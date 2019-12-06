@@ -1,0 +1,53 @@
+sudo: false
+dist: xenial
+
+language: go
+go: "1.13"
+go_import_path: github.com/andig/evcc
+
+cache:
+  directories:
+  - $HOME/.cache/go-build
+  - $HOME/gopath/pkg/mod
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+
+env:
+  global:
+    - PATH=$HOME/gopath/bin:$PATH
+
+before_install:
+# Install linters and misspell
+- curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin
+- golangci-lint --version
+- make install
+
+script:
+# build
+- make
+# ensure all changes are committed
+- test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+before_deploy:
+- curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | bash -s -- -b $GOPATH/bin
+- seihon --version
+- |
+  if ! [ "$BEFORE_DEPLOY_RUN" ]; then
+    export BEFORE_DEPLOY_RUN=1;
+    docker login -u $DOCKER_USER -p $DOCKER_PASS
+  fi
+
+deploy:
+- provider: script
+  skip_cleanup: true
+  script: curl -sL https://git.io/goreleaser | bash
+  on:
+    tags: true
+- provider: script
+  skip_cleanup: true
+  script: make publish-images
+  on:
+    tags: true

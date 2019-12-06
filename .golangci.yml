@@ -1,0 +1,4 @@
+issues:
+  exclude:
+  - "func `..Wallbe..showIO` is unused"
+  - "func `..Wallbe..showIOs` is unused"

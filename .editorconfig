@@ -1,0 +1,27 @@
+; indicate this is the root of the project
+root = true
+
+[*]
+charset = utf-8
+
+end_of_line = LF
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+indent_style = tab
+indent_size = 4
+
+[*.css]
+indent_size = 2
+
+[*.js]
+indent_style = space
+indent_size = 2
+
+[*.html]
+indent_style = space
+indent_size = 2
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2

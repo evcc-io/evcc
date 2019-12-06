@@ -1,0 +1,7 @@
+.vscode
+assets/js/debug.js
+*.conf
+*.json
+*.sh
+*.yaml
+!evcc.dist.yaml

@@ -1,0 +1,34 @@
+uri: 0.0.0.0:7070
+interval: 10s
+
+mqtt:
+  broker: nas.fritz.box:1883
+
+meters:
+- name: netz
+  power:
+    type: mqtt
+    topic: mbmd/sdm1-1/Power
+    timeout: 10s # don't use older values
+- name: pv
+  power:
+    type: mqtt
+    topic: mbmd/sdm1-2/Power
+    timeout: 10s # don't use older values
+- name: charge
+  power:
+    type: script
+    cmd: /bin/sh -c "echo 0"
+    timeout: 3s # kill script after 3 seconds
+
+chargers:
+- name: wallbe
+  type: wallbe
+  uri: 192.168.0.8:502
+
+loadpoints:
+- name: lp1
+  charger: wallbe
+  gridmeter: netz
+  pvmeter: pv
+  chargemeter: charge

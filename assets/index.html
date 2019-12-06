@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="EV Charge Controller">
+  <meta name="author" content="andig">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="ico/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="ico/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="ico/favicon-16x16.png">
+  <link rel="manifest" href="ico/site.webmanifest">
+  <link rel="mask-icon" href="ico/safari-pinned-tab.svg" color="#007bff">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+
+  <title>evcc</title>
+
+  <!-- CSS -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/fontawesome.min.css" rel="stylesheet">
+
+  <!-- Bootstrap -->
+  <script src="js/jquery-3.4.1.slim.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+
+  <!-- Axios -->
+  <script src="js/axios.min.js"></script>
+
+  <!-- VueJS -->
+  <script src="js/vue.min.js"></script>
+  <script src="js/vue-router.min.js"></script>
+</head>
+<body>
+
+<div class="container" id="error">
+  <div class="toast" data-delay="2000" style="position: absolute; z-index: 2000; top: 1rem; right: 1rem;">
+    <div class="toast-header">
+      <strong class="mr-auto">Error</strong>
+      <small v-if="error.status">HTTP {{error.status}}</small>
+      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="toast-body">{{error.message}}</div>
+  </div>
+</div>
+
+<div id="app">
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary far fa-leaf mr-2"></i>evcc</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
+        <!-- << range $idx, $link := .Links >> -->
+        <router-link class="nav-item nav-link pb-1" to="/links/<< $idx >>"><< $link.Title >></router-link>
+        <!-- << end >> -->
+        <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
+        <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/blob/master/README.md">Dokumentation</a>
+        <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
+      </div>
+    </div>
+  </nav>
+  <router-view></router-view>
+</div>
+
+<script type="text/x-template" id="embed-template">
+  <div class="container mx-auto text-center">
+    <h1 class="display-4 pt-3" v-if="title">{{title}}</h1>
+    <p class="lead mx-auto text-center" v-if="subtitle">{{subtitle}}</p>
+    <a v-bind:href="link" v-if="link">
+      <img v-bind:src="img" v-if="img">
+      <iframe v-bind:src="iframe" v-if="iframe">
+    </a>
+    <span v-else>
+      <img v-bind:src="img" v-if="img">
+      <iframe v-bind:src="iframe" v-if="iframe">
+    </span>
+  </div>
+</script>
+
+<script type="text/x-template" id="main-template">
+  <div class="container">
+    <div class="pricing-header px-3 pt-3 mx-auto text-center">
+      <h1 class="display-4">Laden</h1>
+      <p class="lead">Lademodus auswählen und EV verbinden um Ladevorgang zu starten.</p>
+    </div>
+    <modeswitch></modeswitch>
+    <datapanel></datapanel>
+  </div>
+</script>
+
+<script type="text/x-template" id="mode-template">
+  <div class="pricing-header px-3 pb-3 mx-auto text-center">
+    <div class="btn-group btn-group-toggle py-4 mb-2" data-toggle="buttons">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
+        <input type="radio" value="off" v-on:click="mode='off'">Stop
+      </label>
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
+        <input type="radio" value="now" v-on:click="mode='now'">
+        <span class="d-inline d-sm-none">Sofort</span>
+        <span class="d-none d-sm-inline">Sofortladen</span>
+      </label>
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.pvMeter">
+        <input type="radio" value="minpv" v-on:click="mode='minpv'">
+        <span class="d-inline d-sm-none">Min</span>
+        <span class="d-none d-sm-inline">Minimum + PV</span>
+      </label>
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.pvMeter">
+        <input type="radio" value="pv" v-on:click="mode='pv'">
+        <span class="d-inline d-sm-none">PV</span>
+        <span class="d-none d-sm-inline">Nur PV</span>
+      </label>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-template" id="data-template">
+<div>
+
+  <div class="card-deck mb-3 text-center">
+    <div class="col-12 col-md-6 col-lg-3" v-if="state.soc">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Batterie</h4>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title pricing-card-title">
+            {{state.socCharge}} <small class="text-muted">%</small>
+          </h2>
+          <p>Ladezustand</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12"
+      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Wallbox</h4>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title pricing-card-title">
+            {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small>
+            <span class="text-muted">/</span>
+            {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
+          </h2>
+          <p>Strom/Leistung <i class="text-primary far fa-leaf" v-if="state.chargeCurrent"></i></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12"
+      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
+      <div class="card mb-4 shadow-sm" v-if="state.gridMeter">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">Netz</h4>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
+              class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
+          <p v-if="state.gridPower > 0">
+            Bezug <i class="text-primary far fa-arrow-down"></i>
+          </p>
+          <p v-else>
+            Einspeisung <i class="text-primary far fa-arrow-up"></i>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12"
+      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header">
+          <h4 class="my-0 font-weight-normal">PV</h4>
+        </div>
+        <div class="card-body">
+          <h2 class="card-title pricing-card-title">
+            {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
+          </h2>
+          <p>Erzeugung <i class="text-primary far fas fa-sun" v-if="false"></i></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="row py-2">
+        <div class="col-6 text-muted text-right">
+          Fahrzeug:
+        </div>
+        <div class="col-6 text-primary h5">
+          <span v-if="state.connected">verbunden</span><span v-else>&mdash;</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="row py-2">
+        <div class="col-6 text-muted text-right">
+          Geladen:
+        </div>
+        <div class="col-6 text-primary h5">
+          {{fmt(state.chargedEnergy)}} <small>{{fmtUnit(state.chargedEnergy)}}Wh</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="row py-2">
+        <div class="col-6 text-muted text-right">
+          Ladedauer:
+        </div>
+        <div class="col-6 text-primary h5">
+          {{fmtDuration(state.chargeDuration)}}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="row py-2">
+        <div class="col-6 text-muted text-right">
+          Restladezeit:
+        </div>
+        <div class="col-6 text-primary h5">
+          {{fmtDuration(state.chargeEstimate)}}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</script>
+
+<script type="text/x-template" id="config-template">
+  <div class="container">
+    <h1 class="display-4 pt-3 mx-auto text-center">Konfiguration</h1>
+    <p class="lead mx-auto text-center">Details der Fahrzeug-, Wallbox- und Zählerkonfiguration.</p>
+
+    <h5 class="pb-2 pt-4 mx-auto text-center">Fahrzeug</h5>
+    <div class="row py-2">
+      <div class="col-6 col-md-3 text-right">
+        Modell:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.socTitle">{{state.socTitle}}</span>
+        <span v-else>&mdash;</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Kapazität:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.socCapacity">{{state.socCapacity}} kWh</span>
+        <span v-else>&mdash;</span>
+      </div>
+    </div>
+
+    <h5 class="pb-2 pt-4 mx-auto text-center">Wallbox</h5>
+    <div class="row py-2">
+      <div class="col-6 col-md-3 text-right">
+        Phasen:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.phases">{{state.phases}}p</span>
+        <span v-else>&mdash;</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Phasenumschaltung:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.phases">nicht implementiert</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Min. Ladestrom:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.minCurrent !== undefined">{{state.minCurrent}} A</span>
+        <span v-else>&mdash;</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Max. Ladestrom:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.maxCurrent !== undefined">{{state.maxCurrent}} A</span>
+        <span v-else>&mdash;</span>
+      </div>
+    </div>
+
+    <h5 class="pb-2 pt-4 mx-auto text-center">Zähler</h5>
+    <div class="row py-2">
+      <div class="col-6 col-md-3 text-right">
+        PV Zähler:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.pvMeter">✓</span>
+        <span v-else>&mdash;</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Netzzähler:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.gridMeter">✓</span>
+        <span v-else>&mdash;</span>
+      </div>
+      <div class="col-6 col-md-3 text-right">
+        Ladezähler:
+      </div>
+      <div class="col-6 col-md-3 text-primary h5">
+        <span v-if="state.chargeMeter">✓</span>
+        <span v-else>&mdash;</span>
+      </div>
+    </div>
+  </div>
+</script>
+
+<footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-md-5 border-top">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 col-md">
+        <small class="text-muted">&copy; 2020</small>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function routerLinks() {
+    return [
+      // << range $idx, $link := .Links >>
+      {
+        title: "<< $link.Title >>",
+        subtitle: "<< $link.Subtitle >>",
+        img: "<< $link.Img >>",
+        iframe: "<< $link.Iframe >>",
+        link: "<< $link.Link >>"
+      },
+      // << end >>
+    ];
+  }
+</script>
+
+<!-- << if .Debug >> -->
+<script src="js/debug.js"></script>
+<!-- << end >> -->
+<script src="js/app.js"></script>
+
+</body>
+</html>
