@@ -3,9 +3,13 @@ package core
 import (
 	"fmt"
 	"math"
+	"sync"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
+	"github.com/andig/evcc/push"
+
 	evbus "github.com/asaskevich/EventBus"
 )
 
@@ -16,26 +20,22 @@ const (
 	evStopCharge    = "StopCharge"    // update chargeTimer
 )
 
-var status = map[bool]string{false: "disable", true: "enable"}
-var presence = map[bool]string{false: "—", true: "✓"}
+var (
+	once     sync.Once
+	status   = map[bool]string{false: "disable", true: "enable"}
+	presence = map[bool]string{false: "—", true: "✓"}
+)
 
 // powerToCurrent is a helper function to convert power to per-phase current
-func powerToCurrent(power, voltage float64, phases int64) float64 {
-	return power / (float64(phases) * voltage)
-}
-
-// minInt calculates minimum of two integer values
-func minInt(x, y int64) int64 {
-	if x < y {
-		return x
-	}
-	return y
+func powerToCurrent(power, voltage float64, phases int64) int64 {
+	return int64(power / (float64(phases) * voltage))
 }
 
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
-	bus evbus.Bus
+	bus        evbus.Bus         // event bus
+	updateChan chan<- push.Event // notifications
 
 	Name        string
 	Charger     api.Charger
@@ -49,11 +49,15 @@ type LoadPoint struct {
 	SoC         api.SoC   // SoC
 
 	// options
+	Steepness     int64   // Step size of current change
 	Phases        int64   // SOC phases. Required for converting power and current.
 	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
 	Voltage       float64 // Operating voltage. 230V for Germany.
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
+
+	cycleUpdated  time.Time     // charger enabled/disabled timestamp
+	CycleDuration time.Duration // charger enable/disable minimum holding time
 
 	state *State // state variables
 }
@@ -63,18 +67,20 @@ func NewLoadPoint(name string, charger api.Charger) *LoadPoint {
 	state := &State{
 		mode:          api.ModeNow,
 		status:        api.StatusA,
-		targetCurrent: -1,
+		targetCurrent: 0,
 	}
 
 	return &LoadPoint{
-		bus:        evbus.New(),
-		state:      state,
-		Name:       name,
-		Phases:     1,
-		Voltage:    230, // V
-		MinCurrent: 6,   // A
-		MaxCurrent: 16,  // A
-		Charger:    charger,
+		bus:           evbus.New(),
+		state:         state,
+		Name:          name,
+		Phases:        1,
+		Voltage:       230, // V
+		MinCurrent:    6,   // A
+		MaxCurrent:    16,  // A
+		Steepness:     1,   // A
+		Charger:       charger,
+		CycleDuration: time.Minute,
 	}
 }
 
@@ -99,8 +105,35 @@ func (lp *LoadPoint) Dump() {
 	log.INFO.Printf("%s charge mode: %s", lp.Name, lp.state.Mode())
 }
 
+func (lp *LoadPoint) handleChargeStart() {
+	lp.updateChan <- push.Event{
+		EventId: push.ChargeStart,
+		Sender:  "Wallbe",
+		Attributes: map[string]interface{}{
+			"lp":   lp.Name,
+			"mode": lp.state.Mode(),
+		},
+	}
+}
+
+func (lp *LoadPoint) handleChargeStop() {
+	energy, err := lp.ChargeRater.ChargedEnergy()
+	if err != nil {
+		log.ERROR.Printf("%s %v", lp.Name, err)
+	}
+
+	lp.updateChan <- push.Event{
+		EventId: push.ChargeStop,
+		Sender:  "Wallbe",
+		Attributes: map[string]interface{}{
+			"lp":     lp.Name,
+			"energy": energy,
+		},
+	}
+}
+
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare() {
+func (lp *LoadPoint) prepare(updateChan chan<- push.Event) {
 	// ensure charge meter exists
 	if lp.ChargeMeter == nil {
 		m := &wrapper.ChargeMeter{
@@ -134,6 +167,11 @@ func (lp *LoadPoint) Prepare() {
 			lp.ChargeTimer = ct
 		}
 	}
+
+	// event handlers
+	lp.updateChan = updateChan
+	lp.bus.Subscribe(evStartCharge, lp.handleChargeStart)
+	lp.bus.Subscribe(evStopCharge, lp.handleChargeStop)
 }
 
 func (lp *LoadPoint) chargeMode(mode api.ChargeMode) {
@@ -141,9 +179,38 @@ func (lp *LoadPoint) chargeMode(mode api.ChargeMode) {
 	lp.state.SetMode(mode)
 }
 
+// chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
 func (lp *LoadPoint) chargerEnable(enable bool) error {
+	if lp.state.TargetCurrent() != 0 && lp.state.TargetCurrent() != lp.MinCurrent {
+		log.FATAL.Fatal("charger enable/disable called without setting min current first - aborting")
+	}
+
+	if time.Since(lp.cycleUpdated) < lp.CycleDuration {
+		log.TRACE.Printf("%s ignore charger %s", lp.Name, status[enable])
+		return nil
+	}
+
 	log.INFO.Printf("%s charger %s", lp.Name, status[enable])
-	return lp.Charger.Enable(enable)
+
+	err := lp.Charger.Enable(enable)
+	if err == nil {
+		lp.cycleUpdated = time.Now()
+	}
+	return err
+}
+
+// updateChargerEnabled checks charger enabled state
+func (lp *LoadPoint) updateChargerEnabled() bool {
+	enabled, err := lp.Charger.Enabled()
+	// log.DEBUG.Printf(". enabled %v", enabled)
+
+	if err != nil {
+		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
+		return false
+	}
+	log.TRACE.Printf("%s charger: %sd", lp.Name, status[enabled])
+
+	return enabled
 }
 
 // chargingCycle detects charge cycle start and stop events and manages the
@@ -153,6 +220,8 @@ func (lp *LoadPoint) chargingCycle(enable bool) {
 		return
 	}
 
+	lp.state.SetCharging(enable)
+
 	if enable {
 		log.INFO.Printf("%s start charging ->", lp.Name)
 		lp.bus.Publish(evStartCharge)
@@ -160,53 +229,43 @@ func (lp *LoadPoint) chargingCycle(enable bool) {
 		log.INFO.Printf("%s stop charging <-", lp.Name)
 		lp.bus.Publish(evStopCharge)
 	}
-
-	lp.state.SetCharging(enable)
-}
-
-// updateChargerEnabled checks charger enabled state
-func (lp *LoadPoint) updateChargerEnabled() bool {
-	enabled, err := lp.Charger.Enabled()
-	if err != nil {
-		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
-		return false
-	}
-	log.TRACE.Printf("%s charger: %sd", lp.Name, status[enabled])
-
-	if !enabled {
-		// stop cycle if running
-		lp.chargingCycle(false)
-		lp.chargeMode(api.ModeOff)
-	}
-
-	return enabled
 }
 
 // updateChargeStatus updates car status and stops charging if car disconnected
-func (lp *LoadPoint) updateChargeStatus() bool {
+func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 	// abort if no vehicle connected
 	status, err := lp.Charger.Status()
 	if err != nil {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
-		return false
+		return api.StatusNone
 	}
 	log.TRACE.Printf("%s charger car status: %s", lp.Name, status)
 
-	if status != lp.state.Status() {
+	if prevStatus := lp.state.Status(); status != prevStatus {
 		lp.state.SetStatus(status)
-		if lp.Connected() {
+
+		// connected
+		if prevStatus == api.StatusA {
 			log.INFO.Printf("%s car connected (%s)", lp.Name, string(status))
-		} else {
-			log.INFO.Printf("%s car disconnected", lp.Name)
-			lp.chargingCycle(false)
 		}
 
-		if lp.Charging() {
+		// disconnected
+		if status == api.StatusA {
+			log.INFO.Printf("%s car disconnected", lp.Name)
+		}
+
+		// start charging
+		if status == api.StatusC {
 			lp.chargingCycle(true)
+		}
+
+		// stop charging
+		if status != api.StatusC {
+			lp.chargingCycle(false)
 		}
 	}
 
-	return lp.Connected()
+	return status
 }
 
 // updateChargeCurrentAndPower retrieves chargers actual current and charge meter power.
@@ -214,60 +273,49 @@ func (lp *LoadPoint) updateChargeStatus() bool {
 // This mechanism ensures that fake charge meter and charge energy are updated.
 func (lp *LoadPoint) updateChargeCurrentAndPower() (current int64, power float64, err error) {
 	current, err = lp.Charger.ActualCurrent()
-	if err == nil {
-		log.TRACE.Printf("%s charge current: %dA", lp.Name, current)
-	} else {
-		return 0, 0, fmt.Errorf("charger error: %v", err)
+	if err != nil {
+		return 0, 0, fmt.Errorf("%s charger error: %v", lp.Name, err)
 	}
+	log.TRACE.Printf("%s charge current: %dA", lp.Name, current)
 
 	power, err = lp.ChargeMeter.CurrentPower()
-	if err == nil {
-		log.TRACE.Printf("%s charge power: %.0fW", lp.Name, power)
-		lp.state.SetChargePower(power)
-
-		// update charge rater with power
-		lp.bus.Publish(evChargePower, power)
-	} else {
-		return 0, 0, fmt.Errorf("charge meter error: %v", err)
+	if err != nil {
+		return 0, 0, fmt.Errorf("%s charge meter error: %v", lp.Name, err)
 	}
+	log.TRACE.Printf("%s charge power: %.0fW", lp.Name, power)
+
+	// update charge rater with power
+	lp.state.SetChargePower(power)
+	lp.bus.Publish(evChargePower, power)
 
 	return current, power, nil
 }
 
 // setTargetCurrent guards setting current against changing to identical value
 // and violating MaxCurrent
-func (lp *LoadPoint) setTargetCurrent(chargeCurrent, targetChargeCurrent int64) error {
-	if targetChargeCurrent > lp.MaxCurrent {
-		targetChargeCurrent = lp.MaxCurrent
-		log.WARN.Printf("%s hard limit charge current: %dA", lp.Name, targetChargeCurrent)
+func (lp *LoadPoint) setTargetCurrent(targetCurrentIn int64) error {
+	targetCurrent := clamp(targetCurrentIn, lp.MinCurrent, lp.MaxCurrent)
+	if targetCurrent != targetCurrentIn {
+		log.WARN.Printf("%s hard limit charge current: %dA", lp.Name, targetCurrent)
 	}
 
-	if lp.state.TargetCurrent() != targetChargeCurrent {
-		log.INFO.Printf("%s set max charge current: %dA", lp.Name, targetChargeCurrent)
-		if err := lp.Charger.(api.ChargeController).MaxCurrent(targetChargeCurrent); err != nil {
-			return fmt.Errorf("charge controller error: %v", err)
+	if lp.state.TargetCurrent() != targetCurrent {
+		log.INFO.Printf("%s set charge current: %dA", lp.Name, targetCurrent)
+		if err := lp.Charger.(api.ChargeController).MaxCurrent(targetCurrent); err != nil {
+			return fmt.Errorf("%s charge controller error: %v", lp.Name, err)
 		}
-		lp.state.SetTargetCurrent(targetChargeCurrent)
+
+		lp.state.SetTargetCurrent(targetCurrent)
 	}
 
-	// publish in case grid meter not available
-	if !lp.Charging() {
-		chargeCurrent = 0
-	}
-	lp.bus.Publish(evChargeCurrent, minInt(chargeCurrent, targetChargeCurrent))
+	lp.bus.Publish(evChargeCurrent, targetCurrent)
 
 	return nil
 }
 
 // Update reevaluates meters and charger state
-func (lp *LoadPoint) Update() {
-	// check if charging is enabled && car connected
-	if enabled := lp.updateChargerEnabled(); !enabled {
-		return
-	}
-	if connected := lp.updateChargeStatus(); !connected {
-		return
-	}
+func (lp *LoadPoint) Update(updateChan chan<- push.Event) {
+	once.Do(func() { lp.prepare(updateChan) })
 
 	// abort if dumb charge controller
 	if _, chargeController := lp.Charger.(api.ChargeController); !chargeController {
@@ -275,41 +323,93 @@ func (lp *LoadPoint) Update() {
 		return
 	}
 
+	// check if car connected and ready for charging
+	if lp.updateChargeStatus(); !lp.Connected() {
+		return
+	}
+
 	// execute loading strategy
 	var err error
-	mode := lp.state.Mode()
-	switch mode {
+	switch mode := lp.state.Mode(); mode {
+	case api.ModeOff:
+		err = lp.rampOff()
 	case api.ModeNow:
-		err = lp.ApplyModeNow()
+		err = lp.rampOn(lp.MaxCurrent)
 	case api.ModeMinPV, api.ModePV:
 		err = lp.ApplyModePV(mode)
 	}
 
 	if err != nil {
-		log.ERROR.Printf("%s error: %v", lp.Name, err)
+		log.ERROR.Println(err)
 	}
 }
 
-// ApplyModeNow updates charging current and sets maximum current
-func (lp *LoadPoint) ApplyModeNow() error {
-	// get charger current
-	chargeCurrent, _, err := lp.updateChargeCurrentAndPower()
-	if err != nil {
-		return err
+// rampUpDown moves stepwise towards target current. If target current is reached
+// during this process, true is returned otherwise false.
+func (lp *LoadPoint) rampUpDown(target int64) (bool, error) {
+	current := lp.state.TargetCurrent()
+	if current == target {
+		return true, nil
 	}
 
-	// get max charge current
-	targetChargeCurrent := lp.MaxCurrent
-	log.DEBUG.Printf("%s target current: %dA (max)", lp.Name, targetChargeCurrent)
+	var step int64
+	if current < target {
+		step = min(current+lp.Steepness, target)
+	} else if current > target {
+		step = max(current-lp.Steepness, target)
+	}
 
-	// set max charge current
-	return lp.setTargetCurrent(chargeCurrent, targetChargeCurrent)
+	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
+
+	if err := lp.setTargetCurrent(step); err != nil {
+		return false, err
+	}
+
+	// end of ramp reached?
+	if step == target {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// rampOff ramps down charging current to minimum and then turns off
+func (lp *LoadPoint) rampOff() error {
+	if enabled := lp.updateChargerEnabled(); enabled {
+		// log.DEBUG.Printf(". rampOff %d", lp.MinCurrent)
+		finished, err := lp.rampUpDown(lp.MinCurrent)
+		if err != nil {
+			return err
+		}
+
+		if finished {
+			// TODO handle chargerEnable aborted
+			lp.bus.Publish(evChargeCurrent, int64(0))
+			return lp.chargerEnable(false)
+		}
+	}
+
+	return nil
+}
+
+// rampUp ramps up charging current to maximum and then turns off
+func (lp *LoadPoint) rampOn(target int64) error {
+	if enabled := lp.updateChargerEnabled(); !enabled {
+		if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
+			return err
+		}
+
+		return lp.chargerEnable(true)
+	}
+
+	_, err := lp.rampUpDown(target)
+	return err
 }
 
 // ApplyModePV sets "minpv" or "pv" load modes
 func (lp *LoadPoint) ApplyModePV(mode api.ChargeMode) error {
 	// get charger current and charge meter power
-	chargeCurrent, chargePower, err := lp.updateChargeCurrentAndPower()
+	_, chargePower, err := lp.updateChargeCurrentAndPower()
 	if err != nil {
 		return err
 	}
@@ -320,9 +420,9 @@ func (lp *LoadPoint) ApplyModePV(mode api.ChargeMode) error {
 	if lp.GridMeter != nil {
 		gridPower, err := lp.GridMeter.CurrentPower()
 		if err != nil {
-			return fmt.Errorf("grid meter: %v", err)
+			return fmt.Errorf("%s grid meter: %v", lp.Name, err)
 		}
-		log.DEBUG.Printf("%s grid power: %.0fW", lp.Name, gridPower)
+		log.TRACE.Printf("%s grid power: %.0fW", lp.Name, gridPower)
 
 		// grid power must be negative for export
 		deltaChargePower := -gridPower - lp.ResidualPower
@@ -332,9 +432,9 @@ func (lp *LoadPoint) ApplyModePV(mode api.ChargeMode) error {
 	} else {
 		pvPower, err := lp.PVMeter.CurrentPower()
 		if err != nil {
-			return fmt.Errorf("pv meter: %v", err)
+			return fmt.Errorf("%s pv meter: %v", lp.Name, err)
 		}
-		log.DEBUG.Printf("%s pv power: %.0fW", lp.Name, pvPower)
+		log.TRACE.Printf("%s pv power: %.0fW", lp.Name, pvPower)
 
 		pvPower = math.Abs(pvPower)
 		targetChargePower = pvPower - lp.ResidualPower
@@ -343,28 +443,22 @@ func (lp *LoadPoint) ApplyModePV(mode api.ChargeMode) error {
 	}
 
 	// get max charge current
-	targetChargePower = math.Max(targetChargePower, 0)
-	targetChargeCurrent := int64(powerToCurrent(targetChargePower, lp.Voltage, lp.Phases))
+	targetChargeCurrent := clamp(powerToCurrent(targetChargePower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
 
-	if tc := targetChargeCurrent; targetChargeCurrent < lp.MinCurrent {
+	if targetChargeCurrent < lp.MinCurrent {
 		switch mode {
 		case api.ModeMinPV:
-			// charger cannot go below 6A - clamp at min current
 			targetChargeCurrent = lp.MinCurrent
 		case api.ModePV:
-			// If charger is already using less than min current it is probably
-			// at the end of the charging cycle. Charge can continue without
-			// further limiting the current, otherwise stop charging.
-			if chargeCurrent > targetChargeCurrent {
-				// disable charger
-				targetChargeCurrent = 0
-			}
+			targetChargeCurrent = 0
 		}
-		log.DEBUG.Printf("%s target current: %dA -> %dA override", lp.Name, tc, targetChargeCurrent)
-	} else {
-		log.DEBUG.Printf("%s target current: %dA", lp.Name, targetChargeCurrent)
 	}
 
-	// set max charge current
-	return lp.setTargetCurrent(chargeCurrent, targetChargeCurrent)
+	log.DEBUG.Printf("%s target current: %dA", lp.Name, targetChargeCurrent)
+
+	if targetChargeCurrent == 0 {
+		return lp.rampOff()
+	}
+
+	return lp.rampOn(targetChargeCurrent)
 }

@@ -27,6 +27,14 @@ EVCC features a clean, non-bloat user interface:
 
 ## Installation
 
+### Hardware
+
+Make sure supported charger and meters are professionally installed.
+
+**NOTE**: for Wallbe chargers ensure that the device is configured to allow controlling of charge cycle via ModBus. In order to do that ensure that DIP 10 = ON.
+
+### Software
+
 To build EVCC from source, [Go](2) 1.13 is required:
 
     make
@@ -102,11 +110,11 @@ EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*.
 
 Charger is reponsible for EV state handling:
 
-- `Status()`
-- `Enabled()`
-- `Enable(enable bool)`
-- `ActualCurrent()`
-- `MaxCurrent(current int64)` (`ChargeController` only)
+- `Status()`: charge controller status (`A...F`)
+- `Enabled()`: charger availablity
+- `Enable()`: set charger availability
+- `ActualCurrent()`: current in A
+- `MaxCurrent()`: maximum charge current in A (`ChargeController` only)
 
 Available charger implementations are:
 
@@ -117,8 +125,8 @@ Available charger implementations are:
 
 Meters provide data about power and energy consumption:
 
-- `CurrentPower()`
-- `TotalEnergy()` (`MeterEnergy` only)
+- `CurrentPower()`: power in W
+- `TotalEnergy()`: energy in Wh (`MeterEnergy` only)
 
 Meter has a single implementaton where meter readings- power and energy- can be configured to be delivered by plugin.
 
@@ -126,7 +134,7 @@ Meter has a single implementaton where meter readings- power and energy- can be 
 
 SoC represents a specific EV battery. Configuring a SoC allows to define it's `Capacity (kWh)` and dynamically provide:
 
-- `ChargeState()`
+- `ChargeState()`: state of charge in %
 
 If SoC is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 

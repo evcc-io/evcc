@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -14,6 +15,7 @@ const (
 	regStatus            = 100
 	regChargeTime        = 102
 	regActualCurrent     = 300
+	regEnable            = 400
 	regOverchargeProtect = 409
 	regMaxCurrent        = 528
 
@@ -31,10 +33,9 @@ const (
 // Upon setting a differnt, non-zero current, over overcurrent protection is
 // disabled if current was equal 0A at this time.
 type Wallbe struct {
-	log               *api.Logger
-	client            modbus.Client
-	handler           *modbus.TCPClientHandler
-	overchargeProtect bool
+	log     *api.Logger
+	client  modbus.Client
+	handler *modbus.TCPClientHandler
 }
 
 // NewWallbe creates a Wallbe charger
@@ -52,22 +53,18 @@ func NewWallbe(conn string) api.Charger {
 		handler: handler,
 	}
 
-	// init overcharge value
-	if op, err := wb.overChargeEnabled(); err != nil {
-		wb.log.ERROR.Printf("init overcharge protect: %v", err)
-	} else {
-		wb.overchargeProtect = op
-	}
+	// wb.showIOs()
 
 	return wb
 }
 
+// showIOs logs all input/output register values and their configurations
 func (wb *Wallbe) showIOs() {
 	// inputs
-	wb.showIO("LD", 520, 200)
-	wb.showIO("EN", 521, 201)
-	wb.showIO("ML", 522, 202)
-	wb.showIO("XR", 523, 203)
+	wb.showIO("LD", 520, 200) // 200 = EN?
+	wb.showIO("EN", 521, 201) // 201 = XR?
+	wb.showIO("ML", 522, 202) // 202 = LD?
+	wb.showIO("XR", 523, 203) // 203 = ML?
 	wb.showIO("IN", 524, 208)
 
 	// outputs
@@ -83,21 +80,24 @@ func (wb *Wallbe) showIOs() {
 	}
 }
 
+// showIOs logs a single input/output register's values and their configurations
 func (wb *Wallbe) showIO(input string, definition uint16, status uint16) {
 	var def uint16
 	var val byte
 
-	if b, err := wb.client.ReadHoldingRegisters(definition, 1); err != nil {
+	b, err := wb.client.ReadHoldingRegisters(definition, 1)
+	if err != nil {
 		wb.log.FATAL.Printf("%s definition %v", input, err)
-	} else {
-		def = binary.BigEndian.Uint16(b)
+		return
 	}
+	def = binary.BigEndian.Uint16(b)
 
-	if b, err := wb.client.ReadDiscreteInputs(status, 1); err != nil {
+	b, err = wb.client.ReadDiscreteInputs(status, 1)
+	if err != nil {
 		wb.log.FATAL.Printf("%s status %v", input, err)
-	} else {
-		val = b[0]
+		return
 	}
+	val = b[0]
 
 	wb.log.DEBUG.Printf("%s = %d (%d)", input, val, def)
 }
@@ -116,16 +116,30 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *Wallbe) Enabled() (bool, error) {
-	return true, nil
+	b, err := wb.client.ReadCoils(regEnable, 1)
+	wb.log.TRACE.Printf("read charge enable (%d): %0 X", regEnable, b)
+	if err != nil {
+		wb.handler.Close()
+		return false, err
+	}
+
+	return b[0] == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
 func (wb *Wallbe) Enable(enable bool) error {
-	if !enable {
-		return wb.MaxCurrent(0) // set max current to zero
+	var u uint16
+	if enable {
+		u = 0xFF00
 	}
 
-	return nil
+	b, err := wb.client.WriteSingleCoil(regEnable, u)
+	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", regEnable, u, b)
+	if err != nil {
+		wb.handler.Close()
+	}
+
+	return err
 }
 
 // ActualCurrent implements the Charger.ActualCurrent interface
@@ -141,64 +155,18 @@ func (wb *Wallbe) ActualCurrent() (int64, error) {
 	return int64(u / 10), nil
 }
 
-// overChargeEnabled reads respective coil. Overcharge is only enabled
-// when setting max current to 0 to disable the wallbox.
-func (wb *Wallbe) overChargeEnabled() (bool, error) {
-	b, err := wb.client.ReadCoils(regOverchargeProtect, 1)
-	wb.log.TRACE.Printf("read overcharge protect (%d): %0 X", regOverchargeProtect, b)
-	if err != nil {
-		wb.handler.Close()
-		return false, err
+// MaxCurrent implements the Charger.MaxCurrent interface
+func (wb *Wallbe) MaxCurrent(current int64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %d", current)
 	}
 
-	return b[0] == 1, nil
-}
-
-// overChargeEnable sets overcharge coil
-func (wb *Wallbe) overChargeEnable(enable bool) error {
-	var u uint16
-	if enable {
-		u = 0xFF00
-	}
-
-	b, err := wb.client.WriteSingleCoil(regOverchargeProtect, u)
-	wb.log.TRACE.Printf("write overcharge protect %d %0X: %0 X", regOverchargeProtect, u, b)
-	if err != nil {
-		wb.handler.Close()
-	} else {
-		wb.overchargeProtect = enable
-	}
-
-	return err
-}
-
-// maxCurrent sets max current
-func (wb *Wallbe) maxCurrent(current int64) error {
 	u := uint16(current * 10)
 
 	b, err := wb.client.WriteSingleRegister(regMaxCurrent, u)
 	wb.log.TRACE.Printf("write max current %d %0X: %0 X", regMaxCurrent, u, b)
 	if err != nil {
 		wb.handler.Close()
-	}
-
-	return err
-}
-
-// MaxCurrent implements the Charger.MaxCurrent interface
-// Setting current to 0 will always enable overcharge protection.
-// If EV draw current in this state, the charger will go into error state E.
-// In this state, charger will no longer notice car disconnecting (state A).
-func (wb *Wallbe) MaxCurrent(current int64) error {
-	var err error
-	if current == 0 && !wb.overchargeProtect {
-		err = wb.overChargeEnable(true)
-	} else if current > 0 && wb.overchargeProtect {
-		err = wb.overChargeEnable(false)
-	}
-
-	if err == nil {
-		err = wb.maxCurrent(current)
 	}
 
 	return err

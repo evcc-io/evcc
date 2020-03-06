@@ -97,12 +97,8 @@ func (lp *LoadPoint) ChargedEnergy() float64 {
 
 // Connected returns the EVs connection state
 func (lp *LoadPoint) Connected() bool {
-	return lp.state.Status() != api.StatusA
-}
-
-// Charging returns the EVs charging state
-func (lp *LoadPoint) Charging() bool {
-	return lp.state.Status() == api.StatusC
+	status := lp.state.Status()
+	return status == api.StatusB || status == api.StatusC
 }
 
 // SoCChargeState returns the soc battery charge state
@@ -138,7 +134,7 @@ func (lp *LoadPoint) ChargeRemainingDuration() time.Duration {
 	return -1
 }
 
-func (lp *LoadPoint) publishMeter(name string, meter api.Meter, clientPush chan Param) {
+func (lp *LoadPoint) publishMeter(name string, meter api.Meter, clientPush chan<- Param) {
 	if f, err := meter.CurrentPower(); err == nil {
 		key := name + "Power"
 		log.TRACE.Printf("%s %s power: %.1fW", lp.Name, name, f)
@@ -148,8 +144,8 @@ func (lp *LoadPoint) publishMeter(name string, meter api.Meter, clientPush chan 
 	}
 }
 
-func (lp *LoadPoint) publishCharging(clientPush chan Param) {
-	if lp.Charging() {
+func (lp *LoadPoint) publishCharging(clientPush chan<- Param) {
+	if lp.state.Charging() {
 		if f, err := lp.Charger.ActualCurrent(); err == nil {
 			log.TRACE.Printf("%s charge current: %dA", lp.Name, f)
 			clientPush <- Param{Key: "chargeCurrent", Val: f}
@@ -161,7 +157,7 @@ func (lp *LoadPoint) publishCharging(clientPush chan Param) {
 	}
 }
 
-func (lp *LoadPoint) publishSoC(clientPush chan Param) {
+func (lp *LoadPoint) publishSoC(clientPush chan<- Param) {
 	f := lp.SoCChargeState()
 	if math.IsNaN(f) {
 		log.TRACE.Printf("%s soc charge: —", lp.Name)
@@ -175,10 +171,10 @@ func (lp *LoadPoint) publishSoC(clientPush chan Param) {
 }
 
 // Publish publishes loadpoint data to broadcast channel
-func (lp *LoadPoint) Publish(ctx context.Context, clientPush chan Param) {
+func (lp *LoadPoint) Publish(ctx context.Context, clientPush chan<- Param) {
 	clientPush <- Param{Key: "mode", Val: string(lp.state.Mode())}
 	clientPush <- Param{Key: "connected", Val: lp.Connected()}
-	clientPush <- Param{Key: "charging", Val: lp.Charging()}
+	clientPush <- Param{Key: "charging", Val: lp.state.Charging()}
 
 	var wg sync.WaitGroup
 

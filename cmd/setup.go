@@ -9,6 +9,7 @@ import (
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/push"
 	"github.com/spf13/viper"
 )
 
@@ -93,7 +94,11 @@ func configureSoCs(conf config) (socs map[string]api.SoC) {
 
 func configureLoadPoint(lp *core.LoadPoint, lpc loadPointConfig) {
 	if lpc.Mode != "" {
-		lp.Synced().SetMode(api.ChargeMode(lpc.Mode))
+		// workaround for golangs yaml off=0 conversion
+		if lpc.Mode == "0" {
+			lpc.Mode = api.ModeOff
+		}
+		lp.Synced().SetMode(lpc.Mode)
 	}
 	if lpc.MinCurrent > 0 {
 		lp.MinCurrent = lpc.MinCurrent
@@ -112,7 +117,7 @@ func configureLoadPoint(lp *core.LoadPoint, lpc loadPointConfig) {
 	}
 }
 
-func loadConfig(conf config) (loadPoints []*core.LoadPoint) {
+func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.LoadPoint) {
 	if viper.Get("mqtt") != nil {
 		mq = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
@@ -160,9 +165,6 @@ func loadConfig(conf config) (loadPoints []*core.LoadPoint) {
 
 		// assign remaing config
 		configureLoadPoint(lp, lpc)
-
-		// add loadpoint helper objects
-		lp.Prepare()
 
 		loadPoints = append(loadPoints, lp)
 	}

@@ -46,7 +46,7 @@ type ChargeTimer interface {
 	ChargingTime() (time.Duration, error)
 }
 
-// ChargeRater provides charged energy amount
+// ChargeRater provides charged energy amount in Wh
 type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }

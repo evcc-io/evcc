@@ -33,8 +33,8 @@ func TestNoMeter(t *testing.T) {
 
 	f, err := cr.ChargedEnergy()
 
-	if f != 1 || err != nil {
-		t.Error(f, err)
+	if f != 1e3 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
 	}
 }
 func TestWrappedMeter(t *testing.T) {
@@ -47,10 +47,10 @@ func TestWrappedMeter(t *testing.T) {
 
 	me.EXPECT().
 		TotalEnergy().
-		Return(2.0, nil)
+		Return(2e3, nil)
 	me.EXPECT().
 		TotalEnergy().
-		Return(3.0, nil)
+		Return(3e3, nil)
 
 	cr := NewChargeRater("foo", cm)
 	clck := clock.NewMock()
@@ -72,7 +72,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	f, err := cr.ChargedEnergy()
 
-	if f != 1 || err != nil {
-		t.Error(f, err)
+	if f != 1e3 || err != nil {
+		t.Errorf("energy: %.1f %v", f, err)
 	}
 }

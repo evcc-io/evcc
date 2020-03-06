@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 
 	"github.com/spf13/cobra"
@@ -115,17 +116,10 @@ func Execute() {
 }
 
 func configureLogging(level string) {
-	// f, err := os.OpenFile("evcc.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// if err != nil {
-	// 	log.FATAL.Fatal(err)
-	// }
-
 	api.OutThreshold = api.LogLevelToThreshold(level)
 	api.LogThreshold = api.OutThreshold
 	api.Loggers(func(name string, logger *api.Logger) {
 		logger.SetStdoutThreshold(api.OutThreshold)
-		// logger.SetLogThreshold(api.OutThreshold)
-		// logger.SetLogOutput(f)
 	})
 }
 
@@ -144,8 +138,8 @@ func checkVersion() {
 }
 
 // cycle executes loadpoint update and publishes all paramters
-func cycle(lp *core.LoadPoint, tick time.Duration, updateChan chan core.Param) {
-	lp.Update()
+func cycle(lp *core.LoadPoint, tick time.Duration, updateChan chan<- core.Param, eventsChan chan<- push.Event) {
+	lp.Update(eventsChan)
 
 	ctx, cancel := context.WithTimeout(context.Background(), tick)
 	lp.Publish(ctx, updateChan)
@@ -174,13 +168,24 @@ func run(cmd *cobra.Command, args []string) {
 
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
-	loadPoints := loadConfig(conf)
 
 	// setup messaging
-	// if conf.Pushover.App != "" {
-	// 	po := server.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
-	// 	po.Send("Wallbe", "Charge started", "Charging started in PV mode")
-	// }
+	eventsChan := make(chan push.Event, 1)
+	pushHub := &push.Hub{}
+
+	if conf.Pushover.App != "" {
+		pushHub.PushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
+
+		event := push.Event{
+			EventId:    push.ChargeStart,
+			Sender:     "Wallbe",
+			Attributes: map[string]interface{}{"lp": "Wallbe", "mode": "TEST"},
+		}
+		eventsChan <- event
+	}
+
+	loadPoints := loadConfig(conf, eventsChan)
+	go pushHub.Run(eventsChan)
 
 	// create webserver
 	hub := server.NewSocketHub()
@@ -196,10 +201,10 @@ func run(cmd *cobra.Command, args []string) {
 		// update loop
 		go func(lp *core.LoadPoint) {
 			tick := conf.Interval
-			cycle(lp, tick, updateChan)
+			cycle(lp, tick, updateChan, eventsChan)
 
 			for range time.Tick(tick) {
-				cycle(lp, tick, updateChan)
+				cycle(lp, tick, updateChan, eventsChan)
 			}
 		}(lp)
 	}
