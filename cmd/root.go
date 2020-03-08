@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
@@ -137,15 +136,6 @@ func checkVersion() {
 	}
 }
 
-// cycle executes loadpoint update and publishes all paramters
-func cycle(lp *core.LoadPoint, tick time.Duration, updateChan chan<- core.Param, eventsChan chan<- push.Event) {
-	lp.Update(eventsChan)
-
-	ctx, cancel := context.WithTimeout(context.Background(), tick)
-	lp.Publish(ctx, updateChan)
-	cancel()
-}
-
 func run(cmd *cobra.Command, args []string) {
 	level, _ := cmd.PersistentFlags().GetString("log")
 	configureLogging(level)
@@ -170,44 +160,40 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Println("listening at", uri)
 
 	// setup messaging
-	eventsChan := make(chan push.Event, 1)
-	pushHub := &push.Hub{}
+	notificationChan := make(chan push.Event, 1)
+	notificationHub := &push.Hub{}
 
 	if conf.Pushover.App != "" {
-		pushHub.PushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
-
-		event := push.Event{
-			EventId:    push.ChargeStart,
-			Sender:     "Wallbe",
-			Attributes: map[string]interface{}{"lp": "Wallbe", "mode": "TEST"},
-		}
-		eventsChan <- event
+		notificationHub.PushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
 	}
 
-	loadPoints := loadConfig(conf, eventsChan)
-	go pushHub.Run(eventsChan)
+	loadPoints := loadConfig(conf, notificationChan)
+	go notificationHub.Run(notificationChan)
 
 	// create webserver
-	hub := server.NewSocketHub()
-	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], hub)
+	socketHub := server.NewSocketHub()
+	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], socketHub)
 
 	// start broadcasting values
-	updateChan := make(chan core.Param)
-	go hub.Run(updateChan)
+	uiChan := make(chan core.Param)
+	triggerChan := make(chan struct{})
+	go socketHub.Run(uiChan, triggerChan)
 
+	// start all loadpoints
 	for _, lp := range loadPoints {
 		lp.Dump()
-
-		// update loop
-		go func(lp *core.LoadPoint) {
-			tick := conf.Interval
-			cycle(lp, tick, updateChan, eventsChan)
-
-			for range time.Tick(tick) {
-				cycle(lp, tick, updateChan, eventsChan)
-			}
-		}(lp)
+		lp.Prepare(uiChan, notificationChan)
+		go lp.Run(conf.Interval)
 	}
+
+	// handle UI update requests whenever browser connects
+	go func() {
+		for range triggerChan {
+			for _, lp := range loadPoints {
+				lp.Update()
+			}
+		}
+	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

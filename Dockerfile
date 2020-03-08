@@ -26,7 +26,6 @@ FROM alpine
 # Import from builder.
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /etc/passwd /etc/passwd
 
 # Copy our static executable
 COPY --from=builder /build/evcc /usr/local/bin/evcc

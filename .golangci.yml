@@ -2,3 +2,5 @@ issues:
   exclude:
   - "func `..Wallbe..showIO` is unused"
   - "func `..Wallbe..showIOs` is unused"
+  - .regOverchargeProtect. is unused
+  - .regActualCurrent. is unused

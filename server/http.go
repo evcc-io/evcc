@@ -27,10 +27,6 @@ type MenuConfig struct {
 	Link     string
 }
 
-type errorModeJSON struct {
-	Error error `json:"error"`
-}
-
 type chargeModeJSON struct {
 	Mode string `json:"mode"`
 }
@@ -43,9 +39,9 @@ type route struct {
 
 // loadPoint is the well-definied minimal interface for accessing loadpoint methods
 type loadPoint interface {
+	GetMode() api.ChargeMode
+	SetMode(api.ChargeMode)
 	Configuration() core.Configuration
-	Synced() *core.State
-	ChargeMode(api.ChargeMode) error
 }
 
 // routeLogger traces matched routes including their executing time
@@ -97,6 +93,18 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
+// HealthHandler returns current charge mode
+func HealthHandler(lp loadPoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := struct{ OK bool }{OK: true}
+
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		}
+	}
+}
+
 // ConfigHandler returns current charge mode
 func ConfigHandler(lp loadPoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -113,7 +121,7 @@ func ConfigHandler(lp loadPoint) http.HandlerFunc {
 func CurrentChargeModeHandler(lp loadPoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := chargeModeJSON{
-			Mode: string(lp.Synced().Mode()),
+			Mode: string(lp.GetMode()),
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -134,21 +142,10 @@ func ChargeModeHandler(lp loadPoint) http.HandlerFunc {
 			return
 		}
 
-		if err := lp.ChargeMode(api.ChargeMode(mode)); err != nil {
-			log.ERROR.Printf("httpd: failed to set charge mode: %v", err)
-
-			w.WriteHeader(http.StatusBadRequest)
-			res := errorModeJSON{
-				Error: err,
-			}
-			if err := json.NewEncoder(w).Encode(res); err != nil {
-				log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-			}
-			return
-		}
+		lp.SetMode(api.ChargeMode(mode))
 
 		res := chargeModeJSON{
-			Mode: string(lp.Synced().Mode()),
+			Mode: string(lp.GetMode()),
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -168,6 +165,11 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // NewHttpd creates HTTP server with configured routes for loadpoint
 func NewHttpd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *http.Server {
 	var routes = []route{
+		route{
+			[]string{"GET"},
+			"/health",
+			HealthHandler(lp),
+		},
 		route{
 			[]string{"GET"},
 			"/config",

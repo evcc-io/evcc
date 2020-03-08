@@ -1,13 +1,10 @@
 package core
 
 import (
-	"context"
-	"errors"
-	"math"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core/wrapper"
 )
 
 // Param is the broadcast channel data type
@@ -33,13 +30,13 @@ type Configuration struct {
 // Configuration returns meter configuration
 func (lp *LoadPoint) Configuration() Configuration {
 	c := Configuration{
-		Mode:        string(lp.state.Mode()),
+		Mode:        string(lp.GetMode()),
 		Phases:      lp.Phases,
 		MinCurrent:  lp.MinCurrent,
 		MaxCurrent:  lp.MaxCurrent,
 		GridMeter:   lp.GridMeter != nil,
 		PVMeter:     lp.PVMeter != nil,
-		ChargeMeter: lp.chargeMeterPresent(),
+		ChargeMeter: lp.hasChargeMeter(),
 	}
 
 	if lp.SoC != nil {
@@ -53,32 +50,54 @@ func (lp *LoadPoint) Configuration() Configuration {
 	return c
 }
 
-// ChargeMode updates charge mode
-func (lp *LoadPoint) ChargeMode(mode api.ChargeMode) error {
-	// pv modes require GridMeter
-	if mode == api.ModeMinPV || mode == api.ModePV {
-		// check if charger is controllable
-		_, chargerControllable := lp.Charger.(api.ChargeController)
-
-		if (lp.PVMeter == nil && lp.GridMeter == nil) || !chargerControllable {
-			return errors.New("invalid charge mode: " + string(mode))
-		}
-	}
-
-	if lp.state.Mode() != mode {
-		// start cycle detection async from http call
-		go lp.chargingCycle(mode != api.ModeOff)
-
-		// update mode and enable/disable charger
-		lp.chargeMode(mode)
-		return lp.chargerEnable(mode != api.ModeOff)
-	}
-
-	return nil
+func (lp *LoadPoint) hasChargeMeter() bool {
+	_, isWrapped := lp.ChargeMeter.(*wrapper.ChargeMeter)
+	return lp.ChargeMeter != nil && !isWrapped
 }
 
-// ChargeDuration returns for how long the charge cycle has been running
-func (lp *LoadPoint) ChargeDuration() time.Duration {
+// Dump loadpoint configuration
+func (lp *LoadPoint) Dump() {
+	soc := lp.SoC != nil
+	grid := lp.GridMeter != nil
+	pv := lp.PVMeter != nil
+	log.INFO.Printf("%s config: soc %s grid %s pv %s charge %s", lp.Name,
+		presence[soc],
+		presence[grid],
+		presence[pv],
+		presence[lp.hasChargeMeter()],
+	)
+	log.INFO.Printf("%s charge mode: %s", lp.Name, lp.GetMode())
+}
+
+// Update triggers loadpoint to run main control loop and push messages to UI socket
+func (lp *LoadPoint) Update() {
+	select {
+	case lp.triggerChan <- struct{}{}: // non-blocking send
+	default:
+	}
+}
+
+// GetMode returns loadpoint charge mode
+func (lp *LoadPoint) GetMode() api.ChargeMode {
+	lp.Lock()
+	defer lp.Unlock()
+
+	return lp.Mode
+}
+
+// SetMode sets loadpoint charge mode
+func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	log.INFO.Printf("%s set charge mode: %s", lp.Name, string(mode))
+	lp.Mode = mode
+
+	lp.Update()
+}
+
+// chargeDuration returns for how long the charge cycle has been running
+func (lp *LoadPoint) chargeDuration() time.Duration {
 	d, err := lp.ChargeTimer.ChargingTime()
 	if err != nil {
 		log.ERROR.Printf("%s charge timer error: %v", lp.Name, err)
@@ -86,8 +105,8 @@ func (lp *LoadPoint) ChargeDuration() time.Duration {
 	return d
 }
 
-// ChargedEnergy returns energy consumption since charge start in Wh
-func (lp *LoadPoint) ChargedEnergy() float64 {
+// chargedEnergy returns energy consumption since charge start in kWh
+func (lp *LoadPoint) chargedEnergy() float64 {
 	f, err := lp.ChargeRater.ChargedEnergy()
 	if err != nil {
 		log.ERROR.Printf("%s charge rater error: %v", lp.Name, err)
@@ -95,119 +114,39 @@ func (lp *LoadPoint) ChargedEnergy() float64 {
 	return f
 }
 
-// Connected returns the EVs connection state
-func (lp *LoadPoint) Connected() bool {
-	status := lp.state.Status()
-	return status == api.StatusB || status == api.StatusC
-}
-
-// SoCChargeState returns the soc battery charge state
-func (lp *LoadPoint) SoCChargeState() float64 {
-	if !lp.Connected() {
-		return math.NaN()
-	}
-
-	f, err := lp.SoC.ChargeState()
-	if err != nil {
-		log.ERROR.Printf("%s soc error: %v", lp.Name, err)
-		return math.NaN()
-	}
-
-	lp.state.SetSocCharge(f)
-
-	return f
-}
-
-// ChargeRemainingDuration returns the remaining charge time
-func (lp *LoadPoint) ChargeRemainingDuration() time.Duration {
-	if !lp.state.Charging() {
+// remainingChargeDuration returns the remaining charge time
+func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duration {
+	if !lp.charging {
 		return -1
 	}
 
-	if currentPower := lp.state.ChargePower(); currentPower > 0 {
+	if lp.chargePower > 0 {
 		if soc, ok := lp.SoC.(*SoC); ok {
-			whRemaining := (1 - lp.state.SocCharge()/100.0) * 1000.0 * float64(soc.Capacity)
-			return time.Duration(float64(time.Hour) * whRemaining / currentPower)
+			whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(soc.Capacity)
+			return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
 		}
 	}
 
 	return -1
 }
 
-func (lp *LoadPoint) publishMeter(name string, meter api.Meter, clientPush chan<- Param) {
-	if f, err := meter.CurrentPower(); err == nil {
-		key := name + "Power"
-		log.TRACE.Printf("%s %s power: %.1fW", lp.Name, name, f)
-		clientPush <- Param{Key: key, Val: f}
-	} else {
-		log.ERROR.Printf("%s %v", lp.Name, err)
+// publish state of charge and remaining charge duration
+func (lp *LoadPoint) publishSoC() {
+	if lp.SoC == nil {
+		return
 	}
-}
 
-func (lp *LoadPoint) publishCharging(clientPush chan<- Param) {
-	if lp.state.Charging() {
-		if f, err := lp.Charger.ActualCurrent(); err == nil {
-			log.TRACE.Printf("%s charge current: %dA", lp.Name, f)
-			clientPush <- Param{Key: "chargeCurrent", Val: f}
-		} else {
-			log.ERROR.Printf("%s update charger current failed: %v", lp.Name, err)
+	if lp.connected() {
+		f, err := lp.SoC.ChargeState()
+		if err == nil {
+			log.TRACE.Printf("%s soc charge: %.1f%%", lp.Name, f)
+			lp.uiChan <- Param{Key: "socCharge", Val: f}
+			lp.uiChan <- Param{Key: "chargeEstimate", Val: lp.remainingChargeDuration(f)}
+			return
 		}
-	} else {
-		clientPush <- Param{Key: "chargeCurrent", Val: 0.0}
-	}
-}
-
-func (lp *LoadPoint) publishSoC(clientPush chan<- Param) {
-	f := lp.SoCChargeState()
-	if math.IsNaN(f) {
-		log.TRACE.Printf("%s soc charge: —", lp.Name)
-		clientPush <- Param{Key: "socCharge", Val: "—"}
-	} else {
-		log.TRACE.Printf("%s soc charge: %.1f%%", lp.Name, f)
-		clientPush <- Param{Key: "socCharge", Val: f}
+		log.ERROR.Printf("%s soc error: %v", lp.Name, err)
 	}
 
-	clientPush <- Param{Key: "chargeEstimate", Val: lp.ChargeRemainingDuration()}
-}
-
-// Publish publishes loadpoint data to broadcast channel
-func (lp *LoadPoint) Publish(ctx context.Context, clientPush chan<- Param) {
-	clientPush <- Param{Key: "mode", Val: string(lp.state.Mode())}
-	clientPush <- Param{Key: "connected", Val: lp.Connected()}
-	clientPush <- Param{Key: "charging", Val: lp.state.Charging()}
-
-	var wg sync.WaitGroup
-
-	for name, meter := range map[string]api.Meter{
-		"grid":   lp.GridMeter,
-		"pv":     lp.PVMeter,
-		"charge": lp.ChargeMeter,
-	} {
-		if meter != nil {
-			wg.Add(1)
-			go func(name string, meter api.Meter) {
-				lp.publishMeter(name, meter, clientPush)
-				wg.Done()
-			}(name, meter)
-		}
-	}
-
-	wg.Add(1)
-	go func() {
-		lp.publishCharging(clientPush)
-		wg.Done()
-	}()
-
-	if lp.SoC != nil {
-		wg.Add(1)
-		go func() {
-			lp.publishSoC(clientPush)
-			wg.Done()
-		}()
-	}
-
-	wg.Wait()
-
-	clientPush <- Param{Key: "chargedEnergy", Val: lp.ChargedEnergy()}
-	clientPush <- Param{Key: "chargeDuration", Val: lp.ChargeDuration()}
+	lp.uiChan <- Param{Key: "socCharge", Val: "—"}
+	lp.uiChan <- Param{Key: "chargeEstimate", Val: -1}
 }

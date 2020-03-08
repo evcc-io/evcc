@@ -1,4 +1,4 @@
-package core
+package charger
 
 import (
 	"encoding/binary"
@@ -40,6 +40,10 @@ type Wallbe struct {
 
 // NewWallbe creates a Wallbe charger
 func NewWallbe(conn string) api.Charger {
+	if conn == "" {
+		conn = "192.168.0.8:502"
+	}
+
 	handler := modbus.NewTCPClientHandler(conn)
 	client := modbus.NewClient(handler)
 
@@ -140,19 +144,6 @@ func (wb *Wallbe) Enable(enable bool) error {
 	}
 
 	return err
-}
-
-// ActualCurrent implements the Charger.ActualCurrent interface
-func (wb *Wallbe) ActualCurrent() (int64, error) {
-	b, err := wb.client.ReadHoldingRegisters(regActualCurrent, 1)
-	wb.log.TRACE.Printf("read actual current (%d): %0 X", regActualCurrent, b)
-	if err != nil {
-		wb.handler.Close()
-		return 0, err
-	}
-
-	u := binary.BigEndian.Uint16(b)
-	return int64(u / 10), nil
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface

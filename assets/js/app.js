@@ -28,10 +28,9 @@ let store = {
     charging: null,
     gridPower: null,
     pvPower: null,
-    chargeCurrent: null,
     chargePower: null,
     chargeDuration: null,
-    chargeEstimate: null,
+    chargeEstimate: -1,
     chargedEnergy: null,
     socCharge: "—"
   },
@@ -55,6 +54,17 @@ let store = {
 };
 
 //
+// Heartbeat
+//
+
+window.setInterval(function() {
+  axios.get("health").catch(function(res) {
+    res.message = "Server unavailable";
+    error.raise(res)
+  });
+}, 5000);
+
+//
 // Components
 //
 
@@ -62,7 +72,6 @@ const error = new Vue({
   el: '#error',
   data: {
     error: {},
-    timeoutHandle: null,
   },
   methods: {
     raise: function(error) {
@@ -123,7 +132,7 @@ Vue.component("datapanel", {
     },
     fmtDuration: function(d) {
       if (d < 0) {
-        return "&mdash;";
+        return '—';
       }
       var seconds = "0" + (d % 60);
       var minutes = "0" + (Math.floor(d / 60) % 60);
@@ -144,8 +153,13 @@ Vue.component("datapanel", {
         window.setTimeout(self.connect, 1000);
       };
       ws.onmessage = function(evt) {
-        var msg = JSON.parse(evt.data);
-        store.update(msg);
+        try {
+          var msg = JSON.parse(evt.data);
+          store.update(msg);
+        }
+        catch (e) {
+          console.error(e, evt.data)
+        }
       };
     }
   },

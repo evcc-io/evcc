@@ -1,6 +1,16 @@
 package wrapper
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/andig/evcc/api"
+)
+
+// CompositeMeter decorates a Meter with MeterEnergy.
+type CompositeMeter struct {
+	api.Meter
+	api.MeterEnergy
+}
 
 // ChargeMeter is a replacement for a physical charge meter.
 // It uses the charger's actual or max current to calculate power consumption.

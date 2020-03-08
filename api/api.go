@@ -2,19 +2,19 @@ package api
 
 import "time"
 
-//go:generate mockgen -package mock -destination ../mock/mock.go github.com/andig/evcc/api Charger,ChargeController,Meter,MeterEnergy
+//go:generate mockgen -package mock -destination ../mock/mock.go github.com/andig/evcc/api Charger,Meter,MeterEnergy
 
-// Meter is able to provide current power at metering point
-type Meter interface {
-	CurrentPower() (float64, error)
-}
+// ChargeMode are charge modes modeled after OpenWB
+type ChargeMode string
 
-// MeterEnergy is able to provide current power at metering point
-type MeterEnergy interface {
-	TotalEnergy() (float64, error)
-}
+const (
+	ModeOff   ChargeMode = "off"
+	ModeNow   ChargeMode = "now"
+	ModeMinPV ChargeMode = "minpv"
+	ModePV    ChargeMode = "pv"
+)
 
-// ChargeStatus is the EVSE models charging status from A to F
+// ChargeStatus is the EV's charging status from A to F
 type ChargeStatus string
 
 const (
@@ -27,17 +27,21 @@ const (
 	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden möglich: nein
 )
 
+// Meter is able to provide current power in W
+type Meter interface {
+	CurrentPower() (float64, error)
+}
+
+// MeterEnergy is able to provide current energy in kWh
+type MeterEnergy interface {
+	TotalEnergy() (float64, error)
+}
+
 // Charger is able to provide current charging status and to enable/disabler charging
 type Charger interface {
 	Status() (ChargeStatus, error)
 	Enabled() (bool, error)
 	Enable(enable bool) error
-	ActualCurrent() (int64, error)
-	// MaxCurrent(current int64) error
-}
-
-// ChargeController provides controlling of the charger's max allowed power
-type ChargeController interface {
 	MaxCurrent(current int64) error
 }
 
@@ -46,20 +50,10 @@ type ChargeTimer interface {
 	ChargingTime() (time.Duration, error)
 }
 
-// ChargeRater provides charged energy amount in Wh
+// ChargeRater provides charged energy amount in kWh
 type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
-
-// ChargeMode are charge modes modeled after OpenWB
-type ChargeMode string
-
-const (
-	ModeOff   ChargeMode = "off"
-	ModeNow   ChargeMode = "now"
-	ModeMinPV ChargeMode = "minpv"
-	ModePV    ChargeMode = "pv"
-)
 
 // SoC represents the EV battery's state
 type SoC interface {
