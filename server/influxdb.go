@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	influxWriteTimeout = 30 * time.Second
-	precision          = "s"
+	influxWriteTimeout  = 10 * time.Second
+	influxWriteInterval = 30 * time.Second
+	precision           = "s"
 )
 
 // Influx is a influx publisher
@@ -39,7 +40,7 @@ func NewInfluxClient(
 		log.FATAL.Fatal("missing database")
 	}
 	if interval == 0 {
-		interval = influxWriteTimeout
+		interval = influxWriteInterval
 	}
 
 	client, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
@@ -70,7 +71,7 @@ func NewInfluxClient(
 	}
 }
 
-// writeBatchPoints asynchronously writes the collected points to influx
+// writeBatchPoints asynchronously writes the collected points
 func (m *Influx) writeBatchPoints() {
 	m.Lock()
 
@@ -136,6 +137,7 @@ func (m *Influx) Run(in <-chan core.Param) {
 	exit := make(chan struct{}) // exit signals to stop writer
 	done := m.asyncWriter(exit) // done signals writer stopped
 
+	// add points to batch for async writing
 	for param := range in {
 		if _, ok := param.Val.(float64); !ok {
 			continue
