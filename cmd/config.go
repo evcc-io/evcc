@@ -12,6 +12,7 @@ type config struct {
 	Log        string
 	Interval   time.Duration
 	Mqtt       mqttConfig
+	Influx     influxConfig
 	Menu       []server.MenuConfig
 	Pushover   messagingConfig
 	Meters     []meterConfig
@@ -29,6 +30,14 @@ type mqttConfig struct {
 	Broker   string
 	User     string
 	Password string
+}
+
+type influxConfig struct {
+	URL      string
+	Database string
+	User     string
+	Password string
+	Interval time.Duration
 }
 
 type providerConfig struct {
