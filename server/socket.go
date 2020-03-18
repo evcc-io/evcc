@@ -11,7 +11,7 @@ import (
 
 const (
 	// Time allowed to write a message to the peer
-	writeTimeout = 10 * time.Second
+	socketWriteTimeout = 10 * time.Second
 )
 
 var upgrader = websocket.Upgrader{
@@ -39,7 +39,7 @@ func (c *SocketClient) writePump() {
 
 	for {
 		msg := <-c.send
-		if err := c.conn.SetWriteDeadline(time.Now().Add(writeTimeout)); err != nil {
+		if err := c.conn.SetWriteDeadline(time.Now().Add(socketWriteTimeout)); err != nil {
 			return
 		}
 		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {

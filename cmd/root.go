@@ -136,6 +136,25 @@ func checkVersion() {
 	}
 }
 
+var teeIsChained bool // controles piping of first channel in teed chain
+
+func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
+	gen := make(chan core.Param)
+	tee := make(chan core.Param)
+
+	go func(teeIsChained bool) {
+		for i := range gen {
+			if teeIsChained {
+				in <- i
+			}
+			tee <- i
+		}
+	}(teeIsChained)
+
+	teeIsChained = true
+	return gen, tee
+}
+
 func run(cmd *cobra.Command, args []string) {
 	level, _ := cmd.PersistentFlags().GetString("log")
 	configureLogging(level)
@@ -170,19 +189,38 @@ func run(cmd *cobra.Command, args []string) {
 	loadPoints := loadConfig(conf, notificationChan)
 	go notificationHub.Run(notificationChan)
 
+	// start broadcasting values
+	valueChan := make(chan core.Param)
+	triggerChan := make(chan struct{})
+
+	// setup influx
+	if viper.Get("influx") != nil {
+		influx := server.NewInfluxClient(
+			conf.Influx.URL,
+			conf.Influx.Database,
+			conf.Influx.Interval,
+			conf.Influx.User,
+			conf.Influx.Password,
+		)
+
+		var teeChan <-chan core.Param
+		valueChan, teeChan = tee(valueChan)
+
+		go influx.Run(teeChan)
+	}
+
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], socketHub)
 
-	// start broadcasting values
-	uiChan := make(chan core.Param)
-	triggerChan := make(chan struct{})
-	go socketHub.Run(uiChan, triggerChan)
+	var teeChan <-chan core.Param
+	valueChan, teeChan = tee(valueChan)
+	go socketHub.Run(teeChan, triggerChan)
 
 	// start all loadpoints
 	for _, lp := range loadPoints {
 		lp.Dump()
-		lp.Prepare(uiChan, notificationChan)
+		lp.Prepare(valueChan, notificationChan)
 		go lp.Run(conf.Interval)
 	}
 
