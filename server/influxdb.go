@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	influxWriteTimeout = 5 * time.Second
+	influxWriteTimeout = 30 * time.Second
 	precision          = "s"
 )
 
