@@ -86,20 +86,18 @@ func NewSocketHub() *SocketHub {
 }
 
 func (h *SocketHub) encode(v core.Param) ([]byte, error) {
+	var s string
 	switch val := v.Val.(type) {
 	case string:
-		s := fmt.Sprintf("{\"%s\": \"%s\"}", v.Key, val)
-		return []byte(s), nil
+		s = fmt.Sprintf("{\"%s\": \"%s\"}", v.Key, val)
 	case float64:
-		s := fmt.Sprintf("{\"%s\": %.3f}", v.Key, val)
-		return []byte(s), nil
+		s = fmt.Sprintf("{\"%s\": %.3f}", v.Key, val)
 	case time.Duration:
-		s := fmt.Sprintf("{\"%s\": %d}", v.Key, int64(val.Seconds()))
-		return []byte(s), nil
+		s = fmt.Sprintf("{\"%s\": %d}", v.Key, int64(val.Seconds()))
 	default:
-		s := fmt.Sprintf("{\"%s\": %v}", v.Key, val)
-		return []byte(s), nil
+		s = fmt.Sprintf("{\"%s\": %v}", v.Key, val)
 	}
+	return []byte(s), nil
 }
 
 func (h *SocketHub) broadcast(i core.Param) {
@@ -121,21 +119,22 @@ func (h *SocketHub) broadcast(i core.Param) {
 }
 
 // Run starts data and status distribution
-func (h *SocketHub) Run(in <-chan core.Param) {
+func (h *SocketHub) Run(in <-chan core.Param, triggerChan chan<- struct{}) {
 	for {
 		select {
 		case client := <-h.register:
 			h.clients[client] = true
+			triggerChan <- struct{}{} // trigger loadpoint update
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
-		case obj, ok := <-in:
+		case msg, ok := <-in:
 			if !ok {
 				return // break if channel closed
 			}
-			h.broadcast(obj)
+			h.broadcast(msg)
 		}
 	}
 }

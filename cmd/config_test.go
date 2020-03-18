@@ -21,32 +21,22 @@ meters:
 	if err := viper.ReadConfig(bytes.NewBuffer([]byte(yaml))); err != nil {
 		t.Error(err)
 	}
-
-	// var conf Config
-	// if err := viper.UnmarshalExact(&conf); err != nil {
-	// 	t.Error(err)
-	// }
-
-	// _ = configureMeters(conf)
 }
 func TestChargerConfig(t *testing.T) {
 	yaml := `
 chargers:
 - name: test
   type: configurable
-  status: 
+  status:
     type: script
     cmd: script
-  actualCurrent: 
+  enable:
     type: script
     cmd: script
-  enable: 
+  enabled:
     type: script
     cmd: script
-  enabled: 
-    type: script
-    cmd: script
-  maxCurrent: 
+  maxCurrent:
     type: script
     cmd: script
 - name: wallbe
@@ -57,11 +47,4 @@ chargers:
 	if err := viper.ReadConfig(bytes.NewBuffer([]byte(yaml))); err != nil {
 		t.Error(err)
 	}
-
-	// var conf Config
-	// if err := viper.UnmarshalExact(&conf); err != nil {
-	// 	t.Error(err)
-	// }
-
-	// _ = configureChargers(conf)
 }

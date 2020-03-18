@@ -1,6 +1,8 @@
-package server
+package push
 
-import "github.com/gregdel/pushover"
+import (
+	"github.com/gregdel/pushover"
+)
 
 // PushOver implements the pushover messenger
 type PushOver struct {
@@ -10,6 +12,10 @@ type PushOver struct {
 
 // NewMessenger creates new pushover messenger
 func NewMessenger(app string, recipients []string) *PushOver {
+	if app == "" {
+		app = "evcc"
+	}
+
 	po := &PushOver{
 		app: pushover.New(app),
 	}
@@ -22,9 +28,14 @@ func NewMessenger(app string, recipients []string) *PushOver {
 }
 
 // Send sends to all receivers
-func (po *PushOver) Send(sender, msg, title string) {
+func (po *PushOver) Send(event Event, title, msg string) {
+	msg, err := event.Apply(msg)
+	if err != nil {
+		log.ERROR.Printf("invalid message template: %v", err)
+	}
+
 	message := pushover.NewMessageWithTitle(msg, title)
-	message.DeviceName = sender
+	message.DeviceName = event.Sender
 
 	for _, recipient := range po.recipients {
 		go func(recipient *pushover.Recipient) {

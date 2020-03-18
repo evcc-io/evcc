@@ -32,11 +32,12 @@ type mqttConfig struct {
 }
 
 type providerConfig struct {
-	Type    string
-	Topic   string
-	Cmd     string
-	Timeout time.Duration
-	Cache   time.Duration
+	Type       string
+	Topic      string
+	Cmd        string
+	Multiplier float64
+	Timeout    time.Duration
+	Cache      time.Duration
 }
 
 type meterConfig struct {
@@ -54,11 +55,10 @@ type chargerConfig struct {
 	URI string
 
 	// composite charger
-	Status        *providerConfig // Charger
-	ActualCurrent *providerConfig // Charger
-	MaxCurrent    *providerConfig // ChargeController
-	Enable        *providerConfig // Charger
-	Enabled       *providerConfig // Charger
+	Status     *providerConfig // Charger
+	MaxCurrent *providerConfig // ChargeController
+	Enable     *providerConfig // Charger
+	Enabled    *providerConfig // Charger
 }
 
 type socConfig struct {
@@ -80,6 +80,8 @@ type loadPointConfig struct {
 	Phases        int64
 	MinCurrent    int64
 	MaxCurrent    int64
+	Steepness     int64
+	GuardDuration time.Duration
 	Voltage       float64
 	ResidualPower float64
 }

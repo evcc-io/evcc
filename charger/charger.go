@@ -1,4 +1,4 @@
-package core
+package charger
 
 import (
 	"github.com/andig/evcc/api"
@@ -7,24 +7,24 @@ import (
 
 // Charger is an api.Charger implementation with configurable getters and setters.
 type Charger struct {
-	statusG        provider.StringGetter
-	actualCurrentG provider.IntGetter
-	enabledG       provider.BoolGetter
-	enableS        provider.BoolSetter
+	statusG     provider.StringGetter
+	enabledG    provider.BoolGetter
+	enableS     provider.BoolSetter
+	maxCurrentS provider.IntSetter
 }
 
 // NewCharger creates a new charger
 func NewCharger(
 	statusG provider.StringGetter,
-	actualCurrentG provider.IntGetter,
 	enabledG provider.BoolGetter,
 	enableS provider.BoolSetter,
+	maxCurrentS provider.IntSetter,
 ) api.Charger {
 	return &Charger{
-		statusG:        statusG,
-		actualCurrentG: actualCurrentG,
-		enabledG:       enabledG,
-		enableS:        enableS,
+		statusG:     statusG,
+		enabledG:    enabledG,
+		enableS:     enableS,
+		maxCurrentS: maxCurrentS,
 	}
 }
 
@@ -38,11 +38,6 @@ func (m *Charger) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(s), nil
 }
 
-// ActualCurrent implements the Charger.ActualCurrent interface
-func (m *Charger) ActualCurrent() (int64, error) {
-	return m.actualCurrentG()
-}
-
 // Enabled implements the Charger.Enabled interface
 func (m *Charger) Enabled() (bool, error) {
 	return m.enabledG()
@@ -51,4 +46,9 @@ func (m *Charger) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (m *Charger) Enable(enable bool) error {
 	return m.enableS(enable)
+}
+
+// MaxCurrent implements the Charger.MaxCurrent API
+func (m *Charger) MaxCurrent(current int64) error {
+	return m.maxCurrentS(current)
 }

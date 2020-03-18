@@ -1,11 +1,32 @@
-package provider
+package push
 
 import (
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/andig/evcc/api"
 )
+
+var log = api.NewLogger("push")
+
+type EventId int
+
+const (
+	ChargeStart EventId = iota
+	ChargeStop
+)
+
+type Event struct {
+	EventId    EventId
+	Sender     string
+	Attributes map[string]interface{}
+}
+
+func (e Event) Apply(template string) (string, error) {
+	return replaceFormatted(template, e.Attributes)
+}
 
 var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
 

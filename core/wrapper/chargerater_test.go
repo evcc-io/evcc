@@ -34,7 +34,7 @@ func TestNoMeter(t *testing.T) {
 	f, err := cr.ChargedEnergy()
 
 	if f != 1 || err != nil {
-		t.Error(f, err)
+		t.Errorf("energy: %.1f %v", f, err)
 	}
 }
 func TestWrappedMeter(t *testing.T) {
@@ -73,6 +73,6 @@ func TestWrappedMeter(t *testing.T) {
 	f, err := cr.ChargedEnergy()
 
 	if f != 1 || err != nil {
-		t.Error(f, err)
+		t.Errorf("energy: %.1f %v", f, err)
 	}
 }

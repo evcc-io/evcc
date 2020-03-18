@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
+// ChargeTimer measures charging time between start and stop events
 type ChargeTimer struct {
 	sync.Mutex
 	clck clock.Clock
@@ -24,6 +25,7 @@ func NewChargeTimer() *ChargeTimer {
 	}
 }
 
+// StartCharge signals charge timer start
 func (m *ChargeTimer) StartCharge() {
 	m.Lock()
 	defer m.Unlock()
@@ -33,6 +35,7 @@ func (m *ChargeTimer) StartCharge() {
 	m.duration = 0
 }
 
+// StopCharge signals charge timer stop
 func (m *ChargeTimer) StopCharge() {
 	m.Lock()
 	defer m.Unlock()

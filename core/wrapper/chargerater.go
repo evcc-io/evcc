@@ -55,6 +55,8 @@ func (cr *ChargeRater) StartCharge() {
 	}
 }
 
+// StopCharge records meter stop energy. If meter does not supply TotalEnergy,
+// stop time is recorded and accumulating energy though SetChargePower stopped.
 func (cr *ChargeRater) StopCharge() {
 	cr.Lock()
 	defer cr.Unlock()
@@ -72,7 +74,7 @@ func (cr *ChargeRater) StopCharge() {
 	}
 }
 
-// SetChargePower increments consumed energy by amount in Wh since last update
+// SetChargePower increments consumed energy by amount in kWh since last update
 func (cr *ChargeRater) SetChargePower(power float64) {
 	cr.Lock()
 	defer cr.Unlock()
@@ -84,14 +86,15 @@ func (cr *ChargeRater) SetChargePower(power float64) {
 	// update energy amount if not provided by meter
 	if _, ok := cr.meter.(api.MeterEnergy); !ok {
 		log.TRACE.Printf("%s set charge power: %.0fW", cr.name, power)
-		// convert energy into Wh
-		cr.chargedEnergy += power * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
+		// convert power to energy in kWh
+		cr.chargedEnergy += power / 1e3 * float64(cr.clck.Since(cr.start)) / float64(time.Hour)
 		// move timestamp
 		cr.start = cr.clck.Now()
 	}
 }
 
-// ChargedEnergy returns energy consumption since charge start in Wh
+// ChargedEnergy implements the ChargeRater interface.
+// It returns energy consumption since charge start in kWh.
 func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 	cr.Lock()
 	defer cr.Unlock()

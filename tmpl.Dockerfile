@@ -32,9 +32,7 @@ COPY --from=builder /etc/passwd /etc/passwd
 # Copy our static executable.
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-# Use an unprivileged user.
-USER appuser
-
+# UI and API port
 EXPOSE 7070
 
 # Run the binary

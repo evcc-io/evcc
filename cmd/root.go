@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 
 	"github.com/spf13/cobra"
@@ -115,17 +115,10 @@ func Execute() {
 }
 
 func configureLogging(level string) {
-	// f, err := os.OpenFile("evcc.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	// if err != nil {
-	// 	log.FATAL.Fatal(err)
-	// }
-
 	api.OutThreshold = api.LogLevelToThreshold(level)
 	api.LogThreshold = api.OutThreshold
 	api.Loggers(func(name string, logger *api.Logger) {
 		logger.SetStdoutThreshold(api.OutThreshold)
-		// logger.SetLogThreshold(api.OutThreshold)
-		// logger.SetLogOutput(f)
 	})
 }
 
@@ -141,15 +134,6 @@ func checkVersion() {
 			log.INFO.Printf("updates available - please upgrade to %s", res.Current)
 		}
 	}
-}
-
-// cycle executes loadpoint update and publishes all paramters
-func cycle(lp *core.LoadPoint, tick time.Duration, updateChan chan core.Param) {
-	lp.Update()
-
-	ctx, cancel := context.WithTimeout(context.Background(), tick)
-	lp.Publish(ctx, updateChan)
-	cancel()
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -174,35 +158,42 @@ func run(cmd *cobra.Command, args []string) {
 
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
-	loadPoints := loadConfig(conf)
 
 	// setup messaging
-	// if conf.Pushover.App != "" {
-	// 	po := server.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
-	// 	po.Send("Wallbe", "Charge started", "Charging started in PV mode")
-	// }
+	notificationChan := make(chan push.Event, 1)
+	notificationHub := &push.Hub{}
+
+	if conf.Pushover.App != "" {
+		notificationHub.PushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
+	}
+
+	loadPoints := loadConfig(conf, notificationChan)
+	go notificationHub.Run(notificationChan)
 
 	// create webserver
-	hub := server.NewSocketHub()
-	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], hub)
+	socketHub := server.NewSocketHub()
+	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], socketHub)
 
 	// start broadcasting values
-	updateChan := make(chan core.Param)
-	go hub.Run(updateChan)
+	uiChan := make(chan core.Param)
+	triggerChan := make(chan struct{})
+	go socketHub.Run(uiChan, triggerChan)
 
+	// start all loadpoints
 	for _, lp := range loadPoints {
 		lp.Dump()
-
-		// update loop
-		go func(lp *core.LoadPoint) {
-			tick := conf.Interval
-			cycle(lp, tick, updateChan)
-
-			for range time.Tick(tick) {
-				cycle(lp, tick, updateChan)
-			}
-		}(lp)
+		lp.Prepare(uiChan, notificationChan)
+		go lp.Run(conf.Interval)
 	}
+
+	// handle UI update requests whenever browser connects
+	go func() {
+		for range triggerChan {
+			for _, lp := range loadPoints {
+				lp.Update()
+			}
+		}
+	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

@@ -1,14 +1,16 @@
-uri: 0.0.0.0:7070
-interval: 10s
+uri: 0.0.0.0:7070 # uri for ui
+interval: 10s # control cycle interval
 
 mqtt:
-  broker: nas.fritz.box:1883
+  broker: localhost:1883 # mqtt broker address
+  # user:
+  # password:
 
 meters:
-- name: netz
-  power:
-    type: mqtt
-    topic: mbmd/sdm1-1/Power
+- name: grid
+  power: # power reading
+    type: mqtt # use mqtt
+    topic: mbmd/sdm1-1/Power # mqtt topic
     timeout: 10s # don't use older values
 - name: pv
   power:
@@ -17,18 +19,22 @@ meters:
     timeout: 10s # don't use older values
 - name: charge
   power:
-    type: script
-    cmd: /bin/sh -c "echo 0"
+    type: script # use script
+    cmd: /bin/sh -c "echo 0" # actual command
     timeout: 3s # kill script after 3 seconds
 
 chargers:
 - name: wallbe
-  type: wallbe
-  uri: 192.168.0.8:502
+  type: wallbe # Wallbe charger using Phoenix Contact controller
+  uri: 192.168.0.8:502 # ModBus address
 
 loadpoints:
-- name: lp1
-  charger: wallbe
-  gridmeter: netz
-  pvmeter: pv
-  chargemeter: charge
+- name: lp1 # name for logging
+  steepness: 1 # raise/lower charge current in 1A steps
+  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  maxcurrent: 16 # maximum charge current (default 16A)
+  phases: 3 # ev phases (default 3)
+  charger: wallbe # charger
+  gridmeter: grid # grid meter
+  pvmeter: pv # pv meter
+  chargemeter: charge # charge meter
