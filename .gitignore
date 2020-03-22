@@ -12,6 +12,5 @@ manifest.json
 audi.*
 credentials.json
 token.json
-assets/js/debug.js
 evcc
 __debug_bin

@@ -1,5 +1,4 @@
 .vscode
-assets/js/debug.js
 *.conf
 *.json
 *.sh

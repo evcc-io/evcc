@@ -1,8 +1,11 @@
-// axios setup
-const loc = (typeof baseurl !== "undefined") ? baseurl : window.location;
-const uri = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/api";
+// axios setup with test fallback
+const loc = window.location.href.indexOf("http://localhost/evcc/assets/") ? {
+  protocol: "http:",
+  hostname: "localhost",
+  port: "7070",
+} : window.location;
 
-axios.defaults.baseURL = uri;
+axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/api";
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 //
