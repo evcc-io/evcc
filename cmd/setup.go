@@ -48,6 +48,8 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 		switch cc.Type {
 		case "wallbe":
 			c = charger.NewWallbeFromConfig(log, cc.Other)
+		case "nrgkick", "nrg", "kick":
+			c = charger.NewNRGKickFromConfig(log, cc.Other)
 		case "default", "configurable":
 			c = charger.NewChargerFromConfig(log, cc.Other)
 		default:

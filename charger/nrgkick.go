@@ -69,6 +69,14 @@ type NRGKick struct {
 	Password   string
 }
 
+// NewNRGKickFromConfig creates a NRGKick charger from generic config
+func NewNRGKickFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+	cc := struct{ IP, MacAddress, Password string }{}
+	decodeOther(log, other, &cc)
+
+	return NewNRGKick(cc.IP, cc.MacAddress, cc.Password)
+}
+
 // NewNRGKick creates NRGKick charger
 func NewNRGKick(IP, MacAddress, Password string) *NRGKick {
 	nrg := &NRGKick{
