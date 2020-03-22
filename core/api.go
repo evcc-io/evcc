@@ -9,8 +9,9 @@ import (
 
 // Param is the broadcast channel data type
 type Param struct {
-	Key string
-	Val interface{}
+	LoadPoint string
+	Key       string
+	Val       interface{}
 }
 
 // Configuration is the loadpoint feature structure
@@ -139,14 +140,14 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.connected() {
 		f, err := lp.SoC.ChargeState()
 		if err == nil {
-			log.TRACE.Printf("%s soc charge: %.1f%%", lp.Name, f)
-			lp.uiChan <- Param{Key: "socCharge", Val: f}
-			lp.uiChan <- Param{Key: "chargeEstimate", Val: lp.remainingChargeDuration(f)}
+			log.DEBUG.Printf("%s soc charge: %.1f%%", lp.Name, f)
+			lp.publish("socCharge", f)
+			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
 		}
 		log.ERROR.Printf("%s soc error: %v", lp.Name, err)
 	}
 
-	lp.uiChan <- Param{Key: "socCharge", Val: "—"}
-	lp.uiChan <- Param{Key: "chargeEstimate", Val: -1}
+	lp.publish("socCharge", "—")
+	lp.publish("chargeEstimate", -1)
 }

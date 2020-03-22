@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 )
 
@@ -24,6 +25,7 @@ type config struct {
 type messagingConfig struct {
 	App        string
 	Recipients []string
+	Events     map[string]push.EventTemplate
 }
 
 type mqttConfig struct {

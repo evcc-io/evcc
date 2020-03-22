@@ -11,15 +11,8 @@ import (
 
 var log = api.NewLogger("push")
 
-type EventId int
-
-const (
-	ChargeStart EventId = iota
-	ChargeStop
-)
-
 type Event struct {
-	EventId    EventId
+	Event      string
 	Sender     string
 	Attributes map[string]interface{}
 }

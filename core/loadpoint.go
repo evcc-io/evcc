@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/push"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -15,6 +16,14 @@ import (
 var (
 	status   = map[bool]string{false: "disable", true: "enable"}
 	presence = map[bool]string{false: "—", true: "✓"}
+)
+
+const (
+	evcc            = "evcc"    // notification sender
+	evStartCharge   = "start"   // update chargeTimer
+	evStopCharge    = "stop"    // update chargeTimer
+	evChargeCurrent = "current" // update fakeChargeMeter
+	evChargePower   = "power"   // update chargeRater
 )
 
 // powerToCurrent is a helper function to convert power to per-phase current
@@ -71,6 +80,8 @@ func NewLoadPoint() *LoadPoint {
 		bus:           evbus.New(),
 		triggerChan:   make(chan struct{}, 1),
 		Name:          "Main",
+		Mode:          api.ModeOff,
+		status:        api.StatusNone,
 		Phases:        1,
 		Voltage:       230, // V
 		MinCurrent:    6,   // A
@@ -78,6 +89,130 @@ func NewLoadPoint() *LoadPoint {
 		Steepness:     1,   // A
 		targetCurrent: 0,   // A
 		GuardDuration: 10 * time.Minute,
+	}
+}
+
+// notify sends push messages to clients
+func (lp *LoadPoint) notify(event string, attributes map[string]interface{}) {
+	attributes["loadpoint"] = lp.Name
+	lp.notificationChan <- push.Event{
+		Event:      event,
+		Sender:     evcc,
+		Attributes: attributes,
+	}
+}
+
+// publish sends values to UI and databases
+func (lp *LoadPoint) publish(key string, val interface{}) {
+	lp.uiChan <- Param{
+		LoadPoint: lp.Name,
+		Key:       key,
+		Val:       val,
+	}
+}
+
+// evChargeStartHandler sends external start event
+func (lp *LoadPoint) evChargeStartHandler() {
+	lp.notify(evStartCharge, map[string]interface{}{
+		"mode": lp.GetMode(),
+	})
+}
+
+// evChargeStartHandler sends external stop event
+func (lp *LoadPoint) evChargeStopHandler() {
+	energy, err := lp.ChargeRater.ChargedEnergy()
+	if err != nil {
+		log.ERROR.Printf("%s charged energy: %v", lp.Name, err)
+	}
+
+	duration, err := lp.ChargeTimer.ChargingTime()
+	if err != nil {
+		log.ERROR.Printf("%s charge duration: %v", lp.Name, err)
+	}
+
+	lp.notify(evStopCharge, map[string]interface{}{
+		"energy":   energy,
+		"duration": duration.Truncate(time.Second),
+	})
+}
+
+// evChargeCurrentHandler updates proxy charge meter's charge current.
+// If physical charge meter is present this handler is not used.
+func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ...interface{}) {
+	return func(para ...interface{}) {
+		current := para[0].(int64)
+		if !lp.enabled {
+			current = 0
+		}
+		if lp.status != api.StatusB && lp.status != api.StatusC {
+			current = 0
+		}
+		m.SetChargeCurrent(current)
+	}
+}
+
+// Prepare loadpoint configuration by adding missing helper elements
+func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.Event) {
+	lp.notificationChan = notificationChan
+	lp.uiChan = uiChan
+
+	if lp.PVMeter == nil && lp.GridMeter == nil {
+		log.FATAL.Fatal("missing either PV or Grid meter - aborting")
+	}
+
+	// ensure charge meter exists
+	if lp.ChargeMeter == nil {
+		if mt, ok := lp.Charger.(api.Meter); ok {
+			lp.ChargeMeter = mt
+		} else {
+			mt := &wrapper.ChargeMeter{
+				Phases:  lp.Phases,
+				Voltage: lp.Voltage,
+			}
+			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler(mt))
+			_ = lp.bus.Subscribe(evStopCharge, func() {
+				mt.SetChargeCurrent(0)
+			})
+			lp.ChargeMeter = mt
+		}
+	}
+
+	// ensure charge rater exists
+	if rt, ok := lp.Charger.(api.ChargeRater); ok {
+		lp.ChargeRater = rt
+	} else {
+		rt := wrapper.NewChargeRater(lp.Name, lp.ChargeMeter)
+		_ = lp.bus.Subscribe(evChargePower, rt.SetChargePower)
+		_ = lp.bus.Subscribe(evStartCharge, rt.StartCharge)
+		_ = lp.bus.Subscribe(evStopCharge, rt.StopCharge)
+		lp.ChargeRater = rt
+	}
+
+	// ensure charge timer exists
+	if ct, ok := lp.Charger.(api.ChargeTimer); ok {
+		lp.ChargeTimer = ct
+	} else {
+		ct := wrapper.NewChargeTimer()
+		_ = lp.bus.Subscribe(evStartCharge, ct.StartCharge)
+		_ = lp.bus.Subscribe(evStopCharge, ct.StopCharge)
+		lp.ChargeTimer = ct
+	}
+
+	// event handlers
+	_ = lp.bus.Subscribe(evStartCharge, lp.evChargeStartHandler)
+	_ = lp.bus.Subscribe(evStopCharge, lp.evChargeStopHandler)
+
+	// read initial enabled state
+	var err error
+	if lp.enabled, err = lp.Charger.Enabled(); err != nil {
+		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
+	} else {
+		log.INFO.Printf("%s charger %s", lp.Name, status[lp.enabled])
+	}
+
+	// set current to known value
+	if err = lp.setTargetCurrent(lp.MinCurrent); err != nil {
+		log.ERROR.Println(err)
 	}
 }
 
@@ -92,8 +227,8 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 		log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
 
-	if time.Since(lp.guardUpdated) < lp.GuardDuration {
-		log.TRACE.Printf("%s min cycle time violated - ignoring charger %s", lp.Name, status[enable])
+	if remaining := lp.GuardDuration - time.Since(lp.guardUpdated).Truncate(time.Second); remaining > 0 {
+		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
 		return nil
 	}
 
@@ -103,10 +238,15 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
 		lp.guardUpdated = time.Now()
 
-		if !enable {
+		if enable {
+			lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
+		} else {
 			lp.bus.Publish(evChargeCurrent, int64(0))
 		}
+	} else {
+		log.DEBUG.Printf("%s charger %s", lp.Name, status[enable])
 	}
+
 	return err
 }
 
@@ -136,7 +276,7 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 		return api.StatusNone
 	}
-	log.TRACE.Printf("%s charger status: %s", lp.Name, status)
+	log.DEBUG.Printf("%s charger status: %s", lp.Name, status)
 
 	if prevStatus := lp.status; status != prevStatus {
 		lp.status = status
@@ -270,7 +410,7 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 		}
 	}
 
-	log.TRACE.Printf("%s target charge current: %dA", lp.Name, targetChargeCurrent)
+	log.DEBUG.Printf("%s target charge current: %dA", lp.Name, targetChargeCurrent)
 
 	if targetChargeCurrent == 0 {
 		return lp.rampOff()
@@ -288,17 +428,17 @@ func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) {
 		return
 	}
 
-	log.TRACE.Printf("%s %s power: %.1fW", lp.Name, name, *power)
-	lp.uiChan <- Param{Key: name + "Power", Val: *power}
+	log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
+	lp.publish(name+"Power", *power)
 }
 
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
 	lp.updateChargeStatus()
 
-	lp.uiChan <- Param{Key: "mode", Val: string(lp.GetMode())}
-	lp.uiChan <- Param{Key: "connected", Val: lp.connected()}
-	lp.uiChan <- Param{Key: "charging", Val: lp.charging}
+	lp.publish("mode", string(lp.GetMode()))
+	lp.publish("connected", lp.connected())
+	lp.publish("charging", lp.charging)
 
 	lp.updateMeter("grid", lp.GridMeter, &lp.gridPower)
 	lp.updateMeter("pv", lp.PVMeter, &lp.pvPower)
@@ -320,17 +460,15 @@ func (lp *LoadPoint) update() {
 	case api.ModeNow:
 		err = lp.rampOn(lp.MaxCurrent)
 	case api.ModeMinPV, api.ModePV:
-		if lp.charging {
-			err = lp.updateModePV(mode)
-		}
+		err = lp.updateModePV(mode)
 	}
 
 	if err != nil {
 		log.ERROR.Println(err)
 	}
 
-	lp.uiChan <- Param{Key: "chargedEnergy", Val: 1e3 * lp.chargedEnergy()}
-	lp.uiChan <- Param{Key: "chargeDuration", Val: lp.chargeDuration()}
+	lp.publish("chargedEnergy", 1e3*lp.chargedEnergy()) // return Wh for U)
+	lp.publish("chargeDuration", lp.chargeDuration())
 
 	lp.publishSoC()
 }

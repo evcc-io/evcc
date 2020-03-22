@@ -1,34 +1,38 @@
 package push
 
-var definitions = map[EventId]struct{ title, msg string }{
-	ChargeStart: {
-		title: "Charge started",
-		msg:   "Loadpoint ${lp} started charging in \"${mode}\" mode",
-	},
-	ChargeStop: {
-		title: "Charge finished",
-		msg:   "Loadpoint ${lp} finished charging. Charged ${energy:%.1f}kWh in ${duration}.",
-	},
+// EventTemplate is the push message template for an event
+type EventTemplate struct {
+	title, msg string
 }
 
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	PushOver *PushOver
+	pushOver    *PushOver
+	definitions map[string]EventTemplate
+}
+
+// NewHub creates push hub with definitions and receiver
+func NewHub(definitions map[string]EventTemplate, pushOver *PushOver) *Hub {
+	h := &Hub{
+		pushOver:    pushOver,
+		definitions: definitions,
+	}
+	return h
 }
 
 // Run is the Hub's main publishing loop
 func (h *Hub) Run(events <-chan Event) {
 	for ev := range events {
-		if h.PushOver == nil {
+		if h.pushOver == nil {
 			continue
 		}
 
-		definition, ok := definitions[ev.EventId]
+		definition, ok := h.definitions[ev.Event]
 		if !ok {
-			log.ERROR.Printf("invalid event %v", ev.EventId)
+			log.ERROR.Printf("invalid event %v", ev.Event)
 			break
 		}
 
-		go h.PushOver.Send(ev, definition.title, definition.msg)
+		go h.pushOver.Send(ev, definition.title, definition.msg)
 	}
 }

@@ -6,6 +6,27 @@ mqtt:
   # user:
   # password:
 
+# additional menu entries
+menu:
+# - title: "Verlauf"
+#   subtitle: "Bezugs- und Einspeiseleistung"
+#   img: "http://..."
+#   link: "http://..."
+#   iframe: "http://..."
+
+# push messages
+pushover:
+  app: app id
+  recipients: # list of recipient ids
+  - recipient id
+  events: # message templates
+    start:
+      title: Charge started
+      msg: ${loadpoint} started charging in "${mode}" mode
+    stop:
+      title: Charge finished
+      msg: ${loadpoint} finished charging. Charged ${energy:%.1f}kWh in ${duration}.
+
 meters:
 - name: grid
   power: # power reading

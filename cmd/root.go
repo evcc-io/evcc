@@ -179,15 +179,17 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Println("listening at", uri)
 
 	// setup messaging
-	notificationChan := make(chan push.Event, 1)
-	notificationHub := &push.Hub{}
-
+	var pushOver *push.PushOver
 	if conf.Pushover.App != "" {
-		notificationHub.PushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
+		pushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
 	}
 
-	loadPoints := loadConfig(conf, notificationChan)
+	notificationChan := make(chan push.Event, 1)
+	notificationHub := push.NewHub(conf.Pushover.Events, pushOver)
 	go notificationHub.Run(notificationChan)
+
+	// setup loadpoints
+	loadPoints := loadConfig(conf, notificationChan)
 
 	// start broadcasting values
 	valueChan := make(chan core.Param)
