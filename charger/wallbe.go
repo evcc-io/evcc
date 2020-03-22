@@ -12,12 +12,13 @@ import (
 const (
 	slaveID = 255
 
-	regStatus            = 100
-	regChargeTime        = 102
-	regActualCurrent     = 300
-	regEnable            = 400
-	regOverchargeProtect = 409
-	regMaxCurrent        = 528
+	regStatus            = 100 // Input
+	regChargeTime        = 102 // Input
+	regActualCurrent     = 300 // Holding
+	regEnable            = 400 // Coil
+	regOverchargeProtect = 409 // Coil
+	regReset             = 413 // Coil
+	regMaxCurrent        = 528 // Holding
 
 	timeout         = 1 * time.Second
 	protocolTimeout = 2 * time.Second
