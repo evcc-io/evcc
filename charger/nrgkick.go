@@ -164,11 +164,9 @@ func (nrg *NRGKick) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (nrg *NRGKick) Enabled() (bool, error) {
 	var settings NRGSettings
-	if err := nrg.getJSON(nrg.apiURL(apiSettings), settings); err != nil {
-		return false, err
-	}
+	err := nrg.getJSON(nrg.apiURL(apiSettings), settings)
 
-	return *settings.Values.ChargingStatus.Charging, nil
+	return *settings.Values.ChargingStatus.Charging, err
 }
 
 // Enable implements the Charger.Enable interface
@@ -192,19 +190,15 @@ func (nrg *NRGKick) MaxCurrent(current int64) error {
 // CurrentPower implements the Meter interface.
 func (nrg *NRGKick) CurrentPower() (float64, error) {
 	var measurements NRGMeasurements
-	if err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements); err != nil {
-		return 0, err
-	}
+	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
 
-	return 1000 * measurements.ChargingPower, nil
+	return 1000 * measurements.ChargingPower, err
 }
 
 // ChargedEnergy implements the ChargeRater interface.
 func (nrg *NRGKick) ChargedEnergy() (float64, error) {
 	var measurements NRGMeasurements
-	if err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements); err != nil {
-		return 0, err
-	}
+	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
 
-	return measurements.ChargingEnergy, nil
+	return measurements.ChargingEnergy, err
 }
