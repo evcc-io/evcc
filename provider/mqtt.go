@@ -10,7 +10,10 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const publishTimeout = 2 * time.Second
+const (
+	publishTimeout = 2 * time.Second
+	waitTimeout    = 50 * time.Millisecond // polling interval when waiting for initial value
+)
 
 var mlog = api.NewLogger("mqtt")
 
@@ -134,6 +137,7 @@ func (m *MqttClient) WaitForToken(token mqtt.Token) {
 }
 
 type msgHandler struct {
+	once       sync.Once
 	mux        sync.Mutex
 	updated    time.Time
 	timeout    time.Duration
@@ -152,12 +156,33 @@ func (h *msgHandler) Receive(payload string) {
 	h.updated = time.Now()
 }
 
-func (h *msgHandler) floatGetter() (float64, error) {
+func (h *msgHandler) waitForInitialValue() {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
 	if time.Since(h.updated) > h.timeout {
-		return 0, fmt.Errorf("%s outdated: %v", h.topic, time.Since(h.updated))
+		mlog.TRACE.Printf("%s wait for initial value", h.topic)
+
+		for {
+			// wait for update
+			h.mux.Unlock()
+			time.Sleep(waitTimeout)
+			h.mux.Lock()
+
+			if time.Since(h.updated) < h.timeout {
+				return
+			}
+		}
+	}
+}
+
+func (h *msgHandler) floatGetter() (float64, error) {
+	h.once.Do(h.waitForInitialValue)
+	h.mux.Lock()
+	defer h.mux.Unlock()
+
+	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
 	val, err := strconv.ParseFloat(h.payload, 64)
@@ -169,11 +194,12 @@ func (h *msgHandler) floatGetter() (float64, error) {
 }
 
 func (h *msgHandler) intGetter() (int64, error) {
+	h.once.Do(h.waitForInitialValue)
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if time.Since(h.updated) > h.timeout {
-		return 0, fmt.Errorf("%s outdated: %v", h.topic, time.Since(h.updated))
+	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
 	val, err := strconv.ParseInt(h.payload, 10, 64)
