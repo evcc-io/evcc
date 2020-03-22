@@ -4,6 +4,7 @@ import (
 	"time"
 )
 
+// CacheGetter wraps a getter with a cache
 type CacheGetter struct {
 	updated time.Time
 	cache   time.Duration
@@ -11,6 +12,7 @@ type CacheGetter struct {
 	val     interface{}
 }
 
+// NewCacheGetter wraps a getter with a cache
 func NewCacheGetter(getter interface{}, cache time.Duration) *CacheGetter {
 	return &CacheGetter{
 		getter: getter,
