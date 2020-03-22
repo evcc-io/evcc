@@ -13,6 +13,25 @@ type Charger struct {
 	maxCurrentS provider.IntSetter
 }
 
+type config struct {
+	Status, Enable, Enabled, MaxCurrent *provider.Config
+}
+
+// NewChargerFromConfig creates a new configurable charger
+func NewChargerFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+	var cc config
+	decodeOther(log, other, &cc)
+
+	charger := NewCharger(
+		provider.NewStringGetterFromConfig(cc.Status),
+		provider.NewBoolGetterFromConfig(cc.Enabled),
+		provider.NewBoolSetterFromConfig("enable", cc.Enable),
+		provider.NewIntSetterFromConfig("current", cc.MaxCurrent),
+	)
+
+	return charger
+}
+
 // NewCharger creates a new charger
 func NewCharger(
 	statusG provider.StringGetter,
