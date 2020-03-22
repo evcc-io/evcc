@@ -18,12 +18,11 @@ const (
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log         *api.Logger
-	client      influxdb.Client
-	points      []*influxdb.Point
-	pointsConf  influxdb.BatchPointsConfig
-	interval    time.Duration
-	measurement string
+	log        *api.Logger
+	client     influxdb.Client
+	points     []*influxdb.Point
+	pointsConf influxdb.BatchPointsConfig
+	interval   time.Duration
 }
 
 // NewInfluxClient creates new publisher for influx
@@ -133,7 +132,6 @@ func (m *Influx) asyncWriter(exit <-chan struct{}) <-chan struct{} {
 
 // Run Influx publisher
 func (m *Influx) Run(in <-chan core.Param) {
-	// run async writer
 	exit := make(chan struct{}) // exit signals to stop writer
 	done := m.asyncWriter(exit) // done signals writer stopped
 
@@ -145,7 +143,9 @@ func (m *Influx) Run(in <-chan core.Param) {
 
 		p, err := influxdb.NewPoint(
 			param.Key,
-			map[string]string{},
+			map[string]string{
+				"loadpoint": param.LoadPoint,
+			},
 			map[string]interface{}{
 				"value": param.Val,
 			},
