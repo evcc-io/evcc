@@ -2,7 +2,7 @@ package push
 
 // EventTemplate is the push message template for an event
 type EventTemplate struct {
-	title, msg string
+	Title, Msg string
 }
 
 // Hub subscribes to event notifications and sends them to client devices
@@ -33,6 +33,6 @@ func (h *Hub) Run(events <-chan Event) {
 			break
 		}
 
-		go h.pushOver.Send(ev, definition.title, definition.msg)
+		go h.pushOver.Send(ev, definition.Title, definition.Msg)
 	}
 }

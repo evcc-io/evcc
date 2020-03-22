@@ -19,6 +19,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mjibson/esc v0.2.0
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

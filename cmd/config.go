@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 )
@@ -42,42 +43,25 @@ type influxConfig struct {
 	Interval time.Duration
 }
 
-type providerConfig struct {
-	Type       string
-	Topic      string
-	Cmd        string
-	Multiplier float64
-	Timeout    time.Duration
-	Cache      time.Duration
-}
-
 type meterConfig struct {
 	Name   string
 	Type   string
-	Power  *providerConfig
-	Energy *providerConfig
+	Power  *provider.Config
+	Energy *provider.Config
 }
 
 type chargerConfig struct {
-	Name string
-	Type string
-
-	// wallbe charger
-	URI string
-
-	// composite charger
-	Status     *providerConfig // Charger
-	MaxCurrent *providerConfig // ChargeController
-	Enable     *providerConfig // Charger
-	Enabled    *providerConfig // Charger
+	Name  string
+	Type  string
+	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 type socConfig struct {
 	Name     string
-	Title    string
 	Type     string
+	Title    string
 	Capacity int64
-	Charge   *providerConfig
+	Charge   *provider.Config
 }
 
 type loadPointConfig struct {

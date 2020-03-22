@@ -39,6 +39,18 @@ type Wallbe struct {
 	handler *modbus.TCPClientHandler
 }
 
+type wallbeConfig struct {
+	URI string
+}
+
+// NewWallbeFromConfig creates a Wallbe charger from generic config
+func NewWallbeFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+	var cc wallbeConfig
+	decodeOther(log, other, &cc)
+
+	return NewWallbe(cc.URI)
+}
+
 // NewWallbe creates a Wallbe charger
 func NewWallbe(conn string) api.Charger {
 	if conn == "" {

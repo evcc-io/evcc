@@ -18,9 +18,6 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-// MQTT singleton
-var mq *provider.MqttClient
-
 func clientID() string {
 	pid := rand.Int31()
 	return fmt.Sprintf("evcc-%d", pid)
@@ -29,13 +26,13 @@ func clientID() string {
 func configureMeters(conf config) (meters map[string]api.Meter) {
 	meters = make(map[string]api.Meter)
 	for _, mc := range conf.Meters {
-		m := core.NewMeter(floatGetter(mc.Power))
+		m := core.NewMeter(provider.NewFloatGetterFromConfig(mc.Power))
 
 		// decorate Meter with MeterEnergy
 		if mc.Energy != nil {
 			m = &wrapper.CompositeMeter{
 				Meter:       m,
-				MeterEnergy: core.NewMeterEnergy(floatGetter(mc.Energy)),
+				MeterEnergy: core.NewMeterEnergy(provider.NewFloatGetterFromConfig(mc.Energy)),
 			}
 		}
 		meters[mc.Name] = m
@@ -50,16 +47,9 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 
 		switch cc.Type {
 		case "wallbe":
-			c = charger.NewWallbe(cc.URI)
-
+			c = charger.NewWallbeFromConfig(log, cc.Other)
 		case "default", "configurable":
-			c = charger.NewCharger(
-				stringGetter(cc.Status),
-				boolGetter(cc.Enabled),
-				boolSetter("enable", cc.Enable),
-				intSetter("current", cc.MaxCurrent),
-			)
-
+			c = charger.NewChargerFromConfig(log, cc.Other)
 		default:
 			log.FATAL.Fatalf("invalid charger type '%s'", cc.Type)
 		}
@@ -72,7 +62,7 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 func configureSoCs(conf config) (socs map[string]api.SoC) {
 	socs = make(map[string]api.SoC)
 	for _, sc := range conf.SoCs {
-		soc := core.NewSoC(sc.Capacity, sc.Title, floatGetter(sc.Charge))
+		soc := core.NewSoC(sc.Capacity, sc.Title, provider.NewFloatGetterFromConfig(sc.Charge))
 		socs[sc.Name] = soc
 	}
 	return
@@ -113,7 +103,7 @@ func configureLoadPoint(lp *core.LoadPoint, lpc loadPointConfig, subv *viper.Vip
 
 func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.LoadPoint) {
 	if viper.Get("mqtt") != nil {
-		mq = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
+		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
 	meters := configureMeters(conf)
