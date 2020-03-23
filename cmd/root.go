@@ -75,15 +75,12 @@ func initConfig() {
 		// Use config file from the flag
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory
-		home, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+		// Search for config in home directory if available
+		if home, err := os.UserHomeDir(); err == nil {
+			viper.AddConfigPath(home)
 		}
 
 		// Search config in home directory with name "mbmd" (without extension).
-		viper.AddConfigPath(home)
 		viper.AddConfigPath(".")    // optionally look for config in the working directory
 		viper.AddConfigPath("/etc") // path to look for the config file in
 
