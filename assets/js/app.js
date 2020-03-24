@@ -1,5 +1,5 @@
 // axios setup with test fallback
-const loc = window.location.href.indexOf("http://localhost/evcc/assets/") ? {
+const loc = window.location.href.indexOf("http://localhost/evcc/assets/") === 0 ? {
   protocol: "http:",
   hostname: "localhost",
   port: "7070",
