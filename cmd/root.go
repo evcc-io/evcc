@@ -135,6 +135,8 @@ func checkVersion() {
 
 var teeIsChained bool // controles piping of first channel in teed chain
 
+// tee splits a tee channel from an input channel and starts a goroutine
+// for duplicateing channel values to replacement input and tee channel
 func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
 	gen := make(chan core.Param)
 	tee := make(chan core.Param)
@@ -205,6 +207,14 @@ func run(cmd *cobra.Command, args []string) {
 		var teeChan <-chan core.Param
 		valueChan, teeChan = tee(valueChan)
 
+		// eliminate duplicate values
+		dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
+		teeChan = dedupe.Pipe(teeChan)
+
+		// reduce number of values written to influx
+		limiter := server.NewLimiter(1 * time.Minute)
+		teeChan = limiter.Pipe(teeChan)
+
 		go influx.Run(teeChan)
 	}
 
@@ -214,6 +224,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	var teeChan <-chan core.Param
 	valueChan, teeChan = tee(valueChan)
+
 	go socketHub.Run(teeChan, triggerChan)
 
 	// start all loadpoints

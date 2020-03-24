@@ -1,8 +1,16 @@
 uri: 0.0.0.0:7070 # uri for ui
 interval: 10s # control cycle interval
 
+# mqtt message broker
 mqtt:
-  broker: localhost:1883 # mqtt broker address
+  broker: localhost:1883
+  # user:
+  # password:
+
+# influx database (v1)
+influx:
+  url: http://localhost:8086
+  database: evcc
   # user:
   # password:
 
