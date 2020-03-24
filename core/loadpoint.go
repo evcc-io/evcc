@@ -214,6 +214,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 	if err = lp.setTargetCurrent(lp.MinCurrent); err != nil {
 		log.ERROR.Println(err)
 	}
+	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 }
 
 // connected returns the EVs connection state
@@ -238,11 +239,8 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
 		lp.guardUpdated = time.Now()
 
-		if enable {
-			lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
-		} else {
-			lp.bus.Publish(evChargeCurrent, int64(0))
-		}
+		// if not enabled, current will be reduced to 0 in handler
+		lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 	} else {
 		log.DEBUG.Printf("%s charger %s", lp.Name, status[enable])
 	}
