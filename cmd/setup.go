@@ -48,6 +48,8 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 		switch cc.Type {
 		case "wallbe":
 			c = charger.NewWallbeFromConfig(log, cc.Other)
+		case "ego", "ego-home":
+			c = charger.NewEGoFromConfig(log, cc.Other)
 		case "default", "configurable":
 			c = charger.NewChargerFromConfig(log, cc.Other)
 		default:
