@@ -50,15 +50,15 @@ More information on interacting with Wallbe chargers can be found at [GoingElect
 
 The preferred way of running EVCC is using the docker image:
 
-    docker pull andig/evcc-bundle:latest
+    docker pull andig/evcc:latest
 
 To see the available options:
 
-    docker run andig/evcc-bundle -h
+    docker run andig/evcc -h
 
 To run EVCC with given config file and UI on port 7070:
 
-    docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc-bundle
+    docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc
 
 To build EVCC from source, [Go](2) 1.13 is required:
 
