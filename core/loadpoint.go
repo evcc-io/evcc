@@ -144,7 +144,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ..
 		if !lp.enabled {
 			current = 0
 		}
-		if lp.status != api.StatusB && lp.status != api.StatusC {
+		if lp.status != api.StatusC {
 			current = 0
 		}
 		m.SetChargeCurrent(current)
@@ -288,6 +288,8 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 		if status == api.StatusA {
 			log.INFO.Printf("%s car disconnected", lp.Name)
 		}
+
+		lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
 
 		// start/stop charging cycle
 		lp.chargingCycle(status == api.StatusC)
