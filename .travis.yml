@@ -50,4 +50,4 @@ deploy:
   skip_cleanup: true
   script: make publish-images
   on:
-    tags: true
+    branch: master

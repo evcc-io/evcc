@@ -1,6 +1,10 @@
-.vscode
+.*
 *.conf
+*.Dockerfile
 *.json
 *.sh
 *.yaml
+Dockerfile
+!entrypoint.sh
+!modules/**
 !evcc.dist.yaml

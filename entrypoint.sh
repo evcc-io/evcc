@@ -1,8 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-if [ "$1" = "evcc" ]; then
-    exec /go/bin/evcc "$@"
+if [ "$1" == '"evcc"' ] || expr "$1" : '-*' > /dev/null; then
+    exec evcc "$@"
+else
+    exec "$@"
 fi
-
-exec "$@"
