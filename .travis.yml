@@ -1,6 +1,3 @@
-sudo: false
-dist: xenial
-
 language: go
 go: "1.13"
 go_import_path: github.com/andig/evcc
