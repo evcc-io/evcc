@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Event is a notification event
 type Event struct {
 	Event      string
 	Attributes map[string]interface{}

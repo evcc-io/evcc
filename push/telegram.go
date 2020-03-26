@@ -8,7 +8,7 @@ import (
 
 // Telegram implements the Telegram messenger
 type Telegram struct {
-	sync.RWMutex
+	sync.Mutex
 	// log   *api.Logger
 	bot   *tgbotapi.BotAPI
 	chats map[int64]struct{}
@@ -57,7 +57,7 @@ func (m *Telegram) trackChats() {
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
 			log.INFO.Printf("telegram: new chat id: %d", update.Message.Chat.ID)
-			m.chats[update.Message.Chat.ID] = struct{}{}
+			// m.chats[update.Message.Chat.ID] = struct{}{}
 		}
 		m.Unlock()
 	}
@@ -65,7 +65,7 @@ func (m *Telegram) trackChats() {
 
 // Send sends to all receivers
 func (m *Telegram) Send(event Event, title, msg string) {
-	m.RLock()
+	m.Lock()
 	for chat := range m.chats {
 		go func(chat int64) {
 			log.TRACE.Printf("telegram: sending to %d", chat)
@@ -73,5 +73,5 @@ func (m *Telegram) Send(event Event, title, msg string) {
 			m.bot.Send(msg)
 		}(chat)
 	}
-	m.RUnlock()
+	m.Unlock()
 }
