@@ -23,11 +23,8 @@ func NewPushOverMessenger(app string, recipients []string) *PushOver {
 	}
 
 	m := &PushOver{
-		app: pushover.New(app),
-	}
-
-	for _, r := range recipients {
-		m.recipients = append(m.recipients, r)
+		app:        pushover.New(app),
+		recipients: recipients,
 	}
 
 	return m
@@ -42,8 +39,7 @@ func (m *PushOver) Send(event Event, title, msg string) {
 			log.TRACE.Printf("pushover: sending to %s", id)
 
 			recipient := pushover.NewRecipient(id)
-			_, err := m.app.SendMessage(message, recipient)
-			if err != nil {
+			if _, err := m.app.SendMessage(message, recipient); err != nil {
 				log.ERROR.Print(err)
 			}
 		}(id)

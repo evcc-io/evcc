@@ -19,7 +19,6 @@ var (
 )
 
 const (
-	evcc            = "evcc"    // notification sender
 	evStartCharge   = "start"   // update chargeTimer
 	evStopCharge    = "stop"    // update chargeTimer
 	evChargeCurrent = "current" // update fakeChargeMeter
@@ -460,7 +459,7 @@ func (lp *LoadPoint) update() {
 		log.ERROR.Println(err)
 	}
 
-	lp.publish("chargedEnergy", 1e3*lp.chargedEnergy()) // return Wh for U)
+	lp.publish("chargedEnergy", 1e3*lp.chargedEnergy()) // return Wh for UI
 	lp.publish("chargeDuration", lp.chargeDuration())
 
 	lp.publishSoC()

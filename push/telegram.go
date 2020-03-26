@@ -69,8 +69,11 @@ func (m *Telegram) Send(event Event, title, msg string) {
 	for chat := range m.chats {
 		go func(chat int64) {
 			log.TRACE.Printf("telegram: sending to %d", chat)
+
 			msg := tgbotapi.NewMessage(chat, msg)
-			m.bot.Send(msg)
+			if _, err := m.bot.Send(msg); err != nil {
+				log.ERROR.Print(err)
+			}
 		}(chat)
 	}
 	m.Unlock()
