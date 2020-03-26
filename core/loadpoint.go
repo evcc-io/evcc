@@ -97,7 +97,6 @@ func (lp *LoadPoint) notify(event string, attributes map[string]interface{}) {
 	attributes["loadpoint"] = lp.Name
 	lp.notificationChan <- push.Event{
 		Event:      event,
-		Sender:     evcc,
 		Attributes: attributes,
 	}
 }

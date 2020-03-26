@@ -16,7 +16,7 @@ type config struct {
 	Mqtt       mqttConfig
 	Influx     influxConfig
 	Menu       []server.MenuConfig
-	Pushover   messagingConfig
+	Messaging  messagingConfig
 	Meters     []meterConfig
 	Chargers   []typedConfig
 	Vehicles   []typedConfig
@@ -29,9 +29,13 @@ type typedConfig struct {
 }
 
 type messagingConfig struct {
-	App        string
-	Recipients []string
-	Events     map[string]push.EventTemplate
+	Events   map[string]push.EventTemplate
+	Services []messagingService
+}
+
+type messagingService struct {
+	Type  string
+	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 type mqttConfig struct {

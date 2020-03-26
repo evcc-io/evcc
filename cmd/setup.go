@@ -19,6 +19,20 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+func configureMessengers(conf messagingConfig) chan push.Event {
+	notificationChan := make(chan push.Event, 1)
+	notificationHub := push.NewHub(conf.Events)
+
+	for _, service := range conf.Services {
+		impl := push.NewMessengerFromConfig(service.Type, service.Other)
+		notificationHub.Add(impl)
+	}
+
+	go notificationHub.Run(notificationChan)
+
+	return notificationChan
+}
+
 func clientID() string {
 	pid := rand.Int31()
 	return fmt.Sprintf("evcc-%d", pid)

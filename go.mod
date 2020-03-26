@@ -7,6 +7,7 @@ require (
 	github.com/benbjohnson/clock v1.0.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/golang/mock v1.4.3
 	github.com/google/go-github v17.0.0+incompatible // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
@@ -31,6 +32,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.2
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
+	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200317113312-5766fd39f98d // indirect
 	golang.org/x/tools v0.0.0-20200318150045-ba25ddc85566

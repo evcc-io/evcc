@@ -7,7 +7,6 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 
 	"github.com/spf13/cobra"
@@ -178,14 +177,7 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Println("listening at", uri)
 
 	// setup messaging
-	var pushOver *push.PushOver
-	if conf.Pushover.App != "" {
-		pushOver = push.NewMessenger(conf.Pushover.App, conf.Pushover.Recipients)
-	}
-
-	notificationChan := make(chan push.Event, 1)
-	notificationHub := push.NewHub(conf.Pushover.Events, pushOver)
-	go notificationHub.Run(notificationChan)
+	notificationChan := configureMessengers(conf.Messaging)
 
 	// setup loadpoints
 	loadPoints := loadConfig(conf, notificationChan)
