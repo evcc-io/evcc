@@ -141,11 +141,14 @@ func (lp *LoadPoint) evChargeStopHandler() {
 func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ...interface{}) {
 	return func(para ...interface{}) {
 		current := para[0].(int64)
-		if !lp.enabled {
+		if !lp.enabled || lp.status != api.StatusC {
 			current = 0
 		}
-		if lp.status != api.StatusC {
-			current = 0
+		if current > 0 {
+			// limit available power to generation minus delivery
+			availablePower := math.Abs(lp.pvPower) + math.Min(0, lp.gridPower)
+			availableCurrent := int64(powerToCurrent(availablePower, lp.Voltage, lp.Phases))
+			current = min(current, availableCurrent)
 		}
 		m.SetChargeCurrent(current)
 	}
@@ -282,6 +285,10 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 		// connected
 		if prevStatus == api.StatusA {
 			log.INFO.Printf("%s car connected (%s)", lp.Name, string(status))
+			if lp.enabled {
+				// when car connected don't disable right away
+				lp.guardUpdated = time.Now()
+			}
 		}
 
 		// disconnected
@@ -379,25 +386,11 @@ func (lp *LoadPoint) rampOn(target int64) error {
 	return err
 }
 
-func (lp *LoadPoint) targetChargePower() float64 {
-	var targetChargePower float64
-
-	// use grid meter if available, pv meter else
-	if lp.GridMeter != nil {
-		// grid power must be negative for export
-		targetChargePower = lp.chargePower - lp.gridPower - lp.ResidualPower
-		log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetChargePower, lp.chargePower, lp.gridPower, lp.ResidualPower)
-	} else {
-		targetChargePower = math.Abs(lp.pvPower) - lp.ResidualPower
-		log.DEBUG.Printf("%s target power: %.0fW = %.0fW pv - %.0fW residual", lp.Name, targetChargePower, lp.pvPower, lp.ResidualPower)
-	}
-
-	return targetChargePower
-}
-
 // updateModePV sets "minpv" or "pv" load modes
 func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
-	targetChargePower := lp.targetChargePower()
+	// grid meter will always be available, if as wrapped pv meter
+	targetChargePower := lp.chargePower - lp.gridPower - lp.ResidualPower
+	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetChargePower, lp.chargePower, lp.gridPower, lp.ResidualPower)
 
 	// get max charge current
 	targetChargeCurrent := clamp(powerToCurrent(targetChargePower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
@@ -448,19 +441,20 @@ func (lp *LoadPoint) update() {
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// check if car connected and ready for charging
-	if !lp.connected() {
-		return
-	}
-
-	// execute loading strategy
 	var err error
-	switch mode := lp.GetMode(); mode {
-	case api.ModeOff:
-		err = lp.rampOff()
-	case api.ModeNow:
-		err = lp.rampOn(lp.MaxCurrent)
-	case api.ModeMinPV, api.ModePV:
-		err = lp.updateModePV(mode)
+	if !lp.connected() {
+		// ensure restart at min current
+		err = lp.setTargetCurrent(lp.MinCurrent)
+	} else {
+		// execute loading strategy
+		switch mode := lp.GetMode(); mode {
+		case api.ModeOff:
+			err = lp.rampOff()
+		case api.ModeNow:
+			err = lp.rampOn(lp.MaxCurrent)
+		case api.ModeMinPV, api.ModePV:
+			err = lp.updateModePV(mode)
+		}
 	}
 
 	if err != nil {
