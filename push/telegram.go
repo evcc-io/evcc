@@ -9,7 +9,6 @@ import (
 // Telegram implements the Telegram messenger
 type Telegram struct {
 	sync.Mutex
-	// log   *api.Logger
 	bot   *tgbotapi.BotAPI
 	chats map[int64]struct{}
 }
@@ -21,15 +20,12 @@ type telegramConfig struct {
 
 // NewTelegramMessenger creates new pushover messenger
 func NewTelegramMessenger(token string, chats []int64) *Telegram {
-	// log := api.NewLogger("tgrm")
-
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.FATAL.Fatal("telegram: missing token")
 	}
 
 	m := &Telegram{
-		// log:   log,
 		bot:   bot,
 		chats: make(map[int64]struct{}),
 	}
