@@ -16,13 +16,9 @@ type SimpleEVSE struct {
 }
 
 const (
-	regAmpsConfig    = 1000
-	regAmpsOutput    = 1001
-	regVehicleStatus = 1002
-	regAmpsPP        = 1003
-	regTurnOff       = 1004
-	regFirmware      = 1005
-	regState         = 1006
+	evseRegAmpsConfig    = 1000
+	evseRegVehicleStatus = 1002
+	evseRegTurnOff       = 1004
 )
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
@@ -35,7 +31,12 @@ func NewSimpleEVSEFromConfig(log *api.Logger, other map[string]interface{}) api.
 
 // NewSimpleEVSE creates SimpleEVSE charger
 func NewSimpleEVSE(conn, device string) api.Charger {
+	log := api.NewLogger("evse")
+
 	var handler modbus.ClientHandler
+	if conn != "" && device != "" {
+		log.FATAL.Fatal("cannot define uri and device both")
+	}
 	if conn != "" {
 		handler = modbus.NewTCPClientHandler(conn)
 		handler.(*modbus.TCPClientHandler).Timeout = time.Second
@@ -50,9 +51,12 @@ func NewSimpleEVSE(conn, device string) api.Charger {
 		handler.(*modbus.RTUClientHandler).Timeout = time.Second
 		handler.(*modbus.RTUClientHandler).SlaveID = 1
 	}
+	if handler == nil {
+		log.FATAL.Fatal("most define either uri or device")
+	}
 
 	evse := &SimpleEVSE{
-		log:     api.NewLogger("evse"),
+		log:     log,
 		client:  modbus.NewClient(handler),
 		handler: handler,
 	}
@@ -64,8 +68,8 @@ func NewSimpleEVSE(conn, device string) api.Charger {
 
 // Status implements the Charger.Status interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
-	b, err := evse.client.ReadHoldingRegisters(regVehicleStatus, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", regVehicleStatus, b)
+	b, err := evse.client.ReadHoldingRegisters(evseRegVehicleStatus, 1)
+	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegVehicleStatus, b)
 	if err != nil {
 		evse.handler.Close()
 		return api.StatusNone, err
@@ -89,8 +93,8 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
-	b, err := evse.client.ReadHoldingRegisters(regTurnOff, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", regTurnOff, b)
+	b, err := evse.client.ReadHoldingRegisters(evseRegTurnOff, 1)
+	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
 	if err != nil {
 		evse.handler.Close()
 		return false, err
@@ -101,8 +105,8 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 
 // Enable implements the Charger.Enable interface
 func (evse *SimpleEVSE) Enable(enable bool) error {
-	b, err := evse.client.ReadHoldingRegisters(regTurnOff, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", regTurnOff, b)
+	b, err := evse.client.ReadHoldingRegisters(evseRegTurnOff, 1)
+	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
 	if err != nil {
 		evse.handler.Close()
 		return err
@@ -114,8 +118,8 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 		b[0] &= ^byte(1)
 	}
 
-	b, err = evse.client.WriteMultipleRegisters(regTurnOff, 1, b)
-	evse.log.TRACE.Printf("write charge enable %d %0X: %0 X", regTurnOff, b, b)
+	b, err = evse.client.WriteMultipleRegisters(evseRegTurnOff, 1, b)
+	evse.log.TRACE.Printf("write charge enable %d %0X: %0 X", evseRegTurnOff, b, b)
 	if err != nil {
 		evse.handler.Close()
 	}
@@ -127,8 +131,8 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	u := uint16(current)
 
-	b, err := evse.client.WriteSingleRegister(regAmpsConfig, u)
-	evse.log.TRACE.Printf("write max current %d %0X: %0 X", regAmpsConfig, u, b)
+	b, err := evse.client.WriteSingleRegister(evseRegAmpsConfig, u)
+	evse.log.TRACE.Printf("write max current %d %0X: %0 X", evseRegAmpsConfig, u, b)
 	if err != nil {
 		evse.handler.Close()
 	}
