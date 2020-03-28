@@ -23,13 +23,9 @@ type Phoenix struct {
 	handler *modbus.TCPClientHandler
 }
 
-type phoenixConfig struct {
-	URI string
-}
-
 // NewPhoenixFromConfig creates a Phoenix charger from generic config
 func NewPhoenixFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
-	var cc phoenixConfig
+	cc := struct{ URI string }{}
 	decodeOther(log, other, &cc)
 
 	return NewPhoenix(cc.URI)
