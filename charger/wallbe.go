@@ -12,13 +12,13 @@ import (
 const (
 	slaveID = 255
 
-	regStatus            = 100 // Input
-	regChargeTime        = 102 // Input
-	regActualCurrent     = 300 // Holding
-	regEnable            = 400 // Coil
-	regOverchargeProtect = 409 // Coil
-	regReset             = 413 // Coil
-	regMaxCurrent        = 528 // Holding
+	wbRegStatus            = 100 // Input
+	wbRegChargeTime        = 102 // Input
+	wbRegActualCurrent     = 300 // Holding
+	wbRegEnable            = 400 // Coil
+	wbRegOverchargeProtect = 409 // Coil
+	wbRegReset             = 413 // Coil
+	wbRegMaxCurrent        = 528 // Holding
 
 	timeout         = 1 * time.Second
 	protocolTimeout = 2 * time.Second
@@ -26,26 +26,15 @@ const (
 
 // Wallbe is an api.ChargeController implementation for Wallbe wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
-//
-// This implementation will use the overcurrent protection to disable charging
-// when charger is disabled or desired maxcurrent is 0A. This will lead to
-// an overcurrent error state and charger LED will turn red.
-//
-// Upon setting a differnt, non-zero current, over overcurrent protection is
-// disabled if current was equal 0A at this time.
 type Wallbe struct {
 	log     *api.Logger
 	client  modbus.Client
 	handler *modbus.TCPClientHandler
 }
 
-type wallbeConfig struct {
-	URI string
-}
-
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
-	var cc wallbeConfig
+	cc := struct{ URI string }{}
 	decodeOther(log, other, &cc)
 
 	return NewWallbe(cc.URI)
@@ -121,8 +110,8 @@ func (wb *Wallbe) showIO(input string, definition uint16, status uint16) {
 
 // Status implements the Charger.Status interface
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
-	b, err := wb.client.ReadInputRegisters(regStatus, 1)
-	wb.log.TRACE.Printf("read status (%d): %0 X", regStatus, b)
+	b, err := wb.client.ReadInputRegisters(wbRegStatus, 1)
+	wb.log.TRACE.Printf("read status (%d): %0 X", wbRegStatus, b)
 	if err != nil {
 		wb.handler.Close()
 		return api.StatusNone, err
@@ -133,8 +122,8 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *Wallbe) Enabled() (bool, error) {
-	b, err := wb.client.ReadCoils(regEnable, 1)
-	wb.log.TRACE.Printf("read charge enable (%d): %0 X", regEnable, b)
+	b, err := wb.client.ReadCoils(wbRegEnable, 1)
+	wb.log.TRACE.Printf("read charge enable (%d): %0 X", wbRegEnable, b)
 	if err != nil {
 		wb.handler.Close()
 		return false, err
@@ -150,8 +139,8 @@ func (wb *Wallbe) Enable(enable bool) error {
 		u = 0xFF00
 	}
 
-	b, err := wb.client.WriteSingleCoil(regEnable, u)
-	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", regEnable, u, b)
+	b, err := wb.client.WriteSingleCoil(wbRegEnable, u)
+	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", wbRegEnable, u, b)
 	if err != nil {
 		wb.handler.Close()
 	}
@@ -167,8 +156,8 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 
 	u := uint16(current * 10)
 
-	b, err := wb.client.WriteSingleRegister(regMaxCurrent, u)
-	wb.log.TRACE.Printf("write max current %d %0X: %0 X", regMaxCurrent, u, b)
+	b, err := wb.client.WriteSingleRegister(wbRegMaxCurrent, u)
+	wb.log.TRACE.Printf("write max current %d %0X: %0 X", wbRegMaxCurrent, u, b)
 	if err != nil {
 		wb.handler.Close()
 	}
@@ -178,8 +167,8 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 
 // ChargingTime yields current charge run duration
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
-	b, err := wb.client.ReadInputRegisters(regChargeTime, 2)
-	wb.log.TRACE.Printf("read charge time (%d): %0 X", regChargeTime, b)
+	b, err := wb.client.ReadInputRegisters(wbRegChargeTime, 2)
+	wb.log.TRACE.Printf("read charge time (%d): %0 X", wbRegChargeTime, b)
 	if err != nil {
 		wb.handler.Close()
 		return 0, err
