@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	egoStatus apiFunction = "status"
+	goeStatus apiFunction = "status"
 )
 
-// egoStatusResponse is the API response if status not OK
-type egoStatusResponse struct {
+// goeStatusResponse is the API response if status not OK
+type goeStatusResponse struct {
 	Car uint   `yaml:"car"` // car status
 	Alw uint   `yaml:"alw"` // allow charging
 	Amp uint   `yaml:"amp"` // current [A]
@@ -26,23 +26,23 @@ type egoStatusResponse struct {
 	Nrg []uint `yaml:"nrg"` // voltage, current, power
 }
 
-// EGo charger implementation
-type EGo struct {
+// GoE charger implementation
+type GoE struct {
 	log *api.Logger
 	URI string
 }
 
-// NewEGoFromConfig creates a e-go charger from generic config
-func NewEGoFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+// NewGoEFromConfig creates a e-go charger from generic config
+func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
 	decodeOther(log, other, &cc)
 
-	return NewEGo(cc.URI)
+	return NewGoE(cc.URI)
 }
 
-// NewEGo creates EGo charger
-func NewEGo(URI string) *EGo {
-	c := &EGo{
+// NewGoE creates GoE charger
+func NewGoE(URI string) *GoE {
+	c := &GoE{
 		URI: URI,
 		log: api.NewLogger("e-go"),
 	}
@@ -52,11 +52,11 @@ func NewEGo(URI string) *EGo {
 	return c
 }
 
-func (c *EGo) apiURL(api apiFunction) string {
+func (c *GoE) apiURL(api apiFunction) string {
 	return fmt.Sprintf("%s/%s", strings.TrimRight(c.URI, "/"), api)
 }
 
-func (c *EGo) getJSON(url string, result interface{}) error {
+func (c *GoE) getJSON(url string, result interface{}) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -77,16 +77,16 @@ func (c *EGo) getJSON(url string, result interface{}) error {
 		return nil
 	}
 
-	var error egoStatusResponse
+	var error goeStatusResponse
 	_ = json.Unmarshal(body, &error)
 
-	return fmt.Errorf("EGo api error %d: %d", resp.StatusCode, error.Err)
+	return fmt.Errorf("GoE api error %d: %d", resp.StatusCode, error.Err)
 }
 
 // Status implements the Charger.Status interface
-func (c *EGo) Status() (api.ChargeStatus, error) {
-	var status egoStatusResponse
-	err := c.getJSON(c.apiURL(egoStatus), status)
+func (c *GoE) Status() (api.ChargeStatus, error) {
+	var status goeStatusResponse
+	err := c.getJSON(c.apiURL(goeStatus), status)
 
 	switch status.Car {
 	case 1:
@@ -103,9 +103,9 @@ func (c *EGo) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (c *EGo) Enabled() (bool, error) {
-	var status egoStatusResponse
-	err := c.getJSON(c.apiURL(egoStatus), status)
+func (c *GoE) Enabled() (bool, error) {
+	var status goeStatusResponse
+	err := c.getJSON(c.apiURL(goeStatus), status)
 
 	switch status.Alw {
 	case 0:
@@ -118,10 +118,10 @@ func (c *EGo) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (c *EGo) Enable(enable bool) error {
-	var status egoStatusResponse
+func (c *GoE) Enable(enable bool) error {
+	var status goeStatusResponse
 
-	uri := c.apiURL(egoStatus) + "/mqtt?alw="
+	uri := c.apiURL(goeStatus) + "/mqtt?alw="
 	if enable {
 		uri += "1"
 	} else {
@@ -132,24 +132,24 @@ func (c *EGo) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (c *EGo) MaxCurrent(current int64) error {
-	var status egoStatusResponse
-	uri := fmt.Sprintf(c.apiURL(egoStatus)+"/mqtt?amp=%d", current)
+func (c *GoE) MaxCurrent(current int64) error {
+	var status goeStatusResponse
+	uri := fmt.Sprintf(c.apiURL(goeStatus)+"/mqtt?amp=%d", current)
 	return c.getJSON(uri, status)
 }
 
 // CurrentPower implements the Meter interface.
-func (c *EGo) CurrentPower() (float64, error) {
-	var status egoStatusResponse
-	err := c.getJSON(c.apiURL(egoStatus), status)
+func (c *GoE) CurrentPower() (float64, error) {
+	var status goeStatusResponse
+	err := c.getJSON(c.apiURL(goeStatus), status)
 	power := float64(status.Nrg[11]) * 10
 	return power, err
 }
 
 // ChargedEnergy implements the ChargeRater interface.
-func (c *EGo) ChargedEnergy() (float64, error) {
-	var status egoStatusResponse
-	err := c.getJSON(c.apiURL(egoStatus), status)
+func (c *GoE) ChargedEnergy() (float64, error) {
+	var status goeStatusResponse
+	err := c.getJSON(c.apiURL(goeStatus), status)
 	energy := float64(status.Dws) / 3.6e6
 	return energy, err
 }
