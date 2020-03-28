@@ -6,12 +6,13 @@ EVCC is an EV Charge Controller implemented in [Go](2). It comes with a bundled 
 
 Features:
 
-- support for Wallbe chargers
-- support for any charger, meter or EV using scripting
+- clean, non-bloat user interface
+- multiple chargers supported: Wallbe, NRGKick (experimental), SimpleEVSE (planned), any other using scripting
+- customizable push notifications using [PushOver](https://pushover.net)
 - integration with home automation - supports shell scripts and MQTT
+- logging using [InfluxDB](https://www.influxdata.com)
 - soft ramp-up/ramp-down of charge current
 - electric contactor protection
-- clean, non-bloat user interface
 
 ![Screenshot](docs/screenshot.png)
 
