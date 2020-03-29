@@ -18,6 +18,10 @@ type telegramConfig struct {
 	Chats []int64
 }
 
+func init() {
+	tgbotapi.SetLogger(log.ERROR)
+}
+
 // NewTelegramMessenger creates new pushover messenger
 func NewTelegramMessenger(token string, chats []int64) *Telegram {
 	bot, err := tgbotapi.NewBotAPI(token)
@@ -63,14 +67,12 @@ func (m *Telegram) trackChats() {
 func (m *Telegram) Send(event Event, title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
-		go func(chat int64) {
-			log.TRACE.Printf("telegram: sending to %d", chat)
+		log.TRACE.Printf("telegram: sending to %d", chat)
 
-			msg := tgbotapi.NewMessage(chat, msg)
-			if _, err := m.bot.Send(msg); err != nil {
-				log.ERROR.Print(err)
-			}
-		}(chat)
+		msg := tgbotapi.NewMessage(chat, msg)
+		if _, err := m.bot.Send(msg); err != nil {
+			log.ERROR.Print(err)
+		}
 	}
 	m.Unlock()
 }

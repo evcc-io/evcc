@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/andig/evcc/api"
 )
@@ -16,7 +17,7 @@ type apiFunction string
 func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Charger {
 	var c api.Charger
 
-	switch typ {
+	switch strings.ToLower(typ) {
 	case "wallbe":
 		c = NewWallbeFromConfig(log, other)
 	case "phoenix":

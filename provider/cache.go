@@ -14,6 +14,13 @@ type CacheGetter struct {
 
 // NewCacheGetter wraps a getter with a cache
 func NewCacheGetter(getter interface{}, cache time.Duration) *CacheGetter {
+	if g, ok := getter.(func() (float64, error)); ok {
+		getter = FloatGetter(g)
+	}
+	if g, ok := getter.(func() (int64, error)); ok {
+		getter = IntGetter(g)
+	}
+
 	return &CacheGetter{
 		getter: getter,
 		cache:  cache,
@@ -25,7 +32,7 @@ func (c *CacheGetter) FloatGetter() (float64, error) {
 	if time.Since(c.updated) > c.cache {
 		g, ok := c.getter.(FloatGetter)
 		if !ok {
-			log.FATAL.Fatal("invalid type")
+			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 
 		val, err := g()
@@ -45,7 +52,7 @@ func (c *CacheGetter) IntGetter() (int64, error) {
 	if time.Since(c.updated) > c.cache {
 		g, ok := c.getter.(IntGetter)
 		if !ok {
-			log.FATAL.Fatal("invalid type")
+			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 
 		val, err := g()
@@ -65,7 +72,7 @@ func (c *CacheGetter) StringGetter() (string, error) {
 	if time.Since(c.updated) > c.cache {
 		g, ok := c.getter.(StringGetter)
 		if !ok {
-			log.FATAL.Fatal("invalid type")
+			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 
 		val, err := g()
@@ -85,7 +92,7 @@ func (c *CacheGetter) BoolGetter() (bool, error) {
 	if time.Since(c.updated) > c.cache {
 		g, ok := c.getter.(BoolGetter)
 		if !ok {
-			log.FATAL.Fatal("invalid type")
+			log.FATAL.Fatalf("invalid type: %T", g)
 		}
 
 		val, err := g()

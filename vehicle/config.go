@@ -1,6 +1,8 @@
 package vehicle
 
 import (
+	"strings"
+
 	"github.com/andig/evcc/api"
 )
 
@@ -8,8 +10,8 @@ import (
 func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Vehicle {
 	var c api.Vehicle
 
-	switch typ {
-	case "script":
+	switch strings.ToLower(typ) {
+	case "script", "exec":
 		c = NewConfigurableFromConfig(log, other)
 	case "audi":
 		c = NewAudiFromConfig(log, other)
