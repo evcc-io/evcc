@@ -42,7 +42,7 @@ func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger
 func NewGoE(URI string) *GoE {
 	c := &GoE{
 		URI: URI,
-		log: api.NewLogger("e-go"),
+		log: api.NewLogger("go-e"),
 	}
 
 	c.log.WARN.Println("-- experimental --")
