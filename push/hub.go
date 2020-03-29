@@ -1,29 +1,28 @@
 package push
 
-// EventTemplate is the push message template for an event
-type EventTemplate struct {
-	Title, Msg string
-}
-
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
-	pushOver    *PushOver
 	definitions map[string]EventTemplate
+	sender      []Sender
 }
 
 // NewHub creates push hub with definitions and receiver
-func NewHub(definitions map[string]EventTemplate, pushOver *PushOver) *Hub {
+func NewHub(definitions map[string]EventTemplate) *Hub {
 	h := &Hub{
-		pushOver:    pushOver,
 		definitions: definitions,
 	}
 	return h
 }
 
+// Add adds a sender to the list of senders
+func (h *Hub) Add(sender Sender) {
+	h.sender = append(h.sender, sender)
+}
+
 // Run is the Hub's main publishing loop
 func (h *Hub) Run(events <-chan Event) {
 	for ev := range events {
-		if h.pushOver == nil {
+		if len(h.sender) == 0 {
 			continue
 		}
 
@@ -33,6 +32,13 @@ func (h *Hub) Run(events <-chan Event) {
 			break
 		}
 
-		go h.pushOver.Send(ev, definition.Title, definition.Msg)
+		msg, err := ev.apply(definition.Msg)
+		if err != nil {
+			log.ERROR.Printf("invalid message template: %v", err)
+		}
+
+		for _, sender := range h.sender {
+			go sender.Send(ev, definition.Title, msg)
+		}
 	}
 }

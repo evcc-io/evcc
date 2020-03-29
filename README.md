@@ -14,6 +14,10 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - Go-E (experimental)
   - SimpleEVSE (experimental)
   - any other charger using scripting
+- support for different vehicles to show battery state:
+  - Audi
+  - Tesla
+  - any other vehicle using scripting
 - notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - integration with home automation - supports shell scripts and MQTT
 - logging using [InfluxDB](https://www.influxdata.com)

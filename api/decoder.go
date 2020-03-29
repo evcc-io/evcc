@@ -4,7 +4,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-// DecodeOther decodes string map into target configuration
+// DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
 func DecodeOther(log *Logger, other map[string]interface{}, cc interface{}) {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,

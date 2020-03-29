@@ -5,19 +5,16 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/andig/evcc/api"
 )
 
-var log = api.NewLogger("push")
-
+// Event is a notification event
 type Event struct {
 	Event      string
-	Sender     string
 	Attributes map[string]interface{}
 }
 
-func (e Event) Apply(template string) (string, error) {
+// apply applies the event template to the content to produce the actual message
+func (e Event) apply(template string) (string, error) {
 	return replaceFormatted(template, e.Attributes)
 }
 

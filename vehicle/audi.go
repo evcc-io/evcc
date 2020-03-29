@@ -28,8 +28,6 @@ type Audi struct {
 	token               string
 	tokenValid          time.Time
 	cache               time.Duration
-	chargeStateVal      float64
-	chargeStateUpdated  time.Time
 	chargeStateG        *provider.CacheGetter
 }
 

@@ -7,42 +7,41 @@ import (
 // PushOver implements the pushover messenger
 type PushOver struct {
 	app        *pushover.Pushover
-	recipients []*pushover.Recipient
+	recipients []string
 }
 
-// NewMessenger creates new pushover messenger
-func NewMessenger(app string, recipients []string) *PushOver {
+type pushOverConfig struct {
+	App        string
+	Recipients []string
+	Events     map[string]EventTemplate
+}
+
+// NewPushOverMessenger creates new pushover messenger
+func NewPushOverMessenger(app string, recipients []string) *PushOver {
 	if app == "" {
-		app = "evcc"
+		log.FATAL.Fatal("pushover: missing app name")
 	}
 
-	po := &PushOver{
-		app: pushover.New(app),
+	m := &PushOver{
+		app:        pushover.New(app),
+		recipients: recipients,
 	}
 
-	for _, r := range recipients {
-		po.recipients = append(po.recipients, pushover.NewRecipient(r))
-	}
-
-	return po
+	return m
 }
 
 // Send sends to all receivers
-func (po *PushOver) Send(event Event, title, msg string) {
-	msg, err := event.Apply(msg)
-	if err != nil {
-		log.ERROR.Printf("invalid message template: %v", err)
-	}
-
+func (m *PushOver) Send(event Event, title, msg string) {
 	message := pushover.NewMessageWithTitle(msg, title)
-	message.DeviceName = event.Sender
 
-	for _, recipient := range po.recipients {
-		go func(recipient *pushover.Recipient) {
-			_, err := po.app.SendMessage(message, recipient)
-			if err != nil {
+	for _, id := range m.recipients {
+		go func(id string) {
+			log.TRACE.Printf("pushover: sending to %s", id)
+
+			recipient := pushover.NewRecipient(id)
+			if _, err := m.app.SendMessage(message, recipient); err != nil {
 				log.ERROR.Print(err)
 			}
-		}(recipient)
+		}(id)
 	}
 }
