@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider"
 )
 
 const (
@@ -29,6 +30,7 @@ type Audi struct {
 	cache               time.Duration
 	chargeStateVal      float64
 	chargeStateUpdated  time.Time
+	chargeStateG        *provider.CacheGetter
 }
 
 type audiTokenResponse struct {
@@ -71,20 +73,24 @@ func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicl
 	}{}
 	api.DecodeOther(log, other, &cc)
 
-	return &Audi{
+	v := &Audi{
 		embed:    &embed{cc.Title, cc.Capacity},
 		user:     cc.User,
 		password: cc.Password,
 		vin:      cc.VIN,
 		cache:    cc.Cache,
 	}
+
+	v.chargeStateG = provider.NewCacheGetter(v.chargeState, cc.Cache)
+
+	return v
 }
 
-func (m *Audi) apiURL(service, part string) string {
+func (v *Audi) apiURL(service, part string) string {
 	return fmt.Sprintf("%s/%s/%s/%s/%s", audiURL, service, "v1", audiDE, part)
 }
 
-func (m *Audi) headers(header *http.Header) {
+func (v *Audi) headers(header *http.Header) {
 	for k, v := range map[string]string{
 		"Accept":        "application/json",
 		"X-App-ID":      "de.audi.mmiapp",
@@ -102,8 +108,8 @@ func (m *Audi) headers(header *http.Header) {
 	}
 }
 
-func (m *Audi) login(user, password string) error {
-	uri := m.apiURL("core/auth", "token")
+func (v *Audi) login(user, password string) error {
+	uri := v.apiURL("core/auth", "token")
 
 	data := url.Values{
 		"grant_type": []string{"password"},
@@ -116,7 +122,7 @@ func (m *Audi) login(user, password string) error {
 		return err
 	}
 
-	m.headers(&req.Header)
+	v.headers(&req.Header)
 	req.Header.Set("Authorization", audiAuthPrefix)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -145,16 +151,16 @@ func (m *Audi) login(user, password string) error {
 		return err
 	}
 
-	m.token = tr.AccessToken
-	m.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - audiValidMargin)
+	v.token = tr.AccessToken
+	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - audiValidMargin)
 
 	return nil
 }
 
-func (m *Audi) request(uri string) (*http.Request, error) {
+func (v *Audi) request(uri string) (*http.Request, error) {
 	// token invalid or expired
-	if m.token == "" || time.Now().After(m.tokenValid) {
-		if err := m.login(m.user, m.password); err != nil {
+	if v.token == "" || time.Now().After(v.tokenValid) {
+		if err := v.login(v.user, v.password); err != nil {
 			return nil, err
 		}
 	}
@@ -164,16 +170,16 @@ func (m *Audi) request(uri string) (*http.Request, error) {
 		return req, err
 	}
 
-	m.headers(&req.Header)
-	req.Header.Set("Authorization", fmt.Sprintf("%s %s", audiAuthPrefix, m.token))
+	v.headers(&req.Header)
+	req.Header.Set("Authorization", fmt.Sprintf("%s %s", audiAuthPrefix, v.token))
 
 	return req, nil
 }
 
-// chargeState implements the SoC.ChargeState interface internally
-func (m *Audi) chargeState() (float64, error) {
-	uri := m.apiURL("bs/batterycharge", fmt.Sprintf("vehicles/%s/charger", m.vin))
-	req, err := m.request(uri)
+// chargeState implements the Vehicle.ChargeState interface
+func (v *Audi) chargeState() (float64, error) {
+	uri := v.apiURL("bs/batterycharge", fmt.Sprintf("vehicles/%s/charger", v.vin))
+	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
 	}
@@ -196,15 +202,7 @@ func (m *Audi) chargeState() (float64, error) {
 	return float64(br.Charger.Status.BatteryStatusData.StateOfCharge.Content), err
 }
 
-// ChargeState implements the SoC.ChargeState interface
-func (m *Audi) ChargeState() (float64, error) {
-	var err error
-	if time.Since(m.chargeStateUpdated) > m.cache {
-		m.chargeStateVal, err = m.chargeState()
-		if err == nil {
-			m.chargeStateUpdated = time.Now()
-		}
-	}
-
-	return m.chargeStateVal, err
+// ChargeState implements the Vehicle.ChargeState interface
+func (v *Audi) ChargeState() (float64, error) {
+	return v.chargeStateG.FloatGetter()
 }
