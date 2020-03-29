@@ -5,11 +5,25 @@ import (
 	"github.com/andig/evcc/provider"
 )
 
+type embed struct {
+	title    string
+	capacity int64
+}
+
+// Title implements the SoC.Title interface
+func (m *embed) Title() string {
+	return m.title
+}
+
+// Capacity implements the SoC.Capacity interface
+func (m *embed) Capacity() int64 {
+	return m.capacity
+}
+
 // SoC is an api.SoC implementation with configurable getters and setters.
 type SoC struct {
-	capacity int64
-	title    string
-	chargeG  provider.FloatGetter
+	*embed
+	chargeG provider.FloatGetter
 }
 
 // NewConfigurableFromConfig creates a new SoC
@@ -22,20 +36,9 @@ func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) ap
 	api.DecodeOther(log, other, &cc)
 
 	return &SoC{
-		title:    cc.Title,
-		capacity: cc.Capacity,
-		chargeG:  provider.NewFloatGetterFromConfig(cc.Charge),
+		embed:   &embed{cc.Title, cc.Capacity},
+		chargeG: provider.NewFloatGetterFromConfig(cc.Charge),
 	}
-}
-
-// Title implements the SoC.Title interface
-func (m *SoC) Title() string {
-	return m.title
-}
-
-// Capacity implements the SoC.Capacity interface
-func (m *SoC) Capacity() int64 {
-	return m.capacity
 }
 
 // ChargeState implements the SoC.ChargeState interface

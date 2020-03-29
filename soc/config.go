@@ -11,6 +11,8 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 	switch typ {
 	case "script":
 		c = NewConfigurableFromConfig(log, other)
+	case "audi":
+		c = NewAudiFromConfig(log, other)
 	case "tesla":
 		c = NewTeslaFromConfig(log, other)
 	default:

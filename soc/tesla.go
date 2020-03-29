@@ -7,10 +7,8 @@ import (
 
 // Tesla is an api.SoC implementation for Tesla cars
 type Tesla struct {
-	capacity int64
-	title    string
-	client   *tesla.Client
-	vehicle  *tesla.Vehicle
+	*embed
+	vehicle *tesla.Vehicle
 }
 
 // NewTeslaFromConfig creates a new SoC
@@ -39,21 +37,9 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
 	}
 
 	return &Tesla{
-		capacity: cc.Capacity,
-		title:    cc.Title,
-		client:   client,
-		vehicle:  vehicles[0].Vehicle,
+		embed:   &embed{cc.Title, cc.Capacity},
+		vehicle: vehicles[0].Vehicle,
 	}
-}
-
-// Title implements the SoC.Title interface
-func (m *Tesla) Title() string {
-	return m.title
-}
-
-// Capacity implements the SoC.Capacity interface
-func (m *Tesla) Capacity() int64 {
-	return m.capacity
 }
 
 // ChargeState implements the SoC.ChargeState interface
