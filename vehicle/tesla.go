@@ -1,18 +1,18 @@
-package soc
+package vehicle
 
 import (
 	"github.com/andig/evcc/api"
 	"github.com/jsgoecke/tesla"
 )
 
-// Tesla is an api.SoC implementation for Tesla cars
+// Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
 	vehicle *tesla.Vehicle
 }
 
-// NewTeslaFromConfig creates a new SoC
-func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
+// NewTeslaFromConfig creates a new Tesla vehicle
+func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title                                   string
 		Capacity                                int64
@@ -42,7 +42,7 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
 	}
 }
 
-// ChargeState implements the SoC.ChargeState interface
+// ChargeState implements the Vehicle.ChargeState interface
 func (m *Tesla) ChargeState() (float64, error) {
 	state, err := m.vehicle.ChargeState()
 	return float64(state.BatteryLevel), err

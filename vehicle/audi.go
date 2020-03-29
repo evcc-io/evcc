@@ -1,4 +1,4 @@
-package soc
+package vehicle
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ const (
 	audiValidMargin = 10 * time.Second
 )
 
-// Audi is an api.SoC implementation for Audi cars
+// Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
 	user, password, vin string
@@ -61,8 +61,8 @@ type audiBrStateOfCharge struct {
 	Content int
 }
 
-// NewAudiFromConfig creates a new SoC
-func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
+// NewAudiFromConfig creates a new vehicle
+func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title               string
 		Capacity            int64

@@ -55,8 +55,8 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
-// SoC represents the EV battery's state
-type SoC interface {
+// Vehicle represents the EV and it's battery
+type Vehicle interface {
 	Title() string
 	Capacity() int64
 	ChargeState() (float64, error)

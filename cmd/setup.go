@@ -11,7 +11,7 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/soc"
+	"github.com/andig/evcc/vehicle"
 	"github.com/spf13/viper"
 )
 
@@ -49,10 +49,10 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 	return
 }
 
-func configureSoCs(conf config) (socs map[string]api.SoC) {
-	socs = make(map[string]api.SoC)
-	for _, cc := range conf.SoCs {
-		socs[cc.Name] = soc.NewFromConfig(log, cc.Type, cc.Other)
+func configureVehicles(conf config) (vehicles map[string]api.Vehicle) {
+	vehicles = make(map[string]api.Vehicle)
+	for _, cc := range conf.Vehicles {
+		vehicles[cc.Name] = vehicle.NewFromConfig(log, cc.Type, cc.Other)
 	}
 	return
 }
@@ -97,7 +97,7 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 
 	meters := configureMeters(conf)
 	chargers := configureChargers(conf)
-	socs := configureSoCs(conf)
+	vehicles := configureVehicles(conf)
 
 	for idx, lpc := range conf.LoadPoints {
 		// configure loadpoint
@@ -131,11 +131,11 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 		}
 
 		// assign socs
-		if lpc.SoC != "" {
-			if impl, ok := socs[lpc.SoC]; ok {
-				lp.SoC = impl
+		if lpc.Vehicle != "" {
+			if impl, ok := vehicles[lpc.Vehicle]; ok {
+				lp.Vehicle = impl
 			} else {
-				log.FATAL.Fatalf("invalid soc '%s'", lpc.SoC)
+				log.FATAL.Fatalf("invalid vehicle '%s'", lpc.Vehicle)
 			}
 		}
 

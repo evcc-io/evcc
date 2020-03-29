@@ -46,10 +46,10 @@ type LoadPoint struct {
 	ChargeRater api.ChargeRater
 
 	// meters
-	GridMeter   api.Meter // Grid usage meter
-	PVMeter     api.Meter // PV generation meter
-	ChargeMeter api.Meter // Charger usage meter
-	SoC         api.SoC   // SoC
+	GridMeter   api.Meter   // Grid usage meter
+	PVMeter     api.Meter   // PV generation meter
+	ChargeMeter api.Meter   // Charger usage meter
+	Vehicle     api.Vehicle // Vehicle
 
 	// options
 	Steepness     int64   // Step size of current change

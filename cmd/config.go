@@ -19,7 +19,7 @@ type config struct {
 	Pushover   messagingConfig
 	Meters     []meterConfig
 	Chargers   []typedConfig
-	SoCs       []typedConfig
+	Vehicles   []typedConfig
 	LoadPoints []loadPointConfig
 }
 
@@ -61,7 +61,7 @@ type loadPointConfig struct {
 	PVMeter       string // api.Meter
 	ChargeMeter   string // api.Meter
 	Charger       string // api.Charger
-	SoC           string // api.SoC
+	Vehicle       string // api.Vehicle
 	Mode          api.ChargeMode
 	Phases        int64
 	MinCurrent    int64
