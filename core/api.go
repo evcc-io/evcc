@@ -42,10 +42,8 @@ func (lp *LoadPoint) Configuration() Configuration {
 
 	if lp.SoC != nil {
 		c.SoC = true
-		if soc, ok := lp.SoC.(*SoC); ok {
-			c.SoCCapacity = soc.Capacity
-			c.SoCTitle = soc.Title
-		}
+		c.SoCCapacity = lp.SoC.Capacity()
+		c.SoCTitle = lp.SoC.Title()
 	}
 
 	return c
@@ -121,11 +119,9 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 		return -1
 	}
 
-	if lp.chargePower > 0 {
-		if soc, ok := lp.SoC.(*SoC); ok {
-			whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(soc.Capacity)
-			return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
-		}
+	if lp.chargePower > 0 && lp.SoC != nil {
+		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.SoC.Capacity())
+		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
 	}
 
 	return -1

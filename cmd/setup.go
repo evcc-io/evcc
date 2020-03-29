@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/soc"
 	"github.com/spf13/viper"
 )
 
@@ -50,9 +51,8 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 
 func configureSoCs(conf config) (socs map[string]api.SoC) {
 	socs = make(map[string]api.SoC)
-	for _, sc := range conf.SoCs {
-		soc := core.NewSoC(sc.Capacity, sc.Title, provider.NewFloatGetterFromConfig(sc.Charge))
-		socs[sc.Name] = soc
+	for _, cc := range conf.SoCs {
+		socs[cc.Name] = soc.NewFromConfig(log, cc.Type, cc.Title, cc.Other)
 	}
 	return
 }

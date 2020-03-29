@@ -18,6 +18,7 @@ require (
 	github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08 // indirect
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
+	github.com/jsgoecke/tesla v0.0.0-20190206234002-112508e1374e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mjibson/esc v0.2.0

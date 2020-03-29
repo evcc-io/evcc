@@ -57,11 +57,10 @@ type chargerConfig struct {
 }
 
 type socConfig struct {
-	Name     string
-	Type     string
-	Title    string
-	Capacity int64
-	Charge   *provider.Config
+	Name  string
+	Type  string
+	Title string
+	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 type loadPointConfig struct {

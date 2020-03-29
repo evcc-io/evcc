@@ -24,7 +24,7 @@ const (
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI, Device string }{}
-	decodeOther(log, other, &cc)
+	api.DecodeOther(log, other, &cc)
 
 	return NewSimpleEVSE(cc.URI, cc.Device)
 }
