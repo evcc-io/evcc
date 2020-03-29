@@ -95,13 +95,9 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
   The *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
 
-- **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in kWh. The charger is then allowed to consume:
+- **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in Watt (W). The charger is then allowed to consume:
 
-      Δ Charge Power = Grid Meter Power - Residual Power
-
-  rounded down and capped at zero and
-
-      Charge Power = Current Charge Power + Δ Charge Power
+      Charge Power = Current Charge Power - Grid Meter Power - Residual Power
 
   In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
 
@@ -109,7 +105,7 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
 When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
 
-- **Charge meter**: A *charge meter* is often integrated into the charger but can also be installed separately. EVCC expects the *charge meter* to supply *charge power* and preferably also *total energy*.
+- **Charge meter**: A *charge meter* is often integrated into the charger but can also be installed separately. EVCC expects the *charge meter* to supply *charge power* in Watt (W) and preferably *total energy* in kWh.
 If *total energy* is supplied, it can be used to calculate the *charged energy* for the current charging cycle.
 
 - **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.

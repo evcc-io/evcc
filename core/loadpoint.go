@@ -60,7 +60,7 @@ type LoadPoint struct {
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
 
 	// cached state
-	Mode          api.ChargeMode   // Charge mode, garded by mux
+	Mode          api.ChargeMode   // Charge mode, guarded by mutex
 	status        api.ChargeStatus // Charger status
 	targetCurrent int64            // Allowed current. Between MinCurrent and MaxCurrent.
 	enabled       bool             // Charger enabled state
