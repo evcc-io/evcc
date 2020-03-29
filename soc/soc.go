@@ -13,7 +13,7 @@ type SoC struct {
 }
 
 // NewConfigurableFromConfig creates a new SoC
-func NewConfigurableFromConfig(log *api.Logger, title string, other map[string]interface{}) api.SoC {
+func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
 	cc := struct {
 		Title    string
 		Capacity int64

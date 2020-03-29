@@ -14,7 +14,7 @@ type Tesla struct {
 }
 
 // NewTeslaFromConfig creates a new SoC
-func NewTeslaFromConfig(log *api.Logger, title string, other map[string]interface{}) api.SoC {
+func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.SoC {
 	cc := struct {
 		Title                                   string
 		Capacity                                int64

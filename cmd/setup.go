@@ -52,7 +52,7 @@ func configureChargers(conf config) (chargers map[string]api.Charger) {
 func configureSoCs(conf config) (socs map[string]api.SoC) {
 	socs = make(map[string]api.SoC)
 	for _, cc := range conf.SoCs {
-		socs[cc.Name] = soc.NewFromConfig(log, cc.Type, cc.Title, cc.Other)
+		socs[cc.Name] = soc.NewFromConfig(log, cc.Type, cc.Other)
 	}
 	return
 }
