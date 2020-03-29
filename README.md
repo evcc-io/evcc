@@ -21,8 +21,6 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - electric contactor protection
 - REST API
 
-**Note:** EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
-
 ![Screenshot](docs/screenshot.png)
 
 ### Background
@@ -37,14 +35,17 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 - containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
 - support for multiple load points - tbd
 
+### Note
+
+EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
+EVCC requires a supported charger and a combination of grid, PV and charge meter.
+Charger and meters **must** be installed by a certified professional.
+
 ## Installation
 
 ### Hardware
 
-EVCC requires a supported charger and a combination of grid, PV and charge meter.
-Charger and meters MUST be installed by a certified professional.
-
-#### Wallbe Charger
+#### Wallbe and Phoenix Chargers
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
@@ -53,6 +54,10 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 ![dip10](docs/dip10.jpeg)
 
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
+
+#### NRGKick
+
+NRGKick is supported with additional NRGConnect for interfacing.
 
 ### Software
 
