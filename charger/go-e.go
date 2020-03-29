@@ -3,8 +3,6 @@ package charger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -57,30 +55,17 @@ func (c *GoE) apiURL(api apiFunction) string {
 }
 
 func (c *GoE) getJSON(url string, result interface{}) error {
-	resp, err := http.Get(url)
-	if err != nil {
+	resp, body, err := getJSON(url, result)
+	c.log.TRACE.Printf("GET %s: %s", url, string(body))
+
+	if err != nil && len(body) == 0 {
 		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	c.log.TRACE.Printf("GET %v: %s", resp, string(body))
-
-	if resp.StatusCode == http.StatusOK {
-		if err := json.Unmarshal(body, &result); err != nil {
-			return err
-		}
-
-		return nil
 	}
 
 	var error goeStatusResponse
 	_ = json.Unmarshal(body, &error)
 
-	return fmt.Errorf("GoE api error %d: %d", resp.StatusCode, error.Err)
+	return fmt.Errorf("api %d: %d", resp.StatusCode, error.Err)
 }
 
 // Status implements the Charger.Status interface

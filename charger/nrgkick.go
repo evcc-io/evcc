@@ -1,10 +1,8 @@
 package charger
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/andig/evcc/api"
@@ -94,64 +92,35 @@ func (nrg *NRGKick) apiURL(api apiFunction) string {
 }
 
 func (nrg *NRGKick) getJSON(url string, result interface{}) error {
-	resp, err := http.Get(url)
-	if err != nil {
+	resp, body, err := getJSON(url, result)
+	nrg.log.TRACE.Printf("GET %s: %s", url, string(body))
+
+	if err != nil && len(body) == 0 {
 		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	nrg.log.TRACE.Printf("GET %v: %s", resp, string(body))
-
-	if resp.StatusCode == http.StatusOK {
-		if err := json.Unmarshal(body, &result); err != nil {
-			return err
-		}
-
-		return nil
 	}
 
 	var error NRGResponse
 	_ = json.Unmarshal(body, &error)
 
-	return fmt.Errorf("NRGKick api error %d: %s", resp.StatusCode, error.Message)
+	return fmt.Errorf("api %d: %s", resp.StatusCode, error.Message)
 }
 
 func (nrg *NRGKick) putJSON(url string, request interface{}) error {
-	data, err := json.Marshal(request)
-	if err != nil {
-		return err
-	}
-
-	client := &http.Client{}
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	resp, body, err := putJSON(url, request)
 	nrg.log.TRACE.Printf("PUT %v: %s", resp, string(body))
 
-	if resp.StatusCode == http.StatusOK {
+	if err != nil && len(body) == 0 {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
 		return nil
 	}
 
 	var error NRGResponse
 	_ = json.Unmarshal(body, &error)
 
-	return fmt.Errorf("NRGKick api error %d: %s", resp.StatusCode, error.Message)
+	return fmt.Errorf("api %d: %s", resp.StatusCode, error.Message)
 }
 
 // Status implements the Charger.Status interface

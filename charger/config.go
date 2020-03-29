@@ -1,6 +1,14 @@
 package charger
 
-import "github.com/andig/evcc/api"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/andig/evcc/api"
+)
 
 type apiFunction string
 
@@ -26,4 +34,46 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 	}
 
 	return c
+}
+
+func getJSON(url string, result interface{}) (*http.Response, []byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return resp, []byte{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return resp, body, err
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		err = json.Unmarshal(body, &result)
+		return resp, body, err
+	}
+
+	return resp, body, fmt.Errorf("unexpected status %d", resp.StatusCode)
+}
+
+func putJSON(url string, request interface{}) (*http.Response, []byte, error) {
+	data, err := json.Marshal(request)
+	if err != nil {
+		return nil, []byte{}, err
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, []byte{}, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return resp, []byte{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	return resp, body, err
 }
