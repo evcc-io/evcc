@@ -4,19 +4,26 @@
 
 EVCC is an EV Charge Controller implemented in [Go](2). It comes with a bundled implementation for Wallbe chargers but supports any type of charger or meter through scripting and integration with MQTT.
 
-Features:
+**Features:**
 
-- clean, non-bloat user interface
-- multiple chargers supported: Wallbe, NRGKick (experimental), SimpleEVSE (planned), any other using scripting
-- customizable push notifications using [PushOver](https://pushover.net)
+- simple and clean user interface
+- support for multiple chargers:
+  - Wallbe (tested with Wallbe Eco S)
+  - Phoenix (similar to Wallbe)
+  - NRGKick (experimental)
+  - Go-E (experimental)
+  - SimpleEVSE (experimental)
+  - any other charger using scripting
+- notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - integration with home automation - supports shell scripts and MQTT
 - logging using [InfluxDB](https://www.influxdata.com)
 - soft ramp-up/ramp-down of charge current
 - electric contactor protection
+- REST API
+
+**Note:** EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 
 ![Screenshot](docs/screenshot.png)
-
-**NOTE:** You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 
 ## Background
 
@@ -25,9 +32,9 @@ EVCC is heavily inspired by [OpenWB](1). However, I found OpenWB's architecture 
 Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for EVCC were:
 
 - typed language with ability for systematic testing - achieved by using [Go](2)
-- structured cnofiguration - supports YAML-based [config file](evcc.dist.yaml)
+- structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 - avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
-- containerized operation beyond Raspbery Pi - provide multi-arch [Docker Image](4)
+- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
 - support for multiple load points - tbd
 
 ## Installation
@@ -110,14 +117,14 @@ If the charger supplies *total energy* for the charging cycle this value is pref
 
 ## Implementation
 
-EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are decribed in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go)
+EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go)
 
 ### Charger
 
-Charger is reponsible for EV state handling:
+Charger is responsible for EV state handling:
 
 - `Status()`: get charge controller status (`A...F`)
-- `Enabled()`: get charger availablity
+- `Enabled()`: get charger availability
 - `Enable()`: set charger availability
 - `MaxCurrent()`: set maximum allowed charge current in A
 
@@ -133,7 +140,7 @@ Meters provide data about power and energy consumption:
 - `CurrentPower()`: power in W
 - `TotalEnergy()`: energy in kWh (optional)
 
-Meter has a single implementaton where meter readings- power and energy- can be configured to be delivered by plugin.
+Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by plugin.
 
 ### SoC
 
@@ -145,7 +152,7 @@ If SoC is configured and assigned to the charger, charge status and remaining ch
 
 ### Loadpoint
 
-Loadpoint controls the Charger behaviour according to the operations mode- *off*, *now*, *PV + minimum* or *PV only*.
+Loadpoint controls the Charger behavior according to the operations mode- *off*, *now*, *PV + minimum* or *PV only*.
 
 ## Plugins
 
