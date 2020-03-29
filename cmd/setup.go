@@ -43,18 +43,7 @@ func configureMeters(conf config) (meters map[string]api.Meter) {
 func configureChargers(conf config) (chargers map[string]api.Charger) {
 	chargers = make(map[string]api.Charger)
 	for _, cc := range conf.Chargers {
-		var c api.Charger
-
-		switch cc.Type {
-		case "wallbe":
-			c = charger.NewWallbeFromConfig(log, cc.Other)
-		case "default", "configurable":
-			c = charger.NewChargerFromConfig(log, cc.Other)
-		default:
-			log.FATAL.Fatalf("invalid charger type '%s'", cc.Type)
-		}
-
-		chargers[cc.Name] = c
+		chargers[cc.Name] = charger.NewFromConfig(log, cc.Type, cc.Other)
 	}
 	return
 }
