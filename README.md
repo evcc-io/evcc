@@ -4,7 +4,7 @@
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
 
-**Features:**
+### Features
 
 - simple and clean user interface
 - support for multiple chargers:
@@ -25,7 +25,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ![Screenshot](docs/screenshot.png)
 
-## Background
+### Background
 
 EVCC is heavily inspired by [OpenWB](1). However, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
 
@@ -42,7 +42,7 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 ### Hardware
 
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
-Charger and meters MUST be professionally installed.
+Charger and meters MUST be installed by a certified professional.
 
 #### Wallbe Charger
 
