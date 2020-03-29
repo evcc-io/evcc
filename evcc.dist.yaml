@@ -23,18 +23,25 @@ menu:
 #   iframe: "http://..."
 
 # push messages
-pushover:
-  app: app id
-  recipients: # list of recipient ids
-  - recipient id
-  events: # message templates
-    start:
+messaging:
+  events:
+    start: # charge start event
       title: Charge started
       msg: ${loadpoint} started charging in "${mode}" mode
-    stop:
+    stop: # charge stop event
       title: Charge finished
       msg: ${loadpoint} finished charging. Charged ${energy:%.1f}kWh in ${duration}.
+  services:
+  - type: pushover
+    app: # app id
+    recipients:
+    - # list of recipient ids
+  - type: telegram
+    token: # bot id
+    chats:
+    - # list of chat ids
 
+# meters
 meters:
 - name: grid
   power: # power reading
