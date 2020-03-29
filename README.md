@@ -7,8 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EM-CP-PP-ETH), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
-- more chargers experimentally supported: NRGKick, SimpleEVSE, EVSEWifi
+- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EM-CP-PP-ETH), go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA KeContact and BMW, openWB slave, Mobile Charger Connect and any other charger using scripting
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
@@ -134,6 +133,7 @@ Available charger implementations are:
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
 - `nrgkick`: NRGKick chargers with Connect module
 - `go-e`: go-eCharger chargers
+- `keba`: KEBA KeContact P20/P30 and BMW chargers (Note: requires enabled UDP function with DIP switch 1.3 = `ON`, see installation manual)
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 

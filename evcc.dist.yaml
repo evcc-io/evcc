@@ -91,8 +91,11 @@ chargers:
   macaddress: 00:99:22 # MAC address
   password: # password
 - name: go-e
-  type: go-e # go-e charger
+  type: go-e # go-eCharger
   uri: http://192.168.1.4 # go-e address
+- name: keba
+  type: keba # KEBA charger
+  uri: 192.168.1.4:7090 # KEBA address
 - name: mcc
   type: mcc # Mobile Charger Connect (Audi, Bentley, Porsche)
   uri: https://192.168.1.4 # Mobile Charger Connect address

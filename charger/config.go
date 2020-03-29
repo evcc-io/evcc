@@ -30,6 +30,8 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 		c = NewSimpleEVSEFromConfig(log, other)
 	case "porsche", "audi", "bentley", "mcc":
 		c = NewMobileConnectFromConfig(log, other)
+	case "keba", "bmw":
+		c = NewKebaFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid charger type '%s'", typ)
 	}
