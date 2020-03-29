@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/andig/evcc.svg?branch=master)](https://travis-ci.org/andig/evcc)
 
-EVCC is an EV Charge Controller implemented in [Go](2). It comes with a bundled implementation for Wallbe chargers but supports any type of charger or meter through scripting and integration with MQTT.
+EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
 
 **Features:**
 
@@ -17,7 +17,7 @@ EVCC is an EV Charge Controller implemented in [Go](2). It comes with a bundled 
 - notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - integration with home automation - supports shell scripts and MQTT
 - logging using [InfluxDB](https://www.influxdata.com)
-- soft ramp-up/ramp-down of charge current
+- soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
 - electric contactor protection
 - REST API
 
