@@ -26,7 +26,7 @@ type Phoenix struct {
 // NewPhoenixFromConfig creates a Phoenix charger from generic config
 func NewPhoenixFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
-	decodeOther(log, other, &cc)
+	api.DecodeOther(log, other, &cc)
 
 	return NewPhoenix(cc.URI)
 }

@@ -18,9 +18,14 @@ type config struct {
 	Menu       []server.MenuConfig
 	Pushover   messagingConfig
 	Meters     []meterConfig
-	Chargers   []chargerConfig
-	SoCs       []socConfig
+	Chargers   []typedConfig
+	Vehicles   []typedConfig
 	LoadPoints []loadPointConfig
+}
+
+type typedConfig struct {
+	Name, Type string
+	Other      map[string]interface{} `mapstructure:",remain"`
 }
 
 type messagingConfig struct {
@@ -50,27 +55,13 @@ type meterConfig struct {
 	Energy *provider.Config
 }
 
-type chargerConfig struct {
-	Name  string
-	Type  string
-	Other map[string]interface{} `mapstructure:",remain"`
-}
-
-type socConfig struct {
-	Name     string
-	Type     string
-	Title    string
-	Capacity int64
-	Charge   *provider.Config
-}
-
 type loadPointConfig struct {
 	Name          string
 	GridMeter     string // api.Meter
 	PVMeter       string // api.Meter
 	ChargeMeter   string // api.Meter
 	Charger       string // api.Charger
-	SoC           string // api.SoC
+	Vehicle       string // api.Vehicle
 	Mode          api.ChargeMode
 	Phases        int64
 	MinCurrent    int64

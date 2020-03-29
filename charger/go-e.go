@@ -33,7 +33,7 @@ type GoE struct {
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
-	decodeOther(log, other, &cc)
+	api.DecodeOther(log, other, &cc)
 
 	return NewGoE(cc.URI)
 }

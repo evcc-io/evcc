@@ -143,13 +143,21 @@ Meters provide data about power and energy consumption:
 
 Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by plugin.
 
-### SoC
+### Vehicle
 
-SoC represents a specific EV battery. Configuring a SoC allows to define it's `Capacity (kWh)` and dynamically provide:
+Vehicle represents a specific EV vehicle and its battery:
 
+- `Title()`: vehicle name for display in the configuration UI
+- `Capacity()`: battery capacity in kWh
 - `ChargeState()`: state of charge in %
 
-If SoC is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
+Optionally, a vehicle can optionally also provide:
+
+- `CurrentPower()`: charge power in W
+- `ChargedEnergy()`: charged energy in kWh
+- `ChargeDuration()`: charge duration
+
+If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 
 ### Loadpoint
 

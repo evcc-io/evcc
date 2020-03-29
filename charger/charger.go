@@ -16,7 +16,7 @@ type Charger struct {
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ Status, Enable, Enabled, MaxCurrent *provider.Config }{}
-	decodeOther(log, other, &cc)
+	api.DecodeOther(log, other, &cc)
 
 	charger := NewConfigurable(
 		provider.NewStringGetterFromConfig(cc.Status),

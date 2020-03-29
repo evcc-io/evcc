@@ -1,11 +1,11 @@
-package charger
+package api
 
 import (
-	"github.com/andig/evcc/api"
 	"github.com/mitchellh/mapstructure"
 )
 
-func decodeOther(log *api.Logger, other map[string]interface{}, cc interface{}) {
+// DecodeOther decodes string map into target configuration
+func DecodeOther(log *Logger, other map[string]interface{}, cc interface{}) {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,
 		ErrorUnused:      true,

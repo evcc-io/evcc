@@ -27,15 +27,11 @@ FROM alpine:3.11
 
 WORKDIR /evcc
 
-# Audi
-RUN apk add --no-cache python3 curl jq
-RUN pip3 install --no-cache-dir --upgrade requests audiapi
-
-# Import from builder.
+# Import from builder
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY modules/audi/* /evcc/
 COPY entrypoint.sh /evcc/
 
 EXPOSE 7070

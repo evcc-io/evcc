@@ -46,14 +46,14 @@ type LoadPoint struct {
 	ChargeRater api.ChargeRater
 
 	// meters
-	GridMeter   api.Meter // Grid usage meter
-	PVMeter     api.Meter // PV generation meter
-	ChargeMeter api.Meter // Charger usage meter
-	SoC         api.SoC   // SoC
+	GridMeter   api.Meter   // Grid usage meter
+	PVMeter     api.Meter   // PV generation meter
+	ChargeMeter api.Meter   // Charger usage meter
+	Vehicle     api.Vehicle // Vehicle
 
 	// options
 	Steepness     int64   // Step size of current change
-	Phases        int64   // SOC phases. Required for converting power and current.
+	Phases        int64   // Phases- required for converting power and current.
 	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
 	Voltage       float64 // Operating voltage. 230V for Germany.

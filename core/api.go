@@ -40,12 +40,10 @@ func (lp *LoadPoint) Configuration() Configuration {
 		ChargeMeter: lp.hasChargeMeter(),
 	}
 
-	if lp.SoC != nil {
+	if lp.Vehicle != nil {
 		c.SoC = true
-		if soc, ok := lp.SoC.(*SoC); ok {
-			c.SoCCapacity = soc.Capacity
-			c.SoCTitle = soc.Title
-		}
+		c.SoCCapacity = lp.Vehicle.Capacity()
+		c.SoCTitle = lp.Vehicle.Title()
 	}
 
 	return c
@@ -58,11 +56,11 @@ func (lp *LoadPoint) hasChargeMeter() bool {
 
 // Dump loadpoint configuration
 func (lp *LoadPoint) Dump() {
-	soc := lp.SoC != nil
+	vehicle := lp.Vehicle != nil
 	grid := lp.GridMeter != nil
 	pv := lp.PVMeter != nil
-	log.INFO.Printf("%s config: soc %s grid %s pv %s charge %s", lp.Name,
-		presence[soc],
+	log.INFO.Printf("%s config: vehicle %s grid %s pv %s charge %s", lp.Name,
+		presence[vehicle],
 		presence[grid],
 		presence[pv],
 		presence[lp.hasChargeMeter()],
@@ -121,11 +119,9 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 		return -1
 	}
 
-	if lp.chargePower > 0 {
-		if soc, ok := lp.SoC.(*SoC); ok {
-			whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(soc.Capacity)
-			return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
-		}
+	if lp.chargePower > 0 && lp.Vehicle != nil {
+		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.Vehicle.Capacity())
+		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
 	}
 
 	return -1
@@ -133,19 +129,19 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
-	if lp.SoC == nil {
+	if lp.Vehicle == nil {
 		return
 	}
 
 	if lp.connected() {
-		f, err := lp.SoC.ChargeState()
+		f, err := lp.Vehicle.ChargeState()
 		if err == nil {
-			log.DEBUG.Printf("%s soc charge: %.1f%%", lp.Name, f)
+			log.DEBUG.Printf("%s vehicle charge: %.1f%%", lp.Name, f)
 			lp.publish("socCharge", f)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
 		}
-		log.ERROR.Printf("%s soc error: %v", lp.Name, err)
+		log.ERROR.Printf("%s vehicle error: %v", lp.Name, err)
 	}
 
 	lp.publish("socCharge", "—")
