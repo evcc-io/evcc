@@ -143,8 +143,8 @@ func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ..
 			current = 0
 		}
 		if current > 0 {
-			// limit available power to generation minus delivery
-			availablePower := math.Abs(lp.pvPower) + math.Min(0, lp.gridPower)
+			// limit available power to generation plus consumption/ minus delivery
+			availablePower := math.Abs(lp.pvPower) + lp.gridPower
 			availableCurrent := int64(powerToCurrent(availablePower, lp.Voltage, lp.Phases))
 			current = min(current, availableCurrent)
 		}

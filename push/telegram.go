@@ -19,7 +19,9 @@ type telegramConfig struct {
 }
 
 func init() {
-	tgbotapi.SetLogger(log.ERROR)
+	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
+		log.ERROR.Printf("telegram: %v", err)
+	}
 }
 
 // NewTelegramMessenger creates new pushover messenger
