@@ -53,11 +53,13 @@ Charger and meters **must** be installed by a certified professional.
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
-To allow controlling charge start/stop, the Wallbe physical configuration must be modified. This requires opening the Wallbe and should only be done by professionals. Once opened, DIP 10 must be set to ON:
+To allow controlling charge start/stop, the Wallbe physical configuration must be modified. This requires opening the Wallbe. Once opened, DIP 10 must be set to ON:
 
 ![dip10](docs/dip10.jpeg)
 
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
+
+**NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
 #### NRGKick
 
