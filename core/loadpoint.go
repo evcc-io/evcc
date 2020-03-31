@@ -435,7 +435,8 @@ func (lp *LoadPoint) update() {
 	lp.updateMeter("pv", lp.PVMeter, &lp.pvPower)
 	lp.updateMeter("charge", lp.ChargeMeter, &lp.chargePower)
 
-	// update ChargeRater
+	// update ChargeRater here to make sure initial meter update is caught
+	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// check if car connected and ready for charging
