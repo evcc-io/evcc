@@ -3,14 +3,14 @@
 release:
   # Repo in which the release will be created.
   github:
-    owner: volkszaehler
-    name: ulm
+    owner: andig
+    name: evcc
 before:
   hooks:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-- id: ulm
+- id: evcc
   # Path to main.go file or main package.
   main: main.go
   ldflags:
