@@ -7,3 +7,4 @@ evcc
 linux-*.Dockerfile
 !evcc.dist.yaml
 !modules/**
+dist
