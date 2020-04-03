@@ -28,7 +28,7 @@ type Audi struct {
 	token               string
 	tokenValid          time.Time
 	cache               time.Duration
-	chargeStateG        *provider.CacheGetter
+	chargeStateG        provider.FloatGetter
 }
 
 type audiTokenResponse struct {
@@ -79,7 +79,7 @@ func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicl
 		cache:    cc.Cache,
 	}
 
-	v.chargeStateG = provider.NewCacheGetter(v.chargeState, cc.Cache)
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
 	return v
 }
@@ -202,5 +202,5 @@ func (v *Audi) chargeState() (float64, error) {
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Audi) ChargeState() (float64, error) {
-	return v.chargeStateG.FloatGetter()
+	return v.chargeStateG()
 }

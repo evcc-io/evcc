@@ -12,8 +12,8 @@ import (
 type Tesla struct {
 	*embed
 	vehicle        *tesla.Vehicle
-	chargeStateG   *provider.CacheGetter
-	chargedEnergyG *provider.CacheGetter
+	chargeStateG   provider.FloatGetter
+	chargedEnergyG provider.FloatGetter
 }
 
 // NewTeslaFromConfig creates a new Tesla vehicle
@@ -47,8 +47,8 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehic
 		vehicle: vehicles[0].Vehicle,
 	}
 
-	v.chargeStateG = provider.NewCacheGetter(v.chargeState, cc.Cache)
-	v.chargedEnergyG = provider.NewCacheGetter(v.chargedEnergy, cc.Cache)
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
 
 	return v
 }
@@ -61,7 +61,7 @@ func (v *Tesla) chargeState() (float64, error) {
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Tesla) ChargeState() (float64, error) {
-	return v.chargeStateG.FloatGetter()
+	return v.chargeStateG()
 }
 
 // chargedEnergy implements the ChargeRater.ChargedEnergy interface
@@ -72,7 +72,7 @@ func (v *Tesla) chargedEnergy() (float64, error) {
 
 // ChargedEnergy implements the ChargeRater.ChargedEnergy interface
 func (v *Tesla) ChargedEnergy() (float64, error) {
-	return v.chargedEnergyG.FloatGetter()
+	return v.chargedEnergyG()
 }
 
 // depends on https://github.com/jsgoecke/tesla/issues/28

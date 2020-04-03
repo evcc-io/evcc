@@ -36,7 +36,7 @@ func NewStringGetterFromConfig(pc *Config) (res StringGetter) {
 	}
 
 	if pc.Cache > 0 {
-		res = NewCacheGetter(res, pc.Cache).StringGetter
+		res = NewCached(res, pc.Cache).StringGetter()
 	}
 
 	return
@@ -56,7 +56,7 @@ func NewBoolGetterFromConfig(pc *Config) (res BoolGetter) {
 	}
 
 	if pc.Cache > 0 {
-		res = NewCacheGetter(res, pc.Cache).BoolGetter
+		res = NewCached(res, pc.Cache).BoolGetter()
 	}
 
 	return
@@ -84,7 +84,7 @@ func NewFloatGetterFromConfig(pc *Config) (res FloatGetter) {
 	}
 
 	if pc.Cache > 0 {
-		res = NewCacheGetter(res, pc.Cache).FloatGetter
+		res = NewCached(res, pc.Cache).FloatGetter()
 	}
 
 	return
