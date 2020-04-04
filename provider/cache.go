@@ -2,107 +2,126 @@ package provider
 
 import (
 	"time"
+
+	"github.com/benbjohnson/clock"
 )
 
-// CacheGetter wraps a getter with a cache
-type CacheGetter struct {
+// Cached wraps a getter with a cache
+type Cached struct {
+	clck    clock.Clock
 	updated time.Time
 	cache   time.Duration
 	getter  interface{}
 	val     interface{}
 }
 
-// NewCacheGetter wraps a getter with a cache
-func NewCacheGetter(getter interface{}, cache time.Duration) *CacheGetter {
-	if g, ok := getter.(func() (float64, error)); ok {
-		getter = FloatGetter(g)
-	}
-	if g, ok := getter.(func() (int64, error)); ok {
-		getter = IntGetter(g)
-	}
-
-	return &CacheGetter{
+// NewCached wraps a getter with a cache
+func NewCached(getter interface{}, cache time.Duration) *Cached {
+	return &Cached{
+		clck:   clock.New(),
 		getter: getter,
 		cache:  cache,
 	}
 }
 
 // FloatGetter gets float value
-func (c *CacheGetter) FloatGetter() (float64, error) {
-	if time.Since(c.updated) > c.cache {
-		g, ok := c.getter.(FloatGetter)
-		if !ok {
+func (c *Cached) FloatGetter() FloatGetter {
+	g, ok := c.getter.(FloatGetter)
+	if !ok {
+		if g, ok = c.getter.(func() (float64, error)); !ok {
 			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
-
-		val, err := g()
-		if err != nil {
-			return val, err
-		}
-
-		c.updated = time.Now()
-		c.val = val
+		g = FloatGetter(g)
 	}
 
-	return c.val.(float64), nil
+	return FloatGetter(func() (float64, error) {
+		if c.clck.Since(c.updated) > c.cache {
+			val, err := g()
+			if err != nil {
+				return val, err
+			}
+
+			c.updated = c.clck.Now()
+			c.val = val
+		}
+
+		return c.val.(float64), nil
+	})
 }
 
 // IntGetter gets int value
-func (c *CacheGetter) IntGetter() (int64, error) {
-	if time.Since(c.updated) > c.cache {
-		g, ok := c.getter.(IntGetter)
-		if !ok {
+func (c *Cached) IntGetter() IntGetter {
+	g, ok := c.getter.(IntGetter)
+	if !ok {
+		if g, ok = c.getter.(func() (int64, error)); !ok {
 			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
-
-		val, err := g()
-		if err != nil {
-			return val, err
-		}
-
-		c.updated = time.Now()
-		c.val = val
+		g = IntGetter(g)
 	}
 
-	return c.val.(int64), nil
+	return IntGetter(func() (int64, error) {
+		if c.clck.Since(c.updated) > c.cache {
+			val, err := g()
+			if err != nil {
+				return val, err
+			}
+
+			c.updated = c.clck.Now()
+			c.val = val
+		}
+
+		return c.val.(int64), nil
+	})
 }
 
 // StringGetter gets string value
-func (c *CacheGetter) StringGetter() (string, error) {
-	if time.Since(c.updated) > c.cache {
-		g, ok := c.getter.(StringGetter)
-		if !ok {
+func (c *Cached) StringGetter() StringGetter {
+	g, ok := c.getter.(StringGetter)
+	if !ok {
+		if g, ok = c.getter.(func() (string, error)); !ok {
 			log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
-
-		val, err := g()
-		if err != nil {
-			return val, err
-		}
-
-		c.updated = time.Now()
-		c.val = val
+		g = StringGetter(g)
 	}
 
-	return c.val.(string), nil
+	return StringGetter(func() (string, error) {
+		if c.clck.Since(c.updated) > c.cache {
+
+			val, err := g()
+			if err != nil {
+				return val, err
+			}
+
+			c.updated = c.clck.Now()
+			c.val = val
+		}
+
+		return c.val.(string), nil
+	})
 }
 
 // BoolGetter gets bool value
-func (c *CacheGetter) BoolGetter() (bool, error) {
-	if time.Since(c.updated) > c.cache {
-		g, ok := c.getter.(BoolGetter)
-		if !ok {
+func (c *Cached) BoolGetter() BoolGetter {
+	g, ok := c.getter.(BoolGetter)
+	if !ok {
+		if g, ok = c.getter.(func() (bool, error)); !ok {
 			log.FATAL.Fatalf("invalid type: %T", g)
 		}
-
-		val, err := g()
-		if err != nil {
-			return val, err
-		}
-
-		c.updated = time.Now()
-		c.val = val
+		g = BoolGetter(g)
 	}
 
-	return c.val.(bool), nil
+	return BoolGetter(func() (bool, error) {
+		if c.clck.Since(c.updated) > c.cache {
+
+			val, err := g()
+			if err != nil {
+				return val, err
+			}
+
+			c.updated = c.clck.Now()
+			c.val = val
+		}
+
+		return c.val.(bool), nil
+	})
 }

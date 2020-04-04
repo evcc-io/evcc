@@ -8,13 +8,13 @@ release:
 before:
   hooks:
     # you may remove this if you don't need go generate
-    - go generate ./...
+    - make assets
 builds:
 - id: evcc
   # Path to main.go file or main package.
   main: main.go
   ldflags:
-  - -X github.com/andig/evcc.Version={{.Version}} -X github.com/andig/evcc.Commit={{.ShortCommit}}
+  - -X github.com/andig/evcc/server.Version={{.Version}} -X github.com/andig/evcc/server.Commit={{.ShortCommit}}
   env:
   - CGO_ENABLED=0
   goos:
@@ -25,6 +25,17 @@ builds:
   - arm
   goarm:
   - "6"
+archives:
+  - builds:
+    - evcc
+    replacements:
+      amd64: 64-bit
+      386: 32-bit
+      darwin: macOS
+    format: tar.gz
+    format_overrides:
+    - goos: windows
+      format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
