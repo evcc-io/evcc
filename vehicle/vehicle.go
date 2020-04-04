@@ -1,8 +1,14 @@
 package vehicle
 
 import (
+	"time"
+
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+)
+
+const (
+	tokenValidMargin = 10 * time.Second // safety margin for api token validity
 )
 
 type embed struct {
