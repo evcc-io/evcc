@@ -15,10 +15,9 @@ import (
 )
 
 const (
-	audiURL         = "https://msg.audi.de/fs-car"
-	audiDE          = "Audi/DE"
-	audiAuthPrefix  = "AudiAuth 1"
-	audiValidMargin = 10 * time.Second
+	audiURL        = "https://msg.audi.de/fs-car"
+	audiDE         = "Audi/DE"
+	audiAuthPrefix = "AudiAuth 1"
 )
 
 // Audi is an api.Vehicle implementation for Audi cars
@@ -27,7 +26,6 @@ type Audi struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	cache               time.Duration
 	chargeStateG        provider.FloatGetter
 }
 
@@ -36,6 +34,7 @@ type audiTokenResponse struct {
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
 }
+
 type audiErrorResponse struct {
 	Error       string
 	Description string `json:"error_description"`
@@ -76,7 +75,6 @@ func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicl
 		user:     cc.User,
 		password: cc.Password,
 		vin:      cc.VIN,
-		cache:    cc.Cache,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -150,7 +148,7 @@ func (v *Audi) login(user, password string) error {
 	}
 
 	v.token = tr.AccessToken
-	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - audiValidMargin)
+	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - tokenValidMargin)
 
 	return nil
 }

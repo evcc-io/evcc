@@ -6,17 +6,21 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-// NewFromConfig creates charger from configuration
+// NewFromConfig creates vehicle from configuration
 func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Vehicle {
 	var c api.Vehicle
 
 	switch strings.ToLower(typ) {
 	case "script", "exec":
 		c = NewConfigurableFromConfig(log, other)
-	case "audi":
+	case "audi", "etron":
 		c = NewAudiFromConfig(log, other)
-	case "tesla":
+	case "bmw", "i3":
+		c = NewBMWFromConfig(log, other)
+	case "tesla", "model3", "model 3", "models", "model s":
 		c = NewTeslaFromConfig(log, other)
+	case "nissan", "leaf":
+		c = NewNissanFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid vehicle type '%s'", typ)
 	}
