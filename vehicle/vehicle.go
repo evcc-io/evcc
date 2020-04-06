@@ -38,12 +38,13 @@ func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) ap
 		Title    string
 		Capacity int64
 		Charge   *provider.Config
+		Cache    time.Duration
 	}{}
 	api.DecodeOther(log, other, &cc)
 
 	return &Vehicle{
 		embed:   &embed{cc.Title, cc.Capacity},
-		chargeG: provider.NewFloatGetterFromConfig(cc.Charge),
+		chargeG: provider.NewCached(provider.NewFloatGetterFromConfig(cc.Charge), cc.Cache).FloatGetter(),
 	}
 }
 

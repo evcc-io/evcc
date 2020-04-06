@@ -19,11 +19,12 @@ type Tesla struct {
 // NewTeslaFromConfig creates a new Tesla vehicle
 func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
-		Title                                   string
-		Capacity                                int64
-		ClientID, ClientSecret, Email, Password string
-		Vehicle                                 int
-		Cache                                   time.Duration
+		Title                  string
+		Capacity               int64
+		ClientID, ClientSecret string
+		Email, Password        string
+		VIN                    string
+		Cache                  time.Duration
 	}{}
 	api.DecodeOther(log, other, &cc)
 
@@ -43,8 +44,17 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehic
 	}
 
 	v := &Tesla{
-		embed:   &embed{cc.Title, cc.Capacity},
-		vehicle: vehicles[0].Vehicle,
+		embed: &embed{cc.Title, cc.Capacity},
+	}
+
+	for _, vehicle := range vehicles {
+		if vehicle.Vin == cc.VIN {
+			v.vehicle = vehicle.Vehicle
+		}
+	}
+
+	if v.vehicle == nil {
+		log.FATAL.Fatal("cannot create tesla: vin not found")
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()

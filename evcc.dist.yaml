@@ -64,13 +64,59 @@ chargers:
   type: wallbe # Wallbe charger using Phoenix Contact controller
   uri: 192.168.0.8:502 # ModBus address
 
+vehicles:
+- name: script
+  type: script
+  title: Script
+  capacity: 50 # kWh
+  charge:
+    type: script # use script
+    cmd: /bin/sh -c "echo 50" # actual command
+    timeout: 3s # kill script after 3 seconds
+  cache: 5m
+- name: audi
+  type: audi
+  title: Q55 TFSIe
+  capacity: 10 # kWh
+  user: # user
+  password: # password
+  vin: WAUZZZ...
+  cache: 5m
+- name: bmw
+  type: bmw
+  title: i3
+  capacity: 65 # kWh
+  user: # user
+  password: # password
+  vin: WBMW...
+  cache: 5m
+# - name: tesla
+#   type: tesla
+#   title: Model S
+#   capacity: 90 # kWh
+#   clientid: # client id
+#   clientsecret: # client secret
+#   email: # email
+#   password: # password
+#   vin: WTSLA...
+#   cache: 5m
+# - name: nissan
+#   type: nissan
+#   title: Leaf
+#   capacity: 60 # kWh
+#   user: # user
+#   password: # password
+#   region: NE # carwings region, leave empty for Europe
+#   cache: 5m
+
 loadpoints:
 - name: lp1 # name for logging
-  steepness: 1 # raise/lower charge current in 1A steps
-  guardduration: 10m # switch charger contactor not more often than this (default 10m)
-  maxcurrent: 16 # maximum charge current (default 16A)
-  phases: 3 # ev phases (default 3)
+  vehicle: audi
   charger: wallbe # charger
   gridmeter: grid # grid meter
   pvmeter: pv # pv meter
   chargemeter: charge # charge meter
+  steepness: 1 # raise/lower charge current in 1A steps
+  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  maxcurrent: 16 # maximum charge current (default 16A)
+  phases: 3 # ev phases (default 3)
