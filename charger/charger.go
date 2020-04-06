@@ -63,7 +63,7 @@ func (m *Charger) Enable(enable bool) error {
 	return m.enableS(enable)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent API
+// MaxCurrent implements the Charger.MaxCurrent interface
 func (m *Charger) MaxCurrent(current int64) error {
 	return m.maxCurrentS(current)
 }
