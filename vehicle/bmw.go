@@ -2,9 +2,7 @@ package vehicle
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -40,6 +38,7 @@ type bmwVehicleStatus struct {
 // BMW is an api.Vehicle implementation for BMW cars
 type BMW struct {
 	*embed
+	*api.HTTPHelper
 	user, password, vin string
 	token, refreshToken string
 	tokenValid          time.Time
@@ -57,10 +56,11 @@ func NewBMWFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle
 	api.DecodeOther(log, other, &cc)
 
 	v := &BMW{
-		embed:    &embed{cc.Title, cc.Capacity},
-		user:     cc.User,
-		password: cc.Password,
-		vin:      cc.VIN,
+		embed:      &embed{cc.Title, cc.Capacity},
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("bmwi")),
+		user:       cc.User,
+		password:   cc.Password,
+		vin:        cc.VIN,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -95,24 +95,8 @@ func (v *BMW) login(user, password string) error {
 	req.Header.Set("Authorization", v.authHeader())
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
-	}
-
 	var tr bmwTokenResponse
-	if err = json.Unmarshal(b, &tr); err != nil {
+	if _, err = v.RequestJSON(req, &tr); err != nil {
 		return err
 	}
 
@@ -150,20 +134,8 @@ func (v *BMW) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
 	var br bmwStatusResponse
-	err = json.Unmarshal(b, &br)
+	_, err = v.RequestJSON(req, &br)
 
 	return float64(br.VehicleStatus.ChargingLevelHv), err
 }
