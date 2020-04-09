@@ -1,17 +1,12 @@
-# This is an example goreleaser.yaml file with some sane defaults.
-# Make sure to check the documentation at http://goreleaser.com
 release:
-  # Repo in which the release will be created.
   github:
     owner: andig
     name: evcc
 before:
   hooks:
-    # you may remove this if you don't need go generate
     - make assets
 builds:
 - id: evcc
-  # Path to main.go file or main package.
   main: main.go
   ldflags:
   - -X github.com/andig/evcc/server.Version={{.Version}} -X github.com/andig/evcc/server.Commit={{.ShortCommit}}

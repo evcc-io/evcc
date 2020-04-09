@@ -18,6 +18,8 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 	var c api.Charger
 
 	switch strings.ToLower(typ) {
+	case "default", "configurable":
+		c = NewConfigurableFromConfig(log, other)
 	case "wallbe":
 		c = NewWallbeFromConfig(log, other)
 	case "phoenix":
@@ -28,8 +30,6 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 		c = NewGoEFromConfig(log, other)
 	case "simpleevse", "evse":
 		c = NewSimpleEVSEFromConfig(log, other)
-	case "default", "configurable":
-		c = NewConfigurableFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid charger type '%s'", typ)
 	}

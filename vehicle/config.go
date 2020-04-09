@@ -11,7 +11,7 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 	var c api.Vehicle
 
 	switch strings.ToLower(typ) {
-	case "script", "exec":
+	case "default", "configurable":
 		c = NewConfigurableFromConfig(log, other)
 	case "audi", "etron":
 		c = NewAudiFromConfig(log, other)

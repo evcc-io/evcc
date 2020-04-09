@@ -7,19 +7,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ### Features
 
 - simple and clean user interface
-- support for multiple chargers:
-  - Wallbe (tested with Wallbe Eco S)
-  - Phoenix (similar to Wallbe)
-  - NRGKick (experimental)
-  - Go-E (experimental)
-  - SimpleEVSE (experimental)
-  - any other charger using scripting
-- support for different vehicles to show battery state:
-  - Audi
-  - Tesla
-  - any other vehicle using scripting
-- notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
+- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), any other charger using scripting
+- more chargers experimentally supported: NRGKick, Go-E, SimpleEVSE
+- different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - integration with home automation - supports shell scripts and MQTT
+- status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com)
 - soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
 - electric contactor protection
@@ -67,17 +59,13 @@ NRGKick is supported with additional NRGConnect for interfacing.
 
 ### Software
 
-The preferred way of running EVCC is using the docker image:
+EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
 
-    docker pull andig/evcc:latest
+    evcc -h
 
-To see the available options:
+or to run EVCC with given config file and UI on port 7070 using Docker:
 
-    docker run andig/evcc -h
-
-To run EVCC with given config file and UI on port 7070:
-
-    docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc
+    docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 
 To build EVCC from source, [Go](2) 1.13 is required:
 
@@ -128,17 +116,25 @@ EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*.
 
 ### Charger
 
-Charger is responsible for EV state handling:
+Charger is responsible for handling EV state and adjusting charge current:
 
 - `Status()`: get charge controller status (`A...F`)
 - `Enabled()`: get charger availability
 - `Enable()`: set charger availability
 - `MaxCurrent()`: set maximum allowed charge current in A
 
+Optionally, charger can also provide:
+
+- `CurrentPower()`: power in W (used if charge meter is not present)
+
 Available charger implementations are:
 
-- `wallbe`: implements the interface to the Wallbe Eco chargers
-- `default`: default charger implementation using configurable plugins for integrating any type of charger
+- `wallbe`: Wallbe Eco chargers
+- `phoenix`: chargers with Phoenix controllers
+- `simpleevse`: chargers with SimpleEVSE controllers (e.g. OpenWB)
+- `nrgkick`: NRGKick chargers with Connect module
+- `go-e`: go-eCharger chargers
+- `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 ### Meter
 
@@ -147,7 +143,7 @@ Meters provide data about power and energy consumption:
 - `CurrentPower()`: power in W
 - `TotalEnergy()`: energy in kWh (optional)
 
-Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by plugin.
+Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by [plugin](#plugins).
 
 ### Vehicle
 
@@ -157,25 +153,42 @@ Vehicle represents a specific EV vehicle and its battery:
 - `Capacity()`: battery capacity in kWh
 - `ChargeState()`: state of charge in %
 
-Optionally, a vehicle can optionally also provide:
+Optionally, vehicles can also provide:
 
-- `CurrentPower()`: charge power in W
+- `CurrentPower()`: charge power in W (used if charge meter not present)
 - `ChargedEnergy()`: charged energy in kWh
 - `ChargeDuration()`: charge duration
 
 If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 
-### Loadpoint
+Available vehicle implementations are:
 
-Loadpoint controls the Charger behavior according to the operations mode- *off*, *now*, *PV + minimum* or *PV only*.
+- `audi`: Audi (eTron)
+- `bmw`: BMW (i3)
+- `nissan`: Nissan (Leaf)
+- `tesla`: Tesla (any model)
+- `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
-## Plugins
+### Plugins
 
 Plugins are used to implement accessing and updating generic data sources. EVCC supports the following *read/write* plugins:
 
 - `mqtt`: this plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT.
 This plugin type is read-only and does not provide write access.
+
+  Sample configuration:
+
+      type: mqtt
+      topic: mbmd/sdm1-1/Power
+      timeout: 30s
+
 - `script`: the script plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
+
+  Sample configuration:
+
+      type: script
+      cmd: /bin/bash -c "echo 50"
+      timeout: 5s
 
 When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. The variable is replaced with the actual data before the plugin is executed.
 

@@ -65,9 +65,9 @@ chargers:
   uri: 192.168.0.8:502 # ModBus address
 
 vehicles:
-- name: script
-  type: script
-  title: Script
+- name: default
+  type: default
+  title: Default
   capacity: 50 # kWh
   charge:
     type: script # use script
