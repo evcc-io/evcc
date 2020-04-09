@@ -29,7 +29,7 @@ func TestCachedGetter(t *testing.T) {
 	duration := time.Second
 	c := NewCached(g, duration)
 	clck := clock.NewMock()
-	c.clck = clck
+	c.clock = clck
 	getter := c.FloatGetter()
 
 	expect := func(s struct {

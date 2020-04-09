@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/push"
 
 	evbus "github.com/asaskevich/EventBus"
+	"github.com/benbjohnson/clock"
 )
 
 var (
@@ -34,6 +35,7 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 // SoC needs and power availability.
 type LoadPoint struct {
 	sync.Mutex                         // guard status
+	clock            clock.Clock       // mockable time
 	bus              evbus.Bus         // event bus
 	triggerChan      chan struct{}     // API updates
 	notificationChan chan<- push.Event // notifications
@@ -76,6 +78,7 @@ type LoadPoint struct {
 // NewLoadPoint creates a LoadPoint with sane defaults
 func NewLoadPoint() *LoadPoint {
 	return &LoadPoint{
+		clock:         clock.New(),
 		bus:           evbus.New(),
 		triggerChan:   make(chan struct{}, 1),
 		Name:          "Main",
@@ -85,7 +88,7 @@ func NewLoadPoint() *LoadPoint {
 		Voltage:       230, // V
 		MinCurrent:    6,   // A
 		MaxCurrent:    16,  // A
-		Steepness:     1,   // A
+		Steepness:     10,  // A
 		targetCurrent: 0,   // A
 		GuardDuration: 10 * time.Minute,
 	}
@@ -204,16 +207,17 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 	_ = lp.bus.Subscribe(evStopCharge, lp.evChargeStopHandler)
 
 	// read initial enabled state
-	var err error
-	if lp.enabled, err = lp.Charger.Enabled(); err != nil {
-		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
-	} else {
+	enabled, err := lp.Charger.Enabled()
+	if err == nil {
+		lp.enabled = enabled
 		log.INFO.Printf("%s charger %s", lp.Name, status[lp.enabled])
 
 		// prevent immediately disabling charger
 		if lp.enabled {
-			lp.guardUpdated = time.Now()
+			lp.guardUpdated = lp.clock.Now()
 		}
+	} else {
+		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 	}
 
 	// set current to known value
@@ -234,7 +238,7 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 		log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
 
-	if remaining := lp.GuardDuration - time.Since(lp.guardUpdated).Truncate(time.Second); remaining > 0 {
+	if remaining := (lp.GuardDuration - time.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
 		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
 		return nil
 	}
@@ -243,7 +247,7 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 	if err == nil {
 		lp.enabled = enable // cache
 		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
-		lp.guardUpdated = time.Now()
+		lp.guardUpdated = lp.clock.Now()
 
 		// if not enabled, current will be reduced to 0 in handler
 		lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
@@ -290,7 +294,7 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 			log.INFO.Printf("%s car connected (%s)", lp.Name, string(status))
 			if lp.enabled {
 				// when car connected don't disable right away
-				lp.guardUpdated = time.Now()
+				lp.guardUpdated = lp.clock.Now()
 			}
 		}
 
@@ -417,12 +421,13 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 
 // updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) {
-	var err error
-	*power, err = meter.CurrentPower()
+	value, err := meter.CurrentPower()
 	if err != nil {
 		log.ERROR.Printf("%s %v", lp.Name, err)
 		return
 	}
+
+	*power = value // update value if no error
 
 	log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
 	lp.publish(name+"Power", *power)

@@ -8,7 +8,7 @@ import (
 
 // Cached wraps a getter with a cache
 type Cached struct {
-	clck    clock.Clock
+	clock   clock.Clock
 	updated time.Time
 	cache   time.Duration
 	getter  interface{}
@@ -18,7 +18,7 @@ type Cached struct {
 // NewCached wraps a getter with a cache
 func NewCached(getter interface{}, cache time.Duration) *Cached {
 	return &Cached{
-		clck:   clock.New(),
+		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,
 	}
@@ -35,13 +35,13 @@ func (c *Cached) FloatGetter() FloatGetter {
 	}
 
 	return FloatGetter(func() (float64, error) {
-		if c.clck.Since(c.updated) > c.cache {
+		if c.clock.Since(c.updated) > c.cache {
 			val, err := g()
 			if err != nil {
 				return val, err
 			}
 
-			c.updated = c.clck.Now()
+			c.updated = c.clock.Now()
 			c.val = val
 		}
 
@@ -60,13 +60,13 @@ func (c *Cached) IntGetter() IntGetter {
 	}
 
 	return IntGetter(func() (int64, error) {
-		if c.clck.Since(c.updated) > c.cache {
+		if c.clock.Since(c.updated) > c.cache {
 			val, err := g()
 			if err != nil {
 				return val, err
 			}
 
-			c.updated = c.clck.Now()
+			c.updated = c.clock.Now()
 			c.val = val
 		}
 
@@ -85,14 +85,14 @@ func (c *Cached) StringGetter() StringGetter {
 	}
 
 	return StringGetter(func() (string, error) {
-		if c.clck.Since(c.updated) > c.cache {
+		if c.clock.Since(c.updated) > c.cache {
 
 			val, err := g()
 			if err != nil {
 				return val, err
 			}
 
-			c.updated = c.clck.Now()
+			c.updated = c.clock.Now()
 			c.val = val
 		}
 
@@ -111,14 +111,14 @@ func (c *Cached) BoolGetter() BoolGetter {
 	}
 
 	return BoolGetter(func() (bool, error) {
-		if c.clck.Since(c.updated) > c.cache {
+		if c.clock.Since(c.updated) > c.cache {
 
 			val, err := g()
 			if err != nil {
 				return val, err
 			}
 
-			c.updated = c.clck.Now()
+			c.updated = c.clock.Now()
 			c.val = val
 		}
 
