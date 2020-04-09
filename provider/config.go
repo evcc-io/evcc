@@ -66,6 +66,9 @@ func NewBoolGetterFromConfig(pc *Config) (res BoolGetter) {
 func NewFloatGetterFromConfig(pc *Config) (res FloatGetter) {
 	switch pc.Type {
 	case "mqtt":
+		if MQTT == nil {
+			log.FATAL.Fatal("mqtt not configured")
+		}
 		if pc.Timeout == 0 {
 			pc.Timeout = mqttTimeout
 		}
