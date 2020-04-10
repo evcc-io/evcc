@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/push"
 
 	evbus "github.com/asaskevich/EventBus"
+	"github.com/avast/retry-go"
 	"github.com/benbjohnson/clock"
 )
 
@@ -420,17 +421,45 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 }
 
 // updateMeter updates and publishes single meter
-func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) {
+func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) error {
 	value, err := meter.CurrentPower()
 	if err != nil {
 		log.ERROR.Printf("%s %v", lp.Name, err)
-		return
+		return err
 	}
 
 	*power = value // update value if no error
 
 	log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
 	lp.publish(name+"Power", *power)
+
+	return nil
+}
+
+// updateMeter updates and publishes single meter
+func (lp *LoadPoint) updateMeters() (err error) {
+	var wg sync.WaitGroup
+
+	var mux sync.Mutex
+	retry := func(s string, m api.Meter, f *float64) {
+		e := retry.Do(func() error {
+			return lp.updateMeter(s, m, f)
+		})
+		if e != nil {
+			mux.Lock()
+			err = e
+			mux.Unlock()
+		}
+		wg.Done()
+	}
+
+	wg.Add(3)
+	go retry("grid", lp.GridMeter, &lp.gridPower)
+	go retry("pv", lp.PVMeter, &lp.pvPower)
+	go retry("charge", lp.ChargeMeter, &lp.chargePower)
+	wg.Wait()
+
+	return err
 }
 
 // update is the main control function. It reevaluates meters and charger state
@@ -441,9 +470,8 @@ func (lp *LoadPoint) update() {
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
 
-	lp.updateMeter("grid", lp.GridMeter, &lp.gridPower)
-	lp.updateMeter("pv", lp.PVMeter, &lp.pvPower)
-	lp.updateMeter("charge", lp.ChargeMeter, &lp.chargePower)
+	// catch any persistent meter update error
+	meterErr := lp.updateMeters()
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
@@ -462,7 +490,12 @@ func (lp *LoadPoint) update() {
 		case api.ModeNow:
 			err = lp.rampOn(lp.MaxCurrent)
 		case api.ModeMinPV, api.ModePV:
-			err = lp.updateModePV(mode)
+			if meterErr == nil {
+				// pv modes require meter measurements
+				err = lp.updateModePV(mode)
+			} else {
+				log.WARN.Printf("%s aborting due to meter error", lp.Name)
+			}
 		}
 	}
 

@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20180315140547-d46933a94f05
+	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
