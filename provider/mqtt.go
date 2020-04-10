@@ -164,12 +164,14 @@ func (h *msgHandler) waitForInitialValue() {
 		mlog.TRACE.Printf("%s wait for initial value", h.topic)
 
 		for {
+			updated := h.updated
+
 			// wait for update
 			h.mux.Unlock()
 			time.Sleep(waitTimeout)
 			h.mux.Lock()
 
-			if time.Since(h.updated) < h.timeout {
+			if updated != h.updated {
 				return
 			}
 		}
