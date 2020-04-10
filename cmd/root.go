@@ -204,7 +204,7 @@ func run(cmd *cobra.Command, args []string) {
 		teeChan = dedupe.Pipe(teeChan)
 
 		// reduce number of values written to influx
-		limiter := server.NewLimiter(1 * time.Minute)
+		limiter := server.NewLimiter(5 * time.Second)
 		teeChan = limiter.Pipe(teeChan)
 
 		go influx.Run(teeChan)
