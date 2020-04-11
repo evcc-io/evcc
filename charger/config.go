@@ -23,6 +23,8 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 		c = NewNRGKickFromConfig(log, other)
 	case "go-e", "goe":
 		c = NewGoEFromConfig(log, other)
+	case "evsewifi":
+		c = NewEVSEWifiFromConfig(log, other)
 	case "simpleevse", "evse":
 		c = NewSimpleEVSEFromConfig(log, other)
 	default:

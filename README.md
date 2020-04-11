@@ -8,7 +8,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), any other charger using scripting
-- more chargers experimentally supported: NRGKick, Go-E, SimpleEVSE
+- more chargers experimentally supported: NRGKick, Go-E, SimpleEVSE, EVSEWifi
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - integration with home automation - supports shell scripts and MQTT
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
@@ -38,26 +38,6 @@ EVCC requires a supported charger and a combination of grid, PV and charge meter
 Charger and meters **must** be installed by a certified professional.
 
 ## Installation
-
-### Hardware
-
-#### Wallbe and Phoenix Chargers
-
-Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
-
-To allow controlling charge start/stop, the Wallbe physical configuration must be modified. This requires opening the Wallbe. Once opened, DIP 10 must be set to ON:
-
-![dip10](docs/dip10.jpeg)
-
-More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
-
-**NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
-
-#### NRGKick
-
-NRGKick is supported with additional NRGConnect for interfacing.
-
-### Software
 
 EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
 
@@ -129,12 +109,25 @@ Optionally, charger can also provide:
 
 Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers
+- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-Hardware-Preparation) for preparing the Wallbe)
 - `phoenix`: chargers with Phoenix controllers
-- `simpleevse`: chargers with SimpleEVSE controllers (e.g. OpenWB)
+- `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
+- `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
 - `nrgkick`: NRGKick chargers with Connect module
 - `go-e`: go-eCharger chargers
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
+
+#### Wallbe Hardware Preparation
+
+Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
+
+To allow controlling charge start/stop, the Wallbe physical configuration must be modified. This requires opening the Wallbe. Once opened, DIP 10 must be set to ON:
+
+![dip10](docs/dip10.jpeg)
+
+More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
+
+**NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
 ### Meter
 
