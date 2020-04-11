@@ -52,7 +52,7 @@ func NewSimpleEVSE(conn, device string) api.Charger {
 		handler.(*modbus.RTUClientHandler).SlaveID = 1
 	}
 	if handler == nil {
-		log.FATAL.Fatal("most define either uri or device")
+		log.FATAL.Fatal("must define either uri or device")
 	}
 
 	evse := &SimpleEVSE{

@@ -61,8 +61,28 @@ meters:
 
 chargers:
 - name: wallbe
-  type: wallbe # Wallbe charger using Phoenix Contact controller
+  type: wallbe # Wallbe charger
   uri: 192.168.0.8:502 # ModBus address
+- name: phoenix
+  type: phoenix # Charger with Phoenix Contact controller
+  uri: 192.168.0.8:502 # ModBus address
+- name: simpleevse-tcp
+  type: simpleevse # Charger with Phoenix Contact controller
+  uri: 192.168.0.8:502 # TCP ModBus address
+- name: simpleevse-rtu
+  type: simpleevse # Charger with Phoenix Contact controller
+  device: /dev/usb1 # RS485 ModBus device
+- name: evsewifi
+  type: evsewifi # Charger with Phoenix Contact controller
+  uri: http://192.168.1.4 # SimpleEVSE-Wifi address
+- name: nrg
+  type: nrg # NRGKick charger
+  ip: 192.168.1.4 # IP
+  macaddress: 00:99:22 # MAC address
+  password: # password
+- name: go-e
+  type: go-e # go-e charger
+  uri: http://192.168.1.4 # go-e address
 
 vehicles:
 - name: default
@@ -110,7 +130,7 @@ vehicles:
 #   cache: 5m
 
 loadpoints:
-- name: lp1 # name for logging
+- name: main # name for logging
   vehicle: audi
   charger: wallbe # charger
   gridmeter: grid # grid meter
