@@ -3,7 +3,6 @@ package charger
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 
 	"github.com/andig/evcc/api"
 )
@@ -24,7 +23,7 @@ type NRGMeasurements struct {
 	ChargingPower  float64
 }
 
-// NRGSettings is the /api/setings request/response
+// NRGSettings is the /api/settings request/response
 type NRGSettings struct {
 	Info   NRGInfo `json:"omitempty"`
 	Values NRGValues
@@ -59,7 +58,7 @@ type NRGDeviceMetadata struct {
 
 // NRGKick charger implementation
 type NRGKick struct {
-	log        *api.Logger
+	*api.HTTPHelper
 	IP         string
 	MacAddress string
 	Password   string
@@ -76,13 +75,13 @@ func NewNRGKickFromConfig(log *api.Logger, other map[string]interface{}) api.Cha
 // NewNRGKick creates NRGKick charger
 func NewNRGKick(IP, MacAddress, Password string) *NRGKick {
 	nrg := &NRGKick{
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("kick")),
 		IP:         IP,
 		MacAddress: MacAddress,
 		Password:   Password,
-		log:        api.NewLogger("kick"),
 	}
 
-	nrg.log.WARN.Println("-- experimental --")
+	nrg.HTTPHelper.Log.WARN.Println("-- experimental --")
 
 	return nrg
 }
@@ -92,35 +91,31 @@ func (nrg *NRGKick) apiURL(api apiFunction) string {
 }
 
 func (nrg *NRGKick) getJSON(url string, result interface{}) error {
-	resp, body, err := getJSON(url, result)
-	nrg.log.TRACE.Printf("GET %s: %s", url, string(body))
+	b, err := nrg.GetJSON(url, result)
+	if err != nil && len(b) > 0 {
+		var error NRGResponse
+		if err := json.Unmarshal(b, &error); err != nil {
+			return err
+		}
 
-	if err != nil && len(body) == 0 {
-		return err
+		return fmt.Errorf("response: %s", error.Message)
 	}
 
-	var error NRGResponse
-	_ = json.Unmarshal(body, &error)
-
-	return fmt.Errorf("api %d: %s", resp.StatusCode, error.Message)
+	return err
 }
 
 func (nrg *NRGKick) putJSON(url string, request interface{}) error {
-	resp, body, err := putJSON(url, request)
-	nrg.log.TRACE.Printf("PUT %v: %s", resp, string(body))
-
-	if err != nil && len(body) == 0 {
+	b, err := nrg.PutJSON(url, request)
+	if err != nil && len(b) == 0 {
 		return err
 	}
 
-	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusNoContent {
-		return nil
+	var error NRGResponse
+	if err := json.Unmarshal(b, &error); err != nil {
+		return err
 	}
 
-	var error NRGResponse
-	_ = json.Unmarshal(body, &error)
-
-	return fmt.Errorf("api %d: %s", resp.StatusCode, error.Message)
+	return fmt.Errorf("response: %s", error.Message)
 }
 
 // Status implements the Charger.Status interface

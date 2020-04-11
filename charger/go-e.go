@@ -26,7 +26,7 @@ type goeStatusResponse struct {
 
 // GoE charger implementation
 type GoE struct {
-	log *api.Logger
+	*api.HTTPHelper
 	URI string
 }
 
@@ -41,11 +41,11 @@ func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger
 // NewGoE creates GoE charger
 func NewGoE(URI string) *GoE {
 	c := &GoE{
-		URI: URI,
-		log: api.NewLogger("go-e"),
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("go-e")),
+		URI:        URI,
 	}
 
-	c.log.WARN.Println("-- experimental --")
+	c.HTTPHelper.Log.WARN.Println("-- experimental --")
 
 	return c
 }
@@ -55,51 +55,55 @@ func (c *GoE) apiURL(api apiFunction) string {
 }
 
 func (c *GoE) getJSON(url string, result interface{}) error {
-	resp, body, err := getJSON(url, result)
-	c.log.TRACE.Printf("GET %s: %s", url, string(body))
+	b, err := c.GetJSON(url, result)
+	if err != nil && len(b) > 0 {
+		var error goeStatusResponse
+		if err := json.Unmarshal(b, &error); err != nil {
+			return err
+		}
 
-	if err != nil && len(body) == 0 {
-		return err
+		return fmt.Errorf("response code: %d", error.Err)
 	}
 
-	var error goeStatusResponse
-	_ = json.Unmarshal(body, &error)
-
-	return fmt.Errorf("api %d: %d", resp.StatusCode, error.Err)
+	return err
 }
 
 // Status implements the Charger.Status interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
 	var status goeStatusResponse
-	err := c.getJSON(c.apiURL(goeStatus), status)
+	if err := c.getJSON(c.apiURL(goeStatus), status); err != nil {
+		return api.StatusNone, err
+	}
 
 	switch status.Car {
 	case 1:
-		return api.StatusA, err
+		return api.StatusA, nil
 	case 2:
-		return api.StatusC, err
+		return api.StatusC, nil
 	case 3:
-		return api.StatusB, err
+		return api.StatusB, nil
 	case 4:
-		return api.StatusB, err
+		return api.StatusB, nil
+	default:
+		return api.StatusNone, fmt.Errorf("unknown result %d", status.Car)
 	}
-
-	return api.StatusNone, fmt.Errorf("unknown result %d", status.Car)
 }
 
 // Enabled implements the Charger.Enabled interface
 func (c *GoE) Enabled() (bool, error) {
 	var status goeStatusResponse
-	err := c.getJSON(c.apiURL(goeStatus), status)
+	if err := c.getJSON(c.apiURL(goeStatus), status); err != nil {
+		return false, err
+	}
 
 	switch status.Alw {
 	case 0:
-		return false, err
+		return false, nil
 	case 1:
-		return true, err
+		return true, nil
+	default:
+		return false, fmt.Errorf("unknown result %d", status.Alw)
 	}
-
-	return false, fmt.Errorf("unknown result %d", status.Alw)
 }
 
 // Enable implements the Charger.Enable interface

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,15 +18,6 @@ const (
 	audiDE         = "Audi/DE"
 	audiAuthPrefix = "AudiAuth 1"
 )
-
-// Audi is an api.Vehicle implementation for Audi cars
-type Audi struct {
-	*embed
-	user, password, vin string
-	token               string
-	tokenValid          time.Time
-	chargeStateG        provider.FloatGetter
-}
 
 type audiTokenResponse struct {
 	AccessToken string `json:"access_token"`
@@ -60,6 +50,16 @@ type audiBrStateOfCharge struct {
 	Content int
 }
 
+// Audi is an api.Vehicle implementation for Audi cars
+type Audi struct {
+	*embed
+	*api.HTTPHelper
+	user, password, vin string
+	token               string
+	tokenValid          time.Time
+	chargeStateG        provider.FloatGetter
+}
+
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
@@ -71,10 +71,11 @@ func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicl
 	api.DecodeOther(log, other, &cc)
 
 	v := &Audi{
-		embed:    &embed{cc.Title, cc.Capacity},
-		user:     cc.User,
-		password: cc.Password,
-		vin:      cc.VIN,
+		embed:      &embed{cc.Title, cc.Capacity},
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("audi")),
+		user:       cc.User,
+		password:   cc.Password,
+		vin:        cc.VIN,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -122,28 +123,14 @@ func (v *Audi) login(user, password string) error {
 	req.Header.Set("Authorization", audiAuthPrefix)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		var er audiErrorResponse
-		if err = json.Unmarshal(b, &er); err == nil {
-			return errors.New(er.Description)
-		}
-		return fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
-	}
-
 	var tr audiTokenResponse
-	if err = json.Unmarshal(b, &tr); err != nil {
+	if b, err := v.RequestJSON(req, &tr); err != nil {
+		if len(b) > 0 {
+			var er audiErrorResponse
+			if err = json.Unmarshal(b, &er); err == nil {
+				return errors.New(er.Description)
+			}
+		}
 		return err
 	}
 
@@ -180,20 +167,8 @@ func (v *Audi) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0, err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
 	var br audiBatteryResponse
-	err = json.Unmarshal(b, &br)
+	_, err = v.RequestJSON(req, &br)
 
 	return float64(br.Charger.Status.BatteryStatusData.StateOfCharge.Content), err
 }
