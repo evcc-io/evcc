@@ -14,10 +14,6 @@ import (
 
 var log = api.NewLogger("exec")
 
-func truish(s string) bool {
-	return s == "1" || strings.ToLower(s) == "true" || strings.ToLower(s) == "on"
-}
-
 // Script implements shell script-based providers and setters
 type Script struct {
 	timeout time.Duration

@@ -83,6 +83,20 @@ chargers:
 - name: go-e
   type: go-e # go-e charger
   uri: http://192.168.1.4 # go-e address
+- name: configurable
+  type: default # Configurable charger
+  status: # charger status A..F
+    type: mqtt
+    topic: some/topic1
+  enabled: # charger enabled state (true/false or 0/1)
+    type: mqtt
+    topic: some/topic2
+  enable: # set charger enabled state
+    type: script
+    cmd: /bin/sh -c "echo ${enable}"
+  maxcurrent: # set charger max current
+    type: script
+    cmd: /bin/sh -c "echo ${maxcurrent}"
 
 vehicles:
 - name: default
