@@ -114,6 +114,17 @@ Vue.component("datapanel", {
       state: store.state // global state
     };
   },
+  computed: {
+    items: function() {
+      if (this.state.soc && this.state.pvMeter) {
+        return 4;
+      } else if (this.state.soc || this.state.pvMeter) {
+        return 3;
+      } else {
+        return 2;
+      }
+    }
+  },
   watch: {
     "state.chargeDuration": function() {
       window.clearInterval(this.tickerHandle);
