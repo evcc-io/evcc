@@ -5,6 +5,28 @@ import (
 	"testing"
 )
 
+func TestTruish(t *testing.T) {
+	cases := []struct {
+		k string
+		v bool
+	}{
+		{"", false},
+		{"false", false},
+		{"0", false},
+		{"off", false},
+		{"true", true},
+		{"1", true},
+		{"on", true},
+	}
+
+	for _, c := range cases {
+		b := truish(c.k)
+		if b != c.v {
+			t.Errorf("expected %v got %v", c.v, b)
+		}
+	}
+}
+
 func TestReplace(t *testing.T) {
 	cases := []struct {
 		k             string

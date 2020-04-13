@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"strings"
 	"time"
 )
 
@@ -22,49 +23,9 @@ type Config struct {
 // MQTT singleton
 var MQTT *MqttClient
 
-// NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(pc *Config) (res StringGetter) {
-	switch pc.Type {
-	case "script":
-		if pc.Timeout == 0 {
-			pc.Timeout = execTimeout
-		}
-		exec := NewScriptProvider(pc.Timeout)
-		res = exec.StringGetter(pc.Cmd)
-	default:
-		log.FATAL.Fatalf("invalid provider type %s", pc.Type)
-	}
-
-	if pc.Cache > 0 {
-		res = NewCached(res, pc.Cache).StringGetter()
-	}
-
-	return
-}
-
-// NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(pc *Config) (res BoolGetter) {
-	switch pc.Type {
-	case "script":
-		if pc.Timeout == 0 {
-			pc.Timeout = execTimeout
-		}
-		exec := NewScriptProvider(pc.Timeout)
-		res = exec.BoolGetter(pc.Cmd)
-	default:
-		log.FATAL.Fatalf("invalid provider type %s", pc.Type)
-	}
-
-	if pc.Cache > 0 {
-		res = NewCached(res, pc.Cache).BoolGetter()
-	}
-
-	return
-}
-
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(pc *Config) (res FloatGetter) {
-	switch pc.Type {
+	switch strings.ToLower(pc.Type) {
 	case "mqtt":
 		if MQTT == nil {
 			log.FATAL.Fatal("mqtt not configured")
@@ -93,9 +54,96 @@ func NewFloatGetterFromConfig(pc *Config) (res FloatGetter) {
 	return
 }
 
+// NewIntGetterFromConfig creates a IntGetter from config
+func NewIntGetterFromConfig(pc *Config) (res IntGetter) {
+	switch strings.ToLower(pc.Type) {
+	case "mqtt":
+		if MQTT == nil {
+			log.FATAL.Fatal("mqtt not configured")
+		}
+		if pc.Timeout == 0 {
+			pc.Timeout = mqttTimeout
+		}
+		if pc.Multiplier == 0 {
+			pc.Multiplier = 1
+		}
+		res = MQTT.IntGetter(pc.Topic, int64(pc.Multiplier), pc.Timeout)
+	case "script":
+		if pc.Timeout == 0 {
+			pc.Timeout = execTimeout
+		}
+		exec := NewScriptProvider(pc.Timeout)
+		res = exec.IntGetter(pc.Cmd)
+	default:
+		log.FATAL.Fatalf("invalid provider type %s", pc.Type)
+	}
+
+	if pc.Cache > 0 {
+		res = NewCached(res, pc.Cache).IntGetter()
+	}
+
+	return
+}
+
+// NewStringGetterFromConfig creates a StringGetter from config
+func NewStringGetterFromConfig(pc *Config) (res StringGetter) {
+	switch strings.ToLower(pc.Type) {
+	case "mqtt":
+		if MQTT == nil {
+			log.FATAL.Fatal("mqtt not configured")
+		}
+		if pc.Timeout == 0 {
+			pc.Timeout = mqttTimeout
+		}
+		res = MQTT.StringGetter(pc.Topic, pc.Timeout)
+	case "script":
+		if pc.Timeout == 0 {
+			pc.Timeout = execTimeout
+		}
+		exec := NewScriptProvider(pc.Timeout)
+		res = exec.StringGetter(pc.Cmd)
+	default:
+		log.FATAL.Fatalf("invalid provider type %s", pc.Type)
+	}
+
+	if pc.Cache > 0 {
+		res = NewCached(res, pc.Cache).StringGetter()
+	}
+
+	return
+}
+
+// NewBoolGetterFromConfig creates a BoolGetter from config
+func NewBoolGetterFromConfig(pc *Config) (res BoolGetter) {
+	switch strings.ToLower(pc.Type) {
+	case "mqtt":
+		if MQTT == nil {
+			log.FATAL.Fatal("mqtt not configured")
+		}
+		if pc.Timeout == 0 {
+			pc.Timeout = mqttTimeout
+		}
+		res = MQTT.BoolGetter(pc.Topic, pc.Timeout)
+	case "script":
+		if pc.Timeout == 0 {
+			pc.Timeout = execTimeout
+		}
+		exec := NewScriptProvider(pc.Timeout)
+		res = exec.BoolGetter(pc.Cmd)
+	default:
+		log.FATAL.Fatalf("invalid provider type %s", pc.Type)
+	}
+
+	if pc.Cache > 0 {
+		res = NewCached(res, pc.Cache).BoolGetter()
+	}
+
+	return
+}
+
 // NewBoolSetterFromConfig creates a BoolSetter from config
 func NewBoolSetterFromConfig(param string, pc *Config) (res BoolSetter) {
-	switch pc.Type {
+	switch strings.ToLower(pc.Type) {
 	case "script":
 		if pc.Timeout == 0 {
 			pc.Timeout = execTimeout
@@ -110,7 +158,7 @@ func NewBoolSetterFromConfig(param string, pc *Config) (res BoolSetter) {
 
 // NewIntSetterFromConfig creates a IntSetter from config
 func NewIntSetterFromConfig(param string, pc *Config) (res IntSetter) {
-	switch pc.Type {
+	switch strings.ToLower(pc.Type) {
 	case "script":
 		if pc.Timeout == 0 {
 			pc.Timeout = execTimeout

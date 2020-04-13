@@ -115,14 +115,37 @@ func (m *MqttClient) FloatGetter(topic string, multiplier float64, timeout time.
 }
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *MqttClient) IntGetter(topic string, timeout time.Duration) IntGetter {
+func (m *MqttClient) IntGetter(topic string, multiplier int64, timeout time.Duration) IntGetter {
+	h := &msgHandler{
+		topic:      topic,
+		multiplier: float64(multiplier),
+		timeout:    timeout,
+	}
+
+	m.Listen(topic, h.Receive)
+	return h.intGetter
+}
+
+// StringGetter creates handler for string from MQTT topic that returns cached value
+func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGetter {
 	h := &msgHandler{
 		topic:   topic,
 		timeout: timeout,
 	}
 
 	m.Listen(topic, h.Receive)
-	return h.intGetter
+	return h.stringGetter
+}
+
+// BoolGetter creates handler for string from MQTT topic that returns cached value
+func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter {
+	h := &msgHandler{
+		topic:   topic,
+		timeout: timeout,
+	}
+
+	m.Listen(topic, h.Receive)
+	return h.boolGetter
 }
 
 // WaitForToken synchronously waits until token operation completed
@@ -209,5 +232,29 @@ func (h *msgHandler) intGetter() (int64, error) {
 		return 0, fmt.Errorf("%s invalid: '%s'", h.topic, h.payload)
 	}
 
-	return val, nil
+	return int64(h.multiplier) * val, nil
+}
+
+func (h *msgHandler) stringGetter() (string, error) {
+	h.once.Do(h.waitForInitialValue)
+	h.mux.Lock()
+	defer h.mux.Unlock()
+
+	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
+	}
+
+	return string(h.payload), nil
+}
+
+func (h *msgHandler) boolGetter() (bool, error) {
+	h.once.Do(h.waitForInitialValue)
+	h.mux.Lock()
+	defer h.mux.Unlock()
+
+	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+		return false, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
+	}
+
+	return truish(string(h.payload)), nil
 }

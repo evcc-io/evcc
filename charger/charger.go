@@ -22,7 +22,7 @@ func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) ap
 		provider.NewStringGetterFromConfig(cc.Status),
 		provider.NewBoolGetterFromConfig(cc.Enabled),
 		provider.NewBoolSetterFromConfig("enable", cc.Enable),
-		provider.NewIntSetterFromConfig("current", cc.MaxCurrent),
+		provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent),
 	)
 
 	return charger
