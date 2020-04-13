@@ -424,7 +424,6 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) error {
 	value, err := meter.CurrentPower()
 	if err != nil {
-		log.ERROR.Printf("%s %v", lp.Name, err)
 		return err
 	}
 
@@ -438,26 +437,27 @@ func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) e
 
 // updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeters() (err error) {
-	var wg sync.WaitGroup
-
-	var mux sync.Mutex
+	// var wg sync.WaitGroup
+	// var mux sync.Mutex
 	retry := func(s string, m api.Meter, f *float64) {
 		e := retry.Do(func() error {
 			return lp.updateMeter(s, m, f)
 		})
 		if e != nil {
-			mux.Lock()
+			log.ERROR.Printf("%s %v", lp.Name, err)
+			// mux.Lock()
 			err = e
-			mux.Unlock()
+			// mux.Unlock()
 		}
-		wg.Done()
+		// wg.Done()
 	}
 
-	wg.Add(3)
-	go retry("grid", lp.GridMeter, &lp.gridPower)
-	go retry("pv", lp.PVMeter, &lp.pvPower)
-	go retry("charge", lp.ChargeMeter, &lp.chargePower)
-	wg.Wait()
+	// read PV meter before charge meter
+	retry("grid", lp.GridMeter, &lp.gridPower)
+	if lp.PVMeter != nil {
+		retry("pv", lp.PVMeter, &lp.pvPower)
+	}
+	retry("charge", lp.ChargeMeter, &lp.chargePower)
 
 	return err
 }

@@ -109,12 +109,12 @@
         <span class="d-inline d-sm-none">Sofort</span>
         <span class="d-none d-sm-inline">Sofortladen</span>
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.pvMeter">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
         <input type="radio" value="minpv" v-on:click="mode='minpv'">
         <span class="d-inline d-sm-none">Min</span>
         <span class="d-none d-sm-inline">Minimum + PV</span>
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.pvMeter">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
         <input type="radio" value="pv" v-on:click="mode='pv'">
         <span class="d-inline d-sm-none">PV</span>
         <span class="d-none d-sm-inline">Nur PV</span>
@@ -127,7 +127,9 @@
 <div>
 
   <div class="card-deck mb-3 text-center">
-    <div class="col-12 col-md-6 col-lg-3" v-if="state.soc">
+    <div class="col-12" v-if="state.soc" v-bind:class="{
+      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
+      'col-lg-6':items==2, 'col-lg-3':items==4 }">
       <div class="card mb-4 shadow-sm">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Batterie</h4>
@@ -141,8 +143,9 @@
       </div>
     </div>
 
-    <div class="col-12"
-      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
+    <div class="col-12" v-bind:class="{
+      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
+      'col-lg-6':items==2, 'col-lg-3':items==4 }">
       <div class="card mb-4 shadow-sm">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Wallbox</h4>
@@ -156,9 +159,10 @@
       </div>
     </div>
 
-    <div class="col-12"
-      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
-      <div class="card mb-4 shadow-sm" v-if="state.gridMeter">
+    <div class="col-12" v-if="state.gridMeter" v-bind:class="{
+      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
+      'col-lg-6':items==2, 'col-lg-3':items==4 }">
+      <div class="card mb-4 shadow-sm">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">Netz</h4>
         </div>
@@ -175,8 +179,9 @@
       </div>
     </div>
 
-    <div class="col-12"
-      v-bind:class="{'col-md-6':state.soc, 'col-md-4':!state.soc, 'col-lg-3':state.soc, 'col-lg-4':!state.soc}">
+    <div class="col-12" v-if="state.pvMeter" v-bind:class="{
+      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
+      'col-lg-6':items==2, 'col-lg-3':items==4 }">
       <div class="card mb-4 shadow-sm">
         <div class="card-header">
           <h4 class="my-0 font-weight-normal">PV</h4>
