@@ -171,6 +171,15 @@ vehicles:
 #   password: # password
 #   region: NE # carwings region, leave empty for Europe
 #   cache: 5m
+# - name: renault
+#   type: renault
+#   title: Zoe
+#   capacity: 60 # kWh
+#   user: # user
+#   password: # password
+#   region: de_DE # gigya region
+#   vin: WREN...
+#   cache: 5m
 
 loadpoints:
 - name: main # name for logging
