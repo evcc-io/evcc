@@ -88,38 +88,7 @@ func NewRenaultFromConfig(log *api.Logger, other map[string]interface{}) api.Veh
 
 	err := v.apiKeys(cc.Region)
 	if err == nil {
-		var sessionCookie string
-		sessionCookie, err = v.sessionCookie(v.user, v.password)
-
-		if err == nil {
-			var jwtToken string
-			jwtToken, err = v.jwtToken(sessionCookie)
-
-			if err == nil {
-				var personID string
-				personID, err = v.personID(sessionCookie)
-
-				fmt.Println(personID)
-
-				if err == nil {
-					var accountID string
-					accountID, err = v.kamereonPerson(jwtToken, personID)
-
-					fmt.Println(accountID)
-
-					if err == nil {
-						var accessToken string
-						accessToken, err = v.kamereonToken(jwtToken, accountID)
-
-						fmt.Println(accessToken)
-
-						v.gigyaJwtToken = jwtToken
-						v.kamereonAccessToken = accessToken
-					}
-
-				}
-			}
-		}
+		err = v.authFlow()
 	}
 	if err != nil {
 		v.HTTPHelper.Log.FATAL.Fatalf("cannot create renault: %v", err)
@@ -138,6 +107,39 @@ func (v *Renault) apiKeys(region string) error {
 
 	v.gigya = cr.Servers.GigyaProd
 	v.kamereon = cr.Servers.WiredProd
+
+	return err
+}
+
+func (v *Renault) authFlow() error {
+	sessionCookie, err := v.sessionCookie(v.user, v.password)
+
+	if err == nil {
+		v.gigyaJwtToken, err = v.jwtToken(sessionCookie)
+
+		if err == nil {
+			var personID string
+			personID, err = v.personID(sessionCookie)
+
+			fmt.Println(personID)
+
+			if err == nil {
+				var accountID string
+				accountID, err = v.kamereonPerson(personID)
+
+				fmt.Println(accountID)
+
+				if err == nil {
+					var accessToken string
+					accessToken, err = v.kamereonToken(accountID)
+
+					fmt.Println(accessToken)
+
+					v.kamereonAccessToken = accessToken
+				}
+			}
+		}
+	}
 
 	return err
 }
@@ -206,17 +208,29 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 	return tr.IDToken, err
 }
 
-func (v *Renault) kamereonPerson(jwtToken, personID string) (string, error) {
+func (v *Renault) kamereonHeaders(additional ...map[string]string) map[string]string {
+	headers := map[string]string{
+		"x-gigya-id_token": v.gigyaJwtToken,
+		"apikey":           v.kamereon.APIKey,
+	}
+
+	for _, h := range additional {
+		for k, v := range h {
+			headers[k] = v
+		}
+	}
+
+	return headers
+}
+
+func (v *Renault) kamereonPerson(personID string) (string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
 
 	data := url.Values{
 		"country": []string{"DE"},
 	}
 
-	headers := map[string]string{
-		"x-gigya-id_token": jwtToken,
-		"apikey":           v.kamereon.APIKey,
-	}
+	headers := v.kamereonHeaders()
 
 	tr, err := v.request(uri, data, headers)
 	if err != nil {
@@ -225,17 +239,14 @@ func (v *Renault) kamereonPerson(jwtToken, personID string) (string, error) {
 	return tr.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonToken(jwtToken, accountID string) (string, error) {
+func (v *Renault) kamereonToken(accountID string) (string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/token", v.kamereon.Target, accountID)
 
 	data := url.Values{
 		"country": []string{"DE"},
 	}
 
-	headers := map[string]string{
-		"x-gigya-id_token": jwtToken,
-		"apikey":           v.kamereon.APIKey,
-	}
+	headers := v.kamereonHeaders()
 
 	tr, err := v.request(uri, data, headers)
 	return tr.AccessToken, err
@@ -249,11 +260,7 @@ func (v *Renault) chargeState() (float64, error) {
 		"country": []string{"DE"},
 	}
 
-	headers := map[string]string{
-		"x-gigya-id_token":         v.gigyaJwtToken,
-		"apikey":                   v.kamereon.APIKey,
-		"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken,
-	}
+	headers := v.kamereonHeaders(map[string]string{"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken})
 
 	_, _ = v.request(uri, data, headers)
 
