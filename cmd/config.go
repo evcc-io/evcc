@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 )
@@ -17,10 +16,15 @@ type config struct {
 	Influx     influxConfig
 	Menu       []server.MenuConfig
 	Messaging  messagingConfig
-	Meters     []core.MeterConfig
+	Meters     []namedConfig
 	Chargers   []typedConfig
 	Vehicles   []typedConfig
 	LoadPoints []loadPointConfig
+}
+
+type namedConfig struct {
+	Name  string
+	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 type typedConfig struct {

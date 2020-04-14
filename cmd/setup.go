@@ -40,7 +40,7 @@ func clientID() string {
 func configureMeters(conf config) (meters map[string]api.Meter) {
 	meters = make(map[string]api.Meter)
 	for _, cc := range conf.Meters {
-		meters[cc.Name] = core.NewMeterFromConfig(log, cc)
+		meters[cc.Name] = core.NewMeterFromConfig(log, cc.Other)
 	}
 	return
 }
