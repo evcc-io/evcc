@@ -148,6 +148,46 @@ func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter 
 	return h.boolGetter
 }
 
+// IntSetter publishes topic with parameter replaced by int value
+func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
+	return func(v int64) error {
+		payload, err := replaceFormatted(message, map[string]interface{}{
+			param: v,
+		})
+		if err != nil {
+			return err
+		}
+
+		mlog.TRACE.Printf("send %s: '%s'", topic, payload)
+		token := m.Client.Publish(topic, m.qos, false, payload)
+		if token.WaitTimeout(publishTimeout) {
+			return token.Error()
+		}
+
+		return fmt.Errorf("%s send timeout", topic)
+	}
+}
+
+// BoolSetter invokes script with parameter replaced by bool value
+func (m *MqttClient) BoolSetter(param, topic, message string) BoolSetter {
+	return func(v bool) error {
+		payload, err := replaceFormatted(message, map[string]interface{}{
+			param: v,
+		})
+		if err != nil {
+			return err
+		}
+
+		mlog.TRACE.Printf("send %s: '%s'", topic, payload)
+		token := m.Client.Publish(topic, m.qos, false, payload)
+		if token.WaitTimeout(publishTimeout) {
+			return token.Error()
+		}
+
+		return fmt.Errorf("%s send timeout", topic)
+	}
+}
+
 // WaitForToken synchronously waits until token operation completed
 func (m *MqttClient) WaitForToken(token mqtt.Token) {
 	if token.WaitTimeout(publishTimeout) {
