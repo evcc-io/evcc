@@ -183,20 +183,14 @@ func (h *msgHandler) waitForInitialValue() {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if time.Since(h.updated) > h.timeout {
+	if h.updated.IsZero() {
 		mlog.TRACE.Printf("%s wait for initial value", h.topic)
 
-		for {
-			updated := h.updated
-
-			// wait for update
+		// wait for initial update
+		for h.updated.IsZero() {
 			h.mux.Unlock()
 			time.Sleep(waitTimeout)
 			h.mux.Lock()
-
-			if updated != h.updated {
-				return
-			}
 		}
 	}
 }
