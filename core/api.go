@@ -65,6 +65,16 @@ func (lp *LoadPoint) Dump() {
 		presence[pv],
 		presence[lp.hasChargeMeter()],
 	)
+
+	_, power := lp.Charger.(api.Meter)
+	_, energy := lp.Charger.(api.ChargeRater)
+	_, timer := lp.Charger.(api.ChargeTimer)
+	log.INFO.Printf("%s charger: power %s energy %s timer %s", lp.Name,
+		presence[power],
+		presence[energy],
+		presence[timer],
+	)
+
 	log.INFO.Printf("%s charge mode: %s", lp.Name, lp.GetMode())
 }
 
@@ -72,6 +82,7 @@ func (lp *LoadPoint) Dump() {
 func (lp *LoadPoint) Update() {
 	select {
 	case lp.triggerChan <- struct{}{}: // non-blocking send
+		log.WARN.Printf("%s update blocked", lp.Name)
 	default:
 	}
 }

@@ -211,7 +211,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 	enabled, err := lp.Charger.Enabled()
 	if err == nil {
 		lp.enabled = enabled
-		log.INFO.Printf("%s charger %s", lp.Name, status[lp.enabled])
+		log.INFO.Printf("%s charger %sd", lp.Name, status[lp.enabled])
 
 		// prevent immediately disabling charger
 		if lp.enabled {
