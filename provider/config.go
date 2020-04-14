@@ -54,10 +54,6 @@ func mqttFromConfig(log *api.Logger, other map[string]interface{}) mqttConfig {
 }
 
 func scriptFromConfig(log *api.Logger, other map[string]interface{}) scriptConfig {
-	if MQTT == nil {
-		log.FATAL.Fatal("mqtt not configured")
-	}
-
 	var pc scriptConfig
 	api.DecodeOther(log, other, &pc)
 
