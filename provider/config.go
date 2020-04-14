@@ -21,8 +21,8 @@ type Config struct {
 // mqttConfig is the specific mqtt getter/setter configuration
 type mqttConfig struct {
 	Topic, Payload string // Payload only applies to setters
-	Multiplier float64
-	Timeout    time.Duration
+	Multiplier     float64
+	Timeout        time.Duration
 }
 
 // scriptConfig is the specific script getter/setter configuration
@@ -114,6 +114,8 @@ func NewStringGetterFromConfig(log *api.Logger, config Config) (res StringGetter
 		if pc.Cache > 0 {
 			res = NewCached(res, pc.Cache).StringGetter()
 		}
+	case "openwb":
+		res = openWBStatusFromConfig(log, config.Other)
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
 	}
