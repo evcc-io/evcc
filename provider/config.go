@@ -20,7 +20,7 @@ type Config struct {
 
 // mqttConfig is the specific mqtt getter/setter configuration
 type mqttConfig struct {
-	Topic      string
+	Topic, Payload string // Payload only applies to setters
 	Multiplier float64
 	Timeout    time.Duration
 }
@@ -140,26 +140,32 @@ func NewBoolGetterFromConfig(log *api.Logger, config Config) (res BoolGetter) {
 	return
 }
 
-// NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(log *api.Logger, param string, config Config) (res BoolSetter) {
+// NewIntSetterFromConfig creates a IntSetter from config
+func NewIntSetterFromConfig(log *api.Logger, param string, config Config) (res IntSetter) {
 	switch strings.ToLower(config.Type) {
+	case "mqtt":
+		pc := mqttFromConfig(log, config.Other)
+		res = MQTT.IntSetter(param, pc.Topic, pc.Payload)
 	case "script":
 		pc := scriptFromConfig(log, config.Other)
 		exec := NewScriptProvider(pc.Timeout)
-		res = exec.BoolSetter(param, pc.Cmd)
+		res = exec.IntSetter(param, pc.Cmd)
 	default:
 		log.FATAL.Fatalf("invalid setter type %s", config.Type)
 	}
 	return
 }
 
-// NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(log *api.Logger, param string, config Config) (res IntSetter) {
+// NewBoolSetterFromConfig creates a BoolSetter from config
+func NewBoolSetterFromConfig(log *api.Logger, param string, config Config) (res BoolSetter) {
 	switch strings.ToLower(config.Type) {
+	case "mqtt":
+		pc := mqttFromConfig(log, config.Other)
+		res = MQTT.BoolSetter(param, pc.Topic, pc.Payload)
 	case "script":
 		pc := scriptFromConfig(log, config.Other)
 		exec := NewScriptProvider(pc.Timeout)
-		res = exec.IntSetter(param, pc.Cmd)
+		res = exec.BoolSetter(param, pc.Cmd)
 	default:
 		log.FATAL.Fatalf("invalid setter type %s", config.Type)
 	}

@@ -14,32 +14,37 @@ func truish(s string) bool {
 	return s == "1" || strings.ToLower(s) == "true" || strings.ToLower(s) == "on"
 }
 
-// replaceFormatted replaces all occurrances of ${key} with val from the kv map.
-// All keys of kv must exist inside the string to apply replacements to
+// formatValue will apply specific formatting in addition to standard sprintf
+func formatValue(format string, val interface{}) string {
+	switch val := val.(type) {
+	case bool:
+		if format == "%d" {
+			if val {
+				return "1"
+			}
+			return "0"
+		}
+	}
+
+	if format == "" {
+		format = "%v"
+	}
+
+	return fmt.Sprintf(format, val)
+}
+
+// replaceFormatted replaces all occurrences of ${key} with formatted val from the kv map
 func replaceFormatted(s string, kv map[string]interface{}) (string, error) {
-	matches := re.FindAllStringSubmatch(s, -1)
-
-	for len(matches) > 0 {
-		for _, m := range matches {
-			key := m[1]
-			val, ok := kv[key]
-			if !ok {
-				return "", errors.New("could not find match for " + m[0])
-			}
-
-			// apply format
-			format := m[3]
-			if format != "" {
-				val = fmt.Sprintf(format, val)
-			}
-
-			// update string
-			literalMatch := m[0]
-			s = strings.ReplaceAll(s, literalMatch, fmt.Sprintf("%v", val))
+	for m := re.FindStringSubmatch(s); m != nil; m = re.FindStringSubmatch(s) {
+		// find key and replacement value
+		val, ok := kv[m[1]]
+		if !ok {
+			return "", errors.New("could find value for: " + m[0])
 		}
 
-		// update matches
-		matches = re.FindAllStringSubmatch(s, -1)
+		// update all literal matches
+		new := formatValue(m[3], val)
+		s = strings.ReplaceAll(s, m[0], new)
 	}
 
 	return s, nil
