@@ -8,7 +8,6 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/vehicle"
@@ -40,17 +39,8 @@ func clientID() string {
 
 func configureMeters(conf config) (meters map[string]api.Meter) {
 	meters = make(map[string]api.Meter)
-	for _, mc := range conf.Meters {
-		m := core.NewMeter(provider.NewFloatGetterFromConfig(mc.Power))
-
-		// decorate Meter with MeterEnergy
-		if mc.Energy != nil {
-			m = &wrapper.CompositeMeter{
-				Meter:       m,
-				MeterEnergy: core.NewMeterEnergy(provider.NewFloatGetterFromConfig(mc.Energy)),
-			}
-		}
-		meters[mc.Name] = m
+	for _, cc := range conf.Meters {
+		meters[cc.Name] = core.NewMeterFromConfig(log, cc.Other)
 	}
 	return
 }
