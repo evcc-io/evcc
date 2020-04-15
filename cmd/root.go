@@ -212,7 +212,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHttpd(uri, conf.Menu, loadPoints[0], socketHub)
+	httpd := server.NewHTTPd(uri, conf.Menu, loadPoints[0], socketHub)
 
 	var teeChan <-chan core.Param
 	valueChan, teeChan = tee(valueChan)

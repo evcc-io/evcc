@@ -38,7 +38,7 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-// loadPoint is the well-definied minimal interface for accessing loadpoint methods
+// loadPoint is the minimal interface for accessing loadpoint methods
 type loadPoint interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
@@ -163,25 +163,25 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 	}
 }
 
-// NewHttpd creates HTTP server with configured routes for loadpoint
-func NewHttpd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *http.Server {
+// NewHTTPd creates HTTP server with configured routes for loadpoint
+func NewHTTPd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *http.Server {
 	var routes = []route{
-		route{
+		{
 			[]string{"GET"},
 			"/health",
 			HealthHandler(lp),
 		},
-		route{
+		{
 			[]string{"GET"},
 			"/config",
 			ConfigHandler(lp),
 		},
-		route{
+		{
 			[]string{"GET"},
 			"/mode",
 			CurrentChargeModeHandler(lp),
 		},
-		route{
+		{
 			[]string{"PUT", "POST", "OPTIONS"},
 			"/mode/{mode:[a-z]+}",
 			ChargeModeHandler(lp),
