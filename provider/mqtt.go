@@ -148,12 +148,21 @@ func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter 
 	return h.boolGetter
 }
 
+// formatValue formats a message template of returns the value formatted as %v is template is empty
+func (m *MqttClient) formatValue(param, message string, v interface{}) (string, error) {
+	if message == "" {
+		return fmt.Sprintf("%v", v), nil
+	}
+
+	return replaceFormatted(message, map[string]interface{}{
+		param: v,
+	})
+}
+
 // IntSetter publishes topic with parameter replaced by int value
 func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
 	return func(v int64) error {
-		payload, err := replaceFormatted(message, map[string]interface{}{
-			param: v,
-		})
+		payload, err := m.formatValue(param, message, v)
 		if err != nil {
 			return err
 		}
@@ -171,9 +180,7 @@ func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
 // BoolSetter invokes script with parameter replaced by bool value
 func (m *MqttClient) BoolSetter(param, topic, message string) BoolSetter {
 	return func(v bool) error {
-		payload, err := replaceFormatted(message, map[string]interface{}{
-			param: v,
-		})
+		payload, err := m.formatValue(param, message, v)
 		if err != nil {
 			return err
 		}
