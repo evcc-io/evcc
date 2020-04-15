@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -68,7 +67,7 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 	case 3, 4:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown result %d", status.Car)
+		return api.StatusNone, fmt.Errorf("car unknown result: %d", status.Car)
 	}
 }
 
@@ -85,7 +84,7 @@ func (c *GoE) Enabled() (bool, error) {
 	case 1:
 		return true, nil
 	default:
-		return false, fmt.Errorf("unknown result %d", status.Alw)
+		return false, fmt.Errorf("alw unknown result: %d", status.Alw)
 	}
 }
 
@@ -102,7 +101,7 @@ func (c *GoE) Enable(enable bool) error {
 
 	_, err := c.GetJSON(uri, &status)
 	if err == nil && status.Alw != b {
-		return errors.New("update failed")
+		return fmt.Errorf("alw update failed: %d", status.Amp)
 	}
 
 	return err
@@ -115,7 +114,7 @@ func (c *GoE) MaxCurrent(current int64) error {
 
 	_, err := c.GetJSON(uri, &status)
 	if err == nil && int64(status.Amp) != current {
-		return errors.New("update failed")
+		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
 
 	return err
