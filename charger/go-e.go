@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -9,25 +8,26 @@ import (
 )
 
 const (
-	goeStatus apiFunction = "status"
+	goeStatus  apiFunction = "status"
+	goePayload apiFunction = "mqtt?payload="
 )
 
 // goeStatusResponse is the API response if status not OK
 type goeStatusResponse struct {
-	Car uint   `yaml:"car"` // car status
-	Alw uint   `yaml:"alw"` // allow charging
-	Amp uint   `yaml:"amp"` // current [A]
-	Err uint   `yaml:"err"`
-	Stp uint   `yaml:"stp"`
-	Tmp uint   `yaml:"tmp"`
-	Dws uint   `yaml:"dws"` // energy [Ws]
-	Nrg []uint `yaml:"nrg"` // voltage, current, power
+	Car int   `json:"car,string"` // car status
+	Alw int   `json:"alw,string"` // allow charging
+	Amp int   `json:"amp,string"` // current [A]
+	Err int   `json:"err,string"` // error
+	Stp int   `json:"stp,string"` // stop state
+	Tmp int   `json:"tmp,string"` // temperature [°C]
+	Dws int   `json:"dws,string"` // energy [Ws]
+	Nrg []int `json:"nrg"`        // voltage, current, power
 }
 
 // GoE charger implementation
 type GoE struct {
 	*api.HTTPHelper
-	URI string
+	uri string
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
@@ -42,36 +42,20 @@ func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger
 func NewGoE(URI string) *GoE {
 	c := &GoE{
 		HTTPHelper: api.NewHTTPHelper(api.NewLogger("go-e")),
-		URI:        URI,
+		uri:        strings.TrimRight(URI, "/"),
 	}
-
-	c.HTTPHelper.Log.WARN.Println("-- experimental --")
 
 	return c
 }
 
 func (c *GoE) apiURL(api apiFunction) string {
-	return fmt.Sprintf("%s/%s", strings.TrimRight(c.URI, "/"), api)
-}
-
-func (c *GoE) getJSON(url string, result interface{}) error {
-	b, err := c.GetJSON(url, result)
-	if err != nil && len(b) > 0 {
-		var error goeStatusResponse
-		if err := json.Unmarshal(b, &error); err != nil {
-			return err
-		}
-
-		return fmt.Errorf("response code: %d", error.Err)
-	}
-
-	return err
+	return fmt.Sprintf("%s/%s", c.uri, api)
 }
 
 // Status implements the Charger.Status interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
 	var status goeStatusResponse
-	if err := c.getJSON(c.apiURL(goeStatus), status); err != nil {
+	if _, err := c.GetJSON(c.apiURL(goeStatus), &status); err != nil {
 		return api.StatusNone, err
 	}
 
@@ -80,19 +64,17 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case 2:
 		return api.StatusC, nil
-	case 3:
-		return api.StatusB, nil
-	case 4:
+	case 3, 4:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("unknown result %d", status.Car)
+		return api.StatusNone, fmt.Errorf("car unknown result: %d", status.Car)
 	}
 }
 
 // Enabled implements the Charger.Enabled interface
 func (c *GoE) Enabled() (bool, error) {
 	var status goeStatusResponse
-	if err := c.getJSON(c.apiURL(goeStatus), status); err != nil {
+	if _, err := c.GetJSON(c.apiURL(goeStatus), &status); err != nil {
 		return false, err
 	}
 
@@ -102,7 +84,7 @@ func (c *GoE) Enabled() (bool, error) {
 	case 1:
 		return true, nil
 	default:
-		return false, fmt.Errorf("unknown result %d", status.Alw)
+		return false, fmt.Errorf("alw unknown result: %d", status.Alw)
 	}
 }
 
@@ -110,35 +92,49 @@ func (c *GoE) Enabled() (bool, error) {
 func (c *GoE) Enable(enable bool) error {
 	var status goeStatusResponse
 
-	uri := c.apiURL(goeStatus) + "/mqtt?alw="
+	var b int
 	if enable {
-		uri += "1"
-	} else {
-		uri += "0"
+		b = 1
 	}
 
-	return c.getJSON(uri, status)
+	uri := c.apiURL(goePayload) + fmt.Sprintf("alw=%d", b)
+
+	_, err := c.GetJSON(uri, &status)
+	if err == nil && status.Alw != b {
+		return fmt.Errorf("alw update failed: %d", status.Amp)
+	}
+
+	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
 	var status goeStatusResponse
-	uri := fmt.Sprintf(c.apiURL(goeStatus)+"/mqtt?amp=%d", current)
-	return c.getJSON(uri, status)
+	uri := c.apiURL(goePayload) + fmt.Sprintf("amp=%d", current)
+
+	_, err := c.GetJSON(uri, &status)
+	if err == nil && int64(status.Amp) != current {
+		return fmt.Errorf("amp update failed: %d", status.Amp)
+	}
+
+	return err
 }
 
 // CurrentPower implements the Meter interface.
 func (c *GoE) CurrentPower() (float64, error) {
 	var status goeStatusResponse
-	err := c.getJSON(c.apiURL(goeStatus), status)
-	power := float64(status.Nrg[11]) * 10
+	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
+	var power float64
+	if len(status.Nrg) == 16 {
+		power = float64(status.Nrg[11]) * 10
+	}
 	return power, err
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the ChargeRater interface
 func (c *GoE) ChargedEnergy() (float64, error) {
 	var status goeStatusResponse
-	err := c.getJSON(c.apiURL(goeStatus), status)
+	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
 	energy := float64(status.Dws) / 3.6e6
 	return energy, err
 }
