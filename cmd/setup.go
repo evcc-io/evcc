@@ -8,7 +8,6 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/vehicle"
 	"github.com/spf13/viper"
@@ -95,10 +94,6 @@ func configureLoadPoint(lp *core.LoadPoint, lpc loadPointConfig, subv *viper.Vip
 }
 
 func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.LoadPoint) {
-	if viper.Get("mqtt") != nil {
-		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
-	}
-
 	meters := configureMeters(conf)
 	chargers := configureChargers(conf)
 	vehicles := configureVehicles(conf)
@@ -146,5 +141,17 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 		loadPoints = append(loadPoints, lp)
 	}
 
+	return
+}
+
+func loadConfigFile(cfgFile string) (conf config) {
+	if cfgFile != "" {
+		log.INFO.Println("using config file", cfgFile)
+		if err := viper.UnmarshalExact(&conf); err != nil {
+			log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
+		}
+	} else {
+		log.FATAL.Fatal("missing evcc config")
+	}
 	return
 }

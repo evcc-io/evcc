@@ -7,6 +7,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 
 	"github.com/spf13/cobra"
@@ -26,46 +27,49 @@ var rootCmd = &cobra.Command{
 	Run:   run,
 }
 
-func bind(flag string) {
-	if err := viper.BindPFlag(flag, rootCmd.PersistentFlags().Lookup(flag)); err != nil {
+func bind(cmd *cobra.Command, flag string) {
+	if err := viper.BindPFlag(flag, cmd.PersistentFlags().Lookup(flag)); err != nil {
 		panic(err)
 	}
 }
 
+func configureCommand(cmd *cobra.Command) {
+	cmd.PersistentFlags().StringP(
+		"log", "l",
+		"error",
+		"Log level (fatal, error, warn, info, debug, trace)",
+	)
+	bind(cmd, "log")
+
+	cmd.PersistentFlags().StringVarP(&cfgFile,
+		"config", "c",
+		"",
+		"Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")",
+	)
+	cmd.PersistentFlags().BoolP(
+		"help", "h",
+		false,
+		"Help for "+cmd.Name(),
+	)
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
+	configureCommand(rootCmd)
 
 	rootCmd.PersistentFlags().StringP(
 		"uri", "u",
 		"0.0.0.0:7070",
 		"Listen address",
 	)
-	bind("uri")
-
-	rootCmd.PersistentFlags().StringP(
-		"log", "l",
-		"info",
-		"Log level (fatal, error, warn, info, debug, trace)",
-	)
-	bind("log")
+	bind(rootCmd, "uri")
 
 	rootCmd.PersistentFlags().DurationP(
 		"interval", "i",
 		10*time.Second,
 		"Update interval",
 	)
-	bind("interval")
-
-	rootCmd.PersistentFlags().StringVarP(&cfgFile,
-		"config", "c",
-		"",
-		"Config file (default \"~/evcc.yaml\" or \"/etc/evcc.yaml\")",
-	)
-	rootCmd.PersistentFlags().BoolP(
-		"help", "h",
-		false,
-		"Help for "+rootCmd.Name(),
-	)
+	bind(rootCmd, "interval")
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -158,17 +162,8 @@ func run(cmd *cobra.Command, args []string) {
 	configureLogging(level)
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
-	var conf config
-	if cfgFile != "" {
-		log.INFO.Println("using config file", cfgFile)
-		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
-		}
-	} else {
-		log.FATAL.Fatal("missing evcc config")
-	}
-
-	// re-configure after reading config file
+	// load config and re-configure logging after reading config file
+	conf := loadConfigFile(cfgFile)
 	configureLogging(conf.Log)
 
 	go checkVersion()
@@ -178,6 +173,11 @@ func run(cmd *cobra.Command, args []string) {
 
 	// setup messaging
 	notificationChan := configureMessengers(conf.Messaging)
+
+	// setup mqtt
+	if viper.Get("mqtt") != nil {
+		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
+	}
 
 	// setup loadpoints
 	loadPoints := loadConfig(conf, notificationChan)
