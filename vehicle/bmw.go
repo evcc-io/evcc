@@ -13,7 +13,9 @@ import (
 )
 
 const (
-	bmwURL = "https://b2vapi.bmwgroup.com/webapi"
+	bmwHost = "https://b2vapi.bmwgroup.com"
+	bmwAPI  = bmwHost + "/webapi/v1"
+	bmwAuth = bmwHost + "/gcdm/oauth/token"
 )
 
 type bmwTokenResponse struct {
@@ -57,7 +59,7 @@ func NewBMWFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle
 
 	v := &BMW{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("bmwi")),
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("bmw ")),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,
@@ -68,18 +70,7 @@ func NewBMWFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle
 	return v
 }
 
-func (v *BMW) apiURL(service string) string {
-	return fmt.Sprintf("%s/%s", bmwURL, service)
-}
-
-func (v *BMW) authHeader() string {
-	token := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", v.user, v.password)))
-	return fmt.Sprintf("Basic %s", token)
-}
-
 func (v *BMW) login(user, password string) error {
-	uri := v.apiURL("oauth/token")
-
 	data := url.Values{
 		"grant_type": []string{"password"},
 		"username":   []string{user},
@@ -87,12 +78,13 @@ func (v *BMW) login(user, password string) error {
 		"scope":      []string{"remote_services vehicle_data"},
 	}
 
-	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	req, err := http.NewRequest(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()))
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", v.authHeader())
+	authToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", v.user, v.password)))
+	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", authToken))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	var tr bmwTokenResponse
@@ -128,7 +120,7 @@ func (v *BMW) request(uri string) (*http.Request, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *BMW) chargeState() (float64, error) {
-	uri := v.apiURL(fmt.Sprintf("v1/user/vehicles/%s/status", v.vin))
+	uri := fmt.Sprintf("%s/user/vehicles/%s/status", bmwAPI, v.vin)
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
