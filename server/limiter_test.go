@@ -41,6 +41,15 @@ func TestLimiter(t *testing.T) {
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
 		t.Errorf("unexpected param %v", o)
 	}
+
+	// allow nils
+	clck.Add(2 * l.interval)
+	p.Val = nil
+	in <- p
+
+	if o := <-out; o.Key != p.Key || o.Val != p.Val {
+		t.Errorf("unexpected param %v", o)
+	}
 }
 
 func TestDeduplicator(t *testing.T) {
@@ -59,6 +68,14 @@ func TestDeduplicator(t *testing.T) {
 	}
 
 	p = core.Param{Key: "k", Val: 2}
+	in <- p
+
+	if o := <-out; o.Key != p.Key || o.Val != p.Val {
+		t.Errorf("unexpected param %v", o)
+	}
+
+	// allow nils
+	p = core.Param{Key: "k", Val: nil}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
@@ -91,6 +108,14 @@ func TestDeduplicator(t *testing.T) {
 
 	// resend later
 	clck.Add(2 * l.interval)
+	in <- p
+
+	if o := <-out; o.Key != p.Key || o.Val != p.Val {
+		t.Errorf("unexpected param %v", o)
+	}
+
+	// allow nils
+	p = core.Param{Key: "filtered", Val: nil}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
