@@ -15,14 +15,14 @@ const (
 
 // goeStatusResponse is the API response if status not OK
 type goeStatusResponse struct {
-	Car uint   `json:"car,string"` // car status
-	Alw uint   `json:"alw,string"` // allow charging
-	Amp uint   `json:"amp,string"` // current [A]
-	Err uint   `json:"err,string"` // error
-	Stp uint   `json:"stp,string"` // stop state
-	Tmp uint   `json:"tmp,string"` // temperature [°C]
-	Dws uint   `json:"dws,string"` // energy [Ws]
-	Nrg []uint `json:"nrg"`        // voltage, current, power
+	Car int   `json:"car,string"` // car status
+	Alw int   `json:"alw,string"` // allow charging
+	Amp int   `json:"amp,string"` // current [A]
+	Err int   `json:"err,string"` // error
+	Stp int   `json:"stp,string"` // stop state
+	Tmp int   `json:"tmp,string"` // temperature [°C]
+	Dws int   `json:"dws,string"` // energy [Ws]
+	Nrg []int `json:"nrg"`        // voltage, current, power
 }
 
 // GoE charger implementation
@@ -93,7 +93,7 @@ func (c *GoE) Enabled() (bool, error) {
 func (c *GoE) Enable(enable bool) error {
 	var status goeStatusResponse
 
-	var b uint
+	var b int
 	if enable {
 		b = 1
 	}
@@ -114,7 +114,7 @@ func (c *GoE) MaxCurrent(current int64) error {
 	uri := c.apiURL(goePayload) + fmt.Sprintf("amp=%d", current)
 
 	_, err := c.GetJSON(uri, &status)
-	if err == nil && status.Amp != uint(current) {
+	if err == nil && int64(status.Amp) != current {
 		return errors.New("update failed")
 	}
 
