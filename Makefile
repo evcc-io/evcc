@@ -34,7 +34,7 @@ build:
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 #	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc1 --base-runtime-image alpine --dry-run=false --targets=arm.v6,amd64
-	docker build -t "andig/evcc:latest" . && docker push andig/evcc:latest
+	docker build -t "andig/evcc:$(TAG_NAME)" -t "andig/evcc:latest" . && docker push andig/evcc
 
 test-release:
 	goreleaser --snapshot --skip-publish --rm-dist
