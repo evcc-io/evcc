@@ -20,11 +20,9 @@ const (
 )
 
 type bmwDynamicResponse struct {
-	AttributesMap bmwAttributesMap `json:"attributesMap"`
-}
-
-type bmwAttributesMap struct {
-	ChargingLevelHv float64 `json:"chargingLevelHv,string"`
+	Attributes struct {
+		ChargingLevelHv float64 `json:"chargingLevelHv,string"`
+	} `json:"attributesMap"`
 }
 
 // BMW is an api.Vehicle implementation for BMW cars
@@ -79,9 +77,7 @@ func (v *BMW) login(user, password string) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }, // don't follow redirects
 	}
 
 	resp, err := client.Do(req)
@@ -132,7 +128,7 @@ func (v *BMW) chargeState() (float64, error) {
 	var br bmwDynamicResponse
 	_, err = v.RequestJSON(req, &br)
 
-	return br.AttributesMap.ChargingLevelHv, err
+	return br.Attributes.ChargingLevelHv, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface

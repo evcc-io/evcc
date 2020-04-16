@@ -31,23 +31,15 @@ type audiErrorResponse struct {
 }
 
 type audiBatteryResponse struct {
-	Charger audiBrCharger
-}
-
-type audiBrCharger struct {
-	Status audiBrStatus
-}
-
-type audiBrStatus struct {
-	BatteryStatusData audiBrStatusData
-}
-
-type audiBrStatusData struct {
-	StateOfCharge audiBrStateOfCharge
-}
-
-type audiBrStateOfCharge struct {
-	Content int
+	Charger struct {
+		Status struct {
+			BatteryStatusData struct {
+				StateOfCharge struct {
+					Content int
+				}
+			}
+		}
+	}
 }
 
 // Audi is an api.Vehicle implementation for Audi cars
