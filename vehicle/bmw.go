@@ -114,18 +114,16 @@ func (v *BMW) request(uri string) (*http.Request, error) {
 	}
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		return req, err
+	if err == nil {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", v.token))
 	}
-
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", v.token))
 
 	return req, nil
 }
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *BMW) chargeState() (float64, error) {
-	uri := fmt.Sprintf("%s/user/vehicles/%s/status", bmwAPI, v.vin)
+	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
