@@ -14,9 +14,8 @@ import (
 )
 
 const (
-	bmwHost = "https://customer.bmwgroup.com"
-	bmwAuth = bmwHost + "/gcdm/oauth/authenticate"
-	bmwAPI  = bmwHost + "/api"
+	bmwAuth = "https://customer.bmwgroup.com/gcdm/oauth/authenticate"
+	bmwAPI  = "https://www.bmw-connecteddrive.com/api"
 )
 
 type bmwDynamicResponse struct {
