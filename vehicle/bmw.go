@@ -19,9 +19,9 @@ const (
 )
 
 type bmwDynamicResponse struct {
-	Attributes struct {
+	AttributesMap struct {
 		ChargingLevelHv float64 `json:"chargingLevelHv,string"`
-	} `json:"attributesMap"`
+	}
 }
 
 // BMW is an api.Vehicle implementation for BMW cars
@@ -127,7 +127,7 @@ func (v *BMW) chargeState() (float64, error) {
 	var br bmwDynamicResponse
 	_, err = v.RequestJSON(req, &br)
 
-	return br.Attributes.ChargingLevelHv, err
+	return br.AttributesMap.ChargingLevelHv, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
