@@ -32,7 +32,7 @@ type BMW struct {
 	*embed
 	*api.HTTPHelper
 	user, password, vin string
-	token, refreshToken string
+	token               string
 	tokenValid          time.Time
 	chargeStateG        provider.FloatGetter
 }
