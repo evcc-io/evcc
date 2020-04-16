@@ -135,14 +135,13 @@ func (v *Audi) login(user, password string) error {
 	}
 
 	v.token = tr.AccessToken
-	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - tokenValidMargin)
+	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn) * time.Second)
 
 	return nil
 }
 
 func (v *Audi) request(uri string) (*http.Request, error) {
-	// token invalid or expired
-	if v.token == "" || time.Now().After(v.tokenValid) {
+	if v.token == "" || time.Since(v.tokenValid) > 0 {
 		if err := v.login(v.user, v.password); err != nil {
 			return nil, err
 		}

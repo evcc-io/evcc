@@ -1,10 +1,11 @@
 package vehicle
 
 import (
-	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,28 +14,17 @@ import (
 )
 
 const (
-	bmwHost = "https://b2vapi.bmwgroup.com"
-	bmwAPI  = bmwHost + "/webapi/v1"
-	bmwAuth = bmwHost + "/gcdm/oauth/token"
+	bmwHost = "https://customer.bmwgroup.com"
+	bmwAuth = bmwHost + "/gcdm/oauth/authenticate"
+	bmwAPI  = bmwHost + "/api"
 )
 
-type bmwTokenResponse struct {
-	AccessToken  string `json:"access_token"`
-	TokenType    string `json:"token_type"`
-	ExpiresIn    int    `json:"expires_in"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
+type bmwDynamicResponse struct {
+	AttributesMap bmwAttributesMap `json:"attributesMap"`
 }
 
-type bmwStatusResponse struct {
-	VehicleStatus bmwVehicleStatus `json:"vehicleStatus"`
-}
-
-type bmwVehicleStatus struct {
-	ConnectionStatus      string `json:"connectionStatus"`
-	ChargingStatus        string `json:"chargingStatus"`
-	ChargingLevelHv       int    `json:"chargingLevelHv"`
-	ChargingTimeRemaining int    `json:"chargingTimeRemaining"`
+type bmwAttributesMap struct {
+	ChargingLevelHv float64 `json:"chargingLevelHv,string"`
 }
 
 // BMW is an api.Vehicle implementation for BMW cars
@@ -72,37 +62,52 @@ func NewBMWFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle
 
 func (v *BMW) login(user, password string) error {
 	data := url.Values{
-		"grant_type": []string{"password"},
-		"username":   []string{user},
-		"password":   []string{password},
-		"scope":      []string{"remote_services vehicle_data"},
+		"username":      []string{user},
+		"password":      []string{password},
+		"client_id":     []string{"dbf0a542-ebd1-4ff0-a9a7-55172fbfce35"},
+		"redirect_uri":  []string{"https://www.bmw-connecteddrive.com/app/default/static/external-dispatch.html"},
+		"response_type": []string{"token"},
+		"scope":         []string{"authenticate_user fupo"},
+		"state":         []string{"eyJtYXJrZXQiOiJkZSIsImxhbmd1YWdlIjoiZGUiLCJkZXN0aW5hdGlvbiI6ImxhbmRpbmdQYWdlIn0"},
+		"locale":        []string{"DE-de"},
 	}
 
 	req, err := http.NewRequest(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()))
 	if err != nil {
 		return err
 	}
-
-	authToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", v.user, v.password)))
-	req.Header.Set("Authorization", fmt.Sprintf("Basic %s", authToken))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	var tr bmwTokenResponse
-	if _, err = v.RequestJSON(req, &tr); err != nil {
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
 		return err
 	}
 
-	v.token = tr.AccessToken
-	v.refreshToken = tr.RefreshToken
-	v.tokenValid = time.Now().Add(time.Duration(tr.ExpiresIn)*time.Second - tokenValidMargin)
+	query, err := url.ParseQuery(resp.Header.Get("Location"))
+	if err != nil {
+		return err
+	}
+
+	token := query.Get("access_token")
+	expires, err := strconv.Atoi(query.Get("expires_in"))
+	if err != nil || token == "" || expires == 0 {
+		return errors.New("could not obtain token")
+	}
+
+	v.token = token
+	v.tokenValid = time.Now().Add(time.Duration(expires) * time.Second)
 
 	return nil
 }
 
-// @TODO implement refresh_token
 func (v *BMW) request(uri string) (*http.Request, error) {
-	// token invalid or expired
-	if v.token == "" || time.Now().After(v.tokenValid) {
+	if v.token == "" || time.Since(v.tokenValid) > 0 {
 		if err := v.login(v.user, v.password); err != nil {
 			return nil, err
 		}
@@ -126,10 +131,10 @@ func (v *BMW) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	var br bmwStatusResponse
+	var br bmwDynamicResponse
 	_, err = v.RequestJSON(req, &br)
 
-	return float64(br.VehicleStatus.ChargingLevelHv), err
+	return br.AttributesMap.ChargingLevelHv, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
