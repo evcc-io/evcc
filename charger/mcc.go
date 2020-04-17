@@ -13,13 +13,13 @@ import (
 )
 
 const (
-	apiLogin                   apiFunction = "/jwt/login"
-	apiRefresh                 apiFunction = "/jwt/refresh"
-	apiChargeState             apiFunction = "/v1/api/WebServer/properties/chargeState"
-	apiCurrentSession          apiFunction = "/v1/api/WebServer/properties/swaggerCurrentSession"
-	apiEnergy                  apiFunction = "/v1/api/iCAN/properties/propjIcanEnergy"
-	apiSetCurrentLimit         apiFunction = "/v1/api/SCC/properties/propHMICurrentLimit?value="
-	apiCurrentCableInformation apiFunction = "/v1/api/SCC/properties/json_CurrentCableInformation"
+	apiLogin                   apiFunction = "jwt/login"
+	apiRefresh                 apiFunction = "jwt/refresh"
+	apiChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
+	apiCurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
+	apiEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
+	apiSetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
+	apiCurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
 // MCCErrorResponse is the API response if status not OK
@@ -29,66 +29,36 @@ type MCCErrorResponse struct {
 
 // MCCTokenResponse is the apiLogin response
 type MCCTokenResponse struct {
-	AccessToken string `json:"token"`
+	Token string
 }
 
 // MCCCurrentSession is the apiCurrentSession response
 type MCCCurrentSession struct {
-	Account           string     `json:"account"`
-	ChargingRate      float64    `json:"chargingRate"`
-	ChargingType      string     `json:"chargingType"`
-	ClockSrc          string     `json:"clockSrc"`
-	Costs             int64      `json:"costs"`
-	Currency          string     `json:"currency"`
-	DepartTime        string     `json:"departTime"`
-	Duration          int64      `json:"duration"`
-	EndOfChargeTime   string     `json:"endOfChargeTime"`
-	EndSoc            float64    `json:"endSoc"`
-	EndTime           string     `json:"endTime"`
-	EnergySumKwh      float64    `json:"energySumKwh"`
-	EvCharingRateKW   float64    `json:"evChargingRatekW"`
-	EvTargetSoc       float64    `json:"evTargetSoc"`
-	EvVasAvailability bool       `json:"evVasAvailability"`
-	PcID              string     `json:"pcid"`
-	PowerRange        float64    `json:"powerRange"`
-	SelfEnergy        float64    `json:"selfEnergy"`
-	SessionID         int64      `json:"sessionId"`
-	Soc               float64    `json:"soc"`
-	SolarEnergyShare  float64    `json:"solarEnergyShare"`
-	StartSoc          float64    `json:"startSoc"`
-	StartTime         *time.Time `json:"startTime"`
-	TotalRange        float64    `json:"totalRange"`
-	VehicleBrand      string     `json:"vehicleBrand"`
-	VehicleModel      string     `json:"vehicleModel"`
-	Whitelist         bool       `json:"whitelist"`
+	Duration     int64
+	EnergySumKwh float64
 }
 
 // MCCEnergyPhase is the apiEnergy response for a single phase
 type MCCEnergyPhase struct {
-	Ampere float64 `json:"Ampere"`
-	Power  float64 `json:"Power"`
-	Volts  float64 `json:"Volts"`
+	Power float64
 }
 
 // MCCEnergy is the apiEnergy response
 type MCCEnergy struct {
-	L1 MCCEnergyPhase `json:"L1"`
-	L2 MCCEnergyPhase `json:"L2"`
-	L3 MCCEnergyPhase `json:"L3"`
+	L1 MCCEnergyPhase
+	L2 MCCEnergyPhase
+	L3 MCCEnergyPhase
 }
 
 // MCCCurrentCableInformation is the apiCurrentCableInformation response
 type MCCCurrentCableInformation struct {
-	CarCable     int64 `json:"carCable"`
-	GridCable    int64 `json:"gridCable"`
-	HwfpMaxLimit int64 `json:"hwfpMaxLimit"`
-	MaxValue     int64 `json:"maxValue"`
-	MinValue     int64 `json:"minValue"`
-	Value        int64 `json:"value"`
+	MaxValue int64
+	MinValue int64
+	Value    int64
 }
 
 // MCC charger implementation for supporting Mobile Charger Connect devices from Audi, Bentley, Porsche
-type MCC struct {
+type MobileConnect struct {
 	*api.HTTPHelper
 	uri          string
 	password     string
@@ -97,44 +67,42 @@ type MCC struct {
 	tokenRefresh time.Time
 }
 
-// NewMCCFromConfig creates a MCC charger from generic config
-func NewMCCFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+// NewMobileConnectFromConfig creates a MCC charger from generic config
+func NewMobileConnectFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI, Password string }{}
 	api.DecodeOther(log, other, &cc)
 
-	return NewMCC(cc.URI, cc.Password)
+	return NewMobileConnect(cc.URI, cc.Password)
 }
 
-// NewMCC creates MCC charger
-func NewMCC(uri string, password string) *MCC {
+// NewMobileConnect creates MCC charger
+func NewMobileConnect(uri string, password string) *MobileConnect {
 	// ignore the self signed certificate
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	client := &http.Client{Transport: customTransport}
 
-	c := &MCC{
-		HTTPHelper: api.NewHTTPHelperWithClient(api.NewLogger("mcc"), client),
-		uri:        uri,
+	mcc := &MobileConnect{
+		HTTPHelper: api.NewHTTPHelperWithClient(api.NewLogger("MobileConnect"), client),
+		uri:        strings.TrimRight(uri, "/"),
 		password:   password,
 	}
 
-	c.HTTPHelper.Log.WARN.Println("-- experimental --")
-
-	return c
+	return mcc
 }
 
 // construct the URL for a given apiFunction
-func (mcc *MCC) apiURL(api apiFunction) string {
-	return fmt.Sprintf("%s%s", mcc.uri, api)
+func (mcc *MobileConnect) apiURL(api apiFunction) string {
+	return fmt.Sprintf("%s/%s", mcc.uri, api)
 }
 
 // proces the http request to fetch the auth token for a login or refresh request
-func (mcc *MCC) fetchToken(request *http.Request) error {
+func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
 	b, err := mcc.RequestJSON(request, &tr)
 	if err == nil {
-		if len(tr.AccessToken) == 0 && len(b) > 0 {
+		if len(tr.Token) == 0 && len(b) > 0 {
 			var error MCCErrorResponse
 
 			if err := json.Unmarshal(b, &error); err != nil {
@@ -142,25 +110,22 @@ func (mcc *MCC) fetchToken(request *http.Request) error {
 			}
 
 			return fmt.Errorf("response: %s", error.Error)
-
 		}
 
-		mcc.token = tr.AccessToken
+		mcc.token = tr.Token
 		// According to the Web Interface, the token is valid for 10 minutes
 		mcc.tokenValid = time.Now().Add(time.Duration(10) * time.Minute)
 
 		// the web interface updates the token every 2 minutes, so lets do the same here
 		mcc.tokenRefresh = time.Now().Add(time.Duration(2) * time.Minute)
-
-		return nil
 	}
 
 	return err
 }
 
 // login as the home user with the given password
-func (mcc *MCC) login(password string) error {
-	uri := fmt.Sprintf("%s%s", mcc.uri, apiLogin)
+func (mcc *MobileConnect) login(password string) error {
+	uri := fmt.Sprintf("%s/%s", mcc.uri, apiLogin)
 
 	data := url.Values{
 		"user": []string{"user"},
@@ -174,29 +139,25 @@ func (mcc *MCC) login(password string) error {
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	err = mcc.fetchToken(req)
-
-	return err
+	return mcc.fetchToken(req)
 }
 
 // refresh the auth token with a new one
-func (mcc *MCC) refresh() error {
-	uri := fmt.Sprintf("%s%s", mcc.uri, apiRefresh)
+func (mcc *MobileConnect) refresh() error {
+	uri := fmt.Sprintf("%s/%s", mcc.uri, apiRefresh)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf(" Bearer %s", mcc.token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
 
-	err = mcc.fetchToken(req)
-
-	return err
+	return mcc.fetchToken(req)
 }
 
-// creates a custom http request that contains the auth token
-func (mcc *MCC) customRequest(method, uri string) (*http.Request, error) {
+// creates a http request that contains the auth token
+func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 	// do we need to login?
 	if mcc.token == "" || time.Since(mcc.tokenValid) > 0 {
 		if err := mcc.login(mcc.password); err != nil {
@@ -223,8 +184,8 @@ func (mcc *MCC) customRequest(method, uri string) (*http.Request, error) {
 }
 
 // use http PUT to set a value on the URI, the value should be URL encoded in the URI parameter
-func (mcc *MCC) putValue(uri string) error {
-	req, err := mcc.customRequest(http.MethodPut, uri)
+func (mcc *MobileConnect) putValue(uri string) error {
+	req, err := mcc.request(http.MethodPut, uri)
 	if err != nil {
 		return err
 	}
@@ -234,10 +195,8 @@ func (mcc *MCC) putValue(uri string) error {
 		var result string
 		err = json.Unmarshal(b, &result)
 
-		if err == nil {
-			if result != "OK" {
-				return fmt.Errorf("Call returned an unexpected error")
-			}
+		if err == nil && result != "OK" {
+			return fmt.Errorf("Call returned an unexpected error")
 		}
 	}
 
@@ -245,8 +204,8 @@ func (mcc *MCC) putValue(uri string) error {
 }
 
 // use http GET to fetch a non structured value from an URI and stores it in result
-func (mcc *MCC) getValue(uri string, result interface{}) error {
-	req, err := mcc.customRequest(http.MethodGet, uri)
+func (mcc *MobileConnect) getValue(uri string, result interface{}) error {
+	req, err := mcc.request(http.MethodGet, uri)
 	if err != nil {
 		return err
 	}
@@ -260,8 +219,8 @@ func (mcc *MCC) getValue(uri string, result interface{}) error {
 }
 
 // use http GET to fetch an escaped JSON string and unmarshall the data in result
-func (mcc *MCC) getEscapedJSON(uri string, result interface{}) error {
-	req, err := mcc.customRequest(http.MethodGet, uri)
+func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
+	req, err := mcc.request(http.MethodGet, uri)
 	if err != nil {
 		return err
 	}
@@ -282,36 +241,32 @@ func (mcc *MCC) getEscapedJSON(uri string, result interface{}) error {
 }
 
 // Status implements the Charger.Status interface
-func (mcc *MCC) Status() (api.ChargeStatus, error) {
+func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	var chargeState int64
 
-	err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState)
-
-	if err != nil {
+	if err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState); err != nil {
 		return api.StatusNone, err
 	}
 
-	// Charge State values and mapping to ChargeStatus
-	// 0: Unplugged		StatusA
-	// 1: Connecting	StatusB
-	// 2: Error				StatusE
-	// 3: Established	StatusF
-	// 4: Paused			StatusD
-	// 5: Active			StatusC
-	// 6: Finished		StatusD
-
 	switch chargeState {
 	case 0:
+		// 0: Unplugged		StatusA
 		return api.StatusA, nil
 	case 1:
+		// 1: Connecting	StatusB
 		return api.StatusB, nil
 	case 2:
+		// 2: Error				StatusE
 		return api.StatusE, nil
 	case 3:
+		// 3: Established	StatusF
 		return api.StatusF, nil
 	case 4, 6:
+		// 4: Paused			StatusD
+		// 6: Finished		StatusD
 		return api.StatusD, nil
 	case 5:
+		// 5: Active			StatusC
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("properties unknown result: %d", chargeState)
@@ -319,13 +274,11 @@ func (mcc *MCC) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (mcc *MCC) Enabled() (bool, error) {
+func (mcc *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
 	var chargeState int64
 
-	err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState)
-
-	if err != nil {
+	if err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState); err != nil {
 		return false, err
 	}
 
@@ -337,14 +290,13 @@ func (mcc *MCC) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (mcc *MCC) Enable(enable bool) error {
+func (mcc *MobileConnect) Enable(enable bool) error {
 	// As we don't know of the API to disable charging this for now always returns an error
-
-	return fmt.Errorf("The device doesn't allow to enable/disable the device via an API")
+	return nil
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (mcc *MCC) MaxCurrent(current int64) error {
+func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	// The device doesn't return an error if we set a value greater than the
 	// current allowed max or smaller than the allowed min
 	// instead it will simply set it to max or min and return "OK" anyway
@@ -352,8 +304,8 @@ func (mcc *MCC) MaxCurrent(current int64) error {
 	// and then return an error if the value is outside of the limits or
 	// otherwise set the new value
 	var cableInformation MCCCurrentCableInformation
-	err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentCableInformation), &cableInformation)
-	if err != nil {
+	// TODO: this only needs to run once
+	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentCableInformation), &cableInformation); err != nil {
 		return err
 	}
 
@@ -366,17 +318,12 @@ func (mcc *MCC) MaxCurrent(current int64) error {
 	}
 
 	url := fmt.Sprintf("%s%d", mcc.apiURL(apiSetCurrentLimit), current)
-	fmt.Println(url)
 
-	if err := mcc.putValue(url); err != nil {
-		return err
-	}
-
-	return nil
+	return mcc.putValue(url)
 }
 
 // CurrentPower implements the Meter interface.
-func (mcc *MCC) CurrentPower() (float64, error) {
+func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(apiEnergy), &energy)
 
@@ -384,7 +331,7 @@ func (mcc *MCC) CurrentPower() (float64, error) {
 }
 
 // ChargedEnergy implements the ChargeRater interface.
-func (mcc *MCC) ChargedEnergy() (float64, error) {
+func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
 	err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession)
 	if err != nil {
@@ -395,7 +342,7 @@ func (mcc *MCC) ChargedEnergy() (float64, error) {
 }
 
 // ChargingTime yields current charge run duration
-func (mcc *MCC) ChargingTime() (time.Duration, error) {
+func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
 	err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession)
 	if err != nil {
