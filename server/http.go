@@ -73,10 +73,10 @@ func indexHandler(links []MenuConfig, liveAssets bool) http.HandlerFunc {
 	_, debug := _escData["/js/debug.js"]
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-		w.WriteHeader(http.StatusOK)
+		log.TRACE.Println("index")
+		// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+		// w.WriteHeader(http.StatusOK)
 
-		// _, err := fmt.Fprint(w, indexTemplate)
 		if err := t.Execute(w, map[string]interface{}{
 			"Debug": debug,
 			"Links": links,
@@ -165,43 +165,41 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *http.Server {
-	var routes = []route{
-		{
-			[]string{"GET"},
-			"/health",
-			HealthHandler(lp),
-		},
-		{
-			[]string{"GET"},
-			"/config",
-			ConfigHandler(lp),
-		},
-		{
-			[]string{"GET"},
-			"/mode",
-			CurrentChargeModeHandler(lp),
-		},
-		{
-			[]string{"PUT", "POST", "OPTIONS"},
-			"/mode/{mode:[a-z]+}",
-			ChargeModeHandler(lp),
-		},
-	}
+	var routes = []route{{
+		[]string{"GET"}, "/health", HealthHandler(lp),
+	}, {
+		[]string{"GET"}, "/config", ConfigHandler(lp),
+	}, {
+		[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp),
+	}, {
+		[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp),
+	}}
 
 	router := mux.NewRouter().StrictSlash(true)
 
-	// static
-	router.HandleFunc("/", indexHandler(links, liveAssets))
+	// websocket
+	router.HandleFunc("/ws", SocketHandler(hub))
 
-	// individual handlers per folder
+	// static - individual handlers per root and folders
+	static := router.PathPrefix("/").Subrouter()
+	static.Use(handlers.CompressHandler)
+
+	static.HandleFunc("/", indexHandler(links, liveAssets))
 	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
 		prefix := fmt.Sprintf("/%s/", folder)
-		router.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(liveAssets, prefix))))
+		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(liveAssets, prefix))))
 	}
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(jsonHandler)
+	api.Use(handlers.CompressHandler)
+	api.Use(handlers.CORS(
+		handlers.AllowedHeaders([]string{
+			"Accept", "Accept-Language", "Content-Language", "Content-Type", "Origin",
+		}),
+	))
+
 	for _, r := range routes {
 		api.
 			Methods(r.Methods...).
@@ -209,20 +207,9 @@ func NewHTTPd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *htt
 			Handler(routeLogger(r.HandlerFunc))
 	}
 
-	// websocket
-	router.HandleFunc("/ws", SocketHandler(hub))
-
-	// add handlers
-	handler := handlers.CompressHandler(router)
-	handler = handlers.CORS(
-		handlers.AllowedHeaders([]string{
-			"Accept", "Accept-Language", "Content-Language", "Content-Type", "Origin",
-		}),
-	)(handler)
-
 	srv := &http.Server{
 		Addr:         url,
-		Handler:      handler,
+		Handler:      router,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,

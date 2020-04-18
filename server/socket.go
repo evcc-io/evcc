@@ -33,12 +33,9 @@ type SocketClient struct {
 
 // writePump pumps messages from the hub to the websocket connection.
 func (c *SocketClient) writePump() {
-	defer func() {
-		c.conn.Close()
-	}()
+	defer c.conn.Close()
 
-	for {
-		msg := <-c.send
+	for msg := range c.send {
 		if err := c.conn.SetWriteDeadline(time.Now().Add(socketWriteTimeout)); err != nil {
 			return
 		}
@@ -127,8 +124,8 @@ func (h *SocketHub) Run(in <-chan core.Param, triggerChan chan<- struct{}) {
 			triggerChan <- struct{}{} // trigger loadpoint update
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
 				close(client.send)
+				delete(h.clients, client)
 			}
 		case msg, ok := <-in:
 			if !ok {
