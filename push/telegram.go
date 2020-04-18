@@ -28,7 +28,7 @@ func init() {
 func NewTelegramMessenger(token string, chats []int64) *Telegram {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.FATAL.Fatal("telegram: missing token")
+		log.FATAL.Fatal("telegram: invalid bot token")
 	}
 
 	m := &Telegram{
