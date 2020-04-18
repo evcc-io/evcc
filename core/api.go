@@ -82,8 +82,8 @@ func (lp *LoadPoint) Dump() {
 func (lp *LoadPoint) Update() {
 	select {
 	case lp.triggerChan <- struct{}{}: // non-blocking send
-		log.WARN.Printf("%s update blocked", lp.Name)
 	default:
+		log.WARN.Printf("%s update blocked", lp.Name)
 	}
 }
 
