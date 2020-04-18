@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -34,7 +35,7 @@ type MCCTokenResponse struct {
 
 // MCCCurrentSession is the apiCurrentSession response
 type MCCCurrentSession struct {
-	Duration     int64
+	Duration     time.Duration
 	EnergySumKwh float64
 }
 
@@ -45,26 +46,23 @@ type MCCEnergyPhase struct {
 
 // MCCEnergy is the apiEnergy response
 type MCCEnergy struct {
-	L1 MCCEnergyPhase
-	L2 MCCEnergyPhase
-	L3 MCCEnergyPhase
+	L1, L2, L3 MCCEnergyPhase
 }
 
 // MCCCurrentCableInformation is the apiCurrentCableInformation response
 type MCCCurrentCableInformation struct {
-	MaxValue int64
-	MinValue int64
-	Value    int64
+	MaxValue, MinValue, Value int64
 }
 
 // MCC charger implementation for supporting Mobile Charger Connect devices from Audi, Bentley, Porsche
 type MobileConnect struct {
 	*api.HTTPHelper
-	uri          string
-	password     string
-	token        string
-	tokenValid   time.Time
-	tokenRefresh time.Time
+	uri              string
+	password         string
+	token            string
+	tokenValid       time.Time
+	tokenRefresh     time.Time
+	cableInformation MCCCurrentCableInformation
 }
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config
@@ -84,7 +82,7 @@ func NewMobileConnect(uri string, password string) *MobileConnect {
 	client := &http.Client{Transport: customTransport}
 
 	mcc := &MobileConnect{
-		HTTPHelper: api.NewHTTPHelperWithClient(api.NewLogger("MobileConnect"), client),
+		HTTPHelper: api.NewHTTPHelperWithClient(api.NewLogger("mcc "), client),
 		uri:        strings.TrimRight(uri, "/"),
 		password:   password,
 	}
@@ -114,10 +112,10 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 
 		mcc.token = tr.Token
 		// According to the Web Interface, the token is valid for 10 minutes
-		mcc.tokenValid = time.Now().Add(time.Duration(10) * time.Minute)
+		mcc.tokenValid = time.Now().Add(10 * time.Minute)
 
 		// the web interface updates the token every 2 minutes, so lets do the same here
-		mcc.tokenRefresh = time.Now().Add(time.Duration(2) * time.Minute)
+		mcc.tokenRefresh = time.Now().Add(2 * time.Minute)
 	}
 
 	return err
@@ -178,44 +176,29 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 		return req, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf(" Bearer %s", mcc.token))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
 
 	return req, nil
 }
 
 // use http PUT to set a value on the URI, the value should be URL encoded in the URI parameter
-func (mcc *MobileConnect) putValue(uri string) error {
+func (mcc *MobileConnect) putValue(uri string) ([]byte, error) {
 	req, err := mcc.request(http.MethodPut, uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	b, err := mcc.Request(req)
-	if err == nil {
-		var result string
-		err = json.Unmarshal(b, &result)
-
-		if err == nil && result != "OK" {
-			return fmt.Errorf("Call returned an unexpected error")
-		}
-	}
-
-	return err
+	return mcc.Request(req)
 }
 
 // use http GET to fetch a non structured value from an URI and stores it in result
-func (mcc *MobileConnect) getValue(uri string, result interface{}) error {
+func (mcc *MobileConnect) getValue(uri string) ([]byte, error) {
 	req, err := mcc.request(http.MethodGet, uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	b, err := mcc.Request(req)
-	if err == nil {
-		err = json.Unmarshal(b, &result)
-	}
-
-	return err
+	return mcc.Request(req)
 }
 
 // use http GET to fetch an escaped JSON string and unmarshall the data in result
@@ -227,12 +210,8 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 	b, err := mcc.Request(req)
 	if err == nil {
-		var unquote string
-		if err := json.Unmarshal([]byte(b), &unquote); err != nil {
-			return err
-		}
-
-		if err := json.Unmarshal([]byte(unquote), &result); err != nil {
+		s, _ := strconv.Unquote(strings.Trim(string(b), "\n"))
+		if err := json.Unmarshal([]byte(s), &result); err != nil {
 			return err
 		}
 	}
@@ -242,9 +221,13 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 // Status implements the Charger.Status interface
 func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
-	var chargeState int64
+	b, err := mcc.getValue(mcc.apiURL(apiChargeState))
+	if err != nil {
+		return api.StatusNone, err
+	}
 
-	if err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState); err != nil {
+	chargeState, err := strconv.ParseInt(strings.Trim(string(b), "\n"), 10, 8)
+	if err != nil {
 		return api.StatusNone, err
 	}
 
@@ -276,9 +259,14 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (mcc *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
-	var chargeState int64
+	b, err := mcc.getValue(mcc.apiURL(apiChargeState))
+	if err != nil {
+		return false, err
+	}
 
-	if err := mcc.getValue(mcc.apiURL(apiChargeState), &chargeState); err != nil {
+	// return value is returned in the format 0\n
+	chargeState, err := strconv.ParseInt(strings.Trim(string(b), "\n"), 10, 8)
+	if err != nil {
 		return false, err
 	}
 
@@ -303,23 +291,36 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	// Since the API here works differently, we fetch the limits
 	// and then return an error if the value is outside of the limits or
 	// otherwise set the new value
-	var cableInformation MCCCurrentCableInformation
-	// TODO: this only needs to run once
-	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentCableInformation), &cableInformation); err != nil {
-		return err
+	if mcc.cableInformation.MaxValue == 0 {
+		if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentCableInformation), &mcc.cableInformation); err != nil {
+			return err
+		}
 	}
 
-	if current < cableInformation.MinValue {
-		return fmt.Errorf("value is lower than the allowed minimum value %d", cableInformation.MinValue)
+	if current < mcc.cableInformation.MinValue {
+		return fmt.Errorf("value is lower than the allowed minimum value %d", mcc.cableInformation.MinValue)
 	}
 
-	if current > cableInformation.MaxValue {
-		return fmt.Errorf("value is higher than the allowed maximum value %d", cableInformation.MaxValue)
+	if current > mcc.cableInformation.MaxValue {
+		return fmt.Errorf("value is higher than the allowed maximum value %d", mcc.cableInformation.MaxValue)
 	}
 
 	url := fmt.Sprintf("%s%d", mcc.apiURL(apiSetCurrentLimit), current)
 
-	return mcc.putValue(url)
+	b, err := mcc.putValue(url)
+	if err != nil {
+		return err
+	}
+
+	// return value is returned in the format "OK"\n
+	s := strings.Trim(string(b), "\n")
+	s = strings.Trim(s, "\"")
+
+	if s != "OK" {
+		return fmt.Errorf("Call returned an unexpected error")
+	}
+
+	return nil
 }
 
 // CurrentPower implements the Meter interface.
@@ -333,8 +334,7 @@ func (mcc *MobileConnect) CurrentPower() (float64, error) {
 // ChargedEnergy implements the ChargeRater interface.
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
-	err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession)
-	if err != nil {
+	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession); err != nil {
 		return 0, err
 	}
 
@@ -344,10 +344,9 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 // ChargingTime yields current charge run duration
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
-	err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession)
-	if err != nil {
+	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession); err != nil {
 		return 0, err
 	}
 
-	return time.Duration(time.Duration(currentSession.Duration) * time.Second), nil
+	return time.Duration(currentSession.Duration * time.Second), nil
 }
