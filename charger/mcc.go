@@ -181,16 +181,6 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 	return req, nil
 }
 
-// use http PUT to set a value on the URI, the value should be URL encoded in the URI parameter
-func (mcc *MobileConnect) putValue(uri string) ([]byte, error) {
-	req, err := mcc.request(http.MethodPut, uri)
-	if err != nil {
-		return nil, err
-	}
-
-	return mcc.Request(req)
-}
-
 // use http GET to fetch a non structured value from an URI and stores it in result
 func (mcc *MobileConnect) getValue(uri string) ([]byte, error) {
 	req, err := mcc.request(http.MethodGet, uri)
@@ -307,7 +297,12 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 
 	url := fmt.Sprintf("%s%d", mcc.apiURL(apiSetCurrentLimit), current)
 
-	b, err := mcc.putValue(url)
+	req, err := mcc.request(http.MethodPut, url)
+	if err != nil {
+		return err
+	}
+
+	b, err := mcc.Request(req)
 	if err != nil {
 		return err
 	}
