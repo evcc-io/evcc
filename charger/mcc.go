@@ -311,10 +311,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	}
 
 	// return value is returned in the format "OK"\n
-	s := strings.Trim(string(b), "\n")
-	s = strings.Trim(s, "\"")
-
-	if s != "OK" {
+	if strings.Trim(string(b), "\n\"") != "OK" {
 		return fmt.Errorf("Call returned an unexpected error")
 	}
 
