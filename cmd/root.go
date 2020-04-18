@@ -164,7 +164,8 @@ func run(cmd *cobra.Command, args []string) {
 
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
-	configureLogging(conf.Log)
+	level, _ = cmd.PersistentFlags().GetString("log")
+	configureLogging(level)
 
 	go checkVersion()
 
