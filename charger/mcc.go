@@ -200,7 +200,10 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 	b, err := mcc.Request(req)
 	if err == nil {
-		s, _ := strconv.Unquote(strings.Trim(string(b), "\n"))
+		s, err := strconv.Unquote(strings.Trim(string(b), "\n"))
+		if err != nil {
+			return err
+		}
 		if err := json.Unmarshal([]byte(s), &result); err != nil {
 			return err
 		}
