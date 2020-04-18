@@ -75,17 +75,17 @@ func NewMobileConnectFromConfig(log *api.Logger, other map[string]interface{}) a
 
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) *MobileConnect {
+	mcc := &MobileConnect{
+		HTTPHelper: api.NewHTTPHelper(api.NewLogger("mcc ")),
+		uri:        strings.TrimRight(uri, "/"),
+		password:   password,
+	}
+
 	// ignore the self signed certificate
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	client := &http.Client{Transport: customTransport}
-
-	mcc := &MobileConnect{
-		HTTPHelper: api.NewHTTPHelperWithClient(api.NewLogger("mcc "), client),
-		uri:        strings.TrimRight(uri, "/"),
-		password:   password,
-	}
+	mcc.HTTPHelper.Client.Transport = customTransport
 
 	return mcc
 }

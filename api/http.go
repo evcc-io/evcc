@@ -22,16 +22,6 @@ func NewHTTPHelper(log *Logger) *HTTPHelper {
 	return r
 }
 
-// NewHTTPHelperWithClient creates http helper for simplified PUT GET logic
-// This variant requires a client to be passed over which allows it to have custom settings
-func NewHTTPHelperWithClient(log *Logger, client *http.Client) *HTTPHelper {
-	r := &HTTPHelper{
-		Log:    log,
-		Client: client,
-	}
-	return r
-}
-
 // Response codes other than HTTP 200 or 204 are raised as error
 func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
 	if err != nil {
