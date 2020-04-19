@@ -225,24 +225,13 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	}
 
 	switch chargeState {
-	case 0:
-		// 0: Unplugged		StatusA
+	case 0, 1: // 0: Unplugged, 1: Connecting
 		return api.StatusA, nil
-	case 1:
-		// 1: Connecting	StatusB
-		return api.StatusB, nil
-	case 2:
-		// 2: Error				StatusE
-		return api.StatusE, nil
-	case 3:
-		// 3: Established	StatusF
+	case 2: // Error
 		return api.StatusF, nil
-	case 4, 6:
-		// 4: Paused			StatusD
-		// 6: Finished		StatusD
-		return api.StatusD, nil
-	case 5:
-		// 5: Active			StatusC
+	case 3, 4, 6: // 3: Established, 4: Pausee, 6: Finished
+		return api.StatusB, nil
+	case 5: // Active
 		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("properties unknown result: %d", chargeState)
