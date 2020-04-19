@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
+// HTTP testing appproach from http://hassansin.github.io/Unit-Testing-http-client-in-Go
 type roundTripFunc func(req *http.Request) *http.Response
 
 // RoundTrip .
