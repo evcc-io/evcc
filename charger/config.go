@@ -27,6 +27,8 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 		c = NewEVSEWifiFromConfig(log, other)
 	case "simpleevse", "evse":
 		c = NewSimpleEVSEFromConfig(log, other)
+	case "porsche", "audi", "bentley", "mcc":
+		c = NewMobileConnectFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid charger type '%s'", typ)
 	}

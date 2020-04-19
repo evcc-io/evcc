@@ -83,6 +83,10 @@ chargers:
 - name: go-e
   type: go-e # go-e charger
   uri: http://192.168.1.4 # go-e address
+- name: mcc
+  type: mcc # Mobile Charger Connect (Audi, Bentley, Porsche)
+  uri: https://192.168.1.4 # Mobile Charger Connect address
+  password: # home user password
 - name: configurable
   type: default # Configurable charger
   status: # charger status A..F

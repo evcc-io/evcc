@@ -54,6 +54,12 @@ func (r *HTTPHelper) decodeJSON(resp *http.Response, err error, res interface{})
 	return b, err
 }
 
+// Request executes HTTP request returns the response body
+func (r *HTTPHelper) Request(req *http.Request) ([]byte, error) {
+	resp, err := r.Client.Do(req)
+	return r.readBody(resp, err)
+}
+
 // Get executes HTTP GET request returns the response body
 func (r *HTTPHelper) Get(url string) ([]byte, error) {
 	resp, err := r.Client.Get(url)
