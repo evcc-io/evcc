@@ -158,14 +158,12 @@ func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	level, _ := cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
-	level, _ = cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging(viper.GetString("log"))
 
 	go checkVersion()
 
