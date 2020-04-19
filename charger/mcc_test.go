@@ -121,12 +121,12 @@ func TestMobileConnect_Status(t *testing.T) {
 		// test cases for software version 2912
 		{"home plug - Unexpected API response", []apiResponse{{apiChargeState, "abc"}}, api.StatusNone, true},
 		{"home plug - Unplugged", []apiResponse{{apiChargeState, "0\n"}}, api.StatusA, false},
-		{"home plug - Connecting", []apiResponse{{apiChargeState, "1\n"}}, api.StatusA, false},
+		{"home plug - Connecting", []apiResponse{{apiChargeState, "1\n"}}, api.StatusB, false},
 		{"home plug - Error", []apiResponse{{apiChargeState, "2\n"}}, api.StatusF, false},
-		{"home plug - Established", []apiResponse{{apiChargeState, "3\n"}}, api.StatusB, false},
-		{"home plug - Paused", []apiResponse{{apiChargeState, "4\n"}}, api.StatusB, false},
+		{"home plug - Established", []apiResponse{{apiChargeState, "3\n"}}, api.StatusC, false},
+		{"home plug - Paused", []apiResponse{{apiChargeState, "4\n"}}, api.StatusC, false},
 		{"home plug - Active", []apiResponse{{apiChargeState, "5\n"}}, api.StatusC, false},
-		{"home plug - Finished", []apiResponse{{apiChargeState, "6\n"}}, api.StatusB, false},
+		{"home plug - Finished", []apiResponse{{apiChargeState, "6\n"}}, api.StatusC, false},
 		{"home plug - Unexpected status value", []apiResponse{{apiChargeState, "10\n"}}, api.StatusNone, true},
 	}
 	for _, tc := range tests {
