@@ -9,7 +9,6 @@ import (
 
 const (
 	execTimeout = 5 * time.Second
-	mqttTimeout = 5 * time.Second
 )
 
 // Config is the general provider config
@@ -43,9 +42,6 @@ func mqttFromConfig(log *api.Logger, other map[string]interface{}) mqttConfig {
 	var pc mqttConfig
 	api.DecodeOther(log, other, &pc)
 
-	if pc.Timeout == 0 {
-		pc.Timeout = mqttTimeout
-	}
 	if pc.Multiplier == 0 {
 		pc.Multiplier = 1
 	}

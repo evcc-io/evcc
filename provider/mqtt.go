@@ -247,7 +247,7 @@ func (h *msgHandler) floatGetter() (float64, error) {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
 		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
@@ -264,7 +264,7 @@ func (h *msgHandler) intGetter() (int64, error) {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
 		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
@@ -281,7 +281,7 @@ func (h *msgHandler) stringGetter() (string, error) {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
@@ -293,7 +293,7 @@ func (h *msgHandler) boolGetter() (bool, error) {
 	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if elapsed := time.Since(h.updated); elapsed > h.timeout {
+	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
 		return false, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
