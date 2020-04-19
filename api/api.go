@@ -19,12 +19,12 @@ type ChargeStatus string
 
 const (
 	StatusNone ChargeStatus = ""
-	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden möglich: nein
-	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden möglich: nein
-	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden möglich:   ja
-	StatusD    ChargeStatus = "D" // Fzg. angeschlossen:   ja    Laden möglich:   ja
-	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden möglich: nein
-	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden möglich: nein
+	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden möglich: nein    - Kabel nicht angeschlossen
+	StatusB    ChargeStatus = "B" // Fzg. angeschlossen:   ja    Laden möglich: nein    - Kabel angeschlossen, Verbindung wird aufgebaut
+	StatusC    ChargeStatus = "C" // Fzg. angeschlossen:   ja    Laden möglich:   ja    - Laden bzw. Laden möglich
+	StatusD    ChargeStatus = "D" // Fzg. angeschlossen:   ja    Laden möglich:   ja    - Laden mit Lüfter
+	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden möglich: nein    - Fehler (Kurzschluss)
+	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden möglich: nein    - Fehler (Ausfall Wallbox)
 )
 
 // Meter is able to provide current power in W
