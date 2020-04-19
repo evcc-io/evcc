@@ -9,6 +9,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/push"
+	"github.com/pkg/errors"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go"
@@ -437,19 +438,14 @@ func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) e
 
 // updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeters() (err error) {
-	// var wg sync.WaitGroup
-	// var mux sync.Mutex
 	retry := func(s string, m api.Meter, f *float64) {
 		e := retry.Do(func() error {
 			return lp.updateMeter(s, m, f)
-		})
+		}, retry.Attempts(3))
 		if e != nil {
+			err = errors.Wrapf(e, "updating %s meter", s)
 			log.ERROR.Printf("%s %v", lp.Name, err)
-			// mux.Lock()
-			err = e
-			// mux.Unlock()
 		}
-		// wg.Done()
 	}
 
 	// read PV meter before charge meter
