@@ -226,7 +226,7 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case 2: // Error
 		return api.StatusF, nil
-	case 3, 4, 6: // 3: Established, 4: Pausee, 6: Finished
+	case 3, 4, 6: // 3: Established, 4: Paused, 6: Finished
 		return api.StatusB, nil
 	case 5: // Active
 		return api.StatusC, nil
