@@ -73,7 +73,7 @@ func TestMobileConnect_login(t *testing.T) {
 		password  string
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{"login - success", []apiResponse{{apiLogin, "{\n    \"token\": \"1234567890._abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"\n}"}}, "password", false},
 		{"login - wrong password", []apiResponse{{apiLogin, "{\n    \"error\": \"wrong password\"\n}"}}, "wrong", true},
 		{"login - bad return", []apiResponse{{apiLogin, "{{\n    \"error\": \"wrong password\"\n}"}}, "wrong", true},
@@ -95,7 +95,7 @@ func TestMobileConnect_refresh(t *testing.T) {
 		responses []apiResponse
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{"refresh - success", []apiResponse{{apiRefresh, "{\n    \"token\": \"1234567890._abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\"\n}"}}, false},
 		{"refresh - wrong password", []apiResponse{{apiRefresh, "{\n    \"error\": \"signature mismatch: OP-gWPOgQ9fdKujMgRNHkeH4WHqYrHe3Z2RqVXeUEuw1\"\n}"}}, true},
 		{"refresh - bad return", []apiResponse{{apiRefresh, "{{\n    \"error\": \"\"\n}"}}, true},
@@ -118,7 +118,7 @@ func TestMobileConnect_Status(t *testing.T) {
 		want      api.ChargeStatus
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{"home plug - Unexpected API response", []apiResponse{{apiChargeState, "abc"}}, api.StatusNone, true},
 		{"home plug - Unplugged", []apiResponse{{apiChargeState, "0\n"}}, api.StatusA, false},
 		{"home plug - Connecting", []apiResponse{{apiChargeState, "1\n"}}, api.StatusB, false},
@@ -152,7 +152,7 @@ func TestMobileConnect_Enabled(t *testing.T) {
 		want      bool
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{"home plug - Unexpected API response", []apiResponse{{apiChargeState, "abc"}}, false, true},
 		{"home plug - Unplugged", []apiResponse{{apiChargeState, "0\n"}}, false, false},
 		{"home plug - Connecting", []apiResponse{{apiChargeState, "1\n"}}, false, false},
@@ -185,7 +185,7 @@ func TestMobileConnect_MaxCurrent(t *testing.T) {
 		current   int64
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{
 			"home plug - success min value",
 			[]apiResponse{
@@ -243,7 +243,7 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 		want      float64
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{
 			"home plug - charging",
 			[]apiResponse{
@@ -281,7 +281,7 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 		want      float64
 		wantErr   bool
 	}{
-		// test cases for software version 2912
+		// test cases for software version 2914
 		{
 			"valid response",
 			[]apiResponse{
