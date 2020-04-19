@@ -139,3 +139,13 @@ func (c *GoE) ChargedEnergy() (float64, error) {
 	energy := float64(status.Dws) / 3.6e6
 	return energy, err
 }
+
+// Currents implements the MeterCurrent interface
+func (c *GoE) Currents() (float64, float64, float64, error) {
+	var status goeStatusResponse
+	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
+	if len(status.Nrg) == 16 {
+		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
+	}
+	return 0, 0, 0, err
+}
