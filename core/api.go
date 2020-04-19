@@ -7,6 +7,13 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 )
 
+// NilVal implements Stringer for nil values
+type NilVal int
+
+func (n *NilVal) String() string {
+	return "—"
+}
+
 // Param is the broadcast channel data type
 type Param struct {
 	LoadPoint string
@@ -155,6 +162,7 @@ func (lp *LoadPoint) publishSoC() {
 		log.ERROR.Printf("%s vehicle error: %v", lp.Name, err)
 	}
 
-	lp.publish("socCharge", "—")
+	var n *NilVal
+	lp.publish("socCharge", n)
 	lp.publish("chargeEstimate", -1)
 }
