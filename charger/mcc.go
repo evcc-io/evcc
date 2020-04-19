@@ -222,9 +222,9 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	}
 
 	switch chargeState {
-	case 0: // 0: Unplugged
+	case 0: // Unplugged
 		return api.StatusA, nil
-	case 1: // 1: Connecting
+	case 1: // Connecting
 		return api.StatusB, nil
 	case 2: // Error
 		return api.StatusF, nil
