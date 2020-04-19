@@ -12,11 +12,10 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-// RoundTripFunc .
-type RoundTripFunc func(req *http.Request) *http.Response
+type roundTripFunc func(req *http.Request) *http.Response
 
 // RoundTrip .
-func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
 
@@ -27,9 +26,9 @@ type apiResponse struct {
 }
 
 // NewTestClient returns *http.Client with Transport replaced to avoid making real calls
-func NewTestClient(fn RoundTripFunc) *http.Client {
+func NewTestClient(fn roundTripFunc) *http.Client {
 	return &http.Client{
-		Transport: RoundTripFunc(fn),
+		Transport: roundTripFunc(fn),
 	}
 }
 
@@ -78,12 +77,12 @@ func TestMobileConnect_login(t *testing.T) {
 		{"login - wrong password", []apiResponse{{apiLogin, "{\n    \"error\": \"wrong password\"\n}"}}, "wrong", true},
 		{"login - bad return", []apiResponse{{apiLogin, "{{\n    \"error\": \"wrong password\"\n}"}}, "wrong", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
-			if err := mcc.login(tt.password); (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.login() error = %v, wantErr %v", err, tt.wantErr)
+			if err := mcc.login(tc.password); (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.login() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}
@@ -100,143 +99,12 @@ func TestMobileConnect_refresh(t *testing.T) {
 		{"refresh - wrong password", []apiResponse{{apiRefresh, "{\n    \"error\": \"signature mismatch: OP-gWPOgQ9fdKujMgRNHkeH4WHqYrHe3Z2RqVXeUEuw1\"\n}"}}, true},
 		{"refresh - bad return", []apiResponse{{apiRefresh, "{{\n    \"error\": \"\"\n}"}}, true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
-			if err := mcc.refresh(); (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.login() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func TestMobileConnect_request(t *testing.T) {
-	type fields struct {
-		HTTPHelper       *api.HTTPHelper
-		uri              string
-		password         string
-		token            string
-		tokenValid       time.Time
-		tokenRefresh     time.Time
-		cableInformation MCCCurrentCableInformation
-	}
-	type args struct {
-		method string
-		uri    string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *http.Request
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := &MobileConnect{
-				HTTPHelper:       tt.fields.HTTPHelper,
-				uri:              tt.fields.uri,
-				password:         tt.fields.password,
-				token:            tt.fields.token,
-				tokenValid:       tt.fields.tokenValid,
-				tokenRefresh:     tt.fields.tokenRefresh,
-				cableInformation: tt.fields.cableInformation,
-			}
-			got, err := mcc.request(tt.args.method, tt.args.uri)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.request() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MobileConnect.request() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMobileConnect_getValue(t *testing.T) {
-	type fields struct {
-		HTTPHelper       *api.HTTPHelper
-		uri              string
-		password         string
-		token            string
-		tokenValid       time.Time
-		tokenRefresh     time.Time
-		cableInformation MCCCurrentCableInformation
-	}
-	type args struct {
-		uri string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []byte
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := &MobileConnect{
-				HTTPHelper:       tt.fields.HTTPHelper,
-				uri:              tt.fields.uri,
-				password:         tt.fields.password,
-				token:            tt.fields.token,
-				tokenValid:       tt.fields.tokenValid,
-				tokenRefresh:     tt.fields.tokenRefresh,
-				cableInformation: tt.fields.cableInformation,
-			}
-			got, err := mcc.getValue(tt.args.uri)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.getValue() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MobileConnect.getValue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestMobileConnect_getEscapedJSON(t *testing.T) {
-	type fields struct {
-		HTTPHelper       *api.HTTPHelper
-		uri              string
-		password         string
-		token            string
-		tokenValid       time.Time
-		tokenRefresh     time.Time
-		cableInformation MCCCurrentCableInformation
-	}
-	type args struct {
-		uri    string
-		result interface{}
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := &MobileConnect{
-				HTTPHelper:       tt.fields.HTTPHelper,
-				uri:              tt.fields.uri,
-				password:         tt.fields.password,
-				token:            tt.fields.token,
-				tokenValid:       tt.fields.tokenValid,
-				tokenRefresh:     tt.fields.tokenRefresh,
-				cableInformation: tt.fields.cableInformation,
-			}
-			if err := mcc.getEscapedJSON(tt.args.uri, tt.args.result); (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.getEscapedJSON() error = %v, wantErr %v", err, tt.wantErr)
+			if err := mcc.refresh(); (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.login() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}
@@ -260,17 +128,17 @@ func TestMobileConnect_Status(t *testing.T) {
 		{"home plug - Finished", []apiResponse{{apiChargeState, "6\n"}}, api.StatusB, false},
 		{"home plug - Unexpected status value", []apiResponse{{apiChargeState, "10\n"}}, api.StatusNone, true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
 			got, err := mcc.Status()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.Status() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.Status() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MobileConnect.Status() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("MobileConnect.Status() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -293,17 +161,17 @@ func TestMobileConnect_Enabled(t *testing.T) {
 		{"home plug - Active", []apiResponse{{apiChargeState, "5\n"}}, true, false},
 		{"home plug - Finished", []apiResponse{{apiChargeState, "6\n"}}, true, false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
 			got, err := mcc.Enabled()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.Enabled() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.Enabled() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("MobileConnect.Enabled() = %v, want %v", got, tt.want)
+			if got != tc.want {
+				t.Errorf("MobileConnect.Enabled() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -356,12 +224,12 @@ func TestMobileConnect_MaxCurrent(t *testing.T) {
 			10, true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
-			if err := mcc.MaxCurrent(tt.current); (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.MaxCurrent() error = %v, wantErr %v", err, tt.wantErr)
+			if err := mcc.MaxCurrent(tc.current); (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.MaxCurrent() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
 	}
@@ -389,17 +257,17 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 			}, 0, false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
 			got, err := mcc.CurrentPower()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.CurrentPower() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.CurrentPower() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("MobileConnect.CurrentPower() = %v, want %v", got, tt.want)
+			if got != tc.want {
+				t.Errorf("MobileConnect.CurrentPower() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -426,17 +294,17 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 			}, 0, true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
 			got, err := mcc.ChargedEnergy()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.ChargedEnergy() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.ChargedEnergy() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("MobileConnect.ChargedEnergy() = %v, want %v", got, tt.want)
+			if got != tc.want {
+				t.Errorf("MobileConnect.ChargedEnergy() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -462,17 +330,17 @@ func TestMobileConnect_ChargingTime(t *testing.T) {
 			}, 0, true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tt.responses)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
 
 			got, err := mcc.ChargingTime()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("MobileConnect.ChargingTime() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.ChargingTime() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("MobileConnect.ChargingTime() = %v, want %v", got, tt.want)
+			if got != tc.want {
+				t.Errorf("MobileConnect.ChargingTime() = %v, want %v", got, tc.want)
 			}
 		})
 	}

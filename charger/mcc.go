@@ -95,7 +95,7 @@ func (mcc *MobileConnect) apiURL(api apiFunction) string {
 	return fmt.Sprintf("%s/%s", mcc.uri, api)
 }
 
-// proces the http request to fetch the auth token for a login or refresh request
+// process the http request to fetch the auth token for a login or refresh request
 func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
 	b, err := mcc.RequestJSON(request, &tr)
@@ -200,12 +200,9 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 	b, err := mcc.Request(req)
 	if err == nil {
-		s, err := strconv.Unquote(strings.Trim(string(b), "\n"))
-		if err != nil {
-			return err
-		}
-		if err := json.Unmarshal([]byte(s), &result); err != nil {
-			return err
+		var s string
+		if s, err = strconv.Unquote(strings.Trim(string(b), "\n")); err == nil {
+			err = json.Unmarshal([]byte(s), &result)
 		}
 	}
 
@@ -301,7 +298,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 
 	// return value is returned in the format "OK"\n
 	if strings.Trim(string(b), "\n\"") != "OK" {
-		return fmt.Errorf("Call returned an unexpected error")
+		return fmt.Errorf("maxcurrent unexpected resonse: %s", string(b))
 	}
 
 	return nil
