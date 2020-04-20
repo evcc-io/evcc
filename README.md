@@ -109,7 +109,7 @@ Optionally, charger can also provide:
 
 Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-Hardware-Preparation) for preparing the Wallbe)
+- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe)
 - `phoenix`: chargers with Phoenix controllers
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
@@ -118,7 +118,7 @@ Available charger implementations are:
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
-#### Wallbe Hardware Preparation
+#### Wallbe hardware preparation
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
@@ -129,6 +129,37 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
+
+#### openWB slave
+
+EVCC can be used to remote control an openWB charger using openWB's MQTT interface. Here is an example for how to use the `default` charger for controlling the first loadpoint:
+
+````yaml
+chargers:
+- name: openwb
+  type: default
+  status:
+    # with openWB, charging status (A..F) this is split between "plugged" and "charging"
+    # the openwb type combines both into status (charging=C, plugged=B, otherwise=A)
+    type: openwb
+    plugged:
+      type: mqtt
+      topic: openWB/lp/1/boolPlugStat
+    charging:
+      type: mqtt
+      topic: openWB/lp/1/boolChargeStat
+  enabled:
+    type: mqtt
+    topic: openWB/lp/1/ChargePointEnabled
+    timeout: 30s
+  enable:
+    type: mqtt
+    topic: openWB/set/lp1/ChargePointEnabled
+    payload: ${enable:%d}
+  maxcurrent:
+    type: mqtt
+    topic: openWB/set/lp1/DirectChargeAmps
+````
 
 ### Meter
 
@@ -186,6 +217,20 @@ This plugin type is read-only and does not provide write access.
     type: script
     cmd: /bin/bash -c "echo 50"
     timeout: 5s
+    ```
+
+- `openwb`: the openwb plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F.
+
+  Sample configuration:
+
+    ```yaml
+    type: openwb
+    plugged:
+      type: mqtt
+      topic: openWB/lp/1/boolPlugStat
+    charging:
+      type: mqtt
+      topic: openWB/lp/1/boolChargeStat
     ```
 
 When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. The variable is replaced with the actual data before the plugin is executed.
