@@ -172,17 +172,21 @@ This plugin type is read-only and does not provide write access.
 
   Sample configuration:
 
-      type: mqtt
-      topic: mbmd/sdm1-1/Power
-      timeout: 30s
+    ```yaml
+    type: mqtt
+    topic: mbmd/sdm1-1/Power
+    timeout: 30s
+    ```
 
 - `script`: the script plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
 
   Sample configuration:
 
-      type: script
-      cmd: /bin/bash -c "echo 50"
-      timeout: 5s
+    ```yaml
+    type: script
+    cmd: /bin/bash -c "echo 50"
+    timeout: 5s
+    ```
 
 When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. The variable is replaced with the actual data before the plugin is executed.
 
