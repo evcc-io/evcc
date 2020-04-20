@@ -94,7 +94,7 @@ If the charger supplies *total energy* for the charging cycle this value is pref
 
 ## Implementation
 
-EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go)
+EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go).
 
 ### Charger
 
@@ -102,8 +102,8 @@ Charger is responsible for handling EV state and adjusting charge current:
 
 - `Status()`: get charge controller status (`A...F`)
 - `Enabled()`: get charger availability
-- `Enable()`: set charger availability
-- `MaxCurrent()`: set maximum allowed charge current in A
+- `Enable(bool)`: set charger availability
+- `MaxCurrent(int)`: set maximum allowed charge current in A
 
 Optionally, charger can also provide:
 
