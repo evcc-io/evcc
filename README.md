@@ -4,7 +4,7 @@
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
 
-### Features
+## Features
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
@@ -19,23 +19,21 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ![Screenshot](docs/screenshot.png)
 
-### Background
+## Index
 
-EVCC is heavily inspired by [OpenWB](1). However, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
-
-Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for EVCC were:
-
-- typed language with ability for systematic testing - achieved by using [Go](2)
-- structured configuration - supports YAML-based [config file](evcc.dist.yaml)
-- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
-- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
-- support for multiple load points - tbd
-
-### Note
-
-EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
-EVCC requires a supported charger and a combination of grid, PV and charge meter.
-Charger and meters **must** be installed by a certified professional.
+* [Installation](#Installation)
+* [Configuration](#Configuration)
+  * [Charge Modes](#Charge-Modes)
+  * [PV generator configuration](#PV-generator-configuration)
+  * [Charger configuration](#Charger-configuration)
+* [Implementation](#Implementation)
+  * [Charger](#Charger)
+    * [Wallbe hardware preparation](#Wallbe-hardware-preparation)
+    * [openWB slave](#openWB-slave)
+  * [Meter](#Meter)
+  * [Vehicle](#Vehicle)
+  * [Plugins](#Plugins)
+* [Background](#Background)
 
 ## Installation
 
@@ -50,6 +48,10 @@ or to run EVCC with given config file and UI on port 7070 using Docker:
 To build EVCC from source, [Go](2) 1.13 is required:
 
     make
+
+**Note**: EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
+EVCC requires a supported charger and a combination of grid, PV and charge meter.
+All components **must** be installed by a certified professional.
 
 ## Configuration
 
@@ -92,7 +94,7 @@ If the charger supplies *total energy* for the charging cycle this value is pref
 
 ## Implementation
 
-EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go)
+EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go).
 
 ### Charger
 
@@ -100,8 +102,8 @@ Charger is responsible for handling EV state and adjusting charge current:
 
 - `Status()`: get charge controller status (`A...F`)
 - `Enabled()`: get charger availability
-- `Enable()`: set charger availability
-- `MaxCurrent()`: set maximum allowed charge current in A
+- `Enable(bool)`: set charger availability
+- `MaxCurrent(int)`: set maximum allowed charge current in A
 
 Optionally, charger can also provide:
 
@@ -109,7 +111,7 @@ Optionally, charger can also provide:
 
 Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-Hardware-Preparation) for preparing the Wallbe)
+- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe)
 - `phoenix`: chargers with Phoenix controllers
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
@@ -118,7 +120,7 @@ Available charger implementations are:
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
-#### Wallbe Hardware Preparation
+#### Wallbe hardware preparation
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
@@ -129,6 +131,37 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
+
+#### openWB slave
+
+EVCC can be used to remote control an openWB charger using openWB's MQTT interface. Here is an example for how to use the `default` charger for controlling the first loadpoint:
+
+````yaml
+chargers:
+- name: openwb
+  type: default
+  status:
+    # with openWB, charging status (A..F) this is split between "plugged" and "charging"
+    # the openwb type combines both into status (charging=C, plugged=B, otherwise=A)
+    type: openwb
+    plugged:
+      type: mqtt
+      topic: openWB/lp/1/boolPlugStat
+    charging:
+      type: mqtt
+      topic: openWB/lp/1/boolChargeStat
+  enabled:
+    type: mqtt
+    topic: openWB/lp/1/ChargePointEnabled
+    timeout: 30s
+  enable:
+    type: mqtt
+    topic: openWB/set/lp1/ChargePointEnabled
+    payload: ${enable:%d}
+  maxcurrent:
+    type: mqtt
+    topic: openWB/set/lp1/DirectChargeAmps
+````
 
 ### Meter
 
@@ -165,26 +198,66 @@ Available vehicle implementations are:
 
 ### Plugins
 
-Plugins are used to implement accessing and updating generic data sources. EVCC supports the following *read/write* plugins:
+Plugins are used to implement accessing and updating generic data sources. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
+
+EVCC supports the following *read/write* plugins:
 
 - `mqtt`: this plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT.
-This plugin type is read-only and does not provide write access.
 
   Sample configuration:
 
-      type: mqtt
-      topic: mbmd/sdm1-1/Power
-      timeout: 30s
+    ```yaml
+    type: mqtt
+    topic: mbmd/sdm1-1/Power
+    timeout: 30s
+    payload: ${var:%.2f}
+    ```
+
+  For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
 
 - `script`: the script plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
 
-  Sample configuration:
+  Sample read configuration:
 
-      type: script
-      cmd: /bin/bash -c "echo 50"
-      timeout: 5s
+    ```yaml
+    type: script
+    cmd: /bin/bash -c "cat /dev/urandom"
+    timeout: 5s
+    ```
 
-When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. The variable is replaced with the actual data before the plugin is executed.
+  Sample write configuration:
+
+    ```yaml
+    type: script
+    cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
+    timeout: 5s
+    ```
+
+- `openwb`: the openwb plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F.
+
+  Sample configuration (read only):
+
+    ```yaml
+    type: openwb
+    plugged:
+      type: mqtt
+      topic: openWB/lp/1/boolPlugStat
+    charging:
+      type: mqtt
+      topic: openWB/lp/1/boolChargeStat
+    ```
+
+## Background
+
+EVCC is heavily inspired by [OpenWB](1). However, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
+
+Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for EVCC were:
+
+- typed language with ability for systematic testing - achieved by using [Go](2)
+- structured configuration - supports YAML-based [config file](evcc.dist.yaml)
+- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
+- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
+- support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
