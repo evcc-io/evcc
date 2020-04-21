@@ -43,7 +43,7 @@ func NewNissanFromConfig(log *api.Logger, other map[string]interface{}) api.Vehi
 		session: session,
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
 
 	return v
 }

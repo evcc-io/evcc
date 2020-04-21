@@ -52,7 +52,7 @@ func NewBMWFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle
 		vin:        cc.VIN,
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
 
 	return v
 }

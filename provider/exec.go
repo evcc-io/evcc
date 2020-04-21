@@ -12,10 +12,9 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
-var log = api.NewLogger("exec")
-
 // Script implements shell script-based providers and setters
 type Script struct {
+	log     *api.Logger
 	timeout time.Duration
 }
 
@@ -23,6 +22,7 @@ type Script struct {
 // Script execution is aborted after given timeout.
 func NewScriptProvider(timeout time.Duration) *Script {
 	return &Script{
+		log:     api.NewLogger("exec"),
 		timeout: timeout,
 	}
 }
@@ -53,11 +53,11 @@ func (e *Script) StringGetter(script string) StringGetter {
 				s = strings.TrimSpace(string(ee.Stderr))
 			}
 
-			log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
+			e.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
 			return "", err
 		}
 
-		log.TRACE.Printf("%s: %s", strings.Join(args, " "), s)
+		e.log.TRACE.Printf("%s: %s", strings.Join(args, " "), s)
 		return s, nil
 	}
 }

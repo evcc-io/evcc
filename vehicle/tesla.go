@@ -57,8 +57,8 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehic
 		log.FATAL.Fatal("cannot create tesla: vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
+	v.chargedEnergyG = provider.NewCached(log, v.chargedEnergy, cc.Cache).FloatGetter()
 
 	return v
 }

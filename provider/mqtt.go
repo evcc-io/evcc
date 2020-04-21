@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -15,10 +16,9 @@ const (
 	waitTimeout    = 50 * time.Millisecond // polling interval when waiting for initial value
 )
 
-var mlog = api.NewLogger("mqtt")
-
 // MqttClient is a paho publisher
 type MqttClient struct {
+	log      *api.Logger
 	mux      sync.Mutex
 	Client   mqtt.Client
 	broker   string
@@ -34,9 +34,11 @@ func NewMqttClient(
 	clientID string,
 	qos byte,
 ) *MqttClient {
-	mlog.INFO.Printf("connecting %s at %s", clientID, broker)
+	log := api.NewLogger("mqtt")
+	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
 	mc := &MqttClient{
+		log:      log,
 		broker:   broker,
 		qos:      qos,
 		listener: make(map[string]func(string)),
@@ -63,18 +65,18 @@ func NewMqttClient(
 
 // ConnectionLostHandler logs cause of connection loss as warning
 func (m *MqttClient) ConnectionLostHandler(client mqtt.Client, reason error) {
-	mlog.WARN.Printf("%s connection lost: %v", m.broker, reason.Error())
+	m.log.WARN.Printf("%s connection lost: %v", m.broker, reason.Error())
 }
 
 // ConnectionHandler restores listeners
 func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
-	mlog.TRACE.Printf("%s connected", m.broker)
+	m.log.TRACE.Printf("%s connected", m.broker)
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
 	for topic, l := range m.listener {
-		mlog.TRACE.Printf("%s subscribe %s", m.broker, topic)
+		m.log.TRACE.Printf("%s subscribe %s", m.broker, topic)
 		go m.listen(topic, l)
 	}
 }
@@ -83,7 +85,7 @@ func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
 func (m *MqttClient) Listen(topic string, callback func(string)) {
 	m.mux.Lock()
 	if _, ok := m.listener[topic]; ok {
-		mlog.FATAL.Fatalf("%s: duplicate listener not allowed", topic)
+		m.log.FATAL.Fatalf("%s: duplicate listener not allowed", topic)
 	}
 	m.listener[topic] = callback
 	m.mux.Unlock()
@@ -105,6 +107,7 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
 func (m *MqttClient) FloatGetter(topic string, multiplier float64, timeout time.Duration) FloatGetter {
 	h := &msgHandler{
+		log:        m.log,
 		topic:      topic,
 		multiplier: multiplier,
 		timeout:    timeout,
@@ -117,6 +120,7 @@ func (m *MqttClient) FloatGetter(topic string, multiplier float64, timeout time.
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
 func (m *MqttClient) IntGetter(topic string, multiplier int64, timeout time.Duration) IntGetter {
 	h := &msgHandler{
+		log:        m.log,
 		topic:      topic,
 		multiplier: float64(multiplier),
 		timeout:    timeout,
@@ -129,6 +133,7 @@ func (m *MqttClient) IntGetter(topic string, multiplier int64, timeout time.Dura
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGetter {
 	h := &msgHandler{
+		log:     m.log,
 		topic:   topic,
 		timeout: timeout,
 	}
@@ -140,6 +145,7 @@ func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGet
 // BoolGetter creates handler for string from MQTT topic that returns cached value
 func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter {
 	h := &msgHandler{
+		log:     m.log,
 		topic:   topic,
 		timeout: timeout,
 	}
@@ -167,7 +173,7 @@ func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
 			return err
 		}
 
-		mlog.TRACE.Printf("send %s: '%s'", topic, payload)
+		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
 		token := m.Client.Publish(topic, m.qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
@@ -185,7 +191,7 @@ func (m *MqttClient) BoolSetter(param, topic, message string) BoolSetter {
 			return err
 		}
 
-		mlog.TRACE.Printf("send %s: '%s'", topic, payload)
+		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
 		token := m.Client.Publish(topic, m.qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
@@ -199,14 +205,15 @@ func (m *MqttClient) BoolSetter(param, topic, message string) BoolSetter {
 func (m *MqttClient) WaitForToken(token mqtt.Token) {
 	if token.WaitTimeout(publishTimeout) {
 		if token.Error() != nil {
-			mlog.ERROR.Printf("error: %s", token.Error())
+			m.log.ERROR.Printf("error: %s", token.Error())
 		}
 	} else {
-		mlog.DEBUG.Println("timeout")
+		m.log.DEBUG.Println("timeout")
 	}
 }
 
 type msgHandler struct {
+	log        *api.Logger
 	once       sync.Once
 	mux        sync.Mutex
 	updated    time.Time
@@ -217,7 +224,7 @@ type msgHandler struct {
 }
 
 func (h *msgHandler) Receive(payload string) {
-	mlog.TRACE.Printf("recv %s: '%s'", h.topic, payload)
+	h.log.TRACE.Printf("recv %s: '%s'", h.topic, payload)
 
 	h.mux.Lock()
 	defer h.mux.Unlock()
@@ -231,7 +238,7 @@ func (h *msgHandler) waitForInitialValue() {
 	defer h.mux.Unlock()
 
 	if h.updated.IsZero() {
-		mlog.TRACE.Printf("%s wait for initial value", h.topic)
+		h.log.TRACE.Printf("%s wait for initial value", h.topic)
 
 		// wait for initial update
 		for h.updated.IsZero() {
@@ -260,20 +267,8 @@ func (h *msgHandler) floatGetter() (float64, error) {
 }
 
 func (h *msgHandler) intGetter() (int64, error) {
-	h.once.Do(h.waitForInitialValue)
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
-	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
-		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
-	}
-
-	val, err := strconv.ParseInt(h.payload, 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("%s invalid: '%s'", h.topic, h.payload)
-	}
-
-	return int64(h.multiplier) * val, nil
+	f, err := h.floatGetter()
+	return int64(math.Round(f)), err
 }
 
 func (h *msgHandler) stringGetter() (string, error) {

@@ -3,11 +3,13 @@ package provider
 import (
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/benbjohnson/clock"
 )
 
 // Cached wraps a getter with a cache
 type Cached struct {
+	log     *api.Logger
 	clock   clock.Clock
 	updated time.Time
 	cache   time.Duration
@@ -16,8 +18,9 @@ type Cached struct {
 }
 
 // NewCached wraps a getter with a cache
-func NewCached(getter interface{}, cache time.Duration) *Cached {
+func NewCached(log *api.Logger, getter interface{}, cache time.Duration) *Cached {
 	return &Cached{
+		log:    log,
 		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,
@@ -29,7 +32,7 @@ func (c *Cached) FloatGetter() FloatGetter {
 	g, ok := c.getter.(FloatGetter)
 	if !ok {
 		if g, ok = c.getter.(func() (float64, error)); !ok {
-			log.FATAL.Fatalf("invalid type: %T", c.getter)
+			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 		g = FloatGetter(g)
 	}
@@ -54,7 +57,7 @@ func (c *Cached) IntGetter() IntGetter {
 	g, ok := c.getter.(IntGetter)
 	if !ok {
 		if g, ok = c.getter.(func() (int64, error)); !ok {
-			log.FATAL.Fatalf("invalid type: %T", c.getter)
+			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 		g = IntGetter(g)
 	}
@@ -79,7 +82,7 @@ func (c *Cached) StringGetter() StringGetter {
 	g, ok := c.getter.(StringGetter)
 	if !ok {
 		if g, ok = c.getter.(func() (string, error)); !ok {
-			log.FATAL.Fatalf("invalid type: %T", c.getter)
+			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 		}
 		g = StringGetter(g)
 	}
@@ -105,7 +108,7 @@ func (c *Cached) BoolGetter() BoolGetter {
 	g, ok := c.getter.(BoolGetter)
 	if !ok {
 		if g, ok = c.getter.(func() (bool, error)); !ok {
-			log.FATAL.Fatalf("invalid type: %T", g)
+			c.log.FATAL.Fatalf("invalid type: %T", g)
 		}
 		g = BoolGetter(g)
 	}
