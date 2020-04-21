@@ -40,7 +40,7 @@ func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) ap
 
 	getter := provider.NewFloatGetterFromConfig(log, cc.Charge)
 	if cc.Cache > 0 {
-		getter = provider.NewCached(getter, cc.Cache).FloatGetter()
+		getter = provider.NewCached(log, getter, cc.Cache).FloatGetter()
 	}
 
 	return &Vehicle{

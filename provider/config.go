@@ -70,7 +70,7 @@ func NewFloatGetterFromConfig(log *api.Logger, config Config) (res FloatGetter) 
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).FloatGetter(pc.Cmd)
 		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).FloatGetter()
+			res = NewCached(log, res, pc.Cache).FloatGetter()
 		}
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
@@ -89,7 +89,7 @@ func NewIntGetterFromConfig(log *api.Logger, config Config) (res IntGetter) {
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).IntGetter(pc.Cmd)
 		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).IntGetter()
+			res = NewCached(log, res, pc.Cache).IntGetter()
 		}
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
@@ -108,9 +108,9 @@ func NewStringGetterFromConfig(log *api.Logger, config Config) (res StringGetter
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).StringGetter(pc.Cmd)
 		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).StringGetter()
+			res = NewCached(log, res, pc.Cache).StringGetter()
 		}
-	case "openwb":
+	case "combined", "openwb":
 		res = openWBStatusFromConfig(log, config.Other)
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
@@ -129,7 +129,7 @@ func NewBoolGetterFromConfig(log *api.Logger, config Config) (res BoolGetter) {
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).BoolGetter(pc.Cmd)
 		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).BoolGetter()
+			res = NewCached(log, res, pc.Cache).BoolGetter()
 		}
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
