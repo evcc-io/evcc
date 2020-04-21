@@ -115,6 +115,7 @@ func rs485FindOp(device *rs485.RS485, measurement meters.Measurement) (op rs485.
 	return op
 }
 
+// FloatGetter executes configured modbus read operation and implements provider.FloatGetter
 func (m *Modbus) FloatGetter() (float64, error) {
 	m.conn.Slave(m.slaveID)
 
@@ -134,7 +135,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 	return res.Value, err
 }
 
-// IntGetter executes configured modbus read operation
+// IntGetter executes configured modbus read operation and implements provider.IntGetter
 func (m *Modbus) IntGetter() (int64, error) {
 	res, err := m.FloatGetter()
 	return int64(math.Round(res)), err
