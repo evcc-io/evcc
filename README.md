@@ -10,7 +10,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
 - more chargers experimentally supported: NRGKick, SimpleEVSE, EVSEWifi
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
-- integration with home automation - supports shell scripts and MQTT
+- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
