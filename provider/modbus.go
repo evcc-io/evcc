@@ -130,7 +130,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		res, err = dev.QueryOp(m.conn.ModbusClient(), m.op.IEC61850)
 	}
 
-	log.TRACE.Printf("%+v", res)
+	m.log.TRACE.Printf("%+v", res)
 
 	return res.Value, err
 }
