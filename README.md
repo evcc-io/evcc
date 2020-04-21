@@ -220,9 +220,9 @@ Three different types are supported:
 
     ```yaml
     type: modbus-rtu
-	device: /dev/ttyUSB0
-	baudrate: 9600
-	comset: "8N1"
+    device: /dev/ttyUSB0
+    baudrate: 9600
+    comset: "8N1"
     ```
 
 - `modbus-tcprtu`: use this type if the device is physically connected using an RS485/Ethernet adapter. Requires adapter address in `uri`. Adapter serial configuration must be done directly on the adapter. Example:
@@ -244,13 +244,13 @@ Three different types are supported:
 
 The meter device type `meter` and the device's slave id `id` are always required:
 
-    ```yaml
-    type: ...
-    uri/device: ...
-    meter: sdm
-    id: 3
-    value: power
-    ```
+```yaml
+type: ...
+uri/device: ...
+meter: sdm
+id: 3
+value: power
+```
 
 Supported meter types are all supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
 
@@ -274,12 +274,12 @@ The `mqtt` plugin allows to read values from MQTT topics. This is particularly u
 
 Sample configuration:
 
-    ```yaml
-    type: mqtt
-    topic: mbmd/sdm1-1/Power
-    timeout: 30s
-    payload: ${var:%.2f}
-    ```
+```yaml
+type: mqtt
+topic: mbmd/sdm1-1/Power
+timeout: 30s
+payload: ${var:%.2f}
+```
 
 For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
 
@@ -289,19 +289,19 @@ The `script` plugin executes external scripts to read or update data. This plugi
 
 Sample read configuration:
 
-    ```yaml
-    type: script
-    cmd: /bin/bash -c "cat /dev/urandom"
-    timeout: 5s
-    ```
+```yaml
+type: script
+cmd: /bin/bash -c "cat /dev/urandom"
+timeout: 5s
+```
 
 Sample write configuration:
 
-    ```yaml
-    type: script
-    cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
-    timeout: 5s
-    ```
+```yaml
+type: script
+cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
+timeout: 5s
+```
 
 ### OpenWB status
 
@@ -309,15 +309,15 @@ The `openwb` status plugin is used to convert a mixed boolean status of plugged/
 
 Sample configuration (read only):
 
-    ```yaml
-    type: openwb
-    plugged:
-      type: mqtt
-      topic: openWB/lp/1/boolPlugStat
-    charging:
-      type: mqtt
-      topic: openWB/lp/1/boolChargeStat
-    ```
+```yaml
+type: openwb
+plugged:
+	type: mqtt
+	topic: openWB/lp/1/boolPlugStat
+charging:
+	type: mqtt
+	topic: openWB/lp/1/boolChargeStat
+```
 
 ## Background
 
