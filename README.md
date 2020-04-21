@@ -10,7 +10,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
 - more chargers experimentally supported: NRGKick, SimpleEVSE, EVSEWifi
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
-- integration with home automation - supports shell scripts and MQTT
+- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
@@ -21,19 +21,23 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Index
 
-* [Installation](#Installation)
-* [Configuration](#Configuration)
-  * [Charge Modes](#Charge-Modes)
-  * [PV generator configuration](#PV-generator-configuration)
-  * [Charger configuration](#Charger-configuration)
-* [Implementation](#Implementation)
-  * [Charger](#Charger)
-    * [Wallbe hardware preparation](#Wallbe-hardware-preparation)
-    * [openWB slave](#openWB-slave)
-  * [Meter](#Meter)
-  * [Vehicle](#Vehicle)
-  * [Plugins](#Plugins)
-* [Background](#Background)
+- [Installation](#installation)
+- [Configuration](#configuration)
+  - [Charge Modes](#charge-modes)
+  - [PV generator configuration](#pv-generator-configuration)
+  - [Charger configuration](#charger-configuration)
+- [Implementation](#implementation)
+  - [Charger](#charger)
+    - [Wallbe hardware preparation](#wallbe-hardware-preparation)
+    - [OpenWB slave mode](#openwb-slave-mode)
+  - [Meter](#meter)
+  - [Vehicle](#vehicle)
+- [Plugins](#plugins)
+  - [Modbus](#modbus-read-only)
+  - [MQTT](#mqtt-readwrite)
+  - [Script](#script-readwrite)
+  - [Combined status](#combined-status-read-only)
+- [Background](#background)
 
 ## Installation
 
@@ -132,9 +136,9 @@ More information on interacting with Wallbe chargers can be found at [GoingElect
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
-#### openWB slave
+#### OpenWB slave mode
 
-EVCC can be used to remote control an openWB charger using openWB's MQTT interface. Here is an example for how to use the `default` charger for controlling the first loadpoint:
+EVCC can be used to remote control an openWB charger using openWB's MQTT interface. Here is an example for how to use the `default` charger for controlling the first loadpoint, using the special `openw` plugin:
 
 ````yaml
 chargers:
@@ -196,56 +200,122 @@ Available vehicle implementations are:
 - `tesla`: Tesla (any model)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
-### Plugins
+## Plugins
 
-Plugins are used to implement accessing and updating generic data sources. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
+Plugins are used to integrate physical devices and external data sources with EVCC. Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
-EVCC supports the following *read/write* plugins:
+### Modbus (read only)
 
-- `mqtt`: this plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT.
+The `modbus` plugins is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
 
-  Sample configuration:
+The meter configuration consists of the actual physical connection and the value to be read.
 
-    ```yaml
-    type: mqtt
-    topic: mbmd/sdm1-1/Power
-    timeout: 30s
-    payload: ${var:%.2f}
-    ```
+#### Physical connection
 
-  For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
+Three different types are supported:
 
-- `script`: the script plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
-
-  Sample read configuration:
+- `modbus-rtu`: use this type if the device is physically connected using an RS485 adapter. Requires adapter name in `device` and serial configuration `baudrate`, `comset`. Example:
 
     ```yaml
-    type: script
-    cmd: /bin/bash -c "cat /dev/urandom"
-    timeout: 5s
+    type: modbus-rtu
+    device: /dev/ttyUSB0
+    baudrate: 9600
+    comset: "8N1"
     ```
 
-  Sample write configuration:
+- `modbus-tcprtu`: use this type if the device is physically connected using an RS485/Ethernet adapter. Requires adapter address in `uri`. Adapter serial configuration must be done directly on the adapter. Example:
 
     ```yaml
-    type: script
-    cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
-    timeout: 5s
+    type: modbus-rtu
+    uri: 192.168.0.10:502
     ```
 
-- `openwb`: the openwb plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F.
-
-  Sample configuration (read only):
+- `modbus-tcp`: use this type if the device is a grid inverter or other Modbus TCP meter connected via TCP. Requires the device address and port in `uri`. Example:
 
     ```yaml
-    type: openwb
-    plugged:
-      type: mqtt
-      topic: openWB/lp/1/boolPlugStat
-    charging:
-      type: mqtt
-      topic: openWB/lp/1/boolChargeStat
+    type: modbus-tcp
+    uri: 192.168.0.11:502
+    meter: kostal # "sunspec" or any grid inverter brand name
     ```
+
+#### Logical connection
+
+The meter device type `meter` and the device's slave id `id` are always required:
+
+```yaml
+type: ...
+uri/device: ...
+meter: sdm
+id: 3
+value: power
+```
+
+Supported meter types are all supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
+
+- RTU:
+  - `ABB` ABB A/B-Series meters
+  - `BE`  Bernecker Engineering MPM3PM meters
+  - `DZG` DZG Metering GmbH DVH4013 meters
+  - `INEPRO` Inepro Metering Pro 380
+  - `JANITZA`  Janitza B-Series meters
+  - `SBC` Saia Burgess Controls ALE3 meters
+  - `SDM` Eastron SDM630
+  - `SDM220` Eastron SDM220
+  - `SDM230` Eastron SDM230
+- TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc)
+
+Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
+
+### MQTT (read/write)
+
+The `mqtt` plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT.
+
+Sample configuration:
+
+```yaml
+type: mqtt
+topic: mbmd/sdm1-1/Power
+timeout: 30s
+payload: ${var:%.2f}
+```
+
+For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
+
+### Script (read/write)
+
+The `script` plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
+
+Sample read configuration:
+
+```yaml
+type: script
+cmd: /bin/bash -c "cat /dev/urandom"
+timeout: 5s
+```
+
+Sample write configuration:
+
+```yaml
+type: script
+cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
+timeout: 5s
+```
+
+### Combined status (read only)
+
+The `combined` status plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F. It is typically used together with OpenWB MQTT integration.
+
+Sample configuration (read only):
+
+```yaml
+type: combined
+plugged:
+  type: mqtt
+  topic: openWB/lp/1/boolPlugStat
+charging:
+  type: mqtt
+  topic: openWB/lp/1/boolChargeStat
+```
 
 ## Background
 

@@ -7,39 +7,29 @@ require (
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
-	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/golang/mock v1.4.3
-	github.com/google/go-github v17.0.0+incompatible // indirect
-	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200330145937-ee607c681498
 	github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a
-	github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08 // indirect
-	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20190206234002-112508e1374e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mjibson/esc v0.2.0
-	github.com/pelletier/go-toml v1.7.0 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/afero v1.2.2 // indirect
-	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
-	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.3
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
+	github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb
 	golang.org/x/crypto v0.0.0-20200403201458-baeed622b8d8 // indirect
-	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e // indirect
-	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d // indirect
-	golang.org/x/tools v0.0.0-20200403190813-44a64ad78b9b
-	gopkg.in/ini.v1 v1.55.0 // indirect
+	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
+	golang.org/x/tools v0.0.0-20200421042724-cfa8b22178d2
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20200308172723-deb8393798ec
