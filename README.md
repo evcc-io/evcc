@@ -36,7 +36,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Modbus](#Modbus)
   - [MQTT](#MQTT)
   - [Script](#Script)
-  - [OpenWB status](#OpenWB-status)
+  - [Combined status](#Combined-status)
 - [Background](#Background)
 
 ## Installation
@@ -202,11 +202,9 @@ Available vehicle implementations are:
 
 ## Plugins
 
-Plugins are used to implement accessing and updating generic data sources. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
+Plugins are used to integrate physical devices and external data sources with EVCC. Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
-EVCC supports the following *read/write* plugins.
-
-### Modbus
+### Modbus (read only)
 
 The `modbus` plugins is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
 
@@ -268,7 +266,7 @@ Supported meter types are all supported by [MBMD](https://github.com/volkszaehle
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
 
-### MQTT
+### MQTT (read/write)
 
 The `mqtt` plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT.
 
@@ -283,7 +281,7 @@ payload: ${var:%.2f}
 
 For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
 
-### Script
+### Script (read/write)
 
 The `script` plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
 
@@ -303,14 +301,14 @@ cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
 timeout: 5s
 ```
 
-### OpenWB status
+### Combined status (read only)
 
-The `openwb` status plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F.
+The `combined` status plugin is used to convert a mixed boolean status of plugged/charging into an EVCC-compatible charger status of A..F. It is typically used together with OpenWB MQTT integration.
 
 Sample configuration (read only):
 
 ```yaml
-type: openwb
+type: combined
 plugged:
   type: mqtt
   topic: openWB/lp/1/boolPlugStat

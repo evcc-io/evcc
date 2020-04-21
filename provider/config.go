@@ -114,7 +114,7 @@ func NewStringGetterFromConfig(log *api.Logger, config Config) (res StringGetter
 		if pc.Cache > 0 {
 			res = NewCached(res, pc.Cache).StringGetter()
 		}
-	case "openwb":
+	case "combined", "openwb":
 		res = openWBStatusFromConfig(log, config.Other)
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
