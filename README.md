@@ -34,8 +34,8 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Vehicle](#vehicle)
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
-  - [MQTT](#mqtt-read-write)
-  - [Script](#script-read-write)
+  - [MQTT](#mqtt-readwrite)
+  - [Script](#script-readwrite)
   - [Combined status](#combined-status-read-only)
 - [Background](#background)
 
