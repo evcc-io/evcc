@@ -207,7 +207,7 @@ func (c *Keba) MaxCurrent(current int64) error {
 	return fmt.Errorf("curr unexpected response: %s", resp)
 }
 
-// CurrentPower implements the Meter interface.
+// CurrentPower implements the Meter interface
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
@@ -219,7 +219,7 @@ func (c *Keba) CurrentPower() (float64, error) {
 	return float64(kr.P) / 1e3, nil
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the ChargeRater interface
 func (c *Keba) ChargedEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
@@ -229,4 +229,16 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 
 	// 0,1Wh to kWh
 	return float64(kr.EPres) / 1e5, nil
+}
+
+// Currents implements the MeterCurrents interface
+func (c *Keba) Currents() (float64, float64, float64, error) {
+	var kr keba.Report3
+	err := c.roundtrip("report 3", 3, &kr)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// 1mA to A
+	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, nil
 }
