@@ -256,6 +256,8 @@ github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/volkszaehler/mbmd v0.0.0-20200420092504-612973da25e0 h1:VXSJkD8PdXY4fgm5AYU5wQXbXE47PGGKMpTOoLfnGUg=
 github.com/volkszaehler/mbmd v0.0.0-20200420092504-612973da25e0/go.mod h1:JM+zNF1VW2M1UEdy5DDjGccMsxPtcuy/yyj3DdfXC4A=
+github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb h1:gqxcgZEK+wCaK6x89OClHYGADka4en6eA5Ugv9xMOPE=
+github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb/go.mod h1:JM+zNF1VW2M1UEdy5DDjGccMsxPtcuy/yyj3DdfXC4A=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
@@ -369,6 +371,8 @@ golang.org/x/tools v0.0.0-20191112195655-aa38f8e97acc/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20200420001825-978e26b7c37c h1:JzwTM5XxGxiCwZEIZQPG46csyhWQxQlu2uSi3bEza34=
 golang.org/x/tools v0.0.0-20200420001825-978e26b7c37c/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
+golang.org/x/tools v0.0.0-20200421042724-cfa8b22178d2 h1:fVXd7Kf16vo/CTZCrBFb6BeEhaSbBtsPz9oWmWAoyl8=
+golang.org/x/tools v0.0.0-20200421042724-cfa8b22178d2/go.mod h1:EkVYQZoAsY45+roYkvgYkIh4xh/qjgUK9TdY2XT94GE=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=

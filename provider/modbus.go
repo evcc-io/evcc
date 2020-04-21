@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"math"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -19,6 +20,20 @@ type Modbus struct {
 
 var connections map[string]meters.Connection
 
+func modbusConnection(key string, newConn meters.Connection) meters.Connection {
+	if connections == nil {
+		connections = make(map[string]meters.Connection)
+	}
+
+	if conn, ok := connections[key]; ok {
+		return conn
+	}
+
+	connections[key] = newConn
+	return newConn
+}
+
+// NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface{}) *Modbus {
 	cc := struct {
 		URI, Device, Comset string
@@ -28,36 +43,19 @@ func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface
 	}{}
 	api.DecodeOther(log, other, &cc)
 
-	if connections == nil {
-		connections = make(map[string]meters.Connection)
-	}
-
 	var conn meters.Connection
 	var device meters.Device
-	var op rs485.Operation
 	var err error
 
 	switch strings.ToLower(typ) {
 	case "modbus-rtu":
-		conn = connections[cc.Device]
-		if conn == nil {
-			conn = meters.NewRTU(cc.Device, cc.Baudrate, cc.Comset)
-			connections[cc.Device] = conn
-		}
+		conn = modbusConnection(cc.Device, meters.NewRTU(cc.Device, cc.Baudrate, cc.Comset))
 		device, err = rs485.NewDevice(strings.ToUpper(cc.Meter))
 	case "modbus-rtuovertcp", "modbus-tcprtu", "modbus-rtutcp":
-		conn = connections[cc.URI]
-		if conn == nil {
-			conn = meters.NewRTUOverTCP(cc.URI)
-			connections[cc.URI] = conn
-		}
+		conn = modbusConnection(cc.URI, meters.NewRTUOverTCP(cc.URI))
 		device, err = rs485.NewDevice(strings.ToUpper(cc.Meter))
 	case "modbus-tcp":
-		conn = connections[cc.URI]
-		if conn == nil {
-			conn = meters.NewTCP(cc.URI)
-			connections[cc.URI] = conn
-		}
+		conn = modbusConnection(cc.URI, meters.NewTCP(cc.URI))
 		device = sunspec.NewDevice(strings.ToUpper(cc.Meter))
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", typ)
@@ -66,9 +64,15 @@ func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface
 	log = api.NewLogger("modb")
 	conn.Logger(log.TRACE)
 
+	// prepare device
 	if err == nil {
 		conn.Slave(cc.ID)
 		err = device.Initialize(conn.ModbusClient())
+
+		// silence Kostal implementation errors
+		if _, partial := err.(meters.SunSpecPartiallyInitialized); partial {
+			err = nil
+		}
 	}
 	if err != nil {
 		log.FATAL.Fatal(err)
@@ -80,17 +84,14 @@ func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface
 	}
 
 	// for RS485 check if producer supports the measurement
+	op := rs485.Operation{IEC61850: measurement}
 	if dev, ok := device.(*rs485.RS485); ok {
 		op = rs485FindOp(dev, measurement)
 
 		if op.IEC61850 == 0 {
 			log.FATAL.Fatalf("invalid value %s", measurement)
 		}
-	} else {
-		op.IEC61850 = measurement
 	}
-
-	log.FATAL.Printf("%+v", op)
 
 	return &Modbus{
 		log:     log,
@@ -136,5 +137,5 @@ func (m *Modbus) FloatGetter() (float64, error) {
 // IntGetter executes configured modbus read operation
 func (m *Modbus) IntGetter() (int64, error) {
 	res, err := m.FloatGetter()
-	return int64(res), err
+	return int64(math.Round(res)), err
 }
