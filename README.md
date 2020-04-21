@@ -312,11 +312,11 @@ Sample configuration (read only):
 ```yaml
 type: openwb
 plugged:
-	type: mqtt
-	topic: openWB/lp/1/boolPlugStat
+  type: mqtt
+  topic: openWB/lp/1/boolPlugStat
 charging:
-	type: mqtt
-	topic: openWB/lp/1/boolChargeStat
+  type: mqtt
+  topic: openWB/lp/1/boolChargeStat
 ```
 
 ## Background
