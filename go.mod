@@ -28,9 +28,8 @@ require (
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/volkszaehler/mbmd v0.0.0-20200420092504-612973da25e0
 	golang.org/x/crypto v0.0.0-20200403201458-baeed622b8d8 // indirect
+	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
 	golang.org/x/tools v0.0.0-20200420001825-978e26b7c37c
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20200308172723-deb8393798ec
-
-replace github.com/volkszaehler/mbmd => github.com/andig/mbmd v0.0.0-20200420182331-6f3c058753ef
