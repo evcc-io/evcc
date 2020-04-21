@@ -336,12 +336,11 @@ func (lp *LoadPoint) setTargetCurrent(targetCurrentIn int64) error {
 	return nil
 }
 
-// rampUpDown moves stepwise towards target current. If target current is reached
-// during this process, true is returned otherwise false.
-func (lp *LoadPoint) rampUpDown(target int64) (bool, error) {
+// rampUpDown moves stepwise towards target current
+func (lp *LoadPoint) rampUpDown(target int64) error {
 	current := lp.targetCurrent
 	if current == target {
-		return true, nil
+		return nil
 	}
 
 	var step int64
@@ -353,35 +352,23 @@ func (lp *LoadPoint) rampUpDown(target int64) (bool, error) {
 
 	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
 
-	if err := lp.setTargetCurrent(step); err != nil {
-		return false, err
-	}
-
-	// end of ramp reached?
-	if step == target {
-		return true, nil
-	}
-
-	return false, nil
+	return lp.setTargetCurrent(step)
 }
 
-// rampOff ramps down charging current to minimum and then turns off
+// rampOff disables charger after setting minCurrent. If already disables, this is a nop.
 func (lp *LoadPoint) rampOff() error {
 	if lp.enabled {
-		finished, err := lp.rampUpDown(lp.MinCurrent)
-		if err != nil {
-			return err
-		}
-
-		if finished {
+		if lp.targetCurrent == lp.MinCurrent {
 			return lp.chargerEnable(false)
 		}
+
+		return lp.setTargetCurrent(lp.MinCurrent)
 	}
 
 	return nil
 }
 
-// rampUp ramps up charging current to maximum and then turns off
+// rampOn enables charger after setting minCurrent. If already enabled, target will be set.
 func (lp *LoadPoint) rampOn(target int64) error {
 	if !lp.enabled {
 		if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
@@ -391,34 +378,37 @@ func (lp *LoadPoint) rampOn(target int64) error {
 		return lp.chargerEnable(true)
 	}
 
-	_, err := lp.rampUpDown(target)
-	return err
+	return lp.setTargetCurrent(target)
 }
 
 // updateModePV sets "minpv" or "pv" load modes
 func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 	// grid meter will always be available, if as wrapped pv meter
-	targetChargePower := lp.chargePower - lp.gridPower - lp.ResidualPower
-	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetChargePower, lp.chargePower, lp.gridPower, lp.ResidualPower)
+	targetPower := lp.chargePower - lp.gridPower - lp.ResidualPower
+	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
 
 	// get max charge current
-	targetChargeCurrent := clamp(powerToCurrent(targetChargePower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
-	if targetChargeCurrent < lp.MinCurrent {
+	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
+	if targetCurrent < lp.MinCurrent {
 		switch mode {
 		case api.ModeMinPV:
-			targetChargeCurrent = lp.MinCurrent
+			targetCurrent = lp.MinCurrent
 		case api.ModePV:
-			targetChargeCurrent = 0
+			targetCurrent = 0
 		}
 	}
 
-	log.DEBUG.Printf("%s target charge current: %dA", lp.Name, targetChargeCurrent)
+	log.DEBUG.Printf("%s target charge current: %dA", lp.Name, targetCurrent)
 
-	if targetChargeCurrent == 0 {
+	if targetCurrent == 0 {
 		return lp.rampOff()
 	}
 
-	return lp.rampOn(targetChargeCurrent)
+	if !lp.enabled {
+		return lp.rampOn(targetCurrent)
+	}
+
+	return lp.rampUpDown(targetCurrent)
 }
 
 // updateMeter updates and publishes single meter
@@ -438,22 +428,23 @@ func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) e
 
 // updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeters() (err error) {
-	retry := func(s string, m api.Meter, f *float64) {
-		e := retry.Do(func() error {
-			return lp.updateMeter(s, m, f)
-		}, retry.Attempts(3))
-		if e != nil {
-			err = errors.Wrapf(e, "updating %s meter", s)
-			log.ERROR.Printf("%s %v", lp.Name, err)
+	retryMeter := func(s string, m api.Meter, f *float64) {
+		if m != nil {
+			e := retry.Do(func() error {
+				return lp.updateMeter(s, m, f)
+			}, retry.Attempts(3))
+
+			if e != nil {
+				err = errors.Wrapf(e, "updating %s meter", s)
+				log.ERROR.Printf("%s %v", lp.Name, err)
+			}
 		}
 	}
 
 	// read PV meter before charge meter
-	retry("grid", lp.GridMeter, &lp.gridPower)
-	if lp.PVMeter != nil {
-		retry("pv", lp.PVMeter, &lp.pvPower)
-	}
-	retry("charge", lp.ChargeMeter, &lp.chargePower)
+	retryMeter("grid", lp.GridMeter, &lp.gridPower)
+	retryMeter("pv", lp.PVMeter, &lp.pvPower)
+	retryMeter("charge", lp.ChargeMeter, &lp.chargePower)
 
 	return err
 }
