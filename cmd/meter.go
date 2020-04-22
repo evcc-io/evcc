@@ -35,17 +35,16 @@ func runMeter(cmd *cobra.Command, args []string) {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
-	meters := configureMeters(conf)
+	cp := &ConfigProvider{}
+	cp.configureMeters(conf)
 
-	for name, v := range meters {
+	for name, v := range cp.meters {
 		if len(args) == 1 {
 			if target := args[0]; name != target {
-				if _, ok := meters[target]; !ok {
-					log.FATAL.Fatalf("meter not found: %s", target)
-				}
+				_ = cp.Meter(target)
 				continue
 			}
-		} else if len(meters) != 1 {
+		} else if len(cp.meters) != 1 {
 			fmt.Println(name)
 		}
 

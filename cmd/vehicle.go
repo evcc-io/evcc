@@ -35,17 +35,16 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
-	vehicles := configureVehicles(conf)
+	cp := &ConfigProvider{}
+	cp.configureMeters(conf)
 
-	for name, v := range vehicles {
+	for name, v := range cp.vehicles {
 		if len(args) == 1 {
 			if target := args[0]; name != target {
-				if _, ok := vehicles[target]; !ok {
-					log.FATAL.Fatalf("charger not found: %s", target)
-				}
+				_ = cp.Vehicle(target)
 				continue
 			}
-		} else if len(vehicles) != 1 {
+		} else if len(cp.vehicles) != 1 {
 			fmt.Println(name)
 		}
 

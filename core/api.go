@@ -42,30 +42,30 @@ func (lp *LoadPoint) Configuration() Configuration {
 		Phases:      lp.Phases,
 		MinCurrent:  lp.MinCurrent,
 		MaxCurrent:  lp.MaxCurrent,
-		GridMeter:   lp.GridMeter != nil,
-		PVMeter:     lp.PVMeter != nil,
+		GridMeter:   lp.gridMeter != nil,
+		PVMeter:     lp.pvMeter != nil,
 		ChargeMeter: lp.hasChargeMeter(),
 	}
 
-	if lp.Vehicle != nil {
+	if lp.vehicle != nil {
 		c.SoC = true
-		c.SoCCapacity = lp.Vehicle.Capacity()
-		c.SoCTitle = lp.Vehicle.Title()
+		c.SoCCapacity = lp.vehicle.Capacity()
+		c.SoCTitle = lp.vehicle.Title()
 	}
 
 	return c
 }
 
 func (lp *LoadPoint) hasChargeMeter() bool {
-	_, isWrapped := lp.ChargeMeter.(*wrapper.ChargeMeter)
-	return lp.ChargeMeter != nil && !isWrapped
+	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
+	return lp.chargeMeter != nil && !isWrapped
 }
 
 // Dump loadpoint configuration
 func (lp *LoadPoint) Dump() {
-	vehicle := lp.Vehicle != nil
-	grid := lp.GridMeter != nil
-	pv := lp.PVMeter != nil
+	vehicle := lp.vehicle != nil
+	grid := lp.gridMeter != nil
+	pv := lp.pvMeter != nil
 	log.INFO.Printf("%s config: vehicle %s grid %s pv %s charge %s", lp.Name,
 		presence[vehicle],
 		presence[grid],
@@ -73,9 +73,9 @@ func (lp *LoadPoint) Dump() {
 		presence[lp.hasChargeMeter()],
 	)
 
-	_, power := lp.Charger.(api.Meter)
-	_, energy := lp.Charger.(api.ChargeRater)
-	_, timer := lp.Charger.(api.ChargeTimer)
+	_, power := lp.charger.(api.Meter)
+	_, energy := lp.charger.(api.ChargeRater)
+	_, timer := lp.charger.(api.ChargeTimer)
 	log.INFO.Printf("%s charger: power %s energy %s timer %s", lp.Name,
 		presence[power],
 		presence[energy],
@@ -115,7 +115,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 
 // chargeDuration returns for how long the charge cycle has been running
 func (lp *LoadPoint) chargeDuration() time.Duration {
-	d, err := lp.ChargeTimer.ChargingTime()
+	d, err := lp.chargeTimer.ChargingTime()
 	if err != nil {
 		log.ERROR.Printf("%s charge timer error: %v", lp.Name, err)
 	}
@@ -124,7 +124,7 @@ func (lp *LoadPoint) chargeDuration() time.Duration {
 
 // chargedEnergy returns energy consumption since charge start in kWh
 func (lp *LoadPoint) chargedEnergy() float64 {
-	f, err := lp.ChargeRater.ChargedEnergy()
+	f, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
 		log.ERROR.Printf("%s charge rater error: %v", lp.Name, err)
 	}
@@ -137,8 +137,8 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 		return -1
 	}
 
-	if lp.chargePower > 0 && lp.Vehicle != nil {
-		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.Vehicle.Capacity())
+	if lp.chargePower > 0 && lp.vehicle != nil {
+		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.vehicle.Capacity())
 		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
 	}
 
@@ -147,12 +147,12 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
-	if lp.Vehicle == nil {
+	if lp.vehicle == nil {
 		return
 	}
 
 	if lp.connected() {
-		f, err := lp.Vehicle.ChargeState()
+		f, err := lp.vehicle.ChargeState()
 		if err == nil {
 			log.DEBUG.Printf("%s vehicle charge: %.1f%%", lp.Name, f)
 			lp.publish("socCharge", f)
