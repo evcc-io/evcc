@@ -17,7 +17,6 @@ var meterCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(meterCmd)
 	configureCommand(meterCmd)
 }

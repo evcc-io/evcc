@@ -17,7 +17,6 @@ var chargerCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(chargerCmd)
 	configureCommand(chargerCmd)
 }

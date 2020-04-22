@@ -17,7 +17,6 @@ var vehicleCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(vehicleCmd)
 	configureCommand(vehicleCmd)
 }
