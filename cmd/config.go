@@ -3,7 +3,7 @@ package cmd
 import (
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 )
@@ -19,7 +19,7 @@ type config struct {
 	Meters     []namedConfig
 	Chargers   []typedConfig
 	Vehicles   []typedConfig
-	LoadPoints []loadPointConfig
+	LoadPoints []core.Config
 }
 
 type namedConfig struct {
@@ -54,21 +54,4 @@ type influxConfig struct {
 	User     string
 	Password string
 	Interval time.Duration
-}
-
-type loadPointConfig struct {
-	Name          string
-	GridMeter     string // api.Meter
-	PVMeter       string // api.Meter
-	ChargeMeter   string // api.Meter
-	Charger       string // api.Charger
-	Vehicle       string // api.Vehicle
-	Mode          api.ChargeMode
-	Phases        int64
-	MinCurrent    int64
-	MaxCurrent    int64
-	Steepness     int64
-	GuardDuration time.Duration
-	Voltage       float64
-	ResidualPower float64
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/spf13/cobra"
@@ -36,15 +37,16 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	cp := &ConfigProvider{}
-	cp.configureMeters(conf)
+	cp.configureVehicles(conf)
 
-	for name, v := range cp.vehicles {
-		if len(args) == 1 {
-			if target := args[0]; name != target {
-				_ = cp.Vehicle(target)
-				continue
-			}
-		} else if len(cp.vehicles) != 1 {
+	vehicles := cp.vehicles
+	if len(args) == 1 {
+		arg := args[0]
+		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
+	}
+
+	for name, v := range vehicles {
+		if len(vehicles) != 1 {
 			fmt.Println(name)
 		}
 

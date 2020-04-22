@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/spf13/cobra"
@@ -38,13 +39,14 @@ func runMeter(cmd *cobra.Command, args []string) {
 	cp := &ConfigProvider{}
 	cp.configureMeters(conf)
 
-	for name, v := range cp.meters {
-		if len(args) == 1 {
-			if target := args[0]; name != target {
-				_ = cp.Meter(target)
-				continue
-			}
-		} else if len(cp.meters) != 1 {
+	meters := cp.meters
+	if len(args) == 1 {
+		arg := args[0]
+		meters = map[string]api.Meter{arg: cp.Meter(arg)}
+	}
+
+	for name, v := range meters {
+		if len(meters) != 1 {
 			fmt.Println(name)
 		}
 

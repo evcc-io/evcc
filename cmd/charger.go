@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/spf13/cobra"
@@ -36,15 +37,16 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	cp := &ConfigProvider{}
-	cp.configureMeters(conf)
+	cp.configureChargers(conf)
 
-	for name, v := range cp.chargers {
-		if len(args) == 1 {
-			if target := args[0]; name != target {
-				_ = cp.Charger(target)
-				continue
-			}
-		} else if len(cp.chargers) != 1 {
+	chargers := cp.chargers
+	if len(args) == 1 {
+		arg := args[0]
+		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
+	}
+
+	for name, v := range chargers {
+		if len(chargers) != 1 {
 			fmt.Println(name)
 		}
 
