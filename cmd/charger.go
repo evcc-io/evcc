@@ -18,14 +18,11 @@ var chargerCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(chargerCmd)
-	configureCommand(chargerCmd)
 }
 
 func runCharger(cmd *cobra.Command, args []string) {
-	level, _ := cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
