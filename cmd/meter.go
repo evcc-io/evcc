@@ -18,12 +18,10 @@ var meterCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(meterCmd)
-	configureCommand(meterCmd)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
-	level, _ := cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
