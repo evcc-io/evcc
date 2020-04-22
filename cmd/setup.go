@@ -82,7 +82,9 @@ func configureLoadPoint(lp *core.LoadPoint, lpc loadPointConfig, subv *viper.Vip
 	// }
 
 	// we can ignore the error here as UnmarshalExact has been called before
-	_ = subv.UnmarshalExact(lp)
+	if err := subv.UnmarshalExact(lp); err != nil {
+		log.FATAL.Fatalf("config: %v", err)
+	}
 
 	if lpc.Mode != "" {
 		// workaround for golangs yaml off=0 conversion
@@ -97,6 +99,10 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 	meters := configureMeters(conf)
 	chargers := configureChargers(conf)
 	vehicles := configureVehicles(conf)
+
+	lps := loadPoints []*core.LoadPoint
+	api.DecodeOther(log, viper.AllSettings()["loadpoints"], &lps)
+	panic("")
 
 	for idx, lpc := range conf.LoadPoints {
 		// configure loadpoint

@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/pkg/errors"
 
@@ -55,7 +56,7 @@ type LoadPoint struct {
 	Vehicle     api.Vehicle // Vehicle
 
 	// options
-	Steepness     int64   // Step size of current change
+	Sensitivity   int64   // Step size of current change
 	Phases        int64   // Phases- required for converting power and current.
 	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
@@ -77,20 +78,36 @@ type LoadPoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 }
 
+// NewLoadPointFromConfig creates a new loadpoint
+func NewLoadPointFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+	cc := NewLoadPoint()
+	// cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
+	api.DecodeOther(log, other, &cc)
+
+	charger := NewConfigurable(
+		provider.NewStringGetterFromConfig(log, cc.Status),
+		provider.NewBoolGetterFromConfig(log, cc.Enabled),
+		provider.NewBoolSetterFromConfig(log, "enable", cc.Enable),
+		provider.NewIntSetterFromConfig(log, "maxcurrent", cc.MaxCurrent),
+	)
+
+	return charger
+}
+
 // NewLoadPoint creates a LoadPoint with sane defaults
 func NewLoadPoint() *LoadPoint {
 	return &LoadPoint{
 		clock:         clock.New(),
 		bus:           evbus.New(),
 		triggerChan:   make(chan struct{}, 1),
-		Name:          "Main",
+		Name:          "main",
 		Mode:          api.ModeOff,
 		status:        api.StatusNone,
 		Phases:        1,
 		Voltage:       230, // V
 		MinCurrent:    6,   // A
 		MaxCurrent:    16,  // A
-		Steepness:     10,  // A
+		Sensitivity:   10,  // A
 		targetCurrent: 0,   // A
 		GuardDuration: 10 * time.Minute,
 	}
@@ -345,9 +362,9 @@ func (lp *LoadPoint) rampUpDown(target int64) error {
 
 	var step int64
 	if current < target {
-		step = min(current+lp.Steepness, target)
+		step = min(current+lp.Sensitivity, target)
 	} else if current > target {
-		step = max(current-lp.Steepness, target)
+		step = max(current-lp.Sensitivity, target)
 	}
 
 	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
