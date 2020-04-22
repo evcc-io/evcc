@@ -22,7 +22,7 @@ func init() {
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
-	configureLogging(viper.GetString("log"))
+	configureLogging()
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config

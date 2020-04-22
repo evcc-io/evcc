@@ -114,9 +114,12 @@ func Execute() {
 	}
 }
 
-func configureLogging(level string) {
+func configureLogging() {
+	level := viper.GetString("log")
+
 	api.OutThreshold = api.LogLevelToThreshold(level)
 	api.LogThreshold = api.OutThreshold
+
 	api.Loggers(func(name string, logger *api.Logger) {
 		logger.SetStdoutThreshold(api.OutThreshold)
 	})
@@ -158,12 +161,12 @@ func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	configureLogging(viper.GetString("log"))
+	configureLogging()
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
-	configureLogging(viper.GetString("log"))
+	configureLogging()
 
 	go checkVersion()
 
