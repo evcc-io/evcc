@@ -33,6 +33,7 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 	return int64(power / (float64(phases) * voltage))
 }
 
+// Config contains the public loadpoint configuration
 type Config struct {
 	Name string
 	Mode api.ChargeMode // Charge mode, guarded by mutex
@@ -45,15 +46,13 @@ type Config struct {
 	Voltage       float64 // Operating voltage. 230V for Germany.
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
 
-	ChargerRef     string `mapstructure:"charger"`
-	GridMeterRef   string `mapstructure:"gridmeter"`   // Grid usage meter
-	PVMeterRef     string `mapstructure:"pvmeter"`     // PV generation meter
-	ChargeMeterRef string `mapstructure:"chargemeter"` // Charger usage meter
-	VehicleRef     string `mapstructure:"vehicle"`     // Vehicle
+	ChargerRef     string `mapstructure:"charger"`     // Charger reference
+	GridMeterRef   string `mapstructure:"gridmeter"`   // Grid usage meter reference
+	PVMeterRef     string `mapstructure:"pvmeter"`     // PV generation meter reference
+	ChargeMeterRef string `mapstructure:"chargemeter"` // Charger usage meter reference
+	VehicleRef     string `mapstructure:"vehicle"`     // Vehicle reference
 
 	GuardDuration time.Duration // charger enable/disable minimum holding time
-
-	Other map[string]string
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -66,13 +65,13 @@ type LoadPoint struct {
 	notificationChan chan<- push.Event // notifications
 	uiChan           chan<- Param      // client push messages
 
-	Config `mapstructure:",squash"`
+	Config `mapstructure:",squash"` // exposed public configuration
 
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
 	// meters
-	charger     api.Charger
+	charger     api.Charger // Charger
 	gridMeter   api.Meter   // Grid usage meter
 	pvMeter     api.Meter   // PV generation meter
 	chargeMeter api.Meter   // Charger usage meter
