@@ -43,7 +43,9 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
 
-    evcc -h
+```sh
+evcc -h
+```
 
 Use the following `systemd` unit description to configure EVCC as service (put into `/etc/systemd/system/evcc.service`):
 
@@ -64,7 +66,9 @@ docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 
 To build EVCC from source, [Go](2) 1.13 is required:
 
-    make
+```sh
+make
+```
 
 **Note**: EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
@@ -348,7 +352,6 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 - structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 - avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
 - containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
-- support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org

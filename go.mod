@@ -3,6 +3,7 @@ module github.com/andig/evcc
 go 1.13
 
 require (
+	github.com/alvaroloes/enumer v1.1.2 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20180315140547-d46933a94f05
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.0
