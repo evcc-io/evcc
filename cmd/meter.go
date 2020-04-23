@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/spf13/cobra"
@@ -17,14 +18,11 @@ var meterCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(meterCmd)
-	configureCommand(meterCmd)
 }
 
 func runMeter(cmd *cobra.Command, args []string) {
-	level, _ := cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging()
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
@@ -35,17 +33,17 @@ func runMeter(cmd *cobra.Command, args []string) {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
-	meters := configureMeters(conf)
+	cp := &ConfigProvider{}
+	cp.configureMeters(conf)
+
+	meters := cp.meters
+	if len(args) == 1 {
+		arg := args[0]
+		meters = map[string]api.Meter{arg: cp.Meter(arg)}
+	}
 
 	for name, v := range meters {
-		if len(args) == 1 {
-			if target := args[0]; name != target {
-				if _, ok := meters[target]; !ok {
-					log.FATAL.Fatalf("meter not found: %s", target)
-				}
-				continue
-			}
-		} else if len(meters) != 1 {
+		if len(meters) != 1 {
 			fmt.Println(name)
 		}
 

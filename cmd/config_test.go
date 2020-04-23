@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/andig/evcc/provider"
 	"github.com/spf13/viper"
 )
 
@@ -33,6 +34,11 @@ func TestDistConfig(t *testing.T) {
 	var conf config
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
+	}
+
+	// setup mqtt
+	if viper.Get("mqtt") != nil {
+		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
 	// check config is valid

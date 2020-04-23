@@ -33,8 +33,8 @@ func TestNew(t *testing.T) {
 	if lp.MaxCurrent != lpMaxCurrent {
 		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
 	}
-	if lp.Steepness != 10 {
-		t.Errorf("Steepness %v", lp.Steepness)
+	if lp.Sensitivity != 10 {
+		t.Errorf("Sensitivity %v", lp.Sensitivity)
 	}
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
@@ -55,14 +55,14 @@ func newLoadPoint(charger api.Charger, pv, gm, cm api.Meter) *LoadPoint {
 	lp.clock = clock.NewMock()
 	lp.clock.(*clock.Mock).Add(time.Hour)
 
-	lp.Charger = charger
-	lp.PVMeter = pv
-	lp.GridMeter = gm
+	lp.charger = charger
+	lp.pvMeter = pv
+	lp.gridMeter = gm
 
 	// prevent assigning a nil pointer sake of
 	// https://groups.google.com/forum/#!topic/golang-nuts/wnH302gBa4I/discussion
 	if !(cm == nil || reflect.ValueOf(cm).IsNil()) {
-		lp.ChargeMeter = cm
+		lp.chargeMeter = cm
 	}
 
 	uiChan := make(chan Param)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/spf13/cobra"
@@ -17,14 +18,11 @@ var vehicleCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(vehicleCmd)
-	configureCommand(vehicleCmd)
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
-	level, _ := cmd.PersistentFlags().GetString("log")
-	configureLogging(level)
+	configureLogging()
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
@@ -35,17 +33,17 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
-	vehicles := configureVehicles(conf)
+	cp := &ConfigProvider{}
+	cp.configureVehicles(conf)
+
+	vehicles := cp.vehicles
+	if len(args) == 1 {
+		arg := args[0]
+		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
+	}
 
 	for name, v := range vehicles {
-		if len(args) == 1 {
-			if target := args[0]; name != target {
-				if _, ok := vehicles[target]; !ok {
-					log.FATAL.Fatalf("charger not found: %s", target)
-				}
-				continue
-			}
-		} else if len(vehicles) != 1 {
+		if len(vehicles) != 1 {
 			fmt.Println(name)
 		}
 

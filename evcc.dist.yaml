@@ -154,7 +154,7 @@ loadpoints:
   gridmeter: grid # grid meter
   pvmeter: pv # pv meter
   chargemeter: charge # charge meter
-  steepness: 1 # raise/lower charge current in 1A steps
+  sensitivity: 1 # current raise/lower steps size (default 1A)
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
   maxcurrent: 16 # maximum charge current (default 16A)
   phases: 3 # ev phases (default 3)

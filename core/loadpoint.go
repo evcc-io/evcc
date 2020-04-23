@@ -33,6 +33,28 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 	return int64(power / (float64(phases) * voltage))
 }
 
+// Config contains the public loadpoint configuration
+type Config struct {
+	Name string
+	Mode api.ChargeMode // Charge mode, guarded by mutex
+
+	// options
+	Sensitivity   int64   // Step size of current change
+	Phases        int64   // Phases- required for converting power and current.
+	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
+	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
+	Voltage       float64 // Operating voltage. 230V for Germany.
+	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
+
+	ChargerRef     string `mapstructure:"charger"`     // Charger reference
+	GridMeterRef   string `mapstructure:"gridmeter"`   // Grid usage meter reference
+	PVMeterRef     string `mapstructure:"pvmeter"`     // PV generation meter reference
+	ChargeMeterRef string `mapstructure:"chargemeter"` // Charger usage meter reference
+	VehicleRef     string `mapstructure:"vehicle"`     // Vehicle reference
+
+	GuardDuration time.Duration // charger enable/disable minimum holding time
+}
+
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -43,27 +65,19 @@ type LoadPoint struct {
 	notificationChan chan<- push.Event // notifications
 	uiChan           chan<- Param      // client push messages
 
-	Name        string
-	Charger     api.Charger
-	ChargeTimer api.ChargeTimer
-	ChargeRater api.ChargeRater
+	Config `mapstructure:",squash"` // exposed public configuration
+
+	chargeTimer api.ChargeTimer
+	chargeRater api.ChargeRater
 
 	// meters
-	GridMeter   api.Meter   // Grid usage meter
-	PVMeter     api.Meter   // PV generation meter
-	ChargeMeter api.Meter   // Charger usage meter
-	Vehicle     api.Vehicle // Vehicle
-
-	// options
-	Steepness     int64   // Step size of current change
-	Phases        int64   // Phases- required for converting power and current.
-	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
-	Voltage       float64 // Operating voltage. 230V for Germany.
-	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
+	charger     api.Charger // Charger
+	gridMeter   api.Meter   // Grid usage meter
+	pvMeter     api.Meter   // PV generation meter
+	chargeMeter api.Meter   // Charger usage meter
+	vehicle     api.Vehicle // Vehicle
 
 	// cached state
-	Mode          api.ChargeMode   // Charge mode, guarded by mutex
 	status        api.ChargeStatus // Charger status
 	targetCurrent int64            // Allowed current. Between MinCurrent and MaxCurrent.
 	enabled       bool             // Charger enabled state
@@ -73,26 +87,63 @@ type LoadPoint struct {
 	chargePower   float64          // Charging power
 
 	// contactor switch guard
-	guardUpdated  time.Time     // charger enabled/disabled timestamp
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	guardUpdated time.Time // charger enabled/disabled timestamp
+}
+
+// configProvider gives access to configuration repository
+type configProvider interface {
+	Meter(string) api.Meter
+	Charger(string) api.Charger
+	Vehicle(string) api.Vehicle
+}
+
+// NewLoadPointFromConfig creates a new loadpoint
+func NewLoadPointFromConfig(log *api.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
+	lp := NewLoadPoint()
+	api.DecodeOther(log, other, &lp)
+
+	if lp.ChargerRef != "" {
+		lp.charger = cp.Charger(lp.ChargerRef)
+	} else {
+		log.FATAL.Fatal("config: missing charger")
+	}
+	if lp.PVMeterRef == "" && lp.GridMeterRef == "" {
+		log.FATAL.Fatal("config: missing either pv or grid meter")
+	}
+	if lp.GridMeterRef != "" {
+		lp.gridMeter = cp.Meter(lp.GridMeterRef)
+	}
+	if lp.ChargeMeterRef != "" {
+		lp.chargeMeter = cp.Meter(lp.ChargeMeterRef)
+	}
+	if lp.PVMeterRef != "" {
+		lp.pvMeter = cp.Meter(lp.PVMeterRef)
+	}
+	if lp.VehicleRef != "" {
+		lp.vehicle = cp.Vehicle(lp.VehicleRef)
+	}
+
+	return lp
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults
 func NewLoadPoint() *LoadPoint {
 	return &LoadPoint{
-		clock:         clock.New(),
-		bus:           evbus.New(),
-		triggerChan:   make(chan struct{}, 1),
-		Name:          "Main",
-		Mode:          api.ModeOff,
+		clock:       clock.New(),
+		bus:         evbus.New(),
+		triggerChan: make(chan struct{}, 1),
+		Config: Config{
+			Name:          "main",
+			Mode:          api.ModeOff,
+			Phases:        1,
+			Voltage:       230, // V
+			MinCurrent:    6,   // A
+			MaxCurrent:    16,  // A
+			Sensitivity:   10,  // A
+			GuardDuration: 10 * time.Minute,
+		},
 		status:        api.StatusNone,
-		Phases:        1,
-		Voltage:       230, // V
-		MinCurrent:    6,   // A
-		MaxCurrent:    16,  // A
-		Steepness:     10,  // A
-		targetCurrent: 0,   // A
-		GuardDuration: 10 * time.Minute,
+		targetCurrent: 0, // A
 	}
 }
 
@@ -123,12 +174,12 @@ func (lp *LoadPoint) evChargeStartHandler() {
 
 // evChargeStartHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
-	energy, err := lp.ChargeRater.ChargedEnergy()
+	energy, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
 		log.ERROR.Printf("%s charged energy: %v", lp.Name, err)
 	}
 
-	duration, err := lp.ChargeTimer.ChargingTime()
+	duration, err := lp.chargeTimer.ChargingTime()
 	if err != nil {
 		log.ERROR.Printf("%s charge duration: %v", lp.Name, err)
 	}
@@ -162,14 +213,14 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 	lp.notificationChan = notificationChan
 	lp.uiChan = uiChan
 
-	if lp.PVMeter == nil && lp.GridMeter == nil {
-		log.FATAL.Fatal("missing either PV or Grid meter - aborting")
+	if lp.pvMeter == nil && lp.gridMeter == nil {
+		log.FATAL.Fatal("missing either pv or grid meter")
 	}
 
 	// ensure charge meter exists
-	if lp.ChargeMeter == nil {
-		if mt, ok := lp.Charger.(api.Meter); ok {
-			lp.ChargeMeter = mt
+	if lp.chargeMeter == nil {
+		if mt, ok := lp.charger.(api.Meter); ok {
+			lp.chargeMeter = mt
 		} else {
 			mt := &wrapper.ChargeMeter{
 				Phases:  lp.Phases,
@@ -179,29 +230,29 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 			_ = lp.bus.Subscribe(evStopCharge, func() {
 				mt.SetChargeCurrent(0)
 			})
-			lp.ChargeMeter = mt
+			lp.chargeMeter = mt
 		}
 	}
 
 	// ensure charge rater exists
-	if rt, ok := lp.Charger.(api.ChargeRater); ok {
-		lp.ChargeRater = rt
+	if rt, ok := lp.charger.(api.ChargeRater); ok {
+		lp.chargeRater = rt
 	} else {
-		rt := wrapper.NewChargeRater(lp.Name, lp.ChargeMeter)
+		rt := wrapper.NewChargeRater(lp.Name, lp.chargeMeter)
 		_ = lp.bus.Subscribe(evChargePower, rt.SetChargePower)
 		_ = lp.bus.Subscribe(evStartCharge, rt.StartCharge)
 		_ = lp.bus.Subscribe(evStopCharge, rt.StopCharge)
-		lp.ChargeRater = rt
+		lp.chargeRater = rt
 	}
 
 	// ensure charge timer exists
-	if ct, ok := lp.Charger.(api.ChargeTimer); ok {
-		lp.ChargeTimer = ct
+	if ct, ok := lp.charger.(api.ChargeTimer); ok {
+		lp.chargeTimer = ct
 	} else {
 		ct := wrapper.NewChargeTimer()
 		_ = lp.bus.Subscribe(evStartCharge, ct.StartCharge)
 		_ = lp.bus.Subscribe(evStopCharge, ct.StopCharge)
-		lp.ChargeTimer = ct
+		lp.chargeTimer = ct
 	}
 
 	// event handlers
@@ -209,7 +260,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 	_ = lp.bus.Subscribe(evStopCharge, lp.evChargeStopHandler)
 
 	// read initial enabled state
-	enabled, err := lp.Charger.Enabled()
+	enabled, err := lp.charger.Enabled()
 	if err == nil {
 		lp.enabled = enabled
 		log.INFO.Printf("%s charger %sd", lp.Name, status[lp.enabled])
@@ -245,7 +296,7 @@ func (lp *LoadPoint) chargerEnable(enable bool) error {
 		return nil
 	}
 
-	err := lp.Charger.Enable(enable)
+	err := lp.charger.Enable(enable)
 	if err == nil {
 		lp.enabled = enable // cache
 		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
@@ -281,7 +332,7 @@ func (lp *LoadPoint) chargingCycle(enable bool) {
 // updateChargeStatus updates car status and stops charging if car disconnected
 func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 	// abort if no vehicle connected
-	status, err := lp.Charger.Status()
+	status, err := lp.charger.Status()
 	if err != nil {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 		return api.StatusNone
@@ -324,7 +375,7 @@ func (lp *LoadPoint) setTargetCurrent(targetCurrentIn int64) error {
 
 	if lp.targetCurrent != targetCurrent {
 		log.DEBUG.Printf("%s set charge current: %dA", lp.Name, targetCurrent)
-		if err := lp.Charger.MaxCurrent(targetCurrent); err != nil {
+		if err := lp.charger.MaxCurrent(targetCurrent); err != nil {
 			return fmt.Errorf("%s charge controller error: %v", lp.Name, err)
 		}
 
@@ -345,9 +396,9 @@ func (lp *LoadPoint) rampUpDown(target int64) error {
 
 	var step int64
 	if current < target {
-		step = min(current+lp.Steepness, target)
+		step = min(current+lp.Sensitivity, target)
 	} else if current > target {
-		step = max(current-lp.Steepness, target)
+		step = max(current-lp.Sensitivity, target)
 	}
 
 	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
@@ -442,9 +493,9 @@ func (lp *LoadPoint) updateMeters() (err error) {
 	}
 
 	// read PV meter before charge meter
-	retryMeter("grid", lp.GridMeter, &lp.gridPower)
-	retryMeter("pv", lp.PVMeter, &lp.pvPower)
-	retryMeter("charge", lp.ChargeMeter, &lp.chargePower)
+	retryMeter("grid", lp.gridMeter, &lp.gridPower)
+	retryMeter("pv", lp.pvMeter, &lp.pvPower)
+	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
 
 	return err
 }
