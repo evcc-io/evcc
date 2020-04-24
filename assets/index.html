@@ -109,8 +109,8 @@
         <span class="d-inline d-sm-none">Sofort</span>
         <span class="d-none d-sm-inline">Sofortladen</span>
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
-        <input type="radio" value="minpv" v-on:click="mode='minpv'">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='min'}" v-if="state.gridMeter">
+        <input type="radio" value="min" v-on:click="mode='min'">
         <span class="d-inline d-sm-none">Min</span>
         <span class="d-none d-sm-inline">Minimum + PV</span>
       </label>

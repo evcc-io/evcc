@@ -15,12 +15,12 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func configureMessengers(conf messagingConfig) chan push.Event {
+func configureMessengers(conf messagingConfig, cache push.Cacher) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
 	notificationHub := push.NewHub(conf.Events)
 
 	for _, service := range conf.Services {
-		impl := push.NewMessengerFromConfig(service.Type, service.Other)
+		impl := push.NewMessengerFromConfig(service.Type, service.Other, cache)
 		notificationHub.Add(impl)
 	}
 

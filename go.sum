@@ -258,8 +258,6 @@ github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e/go.mod h1:d7u6HkT
 github.com/technoweenie/multipartstreamer v1.0.1 h1:XRztA5MXiR1TIRHxH2uNxXxaIkKQDeX7m2XsSOlQEnM=
 github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
-github.com/volkszaehler/mbmd v0.0.0-20200420092504-612973da25e0 h1:VXSJkD8PdXY4fgm5AYU5wQXbXE47PGGKMpTOoLfnGUg=
-github.com/volkszaehler/mbmd v0.0.0-20200420092504-612973da25e0/go.mod h1:JM+zNF1VW2M1UEdy5DDjGccMsxPtcuy/yyj3DdfXC4A=
 github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb h1:gqxcgZEK+wCaK6x89OClHYGADka4en6eA5Ugv9xMOPE=
 github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb/go.mod h1:JM+zNF1VW2M1UEdy5DDjGccMsxPtcuy/yyj3DdfXC4A=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

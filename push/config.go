@@ -6,6 +6,11 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+// Cacher duplicates the server.Cacher interface
+type Cacher interface {
+	All(string) (map[string]interface{}, error)
+}
+
 // Sender implements message sending
 type Sender interface {
 	Send(event Event, title, msg string)
@@ -19,7 +24,7 @@ type EventTemplate struct {
 var log = util.NewLogger("push")
 
 // NewMessengerFromConfig creates a new messenger
-func NewMessengerFromConfig(typ string, other map[string]interface{}) Sender {
+func NewMessengerFromConfig(typ string, other map[string]interface{}, cache Cacher) Sender {
 	switch strings.ToLower(typ) {
 	case "pushover":
 		var cc pushOverConfig
@@ -28,7 +33,9 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) Sender {
 	case "telegram":
 		var cc telegramConfig
 		util.DecodeOther(log, other, &cc)
-		return NewTelegramMessenger(cc.Token, cc.Chats)
+		tg := NewTelegramMessenger(cc.Token, cc.Chats)
+		tg.Cache = cache
+		return tg
 	}
 
 	log.FATAL.Fatalf("unknown messenger type: %s", typ)

@@ -36,8 +36,8 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 
 // Config contains the public loadpoint configuration
 type Config struct {
-	Name string
-	Mode api.ChargeMode // Charge mode, guarded by mutex
+	Name    string
+	ModeRef string `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	// options
 	Sensitivity   int64   // Step size of current change
@@ -79,6 +79,7 @@ type LoadPoint struct {
 	vehicle     api.Vehicle // Vehicle
 
 	// cached state
+	mode          api.ChargeMode   // Charge mode
 	status        api.ChargeStatus // Charger status
 	targetCurrent int64            // Allowed current. Between MinCurrent and MaxCurrent.
 	enabled       bool             // Charger enabled state
@@ -103,6 +104,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp := NewLoadPoint()
 	util.DecodeOther(log, other, &lp)
 
+	lp.mode, _ = api.ChargeModeString(lp.ModeRef)
 	if lp.ChargerRef != "" {
 		lp.charger = cp.Charger(lp.ChargerRef)
 	} else {
@@ -135,7 +137,7 @@ func NewLoadPoint() *LoadPoint {
 		triggerChan: make(chan struct{}, 1),
 		Config: Config{
 			Name:          "main",
-			Mode:          api.ModeOff,
+			ModeRef:       "off",
 			Phases:        1,
 			Voltage:       230, // V
 			MinCurrent:    6,   // A
@@ -443,9 +445,9 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
 	if targetCurrent < lp.MinCurrent {
 		switch mode {
-		case api.ModeMinPV:
+		case api.Min:
 			targetCurrent = lp.MinCurrent
-		case api.ModePV:
+		case api.PV:
 			targetCurrent = 0
 		}
 	}
@@ -524,11 +526,11 @@ func (lp *LoadPoint) update() {
 	} else {
 		// execute loading strategy
 		switch mode := lp.GetMode(); mode {
-		case api.ModeOff:
+		case api.Off:
 			err = lp.rampOff()
-		case api.ModeNow:
+		case api.Now:
 			err = lp.rampOn(lp.MaxCurrent)
-		case api.ModeMinPV, api.ModePV:
+		case api.Min, api.PV:
 			if meterErr == nil {
 				// pv modes require meter measurements
 				err = lp.updateModePV(mode)

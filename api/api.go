@@ -2,16 +2,18 @@ package api
 
 import "time"
 
+//go:generate enumer -type=ChargeMode
+
 //go:generate mockgen -package mock -destination ../mock/mock.go github.com/andig/evcc/api Charger,Meter,MeterEnergy
 
 // ChargeMode are charge modes modeled after OpenWB
-type ChargeMode string
+type ChargeMode int
 
 const (
-	ModeOff   ChargeMode = "off"
-	ModeNow   ChargeMode = "now"
-	ModeMinPV ChargeMode = "minpv"
-	ModePV    ChargeMode = "pv"
+	Off ChargeMode = iota
+	Now
+	Min
+	PV
 )
 
 // ChargeStatus is the EV's charging status from A to F

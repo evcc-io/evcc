@@ -5,7 +5,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/andig/evcc/api"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+)
+
+const (
+	cmdMode   = "mode"
+	cmdStatus = "status"
 )
 
 // Telegram implements the Telegram messenger
@@ -13,7 +19,8 @@ type Telegram struct {
 	sync.Mutex
 	bot   *tgbotapi.BotAPI
 	chats map[int64]struct{}
-	reply tgbotapi.Message
+	reply tgbotapi.Message // last reply message returned
+	Cache Cacher
 }
 
 type telegramConfig struct {
@@ -25,13 +32,6 @@ func init() {
 	if err := tgbotapi.SetLogger(log.ERROR); err != nil {
 		log.ERROR.Printf("telegram: %v", err)
 	}
-}
-
-var modes = map[string]string{
-	"Off": "off",
-	"Now": "now",
-	"Min": "min",
-	"PV":  "pv",
 }
 
 // NewTelegramMessenger creates new pushover messenger
@@ -78,7 +78,9 @@ func (m *Telegram) trackChats() {
 
 		m.Lock()
 		if _, ok := m.chats[msg.Message.Chat.ID]; ok {
-			m.processMessage(msg.Message)
+			if msg.Message.Command() != "" && m.Cache != nil {
+				m.processCommand(msg.Message)
+			}
 		} else {
 			log.INFO.Printf("telegram: new chat id: %d", msg.Message.Chat.ID)
 		}
@@ -86,23 +88,17 @@ func (m *Telegram) trackChats() {
 	}
 }
 
+// processCallback replies to command callbacks
 func (m *Telegram) processCallback(msg *tgbotapi.CallbackQuery) {
-	log.INFO.Printf("%+v", msg)
+	// log.INFO.Printf("%+v", msg)
 
 	cb := tgbotapi.NewCallback(msg.ID, "done")
 	if _, err := m.bot.AnswerCallbackQuery(cb); err != nil {
 		log.ERROR.Print(err)
 	}
 
-	var mode string
-	for k, v := range modes {
-		if v == msg.Data {
-			mode = k
-			break
-		}
-	}
-
-	if mode == "" {
+	mode, err := api.ChargeModeString(msg.Data)
+	if err != nil {
 		log.ERROR.Printf("telegram: invalid callback request %v", msg)
 		return
 	}
@@ -114,37 +110,36 @@ func (m *Telegram) processCallback(msg *tgbotapi.CallbackQuery) {
 	}
 }
 
-// processUpdate replies to updates received
-func (m *Telegram) processMessage(msg *tgbotapi.Message) {
-	log.INFO.Printf("%+v", msg)
+// processCommand replies to updates received
+func (m *Telegram) processCommand(msg *tgbotapi.Message) {
+	log.DEBUG.Printf("telegram: recv command %+v", msg.Command())
 
-	if strings.HasPrefix(strings.ToLower(msg.Text), "/") {
-		buttons := make([]tgbotapi.InlineKeyboardButton, len(modes))
-		for k, v := range modes {
-			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(k, v))
+	var reply tgbotapi.MessageConfig
+	switch msg.Command() {
+	case cmdMode:
+		buttons := make([]tgbotapi.InlineKeyboardButton, 0, len(api.ChargeModeValues()))
+		for _, m := range api.ChargeModeValues() {
+			s := strings.Title(m.String())
+			if m == api.PV {
+				s = strings.ToTitle(s)
+			}
+			buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(s, m.String()))
 		}
 
-		log.INFO.Printf("%+v", buttons)
-
-		reply := tgbotapi.NewMessage(msg.Chat.ID, "Select mode:")
+		reply = tgbotapi.NewMessage(msg.Chat.ID, "Select mode:")
 		ikm := tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(buttons...))
-
-		// ikm = tgbotapi.NewInlineKeyboardMarkup(
-		// 	tgbotapi.NewInlineKeyboardRow(
-		// 		tgbotapi.NewInlineKeyboardButtonData("Off", "off"),
-		// 		tgbotapi.NewInlineKeyboardButtonData("Now", "now"),
-		// 		tgbotapi.NewInlineKeyboardButtonData("Min", "min"),
-		// 		tgbotapi.NewInlineKeyboardButtonData("PV", "pv"),
-		// 	),
-		// )
-
 		reply.ReplyMarkup = ikm
+	case cmdStatus:
+		reply = tgbotapi.NewMessage(msg.Chat.ID, "not implemented")
+	default:
+		log.ERROR.Printf("telegram: invalid command %s", msg.Text)
+		return
+	}
 
-		if reply, err := m.bot.Send(reply); err != nil {
-			log.ERROR.Print(err)
-		} else {
-			m.reply = reply
-		}
+	if reply, err := m.bot.Send(reply); err != nil {
+		log.ERROR.Print(err)
+	} else {
+		m.reply = reply
 	}
 }
 

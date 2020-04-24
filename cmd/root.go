@@ -162,20 +162,14 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
-	// setup messaging
-	notificationChan := configureMessengers(conf.Messaging)
-
 	// setup mqtt
 	if viper.Get("mqtt") != nil {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
-	// setup loadpoints
-	loadPoints := loadConfig(conf, notificationChan)
-
 	// start broadcasting values
 	valueChan := make(chan core.Param)
-	triggerChan := make(chan struct{})
+	var teeChan <-chan core.Param
 
 	// setup influx
 	if viper.Get("influx") != nil {
@@ -187,7 +181,6 @@ func run(cmd *cobra.Command, args []string) {
 			conf.Influx.Password,
 		)
 
-		var teeChan <-chan core.Param
 		valueChan, teeChan = tee(valueChan)
 
 		// eliminate duplicate values
@@ -201,13 +194,23 @@ func run(cmd *cobra.Command, args []string) {
 		go influx.Run(teeChan)
 	}
 
+	cache := &core.Cache{}
+	valueChan, teeChan = tee(valueChan)
+	go cache.Run(teeChan)
+
+	// setup messaging
+	notificationChan := configureMessengers(conf.Messaging, cache)
+
+	// setup loadpoints
+	loadPoints := loadConfig(conf, notificationChan)
+
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, conf.Menu, loadPoints[0], socketHub)
 
-	var teeChan <-chan core.Param
-	valueChan, teeChan = tee(valueChan)
+	triggerChan := make(chan struct{})
 
+	valueChan, teeChan = tee(valueChan)
 	go socketHub.Run(teeChan, triggerChan)
 
 	// start all loadpoints

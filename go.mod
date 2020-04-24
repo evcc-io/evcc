@@ -3,7 +3,7 @@ module github.com/andig/evcc
 go 1.13
 
 require (
-	github.com/alvaroloes/enumer v1.1.2 // indirect
+	github.com/alvaroloes/enumer v1.1.2
 	github.com/asaskevich/EventBus v0.0.0-20180315140547-d46933a94f05
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.0
@@ -30,7 +30,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20200420184732-6539a8fcdcbb
 	golang.org/x/crypto v0.0.0-20200403201458-baeed622b8d8 // indirect
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
-	golang.org/x/tools v0.0.0-20200421042724-cfa8b22178d2
+	golang.org/x/tools v0.0.0-20200421042724-cfa8b22178d2 // indirect
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20200308172723-deb8393798ec

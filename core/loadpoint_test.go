@@ -22,8 +22,11 @@ const (
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint()
 
-	if lp.Mode != api.ModeOff {
-		t.Errorf("Mode %v", lp.Mode)
+	if lp.mode != api.Off {
+		t.Errorf("mode %v", lp.mode)
+	}
+	if lp.ModeRef != api.Off.String() {
+		t.Errorf("ModeRef %v", lp.ModeRef)
 	}
 	if lp.Phases != 1 {
 		t.Errorf("Phases %v", lp.Phases)
@@ -144,20 +147,20 @@ func TestInitialUpdate(t *testing.T) {
 		status api.ChargeStatus
 		mode   api.ChargeMode
 	}{
-		{status: api.StatusA, mode: api.ModeOff},
-		{status: api.StatusA, mode: api.ModeNow},
-		{status: api.StatusA, mode: api.ModeMinPV},
-		{status: api.StatusA, mode: api.ModePV},
+		{status: api.StatusA, mode: api.Off},
+		{status: api.StatusA, mode: api.Now},
+		{status: api.StatusA, mode: api.Min},
+		{status: api.StatusA, mode: api.PV},
 
-		{status: api.StatusB, mode: api.ModeOff},
-		{status: api.StatusB, mode: api.ModeNow},
-		{status: api.StatusB, mode: api.ModeMinPV},
-		{status: api.StatusB, mode: api.ModePV},
+		{status: api.StatusB, mode: api.Off},
+		{status: api.StatusB, mode: api.Now},
+		{status: api.StatusB, mode: api.Min},
+		{status: api.StatusB, mode: api.PV},
 
-		{status: api.StatusC, mode: api.ModeOff},
-		{status: api.StatusC, mode: api.ModeNow},
-		{status: api.StatusC, mode: api.ModeMinPV},
-		{status: api.StatusC, mode: api.ModePV},
+		{status: api.StatusC, mode: api.Off},
+		{status: api.StatusC, mode: api.Now},
+		{status: api.StatusC, mode: api.Min},
+		{status: api.StatusC, mode: api.PV},
 	}
 
 	for _, tc := range tc {
@@ -171,7 +174,7 @@ func TestInitialUpdate(t *testing.T) {
 		// cm = nil
 
 		lp, wb := newEnvironment(t, ctrl, pm, gm, cm)
-		lp.Mode = tc.mode
+		lp.mode = tc.mode
 
 		wb.EXPECT().Status().Return(tc.status, nil)
 
@@ -184,26 +187,26 @@ func TestInitialUpdate(t *testing.T) {
 		}
 
 		// disable if not connected
-		if tc.status != api.StatusA && tc.mode == api.ModeOff {
+		if tc.status != api.StatusA && tc.mode == api.Off {
 			wb.EXPECT().Enable(false)
 		}
 
 		// power up if now
-		if tc.status != api.StatusA && tc.mode == api.ModeNow {
+		if tc.status != api.StatusA && tc.mode == api.Now {
 			wb.EXPECT().MaxCurrent(lpMaxCurrent)
 		}
 
 		lp.update()
 
 		// max current if connected & mode now
-		if tc.status != api.StatusA && tc.mode == api.ModeNow {
+		if tc.status != api.StatusA && tc.mode == api.Now {
 			if lp.targetCurrent != lpMaxCurrent {
 				t.Errorf("targetCurrent %v", lp.targetCurrent)
 			}
 		}
 
 		// min current in first cycle
-		if tc.mode != api.ModeNow {
+		if tc.mode != api.Now {
 			if lp.targetCurrent != lpMinCurrent {
 				t.Errorf("targetCurrent %v", lp.targetCurrent)
 			}
@@ -223,7 +226,7 @@ func TestImmediateOnOff(t *testing.T) {
 		status api.ChargeStatus
 		mode   api.ChargeMode
 	}{
-		{status: api.StatusC, mode: api.ModePV},
+		{status: api.StatusC, mode: api.PV},
 	}
 
 	for _, tc := range tc {
@@ -237,7 +240,7 @@ func TestImmediateOnOff(t *testing.T) {
 		// cm = nil
 
 		lp, wb := newEnvironment(t, ctrl, pm, gm, cm)
-		lp.Mode = tc.mode
+		lp.mode = tc.mode
 
 		// -- round 1
 		wb.EXPECT().Status().Return(tc.status, nil)
@@ -251,26 +254,26 @@ func TestImmediateOnOff(t *testing.T) {
 		}
 
 		// disable if not connected
-		if tc.status != api.StatusA && tc.mode == api.ModeOff {
+		if tc.status != api.StatusA && tc.mode == api.Off {
 			wb.EXPECT().Enable(false)
 		}
 
 		// power up if now
-		if tc.status != api.StatusA && tc.mode == api.ModeNow {
+		if tc.status != api.StatusA && tc.mode == api.Now {
 			wb.EXPECT().MaxCurrent(lpMaxCurrent)
 		}
 
 		lp.update()
 
 		// max current if connected & mode now
-		if tc.status != api.StatusA && tc.mode == api.ModeNow {
+		if tc.status != api.StatusA && tc.mode == api.Now {
 			if lp.targetCurrent != lpMaxCurrent {
 				t.Errorf("targetCurrent %v", lp.targetCurrent)
 			}
 		}
 
 		// min current in first cycle
-		if tc.mode != api.ModeNow {
+		if tc.mode != api.Now {
 			if lp.targetCurrent != lpMinCurrent {
 				t.Errorf("targetCurrent %v", lp.targetCurrent)
 			}
@@ -307,7 +310,7 @@ func TestImmediateOnOff(t *testing.T) {
 
 		wb.EXPECT().MaxCurrent(lpMinCurrent)
 
-		lp.SetMode(api.ModeOff)
+		lp.SetMode(api.Off)
 		lp.update()
 
 		ctrl.Finish()
