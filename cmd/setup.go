@@ -7,12 +7,56 @@ import (
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
 	"github.com/spf13/viper"
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+func dbTee(valueChan *chan core.Param) <-chan core.Param {
+	var teeChan <-chan core.Param
+	*valueChan, teeChan = tee(*valueChan)
+
+	// eliminate duplicate values
+	dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
+	teeChan = dedupe.Pipe(teeChan)
+
+	// reduce number of values written to influx
+	limiter := server.NewLimiter(5 * time.Second)
+	teeChan = limiter.Pipe(teeChan)
+
+	return teeChan
+}
+
+// setup influx databases
+func configureDatabase(in chan util.Param, conf config) {
+	if viper.Get("influx") != nil {
+		influx := server.NewInfluxClient(
+			conf.Influx.URL,
+			conf.Influx.Database,
+			conf.Influx.Interval,
+			conf.Influx.User,
+			conf.Influx.Password,
+		)
+
+		teeChan := dbTee(valueChan)
+		go influx.Run(teeChan)
+	}
+
+	if viper.Get("influx2") != nil {
+		influx := server.NewInflux2Client(
+			conf.Influx2.URL,
+			conf.Influx2.Token,
+			conf.Influx2.Org,
+			conf.Influx2.Bucket,
+		)
+
+		teeChan := dbTee(valueChan)
+		go influx.Run(teeChan)
+	}
 }
 
 func configureMessengers(conf messagingConfig) chan push.Event {
