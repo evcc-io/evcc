@@ -7,7 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (similar to Wallbe), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
+- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EV-CC-AC1-M3-CBC-RCM), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
 - more chargers experimentally supported: NRGKick, SimpleEVSE, EVSEWifi
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
@@ -133,6 +133,14 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 ![dip10](docs/dip10.jpeg)
 
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
+
+**NOTE:** The Wallbe products come in two flavors. Older models (2017 known to be "old", 2019 known to be "new") use the Phoenix EV-CC-AC1-M3-CBC-RCM controller. For such models make sure to use `phoenix` charger type instead of `wallbe`. You can find you which one you have using [MBMD](5):
+
+```sh
+mbmd read -a 192.168.0.8:502 -d 255 -t holding -e int 300 1
+```
+
+Compare the value to what you see as *Actual Charge Current Setting* in the Wallbe web UI. If the numbers match, it's a Phoenix controller, if the reading is factor 10x the UI value then it's a Wallbe controller.
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
