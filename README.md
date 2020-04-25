@@ -45,9 +45,22 @@ EVCC is provided as binary executable file and docker image. Download the file f
 
     evcc -h
 
-or to run EVCC with given config file and UI on port 7070 using Docker:
+Use the following `systemd` unit description to configure EVCC as service (put into `/etc/systemd/system/evcc.service`):
 
-    docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
+    [Unit]
+    Description=evcc
+    After=syslog.target
+    [Service]
+    ExecStart=/usr/local/bin/evcc --log error
+    Restart=always
+    [Install]
+    WantedBy=multi-user.target
+
+EVCC can also be run using Docker. Here's and example with given config file and UI on port 7070:
+
+```sh
+docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
+```
 
 To build EVCC from source, [Go](2) 1.13 is required:
 
