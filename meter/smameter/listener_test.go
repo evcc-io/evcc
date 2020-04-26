@@ -7,8 +7,6 @@ import (
 )
 
 func TestListener_processUDPData(t *testing.T) {
-	type fields struct {
-	}
 	tests := []struct {
 		name     string
 		ip       net.IP
