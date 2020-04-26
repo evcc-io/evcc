@@ -5,6 +5,8 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
+	"github.com/volkszaehler/mbmd/meters/rs485"
+	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
 // NewModbusFromConfig creates api.Meter from config
@@ -49,12 +51,34 @@ type Modbus struct {
 	slaveID uint8
 }
 
+// floatGetter executes configured modbus read operation and implements provider.FloatGetter
+func (m *Modbus) floatGetter(m meters.Measurement) (float64, error) {
+	m.conn.Slave(m.slaveID)
+
+	var res meters.MeasurementResult
+	var err error
+
+	if dev, ok := m.device.(*rs485.RS485); ok {
+		res, err = dev.QueryOp(m.conn.ModbusClient(), m.op)
+	}
+
+	if dev, ok := m.device.(*sunspec.SunSpec); ok {
+		res, err = dev.QueryOp(m.conn.ModbusClient(), m)
+	}
+
+	if err == nil {
+		m.log.TRACE.Printf("%+v", res)
+	}
+
+	return res.Value, err
+}
+
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Modbus) CurrentPower() (float64, error) {
-	return 0, nil
+	return m.floatGetter(meters.Power)
 }
 
 // TotalEnergy implements the Meter.TotalEnergy interface
 func (m *Modbus) TotalEnergy() (float64, error) {
-	return 0, nil
+	return m.floatGetter(meters.Sum)
 }
