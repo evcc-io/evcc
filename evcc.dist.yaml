@@ -66,6 +66,7 @@ chargers:
 - name: wallbe
   type: wallbe # Wallbe charger
   uri: 192.168.0.8:502 # ModBus address
+# legacy: true # enable for older Wallbes with Phoenix EV-CC-AC1-M3-CBC-RCM controller
 - name: phoenix
   type: phoenix # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # ModBus address

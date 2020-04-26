@@ -7,7 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EV-CC-AC1-M3-CBC-RCM), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
+- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EM-CP-PP-ETH), go-eCharger, openWB slave, Mobile Charger Connect (currently used by Porsche), any other charger using scripting
 - more chargers experimentally supported: NRGKick, SimpleEVSE, EVSEWifi
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
@@ -128,8 +128,8 @@ Optionally, charger can also provide:
 
 Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe)
-- `phoenix`: chargers with Phoenix controllers
+- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
+- `phoenix`: chargers with Phoenix EM-CP-PP-ETH controllers
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
 - `nrgkick`: NRGKick chargers with Connect module
@@ -147,7 +147,7 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
 
-**NOTE:** The Wallbe products come in two flavors. Older models (2017 known to be "old", 2019 known to be "new") use the Phoenix EV-CC-AC1-M3-CBC-RCM controller. For such models make sure to use `phoenix` charger type instead of `wallbe`. You can find you which one you have using [MBMD](5):
+**NOTE:** The Wallbe products come in two flavors. Older models (2017 known to be "old", 2019 known to be "new") use the Phoenix EV-CC-AC1-M3-CBC-RCM controller. For such models make sure to set `legacy: true`. You can find you which one you have using [MBMD](5):
 
 ```sh
 mbmd read -a 192.168.0.8:502 -d 255 -t holding -e int 300 1
