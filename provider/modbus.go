@@ -19,6 +19,14 @@ type Modbus struct {
 	op      rs485.Operation
 }
 
+type ModbusSettings struct {
+	Model               string
+	ID                  uint8
+	URI, Device, Comset string
+	Baudrate            int
+	RTU                 bool // indicates RTU over TCP if true
+}
+
 var connections map[string]meters.Connection
 
 func modbusConnection(key string, newConn meters.Connection) meters.Connection {
@@ -34,33 +42,37 @@ func modbusConnection(key string, newConn meters.Connection) meters.Connection {
 	return newConn
 }
 
+// NewDeviceConnection creates physical modbus device from config
+func NewDeviceConnection(log *util.Logger, cc ModbusSettings) (conn meters.Connection, device meters.Device, err error) {
+	if (cc.URI == "" && cc.Device == "") || (cc.URI != "" && cc.Device != "") {
+		log.FATAL.Fatalf("config: invalid modbus configuration %v", cc)
+	}
+
+	if cc.Device != "" {
+		conn = modbusConnection(cc.Device, meters.NewRTU(cc.Device, cc.Baudrate, cc.Comset))
+		device, err = rs485.NewDevice(strings.ToUpper(cc.Model))
+	}
+	if cc.URI != "" {
+		if cc.RTU {
+			conn = modbusConnection(cc.URI, meters.NewRTUOverTCP(cc.URI))
+		} else {
+			conn = modbusConnection(cc.URI, meters.NewTCP(cc.URI))
+		}
+		device = sunspec.NewDevice(strings.ToUpper(cc.Model))
+	}
+
+	return conn, device, err
+}
+
 // NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interface{}) *Modbus {
 	cc := struct {
-		URI, Device, Comset string
-		Meter, Value        string
-		Baudrate            int
-		ID                  uint8
+		ModbusSettings `mapstructure:",squash"`
+		Value          string
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	var conn meters.Connection
-	var device meters.Device
-	var err error
-
-	switch strings.ToLower(typ) {
-	case "modbus-rtu":
-		conn = modbusConnection(cc.Device, meters.NewRTU(cc.Device, cc.Baudrate, cc.Comset))
-		device, err = rs485.NewDevice(strings.ToUpper(cc.Meter))
-	case "modbus-rtuovertcp", "modbus-tcprtu", "modbus-rtutcp":
-		conn = modbusConnection(cc.URI, meters.NewRTUOverTCP(cc.URI))
-		device, err = rs485.NewDevice(strings.ToUpper(cc.Meter))
-	case "modbus-tcp":
-		conn = modbusConnection(cc.URI, meters.NewTCP(cc.URI))
-		device = sunspec.NewDevice(strings.ToUpper(cc.Meter))
-	default:
-		log.FATAL.Fatalf("invalid provider type %s", typ)
-	}
+	conn, device, err := NewDeviceConnection(log, cc.ModbusSettings)
 
 	log = util.NewLogger("modb")
 	conn.Logger(log.TRACE)
