@@ -6,6 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/vehicle"
@@ -102,7 +103,7 @@ func (c *ConfigProvider) configure(conf config) {
 func (c *ConfigProvider) configureMeters(conf config) {
 	c.meters = make(map[string]api.Meter)
 	for _, cc := range conf.Meters {
-		c.meters[cc.Name] = core.NewMeterFromConfig(log, cc.Other)
+		c.meters[cc.Name] = meter.NewFromConfig(log, cc.Type, cc.Other)
 	}
 }
 
