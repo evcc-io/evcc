@@ -180,7 +180,10 @@ chargers:
 
 ### Meter
 
-Meters provide data about power and energy consumption. Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by [plugin](#plugins).
+Meters provide data about power and energy consumption. Available meter implementations are:
+
+- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices)
+- `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 
 ### Vehicle
 
