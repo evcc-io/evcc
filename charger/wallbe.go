@@ -12,36 +12,46 @@ import (
 const (
 	slaveID = 255
 
-	wbRegStatus            = 100 // Input
-	wbRegChargeTime        = 102 // Input
-	wbRegActualCurrent     = 300 // Holding
-	wbRegEnable            = 400 // Coil
-	wbRegOverchargeProtect = 409 // Coil
-	wbRegReset             = 413 // Coil
-	wbRegMaxCurrent        = 528 // Holding
+	wbRegStatus        = 100 // Input
+	wbRegChargeTime    = 102 // Input
+	wbRegActualCurrent = 300 // Holding
+	wbRegEnable        = 400 // Coil
+	wbRegMaxCurrent    = 528 // Holding
 
 	timeout         = 1 * time.Second
 	protocolTimeout = 2 * time.Second
 )
 
 // Wallbe is an api.ChargeController implementation for Wallbe wallboxes.
+// It supports both wallbe controllers (post 2019 models) and older ones using the
+// Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
 	log     *api.Logger
 	client  modbus.Client
 	handler *modbus.TCPClientHandler
+	factor  int64
 }
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
-	cc := struct{ URI string }{}
+func NewWallbeFromConfig(log *api.Logger, other map[string]interface{}) *Wallbe {
+	cc := struct {
+		URI    string
+		Legacy bool
+	}{}
 	api.DecodeOther(log, other, &cc)
 
-	return NewWallbe(cc.URI)
+	wb := NewWallbe(cc.URI)
+
+	if cc.Legacy {
+		wb.factor = 1
+	}
+
+	return wb
 }
 
 // NewWallbe creates a Wallbe charger
-func NewWallbe(conn string) api.Charger {
+func NewWallbe(conn string) *Wallbe {
 	if conn == "" {
 		conn = "192.168.0.8:502"
 	}
@@ -57,6 +67,7 @@ func NewWallbe(conn string) api.Charger {
 		log:     api.NewLogger("wlbe"),
 		client:  client,
 		handler: handler,
+		factor:  10,
 	}
 
 	// wb.showIOs()
@@ -154,7 +165,7 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	u := uint16(current * 10)
+	u := uint16(current * wb.factor)
 
 	b, err := wb.client.WriteSingleRegister(wbRegMaxCurrent, u)
 	wb.log.TRACE.Printf("write max current %d %0X: %0 X", wbRegMaxCurrent, u, b)

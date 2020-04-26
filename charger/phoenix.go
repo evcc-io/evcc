@@ -15,7 +15,7 @@ const (
 	phRegEnable     = 400 // Coil
 )
 
-// Phoenix is an api.ChargeController implementation for Phoenix wallboxes.
+// Phoenix is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Phoenix struct {
 	log     *api.Logger
