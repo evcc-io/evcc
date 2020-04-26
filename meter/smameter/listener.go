@@ -117,6 +117,45 @@ func New(log *api.Logger, addr string) *Listener {
 	return l
 }
 
+// processUDPData converts a SMA Multicast data package into SmaTelegramData
+func (l *Listener) processUDPData(numBytes int, src *net.UDPAddr, buffer []byte) (SmaTelegramData, error) {
+	// read serial number at index 20
+	serial := strconv.FormatUint(uint64(readSerial(buffer[20:24])), 10)
+
+	var obisCodeValues []SmaObisCodeValue
+
+	// read obis code values, start at position 28, after initial static stuff
+	for i := 28; i < numBytes; i++ {
+		if i+obisCodeLength > numBytes-1 {
+			break
+		}
+		if obisCodeElement, err := getObisCodeElement(buffer[i : i+obisCodeLength]); err == nil {
+			dataIndex := i + obisCodeLength
+
+			obisCodeValue := readValue(buffer[dataIndex:dataIndex+obisCodeElement.length+1], obisCodeElement.length)
+			obisCodeElement.value = obisCodeValue * obisCodeElement.factor
+
+			smaObisCodeValue := SmaObisCodeValue{
+				ObisCode: obisCodeElement.obisCode,
+				Value:    obisCodeValue * obisCodeElement.factor,
+			}
+
+			obisCodeValues = append(obisCodeValues, smaObisCodeValue)
+
+			i = dataIndex + obisCodeElement.length - 1
+		}
+	}
+
+	msg := SmaTelegramData{
+		Addr:   src.IP.String(),
+		Serial: serial,
+		Data:   obisCodeValues,
+	}
+
+	return msg, nil
+}
+
+// listen for Multicast data packages
 func (l *Listener) listen() {
 	// Loop forever reading
 	for {
@@ -127,37 +166,9 @@ func (l *Listener) listen() {
 			continue
 		}
 
-		// read serial number at index 20
-		serial := strconv.FormatUint(uint64(readSerial(buffer[20:24])), 10)
-
-		var obisCodeValues []SmaObisCodeValue
-
-		// read obis code values, start at position 28, after initial static stuff
-		for i := 28; i < numBytes; i++ {
-			if obisCodeElement, err := getObisCodeElement(buffer[i : i+obisCodeLength]); err == nil {
-				dataIndex := i + obisCodeLength
-
-				obisCodeValue := readValue(buffer[dataIndex:dataIndex+obisCodeElement.length+1], obisCodeElement.length)
-				obisCodeElement.value = obisCodeValue * obisCodeElement.factor
-
-				smaObisCodeValue := SmaObisCodeValue{
-					ObisCode: obisCodeElement.obisCode,
-					Value:    obisCodeValue * obisCodeElement.factor,
-				}
-
-				obisCodeValues = append(obisCodeValues, smaObisCodeValue)
-
-				i = dataIndex + obisCodeElement.length - 1
-			}
+		if msg, err := l.processUDPData(numBytes, src, buffer); err != nil {
+			l.send(msg)
 		}
-
-		msg := SmaTelegramData{
-			Addr:   src.IP.String(),
-			Serial: serial,
-			Data:   obisCodeValues,
-		}
-
-		l.send(msg)
 	}
 
 }
