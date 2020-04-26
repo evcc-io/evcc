@@ -44,16 +44,19 @@ messaging:
 # meters
 meters:
 - name: grid
+  type: default
   power: # power reading
     type: mqtt # use mqtt
     topic: mbmd/sdm1-1/Power # mqtt topic
     timeout: 10s # don't use older values
 - name: pv
+  type: default
   power:
     type: mqtt
     topic: mbmd/sdm1-2/Power
     timeout: 10s # don't use older values
 - name: charge
+  type: default
   power:
     type: script # use script
     cmd: /bin/sh -c "echo 0" # actual command

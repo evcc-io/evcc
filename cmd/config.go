@@ -20,7 +20,7 @@ type config struct {
 	Influx     influxConfig
 	Menu       []server.MenuConfig
 	Messaging  messagingConfig
-	Meters     []namedConfig
+	Meters     []qualifiedConfig
 	Chargers   []qualifiedConfig
 	Vehicles   []qualifiedConfig
 	LoadPoints []core.Config
@@ -29,11 +29,6 @@ type config struct {
 type qualifiedConfig struct {
 	Name, Type string
 	Other      map[string]interface{} `mapstructure:",remain"`
-}
-
-type namedConfig struct {
-	Name  string
-	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 type typedConfig struct {
