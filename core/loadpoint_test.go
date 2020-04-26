@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/mock"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
@@ -121,13 +122,13 @@ func TestMeterConfigurations(t *testing.T) {
 
 		var gm, pm, cm api.Meter
 		if tc.gm {
-			gm = NewMeter(fg)
+			gm = meter.NewConfigurable(fg)
 		}
 		if tc.cm {
-			cm = NewMeter(fg)
+			cm = meter.NewConfigurable(fg)
 		}
 		if tc.pm {
-			pm = NewMeter(fg)
+			pm = meter.NewConfigurable(fg)
 		}
 
 		ctrl := gomock.NewController(t)

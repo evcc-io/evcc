@@ -154,7 +154,7 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
-			log.DEBUG.Printf("%s vehicle charge: %.1f%%", lp.Name, f)
+			log.DEBUG.Printf("%s vehicle soc: %.1f%%", lp.Name, f)
 			lp.publish("socCharge", f)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return

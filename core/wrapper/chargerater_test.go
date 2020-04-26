@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/mock"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
@@ -43,7 +44,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	mm := mock.NewMockMeter(ctrl)
 	me := mock.NewMockMeterEnergy(ctrl)
-	cm := &CompositeMeter{mm, me}
+	cm := &meter.CompositeMeter{Meter: mm, MeterEnergy: me}
 
 	me.EXPECT().
 		TotalEnergy().
