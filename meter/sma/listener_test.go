@@ -6,14 +6,14 @@ import (
 	"testing"
 )
 
-func TestListenerProcessUDPData(t *testing.T) {
+func TestListenerProcessMessage(t *testing.T) {
 	tests := []struct {
 		name     string
 		ip       net.IP
 		port     int
 		response []byte
 		wantErr  bool
-		want     TelegramData
+		want     Telegram
 	}{
 		{
 			"SMA Home Manager - success",
@@ -60,10 +60,10 @@ func TestListenerProcessUDPData(t *testing.T) {
 				0x00, 0x00, 0x00, 0x1e, 0x90, 0x00, 0x00, 0x00, 0x02, 0x03, 0x05, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			TelegramData{
+			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: map[string]float64{
+				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 6.89131908e+09,
 					"1:2.4.0": 37.9, "1:2.8.0": 2.371258944e+10,
 					"1:3.4.0": 0, "1:3.8.0": 6.30376488e+09,
@@ -144,10 +144,10 @@ func TestListenerProcessUDPData(t *testing.T) {
 				0x02, 0x00, 0x12, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			TelegramData{
+			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: map[string]float64{
+				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 1.2385008e+08,
 					"1:2.4.0": 222, "1:2.8.0": 4.137912288e+10,
 					"1:3.4.0": 0, "1:3.8.0": 1.66667796e+09,
@@ -189,18 +189,17 @@ func TestListenerProcessUDPData(t *testing.T) {
 			l := &Listener{}
 
 			buffer := tc.response
-			numBytes := len(buffer)
+			read := len(buffer)
 			src := &net.UDPAddr{IP: tc.ip, Port: tc.port}
 
-			got, err := l.processUDPData(src, buffer[:numBytes-1])
+			got, err := l.processMessage(src, buffer[:read-1])
 			if (err != nil) != tc.wantErr {
-				t.Errorf("Listener.processUDPData() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("Listener.processMessage() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("Listener.processUDPData() = %v, want %v", got, tc.want)
+				t.Errorf("Listener.processMessage() got %v, want %v", got, tc.want)
 			}
-
 		})
 	}
 }

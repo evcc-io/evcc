@@ -12,24 +12,28 @@ import (
 )
 
 const (
-	multicastAddr    = "239.12.255.254:9522"
-	udpBufferSize    = 8192
-	obisCodeLength   = 4
+	multicastAddr = "239.12.255.254:9522"
+	udpBufferSize = 8192
+
+	msgSerial     = 20 // start of serial in preamble
+	msgPreamble   = 28 // preamble size in bytes
+	msgCodeLength = 4  // length in bytes
+
 	ObisImportPower  = "1:1.4.0" // Wirkleistung (W)
 	ObisImportEnergy = "1:1.8.0" // Wirkarbeit (Ws) +
 	ObisExportPower  = "1:2.4.0" // Wirkleistung (W)
 	ObisExportEnergy = "1:2.8.0" // Wirkarbeit (Ws) −
 )
 
-// obisCodeProp defines the properties needed to parse the SMA multicast telegram values
-type obisCodeProp struct {
+// obisDefinition defines the properties needed to parse the SMA multicast telegram values
+type obisDefinition struct {
 	length int     // data size in bytes of the return value
 	factor float64 // the factor to multiply the value by to get the proper value in the given unit
 }
 
 // list of Obis codes and their properties as defined in the SMA EMETER-Protokoll-TI-de-10.pdf document
-var knownObisCodes = map[string]obisCodeProp{
-	// Overal sums
+var knownObisCodes = map[string]obisDefinition{
+	// Overall sums
 	ObisImportPower: {4, 0.1}, ObisImportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
 	ObisExportPower: {4, 0.1}, ObisExportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) −
 	"1:3.4.0": {4, 0.1}, "1:3.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) +
@@ -68,13 +72,14 @@ var knownObisCodes = map[string]obisCodeProp{
 	"144:0.0.0": {4, 1}, // SW Version
 }
 
+// Instance is the Listener singleton
 var Instance *Listener
 
-// TelegramData defines the data structure of a SMA multicast data package
-type TelegramData struct {
+// Telegram defines the data structure of a SMA multicast data package
+type Telegram struct {
 	Addr   string
 	Serial string
-	Data   map[string]float64
+	Values map[string]float64
 }
 
 // Listener for receiving SMA multicast data packages
@@ -82,19 +87,19 @@ type Listener struct {
 	mux     sync.Mutex
 	log     *api.Logger
 	conn    *net.UDPConn
-	clients map[string]chan<- TelegramData
+	clients map[string]chan<- Telegram
 }
 
 // New creates a Listener
 func New(log *api.Logger, addr string) *Listener {
 	// Parse the string address
-	laddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
+	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
 		log.FATAL.Fatalf("error resolving udp address: %s", err)
 	}
 
 	// Open up a connection
-	conn, err := net.ListenMulticastUDP("udp4", nil, laddr)
+	conn, err := net.ListenMulticastUDP("udp4", nil, gaddr)
 	if err != nil {
 		log.FATAL.Fatalf("error opening connecting: %s", err)
 	}
@@ -113,95 +118,76 @@ func New(log *api.Logger, addr string) *Listener {
 	return l
 }
 
-// processUDPData converts a SMA Multicast data package into TelegramData
-func (l *Listener) processUDPData(src *net.UDPAddr, buffer []byte) (TelegramData, error) {
-	numBytes := len(buffer)
+// processMessage converts a SMA multicast data package into Telegram
+func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) {
+	numBytes := len(b)
 
-	if numBytes < 29 {
-		return TelegramData{}, errors.New("received data package is too small")
+	if numBytes <= msgPreamble {
+		return Telegram{}, errors.New("received data package is too small")
 	}
 
-	obisCodeValues := make(map[string]float64)
+	obisValues := make(map[string]float64)
 
-	// yes this doesn't look nice, but keeping it until we found a better way to parse the data
-	// read obis code values, start at position 28, after initial static stuff
-	for i := 28; i < numBytes; i++ {
-		if i+obisCodeLength > numBytes-1 {
-			break
+	var obisDef obisDefinition
+	for i := msgPreamble; i < numBytes-msgCodeLength; i += msgCodeLength + obisDef.length {
+		// spec says value should be 1, but reading contains 0
+		b0 := b[i+0]
+		if b0 == 0 {
+			b0 = 1
 		}
 
-		// create the string notation of the potential obis code
-		b := buffer[i : i+obisCodeLength]
-
-		// Spec says value should be 1, but reading contains 0
-		b3 := b[0]
-		if b3 == 0 {
-			b3 = 1
+		code := fmt.Sprintf("%d:%d.%d.%d", b0, b[i+1], b[i+2], b[i+3])
+		if obisDef, ok := knownObisCodes[code]; ok {
+			switch obisDef.length {
+			case 4:
+				obisValues[code] = obisDef.factor * float64(binary.BigEndian.Uint32(b[i+msgCodeLength:]))
+			case 8:
+				obisValues[code] = obisDef.factor * float64(binary.BigEndian.Uint64(b[i+msgCodeLength:]))
+			}
 		}
-
-		code := fmt.Sprintf("%d:%d.%d.%d", b3, b[1], b[2], b[3])
-
-		element, ok := knownObisCodes[code]
-		if !ok {
-			continue
-		}
-
-		dataIndex := i + obisCodeLength
-
-		var value float64
-		switch element.length {
-		case 4:
-			value = float64(binary.BigEndian.Uint32(buffer[dataIndex : dataIndex+element.length+1]))
-		case 8:
-			value = float64(binary.BigEndian.Uint64(buffer[dataIndex : dataIndex+element.length+1]))
-		}
-
-		obisCodeValues[code] = value * element.factor
-
-		i = dataIndex + element.length - 1
 	}
 
-	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(buffer[20:24])), 10)
+	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(b[msgSerial:])), 10)
 
-	msg := TelegramData{
+	msg := Telegram{
 		Addr:   src.IP.String(),
 		Serial: serial,
-		Data:   obisCodeValues,
+		Values: obisValues,
 	}
 
 	return msg, nil
 }
 
-// listen for Multicast data packages
+// listen for multicast data packages
 func (l *Listener) listen() {
 	buffer := make([]byte, udpBufferSize)
-	// Loop forever reading
+
 	for {
-		numBytes, src, err := l.conn.ReadFromUDP(buffer)
+		read, src, err := l.conn.ReadFromUDP(buffer)
 		if err != nil {
-			l.log.WARN.Printf("readfromudp failed: %s", err)
+			l.log.WARN.Printf("udp read failed: %s", err)
 			continue
 		}
 
-		if msg, err := l.processUDPData(src, buffer[:numBytes-1]); err == nil {
+		if msg, err := l.processMessage(src, buffer[:read-1]); err == nil {
 			l.send(msg)
 		}
 	}
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- TelegramData) {
+func (l *Listener) Subscribe(addr string, c chan<- Telegram) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
 	if l.clients == nil {
-		l.clients = make(map[string]chan<- TelegramData)
+		l.clients = make(map[string]chan<- Telegram)
 	}
 
 	l.clients[addr] = c
 }
 
-func (l *Listener) send(msg TelegramData) {
+func (l *Listener) send(msg Telegram) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 

@@ -16,13 +16,13 @@ const (
 
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
-	log        *api.Logger
-	uri        string
-	power      float64
-	lastUpdate time.Time
-	recv       chan sma.TelegramData
-	mux        sync.Mutex
-	once       sync.Once
+	log     *api.Logger
+	uri     string
+	power   float64
+	updated time.Time
+	recv    chan sma.Telegram
+	mux     sync.Mutex
+	once    sync.Once
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
@@ -42,7 +42,7 @@ func NewSMA(uri string) *SMA {
 	sm := &SMA{
 		log:  log,
 		uri:  uri,
-		recv: make(chan sma.TelegramData),
+		recv: make(chan sma.Telegram),
 	}
 
 	if sma.Instance == nil {
@@ -61,11 +61,11 @@ func (sm *SMA) waitForInitialValue() {
 	sm.mux.Lock()
 	defer sm.mux.Unlock()
 
-	if sm.lastUpdate.IsZero() {
+	if sm.updated.IsZero() {
 		sm.log.TRACE.Print("waiting for initial value")
 
 		// wait for initial update
-		for sm.lastUpdate.IsZero() {
+		for sm.updated.IsZero() {
 			sm.mux.Unlock()
 			time.Sleep(waitTimeout)
 			sm.mux.Lock()
@@ -76,28 +76,22 @@ func (sm *SMA) waitForInitialValue() {
 // receive processes the channel message containing the multicast data
 func (sm *SMA) receive() {
 	for msg := range sm.recv {
-		if msg.Data == nil {
-			continue
-		}
-
-		var powerIn, powerOut float64
-		var ok bool
-
-		if powerIn, ok = msg.Data[sma.ObisImportPower]; !ok {
-			continue
-		}
-
-		if powerOut, ok = msg.Data[sma.ObisExportPower]; !ok {
+		if msg.Values == nil {
 			continue
 		}
 
 		sm.mux.Lock()
-		sm.lastUpdate = time.Now()
-		if powerOut > 0 {
-			sm.power = -powerOut
+
+		if power, ok := msg.Values[sma.ObisExportPower]; ok {
+			sm.power = -power
+			sm.updated = time.Now()
+		} else if power, ok := msg.Values[sma.ObisImportPower]; ok {
+			sm.power = power
+			sm.updated = time.Now()
 		} else {
-			sm.power = powerIn
+			sm.log.WARN.Println("missing obis for import/export power")
 		}
+
 		sm.mux.Unlock()
 	}
 }
@@ -108,7 +102,7 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	sm.mux.Lock()
 	defer sm.mux.Unlock()
 
-	if time.Since(sm.lastUpdate) > udpTimeout {
+	if time.Since(sm.updated) > udpTimeout {
 		return 0, errors.New("recv timeout")
 	}
 
