@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestListenerProcessUDPData(t *testing.T) {
+func TestListenerProcessMessage(t *testing.T) {
 	tests := []struct {
 		name     string
 		ip       net.IP
@@ -194,11 +194,11 @@ func TestListenerProcessUDPData(t *testing.T) {
 
 			got, err := l.processMessage(src, buffer[:read-1])
 			if (err != nil) != tc.wantErr {
-				t.Errorf("Listener.processUDPData() error = %v, wantErr %v", err, tc.wantErr)
+				t.Errorf("Listener.processMessage() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("Listener.processUDPData() = %v, want %v", got, tc.want)
+				t.Errorf("Listener.processMessage() got %v, want %v", got, tc.want)
 			}
 		})
 	}

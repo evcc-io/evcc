@@ -12,9 +12,12 @@ import (
 )
 
 const (
-	multicastAddr    = "239.12.255.254:9522"
-	udpBufferSize    = 8192
-	obisCodeLength   = 4
+	multicastAddr = "239.12.255.254:9522"
+	udpBufferSize = 8192
+
+	msgPreamble   = 28 // preamble size in bytes
+	msgCodeLength = 4  // length in bytes
+
 	ObisImportPower  = "1:1.4.0" // Wirkleistung (W)
 	ObisImportEnergy = "1:1.8.0" // Wirkarbeit (Ws) +
 	ObisExportPower  = "1:2.4.0" // Wirkleistung (W)
@@ -115,54 +118,35 @@ func New(log *api.Logger, addr string) *Listener {
 }
 
 // processMessage converts a SMA multicast data package into Telegram
-func (l *Listener) processMessage(src *net.UDPAddr, buffer []byte) (Telegram, error) {
-	numBytes := len(buffer)
+func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) {
+	numBytes := len(b)
 
-	if numBytes < 29 {
+	if numBytes <= msgPreamble {
 		return Telegram{}, errors.New("received data package is too small")
 	}
 
 	obisCodeValues := make(map[string]float64)
 
-	// yes this doesn't look nice, but keeping it until we found a better way to parse the data
-	// read obis code values, start at position 28, after initial static stuff
-	for i := 28; i < numBytes; i++ {
-		if i+obisCodeLength > numBytes-1 {
-			break
+	var obisDef obisCodeProp
+	for i := msgPreamble; i < numBytes-msgCodeLength; i = i + msgCodeLength + obisDef.length {
+		// spec says value should be 1, but reading contains 0
+		b0 := b[i+0]
+		if b0 == 0 {
+			b0 = 1
 		}
 
-		// create the string notation of the potential obis code
-		b := buffer[i : i+obisCodeLength]
-
-		// Spec says value should be 1, but reading contains 0
-		b3 := b[0]
-		if b3 == 0 {
-			b3 = 1
+		code := fmt.Sprintf("%d:%d.%d.%d", b0, b[i+1], b[i+2], b[i+3])
+		if obisDef, ok := knownObisCodes[code]; ok {
+			switch obisDef.length {
+			case 4:
+				obisCodeValues[code] = obisDef.factor * float64(binary.BigEndian.Uint32(b[i+msgCodeLength:]))
+			case 8:
+				obisCodeValues[code] = obisDef.factor * float64(binary.BigEndian.Uint64(b[i+msgCodeLength:]))
+			}
 		}
-
-		code := fmt.Sprintf("%d:%d.%d.%d", b3, b[1], b[2], b[3])
-
-		element, ok := knownObisCodes[code]
-		if !ok {
-			continue
-		}
-
-		dataIndex := i + obisCodeLength
-
-		var value float64
-		switch element.length {
-		case 4:
-			value = float64(binary.BigEndian.Uint32(buffer[dataIndex : dataIndex+element.length+1]))
-		case 8:
-			value = float64(binary.BigEndian.Uint64(buffer[dataIndex : dataIndex+element.length+1]))
-		}
-
-		obisCodeValues[code] = value * element.factor
-
-		i = dataIndex + element.length - 1
 	}
 
-	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(buffer[20:24])), 10)
+	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(b[20:24])), 10)
 
 	msg := Telegram{
 		Addr:   src.IP.String(),
