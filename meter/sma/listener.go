@@ -24,15 +24,15 @@ const (
 	ObisExportEnergy = "1:2.8.0" // Wirkarbeit (Ws) −
 )
 
-// obisCodeProp defines the properties needed to parse the SMA multicast telegram values
-type obisCodeProp struct {
+// obisDefinition defines the properties needed to parse the SMA multicast telegram values
+type obisDefinition struct {
 	length int     // data size in bytes of the return value
 	factor float64 // the factor to multiply the value by to get the proper value in the given unit
 }
 
 // list of Obis codes and their properties as defined in the SMA EMETER-Protokoll-TI-de-10.pdf document
-var knownObisCodes = map[string]obisCodeProp{
-	// Overal sums
+var knownObisCodes = map[string]obisDefinition{
+	// Overall sums
 	ObisImportPower: {4, 0.1}, ObisImportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
 	ObisExportPower: {4, 0.1}, ObisExportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) −
 	"1:3.4.0": {4, 0.1}, "1:3.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) +
@@ -125,9 +125,9 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		return Telegram{}, errors.New("received data package is too small")
 	}
 
-	obisCodeValues := make(map[string]float64)
+	obisValues := make(map[string]float64)
 
-	var obisDef obisCodeProp
+	var obisDef obisDefinition
 	for i := msgPreamble; i < numBytes-msgCodeLength; i = i + msgCodeLength + obisDef.length {
 		// spec says value should be 1, but reading contains 0
 		b0 := b[i+0]
@@ -139,9 +139,9 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		if obisDef, ok := knownObisCodes[code]; ok {
 			switch obisDef.length {
 			case 4:
-				obisCodeValues[code] = obisDef.factor * float64(binary.BigEndian.Uint32(b[i+msgCodeLength:]))
+				obisValues[code] = obisDef.factor * float64(binary.BigEndian.Uint32(b[i+msgCodeLength:]))
 			case 8:
-				obisCodeValues[code] = obisDef.factor * float64(binary.BigEndian.Uint64(b[i+msgCodeLength:]))
+				obisValues[code] = obisDef.factor * float64(binary.BigEndian.Uint64(b[i+msgCodeLength:]))
 			}
 		}
 	}
@@ -151,7 +151,7 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 	msg := Telegram{
 		Addr:   src.IP.String(),
 		Serial: serial,
-		Data:   obisCodeValues,
+		Data:   obisValues,
 	}
 
 	return msg, nil
