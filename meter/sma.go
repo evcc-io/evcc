@@ -56,7 +56,7 @@ func (sm *SMA) receive() {
 	for {
 		msg := <-sm.recv
 		if msg.Data == nil {
-			return
+			continue
 		}
 
 		var powerIn, powerOut float64
@@ -74,7 +74,7 @@ func (sm *SMA) receive() {
 		if foundValues {
 			sm.lastUpdate = time.Now()
 			if powerOut > 0 {
-				sm.power = powerOut * -1
+				sm.power = -powerOut
 			} else {
 				sm.power = powerIn
 			}
