@@ -62,7 +62,7 @@ func (sm *SMA) waitForInitialValue() {
 	defer sm.mux.Unlock()
 
 	if sm.lastUpdate.IsZero() {
-		sm.log.TRACE.Print("sma is waiting for initial value")
+		sm.log.TRACE.Print("waiting for initial value")
 
 		// wait for initial update
 		for sm.lastUpdate.IsZero() {
