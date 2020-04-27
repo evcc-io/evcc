@@ -63,7 +63,7 @@ func TestListenerProcessMessage(t *testing.T) {
 			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: map[string]float64{
+				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 6.89131908e+09,
 					"1:2.4.0": 37.9, "1:2.8.0": 2.371258944e+10,
 					"1:3.4.0": 0, "1:3.8.0": 6.30376488e+09,
@@ -147,7 +147,7 @@ func TestListenerProcessMessage(t *testing.T) {
 			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: map[string]float64{
+				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 1.2385008e+08,
 					"1:2.4.0": 222, "1:2.8.0": 4.137912288e+10,
 					"1:3.4.0": 0, "1:3.8.0": 1.66667796e+09,

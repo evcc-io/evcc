@@ -78,7 +78,7 @@ var Instance *Listener
 type Telegram struct {
 	Addr   string
 	Serial string
-	Data   map[string]float64
+	Values map[string]float64
 }
 
 // Listener for receiving SMA multicast data packages
@@ -151,7 +151,7 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 	msg := Telegram{
 		Addr:   src.IP.String(),
 		Serial: serial,
-		Data:   obisValues,
+		Values: obisValues,
 	}
 
 	return msg, nil
