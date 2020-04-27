@@ -163,7 +163,7 @@ func (l *Listener) listen() {
 			continue
 		}
 
-		if msg, err := l.processUDPData(src, buffer[:numBytes-1]); err != nil {
+		if msg, err := l.processUDPData(src, buffer[:numBytes-1]); err == nil {
 			l.send(msg)
 		}
 	}
