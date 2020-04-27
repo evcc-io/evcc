@@ -1,4 +1,4 @@
-package smameter
+package sma
 
 import (
 	"bytes"
@@ -68,17 +68,17 @@ var knownObisCodes = []obisCode{
 
 var Instance *Listener
 
-// SmaObisCodeValue contains the value of a specific OBIS code
-type SmaObisCodeValue struct {
+// ObisCodeValue contains the value of a specific OBIS code
+type ObisCodeValue struct {
 	ObisCode string
 	Value    float64
 }
 
-// SmaTelegramData defines the data structure of a SMA multicast data package
-type SmaTelegramData struct {
+// TelegramData defines the data structure of a SMA multicast data package
+type TelegramData struct {
 	Addr   string
 	Serial string
-	Data   []SmaObisCodeValue
+	Data   []ObisCodeValue
 }
 
 // Listener for receiving SMA multicast data packages
@@ -86,7 +86,7 @@ type Listener struct {
 	mux     sync.Mutex
 	log     *api.Logger
 	conn    *net.UDPConn
-	clients map[string]chan<- SmaTelegramData
+	clients map[string]chan<- TelegramData
 }
 
 // New creates a Listener
@@ -117,36 +117,36 @@ func New(log *api.Logger, addr string) *Listener {
 	return l
 }
 
-// processUDPData converts a SMA Multicast data package into SmaTelegramData
-func (l *Listener) processUDPData(numBytes int, src *net.UDPAddr, buffer []byte) (SmaTelegramData, error) {
+// processUDPData converts a SMA Multicast data package into TelegramData
+func (l *Listener) processUDPData(numBytes int, src *net.UDPAddr, buffer []byte) (TelegramData, error) {
 	// read serial number at index 20
 	serial := strconv.FormatUint(uint64(readSerial(buffer[20:24])), 10)
 
-	var obisCodeValues []SmaObisCodeValue
+	var obisCodeValues []ObisCodeValue
 
 	// read obis code values, start at position 28, after initial static stuff
 	for i := 28; i < numBytes; i++ {
 		if i+obisCodeLength > numBytes-1 {
 			break
 		}
-		if obisCodeElement, err := getObisCodeElement(buffer[i : i+obisCodeLength]); err == nil {
+		if element, err := getObisCodeElement(buffer[i : i+obisCodeLength]); err == nil {
 			dataIndex := i + obisCodeLength
 
-			obisCodeValue := readValue(buffer[dataIndex:dataIndex+obisCodeElement.length+1], obisCodeElement.length)
-			obisCodeElement.value = obisCodeValue * obisCodeElement.factor
+			value := readValue(buffer[dataIndex:dataIndex+element.length+1], element.length)
+			element.value = value * element.factor
 
-			smaObisCodeValue := SmaObisCodeValue{
-				ObisCode: obisCodeElement.obisCode,
-				Value:    obisCodeValue * obisCodeElement.factor,
+			obisCodeValue := ObisCodeValue{
+				ObisCode: element.obisCode,
+				Value:    value * element.factor,
 			}
 
-			obisCodeValues = append(obisCodeValues, smaObisCodeValue)
+			obisCodeValues = append(obisCodeValues, obisCodeValue)
 
-			i = dataIndex + obisCodeElement.length - 1
+			i = dataIndex + element.length - 1
 		}
 	}
 
-	msg := SmaTelegramData{
+	msg := TelegramData{
 		Addr:   src.IP.String(),
 		Serial: serial,
 		Data:   obisCodeValues,
@@ -174,18 +174,18 @@ func (l *Listener) listen() {
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- SmaTelegramData) {
+func (l *Listener) Subscribe(addr string, c chan<- TelegramData) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
 	if l.clients == nil {
-		l.clients = make(map[string]chan<- SmaTelegramData)
+		l.clients = make(map[string]chan<- TelegramData)
 	}
 
 	l.clients[addr] = c
 }
 
-func (l *Listener) send(msg SmaTelegramData) {
+func (l *Listener) send(msg TelegramData) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 

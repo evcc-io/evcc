@@ -1,4 +1,4 @@
-package smameter
+package sma
 
 import (
 	"net"
@@ -13,7 +13,7 @@ func TestListener_processUDPData(t *testing.T) {
 		port     int
 		response []byte
 		wantErr  bool
-		want     SmaTelegramData
+		want     TelegramData
 	}{
 		{
 			"SMA Home Manager - success",
@@ -60,10 +60,10 @@ func TestListener_processUDPData(t *testing.T) {
 				0x00, 0x00, 0x00, 0x1e, 0x90, 0x00, 0x00, 0x00, 0x02, 0x03, 0x05, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			SmaTelegramData{
+			TelegramData{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: []SmaObisCodeValue{
+				Data: []ObisCodeValue{
 					{ObisCode: "1:1.4.0", Value: 0}, {ObisCode: "1:1.8.0", Value: 6.89131908e+09},
 					{ObisCode: "1:2.4.0", Value: 37.9}, {ObisCode: "1:2.8.0", Value: 2.371258944e+10},
 					{ObisCode: "1:3.4.0", Value: 0}, {ObisCode: "1:3.8.0", Value: 6.30376488e+09},
@@ -144,10 +144,10 @@ func TestListener_processUDPData(t *testing.T) {
 				0x02, 0x00, 0x12, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			SmaTelegramData{
+			TelegramData{
 				Addr:   "192.168.1.4",
 				Serial: "0",
-				Data: []SmaObisCodeValue{
+				Data: []ObisCodeValue{
 					{ObisCode: "1:1.4.0", Value: 0}, {ObisCode: "1:1.8.0", Value: 1.2385008e+08},
 					{ObisCode: "1:2.4.0", Value: 222}, {ObisCode: "1:2.8.0", Value: 4.137912288e+10},
 					{ObisCode: "1:3.4.0", Value: 0}, {ObisCode: "1:3.8.0", Value: 1.66667796e+09},

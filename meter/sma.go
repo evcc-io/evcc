@@ -5,45 +5,45 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/smameter"
+	"github.com/andig/evcc/meter/sma"
 )
 
 const (
-	udpTimeout = 10
+	udpTimeout = 10 * time.Second
 )
 
-// SmaMeter supporting SMA Home Manager 2.0 and SMA Energy Meter 30
-type SmaMeter struct {
+// SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
+type SMA struct {
 	uri        string
 	power      float64
 	lastUpdate time.Time
-	recv       chan smameter.SmaTelegramData
+	recv       chan sma.TelegramData
 }
 
-// NewSmaMeterFromConfig creates a SMA Meter from generic config
-func NewSmaMeterFromConfig(log *api.Logger, other map[string]interface{}) api.Meter {
+// NewSMAFromConfig creates a SMA Meter from generic config
+func NewSMAFromConfig(log *api.Logger, other map[string]interface{}) api.Meter {
 	sm := struct {
 		URI string
 	}{}
 	api.DecodeOther(log, other, &sm)
 
-	return NewSmaMeter(sm.URI)
+	return NewSMA(sm.URI)
 }
 
-// NewSmaMeter creates a SMA Meter
-func NewSmaMeter(uri string) *SmaMeter {
-	log := api.NewLogger("smameter")
+// NewSMA creates a SMA Meter
+func NewSMA(uri string) *SMA {
+	log := api.NewLogger("sma ")
 
-	sm := &SmaMeter{
+	sm := &SMA{
 		uri:  uri,
-		recv: make(chan smameter.SmaTelegramData),
+		recv: make(chan sma.TelegramData),
 	}
 
-	if smameter.Instance == nil {
-		smameter.Instance = smameter.New(log, sm.uri)
+	if sma.Instance == nil {
+		sma.Instance = sma.New(log, sm.uri)
 	}
 
-	smameter.Instance.Subscribe(uri, sm.recv)
+	sma.Instance.Subscribe(uri, sm.recv)
 
 	sm.lastUpdate = time.Now()
 	go sm.receive()
@@ -52,7 +52,7 @@ func NewSmaMeter(uri string) *SmaMeter {
 }
 
 // receive processes the channel message containing the multicast data
-func (sm *SmaMeter) receive() {
+func (sm *SMA) receive() {
 	for {
 		msg := <-sm.recv
 		if msg.Data == nil {
@@ -83,8 +83,8 @@ func (sm *SmaMeter) receive() {
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
-func (sm *SmaMeter) CurrentPower() (float64, error) {
-	if time.Since(sm.lastUpdate) > udpTimeout*time.Second {
+func (sm *SMA) CurrentPower() (float64, error) {
+	if time.Since(sm.lastUpdate) > udpTimeout {
 		return 0, errors.New("recv timeout")
 	}
 
