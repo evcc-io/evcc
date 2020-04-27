@@ -53,25 +53,15 @@ func NewSMA(uri string) *SMA {
 
 // receive processes the channel message containing the multicast data
 func (sm *SMA) receive() {
-	for {
-		msg := <-sm.recv
+	for msg := range sm.recv {
 		if msg.Data == nil {
 			continue
 		}
 
-		var powerIn, powerOut float64
-		foundValues := false
-		for _, element := range msg.Data {
-			if element.ObisCode == "1:1.4.0" {
-				powerIn = element.Value
-				foundValues = true
-			}
-			if element.ObisCode == "1:2.4.0" {
-				powerOut = element.Value
-				foundValues = true
-			}
-		}
-		if foundValues {
+		powerIn, ok1 := msg.Data[sma.ObisImportPower]
+		powerOut, ok2 := msg.Data[sma.ObisExportPower]
+
+		if ok1 || ok2 {
 			sm.lastUpdate = time.Now()
 			if powerOut > 0 {
 				sm.power = -powerOut
