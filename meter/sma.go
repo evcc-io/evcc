@@ -76,15 +76,15 @@ func (sm *SMA) waitForInitialValue() {
 // receive processes the channel message containing the multicast data
 func (sm *SMA) receive() {
 	for msg := range sm.recv {
-		if msg.Data == nil {
+		if msg.Values == nil {
 			continue
 		}
 
 		sm.mux.Lock()
 
-		if power, ok := msg.Data[sma.ObisExportPower]; ok {
+		if power, ok := msg.Values[sma.ObisExportPower]; ok {
 			sm.power = -power
-		} else if power, ok := msg.Data[sma.ObisImportPower]; ok {
+		} else if power, ok := msg.Values[sma.ObisImportPower]; ok {
 			sm.power = power
 		} else {
 			sm.log.WARN.Println("missing obis for import/export power")
