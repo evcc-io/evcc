@@ -163,7 +163,7 @@ func (l *Listener) listen() {
 	for {
 		numBytes, src, err := l.conn.ReadFromUDP(buffer)
 		if err != nil {
-			l.log.WARN.Fatalf("readfromudp failed: %s", err)
+			l.log.WARN.Printf("readfromudp failed: %s", err)
 			continue
 		}
 
