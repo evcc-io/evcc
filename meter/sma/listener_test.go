@@ -189,10 +189,10 @@ func TestListenerProcessUDPData(t *testing.T) {
 			l := &Listener{}
 
 			buffer := tc.response
-			numBytes := len(buffer)
+			read := len(buffer)
 			src := &net.UDPAddr{IP: tc.ip, Port: tc.port}
 
-			got, err := l.processUDPData(src, buffer[:numBytes-1])
+			got, err := l.processMessage(src, buffer[:read-1])
 			if (err != nil) != tc.wantErr {
 				t.Errorf("Listener.processUDPData() error = %v, wantErr %v", err, tc.wantErr)
 				return
@@ -200,7 +200,6 @@ func TestListenerProcessUDPData(t *testing.T) {
 			if !reflect.DeepEqual(got, tc.want) {
 				t.Errorf("Listener.processUDPData() = %v, want %v", got, tc.want)
 			}
-
 		})
 	}
 }

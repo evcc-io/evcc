@@ -61,12 +61,12 @@ meters:
     type: script # use script
     cmd: /bin/sh -c "echo 0" # actual command
     timeout: 3s # kill script after 3 seconds
-#- name: grid
-#  type: smameter # SMA Home Manager 2.0 or SMA Energy Meter 30
-#  uri: 192.168.1.4 # IP Address of the device
-#- name: pv
-#  type: smameter # SMA Home Manager 2.0 or SMA Energy Meter 30
-#  uri: 192.168.1.4 # IP Address of the device
+- name: sma-grid
+  type: sma # SMA Home Manager 2.0 or SMA Energy Meter 30
+  uri: 192.168.1.4 # IP Address of the device
+- name: sma-pv
+  type: sma # SMA Home Manager 2.0 or SMA Energy Meter 30
+  uri: 192.168.1.4 # IP Address of the device
 
 chargers:
 - name: wallbe

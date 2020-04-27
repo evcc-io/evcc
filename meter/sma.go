@@ -20,7 +20,7 @@ type SMA struct {
 	uri        string
 	power      float64
 	lastUpdate time.Time
-	recv       chan sma.TelegramData
+	recv       chan sma.Telegram
 	mux        sync.Mutex
 	once       sync.Once
 }
@@ -42,7 +42,7 @@ func NewSMA(uri string) *SMA {
 	sm := &SMA{
 		log:  log,
 		uri:  uri,
-		recv: make(chan sma.TelegramData),
+		recv: make(chan sma.Telegram),
 	}
 
 	if sma.Instance == nil {
@@ -80,24 +80,17 @@ func (sm *SMA) receive() {
 			continue
 		}
 
-		var powerIn, powerOut float64
-		var ok bool
-
-		if powerIn, ok = msg.Data[sma.ObisImportPower]; !ok {
-			continue
-		}
-
-		if powerOut, ok = msg.Data[sma.ObisExportPower]; !ok {
-			continue
-		}
-
 		sm.mux.Lock()
-		sm.lastUpdate = time.Now()
-		if powerOut > 0 {
-			sm.power = -powerOut
+
+		if power, ok := msg.Data[sma.ObisExportPower]; ok {
+			sm.power = -power
+		} else if power, ok := msg.Data[sma.ObisImportPower]; ok {
+			sm.power = power
 		} else {
-			sm.power = powerIn
+			sm.log.WARN.Println("missing obis for import/export power")
 		}
+
+		sm.lastUpdate = time.Now()
 		sm.mux.Unlock()
 	}
 }

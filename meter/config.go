@@ -13,7 +13,7 @@ func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) ap
 	switch strings.ToLower(typ) {
 	case "default", "configurable":
 		c = NewConfigurableFromConfig(log, other)
-	case "smameter":
+	case "sma":
 		c = NewSMAFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid meter type '%s'", typ)

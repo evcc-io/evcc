@@ -114,8 +114,8 @@ func New(log *api.Logger, addr string) *Listener {
 	return l
 }
 
-// processUDPData converts a SMA Multicast data package into Telegram
-func (l *Listener) processUDPData(src *net.UDPAddr, buffer []byte) (Telegram, error) {
+// processMessage converts a SMA multicast data package into Telegram
+func (l *Listener) processMessage(src *net.UDPAddr, buffer []byte) (Telegram, error) {
 	numBytes := len(buffer)
 
 	if numBytes < 29 {
@@ -173,18 +173,18 @@ func (l *Listener) processUDPData(src *net.UDPAddr, buffer []byte) (Telegram, er
 	return msg, nil
 }
 
-// listen for Multicast data packages
+// listen for multicast data packages
 func (l *Listener) listen() {
 	buffer := make([]byte, udpBufferSize)
 
 	for {
 		read, src, err := l.conn.ReadFromUDP(buffer)
 		if err != nil {
-			l.log.WARN.Printf("readfromudp failed: %s", err)
+			l.log.WARN.Printf("udp read failed: %s", err)
 			continue
 		}
 
-		if msg, err := l.processUDPData(src, buffer[:read-1]); err == nil {
+		if msg, err := l.processMessage(src, buffer[:read-1]); err == nil {
 			l.send(msg)
 		}
 	}
