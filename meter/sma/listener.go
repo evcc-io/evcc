@@ -15,6 +15,7 @@ const (
 	multicastAddr = "239.12.255.254:9522"
 	udpBufferSize = 8192
 
+	msgSerial     = 20 // start of serial in preamble
 	msgPreamble   = 28 // preamble size in bytes
 	msgCodeLength = 4  // length in bytes
 
@@ -146,7 +147,7 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		}
 	}
 
-	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(b[20:24])), 10)
+	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(b[msgSerial:])), 10)
 
 	msg := Telegram{
 		Addr:   src.IP.String(),
