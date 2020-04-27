@@ -11,6 +11,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -45,7 +46,7 @@ type audiBatteryResponse struct {
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
-	*api.HTTPHelper
+	*util.HTTPHelper
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
@@ -53,18 +54,18 @@ type Audi struct {
 }
 
 // NewAudiFromConfig creates a new vehicle
-func NewAudiFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
+func NewAudiFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title               string
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	v := &Audi{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("audi")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("audi")),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,

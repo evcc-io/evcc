@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 // HTTP testing appproach from http://hassansin.github.io/Unit-Testing-http-client-in-Go
@@ -36,7 +37,7 @@ func NewTestClient(fn roundTripFunc) *http.Client {
 // NewTestMobileConnect .
 func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect {
 	mcc := &MobileConnect{
-		HTTPHelper:   api.NewHTTPHelper(nil),
+		HTTPHelper:   util.NewHTTPHelper(nil),
 		uri:          "http://192.168.1.1",
 		password:     "none",
 		token:        "token",

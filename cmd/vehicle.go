@@ -6,6 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,7 +23,7 @@ func init() {
 }
 
 func runVehicle(cmd *cobra.Command, args []string) {
-	configureLogging()
+	util.LogLevel(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config

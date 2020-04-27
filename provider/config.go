@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -34,13 +34,13 @@ type scriptConfig struct {
 // MQTT singleton
 var MQTT *MqttClient
 
-func mqttFromConfig(log *api.Logger, other map[string]interface{}) mqttConfig {
+func mqttFromConfig(log *util.Logger, other map[string]interface{}) mqttConfig {
 	if MQTT == nil {
 		log.FATAL.Fatal("mqtt not configured")
 	}
 
 	var pc mqttConfig
-	api.DecodeOther(log, other, &pc)
+	util.DecodeOther(log, other, &pc)
 
 	if pc.Multiplier == 0 {
 		pc.Multiplier = 1
@@ -49,9 +49,9 @@ func mqttFromConfig(log *api.Logger, other map[string]interface{}) mqttConfig {
 	return pc
 }
 
-func scriptFromConfig(log *api.Logger, other map[string]interface{}) scriptConfig {
+func scriptFromConfig(log *util.Logger, other map[string]interface{}) scriptConfig {
 	var pc scriptConfig
-	api.DecodeOther(log, other, &pc)
+	util.DecodeOther(log, other, &pc)
 
 	if pc.Timeout == 0 {
 		pc.Timeout = execTimeout
@@ -61,7 +61,7 @@ func scriptFromConfig(log *api.Logger, other map[string]interface{}) scriptConfi
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
-func NewFloatGetterFromConfig(log *api.Logger, config Config) (res FloatGetter) {
+func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
@@ -82,7 +82,7 @@ func NewFloatGetterFromConfig(log *api.Logger, config Config) (res FloatGetter) 
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config
-func NewIntGetterFromConfig(log *api.Logger, config Config) (res IntGetter) {
+func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
@@ -103,7 +103,7 @@ func NewIntGetterFromConfig(log *api.Logger, config Config) (res IntGetter) {
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(log *api.Logger, config Config) (res StringGetter) {
+func NewStringGetterFromConfig(log *util.Logger, config Config) (res StringGetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
@@ -124,7 +124,7 @@ func NewStringGetterFromConfig(log *api.Logger, config Config) (res StringGetter
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(log *api.Logger, config Config) (res BoolGetter) {
+func NewBoolGetterFromConfig(log *util.Logger, config Config) (res BoolGetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
@@ -143,7 +143,7 @@ func NewBoolGetterFromConfig(log *api.Logger, config Config) (res BoolGetter) {
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(log *api.Logger, param string, config Config) (res IntSetter) {
+func NewIntSetterFromConfig(log *util.Logger, param string, config Config) (res IntSetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
@@ -159,7 +159,7 @@ func NewIntSetterFromConfig(log *api.Logger, param string, config Config) (res I
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(log *api.Logger, param string, config Config) (res BoolSetter) {
+func NewBoolSetterFromConfig(log *util.Logger, param string, config Config) (res BoolSetter) {
 	switch strings.ToLower(config.Type) {
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)

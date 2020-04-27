@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	log     = api.NewLogger("main")
+	log     = util.NewLogger("main")
 	cfgFile string
 )
 
@@ -114,17 +114,6 @@ func Execute() {
 	}
 }
 
-func configureLogging() {
-	level := viper.GetString("log")
-
-	api.OutThreshold = api.LogLevelToThreshold(level)
-	api.LogThreshold = api.OutThreshold
-
-	api.Loggers(func(name string, logger *api.Logger) {
-		logger.SetStdoutThreshold(api.OutThreshold)
-	})
-}
-
 // checkVersion validates if updates are available
 func checkVersion() {
 	githubTag := &latest.GithubTag{
@@ -161,12 +150,12 @@ func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	configureLogging()
+	util.LogLevel(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
-	configureLogging()
+	util.LogLevel(viper.GetString("log"))
 
 	go checkVersion()
 

@@ -3,6 +3,7 @@ package charger
 import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 )
 
 // Charger is an api.Charger implementation with configurable getters and setters.
@@ -14,9 +15,9 @@ type Charger struct {
 }
 
 // NewConfigurableFromConfig creates a new configurable charger
-func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	charger := NewConfigurable(
 		provider.NewStringGetterFromConfig(log, cc.Status),

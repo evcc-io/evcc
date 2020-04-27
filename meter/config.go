@@ -4,10 +4,11 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Meter {
+func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Meter {
 	var c api.Meter
 
 	switch strings.ToLower(typ) {

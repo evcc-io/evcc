@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	influxdb "github.com/influxdata/influxdb1-client/v2"
 )
 
@@ -18,7 +18,7 @@ const (
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log        *api.Logger
+	log        *util.Logger
 	client     influxdb.Client
 	points     []*influxdb.Point
 	pointsConf influxdb.BatchPointsConfig
@@ -33,7 +33,7 @@ func NewInfluxClient(
 	user string,
 	password string,
 ) *Influx {
-	log := api.NewLogger("iflx")
+	log := util.NewLogger("iflx")
 
 	if database == "" {
 		log.FATAL.Fatal("missing database")

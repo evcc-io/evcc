@@ -3,7 +3,7 @@ package push
 import (
 	"strings"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 // Sender implements message sending
@@ -16,18 +16,18 @@ type EventTemplate struct {
 	Title, Msg string
 }
 
-var log = api.NewLogger("push")
+var log = util.NewLogger("push")
 
 // NewMessengerFromConfig creates a new messenger
 func NewMessengerFromConfig(typ string, other map[string]interface{}) Sender {
 	switch strings.ToLower(typ) {
 	case "pushover":
 		var cc pushOverConfig
-		api.DecodeOther(log, other, &cc)
+		util.DecodeOther(log, other, &cc)
 		return NewPushOverMessenger(cc.App, cc.Recipients)
 	case "telegram":
 		var cc telegramConfig
-		api.DecodeOther(log, other, &cc)
+		util.DecodeOther(log, other, &cc)
 		return NewTelegramMessenger(cc.Token, cc.Chats)
 	}
 

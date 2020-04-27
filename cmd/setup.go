@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/util"
 	"github.com/spf13/viper"
 )
 
@@ -46,7 +46,7 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 
 	// decode slice into slice of maps
 	var lpm []map[string]interface{}
-	api.DecodeOther(log, lps, &lpm)
+	util.DecodeOther(log, lps, &lpm)
 
 	for _, lpc := range lpm {
 		lp := core.NewLoadPointFromConfig(log, cp, lpc)

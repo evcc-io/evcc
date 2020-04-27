@@ -1,5 +1,5 @@
 package wrapper
 
-import "github.com/andig/evcc/api"
+import "github.com/andig/evcc/util"
 
-var log = api.NewLogger("wrap")
+var log = util.NewLogger("wrap")

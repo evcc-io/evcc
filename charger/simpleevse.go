@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/grid-x/modbus"
 )
 
 // SimpleEVSE charger implementation
 type SimpleEVSE struct {
-	log     *api.Logger
+	log     *util.Logger
 	client  modbus.Client
 	handler modbus.ClientHandler
 }
@@ -22,16 +23,16 @@ const (
 )
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
-func NewSimpleEVSEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewSimpleEVSEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI, Device string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewSimpleEVSE(cc.URI, cc.Device)
 }
 
 // NewSimpleEVSE creates SimpleEVSE charger
 func NewSimpleEVSE(conn, device string) api.Charger {
-	log := api.NewLogger("evse")
+	log := util.NewLogger("evse")
 
 	var handler modbus.ClientHandler
 	if conn != "" && device != "" {

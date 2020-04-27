@@ -9,6 +9,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/util"
 	"github.com/pkg/errors"
 
 	evbus "github.com/asaskevich/EventBus"
@@ -98,9 +99,9 @@ type configProvider interface {
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
-func NewLoadPointFromConfig(log *api.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
+func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
 	lp := NewLoadPoint()
-	api.DecodeOther(log, other, &lp)
+	util.DecodeOther(log, other, &lp)
 
 	if lp.ChargerRef != "" {
 		lp.charger = cp.Charger(lp.ChargerRef)

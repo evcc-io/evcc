@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -85,13 +85,13 @@ type Telegram struct {
 // Listener for receiving SMA multicast data packages
 type Listener struct {
 	mux     sync.Mutex
-	log     *api.Logger
+	log     *util.Logger
 	conn    *net.UDPConn
 	clients map[string]chan<- Telegram
 }
 
 // New creates a Listener
-func New(log *api.Logger, addr string) *Listener {
+func New(log *util.Logger, addr string) *Listener {
 	// Parse the string address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/meter/sma"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -16,7 +17,7 @@ const (
 
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
-	log     *api.Logger
+	log     *util.Logger
 	uri     string
 	power   float64
 	updated time.Time
@@ -26,18 +27,18 @@ type SMA struct {
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
-func NewSMAFromConfig(log *api.Logger, other map[string]interface{}) api.Meter {
+func NewSMAFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
 	sm := struct {
 		URI string
 	}{}
-	api.DecodeOther(log, other, &sm)
+	util.DecodeOther(log, other, &sm)
 
 	return NewSMA(sm.URI)
 }
 
 // NewSMA creates a SMA Meter
 func NewSMA(uri string) *SMA {
-	log := api.NewLogger("sma ")
+	log := util.NewLogger("sma ")
 
 	sm := &SMA{
 		log:  log,

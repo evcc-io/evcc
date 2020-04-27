@@ -5,6 +5,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 
 	"github.com/joeshaw/carwings"
 )
@@ -17,14 +18,14 @@ type Nissan struct {
 }
 
 // NewNissanFromConfig creates a new vehicle
-func NewNissanFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
+func NewNissanFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title                  string
 		Capacity               int64
 		User, Password, Region string
 		Cache                  time.Duration
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	if cc.Region == "" {
 		cc.Region = carwings.RegionEurope

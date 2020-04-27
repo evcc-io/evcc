@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -56,7 +57,7 @@ type MCCCurrentCableInformation struct {
 
 // MobileConnect charger supporting devices from Audi, Bentley, Porsche
 type MobileConnect struct {
-	*api.HTTPHelper
+	*util.HTTPHelper
 	uri              string
 	password         string
 	token            string
@@ -66,9 +67,9 @@ type MobileConnect struct {
 }
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config
-func NewMobileConnectFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewMobileConnectFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI, Password string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewMobileConnect(cc.URI, cc.Password)
 }
@@ -76,7 +77,7 @@ func NewMobileConnectFromConfig(log *api.Logger, other map[string]interface{}) a
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) *MobileConnect {
 	mcc := &MobileConnect{
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("mcc ")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("mcc ")),
 		uri:        strings.TrimRight(uri, "/"),
 		password:   password,
 	}

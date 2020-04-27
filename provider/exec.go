@@ -8,13 +8,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/kballard/go-shellquote"
 )
 
 // Script implements shell script-based providers and setters
 type Script struct {
-	log     *api.Logger
+	log     *util.Logger
 	timeout time.Duration
 }
 
@@ -22,7 +22,7 @@ type Script struct {
 // Script execution is aborted after given timeout.
 func NewScriptProvider(timeout time.Duration) *Script {
 	return &Script{
-		log:     api.NewLogger("exec"),
+		log:     util.NewLogger("exec"),
 		timeout: timeout,
 	}
 }
@@ -103,7 +103,7 @@ func (e *Script) BoolGetter(script string) BoolGetter {
 			return false, err
 		}
 
-		return truish(s), nil
+		return util.Truish(s), nil
 	}
 }
 
@@ -111,7 +111,7 @@ func (e *Script) BoolGetter(script string) BoolGetter {
 func (e *Script) IntSetter(param, script string) IntSetter {
 	// return func to access cached value
 	return func(i int64) error {
-		cmd, err := replaceFormatted(script, map[string]interface{}{
+		cmd, err := util.ReplaceFormatted(script, map[string]interface{}{
 			param: i,
 		})
 		if err != nil {
@@ -131,7 +131,7 @@ func (e *Script) IntSetter(param, script string) IntSetter {
 func (e *Script) BoolSetter(param, script string) BoolSetter {
 	// return func to access cached value
 	return func(b bool) error {
-		cmd, err := replaceFormatted(script, map[string]interface{}{
+		cmd, err := util.ReplaceFormatted(script, map[string]interface{}{
 			param: b,
 		})
 		if err != nil {

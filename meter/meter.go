@@ -3,6 +3,7 @@ package meter
 import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 )
 
 // CompositeMeter decorates a Meter with MeterEnergy.
@@ -12,12 +13,12 @@ type CompositeMeter struct {
 }
 
 // NewConfigurableFromConfig creates api.Meter from config
-func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) api.Meter {
+func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
 	cc := struct {
 		Power  provider.Config
 		Energy *provider.Config // optional
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	m := NewConfigurable(provider.NewFloatGetterFromConfig(log, cc.Power))
 

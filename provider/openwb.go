@@ -2,17 +2,18 @@ package provider
 
 import (
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 type openWBStatusProvider struct {
 	plugged, charging BoolGetter
 }
 
-func openWBStatusFromConfig(log *api.Logger, other map[string]interface{}) StringGetter {
+func openWBStatusFromConfig(log *util.Logger, other map[string]interface{}) StringGetter {
 	cc := struct {
 		Plugged, Charging Config
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	o := &openWBStatusProvider{
 		plugged:  NewBoolGetterFromConfig(log, cc.Plugged),

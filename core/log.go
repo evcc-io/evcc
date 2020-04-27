@@ -1,5 +1,5 @@
 package core
 
-import "github.com/andig/evcc/api"
+import "github.com/andig/evcc/util"
 
-var log = api.NewLogger("load")
+var log = util.NewLogger("load")

@@ -3,13 +3,13 @@ package provider
 import (
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 )
 
 // Cached wraps a getter with a cache
 type Cached struct {
-	log     *api.Logger
+	log     *util.Logger
 	clock   clock.Clock
 	updated time.Time
 	cache   time.Duration
@@ -18,7 +18,7 @@ type Cached struct {
 }
 
 // NewCached wraps a getter with a cache
-func NewCached(log *api.Logger, getter interface{}, cache time.Duration) *Cached {
+func NewCached(log *util.Logger, getter interface{}, cache time.Duration) *Cached {
 	return &Cached{
 		log:    log,
 		clock:  clock.New(),
