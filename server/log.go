@@ -1,5 +1,5 @@
 package server
 
-import "github.com/andig/evcc/api"
+import "github.com/andig/evcc/util"
 
-var log = api.NewLogger("srvr")
+var log = util.NewLogger("srvr")

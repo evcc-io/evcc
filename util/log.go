@@ -1,4 +1,4 @@
-package api
+package util
 
 import (
 	"io/ioutil"
@@ -37,6 +37,16 @@ func Loggers(cb func(string, *Logger)) {
 	for name, logger := range loggers {
 		cb(name, logger)
 	}
+}
+
+// LogLevel sets log level for all loggers
+func LogLevel(level string) {
+	OutThreshold = LogLevelToThreshold(level)
+	LogThreshold = OutThreshold
+
+	Loggers(func(name string, logger *Logger) {
+		logger.SetStdoutThreshold(OutThreshold)
+	})
 }
 
 // LogLevelToThreshold converts log level string to a jww Threshold

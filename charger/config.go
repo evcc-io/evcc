@@ -4,12 +4,13 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 type apiFunction string
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Charger {
+func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Charger {
 	var c api.Charger
 
 	switch strings.ToLower(typ) {

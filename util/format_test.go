@@ -1,4 +1,4 @@
-package provider
+package util
 
 import (
 	"math"
@@ -20,7 +20,7 @@ func TestTruish(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		b := truish(c.k)
+		b := Truish(c.k)
 		if b != c.v {
 			t.Errorf("expected %v got %v", c.v, b)
 		}
@@ -39,7 +39,7 @@ func TestReplace(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		s, err := replaceFormatted(c.fmt, map[string]interface{}{
+		s, err := ReplaceFormatted(c.fmt, map[string]interface{}{
 			c.k: c.v,
 		})
 
@@ -50,7 +50,7 @@ func TestReplace(t *testing.T) {
 }
 
 func TestReplaceMulti(t *testing.T) {
-	s, err := replaceFormatted("${foo}-${bar}", map[string]interface{}{
+	s, err := ReplaceFormatted("${foo}-${bar}", map[string]interface{}{
 		"foo": "bar",
 		"bar": "baz",
 	})
@@ -61,7 +61,7 @@ func TestReplaceMulti(t *testing.T) {
 }
 
 func TestReplaceNoMatch(t *testing.T) {
-	s, err := replaceFormatted("${foo}", map[string]interface{}{
+	s, err := ReplaceFormatted("${foo}", map[string]interface{}{
 		"bar": "baz",
 	})
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/grid-x/modbus"
 )
 
@@ -27,19 +28,19 @@ const (
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
-	log     *api.Logger
+	log     *util.Logger
 	client  modbus.Client
 	handler *modbus.TCPClientHandler
 	factor  int64
 }
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(log *api.Logger, other map[string]interface{}) *Wallbe {
+func NewWallbeFromConfig(log *util.Logger, other map[string]interface{}) *Wallbe {
 	cc := struct {
 		URI    string
 		Legacy bool
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	wb := NewWallbe(cc.URI)
 
@@ -64,7 +65,7 @@ func NewWallbe(conn string) *Wallbe {
 	handler.ProtocolRecoveryTimeout = protocolTimeout
 
 	wb := &Wallbe{
-		log:     api.NewLogger("wlbe"),
+		log:     util.NewLogger("wlbe"),
 		client:  client,
 		handler: handler,
 		factor:  10,

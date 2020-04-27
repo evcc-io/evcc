@@ -1,5 +1,18 @@
 package push
 
+import "github.com/andig/evcc/util"
+
+// Event is a notification event
+type Event struct {
+	Event      string
+	Attributes map[string]interface{}
+}
+
+// apply applies the event template to the content to produce the actual message
+func (e Event) apply(template string) (string, error) {
+	return util.ReplaceFormatted(template, e.Attributes)
+}
+
 // Hub subscribes to event notifications and sends them to client devices
 type Hub struct {
 	definitions map[string]EventTemplate

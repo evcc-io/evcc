@@ -5,6 +5,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 	"github.com/jsgoecke/tesla"
 )
 
@@ -17,7 +18,7 @@ type Tesla struct {
 }
 
 // NewTeslaFromConfig creates a new Tesla vehicle
-func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
+func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title                  string
 		Capacity               int64
@@ -26,7 +27,7 @@ func NewTeslaFromConfig(log *api.Logger, other map[string]interface{}) api.Vehic
 		VIN                    string
 		Cache                  time.Duration
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	client, err := tesla.NewClient(&tesla.Auth{
 		ClientID:     cc.ClientID,

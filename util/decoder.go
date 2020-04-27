@@ -1,4 +1,4 @@
-package api
+package util
 
 import (
 	"github.com/mitchellh/mapstructure"

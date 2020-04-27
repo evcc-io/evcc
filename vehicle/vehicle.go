@@ -5,6 +5,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 )
 
 type embed struct {
@@ -29,14 +30,14 @@ type Vehicle struct {
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
-func NewConfigurableFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
+func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title    string
 		Capacity int64
 		Charge   provider.Config
 		Cache    time.Duration
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	getter := provider.NewFloatGetterFromConfig(log, cc.Charge)
 	if cc.Cache > 0 {

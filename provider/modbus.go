@@ -4,7 +4,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -12,7 +12,7 @@ import (
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log     *api.Logger
+	log     *util.Logger
 	conn    meters.Connection
 	device  meters.Device
 	slaveID uint8
@@ -35,14 +35,14 @@ func modbusConnection(key string, newConn meters.Connection) meters.Connection {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface{}) *Modbus {
+func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interface{}) *Modbus {
 	cc := struct {
 		URI, Device, Comset string
 		Meter, Value        string
 		Baudrate            int
 		ID                  uint8
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	var conn meters.Connection
 	var device meters.Device
@@ -62,7 +62,7 @@ func NewModbusFromConfig(log *api.Logger, typ string, other map[string]interface
 		log.FATAL.Fatalf("invalid provider type %s", typ)
 	}
 
-	log = api.NewLogger("modb")
+	log = util.NewLogger("modb")
 	conn.Logger(log.TRACE)
 
 	// prepare device

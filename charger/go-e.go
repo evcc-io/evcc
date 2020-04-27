@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -26,14 +27,14 @@ type goeStatusResponse struct {
 
 // GoE charger implementation
 type GoE struct {
-	*api.HTTPHelper
+	*util.HTTPHelper
 	uri string
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
-func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewGoE(cc.URI)
 }
@@ -41,7 +42,7 @@ func NewGoEFromConfig(log *api.Logger, other map[string]interface{}) api.Charger
 // NewGoE creates GoE charger
 func NewGoE(URI string) *GoE {
 	c := &GoE{
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("go-e")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("go-e")),
 		uri:        strings.TrimRight(URI, "/"),
 	}
 

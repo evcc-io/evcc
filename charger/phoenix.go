@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/grid-x/modbus"
 )
 
@@ -18,22 +19,22 @@ const (
 // Phoenix is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Phoenix struct {
-	log     *api.Logger
+	log     *util.Logger
 	client  modbus.Client
 	handler *modbus.TCPClientHandler
 }
 
 // NewPhoenixFromConfig creates a Phoenix charger from generic config
-func NewPhoenixFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewPhoenixFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewPhoenix(cc.URI)
 }
 
 // NewPhoenix creates a Phoenix charger
 func NewPhoenix(conn string) api.Charger {
-	log := api.NewLogger("phoe")
+	log := util.NewLogger("phoe")
 	if conn == "" {
 		log.FATAL.Fatal("missing connection")
 	}

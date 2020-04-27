@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -43,14 +44,14 @@ type EVSEListEntry struct {
 
 // EVSEWifi charger implementation
 type EVSEWifi struct {
-	*api.HTTPHelper
+	*util.HTTPHelper
 	uri string
 }
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
-func NewEVSEWifiFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewEVSEWifiFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ URI string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewEVSEWifi(cc.URI)
 }
@@ -58,7 +59,7 @@ func NewEVSEWifiFromConfig(log *api.Logger, other map[string]interface{}) api.Ch
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) api.Charger {
 	evse := &EVSEWifi{
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("wifi")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
 		uri:        strings.TrimRight(uri, "/") + "/",
 	}
 

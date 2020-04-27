@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -18,7 +18,7 @@ const (
 
 // MqttClient is a paho publisher
 type MqttClient struct {
-	log      *api.Logger
+	log      *util.Logger
 	mux      sync.Mutex
 	Client   mqtt.Client
 	broker   string
@@ -34,7 +34,7 @@ func NewMqttClient(
 	clientID string,
 	qos byte,
 ) *MqttClient {
-	log := api.NewLogger("mqtt")
+	log := util.NewLogger("mqtt")
 	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
 	mc := &MqttClient{
@@ -160,7 +160,7 @@ func (m *MqttClient) formatValue(param, message string, v interface{}) (string, 
 		return fmt.Sprintf("%v", v), nil
 	}
 
-	return replaceFormatted(message, map[string]interface{}{
+	return util.ReplaceFormatted(message, map[string]interface{}{
 		param: v,
 	})
 }
@@ -213,7 +213,7 @@ func (m *MqttClient) WaitForToken(token mqtt.Token) {
 }
 
 type msgHandler struct {
-	log        *api.Logger
+	log        *util.Logger
 	once       sync.Once
 	mux        sync.Mutex
 	updated    time.Time
@@ -292,5 +292,5 @@ func (h *msgHandler) boolGetter() (bool, error) {
 		return false, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
-	return truish(string(h.payload)), nil
+	return util.Truish(string(h.payload)), nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 const (
@@ -58,16 +59,16 @@ type NRGDeviceMetadata struct {
 
 // NRGKick charger implementation
 type NRGKick struct {
-	*api.HTTPHelper
+	*util.HTTPHelper
 	IP         string
 	MacAddress string
 	Password   string
 }
 
 // NewNRGKickFromConfig creates a NRGKick charger from generic config
-func NewNRGKickFromConfig(log *api.Logger, other map[string]interface{}) api.Charger {
+func NewNRGKickFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ IP, MacAddress, Password string }{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	return NewNRGKick(cc.IP, cc.MacAddress, cc.Password)
 }
@@ -75,7 +76,7 @@ func NewNRGKickFromConfig(log *api.Logger, other map[string]interface{}) api.Cha
 // NewNRGKick creates NRGKick charger
 func NewNRGKick(IP, MacAddress, Password string) *NRGKick {
 	nrg := &NRGKick{
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("kick")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("kick")),
 		IP:         IP,
 		MacAddress: MacAddress,
 		Password:   Password,

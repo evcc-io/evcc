@@ -4,10 +4,11 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 )
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(log *api.Logger, typ string, other map[string]interface{}) api.Vehicle {
+func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Vehicle {
 	var c api.Vehicle
 
 	switch strings.ToLower(typ) {
