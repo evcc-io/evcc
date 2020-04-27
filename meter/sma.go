@@ -80,16 +80,22 @@ func (sm *SMA) receive() {
 			continue
 		}
 
-		powerIn, ok1 := msg.Data[sma.ObisImportPower]
-		powerOut, ok2 := msg.Data[sma.ObisExportPower]
+		var powerIn, powerOut float64
+		var ok bool
 
-		if ok1 || ok2 {
-			sm.lastUpdate = time.Now()
-			if powerOut > 0 {
-				sm.power = -powerOut
-			} else {
-				sm.power = powerIn
-			}
+		if powerIn, ok = msg.Data[sma.ObisImportPower]; ok == false {
+			continue
+		}
+
+		if powerOut, ok = msg.Data[sma.ObisExportPower]; ok == false {
+			continue
+		}
+
+		sm.lastUpdate = time.Now()
+		if powerOut > 0 {
+			sm.power = -powerOut
+		} else {
+			sm.power = powerIn
 		}
 	}
 }
