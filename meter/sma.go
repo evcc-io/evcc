@@ -91,18 +91,22 @@ func (sm *SMA) receive() {
 			continue
 		}
 
+		sm.mux.Lock()
 		sm.lastUpdate = time.Now()
 		if powerOut > 0 {
 			sm.power = -powerOut
 		} else {
 			sm.power = powerIn
 		}
+		sm.mux.Unlock()
 	}
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	sm.once.Do(sm.waitForInitialValue)
+	sm.mux.Lock()
+	defer sm.mux.Unlock()
 
 	if time.Since(sm.lastUpdate) > udpTimeout {
 		return 0, errors.New("recv timeout")

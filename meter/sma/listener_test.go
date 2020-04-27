@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestListener_processUDPData(t *testing.T) {
+func TestListenerProcessUDPData(t *testing.T) {
 	tests := []struct {
 		name     string
 		ip       net.IP

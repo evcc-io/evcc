@@ -121,31 +121,47 @@ func (l *Listener) processUDPData(src *net.UDPAddr, buffer []byte) (TelegramData
 		return TelegramData{}, errors.New("received data package is too small")
 	}
 
-	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(buffer[20:24])), 10)
-
 	obisCodeValues := make(map[string]float64)
 
+	// yes this doesn't look nice, but keeping it until we found a better way to parse the data
 	// read obis code values, start at position 28, after initial static stuff
 	for i := 28; i < numBytes; i++ {
 		if i+obisCodeLength > numBytes-1 {
 			break
 		}
-		if obisCode, element, err := getObisCodeElement(buffer[i : i+obisCodeLength]); err == nil {
-			dataIndex := i + obisCodeLength
 
-			var value float64
-			switch element.length {
-			case 4:
-				value = float64(binary.BigEndian.Uint32(buffer[dataIndex : dataIndex+element.length+1]))
-			case 8:
-				value = float64(binary.BigEndian.Uint64(buffer[dataIndex : dataIndex+element.length+1]))
-			}
+		// create the string notation of the potential obis code
+		b := buffer[i : i+obisCodeLength]
 
-			obisCodeValues[obisCode] = value * element.factor
-
-			i = dataIndex + element.length - 1
+		// Spec says value should be 1, but reading contains 0
+		b3 := b[0]
+		if b3 == 0 {
+			b3 = 1
 		}
+
+		code := fmt.Sprintf("%d:%d.%d.%d", b3, b[1], b[2], b[3])
+
+		element, ok := knownObisCodes[code]
+		if !ok {
+			continue
+		}
+
+		dataIndex := i + obisCodeLength
+
+		var value float64
+		switch element.length {
+		case 4:
+			value = float64(binary.BigEndian.Uint32(buffer[dataIndex : dataIndex+element.length+1]))
+		case 8:
+			value = float64(binary.BigEndian.Uint64(buffer[dataIndex : dataIndex+element.length+1]))
+		}
+
+		obisCodeValues[code] = value * element.factor
+
+		i = dataIndex + element.length - 1
 	}
+
+	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(buffer[20:24])), 10)
 
 	msg := TelegramData{
 		Addr:   src.IP.String(),
@@ -171,7 +187,6 @@ func (l *Listener) listen() {
 			l.send(msg)
 		}
 	}
-
 }
 
 // Subscribe adds a client address and message channel
@@ -200,26 +215,4 @@ func (l *Listener) send(msg TelegramData) {
 			break
 		}
 	}
-}
-
-// getObisCodeElement parses the OBIS code from a set of bytes
-func getObisCodeElement(value []byte) (string, obisCodeProp, error) {
-	b0 := value[3]
-	b1 := value[2]
-	b2 := value[1]
-	b3 := value[0]
-
-	// Spec says value should be 1, but reading contains 0
-	if b3 == 0 {
-		b3 = 1
-	}
-
-	code := fmt.Sprintf("%d:%d.%d.%d", b3, b2, b1, b0)
-	var element obisCodeProp = knownObisCodes[code]
-
-	if element.length > 0 {
-		return code, element, nil
-	}
-
-	return "", obisCodeProp{}, errors.New("no obis code found")
 }
