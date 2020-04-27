@@ -13,7 +13,7 @@ func TestListenerProcessUDPData(t *testing.T) {
 		port     int
 		response []byte
 		wantErr  bool
-		want     TelegramData
+		want     Telegram
 	}{
 		{
 			"SMA Home Manager - success",
@@ -60,7 +60,7 @@ func TestListenerProcessUDPData(t *testing.T) {
 				0x00, 0x00, 0x00, 0x1e, 0x90, 0x00, 0x00, 0x00, 0x02, 0x03, 0x05, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			TelegramData{
+			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
 				Data: map[string]float64{
@@ -144,7 +144,7 @@ func TestListenerProcessUDPData(t *testing.T) {
 				0x02, 0x00, 0x12, 0x52, 0x00, 0x00, 0x00, 0x00,
 			},
 			false,
-			TelegramData{
+			Telegram{
 				Addr:   "192.168.1.4",
 				Serial: "0",
 				Data: map[string]float64{
