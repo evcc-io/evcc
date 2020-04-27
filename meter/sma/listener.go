@@ -128,7 +128,7 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 	obisValues := make(map[string]float64)
 
 	var obisDef obisDefinition
-	for i := msgPreamble; i < numBytes-msgCodeLength; i = i + msgCodeLength + obisDef.length {
+	for i := msgPreamble; i < numBytes-msgCodeLength; i += msgCodeLength + obisDef.length {
 		// spec says value should be 1, but reading contains 0
 		b0 := b[i+0]
 		if b0 == 0 {
