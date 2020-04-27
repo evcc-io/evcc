@@ -84,13 +84,14 @@ func (sm *SMA) receive() {
 
 		if power, ok := msg.Values[sma.ObisExportPower]; ok {
 			sm.power = -power
+			sm.lastUpdate = time.Now()
 		} else if power, ok := msg.Values[sma.ObisImportPower]; ok {
 			sm.power = power
+			sm.lastUpdate = time.Now()
 		} else {
 			sm.log.WARN.Println("missing obis for import/export power")
 		}
 
-		sm.lastUpdate = time.Now()
 		sm.mux.Unlock()
 	}
 }
