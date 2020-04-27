@@ -2,6 +2,7 @@ package meter
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -9,15 +10,19 @@ import (
 )
 
 const (
-	udpTimeout = 10 * time.Second
+	udpTimeout  = 10 * time.Second
+	waitTimeout = 50 * time.Millisecond // interval when waiting for initial value
 )
 
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
+	log        *api.Logger
 	uri        string
 	power      float64
 	lastUpdate time.Time
 	recv       chan sma.TelegramData
+	mux        sync.Mutex
+	once       sync.Once
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
@@ -35,6 +40,7 @@ func NewSMA(uri string) *SMA {
 	log := api.NewLogger("sma ")
 
 	sm := &SMA{
+		log:  log,
 		uri:  uri,
 		recv: make(chan sma.TelegramData),
 	}
@@ -45,10 +51,26 @@ func NewSMA(uri string) *SMA {
 
 	sma.Instance.Subscribe(uri, sm.recv)
 
-	sm.lastUpdate = time.Now()
 	go sm.receive()
 
 	return sm
+}
+
+// waitForInitialValue makes sure we don't start with an error
+func (sm *SMA) waitForInitialValue() {
+	sm.mux.Lock()
+	defer sm.mux.Unlock()
+
+	if sm.lastUpdate.IsZero() {
+		sm.log.TRACE.Print("sma is waiting for initial value")
+
+		// wait for initial update
+		for sm.lastUpdate.IsZero() {
+			sm.mux.Unlock()
+			time.Sleep(waitTimeout)
+			sm.mux.Lock()
+		}
+	}
 }
 
 // receive processes the channel message containing the multicast data
@@ -74,6 +96,8 @@ func (sm *SMA) receive() {
 
 // CurrentPower implements the Meter.CurrentPower interface
 func (sm *SMA) CurrentPower() (float64, error) {
+	sm.once.Do(sm.waitForInitialValue)
+
 	if time.Since(sm.lastUpdate) > udpTimeout {
 		return 0, errors.New("recv timeout")
 	}
