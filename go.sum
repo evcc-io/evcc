@@ -260,6 +260,8 @@ github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/volkszaehler/mbmd v0.0.0-20200425162258-8528afbf6802 h1:F9nAK3ctHkvBM3Dg6Ov7JLyJCLCDGXXIClpb7ZDwRyI=
 github.com/volkszaehler/mbmd v0.0.0-20200425162258-8528afbf6802/go.mod h1:9tE184AIdCL9o9u+nOc2fWJ64NED05Rc63CrLRbDLw0=
+github.com/volkszaehler/mbmd v0.0.0-20200427071855-e83718d438c1 h1:uC/JWhovJ4Hb1a2wBUqrEJKkKekWjfbiCfozph7iNgk=
+github.com/volkszaehler/mbmd v0.0.0-20200427071855-e83718d438c1/go.mod h1:9tE184AIdCL9o9u+nOc2fWJ64NED05Rc63CrLRbDLw0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

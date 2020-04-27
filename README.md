@@ -245,7 +245,7 @@ id: 3
 value: power
 ```
 
-Supported meter types are all supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
+Supported meter models are the same as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
 
 - RTU:
   - `ABB` ABB A/B-Series meters

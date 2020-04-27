@@ -91,8 +91,8 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 		log.FATAL.Fatal(err)
 	}
 
-	measurement := meters.UnStringMeasurement(cc.Value)
-	if measurement == 0 {
+	measurement, err := meters.MeasurementString(cc.Value)
+	if err != nil {
 		log.FATAL.Fatalf("invalid measurement %s", cc.Value)
 	}
 

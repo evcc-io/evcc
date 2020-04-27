@@ -49,10 +49,11 @@ type Modbus struct {
 	conn    meters.Connection
 	device  meters.Device
 	slaveID uint8
+	op      rs485.Operation
 }
 
 // floatGetter executes configured modbus read operation and implements provider.FloatGetter
-func (m *Modbus) floatGetter(m meters.Measurement) (float64, error) {
+func (m *Modbus) floatGetter(measurement meters.Measurement) (float64, error) {
 	m.conn.Slave(m.slaveID)
 
 	var res meters.MeasurementResult
@@ -63,7 +64,7 @@ func (m *Modbus) floatGetter(m meters.Measurement) (float64, error) {
 	}
 
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
-		res, err = dev.QueryOp(m.conn.ModbusClient(), m)
+		res, err = dev.QueryOp(m.conn.ModbusClient(), measurement)
 	}
 
 	if err == nil {

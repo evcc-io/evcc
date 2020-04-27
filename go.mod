@@ -26,7 +26,7 @@ require (
 	github.com/spf13/viper v1.6.3
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
-	github.com/volkszaehler/mbmd v0.0.0-20200425162258-8528afbf6802
+	github.com/volkszaehler/mbmd v0.0.0-20200427071855-e83718d438c1
 	golang.org/x/crypto v0.0.0-20200403201458-baeed622b8d8 // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
