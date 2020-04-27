@@ -117,6 +117,10 @@ func New(log *api.Logger, addr string) *Listener {
 func (l *Listener) processUDPData(src *net.UDPAddr, buffer []byte) (TelegramData, error) {
 	numBytes := len(buffer)
 
+	if numBytes < 29 {
+		return TelegramData{}, errors.New("received data package is too small")
+	}
+
 	serial := strconv.FormatUint(uint64(binary.BigEndian.Uint32(buffer[20:24])), 10)
 
 	obisCodeValues := make(map[string]float64)
