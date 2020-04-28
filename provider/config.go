@@ -63,6 +63,11 @@ func scriptFromConfig(log *util.Logger, other map[string]interface{}) scriptConf
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter) {
 	switch strings.ToLower(config.Type) {
+	case "http":
+		res = NewHTTPProviderFromConfig(log, config.Other).FloatGetter
+		if pc.Cache > 0 {
+			res = NewCached(log, res, pc.Cache).FloatGetter()
+		}
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
 		res = MQTT.FloatGetter(pc.Topic, pc.Multiplier, pc.Timeout)
