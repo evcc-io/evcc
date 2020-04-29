@@ -182,7 +182,18 @@ chargers:
 
 Meters provide data about power and energy consumption. Available meter implementations are:
 
-- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices)
+- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use:
+
+  ```yaml
+  - name: pv
+    type: modbus
+    model: sdm
+    uri: rs485.fritz.box:23
+    id: 2
+    power: PowerL1
+    energy: Export
+  ```
+
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 
 ### Vehicle
@@ -242,7 +253,7 @@ type: ...
 uri/device: ...
 model: sdm
 id: 3
-value: power
+value: Power
 ```
 
 Supported meter models are the same as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
