@@ -63,12 +63,12 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 
 	// power reading
 	if cc.Power == "" {
-		cc.Power = "power"
+		cc.Power = "Power"
 	}
 
 	powerM, err := meters.MeasurementString(cc.Power)
 	if err != nil {
-		log.FATAL.Fatalf("invalid power measurement %s", cc.Power)
+		log.FATAL.Fatalf("invalid measurement for power: %s", cc.Power)
 	}
 
 	// for RS485 check if producer supports the measurement
@@ -77,18 +77,18 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 		m.opPower = modbus.RS485FindDeviceOp(dev, powerM)
 
 		if m.opPower.IEC61850 == 0 {
-			log.FATAL.Fatalf("unsupported power value: %s", cc.Power)
+			log.FATAL.Fatalf("unsupported measurement for power: %s", cc.Power)
 		}
 	}
 
 	// energy reading
 	if cc.Energy == "" {
-		cc.Energy = "sum"
+		cc.Energy = "Sum"
 	}
 
 	energyM, err := meters.MeasurementString(cc.Energy)
 	if err != nil {
-		log.FATAL.Fatalf("invalid energy measurement %s", cc.Energy)
+		log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Energy)
 	}
 
 	// for RS485 check if producer supports the measurement
@@ -97,7 +97,7 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 		m.opEnergy = modbus.RS485FindDeviceOp(dev, energyM)
 
 		if m.opEnergy.IEC61850 == 0 {
-			log.FATAL.Fatalf("unsupported energy value: %s", cc.Energy)
+			log.FATAL.Fatalf("unsupported measurement for energy: %s", cc.Energy)
 		}
 	}
 

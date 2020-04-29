@@ -9,6 +9,7 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+// Connection contains the ModBus connection configuration
 type Connection struct {
 	ID                  uint8
 	URI, Device, Comset string
@@ -18,7 +19,7 @@ type Connection struct {
 
 var connections map[string]meters.Connection
 
-func modbusConnection(key string, newConn meters.Connection) meters.Connection {
+func registeredConnection(key string, newConn meters.Connection) meters.Connection {
 	if connections == nil {
 		connections = make(map[string]meters.Connection)
 	}
@@ -34,14 +35,14 @@ func modbusConnection(key string, newConn meters.Connection) meters.Connection {
 // NewConnection creates physical modbus device from config
 func NewConnection(log *util.Logger, uri, device, comset string, baudrate int, rtu bool) (conn meters.Connection) {
 	if device != "" {
-		conn = modbusConnection(device, meters.NewRTU(device, baudrate, comset))
+		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
 
 	if uri != "" {
 		if rtu {
-			conn = modbusConnection(uri, meters.NewRTUOverTCP(uri))
+			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		} else {
-			conn = modbusConnection(uri, meters.NewTCP(uri))
+			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
 	}
 
@@ -77,6 +78,7 @@ func IsRS485(model string) bool {
 	return false
 }
 
+// RS485FindDeviceOp checks is RS485 device supports operation
 func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op rs485.Operation) {
 	ops := device.Producer().Produce()
 
