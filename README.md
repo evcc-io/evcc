@@ -36,6 +36,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT](#mqtt-readwrite)
   - [Script](#script-readwrite)
   - [Combined status](#combined-status-read-only)
+- [Developer](#developer)
 - [Background](#background)
 
 ## Installation
@@ -114,18 +115,7 @@ EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*.
 
 ### Charger
 
-Charger is responsible for handling EV state and adjusting charge current:
-
-- `Status()`: get charge controller status (`A...F`)
-- `Enabled()`: get charger availability
-- `Enable(bool)`: set charger availability
-- `MaxCurrent(int)`: set maximum allowed charge current in A
-
-Optionally, charger can also provide:
-
-- `CurrentPower()`: power in W (used if charge meter is not present)
-
-Available charger implementations are:
+Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
 
 - `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `phoenix`: chargers with Phoenix EM-CP-PP-ETH controllers
@@ -190,28 +180,11 @@ chargers:
 
 ### Meter
 
-Meters provide data about power and energy consumption:
-
-- `CurrentPower()`: power in W
-- `TotalEnergy()`: energy in kWh (optional)
-
-Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by [plugin](#plugins).
+Meters provide data about power and energy consumption. Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by [plugin](#plugins).
 
 ### Vehicle
 
-Vehicle represents a specific EV vehicle and its battery:
-
-- `Title()`: vehicle name for display in the configuration UI
-- `Capacity()`: battery capacity in kWh
-- `ChargeState()`: state of charge in %
-
-Optionally, vehicles can also provide:
-
-- `CurrentPower()`: charge power in W (used if charge meter not present)
-- `ChargedEnergy()`: charged energy in kWh
-- `ChargeDuration()`: charge duration
-
-If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
+Vehicle represents a specific EV vehicle and its battery. If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 
 Available vehicle implementations are:
 
@@ -337,6 +310,38 @@ charging:
   type: mqtt
   topic: openWB/lp/1/boolChargeStat
 ```
+
+## Developer
+
+EVCC has the following internal API. The full documentation is available in GoDoc format in https://pkg.go.dev/github.com/andig/evcc/api.
+
+### Charger API
+
+- `Status()`: get charge controller status (`A...F`)
+- `Enabled()`: get charger availability
+- `Enable(bool)`: set charger availability
+- `MaxCurrent(int)`: set maximum allowed charge current in A
+
+Optionally, charger can also provide:
+
+- `CurrentPower()`: power in W (used if charge meter is not present)
+
+### Meter API
+
+- `CurrentPower()`: power in W
+- `TotalEnergy()`: energy in kWh (optional)
+
+### Vehicle API
+
+- `Title()`: vehicle name for display in the configuration UI
+- `Capacity()`: battery capacity in kWh
+- `ChargeState()`: state of charge in %
+
+Optionally, vehicles can also provide:
+
+- `CurrentPower()`: charge power in W (used if charge meter not present)
+- `ChargedEnergy()`: charged energy in kWh
+- `ChargeDuration()`: charge duration
 
 ## Background
 
