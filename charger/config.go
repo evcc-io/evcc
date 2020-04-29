@@ -18,8 +18,10 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 		c = NewConfigurableFromConfig(log, other)
 	case "wallbe":
 		c = NewWallbeFromConfig(log, other)
-	case "phoenix":
-		c = NewPhoenixFromConfig(log, other)
+	case "phoenix-emcp":
+		c = NewPhoenixEMCPFromConfig(log, other)
+	case "phoenix-evcc":
+		c = NewPhoenixEVCCFromConfig(log, other)
 	case "nrgkick", "nrg", "kick":
 		c = NewNRGKickFromConfig(log, other)
 	case "go-e", "goe":

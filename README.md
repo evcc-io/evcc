@@ -7,7 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe (tested with Wallbe Eco S), Phoenix controllers (EM-CP-PP-ETH), go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA KeContact and BMW, openWB slave, Mobile Charger Connect and any other charger using scripting
+- multiple [chargers](#charger): Wallbe, Phoenix, go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
@@ -118,7 +118,8 @@ EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*.
 Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
 
 - `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
-- `phoenix`: chargers with Phoenix EM-CP-PP-ETH controllers
+- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers (Ethernet connection)
+- `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
 - `nrgkick`: NRGKick chargers with Connect module
