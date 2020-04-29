@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider/modbus"
 	"github.com/andig/evcc/util"
-	"github.com/grid-x/modbus"
+	gridx "github.com/grid-x/modbus"
+	"github.com/volkszaehler/mbmd/meters"
 )
 
 const (
@@ -18,40 +20,32 @@ const (
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type PhoenixEVCC struct {
 	log     *util.Logger
-	client  modbus.Client
-	handler *modbus.TCPClientHandler
+	handler meters.Connection // alias for close method
+	client  gridx.Client
 }
 
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVCCFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
-	cc := struct {
-		Baudrate int
-		ID       uint8
-	}{}
+	var cc modbus.Connection
 	util.DecodeOther(log, other, &cc)
 
 	if cc.ID == 0 {
 		log.FATAL.Fatal("config: missing slave id")
 	}
 
-	return NewPhoenixEVCC(cc.ID, cc.Baudrate)
+	return NewPhoenixEVCC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewPhoenixEVCC creates a Phoenix charger
-func NewPhoenixEVCC(slaveID uint8, baudrate int) api.Charger {
+func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) api.Charger {
 	log := util.NewLogger("evcc")
-
-	handler := modbus.NewTCPClientHandler(conn)
-	client := modbus.NewClient(handler)
-
-	handler.SlaveID = slaveID
-	handler.Timeout = timeout
-	handler.ProtocolRecoveryTimeout = protocolTimeout
+	conn := modbus.NewConnection(log, uri, device, comset, baudrate, true)
+	conn.Slave(id)
 
 	wb := &PhoenixEVCC{
 		log:     log,
-		client:  client,
-		handler: handler,
+		client:  conn.ModbusClient(),
+		handler: conn,
 	}
 
 	return wb

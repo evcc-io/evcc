@@ -26,23 +26,27 @@ type PhoenixEMCP struct {
 
 // NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMCPFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
-	cc := struct{ URI string }{}
+	cc := struct {
+		URI string
+		ID  uint8
+	}{}
 	util.DecodeOther(log, other, &cc)
 
-	return NewPhoenixEMCP(cc.URI)
+	if cc.ID == 0 {
+		log.FATAL.Fatal("config: missing slave id")
+	}
+
+	return NewPhoenixEMCP(cc.URI, cc.ID)
 }
 
 // NewPhoenixEMCP creates a Phoenix charger
-func NewPhoenixEMCP(conn string) api.Charger {
+func NewPhoenixEMCP(uri string, id uint8) api.Charger {
 	log := util.NewLogger("emcp")
-	if conn == "" {
-		log.FATAL.Fatal("missing connection")
-	}
 
-	handler := modbus.NewTCPClientHandler(conn)
+	handler := modbus.NewTCPClientHandler(uri)
 	client := modbus.NewClient(handler)
 
-	handler.SlaveID = slaveID
+	handler.SlaveID = id
 	handler.Timeout = timeout
 	handler.ProtocolRecoveryTimeout = protocolTimeout
 

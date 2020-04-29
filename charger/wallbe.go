@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	slaveID = 255
+	wbSlaveID = 255
 
 	wbRegStatus        = 100 // Input
 	wbRegChargeTime    = 102 // Input
@@ -60,7 +60,7 @@ func NewWallbe(conn string) *Wallbe {
 	handler := modbus.NewTCPClientHandler(conn)
 	client := modbus.NewClient(handler)
 
-	handler.SlaveID = slaveID
+	handler.SlaveID = wbSlaveID
 	handler.Timeout = timeout
 	handler.ProtocolRecoveryTimeout = protocolTimeout
 
