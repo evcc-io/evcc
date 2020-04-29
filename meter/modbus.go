@@ -3,20 +3,39 @@ package meter
 import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/provider/modbus"
 	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+// Modbus is an api.Meter implementation with configurable getters and setters.
+type Modbus struct {
+	log      *util.Logger
+	conn     meters.Connection
+	device   meters.Device
+	slaveID  uint8
+	opPower  rs485.Operation
+	opEnergy rs485.Operation
+}
+
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
 	cc := struct {
 		provider.ModbusSettings `mapstructure:",squash"`
+		Power, Energy           string
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	conn, device, err := provider.NewDeviceConnection(log, cc.ModbusSettings)
+	// assume RTU if not set and this is a known RS485 meter model
+	if cc.RTU == nil {
+		b := modbus.IsRS485(cc.Model)
+		cc.RTU = &b
+	}
+
+	conn := modbus.NewConnection(log, cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	device, err := modbus.NewDevice(log, cc.Model, *cc.RTU)
 
 	log = util.NewLogger("modb")
 	conn.Logger(log.TRACE)
@@ -35,36 +54,69 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 		log.FATAL.Fatal(err)
 	}
 
-	return &Modbus{
+	m := &Modbus{
 		log:     log,
 		conn:    conn,
 		device:  device,
 		slaveID: cc.ID,
 	}
-}
 
-// Modbus is an api.Meter implementation with configurable getters and setters.
-type Modbus struct {
-	log     *util.Logger
-	conn    meters.Connection
-	device  meters.Device
-	slaveID uint8
-	op      rs485.Operation
+	// power reading
+	if cc.Power == "" {
+		cc.Power = "power"
+	}
+
+	powerM, err := meters.MeasurementString(cc.Power)
+	if err != nil {
+		log.FATAL.Fatalf("invalid power measurement %s", cc.Power)
+	}
+
+	// for RS485 check if producer supports the measurement
+	m.opPower = rs485.Operation{IEC61850: powerM}
+	if dev, ok := device.(*rs485.RS485); ok {
+		m.opPower = modbus.RS485FindDeviceOp(dev, powerM)
+
+		if m.opPower.IEC61850 == 0 {
+			log.FATAL.Fatalf("unsupported power value: %s", cc.Power)
+		}
+	}
+
+	// energy reading
+	if cc.Energy == "" {
+		cc.Energy = "sum"
+	}
+
+	energyM, err := meters.MeasurementString(cc.Energy)
+	if err != nil {
+		log.FATAL.Fatalf("invalid energy measurement %s", cc.Energy)
+	}
+
+	// for RS485 check if producer supports the measurement
+	m.opEnergy = rs485.Operation{IEC61850: energyM}
+	if dev, ok := device.(*rs485.RS485); ok {
+		m.opEnergy = modbus.RS485FindDeviceOp(dev, energyM)
+
+		if m.opEnergy.IEC61850 == 0 {
+			log.FATAL.Fatalf("unsupported energy value: %s", cc.Energy)
+		}
+	}
+
+	return m
 }
 
 // floatGetter executes configured modbus read operation and implements provider.FloatGetter
-func (m *Modbus) floatGetter(measurement meters.Measurement) (float64, error) {
+func (m *Modbus) floatGetter(op rs485.Operation) (float64, error) {
 	m.conn.Slave(m.slaveID)
 
 	var res meters.MeasurementResult
 	var err error
 
 	if dev, ok := m.device.(*rs485.RS485); ok {
-		res, err = dev.QueryOp(m.conn.ModbusClient(), m.op)
+		res, err = dev.QueryOp(m.conn.ModbusClient(), op)
 	}
 
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
-		res, err = dev.QueryOp(m.conn.ModbusClient(), measurement)
+		res, err = dev.QueryOp(m.conn.ModbusClient(), op.IEC61850)
 	}
 
 	if err == nil {
@@ -76,10 +128,10 @@ func (m *Modbus) floatGetter(measurement meters.Measurement) (float64, error) {
 
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Modbus) CurrentPower() (float64, error) {
-	return m.floatGetter(meters.Power)
+	return m.floatGetter(m.opPower)
 }
 
 // TotalEnergy implements the Meter.TotalEnergy interface
 func (m *Modbus) TotalEnergy() (float64, error) {
-	return m.floatGetter(meters.Sum)
+	return m.floatGetter(m.opEnergy)
 }

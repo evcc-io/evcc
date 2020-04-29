@@ -2,8 +2,8 @@ package provider
 
 import (
 	"math"
-	"strings"
 
+	"github.com/andig/evcc/provider/modbus"
 	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -20,48 +20,8 @@ type Modbus struct {
 }
 
 type ModbusSettings struct {
-	Model               string
-	ID                  uint8
-	URI, Device, Comset string
-	Baudrate            int
-	RTU                 bool // indicates RTU over TCP if true
-}
-
-var connections map[string]meters.Connection
-
-func modbusConnection(key string, newConn meters.Connection) meters.Connection {
-	if connections == nil {
-		connections = make(map[string]meters.Connection)
-	}
-
-	if conn, ok := connections[key]; ok {
-		return conn
-	}
-
-	connections[key] = newConn
-	return newConn
-}
-
-// NewDeviceConnection creates physical modbus device from config
-func NewDeviceConnection(log *util.Logger, cc ModbusSettings) (conn meters.Connection, device meters.Device, err error) {
-	if (cc.URI == "" && cc.Device == "") || (cc.URI != "" && cc.Device != "") {
-		log.FATAL.Fatalf("config: invalid modbus configuration %v", cc)
-	}
-
-	if cc.Device != "" {
-		conn = modbusConnection(cc.Device, meters.NewRTU(cc.Device, cc.Baudrate, cc.Comset))
-		device, err = rs485.NewDevice(strings.ToUpper(cc.Model))
-	}
-	if cc.URI != "" {
-		if cc.RTU {
-			conn = modbusConnection(cc.URI, meters.NewRTUOverTCP(cc.URI))
-		} else {
-			conn = modbusConnection(cc.URI, meters.NewTCP(cc.URI))
-		}
-		device = sunspec.NewDevice(strings.ToUpper(cc.Model))
-	}
-
-	return conn, device, err
+	Model             string
+	modbus.Connection `mapstructure:",squash"`
 }
 
 // NewModbusFromConfig creates Modbus plugin
@@ -72,7 +32,14 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	conn, device, err := NewDeviceConnection(log, cc.ModbusSettings)
+	// assume RTU if not set and this is a known RS485 meter model
+	if cc.RTU == nil {
+		b := modbus.IsRS485(cc.Model)
+		cc.RTU = &b
+	}
+
+	conn := modbus.NewConnection(log, cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	device, err := modbus.NewDevice(log, cc.Model, *cc.RTU)
 
 	log = util.NewLogger("modb")
 	conn.Logger(log.TRACE)
@@ -99,10 +66,10 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 	// for RS485 check if producer supports the measurement
 	op := rs485.Operation{IEC61850: measurement}
 	if dev, ok := device.(*rs485.RS485); ok {
-		op = rs485FindOp(dev, measurement)
+		op = modbus.RS485FindDeviceOp(dev, measurement)
 
 		if op.IEC61850 == 0 {
-			log.FATAL.Fatalf("invalid value %s", measurement)
+			log.FATAL.Fatalf("unsupported measurement value: %s", measurement)
 		}
 	}
 
@@ -113,19 +80,6 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 		op:      op,
 		slaveID: cc.ID,
 	}
-}
-
-func rs485FindOp(device *rs485.RS485, measurement meters.Measurement) (op rs485.Operation) {
-	ops := device.Producer().Produce()
-
-	for _, o := range ops {
-		if o.IEC61850 == measurement {
-			op = o
-			break
-		}
-	}
-
-	return op
 }
 
 // FloatGetter executes configured modbus read operation and implements provider.FloatGetter
