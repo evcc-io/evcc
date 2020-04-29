@@ -14,6 +14,8 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 	switch strings.ToLower(typ) {
 	case "default", "configurable":
 		c = NewConfigurableFromConfig(log, other)
+	case "modbus":
+		c = NewModbusFromConfig(log, other)
 	case "sma":
 		c = NewSMAFromConfig(log, other)
 	default:

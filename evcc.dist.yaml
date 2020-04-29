@@ -61,12 +61,17 @@ meters:
     type: script # use script
     cmd: /bin/sh -c "echo 0" # actual command
     timeout: 3s # kill script after 3 seconds
-- name: sma-grid
+- name: sma
   type: sma # SMA Home Manager 2.0 or SMA Energy Meter 30
-  uri: 192.168.1.4 # IP Address of the device
-- name: sma-pv
-  type: sma # SMA Home Manager 2.0 or SMA Energy Meter 30
-  uri: 192.168.1.4 # IP Address of the device
+  uri: 192.168.1.4 # IP address of the device
+- name: sdm
+  type: modbus
+  model: sdm
+  uri: rs485.fritz.box:23
+  rtu: true # rs485 device connected using ethernet adapter
+  id: 2
+  power: Power # default values, optionally override
+  energy: Sum # default values, optionally override
 
 chargers:
 - name: wallbe

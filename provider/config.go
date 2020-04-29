@@ -72,7 +72,7 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter)
 		if pc.Cache > 0 {
 			res = NewCached(log, res, pc.Cache).FloatGetter()
 		}
-	case "modbus-rtu", "modbus-tcp", "modbus-rtuovertcp", "modbus-tcprtu", "modbus-rtutcp":
+	case "modbus":
 		res = FloatGetter(NewModbusFromConfig(log, config.Type, config.Other).FloatGetter)
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)

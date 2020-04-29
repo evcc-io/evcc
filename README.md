@@ -180,7 +180,21 @@ chargers:
 
 ### Meter
 
-Meters provide data about power and energy consumption. Meter has a single implementation where meter readings- power and energy- can be configured to be delivered by [plugin](#plugins).
+Meters provide data about power and energy consumption. Available meter implementations are:
+
+- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use:
+
+  ```yaml
+  - name: pv
+    type: modbus
+    model: sdm
+    uri: rs485.fritz.box:23
+    id: 2
+    power: PowerL1
+    energy: Export
+  ```
+
+- `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 
 ### Vehicle
 
@@ -206,31 +220,29 @@ The meter configuration consists of the actual physical connection and the value
 
 #### Physical connection
 
-Three different types are supported:
+If the device is physically connected using an RS485 adapter, `device` and serial configuration `baudrate`, `comset` must be specified:
 
-- `modbus-rtu`: use this type if the device is physically connected using an RS485 adapter. Requires adapter name in `device` and serial configuration `baudrate`, `comset`. Example:
+```yaml
+type: modbus
+device: /dev/ttyUSB0
+baudrate: 9600
+comset: "8N1"
+```
 
-    ```yaml
-    type: modbus-rtu
-    device: /dev/ttyUSB0
-    baudrate: 9600
-    comset: "8N1"
-    ```
+If the device is a grid inverter or a Modbus meter connected via TCP, `uri` must be specified:
 
-- `modbus-tcprtu`: use this type if the device is physically connected using an RS485/Ethernet adapter. Requires adapter address in `uri`. Adapter serial configuration must be done directly on the adapter. Example:
+```yaml
+type: modbus
+uri: 192.168.0.11:502
+```
 
-    ```yaml
-    type: modbus-rtu
-    uri: 192.168.0.10:502
-    ```
+If the device is a Modbus RTU device connected using an RS485/Ethernet adapter, set `rtu: true`. The serial configuration must be done directly on the adapter. Example:
 
-- `modbus-tcp`: use this type if the device is a grid inverter or other Modbus TCP meter connected via TCP. Requires the device address and port in `uri`. Example:
-
-    ```yaml
-    type: modbus-tcp
-    uri: 192.168.0.11:502
-    meter: kostal # "sunspec" or any grid inverter brand name
-    ```
+```yaml
+type: modbus
+uri: 192.168.0.10:502
+rtu: true
+```
 
 #### Logical connection
 
@@ -239,16 +251,16 @@ The meter device type `meter` and the device's slave id `id` are always required
 ```yaml
 type: ...
 uri/device: ...
-meter: sdm
+model: sdm
 id: 3
-value: power
+value: Power
 ```
 
-Supported meter types are all supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
+Supported meter models are the same as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
 
 - RTU:
   - `ABB` ABB A/B-Series meters
-  - `BE`  Bernecker Engineering MPM3PM meters
+  - `MPM`  Bernecker Engineering MPM3PM meters
   - `DZG` DZG Metering GmbH DVH4013 meters
   - `INEPRO` Inepro Metering Pro 380
   - `JANITZA`  Janitza B-Series meters
