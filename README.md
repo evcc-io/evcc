@@ -99,6 +99,18 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
   In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
 
+- **Battery meter**: *battery meter* is used if a home battery is installed and you want charging the EV take priority over charging the home battery. As the home battery would otherwise "grab" all available PV power, this meter measures the home battery charging power.
+
+  With *grid meter* the charger is then allowed to consume:
+
+      Charge Power = Current Charge Power - Grid Meter Power + Battery Meter Power - Residual Power
+
+  or without *grid meter*
+
+      Charge Power = PV Meter Power + Battery Meter Power - Residual Power
+
+  The *battery meter* is expected to deliver negative values when charging, positives values signal discharging and are ignored.
+
 ### Charger configuration
 
 When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:

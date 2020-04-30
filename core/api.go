@@ -63,20 +63,18 @@ func (lp *LoadPoint) hasChargeMeter() bool {
 
 // Dump loadpoint configuration
 func (lp *LoadPoint) Dump() {
-	vehicle := lp.vehicle != nil
-	grid := lp.gridMeter != nil
-	pv := lp.pvMeter != nil
-	log.INFO.Printf("%s config: vehicle %s grid %s pv %s charge %s", lp.Name,
-		presence[vehicle],
-		presence[grid],
-		presence[pv],
+	log.INFO.Printf("%s loadpoint config: vehicle %s grid %s pv %s battery %s charge %s", lp.Name,
+		presence[lp.vehicle != nil],
+		presence[lp.gridMeter != nil],
+		presence[lp.pvMeter != nil],
+		presence[lp.batteryMeter != nil],
 		presence[lp.hasChargeMeter()],
 	)
 
 	_, power := lp.charger.(api.Meter)
 	_, energy := lp.charger.(api.ChargeRater)
 	_, timer := lp.charger.(api.ChargeTimer)
-	log.INFO.Printf("%s charger: power %s energy %s timer %s", lp.Name,
+	log.INFO.Printf("%s charger config: power %s energy %s timer %s", lp.Name,
 		presence[power],
 		presence[energy],
 		presence[timer],
