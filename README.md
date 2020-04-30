@@ -25,7 +25,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Charge Modes](#charge-modes)
   - [PV generator configuration](#pv-generator-configuration)
   - [Charger configuration](#charger-configuration)
-- [Implementation](#implementation)
+- [Configuration](#configuration)
   - [Charger](#charger)
     - [Wallbe hardware preparation](#wallbe-hardware-preparation)
     - [OpenWB slave mode](#openwb-slave-mode)
@@ -121,9 +121,9 @@ If *total energy* is supplied, it can be used to calculate the *charged energy* 
 - **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.
 If the charger supplies *total energy* for the charging cycle this value is preferred over the *charge meter*'s value (if present).
 
-## Implementation
+## Configuration
 
-EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go).
+The EVCC consists of four basic elements: *Charger*, *Meter* and *Vehicle* individually configured and attached to *Loadpoints*.
 
 ### Charger
 
