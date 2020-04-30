@@ -35,6 +35,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
   - [Script](#script-readwrite)
+  - [HTTP](#http-readwrite)
   - [Combined status](#combined-status-read-only)
 - [Developer](#developer)
 - [Background](#background)
@@ -318,6 +319,28 @@ Sample write configuration:
 type: script
 cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
 timeout: 5s
+```
+
+### HTTP (read/write)
+
+The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries.
+
+Sample read configuration:
+
+```yaml
+type: http
+uri: https://volkszaehler/api/data/<uuid>.json?from=now
+method: GET # default HTTP method
+headers:
+- content-type: application/json
+jq: .data.tuples.[0].[1] # parse response json
+```
+
+Sample write configuration:
+
+```yaml
+...
+body: %v # only applicable for PUT or POST requests
 ```
 
 ### Combined status (read only)
