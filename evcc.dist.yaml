@@ -55,6 +55,12 @@ meters:
     type: mqtt
     topic: mbmd/sdm1-2/Power
     timeout: 10s # don't use older values
+- name: battery
+  type: default
+  power:
+    type: mqtt
+    topic: mbmd/sma1-1/Power
+    timeout: 10s # don't use older values
 - name: charge
   type: default
   power:
@@ -79,8 +85,9 @@ chargers:
   uri: 192.168.0.8:502 # ModBus address
 # legacy: true # enable for older Wallbes with Phoenix EV-CC-AC1-M3-CBC-RCM controller
 - name: phoenix
-  type: phoenix # Charger with Phoenix Contact controller
+  type: phoenix-emcp # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # ModBus address
+  id: 1
 - name: simpleevse-tcp
   type: simpleevse # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # TCP ModBus address
@@ -169,10 +176,12 @@ loadpoints:
 - name: main # name for logging
   vehicle: audi
   charger: wallbe # charger
-  gridmeter: grid # grid meter
-  pvmeter: pv # pv meter
-  chargemeter: charge # charge meter
-  sensitivity: 1 # current raise/lower steps size (default 1A)
+  meters:
+    grid: grid # grid meter
+    pv: pv # pv meter
+    battery: battery # battery meter
+    charge: charge # charge meter
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
   maxcurrent: 16 # maximum charge current (default 16A)
   phases: 3 # ev phases (default 3)
+  sensitivity: 1 # current raise/lower step size (default 10A)

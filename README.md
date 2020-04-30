@@ -25,7 +25,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Charge Modes](#charge-modes)
   - [PV generator configuration](#pv-generator-configuration)
   - [Charger configuration](#charger-configuration)
-- [Implementation](#implementation)
+- [Configuration](#configuration)
   - [Charger](#charger)
     - [Wallbe hardware preparation](#wallbe-hardware-preparation)
     - [OpenWB slave mode](#openwb-slave-mode)
@@ -99,6 +99,18 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
   In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
 
+- **Battery meter**: *battery meter* is used if a home battery is installed and you want charging the EV take priority over charging the home battery. As the home battery would otherwise "grab" all available PV power, this meter measures the home battery charging power.
+
+  With *grid meter* the charger is then allowed to consume:
+
+      Charge Power = Current Charge Power - Grid Meter Power + Battery Meter Power - Residual Power
+
+  or without *grid meter*
+
+      Charge Power = PV Meter Power + Battery Meter Power - Residual Power
+
+  The *battery meter* is expected to deliver negative values when charging, positives values signal discharging and are ignored.
+
 ### Charger configuration
 
 When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
@@ -109,9 +121,9 @@ If *total energy* is supplied, it can be used to calculate the *charged energy* 
 - **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.
 If the charger supplies *total energy* for the charging cycle this value is preferred over the *charge meter*'s value (if present).
 
-## Implementation
+## Configuration
 
-EVCC consists of four basic elements: *Charger*, *Meter*, *SoC* and *Loadpoint*. Their APIs are described in [api/api.go](https://github.com/andig/evcc/blob/master/api/api.go).
+The EVCC consists of four basic elements: *Charger*, *Meter* and *Vehicle* individually configured and attached to *Loadpoints*.
 
 ### Charger
 

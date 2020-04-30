@@ -47,13 +47,19 @@ type Config struct {
 	Voltage       float64 // Operating voltage. 230V for Germany.
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
 
-	ChargerRef     string `mapstructure:"charger"`     // Charger reference
-	GridMeterRef   string `mapstructure:"gridmeter"`   // Grid usage meter reference
-	PVMeterRef     string `mapstructure:"pvmeter"`     // PV generation meter reference
-	ChargeMeterRef string `mapstructure:"chargemeter"` // Charger usage meter reference
-	VehicleRef     string `mapstructure:"vehicle"`     // Vehicle reference
+	ChargerRef string       `mapstructure:"charger"` // Charger reference
+	VehicleRef string       `mapstructure:"vehicle"` // Vehicle reference
+	Meters     MetersConfig // Meter references
 
 	GuardDuration time.Duration // charger enable/disable minimum holding time
+}
+
+// MetersConfig contains the loadpoint's meter configuration
+type MetersConfig struct {
+	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
+	ChargeMeterRef  string `mapstructure:"charge"`  // Charger usage meter reference
+	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
+	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -72,11 +78,12 @@ type LoadPoint struct {
 	chargeRater api.ChargeRater
 
 	// meters
-	charger     api.Charger // Charger
-	gridMeter   api.Meter   // Grid usage meter
-	pvMeter     api.Meter   // PV generation meter
-	chargeMeter api.Meter   // Charger usage meter
-	vehicle     api.Vehicle // Vehicle
+	charger      api.Charger // Charger
+	gridMeter    api.Meter   // Grid usage meter
+	pvMeter      api.Meter   // PV generation meter
+	batteryMeter api.Meter   // Battery charging meter
+	chargeMeter  api.Meter   // Charger usage meter
+	vehicle      api.Vehicle // Vehicle
 
 	// cached state
 	status        api.ChargeStatus // Charger status
@@ -85,6 +92,7 @@ type LoadPoint struct {
 	charging      bool             // Charging cycle
 	gridPower     float64          // Grid power
 	pvPower       float64          // PV power
+	batteryPower  float64          // Battery charge power
 	chargePower   float64          // Charging power
 
 	// contactor switch guard
@@ -108,17 +116,20 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	} else {
 		log.FATAL.Fatal("config: missing charger")
 	}
-	if lp.PVMeterRef == "" && lp.GridMeterRef == "" {
+	if lp.Meters.PVMeterRef == "" && lp.Meters.GridMeterRef == "" {
 		log.FATAL.Fatal("config: missing either pv or grid meter")
 	}
-	if lp.GridMeterRef != "" {
-		lp.gridMeter = cp.Meter(lp.GridMeterRef)
+	if lp.Meters.GridMeterRef != "" {
+		lp.gridMeter = cp.Meter(lp.Meters.GridMeterRef)
 	}
-	if lp.ChargeMeterRef != "" {
-		lp.chargeMeter = cp.Meter(lp.ChargeMeterRef)
+	if lp.Meters.ChargeMeterRef != "" {
+		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
 	}
-	if lp.PVMeterRef != "" {
-		lp.pvMeter = cp.Meter(lp.PVMeterRef)
+	if lp.Meters.PVMeterRef != "" {
+		lp.pvMeter = cp.Meter(lp.Meters.PVMeterRef)
+	}
+	if lp.Meters.BatteryMeterRef != "" {
+		lp.batteryMeter = cp.Meter(lp.Meters.BatteryMeterRef)
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
@@ -201,12 +212,21 @@ func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ..
 		}
 		if current > 0 {
 			// limit available power to generation plus consumption/ minus delivery
-			availablePower := math.Abs(lp.pvPower) + lp.gridPower
+			availablePower := math.Abs(lp.pvPower) + lp.availableBatteryPower() + lp.gridPower
 			availableCurrent := int64(powerToCurrent(availablePower, lp.Voltage, lp.Phases))
 			current = min(current, availableCurrent)
 		}
 		m.SetChargeCurrent(current)
 	}
+}
+
+// availableBatteryPower delivers the battery charging power as additional available power at the grid connection point
+func (lp *LoadPoint) availableBatteryPower() float64 {
+	if lp.batteryPower < 0 {
+		return math.Abs(lp.batteryPower)
+	}
+
+	return 0
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
@@ -436,7 +456,7 @@ func (lp *LoadPoint) rampOn(target int64) error {
 // updateModePV sets "minpv" or "pv" load modes
 func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 	// grid meter will always be available, if as wrapped pv meter
-	targetPower := lp.chargePower - lp.gridPower - lp.ResidualPower
+	targetPower := lp.chargePower - lp.gridPower + lp.availableBatteryPower() - lp.ResidualPower
 	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
 
 	// get max charge current
@@ -496,6 +516,7 @@ func (lp *LoadPoint) updateMeters() (err error) {
 	// read PV meter before charge meter
 	retryMeter("grid", lp.gridMeter, &lp.gridPower)
 	retryMeter("pv", lp.pvMeter, &lp.pvPower)
+	retryMeter("battery", lp.batteryMeter, &lp.batteryPower)
 	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
 
 	return err
