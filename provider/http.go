@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"io"
 	"math"
 	"net/http"
@@ -8,7 +9,8 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/util"
-	"github.com/savaki/jq"
+	"github.com/andig/evcc/util/jq"
+	"github.com/itchyny/gojq"
 )
 
 // HTTP implements HTTP request provider
@@ -19,7 +21,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	scale       float64
-	jq          jq.Op
+	jq          *gojq.Query
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
@@ -46,7 +48,7 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 	}
 
 	if cc.Jq != "" {
-		op, err := jq.Parse(cc.Jq)
+		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
 			log.FATAL.Fatalf("config: invalid jq query: %s", p.jq)
 		}
@@ -105,7 +107,8 @@ func (p *HTTP) StringGetter() (string, error) {
 	}
 
 	if p.jq != nil {
-		b, err = p.jq.Apply(b)
+		v, err := jq.Query(p.jq, b)
+		return fmt.Sprintf("%v", v), err
 	}
 
 	return string(b), err
