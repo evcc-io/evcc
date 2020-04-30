@@ -21,20 +21,19 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Index
 
 - [Installation](#installation)
-- [Configuration](#configuration)
-  - [Charge Modes](#charge-modes)
-  - [PV generator configuration](#pv-generator-configuration)
-  - [Charger configuration](#charger-configuration)
+- [General concepts](#general-concepts)
+  - [Charge modes](#charge-modes)
+  - [PV generator setup](#pv-generator-setup)
+  - [Charger setup](#charger-setup)
 - [Configuration](#configuration)
   - [Charger](#charger)
-    - [Wallbe hardware preparation](#wallbe-hardware-preparation)
-    - [OpenWB slave mode](#openwb-slave-mode)
   - [Meter](#meter)
   - [Vehicle](#vehicle)
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
   - [Script](#script-readwrite)
+  - [HTTP](#http-readwrite)
   - [Combined status](#combined-status-read-only)
 - [Developer](#developer)
 - [Background](#background)
@@ -70,9 +69,9 @@ To build EVCC from source, [Go](2) 1.13 is required:
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
 All components **must** be installed by a certified professional.
 
-## Configuration
+## General concepts
 
-### Charge Modes
+### Charge modes
 
 Multiple charge modes are supported:
 
@@ -83,7 +82,7 @@ Multiple charge modes are supported:
 
 In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
 
-### PV generator configuration
+### PV generator setup
 
 For both PV modes, EVCC needs to assess how much residual PV power is available at the grid connection point and how much power the charger actually uses. Various methods are implemented to obtain this information, with different degrees of accuracy.
 
@@ -111,7 +110,7 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
   The *battery meter* is expected to deliver negative values when charging, positives values signal discharging and are ignored.
 
-### Charger configuration
+### Charger setup
 
 When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
 
@@ -318,6 +317,28 @@ Sample write configuration:
 type: script
 cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
 timeout: 5s
+```
+
+### HTTP (read/write)
+
+The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries.
+
+Sample read configuration:
+
+```yaml
+type: http
+uri: https://volkszaehler/api/data/<uuid>.json?from=now
+method: GET # default HTTP method
+headers:
+- content-type: application/json
+jq: .data.tuples[0][1] # parse response json
+```
+
+Sample write configuration:
+
+```yaml
+...
+body: %v # only applicable for PUT or POST requests
 ```
 
 ### Combined status (read only)

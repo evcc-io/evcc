@@ -15,6 +15,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200330145937-ee607c681498
 	github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
+	github.com/itchyny/gojq v0.10.1
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20190206234002-112508e1374e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
