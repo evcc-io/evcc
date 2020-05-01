@@ -22,6 +22,8 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 		c = NewTeslaFromConfig(log, other)
 	case "nissan", "leaf":
 		c = NewNissanFromConfig(log, other)
+	case "renault", "zoe":
+		c = NewRenaultFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid vehicle type '%s'", typ)
 	}

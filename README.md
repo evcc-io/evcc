@@ -206,6 +206,16 @@ Meters provide data about power and energy consumption. Available meter implemen
     energy: Export
   ```
 
+- `sma`: SMA Home Manager and SMA Energy Meter. Power reading is configured out of the box but can be customizied if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0"):
+
+  ```yaml
+  - name: sma-home-manager
+    type: sdm
+    uri: 192.168.1.4
+    power: # leave empty for mixed import/export energy
+    energy: # leave empty to disable or chose obis 1:1.8.0/1:2.8.0
+  ```
+
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 
 ### Vehicle
@@ -218,6 +228,7 @@ Available vehicle implementations are:
 - `bmw`: BMW (i3)
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
+- `renault`: Renault (Zoe)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 ## Plugins
