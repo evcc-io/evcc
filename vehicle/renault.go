@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
 )
 
 // Credits to
 // 	https://github.com/edent/Renault-Zoe-API/issues/18
 // 	https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
+//  https://github.com/jamesremuscat/pyze
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -33,13 +36,10 @@ type configServer struct {
 	APIKey string `json:"apikey"`
 }
 
-type messageResponse struct {
-	Message     string            `json:"message"`
-	SessionInfo gigyaSessionInfo  `json:"sessionInfo"`
-	IDToken     string            `json:"id_token"`
-	Data        gigyaData         `json:"data"`
-	Accounts    []kamereonAccount `json:"accounts"`
-	AccessToken string            `json:"accessToken"`
+type gigyaResponse struct {
+	SessionInfo gigyaSessionInfo `json:"sessionInfo"` // /accounts.login
+	IDToken     string           `json:"id_token"`    // /accounts.getJWT
+	Data        gigyaData        `json:"data"`        // /accounts.getAccountInfo
 }
 
 type gigyaSessionInfo struct {
@@ -50,37 +50,68 @@ type gigyaData struct {
 	PersonID string `json:"personId"`
 }
 
+type kamereonResponse struct {
+	Accounts     []kamereonAccount `json:"accounts"`     // /commerce/v1/persons/%s
+	AccessToken  string            `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
+	VehicleLinks []kamereonVehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
+	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status
+}
+
 type kamereonAccount struct {
 	AccountID string `json:"accountId"`
+}
+
+type kamereonVehicle struct {
+	Brand  string `json:"brand"`
+	VIN    string `json:"vin"`
+	Status string `json:"status"`
+}
+
+type kamereonData struct {
+	Attributes batteryAttributes `json:"attributes"`
+}
+
+type batteryAttributes struct {
+	ChargeStatus       int    `json:"chargeStatus"`
+	InstantaneousPower int    `json:"instantaneousPower"`
+	RangeHvacOff       int    `json:"rangeHvacOff"`
+	BatteryLevel       int    `json:"batteryLevel"`
+	BatteryTemperature int    `json:"batteryTemperature"`
+	PlugStatus         int    `json:"plugStatus"`
+	LastUpdateTime     string `json:"lastUpdateTime"`
+	ChargePower        int    `json:"chargePower"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
 type Renault struct {
 	*embed
-	*api.HTTPHelper
+	*util.HTTPHelper
 	user, password, vin                string
 	gigya, kamereon                    configServer
 	gigyaJwtToken, kamereonAccessToken string
+	accountID                          string
 	chargeStateG                       provider.FloatGetter
 }
 
 // NewRenaultFromConfig creates a new vehicle
-func NewRenaultFromConfig(log *api.Logger, other map[string]interface{}) api.Vehicle {
+func NewRenaultFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
 	cc := struct {
 		Title                       string
 		Capacity                    int64
 		User, Password, Region, VIN string
 		Cache                       time.Duration
 	}{}
-	api.DecodeOther(log, other, &cc)
+	util.DecodeOther(log, other, &cc)
 
 	if cc.Region == "" {
 		cc.Region = "de_DE"
 	}
 
+	logger := util.NewLogger("zoe")
+
 	v := &Renault{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: api.NewHTTPHelper(api.NewLogger("zoe")),
+		HTTPHelper: util.NewHTTPHelper(logger),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,
@@ -94,7 +125,7 @@ func NewRenaultFromConfig(log *api.Logger, other map[string]interface{}) api.Veh
 		v.HTTPHelper.Log.FATAL.Fatalf("cannot create renault: %v", err)
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(logger, v.chargeState, cc.Cache).FloatGetter()
 
 	return v
 }
@@ -120,22 +151,29 @@ func (v *Renault) authFlow() error {
 		if err == nil {
 			var personID string
 			personID, err = v.personID(sessionCookie)
-
-			fmt.Println(personID)
+			if personID == "" {
+				return errors.New("missing personID")
+			}
 
 			if err == nil {
-				var accountID string
-				accountID, err = v.kamereonPerson(personID)
+				v.accountID, err = v.kamereonPerson(personID)
+				if v.accountID == "" {
+					return errors.New("missing accountID")
+				}
 
-				fmt.Println(accountID)
+				// find VIN
+				if v.vin == "" {
+					v.vin, err = v.kamereonVehicles(v.accountID)
+					if v.vin == "" {
+						return errors.New("missing vin")
+					}
+				}
 
 				if err == nil {
-					var accessToken string
-					accessToken, err = v.kamereonToken(accountID)
-
-					fmt.Println(accessToken)
-
-					v.kamereonAccessToken = accessToken
+					v.kamereonAccessToken, err = v.kamereonToken(v.accountID)
+					if v.kamereonAccessToken == "" {
+						return errors.New("missing kamereon access token")
+					}
 				}
 			}
 		}
@@ -144,12 +182,10 @@ func (v *Renault) authFlow() error {
 	return err
 }
 
-func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (messageResponse, error) {
-	var tr messageResponse
-
+func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (*http.Request, error) {
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
-		return tr, err
+		return req, err
 	}
 	req.URL.RawQuery = data.Encode()
 
@@ -159,16 +195,7 @@ func (v *Renault) request(uri string, data url.Values, headers ...map[string]str
 		}
 	}
 
-	_, err = v.RequestJSON(req, &tr)
-	if err != nil {
-		return tr, err
-	}
-
-	if tr.Message != "" {
-		return tr, errors.New(tr.Message)
-	}
-
-	return tr, nil
+	return req, nil
 }
 
 func (v *Renault) sessionCookie(user, password string) (string, error) {
@@ -180,8 +207,14 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 		"apiKey":   []string{v.gigya.APIKey},
 	}
 
-	tr, err := v.request(uri, data)
-	return tr.SessionInfo.CookieValue, err
+	req, err := v.request(uri, data)
+
+	var gr gigyaResponse
+	if err == nil {
+		_, err = v.RequestJSON(req, &gr)
+	}
+
+	return gr.SessionInfo.CookieValue, err
 }
 
 func (v *Renault) personID(sessionCookie string) (string, error) {
@@ -191,8 +224,14 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 		"oauth_token": []string{sessionCookie},
 	}
 
-	tr, err := v.request(uri, data)
-	return tr.Data.PersonID, err
+	req, err := v.request(uri, data)
+
+	var gr gigyaResponse
+	if err == nil {
+		_, err = v.RequestJSON(req, &gr)
+	}
+
+	return gr.Data.PersonID, err
 }
 
 func (v *Renault) jwtToken(sessionCookie string) (string, error) {
@@ -204,8 +243,14 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 		"expiration":  []string{"900"},
 	}
 
-	tr, err := v.request(uri, data)
-	return tr.IDToken, err
+	req, err := v.request(uri, data)
+
+	var gr gigyaResponse
+	if err == nil {
+		_, err = v.RequestJSON(req, &gr)
+	}
+
+	return gr.IDToken, err
 }
 
 func (v *Renault) kamereonHeaders(additional ...map[string]string) map[string]string {
@@ -224,47 +269,73 @@ func (v *Renault) kamereonHeaders(additional ...map[string]string) map[string]st
 }
 
 func (v *Renault) kamereonPerson(personID string) (string, error) {
+	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
 
-	data := url.Values{
-		"country": []string{"DE"},
-	}
-
+	data := url.Values{"country": []string{"DE"}}
 	headers := v.kamereonHeaders()
 
-	tr, err := v.request(uri, data, headers)
-	if err != nil {
-		return "", err
+	req, err := v.request(uri, data, headers)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
+
+		if len(kr.Accounts) == 0 {
+			return "", nil
+		}
 	}
-	return tr.Accounts[0].AccountID, err
+
+	return kr.Accounts[0].AccountID, err
+}
+
+func (v *Renault) kamereonVehicles(accountID string) (string, error) {
+	var kr kamereonResponse
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
+
+	data := url.Values{"country": []string{"DE"}}
+	headers := v.kamereonHeaders()
+
+	req, err := v.request(uri, data, headers)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
+
+		for _, v := range kr.VehicleLinks {
+			if strings.ToUpper(v.Status) == "ACTIVE" {
+				return v.VIN, nil
+			}
+		}
+	}
+
+	return "", err
 }
 
 func (v *Renault) kamereonToken(accountID string) (string, error) {
+	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/token", v.kamereon.Target, accountID)
 
-	data := url.Values{
-		"country": []string{"DE"},
-	}
-
+	data := url.Values{"country": []string{"DE"}}
 	headers := v.kamereonHeaders()
 
-	tr, err := v.request(uri, data, headers)
-	return tr.AccessToken, err
+	req, err := v.request(uri, data, headers)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
+	}
+
+	return kr.AccessToken, err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Renault) chargeState() (float64, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/kmr/remote-services/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.vin)
+	var kr kamereonResponse
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 
-	data := url.Values{
-		"country": []string{"DE"},
-	}
-
+	data := url.Values{"country": []string{"DE"}}
 	headers := v.kamereonHeaders(map[string]string{"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken})
 
-	_, _ = v.request(uri, data, headers)
-
-	return float64(0), nil
+	req, err := v.request(uri, data, headers)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
+	}
+	return float64(kr.Data.Attributes.BatteryLevel), err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
