@@ -11,6 +11,8 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+type Obis = string
+
 const (
 	multicastAddr = "239.12.255.254:9522"
 	udpBufferSize = 8192
@@ -19,10 +21,10 @@ const (
 	msgPreamble   = 28 // preamble size in bytes
 	msgCodeLength = 4  // length in bytes
 
-	ObisImportPower  = "1:1.4.0" // Wirkleistung (W)
-	ObisImportEnergy = "1:1.8.0" // Wirkarbeit (Ws) +
-	ObisExportPower  = "1:2.4.0" // Wirkleistung (W)
-	ObisExportEnergy = "1:2.8.0" // Wirkarbeit (Ws) −
+	ImportPower  Obis = "1:1.4.0" // Wirkleistung (W)
+	ExportPower  Obis = "1:2.4.0" // Wirkleistung (W)
+	ImportEnergy Obis = "1:1.8.0" // Wirkarbeit (Ws) +
+	ExportEnergy Obis = "1:2.8.0" // Wirkarbeit (Ws) −
 )
 
 // obisDefinition defines the properties needed to parse the SMA multicast telegram values
@@ -32,10 +34,10 @@ type obisDefinition struct {
 }
 
 // list of Obis codes and their properties as defined in the SMA EMETER-Protokoll-TI-de-10.pdf document
-var knownObisCodes = map[string]obisDefinition{
+var knownObisCodes = map[Obis]obisDefinition{
 	// Overall sums
-	ObisImportPower: {4, 0.1}, ObisImportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
-	ObisExportPower: {4, 0.1}, ObisExportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) −
+	ImportPower: {4, 0.1}, ImportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
+	ExportPower: {4, 0.1}, ExportEnergy: {8, 1}, // Wirkleistung (W)/-arbeit (Ws) −
 	"1:3.4.0": {4, 0.1}, "1:3.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) +
 	"1:4.4.0": {4, 0.1}, "1:4.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) −
 	"1:9.4.0": {4, 0.1}, "1:9.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) +
@@ -79,7 +81,7 @@ var Instance *Listener
 type Telegram struct {
 	Addr   string
 	Serial string
-	Values map[string]float64
+	Values map[Obis]float64
 }
 
 // Listener for receiving SMA multicast data packages

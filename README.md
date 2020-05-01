@@ -206,6 +206,16 @@ Meters provide data about power and energy consumption. Available meter implemen
     energy: Export
   ```
 
+- `sma`: SMA Home Manager and SMA Energy Meter. Power reading is configured out of the box but can be customizied if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0"):
+
+  ```yaml
+  - name: sma-home-manager
+    type: sdm
+    uri: 192.168.1.4
+    power: # leave empty for mixed import/export energy
+    energy: # leave empty to disable or chose obis 1:1.8.0/1:2.8.0
+  ```
+
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 
 ### Vehicle

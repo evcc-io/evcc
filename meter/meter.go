@@ -6,8 +6,8 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-// WrappedMeterEnergy decorates a Meter with MeterEnergy
-type WrappedMeterEnergy struct {
+// MeterEnergyDecorator decorates an api.Meter with api.MeterEnergy
+type MeterEnergyDecorator struct {
 	api.Meter
 	api.MeterEnergy
 }
@@ -24,7 +24,7 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 
 	// decorate Meter with MeterEnergy
 	if cc.Energy != nil {
-		m = &WrappedMeterEnergy{
+		m = &MeterEnergyDecorator{
 			Meter:       m,
 			MeterEnergy: NewMeterEnergy(provider.NewFloatGetterFromConfig(log, *cc.Energy)),
 		}
