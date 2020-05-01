@@ -218,6 +218,7 @@ Available vehicle implementations are:
 - `bmw`: BMW (i3)
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
+- `renault`: Renault (Zoe)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 ## Plugins
