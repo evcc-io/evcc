@@ -20,6 +20,7 @@ type SMA struct {
 	log     *util.Logger
 	uri     string
 	power   float64
+	energy  float64
 	powerO  sma.Obis
 	energyO sma.Obis
 	updated time.Time
@@ -39,7 +40,7 @@ func NewSMAFromConfig(log *util.Logger, other map[string]interface{}) api.Meter 
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, power, energy string) *SMA {
+func NewSMA(uri, power, energy string) api.Meter {
 	log := util.NewLogger("sma ")
 
 	sm := &SMA{
@@ -57,6 +58,11 @@ func NewSMA(uri, power, energy string) *SMA {
 	sma.Instance.Subscribe(uri, sm.recv)
 
 	go sm.receive()
+
+	// decorate api.MeterEnergy
+	if power != "" {
+		return &SMAEnergy{SMA: sm}
+	}
 
 	return sm
 }
@@ -88,7 +94,7 @@ func (sm *SMA) receive() {
 		sm.mux.Lock()
 
 		if sm.powerO != "" {
-			// use defined obis
+			// use user-defined obis
 			if power, ok := msg.Values[sm.powerO]; ok {
 				sm.power = power
 				sm.updated = time.Now()
@@ -101,6 +107,15 @@ func (sm *SMA) receive() {
 			sm.updated = time.Now()
 		} else {
 			sm.log.WARN.Println("missing obis for import/export power")
+		}
+
+		if sm.energyO != "" {
+			if energy, ok := msg.Values[sm.energyO]; ok {
+				sm.energy = energy
+				sm.updated = time.Now()
+			} else {
+				sm.log.WARN.Println("missing obis for energy")
+			}
 		}
 
 		sm.mux.Unlock()
@@ -118,4 +133,22 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	}
 
 	return sm.power, nil
+}
+
+// SMAEnergy decorates SMA with api.MeterEnergy interface
+type SMAEnergy struct {
+	*SMA
+}
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (sm *SMA) TotalEnergy() (float64, error) {
+	sm.once.Do(sm.waitForInitialValue)
+	sm.mux.Lock()
+	defer sm.mux.Unlock()
+
+	if time.Since(sm.updated) > udpTimeout {
+		return 0, errors.New("recv timeout")
+	}
+
+	return sm.energy, nil
 }
