@@ -86,7 +86,7 @@ func (p *HTTP) FloatGetter() (float64, error) {
 	}
 
 	f, err := strconv.ParseFloat(s, 64)
-	if err == nil && p.scale > 0 {
+	if err == nil && p.scale != 0 {
 		f *= p.scale
 	}
 

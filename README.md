@@ -305,8 +305,16 @@ Sample configuration:
 ```yaml
 type: mqtt
 topic: mbmd/sdm1-1/Power
-timeout: 30s
-payload: ${var:%.2f}
+timeout: 30s # don't accept values older than timeout
+scale: 0.001 # floating point factor applied to result, e.g. for kW to W conversion
+```
+
+Sample write configuration:
+
+```yaml
+type: mqtt
+topic: mbmd/charger/maxcurrent
+payload: ${var:%d}
 ```
 
 For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
@@ -344,6 +352,7 @@ method: GET # default HTTP method
 headers:
 - content-type: application/json
 jq: .data.tuples[0][1] # parse response json
+scale: 0.001 # floating point factor applied to result, e.g. for kW to W conversion
 ```
 
 Sample write configuration:

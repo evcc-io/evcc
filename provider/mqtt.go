@@ -105,12 +105,12 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 }
 
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
-func (m *MqttClient) FloatGetter(topic string, multiplier float64, timeout time.Duration) FloatGetter {
+func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) FloatGetter {
 	h := &msgHandler{
-		log:        m.log,
-		topic:      topic,
-		multiplier: multiplier,
-		timeout:    timeout,
+		log:     m.log,
+		topic:   topic,
+		scale:   scale,
+		timeout: timeout,
 	}
 
 	m.Listen(topic, h.Receive)
@@ -118,12 +118,12 @@ func (m *MqttClient) FloatGetter(topic string, multiplier float64, timeout time.
 }
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *MqttClient) IntGetter(topic string, multiplier int64, timeout time.Duration) IntGetter {
+func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) IntGetter {
 	h := &msgHandler{
-		log:        m.log,
-		topic:      topic,
-		multiplier: float64(multiplier),
-		timeout:    timeout,
+		log:     m.log,
+		topic:   topic,
+		scale:   float64(scale),
+		timeout: timeout,
 	}
 
 	m.Listen(topic, h.Receive)
@@ -213,14 +213,14 @@ func (m *MqttClient) WaitForToken(token mqtt.Token) {
 }
 
 type msgHandler struct {
-	log        *util.Logger
-	once       sync.Once
-	mux        sync.Mutex
-	updated    time.Time
-	timeout    time.Duration
-	multiplier float64
-	topic      string
-	payload    string
+	log     *util.Logger
+	once    sync.Once
+	mux     sync.Mutex
+	updated time.Time
+	timeout time.Duration
+	scale   float64
+	topic   string
+	payload string
 }
 
 func (h *msgHandler) Receive(payload string) {
@@ -263,7 +263,7 @@ func (h *msgHandler) floatGetter() (float64, error) {
 		return 0, fmt.Errorf("%s invalid: '%s'", h.topic, h.payload)
 	}
 
-	return h.multiplier * val, nil
+	return h.scale * val, nil
 }
 
 func (h *msgHandler) intGetter() (int64, error) {
