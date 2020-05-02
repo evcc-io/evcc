@@ -211,34 +211,25 @@ func (c *Keba) MaxCurrent(current int64) error {
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
-	if err != nil {
-		return 0, err
-	}
 
 	// mW to W
-	return float64(kr.P) / 1e3, nil
+	return float64(kr.P) / 1e3, err
 }
 
 // ChargedEnergy implements the ChargeRater interface
 func (c *Keba) ChargedEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
-	if err != nil {
-		return 0, err
-	}
 
 	// 0,1Wh to kWh
-	return float64(kr.EPres) / 1e5, nil
+	return float64(kr.EPres) / 1e5, err
 }
 
 // Currents implements the MeterCurrents interface
 func (c *Keba) Currents() (float64, float64, float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
-	if err != nil {
-		return 0, 0, 0, err
-	}
 
 	// 1mA to A
-	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, nil
+	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
 }
