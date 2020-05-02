@@ -31,19 +31,18 @@ type teslaResponse map[string]struct {
 // Tesla is the tesla powerwall meter
 type Tesla struct {
 	*util.HTTPHelper
-	log                *util.Logger
-	uri, value, energy string
+	uri, usage string
 }
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
 	cc := struct {
-		URI, Value, Energy string
+		URI, Usage string
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	if cc.Value == "" {
-		log.FATAL.Fatalf("config: missing value")
+	if cc.Usage == "" {
+		log.FATAL.Fatalf("config: missing usage")
 	}
 
 	url, err := url.ParseRequestURI(cc.URI)
@@ -56,16 +55,15 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Mete
 		cc.URI = url.String()
 	}
 
-	return NewTesla(cc.URI, cc.Value, cc.Energy)
+	return NewTesla(cc.URI, cc.Usage)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, value, energy string) api.Meter {
+func NewTesla(uri, usage string) api.Meter {
 	m := &Tesla{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("tsla")),
 		uri:        uri,
-		value:      strings.ToLower(value),
-		energy:     energy,
+		usage:      strings.ToLower(usage),
 	}
 
 	// ignore the self signed certificate
@@ -74,9 +72,9 @@ func NewTesla(uri, value, energy string) api.Meter {
 	m.HTTPHelper.Client.Transport = customTransport
 
 	// decorate api.MeterEnergy
-	// if energy != "" {
-	// 	return &TeslaEnergy{Tesla: m}
-	// }
+	if m.usage == "load" || m.usage == "solar" {
+		return &TeslaEnergy{Tesla: m}
+	}
 
 	return m
 }
@@ -87,20 +85,34 @@ func (m *Tesla) CurrentPower() (float64, error) {
 	_, err := m.GetJSON(m.uri, &tr)
 
 	if err == nil {
-		if o, ok := tr[m.value]; ok {
+		if o, ok := tr[m.usage]; ok {
 			return o.InstantPower, nil
 		}
 	}
 
-	return 0, fmt.Errorf("invalid value: %s", m.value)
+	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
 // TeslaEnergy decorates Tesla with api.MeterEnergy interface
-// type TeslaEnergy struct {
-// 	*Tesla
-// }
+type TeslaEnergy struct {
+	*Tesla
+}
 
-// // TotalEnergy implements the api.MeterEnergy interface
-// func (m *TeslaEnergy) TotalEnergy() (float64, error) {
-// 	return 0, nil
-// }
+// TotalEnergy implements the api.MeterEnergy interface
+func (m *TeslaEnergy) TotalEnergy() (float64, error) {
+	var tr teslaResponse
+	_, err := m.GetJSON(m.uri, &tr)
+
+	if err == nil {
+		if o, ok := tr[m.usage]; ok {
+			if m.usage == "load" {
+				return o.EnergyImported, nil
+			}
+			if m.usage == "solar" {
+				return o.EnergyExported, nil
+			}
+		}
+	}
+
+	return 0, fmt.Errorf("invalid usage: %s", m.usage)
+}

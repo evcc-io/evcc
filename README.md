@@ -8,7 +8,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe, Phoenix, go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
-- multiple [meters](#meter): ModBus (SDM630, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC)
+- multiple [meters](#meter): ModBus (SDM630, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, Tesla PowerWall)
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
@@ -219,7 +219,7 @@ Meters provide data about power and energy consumption. Available meter implemen
     energy: # leave empty to disable or choose obis 1:1.8.0/1:2.8.0
   ```
 
-- `tesla`: Tesla Powerwall Meter. Use `value` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`)
+- `tesla`: Tesla PowerWall meter. Use `value` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`)
 
   ```yaml
   - name: powerwall
