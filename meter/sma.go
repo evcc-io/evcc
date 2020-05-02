@@ -60,7 +60,7 @@ func NewSMA(uri, power, energy string) api.Meter {
 	go sm.receive()
 
 	// decorate api.MeterEnergy
-	if power != "" {
+	if energy != "" {
 		return &SMAEnergy{SMA: sm}
 	}
 
@@ -141,7 +141,7 @@ type SMAEnergy struct {
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (sm *SMA) TotalEnergy() (float64, error) {
+func (sm *SMAEnergy) TotalEnergy() (float64, error) {
 	sm.once.Do(sm.waitForInitialValue)
 	sm.mux.Lock()
 	defer sm.mux.Unlock()
