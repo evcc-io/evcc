@@ -6,31 +6,18 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-func TestProxyMeterSinglePhase(t *testing.T) {
+func TestProxyChargeMeter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	tc := []struct {
-		phases  int64
-		voltage float64
-		current int64
-		power   float64
-	}{
-		{1, 100, 10, 1000},
-		{3, 200, 1, 600},
-	}
+	tc := []float64{600, 1000, 2000}
+	m := ChargeMeter{}
 
-	for _, tc := range tc {
-		m := ChargeMeter{
-			Phases:  tc.phases,
-			Voltage: tc.voltage,
-		}
+	for _, f := range tc {
+		m.SetPower(f)
 
-		m.SetChargeCurrent(tc.current)
-
-		if p, err := m.CurrentPower(); p != tc.power || err != nil {
+		if p, err := m.CurrentPower(); p != f || err != nil {
 			t.Errorf("power: %.1f %v", p, err)
 		}
 	}
-
 }

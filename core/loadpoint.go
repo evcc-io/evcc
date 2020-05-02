@@ -204,19 +204,20 @@ func (lp *LoadPoint) evChargeStopHandler() {
 
 // evChargeCurrentHandler updates proxy charge meter's charge current.
 // If physical charge meter is present this handler is not used.
-func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(para ...interface{}) {
-	return func(para ...interface{}) {
-		current := para[0].(int64)
+// It assumes that the charge meter cannot consume more than total household consumption
+func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(current int64) {
+	return func(current int64) {
+		power := float64(current*lp.Phases) * lp.Voltage
+
 		if !lp.enabled || lp.status != api.StatusC {
-			current = 0
-		}
-		if current > 0 {
+			power = 0
+		} else if power > 0 {
 			// limit available power to generation plus consumption/ minus delivery
-			availablePower := math.Abs(lp.pvPower) + lp.availableBatteryPower() + lp.gridPower
-			availableCurrent := int64(powerToCurrent(availablePower, lp.Voltage, lp.Phases))
-			current = min(current, availableCurrent)
+			consumedPower := math.Abs(lp.pvPower) + lp.availableBatteryPower() + lp.gridPower
+			power = math.Min(power, consumedPower)
 		}
-		m.SetChargeCurrent(current)
+
+		m.SetPower(power)
 	}
 }
 
@@ -243,13 +244,10 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 		if mt, ok := lp.charger.(api.Meter); ok {
 			lp.chargeMeter = mt
 		} else {
-			mt := &wrapper.ChargeMeter{
-				Phases:  lp.Phases,
-				Voltage: lp.Voltage,
-			}
+			mt := &wrapper.ChargeMeter{}
 			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler(mt))
 			_ = lp.bus.Subscribe(evStopCharge, func() {
-				mt.SetChargeCurrent(0)
+				mt.SetPower(0)
 			})
 			lp.chargeMeter = mt
 		}
