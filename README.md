@@ -249,6 +249,21 @@ Available vehicle implementations are:
 
 Plugins are used to integrate physical devices and external data sources with EVCC. Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
+### Calc (read only)
+
+The `calc` plugin allows calculating the sum of other plugins:
+
+```yaml
+type: calc
+add:
+- type: ...
+  ...
+- type: ...
+  ...
+```
+
+The `calc` plugin is useful e.g. to combine power values if import and export power are separate like with S0 meters. Use `scale` on one of the elements to implement a subtraction.
+
 ### Modbus (read only)
 
 The `modbus` plugins is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
