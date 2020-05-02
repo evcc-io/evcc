@@ -20,7 +20,7 @@ type Config struct {
 // mqttConfig is the specific mqtt getter/setter configuration
 type mqttConfig struct {
 	Topic, Payload string // Payload only applies to setters
-	Multiplier     float64
+	Scale          float64
 	Timeout        time.Duration
 }
 
@@ -42,8 +42,8 @@ func mqttFromConfig(log *util.Logger, other map[string]interface{}) mqttConfig {
 	var pc mqttConfig
 	util.DecodeOther(log, other, &pc)
 
-	if pc.Multiplier == 0 {
-		pc.Multiplier = 1
+	if pc.Scale == 0 {
+		pc.Scale = 1
 	}
 
 	return pc
@@ -67,7 +67,7 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter)
 		res = NewHTTPProviderFromConfig(log, config.Other).FloatGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.FloatGetter(pc.Topic, pc.Multiplier, pc.Timeout)
+		res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
 	case "script":
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).FloatGetter(pc.Cmd)
@@ -90,7 +90,7 @@ func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
 		res = NewHTTPProviderFromConfig(log, config.Other).IntGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.IntGetter(pc.Topic, int64(pc.Multiplier), pc.Timeout)
+		res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
 	case "script":
 		pc := scriptFromConfig(log, config.Other)
 		res = NewScriptProvider(pc.Timeout).IntGetter(pc.Cmd)
