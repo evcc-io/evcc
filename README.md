@@ -209,7 +209,7 @@ Meters provide data about power and energy consumption. Available meter implemen
     energy: Export # optional reading for total energy values, specify for charge meter
   ```
 
-- `sma`: SMA Home Manager and SMA Energy Meter. Power reading is configured out of the box but can be customizied if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0"):
+- `sma`: SMA Home Manager and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0"):
 
   ```yaml
   - name: sma-home-manager
@@ -218,6 +218,17 @@ Meters provide data about power and energy consumption. Available meter implemen
     power: # leave empty for mixed import/export energy
     energy: # leave empty to disable or choose obis 1:1.8.0/1:2.8.0
   ```
+
+- `tesla`: Tesla Powerwall Meter. Use `value` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`)
+
+  ```yaml
+  - name: powerwall
+    type: tesla
+    uri: http://192.168.1.4/api/meters/aggregates
+    meter: site # grid meter: `site`, pv: `solar`, battery: `battery`
+  ```
+
+  *Note*: this could also be implemented using a `default` meter with the `http` plugin.
 
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
 

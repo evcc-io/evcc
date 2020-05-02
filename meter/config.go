@@ -18,6 +18,8 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 		c = NewModbusFromConfig(log, other)
 	case "sma":
 		c = NewSMAFromConfig(log, other)
+	case "tesla", "powerwall":
+		c = NewTeslaFromConfig(log, other)
 	default:
 		log.FATAL.Fatalf("invalid meter type '%s'", typ)
 	}
