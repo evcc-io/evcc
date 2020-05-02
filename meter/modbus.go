@@ -81,24 +81,24 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 		}
 	}
 
-	// energy reading
-	if cc.Energy == "" {
-		cc.Energy = "Sum"
-	}
-
-	energyM, err := meters.MeasurementString(cc.Energy)
-	if err != nil {
-		log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Energy)
-	}
-
-	// for RS485 check if producer supports the measurement
-	m.opEnergy = rs485.Operation{IEC61850: energyM}
-	if dev, ok := device.(*rs485.RS485); ok {
-		m.opEnergy = modbus.RS485FindDeviceOp(dev, energyM)
-
-		if m.opEnergy.IEC61850 == 0 {
-			log.FATAL.Fatalf("unsupported measurement for energy: %s", cc.Energy)
+	// decorate energy reading
+	if cc.Energy != "" {
+		energyM, err := meters.MeasurementString(cc.Energy)
+		if err != nil {
+			log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Energy)
 		}
+
+		// for RS485 check if producer supports the measurement
+		m.opEnergy = rs485.Operation{IEC61850: energyM}
+		if dev, ok := device.(*rs485.RS485); ok {
+			m.opEnergy = modbus.RS485FindDeviceOp(dev, energyM)
+
+			if m.opEnergy.IEC61850 == 0 {
+				log.FATAL.Fatalf("unsupported measurement for energy: %s", cc.Energy)
+			}
+		}
+
+		return &ModbusEnergy{m}
 	}
 
 	return m
@@ -131,7 +131,12 @@ func (m *Modbus) CurrentPower() (float64, error) {
 	return m.floatGetter(m.opPower)
 }
 
+// ModbusEnergy decorates Modbus with api.MeterEnergy interface
+type ModbusEnergy struct {
+	*Modbus
+}
+
 // TotalEnergy implements the Meter.TotalEnergy interface
-func (m *Modbus) TotalEnergy() (float64, error) {
+func (m *ModbusEnergy) TotalEnergy() (float64, error) {
 	return m.floatGetter(m.opEnergy)
 }

@@ -19,6 +19,7 @@ type Modbus struct {
 	op      rs485.Operation
 }
 
+// ModbusSettings combine physical modbus configuration and MBMD model
 type ModbusSettings struct {
 	Model             string
 	modbus.Connection `mapstructure:",squash"`
@@ -49,7 +50,7 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 		conn.Slave(cc.ID)
 		err = device.Initialize(conn.ModbusClient())
 
-		// silence Kostal implementation errors
+		// silence KOSTAL implementation errors
 		if _, partial := err.(meters.SunSpecPartiallyInitialized); partial {
 			err = nil
 		}
