@@ -202,32 +202,30 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	})
 }
 
-// evChargeCurrentHandler updates proxy charge meter's charge current.
-// If physical charge meter is present this handler is not used.
-// It assumes that the charge meter cannot consume more than total household consumption
-func (lp *LoadPoint) evChargeCurrentHandler(m *wrapper.ChargeMeter) func(current int64) {
-	return func(current int64) {
-		power := float64(current*lp.Phases) * lp.Voltage
-
-		if !lp.enabled || lp.status != api.StatusC {
-			power = 0
-		} else if power > 0 {
-			// limit available power to generation plus consumption/ minus delivery
-			consumedPower := math.Abs(lp.pvPower) + lp.availableBatteryPower() + lp.gridPower
-			power = math.Min(power, consumedPower)
-		}
-
-		m.SetPower(power)
-	}
+// consumedPower estimates how much power the charger might have consumed given it was the only load
+// negative values mean pv: production, battery: charging, grid: export
+func consumedPower(pv, battery, grid float64) float64 {
+	return math.Abs(pv) + battery + grid
 }
 
-// availableBatteryPower delivers the battery charging power as additional available power at the grid connection point
-func (lp *LoadPoint) availableBatteryPower() float64 {
-	if lp.batteryPower < 0 {
-		return math.Abs(lp.batteryPower)
+// evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
+// where the charge meter can always be treated as present.  It assumes that the charge meter cannot consume
+// more than total household consumption. If physical charge meter is present this handler is not used.
+func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
+	power := float64(current*lp.Phases) * lp.Voltage
+
+	if !lp.enabled || lp.status != api.StatusC {
+		// if disabled we cannot be charging
+		power = 0
+	} else if power > 0 && lp.pvMeter != nil {
+		// limit charge power to generation plus grid consumption/ minus grid delivery
+		// as the charger cannot have consumed more than that
+		consumedPower := consumedPower(lp.pvPower, lp.batteryPower, lp.gridPower)
+		power = math.Min(power, consumedPower)
 	}
 
-	return 0
+	// handler only called if charge meter was replaced by dummy
+	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
@@ -245,7 +243,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.E
 			lp.chargeMeter = mt
 		} else {
 			mt := &wrapper.ChargeMeter{}
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler(mt))
+			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 			_ = lp.bus.Subscribe(evStopCharge, func() {
 				mt.SetPower(0)
 			})
@@ -454,7 +452,7 @@ func (lp *LoadPoint) rampOn(target int64) error {
 // updateModePV sets "minpv" or "pv" load modes
 func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 	// grid meter will always be available, if as wrapped pv meter
-	targetPower := lp.chargePower - lp.gridPower + lp.availableBatteryPower() - lp.ResidualPower
+	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
 	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
 
 	// get max charge current
