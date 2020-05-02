@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math"
@@ -32,6 +33,7 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 		Body        string
 		Jq          string
 		Scale       float64
+		Insecure    bool
 	}{}
 	util.DecodeOther(log, other, &cc)
 
@@ -45,6 +47,13 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 		headers:    cc.Headers,
 		body:       cc.Body,
 		scale:      cc.Scale,
+	}
+
+	// ignore the self signed certificate
+	if cc.Insecure {
+		customTransport := http.DefaultTransport.(*http.Transport).Clone()
+		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		p.HTTPHelper.Client.Transport = customTransport
 	}
 
 	if cc.Jq != "" {
