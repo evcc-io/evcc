@@ -91,7 +91,9 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
       Charge Power = PV Meter Power - Residual Power
 
-  The *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
+  The *pv meter* is expected to deliver negative values for export and should not return positive values.
+
+  *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
 
 - **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in Watt (W). The charger is then allowed to consume:
 
@@ -109,7 +111,7 @@ For both PV modes, EVCC needs to assess how much residual PV power is available 
 
       Charge Power = PV Meter Power + Battery Meter Power - Residual Power
 
-  The *battery meter* is expected to deliver negative values when charging, positives values signal discharging and are ignored.
+  The *battery meter* is expected to deliver negative values when charging and positive values when discharging.
 
 ### Charger setup
 
