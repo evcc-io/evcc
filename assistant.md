@@ -19,14 +19,18 @@ Beantworte die folgenden Fragen um die EVCC Konfiguration zu erstellen.
 Beantworte die folgenden Fragen um die Wallbox zu konfigurieren. Falls noch keine Wallbox vorhanden ist, kann EVCC dennoch getestet werden. Siehe [EVCC ohne Wallbox ausprobieren](#evcc-ohne-wallbox-ausprobieren).
 
 Welche Wallbox soll verwendet werden:
-- Wallbe
+- [Wallbe](#wallbe-auswählen)
 - KEBA Connect
 - go-eCharger
 - andere Wallbox mit Phoenix Controller
 
-## Zähler konfigurieren
+## Batterie oder HEMS konfigurieren
 
 ping
+
+## Zähler konfigurieren
+
+puck
 
 ## Fahrzeug konfigurieren
 
@@ -54,7 +58,7 @@ Wenn [Zähler](#zähler-prüfen) oder [Fahrzeug](#fahrzeug-prüfen) konfiguriert
 
 # Anweisungen
 
-## Allgemein
+## Allgemeine Konfigurationsanweisungen
 
 ### MQTT konfigurieren
 
@@ -67,4 +71,12 @@ foo
 
 ## Wallbox konfigurieren
 
-bar
+### Wallbe auswählen
+
+Ist die eingesetzte Wallbe neueren Datens (ca. ab 2019)?
+
+[JA: Wallbe konfigurieren](#wallbe-konfigurieren)
+[NEIN: Wallbe Legacy konfigurieren](#wallbe-legacy-konfigurieren)
+
+### Wallbe konfigurieren
+### Wallbe Legacy konfigurieren
