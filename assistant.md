@@ -12,8 +12,43 @@ Beantworte die folgenden Fragen um die EVCC Konfiguration zu erstellen.
 ### Möchtest Du Messwerte in InfluxDB erfassen und mit Grafana visualisieren?
 
 [JA: InfluxDB konfigurieren](#influxdb-konfigurieren)
-[NEIN: Weiter](#influxdb-konfigurieren)
+[NEIN: Weiter](#wallbox)
 
+## Wallbox
+
+Beantworte die folgenden Fragen um die Wallbox zu konfigurieren. Falls noch keine Wallbox vorhanden ist, kann EVCC dennoch getestet werden. Siehe [EVCC ohne Wallbox ausprobieren](#evcc-ohne-wallbox-ausprobieren).
+
+Welche Wallbox soll verwendet werden:
+- Wallbe
+- KEBA Connect
+- go-eCharger
+- andere Wallbox mit Phoenix Controller
+
+## Zähler konfigurieren
+
+ping
+
+## Fahrzeug konfigurieren
+
+pong
+
+
+
+# EVCC ohne Wallbox ausprobieren
+
+Wenn [Zähler](#zähler-prüfen) oder [Fahrzeug](#fahrzeug-prüfen) konfiguriert sind, kann die Konfiguration jeweils überprüft werden.
+
+## Zähler prüfen
+
+    evcc -c evcc.yaml meter
+
+[Zurück zur Zählerkonfiguration](#zähler-konfigurieren)
+
+## Fahrzeug prüfen
+
+    evcc -c evcc.yaml vehicle
+
+[Zurück zur Fahrzeugkonfiguration](#fahrzeug-konfigurieren)
 
 
 
@@ -29,3 +64,7 @@ Beantworte die folgenden Fragen um die EVCC Konfiguration zu erstellen.
 ### InfluxDB konfigurieren
 
 foo
+
+## Wallbox konfigurieren
+
+bar
