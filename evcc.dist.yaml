@@ -78,6 +78,18 @@ meters:
   id: 2
   power: Power # default values, optionally override
   energy: Sum # default values, optionally override
+- name: e3dc-battery
+  type: default
+  power:
+    type: modbus
+    uri: e3dc.fritz.box:502
+    id: 1
+    register: # manual register configuration
+      address: 40070
+      length: 2
+      type: holding
+      decode: int32
+    scale: -1 # reverse direction
 
 chargers:
 - name: wallbe

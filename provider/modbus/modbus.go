@@ -1,6 +1,7 @@
 package modbus
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/andig/evcc/util"
@@ -8,6 +9,49 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
+
+// Register contains the ModBus register configuration
+type Register struct {
+	Address, Length uint16
+	Type            string
+	Decode          string
+}
+
+// RegisterOperation creates a read operation from a register definition
+func RegisterOperation(r Register) (rs485.Operation, error) {
+	op := rs485.Operation{
+		OpCode:  r.Address,
+		ReadLen: r.Length,
+	}
+
+	switch strings.ToLower(r.Type) {
+	case "holding":
+		op.FuncCode = rs485.ReadHoldingReg
+	case "input":
+		op.FuncCode = rs485.ReadInputReg
+	default:
+		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
+	}
+
+	switch strings.ToLower(r.Decode) {
+	case "float32", "ieee754":
+		op.Transform = rs485.RTUIeee754ToFloat64
+	case "uint16":
+		op.Transform = rs485.RTUUint16ToFloat64
+	case "uint32":
+		op.Transform = rs485.RTUUint32ToFloat64
+	case "uint64":
+		op.Transform = rs485.RTUUint64ToFloat64
+	case "int16":
+		op.Transform = rs485.RTUInt16ToFloat64
+	case "int32":
+		op.Transform = rs485.RTUInt32ToFloat64
+	default:
+		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
+	}
+
+	return op, nil
+}
 
 // Connection contains the ModBus connection configuration
 type Connection struct {
