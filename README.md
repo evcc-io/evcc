@@ -7,7 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe, Phoenix, go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
+- multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
@@ -24,7 +24,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [Installation](#installation)
 - [General concepts](#general-concepts)
   - [Charge modes](#charge-modes)
-  - [PV generator setup](#pv-generator-setup)
+  - [Meter setup](#meter-setup)
   - [Charger setup](#charger-setup)
 - [Configuration](#configuration)
   - [Charger](#charger)
@@ -83,7 +83,7 @@ Multiple charge modes are supported:
 
 In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
 
-### PV generator setup
+### Meter setup
 
 For both PV modes, EVCC needs to assess how much residual PV power is available at the grid connection point and how much power the charger actually uses. Various methods are implemented to obtain this information, with different degrees of accuracy.
 
@@ -131,18 +131,18 @@ The EVCC consists of four basic elements: *Charger*, *Meter* and *Vehicle* indiv
 
 Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers (see [Hardware Preparation](#Wallbe-hardware-preparation) for preparing the Wallbe). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
-- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers (Ethernet connection)
+- `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
+- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers like the ESL Walli (Ethernet connection).
 - `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
 - `nrgkick`: NRGKick chargers with Connect module
 - `go-e`: go-eCharger chargers
-- `keba`: KEBA KeContact P20/P30 and BMW chargers (Note: requires enabled UDP function with DIP switch 1.3 = `ON`, see installation manual)
+- `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
-#### Wallbe hardware preparation
+#### Wallbe preparation
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
@@ -162,36 +162,15 @@ Compare the value to what you see as *Actual Charge Current Setting* in the Wall
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
-#### OpenWB slave mode
+#### KEBA preparation
 
-EVCC can be used to remote control an openWB charger using openWB's MQTT interface. Here is an example for how to use the `default` charger for controlling the first loadpoint, using the special `openw` plugin:
+KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see KEBA installation manual.
 
-````yaml
-chargers:
-- name: openwb
-  type: default
-  status:
-    # with openWB, charging status (A..F) this is split between "plugged" and "charging"
-    # the openwb type combines both into status (charging=C, plugged=B, otherwise=A)
-    type: openwb
-    plugged:
-      type: mqtt
-      topic: openWB/lp/1/boolPlugStat
-    charging:
-      type: mqtt
-      topic: openWB/lp/1/boolChargeStat
-  enabled:
-    type: mqtt
-    topic: openWB/lp/1/ChargePointEnabled
-    timeout: 30s
-  enable:
-    type: mqtt
-    topic: openWB/set/lp1/ChargePointEnabled
-    payload: ${enable:%d}
-  maxcurrent:
-    type: mqtt
-    topic: openWB/set/lp1/DirectChargeAmps
-````
+If using Docker, make sure that the Docker container can receive UDP messages on port 7090 used by KEBA by using [host networking](https://docs.docker.com/network/host/) in Docker:
+
+```sh
+docker run --network=host -p 7070:7070 andig/evcc ...
+```
 
 ### Meter
 
@@ -215,7 +194,7 @@ Meters provide data about power and energy consumption. Available meter implemen
   - name: sma-home-manager
     type: sdm
     uri: 192.168.1.4
-    power: # leave empty for mixed import/export energy
+    power: # leave empty for combined import/export power choose obis
     energy: # leave empty to disable or choose obis 1:1.8.0/1:2.8.0
   ```
 
@@ -231,6 +210,17 @@ Meters provide data about power and energy consumption. Available meter implemen
   *Note*: this could also be implemented using a `default` meter with the `http` plugin.
 
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
+
+  ```yaml
+  - name: vzlogger
+    type: default
+    power:
+      type: http # or any other plugin
+      ...
+    energy:
+      type: http # or any other plugin
+      ...
+  ```
 
 ### Vehicle
 
