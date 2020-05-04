@@ -8,7 +8,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe, Phoenix, go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
-- multiple [meters](#meter): ModBus (SDM630, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, Tesla PowerWall)
+- multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
@@ -316,10 +316,11 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
   - `DZG` DZG Metering GmbH DVH4013 meters
   - `INEPRO` Inepro Metering Pro 380
   - `JANITZA`  Janitza B-Series meters
-  - `SBC` Saia Burgess Controls ALE3 meters
+  - `SBC` Saia Burgess Controls ALD1 and ALE3 meters
   - `SDM` Eastron SDM630
   - `SDM220` Eastron SDM220
   - `SDM230` Eastron SDM230
+  - `SDM72` Eastron SDM72
 - TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc)
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
