@@ -15,6 +15,8 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+// https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
+
 const (
 	udpTimeout = time.Second
 	kebaPort   = "7090"
