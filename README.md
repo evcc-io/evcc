@@ -286,6 +286,7 @@ If the device is a grid inverter or a Modbus meter connected via TCP, `uri` must
 ```yaml
 type: modbus
 uri: 192.168.0.11:502
+id: 1 # modbus slave id
 ```
 
 If the device is a Modbus RTU device connected using an RS485/Ethernet adapter, set `rtu: true`. The serial configuration must be done directly on the adapter. Example:
@@ -293,6 +294,7 @@ If the device is a Modbus RTU device connected using an RS485/Ethernet adapter, 
 ```yaml
 type: modbus
 uri: 192.168.0.10:502
+id: 3 # modbus slave id
 rtu: true
 ```
 
@@ -302,10 +304,10 @@ The meter device type `meter` and the device's slave id `id` are always required
 
 ```yaml
 type: ...
-uri/device: ...
+uri/device/id: ...
 model: sdm
-id: 3
 value: Power
+scale: -1 # floating point factor applied to result, e.g. for kW to W conversion
 ```
 
 Supported meter models are the same as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices):
@@ -324,6 +326,21 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
 - TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc)
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
+
+#### Manual configuration
+
+If the Modbus device is not supported by MBMD, the Modbus register can also be manually configured:
+
+```yaml
+type: ...
+uri/device/id: ...
+register:
+  address: 40070
+  length: 2
+  type: holding
+  decode: int32
+scale: -1 # floating point factor applied to result, e.g. for kW to W conversion
+```
 
 ### MQTT (read/write)
 
