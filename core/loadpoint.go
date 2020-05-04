@@ -453,7 +453,11 @@ func (lp *LoadPoint) rampOn(target int64) error {
 func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 	// grid meter will always be available, if as wrapped pv meter
 	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
-	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
+	if lp.batteryMeter == nil {
+		log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
+	} else {
+		log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW battery - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.batteryPower, lp.ResidualPower)
+	}
 
 	// get max charge current
 	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
