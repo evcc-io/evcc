@@ -40,7 +40,7 @@
 
 <div id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary far fa-leaf mr-2"></i>evcc</a>
+    <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -62,7 +62,7 @@
 <div id="error">
   <div class="toast" data-delay="2000" style="position: absolute; top: 4rem; right: 0.5rem;">
     <div class="toast-header">
-      <strong class="mr-auto"><i class="text-danger far fa-exclamation-triangle"></i> Error</strong>
+      <strong class="mr-auto"><i class="text-danger fas fa-exclamation-triangle"></i> Error</strong>
       <small v-if="error.status">HTTP {{error.status}}</small>
       <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -154,7 +154,7 @@
           <h2 class="card-title pricing-card-title">
             {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
           </h2>
-          <p>Ladeleistung <i class="text-primary far fa-leaf" v-if="state.chargePower"></i></p>
+          <p>Ladeleistung <i class="text-primary fas fa-leaf" v-if="state.chargePower"></i></p>
         </div>
       </div>
     </div>
@@ -170,10 +170,10 @@
           <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
               class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
           <p v-if="state.gridPower > 0">
-            Bezug <i class="text-primary far fa-arrow-down"></i>
+            Bezug <i class="text-primary fas fa-arrow-down"></i>
           </p>
           <p v-else>
-            Einspeisung <i class="text-primary far fa-arrow-up"></i>
+            Einspeisung <i class="text-primary fas fa-arrow-up"></i>
           </p>
         </div>
       </div>
@@ -190,7 +190,7 @@
           <h2 class="card-title pricing-card-title">
             {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
           </h2>
-          <p>Erzeugung <i class="text-primary far fas fa-sun" v-if="false"></i></p>
+          <p>Erzeugung <i class="text-primary fas fas fa-sun" v-if="false"></i></p>
         </div>
       </div>
     </div>

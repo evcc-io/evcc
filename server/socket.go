@@ -85,12 +85,13 @@ func NewSocketHub() *SocketHub {
 func (h *SocketHub) encode(v core.Param) ([]byte, error) {
 	var s string
 	switch val := v.Val.(type) {
-	case string:
+	case time.Duration:
+		// must be before stringer to convert to seconds instead of string
+		s = fmt.Sprintf("{\"%s\": %d}", v.Key, int64(val.Seconds()))
+	case fmt.Stringer, string:
 		s = fmt.Sprintf("{\"%s\": \"%s\"}", v.Key, val)
 	case float64:
 		s = fmt.Sprintf("{\"%s\": %.3f}", v.Key, val)
-	case time.Duration:
-		s = fmt.Sprintf("{\"%s\": %d}", v.Key, int64(val.Seconds()))
 	default:
 		s = fmt.Sprintf("{\"%s\": %v}", v.Key, val)
 	}
