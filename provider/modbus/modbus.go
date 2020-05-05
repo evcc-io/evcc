@@ -36,16 +36,22 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 	switch strings.ToLower(r.Decode) {
 	case "float32", "ieee754":
 		op.Transform = rs485.RTUIeee754ToFloat64
+	case "float64":
+		op.Transform = rs485.RTUUint64ToFloat64
 	case "uint16":
 		op.Transform = rs485.RTUUint16ToFloat64
 	case "uint32":
 		op.Transform = rs485.RTUUint32ToFloat64
+	case "uint32s":
+		op.Transform = rs485.RTUUint32ToFloat64Swapped
 	case "uint64":
 		op.Transform = rs485.RTUUint64ToFloat64
 	case "int16":
 		op.Transform = rs485.RTUInt16ToFloat64
 	case "int32":
 		op.Transform = rs485.RTUInt32ToFloat64
+	case "int32s":
+		op.Transform = rs485.RTUInt32ToFloat64Swapped
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}
