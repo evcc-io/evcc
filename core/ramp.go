@@ -53,9 +53,7 @@ func (lp *Ramp) chargerEnable(enable bool) error {
 	}
 
 	// if not enabled, current will be reduced to 0 in handler
-	if lp.bus != nil {
-		lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
-	}
+	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 
 	return nil
 }
@@ -77,9 +75,7 @@ func (lp *Ramp) setTargetCurrent(targetCurrentIn int64) error {
 		lp.targetCurrent = targetCurrent // cache
 	}
 
-	if lp.bus != nil {
-		lp.bus.Publish(evChargeCurrent, targetCurrent)
-	}
+	lp.bus.Publish(evChargeCurrent, targetCurrent)
 
 	return nil
 }
