@@ -4,22 +4,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
 
 // Influx2 is a influx publisher
 type Influx2 struct {
 	sync.Mutex
-	log    *api.Logger
+	log    *util.Logger
 	client influxdb2.InfluxDBClient
 	writer influxdb2.WriteApi
 }
 
 // NewInflux2Client creates new publisher for influx
 func NewInflux2Client(url, token, org, bucket string) *Influx2 {
-	log := api.NewLogger("iflx")
+	log := util.NewLogger("iflx")
 
 	client := influxdb2.NewClient(url, token)
 	writer := client.WriteApi(org, bucket)
