@@ -118,11 +118,11 @@ func (lp *ChargerHandler) rampUpDown(target int64) error {
 // Setting current and disabling are two steps. If already disabled, this is a nop.
 func (lp *ChargerHandler) rampOff() error {
 	if lp.enabled {
-		if lp.targetCurrent == lp.MinCurrent {
-			return lp.chargerEnable(false)
+		if lp.targetCurrent != lp.MinCurrent {
+			return lp.setTargetCurrent(lp.MinCurrent)
 		}
 
-		return lp.setTargetCurrent(lp.MinCurrent)
+		return lp.chargerEnable(false)
 	}
 
 	return nil
