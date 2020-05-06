@@ -2,6 +2,7 @@ package charger
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -17,7 +18,7 @@ const (
 )
 
 // PhoenixEMCP is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
-// It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
+// It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMCP struct {
 	log     *util.Logger
 	client  modbus.Client
@@ -32,8 +33,13 @@ func NewPhoenixEMCPFromConfig(log *util.Logger, other map[string]interface{}) ap
 	}{}
 	util.DecodeOther(log, other, &cc)
 
+	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
+		log.FATAL.Printf("config: missing or invalid phoenix EM-CP uri: %s", cc.URI)
+	}
+
 	if cc.ID == 0 {
-		log.FATAL.Fatal("config: missing slave id")
+		cc.ID = 180
+		log.WARN.Printf("config: missing phoenix EM-CP slave id, assuming default %d", cc.ID)
 	}
 
 	return NewPhoenixEMCP(cc.URI, cc.ID)

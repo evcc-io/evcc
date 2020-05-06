@@ -30,7 +30,8 @@ func NewPhoenixEVCCFromConfig(log *util.Logger, other map[string]interface{}) ap
 	util.DecodeOther(log, other, &cc)
 
 	if cc.ID == 0 {
-		log.FATAL.Fatal("config: missing slave id")
+		cc.ID = 255
+		log.WARN.Printf("config: missing phoenix EV-CC slave id, assuming default %d", cc.ID)
 	}
 
 	return NewPhoenixEVCC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
