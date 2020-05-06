@@ -3,6 +3,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -42,6 +43,11 @@ func NewWallbeFromConfig(log *util.Logger, other map[string]interface{}) *Wallbe
 	}{}
 	util.DecodeOther(log, other, &cc)
 
+	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
+		cc.URI = "192.168.0.8:502"
+		log.WARN.Printf("config: missing or invalid wallbe uri, using default %s", cc.URI)
+	}
+
 	wb := NewWallbe(cc.URI)
 
 	if cc.Legacy {
@@ -53,10 +59,6 @@ func NewWallbeFromConfig(log *util.Logger, other map[string]interface{}) *Wallbe
 
 // NewWallbe creates a Wallbe charger
 func NewWallbe(conn string) *Wallbe {
-	if conn == "" {
-		conn = "192.168.0.8:502"
-	}
-
 	handler := modbus.NewTCPClientHandler(conn)
 	client := modbus.NewClient(handler)
 
