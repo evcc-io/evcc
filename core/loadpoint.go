@@ -345,8 +345,7 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 	return status
 }
 
-// updateModePV sets "minpv" or "pv" load modes
-func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
+func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// grid meter will always be available, if as wrapped pv meter
 	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
 	if lp.batteryMeter == nil {
@@ -364,6 +363,19 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 		case api.ModePV:
 			targetCurrent = 0
 		}
+	}
+
+	return targetCurrent
+}
+
+// updateModePV handles "minpv" or "pv" modes by setting charger enabled/disabled state
+// and maximum current according to available PV power
+func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
+	targetCurrent := lp.maxCurrent(mode)
+	if !lp.connected() {
+		// ensure minimum current when not connected
+		// https://github.com/andig/evcc/issues/105
+		targetCurrent = min(lp.MinCurrent, targetCurrent)
 	}
 
 	log.DEBUG.Printf("%s target charge current: %dA", lp.Name, targetCurrent)
@@ -435,24 +447,25 @@ func (lp *LoadPoint) update() {
 
 	// check if car connected and ready for charging
 	var err error
-	if !lp.connected() {
-		// ensure restart at min current
-		err = lp.setTargetCurrent(lp.MinCurrent)
-	} else {
-		// execute loading strategy
-		switch mode := lp.GetMode(); mode {
-		case api.ModeOff:
-			err = lp.rampOff()
-		case api.ModeNow:
-			err = lp.rampOn(lp.MaxCurrent)
-		case api.ModeMinPV, api.ModePV:
-			if meterErr == nil {
-				// pv modes require meter measurements
-				err = lp.updateModePV(mode)
-			} else {
-				log.WARN.Printf("%s aborting due to meter error", lp.Name)
-			}
+
+	// execute loading strategy
+	switch mode := lp.GetMode(); mode {
+	case api.ModeOff:
+		err = lp.rampOff()
+	case api.ModeNow:
+		// ensure that new connections happen at min current
+		current := lp.MinCurrent
+		if lp.connected() {
+			current = lp.MaxCurrent
 		}
+		err = lp.rampOn(current)
+	case api.ModeMinPV, api.ModePV:
+		// pv modes require meter measurements
+		if meterErr != nil {
+			log.WARN.Printf("%s aborting due to meter error", lp.Name)
+			break
+		}
+		err = lp.updateModePV(mode)
 	}
 
 	if err != nil {
