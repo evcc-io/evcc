@@ -305,16 +305,6 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	return nil
 }
 
-// ChargedEnergy implements the ChargeRater interface.
-func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
-	var currentSession MCCCurrentSession
-	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession); err != nil {
-		return 0, err
-	}
-
-	return currentSession.EnergySumKwh, nil
-}
-
 // ChargingTime yields current charge run duration
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession

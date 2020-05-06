@@ -237,43 +237,6 @@ func TestMobileConnect_MaxCurrent(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_ChargedEnergy(t *testing.T) {
-	tests := []struct {
-		name      string
-		responses []apiResponse
-		want      float64
-		wantErr   bool
-	}{
-		// test cases for software version 2914
-		{
-			"valid response",
-			[]apiResponse{
-				{apiCurrentSession, "\"{\\n    \\\"account\\\": \\\"PRIVATE\\\",\\n    \\\"chargingRate\\\": 0,\\n    \\\"chargingType\\\": \\\"AC\\\",\\n    \\\"clockSrc\\\": \\\"NTP\\\",\\n    \\\"costs\\\": 0,\\n    \\\"currency\\\": \\\"\\\",\\n    \\\"departTime\\\": \\\"\\\",\\n    \\\"duration\\\": 30789,\\n    \\\"endOfChargeTime\\\": \\\"\\\",\\n    \\\"endSoc\\\": 0,\\n    \\\"endTime\\\": \\\"\\\",\\n    \\\"energySumKwh\\\": 18.832000000000001,\\n    \\\"evChargingRatekW\\\": 0,\\n    \\\"evTargetSoc\\\": -1,\\n    \\\"evVasAvailability\\\": false,\\n    \\\"pcid\\\": \\\"\\\",\\n    \\\"powerRange\\\": 0,\\n    \\\"selfEnergy\\\": 0,\\n    \\\"sessionId\\\": 13,\\n    \\\"soc\\\": -1,\\n    \\\"solarEnergyShare\\\": 0,\\n    \\\"startSoc\\\": 0,\\n    \\\"startTime\\\": \\\"2020-04-15T10:07:22+02:00\\\",\\n    \\\"totalRange\\\": 0,\\n    \\\"vehicleBrand\\\": \\\"\\\",\\n    \\\"vehicleModel\\\": \\\"\\\",\\n    \\\"whitelist\\\": false\\n}\\n\""},
-			}, 18.832000000000001, false,
-		},
-		{
-			"error response",
-			[]apiResponse{
-				{apiCurrentSession, "\"\""},
-			}, 0, true,
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			mcc := NewTestMobileConnect(t, tc.responses)
-
-			got, err := mcc.ChargedEnergy()
-			if (err != nil) != tc.wantErr {
-				t.Errorf("MobileConnect.ChargedEnergy() error = %v, wantErr %v", err, tc.wantErr)
-				return
-			}
-			if got != tc.want {
-				t.Errorf("MobileConnect.ChargedEnergy() = %v, want %v", got, tc.want)
-			}
-		})
-	}
-}
-
 func TestMobileConnect_ChargingTime(t *testing.T) {
 	tests := []struct {
 		name      string
