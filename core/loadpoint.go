@@ -451,8 +451,12 @@ func (lp *LoadPoint) update() {
 	// execute loading strategy
 	switch mode := lp.GetMode(); mode {
 	case api.ModeOff:
+		// apply immediately
+		lp.guardUpdated = lp.clock.Now()
 		err = lp.rampOff()
 	case api.ModeNow:
+		// apply immediately
+		lp.guardUpdated = lp.clock.Now()
 		// ensure that new connections happen at min current
 		current := lp.MinCurrent
 		if lp.connected() {
