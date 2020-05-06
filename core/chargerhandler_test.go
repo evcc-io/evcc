@@ -2,6 +2,7 @@ package core
 
 import (
 	"testing"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/mock"
@@ -14,6 +15,7 @@ const (
 	minA        int64 = 6
 	maxA        int64 = 16
 	sensitivity       = 1
+	dt                = time.Hour
 )
 
 type nilCharger struct{}
@@ -23,45 +25,85 @@ func (c *nilCharger) Enabled() (bool, error)            { return false, nil }
 func (c *nilCharger) Enable(enable bool) error          { return nil }
 func (c *nilCharger) MaxCurrent(current int64) error    { return nil }
 
+func newChargerHandler(clock clock.Clock, mc api.Charger) ChargerHandler {
+	r := NewChargerHandler("", clock, evbus.New())
+
+	r.charger = mc
+	r.Sensitivity = sensitivity
+	r.guardUpdated = clock.Now()
+
+	return r
+}
+
+func TestNewChargerHandler(t *testing.T) {
+	r := NewChargerHandler("", nil, nil)
+
+	if r.MinCurrent != minA {
+		t.Errorf("expected %v, got %v", minA, r.MinCurrent)
+	}
+	if r.MaxCurrent != maxA {
+		t.Errorf("expected %v, got %v", maxA, r.MaxCurrent)
+	}
+	if r.Sensitivity != 10 {
+		t.Errorf("expected %v, got %v", 10, r.Sensitivity)
+	}
+	if r.GuardDuration != 5*time.Minute {
+		t.Errorf("expected %v, got %v", 5*time.Minute, r.GuardDuration)
+	}
+}
+
 func TestEnable(t *testing.T) {
 	tc := []struct {
-		enabledI, enabledO             bool
-		targetCurrentI, targetCurrentO int64
-		expect                         func(*mock.MockCharger)
+		enabledI       bool
+		dt             time.Duration
+		enable         bool
+		targetCurrentI int64
+		expect         func(*mock.MockCharger)
 	}{
 		// any test with current != 0 or min will fail
-		{false, false, 0, 0, func(mc *mock.MockCharger) {}},
-		{false, true, 0, 0, func(mc *mock.MockCharger) {
+		{false, 0, false, 0, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		{false, 0, true, 0, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		{false, dt, true, 0, func(mc *mock.MockCharger) {
 			mc.EXPECT().Enable(true).Return(nil)
 		}},
-		{false, true, minA, minA, func(mc *mock.MockCharger) {
+		{false, 0, true, minA, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		{false, dt, true, minA, func(mc *mock.MockCharger) {
 			mc.EXPECT().Enable(true).Return(nil)
 		}},
-		{true, false, minA, minA, func(mc *mock.MockCharger) {
+		{true, 0, false, minA, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		{true, dt, false, minA, func(mc *mock.MockCharger) {
 			mc.EXPECT().Enable(false).Return(nil)
 		}},
-		{true, true, minA, minA, func(mc *mock.MockCharger) {}},
+		{true, 0, true, minA, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		{true, dt, true, minA, func(mc *mock.MockCharger) {
+			// nop
+		}},
 	}
 
 	for _, tc := range tc {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &ChargerHandler{
-			clock:         clock.NewMock(),
-			bus:           evbus.New(),
-			enabled:       tc.enabledI,
-			targetCurrent: tc.targetCurrentI,
-			charger:       mc,
-			MinCurrent:    minA,
-		}
+		t.Log(tc)
+
+		clock := clock.NewMock()
+		r := newChargerHandler(clock, mc)
+		r.enabled = tc.enabledI
+		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
-		r.chargerEnable(tc.enabledO)
-
-		if r.enabled != tc.enabledO {
-			t.Errorf("enabled: expected %s, got %s", status[tc.enabledO], status[r.enabled])
-		}
+		clock.Add(tc.dt)
+		r.chargerEnable(tc.enable)
 
 		ctrl.Finish()
 	}
@@ -96,14 +138,11 @@ func TestSetCurrent(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &ChargerHandler{
-			clock:         clock.NewMock(),
-			bus:           evbus.New(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			targetCurrent: tc.targetCurrentI,
-			charger:       mc,
-		}
+		t.Log(tc)
+
+		clock := clock.NewMock()
+		r := newChargerHandler(clock, mc)
+		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
 		r.setTargetCurrent(tc.targetCurrent)
@@ -120,30 +159,43 @@ func TestRampOn(t *testing.T) {
 	tc := []struct {
 		enabledI                      bool
 		targetCurrentI, targetCurrent int64
+		dt                            time.Duration
 		expect                        func(*mock.MockCharger)
 	}{
 		// off at zero: set min
-		{false, 0, minA, func(mc *mock.MockCharger) {
+		{false, 0, minA, 0, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(minA).Return(nil)
+			// guard duration
+		}},
+		{false, 0, minA, dt, func(mc *mock.MockCharger) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			mc.EXPECT().Enable(true).Return(nil)
 		}},
 		// off at max: set min
-		{false, maxA, minA, func(mc *mock.MockCharger) {
+		{false, maxA, minA, 0, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(minA).Return(nil)
+			// guard duration
+		}},
+		{false, maxA, minA, dt, func(mc *mock.MockCharger) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			mc.EXPECT().Enable(true).Return(nil)
 		}},
 		// off at min: set on
-		{false, minA, minA, func(mc *mock.MockCharger) {
+		{false, minA, minA, 0, func(mc *mock.MockCharger) {
+			// we are at min: current call omitted
+			// guard duration
+		}},
+		{false, minA, minA, dt, func(mc *mock.MockCharger) {
 			// we are at min: current call omitted
 			mc.EXPECT().Enable(true).Return(nil)
 		}},
 		// on at min, set min: set min
-		{true, minA, minA, func(mc *mock.MockCharger) {
+		{true, minA, minA, 0, func(mc *mock.MockCharger) {
 			// we are at min: current call omitted
 			// we are enabled: enable call omitted
 		}},
 		// on at max, set min: set min
-		{true, maxA, minA, func(mc *mock.MockCharger) {
+		{true, maxA, minA, 0, func(mc *mock.MockCharger) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			// we are enabled: enable call omitted
 		}},
@@ -153,17 +205,15 @@ func TestRampOn(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &ChargerHandler{
-			clock:         clock.NewMock(),
-			bus:           evbus.New(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			enabled:       tc.enabledI,
-			targetCurrent: tc.targetCurrentI,
-			charger:       mc,
-		}
+		t.Log(tc)
+
+		clock := clock.NewMock()
+		r := newChargerHandler(clock, mc)
+		r.enabled = tc.enabledI
+		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
+		clock.Add(tc.dt)
 		r.rampOn(tc.targetCurrent)
 
 		ctrl.Finish()
@@ -174,27 +224,32 @@ func TestRampOff(t *testing.T) {
 	tc := []struct {
 		enabledI       bool
 		targetCurrentI int64
+		dt             time.Duration
 		expect         func(*mock.MockCharger)
 	}{
 		// off at zero
-		{false, 0, func(mc *mock.MockCharger) {
+		{false, 0, 0, func(mc *mock.MockCharger) {
+			// we are off: enable call omitted
+		}},
+		// off at min
+		{false, minA, 0, func(mc *mock.MockCharger) {
 			// we are off: enable call omitted
 		}},
 		// off at max
-		{false, maxA, func(mc *mock.MockCharger) {
+		{false, maxA, 0, func(mc *mock.MockCharger) {
 			// we are off: enable call omitted
 		}},
-		// // off at min
-		{false, minA, func(mc *mock.MockCharger) {
-			// we are off: enable call omitted
+		// on at min, disable
+		{true, minA, 0, func(mc *mock.MockCharger) {
+			// we are at min: current call omitted
+			// guard duration
 		}},
-		// on at min, set min
-		{true, minA, func(mc *mock.MockCharger) {
+		{true, minA, dt, func(mc *mock.MockCharger) {
 			// we are at min: current call omitted
 			mc.EXPECT().Enable(false).Return(nil)
 		}},
 		// on at max, set min
-		{true, maxA, func(mc *mock.MockCharger) {
+		{true, maxA, 0, func(mc *mock.MockCharger) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			// we are not at min: enable call omitted
 		}},
@@ -204,17 +259,15 @@ func TestRampOff(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &ChargerHandler{
-			clock:         clock.NewMock(),
-			bus:           evbus.New(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			enabled:       tc.enabledI,
-			targetCurrent: tc.targetCurrentI,
-			charger:       mc,
-		}
+		t.Log(tc)
+
+		clock := clock.NewMock()
+		r := newChargerHandler(clock, mc)
+		r.enabled = tc.enabledI
+		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
+		clock.Add(tc.dt)
 		r.rampOff()
 
 		ctrl.Finish()
@@ -256,16 +309,12 @@ func TestRampUpDown(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &ChargerHandler{
-			clock:         clock.NewMock(),
-			bus:           evbus.New(),
-			MinCurrent:    minA,
-			MaxCurrent:    maxA,
-			Sensitivity:   sensitivity,
-			enabled:       true,
-			targetCurrent: tc.targetCurrentI,
-			charger:       mc,
-		}
+		t.Log(tc)
+
+		clock := clock.NewMock()
+		r := newChargerHandler(clock, mc)
+		r.enabled = true
+		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
 		r.rampUpDown(tc.targetCurrent)

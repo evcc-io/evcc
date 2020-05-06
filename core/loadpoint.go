@@ -141,17 +141,8 @@ func NewLoadPoint() *LoadPoint {
 			Phases:  1,
 			Voltage: 230, // V
 		},
-		status: api.StatusNone,
-	}
-
-	lp.ChargerHandler = ChargerHandler{
-		Name:          "main",
-		clock:         clock, // mockable time
-		bus:           bus,   // event bus
-		MinCurrent:    6,     // A
-		MaxCurrent:    16,    // A
-		Sensitivity:   10,    // A
-		GuardDuration: 10 * time.Minute,
+		status:         api.StatusNone,
+		ChargerHandler: NewChargerHandler("main", clock, bus),
 	}
 
 	return lp

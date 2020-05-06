@@ -30,13 +30,26 @@ type ChargerHandler struct {
 	guardUpdated time.Time // charger enabled/disabled timestamp
 }
 
+// NewChargerHandler creates handler with default settings
+func NewChargerHandler(name string, clock clock.Clock, bus evbus.Bus) ChargerHandler {
+	return ChargerHandler{
+		Name:          name,
+		clock:         clock, // mockable time
+		bus:           bus,   // event bus
+		MinCurrent:    6,     // A
+		MaxCurrent:    16,    // A
+		Sensitivity:   10,    // A
+		GuardDuration: 5 * time.Minute,
+	}
+}
+
 // chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
 func (lp *ChargerHandler) chargerEnable(enable bool) error {
 	if lp.targetCurrent != 0 && lp.targetCurrent != lp.MinCurrent {
 		log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
 
-	if remaining := (lp.GuardDuration - time.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
+	if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
 		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
 		return nil
 	}
