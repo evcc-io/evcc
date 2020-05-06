@@ -293,14 +293,14 @@ func (lp *LoadPoint) connected() bool {
 
 // chargingCycle detects charge cycle start and stop events and manages the
 // charge energy counter and charge timer. It guards against duplicate invocation.
-func (lp *LoadPoint) chargingCycle(enable bool) {
-	if enable == lp.charging {
+func (lp *LoadPoint) chargingCycle(start bool) {
+	if start == lp.charging {
 		return
 	}
 
-	lp.charging = enable
+	lp.charging = start
 
-	if enable {
+	if start {
 		log.INFO.Printf("%s start charging ->", lp.Name)
 		lp.bus.Publish(evStartCharge)
 	} else {
@@ -309,14 +309,13 @@ func (lp *LoadPoint) chargingCycle(enable bool) {
 	}
 }
 
-// updateChargeStatus updates car status and stops charging if car disconnected
-func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
-	// abort if no vehicle connected
+// updateChargeStatus updates car status and detects car connected/disconnected events
+func (lp *LoadPoint) updateChargeStatus() error {
 	status, err := lp.charger.Status()
 	if err != nil {
-		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
-		return api.StatusNone
+		return err
 	}
+
 	log.DEBUG.Printf("%s charger status: %s", lp.Name, status)
 
 	if prevStatus := lp.status; status != prevStatus {
@@ -342,7 +341,7 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 		lp.chargingCycle(status == api.StatusC)
 	}
 
-	return status
+	return nil
 }
 
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
@@ -432,7 +431,10 @@ func (lp *LoadPoint) updateMeters() (err error) {
 
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
-	lp.updateChargeStatus()
+	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
+		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
+		return
+	}
 
 	lp.publish("mode", string(lp.GetMode()))
 	lp.publish("connected", lp.connected())
