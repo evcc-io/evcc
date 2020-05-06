@@ -19,7 +19,6 @@ const (
 	apiRefresh                 apiFunction = "jwt/refresh"
 	apiChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
 	apiCurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
-	apiEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
 	apiSetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
 	apiCurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
