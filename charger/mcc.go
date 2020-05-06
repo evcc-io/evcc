@@ -305,14 +305,6 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	return nil
 }
 
-// CurrentPower implements the Meter interface.
-func (mcc *MobileConnect) CurrentPower() (float64, error) {
-	var energy MCCEnergy
-	err := mcc.getEscapedJSON(mcc.apiURL(apiEnergy), &energy)
-
-	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
-}
-
 // ChargedEnergy implements the ChargeRater interface.
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
