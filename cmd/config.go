@@ -5,7 +5,6 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
@@ -23,7 +22,7 @@ type config struct {
 	Meters     []qualifiedConfig
 	Chargers   []qualifiedConfig
 	Vehicles   []qualifiedConfig
-	LoadPoints []core.Config
+	LoadPoints []map[string]interface{}
 }
 
 type qualifiedConfig struct {

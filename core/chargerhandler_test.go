@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	minA int64 = 6
-	maxA int64 = 16
+	minA        int64 = 6
+	maxA        int64 = 16
+	sensitivity       = 1
 )
 
 type nilCharger struct{}
@@ -46,7 +47,7 @@ func TestEnable(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &Ramp{
+		r := &ChargerHandler{
 			clock:         clock.NewMock(),
 			bus:           evbus.New(),
 			enabled:       tc.enabledI,
@@ -95,7 +96,7 @@ func TestSetCurrent(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &Ramp{
+		r := &ChargerHandler{
 			clock:         clock.NewMock(),
 			bus:           evbus.New(),
 			MinCurrent:    minA,
@@ -146,18 +147,13 @@ func TestRampOn(t *testing.T) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			// we are enabled: enable call omitted
 		}},
-		// on at max, set min: set on
-		{true, maxA, minA, func(mc *mock.MockCharger) {
-			mc.EXPECT().MaxCurrent(minA).Return(nil)
-			// we are enabled: enable call omitted
-		}},
 	}
 
 	for _, tc := range tc {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &Ramp{
+		r := &ChargerHandler{
 			clock:         clock.NewMock(),
 			bus:           evbus.New(),
 			MinCurrent:    minA,
@@ -180,40 +176,35 @@ func TestRampOff(t *testing.T) {
 		targetCurrentI int64
 		expect         func(*mock.MockCharger)
 	}{
-		// off at zero: set min
+		// off at zero
 		{false, 0, func(mc *mock.MockCharger) {
 			// we are off: enable call omitted
 		}},
-		// off at max: set min
+		// off at max
 		{false, maxA, func(mc *mock.MockCharger) {
 			// we are off: enable call omitted
 		}},
-		// // off at min: set on
+		// // off at min
 		{false, minA, func(mc *mock.MockCharger) {
 			// we are off: enable call omitted
 		}},
-		// // on at min, set min: set min
-		// {true, minA, func(mc *mock.MockCharger) {
-		// 	// we are at min: current call omitted
-		// 	// we are enabled: enable call omitted
-		// }},
-		// // on at max, set min: set min
-		// {true, maxA, func(mc *mock.MockCharger) {
-		// 	mc.EXPECT().MaxCurrent(minA).Return(nil)
-		// 	// we are enabled: enable call omitted
-		// }},
-		// // on at max, set min: set on
-		// {true, maxA, func(mc *mock.MockCharger) {
-		// 	mc.EXPECT().MaxCurrent(minA).Return(nil)
-		// 	// we are enabled: enable call omitted
-		// }},
+		// on at min, set min
+		{true, minA, func(mc *mock.MockCharger) {
+			// we are at min: current call omitted
+			mc.EXPECT().Enable(false).Return(nil)
+		}},
+		// on at max, set min
+		{true, maxA, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(minA).Return(nil)
+			// we are not at min: enable call omitted
+		}},
 	}
 
 	for _, tc := range tc {
 		ctrl := gomock.NewController(t)
 		mc := mock.NewMockCharger(ctrl)
 
-		r := &Ramp{
+		r := &ChargerHandler{
 			clock:         clock.NewMock(),
 			bus:           evbus.New(),
 			MinCurrent:    minA,
@@ -231,4 +222,54 @@ func TestRampOff(t *testing.T) {
 }
 
 func TestRampUpDown(t *testing.T) {
+	tc := []struct {
+		targetCurrentI, targetCurrent int64
+		expect                        func(*mock.MockCharger)
+	}{
+		// no change at 0: nop
+		{0, 0, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		// no change at min: nop
+		{minA, minA, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		// at min: set <min
+		{minA, minA - 100, func(mc *mock.MockCharger) {
+			// nop
+		}},
+		// at min: set max
+		{minA, maxA, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(minA + sensitivity).Return(nil)
+		}},
+		// at max: set min
+		{maxA, minA, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(maxA - sensitivity).Return(nil)
+		}},
+		// at max: set >max
+		{maxA, maxA + 100, func(mc *mock.MockCharger) {
+			// nop
+		}},
+	}
+
+	for _, tc := range tc {
+		ctrl := gomock.NewController(t)
+		mc := mock.NewMockCharger(ctrl)
+
+		r := &ChargerHandler{
+			clock:         clock.NewMock(),
+			bus:           evbus.New(),
+			MinCurrent:    minA,
+			MaxCurrent:    maxA,
+			Sensitivity:   sensitivity,
+			enabled:       true,
+			targetCurrent: tc.targetCurrentI,
+			charger:       mc,
+		}
+
+		tc.expect(mc)
+		r.rampUpDown(tc.targetCurrent)
+
+		ctrl.Finish()
+	}
 }

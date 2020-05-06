@@ -42,9 +42,10 @@ type Config struct {
 	Voltage       float64 // Operating voltage. 230V for Germany.
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
 
-	ChargerRef string       `mapstructure:"charger"` // Charger reference
-	VehicleRef string       `mapstructure:"vehicle"` // Vehicle reference
-	Meters     MetersConfig // Meter references
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
+
+	Meters MetersConfig // Meter references
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -65,8 +66,8 @@ type LoadPoint struct {
 	notificationChan chan<- push.Event // notifications
 	uiChan           chan<- Param      // client push messages
 
-	Config `mapstructure:",squash"` // exposed public configuration
-	Ramp   `mapstructure:",squash"` // ramp on/off/updown handler
+	Config         `mapstructure:",squash"` // exposed public configuration
+	ChargerHandler `mapstructure:",squash"` // handle charger state and current
 
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
@@ -128,9 +129,12 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 // NewLoadPoint creates a LoadPoint with sane defaults
 func NewLoadPoint() *LoadPoint {
+	clock := clock.New()
+	bus := evbus.New()
+
 	lp := &LoadPoint{
-		clock:       clock.New(),
-		bus:         evbus.New(),
+		clock:       clock, // mockable time
+		bus:         bus,   // event bus
 		triggerChan: make(chan struct{}, 1),
 		Config: Config{
 			Mode:    api.ModeOff,
@@ -140,13 +144,13 @@ func NewLoadPoint() *LoadPoint {
 		status: api.StatusNone,
 	}
 
-	lp.Ramp = Ramp{
+	lp.ChargerHandler = ChargerHandler{
 		Name:          "main",
-		clock:         lp.clock, // mockable time
-		bus:           lp.bus,   // event bus
-		MinCurrent:    6,        // A
-		MaxCurrent:    16,       // A
-		Sensitivity:   10,       // A
+		clock:         clock, // mockable time
+		bus:           bus,   // event bus
+		MinCurrent:    6,     // A
+		MaxCurrent:    16,    // A
+		Sensitivity:   10,    // A
 		GuardDuration: 10 * time.Minute,
 	}
 

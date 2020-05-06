@@ -10,7 +10,8 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-type Ramp struct {
+// ChargerHandler handles steering of the charger state and allowed current
+type ChargerHandler struct {
 	clock clock.Clock // mockable time
 	bus   evbus.Bus   // event bus
 
@@ -30,7 +31,7 @@ type Ramp struct {
 }
 
 // chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
-func (lp *Ramp) chargerEnable(enable bool) error {
+func (lp *ChargerHandler) chargerEnable(enable bool) error {
 	if lp.targetCurrent != 0 && lp.targetCurrent != lp.MinCurrent {
 		log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
@@ -60,7 +61,7 @@ func (lp *Ramp) chargerEnable(enable bool) error {
 
 // setTargetCurrent guards setting current against changing to identical value
 // and violating MaxCurrent
-func (lp *Ramp) setTargetCurrent(targetCurrentIn int64) error {
+func (lp *ChargerHandler) setTargetCurrent(targetCurrentIn int64) error {
 	targetCurrent := clamp(targetCurrentIn, lp.MinCurrent, lp.MaxCurrent)
 	if targetCurrent != targetCurrentIn {
 		log.WARN.Printf("%s hard limit charge current: %dA", lp.Name, targetCurrent)
@@ -80,8 +81,9 @@ func (lp *Ramp) setTargetCurrent(targetCurrentIn int64) error {
 	return nil
 }
 
-// rampUpDown moves stepwise towards target current
-func (lp *Ramp) rampUpDown(target int64) error {
+// rampUpDown moves stepwise towards target current.
+// It does not enable or disable the charger.
+func (lp *ChargerHandler) rampUpDown(target int64) error {
 	current := lp.targetCurrent
 	if current == target {
 		return nil
@@ -99,8 +101,9 @@ func (lp *Ramp) rampUpDown(target int64) error {
 	return lp.setTargetCurrent(step)
 }
 
-// rampOff disables charger after setting minCurrent. If already disables, this is a nop.
-func (lp *Ramp) rampOff() error {
+// rampOff disables charger after setting minCurrent.
+// Setting current and disabling are two steps. If already disabled, this is a nop.
+func (lp *ChargerHandler) rampOff() error {
 	if lp.enabled {
 		if lp.targetCurrent == lp.MinCurrent {
 			return lp.chargerEnable(false)
@@ -112,8 +115,9 @@ func (lp *Ramp) rampOff() error {
 	return nil
 }
 
-// rampOn enables charger after setting minCurrent. If already enabled, target will be set.
-func (lp *Ramp) rampOn(target int64) error {
+// rampOn enables charger immediately after setting minCurrent.
+// If already enabled, target will be set.
+func (lp *ChargerHandler) rampOn(target int64) error {
 	if !lp.enabled {
 		if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
 			return err

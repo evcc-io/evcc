@@ -45,10 +45,10 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 	}
 
 	// decode slice into slice of maps
-	var lpm []map[string]interface{}
-	util.DecodeOther(log, lps, &lpm)
+	var lpc []map[string]interface{}
+	util.DecodeOther(log, lps, &lpc)
 
-	for _, lpc := range lpm {
+	for _, lpc := range lpc {
 		lp := core.NewLoadPointFromConfig(log, cp, lpc)
 		loadPoints = append(loadPoints, lp)
 	}
