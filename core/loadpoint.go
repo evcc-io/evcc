@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -36,22 +35,17 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 
 // Config contains the public loadpoint configuration
 type Config struct {
-	Name string
 	Mode api.ChargeMode // Charge mode, guarded by mutex
 
 	// options
-	Sensitivity   int64   // Step size of current change
 	Phases        int64   // Phases- required for converting power and current.
-	MinCurrent    int64   // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    int64   // Max allowed current. Physically ensured by the charge controller
 	Voltage       float64 // Operating voltage. 230V for Germany.
 	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
 
-	ChargerRef string       `mapstructure:"charger"` // Charger reference
-	VehicleRef string       `mapstructure:"vehicle"` // Vehicle reference
-	Meters     MetersConfig // Meter references
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	Meters MetersConfig // Meter references
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -72,13 +66,13 @@ type LoadPoint struct {
 	notificationChan chan<- push.Event // notifications
 	uiChan           chan<- Param      // client push messages
 
-	Config `mapstructure:",squash"` // exposed public configuration
+	Config         `mapstructure:",squash"` // exposed public configuration
+	ChargerHandler `mapstructure:",squash"` // handle charger state and current
 
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
 	// meters
-	charger      api.Charger // Charger
 	gridMeter    api.Meter   // Grid usage meter
 	pvMeter      api.Meter   // PV generation meter
 	batteryMeter api.Meter   // Battery charging meter
@@ -86,17 +80,12 @@ type LoadPoint struct {
 	vehicle      api.Vehicle // Vehicle
 
 	// cached state
-	status        api.ChargeStatus // Charger status
-	targetCurrent int64            // Allowed current. Between MinCurrent and MaxCurrent.
-	enabled       bool             // Charger enabled state
-	charging      bool             // Charging cycle
-	gridPower     float64          // Grid power
-	pvPower       float64          // PV power
-	batteryPower  float64          // Battery charge power
-	chargePower   float64          // Charging power
-
-	// contactor switch guard
-	guardUpdated time.Time // charger enabled/disabled timestamp
+	status       api.ChargeStatus // Charger status
+	charging     bool             // Charging cycle
+	gridPower    float64          // Grid power
+	pvPower      float64          // PV power
+	batteryPower float64          // Battery charge power
+	chargePower  float64          // Charging power
 }
 
 // configProvider gives access to configuration repository
@@ -140,23 +129,23 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 // NewLoadPoint creates a LoadPoint with sane defaults
 func NewLoadPoint() *LoadPoint {
-	return &LoadPoint{
-		clock:       clock.New(),
-		bus:         evbus.New(),
+	clock := clock.New()
+	bus := evbus.New()
+
+	lp := &LoadPoint{
+		clock:       clock, // mockable time
+		bus:         bus,   // event bus
 		triggerChan: make(chan struct{}, 1),
 		Config: Config{
-			Name:          "main",
-			Mode:          api.ModeOff,
-			Phases:        1,
-			Voltage:       230, // V
-			MinCurrent:    6,   // A
-			MaxCurrent:    16,  // A
-			Sensitivity:   10,  // A
-			GuardDuration: 10 * time.Minute,
+			Mode:    api.ModeOff,
+			Phases:  1,
+			Voltage: 230, // V
 		},
-		status:        api.StatusNone,
-		targetCurrent: 0, // A
+		status:         api.StatusNone,
+		ChargerHandler: NewChargerHandler("main", clock, bus),
 	}
+
+	return lp
 }
 
 // notify sends push messages to clients
@@ -302,32 +291,6 @@ func (lp *LoadPoint) connected() bool {
 	return lp.status == api.StatusB || lp.status == api.StatusC
 }
 
-// chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
-func (lp *LoadPoint) chargerEnable(enable bool) error {
-	if lp.targetCurrent != 0 && lp.targetCurrent != lp.MinCurrent {
-		log.FATAL.Fatal("charger enable/disable called without setting min current first")
-	}
-
-	if remaining := (lp.GuardDuration - time.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
-		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
-		return nil
-	}
-
-	err := lp.charger.Enable(enable)
-	if err == nil {
-		lp.enabled = enable // cache
-		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
-		lp.guardUpdated = lp.clock.Now()
-
-		// if not enabled, current will be reduced to 0 in handler
-		lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
-	} else {
-		log.DEBUG.Printf("%s charger %s", lp.Name, status[enable])
-	}
-
-	return err
-}
-
 // chargingCycle detects charge cycle start and stop events and manages the
 // charge energy counter and charge timer. It guards against duplicate invocation.
 func (lp *LoadPoint) chargingCycle(enable bool) {
@@ -380,73 +343,6 @@ func (lp *LoadPoint) updateChargeStatus() api.ChargeStatus {
 	}
 
 	return status
-}
-
-// setTargetCurrent guards setting current against changing to identical value
-// and violating MaxCurrent
-func (lp *LoadPoint) setTargetCurrent(targetCurrentIn int64) error {
-	targetCurrent := clamp(targetCurrentIn, lp.MinCurrent, lp.MaxCurrent)
-	if targetCurrent != targetCurrentIn {
-		log.WARN.Printf("%s hard limit charge current: %dA", lp.Name, targetCurrent)
-	}
-
-	if lp.targetCurrent != targetCurrent {
-		log.DEBUG.Printf("%s set charge current: %dA", lp.Name, targetCurrent)
-		if err := lp.charger.MaxCurrent(targetCurrent); err != nil {
-			return fmt.Errorf("%s charge controller error: %v", lp.Name, err)
-		}
-
-		lp.targetCurrent = targetCurrent // cache
-	}
-
-	lp.bus.Publish(evChargeCurrent, targetCurrent)
-
-	return nil
-}
-
-// rampUpDown moves stepwise towards target current
-func (lp *LoadPoint) rampUpDown(target int64) error {
-	current := lp.targetCurrent
-	if current == target {
-		return nil
-	}
-
-	var step int64
-	if current < target {
-		step = min(current+lp.Sensitivity, target)
-	} else if current > target {
-		step = max(current-lp.Sensitivity, target)
-	}
-
-	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
-
-	return lp.setTargetCurrent(step)
-}
-
-// rampOff disables charger after setting minCurrent. If already disables, this is a nop.
-func (lp *LoadPoint) rampOff() error {
-	if lp.enabled {
-		if lp.targetCurrent == lp.MinCurrent {
-			return lp.chargerEnable(false)
-		}
-
-		return lp.setTargetCurrent(lp.MinCurrent)
-	}
-
-	return nil
-}
-
-// rampOn enables charger after setting minCurrent. If already enabled, target will be set.
-func (lp *LoadPoint) rampOn(target int64) error {
-	if !lp.enabled {
-		if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
-			return err
-		}
-
-		return lp.chargerEnable(true)
-	}
-
-	return lp.setTargetCurrent(target)
 }
 
 // updateModePV sets "minpv" or "pv" load modes
