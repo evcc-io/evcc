@@ -133,7 +133,8 @@ func TestMeterConfigurations(t *testing.T) {
 
 		ctrl := gomock.NewController(t)
 		lp, wb := newEnvironment(t, ctrl, pm, gm, cm)
-		wb.EXPECT().Status().Return(api.StatusA, nil)
+		wb.EXPECT().Status().Return(api.StatusA, nil) // disconnected
+		wb.EXPECT().Enable(false)                     // "off" mode
 
 		lp.update()
 	}
@@ -184,7 +185,7 @@ func TestInitialUpdate(t *testing.T) {
 		}
 
 		// disable if not connected
-		if tc.status != api.StatusA && tc.mode == api.ModeOff {
+		if tc.mode == api.ModeOff {
 			wb.EXPECT().Enable(false)
 		}
 
