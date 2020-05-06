@@ -18,13 +18,6 @@ const (
 	dt                = time.Hour
 )
 
-type nilCharger struct{}
-
-func (c *nilCharger) Status() (api.ChargeStatus, error) { return api.StatusA, nil }
-func (c *nilCharger) Enabled() (bool, error)            { return false, nil }
-func (c *nilCharger) Enable(enable bool) error          { return nil }
-func (c *nilCharger) MaxCurrent(current int64) error    { return nil }
-
 func newChargerHandler(clock clock.Clock, mc api.Charger) ChargerHandler {
 	r := NewChargerHandler("", clock, evbus.New())
 
@@ -103,7 +96,10 @@ func TestEnable(t *testing.T) {
 
 		tc.expect(mc)
 		clock.Add(tc.dt)
-		r.chargerEnable(tc.enable)
+
+		if err := r.chargerEnable(tc.enable); err != nil {
+			t.Error(err)
+		}
 
 		ctrl.Finish()
 	}
@@ -145,7 +141,10 @@ func TestSetCurrent(t *testing.T) {
 		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
-		r.setTargetCurrent(tc.targetCurrent)
+
+		if err := r.setTargetCurrent(tc.targetCurrent); err != nil {
+			t.Error(err)
+		}
 
 		if r.targetCurrent != tc.targetCurrentO {
 			t.Errorf("targetCurrent: expected %d, got %d", tc.targetCurrentO, r.targetCurrent)
@@ -214,7 +213,10 @@ func TestRampOn(t *testing.T) {
 
 		tc.expect(mc)
 		clock.Add(tc.dt)
-		r.rampOn(tc.targetCurrent)
+
+		if err := r.rampOn(tc.targetCurrent); err != nil {
+			t.Error(err)
+		}
 
 		ctrl.Finish()
 	}
@@ -268,7 +270,10 @@ func TestRampOff(t *testing.T) {
 
 		tc.expect(mc)
 		clock.Add(tc.dt)
-		r.rampOff()
+
+		if err := r.rampOff(); err != nil {
+			t.Error(err)
+		}
 
 		ctrl.Finish()
 	}
@@ -317,7 +322,10 @@ func TestRampUpDown(t *testing.T) {
 		r.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
-		r.rampUpDown(tc.targetCurrent)
+
+		if err := r.rampUpDown(tc.targetCurrent); err != nil {
+			t.Error(err)
+		}
 
 		ctrl.Finish()
 	}
