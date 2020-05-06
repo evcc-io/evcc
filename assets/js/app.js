@@ -103,7 +103,6 @@ Vue.component('modeswitch', {
       }
     }
   },
-  created: store.init,
 });
 
 Vue.component("datapanel", {
@@ -200,7 +199,6 @@ const config = Vue.component("config", {
       state: store.state // global state
     };
   },
-  created: store.init,
 });
 
 const embed = Vue.component("embed", {
@@ -224,3 +222,4 @@ const router = new VueRouter({
 const app = new Vue({
   router,
 }).$mount("#app");
+store.init;
