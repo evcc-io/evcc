@@ -21,7 +21,7 @@ func dumpAPIs(v interface{}) {
 		if energy, err := v.TotalEnergy(); err != nil {
 			fmt.Printf("Energy: %v\n", err)
 		} else {
-			fmt.Printf("Energy: %.0fkWh\n", energy)
+			fmt.Printf("Energy: %.1fkWh\n", energy)
 		}
 	}
 
@@ -29,7 +29,7 @@ func dumpAPIs(v interface{}) {
 		if energy, err := v.ChargedEnergy(); err != nil {
 			fmt.Printf("Charged: %v\n", err)
 		} else {
-			fmt.Printf("Charged: %.0fkWh\n", energy)
+			fmt.Printf("Charged: %.1fkWh\n", energy)
 		}
 	}
 
