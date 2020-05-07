@@ -46,6 +46,14 @@ type Config struct {
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 
 	Meters MetersConfig // Meter references
+
+	Enable, Disable ThresholdConfig
+}
+
+// ThresholdConfig defines enable/disable hysteresis paramters
+type ThresholdConfig struct {
+	Delay     time.Duration
+	Threshold float64
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -86,6 +94,8 @@ type LoadPoint struct {
 	pvPower      float64          // PV power
 	batteryPower float64          // Battery charge power
 	chargePower  float64          // Charging power
+
+	pvTimer time.Time
 }
 
 // configProvider gives access to configuration repository
@@ -344,6 +354,21 @@ func (lp *LoadPoint) updateChargeStatus() error {
 	return nil
 }
 
+func (lp *LoadPoint) pvKeepHysteresis() bool {
+	sitePower := lp.gridPower + lp.batteryPower
+	log.TRACE.Printf("%s site power: %.0fW", lp.Name, sitePower)
+
+	if lp.enabled && sitePower <= lp.Disable.Threshold {
+		return true
+	}
+
+	if !lp.enabled && sitePower <= -lp.Enable.Threshold {
+		return true
+	}
+
+	return false
+}
+
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// grid meter will always be available, if as wrapped pv meter
 	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
@@ -355,14 +380,39 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 
 	// get max charge current
 	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
-	if targetCurrent < lp.MinCurrent {
-		switch mode {
-		case api.ModeMinPV:
-			targetCurrent = lp.MinCurrent
-		case api.ModePV:
-			targetCurrent = 0
+
+	if targetCurrent < lp.MinCurrent && mode == api.ModeMinPV {
+		return lp.MinCurrent
+	}
+
+	if targetCurrent < lp.MinCurrent && mode == api.ModePV {
+		keep := lp.pvKeepHysteresis()
+
+		if lp.enabled && keep {
+			if lp.pvTimer.IsZero() {
+				lp.pvTimer = lp.clock.Now()
+				return lp.MinCurrent
+			}
+
+			if lp.clock.Since(lp.pvTimer) >= lp.Disable.Delay {
+				return 0
+			}
+		}
+
+		if !lp.enabled && keep {
+			if lp.pvTimer.IsZero() {
+				lp.pvTimer = lp.clock.Now()
+				return 0
+			}
+
+			if lp.clock.Since(lp.pvTimer) >= lp.Enable.Delay {
+				return lp.MinCurrent
+			}
 		}
 	}
+
+	// reset pv timer
+	lp.pvTimer = time.Time{}
 
 	return targetCurrent
 }
