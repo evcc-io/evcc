@@ -89,6 +89,8 @@ func (c *Keba) send(msg string) error {
 
 func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, closeC <-chan struct{}) {
 	t := time.NewTimer(c.timeout)
+	defer close(resC)
+	defer close(errC)
 	for {
 		select {
 		case msg := <-c.recv:
@@ -97,7 +99,7 @@ func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, c
 				resC <- msg
 				return
 			}
-			// matching report result
+			// matching report id
 			if msg.Report != nil && report == msg.Report.ID {
 				resC <- msg
 				return
@@ -106,8 +108,6 @@ func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, c
 			errC <- errors.New("recv timeout")
 			return
 		case <-closeC:
-			close(resC)
-			close(errC)
 			return
 		}
 	}
