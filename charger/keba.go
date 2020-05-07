@@ -87,7 +87,7 @@ func (c *Keba) send(msg string) error {
 	return err
 }
 
-func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error) {
+func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, closeC <-chan struct{}) {
 	t := time.NewTimer(c.timeout)
 	for {
 		select {
@@ -105,6 +105,10 @@ func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error) {
 		case <-t.C:
 			errC <- errors.New("recv timeout")
 			return
+		case <-closeC:
+			close(resC)
+			close(errC)
+			return
 		}
 	}
 }
@@ -112,13 +116,11 @@ func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error) {
 func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 	resC := make(chan keba.UDPMsg)
 	errC := make(chan error)
+	closeC := make(chan struct{})
 
-	defer func() {
-		close(resC)
-		close(errC)
-	}()
+	defer close(closeC)
 
-	go c.receive(report, resC, errC)
+	go c.receive(report, resC, errC, closeC)
 
 	if err := c.send(msg); err != nil {
 		return err
