@@ -218,13 +218,22 @@ func (c *Keba) CurrentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
+// TotalEnergy implements the MeterEnergy interface
+func (c *Keba) TotalEnergy() (float64, error) {
+	var kr keba.Report3
+	err := c.roundtrip("report 3", 3, &kr)
+
+	// mW to W
+	return float64(kr.ETotal) / 1e4, err
+}
+
 // ChargedEnergy implements the ChargeRater interface
 func (c *Keba) ChargedEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
 
 	// 0,1Wh to kWh
-	return float64(kr.EPres) / 1e5, err
+	return float64(kr.EPres) / 1e4, err
 }
 
 // Currents implements the MeterCurrents interface
