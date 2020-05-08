@@ -152,7 +152,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	if kr.Plug == 0 {
+	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
 	if kr.State == 2 {
@@ -162,7 +162,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusC, nil
 	}
 
-	return api.StatusA, fmt.Errorf("unexpected status: %v", kr)
+	return api.StatusA, fmt.Errorf("unexpected status: %+v", kr)
 }
 
 // Enabled implements the Charger.Enabled interface
