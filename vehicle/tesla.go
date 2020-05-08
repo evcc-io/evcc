@@ -48,9 +48,13 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehi
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	for _, vehicle := range vehicles {
-		if vehicle.Vin == cc.VIN {
-			v.vehicle = vehicle.Vehicle
+	if cc.VIN == "" && len(vehicles) == 1 {
+		v.vehicle = vehicles[0].Vehicle
+	} else {
+		for _, vehicle := range vehicles {
+			if vehicle.Vin == cc.VIN {
+				v.vehicle = vehicle.Vehicle
+			}
 		}
 	}
 
@@ -67,7 +71,10 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehi
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Tesla) chargeState() (float64, error) {
 	state, err := v.vehicle.ChargeState()
-	return float64(state.BatteryLevel), err
+	if err != nil {
+		return 0, err
+	}
+	return float64(state.BatteryLevel), nil
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
@@ -78,7 +85,10 @@ func (v *Tesla) ChargeState() (float64, error) {
 // chargedEnergy implements the ChargeRater.ChargedEnergy interface
 func (v *Tesla) chargedEnergy() (float64, error) {
 	state, err := v.vehicle.ChargeState()
-	return state.ChargeEnergyAdded, err
+	if err != nil {
+		return 0, err
+	}
+	return state.ChargeEnergyAdded, nil
 }
 
 // ChargedEnergy implements the ChargeRater.ChargedEnergy interface
@@ -91,5 +101,8 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 // CurrentPower implements the ChargeRater.CurrentPower interface
 // func (v *Tesla) CurrentPower() (float64, error) {
 // 	state, err := v.vehicle.ChargeState()
+// 	if err != nil {
+// 		return 0, err
+// 	}
 // 	return state.ChargerPower, err
 // }
