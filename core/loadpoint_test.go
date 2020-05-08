@@ -341,3 +341,54 @@ func TestConsumedPower(t *testing.T) {
 		}
 	}
 }
+
+func TestPVHysteresis(t *testing.T) {
+	tc := []struct {
+		enabled               bool
+		site, enable, disable float64
+		delay                 time.Duration
+		current               int64
+	}{
+		{false, 0, 0, 0, 0, 0},
+		{false, 0, 0, 0, time.Hour, 0},
+		{false, -1e5, 0, 0, 0, 0},
+		{false, -1e5, 0, 0, time.Hour, 0},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		clck := clock.NewMock()
+		lp := LoadPoint{
+			clock: clck,
+			ChargerHandler: ChargerHandler{
+				MinCurrent: 6,
+				enabled:    tc.enabled,
+			},
+			Config: Config{
+				Voltage: 100,
+				Phases:  10,
+				Enable: ThresholdConfig{
+					Threshold: tc.enable,
+					Delay:     time.Minute,
+				},
+				Disable: ThresholdConfig{
+					Threshold: tc.disable,
+					Delay:     time.Minute,
+				},
+			},
+			gridPower: tc.site,
+		}
+
+		current := lp.maxCurrent(api.ModePV)
+
+		if tc.delay > 0 {
+			clck.Add(tc.delay)
+			current = lp.maxCurrent(api.ModePV)
+		}
+
+		if current != tc.current {
+			t.Errorf("wanted %d, got %d", tc.current, current)
+		}
+	}
+}

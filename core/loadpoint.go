@@ -354,21 +354,6 @@ func (lp *LoadPoint) updateChargeStatus() error {
 	return nil
 }
 
-func (lp *LoadPoint) pvKeepHysteresis() bool {
-	sitePower := lp.gridPower + lp.batteryPower
-	log.TRACE.Printf("%s site power: %.0fW", lp.Name, sitePower)
-
-	if lp.enabled && sitePower <= lp.Disable.Threshold {
-		return true
-	}
-
-	if !lp.enabled && sitePower <= -lp.Enable.Threshold {
-		return true
-	}
-
-	return false
-}
-
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// grid meter will always be available, if as wrapped pv meter
 	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
@@ -386,9 +371,10 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	}
 
 	if targetCurrent < lp.MinCurrent && mode == api.ModePV {
-		keep := lp.pvKeepHysteresis()
+		sitePower := lp.gridPower + lp.batteryPower
+		log.TRACE.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
-		if lp.enabled && keep {
+		if lp.enabled && sitePower <= lp.Disable.Threshold {
 			if lp.pvTimer.IsZero() {
 				lp.pvTimer = lp.clock.Now()
 				return lp.MinCurrent
@@ -399,7 +385,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 			}
 		}
 
-		if !lp.enabled && keep {
+		if !lp.enabled && sitePower <= -lp.Enable.Threshold {
 			if lp.pvTimer.IsZero() {
 				lp.pvTimer = lp.clock.Now()
 				return 0
