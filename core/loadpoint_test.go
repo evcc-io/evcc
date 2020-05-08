@@ -349,10 +349,10 @@ func TestPVHysteresis(t *testing.T) {
 		delay                 time.Duration
 		current               int64
 	}{
-		{false, 0, 0, 0, 0, 0},
-		{false, 0, 0, 0, time.Hour, 0},
-		{false, -1e5, 0, 0, 0, 0},
-		{false, -1e5, 0, 0, time.Hour, 0},
+		// {false, 0, 0, 0, 0, 0},
+		// {false, 0, 0, 0, time.Hour, 0},
+		{false, -10000, 0, 0, 0, 0},
+		{false, -10000, 0, 0, time.Hour, 10},
 	}
 
 	for _, tc := range tc {
@@ -363,6 +363,7 @@ func TestPVHysteresis(t *testing.T) {
 			clock: clck,
 			ChargerHandler: ChargerHandler{
 				MinCurrent: 6,
+				MaxCurrent: 100,
 				enabled:    tc.enabled,
 			},
 			Config: Config{
