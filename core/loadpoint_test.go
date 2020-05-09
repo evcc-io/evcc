@@ -352,7 +352,7 @@ func TestPVHysteresis(t *testing.T) {
 		// keep disabled
 		{false, 0, 0, 0, 0, 0},
 		{false, 0, 0, 0, time.Hour, 0},
-		// enable without threshold
+		// enable when threshold not configured but min power met
 		{false, -6 * 100 * 10, 0, 0, 0, 0},
 		{false, -6 * 100 * 10, 0, 0, time.Hour, lpMinCurrent},
 		// keep disabled when threshold not configured
