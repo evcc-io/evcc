@@ -492,6 +492,9 @@ func (lp *LoadPoint) resetGuard() {
 
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
+	log.DEBUG.Println(">", lp.Name)
+	defer log.DEBUG.Println("<", lp.Name)
+
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 		return
