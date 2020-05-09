@@ -7,10 +7,10 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 )
 
-// NilVal implements Stringer for nil values
-type NilVal int
+// nilVal implements Stringer for nil values
+type nilVal int
 
-func (n *NilVal) String() string {
+func (n *nilVal) String() string {
 	return "—"
 }
 
@@ -160,7 +160,7 @@ func (lp *LoadPoint) publishSoC() {
 		log.ERROR.Printf("%s vehicle error: %v", lp.Name, err)
 	}
 
-	var n *NilVal
+	var n *nilVal
 	lp.publish("socCharge", n)
 	lp.publish("chargeEstimate", -1)
 }
