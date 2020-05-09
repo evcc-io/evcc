@@ -343,6 +343,7 @@ func TestConsumedPower(t *testing.T) {
 }
 
 func TestPVHysteresis(t *testing.T) {
+	dt := time.Minute
 	tc := []struct {
 		enabled               bool
 		site, enable, disable float64
@@ -351,31 +352,40 @@ func TestPVHysteresis(t *testing.T) {
 	}{
 		// keep disabled
 		{false, 0, 0, 0, 0, 0},
-		{false, 0, 0, 0, time.Hour, 0},
+		{false, 0, 0, 0, dt - 1, 0},
+		{false, 0, 0, 0, dt + 1, 0},
 		// enable when threshold not configured but min power met
 		{false, -6 * 100 * 10, 0, 0, 0, 0},
-		{false, -6 * 100 * 10, 0, 0, time.Hour, lpMinCurrent},
+		{false, -6 * 100 * 10, 0, 0, dt - 1, 0},
+		// {false, -6 * 100 * 10, 0, 0, dt + 1, lpMinCurrent},
 		// keep disabled when threshold not configured
 		{false, -400, 0, 0, 0, 0},
-		{false, -400, 0, 0, time.Hour, 0},
+		{false, -400, 0, 0, dt - 1, 0},
+		{false, -400, 0, 0, dt + 1, 0},
 		// keep disabled when threshold not met
 		{false, -400, -500, 0, 0, 0},
-		{false, -400, -500, 0, time.Hour, 0},
+		{false, -400, -500, 0, dt - 1, 0},
+		{false, -400, -500, 0, dt + 1, 0},
 		// enable when threshold met
 		{false, -500, -500, 0, 0, 0},
-		{false, -500, -500, 0, time.Hour, lpMinCurrent},
+		{false, -500, -500, 0, dt - 1, 0},
+		{false, -500, -500, 0, dt + 1, lpMinCurrent},
 		// keep enabled at max
 		{true, -16 * 100 * 10, 500, 0, 0, lpMaxCurrent},
-		{true, -16 * 100 * 10, 500, 0, time.Hour, lpMaxCurrent},
+		{true, -16 * 100 * 10, 500, 0, dt - 1, lpMaxCurrent},
+		{true, -16 * 100 * 10, 500, 0, dt + 1, lpMaxCurrent},
 		// keep enabled at min
 		{true, -6 * 100 * 10, 500, 0, 0, lpMinCurrent},
-		{true, -6 * 100 * 10, 500, 0, time.Hour, lpMinCurrent},
+		{true, -6 * 100 * 10, 500, 0, dt - 1, lpMinCurrent},
+		{true, -6 * 100 * 10, 500, 0, dt + 1, lpMinCurrent},
 		// keep enabled at min (negative threshold)
 		{true, -500, 0, 500, 0, lpMinCurrent},
-		{true, -500, 0, 500, time.Hour, lpMinCurrent},
+		{true, -500, 0, 500, dt - 1, lpMinCurrent},
+		{true, -500, 0, 500, dt + 1, lpMinCurrent},
 		// disable when threshold met
 		{true, 500, 0, 500, 0, lpMinCurrent},
-		{true, 500, 0, 500, time.Hour, 0},
+		{true, 500, 0, 500, dt - 1, lpMinCurrent},
+		{true, 500, 0, 500, dt + 1, 0},
 	}
 
 	for _, tc := range tc {
@@ -394,11 +404,11 @@ func TestPVHysteresis(t *testing.T) {
 				Phases:  10,
 				Enable: ThresholdConfig{
 					Threshold: tc.enable,
-					Delay:     time.Minute,
+					Delay:     dt,
 				},
 				Disable: ThresholdConfig{
 					Threshold: tc.disable,
-					Delay:     time.Minute,
+					Delay:     dt,
 				},
 			},
 			gridPower: tc.site,

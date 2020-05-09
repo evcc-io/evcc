@@ -412,6 +412,8 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 				log.DEBUG.Printf("%s enable timer elapsed", lp.Name)
 				return lp.MinCurrent
 			}
+
+			return 0
 		}
 	}
 
