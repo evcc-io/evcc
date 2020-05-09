@@ -349,10 +349,27 @@ func TestPVHysteresis(t *testing.T) {
 		delay                 time.Duration
 		current               int64
 	}{
-		// {false, 0, 0, 0, 0, 0},
-		// {false, 0, 0, 0, time.Hour, 0},
-		{false, -10000, 0, 0, 0, 0},
-		{false, -10000, 0, 0, time.Hour, 10},
+		// keep disabled
+		{false, 0, 0, 0, 0, 0},
+		{false, 0, 0, 0, time.Hour, 0},
+		// enable without threshold
+		{false, -6 * 100 * 10, 0, 0, 0, 0},
+		{false, -6 * 100 * 10, 0, 0, time.Hour, lpMinCurrent},
+		// keep disabled when threshold not met
+		{false, -400, 500, 0, 0, 0},
+		{false, -400, 500, 0, time.Hour, 0},
+		// enable when threshold met
+		{false, -500, 500, 0, 0, 0},
+		{false, -500, 500, 0, time.Hour, lpMinCurrent},
+		// keep enabled at max
+		{true, -16 * 100 * 10, 500, 0, 0, lpMaxCurrent},
+		{true, -16 * 100 * 10, 500, 0, time.Hour, lpMaxCurrent},
+		// keep enabled at min
+		{true, -6 * 100 * 10, 500, 0, 0, lpMinCurrent},
+		{true, -6 * 100 * 10, 500, 0, time.Hour, lpMinCurrent},
+		// disable when threshold met
+		{true, -500, 0, 500, 0, lpMinCurrent},
+		{true, -500, 0, 500, time.Hour, 0},
 	}
 
 	for _, tc := range tc {
@@ -362,8 +379,8 @@ func TestPVHysteresis(t *testing.T) {
 		lp := LoadPoint{
 			clock: clck,
 			ChargerHandler: ChargerHandler{
-				MinCurrent: 6,
-				MaxCurrent: 100,
+				MinCurrent: lpMinCurrent,
+				MaxCurrent: lpMaxCurrent,
 				enabled:    tc.enabled,
 			},
 			Config: Config{

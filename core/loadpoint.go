@@ -370,7 +370,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 		return lp.MinCurrent
 	}
 
-	if mode == api.ModePV && targetCurrent < lp.MinCurrent && lp.enabled {
+	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
 		sitePower := lp.gridPower + lp.batteryPower
 		log.TRACE.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
@@ -386,12 +386,13 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 		}
 	}
 
-	if mode == api.ModePV && targetCurrent >= lp.MinCurrent && !lp.enabled {
+	if mode == api.ModePV && !lp.enabled {
 		sitePower := lp.gridPower + lp.batteryPower
 		log.TRACE.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
 		// TODO Threshold
-		if sitePower <= -lp.Enable.Threshold && lp.Enable.Threshold != 0 {
+		if targetCurrent >= lp.MinCurrent ||
+			lp.Enable.Threshold != 0 && sitePower <= -lp.Enable.Threshold {
 			if lp.pvTimer.IsZero() {
 				lp.pvTimer = lp.clock.Now()
 				return 0
