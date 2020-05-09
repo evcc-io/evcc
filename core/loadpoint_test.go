@@ -355,12 +355,15 @@ func TestPVHysteresis(t *testing.T) {
 		// enable without threshold
 		{false, -6 * 100 * 10, 0, 0, 0, 0},
 		{false, -6 * 100 * 10, 0, 0, time.Hour, lpMinCurrent},
+		// keep disabled when threshold not configured
+		{false, -400, 0, 0, 0, 0},
+		{false, -400, 0, 0, time.Hour, 0},
 		// keep disabled when threshold not met
-		{false, -400, 500, 0, 0, 0},
-		{false, -400, 500, 0, time.Hour, 0},
+		{false, -400, -500, 0, 0, 0},
+		{false, -400, -500, 0, time.Hour, 0},
 		// enable when threshold met
-		{false, -500, 500, 0, 0, 0},
-		{false, -500, 500, 0, time.Hour, lpMinCurrent},
+		{false, -500, -500, 0, 0, 0},
+		{false, -500, -500, 0, time.Hour, lpMinCurrent},
 		// keep enabled at max
 		{true, -16 * 100 * 10, 500, 0, 0, lpMaxCurrent},
 		{true, -16 * 100 * 10, 500, 0, time.Hour, lpMaxCurrent},
