@@ -82,32 +82,33 @@ func NewSocketHub() *SocketHub {
 	}
 }
 
-func (h *SocketHub) encode(v core.Param) ([]byte, error) {
+func encode(v interface{}) (string, error) {
 	var s string
-	switch val := v.Val.(type) {
+	switch val := v.(type) {
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("{\"%s\": %d}", v.Key, int64(val.Seconds()))
+		s = fmt.Sprintf("%d", int64(val.Seconds()))
 	case fmt.Stringer, string:
-		s = fmt.Sprintf("{\"%s\": \"%s\"}", v.Key, val)
+		s = fmt.Sprintf("\"%s\"", val)
 	case float64:
-		s = fmt.Sprintf("{\"%s\": %.3f}", v.Key, val)
+		s = fmt.Sprintf("%.3f", val)
 	default:
-		s = fmt.Sprintf("{\"%s\": %v}", v.Key, val)
+		s = fmt.Sprintf("%v", val)
 	}
-	return []byte(s), nil
+	return s, nil
 }
 
 func (h *SocketHub) broadcast(i core.Param) {
 	if len(h.clients) > 0 {
-		message, err := h.encode(i)
+		val, err := encode(i.Val)
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+		message := fmt.Sprintf("{\"%s\": %s}", i.Key, val)
 
 		for client := range h.clients {
 			select {
-			case client.send <- message:
+			case client.send <- []byte(message):
 			default:
 				close(client.send)
 				delete(h.clients, client)
