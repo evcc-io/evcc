@@ -36,22 +36,11 @@ func configureDatabase(in chan util.Param, conf config) {
 	if viper.Get("influx") != nil {
 		influx := server.NewInfluxClient(
 			conf.Influx.URL,
-			conf.Influx.Database,
-			conf.Influx.Interval,
+			conf.Influx.Token,
+			conf.Influx.Org,
 			conf.Influx.User,
 			conf.Influx.Password,
-		)
-
-		teeChan := dbTee(valueChan)
-		go influx.Run(teeChan)
-	}
-
-	if viper.Get("influx2") != nil {
-		influx := server.NewInflux2Client(
-			conf.Influx2.URL,
-			conf.Influx2.Token,
-			conf.Influx2.Org,
-			conf.Influx2.Bucket,
+			conf.Influx.Database,
 		)
 
 		teeChan := dbTee(valueChan)
