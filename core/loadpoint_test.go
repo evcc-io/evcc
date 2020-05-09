@@ -370,9 +370,12 @@ func TestPVHysteresis(t *testing.T) {
 		// keep enabled at min
 		{true, -6 * 100 * 10, 500, 0, 0, lpMinCurrent},
 		{true, -6 * 100 * 10, 500, 0, time.Hour, lpMinCurrent},
-		// disable when threshold met
+		// keep enabled at min (negative threshold)
 		{true, -500, 0, 500, 0, lpMinCurrent},
-		{true, -500, 0, 500, time.Hour, 0},
+		{true, -500, 0, 500, time.Hour, lpMinCurrent},
+		// disable when threshold met
+		{true, 500, 0, 500, 0, lpMinCurrent},
+		{true, 500, 0, 500, time.Hour, 0},
 	}
 
 	for _, tc := range tc {

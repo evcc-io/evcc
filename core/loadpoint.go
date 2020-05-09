@@ -366,7 +366,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// get max charge current
 	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
 
-	if targetCurrent < lp.MinCurrent && mode == api.ModeMinPV {
+	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
 		return lp.MinCurrent
 	}
 
@@ -374,7 +374,10 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 		sitePower := lp.gridPower + lp.batteryPower
 		log.DEBUG.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
-		if sitePower < lp.Disable.Threshold {
+		// kick off disable sequence
+		if sitePower >= lp.Disable.Threshold {
+			log.DEBUG.Printf("%s site power %.0f >= disable threshold %.0f", lp.Name, sitePower, lp.Disable.Threshold)
+
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start disable timer", lp.Name)
 				lp.pvTimer = lp.clock.Now()
@@ -386,6 +389,8 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 				return 0
 			}
 		}
+
+		return lp.MinCurrent
 	}
 
 	if mode == api.ModePV && !lp.enabled {
@@ -393,7 +398,9 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 		log.DEBUG.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
 		if targetCurrent >= lp.MinCurrent ||
-			lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold {
+			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
+			log.DEBUG.Printf("%s site power %.0f < enable threshold %.0f", lp.Name, sitePower, lp.Enable.Threshold)
+
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start enable timer", lp.Name)
 
