@@ -192,6 +192,14 @@ vehicles:
 #   region: de_DE # gigya region
 #   vin: WREN...
 #   cache: 5m
+# - name: porsche
+#   type: porsche
+#   title: Taycan
+#   capacity: 83 # kWh
+#   user: # user
+#   password: # password
+#   vin: WP...
+#   cache: 5m
 
 loadpoints:
 - name: main # name for logging
