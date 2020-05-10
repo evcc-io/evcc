@@ -30,10 +30,10 @@ const (
 )
 
 type porscheTokenResponse struct {
-	Access_token string `json:"access_token"`
-	Id_token     string `json:"id_token"`
-	Token_type   string `json:"token_type"`
-	Expires_in   int    `json:"expires_in"`
+	AccessToken string `json:"access_token"`
+	IdToken     string `json:"id_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 type porscheVehicleResponse struct {
@@ -203,12 +203,12 @@ func (v *Porsche) login(user, password string) error {
 		return err
 	}
 
-	if pr.Access_token == "" || pr.Expires_in == 0 {
+	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
 		return errors.New("could not obtain token")
 	}
 
-	v.token = pr.Access_token
-	v.tokenValid = time.Now().Add(time.Duration(pr.Expires_in) * time.Second)
+	v.token = pr.AccessToken
+	v.tokenValid = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
 
 	return nil
 }
