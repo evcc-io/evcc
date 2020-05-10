@@ -344,48 +344,78 @@ func TestConsumedPower(t *testing.T) {
 
 func TestPVHysteresis(t *testing.T) {
 	dt := time.Minute
+	type se struct {
+		delay   time.Duration // test case delay since start
+		current int64
+	}
 	tc := []struct {
 		enabled               bool
 		site, enable, disable float64
-		delay                 time.Duration
-		current               int64
+		series                []se
 	}{
 		// keep disabled
-		{false, 0, 0, 0, 0, 0},
-		{false, 0, 0, 0, dt - 1, 0},
-		{false, 0, 0, 0, dt + 1, 0},
+		{false, 0, 0, 0, []se{
+			{0, 0},
+			{1, 0},
+			{dt - 1, 0},
+			{dt + 1, 0},
+		}},
 		// enable when threshold not configured but min power met
-		{false, -6 * 100 * 10, 0, 0, 0, 0},
-		{false, -6 * 100 * 10, 0, 0, dt - 1, 0},
-		// {false, -6 * 100 * 10, 0, 0, dt + 1, lpMinCurrent},
+		{false, -6 * 100 * 10, 0, 0, []se{
+			{0, 0},
+			{1, 0},
+			{dt - 1, 0},
+			{dt + 1, lpMinCurrent},
+		}},
 		// keep disabled when threshold not configured
-		{false, -400, 0, 0, 0, 0},
-		{false, -400, 0, 0, dt - 1, 0},
-		{false, -400, 0, 0, dt + 1, 0},
+		{false, -400, 0, 0, []se{
+			{0, 0},
+			{1, 0},
+			{dt - 1, 0},
+			{dt + 1, 0},
+		}},
 		// keep disabled when threshold not met
-		{false, -400, -500, 0, 0, 0},
-		{false, -400, -500, 0, dt - 1, 0},
-		{false, -400, -500, 0, dt + 1, 0},
+		{false, -400, -500, 0, []se{
+			{0, 0},
+			{1, 0},
+			{dt - 1, 0},
+			{dt + 1, 0},
+		}},
 		// enable when threshold met
-		{false, -500, -500, 0, 0, 0},
-		{false, -500, -500, 0, dt - 1, 0},
-		{false, -500, -500, 0, dt + 1, lpMinCurrent},
+		{false, -500, -500, 0, []se{
+			{0, 0},
+			{1, 0},
+			{dt - 1, 0},
+			{dt + 1, lpMinCurrent},
+		}},
 		// keep enabled at max
-		{true, -16 * 100 * 10, 500, 0, 0, lpMaxCurrent},
-		{true, -16 * 100 * 10, 500, 0, dt - 1, lpMaxCurrent},
-		{true, -16 * 100 * 10, 500, 0, dt + 1, lpMaxCurrent},
+		{true, -16 * 100 * 10, 500, 0, []se{
+			{0, lpMaxCurrent},
+			{1, lpMaxCurrent},
+			{dt - 1, lpMaxCurrent},
+			{dt + 1, lpMaxCurrent},
+		}},
 		// keep enabled at min
-		{true, -6 * 100 * 10, 500, 0, 0, lpMinCurrent},
-		{true, -6 * 100 * 10, 500, 0, dt - 1, lpMinCurrent},
-		{true, -6 * 100 * 10, 500, 0, dt + 1, lpMinCurrent},
+		{true, -6 * 100 * 10, 500, 0, []se{
+			{0, lpMinCurrent},
+			{1, lpMinCurrent},
+			{dt - 1, lpMinCurrent},
+			{dt + 1, lpMinCurrent},
+		}},
 		// keep enabled at min (negative threshold)
-		{true, -500, 0, 500, 0, lpMinCurrent},
-		{true, -500, 0, 500, dt - 1, lpMinCurrent},
-		{true, -500, 0, 500, dt + 1, lpMinCurrent},
+		{true, -500, 0, 500, []se{
+			{0, lpMinCurrent},
+			{1, lpMinCurrent},
+			{dt - 1, lpMinCurrent},
+			{dt + 1, lpMinCurrent},
+		}},
 		// disable when threshold met
-		{true, 500, 0, 500, 0, lpMinCurrent},
-		{true, 500, 0, 500, dt - 1, lpMinCurrent},
-		{true, 500, 0, 500, dt + 1, 0},
+		{true, 500, 0, 500, []se{
+			{0, lpMinCurrent},
+			{1, lpMinCurrent},
+			{dt - 1, lpMinCurrent},
+			{dt + 1, 0},
+		}},
 	}
 
 	for _, tc := range tc {
@@ -414,15 +444,16 @@ func TestPVHysteresis(t *testing.T) {
 			gridPower: tc.site,
 		}
 
+		start := clck.Now()
 		current := lp.maxCurrent(api.ModePV)
 
-		if tc.delay > 0 {
-			clck.Add(tc.delay)
+		for step, se := range tc.series {
+			clck.Set(start.Add(se.delay))
 			current = lp.maxCurrent(api.ModePV)
-		}
 
-		if current != tc.current {
-			t.Errorf("wanted %d, got %d", tc.current, current)
+			if current != se.current {
+				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+			}
 		}
 	}
 }
