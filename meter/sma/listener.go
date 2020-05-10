@@ -93,7 +93,7 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(log *util.Logger, addr string) *Listener {
+func New(log *util.Logger) *Listener {
 	// Parse the string address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
@@ -178,7 +178,7 @@ func (l *Listener) listen() {
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- Telegram) {
+func (l *Listener) Subscribe(identifier string, c chan<- Telegram) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
@@ -186,15 +186,15 @@ func (l *Listener) Subscribe(addr string, c chan<- Telegram) {
 		l.clients = make(map[string]chan<- Telegram)
 	}
 
-	l.clients[addr] = c
+	l.clients[identifier] = c
 }
 
 func (l *Listener) send(msg Telegram) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	for addr, client := range l.clients {
-		if addr == msg.Addr {
+	for identifier, client := range l.clients {
+		if identifier == msg.Addr || identifier == msg.Serial {
 			select {
 			case client <- msg:
 			default:
