@@ -57,26 +57,26 @@ type NRGDeviceMetadata struct {
 	Password string
 }
 
-// NRGKick charger implementation
-type NRGKick struct {
+// NRGKickConnect charger implementation
+type NRGKickConnect struct {
 	*util.HTTPHelper
 	IP         string
 	MacAddress string
 	Password   string
 }
 
-// NewNRGKickFromConfig creates a NRGKick charger from generic config
-func NewNRGKickFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+// NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
+func NewNRGKickConnectFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
 	cc := struct{ IP, MacAddress, Password string }{}
 	util.DecodeOther(log, other, &cc)
 
-	return NewNRGKick(cc.IP, cc.MacAddress, cc.Password)
+	return NewNRGKickConnect(cc.IP, cc.MacAddress, cc.Password)
 }
 
-// NewNRGKick creates NRGKick charger
-func NewNRGKick(IP, MacAddress, Password string) *NRGKick {
-	nrg := &NRGKick{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("kick")),
+// NewNRGKickConnect creates NRGKickConnect charger
+func NewNRGKickConnect(IP, MacAddress, Password string) *NRGKickConnect {
+	nrg := &NRGKickConnect{
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("nrgc")),
 		IP:         IP,
 		MacAddress: MacAddress,
 		Password:   Password,
@@ -87,11 +87,11 @@ func NewNRGKick(IP, MacAddress, Password string) *NRGKick {
 	return nrg
 }
 
-func (nrg *NRGKick) apiURL(api apiFunction) string {
+func (nrg *NRGKickConnect) apiURL(api apiFunction) string {
 	return fmt.Sprintf("%s/api/%s/%s", nrg.IP, api, nrg.MacAddress)
 }
 
-func (nrg *NRGKick) getJSON(url string, result interface{}) error {
+func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
 	b, err := nrg.GetJSON(url, result)
 	if err != nil && len(b) > 0 {
 		var error NRGResponse
@@ -105,7 +105,7 @@ func (nrg *NRGKick) getJSON(url string, result interface{}) error {
 	return err
 }
 
-func (nrg *NRGKick) putJSON(url string, request interface{}) error {
+func (nrg *NRGKickConnect) putJSON(url string, request interface{}) error {
 	b, err := nrg.PutJSON(url, request)
 	if err != nil && len(b) == 0 {
 		return err
@@ -120,12 +120,12 @@ func (nrg *NRGKick) putJSON(url string, request interface{}) error {
 }
 
 // Status implements the Charger.Status interface
-func (nrg *NRGKick) Status() (api.ChargeStatus, error) {
+func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 	return api.StatusC, nil
 }
 
 // Enabled implements the Charger.Enabled interface
-func (nrg *NRGKick) Enabled() (bool, error) {
+func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	var settings NRGSettings
 	err := nrg.getJSON(nrg.apiURL(apiSettings), settings)
 
@@ -133,7 +133,7 @@ func (nrg *NRGKick) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (nrg *NRGKick) Enable(enable bool) error {
+func (nrg *NRGKickConnect) Enable(enable bool) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.Password
 	settings.Values.ChargingStatus.Charging = &enable
@@ -142,7 +142,7 @@ func (nrg *NRGKick) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (nrg *NRGKick) MaxCurrent(current int64) error {
+func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.Password
 	settings.Values.ChargingCurrent.Value = float64(current)
@@ -151,7 +151,7 @@ func (nrg *NRGKick) MaxCurrent(current int64) error {
 }
 
 // CurrentPower implements the Meter interface.
-func (nrg *NRGKick) CurrentPower() (float64, error) {
+func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	var measurements NRGMeasurements
 	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
 
@@ -159,7 +159,7 @@ func (nrg *NRGKick) CurrentPower() (float64, error) {
 }
 
 // ChargedEnergy implements the ChargeRater interface.
-func (nrg *NRGKick) ChargedEnergy() (float64, error) {
+func (nrg *NRGKickConnect) ChargedEnergy() (float64, error) {
 	var measurements NRGMeasurements
 	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
 

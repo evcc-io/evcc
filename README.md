@@ -7,7 +7,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 ## Features
 
 - simple and clean user interface
-- multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGKick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
+- multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGKick (Bluetooth and Connect), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, any other charger using scripting
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), SMA Home Manager and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
 - different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
@@ -136,7 +136,8 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB)
 - `evsewifi`: chargers with SimpleEVSE controllers using [SimpleEVSE-Wifi](https://github.com/CurtRod/SimpleEVSE-WiFi)
-- `nrgkick`: NRGKick chargers with Connect module
+- `nrgkick-bt`: NRGKick chargers with Bluetooth connector (Linux only, not supported on Docker)
+- `nrgkick-connect`: NRGKick chargers with Connect module
 - `go-e`: go-eCharger chargers
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
