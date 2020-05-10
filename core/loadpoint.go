@@ -429,6 +429,11 @@ func (lp *LoadPoint) updateMeters() (err error) {
 	return err
 }
 
+// resetGuard sets guardUpdated to an expired value
+func (lp *LoadPoint) resetGuard() {
+	lp.guardUpdated = lp.clock.Now().Add(-2 * lp.GuardDuration)
+}
+
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
@@ -453,12 +458,8 @@ func (lp *LoadPoint) update() {
 	// execute loading strategy
 	switch mode := lp.GetMode(); mode {
 	case api.ModeOff:
-		// apply immediately
-		lp.guardUpdated = lp.clock.Now()
 		err = lp.rampOff()
 	case api.ModeNow:
-		// apply immediately
-		lp.guardUpdated = lp.clock.Now()
 		// ensure that new connections happen at min current
 		current := lp.MinCurrent
 		if lp.connected() {

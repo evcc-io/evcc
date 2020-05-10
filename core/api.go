@@ -106,7 +106,12 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	defer lp.Unlock()
 
 	log.INFO.Printf("%s set charge mode: %s", lp.Name, string(mode))
-	lp.Mode = mode
+
+	// apply immediately
+	if lp.Mode != mode {
+		lp.resetGuard()
+		lp.Mode = mode
+	}
 
 	lp.Update()
 }
