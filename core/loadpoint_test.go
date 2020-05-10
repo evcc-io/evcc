@@ -417,6 +417,24 @@ func TestPVHysteresis(t *testing.T) {
 			{500, dt - 1, lpMinCurrent},
 			{500, dt + 1, 0},
 		}},
+		// reset enable timer during threshold not met
+		{false, 500, 0, []se{
+			{-500, 0, 0},
+			{-500, 1, 0},
+			{-499, dt - 1, 0}, // should reset timer
+			{-500, dt + 1, 0}, // new begin of timer
+			{-500, 2 * dt, 0},
+			{-500, 2 * dt + 2, lpMinCurrent},
+		}},
+		// reset disable timer during threshold not met
+		{true, 0, 500, []se{
+			{500, 0, lpMinCurrent},
+			{500, 1, lpMinCurrent},
+			{499, dt - 1, lpMinCurrent}, // should reset timer
+			{500, dt + 1, lpMinCurrent}, // new begin of timer
+			{500, 2 * dt, lpMinCurrent},
+			{500, 2 * dt + 2, 0},
+		}},
 	}
 
 	for _, tc := range tc {
