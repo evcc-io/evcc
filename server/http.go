@@ -204,7 +204,7 @@ func NewHTTPd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *htt
 		api.
 			Methods(r.Methods...).
 			Path(r.Pattern).
-			Handler(routeLogger(r.HandlerFunc))
+			Handler(r.HandlerFunc) // routeLogger
 	}
 
 	srv := &http.Server{

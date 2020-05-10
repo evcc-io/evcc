@@ -445,11 +445,11 @@ func TestPVHysteresis(t *testing.T) {
 		}
 
 		start := clck.Now()
-		current := lp.maxCurrent(api.ModePV)
+		_ = lp.maxCurrent(api.ModePV)
 
 		for step, se := range tc.series {
 			clck.Set(start.Add(se.delay))
-			current = lp.maxCurrent(api.ModePV)
+			current := lp.maxCurrent(api.ModePV)
 
 			if current != se.current {
 				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
