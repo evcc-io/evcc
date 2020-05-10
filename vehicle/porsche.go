@@ -171,7 +171,7 @@ func (v *Porsche) login(user, password string) error {
 		return err
 	}
 
-	authCode0 := queryAPIAuth.Get("code")
+	authCode := queryAPIAuth.Get("code")
 
 	codeVerifier := CodeVerifier.CodeChallengePlain()
 
@@ -179,7 +179,7 @@ func (v *Porsche) login(user, password string) error {
 		"grant_type":    []string{"authorization_code"},
 		"client_id":     []string{porscheAPIClientID},
 		"redirect_uri":  []string{porscheAPIRedirectUri},
-		"code":          []string{authCode0},
+		"code":          []string{authCode},
 		"prompt":        []string{"none"},
 		"code_verifier": []string{codeVerifier},
 	}
