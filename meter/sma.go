@@ -57,11 +57,13 @@ func NewSMA(uri, serial, power, energy string) api.Meter {
 		sma.Instance = sma.New(log)
 	}
 
-	// we only want to subscribe to one of the two possible identifiers
+	// we only need to subscribe to one of the two possible identifiers
 	if uri != "" {
 		sma.Instance.Subscribe(uri, sm.recv)
 	} else if serial != "" {
 		sma.Instance.Subscribe(serial, sm.recv)
+	} else {
+		log.FATAL.Fatalf("config: missing uri or serial")
 	}
 
 	go sm.receive()
