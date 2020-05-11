@@ -19,6 +19,7 @@ const (
 type SMA struct {
 	log     *util.Logger
 	uri     string
+	serial  string
 	power   float64
 	energy  float64
 	powerO  sma.Obis
@@ -32,30 +33,38 @@ type SMA struct {
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
 	cc := struct {
-		URI, Power, Energy string
+		URI, Serial, Power, Energy string
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	return NewSMA(cc.URI, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Serial, cc.Power, cc.Energy)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, power, energy string) api.Meter {
+func NewSMA(uri, serial, power, energy string) api.Meter {
 	log := util.NewLogger("sma ")
 
 	sm := &SMA{
 		log:     log,
 		uri:     uri,
+		serial:  serial,
 		powerO:  sma.Obis(power),
 		energyO: sma.Obis(energy),
 		recv:    make(chan sma.Telegram),
 	}
 
 	if sma.Instance == nil {
-		sma.Instance = sma.New(log, sm.uri)
+		sma.Instance = sma.New(log)
 	}
 
-	sma.Instance.Subscribe(uri, sm.recv)
+	// we only need to subscribe to one of the two possible identifiers
+	if uri != "" {
+		sma.Instance.Subscribe(uri, sm.recv)
+	} else if serial != "" {
+		sma.Instance.Subscribe(serial, sm.recv)
+	} else {
+		log.FATAL.Fatalf("config: missing uri or serial")
+	}
 
 	go sm.receive()
 
