@@ -157,7 +157,7 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		Values: obisValues,
 	}
 
-	l.log.TRACE.Printf("recv %v", msg.Values)
+	//	l.log.TRACE.Printf("recv %v", msg.Values)
 
 	return msg, nil
 }
@@ -197,7 +197,6 @@ func (l *Listener) send(msg Telegram) {
 
 	for identifier, client := range l.clients {
 		if identifier == msg.Addr || identifier == msg.Serial {
-			l.log.TRACE.Printf("listener: found matching identifier %s", identifier)
 			select {
 			case client <- msg:
 			default:
