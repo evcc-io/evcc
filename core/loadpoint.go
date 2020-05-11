@@ -372,7 +372,6 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
 		sitePower := lp.gridPower + lp.batteryPower
-		log.DEBUG.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
@@ -381,7 +380,6 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start disable timer", lp.Name)
 				lp.pvTimer = lp.clock.Now()
-				return lp.MinCurrent
 			}
 
 			if lp.clock.Since(lp.pvTimer) >= lp.Disable.Delay {
@@ -398,17 +396,15 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 
 	if mode == api.ModePV && !lp.enabled {
 		sitePower := lp.gridPower + lp.batteryPower
-		log.DEBUG.Printf("%s site power: %.0fW", lp.Name, sitePower)
 
+		// kick off enable sequence
 		if targetCurrent >= lp.MinCurrent ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
 			log.DEBUG.Printf("%s site power %.0f < enable threshold %.0f", lp.Name, sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start enable timer", lp.Name)
-
 				lp.pvTimer = lp.clock.Now()
-				return 0
 			}
 
 			if lp.clock.Since(lp.pvTimer) >= lp.Enable.Delay {
