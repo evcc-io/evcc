@@ -4,6 +4,8 @@ import (
 	"net"
 	"reflect"
 	"testing"
+
+	"github.com/andig/evcc/util"
 )
 
 func TestListenerProcessMessage(t *testing.T) {
@@ -186,7 +188,9 @@ func TestListenerProcessMessage(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			l := &Listener{}
+			l := &Listener{
+				log: util.NewLogger("sma "),
+			}
 
 			buffer := tc.response
 			read := len(buffer)
