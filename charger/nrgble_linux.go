@@ -128,12 +128,11 @@ func (nrg *NRGKickBLE) close() {
 }
 
 func (nrg *NRGKickBLE) waitTimer() {
-	select {
-	case <-nrg.timer.C:
-	}
+	<-nrg.timer.C
 }
 
 func (nrg *NRGKickBLE) setTimer() {
+	nrg.timer.Stop() // can be stopped without reading as channel is always drained
 	nrg.timer.Reset(2 * time.Second)
 }
 
