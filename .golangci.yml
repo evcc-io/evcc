@@ -5,3 +5,4 @@ issues:
   - .regActualCurrent. is unused
   - .regOverchargeProtect. is unused
   - .regReset. is unused
+  - "`routeLogger` is unused"
