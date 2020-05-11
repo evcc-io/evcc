@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	apiLogin                   apiFunction = "jwt/login"
-	apiRefresh                 apiFunction = "jwt/refresh"
-	apiChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
-	apiCurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
-	apiEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
-	apiSetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
-	apiCurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
+	mccAPILogin                   apiFunction = "jwt/login"
+	mccAPIRefresh                 apiFunction = "jwt/refresh"
+	mccAPIChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
+	mccAPICurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
+	mccAPIEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
+	mccAPISetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
+	mccAPICurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
 // MCCErrorResponse is the API response if status not OK
@@ -124,7 +124,7 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 
 // login as the home user with the given password
 func (mcc *MobileConnect) login(password string) error {
-	uri := fmt.Sprintf("%s/%s", mcc.uri, apiLogin)
+	uri := fmt.Sprintf("%s/%s", mcc.uri, mccAPILogin)
 
 	data := url.Values{
 		"user": []string{"user"},
@@ -143,7 +143,7 @@ func (mcc *MobileConnect) login(password string) error {
 
 // refresh the auth token with a new one
 func (mcc *MobileConnect) refresh() error {
-	uri := fmt.Sprintf("%s/%s", mcc.uri, apiRefresh)
+	uri := fmt.Sprintf("%s/%s", mcc.uri, mccAPIRefresh)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
@@ -212,7 +212,7 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 // Status implements the Charger.Status interface
 func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
-	b, err := mcc.getValue(mcc.apiURL(apiChargeState))
+	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -239,7 +239,7 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (mcc *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
-	b, err := mcc.getValue(mcc.apiURL(apiChargeState))
+	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
 	if err != nil {
 		return false, err
 	}
@@ -272,7 +272,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	// and then return an error if the value is outside of the limits or
 	// otherwise set the new value
 	if mcc.cableInformation.MaxValue == 0 {
-		if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentCableInformation), &mcc.cableInformation); err != nil {
+		if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentCableInformation), &mcc.cableInformation); err != nil {
 			return err
 		}
 	}
@@ -285,7 +285,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 		return fmt.Errorf("value is higher than the allowed maximum value %d", mcc.cableInformation.MaxValue)
 	}
 
-	url := fmt.Sprintf("%s%d", mcc.apiURL(apiSetCurrentLimit), current)
+	url := fmt.Sprintf("%s%d", mcc.apiURL(mccAPISetCurrentLimit), current)
 
 	req, err := mcc.request(http.MethodPut, url)
 	if err != nil {
@@ -308,7 +308,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 // CurrentPower implements the Meter interface.
 func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
-	err := mcc.getEscapedJSON(mcc.apiURL(apiEnergy), &energy)
+	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
 
 	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
 }
@@ -316,7 +316,7 @@ func (mcc *MobileConnect) CurrentPower() (float64, error) {
 // ChargedEnergy implements the ChargeRater interface.
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
-	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession); err != nil {
+	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
 		return 0, err
 	}
 
@@ -326,7 +326,7 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 // ChargingTime yields current charge run duration
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
-	if err := mcc.getEscapedJSON(mcc.apiURL(apiCurrentSession), &currentSession); err != nil {
+	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
 		return 0, err
 	}
 
