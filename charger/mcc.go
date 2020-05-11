@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	timeout = 10 * time.Second
+	apiTimeout = 10 * time.Second
 
 	apiLogin                   apiFunction = "jwt/login"
 	apiRefresh                 apiFunction = "jwt/refresh"
@@ -90,7 +90,7 @@ func NewMobileConnect(uri string, password string) *MobileConnect {
 
 	mcc.HTTPHelper.Client.Transport = customTransport
 	// set a timeout in case the charger is offline or in sleep mode
-	mcc.HTTPHelper.Client.Timeout = timeout
+	mcc.HTTPHelper.Client.Timeout = apiTimeout
 
 	return mcc
 }

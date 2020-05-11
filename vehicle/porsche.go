@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	timeout = 10 * time.Second
+	apiTimeout = 10 * time.Second
 
 	porscheLogin          = "https://login.porsche.com/auth/de/de_DE"
 	porscheLoginAuth      = "https://login.porsche.com/auth/api/v1/de/de_DE/public/login"
@@ -80,7 +80,7 @@ func NewPorscheFromConfig(log *util.Logger, other map[string]interface{}) api.Ve
 	}
 
 	// set a timeout in case the API is not reachable
-	v.HTTPHelper.Client.Timeout = timeout
+	v.HTTPHelper.Client.Timeout = apiTimeout
 
 	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
 
@@ -98,7 +98,7 @@ func (v *Porsche) login(user, password string) error {
 	// the flow is using Oauth2 and >10 redirects
 	client := &http.Client{
 		Jar:     jar,
-		Timeout: timeout,
+		Timeout: apiTimeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return nil
 		},
