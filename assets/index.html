@@ -100,21 +100,21 @@
 
 <script type="text/x-template" id="mode-template">
   <div class="pricing-header px-3 pb-3 mx-auto text-center">
-    <div class="btn-group btn-group-toggle py-4 mb-2" data-toggle="buttons">
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
+    <div class="btn-group btn-group-toggle py-4 mb-2">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode==='off'}">
         <input type="radio" value="off" v-on:click="mode='off'">Stop
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode==='now'}">
         <input type="radio" value="now" v-on:click="mode='now'">
         <span class="d-inline d-sm-none">Sofort</span>
         <span class="d-none d-sm-inline">Sofortladen</span>
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode==='minpv'}" v-if="state.gridMeter">
         <input type="radio" value="minpv" v-on:click="mode='minpv'">
         <span class="d-inline d-sm-none">Min</span>
         <span class="d-none d-sm-inline">Minimum + PV</span>
       </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
+      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode==='pv'}" v-if="state.gridMeter">
         <input type="radio" value="pv" v-on:click="mode='pv'">
         <span class="d-inline d-sm-none">PV</span>
         <span class="d-none d-sm-inline">Nur PV</span>
