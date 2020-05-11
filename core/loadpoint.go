@@ -436,6 +436,14 @@ func (lp *LoadPoint) resetGuard() {
 
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
+	// read and publish meters first
+	meterErr := lp.updateMeters()
+
+	// update ChargeRater here to make sure initial meter update is caught
+	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
+	lp.bus.Publish(evChargePower, lp.chargePower)
+
+	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 		return
@@ -444,13 +452,6 @@ func (lp *LoadPoint) update() {
 	lp.publish("mode", string(lp.GetMode()))
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
-
-	// catch any persistent meter update error
-	meterErr := lp.updateMeters()
-
-	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// check if car connected and ready for charging
 	var err error
