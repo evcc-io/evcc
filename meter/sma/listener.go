@@ -157,6 +157,9 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		Values: obisValues,
 	}
 
+	l.log.TRACE.Printf("%s: %f", ImportPower, msg.Values[ImportPower])
+	l.log.TRACE.Printf("%s: %f", ExportPower, msg.Values[ExportPower])
+
 	return msg, nil
 }
 
