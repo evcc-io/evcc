@@ -341,3 +341,146 @@ func TestConsumedPower(t *testing.T) {
 		}
 	}
 }
+
+func TestPVHysteresis(t *testing.T) {
+	dt := time.Minute
+	type se struct {
+		site    float64
+		delay   time.Duration // test case delay since start
+		current int64
+	}
+	tc := []struct {
+		enabled         bool
+		enable, disable float64
+		series          []se
+	}{
+		// keep disabled
+		{false, 0, 0, []se{
+			{0, 0, 0},
+			{0, 1, 0},
+			{0, dt - 1, 0},
+			{0, dt + 1, 0},
+		}},
+		// enable when threshold not configured but min power met
+		{false, 0, 0, []se{
+			{-6 * 100 * 10, 0, 0},
+			{-6 * 100 * 10, 1, 0},
+			{-6 * 100 * 10, dt - 1, 0},
+			{-6 * 100 * 10, dt + 1, lpMinCurrent},
+		}},
+		// keep disabled when threshold not configured
+		{false, 0, 0, []se{
+			{-400, 0, 0},
+			{-400, 1, 0},
+			{-400, dt - 1, 0},
+			{-400, dt + 1, 0},
+		}},
+		// keep disabled when threshold not met
+		{false, -500, 0, []se{
+			{-400, 0, 0},
+			{-400, 1, 0},
+			{-400, dt - 1, 0},
+			{-400, dt + 1, 0},
+		}},
+		// enable when threshold met
+		{false, -500, 0, []se{
+			{-500, 0, 0},
+			{-500, 1, 0},
+			{-500, dt - 1, 0},
+			{-500, dt + 1, lpMinCurrent},
+		}},
+		// keep enabled at max
+		{true, 500, 0, []se{
+			{-16 * 100 * 10, 0, lpMaxCurrent},
+			{-16 * 100 * 10, 1, lpMaxCurrent},
+			{-16 * 100 * 10, dt - 1, lpMaxCurrent},
+			{-16 * 100 * 10, dt + 1, lpMaxCurrent},
+		}},
+		// keep enabled at min
+		{true, 500, 0, []se{
+			{-6 * 100 * 10, 0, lpMinCurrent},
+			{-6 * 100 * 10, 1, lpMinCurrent},
+			{-6 * 100 * 10, dt - 1, lpMinCurrent},
+			{-6 * 100 * 10, dt + 1, lpMinCurrent},
+		}},
+		// keep enabled at min (negative threshold)
+		{true, 0, 500, []se{
+			{-500, 0, lpMinCurrent},
+			{-500, 1, lpMinCurrent},
+			{-500, dt - 1, lpMinCurrent},
+			{-500, dt + 1, lpMinCurrent},
+		}},
+		// disable when threshold met
+		{true, 0, 500, []se{
+			{500, 0, lpMinCurrent},
+			{500, 1, lpMinCurrent},
+			{500, dt - 1, lpMinCurrent},
+			{500, dt + 1, 0},
+		}},
+		// reset enable timer when threshold not met while timer active
+		{false, -500, 0, []se{
+			{-500, 0, 0},
+			{-500, 1, 0},
+			{-499, dt - 1, 0}, // should reset timer
+			{-500, dt + 1, 0}, // new begin of timer
+			{-500, 2*dt - 2, 0},
+			{-500, 2*dt - 1, lpMinCurrent},
+		}},
+		// reset enable timer when threshold not met while timer active and threshold not configured
+		{false, 0, 0, []se{
+			{-6*100*10 - 1, dt + 1, 0},
+			{-6 * 100 * 10, dt + 1, 0},
+			{-6 * 100 * 10, dt + 2, 0},
+			{-6 * 100 * 10, 2 * dt, 0},
+			{-6 * 100 * 10, 2*dt + 2, lpMinCurrent},
+		}},
+		// reset disable timer when threshold not met while timer active
+		{true, 0, 500, []se{
+			{500, 0, lpMinCurrent},
+			{500, 1, lpMinCurrent},
+			{499, dt - 1, lpMinCurrent},   // reset timer
+			{500, dt + 1, lpMinCurrent},   // within reset timer duration
+			{500, 2*dt - 2, lpMinCurrent}, // still within reset timer duration
+			{500, 2*dt - 1, 0},            // reset timer elapsed
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Log(tc)
+
+		clck := clock.NewMock()
+		lp := LoadPoint{
+			clock: clck,
+			ChargerHandler: ChargerHandler{
+				MinCurrent: lpMinCurrent,
+				MaxCurrent: lpMaxCurrent,
+				enabled:    tc.enabled,
+			},
+			Config: Config{
+				Voltage: 100,
+				Phases:  10,
+				Enable: ThresholdConfig{
+					Threshold: tc.enable,
+					Delay:     dt,
+				},
+				Disable: ThresholdConfig{
+					Threshold: tc.disable,
+					Delay:     dt,
+				},
+			},
+			gridPower: 0,
+		}
+
+		start := clck.Now()
+
+		for step, se := range tc.series {
+			clck.Set(start.Add(se.delay))
+			lp.gridPower = se.site
+			current := lp.maxCurrent(api.ModePV)
+
+			if current != se.current {
+				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+			}
+		}
+	}
+}

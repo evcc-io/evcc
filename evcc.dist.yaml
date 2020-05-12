@@ -211,6 +211,12 @@ loadpoints:
     pv: pv # pv meter
     battery: battery # battery meter
     charge: charge # charge meter
+  enable: # pv mode enable behavior
+    delay: 1m # threshold must be exceeded for this long
+    threshold: 0 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
+  disable: # pv mode disable behavior
+    delay: 5m # threshold must be exceeded for this long
+    threshold: 200 # maximum import power (W)
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
   maxcurrent: 16 # maximum charge current (default 16A)
   phases: 3 # ev phases (default 3)
