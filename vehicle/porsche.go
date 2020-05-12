@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -87,7 +86,7 @@ func NewPorscheFromConfig(log *util.Logger, other map[string]interface{}) api.Ve
 func (v *Porsche) login(user, password string) error {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// the flow is using Oauth2 and >10 redirects
