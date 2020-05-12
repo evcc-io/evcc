@@ -58,7 +58,7 @@ func newLoadPoint(charger api.Charger, pv, gm, cm api.Meter) *LoadPoint {
 	lp.clock.(*clock.Mock).Add(time.Hour)
 
 	lp.charger = charger
-	lp.pvMeter = pv
+	lp.pvMeter = []api.Meter{pv}
 	lp.gridMeter = gm
 
 	// prevent assigning a nil pointer sake of

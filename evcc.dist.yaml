@@ -214,9 +214,11 @@ loadpoints:
   charger: wallbe # charger
   meters:
     grid: grid # grid meter
-    pv: pv # pv meter
-    battery: battery # battery meter
     charge: charge # charge meter
+    pv: # list of pv generator meters
+    - pv
+    battery: # list of battery meters
+    - battery
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
     threshold: 0 # minimum export power (W). If zero, export must exceeds minimum charge power to enable

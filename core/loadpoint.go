@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -58,10 +59,10 @@ type ThresholdConfig struct {
 
 // MetersConfig contains the loadpoint's meter configuration
 type MetersConfig struct {
-	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
-	ChargeMeterRef  string `mapstructure:"charge"`  // Charger usage meter reference
-	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
-	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
+	GridMeterRef    string   `mapstructure:"grid"`    // Grid usage meter reference
+	ChargeMeterRef  string   `mapstructure:"charge"`  // Charger usage meter reference
+	PVMeterRef      []string `mapstructure:"pv"`      // PV generation meter reference
+	BatteryMeterRef []string `mapstructure:"battery"` // Battery charging meter reference
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -82,9 +83,9 @@ type LoadPoint struct {
 
 	// meters
 	gridMeter    api.Meter   // Grid usage meter
-	pvMeter      api.Meter   // PV generation meter
-	batteryMeter api.Meter   // Battery charging meter
 	chargeMeter  api.Meter   // Charger usage meter
+	pvMeter      []api.Meter // PV generation meter
+	batteryMeter []api.Meter // Battery charging meter
 	vehicle      api.Vehicle // Vehicle
 
 	// cached state
@@ -120,7 +121,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	} else {
 		log.FATAL.Fatal("config: missing charger")
 	}
-	if lp.Meters.PVMeterRef == "" && lp.Meters.GridMeterRef == "" {
+	if len(lp.Meters.PVMeterRef) == 0 && lp.Meters.GridMeterRef == "" {
 		log.FATAL.Fatal("config: missing either pv or grid meter")
 	}
 	if lp.Meters.GridMeterRef != "" {
@@ -129,11 +130,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
 	}
-	if lp.Meters.PVMeterRef != "" {
-		lp.pvMeter = cp.Meter(lp.Meters.PVMeterRef)
+	for _, ref := range lp.Meters.PVMeterRef {
+		lp.pvMeter = append(lp.pvMeter, cp.Meter(ref))
 	}
-	if lp.Meters.BatteryMeterRef != "" {
-		lp.batteryMeter = cp.Meter(lp.Meters.BatteryMeterRef)
+	for _, ref := range lp.Meters.BatteryMeterRef {
+		lp.batteryMeter = append(lp.batteryMeter, cp.Meter(ref))
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
@@ -487,9 +488,29 @@ func (lp *LoadPoint) updateMeters() (err error) {
 
 	// read PV meter before charge meter
 	retryMeter("grid", lp.gridMeter, &lp.gridPower)
-	retryMeter("pv", lp.pvMeter, &lp.pvPower)
-	retryMeter("battery", lp.batteryMeter, &lp.batteryPower)
 	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
+
+	lp.pvPower = 0
+	for i, m := range lp.pvMeter {
+		name := "pv"
+		if i > 0 {
+			name = fmt.Sprintf("pv%d", i+1)
+		}
+		var power float64
+		retryMeter(name, m, &power)
+		lp.pvPower += power
+	}
+
+	lp.batteryPower = 0
+	for i, m := range lp.batteryMeter {
+		name := "battery"
+		if i > 0 {
+			name = fmt.Sprintf("battery%d", i+1)
+		}
+		var power float64
+		retryMeter(name, m, &power)
+		lp.batteryPower += power
+	}
 
 	return err
 }
