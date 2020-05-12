@@ -280,24 +280,27 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, notificationChan chan<- p
 	_ = lp.bus.Subscribe(evStartCharge, lp.evChargeStartHandler)
 	_ = lp.bus.Subscribe(evStopCharge, lp.evChargeStopHandler)
 
+	// set current to known value
+	if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
+		log.ERROR.Println(err)
+	}
+
 	// read initial enabled state
-	enabled, err := lp.charger.Enabled()
-	if err == nil {
+	if enabled, err := lp.charger.Enabled(); err == nil {
 		lp.enabled = enabled
 		log.INFO.Printf("%s charger %sd", lp.Name, status[lp.enabled])
 
-		// prevent immediately disabling charger
-		if lp.enabled {
+		// ensure charger enabled according to initial mode
+		if lp.enabled && (lp.GetMode() == api.ModeOff) {
+			lp.chargerEnable(false)
+		} else {
+			// prevent immediately disabling charger
 			lp.guardUpdated = lp.clock.Now()
 		}
 	} else {
 		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
 	}
 
-	// set current to known value
-	if err = lp.setTargetCurrent(lp.MinCurrent); err != nil {
-		log.ERROR.Println(err)
-	}
 	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 }
 
