@@ -292,7 +292,9 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, notificationChan chan<- p
 
 		// ensure charger enabled according to initial mode
 		if lp.enabled && (lp.GetMode() == api.ModeOff) {
-			lp.chargerEnable(false)
+			if err := lp.chargerEnable(false); err != nil {
+				log.ERROR.Printf("%s charger error: %v", lp.Name, err)
+			}
 		} else {
 			// prevent immediately disabling charger
 			lp.guardUpdated = lp.clock.Now()
