@@ -9,46 +9,49 @@ const (
 )
 
 type Info struct {
-	Current              int  `struc:"int8"`  // appInfo[0]
-	KWhPer100            int  `struc:"int16"` // appInfo[1] / 10
-	AmountPerKWh         int  `struc:"int8"`  // appInfo[2] / 100
-	FIEnabled            int  `struc:"int8"`  // 1 == appInfo[3]
-	ErrorCode            int  `struc:"int8"`  // appInfo[4]
-	Efficiency           int  `struc:"int8"`  // appInfo[5]
-	ChargingActive       bool `struc:"int8"`  // 1 == appInfo[6]
-	PauseCharging        bool `struc:"int8"`  // 1 == appInfo[7]
-	ChargingCurrentMax   int  `struc:"int8"`  // appInfo[8]
-	BLETransmissionPower int  `struc:"int8"`  // appInfo[9]
+	Current              int  `struc:"int8"`   // B appInfo[0]
+	KWhPer100            int  `struc:"int16"`  // H appInfo[1] / 10
+	AmountPerKWh         int  `struc:"int8"`   // B appInfo[2] / 100
+	FIEnabled            int  `struc:"int8"`   // B 1 == appInfo[3]
+	ErrorCode            int  `struc:"int8"`   // B appInfo[4]
+	Efficiency           int  `struc:"int8"`   // B appInfo[5]
+	ChargingActive       bool `struc:"int8"`   // B 1 == appInfo[6]
+	PauseCharging        bool `struc:"int8"`   // B 1 == appInfo[7]
+	ChargingCurrentMax   int  `struc:"int8"`   // B appInfo[8]
+	BLETransmissionPower int  `struc:"int8"`   // B appInfo[9]
+	Pad                  int  `struc:"[2]pad"` // xx
 }
 
 type Energy struct {
-	TotalEnergy         int `struc:"uint32"` // energie02[0] / 1000
-	EnergyLastCharge    int `struc:"uint32"` // energie02[1] / 1000
-	Energy2ndLastCharge int `struc:"uint32"` // energie02[2] / 1000
-	Energy3rdLastCharge int `struc:"uint32"` // energie02[3] / 1000
-	ChargingEnergyLimit int `struc:"uint16"` // energie02[4] / 100
+	TotalEnergy         int  `struc:"uint32"` // L energie02[0] / 1000
+	EnergyLastCharge    int  `struc:"uint32"` // L energie02[1] / 1000
+	Energy2ndLastCharge int  `struc:"uint32"` // L energie02[2] / 1000
+	Energy3rdLastCharge int  `struc:"uint32"` // L energie02[3] / 1000
+	ChargingEnergyLimit int  `struc:"uint16"` // H energie02[4] / 100
+	Pad                 byte `struc:"pad"`    // x
 }
 
 type Power struct {
-	TotalPower        int `struc:"uint16"` // leistung[0] / 100
-	L1                int `struc:"uint16"` // leistung[1] / 100
-	L2                int `struc:"uint16"` // leistung[2] / 100
-	L3                int `struc:"uint16"` // leistung[3] / 100
-	PeakPower         int `struc:"uint16"` // leistung[4] / 100;
-	Frequency         int `struc:"uint16"` // leistung[5] / 100
-	Temperature       int `struc:"int16"`  // leistung[6]
-	RemainingDistance int `struc:"uint16"` // leistung[7] / 10
-	Costs             int `struc:"uint16"` // leistung[8] / 100
-	CPSignal          int `struc:"int8"`   // round(((leistung[9] << 8) / 100) + 0.4, 1)
+	TotalPower        int `struc:"uint16"` // H leistung[0] / 100
+	L1                int `struc:"uint16"` // H leistung[1] / 100
+	L2                int `struc:"uint16"` // H leistung[2] / 100
+	L3                int `struc:"uint16"` // H leistung[3] / 100
+	PeakPower         int `struc:"uint16"` // H leistung[4] / 100;
+	Frequency         int `struc:"uint16"` // H leistung[5] / 100
+	Temperature       int `struc:"int16"`  // h leistung[6]
+	RemainingDistance int `struc:"uint16"` // H leistung[7] / 10
+	Costs             int `struc:"uint16"` // H leistung[8] / 100
+	CPSignal          int `struc:"int8"`   // b round(((leistung[9] << 8) / 100) + 0.4, 1)
 }
 
 type VoltageCurrent struct {
-	VoltageL1 int `struc:"uint16"` // voltageAndCurrent[0] / 10
-	VoltageL2 int `struc:"uint16"` // voltageAndCurrent[1] / 10
-	VoltageL3 int `struc:"uint16"` // voltageAndCurrent[2] / 10
-	CurrentL1 int `struc:"uint16"` // voltageAndCurrent[3] / 100
-	CurrentL2 int `struc:"uint16"` // voltageAndCurrent[4] / 100
-	CurrentL3 int `struc:"uint16"` // voltageAndCurrent[5] / 100
+	VoltageL1 int `struc:"uint16"` // H voltageAndCurrent[0] / 10
+	VoltageL2 int `struc:"uint16"` // H voltageAndCurrent[1] / 10
+	VoltageL3 int `struc:"uint16"` // H voltageAndCurrent[2] / 10
+	CurrentL1 int `struc:"uint16"` // H voltageAndCurrent[3] / 100
+	CurrentL2 int `struc:"uint16"` // H voltageAndCurrent[4] / 100
+	CurrentL3 int `struc:"uint16"` // H voltageAndCurrent[5] / 100
+	Pad       int `struc:"[2]pad"` // xx
 }
 
 type Settings struct {

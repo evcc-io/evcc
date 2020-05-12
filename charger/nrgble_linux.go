@@ -216,17 +216,16 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	}
 	nrg.log.TRACE.Printf("power: %+v", res)
 
-	CPSignal := float64(res.CPSignal<<8)/100 + 0.4
-
-	if CPSignal >= 1.3 && CPSignal <= 7.5 {
-		return api.StatusC, nil
-	}
-
-	if CPSignal >= 1.3 && CPSignal <= 10.5 {
+	switch res.CPSignal {
+	case 3:
 		return api.StatusB, nil
+	case 2:
+		return api.StatusC, nil
+	case 4:
+		return api.StatusA, nil
 	}
 
-	return api.StatusA, nil
+	return api.StatusA, fmt.Errorf("unexpected cp signal: %d", res.CPSignal)
 }
 
 // Enabled implements the Charger.Enabled interface
