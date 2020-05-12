@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 type HTTPHelper struct {
@@ -17,7 +18,7 @@ type HTTPHelper struct {
 func NewHTTPHelper(log *Logger) *HTTPHelper {
 	r := &HTTPHelper{
 		Log:    log,
-		Client: &http.Client{},
+		Client: &http.Client{Timeout: 10 * time.Second},
 	}
 	return r
 }
