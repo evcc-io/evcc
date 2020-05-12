@@ -2,7 +2,6 @@ package charger
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -226,7 +225,7 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	}
 
-	return api.StatusA, errors.New("unexpected cp signal: %d", res.CPSignal)
+	return api.StatusA, fmt.Errorf("unexpected cp signal: %d", res.CPSignal)
 }
 
 // Enabled implements the Charger.Enabled interface
