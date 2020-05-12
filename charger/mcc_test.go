@@ -253,6 +253,12 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 			2308, false,
 		},
 		{
+			"no data response",
+			[]apiResponse{
+				{mccAPIEnergy, "\"\"\n"},
+			}, 0, false,
+		},
+		{
 			"home plug - error response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 246.60000000000002\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.800000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.300000000000001\\n    }\\n}\\n\""},
@@ -290,6 +296,12 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 			}, 18.832000000000001, false,
 		},
 		{
+			"no data response",
+			[]apiResponse{
+				{mccAPICurrentSession, "\"\"\n"},
+			}, 0, false,
+		},
+		{
 			"error response",
 			[]apiResponse{
 				{mccAPICurrentSession, "\"\""},
@@ -324,6 +336,12 @@ func TestMobileConnect_ChargingTime(t *testing.T) {
 			[]apiResponse{
 				{mccAPICurrentSession, "\"{\\n    \\\"account\\\": \\\"PRIVATE\\\",\\n    \\\"chargingRate\\\": 0,\\n    \\\"chargingType\\\": \\\"AC\\\",\\n    \\\"clockSrc\\\": \\\"NTP\\\",\\n    \\\"costs\\\": 0,\\n    \\\"currency\\\": \\\"\\\",\\n    \\\"departTime\\\": \\\"\\\",\\n    \\\"duration\\\": 30789,\\n    \\\"endOfChargeTime\\\": \\\"\\\",\\n    \\\"endSoc\\\": 0,\\n    \\\"endTime\\\": \\\"\\\",\\n    \\\"energySumKwh\\\": 18.832000000000001,\\n    \\\"evChargingRatekW\\\": 0,\\n    \\\"evTargetSoc\\\": -1,\\n    \\\"evVasAvailability\\\": false,\\n    \\\"pcid\\\": \\\"\\\",\\n    \\\"powerRange\\\": 0,\\n    \\\"selfEnergy\\\": 0,\\n    \\\"sessionId\\\": 13,\\n    \\\"soc\\\": -1,\\n    \\\"solarEnergyShare\\\": 0,\\n    \\\"startSoc\\\": 0,\\n    \\\"startTime\\\": \\\"2020-04-15T10:07:22+02:00\\\",\\n    \\\"totalRange\\\": 0,\\n    \\\"vehicleBrand\\\": \\\"\\\",\\n    \\\"vehicleModel\\\": \\\"\\\",\\n    \\\"whitelist\\\": false\\n}\\n\""},
 			}, 30789 * time.Second, false,
+		},
+		{
+			"no data response",
+			[]apiResponse{
+				{mccAPICurrentSession, "\"\"\n"},
+			}, 0, false,
 		},
 		{
 			"error response",
