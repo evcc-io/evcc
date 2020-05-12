@@ -9,6 +9,7 @@ require (
 	github.com/benbjohnson/clock v1.0.0
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/godbus/dbus v4.1.0+incompatible
 	github.com/golang/mock v1.4.3
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
@@ -21,10 +22,14 @@ require (
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20190206234002-112508e1374e
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+	github.com/lunixbochs/struc v0.0.0-20190916212049-a5c72983bc42
 	github.com/mitchellh/mapstructure v1.3.0
 	github.com/mjibson/esc v0.2.0
+	github.com/muka/go-bluetooth v0.0.0-20200505070311-0c1993e4ff21
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/common v0.4.0
+	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.6.3

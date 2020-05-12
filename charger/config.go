@@ -22,8 +22,10 @@ func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) a
 		c = NewPhoenixEMCPFromConfig(log, other)
 	case "phoenix-evcc":
 		c = NewPhoenixEVCCFromConfig(log, other)
-	case "nrgkick", "nrg", "kick":
-		c = NewNRGKickFromConfig(log, other)
+	case "nrgkick-bluetooth", "nrgkick-bt", "nrgble":
+		c = NewNRGKickBLEFromConfig(log, other)
+	case "nrgkick-connect", "nrgconnect":
+		c = NewNRGKickConnectFromConfig(log, other)
 	case "go-e", "goe":
 		c = NewGoEFromConfig(log, other)
 	case "evsewifi":
