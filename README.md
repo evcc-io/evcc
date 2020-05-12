@@ -21,23 +21,39 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Index
 
+- [Getting started](#getting-started)
 - [Installation](#installation)
-- [General concepts](#general-concepts)
-  - [Charge modes](#charge-modes)
-  - [Meter setup](#meter-setup)
-  - [Charger setup](#charger-setup)
 - [Configuration](#configuration)
   - [Charger](#charger)
   - [Meter](#meter)
   - [Vehicle](#vehicle)
+  - [Loadpoint](#loadpoint)
+  - [Considerations](#considerations)
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
   - [Script](#script-readwrite)
   - [HTTP](#http-readwrite)
   - [Combined status](#combined-status-read-only)
-- [Developer](#developer)
+- [Developer information](#developer-information)
 - [Background](#background)
+
+## Getting started
+
+1. Install EVCC. For details see [installation](#installation).
+2. Copy the default configuration file `evcc.dist.yaml` to `evcc.yaml` and open for editing.
+3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). A pv meter can also be replaced by a pv inverter. Both need be combined to a [loadpoint](#loadpoint).
+4. Configure both meter(s) and charger by:
+    - choosing the appropriate `type`
+    - add a `name` attribute than can later be referred to
+    - add configuration details depending on `type`
+  See `evcc.dist.yaml` for examples.
+5. Test your meter, charger and optional vehicle configuration by running
+
+        evcc meter|charger|vehicle
+
+6. Configure a loadpoint and refer to the meter, charger and vehicle using the defined `name` attributes.
+7. Provide optional configuration for MQTT, push messaging, database logging and custom menus.
 
 ## Installation
 
@@ -69,59 +85,6 @@ To build EVCC from source, [Go](2) 1.13 is required:
 **Note**: EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
 All components **must** be installed by a certified professional.
-
-## General concepts
-
-### Charge modes
-
-Multiple charge modes are supported:
-
-- **Off**: disable the charger, even if car gets connected.
-- **Now** (**Sofortladen**): charge immediately with maximum allowed current.
-- **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
-- **PV**: use PV as available. May not charge the car if PV remains dark.
-
-In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
-
-### Meter setup
-
-For both PV modes, EVCC needs to assess how much residual PV power is available at the grid connection point and how much power the charger actually uses. Various methods are implemented to obtain this information, with different degrees of accuracy.
-
-- **PV meter**: Configuring a *PV meter* is the simplest option. *PV meter* measures the PV generation. The charger is allowed to consume:
-
-      Charge Power = PV Meter Power - Residual Power
-
-  The *pv meter* is expected to deliver negative values for export and should not return positive values.
-
-  *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
-
-- **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in Watt (W). The charger is then allowed to consume:
-
-      Charge Power = Current Charge Power - Grid Meter Power - Residual Power
-
-  In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
-
-- **Battery meter**: *battery meter* is used if a home battery is installed and you want charging the EV take priority over charging the home battery. As the home battery would otherwise "grab" all available PV power, this meter measures the home battery charging power.
-
-  With *grid meter* the charger is then allowed to consume:
-
-      Charge Power = Current Charge Power - Grid Meter Power + Battery Meter Power - Residual Power
-
-  or without *grid meter*
-
-      Charge Power = PV Meter Power + Battery Meter Power - Residual Power
-
-  The *battery meter* is expected to deliver negative values when charging and positive values when discharging.
-
-### Charger setup
-
-When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
-
-- **Charge meter**: A *charge meter* is often integrated into the charger but can also be installed separately. EVCC expects the *charge meter* to supply *charge power* in Watt (W) and preferably *total energy* in kWh.
-If *total energy* is supplied, it can be used to calculate the *charged energy* for the current charging cycle.
-
-- **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.
-If the charger supplies *total energy* for the charging cycle this value is preferred over the *charge meter*'s value (if present).
 
 ## Configuration
 
@@ -236,6 +199,71 @@ Available vehicle implementations are:
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
+
+### Loadpoint
+
+A loadpoint combines meters, charger and vehicle together and adds optional configuration. A minimal loadpoint configuration needs either pv or grid meter and a charger. More meters can be added as needed:
+
+```yaml
+loadpoints:
+- name: main # name for logging
+  charger: wallbe # charger reference
+  vehicle: audi # vehicle reference
+  meters:
+    grid: sdm630 # grid meter reference
+    pv: sma # pv meter reference
+```
+
+More options are documented in the `evcc.dist.yaml` sample configuration.
+
+#### Charge modes
+
+The default *charge mode* upon start of EVCC is configured on the loadpoint. Multiple charge modes are supported:
+
+- **Off**: disable the charger, even if car gets connected.
+- **Now** (**Sofortladen**): charge immediately with maximum allowed current.
+- **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
+- **PV**: use PV as available. May not charge the car if PV remains dark.
+
+In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
+
+### Considerations
+
+For intelligent control of PV power usage, EVCC needs to assess how much residual PV power is available at the grid connection point and how much power the charger actually uses. Various methods are implemented to obtain this information, with different degrees of accuracy.
+
+- **PV meter**: Configuring a *PV meter* is the simplest option. *PV meter* measures the PV generation. The charger is allowed to consume:
+
+      Charge Power = PV Meter Power - Residual Power
+
+  The *pv meter* is expected to deliver negative values for export and should not return positive values.
+
+  *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
+
+- **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in Watt (W). The charger is then allowed to consume:
+
+      Charge Power = Current Charge Power - Grid Meter Power - Residual Power
+
+  In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
+
+- **Battery meter**: *battery meter* is used if a home battery is installed and you want charging the EV take priority over charging the home battery. As the home battery would otherwise "grab" all available PV power, this meter measures the home battery charging power.
+
+  With *grid meter* the charger is then allowed to consume:
+
+      Charge Power = Current Charge Power - Grid Meter Power + Battery Meter Power - Residual Power
+
+  or without *grid meter*
+
+      Charge Power = PV Meter Power + Battery Meter Power - Residual Power
+
+  The *battery meter* is expected to deliver negative values when charging and positive values when discharging.
+
+When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
+
+- **Charge meter**: A *charge meter* is often integrated into the charger but can also be installed separately. EVCC expects the *charge meter* to supply *charge power* in Watt (W) and preferably *total energy* in kWh.
+If *total energy* is supplied, it can be used to calculate the *charged energy* for the current charging cycle.
+
+- **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.
+If the charger supplies *total energy* for the charging cycle this value is preferred over the *charge meter*'s value (if present).
 
 ## Plugins
 
@@ -419,7 +447,7 @@ charging:
   topic: openWB/lp/1/boolChargeStat
 ```
 
-## Developer
+## Developer information
 
 EVCC has the following internal API. The full documentation is available in GoDoc format in https://pkg.go.dev/github.com/andig/evcc/api.
 
