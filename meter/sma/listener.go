@@ -157,6 +157,8 @@ func (l *Listener) processMessage(src *net.UDPAddr, b []byte) (Telegram, error) 
 		Values: obisValues,
 	}
 
+	//	l.log.TRACE.Printf("recv %v", msg.Values)
+
 	return msg, nil
 }
 

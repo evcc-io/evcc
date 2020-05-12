@@ -109,7 +109,10 @@ func (sm *SMA) receive() {
 				sm.updated = time.Now()
 			}
 		} else if power, ok := msg.Values[sma.ExportPower]; ok {
-			sm.power = -power
+			sm.power = 0
+			if power > 0 {
+				sm.power = -power
+			}
 			sm.updated = time.Now()
 		} else if power, ok := msg.Values[sma.ImportPower]; ok {
 			sm.power = power
