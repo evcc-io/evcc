@@ -92,9 +92,10 @@ func (v *Porsche) login(user, password string) error {
 
 	// the flow is using Oauth2 and >10 redirects
 	client := &http.Client{
-		Jar: jar,
+		Jar:     jar,
+		Timeout: v.HTTPHelper.Client.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return nil
+			return nil // allow >10 redirects
 		},
 	}
 

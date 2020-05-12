@@ -77,6 +77,7 @@ func (v *BMW) login(user, password string) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{
+		Timeout:       v.HTTPHelper.Client.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }, // don't follow redirects
 	}
 
