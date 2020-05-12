@@ -304,7 +304,7 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 		{
 			"error response",
 			[]apiResponse{
-				{mccAPICurrentSession, "\"\""},
+				{mccAPICurrentSession, "invalidjson"},
 			}, 0, true,
 		},
 	}
@@ -346,7 +346,7 @@ func TestMobileConnect_ChargingTime(t *testing.T) {
 		{
 			"error response",
 			[]apiResponse{
-				{mccAPICurrentSession, "\"\""},
+				{mccAPICurrentSession, "invalidjson"},
 			}, 0, true,
 		},
 	}

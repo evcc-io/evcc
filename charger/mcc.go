@@ -201,13 +201,12 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 	b, err := mcc.Request(req)
 	if err == nil {
-		var s string
-		// ""\n is usually returned if no data is present, e.g. after a restart
+		var s = strings.Trim(string(b), "\n")
+
+		// "" is usually returned if no data is present, e.g. after a restart
 		// we know this is no valid json so we make sure we don't treat this as an error
-		if string(b) == "\"\"\n" {
-			return nil
-		} else {
-			if s, err = strconv.Unquote(strings.Trim(string(b), "\n")); err == nil {
+		if s != "\"\"" {
+			if s, err = strconv.Unquote(s); err == nil {
 				err = json.Unmarshal([]byte(s), &result)
 			}
 		}
