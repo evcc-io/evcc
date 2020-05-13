@@ -93,6 +93,33 @@ func (sm *SMA) waitForInitialValue() {
 	}
 }
 
+// update the actual meter data
+func (sm *SMA) updatePower(msg sma.Telegram) {
+	sm.mux.Lock()
+
+	if sm.powerO != "" {
+		// use user-defined obis
+		if power, ok := msg.Values[sm.powerO]; ok {
+			sm.power = power
+			sm.updated = time.Now()
+		}
+	} else {
+		sm.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
+		sm.updated = time.Now()
+	}
+
+	if sm.energyO != "" {
+		if energy, ok := msg.Values[sm.energyO]; ok {
+			sm.energy = energy
+			sm.updated = time.Now()
+		} else {
+			sm.log.WARN.Println("missing obis for energy")
+		}
+	}
+
+	sm.mux.Unlock()
+}
+
 // receive processes the channel message containing the multicast data
 func (sm *SMA) receive() {
 	for msg := range sm.recv {
@@ -100,29 +127,7 @@ func (sm *SMA) receive() {
 			continue
 		}
 
-		sm.mux.Lock()
-
-		if sm.powerO != "" {
-			// use user-defined obis
-			if power, ok := msg.Values[sm.powerO]; ok {
-				sm.power = power
-				sm.updated = time.Now()
-			}
-		} else {
-			sm.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
-			sm.updated = time.Now()
-		}
-
-		if sm.energyO != "" {
-			if energy, ok := msg.Values[sm.energyO]; ok {
-				sm.energy = energy
-				sm.updated = time.Now()
-			} else {
-				sm.log.WARN.Println("missing obis for energy")
-			}
-		}
-
-		sm.mux.Unlock()
+		sm.updatePower(msg)
 	}
 }
 
