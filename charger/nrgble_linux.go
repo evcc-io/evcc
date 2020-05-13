@@ -161,12 +161,12 @@ func (nrg *NRGKickBLE) read(service string, res interface{}) error {
 	}
 	nrg.log.TRACE.Printf("read %s %0x", service, b)
 
-	return struc.Unpack(bytes.NewReader(b), &res)
+	return struc.Unpack(bytes.NewReader(b), res)
 }
 
 func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	var out bytes.Buffer
-	if err := struc.Pack(&out, &val); err != nil {
+	if err := struc.Pack(&out, val); err != nil {
 		return err
 	}
 	nrg.log.TRACE.Printf("write %s %0x", service, out.Bytes())
@@ -254,7 +254,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	settings := nrg.defaultSettings(res)
 	settings.PauseCharging = !enable
 
-	return nrg.write(nrgble.SettingsService, settings)
+	return nrg.write(nrgble.SettingsService, &settings)
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
@@ -269,7 +269,7 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	settings := nrg.defaultSettings(res)
 	settings.Current = int(current)
 
-	return nrg.write(nrgble.SettingsService, settings)
+	return nrg.write(nrgble.SettingsService, &settings)
 }
 
 // CurrentPower implements the Meter interface.
