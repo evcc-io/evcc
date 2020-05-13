@@ -108,17 +108,9 @@ func (sm *SMA) receive() {
 				sm.power = power
 				sm.updated = time.Now()
 			}
-		} else if power, ok := msg.Values[sma.ExportPower]; ok {
-			sm.power = 0
-			if power > 0 {
-				sm.power = -power
-			}
-			sm.updated = time.Now()
-		} else if power, ok := msg.Values[sma.ImportPower]; ok {
-			sm.power = power
-			sm.updated = time.Now()
 		} else {
-			sm.log.WARN.Println("missing obis for import/export power")
+			sm.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
+			sm.updated = time.Now()
 		}
 
 		if sm.energyO != "" {
