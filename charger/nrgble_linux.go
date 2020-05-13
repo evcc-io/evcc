@@ -254,7 +254,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	settings := nrg.defaultSettings(res)
 	settings.PauseCharging = !enable
 
-	return nrg.write(nrgble.SettingsService, settings)
+	return nrg.write(nrgble.SettingsService, &settings)
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
@@ -269,7 +269,7 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	settings := nrg.defaultSettings(res)
 	settings.Current = int(current)
 
-	return nrg.write(nrgble.SettingsService, settings)
+	return nrg.write(nrgble.SettingsService, &settings)
 }
 
 // CurrentPower implements the Meter interface.
