@@ -253,6 +253,12 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 			2308, false,
 		},
 		{
+			"no data response",
+			[]apiResponse{
+				{mccAPIEnergy, "\"\"\n"},
+			}, 0, false,
+		},
+		{
 			"home plug - error response",
 			[]apiResponse{
 				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 246.60000000000002\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.800000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.300000000000001\\n    }\\n}\\n\""},
@@ -290,9 +296,15 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 			}, 18.832000000000001, false,
 		},
 		{
+			"no data response",
+			[]apiResponse{
+				{mccAPICurrentSession, "\"\"\n"},
+			}, 0, false,
+		},
+		{
 			"error response",
 			[]apiResponse{
-				{mccAPICurrentSession, "\"\""},
+				{mccAPICurrentSession, "invalidjson"},
 			}, 0, true,
 		},
 	}
@@ -326,9 +338,15 @@ func TestMobileConnect_ChargingTime(t *testing.T) {
 			}, 30789 * time.Second, false,
 		},
 		{
+			"no data response",
+			[]apiResponse{
+				{mccAPICurrentSession, "\"\"\n"},
+			}, 0, false,
+		},
+		{
 			"error response",
 			[]apiResponse{
-				{mccAPICurrentSession, "\"\""},
+				{mccAPICurrentSession, "invalidjson"},
 			}, 0, true,
 		},
 	}

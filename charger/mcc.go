@@ -200,14 +200,20 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 	}
 
 	b, err := mcc.Request(req)
-	if err == nil {
-		var s string
-		if s, err = strconv.Unquote(strings.Trim(string(b), "\n")); err == nil {
-			err = json.Unmarshal([]byte(s), &result)
-		}
+	if err != nil {
+		return err
 	}
 
-	return err
+	s, err := strconv.Unquote(strings.Trim(string(b), "\n"))
+	if err != nil {
+		return err
+	}
+
+	if s == "" {
+		return nil // empty response
+	}
+
+	return json.Unmarshal([]byte(s), &result)
 }
 
 // Status implements the Charger.Status interface
