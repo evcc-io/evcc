@@ -28,7 +28,6 @@ require (
 	github.com/muka/go-bluetooth v0.0.0-20200505070311-0c1993e4ff21
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/common v0.4.0
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
