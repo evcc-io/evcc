@@ -136,35 +136,7 @@ func (nrg *NRGKickBLE) setTimer() {
 	nrg.timer.Reset(2 * time.Second)
 }
 
-func (nrg *NRGKickBLE) read(service string) ([]byte, error) {
-	nrg.waitTimer()
-	defer nrg.setTimer()
-
-	if nrg.dev == nil {
-		dev, err := nrg.connect()
-		if err != nil {
-			return []byte{}, err
-		}
-		nrg.dev = dev
-	}
-
-	char, err := nrg.dev.GetCharByUUID(service)
-	if err != nil {
-		nrg.close()
-		return []byte{}, err
-	}
-
-	b, err := char.ReadValue(map[string]interface{}{})
-	if err != nil {
-		nrg.close()
-		return []byte{}, err
-	}
-	nrg.log.TRACE.Printf("read %s %0x", service, b)
-
-	return b, nil
-}
-
-func (nrg *NRGKickBLE) write(service string, b []byte) error {
+func (nrg *NRGKickBLE) read(service string, res interface{}) error {
 	nrg.waitTimer()
 	defer nrg.setTimer()
 
@@ -176,14 +148,47 @@ func (nrg *NRGKickBLE) write(service string, b []byte) error {
 		nrg.dev = dev
 	}
 
-	nrg.log.TRACE.Printf("write %s %0x", service, b)
 	char, err := nrg.dev.GetCharByUUID(service)
 	if err != nil {
 		nrg.close()
 		return err
 	}
 
-	if err := char.WriteValue(b, map[string]interface{}{}); err != nil {
+	b, err := char.ReadValue(map[string]interface{}{})
+	if err != nil {
+		nrg.close()
+		return err
+	}
+	nrg.log.TRACE.Printf("read %s %0x", service, b)
+
+	return struc.Unpack(bytes.NewReader(b), &res)
+}
+
+func (nrg *NRGKickBLE) write(service string, val interface{}) error {
+	var out bytes.Buffer
+	if err := struc.Pack(&out, &val); err != nil {
+		return err
+	}
+	nrg.log.TRACE.Printf("write %s %0x", service, out.Bytes())
+
+	nrg.waitTimer()
+	defer nrg.setTimer()
+
+	if nrg.dev == nil {
+		dev, err := nrg.connect()
+		if err != nil {
+			return err
+		}
+		nrg.dev = dev
+	}
+
+	char, err := nrg.dev.GetCharByUUID(service)
+	if err != nil {
+		nrg.close()
+		return err
+	}
+
+	if err := char.WriteValue(out.Bytes(), map[string]interface{}{}); err != nil {
 		nrg.close()
 		return err
 	}
@@ -205,15 +210,11 @@ func (nrg *NRGKickBLE) defaultSettings(info nrgble.Info) nrgble.Settings {
 
 // Status implements the Charger.Status interface
 func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
-	b, err := nrg.read(nrgble.PowerService)
-	if err != nil {
+	res := nrgble.Power{}
+	if err := nrg.read(nrgble.PowerService, &res); err != nil {
 		return api.StatusF, err
 	}
 
-	res := nrgble.Power{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return api.StatusF, err
-	}
 	nrg.log.TRACE.Printf("power: %+v", res)
 
 	switch res.CPSignal {
@@ -230,16 +231,12 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
-	b, err := nrg.read(nrgble.InfoService)
-	if err != nil {
+	res := nrgble.Info{}
+	if err := nrg.read(nrgble.InfoService, &res); err != nil {
 		nrg.log.TRACE.Println(err)
 		return false, err
 	}
 
-	res := nrgble.Info{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return false, err
-	}
 	nrg.log.TRACE.Printf("info: %+v", res)
 
 	return !res.PauseCharging, nil
@@ -247,63 +244,41 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 
 // Enable implements the Charger.Enable interface
 func (nrg *NRGKickBLE) Enable(enable bool) error {
-	b, err := nrg.read(nrgble.InfoService)
-	if err != nil {
+	res := nrgble.Info{}
+	if err := nrg.read(nrgble.InfoService, &res); err != nil {
 		return err
 	}
 
-	res := nrgble.Info{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return err
-	}
 	nrg.log.TRACE.Printf("info: %+v", res)
 
 	settings := nrg.defaultSettings(res)
 	settings.PauseCharging = !enable
 
-	var out bytes.Buffer
-	if err := struc.Pack(&out, &settings); err != nil {
-		return err
-	}
-
-	return nrg.write(nrgble.SettingsService, out.Bytes())
+	return nrg.write(nrgble.SettingsService, settings)
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
-	b, err := nrg.read(nrgble.InfoService)
-	if err != nil {
+	res := nrgble.Info{}
+	if err := nrg.read(nrgble.InfoService, &res); err != nil {
 		return err
 	}
 
-	res := nrgble.Info{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return err
-	}
 	nrg.log.TRACE.Printf("info: %+v", res)
 
 	settings := nrg.defaultSettings(res)
 	settings.Current = int(current)
 
-	var out bytes.Buffer
-	if err := struc.Pack(&out, &settings); err != nil {
-		return err
-	}
-
-	return nrg.write(nrgble.SettingsService, out.Bytes())
+	return nrg.write(nrgble.SettingsService, settings)
 }
 
 // CurrentPower implements the Meter interface.
 func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
-	b, err := nrg.read(nrgble.PowerService)
-	if err != nil {
+	res := nrgble.Power{}
+	if err := nrg.read(nrgble.PowerService, &res); err != nil {
 		return 0, err
 	}
 
-	res := nrgble.Power{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return 0, err
-	}
 	nrg.log.TRACE.Printf("power: %+v", res)
 
 	return float64(res.TotalPower) * 10, nil
@@ -311,15 +286,11 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 
 // TotalEnergy implements the MeterEnergy interface.
 func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
-	b, err := nrg.read(nrgble.EnergyService)
-	if err != nil {
+	res := nrgble.Energy{}
+	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
 		return 0, err
 	}
 
-	res := nrgble.Energy{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return 0, err
-	}
 	nrg.log.TRACE.Printf("energy: %+v", res)
 
 	return float64(res.TotalEnergy) / 1000, nil
@@ -327,15 +298,11 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 
 // Currents implements the MeterCurrent interface.
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
-	b, err := nrg.read(nrgble.VoltageCurrentService)
-	if err != nil {
+	res := nrgble.VoltageCurrent{}
+	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {
 		return 0, 0, 0, err
 	}
 
-	res := nrgble.VoltageCurrent{}
-	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
-		return 0, 0, 0, err
-	}
 	nrg.log.TRACE.Printf("voltage/current: %+v", res)
 
 	return float64(res.CurrentL1) / 100,
@@ -347,14 +314,8 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 // ChargedEnergy implements the ChargeRater interface.
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
-// 	nrg.log.TRACE.Print("read EnergyService")
-// 	b, err := nrg.read(nrgble.EnergyService)
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
 // 	res := nrgble.Energy{}
-// 	if err := struc.Unpack(bytes.NewReader(b), &res); err != nil {
+// 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
 // 		return 0, err
 // 	}
 
