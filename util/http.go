@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// HTTPHelper provides utility primitives
 type HTTPHelper struct {
 	Log    *Logger
 	Client *http.Client
