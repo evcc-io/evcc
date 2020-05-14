@@ -419,6 +419,10 @@ uri: https://volkszaehler/api/data/<uuid>.json?from=now
 method: GET # default HTTP method
 headers:
 - content-type: application/json
+auth: # basic authorization
+  type: basic
+  user: foo
+  password: bar
 insecure: false # set to true to trust self-signed certificates
 jq: .data.tuples[0][1] # parse response json
 scale: 0.001 # floating point factor applied to result, e.g. for kW to W conversion
