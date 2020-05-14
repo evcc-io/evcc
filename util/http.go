@@ -13,6 +13,7 @@ import (
 type HTTPHelper struct {
 	Log    *Logger
 	Client *http.Client
+	last   *http.Response // last response
 }
 
 // NewHTTPHelper creates http helper for simplified PUT GET logic
@@ -24,8 +25,14 @@ func NewHTTPHelper(log *Logger) *HTTPHelper {
 	return r
 }
 
+// LastResponse returns last http.Response that was read without error
+func (r *HTTPHelper) LastResponse() *http.Response {
+	return r.last
+}
+
 // Response codes other than HTTP 200 or 204 are raised as error
 func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
+	r.last = nil
 	if err != nil {
 		return []byte{}, err
 	}
@@ -40,6 +47,7 @@ func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
 		r.Log.TRACE.Printf("%s\n%s", resp.Request.URL.String(), string(b))
 	}
 
+	r.last = resp
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
 	}
