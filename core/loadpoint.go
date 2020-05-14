@@ -50,7 +50,7 @@ type Config struct {
 	Enable, Disable ThresholdConfig
 }
 
-// ThresholdConfig defines enable/disable hysteresis paramters
+// ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration
 	Threshold float64
@@ -72,7 +72,7 @@ type LoadPoint struct {
 	bus              evbus.Bus         // event bus
 	triggerChan      chan struct{}     // API updates
 	notificationChan chan<- push.Event // notifications
-	uiChan           chan<- Param      // client push messages
+	uiChan           chan<- util.Param // client push messages
 
 	Config         `mapstructure:",squash"` // exposed public configuration
 	ChargerHandler `mapstructure:",squash"` // handle charger state and current
@@ -169,7 +169,7 @@ func (lp *LoadPoint) notify(event string, attributes map[string]interface{}) {
 
 // publish sends values to UI and databases
 func (lp *LoadPoint) publish(key string, val interface{}) {
-	lp.uiChan <- Param{
+	lp.uiChan <- util.Param{
 		LoadPoint: lp.Name,
 		Key:       key,
 		Val:       val,
@@ -228,7 +228,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- Param, notificationChan chan<- push.Event) {
+func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, notificationChan chan<- push.Event) {
 	lp.notificationChan = notificationChan
 	lp.uiChan = uiChan
 

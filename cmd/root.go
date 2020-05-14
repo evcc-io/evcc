@@ -128,25 +128,13 @@ func checkVersion() {
 	}
 }
 
-var teeIsChained bool // controles piping of first channel in teed chain
-
-// tee splits a tee channel from an input channel and starts a goroutine
-// for duplicateing channel values to replacement input and tee channel
-func tee(in chan core.Param) (chan core.Param, <-chan core.Param) {
-	gen := make(chan core.Param)
-	tee := make(chan core.Param)
-
-	go func(teeIsChained bool) {
-		for i := range gen {
-			if teeIsChained {
-				in <- i
-			}
-			tee <- i
+// handle UI update requests
+func handleUI(triggerChan <-chan struct{}, loadPoints []*core.LoadPoint) {
+	for range triggerChan {
+		for _, lp := range loadPoints {
+			lp.Update()
 		}
-	}(teeIsChained)
-
-	teeIsChained = true
-	return gen, tee
+	}
 }
 
 func run(cmd *cobra.Command, args []string) {
@@ -174,8 +162,7 @@ func run(cmd *cobra.Command, args []string) {
 	loadPoints := loadConfig(conf, notificationChan)
 
 	// start broadcasting values
-	valueChan := make(chan core.Param)
-	triggerChan := make(chan struct{})
+	tee := &Tee{}
 
 	// setup influx
 	if viper.Get("influx") != nil {
@@ -187,28 +174,32 @@ func run(cmd *cobra.Command, args []string) {
 			conf.Influx.Password,
 		)
 
-		var teeChan <-chan core.Param
-		valueChan, teeChan = tee(valueChan)
-
 		// eliminate duplicate values
 		dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
-		teeChan = dedupe.Pipe(teeChan)
+		pipeChan := dedupe.Pipe(tee.Attach())
 
 		// reduce number of values written to influx
 		limiter := server.NewLimiter(5 * time.Second)
-		teeChan = limiter.Pipe(teeChan)
+		pipeChan = limiter.Pipe(pipeChan)
 
-		go influx.Run(teeChan)
+		go influx.Run(pipeChan)
 	}
 
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, conf.Menu, loadPoints[0], socketHub)
 
-	var teeChan <-chan core.Param
-	valueChan, teeChan = tee(valueChan)
+	triggerChan := make(chan struct{})
 
-	go socketHub.Run(teeChan, triggerChan)
+	// handle UI update requests whenever browser connects
+	go handleUI(triggerChan, loadPoints)
+
+	// publish to UI
+	go socketHub.Run(tee.Attach(), triggerChan)
+
+	// setup values channel
+	valueChan := make(chan util.Param)
+	go tee.Run(valueChan)
 
 	// start all loadpoints
 	for _, lp := range loadPoints {
@@ -216,15 +207,6 @@ func run(cmd *cobra.Command, args []string) {
 		lp.Prepare(valueChan, notificationChan)
 		go lp.Run(conf.Interval)
 	}
-
-	// handle UI update requests whenever browser connects
-	go func() {
-		for range triggerChan {
-			for _, lp := range loadPoints {
-				lp.Update()
-			}
-		}
-	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

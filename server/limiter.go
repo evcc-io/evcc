@@ -3,13 +3,13 @@ package server
 import (
 	"time"
 
-	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 )
 
 // Piper is the interface that data flow plugins must implement
 type Piper interface {
-	Pipe(in <-chan core.Param) <-chan core.Param
+	Pipe(in <-chan util.Param) <-chan util.Param
 }
 
 type cacheItem struct {
@@ -41,7 +41,7 @@ func NewDeduplicator(interval time.Duration, filter ...string) Piper {
 	return l
 }
 
-func (l *Deduplicator) pipe(in <-chan core.Param, out chan<- core.Param) {
+func (l *Deduplicator) pipe(in <-chan util.Param, out chan<- util.Param) {
 	for p := range in {
 		// use loadpoint + param.Key as lookup key to value cache
 		key := p.LoadPoint + "." + p.Key
@@ -58,8 +58,8 @@ func (l *Deduplicator) pipe(in <-chan core.Param, out chan<- core.Param) {
 }
 
 // Pipe creates a new filtered output channel for given input channel
-func (l *Deduplicator) Pipe(in <-chan core.Param) <-chan core.Param {
-	out := make(chan core.Param)
+func (l *Deduplicator) Pipe(in <-chan util.Param) <-chan util.Param {
+	out := make(chan util.Param)
 	go l.pipe(in, out)
 	return out
 }
@@ -82,7 +82,7 @@ func NewLimiter(interval time.Duration) Piper {
 	return l
 }
 
-func (l *Limiter) pipe(in <-chan core.Param, out chan<- core.Param) {
+func (l *Limiter) pipe(in <-chan util.Param, out chan<- util.Param) {
 	for p := range in {
 		// use loadpoint + param.Key as lookup key to value cache
 		key := p.LoadPoint + "." + p.Key
@@ -97,8 +97,8 @@ func (l *Limiter) pipe(in <-chan core.Param, out chan<- core.Param) {
 }
 
 // Pipe creates a new filtered output channel for given input channel
-func (l *Limiter) Pipe(in <-chan core.Param) <-chan core.Param {
-	out := make(chan core.Param)
+func (l *Limiter) Pipe(in <-chan util.Param) <-chan util.Param {
+	out := make(chan util.Param)
 	go l.pipe(in, out)
 	return out
 }
