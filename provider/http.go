@@ -2,6 +2,7 @@ package provider
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
@@ -25,6 +26,21 @@ type HTTP struct {
 	jq          *gojq.Query
 }
 
+// Auth is the authorization config
+type Auth struct {
+	Type, User, Password string
+}
+
+// NewAuth creates authorization headers from config
+func NewAuth(log *util.Logger, auth Auth, headers map[string]string) {
+	if strings.ToLower(auth.Type) != "basic" {
+		log.FATAL.Fatalf("config: unsupported auth type: %s", auth.Type)
+	}
+
+	basicAuth := auth.User + ":" + auth.Password
+	headers["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth))
+}
+
 // NewHTTPProviderFromConfig creates a HTTP provider
 func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *HTTP {
 	cc := struct {
@@ -34,6 +50,7 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 		Jq          string
 		Scale       float64
 		Insecure    bool
+		Auth        Auth
 	}{}
 	util.DecodeOther(log, other, &cc)
 
@@ -47,6 +64,14 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 		headers:    cc.Headers,
 		body:       cc.Body,
 		scale:      cc.Scale,
+	}
+
+	// handle basic auth
+	if cc.Auth.Type != "" {
+		if p.headers == nil {
+			p.headers = make(map[string]string)
+		}
+		NewAuth(log, cc.Auth, p.headers)
 	}
 
 	// ignore the self signed certificate
