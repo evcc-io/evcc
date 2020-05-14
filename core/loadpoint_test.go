@@ -10,6 +10,7 @@ import (
 	"github.com/andig/evcc/mock"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 )
@@ -66,7 +67,7 @@ func newLoadPoint(charger api.Charger, pv, gm, cm api.Meter) *LoadPoint {
 		lp.chargeMeter = cm
 	}
 
-	uiChan := make(chan Param)
+	uiChan := make(chan util.Param)
 	notificationChan := make(chan push.Event)
 
 	lp.Prepare(uiChan, notificationChan)

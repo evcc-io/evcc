@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 )
 
@@ -14,10 +14,10 @@ func TestLimiter(t *testing.T) {
 	clck := clock.NewMock()
 	l.clock = clck
 
-	in := make(chan core.Param)
+	in := make(chan util.Param)
 	out := l.Pipe(in)
 
-	p := core.Param{Key: "k", Val: 1}
+	p := util.Param{Key: "k", Val: 1}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
@@ -57,17 +57,17 @@ func TestDeduplicator(t *testing.T) {
 	clck := clock.NewMock()
 	l.clock = clck
 
-	in := make(chan core.Param)
+	in := make(chan util.Param)
 	out := l.Pipe(in)
 
-	p := core.Param{Key: "k", Val: 1}
+	p := util.Param{Key: "k", Val: 1}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
 		t.Errorf("unexpected param %v", o)
 	}
 
-	p = core.Param{Key: "k", Val: 2}
+	p = util.Param{Key: "k", Val: 2}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
@@ -75,21 +75,21 @@ func TestDeduplicator(t *testing.T) {
 	}
 
 	// allow nils
-	p = core.Param{Key: "k", Val: nil}
+	p = util.Param{Key: "k", Val: nil}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
 		t.Errorf("unexpected param %v", o)
 	}
 
-	p = core.Param{Key: "filtered", Val: 3}
+	p = util.Param{Key: "filtered", Val: 3}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
 		t.Errorf("unexpected param %v", o)
 	}
 
-	p = core.Param{Key: "filtered", Val: 4}
+	p = util.Param{Key: "filtered", Val: 4}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {
@@ -115,7 +115,7 @@ func TestDeduplicator(t *testing.T) {
 	}
 
 	// allow nils
-	p = core.Param{Key: "filtered", Val: nil}
+	p = util.Param{Key: "filtered", Val: nil}
 	in <- p
 
 	if o := <-out; o.Key != p.Key || o.Val != p.Val {

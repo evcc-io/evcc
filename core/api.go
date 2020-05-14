@@ -14,13 +14,6 @@ func (n *nilVal) String() string {
 	return "—"
 }
 
-// Param is the broadcast channel data type
-type Param struct {
-	LoadPoint string
-	Key       string
-	Val       interface{}
-}
-
 // Configuration is the loadpoint feature structure
 type Configuration struct {
 	Mode        string `json:"mode"`

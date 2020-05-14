@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
 	influxdb "github.com/influxdata/influxdb1-client/v2"
 )
@@ -131,7 +130,7 @@ func (m *Influx) asyncWriter(exit <-chan struct{}) <-chan struct{} {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(in <-chan core.Param) {
+func (m *Influx) Run(in <-chan util.Param) {
 	exit := make(chan struct{}) // exit signals to stop writer
 	done := m.asyncWriter(exit) // done signals writer stopped
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -98,7 +98,7 @@ func encode(v interface{}) (string, error) {
 	return s, nil
 }
 
-func (h *SocketHub) broadcast(i core.Param) {
+func (h *SocketHub) broadcast(i util.Param) {
 	if len(h.clients) > 0 {
 		val, err := encode(i.Val)
 		if err != nil {
@@ -118,7 +118,7 @@ func (h *SocketHub) broadcast(i core.Param) {
 }
 
 // Run starts data and status distribution
-func (h *SocketHub) Run(in <-chan core.Param, triggerChan chan<- struct{}) {
+func (h *SocketHub) Run(in <-chan util.Param, triggerChan chan<- struct{}) {
 	for {
 		select {
 		case client := <-h.register:
