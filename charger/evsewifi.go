@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -70,22 +71,32 @@ func (evse *EVSEWifi) apiURL(service apiFunction) string {
 	return fmt.Sprintf("%s/%s", evse.uri, service)
 }
 
-// Status implements the Charger.Status interface
-func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
+// query evse parameters
+func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var pr EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
 	body, err := evse.GetJSON(url, &pr)
 	if err != nil {
-		return api.StatusNone, err
+		return EVSEListEntry{}, err
 	}
 
 	if len(pr.List) != 1 {
-		return api.StatusNone, fmt.Errorf("unexpected response: %s", string(body))
+		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
 	params := pr.List[0]
 	if params.AlwaysActive {
 		evse.HTTPHelper.Log.WARN.Println("cannot control evse- alwaysactive is on")
+	}
+
+	return params, nil
+}
+
+// Status implements the Charger.Status interface
+func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
+	params, err := evse.getParameters()
+	if err != nil {
+		return api.StatusNone, err
 	}
 
 	switch params.VehicleState {
@@ -106,18 +117,8 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *EVSEWifi) Enabled() (bool, error) {
-	var pr EVSEParameterResponse
-	url := evse.apiURL(evseGetParameters)
-	body, err := evse.GetJSON(url, &pr)
-	if err != nil {
-		return false, err
-	}
-
-	if len(pr.List) != 1 {
-		return false, fmt.Errorf("unexpected response: %s", string(body))
-	}
-
-	return pr.List[0].EvseState, nil
+	params, err := evse.getParameters()
+	return params.EvseState, err
 }
 
 // checkError checks for EVSE error response with HTTP 200 status
@@ -138,4 +139,28 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.checkError(evse.Get(url))
+}
+
+// ChargingTime yields current charge run duration
+func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
+	params, err := evse.getParameters()
+	return time.Duration(params.Duration) * time.Millisecond, err
+}
+
+// TotalEnergy implements the MeterEnergy interface
+func (evse *EVSEWifi) TotalEnergy() (float64, error) {
+	params, err := evse.getParameters()
+	return params.MeterReading, err
+}
+
+// ChargedEnergy implements the ChargeRater interface
+func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
+	params, err := evse.getParameters()
+	return params.Energy, err
+}
+
+// Currents implements the MeterCurrents interface
+func (evse *EVSEWifi) Currents() (float64, float64, float64, error) {
+	params, err := evse.getParameters()
+	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
 }
