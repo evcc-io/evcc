@@ -7,7 +7,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.0
-	github.com/deepmap/oapi-codegen v1.3.7 // indirect
+	github.com/deepmap/oapi-codegen v1.3.8 // indirect
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus v4.1.0+incompatible
@@ -17,7 +17,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
 	github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a
-	github.com/influxdata/influxdb-client-go v1.1.1-0.20200505120930-a288b0cca8c8
+	github.com/influxdata/influxdb-client-go v1.2.0
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
 	github.com/itchyny/astgen-go v0.0.0-20200403103919-0d06ab3590ba // indirect
 	github.com/itchyny/gojq v0.10.1

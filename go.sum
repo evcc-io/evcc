@@ -65,6 +65,8 @@ github.com/deepmap/oapi-codegen v1.3.6 h1:Wj44p9A0V0PJ+AUg0BWdyGcsS1LY18U+0rCuPQ
 github.com/deepmap/oapi-codegen v1.3.6/go.mod h1:aBozjEveG+33xPiP55Iw/XbVkhtZHEGLq3nxlX0+hfU=
 github.com/deepmap/oapi-codegen v1.3.7 h1:sAr028WbNs/ijxQyRozRu8173xaDuRYNv+a5ly9QSA4=
 github.com/deepmap/oapi-codegen v1.3.7/go.mod h1:kmvHN8Gd6to5zLS+P8mhUYJI+Lmn4h7NH00s/5erjd8=
+github.com/deepmap/oapi-codegen v1.3.8 h1:ot/iBKB7oCcT61L419fJZFMxLRgCW8fYAYKuPnmFOR4=
+github.com/deepmap/oapi-codegen v1.3.8/go.mod h1:kmvHN8Gd6to5zLS+P8mhUYJI+Lmn4h7NH00s/5erjd8=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
 github.com/eclipse/paho.mqtt.golang v1.2.0 h1:1F8mhG9+aO5/xpdtFkW4SxOJB67ukuDC3t2y2qayIX0=
@@ -170,6 +172,8 @@ github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NH
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/influxdata/influxdb-client-go v1.1.1-0.20200505120930-a288b0cca8c8 h1:zaHlbb4N8O2tdWgMolGv+0ztqvuWLBF1HvqQ3nMBCnQ=
 github.com/influxdata/influxdb-client-go v1.1.1-0.20200505120930-a288b0cca8c8/go.mod h1:ZVjaPW87aKp5hzyny2WVpWVF0UY+iqtPz9veOZ2T1zw=
+github.com/influxdata/influxdb-client-go v1.2.0 h1:QiRg4BX9KYM28rVxUTk3MQM0mYOMayxC+rM9tGVk1C0=
+github.com/influxdata/influxdb-client-go v1.2.0/go.mod h1:ZVjaPW87aKp5hzyny2WVpWVF0UY+iqtPz9veOZ2T1zw=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d h1:/WZQPMZNsjZ7IlCpsLGdQBINg5bxKQ1K1sh6awxLtkA=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 h1:W9WBk7wlPfJLvMCdtV4zPulc4uCPrlywQOmbFOhgQNU=
