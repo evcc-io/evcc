@@ -17,17 +17,20 @@ const (
 
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
-	log     *util.Logger
-	uri     string
-	serial  string
-	power   float64
-	energy  float64
-	powerO  sma.Obis
-	energyO sma.Obis
-	updated time.Time
-	recv    chan sma.Telegram
-	mux     sync.Mutex
-	once    sync.Once
+	log       *util.Logger
+	uri       string
+	serial    string
+	power     float64
+	energy    float64
+	currentL1 float64
+	currentL2 float64
+	currentL3 float64
+	powerO    sma.Obis
+	energyO   sma.Obis
+	updated   time.Time
+	recv      chan sma.Telegram
+	mux       sync.Mutex
+	once      sync.Once
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
@@ -94,7 +97,7 @@ func (sm *SMA) waitForInitialValue() {
 }
 
 // update the actual meter data
-func (sm *SMA) updatePower(msg sma.Telegram) {
+func (sm *SMA) updateMeterValues(msg sma.Telegram) {
 	sm.mux.Lock()
 
 	if sm.powerO != "" {
@@ -117,6 +120,27 @@ func (sm *SMA) updatePower(msg sma.Telegram) {
 		}
 	}
 
+	if currentL1, ok := msg.Values[sma.CurrentL1]; ok {
+		sm.currentL1 = currentL1
+		sm.updated = time.Now()
+	} else {
+		sm.log.WARN.Println("missing obis for currentL1")
+	}
+
+	if currentL2, ok := msg.Values[sma.CurrentL2]; ok {
+		sm.currentL2 = currentL2
+		sm.updated = time.Now()
+	} else {
+		sm.log.WARN.Println("missing obis for currentL2")
+	}
+
+	if currentL3, ok := msg.Values[sma.CurrentL3]; ok {
+		sm.currentL3 = currentL3
+		sm.updated = time.Now()
+	} else {
+		sm.log.WARN.Println("missing obis for currentL3")
+	}
+
 	sm.mux.Unlock()
 }
 
@@ -127,7 +151,7 @@ func (sm *SMA) receive() {
 			continue
 		}
 
-		sm.updatePower(msg)
+		sm.updateMeterValues(msg)
 	}
 }
 
@@ -142,6 +166,19 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	}
 
 	return sm.power, nil
+}
+
+// Currents implements the MeterCurrent interface
+func (sm *SMA) Currents() (float64, float64, float64, error) {
+	sm.once.Do(sm.waitForInitialValue)
+	sm.mux.Lock()
+	defer sm.mux.Unlock()
+
+	if time.Since(sm.updated) > udpTimeout {
+		return 0, 0, 0, errors.New("recv timeout")
+	}
+
+	return sm.currentL1, sm.currentL2, sm.currentL3, nil
 }
 
 // SMAEnergy decorates SMA with api.MeterEnergy interface
