@@ -1,9 +1,11 @@
 package util
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	jww "github.com/spf13/jwalterweatherman"
@@ -67,4 +69,40 @@ func LogLevelToThreshold(level string) jww.Threshold {
 	default:
 		panic("invalid log level " + level)
 	}
+}
+
+var uiChan chan<- Param
+
+type uiWriter struct {
+	level string
+}
+
+func (w *uiWriter) Write(p []byte) (n int, err error) {
+	uiChan <- Param{
+		LoadPoint: "",
+		Key:       w.level,
+		Val:       strings.Trim(strconv.Quote(string(p)), "\""),
+	}
+
+	return 0, nil
+}
+
+// CaptureLogs appends uiWriter to relevant log levels
+func CaptureLogs(c chan<- Param) {
+	uiChan = c
+
+	for _, l := range loggers {
+		captureLogger("warn", l.Notepad.WARN)
+		captureLogger("error", l.Notepad.ERROR)
+		captureLogger("error", l.Notepad.FATAL)
+	}
+}
+
+func captureLogger(level string, l *log.Logger) {
+	ui := uiWriter{
+		level: level,
+	}
+
+	mw := io.MultiWriter(l.Writer(), &ui)
+	l.SetOutput(mw)
 }

@@ -201,6 +201,9 @@ func run(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
 
+	// capture log messages for UI
+	util.CaptureLogs(valueChan)
+
 	// start all loadpoints
 	for _, lp := range loadPoints {
 		lp.Dump()

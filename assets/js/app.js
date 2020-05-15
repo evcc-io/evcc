@@ -42,7 +42,13 @@ let store = {
       if (force || this[k] !== undefined) {
         this[k] = msg[k];
       } else {
-        console.log("invalid key: " + k);
+        if (k == "error") {
+          toasts.error({message: msg[k]});
+        } else if (k == "warn") {
+          toasts.warn({message: msg[k]});
+        } else {
+          console.log("invalid key: " + k);
+        }
       }
     }, this.state);
   },
@@ -51,7 +57,7 @@ let store = {
       axios.get("config").then(function(response) {
         store.update(response.data);
         store.initialized = true;
-      }).catch(error.raise);
+      }).catch(toasts.error);
     }
   }
 };
@@ -63,7 +69,7 @@ let store = {
 window.setInterval(function() {
   axios.get("health").catch(function(res) {
     res.message = "Server unavailable";
-    error.raise(res)
+    toasts.error(res)
   });
 }, 5000);
 
@@ -71,16 +77,40 @@ window.setInterval(function() {
 // Components
 //
 
-const error = new Vue({
-  el: '#error',
+const toasts = new Vue({
+  el: "#toasts",
   data: {
-    error: {},
+    items: {},
+    count: 0,
   },
   methods: {
-    raise: function(error) {
-      this.error = error;
-      $('.toast').toast('show');
+    raise: function (msg) {
+      msg.id = this.count++;
+      Vue.set(this.items, msg.id, msg);
     },
+    error: function (error) {
+      error.type = "error";
+      this.raise(error)
+    },
+    warn: function (error) {
+      error.type = "warn";
+      this.raise(error);
+    },
+    remove: function (msg) {
+      Vue.delete(this.items, msg.id);
+    },
+  }
+});
+
+Vue.component('message-toast', {
+  props: ['item'],
+  template: '#message-template',
+  mounted: function () {
+    const id = "#message-id-" + this.item.id;
+    $(id).toast('show');
+    $(id).on('hidden.bs.toast', function () {
+      toasts.remove(this.item);
+    })
   },
 });
 
