@@ -318,8 +318,6 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 // 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
 // 		return 0, err
 // 	}
-
 // 	nrg.log.TRACE.Printf("energy: %+v", res)
-
 // 	return float64(res.EnergyLastCharge) / 1000, nil
 // }
