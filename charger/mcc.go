@@ -42,7 +42,8 @@ type MCCCurrentSession struct {
 
 // MCCEnergyPhase is the apiEnergy response for a single phase
 type MCCEnergyPhase struct {
-	Power float64
+	Ampere float64
+	Power  float64
 }
 
 // MCCEnergy is the apiEnergy response
@@ -337,4 +338,12 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	}
 
 	return time.Duration(currentSession.Duration * time.Second), nil
+}
+
+// Currents implements the MeterCurrent interface
+func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
+	var energy MCCEnergy
+	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
+
+	return energy.L1.Ampere, energy.L2.Ampere, energy.L3.Ampere, err
 }

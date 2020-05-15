@@ -67,7 +67,7 @@ func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect 
 	return mcc
 }
 
-func TestMobileConnect_login(t *testing.T) {
+func TestMobileConnectLogin(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -90,7 +90,7 @@ func TestMobileConnect_login(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_refresh(t *testing.T) {
+func TestMobileConnectRefresh(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -112,7 +112,7 @@ func TestMobileConnect_refresh(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_Status(t *testing.T) {
+func TestMobileConnectStatus(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -146,7 +146,7 @@ func TestMobileConnect_Status(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_Enabled(t *testing.T) {
+func TestMobileConnectEnabled(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -179,7 +179,7 @@ func TestMobileConnect_Enabled(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_MaxCurrent(t *testing.T) {
+func TestMobileConnectMaxCurrent(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -237,7 +237,7 @@ func TestMobileConnect_MaxCurrent(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_CurrentPower(t *testing.T) {
+func TestMobileConnectCurrentPower(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -251,6 +251,13 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 9.9000000000000004,\\n        \\\"Power\\\": 2308,\\n        \\\"Volts\\\": 230.5\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 13.700000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 13.9\\n    }\\n}\\n\""},
 			},
 			2308, false,
+		},
+		{
+			"3 phase low power - charging",
+			[]apiResponse{
+				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 7,\\n        \\\"Volts\\\": 244.40000000000001\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 242.10000000000002\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 1,\\n        \\\"Volts\\\": 242.30000000000001\\n    }\\n}\\n\""},
+			},
+			8, false,
 		},
 		{
 			"no data response",
@@ -281,7 +288,7 @@ func TestMobileConnect_CurrentPower(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_ChargedEnergy(t *testing.T) {
+func TestMobileConnectChargedEnergy(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -324,7 +331,7 @@ func TestMobileConnect_ChargedEnergy(t *testing.T) {
 	}
 }
 
-func TestMobileConnect_ChargingTime(t *testing.T) {
+func TestMobileConnectChargingTime(t *testing.T) {
 	tests := []struct {
 		name      string
 		responses []apiResponse
@@ -361,6 +368,63 @@ func TestMobileConnect_ChargingTime(t *testing.T) {
 			}
 			if got != tc.want {
 				t.Errorf("MobileConnect.ChargingTime() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMobileConnectCurrents(t *testing.T) {
+	tests := []struct {
+		name                   string
+		responses              []apiResponse
+		wantL1, wantL2, wantL3 float64
+		wantErr                bool
+	}{
+		// test cases for software version 2914
+		{
+			"home plug - charging",
+			[]apiResponse{
+				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 9.9000000000000004,\\n        \\\"Power\\\": 2308,\\n        \\\"Volts\\\": 230.5\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 13.700000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 13.9\\n    }\\n}\\n\""},
+			},
+			9.9000000000000004, 0, 0, false,
+		},
+		{
+			"3 phase low power - charging",
+			[]apiResponse{
+				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 7,\\n        \\\"Volts\\\": 244.40000000000001\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 242.10000000000002\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0.5,\\n        \\\"Power\\\": 1,\\n        \\\"Volts\\\": 242.30000000000001\\n    }\\n}\\n\""},
+			},
+			0.5, 0.5, 0.5, false,
+		},
+		{
+			"no data response",
+			[]apiResponse{
+				{mccAPIEnergy, "\"\"\n"},
+			}, 0, 0, 0, false,
+		},
+		{
+			"home plug - error response",
+			[]apiResponse{
+				{mccAPIEnergy, "\"{\\n    \\\"L1\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 246.60000000000002\\n    },\\n    \\\"L2\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.800000000000001\\n    },\\n    \\\"L3\\\": {\\n        \\\"Ampere\\\": 0,\\n        \\\"Power\\\": 0,\\n        \\\"Volts\\\": 16.300000000000001\\n    }\\n}\\n\""},
+			}, 0, 0, 0, false,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mcc := NewTestMobileConnect(t, tc.responses)
+
+			gotL1, gotL2, gotL3, err := mcc.Currents()
+			if (err != nil) != tc.wantErr {
+				t.Errorf("MobileConnect.Currents() error = %v, wantErr %v", err, tc.wantErr)
+				return
+			}
+			if gotL1 != tc.wantL1 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL1, tc.wantL1)
+			}
+			if gotL2 != tc.wantL2 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL2, tc.wantL2)
+			}
+			if gotL3 != tc.wantL3 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL3, tc.wantL3)
 			}
 		})
 	}

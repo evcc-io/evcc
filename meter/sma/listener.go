@@ -21,10 +21,13 @@ const (
 	msgPreamble   = 28 // preamble size in bytes
 	msgCodeLength = 4  // length in bytes
 
-	ImportPower  Obis = "1:1.4.0" // Wirkleistung (W)
-	ExportPower  Obis = "1:2.4.0" // Wirkleistung (W)
-	ImportEnergy Obis = "1:1.8.0" // Wirkarbeit (Ws) +
-	ExportEnergy Obis = "1:2.8.0" // Wirkarbeit (Ws) −
+	ImportPower  Obis = "1:1.4.0"  // Wirkleistung (W)
+	ExportPower  Obis = "1:2.4.0"  // Wirkleistung (W)
+	ImportEnergy Obis = "1:1.8.0"  // Wirkarbeit (Ws) +
+	ExportEnergy Obis = "1:2.8.0"  // Wirkarbeit (Ws) −
+	CurrentL1    Obis = "1:31.4.0" // Strom (A)
+	CurrentL2    Obis = "1:51.4.0" // Strom (A)
+	CurrentL3    Obis = "1:71.4.0" // Strom (A)
 )
 
 // obisDefinition defines the properties needed to parse the SMA multicast telegram values
@@ -50,7 +53,7 @@ var knownObisCodes = map[Obis]obisDefinition{
 	"1:24.4.0": {4, 0.1}, "1:24.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) −
 	"1:29.4.0": {4, 0.1}, "1:29.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) +
 	"1:30.4.0": {4, 0.1}, "1:30.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) −
-	"1:31.4.0": {4, 0.001}, // Strom (A)
+	CurrentL1:  {4, 0.001}, // Strom (A)
 	"1:32.4.0": {4, 0.001}, // Spannung (V
 	// Phase 2: {
 	"1:41.4.0": {4, 0.1}, "1:41.8.0": {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
@@ -59,7 +62,7 @@ var knownObisCodes = map[Obis]obisDefinition{
 	"1:44.4.0": {4, 0.1}, "1:44.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) −
 	"1:49.4.0": {4, 0.1}, "1:49.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) +
 	"1:50.4.0": {4, 0.1}, "1:50.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) −
-	"1:51.4.0": {4, 0.001}, // Strom (A)
+	CurrentL2:  {4, 0.001}, // Strom (A)
 	"1:52.4.0": {4, 0.001}, // Spannung (V)
 	// Phase 3: {
 	"1:61.4.0": {4, 0.1}, "1:61.8.0": {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
@@ -68,7 +71,7 @@ var knownObisCodes = map[Obis]obisDefinition{
 	"1:64.4.0": {4, 0.1}, "1:64.8.0": {8, 1}, // Blindleistung (W)/-arbeit (Ws) −
 	"1:69.4.0": {4, 0.1}, "1:69.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) +
 	"1:70.4.0": {4, 0.1}, "1:70.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) −
-	"1:71.4.0": {4, 0.001}, // Strom (A)
+	CurrentL3:  {4, 0.001}, // Strom (A)
 	"1:72.4.0": {4, 0.001}, // Spannung (V)
 	// Others
 	"144:0.0.0": {4, 1}, // SW Version
