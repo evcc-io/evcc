@@ -56,20 +56,8 @@
       </div>
     </div>
   </nav>
+  <message-toasts></message-toasts>
   <router-view></router-view>
-</div>
-
-<div id="error">
-  <div class="toast" data-delay="2000" style="position: absolute; top: 4rem; right: 0.5rem;">
-    <div class="toast-header">
-      <strong class="mr-auto"><i class="text-danger fas fa-exclamation-triangle"></i> Error</strong>
-      <small v-if="error.status">HTTP {{error.status}}</small>
-      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    <div class="toast-body">{{error.message}}</div>
-  </div>
 </div>
 
 <script type="text/x-template" id="embed-template">
@@ -84,6 +72,28 @@
       <img class="img-fluid" v-bind:src="img" v-if="img">
       <iframe v-bind:src="iframe" v-if="iframe">
     </span>
+  </div>
+</script>
+
+<div id="toasts">
+  <div aria-atomic="true" style="position: absolute; top: 4rem; right: 0.5rem; min-height: 200px; min-width: 300px">
+    <!-- Position it -->
+    <message-toast v-for="item in items" v-bind:item="item" :id="'message-id-'+item.id" :key="item.id">
+    </message-toast>
+  </div>
+</div>
+
+<script type="text/x-template" id="message-template">
+  <div class="toast" data-delay="10000" v-bind:data-autohide="item.type == 'warn' ? 'true' : 'false'">
+    <div class="toast-header">
+      <strong class="mr-auto" v-if="item.type != 'warn'"><i class="text-danger fas fa-exclamation-triangle"></i> Error</strong>
+      <strong class="mr-auto" v-if="item.type == 'warn'"><i class="text-warning fas fa-exclamation-triangle"></i> Warning</strong>
+      <small v-if="item.status">HTTP {{item.status}}</small>
+      <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="toast-body">{{item.message}}</div>
   </div>
 </script>
 
