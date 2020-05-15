@@ -60,10 +60,8 @@ func NewEVSEWifiFromConfig(log *util.Logger, other map[string]interface{}) api.C
 func NewEVSEWifi(uri string) api.Charger {
 	evse := &EVSEWifi{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:        strings.TrimRight(uri, "/") + "/",
+		uri:        strings.TrimRight(uri, "/"),
 	}
-
-	evse.HTTPHelper.Log.WARN.Println("-- experimental --")
 
 	return evse
 }
@@ -85,7 +83,12 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
-	switch pr.List[0].VehicleState {
+	params := pr.List[0]
+	if params.AlwaysActive {
+		evse.HTTPHelper.Log.WARN.Println("cannot control evse- alwaysactive is on")
+	}
+
+	switch params.VehicleState {
 	case 1: // ready
 		return api.StatusA, nil
 	case 2: // EV is present
