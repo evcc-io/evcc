@@ -25,6 +25,14 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.MeterCurrent); ok {
+		if i1, i2, i3, err := v.Currents(); err != nil {
+			fmt.Printf("Current L1..L3: %v\n", err)
+		} else {
+			fmt.Printf("Current L1..L3: %.1fA %.1fA %.1fA\n", i1, i2, i3)
+		}
+	}
+
 	if v, ok := v.(api.ChargeRater); ok {
 		if energy, err := v.ChargedEnergy(); err != nil {
 			fmt.Printf("Charged: %v\n", err)
