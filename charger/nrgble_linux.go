@@ -215,7 +215,7 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 		return api.StatusF, err
 	}
 
-	nrg.log.TRACE.Printf("power: %+v", res)
+	nrg.log.TRACE.Printf("read power: %+v", res)
 
 	switch res.CPSignal {
 	case 3:
@@ -237,7 +237,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
+	nrg.log.TRACE.Printf("read info: %+v", res)
 
 	return !res.PauseCharging, nil
 }
@@ -249,10 +249,10 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		return err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
-
 	settings := nrg.defaultSettings(res)
 	settings.PauseCharging = !enable
+
+	nrg.log.TRACE.Printf("write info: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -264,10 +264,10 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 		return err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
-
 	settings := nrg.defaultSettings(res)
 	settings.Current = int(current)
+
+	nrg.log.TRACE.Printf("write info: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -279,7 +279,7 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("power: %+v", res)
+	nrg.log.TRACE.Printf("read power: %+v", res)
 
 	return float64(res.TotalPower) * 10, nil
 }
@@ -291,7 +291,7 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("energy: %+v", res)
+	nrg.log.TRACE.Printf("read energy: %+v", res)
 
 	return float64(res.TotalEnergy) / 1000, nil
 }
@@ -303,7 +303,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	nrg.log.TRACE.Printf("voltage/current: %+v", res)
+	nrg.log.TRACE.Printf("read voltage/current: %+v", res)
 
 	return float64(res.CurrentL1) / 100,
 		float64(res.CurrentL2) / 100,
