@@ -39,7 +39,7 @@ type MeterEnergy interface {
 
 // MeterCurrent is able to provide per-line current A
 type MeterCurrent interface {
-	Currents() (float64, float64, float64, error)
+	Currents() ([3]float64, error)
 }
 
 // Charger is able to provide current charging status and to enable/disabler charging

@@ -121,7 +121,7 @@ func (c *GoE) MaxCurrent(current int64) error {
 	return err
 }
 
-// CurrentPower implements the Meter interface.
+// CurrentPower implements the Meter interface
 func (c *GoE) CurrentPower() (float64, error) {
 	var status goeStatusResponse
 	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
@@ -141,11 +141,15 @@ func (c *GoE) ChargedEnergy() (float64, error) {
 }
 
 // Currents implements the MeterCurrent interface
-func (c *GoE) Currents() (float64, float64, float64, error) {
+func (c *GoE) Currents() ([3]float64, error) {
 	var status goeStatusResponse
 	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
 	if len(status.Nrg) == 16 {
-		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
+		var res [3]float64
+		for i, f := range status.Nrg[4:6] {
+			res[i] = float64(f) / 10
+		}
+		return res, nil
 	}
-	return 0, 0, 0, err
+	return [3]float64{}, err
 }
