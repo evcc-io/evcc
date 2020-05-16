@@ -8,8 +8,7 @@ import (
 
 // TestGoE tests interfaces
 func TestGoE(t *testing.T) {
-	var wb api.Charger
-	wb = NewGoE("foo")
+	var wb api.Charger = NewGoE("foo")
 
 	if _, ok := wb.(api.MeterCurrent); !ok {
 		t.Error("missing MeterCurrents interface")

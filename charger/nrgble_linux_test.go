@@ -7,8 +7,7 @@ import (
 )
 
 func TestNRGKickBLE(t *testing.T) {
-	var wb api.Charger
-	wb = NewNRGKickBLE("foo", "bar", 0)
+	var wb api.Charger = NewNRGKickBLE("foo", "bar", 0)
 
 	if _, ok := wb.(api.MeterCurrent); !ok {
 		t.Error("missing MeterCurrents interface")

@@ -7,8 +7,7 @@ import (
 )
 
 func TestNRGKickConnect(t *testing.T) {
-	var wb api.Charger
-	wb = NewNRGKickConnect("foo", "bar", "baz")
+	var wb api.Charger = NewNRGKickConnect("foo", "bar", "baz")
 
 	if _, ok := wb.(api.MeterEnergy); !ok {
 		t.Error("missing MeterEnergy interface")
