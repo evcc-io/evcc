@@ -147,20 +147,20 @@ func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
-// TotalEnergy implements the MeterEnergy interface
-func (evse *EVSEWifi) TotalEnergy() (float64, error) {
-	params, err := evse.getParameters()
-	return params.MeterReading, err
-}
+// // TotalEnergy implements the MeterEnergy interface
+// func (evse *EVSEWifi) TotalEnergy() (float64, error) {
+// 	params, err := evse.getParameters()
+// 	return params.MeterReading, err
+// }
 
-// ChargedEnergy implements the ChargeRater interface
-func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
-	params, err := evse.getParameters()
-	return params.Energy, err
-}
+// // ChargedEnergy implements the ChargeRater interface
+// func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
+// 	params, err := evse.getParameters()
+// 	return params.Energy, err
+// }
 
-// Currents implements the MeterCurrents interface
-func (evse *EVSEWifi) Currents() (float64, float64, float64, error) {
-	params, err := evse.getParameters()
-	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
-}
+// // Currents implements the MeterCurrents interface
+// func (evse *EVSEWifi) Currents() (float64, float64, float64, error) {
+// 	params, err := evse.getParameters()
+// 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+// }
