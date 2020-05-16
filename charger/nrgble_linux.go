@@ -54,7 +54,8 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 	// set LE mode
 	btmgmt := hw.NewBtMgmt(device)
 
-	if len(os.Getenv("DOCKER")) > 0 {
+	// don't add Docker binary on CI
+	if len(os.Getenv("DOCKER")) > 0 && os.Getenv("CI") == "" {
 		btmgmt.BinPath = "./bin/docker-btmgmt"
 	}
 
