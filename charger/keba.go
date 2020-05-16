@@ -22,10 +22,16 @@ const (
 	kebaPort   = "7090"
 )
 
+// RFID contains access credentials
+type RFID struct {
+	Tag, Class string
+}
+
 // Keba is an api.Charger implementation with configurable getters and setters.
 type Keba struct {
 	log     *util.Logger
 	conn    string
+	rfid    RFID
 	timeout time.Duration
 	recv    chan keba.UDPMsg
 }
@@ -35,14 +41,15 @@ func NewKebaFromConfig(log *util.Logger, other map[string]interface{}) api.Charg
 	cc := struct {
 		URI     string
 		Timeout time.Duration
+		RFID    RFID
 	}{}
 	util.DecodeOther(log, other, &cc)
 
-	return NewKeba(cc.URI, cc.Timeout)
+	return NewKeba(cc.URI, cc.RFID, cc.Timeout)
 }
 
 // NewKeba creates a new charger
-func NewKeba(conn string, timeout time.Duration) api.Charger {
+func NewKeba(conn string, rfid RFID, timeout time.Duration) api.Charger {
 	log := util.NewLogger("keba")
 
 	if keba.Instance == nil {
@@ -61,6 +68,7 @@ func NewKeba(conn string, timeout time.Duration) api.Charger {
 	c := &Keba{
 		log:     log,
 		conn:    conn,
+		rfid:    rfid,
 		timeout: timeout,
 		recv:    make(chan keba.UDPMsg),
 	}
@@ -152,6 +160,10 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
+	if kr.AuthON && c.rfid.id == "" {
+		c.log.WARN.Println("missing credentials for RFID authorization")
+	}
+
 	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
@@ -177,7 +189,28 @@ func (c *Keba) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
+func (c *Keba) enableRFID() error {
+	var resp string
+	err := c.roundtrip(fmt.Sprintf("start %s %s", c.rfid.Tag, c.rfid.Class), 0, &resp)
+	if err != nil {
+		return err
+	}
+
+	if resp == keba.OK {
+		return nil
+	}
+
+	return fmt.Errorf("start unexpected response: %s", resp)
+}
+
+// Enable implements the Charger.Enable interface
 func (c *Keba) Enable(enable bool) error {
+	if enable && c.rfid.Tag != "" {
+		if err := c.enableRFID(); err != nil {
+			return err
+		}
+	}
+
 	var d int
 	if enable {
 		d = 1
