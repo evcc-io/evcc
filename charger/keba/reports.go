@@ -58,3 +58,22 @@ type Report3 struct {
 	ETotal int64  `json:"E total"`
 	Sec    int64  `json:"Sec"`
 }
+
+// Report100 is the report 100 command answer
+type Report100 struct {
+	ID        int    `json:"ID,string"`
+	Serial    string `json:"Serial"`
+	SessionID int64  `json:"SessionID"`
+	CurrHW    int    `json:"Curr HW"`
+	EStart    int64  `json:"E start"`
+	EPres     int64  `json:"E pres"`
+	Started   string `json:"started"`
+	Ended     string `json:"ended"`
+	StartedS  int64  `json:"started[s]"`
+	EndedS    int64  `json:"ended[s]"`
+	Reason    int    `json:"reason"`
+	TimeQ     int    `json:"timeQ"`
+	RFIDTag   string `json:"RFID tag"`
+	RFIDClass string `json:"RFID class"`
+	Sec       int64  `json:"Sec"`
+}

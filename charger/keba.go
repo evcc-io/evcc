@@ -279,3 +279,11 @@ func (c *Keba) Currents() (float64, float64, float64, error) {
 	// 1mA to A
 	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
 }
+
+// Diagnosis implements the Diagnosis interface
+func (c *Keba) Diagnosis() {
+	var kr keba.Report100
+	if err := c.roundtrip("report 100", 100, &kr); err == nil {
+		fmt.Printf("%+v\n", kr)
+	}
+}

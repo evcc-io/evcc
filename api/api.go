@@ -50,6 +50,11 @@ type Charger interface {
 	MaxCurrent(current int64) error
 }
 
+// Diagnosis is a helper interface that allows to dump diagnostic data to console
+type Diagnosis interface {
+	Diagnosis()
+}
+
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
 	ChargingTime() (time.Duration, error)
