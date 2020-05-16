@@ -30,6 +30,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY entrypoint.sh /evcc/
+COPY bin/* /evcc/
 
 EXPOSE 7070
 
