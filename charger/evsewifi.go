@@ -15,7 +15,7 @@ const (
 	evseSetStatus     apiFunction = "setStatus"
 	evseSetCurrent    apiFunction = "setCurrent"
 
-	evseSuccess = "S0_EVSE"
+	evseSuccess = "S0_"
 )
 
 // EVSEParameterResponse is the getParameters response

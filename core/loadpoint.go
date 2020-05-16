@@ -505,7 +505,7 @@ func (lp *LoadPoint) update() {
 
 	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
-		log.ERROR.Printf("%s charger error: %v", lp.Name, err)
+		log.ERROR.Printf("%s charge controller error: %v", lp.Name, err)
 		return
 	}
 
