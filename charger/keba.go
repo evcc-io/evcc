@@ -160,7 +160,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	if kr.AuthON && c.rfid.id == "" {
+	if kr.AuthON == 1 && c.rfid.Tag == "" {
 		c.log.WARN.Println("missing credentials for RFID authorization")
 	}
 
