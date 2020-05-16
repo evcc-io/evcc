@@ -297,18 +297,19 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 }
 
 // Currents implements the MeterCurrent interface.
-func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
+func (nrg *NRGKickBLE) Currents() ([3]float64, error) {
 	res := nrgble.VoltageCurrent{}
 	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {
-		return 0, 0, 0, err
+		return [3]float64{}, err
 	}
 
 	nrg.log.TRACE.Printf("voltage/current: %+v", res)
 
-	return float64(res.CurrentL1) / 100,
-		float64(res.CurrentL2) / 100,
-		float64(res.CurrentL3) / 100,
-		nil
+	return [3]float64{
+			float64(res.CurrentL1) / 100,
+			float64(res.CurrentL2) / 100,
+			float64(res.CurrentL3) / 100
+		}, nil
 }
 
 // ChargedEnergy implements the ChargeRater interface.

@@ -341,9 +341,9 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 }
 
 // Currents implements the MeterCurrent interface
-func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
+func (mcc *MobileConnect) Currents() ([3]float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
 
-	return energy.L1.Ampere, energy.L2.Ampere, energy.L3.Ampere, err
+	return [3]float64{energy.L1.Ampere, energy.L2.Ampere, energy.L3.Ampere}, err
 }

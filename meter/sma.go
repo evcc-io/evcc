@@ -169,16 +169,16 @@ func (sm *SMA) CurrentPower() (float64, error) {
 }
 
 // Currents implements the MeterCurrent interface
-func (sm *SMA) Currents() (float64, float64, float64, error) {
+func (sm *SMA) Currents() ([3]float64, error) {
 	sm.once.Do(sm.waitForInitialValue)
 	sm.mux.Lock()
 	defer sm.mux.Unlock()
 
 	if time.Since(sm.updated) > udpTimeout {
-		return 0, 0, 0, errors.New("recv timeout")
+		return [3]float64{}, errors.New("recv timeout")
 	}
 
-	return sm.currentL1, sm.currentL2, sm.currentL3, nil
+	return [3]float64{sm.currentL1, sm.currentL2, sm.currentL3}, nil
 }
 
 // SMAEnergy decorates SMA with api.MeterEnergy interface

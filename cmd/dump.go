@@ -26,10 +26,10 @@ func dumpAPIs(v interface{}) {
 	}
 
 	if v, ok := v.(api.MeterCurrent); ok {
-		if i1, i2, i3, err := v.Currents(); err != nil {
+		if i, err := v.Currents(); err != nil {
 			fmt.Printf("Current L1..L3: %v\n", err)
 		} else {
-			fmt.Printf("Current L1..L3: %.1fA %.1fA %.1fA\n", i1, i2, i3)
+			fmt.Printf("Current L1..L3: %.1fA %.1fA %.1fA\n", i[0], i[1], i[2])
 		}
 	}
 

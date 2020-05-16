@@ -412,19 +412,19 @@ func TestMobileConnectCurrents(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mcc := NewTestMobileConnect(t, tc.responses)
 
-			gotL1, gotL2, gotL3, err := mcc.Currents()
+			got, err := mcc.Currents()
 			if (err != nil) != tc.wantErr {
 				t.Errorf("MobileConnect.Currents() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if gotL1 != tc.wantL1 {
-				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL1, tc.wantL1)
+			if got[0] != tc.wantL1 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", got[0], tc.wantL1)
 			}
-			if gotL2 != tc.wantL2 {
-				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL2, tc.wantL2)
+			if got[1] != tc.wantL2 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", got[1], tc.wantL2)
 			}
-			if gotL3 != tc.wantL3 {
-				t.Errorf("MobileConnect.Currents() = %v, want %v", gotL3, tc.wantL3)
+			if got[2] != tc.wantL3 {
+				t.Errorf("MobileConnect.Currents() = %v, want %v", got[2], tc.wantL3)
 			}
 		})
 	}

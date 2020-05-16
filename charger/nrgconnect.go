@@ -171,18 +171,15 @@ func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
 }
 
 // Currents implements the MeterCurrent interface
-func (nrg *NRGKickConnect) Currents() (float64, float64, float64, error) {
+func (nrg *NRGKickConnect) Currents() ([3]float64, error) {
 	var measurements NRGMeasurements
 	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
 
 	if len(measurements.ChargingCurrentPhase) != 3 {
-		return 0, 0, 0, fmt.Errorf("unexpected response: %v", measurements)
+		return [3]float64{}, fmt.Errorf("unexpected response: %v", measurements)
 	}
 
-	return measurements.ChargingCurrentPhase[0],
-		measurements.ChargingCurrentPhase[1],
-		measurements.ChargingCurrentPhase[2],
-		err
+	return measurements.ChargingCurrentPhase, err
 }
 
 // ChargedEnergy implements the ChargeRater interface

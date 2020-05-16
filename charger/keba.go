@@ -239,10 +239,10 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 }
 
 // Currents implements the MeterCurrents interface
-func (c *Keba) Currents() (float64, float64, float64, error) {
+func (c *Keba) Currents() ([3]float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report 3", 3, &kr)
 
 	// 1mA to A
-	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
+	return [3]float64{float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3}, err
 }
