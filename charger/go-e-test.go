@@ -11,7 +11,7 @@ func TestGoE(t *testing.T) {
 	var wb api.Charger = NewGoE("foo")
 
 	if _, ok := wb.(api.MeterCurrent); !ok {
-		t.Error("missing MeterCurrents interface")
+		t.Error("missing MeterCurrent interface")
 	}
 
 	if _, ok := wb.(api.ChargeRater); !ok {

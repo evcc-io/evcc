@@ -14,6 +14,6 @@ func TestNRGKickConnect(t *testing.T) {
 	}
 
 	if _, ok := wb.(api.MeterCurrent); !ok {
-		t.Error("missing MeterCurrents interface")
+		t.Error("missing MeterCurrent interface")
 	}
 }
