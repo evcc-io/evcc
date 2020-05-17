@@ -20,14 +20,16 @@ import (
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
-	log        *util.Logger
-	timer      *time.Timer
-	adapter    *adapter.Adapter1
-	agent      *agent.SimpleAgent
-	dev        *device.Device1
-	device     string
-	macaddress string
-	pin        int
+	log           *util.Logger
+	timer         *time.Timer
+	adapter       *adapter.Adapter1
+	agent         *agent.SimpleAgent
+	dev           *device.Device1
+	device        string
+	macaddress    string
+	pin           int
+	pauseCharging bool
+	current       int
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
@@ -196,15 +198,16 @@ func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	return nil
 }
 
-func (nrg *NRGKickBLE) defaultSettings(info nrgble.Info) nrgble.Settings {
+func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
 	return nrgble.Settings{
 		PIN:                  nrg.pin,
 		ChargingEnergyLimit:  19997, // magic const for "disable"
 		KWhPer100:            info.KWhPer100,
 		AmountPerKWh:         info.AmountPerKWh,
 		Efficiency:           info.Efficiency,
-		PauseCharging:        info.PauseCharging,
 		BLETransmissionPower: info.BLETransmissionPower,
+		PauseCharging:        nrg.pauseCharging, // apply last value
+		Current:              nrg.current,       // apply last value
 	}
 }
 
@@ -249,8 +252,8 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		return err
 	}
 
-	settings := nrg.defaultSettings(res)
-	settings.PauseCharging = !enable
+	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
+	settings := nrg.mergeSettings(res)
 
 	nrg.log.TRACE.Printf("write info: %+v", settings)
 
@@ -264,8 +267,8 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 		return err
 	}
 
-	settings := nrg.defaultSettings(res)
-	settings.Current = int(current)
+	nrg.current = int(current) // use cached value to work around API roundtrip delay
+	settings := nrg.mergeSettings(res)
 
 	nrg.log.TRACE.Printf("write info: %+v", settings)
 
