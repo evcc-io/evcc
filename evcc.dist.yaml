@@ -121,6 +121,8 @@ chargers:
 - name: keba
   type: keba # KEBA charger
   uri: 192.168.1.4:7090 # KEBA address
+  rfid:
+    tag: 765765348 # RFID tag, see `evcc charger` to show tag
 - name: mcc
   type: mcc # Mobile Charger Connect (Audi, Bentley, Porsche)
   uri: https://192.168.1.4 # Mobile Charger Connect address
