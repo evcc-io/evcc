@@ -190,7 +190,7 @@ func (c *Keba) Enabled() (bool, error) {
 	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// enableRFID sends RFID credentials to enable charge
 func (c *Keba) enableRFID() error {
 	var resp string
 	err := c.roundtrip(fmt.Sprintf("start %s %s", c.rfid.Tag, c.rfid.Class), 0, &resp)
