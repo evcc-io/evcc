@@ -255,7 +255,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
 	settings := nrg.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write info: %+v", settings)
+	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -270,7 +270,7 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	nrg.current = int(current) // use cached value to work around API roundtrip delay
 	settings := nrg.mergeSettings(res)
 
-	nrg.log.TRACE.Printf("write info: %+v", settings)
+	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
