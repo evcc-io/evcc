@@ -131,7 +131,7 @@ func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	var settings NRGSettings
-	err := nrg.getJSON(nrg.apiURL(apiSettings), settings)
+	err := nrg.getJSON(nrg.apiURL(apiSettings), &settings)
 
 	return *settings.Values.ChargingStatus.Charging, err
 }
@@ -157,7 +157,7 @@ func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 // CurrentPower implements the Meter interface
 func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	var measurements NRGMeasurements
-	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
+	err := nrg.getJSON(nrg.apiURL(apiMeasurements), &measurements)
 
 	return 1000 * measurements.ChargingPower, err
 }
@@ -165,7 +165,7 @@ func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 // TotalEnergy implements the MeterEnergy interface
 func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
 	var measurements NRGMeasurements
-	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
+	err := nrg.getJSON(nrg.apiURL(apiMeasurements), &measurements)
 
 	return measurements.ChargingEnergyOverAll, err
 }
@@ -173,7 +173,7 @@ func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
 // Currents implements the MeterCurrent interface
 func (nrg *NRGKickConnect) Currents() (float64, float64, float64, error) {
 	var measurements NRGMeasurements
-	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
+	err := nrg.getJSON(nrg.apiURL(apiMeasurements), &measurements)
 
 	if len(measurements.ChargingCurrentPhase) != 3 {
 		return 0, 0, 0, fmt.Errorf("unexpected response: %v", measurements)
@@ -189,6 +189,6 @@ func (nrg *NRGKickConnect) Currents() (float64, float64, float64, error) {
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickConnect) ChargedEnergy() (float64, error) {
 // 	var measurements NRGMeasurements
-// 	err := nrg.getJSON(nrg.apiURL(apiMeasurements), measurements)
+// 	err := nrg.getJSON(nrg.apiURL(apiMeasurements), &measurements)
 // 	return measurements.ChargingEnergy, err
 // }
