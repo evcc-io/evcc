@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -74,14 +75,18 @@ func LogLevelToThreshold(level string) jww.Threshold {
 var uiChan chan<- Param
 
 type uiWriter struct {
+	re    *regexp.Regexp
 	level string
 }
 
 func (w *uiWriter) Write(p []byte) (n int, err error) {
+	// trim level and timestamp
+	s := string(w.re.ReplaceAll(p, []byte{}))
+
 	uiChan <- Param{
 		LoadPoint: "",
 		Key:       w.level,
-		Val:       strings.Trim(strconv.Quote(string(p)), "\""),
+		Val:       strings.Trim(strconv.Quote(s), "\""),
 	}
 
 	return 0, nil
@@ -99,7 +104,13 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(level string, l *log.Logger) {
+	re, err := regexp.Compile(`^\[\w+\] \w+ .{19} `)
+	if err != nil {
+		panic(err)
+	}
+
 	ui := uiWriter{
+		re:    re,
 		level: level,
 	}
 
