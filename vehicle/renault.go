@@ -168,6 +168,12 @@ func (v *Renault) authFlow() error {
 						return errors.New("missing vin")
 					}
 				}
+
+				token, err := v.kamereonToken(v.accountID)
+				if err != nil || token == "" {
+					return fmt.Errorf("refreshing kamereon access token failed: %v", err)
+				}
+				v.kamereonAccessToken = token
 			}
 		}
 	}
@@ -318,11 +324,9 @@ func (v *Renault) kamereonToken(accountID string) (string, error) {
 
 func (v *Renault) kamereonRequest(uri string) (*http.Request, error) {
 	if v.kamereonAccessToken == "" {
-		token, err := v.kamereonToken(v.accountID)
-		if err != nil || token == "" {
-			return nil, fmt.Errorf("refreshing kamereon access token failed: %v", err)
+		if err := v.authFlow(); err != nil {
+			return nil, err
 		}
-		v.kamereonAccessToken = token
 	}
 
 	data := url.Values{"country": []string{"DE"}}
