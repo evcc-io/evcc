@@ -42,7 +42,9 @@ func NewKebaFromConfig(log *util.Logger, other map[string]interface{}) api.Charg
 		URI     string
 		Timeout time.Duration
 		RFID    RFID
-	}{}
+	}{
+		RFID: RFID{Class: "00000000000000000000"}, // default class
+	}
 	util.DecodeOther(log, other, &cc)
 
 	return NewKeba(cc.URI, cc.RFID, cc.Timeout)
@@ -167,7 +169,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
-	if kr.State == 2 {
+	if kr.State == 2 || kr.State == 5 {
 		return api.StatusB, nil
 	}
 	if kr.State == 3 {
