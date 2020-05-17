@@ -22,10 +22,16 @@ const (
 	kebaPort   = "7090"
 )
 
+// RFID contains access credentials
+type RFID struct {
+	Tag, Class string
+}
+
 // Keba is an api.Charger implementation with configurable getters and setters.
 type Keba struct {
 	log     *util.Logger
 	conn    string
+	rfid    RFID
 	timeout time.Duration
 	recv    chan keba.UDPMsg
 }
@@ -35,14 +41,17 @@ func NewKebaFromConfig(log *util.Logger, other map[string]interface{}) api.Charg
 	cc := struct {
 		URI     string
 		Timeout time.Duration
-	}{}
+		RFID    RFID
+	}{
+		RFID: RFID{Class: "00000000000000000000"}, // default class
+	}
 	util.DecodeOther(log, other, &cc)
 
-	return NewKeba(cc.URI, cc.Timeout)
+	return NewKeba(cc.URI, cc.RFID, cc.Timeout)
 }
 
 // NewKeba creates a new charger
-func NewKeba(conn string, timeout time.Duration) api.Charger {
+func NewKeba(conn string, rfid RFID, timeout time.Duration) api.Charger {
 	log := util.NewLogger("keba")
 
 	if keba.Instance == nil {
@@ -61,6 +70,7 @@ func NewKeba(conn string, timeout time.Duration) api.Charger {
 	c := &Keba{
 		log:     log,
 		conn:    conn,
+		rfid:    rfid,
 		timeout: timeout,
 		recv:    make(chan keba.UDPMsg),
 	}
@@ -152,10 +162,14 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
+	if kr.AuthON == 1 && c.rfid.Tag == "" {
+		c.log.WARN.Println("missing credentials for RFID authorization")
+	}
+
 	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
-	if kr.State == 2 {
+	if kr.State == 2 || kr.State == 5 {
 		return api.StatusB, nil
 	}
 	if kr.State == 3 {
@@ -176,8 +190,29 @@ func (c *Keba) Enabled() (bool, error) {
 	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
 }
 
+// enableRFID sends RFID credentials to enable charge
+func (c *Keba) enableRFID() error {
+	var resp string
+	err := c.roundtrip(fmt.Sprintf("start %s %s", c.rfid.Tag, c.rfid.Class), 0, &resp)
+	if err != nil {
+		return err
+	}
+
+	if resp == keba.OK {
+		return nil
+	}
+
+	return fmt.Errorf("start unexpected response: %s", resp)
+}
+
 // Enable implements the Charger.Enable interface
 func (c *Keba) Enable(enable bool) error {
+	if enable && c.rfid.Tag != "" {
+		if err := c.enableRFID(); err != nil {
+			return err
+		}
+	}
+
 	var d int
 	if enable {
 		d = 1
@@ -245,4 +280,12 @@ func (c *Keba) Currents() (float64, float64, float64, error) {
 
 	// 1mA to A
 	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
+}
+
+// Diagnosis implements the Diagnosis interface
+func (c *Keba) Diagnosis() {
+	var kr keba.Report100
+	if err := c.roundtrip("report 100", 100, &kr); err == nil {
+		fmt.Printf("%+v\n", kr)
+	}
 }

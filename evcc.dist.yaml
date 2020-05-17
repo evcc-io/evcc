@@ -110,17 +110,23 @@ chargers:
 - name: evsewifi
   type: evsewifi # Charger with Phoenix Contact controller
   uri: http://192.168.1.4 # SimpleEVSE-Wifi address
-- name: nrg
-  type: nrg # NRGKick charger
+- name: nrg-1
+  type: nrgkick-connect # NRGKick Connect charger
   ip: 192.168.1.4 # IP
   macaddress: 00:99:22 # MAC address
   password: # password
+# - name: nrg-2
+#   type: nrgkick-bluetooth # NRGKick charger with Bluetooth
+#   macaddress: 00:99:22 # MAC address
+#   pin: # pin
 - name: go-e
   type: go-e # go-eCharger
   uri: http://192.168.1.4 # go-e address
 - name: keba
   type: keba # KEBA charger
   uri: 192.168.1.4:7090 # KEBA address
+  rfid:
+    tag: 765765348 # RFID tag, see `evcc charger` to show tag
 - name: mcc
   type: mcc # Mobile Charger Connect (Audi, Bentley, Porsche)
   uri: https://192.168.1.4 # Mobile Charger Connect address

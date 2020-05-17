@@ -48,4 +48,9 @@ func dumpAPIs(v interface{}) {
 			fmt.Printf("Duration: %v\n", duration)
 		}
 	}
+
+	if v, ok := v.(api.Diagnosis); ok {
+		fmt.Println("Diagnostic dump:")
+		v.Diagnosis()
+	}
 }
