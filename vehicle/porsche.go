@@ -22,7 +22,7 @@ const (
 	porscheLogin          = "https://login.porsche.com/auth/de/de_DE"
 	porscheLoginAuth      = "https://login.porsche.com/auth/api/v1/de/de_DE/public/login"
 	porscheAPIClientID    = "TZ4Vf5wnKeipJxvatJ60lPHYEzqZ4WNp"
-	porscheAPIRedirectUri = "https://my-static02.porsche.com/static/cms/auth.html"
+	porscheAPIRedirectURI = "https://my-static02.porsche.com/static/cms/auth.html"
 	porscheAPIAuth        = "https://login.porsche.com/as/authorization.oauth2"
 	porscheAPIToken       = "https://login.porsche.com/as/token.oauth2"
 	porscheAPI            = "https://connect-portal.porsche.com/core/api/v3/de/de_DE"
@@ -30,7 +30,7 @@ const (
 
 type porscheTokenResponse struct {
 	AccessToken string `json:"access_token"`
-	IdToken     string `json:"id_token"`
+	IDToken     string `json:"id_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int    `json:"expires_in"`
 }
@@ -117,12 +117,12 @@ func (v *Porsche) login(user, password string) error {
 	sec := queryLogin.Get("sec")
 	resume := queryLogin.Get("resume")
 	state := queryLogin.Get("state")
-	thirdPartyId := queryLogin.Get("thirdPartyId")
+	thirdPartyID := queryLogin.Get("thirdPartyId")
 
 	dataLoginAuth := url.Values{
 		"sec":          []string{sec},
 		"resume":       []string{resume},
-		"thirdPartyId": []string{thirdPartyId},
+		"thirdPartyId": []string{thirdPartyID},
 		"state":        []string{state},
 		"username":     []string{user},
 		"password":     []string{password},
@@ -150,7 +150,7 @@ func (v *Porsche) login(user, password string) error {
 		"access_type":           []string{"offline"},
 		"prompt":                []string{"none"},
 		"client_id":             []string{porscheAPIClientID},
-		"redirect_uri":          []string{porscheAPIRedirectUri},
+		"redirect_uri":          []string{porscheAPIRedirectURI},
 		"code_challenge":        []string{codeChallenge},
 		"code_challenge_method": []string{"S256"},
 	}
@@ -178,7 +178,7 @@ func (v *Porsche) login(user, password string) error {
 	dataAPIToken := url.Values{
 		"grant_type":    []string{"authorization_code"},
 		"client_id":     []string{porscheAPIClientID},
-		"redirect_uri":  []string{porscheAPIRedirectUri},
+		"redirect_uri":  []string{porscheAPIRedirectURI},
 		"code":          []string{authCode},
 		"prompt":        []string{"none"},
 		"code_verifier": []string{codeVerifier},
