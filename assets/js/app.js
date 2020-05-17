@@ -85,16 +85,25 @@ const toasts = new Vue({
   },
   methods: {
     raise: function (msg) {
-      msg.id = this.count++;
-      Vue.set(this.items, msg.id, msg);
+      let found = false;
+      Object.keys(this.items).forEach(function (k) {
+        let m = this.items[k];
+        if (m.type == msg.type && m.message == msg.message) {
+          found = true;
+        }
+      }, this);
+      if (!found) {
+        msg.id = this.count++;
+        Vue.set(this.items, msg.id, msg);
+      }
     },
-    error: function (error) {
-      error.type = "error";
-      this.raise(error)
+    error: function (msg) {
+      msg.type = "error";
+      this.raise(msg)
     },
-    warn: function (error) {
-      error.type = "warn";
-      this.raise(error);
+    warn: function (msg) {
+      msg.type = "warn";
+      this.raise(msg);
     },
     remove: function (msg) {
       Vue.delete(this.items, msg.id);
