@@ -18,6 +18,8 @@ import (
 	"github.com/muka/go-bluetooth/hw"
 )
 
+const nrgTimeout = 30 * time.Second
+
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
 	log           *util.Logger
@@ -109,9 +111,9 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress)
+	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress, nrgTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("findDevice: %s", err)
+		return nil, fmt.Errorf("find device: %s", err)
 	}
 
 	err = nrgble.Connect(dev, nrg.agent, nrg.device)
