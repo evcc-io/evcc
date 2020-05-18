@@ -169,12 +169,11 @@ func (v *Renault) authFlow() error {
 					}
 				}
 
-				if err == nil {
-					v.kamereonAccessToken, err = v.kamereonToken(v.accountID)
-					if v.kamereonAccessToken == "" {
-						return errors.New("missing kamereon access token")
-					}
+				token, err := v.kamereonToken(v.accountID)
+				if err != nil || token == "" {
+					return fmt.Errorf("refreshing kamereon access token failed: %v", err)
 				}
+				v.kamereonAccessToken = token
 			}
 		}
 	}
@@ -323,18 +322,44 @@ func (v *Renault) kamereonToken(accountID string) (string, error) {
 	return kr.AccessToken, err
 }
 
+func (v *Renault) kamereonRequest(uri string) (*http.Request, error) {
+	if v.kamereonAccessToken == "" {
+		if err := v.authFlow(); err != nil {
+			return nil, err
+		}
+	}
+
+	data := url.Values{"country": []string{"DE"}}
+	headers := v.kamereonHeaders(map[string]string{"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken})
+
+	return v.request(uri, data, headers)
+}
+
+// doJSONRequest executes request and handles token expiry
+func (v *Renault) doKamereonRequest(uri string, kr interface{}) error {
+	req, err := v.kamereonRequest(uri)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
+		if err != nil {
+			if resp := v.LastResponse(); resp != nil && resp.StatusCode == http.StatusUnauthorized {
+				v.kamereonAccessToken = ""
+			}
+		}
+	}
+	return err
+}
+
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Renault) chargeState() (float64, error) {
 	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 
-	data := url.Values{"country": []string{"DE"}}
-	headers := v.kamereonHeaders(map[string]string{"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken})
-
-	req, err := v.request(uri, data, headers)
-	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
+	// do request with retry
+	err := v.doKamereonRequest(uri, &kr)
+	if err != nil && v.kamereonAccessToken == "" {
+		err = v.doKamereonRequest(uri, &kr)
 	}
+
 	return float64(kr.Data.Attributes.BatteryLevel), err
 }
 
