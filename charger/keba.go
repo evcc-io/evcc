@@ -24,7 +24,7 @@ const (
 
 // RFID contains access credentials
 type RFID struct {
-	Tag, Class string
+	Tag string
 }
 
 // Keba is an api.Charger implementation with configurable getters and setters.
@@ -42,9 +42,7 @@ func NewKebaFromConfig(log *util.Logger, other map[string]interface{}) api.Charg
 		URI     string
 		Timeout time.Duration
 		RFID    RFID
-	}{
-		RFID: RFID{Class: "00000000000000000000"}, // default class
-	}
+	}{}
 	util.DecodeOther(log, other, &cc)
 
 	return NewKeba(cc.URI, cc.RFID, cc.Timeout)
@@ -192,12 +190,20 @@ func (c *Keba) Enabled() (bool, error) {
 
 // enableRFID sends RFID credentials to enable charge
 func (c *Keba) enableRFID() error {
-	var resp string
-	err := c.roundtrip(fmt.Sprintf("start %s %s", c.rfid.Tag, c.rfid.Class), 0, &resp)
-	if err != nil {
+	// check if authorization required
+	var kr keba.Report2
+	if err := c.roundtrip("report 2", 2, &kr); err != nil {
 		return err
 	}
+	if kr.AuthReq == 0 {
+		return nil
+	}
 
+	// authorize
+	var resp string
+	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
+		return err
+	}
 	if resp == keba.OK {
 		return nil
 	}
