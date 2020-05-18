@@ -46,7 +46,8 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*util.HTTPHelper
-	uri string
+	uri     string
+	enabled bool
 }
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
@@ -103,6 +104,10 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	case 1: // ready
 		return api.StatusA, nil
 	case 2: // EV is present
+		// fix https://github.com/andig/evcc/issues/169
+		if evse.enabled && !params.EvseState {
+			return api.StatusB, evse.Enable(true)
+		}
 		return api.StatusB, nil
 	case 3: // charging
 		return api.StatusC, nil
@@ -132,7 +137,11 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 // Enable implements the Charger.Enable interface
 func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
-	return evse.checkError(evse.Get(url))
+	err := evse.checkError(evse.Get(url))
+	if err == nil {
+		evse.enabled = enable
+	}
+	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
