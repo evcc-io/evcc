@@ -22,9 +22,10 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "evcc",
-	Short: "EV Charge Controller",
-	Run:   run,
+	Use:     "evcc",
+	Short:   "EV Charge Controller",
+	Version: fmt.Sprintf("%s (%s)", server.Version, server.Commit),
+	Run:     run,
 }
 
 func bind(cmd *cobra.Command, flag string) {
