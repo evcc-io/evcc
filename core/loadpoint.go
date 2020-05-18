@@ -217,6 +217,7 @@ func consumedPower(pv, battery, grid float64) float64 {
 // more than total household consumption. If physical charge meter is present this handler is not used.
 func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 	power := float64(current*lp.Phases) * lp.Voltage
+	// lp.publish("maxCurrent", current)
 
 	if !lp.enabled || lp.status != api.StatusC {
 		// if disabled we cannot be charging
