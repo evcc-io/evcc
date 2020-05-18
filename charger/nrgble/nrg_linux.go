@@ -35,6 +35,8 @@ func Discover(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*devic
 		return nil, err
 	}
 
+	timer := time.NewTimer(timeout)
+
 	for {
 		select {
 		case ev := <-discovery:
@@ -52,7 +54,7 @@ func Discover(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*devic
 			}
 
 			return dev, nil
-		case <-time.After(timeout):
+		case <-timer.C:
 			cancel()
 			return nil, errors.New("discovery timeout exceeded")
 		}
