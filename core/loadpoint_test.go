@@ -185,6 +185,11 @@ func TestInitialUpdate(t *testing.T) {
 			cm.EXPECT().CurrentPower().Return(minPower, nil)
 		}
 
+		// syncSettings
+		if tc.status != api.StatusA {
+			wb.EXPECT().Enabled().Return(true, nil)
+		}
+
 		// disable if not connected
 		if tc.mode == api.ModeOff {
 			wb.EXPECT().Enable(false)
@@ -262,6 +267,7 @@ func TestImmediateOnOff(t *testing.T) {
 			wb.EXPECT().MaxCurrent(lpMaxCurrent)
 		}
 
+		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
 		lp.update()
 
 		// max current if connected & mode now
@@ -294,6 +300,7 @@ func TestImmediateOnOff(t *testing.T) {
 
 		wb.EXPECT().MaxCurrent(2 * lpMinCurrent)
 
+		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
 		lp.update()
 
 		// -- round 3
@@ -310,6 +317,8 @@ func TestImmediateOnOff(t *testing.T) {
 		wb.EXPECT().MaxCurrent(lpMinCurrent)
 
 		lp.SetMode(api.ModeOff)
+
+		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
 		lp.update()
 
 		ctrl.Finish()
