@@ -18,7 +18,7 @@ func FindDevice(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*dev
 		return nil, err
 	}
 	if dev == nil {
-		return nil, errors.New("Device not found, is it advertising?")
+		return nil, errors.New("device not found, is it advertising?")
 	}
 
 	return dev, nil
@@ -53,6 +53,7 @@ func Discover(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*devic
 				continue
 			}
 
+			cancel()
 			return dev, nil
 		case <-timer.C:
 			cancel()
