@@ -494,6 +494,19 @@ func (lp *LoadPoint) resetGuard() {
 	lp.guardUpdated = lp.clock.Now().Add(-2 * lp.GuardDuration)
 }
 
+// syncSettings synchronizes charger settings to expected state
+func (lp *LoadPoint) syncSettings() {
+	enabled, err := lp.charger.Enabled()
+	if err == nil && enabled != lp.enabled {
+		log.ERROR.Printf("%s sync enabled", lp.Name)
+		err = lp.charger.Enable(lp.enabled)
+	}
+
+	if err != nil {
+		log.ERROR.Printf("%s charge controller error: %v", lp.Name, err)
+	}
+}
+
 // update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) update() {
 	// read and publish meters first
@@ -512,6 +525,11 @@ func (lp *LoadPoint) update() {
 	lp.publish("mode", string(lp.GetMode()))
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
+
+	// sync settings with charger
+	if lp.status != api.StatusA {
+		lp.syncSettings()
+	}
 
 	// check if car connected and ready for charging
 	var err error
