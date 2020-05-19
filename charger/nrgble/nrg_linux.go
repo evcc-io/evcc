@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/muka/go-bluetooth/api"
 	"github.com/muka/go-bluetooth/bluez/profile/adapter"
@@ -11,19 +12,19 @@ import (
 	"github.com/muka/go-bluetooth/bluez/profile/device"
 )
 
-func FindDevice(a *adapter.Adapter1, hwaddr string) (*device.Device1, error) {
-	dev, err := Discover(a, hwaddr)
+func FindDevice(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*device.Device1, error) {
+	dev, err := Discover(a, hwaddr, timeout)
 	if err != nil {
 		return nil, err
 	}
 	if dev == nil {
-		return nil, errors.New("Device not found, is it advertising?")
+		return nil, errors.New("device not found, is it advertising?")
 	}
 
 	return dev, nil
 }
 
-func Discover(a *adapter.Adapter1, hwaddr string) (*device.Device1, error) {
+func Discover(a *adapter.Adapter1, hwaddr string, timeout time.Duration) (*device.Device1, error) {
 	err := a.FlushDevices()
 	if err != nil {
 		return nil, err
@@ -34,28 +35,31 @@ func Discover(a *adapter.Adapter1, hwaddr string) (*device.Device1, error) {
 		return nil, err
 	}
 
-	defer cancel()
+	timer := time.NewTimer(timeout)
 
-	for ev := range discovery {
-		dev, err1 := device.NewDevice1(ev.Path)
-		if err != nil {
-			return nil, err1
+	for {
+		select {
+		case ev := <-discovery:
+			dev, err := device.NewDevice1(ev.Path)
+			if err != nil {
+				return nil, err
+			}
+			if dev == nil || dev.Properties == nil {
+				continue
+			}
+
+			p := dev.Properties
+			if p.Address != hwaddr {
+				continue
+			}
+
+			cancel()
+			return dev, nil
+		case <-timer.C:
+			cancel()
+			return nil, errors.New("discovery timeout exceeded")
 		}
-
-		if dev == nil || dev.Properties == nil {
-			continue
-		}
-
-		p := dev.Properties
-
-		if p.Address != hwaddr {
-			continue
-		}
-
-		return dev, nil
 	}
-
-	return nil, nil
 }
 
 func Connect(dev *device.Device1, ag *agent.SimpleAgent, adapterID string) error {

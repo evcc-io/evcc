@@ -18,16 +18,20 @@ import (
 	"github.com/muka/go-bluetooth/hw"
 )
 
+const nrgTimeout = 30 * time.Second
+
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
-	log        *util.Logger
-	timer      *time.Timer
-	adapter    *adapter.Adapter1
-	agent      *agent.SimpleAgent
-	dev        *device.Device1
-	device     string
-	macaddress string
-	pin        int
+	log           *util.Logger
+	timer         *time.Timer
+	adapter       *adapter.Adapter1
+	agent         *agent.SimpleAgent
+	dev           *device.Device1
+	device        string
+	macaddress    string
+	pin           int
+	pauseCharging bool
+	current       int
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
@@ -107,9 +111,9 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress)
+	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress, nrgTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("findDevice: %s", err)
+		return nil, fmt.Errorf("find device: %s", err)
 	}
 
 	err = nrgble.Connect(dev, nrg.agent, nrg.device)
@@ -196,15 +200,16 @@ func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	return nil
 }
 
-func (nrg *NRGKickBLE) defaultSettings(info nrgble.Info) nrgble.Settings {
+func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
 	return nrgble.Settings{
 		PIN:                  nrg.pin,
 		ChargingEnergyLimit:  19997, // magic const for "disable"
 		KWhPer100:            info.KWhPer100,
 		AmountPerKWh:         info.AmountPerKWh,
 		Efficiency:           info.Efficiency,
-		PauseCharging:        info.PauseCharging,
 		BLETransmissionPower: info.BLETransmissionPower,
+		PauseCharging:        nrg.pauseCharging, // apply last value
+		Current:              nrg.current,       // apply last value
 	}
 }
 
@@ -215,7 +220,7 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 		return api.StatusF, err
 	}
 
-	nrg.log.TRACE.Printf("power: %+v", res)
+	nrg.log.TRACE.Printf("read power: %+v", res)
 
 	switch res.CPSignal {
 	case 3:
@@ -237,7 +242,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
+	nrg.log.TRACE.Printf("read info: %+v", res)
 
 	return !res.PauseCharging, nil
 }
@@ -249,10 +254,10 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		return err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
+	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
+	settings := nrg.mergeSettings(res)
 
-	settings := nrg.defaultSettings(res)
-	settings.PauseCharging = !enable
+	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -264,10 +269,10 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 		return err
 	}
 
-	nrg.log.TRACE.Printf("info: %+v", res)
+	nrg.current = int(current) // use cached value to work around API roundtrip delay
+	settings := nrg.mergeSettings(res)
 
-	settings := nrg.defaultSettings(res)
-	settings.Current = int(current)
+	nrg.log.TRACE.Printf("write settings: %+v", settings)
 
 	return nrg.write(nrgble.SettingsService, &settings)
 }
@@ -279,7 +284,7 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("power: %+v", res)
+	nrg.log.TRACE.Printf("read power: %+v", res)
 
 	return float64(res.TotalPower) * 10, nil
 }
@@ -291,7 +296,7 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	nrg.log.TRACE.Printf("energy: %+v", res)
+	nrg.log.TRACE.Printf("read energy: %+v", res)
 
 	return float64(res.TotalEnergy) / 1000, nil
 }
@@ -303,7 +308,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	nrg.log.TRACE.Printf("voltage/current: %+v", res)
+	nrg.log.TRACE.Printf("read voltage/current: %+v", res)
 
 	return float64(res.CurrentL1) / 100,
 		float64(res.CurrentL2) / 100,
