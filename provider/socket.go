@@ -6,7 +6,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -18,15 +17,12 @@ import (
 // Socket implements websocket request provider
 type Socket struct {
 	*util.HTTPHelper
-	mux     sync.Mutex
-	once    sync.Once
+	mux     *util.Waiter
 	url     string
 	headers map[string]string
 	scale   float64
 	jq      *gojq.Query
-	timeout time.Duration
 	val     interface{}
-	updated time.Time
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider
@@ -46,10 +42,10 @@ func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{})
 
 	p := &Socket{
 		HTTPHelper: util.NewHTTPHelper(logger),
+		mux:        util.NewWaiter(cc.Timeout, func() { logger.TRACE.Println("wait for initial value") }),
 		url:        cc.URI,
 		headers:    cc.Headers,
 		scale:      cc.Scale,
-		timeout:    cc.Timeout,
 	}
 
 	// handle basic auth
@@ -110,41 +106,24 @@ func (p *Socket) listen() {
 				v, err := jq.Query(p.jq, b)
 				if err == nil {
 					p.val = v
-					p.updated = time.Now()
+					p.mux.Update()
 				} else {
 					log.WARN.Printf("invalid: %s", string(b))
 				}
 			} else {
 				p.val = string(b)
-				p.updated = time.Now()
+				p.mux.Update()
 			}
 			p.mux.Unlock()
 		}
 	}
 }
 
-func (p *Socket) waitForInitialValue() {
-	p.mux.Lock()
-	defer p.mux.Unlock()
-
-	if p.updated.IsZero() {
-		p.HTTPHelper.Log.TRACE.Println("wait for initial value")
-
-		// wait for initial update
-		for p.updated.IsZero() {
-			p.mux.Unlock()
-			time.Sleep(waitTimeout)
-			p.mux.Lock()
-		}
-	}
-}
-
 func (p *Socket) hasValue() (interface{}, error) {
-	p.once.Do(p.waitForInitialValue)
-	p.mux.Lock()
+	elapsed := p.mux.LockWithTimeout()
 	defer p.mux.Unlock()
 
-	if elapsed := time.Since(p.updated); p.timeout != 0 && elapsed > p.timeout {
+	if elapsed > 0 {
 		return nil, fmt.Errorf("outdated: %v", elapsed.Truncate(time.Second))
 	}
 

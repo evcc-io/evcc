@@ -2,7 +2,6 @@ package meter
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -10,10 +9,7 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-const (
-	udpTimeout  = 10 * time.Second
-	waitTimeout = 50 * time.Millisecond // interval when waiting for initial value
-)
+const udpTimeout = 10 * time.Second
 
 // values bundles SMA readings
 type values struct {
@@ -27,15 +23,13 @@ type values struct {
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
 	log     *util.Logger
+	mux     *util.Waiter
 	uri     string
 	serial  string
 	values  values
 	powerO  sma.Obis
 	energyO sma.Obis
-	updated time.Time
 	recv    chan sma.Telegram
-	mux     sync.Mutex
-	once    sync.Once
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
@@ -50,9 +44,10 @@ func NewSMAFromConfig(log *util.Logger, other map[string]interface{}) api.Meter 
 
 // NewSMA creates a SMA Meter
 func NewSMA(uri, serial, power, energy string) api.Meter {
-	log := util.NewLogger("sma ")
+	log := util.NewLogger("sma")
 
 	sm := &SMA{
+		mux:     util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:     log,
 		uri:     uri,
 		serial:  serial,
@@ -93,17 +88,17 @@ func (sm *SMA) updateMeterValues(msg sma.Telegram) {
 		// use user-defined obis
 		if power, ok := msg.Values[sm.powerO]; ok {
 			sm.values.power = power
-			sm.updated = time.Now()
+			sm.mux.Update()
 		}
 	} else {
 		sm.values.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
-		sm.updated = time.Now()
+		sm.mux.Update()
 	}
 
 	if sm.energyO != "" {
 		if energy, ok := msg.Values[sm.energyO]; ok {
 			sm.values.energy = energy
-			sm.updated = time.Now()
+			sm.mux.Update()
 		} else {
 			sm.log.WARN.Println("missing obis for energy")
 		}
@@ -111,21 +106,21 @@ func (sm *SMA) updateMeterValues(msg sma.Telegram) {
 
 	if currentL1, ok := msg.Values[sma.CurrentL1]; ok {
 		sm.values.currentL1 = currentL1
-		sm.updated = time.Now()
+		sm.mux.Update()
 	} else {
 		sm.log.WARN.Println("missing obis for currentL1")
 	}
 
 	if currentL2, ok := msg.Values[sma.CurrentL2]; ok {
 		sm.values.currentL2 = currentL2
-		sm.updated = time.Now()
+		sm.mux.Update()
 	} else {
 		sm.log.WARN.Println("missing obis for currentL2")
 	}
 
 	if currentL3, ok := msg.Values[sma.CurrentL3]; ok {
 		sm.values.currentL3 = currentL3
-		sm.updated = time.Now()
+		sm.mux.Update()
 	} else {
 		sm.log.WARN.Println("missing obis for currentL3")
 	}
@@ -142,29 +137,11 @@ func (sm *SMA) receive() {
 	}
 }
 
-// waitForInitialValue makes sure we don't start with an error
-func (sm *SMA) waitForInitialValue() {
-	sm.mux.Lock()
-	defer sm.mux.Unlock()
-
-	if sm.updated.IsZero() {
-		sm.log.TRACE.Print("waiting for initial value")
-
-		// wait for initial update
-		for sm.updated.IsZero() {
-			sm.mux.Unlock()
-			time.Sleep(waitTimeout)
-			sm.mux.Lock()
-		}
-	}
-}
-
 func (sm *SMA) hasValue() (values, error) {
-	sm.once.Do(sm.waitForInitialValue)
-	sm.mux.Lock()
+	elapsed := sm.mux.LockWithTimeout()
 	defer sm.mux.Unlock()
 
-	if elapsed := time.Since(sm.updated); elapsed > udpTimeout {
+	if elapsed > 0 {
 		return values{}, fmt.Errorf("recv timeout: %v", elapsed.Truncate(time.Second))
 	}
 

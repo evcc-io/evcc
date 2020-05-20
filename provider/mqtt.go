@@ -11,10 +11,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const (
-	publishTimeout = 2 * time.Second
-	waitTimeout    = 50 * time.Millisecond // polling interval when waiting for initial value
-)
+const publishTimeout = 2 * time.Second
 
 // MqttClient is a paho publisher
 type MqttClient struct {
@@ -107,10 +104,10 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
 func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) FloatGetter {
 	h := &msgHandler{
-		log:     m.log,
-		topic:   topic,
-		scale:   scale,
-		timeout: timeout,
+		log:   m.log,
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
+		topic: topic,
+		scale: scale,
 	}
 
 	m.Listen(topic, h.Receive)
@@ -120,10 +117,10 @@ func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Durat
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
 func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) IntGetter {
 	h := &msgHandler{
-		log:     m.log,
-		topic:   topic,
-		scale:   float64(scale),
-		timeout: timeout,
+		log:   m.log,
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
+		topic: topic,
+		scale: float64(scale),
 	}
 
 	m.Listen(topic, h.Receive)
@@ -133,9 +130,9 @@ func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration)
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGetter {
 	h := &msgHandler{
-		log:     m.log,
-		topic:   topic,
-		timeout: timeout,
+		log:   m.log,
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
+		topic: topic,
 	}
 
 	m.Listen(topic, h.Receive)
@@ -145,9 +142,9 @@ func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGet
 // BoolGetter creates handler for string from MQTT topic that returns cached value
 func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter {
 	h := &msgHandler{
-		log:     m.log,
-		topic:   topic,
-		timeout: timeout,
+		log:   m.log,
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
+		topic: topic,
 	}
 
 	m.Listen(topic, h.Receive)
@@ -214,10 +211,7 @@ func (m *MqttClient) WaitForToken(token mqtt.Token) {
 
 type msgHandler struct {
 	log     *util.Logger
-	once    sync.Once
-	mux     sync.Mutex
-	updated time.Time
-	timeout time.Duration
+	mux     *util.Waiter
 	scale   float64
 	topic   string
 	payload string
@@ -230,31 +224,14 @@ func (h *msgHandler) Receive(payload string) {
 	defer h.mux.Unlock()
 
 	h.payload = payload
-	h.updated = time.Now()
-}
-
-func (h *msgHandler) waitForInitialValue() {
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
-	if h.updated.IsZero() {
-		h.log.TRACE.Printf("%s wait for initial value", h.topic)
-
-		// wait for initial update
-		for h.updated.IsZero() {
-			h.mux.Unlock()
-			time.Sleep(waitTimeout)
-			h.mux.Lock()
-		}
-	}
+	h.mux.Update()
 }
 
 func (h *msgHandler) hasValue() (string, error) {
-	h.once.Do(h.waitForInitialValue)
-	h.mux.Lock()
+	elapsed := h.mux.LockWithTimeout()
 	defer h.mux.Unlock()
 
-	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
+	if elapsed > 0 {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
