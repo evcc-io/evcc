@@ -18,7 +18,7 @@ import (
 	"github.com/muka/go-bluetooth/hw"
 )
 
-const nrgTimeout = 30 * time.Second
+const nrgTimeout = 10 * time.Second
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
