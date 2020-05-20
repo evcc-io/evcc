@@ -67,6 +67,8 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter)
 		res = NewCalcFromConfig(log, config.Other)
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).FloatGetter
+	case "websocket", "ws":
+		res = NewSocketProviderFromConfig(log, config.Other).FloatGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
 		res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
@@ -90,6 +92,8 @@ func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).IntGetter
+	case "websocket", "ws":
+		res = NewSocketProviderFromConfig(log, config.Other).IntGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
 		res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
@@ -113,6 +117,8 @@ func NewStringGetterFromConfig(log *util.Logger, config Config) (res StringGette
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).StringGetter
+	case "websocket", "ws":
+		res = NewSocketProviderFromConfig(log, config.Other).StringGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
 		res = MQTT.StringGetter(pc.Topic, pc.Timeout)
@@ -136,6 +142,8 @@ func NewBoolGetterFromConfig(log *util.Logger, config Config) (res BoolGetter) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).BoolGetter
+	case "websocket", "ws":
+		res = NewSocketProviderFromConfig(log, config.Other).BoolGetter
 	case "mqtt":
 		pc := mqttFromConfig(log, config.Other)
 		res = MQTT.BoolGetter(pc.Topic, pc.Timeout)

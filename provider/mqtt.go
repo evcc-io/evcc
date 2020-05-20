@@ -249,29 +249,7 @@ func (h *msgHandler) waitForInitialValue() {
 	}
 }
 
-func (h *msgHandler) floatGetter() (float64, error) {
-	h.once.Do(h.waitForInitialValue)
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
-	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
-		return 0, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
-	}
-
-	val, err := strconv.ParseFloat(h.payload, 64)
-	if err != nil {
-		return 0, fmt.Errorf("%s invalid: '%s'", h.topic, h.payload)
-	}
-
-	return h.scale * val, nil
-}
-
-func (h *msgHandler) intGetter() (int64, error) {
-	f, err := h.floatGetter()
-	return int64(math.Round(f)), err
-}
-
-func (h *msgHandler) stringGetter() (string, error) {
+func (h *msgHandler) hasValue() (string, error) {
 	h.once.Do(h.waitForInitialValue)
 	h.mux.Lock()
 	defer h.mux.Unlock()
@@ -280,17 +258,42 @@ func (h *msgHandler) stringGetter() (string, error) {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
-	return string(h.payload), nil
+	return h.payload, nil
+}
+
+func (h *msgHandler) floatGetter() (float64, error) {
+	v, err := h.hasValue()
+	if err != nil {
+		return 0, err
+	}
+
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%s invalid: '%s'", h.topic, v)
+	}
+
+	return f * h.scale, nil
+}
+
+func (h *msgHandler) intGetter() (int64, error) {
+	f, err := h.floatGetter()
+	return int64(math.Round(f)), err
+}
+
+func (h *msgHandler) stringGetter() (string, error) {
+	v, err := h.hasValue()
+	if err != nil {
+		return "", err
+	}
+
+	return string(v), nil
 }
 
 func (h *msgHandler) boolGetter() (bool, error) {
-	h.once.Do(h.waitForInitialValue)
-	h.mux.Lock()
-	defer h.mux.Unlock()
-
-	if elapsed := time.Since(h.updated); h.timeout != 0 && elapsed > h.timeout {
-		return false, fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
+	v, err := h.hasValue()
+	if err != nil {
+		return false, err
 	}
 
-	return util.Truish(string(h.payload)), nil
+	return util.Truish(v), nil
 }

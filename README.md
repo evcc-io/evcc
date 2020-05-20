@@ -34,6 +34,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT](#mqtt-readwrite)
   - [Script](#script-readwrite)
   - [HTTP](#http-readwrite)
+  - [Websocket](#websocket-read-only)
   - [Combined status](#combined-status-read-only)
 - [Developer information](#developer-information)
 - [Background](#background)
@@ -374,7 +375,7 @@ Sample configuration:
 type: mqtt
 topic: mbmd/sdm1-1/Power
 timeout: 30s # don't accept values older than timeout
-scale: 0.001 # floating point factor applied to result, e.g. for kW to W conversion
+scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
 ```
 
 Sample write configuration:
@@ -433,6 +434,20 @@ Sample write configuration:
 ```yaml
 ...
 body: %v # only applicable for PUT or POST requests
+```
+
+### Websocket (read only)
+
+The `websocket` plugin implements a web socket listener. Includes the ability to read and parse JSON using jq-like queries. It can for example be used to receive messages from Volkszähler's push server.
+
+Sample configuration (read only):
+
+```yaml
+type: http
+uri: ws://<volkszaehler host:port>/socket
+jq: .data | select(.uuid=="<uuid>") .tuples[0][1] # parse message json
+scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
+timeout: 30s # error if no update received in 30 seconds
 ```
 
 ### Combined status (read only)

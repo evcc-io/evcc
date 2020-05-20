@@ -17,7 +17,6 @@ import (
 
 // HTTP implements HTTP request provider
 type HTTP struct {
-	log *util.Logger
 	*util.HTTPHelper
 	url, method string
 	headers     map[string]string
@@ -57,7 +56,6 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 	logger := util.NewLogger("http")
 
 	p := &HTTP{
-		log:        logger,
 		HTTPHelper: util.NewHTTPHelper(logger),
 		url:        cc.URI,
 		method:     cc.Method,
