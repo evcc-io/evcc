@@ -25,12 +25,13 @@ func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
 }
 
 // Update is called when client has received data. Update resets the timeout counter.
-// It is client responsibility to ensure that the waiter is not locked when Update is valled.
+// It is client responsibility to ensure that the waiter is not locked when Update is called.
 func (p *Waiter) Update() {
 	p.updated = time.Now()
 }
 
-// waitForInitialValue blocks until Update has been called at least once
+// waitForInitialValue blocks until Update has been called at least once.
+// It assumes lock has been obtained before and returns with lock active.
 func (p *Waiter) waitForInitialValue() {
 	if p.updated.IsZero() {
 		p.log()
