@@ -73,7 +73,6 @@ func indexHandler(links []MenuConfig, liveAssets bool) http.HandlerFunc {
 	_, debug := _escData["/js/debug.js"]
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.TRACE.Println("index")
 		// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		// w.WriteHeader(http.StatusOK)
 

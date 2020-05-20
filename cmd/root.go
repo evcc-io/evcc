@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -129,15 +128,6 @@ func checkVersion() {
 	}
 }
 
-// handle UI update requests
-func handleUI(triggerChan <-chan struct{}, loadPoints []*core.LoadPoint) {
-	for range triggerChan {
-		for _, lp := range loadPoints {
-			lp.Update()
-		}
-	}
-}
-
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
@@ -165,6 +155,9 @@ func run(cmd *cobra.Command, args []string) {
 	// start broadcasting values
 	tee := &Tee{}
 
+	cache := util.NewCache()
+	go cache.Run(tee.Attach())
+
 	// setup influx
 	if viper.Get("influx") != nil {
 		influx := server.NewInfluxClient(
@@ -190,13 +183,8 @@ func run(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, conf.Menu, loadPoints[0], socketHub)
 
-	triggerChan := make(chan struct{})
-
-	// handle UI update requests whenever browser connects
-	go handleUI(triggerChan, loadPoints)
-
 	// publish to UI
-	go socketHub.Run(tee.Attach(), triggerChan)
+	go socketHub.Run(tee.Attach(), cache)
 
 	// setup values channel
 	valueChan := make(chan util.Param)
