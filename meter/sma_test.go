@@ -56,20 +56,20 @@ func TestSMAUpdateMeterValues(t *testing.T) {
 			}
 
 			sm.updateMeterValues(tt.messsage)
-			if sm.power != tt.wantPower {
-				t.Errorf("Listener.processMessage() got Power %v, want %v", sm.power, tt.wantPower)
+			if sm.values.power != tt.wantPower {
+				t.Errorf("Listener.processMessage() got Power %v, want %v", sm.values.power, tt.wantPower)
 			}
 
-			if sm.currentL1 != tt.wantCurrentL1 {
-				t.Errorf("Listener.processMessage() got CurrentL1 %v, want %v", sm.currentL1, tt.wantCurrentL1)
+			if sm.values.currentL1 != tt.wantCurrentL1 {
+				t.Errorf("Listener.processMessage() got CurrentL1 %v, want %v", sm.values.currentL1, tt.wantCurrentL1)
 			}
 
-			if sm.currentL2 != tt.wantCurrentL2 {
-				t.Errorf("Listener.processMessage() got CurrentL2 %v, want %v", sm.currentL2, tt.wantCurrentL2)
+			if sm.values.currentL2 != tt.wantCurrentL2 {
+				t.Errorf("Listener.processMessage() got CurrentL2 %v, want %v", sm.values.currentL2, tt.wantCurrentL2)
 			}
 
-			if sm.currentL3 != tt.wantCurrentL3 {
-				t.Errorf("Listener.processMessage() got CurrentL3 %v, want %v", sm.currentL3, tt.wantCurrentL3)
+			if sm.values.currentL3 != tt.wantCurrentL3 {
+				t.Errorf("Listener.processMessage() got CurrentL3 %v, want %v", sm.values.currentL3, tt.wantCurrentL3)
 			}
 
 		})
