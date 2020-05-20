@@ -53,6 +53,7 @@ func TestSMAUpdateMeterValues(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sm := &SMA{
 				log: util.NewLogger("sma "),
+				mux: util.NewWaiter(udpTimeout, func() {}),
 			}
 
 			sm.updateMeterValues(tt.messsage)
