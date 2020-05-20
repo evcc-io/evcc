@@ -10,16 +10,16 @@ const waitTimeout = 50 * time.Millisecond // polling interval when waiting for i
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
 	sync.Mutex
-	log     *Logger
+	log     func()
 	once    sync.Once
 	updated time.Time
 	timeout time.Duration
 }
 
 // NewWaiter creates new waiter
-func NewWaiter(log *Logger, timeout time.Duration) *Waiter {
+func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
 	return &Waiter{
-		log:     log,
+		log:     logInitialWait,
 		timeout: timeout,
 	}
 }
@@ -33,7 +33,7 @@ func (p *Waiter) Update() {
 // waitForInitialValue blocks until Update has been called at least once
 func (p *Waiter) waitForInitialValue() {
 	if p.updated.IsZero() {
-		p.log.TRACE.Println("wait for initial value")
+		p.log()
 
 		// wait for initial update
 		for p.updated.IsZero() {

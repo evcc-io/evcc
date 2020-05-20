@@ -47,7 +47,7 @@ func NewSMA(uri, serial, power, energy string) api.Meter {
 	log := util.NewLogger("sma")
 
 	sm := &SMA{
-		mux:     util.NewWaiter(log, udpTimeout),
+		mux:     util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:     log,
 		uri:     uri,
 		serial:  serial,

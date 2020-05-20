@@ -42,7 +42,7 @@ func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{})
 
 	p := &Socket{
 		HTTPHelper: util.NewHTTPHelper(logger),
-		mux:        util.NewWaiter(logger, cc.Timeout),
+		mux:        util.NewWaiter(cc.Timeout, func() { logger.TRACE.Println("wait for initial value") }),
 		url:        cc.URI,
 		headers:    cc.Headers,
 		scale:      cc.Scale,

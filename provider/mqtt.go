@@ -105,7 +105,7 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) FloatGetter {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(m.log, timeout),
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
 		topic: topic,
 		scale: scale,
 	}
@@ -118,7 +118,7 @@ func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Durat
 func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) IntGetter {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(m.log, timeout),
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
 		topic: topic,
 		scale: float64(scale),
 	}
@@ -131,7 +131,7 @@ func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration)
 func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGetter {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(m.log, timeout),
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
 		topic: topic,
 	}
 
@@ -143,7 +143,7 @@ func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGet
 func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(m.log, timeout),
+		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
 		topic: topic,
 	}
 
