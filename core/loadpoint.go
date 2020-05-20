@@ -110,6 +110,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp := NewLoadPoint()
 	util.DecodeOther(log, other, &lp)
 
+	// workaround mapstructure
+	if lp.Mode == "0" {
+		lp.Mode = api.ModeOff
+	}
+
 	if lp.ChargerRef != "" {
 		lp.charger = cp.Charger(lp.ChargerRef)
 	} else {
