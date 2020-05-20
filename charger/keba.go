@@ -167,11 +167,11 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	if kr.Plug < 5 {
 		return api.StatusA, nil
 	}
-	if kr.State == 2 || kr.State == 5 {
-		return api.StatusB, nil
-	}
 	if kr.State == 3 {
 		return api.StatusC, nil
+	}
+	if kr.State != 4 {
+		return api.StatusB, nil
 	}
 
 	return api.StatusA, fmt.Errorf("unexpected status: %+v", kr)
