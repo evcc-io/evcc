@@ -114,6 +114,9 @@ func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
 	// build json object
 	_, _ = msg.WriteString("{")
 	for _, p := range params {
+		if p.Key == "error" || p.Key == "warn" {
+			continue
+		}
 		if msg.Len() > 1 {
 			_, _ = msg.WriteString(",")
 		}
