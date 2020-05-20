@@ -20,8 +20,10 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**EVCC version:**
+**EVCC details:**
 Show output of `evcc -v`
+Show evcc log output with `--log trace`
 
-**Additional context**
-Add any other context about the problem here.
+**If using Docker:**
+Show output of `docker run andig/evcc -v`
+Show evcc log output with `docker logs <container id>`
