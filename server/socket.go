@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -98,13 +99,40 @@ func encode(v interface{}) (string, error) {
 	return s, nil
 }
 
-func (h *SocketHub) broadcast(i util.Param) {
-	if len(h.clients) > 0 {
-		val, err := encode(i.Val)
-		if err != nil {
-			log.FATAL.Fatal(err)
+func kv(i util.Param) string {
+	val, err := encode(i.Val)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	return "\"" + i.Key + "\":" + val
+}
+
+func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+	var msg strings.Builder
+
+	// build json object
+	_, _ = msg.WriteString("{")
+	for _, p := range params {
+		if msg.Len() > 1 {
+			_, _ = msg.WriteString(",")
 		}
-		message := fmt.Sprintf("{\"%s\": %s}", i.Key, val)
+		msg.WriteString(kv(p))
+	}
+	_, _ = msg.WriteString("}")
+
+	// add client if send successful
+	select {
+	case client.send <- []byte(msg.String()):
+		h.clients[client] = true
+	default:
+		close(client.send)
+	}
+}
+
+func (h *SocketHub) broadcast(p util.Param) {
+	if len(h.clients) > 0 {
+		message := fmt.Sprintf("{%s}", kv(p))
 
 		for client := range h.clients {
 			select {
@@ -117,13 +145,17 @@ func (h *SocketHub) broadcast(i util.Param) {
 	}
 }
 
+// Cacher gives access to current cache state
+type Cacher interface {
+	All() []util.Param
+}
+
 // Run starts data and status distribution
-func (h *SocketHub) Run(in <-chan util.Param, triggerChan chan<- struct{}) {
+func (h *SocketHub) Run(in <-chan util.Param, cache Cacher) {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client] = true
-			triggerChan <- struct{}{} // trigger loadpoint update
+			h.welcome(client, cache.All())
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
 				close(client.send)
