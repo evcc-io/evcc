@@ -53,7 +53,6 @@ func NewNRGKickBLEFromConfig(log *util.Logger, other map[string]interface{}) api
 // NewNRGKickBLE creates NRGKickBLE charger
 func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 	logger := util.NewLogger("nrgbt")
-	logger.WARN.Println("-- experimental --")
 
 	// set LE mode
 	btmgmt := hw.NewBtMgmt(device)
