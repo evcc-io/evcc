@@ -104,36 +104,133 @@
       <p class="lead">Lademodus auswählen und EV verbinden um Ladevorgang zu starten.</p>
     </div>
     <modeswitch></modeswitch>
-    <datapanel></datapanel>
+    <site></site>
+    <loadpoint></loadpoint>
   </div>
 </script>
 
 <script type="text/x-template" id="mode-template">
-  <div class="pricing-header px-3 pb-3 mx-auto text-center">
-    <div class="btn-group btn-group-toggle py-4 mb-2">
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
-        <input type="radio" value="off" v-on:click="mode='off'">Stop
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
-        <input type="radio" value="now" v-on:click="mode='now'">
-        <span class="d-inline d-sm-none">Sofort</span>
-        <span class="d-none d-sm-inline">Sofortladen</span>
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
-        <input type="radio" value="minpv" v-on:click="mode='minpv'">
-        <span class="d-inline d-sm-none">Min</span>
-        <span class="d-none d-sm-inline">Minimum + PV</span>
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
-        <input type="radio" value="pv" v-on:click="mode='pv'">
-        <span class="d-inline d-sm-none">PV</span>
-        <span class="d-none d-sm-inline">Nur PV</span>
-      </label>
+  <div class="row text-center my-5">
+    <!-- <div class="col-4 d-flex">
+      <h1 class="m-auto">Mode</h1>
+    </div> -->
+    <div class="col-12">
+      <div class="btn-group btn-group-toggle py-4 mb-2">
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
+          <input type="radio" value="off" v-on:click="mode='off'">Stop
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
+          <input type="radio" value="now" v-on:click="mode='now'">
+          <span class="d-inline d-sm-none">Sofort</span>
+          <span class="d-none d-sm-inline">Sofortladen</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
+          <input type="radio" value="minpv" v-on:click="mode='minpv'">
+          <span class="d-inline d-sm-none">Min</span>
+          <span class="d-none d-sm-inline">Minimum + PV</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
+          <input type="radio" value="pv" v-on:click="mode='pv'">
+          <span class="d-inline d-sm-none">PV</span>
+          <span class="d-none d-sm-inline">Nur PV</span>
+        </label>
+      </div>
     </div>
   </div>
 </script>
 
-<script type="text/x-template" id="data-template">
+<script type="text/x-template" id="site-template">
+<div class="row text-center my-5">
+  <div class="col-4 d-flex">
+    <p class="h1 m-auto">Home</p>
+  </div>
+  <div class="col-4">
+    <p class="h5">Netz</p>
+    <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
+        class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
+    <p v-if="state.gridPower > 0">
+      Bezug <i class="text-primary fas fa-arrow-down"></i>
+    </p>
+    <p v-else>
+      Einspeisung <i class="text-primary fas fa-arrow-up"></i>
+    </p>
+  </div>
+  <div class="col-4">
+    <p class="h5">PV</p>
+    <h2>
+      {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
+    </h2>
+    <p>Erzeugung <i class="text-primary fas fas fa-sun" v-if="false"></i></p>
+  </div>
+</div>
+</script>
+
+<script type="text/x-template" id="loadpoint-template">
+<div class="row text-center my-5">
+  <div class="col-4 d-flex">
+    <div class="m-auto">
+      <p class="h1">Audi</p>
+      <p>
+        <div class="progress mx-auto" style="width:80%; height: 20px; border-radius: 10px;"
+          v-if="state.soc && (state.socCharge != '—')">
+          <div class="progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"
+            v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
+        </div>
+      </p>
+      <p>
+        <button type="button" class="btn badge btn-secondary">Getrennt</button>
+        <button type="button" class="btn badge btn-primary">Verbunden</button>
+        <button type="button" class="btn badge btn-success">Laden</button>
+        <button type="button" class="btn badge btn-secondary">Deaktiviert</button>
+        <!-- <button type="button" class=""><i class="text-primary fas fa-clock"></i></button> -->
+      </p>
+    </div>
+  </div>
+
+  <div class="col-8">
+    <div class="row">
+      <div class="col-6">
+        <h2>
+          {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
+          <span class="text-muted">/</span>
+          {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small>
+        </h2>
+        <p>Ladeleistung/strom</p>
+      </div>
+      <div class="col-6">
+        <h2>
+          {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
+        </h2>
+        <p>Geladene Energie <i class="text-primary fas fa-leaf" v-if="state.chargePower"></i></p>
+      </div>
+    </div>
+
+    <div class="row text-center mt-3">
+      <div class="col-12 col-md-6">
+        <div class="text-primary h5">
+          {{fmtDuration(state.chargeDuration)}}
+        </div>
+        <div class="text-muted1">
+          Ladedauer
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div class="text-primary h5">
+          {{fmtDuration(state.chargeEstimate)}}
+        </div>
+        <div class="text-muted1">
+          Restladezeit
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</script>
+
+
+<script type="text/x-template" id="data-template-2">
 <div>
 
   <div class="card-deck mb-3 text-center">
