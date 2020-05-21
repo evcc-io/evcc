@@ -110,7 +110,7 @@
 </script>
 
 <script type="text/x-template" id="mode-template">
-  <div class="row text-center my-2 my-md-5">
+  <div class="row text-center my-2 my-md-3">
     <div class="col-12">
       <div class="btn-group btn-group-toggle py-4">
         <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
@@ -137,11 +137,11 @@
 </script>
 
 <script type="text/x-template" id="site-template">
-<div class="row text-center my-2 my-md-5">
+<div class="row text-center my-2 my-md-3">
   <div class="col-12 col-md-4 d-flex py-3">
-    <p class="h1 m-auto">Home</p>
+    <p class="h1 m-auto">Heim</p>
   </div>
-  <div class="col-6 col-md-4 py-3">
+  <div class="col-6 col-md-4 py-3" v-if="state.gridMeter">
     <p class="h5">Netz</p>
     <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
         class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
@@ -152,7 +152,7 @@
       Einspeisung <i class="text-primary fas fa-arrow-up"></i>
     </p>
   </div>
-  <div class="col-6 col-md-4 py-3">
+  <div class="col-6 col-md-4 py-3" v-if="state.pvMeter">
     <p class="h5">PV</p>
     <h2>
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
@@ -163,20 +163,24 @@
 </script>
 
 <script type="text/x-template" id="loadpoint-template">
-<div class="row text-center my-2 my-md-5">
-  <div class="col-12 col-md-4">
+<div class="row text-center my-2 my-md-3">
+  <div class="col-12 col-md-4 d-flex">
 
+    <div class="row my-auto">
+      <div class="col-12">
     <p class="h1">Ladepunkt</p>
+      </div>
 
-    <div class="row">
-      <div class="col-6 col-md-12 my-1">
-        <div class="progress mx-auto" style="width:80%; height: 20px; border-radius: 10px;"
-          v-if="state.soc && (state.socCharge != '—')">
+      <div class="col-6 col-md-12 my-1 d-flex" v-if="state.soc && (state.socCharge != '—')">
+        <div class="progress m-auto" style="width:80%; height: 20px; border-radius: 10px;">
           <div class="progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"
             v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
         </div>
       </div>
-      <div class="col-6 col-md-12 my-1">
+      <div class="col-md-12 my-1" v-bind:class="{
+        'col-6':state.soc && (state.socCharge != '—'),
+        'col-12':!(state.soc && (state.socCharge != '—')),
+        }">
         <button type="button" class="btn badge btn-secondary" v-if="!state.connected"
           v-bind="state.operatingState">Getrennt</button>
         <button type="button" class="btn badge btn-primary" v-if="state.connected && !state.charging"
