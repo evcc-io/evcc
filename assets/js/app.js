@@ -33,6 +33,22 @@ let formatter = {
       }
       return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
     },
+    fmtShortDuration: function (d) {
+      if (d < 0) {
+        return '—';
+      }
+      var minutes = (Math.floor(d / 60) % 60);
+      var hours = Math.floor(d / 3600);
+      var tm;
+      if (hours >= 1) {
+        minutes = "0" + minutes;
+        tm = hours + ":" + minutes.substr(-2) + "h";
+      } else {
+        var seconds = "0" + (d % 60);
+        tm = minutes + ":" + seconds.substr(-2) + "m";
+      }
+      return tm;
+    },
   }
 }
 
