@@ -107,8 +107,6 @@ func (p *Socket) listen() {
 				if err == nil {
 					p.val = v
 					p.mux.Update()
-				} else {
-					log.WARN.Printf("invalid: %s", string(b))
 				}
 			} else {
 				p.val = string(b)
