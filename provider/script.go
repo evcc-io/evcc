@@ -92,7 +92,7 @@ func (e *Script) FloatGetter(script string) FloatGetter {
 	}
 }
 
-// BoolGetter parses bool from exec result. "on", "true" and 1 are considerd truish.
+// BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
 func (e *Script) BoolGetter(script string) BoolGetter {
 	exec := e.StringGetter(script)
 
