@@ -9,6 +9,34 @@ axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 //
+// Mixins
+//
+
+let formatter = {
+  methods: {
+    fmt: function (val) {
+      val = Math.abs(val);
+      return val >= 100 ? (val / 1e3).toFixed(1) : val.toFixed(0);
+    },
+    fmtUnit: function (val) {
+      return Math.abs(val) >= 100 ? "k" : "";
+    },
+    fmtDuration: function (d) {
+      if (d < 0) {
+        return '—';
+      }
+      var seconds = "0" + (d % 60);
+      var minutes = "0" + (Math.floor(d / 60) % 60);
+      var hours = "" + Math.floor(d / 3600);
+      if (hours.length < 2) {
+        hours = "0" + hours;
+      }
+      return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+    },
+  }
+}
+
+//
 // State
 //
 
@@ -31,6 +59,7 @@ let store = {
     charging: null,
     gridPower: null,
     pvPower: null,
+    chargeCurrent: null,
     chargePower: null,
     chargeDuration: null,
     chargeEstimate: -1,
@@ -144,8 +173,55 @@ Vue.component('modeswitch', {
   },
 });
 
-Vue.component("datapanel", {
-  template: "#data-template",
+Vue.component("site", {
+  template: "#site-template",
+  mixins: [formatter],
+  data: function() {
+    return {
+      state: store.state // global state
+    };
+  },
+  computed: {
+    items: function() {
+      if (this.state.soc && this.state.pvMeter) {
+        return 4;
+      } else if (this.state.soc || this.state.pvMeter) {
+        return 3;
+      } else {
+        return 2;
+      }
+    }
+  },
+  methods: {
+    connect: function() {
+      const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
+      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/ws";
+      const ws = new WebSocket(uri), self = this;
+      ws.onerror = function(evt) {
+        ws.close();
+      };
+      ws.onclose = function(evt) {
+        window.setTimeout(self.connect, 1000);
+      };
+      ws.onmessage = function(evt) {
+        try {
+          var msg = JSON.parse(evt.data);
+          store.update(msg);
+        }
+        catch (e) {
+          console.error(e, evt.data)
+        }
+      };
+    }
+  },
+  created: function() {
+    this.connect();
+  }
+});
+
+Vue.component("loadpoint", {
+  template: "#loadpoint-template",
+  mixins: [formatter],
   data: function() {
     return {
       tickerHandle: null,
@@ -173,50 +249,6 @@ Vue.component("datapanel", {
         }.bind(this), 1000);
       }
     },
-  },
-  methods: {
-    fmt: function(val) {
-      val = Math.abs(val);
-      return val >= 100 ? (val / 1e3).toFixed(1) : val.toFixed(0);
-    },
-    fmtUnit: function(val) {
-      return Math.abs(val) >= 100 ? "k" : "";
-    },
-    fmtDuration: function(d) {
-      if (d < 0) {
-        return '—';
-      }
-      var seconds = "0" + (d % 60);
-      var minutes = "0" + (Math.floor(d / 60) % 60);
-      var hours = "" + Math.floor(d / 3600);
-      if (hours.length < 2) {
-        hours = "0" + hours;
-      }
-      return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
-    },
-    connect: function() {
-      const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/ws";
-      const ws = new WebSocket(uri), self = this;
-      ws.onerror = function(evt) {
-        ws.close();
-      };
-      ws.onclose = function(evt) {
-        window.setTimeout(self.connect, 1000);
-      };
-      ws.onmessage = function(evt) {
-        try {
-          var msg = JSON.parse(evt.data);
-          store.update(msg);
-        }
-        catch (e) {
-          console.error(e, evt.data)
-        }
-      };
-    }
-  },
-  created: function() {
-    this.connect();
   },
   destroyed: function() {
     window.clearInterval(this.tickerHandle);

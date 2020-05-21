@@ -230,6 +230,9 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 
 	// handler only called if charge meter was replaced by dummy
 	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+
+	// expose for UI
+	lp.publish("chargeCurrent", current)
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
