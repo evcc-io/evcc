@@ -70,8 +70,7 @@ func newLoadPoint(charger api.Charger, pv, gm, cm api.Meter) *LoadPoint {
 	uiChan := make(chan util.Param)
 	notificationChan := make(chan push.Event)
 
-	lp.Prepare(uiChan, notificationChan)
-
+	// consume channels so tests don't block
 	go func() {
 		for {
 			select {
@@ -80,6 +79,8 @@ func newLoadPoint(charger api.Charger, pv, gm, cm api.Meter) *LoadPoint {
 			}
 		}
 	}()
+
+	lp.Prepare(uiChan, notificationChan)
 
 	return lp
 }
