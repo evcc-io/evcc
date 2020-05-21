@@ -1,6 +1,10 @@
 package core
 
-import "github.com/andig/evcc/api"
+import (
+	"time"
+
+	"github.com/andig/evcc/api"
+)
 
 // Config contains the public loadpoint configuration
 type Config struct {
@@ -15,6 +19,14 @@ type Config struct {
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 
 	Meters MetersConfig // Meter references
+
+	Enable, Disable ThresholdConfig
+}
+
+// ThresholdConfig defines enable/disable hysteresis parameters
+type ThresholdConfig struct {
+	Delay     time.Duration
+	Threshold float64
 }
 
 // MetersConfig contains the loadpoint's meter configuration
