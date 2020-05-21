@@ -106,7 +106,7 @@ func (lp *ChargerHandler) rampUpDown(target int64) error {
 	if current < target {
 		step = min(current+lp.Sensitivity, target)
 	} else if current > target {
-		step = max(current-lp.Sensitivity, target)
+		step = target
 	}
 
 	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
