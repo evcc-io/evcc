@@ -181,17 +181,6 @@ Vue.component("site", {
       state: store.state // global state
     };
   },
-  computed: {
-    items: function() {
-      if (this.state.soc && this.state.pvMeter) {
-        return 4;
-      } else if (this.state.soc || this.state.pvMeter) {
-        return 3;
-      } else {
-        return 2;
-      }
-    }
-  },
   methods: {
     connect: function() {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
@@ -227,17 +216,6 @@ Vue.component("loadpoint", {
       tickerHandle: null,
       state: store.state // global state
     };
-  },
-  computed: {
-    items: function() {
-      if (this.state.soc && this.state.pvMeter) {
-        return 4;
-      } else if (this.state.soc || this.state.pvMeter) {
-        return 3;
-      } else {
-        return 2;
-      }
-    }
   },
   watch: {
     "state.chargeDuration": function() {
