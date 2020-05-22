@@ -55,8 +55,8 @@ type LoadPoint struct {
 	uiChan   chan<- util.Param // client push messages
 
 	// exposed public configuration
+	Title           string            // UI title
 	Phases          int64             // Phases- required for converting power and current.
-	ResidualPower   float64           // PV meter only: household usage. Grid meter: household safety margin
 	ChargerRef      string            `mapstructure:"charger"` // Charger reference
 	VehicleRef      string            `mapstructure:"vehicle"` // Vehicle reference
 	Meter           ChargeMeterConfig `mapstructure:"meters"`  // Meter references
@@ -76,6 +76,7 @@ type LoadPoint struct {
 	status      api.ChargeStatus // Charger status
 	charging    bool             // Charging cycle
 	chargePower float64          // Charging power
+	sitePower   float64          // Available power from site
 
 	pvTimer time.Time
 }
@@ -138,7 +139,7 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.notify(evStartCharge, map[string]interface{}{
-		"mode": lp.GetMode(),
+		// "mode": lp.GetMode(),
 	})
 }
 
@@ -314,12 +315,8 @@ func (lp *LoadPoint) updateChargeStatus() error {
 
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// grid meter will always be available, if as wrapped pv meter
-	targetPower := lp.chargePower - lp.gridPower - lp.batteryPower - lp.ResidualPower
-	if lp.batteryMeter == nil {
-		log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
-	} else {
-		log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW battery - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.batteryPower, lp.ResidualPower)
-	}
+	targetPower := lp.chargePower - lp.sitePower
+	log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW available", lp.Name, targetPower, lp.chargePower, lp.sitePower)
 
 	// get max charge current
 	targetCurrent := clamp(powerToCurrent(targetPower, lp.Voltage, lp.Phases), 0, lp.MaxCurrent)
@@ -329,11 +326,9 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	}
 
 	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
-		sitePower := lp.gridPower + lp.batteryPower
-
 		// kick off disable sequence
-		if sitePower >= lp.Disable.Threshold {
-			log.DEBUG.Printf("%s site power %.0f >= disable threshold %.0f", lp.Name, sitePower, lp.Disable.Threshold)
+		if lp.sitePower >= lp.Disable.Threshold {
+			log.DEBUG.Printf("%s site power %.0f >= disable threshold %.0f", lp.Name, lp.sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start disable timer", lp.Name)
@@ -353,12 +348,10 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	}
 
 	if mode == api.ModePV && !lp.enabled {
-		sitePower := lp.gridPower + lp.batteryPower
-
 		// kick off enable sequence
 		if targetCurrent >= lp.MinCurrent ||
-			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			log.DEBUG.Printf("%s site power %.0f < enable threshold %.0f", lp.Name, sitePower, lp.Enable.Threshold)
+			(lp.Enable.Threshold != 0 && lp.sitePower <= lp.Enable.Threshold) {
+			log.DEBUG.Printf("%s site power %.0f < enable threshold %.0f", lp.Name, lp.sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				log.DEBUG.Printf("%s start enable timer", lp.Name)
@@ -463,9 +456,11 @@ func (lp *LoadPoint) syncSettings() {
 }
 
 // update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) update() {
+func (lp *LoadPoint) update(sitePower float64) {
 	// read and publish meters first
 	meterErr := lp.updateMeters()
+
+	lp.sitePower = sitePower
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)

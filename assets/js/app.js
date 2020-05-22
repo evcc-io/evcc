@@ -94,16 +94,18 @@ let store = {
     },
   },
   update: function(msg) {
-    // console.log(msg)
+    // update loadpoints array
     if (msg.loadpoint !== undefined) {
-      if (!(msg.loadpoint in this.state.loadPoints)) {
-        Vue.set(this.state.loadPoints, msg.loadpoint, {})
-      }
+      for (var i=0; i<this.state.loadPoints.length; i++) {
+        if (this.state.loadPoints[i].name != msg.loadpoint) {
+          continue;
+        }
 
-      Object.keys(msg.data).forEach(function (k) {
-        let v = msg.data[k];
-        Vue.set(this.state.loadPoints[msg.loadpoint], k, v)
-      }, this);
+        Object.keys(msg.data).forEach(function (k) {
+          let v = msg.data[k];
+          Vue.set(this.state.loadPoints[i], k, v)
+        }, this);
+      }
 
       return;
     }
@@ -125,29 +127,9 @@ let store = {
     if (!store.initialized) {
       axios.get("config").then(function(msg) {
         Object.keys(msg.data).forEach(function (k) {
-          if (k == "loadPoints") {
-            return
-          }
           let data = {};
           data[k] = msg.data[k];
           store.update(data);
-        });
-
-        // transform loadpoints array into object
-        msg.data.loadPoints.forEach(function (lp) {
-          let data = {};
-          data[lp.name] = lp;
-          store.update({
-            "loadPoints": data
-          });
-          // Object.keys(lp).forEach(function (k) {
-          //   let data = {};
-          //   data[k] = lp[k];
-          //   store.update({
-          //     "loadpoint": lp.name,
-          //     "data": data,
-          //   });
-          // });
         });
 
         store.initialized = true;

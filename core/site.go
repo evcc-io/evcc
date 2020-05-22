@@ -16,9 +16,11 @@ type Site struct {
 	triggerChan chan struct{}     // API updates
 	uiChan      chan<- util.Param // client push messages
 
-	Voltage float64        // Operating voltage. 230V for Germany.
-	Mode    api.ChargeMode // Charge mode, guarded by mutex
-	Meters  MetersConfig   // Meter references
+	Title         string         // UI title
+	Voltage       float64        // Operating voltage. 230V for Germany.
+	ResidualPower float64        // PV meter only: household usage. Grid meter: household safety margin
+	Mode          api.ChargeMode // Charge mode, guarded by mutex
+	Meters        MetersConfig   // Meter references
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -103,6 +105,7 @@ type SiteConfiguration struct {
 // LoadpointConfiguration is the loadpoint feature structure
 type LoadpointConfiguration struct {
 	Name        string `json:"name"`
+	Title       string `json:"title"`
 	Phases      int64  `json:"phases"`
 	MinCurrent  int64  `json:"minCurrent"`
 	MaxCurrent  int64  `json:"maxCurrent"`
@@ -124,6 +127,7 @@ func (lp *Site) Configuration() SiteConfiguration {
 	for _, lp := range lp.loadPoints {
 		l := LoadpointConfiguration{
 			Name:        lp.Name,
+			Title:       lp.Title,
 			Phases:      lp.Phases,
 			MinCurrent:  lp.MinCurrent,
 			MaxCurrent:  lp.MaxCurrent,
@@ -249,13 +253,30 @@ func (lp *Site) updateMeters() (err error) {
 	return err
 }
 
-func (lp *Site) update() {
+func (lp *Site) availablePower() (float64, error) {
+	if err := lp.updateMeters(); err != nil {
+		return 0, err
+	}
+
+	availablePower := -lp.gridPower - lp.batteryPower - lp.ResidualPower
+	return availablePower, nil
+}
+
+func (lp *Site) update() error {
 	lp.publish("mode", string(lp.GetMode()))
-	lp.updateMeters()
+
+	availablePower, err := lp.availablePower()
+	if err != nil {
+		return err
+	}
+
+	// log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
 
 	for _, lp := range lp.loadPoints {
-		lp.update()
+		lp.update(availablePower)
 	}
+
+	return nil
 }
 
 // Run is the loadpoint main control loop. It reacts to trigger events by
@@ -272,7 +293,9 @@ func (lp *Site) Run(uiChan chan<- util.Param, pushChan chan<- push.Event, interv
 	for {
 		select {
 		case <-ticker.C:
-			lp.update()
+			if lp.update() != nil {
+				lp.triggerChan <- struct{}{} // restart immediately
+			}
 		case <-lp.triggerChan:
 			lp.update()
 			ticker.Stop()

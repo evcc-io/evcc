@@ -99,19 +99,19 @@
 
 <script type="text/x-template" id="main-template">
   <div class="container">
-    <div class="pricing-header px-3 pt-3 mx-auto text-center">
+    <!-- <div class="pricing-header px-3 pt-3 mx-auto text-center">
       <h1 class="display-4">Laden</h1>
       <p class="lead d-none d-md-block">Lademodus auswählen und EV verbinden um Ladevorgang zu starten.</p>
-    </div>
-    <modeswitch></modeswitch>
+    </div> -->
+
     <site></site>
   </div>
 </script>
 
 <script type="text/x-template" id="mode-template">
-  <div class="row text-center my-2 my-md-3">
+  <div class="row">
     <div class="col-12">
-      <div class="btn-group btn-group-toggle py-4">
+      <div class="btn-group btn-group-toggle">
         <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
           <input type="radio" value="off" v-on:click="mode='off'">Stop
         </label>
@@ -138,13 +138,17 @@
 <script type="text/x-template" id="site-template">
 <div>
 <div class="row mt-4 border-bottom">
-  <div class="col-12">
-    <p class="h1">Heim</p>
+  <div class="col-12 col-md-4">
+    <p class="h1" v-if="state.title">{{state.title}}</p>
+    <p class="h1" v-else>Home</p>
   </div>
+ <div class="d-none d-md-block col-12 col-md-8 pt-1">
+   <modeswitch></modeswitch>
+ </div>
 </div>
 
 <div class="row">
-  {{state}}
+  <!-- {{state}} -->
 
   <div class="d-none d-md-block col-md-4 my-4">
   </div>
@@ -164,6 +168,9 @@
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
+  <div class="d-block d-md-none col-12 text-center pt-4 pb-5">
+    <modeswitch></modeswitch>
+  </div>
 </div>
 
 <loadpoint v-for="loadpoint in state.loadPoints" v-bind:loadpoint="loadpoint" :id="'loadpoint-'+loadpoint.name">
@@ -175,7 +182,9 @@
 <div>
 <div class="row border-bottom">
   <div class="col-12">
-    <p class="h1">Ladepunkt {{loadpoint.name}}</p>
+    <p class="h1" v-if="loadpoint.title">{{loadpoint.title}}</p>
+    <p class="h1" v-else-if="loadpoint.name">{{loadpoint.name}}</p>
+    <p class="h1" v-else>Ladepunkt</p>
     <p class="d-none">
       <button type="button" class="btn badge btn-secondary" v-if="!state.connected"
         v-bind="state.operatingState">Getrennt</button>
@@ -194,15 +203,28 @@
   <div class="col-12 col-md-4 my-4">
     <div class="mb-2" v-if="loadpoint.socTitle">{{loadpoint.socTitle}}</div>
     <div class="mb-2" v-else>Fahrzeug</div>
-    <div class="progress" style="height: 24px; font-size:100%; margin-top:16px"
-      v-if="loadpoint.soc">
-      <div class="progress-bar" role="progressbar" aria-valuenow="{{loadpoint.socCharge}}" aria-valuemin="0"
-        aria-valuemax="100"
-        v-bind:style="{width: loadpoint.socCharge+'%'}"
-        v-if="loadpoint.socCharge > 9">{{loadpoint.socCharge}}%</div>
-      <div class="progress-bar" role="progressbar" aria-valuenow="{{loadpoint.socCharge}}" aria-valuemin="0"
-        aria-valuemax="100"
-        v-bind:style="{width: (loadpoint.socCharge=='—') ? 0 : loadpoint.socCharge+'%'}" v-else></div>
+    <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
+      <div class="progress-bar" role="progressbar" v-if="!(loadpoint.soc && loadpoint.connected)"
+        v-bind:class="{
+          'bg-success': loadpoint.charging,
+          'bg-primary': !loadpoint.charging && loadpoint.connected,
+          'bg-light': !loadpoint.connected,
+          'text-secondary': !loadpoint.connected,
+        }" v-bind:style="{width: '100%'}">
+        {{loadpoint.charging ? "laden" : (loadpoint.connected ? "verbunden" : "getrennt")}}
+      </div>
+      <div class="progress-bar" role="progressbar" v-else-if="loadpoint.soc && (loadpoint.socCharge > 9)"
+        v-bind:class="{
+          'bg-success': loadpoint.charging,
+          'bg-primary': !loadpoint.charging && loadpoint.connected,
+        }"
+        v-bind:style="{width: loadpoint.socCharge+'%'}">{{loadpoint.socCharge}}%</div>
+      <div class="progress-bar" role="progressbar" v-else
+        v-bind:class="{
+        'bg-success': loadpoint.charging,
+        'bg-primary': !loadpoint.charging && loadpoint.connected,
+        }"
+        v-bind:style="{width: (loadpoint.socCharge=='—') ? 0 : loadpoint.socCharge+'%'}"></div>
     </div>
   </div>
 
