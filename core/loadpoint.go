@@ -2,7 +2,6 @@ package core
 
 import (
 	"math"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -33,76 +32,52 @@ func powerToCurrent(power, voltage float64, phases int64) int64 {
 	return int64(power / (float64(phases) * voltage))
 }
 
-// Config contains the public loadpoint configuration
-type Config struct {
-	Mode api.ChargeMode // Charge mode, guarded by mutex
-
-	// options
-	Phases        int64   // Phases- required for converting power and current.
-	Voltage       float64 // Operating voltage. 230V for Germany.
-	ResidualPower float64 // PV meter only: household usage. Grid meter: household safety margin
-
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
-
-	Meters MetersConfig // Meter references
-
-	Enable, Disable ThresholdConfig
-}
-
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration
 	Threshold float64
 }
 
-// MetersConfig contains the loadpoint's meter configuration
-type MetersConfig struct {
-	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
-	ChargeMeterRef  string `mapstructure:"charge"`  // Charger usage meter reference
-	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
-	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
+// ChargeMeterConfig contains the loadpoint's meter configuration
+type ChargeMeterConfig struct {
+	ChargeMeterRef string `mapstructure:"charge"` // Charger usage meter reference
 }
 
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
-	sync.Mutex                         // guard status
-	clock            clock.Clock       // mockable time
-	bus              evbus.Bus         // event bus
-	triggerChan      chan struct{}     // API updates
-	notificationChan chan<- push.Event // notifications
-	uiChan           chan<- util.Param // client push messages
+	ID int
 
-	Config         `mapstructure:",squash"` // exposed public configuration
+	// sync.Mutex                         // guard status
+	clock    clock.Clock       // mockable time
+	bus      evbus.Bus         // event bus
+	pushChan chan<- push.Event // notifications
+	uiChan   chan<- util.Param // client push messages
+
+	// exposed public configuration
+	Phases          int64             // Phases- required for converting power and current.
+	ResidualPower   float64           // PV meter only: household usage. Grid meter: household safety margin
+	ChargerRef      string            `mapstructure:"charger"` // Charger reference
+	VehicleRef      string            `mapstructure:"vehicle"` // Vehicle reference
+	Meter           ChargeMeterConfig `mapstructure:"meters"`  // Meter references
+	Enable, Disable ThresholdConfig
+
+	*Site
+
 	ChargerHandler `mapstructure:",squash"` // handle charger state and current
 
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	// meters
-	gridMeter    api.Meter   // Grid usage meter
-	pvMeter      api.Meter   // PV generation meter
-	batteryMeter api.Meter   // Battery charging meter
-	chargeMeter  api.Meter   // Charger usage meter
-	vehicle      api.Vehicle // Vehicle
+	chargeMeter api.Meter   // Charger usage meter
+	vehicle     api.Vehicle // Vehicle
 
 	// cached state
-	status       api.ChargeStatus // Charger status
-	charging     bool             // Charging cycle
-	gridPower    float64          // Grid power
-	pvPower      float64          // PV power
-	batteryPower float64          // Battery charge power
-	chargePower  float64          // Charging power
+	status      api.ChargeStatus // Charger status
+	charging    bool             // Charging cycle
+	chargePower float64          // Charging power
 
 	pvTimer time.Time
-}
-
-// configProvider gives access to configuration repository
-type configProvider interface {
-	Meter(string) api.Meter
-	Charger(string) api.Charger
-	Vehicle(string) api.Vehicle
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -110,30 +85,13 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp := NewLoadPoint()
 	util.DecodeOther(log, other, &lp)
 
-	// workaround mapstructure
-	if lp.Mode == "0" {
-		lp.Mode = api.ModeOff
-	}
-
 	if lp.ChargerRef != "" {
 		lp.charger = cp.Charger(lp.ChargerRef)
 	} else {
 		log.FATAL.Fatal("config: missing charger")
 	}
-	if lp.Meters.PVMeterRef == "" && lp.Meters.GridMeterRef == "" {
-		log.FATAL.Fatal("config: missing either pv or grid meter")
-	}
-	if lp.Meters.GridMeterRef != "" {
-		lp.gridMeter = cp.Meter(lp.Meters.GridMeterRef)
-	}
-	if lp.Meters.ChargeMeterRef != "" {
-		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
-	}
-	if lp.Meters.PVMeterRef != "" {
-		lp.pvMeter = cp.Meter(lp.Meters.PVMeterRef)
-	}
-	if lp.Meters.BatteryMeterRef != "" {
-		lp.batteryMeter = cp.Meter(lp.Meters.BatteryMeterRef)
+	if lp.Meter.ChargeMeterRef != "" {
+		lp.chargeMeter = cp.Meter(lp.Meter.ChargeMeterRef)
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
@@ -148,14 +106,10 @@ func NewLoadPoint() *LoadPoint {
 	bus := evbus.New()
 
 	lp := &LoadPoint{
-		clock:       clock, // mockable time
-		bus:         bus,   // event bus
-		triggerChan: make(chan struct{}, 1),
-		Config: Config{
-			Mode:    api.ModeOff,
-			Phases:  1,
-			Voltage: 230, // V
-		},
+		clock: clock, // mockable time
+		bus:   bus,   // event bus
+		// triggerChan: make(chan struct{}, 1),
+		Phases:         1,
 		status:         api.StatusNone,
 		ChargerHandler: NewChargerHandler("main", clock, bus),
 	}
@@ -166,7 +120,7 @@ func NewLoadPoint() *LoadPoint {
 // notify sends push messages to clients
 func (lp *LoadPoint) notify(event string, attributes map[string]interface{}) {
 	attributes["loadpoint"] = lp.Name
-	lp.notificationChan <- push.Event{
+	lp.pushChan <- push.Event{
 		Event:      event,
 		Attributes: attributes,
 	}
@@ -236,13 +190,9 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, notificationChan chan<- push.Event) {
-	lp.notificationChan = notificationChan
+func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
+	lp.pushChan = pushChan
 	lp.uiChan = uiChan
-
-	if lp.pvMeter == nil && lp.gridMeter == nil {
-		log.FATAL.Fatal("missing either pv or grid meter")
-	}
 
 	// ensure charge meter exists
 	if lp.chargeMeter == nil {
@@ -489,9 +439,6 @@ func (lp *LoadPoint) updateMeters() (err error) {
 	}
 
 	// read PV meter before charge meter
-	retryMeter("grid", lp.gridMeter, &lp.gridPower)
-	retryMeter("pv", lp.pvMeter, &lp.pvPower)
-	retryMeter("battery", lp.batteryMeter, &lp.batteryPower)
 	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
 
 	return err
@@ -530,7 +477,6 @@ func (lp *LoadPoint) update() {
 		return
 	}
 
-	lp.publish("mode", string(lp.GetMode()))
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
 
@@ -570,22 +516,4 @@ func (lp *LoadPoint) update() {
 	lp.publish("chargeDuration", lp.chargeDuration())
 
 	lp.publishSoC()
-}
-
-// Run is the loadpoint main control loop. It reacts to trigger events by
-// updating measurements and executing control logic.
-func (lp *LoadPoint) Run(interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	lp.triggerChan <- struct{}{} // start immediately
-
-	for {
-		select {
-		case <-ticker.C:
-			lp.update()
-		case <-lp.triggerChan:
-			lp.update()
-			ticker.Stop()
-			ticker = time.NewTicker(interval)
-		}
-	}
 }

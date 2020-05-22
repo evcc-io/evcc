@@ -34,10 +34,21 @@ func clientID() string {
 	return fmt.Sprintf("evcc-%d", pid)
 }
 
-func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.LoadPoint) {
+func loadConfig(conf config, pushChan chan<- push.Event) *core.Site {
 	cp := &ConfigProvider{}
 	cp.configure(conf)
 
+	loadPoints := configureLoadPoints(conf, cp, pushChan)
+	site := configureSite(conf.Site, cp, loadPoints)
+
+	return site
+}
+
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
+	return core.NewSiteFromConfig(log, cp, conf, loadPoints)
+}
+
+func configureLoadPoints(conf config, cp *ConfigProvider, pushChan chan<- push.Event) (loadPoints []*core.LoadPoint) {
 	// slice of loadpoints
 	lps, ok := viper.AllSettings()["loadpoints"]
 	if !ok {

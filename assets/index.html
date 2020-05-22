@@ -105,7 +105,6 @@
     </div>
     <modeswitch></modeswitch>
     <site></site>
-    <loadpoint></loadpoint>
   </div>
 </script>
 
@@ -145,6 +144,8 @@
 </div>
 
 <div class="row">
+  {{state}}
+
   <div class="d-none d-md-block col-md-4 my-4">
   </div>
   <div class="col-6 col-md-2 my-4" v-if="state.gridMeter">
@@ -164,6 +165,9 @@
     </h2>
   </div>
 </div>
+
+<loadpoint v-for="loadpoint in state.loadPoints" v-bind:loadpoint="loadpoint" :id="'loadpoint-'+loadpoint.name">
+</loadpoint>
 </div>
 </script>
 
@@ -171,7 +175,7 @@
 <div>
 <div class="row border-bottom">
   <div class="col-12">
-    <p class="h1">Ladepunkt</p>
+    <p class="h1">Ladepunkt {{loadpoint.name}}</p>
     <p class="d-none">
       <button type="button" class="btn badge btn-secondary" v-if="!state.connected"
         v-bind="state.operatingState">Getrennt</button>
@@ -188,166 +192,49 @@
 
 <div class="row">
   <div class="col-12 col-md-4 my-4">
-    <div class="mb-2">Audi</div>
+    <div class="mb-2" v-if="loadpoint.socTitle">{{loadpoint.socTitle}}</div>
+    <div class="mb-2" v-else>Fahrzeug</div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px"
-      v-if="state.soc && (state.socCharge != '—')">
-      <div class="progress-bar" role="progressbar" aria-valuenow="{{state.socCharge}}" aria-valuemin="0"
+      v-if="loadpoint.soc">
+      <div class="progress-bar" role="progressbar" aria-valuenow="{{loadpoint.socCharge}}" aria-valuemin="0"
         aria-valuemax="100"
-        v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
+        v-bind:style="{width: loadpoint.socCharge+'%'}"
+        v-if="loadpoint.socCharge > 9">{{loadpoint.socCharge}}%</div>
+      <div class="progress-bar" role="progressbar" aria-valuenow="{{loadpoint.socCharge}}" aria-valuemin="0"
+        aria-valuemax="100"
+        v-bind:style="{width: (loadpoint.socCharge=='—') ? 0 : loadpoint.socCharge+'%'}" v-else></div>
     </div>
   </div>
 
   <div class="col-6 col-md-2 my-4">
     <div class="mb-2">Ladeleistung/-strom</div>
     <h2>
-      {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
+      {{fmt(loadpoint.chargePower)}} <small class="text-muted">{{fmtUnit(loadpoint.chargePower)}}W</small>
       <span class="text-muted">/</span>
-      {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small>
+      {{fmt(loadpoint.chargeCurrent)}} <small class="text-muted">A</small>
     </h2>
   </div>
   <div class="col-6 col-md-2 my-4">
-    <div class="mb-2">Geladene Energie <i class="text-primary fas fa-leaf" v-if="state.chargePower"></i></div>
+    <div class="mb-2">Geladene Energie <i class="text-primary fas fa-leaf" v-if="loadpoint.chargePower"></i></div>
     <h2>
-      {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
+      {{fmt(loadpoint.chargedEnergy)}} <small class="text-muted">{{fmtUnit(loadpoint.chargedEnergy)}}Wh</small>
     </h2>
   </div>
 
   <div class="col-6 col-md-2 my-4">
     <div class="mb-2">Ladedauer</div>
     <h2>
-      {{fmtShortDuration(state.chargeDuration)}}
+      {{fmtShortDuration(loadpoint.chargeDuration)}}
     </h2>
   </div>
 
   <div class="col-6 col-md-2 my-4">
     <div class="mb-2">Restladezeit</div>
     <h2>
-      {{fmtShortDuration(state.chargeEstimate)}}
+      {{fmtShortDuration(loadpoint.chargeEstimate)}}
     </h2>
   </div>
 </div>
-</div>
-</script>
-
-<script type="text/x-template" id="data-template-2">
-<div>
-
-  <div class="card-deck mb-3 text-center">
-    <div class="col-12" v-if="state.soc" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Batterie</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{state.socCharge}} <small class="text-muted">%</small>
-          </h2>
-          <p>Ladezustand</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Wallbox</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
-          </h2>
-          <p>Ladeleistung <i class="text-primary fas fa-leaf" v-if="state.chargePower"></i></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12" v-if="state.gridMeter" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Netz</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
-              class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
-          <p v-if="state.gridPower > 0">
-            Bezug <i class="text-primary fas fa-arrow-down"></i>
-          </p>
-          <p v-else>
-            Einspeisung <i class="text-primary fas fa-arrow-up"></i>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12" v-if="state.pvMeter" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">PV</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
-          </h2>
-          <p>Erzeugung <i class="text-primary fas fas fa-sun" v-if="false"></i></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Fahrzeug:
-        </div>
-        <div class="col-6 text-primary h5">
-          <span v-if="state.connected">verbunden</span><span v-else>&mdash;</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Geladen:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmt(state.chargedEnergy)}} <small>{{fmtUnit(state.chargedEnergy)}}Wh</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Ladedauer:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmtDuration(state.chargeDuration)}}
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Restladezeit:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmtDuration(state.chargeEstimate)}}
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
 </script>
 

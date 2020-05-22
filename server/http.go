@@ -42,7 +42,7 @@ type route struct {
 type loadPoint interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
-	Configuration() core.Configuration
+	Configuration() core.SiteConfiguration
 }
 
 // routeLogger traces matched routes including their executing time

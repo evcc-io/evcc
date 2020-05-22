@@ -135,11 +135,22 @@ func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
 
 func (h *SocketHub) broadcast(p util.Param) {
 	if len(h.clients) > 0 {
-		message := fmt.Sprintf("{%s}", kv(p))
+		// build json object
+		var msg strings.Builder
+		_, _ = msg.WriteString("{")
+		if p.LoadPoint != "" {
+			msg.WriteString(fmt.Sprintf("\"loadpoint\":\"%s\",\"data\":{", p.LoadPoint))
+		}
+		_, _ = msg.WriteString(fmt.Sprintf("%s}", kv(p)))
+		if p.LoadPoint != "" {
+			msg.WriteString("}")
+		}
+
+		fmt.Printf("%v -> %s\n", p, msg.String())
 
 		for client := range h.clients {
 			select {
-			case client.send <- []byte(message):
+			case client.send <- []byte(msg.String()):
 			default:
 				close(client.send)
 				delete(h.clients, client)

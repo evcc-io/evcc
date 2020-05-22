@@ -207,14 +207,22 @@ vehicles:
 #   vin: WP...
 #   cache: 5m
 
-loadpoints:
-- name: main # name for logging
-  vehicle: audi
-  charger: wallbe # charger
+site:
+  name: Home
   meters:
     grid: grid # grid meter
     pv: pv # pv meter
     battery: battery # battery meter
+
+loadpoints:
+- name: Ladepunkt # name for logging
+  vehicle: audi
+  charger: wallbe # charger
+  # meters:
+  #   grid: grid # grid meter
+  #   pv: pv # pv meter
+  #   battery: battery # battery meter
+  meters:
     charge: charge # charge meter
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long

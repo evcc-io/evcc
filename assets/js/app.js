@@ -15,6 +15,9 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 let formatter = {
   methods: {
     fmt: function (val) {
+      if (val === undefined || val === null) {
+        return 0;
+      }
       val = Math.abs(val);
       return val >= 100 ? (val / 1e3).toFixed(1) : val.toFixed(0);
     },
@@ -61,46 +64,92 @@ let store = {
   state: {
     // configuration
     mode: null,
-    soc: null,
-    socCapacity: null,
-    socTitle: null,
-    gridMeter: true,
-    pvMeter: true,
-    chargeMeter: true,
-    phases: null,
-    minCurrent: null,
-    maxCurrent: null,
+    gridMeter: null,
+    pvMeter: null,
+    batteryMeter: null,
     // runtime
-    connected: null,
-    charging: null,
     gridPower: null,
     pvPower: null,
-    chargeCurrent: null,
-    chargePower: null,
-    chargeDuration: null,
-    chargeEstimate: -1,
-    chargedEnergy: null,
-    socCharge: "—"
+    batteryPower: null,
+    loadPoints: {
+      // configuration
+      // soc: null,
+      // socCapacity: null,
+      // socTitle: null,
+      // chargeMeter: true,
+      // phases: null,
+      // minCurrent: null,
+      // maxCurrent: null,
+      // runtime
+      // connected: null,
+      // charging: null,
+      // gridPower: null,
+      // pvPower: null,
+      // chargeCurrent: null,
+      // chargePower: null,
+      // chargeDuration: null,
+      // chargeEstimate: -1,
+      // chargedEnergy: null,
+      // socCharge: "—"
+    },
   },
-  update: function(msg, force) {
+  update: function(msg) {
+    // console.log(msg)
+    if (msg.loadpoint !== undefined) {
+      if (!(msg.loadpoint in this.state.loadPoints)) {
+        Vue.set(this.state.loadPoints, msg.loadpoint, {})
+      }
+
+      Object.keys(msg.data).forEach(function (k) {
+        let v = msg.data[k];
+        Vue.set(this.state.loadPoints[msg.loadpoint], k, v)
+      }, this);
+
+      return;
+    }
+
     Object.keys(msg).forEach(function(k) {
-      if (force || this[k] !== undefined) {
-        this[k] = msg[k];
+      if (k == "error") {
+        toasts.error({message: msg[k]});
+      } else if (k == "warn") {
+        toasts.warn({message: msg[k]});
       } else {
-        if (k == "error") {
-          toasts.error({message: msg[k]});
-        } else if (k == "warn") {
-          toasts.warn({message: msg[k]});
-        } else {
+        if (!(k in this.state)) {
           console.log("invalid key: " + k);
         }
+        Vue.set(this.state, k, msg[k])
       }
-    }, this.state);
+    }, this);
   },
   init: function() {
     if (!store.initialized) {
-      axios.get("config").then(function(response) {
-        store.update(response.data);
+      axios.get("config").then(function(msg) {
+        Object.keys(msg.data).forEach(function (k) {
+          if (k == "loadPoints") {
+            return
+          }
+          let data = {};
+          data[k] = msg.data[k];
+          store.update(data);
+        });
+
+        // transform loadpoints array into object
+        msg.data.loadPoints.forEach(function (lp) {
+          let data = {};
+          data[lp.name] = lp;
+          store.update({
+            "loadPoints": data
+          });
+          // Object.keys(lp).forEach(function (k) {
+          //   let data = {};
+          //   data[k] = lp[k];
+          //   store.update({
+          //     "loadpoint": lp.name,
+          //     "data": data,
+          //   });
+          // });
+        });
+
         store.initialized = true;
       }).catch(toasts.error);
     }
@@ -139,7 +188,7 @@ const toasts = new Vue({
       }, this);
       if (!found) {
         msg.id = this.count++;
-        Vue.set(this.items, msg.id, msg);
+        Object.values(this.items, msg.id, msg);
       }
     },
     error: function (msg) {
@@ -226,6 +275,7 @@ Vue.component("site", {
 
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
+  props: ['loadpoint'],
   mixins: [formatter],
   data: function() {
     return {
