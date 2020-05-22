@@ -99,6 +99,7 @@ type SiteConfiguration struct {
 	GridMeter    bool                     `json:"gridMeter"`
 	PVMeter      bool                     `json:"pvMeter"`
 	BatteryMeter bool                     `json:"batteryMeter"`
+	Voltage      float64                  `json:"voltage"`
 	LoadPoints   []LoadpointConfiguration `json:"loadPoints"`
 }
 
@@ -122,6 +123,7 @@ func (lp *Site) Configuration() SiteConfiguration {
 		GridMeter:    lp.gridMeter != nil,
 		PVMeter:      lp.pvMeter != nil,
 		BatteryMeter: lp.batteryMeter != nil,
+		Voltage:      lp.Voltage,
 	}
 
 	for _, lp := range lp.loadPoints {

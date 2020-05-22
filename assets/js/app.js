@@ -25,7 +25,7 @@ let formatter = {
       return Math.abs(val) >= 100 ? "k" : "";
     },
     fmtDuration: function (d) {
-      if (d < 0) {
+      if (d <= 0 || d == null) {
         return '—';
       }
       var seconds = "0" + (d % 60);
@@ -37,7 +37,7 @@ let formatter = {
       return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
     },
     fmtShortDuration: function (d) {
-      if (d < 0) {
+      if (d <= 0 || d == null) {
         return '—';
       }
       var minutes = (Math.floor(d / 60) % 60);
