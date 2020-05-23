@@ -138,7 +138,7 @@ func TestMeterConfigurations(t *testing.T) {
 		wb.EXPECT().Status().Return(api.StatusA, nil) // disconnected
 		wb.EXPECT().Enable(false)                     // "off" mode
 
-		lp.update()
+		lp.update(0)
 	}
 }
 
@@ -201,7 +201,7 @@ func TestInitialUpdate(t *testing.T) {
 			wb.EXPECT().MaxCurrent(lpMaxCurrent)
 		}
 
-		lp.update()
+		lp.update(0)
 
 		// max current if connected & mode now
 		if tc.status != api.StatusA && tc.mode == api.ModeNow {
@@ -269,7 +269,7 @@ func TestImmediateOnOff(t *testing.T) {
 		}
 
 		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
-		lp.update()
+		lp.update(0)
 
 		// max current if connected & mode now
 		if tc.status != api.StatusA && tc.mode == api.ModeNow {
@@ -302,7 +302,7 @@ func TestImmediateOnOff(t *testing.T) {
 		wb.EXPECT().MaxCurrent(2 * lpMinCurrent)
 
 		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
-		lp.update()
+		lp.update(0)
 
 		// -- round 3
 		t.Logf("%+v - 3 (status: %v, enabled: %v, current %d)\n", tc, lp.status, lp.enabled, lp.targetCurrent)
@@ -320,7 +320,7 @@ func TestImmediateOnOff(t *testing.T) {
 		lp.SetMode(api.ModeOff)
 
 		wb.EXPECT().Enabled().Return(true, nil) // syncSettings
-		lp.update()
+		lp.update(0)
 
 		ctrl.Finish()
 	}
@@ -460,26 +460,28 @@ func TestPVHysteresis(t *testing.T) {
 		t.Log(tc)
 
 		clck := clock.NewMock()
+		site := Site{
+			Voltage:   100,
+			gridPower: 0,
+		}
+
 		lp := LoadPoint{
 			clock: clck,
+			Site:  &site,
 			ChargerHandler: ChargerHandler{
 				MinCurrent: lpMinCurrent,
 				MaxCurrent: lpMaxCurrent,
 				enabled:    tc.enabled,
 			},
-			Config: Config{
-				Voltage: 100,
-				Phases:  10,
-				Enable: ThresholdConfig{
-					Threshold: tc.enable,
-					Delay:     dt,
-				},
-				Disable: ThresholdConfig{
-					Threshold: tc.disable,
-					Delay:     dt,
-				},
+			Phases: 10,
+			Enable: ThresholdConfig{
+				Threshold: tc.enable,
+				Delay:     dt,
 			},
-			gridPower: 0,
+			Disable: ThresholdConfig{
+				Threshold: tc.disable,
+				Delay:     dt,
+			},
 		}
 
 		start := clck.Now()
