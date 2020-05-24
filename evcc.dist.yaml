@@ -87,7 +87,6 @@ meters:
     id: 1
     register: # manual register configuration
       address: 40070
-      length: 2
       type: holding
       decode: int32
     scale: -1 # reverse direction

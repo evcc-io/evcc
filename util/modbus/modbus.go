@@ -195,8 +195,7 @@ type Operation struct {
 func ParseOperation(dev meters.Device, measurement string, op *Operation) (err error) {
 	// if measurement cannot be parsed it could be SunSpec model/block/point
 	if op.MBMD.IEC61850, err = meters.MeasurementString(measurement); err != nil {
-		opSunSpec := &SunSpecOperation{}
-		opSunSpec.Model, opSunSpec.Block, opSunSpec.Point, err = ParsePoint(measurement)
+		op.SunSpec.Model, op.SunSpec.Block, op.SunSpec.Point, err = ParsePoint(measurement)
 		return err
 	}
 
