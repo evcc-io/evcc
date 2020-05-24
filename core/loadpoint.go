@@ -426,38 +426,33 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 }
 
 // updateMeter updates and publishes single meter
-func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) error {
-	value, err := meter.CurrentPower()
-	if err != nil {
-		return err
-	}
-
-	*power = value // update value if no error
-
-	log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
-	lp.publish(name+"Power", *power)
-
-	return nil
-}
-
-// updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeters() (err error) {
-	retryMeter := func(s string, m api.Meter, f *float64) {
-		if m != nil {
-			e := retry.Do(func() error {
-				return lp.updateMeter(s, m, f)
-			}, retry.Attempts(3))
-
-			if e != nil {
-				err = errors.Wrapf(e, "updating %s meter", s)
-				log.ERROR.Printf("%s %v", lp.Name, err)
-			}
+	retryMeter := func(name string, m api.Meter, power *float64) error {
+		if m == nil {
+			return nil
 		}
+
+		retryErr := retry.Do(func() error {
+			if value, err := m.CurrentPower(); err == nil {
+				*power = value // update value if no error
+			}
+			return err
+		}, retry.Attempts(3))
+
+		if retryErr == nil {
+			log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
+			lp.publish(name+"Power", *power)
+		} else {
+			err = errors.Wrapf(retryErr, "updating %s meter", name)
+			log.ERROR.Printf("%s %v", lp.Name, err)
+		}
+
+		return retryErr
 	}
 
 	// read PV meter before charge meter
-	retryMeter("grid", lp.gridMeter, &lp.gridPower)
-	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
+	_ = retryMeter("grid", lp.gridMeter, &lp.gridPower)
+	_ = retryMeter("charge", lp.chargeMeter, &lp.chargePower)
 
 	lp.pvPower = 0
 	for i, m := range lp.pvMeter {
@@ -480,6 +475,14 @@ func (lp *LoadPoint) updateMeters() (err error) {
 		retryMeter(name, m, &power)
 		lp.batteryPower += power
 	}
+
+	// summary values
+	lp.publish("pvPower", lp.pvPower)
+	lp.publish("batteryPower", lp.batteryPower)
+
+	// update ChargeRater here to make sure initial meter update is caught
+	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
+	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	return err
 }
@@ -506,10 +509,6 @@ func (lp *LoadPoint) syncSettings() {
 func (lp *LoadPoint) update() {
 	// read and publish meters first
 	meterErr := lp.updateMeters()
-
-	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.targetCurrent)
-	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
