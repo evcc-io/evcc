@@ -427,32 +427,28 @@ func (lp *LoadPoint) updateModePV(mode api.ChargeMode) error {
 
 // updateMeter updates and publishes single meter
 func (lp *LoadPoint) updateMeters() (err error) {
-	retryMeter := func(name string, m api.Meter, power *float64) error {
-		if m == nil {
-			return nil
-		}
+	retryMeter := func(name string, m api.Meter, power *float64) {
+		if m != nil {
+			retryErr := retry.Do(func() error {
+				if value, err := m.CurrentPower(); err == nil {
+					*power = value // update value if no error
+				}
+				return err
+			}, retry.Attempts(3))
 
-		retryErr := retry.Do(func() error {
-			if value, err := m.CurrentPower(); err == nil {
-				*power = value // update value if no error
+			if retryErr == nil {
+				log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
+				lp.publish(name+"Power", *power)
+			} else {
+				err = errors.Wrapf(retryErr, "updating %s meter", name)
+				log.ERROR.Printf("%s %v", lp.Name, err)
 			}
-			return err
-		}, retry.Attempts(3))
-
-		if retryErr == nil {
-			log.DEBUG.Printf("%s %s power: %.1fW", lp.Name, name, *power)
-			lp.publish(name+"Power", *power)
-		} else {
-			err = errors.Wrapf(retryErr, "updating %s meter", name)
-			log.ERROR.Printf("%s %v", lp.Name, err)
 		}
-
-		return retryErr
 	}
 
 	// read PV meter before charge meter
-	_ = retryMeter("grid", lp.gridMeter, &lp.gridPower)
-	_ = retryMeter("charge", lp.chargeMeter, &lp.chargePower)
+	retryMeter("grid", lp.gridMeter, &lp.gridPower)
+	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
 
 	lp.pvPower = 0
 	for i, m := range lp.pvMeter {
