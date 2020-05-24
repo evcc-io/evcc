@@ -251,8 +251,8 @@ github.com/technoweenie/multipartstreamer v1.0.1 h1:XRztA5MXiR1TIRHxH2uNxXxaIkKQ
 github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
-github.com/volkszaehler/mbmd v0.0.0-20200505114042-9732bf1ad846 h1:PwtXvfj0GBgSOFHSxoV+YB/Ii0TV12W17YE844R9w/o=
-github.com/volkszaehler/mbmd v0.0.0-20200505114042-9732bf1ad846/go.mod h1:MmglPXoZJOT0r+tWwAjaaRWmuopdQOq2tWxbL9zvuxE=
+github.com/volkszaehler/mbmd v0.0.0-20200524120609-c683601720ed h1:oC2QZlpY+AbEPn/8TWvO4FiXrk9uHhCyT24b6wwa/JA=
+github.com/volkszaehler/mbmd v0.0.0-20200524120609-c683601720ed/go.mod h1:MmglPXoZJOT0r+tWwAjaaRWmuopdQOq2tWxbL9zvuxE=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

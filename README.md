@@ -348,6 +348,8 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
 
+In case of SunSpec-compatible inverters, values can also be configured in the form of `model:[block:]point` according to SunSpec definition. For example, a 3-phase inverter's DC power of the 2nd string would be configurable as `103:2:W`.
+
 #### Manual configuration
 
 If the Modbus device is not supported by MBMD, the Modbus register can also be manually configured:
@@ -359,7 +361,7 @@ register:
   address: 40070
   length: 2 # read length in words
   type: holding # holding or input
-  decode: int32 # int16|32|64, uint16|32|64, float32|64 and u|int32s
+  decode: int32 # int16|32|64, uint16|32|64, float32|64 and u|int32s + float32s
 scale: -1 # floating point factor applied to result, e.g. for kW to W conversion
 ```
 

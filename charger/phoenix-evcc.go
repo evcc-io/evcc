@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider/modbus"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 )
