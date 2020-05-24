@@ -359,7 +359,6 @@ type: ...
 uri/device/id: ...
 register:
   address: 40070
-  length: 2 # read length in words
   type: holding # holding or input
   decode: int32 # int16|32|64, uint16|32|64, float32|64 and u|int32s + float32s
 scale: -1 # floating point factor applied to result, e.g. for kW to W conversion

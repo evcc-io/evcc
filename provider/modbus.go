@@ -46,6 +46,29 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 	var device meters.Device
 	var op modbus.Operation
 
+	if cc.Value != "" && cc.Register.Decode != "" {
+		log.FATAL.Fatalf("config: modbus cannot have value and register both")
+	}
+
+	// model + value configured
+	if cc.Value != "" {
+		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
+			log.FATAL.Fatalf("config: invalid value %s", cc.Value)
+		}
+
+		// if sunspec reading configured make sure model is defined or device won't be initalized
+		if op.SunSpec.Point != "" && cc.Model == "" {
+			cc.Model = "SunSpec"
+		}
+	}
+
+	// register configured
+	if cc.Register.Decode != "" {
+		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
+			log.TRACE.Fatal(err)
+		}
+	}
+
 	// model configured
 	if cc.Model != "" {
 		device, err = modbus.NewDevice(log, cc.Model, *cc.RTU)
@@ -63,20 +86,6 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 	}
 	if err != nil {
 		log.FATAL.Fatal(err)
-	}
-
-	// model + value configured
-	if cc.Value != "" {
-		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
-			log.FATAL.Fatalf("invalid value %s", cc.Value)
-		}
-	}
-
-	// register configured
-	if cc.Register.Decode != "" {
-		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
-			log.TRACE.Fatal(err)
-		}
 	}
 
 	if cc.Scale == 0 {
