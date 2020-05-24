@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/andig/evcc/provider/modbus"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/modbus"
 	"github.com/pkg/errors"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -18,23 +18,17 @@ type Modbus struct {
 	conn    meters.Connection
 	device  meters.Device
 	slaveID uint8
-	op      rs485.Operation
+	op      modbus.Operation
 	scale   float64
-}
-
-// ModbusSettings combine physical modbus configuration and MBMD model
-type ModbusSettings struct {
-	Model             string
-	modbus.Connection `mapstructure:",squash"`
 }
 
 // NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interface{}) *Modbus {
 	cc := struct {
-		ModbusSettings `mapstructure:",squash"`
-		Register       modbus.Register
-		Value          string
-		Scale          float64
+		modbus.Settings `mapstructure:",squash"`
+		Register        modbus.Register
+		Value           string
+		Scale           float64
 	}{}
 	util.DecodeOther(log, other, &cc)
 
@@ -50,7 +44,7 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 
 	var err error
 	var device meters.Device
-	var op rs485.Operation
+	var op modbus.Operation
 
 	// model configured
 	if cc.Model != "" {
@@ -67,32 +61,20 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 			}
 		}
 	}
-
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
 
 	// model + value configured
 	if cc.Value != "" {
-		measurement, err := meters.MeasurementString(cc.Value)
-		if err != nil {
-			log.FATAL.Fatalf("invalid measurement %s", cc.Value)
-		}
-
-		// for RS485 check if producer supports the measurement
-		op.IEC61850 = measurement
-		if dev, ok := device.(*rs485.RS485); ok {
-			op = modbus.RS485FindDeviceOp(dev, measurement)
-
-			if op.IEC61850 == 0 {
-				log.FATAL.Fatalf("unsupported measurement value: %s", measurement)
-			}
+		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
+			log.FATAL.Fatalf("invalid value %s", cc.Value)
 		}
 	}
 
 	// register configured
 	if cc.Register.Decode != "" {
-		if op, err = modbus.RegisterOperation(cc.Register); err != nil {
+		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
 			log.TRACE.Fatal(err)
 		}
 	}
@@ -119,29 +101,38 @@ func (m *Modbus) FloatGetter() (float64, error) {
 	var err error
 
 	// if funccode is configured, execute the read directly
-	if m.op.FuncCode != 0 {
+	if op := m.op.MBMD; op.FuncCode != 0 {
 		client := m.conn.ModbusClient()
 
 		var bytes []byte
-		switch m.op.FuncCode {
+		switch op.FuncCode {
 		case rs485.ReadHoldingReg:
-			bytes, err = client.ReadHoldingRegisters(m.op.OpCode, m.op.ReadLen)
+			bytes, err = client.ReadHoldingRegisters(op.OpCode, op.ReadLen)
 		case rs485.ReadInputReg:
-			bytes, err = client.ReadInputRegisters(m.op.OpCode, m.op.ReadLen)
+			bytes, err = client.ReadInputRegisters(op.OpCode, op.ReadLen)
 		default:
-			return 0, fmt.Errorf("unknown function code %d", m.op.FuncCode)
+			return 0, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
 
 		if err != nil {
 			return 0, errors.Wrap(err, "read failed")
 		}
 
-		return m.scale * m.op.Transform(bytes), nil
+		return m.scale * op.Transform(bytes), nil
 	}
 
 	// if funccode is not configured, try find the reading on sunspec
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
-		res, err = dev.QueryOp(m.conn.ModbusClient(), m.op.IEC61850)
+		if m.op.MBMD.IEC61850 != 0 {
+			res, err = dev.QueryOp(m.conn.ModbusClient(), m.op.MBMD.IEC61850)
+		} else {
+			res, err = dev.QueryPoint(
+				m.conn.ModbusClient(),
+				m.op.SunSpec.Model,
+				m.op.SunSpec.Block,
+				m.op.SunSpec.Point,
+			)
+		}
 	}
 
 	if err == nil {
