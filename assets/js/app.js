@@ -13,16 +13,26 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 //
 
 let formatter = {
+  data: function () {
+    return {
+      fmtLimit: 100,
+      fmtDigits: 1,
+    }
+  },
   methods: {
+    round: function(num, precision) {
+      var base = 10 ** precision;
+      return (Math.round(num * base) / base).toFixed(precision);
+    },
     fmt: function (val) {
       if (val === undefined || val === null) {
         return 0;
       }
       val = Math.abs(val);
-      return val >= 100 ? (val / 1e3).toFixed(1) : val.toFixed(0);
+      return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
     fmtUnit: function (val) {
-      return Math.abs(val) >= 100 ? "k" : "";
+      return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },
     fmtDuration: function (d) {
       if (d <= 0 || d == null) {

@@ -190,30 +190,29 @@
     <p class="h1">{{loadpoint.title||loadpoint.name||"Ladepunkt"}}</p>
   </div>
 </div>
-
 <div class="row">
   <div class="col-12 col-md-4 my-4">
     <div class="mb-2" v-if="loadpoint.soc">{{loadpoint.socTitle||"Fahrzeug"}}</div>
+    <div class="mb-2" v-else></div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
-      <div class="progress-bar" role="progressbar" v-if="!(loadpoint.soc && loadpoint.connected)"
+      <div class="progress-bar" role="progressbar" v-if="!loadpoint.soc"
         v-bind:class="{
-          'bg-success': loadpoint.charging,
-          'bg-primary': !loadpoint.charging && loadpoint.connected,
-          'bg-light': !loadpoint.connected,
-          'text-secondary': !loadpoint.connected,
-        }" v-bind:style="{width: '100%'}">
-        {{loadpoint.charging ? "laden" : (loadpoint.connected ? "verbunden" : "getrennt")}}
-      </div>
-      <div class="progress-bar" role="progressbar" v-else-if="loadpoint.soc && (loadpoint.socCharge > 9)"
+          'progress-bar-striped': loadpoint.charging,
+          'bg-primary': loadpoint.connected,
+          'bg-light': !(loadpoint.connected || loadpoint.charging),
+          'text-secondary': !(loadpoint.connected || loadpoint.charging),
+        }"
+        v-bind:style="{width: '100%'}">{{loadpoint.charging ? "laden" : (loadpoint.connected ? "verbunden" : "getrennt")}}</div>
+      <div class="progress-bar" role="progressbar" v-else-if="loadpoint.socCharge > 9"
         v-bind:class="{
-          'bg-success': loadpoint.charging,
+          'progress-bar-striped': loadpoint.charging,
           'bg-primary': !loadpoint.charging && loadpoint.connected,
         }"
         v-bind:style="{width: loadpoint.socCharge+'%'}">{{loadpoint.socCharge}}%</div>
       <div class="progress-bar" role="progressbar" v-else
         v-bind:class="{
-        'bg-success': loadpoint.charging,
-        'bg-primary': !loadpoint.charging && loadpoint.connected,
+          'progress-bar-striped': loadpoint.charging,
+          'bg-primary': !loadpoint.charging && loadpoint.connected,
         }"
         v-bind:style="{width: (loadpoint.socCharge=='—') ? 0 : loadpoint.socCharge+'%'}"></div>
     </div>
@@ -277,11 +276,6 @@
       <div class="col-6 col-md-2 py-3">
         Batteriezähler:
         <span class="text-primary" v-if="state.batteryMeter">✓</span>
-        <span class="text-primary" v-else>&mdash;</span>
-      </div>
-      <div class="col-6 col-md-2 py-3">
-        Spannung:
-        <span class="text-primary" v-if="state.voltage">{{state.voltage}}V</span>
         <span class="text-primary" v-else>&mdash;</span>
       </div>
     </div>
