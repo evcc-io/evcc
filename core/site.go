@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"sync"
 	"time"
 
@@ -99,7 +100,6 @@ type SiteConfiguration struct {
 	GridMeter    bool                     `json:"gridMeter"`
 	PVMeter      bool                     `json:"pvMeter"`
 	BatteryMeter bool                     `json:"batteryMeter"`
-	Voltage      float64                  `json:"voltage"`
 	LoadPoints   []LoadpointConfiguration `json:"loadPoints"`
 }
 
@@ -123,7 +123,6 @@ func (lp *Site) Configuration() SiteConfiguration {
 		GridMeter:    lp.gridMeter != nil,
 		PVMeter:      lp.pvMeter != nil,
 		BatteryMeter: lp.batteryMeter != nil,
-		Voltage:      lp.Voltage,
 	}
 
 	for _, lp := range lp.loadPoints {
@@ -255,27 +254,42 @@ func (lp *Site) updateMeters() (err error) {
 	return err
 }
 
-func (lp *Site) availablePower() (float64, error) {
+func consumedPower(pv, battery, grid float64) float64 {
+	return math.Abs(pv) + battery + grid
+}
+
+// consumedPower estimates how much power the charger might have consumed given it was the only load
+func (lp *Site) consumedPower() float64 {
+	return consumedPower(lp.pvPower, lp.batteryPower, lp.gridPower)
+}
+
+// sitePower returns the net power exported by the site minus a residual margin.
+// negative values mean grid: export, battery: charging
+func (lp *Site) sitePower() (float64, error) {
 	if err := lp.updateMeters(); err != nil {
 		return 0, err
 	}
 
-	availablePower := -lp.gridPower - lp.batteryPower - lp.ResidualPower
-	return availablePower, nil
+	sitePower := lp.gridPower + lp.batteryPower + lp.ResidualPower
+	return sitePower, nil
 }
 
 func (lp *Site) update() error {
-	lp.publish("mode", string(lp.GetMode()))
+	mode := lp.GetMode()
+	lp.publish("mode", string(mode))
 
-	availablePower, err := lp.availablePower()
+	availablePower, err := lp.sitePower()
 	if err != nil {
 		return err
 	}
 
-	// log.DEBUG.Printf("%s target power: %.0fW = %.0fW charge - %.0fW grid - %.0fW residual", lp.Name, targetPower, lp.chargePower, lp.gridPower, lp.ResidualPower)
+	log.DEBUG.Printf("site power: %.0fW", availablePower)
 
 	for _, lp := range lp.loadPoints {
-		lp.update(availablePower)
+		usedPower := lp.update(mode, availablePower)
+		remainingPower := availablePower + usedPower
+		log.DEBUG.Printf("%s remaining power: %.0fW = %.0fW - %.0fW", lp.Name, remainingPower, availablePower, usedPower)
+		availablePower = remainingPower
 	}
 
 	return nil
@@ -285,8 +299,9 @@ func (lp *Site) update() error {
 // updating measurements and executing control logic.
 func (lp *Site) Run(uiChan chan<- util.Param, pushChan chan<- push.Event, interval time.Duration) {
 	lp.uiChan = uiChan
-	for _, lp := range lp.loadPoints {
-		lp.Prepare(uiChan, pushChan)
+	for _, lpn := range lp.loadPoints {
+		lpn.Prepare(uiChan, pushChan)
+		lpn.Voltage = lp.Voltage
 	}
 
 	ticker := time.NewTicker(interval)

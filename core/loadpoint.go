@@ -56,13 +56,14 @@ type LoadPoint struct {
 
 	// exposed public configuration
 	Title           string            // UI title
-	Phases          int64             // Phases- required for converting power and current.
+	Voltage         float64           // Operating voltage- identical for all loadpoints
+	Phases          int64             // Phases- required for converting power and current
 	ChargerRef      string            `mapstructure:"charger"` // Charger reference
 	VehicleRef      string            `mapstructure:"vehicle"` // Vehicle reference
 	Meter           ChargeMeterConfig `mapstructure:"meters"`  // Meter references
 	Enable, Disable ThresholdConfig
 
-	*Site
+	Site *Site
 
 	ChargerHandler `mapstructure:",squash"` // handle charger state and current
 
@@ -161,12 +162,6 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	})
 }
 
-// consumedPower estimates how much power the charger might have consumed given it was the only load
-// negative values mean pv: production, battery: charging, grid: export
-func consumedPower(pv, battery, grid float64) float64 {
-	return math.Abs(pv) + battery + grid
-}
-
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
 // where the charge meter can always be treated as present.  It assumes that the charge meter cannot consume
 // more than total household consumption. If physical charge meter is present this handler is not used.
@@ -176,10 +171,11 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 	if !lp.enabled || lp.status != api.StatusC {
 		// if disabled we cannot be charging
 		power = 0
-	} else if power > 0 && lp.pvMeter != nil {
+	} else if power > 0 && lp.Site.pvMeter != nil {
 		// limit charge power to generation plus grid consumption/ minus grid delivery
 		// as the charger cannot have consumed more than that
-		consumedPower := consumedPower(lp.pvPower, lp.batteryPower, lp.gridPower)
+		// consumedPower := consumedPower(lp.pvPower, lp.batteryPower, lp.gridPower)
+		consumedPower := lp.Site.consumedPower()
 		power = math.Min(power, consumedPower)
 	}
 
@@ -456,7 +452,7 @@ func (lp *LoadPoint) syncSettings() {
 }
 
 // update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) update(sitePower float64) {
+func (lp *LoadPoint) update(mode api.ChargeMode, sitePower float64) float64 {
 	// read and publish meters first
 	meterErr := lp.updateMeters()
 
@@ -469,7 +465,7 @@ func (lp *LoadPoint) update(sitePower float64) {
 	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
 		log.ERROR.Printf("%s charge controller error: %v", lp.Name, err)
-		return
+		return lp.chargePower
 	}
 
 	lp.publish("connected", lp.connected())
@@ -484,7 +480,7 @@ func (lp *LoadPoint) update(sitePower float64) {
 	var err error
 
 	// execute loading strategy
-	switch mode := lp.GetMode(); mode {
+	switch mode {
 	case api.ModeOff:
 		err = lp.rampOff()
 	case api.ModeNow:
@@ -511,4 +507,6 @@ func (lp *LoadPoint) update(sitePower float64) {
 	lp.publish("chargeDuration", lp.chargeDuration())
 
 	lp.publishSoC()
+
+	return lp.chargePower
 }

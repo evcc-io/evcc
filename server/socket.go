@@ -146,8 +146,6 @@ func (h *SocketHub) broadcast(p util.Param) {
 			msg.WriteString("}")
 		}
 
-		fmt.Printf("%v -> %s\n", p, msg.String())
-
 		for client := range h.clients {
 			select {
 			case client.send <- []byte(msg.String()):
