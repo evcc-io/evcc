@@ -158,9 +158,17 @@
     </h2>
   </div>
   <div class="col-6 col-md-2 my-4" v-if="state.pvMeter">
-    <div class="mb-2">Erzeugung <i class="text-primary fas fas fa-sun" v-if="false"></i></div>
+    <div class="mb-2">Erzeugung <i class="text-primary fas fas fa-sun" v-if="state.pvPower < 0"></i></div>
     <h2>
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
+    </h2>
+  </div>
+  <div class="col-6 col-md-2 my-4" v-if="state.batteryMeter">
+    <div class="mb-2">Batterie <i class="text-primary fas"
+        v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
+    </div>
+    <h2>
+      {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
     </h2>
   </div>
   <div class="d-block col-12 text-center pt-4 pb-4 mb-4 bg-light"
@@ -179,16 +187,13 @@
 <div>
 <div class="row border-bottom">
   <div class="col-12">
-    <p class="h1" v-if="loadpoint.title">{{loadpoint.title}}</p>
-    <p class="h1" v-else-if="loadpoint.name">{{loadpoint.name}}</p>
-    <p class="h1" v-else>Ladepunkt</p>
+    <p class="h1">{{loadpoint.title||loadpoint.name||"Ladepunkt"}}</p>
   </div>
 </div>
 
 <div class="row">
   <div class="col-12 col-md-4 my-4">
-    <div class="mb-2" v-if="loadpoint.socTitle">{{loadpoint.socTitle}}</div>
-    <div class="mb-2" v-else>Fahrzeug</div>
+    <div class="mb-2" v-if="loadpoint.soc">{{loadpoint.socTitle||"Fahrzeug"}}</div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
       <div class="progress-bar" role="progressbar" v-if="!(loadpoint.soc && loadpoint.connected)"
         v-bind:class="{
@@ -253,8 +258,7 @@
 
     <div class="row mt-4 border-bottom">
       <div class="col-12">
-        <p class="h1" v-if="state.title">{{state.title}}</p>
-        <p class="h1" v-else>Home</p>
+        <p class="h1">{{state.title||"Home"}}</p>
       </div>
     </div>
 
@@ -286,9 +290,7 @@
 
       <div class="row mt-4 border-bottom">
         <div class="col-12">
-          <p class="h1" v-if="loadpoint.title">{{loadpoint.title}}</p>
-          <p class="h1" v-else-if="loadpoint.name">{{loadpoint.name}}</p>
-          <p class="h1" v-else>Ladepunkt</p>
+          <p class="h1">{{loadpoint.title||loadpoint.name||"Ladepunkt"</p>
         </div>
       </div>
 
@@ -324,7 +326,7 @@
           <div class="row h5">
             <div class="col-6 py-3">
               Modell:
-              <span class="text-primary">{{loadpoint.socTitle}}</span>
+              <span class="text-primary">{{loadpoint.socTitle||"—"}}</span>
             </div>
             <div class="col-6 py-3">
               Kapazität:
