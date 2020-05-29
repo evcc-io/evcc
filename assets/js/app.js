@@ -224,7 +224,7 @@ Vue.component('modeswitch', {
       set: function(mode) {
         axios.post('mode/' + mode).then(function(response) {
           this.state.mode = response.data.mode;
-        }.bind(this)).catch(error.raise);
+        }.bind(this)).catch(toasts.error);
       }
     }
   },
