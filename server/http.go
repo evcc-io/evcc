@@ -30,7 +30,7 @@ type MenuConfig struct {
 }
 
 type chargeModeJSON struct {
-	Mode string `json:"mode"`
+	Mode api.ChargeMode `json:"mode"`
 }
 
 type route struct {
@@ -94,15 +94,18 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
+func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(content); err != nil {
+		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+	}
+}
+
 // HealthHandler returns current charge mode
 func HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct{ OK bool }{OK: true}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		jsonResponse(w, r, res)
 	}
 }
 
@@ -110,11 +113,7 @@ func HealthHandler() http.HandlerFunc {
 func ConfigHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := site.Configuration()
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		jsonResponse(w, r, res)
 	}
 }
 
@@ -122,25 +121,15 @@ func ConfigHandler(site site) http.HandlerFunc {
 func StateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		jsonResponse(w, r, res)
 	}
 }
 
 // CurrentChargeModeHandler returns current charge mode
 func CurrentChargeModeHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := chargeModeJSON{
-			Mode: string(site.GetMode()),
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		res := chargeModeJSON{Mode: site.GetMode()}
+		jsonResponse(w, r, res)
 	}
 }
 
@@ -157,14 +146,8 @@ func ChargeModeHandler(site site) http.HandlerFunc {
 
 		site.SetMode(api.ChargeMode(mode))
 
-		res := chargeModeJSON{
-			Mode: string(site.GetMode()),
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		res := chargeModeJSON{Mode: site.GetMode()}
+		jsonResponse(w, r, res)
 	}
 }
 
