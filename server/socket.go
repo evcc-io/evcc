@@ -108,47 +108,42 @@ func kv(i util.Param) string {
 	return "\"" + i.Key + "\":" + val
 }
 
-func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+// paramToJSON converts util.Param to JSON as expected by UI
+func paramToJSON(p util.Param) string {
 	var msg strings.Builder
-
-	// build json object
 	_, _ = msg.WriteString("{")
-	for _, p := range params {
-		if p.Key == "error" || p.Key == "warn" {
-			continue
-		}
-		if msg.Len() > 1 {
-			_, _ = msg.WriteString(",")
-		}
-		msg.WriteString(kv(p))
+	if p.LoadPoint != "" {
+		msg.WriteString(fmt.Sprintf("\"loadpoint\":\"%s\",\"data\":{", p.LoadPoint))
 	}
-	_, _ = msg.WriteString("}")
+	_, _ = msg.WriteString(fmt.Sprintf("%s}", kv(p)))
+	if p.LoadPoint != "" {
+		msg.WriteString("}")
+	}
 
-	// add client if send successful
-	select {
-	case client.send <- []byte(msg.String()):
-		h.clients[client] = true
-	default:
-		close(client.send)
+	return msg.String()
+}
+
+func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+	h.clients[client] = true
+
+	for _, p := range params {
+		msg := paramToJSON(p)
+
+		select {
+		case client.send <- []byte(msg):
+		default:
+			close(client.send)
+		}
 	}
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
 	if len(h.clients) > 0 {
-		// build json object
-		var msg strings.Builder
-		_, _ = msg.WriteString("{")
-		if p.LoadPoint != "" {
-			msg.WriteString(fmt.Sprintf("\"loadpoint\":\"%s\",\"data\":{", p.LoadPoint))
-		}
-		_, _ = msg.WriteString(fmt.Sprintf("%s}", kv(p)))
-		if p.LoadPoint != "" {
-			msg.WriteString("}")
-		}
+		msg := paramToJSON(p)
 
 		for client := range h.clients {
 			select {
-			case client.send <- []byte(msg.String()):
+			case client.send <- []byte(msg):
 			default:
 				close(client.send)
 				delete(h.clients, client)

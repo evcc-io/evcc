@@ -181,7 +181,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(uri, conf.Menu, site, socketHub)
+	httpd := server.NewHTTPd(uri, conf.Menu, site, socketHub, cache)
 
 	// publish to UI
 	go socketHub.Run(tee.Attach(), cache)

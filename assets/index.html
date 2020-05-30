@@ -214,7 +214,7 @@
           'progress-bar-striped': loadpoint.charging,
           'bg-primary': !loadpoint.charging && loadpoint.connected,
         }"
-        v-bind:style="{width: (loadpoint.socCharge=='—') ? 0 : loadpoint.socCharge+'%'}"></div>
+        v-bind:style="{width: (loadpoint.socCharge<0) ? 0 : loadpoint.socCharge+'%'}"></div>
     </div>
   </div>
 

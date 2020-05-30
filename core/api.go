@@ -6,13 +6,6 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 )
 
-// nilVal implements Stringer for nil values
-type nilVal int
-
-func (n *nilVal) String() string {
-	return "—"
-}
-
 func (lp *LoadPoint) hasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
 	return lp.chargeMeter != nil && !isWrapped
@@ -67,7 +60,6 @@ func (lp *LoadPoint) publishSoC() {
 		log.ERROR.Printf("%s vehicle error: %v", lp.Name, err)
 	}
 
-	var n *nilVal
-	lp.publish("socCharge", n)
+	lp.publish("socCharge", -1)
 	lp.publish("chargeEstimate", -1)
 }

@@ -442,7 +442,7 @@ func (lp *LoadPoint) resetGuard() {
 func (lp *LoadPoint) syncSettings() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
-		log.ERROR.Printf("%s sync enabled", lp.Name)
+		log.DEBUG.Printf("%s sync enabled state to %s", lp.Name, status[lp.enabled])
 		err = lp.charger.Enable(lp.enabled)
 	}
 
