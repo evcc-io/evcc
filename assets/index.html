@@ -198,6 +198,7 @@
       <div class="progress-bar" role="progressbar" v-if="!loadpoint.soc"
         v-bind:class="{
           'progress-bar-striped': loadpoint.charging,
+          'progress-bar-animated': loadpoint.charging,
           'bg-primary': loadpoint.connected,
           'bg-light': !(loadpoint.connected || loadpoint.charging),
           'text-secondary': !(loadpoint.connected || loadpoint.charging),
@@ -206,12 +207,14 @@
       <div class="progress-bar" role="progressbar" v-else-if="loadpoint.socCharge > 9"
         v-bind:class="{
           'progress-bar-striped': loadpoint.charging,
+          'progress-bar-animated': loadpoint.charging,
           'bg-primary': !loadpoint.charging && loadpoint.connected,
         }"
         v-bind:style="{width: loadpoint.socCharge+'%'}">{{loadpoint.socCharge}}%</div>
       <div class="progress-bar" role="progressbar" v-else
         v-bind:class="{
           'progress-bar-striped': loadpoint.charging,
+          'progress-bar-animated': loadpoint.charging,
           'bg-primary': !loadpoint.charging && loadpoint.connected,
         }"
         v-bind:style="{width: (loadpoint.socCharge<0) ? 0 : loadpoint.socCharge+'%'}"></div>
@@ -227,7 +230,7 @@
     </h2>
   </div>
   <div class="col-6 col-md-2 my-4">
-    <div class="mb-2">Energie <i class="text-primary fas fa-leaf" v-if="loadpoint.chargePower"></i></div>
+    <div class="mb-2">Energie</div>
     <h2>
       {{fmt(loadpoint.chargedEnergy)}} <small class="text-muted">{{fmtUnit(loadpoint.chargedEnergy)}}Wh</small>
     </h2>
