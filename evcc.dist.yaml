@@ -208,7 +208,7 @@ vehicles:
 #   cache: 5m
 
 site:
-  name: Home
+  title: Home
   meters:
     grid: grid # grid meter
     pv: pv # pv meter
