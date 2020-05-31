@@ -49,6 +49,11 @@ func (lp *ChargerHandler) chargerEnable(enable bool) error {
 		log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
 
+	fmt.Printf("%v\n", lp.GuardDuration)
+	fmt.Printf("%v\n", lp.guardUpdated)
+	fmt.Printf("%v\n", lp.clock.Now())
+	fmt.Printf("%v\n", lp.clock.Since(lp.guardUpdated))
+
 	if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
 		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
 		return nil

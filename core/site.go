@@ -299,9 +299,9 @@ func (lp *Site) update() error {
 // updating measurements and executing control logic.
 func (lp *Site) Run(uiChan chan<- util.Param, pushChan chan<- push.Event, interval time.Duration) {
 	lp.uiChan = uiChan
-	for _, lpn := range lp.loadPoints {
-		lpn.Prepare(uiChan, pushChan)
-		lpn.Voltage = lp.Voltage
+	for _, _lp := range lp.loadPoints {
+		_lp.Prepare(uiChan, pushChan)
+		_lp.Voltage = lp.Voltage
 	}
 
 	ticker := time.NewTicker(interval)
