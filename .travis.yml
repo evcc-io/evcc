@@ -53,7 +53,7 @@ deploy:
 # always publish latest image
 - provider: script
   skip_cleanup: true
-  script: docker build -t "andig/evcc:latest" . && docker push andig/evcc
+  script: make publish-latest
   on:
     branch: master
     tags: false
