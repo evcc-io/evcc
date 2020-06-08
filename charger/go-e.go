@@ -136,7 +136,7 @@ func (c *GoE) CurrentPower() (float64, error) {
 func (c *GoE) ChargedEnergy() (float64, error) {
 	var status goeStatusResponse
 	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
-	energy := float64(status.Dws) / 3.6e6
+	energy := float64(status.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
 	return energy, err
 }
 
