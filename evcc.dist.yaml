@@ -223,6 +223,7 @@ loadpoints:
     delay: 5m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
   phases: 3 # ev phases (default 3)
   sensitivity: 1 # current raise/lower step size (default 10A)
