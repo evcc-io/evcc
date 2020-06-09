@@ -15,7 +15,7 @@ const goeCloud = "https://api.go-e.co"
 
 // goeCloudResponse is the cloud API response
 type goeCloudResponse struct {
-	Success bool              `json:"success"`
+	Success *bool             `json:"success"` // only valid for cloud payload commands
 	Age     int               `json:"age"`
 	Error   string            `json:"error"` // only valid for cloud payload commands
 	Data    goeStatusResponse `json:"data"`
@@ -62,35 +62,40 @@ func NewGoE(uri, token string) *GoE {
 	return c
 }
 
-func (c *GoE) apiStatus() (goeStatusResponse, error) {
-	if c.token == "" {
-		var status goeStatusResponse
-		url := fmt.Sprintf("%s/%s", c.uri, "status")
-		_, err := c.GetJSON(url, &status)
-		return status, err
+func (c *GoE) localResponse(function string) (goeStatusResponse, error) {
+	var status goeStatusResponse
+	_, err := c.GetJSON(fmt.Sprintf("%s/%s", c.uri, function), &status)
+	return status, err
+}
+
+func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error) {
+	var status goeCloudResponse
+
+	url := fmt.Sprintf("%s/%s?token=%s", goeCloud, function, c.token)
+	if payload != "" {
+		url += "&" + payload
 	}
 
-	var status goeCloudResponse
-	url := fmt.Sprintf("%s/%s?token=%s&", goeCloud, "api_status", c.token)
 	_, err := c.GetJSON(url, &status)
+	if err == nil && status.Success != nil && !*status.Success {
+		err = errors.New(status.Error)
+	}
+
 	return status.Data, err
+}
+
+func (c *GoE) apiStatus() (goeStatusResponse, error) {
+	if c.token == "" {
+		return c.localResponse("status")
+	}
+	return c.cloudResponse("api_status", "")
 }
 
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
-		var status goeStatusResponse
-		url := fmt.Sprintf("%s/%s=%s", c.uri, "mqtt?payload", payload)
-		_, err := c.GetJSON(url, &status)
-		return status, err
+		return c.localResponse("mqtt?payload=" + payload)
 	}
-
-	var status goeCloudResponse
-	url := fmt.Sprintf("%s/%s?token=%s&%s", goeCloud, "api", c.token, payload)
-	_, err := c.GetJSON(url, &status)
-	if err == nil && !status.Success {
-		err = errors.New(status.Error)
-	}
-	return status.Data, err
+	return c.cloudResponse("api", payload)
 }
 
 // Status implements the Charger.Status interface
