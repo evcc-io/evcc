@@ -120,7 +120,8 @@ chargers:
 #   pin: # pin
 - name: go-e
   type: go-e # go-eCharger
-  uri: http://192.168.1.4 # go-e address
+  uri: http://192.168.1.4 # either go-e local address
+  token: 4711c # or go-e cloud API token
 - name: keba
   type: keba # KEBA charger
   uri: 192.168.1.4:7090 # KEBA address
