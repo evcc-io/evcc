@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,10 +9,17 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-const (
-	goeStatus  apiFunction = "status"
-	goePayload apiFunction = "mqtt?payload="
-)
+// https://go-e.co/app/api.pdf
+
+const goeCloud = "https://api.go-e.co"
+
+// goeCloudResponse is the cloud API response
+type goeCloudResponse struct {
+	Success bool              `json:"success"`
+	Age     int               `json:"age"`
+	Error   string            `json:"error"` // only valid for cloud payload commands
+	Data    goeStatusResponse `json:"data"`
+}
 
 // goeStatusResponse is the API response if status not OK
 type goeStatusResponse struct {
@@ -28,35 +36,67 @@ type goeStatusResponse struct {
 // GoE charger implementation
 type GoE struct {
 	*util.HTTPHelper
-	uri string
+	uri, token string
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
-	cc := struct{ URI string }{}
+	cc := struct{ URI, Token string }{}
 	util.DecodeOther(log, other, &cc)
 
-	return NewGoE(cc.URI)
+	if cc.URI != "" && cc.Token != "" {
+		log.FATAL.Fatal("config: should only have one of uri/token")
+	}
+
+	return NewGoE(cc.URI, cc.Token)
 }
 
 // NewGoE creates GoE charger
-func NewGoE(URI string) *GoE {
+func NewGoE(uri, token string) *GoE {
 	c := &GoE{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("go-e")),
-		uri:        strings.TrimRight(URI, "/"),
+		uri:        strings.TrimRight(uri, "/"),
+		token:      strings.TrimSpace(token),
 	}
 
 	return c
 }
 
-func (c *GoE) apiURL(api apiFunction) string {
-	return fmt.Sprintf("%s/%s", c.uri, api)
+func (c *GoE) apiStatus() (goeStatusResponse, error) {
+	if c.token == "" {
+		var status goeStatusResponse
+		url := fmt.Sprintf("%s/%s", c.uri, "status")
+		_, err := c.GetJSON(url, &status)
+		return status, err
+	}
+
+	var status goeCloudResponse
+	url := fmt.Sprintf("%s/%s?token=%s&", goeCloud, "api_status", c.token)
+	_, err := c.GetJSON(url, &status)
+	return status.Data, err
+}
+
+func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
+	if c.token == "" {
+		var status goeStatusResponse
+		url := fmt.Sprintf("%s/%s=%s", c.uri, "mqtt?payload", payload)
+		_, err := c.GetJSON(url, &status)
+		return status, err
+	}
+
+	var status goeCloudResponse
+	url := fmt.Sprintf("%s/%s?token=%s&%s", goeCloud, "api", c.token, payload)
+	_, err := c.GetJSON(url, &status)
+	if err == nil && !status.Success {
+		err = errors.New(status.Error)
+	}
+	return status.Data, err
 }
 
 // Status implements the Charger.Status interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
-	var status goeStatusResponse
-	if _, err := c.GetJSON(c.apiURL(goeStatus), &status); err != nil {
+	status, err := c.apiStatus()
+	if err != nil {
 		return api.StatusNone, err
 	}
 
@@ -74,8 +114,8 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *GoE) Enabled() (bool, error) {
-	var status goeStatusResponse
-	if _, err := c.GetJSON(c.apiURL(goeStatus), &status); err != nil {
+	status, err := c.apiStatus()
+	if err != nil {
 		return false, err
 	}
 
@@ -91,16 +131,12 @@ func (c *GoE) Enabled() (bool, error) {
 
 // Enable implements the Charger.Enable interface
 func (c *GoE) Enable(enable bool) error {
-	var status goeStatusResponse
-
 	var b int
 	if enable {
 		b = 1
 	}
 
-	uri := c.apiURL(goePayload) + fmt.Sprintf("alw=%d", b)
-
-	_, err := c.GetJSON(uri, &status)
+	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
 	if err == nil && status.Alw != b {
 		return fmt.Errorf("alw update failed: %d", status.Amp)
 	}
@@ -110,10 +146,7 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
-	var status goeStatusResponse
-	uri := c.apiURL(goePayload) + fmt.Sprintf("amp=%d", current)
-
-	_, err := c.GetJSON(uri, &status)
+	status, err := c.apiUpdate(fmt.Sprintf("amp=%d", current))
 	if err == nil && int64(status.Amp) != current {
 		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
@@ -123,8 +156,7 @@ func (c *GoE) MaxCurrent(current int64) error {
 
 // CurrentPower implements the Meter interface.
 func (c *GoE) CurrentPower() (float64, error) {
-	var status goeStatusResponse
-	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
+	status, err := c.apiStatus()
 	var power float64
 	if len(status.Nrg) == 16 {
 		power = float64(status.Nrg[11]) * 10
@@ -134,16 +166,14 @@ func (c *GoE) CurrentPower() (float64, error) {
 
 // ChargedEnergy implements the ChargeRater interface
 func (c *GoE) ChargedEnergy() (float64, error) {
-	var status goeStatusResponse
-	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
+	status, err := c.apiStatus()
 	energy := float64(status.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
 	return energy, err
 }
 
 // Currents implements the MeterCurrent interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
-	var status goeStatusResponse
-	_, err := c.GetJSON(c.apiURL(goeStatus), &status)
+	status, err := c.apiStatus()
 	if len(status.Nrg) == 16 {
 		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
 	}
