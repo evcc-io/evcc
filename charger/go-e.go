@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -37,11 +38,18 @@ type goeStatusResponse struct {
 type GoE struct {
 	*util.HTTPHelper
 	uri, token string
+	cache      time.Duration
+	updated    time.Time
+	status     goeStatusResponse
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
-	cc := struct{ URI, Token string }{}
+	cc := struct {
+		Token string
+		URI   string
+		Cache time.Duration
+	}{}
 	util.DecodeOther(log, other, &cc)
 
 	if cc.URI != "" && cc.Token != "" {
@@ -51,11 +59,11 @@ func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charge
 		log.FATAL.Fatal("config: must have one of uri/token")
 	}
 
-	return NewGoE(cc.URI, cc.Token)
+	return NewGoE(cc.URI, cc.Token, cc.Cache)
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string) *GoE {
+func NewGoE(uri, token string, cache time.Duration) *GoE {
 	c := &GoE{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("go-e")),
 		uri:        strings.TrimRight(uri, "/"),
@@ -87,18 +95,36 @@ func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error)
 	return status.Data, err
 }
 
-func (c *GoE) apiStatus() (goeStatusResponse, error) {
+func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 	if c.token == "" {
 		return c.localResponse("status")
 	}
-	return c.cloudResponse("api_status", "")
+
+	status = c.status // cached value
+
+	if time.Since(c.updated) >= c.cache {
+		status, err = c.cloudResponse("api_status", "")
+		if err == nil {
+			c.updated = time.Now()
+			c.status = status
+		}
+	}
+
+	return status, err
 }
 
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
 		return c.localResponse("mqtt?payload=" + payload)
 	}
-	return c.cloudResponse("api", payload)
+
+	status, err := c.cloudResponse("api", payload)
+	if err == nil {
+		c.updated = time.Now()
+		c.status = status
+	}
+
+	return status, err
 }
 
 // Status implements the Charger.Status interface
