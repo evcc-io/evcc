@@ -47,6 +47,9 @@ func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charge
 	if cc.URI != "" && cc.Token != "" {
 		log.FATAL.Fatal("config: should only have one of uri/token")
 	}
+	if cc.URI == "" && cc.Token == "" {
+		log.FATAL.Fatal("config: must have one of uri/token")
+	}
 
 	return NewGoE(cc.URI, cc.Token)
 }
