@@ -84,7 +84,7 @@ func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error)
 
 	url := fmt.Sprintf("%s/%s?token=%s", goeCloud, function, c.token)
 	if payload != "" {
-		url += "&" + payload
+		url += "&payload=" + payload
 	}
 
 	_, err := c.GetJSON(url, &status)
