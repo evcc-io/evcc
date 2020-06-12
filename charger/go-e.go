@@ -73,9 +73,15 @@ func NewGoE(uri, token string, cache time.Duration) *GoE {
 	return c
 }
 
-func (c *GoE) localResponse(function string) (goeStatusResponse, error) {
+func (c *GoE) localResponse(function, payload string) (goeStatusResponse, error) {
 	var status goeStatusResponse
-	_, err := c.GetJSON(fmt.Sprintf("%s/%s", c.uri, function), &status)
+
+	url := fmt.Sprintf("%s/%s", c.uri, function)
+	if payload != "" {
+		url += "&payload=" + payload
+	}
+
+	_, err := c.GetJSON(url, &status)
 	return status, err
 }
 
@@ -97,7 +103,7 @@ func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error)
 
 func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 	if c.token == "" {
-		return c.localResponse("status")
+		return c.localResponse("status", "")
 	}
 
 	status = c.status // cached value
@@ -115,7 +121,7 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
-		return c.localResponse("mqtt?payload=" + payload)
+		return c.localResponse("mqtt", payload)
 	}
 
 	status, err := c.cloudResponse("api", payload)
