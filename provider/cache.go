@@ -15,6 +15,7 @@ type Cached struct {
 	cache   time.Duration
 	getter  interface{}
 	val     interface{}
+	err     error
 }
 
 // NewCached wraps a getter with a cache
@@ -29,102 +30,68 @@ func NewCached(log *util.Logger, getter interface{}, cache time.Duration) *Cache
 
 // FloatGetter gets float value
 func (c *Cached) FloatGetter() FloatGetter {
-	g, ok := c.getter.(FloatGetter)
+	g, ok := c.getter.(func() (float64, error))
 	if !ok {
-		if g, ok = c.getter.(func() (float64, error)); !ok {
-			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
-		}
-		g = FloatGetter(g)
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return FloatGetter(func() (float64, error) {
 		if c.clock.Since(c.updated) > c.cache {
-			val, err := g()
-			if err != nil {
-				return val, err
-			}
-
+			c.val, c.err = g()
 			c.updated = c.clock.Now()
-			c.val = val
 		}
 
-		return c.val.(float64), nil
+		return c.val.(float64), c.err
 	})
 }
 
 // IntGetter gets int value
 func (c *Cached) IntGetter() IntGetter {
-	g, ok := c.getter.(IntGetter)
+	g, ok := c.getter.(func() (int64, error))
 	if !ok {
-		if g, ok = c.getter.(func() (int64, error)); !ok {
-			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
-		}
-		g = IntGetter(g)
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return IntGetter(func() (int64, error) {
 		if c.clock.Since(c.updated) > c.cache {
-			val, err := g()
-			if err != nil {
-				return val, err
-			}
-
+			c.val, c.err = g()
 			c.updated = c.clock.Now()
-			c.val = val
 		}
 
-		return c.val.(int64), nil
+		return c.val.(int64), c.err
 	})
 }
 
 // StringGetter gets string value
 func (c *Cached) StringGetter() StringGetter {
-	g, ok := c.getter.(StringGetter)
+	g, ok := c.getter.(func() (string, error))
 	if !ok {
-		if g, ok = c.getter.(func() (string, error)); !ok {
-			c.log.FATAL.Fatalf("invalid type: %T", c.getter)
-		}
-		g = StringGetter(g)
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return StringGetter(func() (string, error) {
 		if c.clock.Since(c.updated) > c.cache {
-
-			val, err := g()
-			if err != nil {
-				return val, err
-			}
-
+			c.val, c.err = g()
 			c.updated = c.clock.Now()
-			c.val = val
 		}
 
-		return c.val.(string), nil
+		return c.val.(string), c.err
 	})
 }
 
 // BoolGetter gets bool value
 func (c *Cached) BoolGetter() BoolGetter {
-	g, ok := c.getter.(BoolGetter)
+	g, ok := c.getter.(func() (bool, error))
 	if !ok {
-		if g, ok = c.getter.(func() (bool, error)); !ok {
-			c.log.FATAL.Fatalf("invalid type: %T", g)
-		}
-		g = BoolGetter(g)
+		c.log.FATAL.Fatalf("invalid type: %T", g)
 	}
 
 	return BoolGetter(func() (bool, error) {
 		if c.clock.Since(c.updated) > c.cache {
-
-			val, err := g()
-			if err != nil {
-				return val, err
-			}
-
+			c.val, c.err = g()
 			c.updated = c.clock.Now()
-			c.val = val
 		}
 
-		return c.val.(bool), nil
+		return c.val.(bool), c.err
 	})
 }
