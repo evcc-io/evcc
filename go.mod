@@ -16,6 +16,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
 	github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a
+	github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08
 	github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d
 	github.com/itchyny/astgen-go v0.0.0-20200403103919-0d06ab3590ba // indirect
 	github.com/itchyny/gojq v0.10.1
