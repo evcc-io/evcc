@@ -102,7 +102,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
 - `nrgkick-bt`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
-- `go-e`: go-eCharger chargers
+- `go-e`: go-eCharger chargers (both local and cloud API are supported)
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
