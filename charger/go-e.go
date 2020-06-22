@@ -78,7 +78,7 @@ func (c *GoE) localResponse(function, payload string) (goeStatusResponse, error)
 
 	url := fmt.Sprintf("%s/%s", c.uri, function)
 	if payload != "" {
-		url += "&payload=" + payload
+		url += "?payload=" + payload
 	}
 
 	_, err := c.GetJSON(url, &status)
