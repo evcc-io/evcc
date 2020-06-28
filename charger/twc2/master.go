@@ -112,47 +112,46 @@ RESTART:
 		for i := 0; i < 5; i++ {
 			println("sendLinkReady1")
 
-			err := h.sendLinkReady1()
-			time.Sleep(linkDelay)
-
-			if err != nil {
+			if err := h.sendLinkReady1(); err != nil {
 				fmt.Printf("sendLinkReady1: %v\n", err)
 				goto RESTART
 			}
+
+			time.Sleep(linkDelay)
 		}
 
 		// link ready 2
 		for i := 0; i < 5; i++ {
 			println("sendLinkReady2")
 
-			err := h.sendLinkReady2()
-			time.Sleep(linkDelay)
-
-			if err != nil {
+			if err := h.sendLinkReady2(); err != nil {
 				fmt.Printf("sendLinkReady2: %v\n", err)
 				goto RESTART
 			}
+
+			time.Sleep(linkDelay)
 		}
 
 		// main advertise/receive loop
-		for {
-			if time.Since(h.lastTX) > advertiseDelay {
-				// TODO send to one slave at a time, use channel?
-				for _, slave := range h.slaves {
-					println("sendMasterHeartbeat")
+		if time.Since(h.lastTX) > advertiseDelay {
+			println("advertiseDelay")
 
-					if err := slave.sendMasterHeartbeat(); err != nil {
-						fmt.Printf("sendMasterHeartbeat: %v\n", err)
-						goto RESTART
-					}
+			// TODO send to one slave at a time, use channel?
+			for _, slave := range h.slaves {
+				println("sendMasterHeartbeat")
+
+				if err := slave.sendMasterHeartbeat(); err != nil {
+					fmt.Printf("sendMasterHeartbeat: %v\n", err)
+					goto RESTART
 				}
-				time.Sleep(linkDelay)
 			}
 
-			if err := h.receive(); err != nil {
-				fmt.Printf("receive: %v\n", err)
-				goto RESTART
-			}
+			time.Sleep(linkDelay)
+		}
+
+		if err := h.receive(); err != nil {
+			fmt.Printf("receive: %v\n", err)
+			goto RESTART
 		}
 	}
 }
@@ -204,6 +203,7 @@ func (h *Master) receive() error {
 			if len(data) == 0 {
 				return nil
 			}
+
 			if time.Since(timeMsgRxStart) > recvTimeout {
 				return errors.New("recv timeout")
 			}
