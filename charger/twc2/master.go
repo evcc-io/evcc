@@ -76,10 +76,9 @@ func (h *Master) Close() {
 }
 
 func (h *Master) send(msg []byte) error {
-	fmt.Printf("send1: % 0x\n", msg)
 	msg = Encode(msg)
 	_, err := h.port.Write(msg)
-	fmt.Printf("send2: % 0x\n", msg)
+	fmt.Printf("send: % 0X\n", msg)
 	h.lastTX = time.Now()
 	return err
 }
@@ -106,6 +105,8 @@ func (h *Master) Run() {
 RESTART:
 	h.Close()
 
+	numInitMsgsToSend := 10
+
 	for {
 		println("--")
 
@@ -115,8 +116,6 @@ RESTART:
 		}
 
 		time.Sleep(loopDelay)
-
-		numInitMsgsToSend := 10
 
 		if numInitMsgsToSend > 5 {
 			// link ready 1
@@ -265,6 +264,7 @@ func (h *Master) receive() error {
 		// 	msgLen += 1
 		msg = append(msg, data[0:dataLen-1]...)
 
+		fmt.Printf("recv: % 0X\n", msg)
 		// 	# Messages are usually 17 bytes or longer and end with \xc0\xfe.
 		// 	# However, when the network lacks termination and bias
 		// 	# resistors, the last byte (\xfe) may be corrupted or even
