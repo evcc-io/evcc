@@ -177,11 +177,11 @@ func (h *Master) receive() error {
 	for {
 		dataLen, err := h.port.Read(data)
 		if err != nil {
-			fmt.Printf("receive: %v\n", err)
+			fmt.Printf("recv: %v\n", err)
 			return err
 		}
 
-		fmt.Println("receive:", dataLen)
+		fmt.Println("recv:", dataLen)
 
 		// 	if(dataLen == 0):
 		// 		if(msgLen == 0):
