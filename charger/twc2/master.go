@@ -312,7 +312,11 @@ func (h *Master) receive() error {
 				return nil
 			}
 
-			return h.handleMessage(msg)
+			if err := h.handleMessage(msg); err != nil {
+				fmt.Printf("handle: %v", err)
+			}
+
+			return nil
 		}
 	}
 }

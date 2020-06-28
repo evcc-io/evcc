@@ -5,7 +5,10 @@ type SlaveMessage struct {
 	SenderID uint16
 }
 
-const SlaveLinkReadyID uint16 = 0xfde2
+const (
+	SlaveLinkReadyID uint16 = 0xfde2
+	SlaveHeartbeatID uint16 = 0xfde0
+)
 
 type SlaveLinkReady struct {
 	Type        uint16
@@ -14,8 +17,6 @@ type SlaveLinkReady struct {
 	MaxAmps     uint16
 	ZeroPadding [6]byte
 }
-
-const SlaveHeartbeatID uint16 = 0xfde0
 
 type SlaveHeartbeat struct {
 	Type                 uint16
