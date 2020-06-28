@@ -290,10 +290,10 @@ func (h *Master) receive() error {
 		// 	#   https://e2e.ti.com/blogs_/b/analogwire/archive/2016/07/28/rs-485-basics-when-termination-is-necessary-and-how-to-do-it-properly
 		// 	if(msgLen >= 16 and data[0] == 0xc0):
 		// 		break
-		if len(msg) >= 16 && data[0] == delimiter {
-			println("corrupted - ignoring")
-			return nil
-		}
+		// if len(msg) >= 16 && data[0] == delimiter {
+		// 	println("corrupted - ignoring")
+		// 	return nil
+		// }
 
 		// if(msgLen >= 16):
 		// 	msg = unescape_msg(msg, msgLen)
