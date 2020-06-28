@@ -305,13 +305,11 @@ func (h *Master) receive() error {
 		// 	# len($msg) now contains the unescaped message length.
 		// 	msgLen = 0
 		if len(msg) >= 16 {
-			fmt.Printf("IN %0 x\n", msg)
 			msg, err := Decode(msg)
-			fmt.Printf("OUT %0 x\n", msg)
 
 			if err != nil {
 				fmt.Printf("decode: %v\n", err)
-				return err
+				return nil
 			}
 
 			return h.handleMessage(msg)
@@ -356,10 +354,6 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 				(len(msg), hex_str(msg)))
 	// 		continue
 
-	if len(msg) != 14 && len(msg) != 16 && len(msg) != 20 {
-		fmt.Printf("ignoring message of unexpected length: %d", len(msg))
-	}
-
 	// 	checksumExpected = msg[len(msg) - 1]
 	// 	checksum = 0
 	// 	for i in range(1, len(msg) - 1):
@@ -369,6 +363,12 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 		print("ERROR: Checksum %X does not match %02X.  Ignoring message: %s" %
 	// 			(checksum, checksumExpected, hex_str(msg)))
 	// 		continue
+
+	// msg length-1 compared to twcmanager as checksum is already removed
+	if len(msg) != 13 && len(msg) != 15 && len(msg) != 19 {
+		fmt.Printf("ignoring message of unexpected length: %d", len(msg))
+		return nil
+	}
 
 	// 	if(fakeMaster == 1):
 	// 		############################
