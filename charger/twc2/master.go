@@ -36,7 +36,8 @@ type Master struct {
 // NewMaster creates TWC master for given serial device
 func NewMaster(dev string) *Master {
 	h := &Master{
-		dev: dev,
+		dev:    dev,
+		slaves: make(map[uint16]*Slave),
 	}
 
 	// set singleton instance
@@ -313,7 +314,7 @@ func (h *Master) receive() error {
 			}
 
 			if err := h.handleMessage(msg); err != nil {
-				fmt.Printf("handle: %v", err)
+				fmt.Printf("handle: %v\n", err)
 			}
 
 			return nil
@@ -416,14 +417,12 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 	maxAmps := int(binary.BigEndian.Uint16(match[2]) / 100)
 
 	if slaveMsgType.Type == SlaveLinkReadyID {
-		println("SlaveLinkReadyID")
-
 		var slaveMsg SlaveLinkReady
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("SlaveLinkReady: %v", slaveMsg)
+		fmt.Println("SlaveLinkReady:", slaveMsg)
 
 		senderID := slaveMsg.SenderID
 		maxAmps := int(slaveMsg.SenderID / 100)
@@ -504,14 +503,12 @@ func (h *Master) handleMessage(msg []byte) error {
 	// if match := re.FindSubmatch(msg); len(match) > 0 {
 
 	if slaveMsgType.Type == SlaveHeartbeatID {
-		println("SlaveHeartbeatID")
-
 		var slaveMsg SlaveHeartbeat
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("SlaveHeartbeat: %v", slaveMsg)
+		fmt.Println("SlaveHeartbeat:", slaveMsg)
 
 		// 			# Handle heartbeat message from slave.
 		// 			#
