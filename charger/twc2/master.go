@@ -324,50 +324,6 @@ func (h *Master) receive() error {
 
 func (h *Master) handleMessage(msg []byte) error {
 	fmt.Printf("handle: % 0x\n", msg)
-	// 	msgRxCount += 1
-
-	// 	# When the sendTWCMsg web command is used to send a message to the
-	// 	# TWC, it sets lastTWCResponseMsg = b''.  When we see that here,
-	// 	# set lastTWCResponseMsg to any unusual message received in response
-	// 	# to the sent message.  Never set lastTWCResponseMsg to a commonly
-	// 	# repeated message like master or slave linkready, heartbeat, or
-	// 	# voltage/kWh report.
-	// 	if(lastTWCResponseMsg == b''
-	// 		and msg[0:2] != b'\xFB\xE0' and msg[0:2] != b'\xFD\xE0'
-	// 		and msg[0:2] != b'\xFC\xE1' and msg[0:2] != b'\xFB\xE2'
-	// 		and msg[0:2] != b'\xFD\xE2' and msg[0:2] != b'\xFB\xEB'
-	// 		and msg[0:2] != b'\xFD\xEB' and msg[0:2] != b'\xFD\xE0'
-	// 	):
-	// 		lastTWCResponseMsg = msg
-
-	// 	if(debugLevel >= 9):
-	// 		print("Rx@" + time_now() + ": (" + hex_str(ignoredData) + ') ' \
-	// 				+ hex_str(msg) + "")
-
-	// 	ignoredData = bytearray()
-
-	// 	# After unescaping special values and removing the leading and
-	// 	# trailing C0 bytes, the messages we know about are always 14 bytes
-	// 	# long in original TWCs, or 16 bytes in newer TWCs (protocolVersion
-	// 	# == 2).
-	// 	if(len(msg) != 14 and len(msg) != 16 and len(msg) != 20):
-	// 		# In firmware 4.5.3, FD EB (kWh and voltage report), FD ED, FD
-	// 		# EE, FD EF, FD F1, and FB A4 messages are length 20 while most
-	// 		# other messages are length 16. I'm not sure if there are any
-	// 		# length 14 messages remaining.
-	// 		print(time_now() + ": ERROR: Ignoring message of unexpected length %d: %s" % \
-	// 				(len(msg), hex_str(msg)))
-	// 		continue
-
-	// 	checksumExpected = msg[len(msg) - 1]
-	// 	checksum = 0
-	// 	for i in range(1, len(msg) - 1):
-	// 		checksum += msg[i]
-
-	// 	if((checksum & 0xFF) != checksumExpected):
-	// 		print("ERROR: Checksum %X does not match %02X.  Ignoring message: %s" %
-	// 			(checksum, checksumExpected, hex_str(msg)))
-	// 		continue
 
 	// msg length-1 compared to twcmanager as checksum is already removed
 	if len(msg) != 13 && len(msg) != 15 && len(msg) != 19 {
@@ -375,67 +331,25 @@ func (h *Master) handleMessage(msg []byte) error {
 		return nil
 	}
 
-	// 	if(fakeMaster == 1):
-	// 		############################
-	// 		# Pretend to be a master TWC
-
-	// 		foundMsgMatch = False
-
-	// 		# We end each regex message search below with \Z instead of $
-	// 		# because $ will match a newline at the end of the string or the
-	// 		# end of the string (even without the re.MULTILINE option), and
-	// 		# sometimes our strings do end with a newline character that is
-	// 		# actually the CRC byte with a value of 0A or 0D.
-
-	// 		msgMatch = re.search(b'^\xfd\xe2(..)(.)(..)\x00\x00\x00\x00\x00\x00.+\Z', msg, re.DOTALL)
-	// 		if(msgMatch and foundMsgMatch == False):
-	// 			# Handle linkready message from slave.
-	// 			#
-	// 			# We expect to see one of these before we start sending our
-	// 			# own heartbeat message to slave.
-	// 			# Once we start sending our heartbeat to slave once per
-	// 			# second, it should no longer send these linkready messages.
-	// 			# If slave doesn't hear master's heartbeat for around 10
-	// 			# seconds, it sends linkready once per 10 seconds and starts
-	// 			# flashing its red LED 4 times with the top green light on.
-	// 			# Red LED stops flashing if we start sending heartbeat
-	// 			# again.
-	// 			foundMsgMatch = True
-	// 			senderID = msgMatch.group(1)
-	// 			sign = msgMatch.group(2)
-	// 			maxAmps = ((msgMatch.group(3)[0] << 8) + msgMatch.group(3)[1]) / 100
-
 	var slaveMsgType SlaveMessage
 	if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsgType); err != nil {
 		panic(err)
 	}
 
-	if slaveMsgType.Type == SlaveLinkReadyID {
+	switch slaveMsgType.Type {
+	case SlaveLinkReadyID:
 		var slaveMsg SlaveLinkReady
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
 		fmt.Println("SlaveLinkReady:", slaveMsg)
 
-		maxAmps := int(slaveMsg.MaxAmps / 100)
-		fmt.Printf("%d amp slave TWC %02X is ready to link", maxAmps, slaveMsg.SenderID)
-
 		if slaveMsg.SenderID == binary.BigEndian.Uint16(fakeTWCID) {
 			return fmt.Errorf("slave reports same TWCID as master")
 		}
 
+		maxAmps := int(slaveMsg.MaxAmps / 100)
 		slaveTWC := h.newSlave(slaveMsg.SenderID, maxAmps)
-
-		// 			if(slaveTWC.protocolVersion == 1 and slaveTWC.minAmpsTWCSupports == 6):
-		// 				if(len(msg) == 14):
-		// 					slaveTWC.protocolVersion = 1
-		// 					slaveTWC.minAmpsTWCSupports = 5
-		// 				elif(len(msg) == 16):
-		// 					slaveTWC.protocolVersion = 2
-		// 					slaveTWC.minAmpsTWCSupports = 6
-		// 				if(debugLevel >= 1):
-		// 					print(time_now() + ": Set slave TWC %02X%02X protocolVersion to %d, minAmpsTWCSupports to %d." % \
-		// 							(senderID[0], senderID[1], slaveTWC.protocolVersion, slaveTWC.minAmpsTWCSupports))
 
 		// msg length-1 compared to twcmanager as checksum is already removed
 		if slaveTWC.protocolVersion == 1 && slaveTWC.minAmpsTWCSupports == 6 {
@@ -448,48 +362,13 @@ func (h *Master) handleMessage(msg []byte) error {
 			}
 		}
 
-		// 			# We expect maxAmps to be 80 on U.S. chargers and 32 on EU
-		// 			# chargers. Either way, don't allow
-		// 			# slaveTWC.wiringMaxAmps to be greater than maxAmps.
-		// 			if(slaveTWC.wiringMaxAmps > maxAmps):
-		// 				print("\n\n!!! DANGER DANGER !!!\nYou have set wiringMaxAmpsPerTWC to "
-		// 						+ str(wiringMaxAmpsPerTWC)
-		// 						+ " which is greater than the max "
-		// 						+ str(maxAmps) + " amps your charger says it can handle.  " \
-		// 						"Please review instructions in the source code and consult an " \
-		// 						"electrician if you don't know what to do.")
-		// 				slaveTWC.wiringMaxAmps = maxAmps / 4
-
-		if slaveTWC.wiringMaxAmps > 32 {
-			panic("slave wiringMaxAmps too high")
-		}
-
-		// 			# Make sure we print one SHB message after a slave
-		// 			# linkready message is received by clearing
-		// 			# lastHeartbeatDebugOutput. This helps with debugging
-		// 			# cases where I can't tell if we responded with a
-		// 			# heartbeat or not.
-		// 			slaveTWC.lastHeartbeatDebugOutput = ''
-
-		// 			slaveTWC.timeLastRx = time.time()
-		// 			slaveTWC.send_master_heartbeat()
-
 		return slaveTWC.sendMasterHeartbeat()
-	}
 
-	// 		else:
-	// 			msgMatch = re.search(b'\A\xfd\xe0(..)(..)(.......+?).\Z', msg, re.DOTALL)
-	// 		if(msgMatch and foundMsgMatch == False):
-
-	// re := regexp.MustCompile(`^\x{fd}\x{e0}(..)(..)(.......+?).$`)
-	// if match := re.FindSubmatch(msg); len(match) > 0 {
-
-	if slaveMsgType.Type == SlaveHeartbeatID {
+	case SlaveHeartbeatID:
 		var slaveMsg SlaveHeartbeat
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-
 		fmt.Println("SlaveHeartbeat:", slaveMsg)
 
 		slaveTWC, ok := h.slaves[slaveMsg.SenderID]
@@ -501,22 +380,7 @@ func (h *Master) handleMessage(msg []byte) error {
 			return slaveTWC.receiveSlaveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
 		}
 
-		// 			else:
-		// 				# I've tried different fakeTWCID values to verify a
-		// 				# slave will send our fakeTWCID back to us as
-		// 				# receiverID. However, I once saw it send receiverID =
-		// 				# 0000.
-		// 				# I'm not sure why it sent 0000 and it only happened
-		// 				# once so far, so it could have been corruption in the
-		// 				# data or an unusual case.
-		// 				if(debugLevel >= 1):
-		// 					print(time_now() + ": WARNING: Slave TWC %02X%02X status data: " \
-		// 							"%s sent to unknown TWC %02X%02X." % \
-		// 						(senderID[0], senderID[1],
-		// 						hex_str(heartbeatData), receiverID[0], receiverID[1]))
-
-		return fmt.Errorf("slave replied to unexpected master: %02X", receiverID)
-	}
+		return fmt.Errorf("slave replied to unexpected master: %02X", slaveMsg.ReceiverID)
 
 	// 		else:
 	// 			msgMatch = re.search(b'\A\xfd\xeb(..)(..)(.+?).\Z', msg, re.DOTALL)
@@ -552,15 +416,6 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			receiverID = msgMatch.group(2)
 	// 			data = msgMatch.group(3)
 
-	// 			if(debugLevel >= 1):
-	// 				print(time_now() + ": Slave TWC %02X%02X unexpectedly reported kWh and voltage data: %s." % \
-	// 					(senderID[0], senderID[1],
-	// 					hex_str(data)))
-
-	// ignore message
-	// 	return nil
-	// }
-
 	// 		else:
 	// 			msgMatch = re.search(b'\A\xfc(\xe1|\xe2)(..)(.)\x00\x00\x00\x00\x00\x00\x00\x00.+\Z', msg, re.DOTALL)
 	// 		if(msgMatch and foundMsgMatch == False):
@@ -580,39 +435,23 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			print(time_now() + ": *** UNKNOWN MESSAGE FROM SLAVE:" + hex_str(msg)
 	// 					+ "\nPlease private message user CDragon at http://teslamotorsclub.com " \
 	// 					"with a copy of this error.")
+	default:
+		fmt.Println("unknown message received")
+	}
 
-	fmt.Println("unknown message received")
 	return nil
 }
 
 func (h *Master) newSlave(slaveID uint16, maxAmps int) *Slave {
-	// try:
-	//     slaveTWC = slaveTWCs[newSlaveID]
-	//     # We didn't get KeyError exception, so this slave is already in
-	//     # slaveTWCs and we can simply return it.
-	//     return slaveTWC
-	// except KeyError:
-	//     pass
-
-	// u := binary.BigEndian.Uint16(newSlaveID)
 	if slaveTWC, ok := h.slaves[slaveID]; ok {
 		return slaveTWC
 	}
-
-	// slaveTWC = TWCSlave(newSlaveID, maxAmps)
-	// slaveTWCs[newSlaveID] = slaveTWC
-	// slaveTWCRoundRobin.append(slaveTWC)
-
-	// if(len(slaveTWCRoundRobin) > 3):
-	//     print("WARNING: More than 3 slave TWCs seen on network.  " \
-	//         "Dropping oldest: " + hex_str(slaveTWCRoundRobin[0].TWCID) + ".")
-	//     delete_slave(slaveTWCRoundRobin[0].TWCID)
 
 	slaveTWC := NewSlave(slaveID, maxAmps)
 	h.slaves[slaveID] = slaveTWC
 
 	if len(h.slaves) > 3 {
-		panic("too many slaves")
+		panic("twc2: too many slaves")
 	}
 
 	return slaveTWC
