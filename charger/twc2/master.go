@@ -33,6 +33,7 @@ type Master struct {
 	lastTX time.Time
 }
 
+// NewMaster creates TWC master for given serial device
 func NewMaster(dev string) *Master {
 	h := &Master{
 		dev: dev,
@@ -46,9 +47,10 @@ func NewMaster(dev string) *Master {
 	return master
 }
 
+// Open opens the serial device with default configuration
 func (h *Master) Open() error {
 	if h.port == nil {
-		println("open")
+		fmt.Println("open", h.dev)
 
 		port, err := serial.Open(&serial.Config{
 			Address:  h.dev,
