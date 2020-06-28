@@ -192,14 +192,13 @@ func (h *Master) receive() error {
 			}
 		}
 
-		timeMsgRxStart = time.Now()
-
 		if len(msg) == 0 && data[0] != delimiter {
 			continue
 		}
 
+		timeMsgRxStart = time.Now()
 		if len(msg) > 0 && len(msg) < 15 && data[0] == delimiter {
-			fmt.Println("started in middle of message- should not happen")
+			fmt.Println("recv: started in middle of message- should not happen")
 			msg = data[0:dataLen]
 			continue
 		}
@@ -208,7 +207,7 @@ func (h *Master) receive() error {
 		fmt.Printf("recv: % 0X\n", msg)
 
 		if len(msg) >= 16 && bytes.Count(msg, []byte{delimiter}) > 2 {
-			fmt.Println("invalid message- ignoring")
+			fmt.Println("recv: invalid message- ignoring")
 			msg = []byte{}
 			continue
 		}
