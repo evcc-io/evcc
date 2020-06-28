@@ -163,10 +163,14 @@ func (h *Master) receive() error {
 	// 	now = time.time()
 	// 	dataLen = ser.inWaiting()
 	for {
+		println("receive")
+
 		dataLen, err := h.port.Read(data)
 		if err != nil {
 			return err
 		}
+
+		println(dataLen)
 
 		// 	if(dataLen == 0):
 		// 		if(msgLen == 0):
