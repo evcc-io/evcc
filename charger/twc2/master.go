@@ -106,14 +106,6 @@ func (h *Master) Run() {
 RESTART:
 	h.Close()
 
-	// msg := bytes.NewBuffer([]byte{0xFC, 0xE1})
-	// msg.Write(fakeTWCID)
-	// msg.Write(masterSign)
-	// msg.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
-	// b := Encode(msg.Bytes())
-	// fmt.Printf("% 0X\n", b)
-	// panic("foo")
-
 	for {
 		println("--")
 
@@ -124,8 +116,10 @@ RESTART:
 
 		time.Sleep(loopDelay)
 
-		// link ready 1
-		for i := 0; i < 5; i++ {
+		numInitMsgsToSend := 10
+
+		if numInitMsgsToSend > 5 {
+			// link ready 1
 			println("sendMasterLinkReady1")
 
 			if err := h.sendMasterLinkReady1(); err != nil {
@@ -133,11 +127,10 @@ RESTART:
 				goto RESTART
 			}
 
+			numInitMsgsToSend--
 			time.Sleep(linkDelay)
-		}
-
-		// link ready 2
-		for i := 0; i < 5; i++ {
+		} else if numInitMsgsToSend > 0 {
+			// link ready 2
 			println("sendMasterLinkReady2")
 
 			if err := h.sendMasterLinkReady2(); err != nil {
@@ -145,11 +138,10 @@ RESTART:
 				goto RESTART
 			}
 
+			numInitMsgsToSend--
 			time.Sleep(linkDelay)
-		}
-
-		// main advertise/receive loop
-		if time.Since(h.lastTX) > advertiseDelay {
+		} else if time.Since(h.lastTX) > advertiseDelay {
+			// master heartbeat
 			println("advertiseDelay")
 
 			// TODO send to one slave at a time, use channel?
