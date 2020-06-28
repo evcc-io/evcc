@@ -7,7 +7,6 @@ import (
 
 const (
 	delimiter = 0xC0
-	endmarker = 0xFC
 	escape    = 0xDB
 )
 

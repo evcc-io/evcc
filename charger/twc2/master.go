@@ -214,7 +214,7 @@ func (h *Master) receive() error {
 
 		if len(msg) >= 16 {
 			// drop final marker after 0xC0
-			if msg[len(msg)-1] == endmarker {
+			if msg[len(msg)-2] == delimiter {
 				msg = msg[:len(msg)-1]
 			}
 
