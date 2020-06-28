@@ -58,7 +58,7 @@ func (h *Master) Open() error {
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 2,
-			RS485:    serial.RS485Config{Enabled: true},
+			// RS485:    serial.RS485Config{Enabled: true},
 		})
 
 		if err != nil {
