@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/grid-x/serial"
+	"github.com/lunixbochs/struc"
 )
 
 const (
@@ -318,7 +319,7 @@ func (h *Master) receive() error {
 }
 
 func (h *Master) handleMessage(msg []byte) error {
-	println("handleMessage")
+	fmt.Printf("handleMessage: % 0x\n", msg)
 	// 	msgRxCount += 1
 
 	// 	# When the sendTWCMsg web command is used to send a message to the
@@ -366,7 +367,7 @@ func (h *Master) handleMessage(msg []byte) error {
 
 	// msg length-1 compared to twcmanager as checksum is already removed
 	if len(msg) != 13 && len(msg) != 15 && len(msg) != 19 {
-		fmt.Printf("ignoring message of unexpected length: %d", len(msg))
+		fmt.Println("ignoring message of unexpected length:", len(msg))
 		return nil
 	}
 
@@ -400,48 +401,27 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			sign = msgMatch.group(2)
 	// 			maxAmps = ((msgMatch.group(3)[0] << 8) + msgMatch.group(3)[1]) / 100
 
-	re := regexp.MustCompile(`^\x{fd}\x{e2}(..)(.)(..)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
-	if match := re.FindSubmatch(msg); len(match) > 0 {
-		senderID := match[0]
-		// sign := match[1]
-		maxAmps := int(binary.BigEndian.Uint16(match[2]) / 100)
+	var slaveMsg SlaveLinkReady
+	if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
+		panic(err)
+	}
 
-		// 			if(debugLevel >= 1):
-		// 				print(time_now() + ": %.2f amp slave TWC %02X%02X is ready to link.  Sign: %s" % \
-		// 					(maxAmps, senderID[0], senderID[1],
-		// 					hex_str(sign)))
+	fmt.Printf("slaveMsg: %v\n", slaveMsg)
+
+	// re := regexp.MustCompile(`^\x{fd}\x{e2}(..)(.)(..)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
+	// if match := re.FindSubmatch(msg); len(match) > 0 {
+	// 	senderID := match[0]
+	// 	// sign := match[1]
+	// 	maxAmps := int(binary.BigEndian.Uint16(match[2]) / 100)
+
+	if slaveMsg.SenderID == 0xfde2 {
+		senderID := slaveMsg.SenderID
+		maxAmps := int(slaveMsg.SenderID / 100)
+
 		fmt.Printf("%d amp slave TWC %02X is ready to link", maxAmps, senderID)
 
-		// 			if(maxAmps >= 80):
-		// 				# U.S. chargers need a spike to 21A to cancel a 6A
-		// 				# charging limit imposed in an Oct 2017 Tesla car
-		// 				# firmware update. See notes where
-		// 				# spikeAmpsToCancel6ALimit is used.
-		// 				spikeAmpsToCancel6ALimit = 21
-		// 			else:
-		// 				# EU chargers need a spike to only 16A.  This value
-		// 				# comes from a forum post and has not been directly
-		// 				# tested.
-		// 				spikeAmpsToCancel6ALimit = 16
-
-		// 			if(senderID == fakeTWCID):
-		// 				print(time_now + ": Slave TWC %02X%02X reports same TWCID as master.  " \
-		// 						"Slave should resolve by changing its TWCID." % \
-		// 						(senderID[0], senderID[1]))
-		// 				# I tested sending a linkready to a real master with the
-		// 				# same TWCID as master and instead of master sending back
-		// 				# its heartbeat message, it sent 5 copies of its
-		// 				# linkready1 and linkready2 messages. Those messages
-		// 				# will prompt a real slave to pick a new random value
-		// 				# for its TWCID.
-		// 				#
-		// 				# We mimic that behavior by setting numInitMsgsToSend =
-		// 				# 10 to make the idle code at the top of the for()
-		// 				# loop send 5 copies of linkready1 and linkready2.
-		// 				numInitMsgsToSend = 10
-		// 				continue
-
-		if equals(senderID, fakeTWCID) {
+		// if equals(senderID, fakeTWCID) {
+		if senderID == binary.BigEndian.Uint16(fakeTWCID) {
 			fmt.Println("slave reports same TWCID as master")
 			return nil
 		}
@@ -452,7 +432,8 @@ func (h *Master) handleMessage(msg []byte) error {
 		// 			# devices.
 		// 			slaveTWC = new_slave(senderID, maxAmps)
 
-		slaveTWC := h.newSlave(senderID, maxAmps)
+		// slaveTWC := h.newSlave(senderID, maxAmps)
+		slaveTWC := h.newSlave([]byte{}, maxAmps)
 
 		// 			if(slaveTWC.protocolVersion == 1 and slaveTWC.minAmpsTWCSupports == 6):
 		// 				if(len(msg) == 14):
@@ -508,7 +489,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			msgMatch = re.search(b'\A\xfd\xe0(..)(..)(.......+?).\Z', msg, re.DOTALL)
 	// 		if(msgMatch and foundMsgMatch == False):
 
-	re = regexp.MustCompile(`^\x{fd}\x{e0}(..)(..)(.......+?).$`)
+	re := regexp.MustCompile(`^\x{fd}\x{e0}(..)(..)(.......+?).$`)
 	if match := re.FindSubmatch(msg); len(match) > 0 {
 
 		// 			# Handle heartbeat message from slave.
