@@ -33,7 +33,6 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/viper v1.7.0
-	github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	github.com/volkszaehler/mbmd v0.0.0-20200528112806-5c975b534763
