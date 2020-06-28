@@ -207,9 +207,15 @@ func (h *Master) receive() error {
 		msg = append(msg, data[0:dataLen]...)
 		fmt.Printf("recv: % 0X\n", msg)
 
+		if len(msg) >= 16 && bytes.Count(msg, []byte{delimiter}) > 2 {
+			fmt.Println("invalid message- ignoring")
+			msg = []byte{}
+			continue
+		}
+
 		if len(msg) >= 16 {
 			// drop final marker after 0xC0
-			if msg[len(msg)-1] == 0xFE {
+			if msg[len(msg)-1] == endmarker {
 				msg = msg[:len(msg)-1]
 			}
 
