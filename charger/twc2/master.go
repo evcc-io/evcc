@@ -22,7 +22,7 @@ var (
 	// singleton instance for sending all data
 	master *Master
 
-	fakeTWCID  = []byte{0x77, 0x77}
+	fakeTWCID  = []byte{0x77, 0x78}
 	masterSign = []byte{0x77}
 )
 
