@@ -149,7 +149,6 @@ RESTART:
 				time.Sleep(linkDelay)
 			}
 
-			println("receive")
 			if err := h.receive(); err != nil {
 				fmt.Printf("receive: %v\n", err)
 				goto RESTART

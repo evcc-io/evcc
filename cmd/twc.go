@@ -64,5 +64,5 @@ func runMeterTWC(cmd *cobra.Command, args []string) {
 		dumpAPIs(v)
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(60 * time.Second)
 }
