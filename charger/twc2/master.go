@@ -82,8 +82,8 @@ func (h *Master) Close() {
 
 func (h *Master) send(msg []byte) error {
 	msg = Encode(msg)
-	_, err := h.port.Write(msg)
 	fmt.Printf("send: % 0X\n", msg)
+	_, err := h.port.Write(msg)
 	h.lastTX = time.Now()
 	return err
 }
@@ -146,8 +146,6 @@ RESTART:
 			time.Sleep(linkDelay)
 		} else if time.Since(h.lastTX) > advertiseDelay {
 			// master heartbeat
-			println("advertiseDelay")
-
 			// TODO send to one slave at a time, use channel?
 			for _, slave := range h.slaves {
 				println("sendMasterHeartbeat")
@@ -179,15 +177,13 @@ func (h *Master) receive() error {
 	// 	now = time.time()
 	// 	dataLen = ser.inWaiting()
 	for {
-		println("receive")
-
 		dataLen, err := h.port.Read(data)
 		if err != nil {
 			fmt.Printf("receive: %v\n", err)
 			return err
 		}
 
-		println(dataLen)
+		fmt.Println("receive: ", dataLen)
 
 		// 	if(dataLen == 0):
 		// 		if(msgLen == 0):
