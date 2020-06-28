@@ -419,6 +419,8 @@ func (h *Master) handleMessage(msg []byte) error {
 			panic(err)
 		}
 
+		fmt.Printf("SlaveLinkReady: %v", slaveMsg)
+
 		senderID := slaveMsg.SenderID
 		maxAmps := int(slaveMsg.SenderID / 100)
 
@@ -504,6 +506,8 @@ func (h *Master) handleMessage(msg []byte) error {
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
+
+		fmt.Printf("SlaveHeartbeat: %v", slaveMsg)
 
 		// 			# Handle heartbeat message from slave.
 		// 			#
