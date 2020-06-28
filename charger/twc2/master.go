@@ -107,6 +107,8 @@ RESTART:
 
 		// link ready 1
 		for i := 0; i < 5; i++ {
+			println("sendLinkReady1")
+
 			err := h.sendLinkReady1()
 			time.Sleep(linkDelay)
 
@@ -117,6 +119,8 @@ RESTART:
 
 		// link ready 2
 		for i := 0; i < 5; i++ {
+			println("sendLinkReady2")
+
 			err := h.sendLinkReady2()
 			time.Sleep(linkDelay)
 
@@ -130,6 +134,8 @@ RESTART:
 			if time.Since(h.lastTX) > advertiseDelay {
 				// TODO send to one slave at a time, use channel?
 				for _, slave := range h.slaves {
+					println("sendMasterHeartbeat")
+
 					if err := slave.sendMasterHeartbeat(); err != nil {
 						goto RESTART
 					}
@@ -138,6 +144,8 @@ RESTART:
 			}
 
 			if err := h.receive(); err != nil {
+				println("receive")
+
 				goto RESTART
 			}
 		}
