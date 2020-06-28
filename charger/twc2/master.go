@@ -71,6 +71,7 @@ func (h *Master) Open() error {
 	return nil
 }
 
+// Close closes the serial port and sets it to nil
 func (h *Master) Close() {
 	if h.port != nil {
 		println("close")
