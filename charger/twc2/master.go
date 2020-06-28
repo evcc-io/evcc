@@ -410,39 +410,21 @@ func (h *Master) handleMessage(msg []byte) error {
 		panic(err)
 	}
 
-	// re := regexp.MustCompile(`^\x{fd}\x{e2}(..)(.)(..)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
-	// if match := re.FindSubmatch(msg); len(match) > 0 {
-	// 	senderID := match[0]
-	// 	// sign := match[1]
-	// 	maxAmps := int(binary.BigEndian.Uint16(match[2]) / 100)
-
 	if slaveMsgType.Type == SlaveLinkReadyID {
 		var slaveMsg SlaveLinkReady
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-
 		fmt.Println("SlaveLinkReady:", slaveMsg)
 
-		senderID := slaveMsg.SenderID
-		maxAmps := int(slaveMsg.SenderID / 100)
+		maxAmps := int(slaveMsg.MaxAmps / 100)
+		fmt.Printf("%d amp slave TWC %02X is ready to link", maxAmps, slaveMsg.SenderID)
 
-		fmt.Printf("%d amp slave TWC %02X is ready to link", maxAmps, senderID)
-
-		// if equals(senderID, fakeTWCID) {
-		if senderID == binary.BigEndian.Uint16(fakeTWCID) {
-			fmt.Println("slave reports same TWCID as master")
-			return nil
+		if slaveMsg.SenderID == binary.BigEndian.Uint16(fakeTWCID) {
+			return fmt.Errorf("slave reports same TWCID as master")
 		}
 
-		// 			# We should always get this linkready message at least once
-		// 			# and generally no more than once, so this is a good
-		// 			# opportunity to add the slave to our known pool of slave
-		// 			# devices.
-		// 			slaveTWC = new_slave(senderID, maxAmps)
-
-		// slaveTWC := h.newSlave(senderID, maxAmps)
-		slaveTWC := h.newSlave(senderID, maxAmps)
+		slaveTWC := h.newSlave(slaveMsg.SenderID, maxAmps)
 
 		// 			if(slaveTWC.protocolVersion == 1 and slaveTWC.minAmpsTWCSupports == 6):
 		// 				if(len(msg) == 14):
@@ -510,48 +492,12 @@ func (h *Master) handleMessage(msg []byte) error {
 
 		fmt.Println("SlaveHeartbeat:", slaveMsg)
 
-		// 			# Handle heartbeat message from slave.
-		// 			#
-		// 			# These messages come in as a direct response to each
-		// 			# heartbeat message from master. Slave does not send its
-		// 			# heartbeat until it gets one from master first.
-		// 			# A real master sends heartbeat to a slave around once per
-		// 			# second, so we do the same near the top of this for()
-		// 			# loop. Thus, we should receive a heartbeat reply from the
-		// 			# slave around once per second as well.
-		// 			foundMsgMatch = True
-		// 			senderID = msgMatch.group(1)
-		// 			receiverID = msgMatch.group(2)
-		// 			heartbeatData = msgMatch.group(3)
-
-		// senderID := match[0]
-		// receiverID := match[1]
-		// heartbeatData := match[2]
-		senderID := slaveMsg.SenderID
-		receiverID := slaveMsg.ReceiverID
-
-		// 			try:
-		// 				slaveTWC = slaveTWCs[senderID]
-		// 			except KeyError:
-		// 				# Normally, a slave only sends us a heartbeat message if
-		// 				# we send them ours first, so it's not expected we would
-		// 				# hear heartbeat from a slave that's not in our list.
-		// 				print(time_now() + ": ERROR: Received heartbeat message from " \
-		// 						"slave %02X%02X that we've not met before." % \
-		// 						(senderID[0], senderID[1]))
-		// 				continue
-
-		// u := binary.BigEndian.Uint16(senderID)
-		slaveTWC, ok := h.slaves[senderID]
+		slaveTWC, ok := h.slaves[slaveMsg.SenderID]
 		if !ok {
-			return fmt.Errorf("invalid slave id: %02X", senderID)
+			return fmt.Errorf("invalid slave id: %02X", slaveMsg.SenderID)
 		}
 
-		// 			if(fakeTWCID == receiverID):
-		// 				slaveTWC.receive_slave_heartbeat(heartbeatData)
-
-		// if equals(fakeTWCID, receiverID) {
-		if receiverID == binary.BigEndian.Uint16(fakeTWCID) {
+		if slaveMsg.ReceiverID == binary.BigEndian.Uint16(fakeTWCID) {
 			return slaveTWC.receiveSlaveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
 		}
 
