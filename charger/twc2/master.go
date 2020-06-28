@@ -47,6 +47,8 @@ func NewMaster(dev string) *Master {
 
 func (h *Master) Open() error {
 	if h.port == nil {
+		println("open")
+
 		port, err := serial.Open(&serial.Config{
 			Address:  h.dev,
 			BaudRate: 9600,
@@ -66,6 +68,7 @@ func (h *Master) Open() error {
 
 func (h *Master) Close() {
 	if h.port != nil {
+		println("close")
 		_ = h.port.Close()
 	}
 	h.port = nil
@@ -101,7 +104,7 @@ RESTART:
 	h.Close()
 
 	for {
-		println("loop")
+		println("--")
 
 		if err := h.Open(); err != nil {
 			fmt.Printf("open: %v\n", err)
@@ -200,8 +203,9 @@ func (h *Master) receive() error {
 		// 		data = ser.read(dataLen)
 
 		if dataLen == 0 {
-			if len(data) == 0 {
-				return nil
+			if len(msg) == 0 {
+				// return nil
+				continue
 			}
 
 			if time.Since(timeMsgRxStart) > recvTimeout {

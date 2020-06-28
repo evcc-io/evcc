@@ -2,6 +2,7 @@ package twc2
 
 import (
 	"bytes"
+	"fmt"
 )
 
 var (
@@ -57,6 +58,7 @@ func NewSlave(newSlaveID []byte, maxAmps int) *Slave {
 // }
 
 func (h *Slave) sendMasterHeartbeat() error {
+	fmt.Println("sendMasterHeartbeat")
 	// if(len(overrideMasterHeartbeatData) >= 7):
 	// 	self.masterHeartbeatData = overrideMasterHeartbeatData
 
