@@ -8,7 +8,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/grid-x/serial"
+	// "github.com/grid-x/serial"
+	"github.com/tarm/serial"
 )
 
 const (
@@ -27,8 +28,9 @@ var (
 )
 
 type Master struct {
-	dev    string
-	port   serial.Port
+	dev string
+	// port   serial.Port
+	port   *serial.Port
 	slaves map[uint16]*Slave
 	lastTX time.Time
 }
@@ -52,13 +54,20 @@ func (h *Master) Open() error {
 	if h.port == nil {
 		fmt.Println("open", h.dev)
 
-		port, err := serial.Open(&serial.Config{
-			Address:  h.dev,
-			BaudRate: 9600,
-			DataBits: 8,
-			Parity:   "N",
+		// port, err := serial.Open(&serial.Config{
+		// 	Address:  h.dev,
+		// 	BaudRate: 9600,
+		// 	DataBits: 8,
+		// 	Parity:   "N",
+		// 	StopBits: 1,
+		// 	// RS485:    serial.RS485Config{Enabled: true},
+		// })
+		port, err := serial.OpenPort(&serial.Config{
+			Name:     h.dev,
+			Baud:     9600,
+			Size:     8,
+			Parity:   'N',
 			StopBits: 1,
-			// RS485:    serial.RS485Config{Enabled: true},
 		})
 
 		if err != nil {
