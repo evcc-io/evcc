@@ -3,7 +3,6 @@ package twc2
 import (
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"time"
 
@@ -173,43 +172,14 @@ func (h *Master) receive() error {
 	var msg []byte
 	data := make([]byte, 256)
 
-	// timeMsgRxStart = time.time()
 	timeMsgRxStart := time.Now()
 
-	// while True:
-	// 	now = time.time()
-	// 	dataLen = ser.inWaiting()
 	for {
 		dataLen, err := h.port.Read(data)
 		if err != nil {
-			fmt.Printf("recv: %v\n", err)
+			// return error here- this might be a problem with the device
 			return err
 		}
-
-		fmt.Println("recv:", dataLen)
-
-		// 	if(dataLen == 0):
-		// 		if(msgLen == 0):
-		// 			# No message data waiting and we haven't received the
-		// 			# start of a new message yet. Break out of inner while
-		// 			# to continue at top of outer while loop where we may
-		// 			# decide to send a periodic message.
-		// 			break
-		// 		else:
-		// 			# No message data waiting but we've received a partial
-		// 			# message that we should wait to finish receiving.
-		// 			if(now - timeMsgRxStart >= 2.0):
-		// 				if(debugLevel >= 9):
-		// 					print(time_now() + ": Msg timeout (" + hex_str(ignoredData) +
-		// 							') ' + hex_str(msg[0:msgLen]))
-		// 				msgLen = 0
-		// 				ignoredData = bytearray()
-		// 				break
-		// 			time.sleep(0.025)
-		// 			continue
-		// 	else:
-		// 		dataLen = 1
-		// 		data = ser.read(dataLen)
 
 		if dataLen == 0 {
 			if len(msg) == 0 {
@@ -217,56 +187,24 @@ func (h *Master) receive() error {
 			}
 
 			if time.Since(timeMsgRxStart) > recvTimeout {
-				return errors.New("recv timeout")
+				fmt.Println("recv: timeout")
+				return nil
 			}
 		}
 
-		// 	timeMsgRxStart = now
-		// 	timeLastRx = now
-
 		timeMsgRxStart = time.Now()
-		// timeLastRx := time.Now()
 
-		// 	if(msgLen == 0 and data[0] != 0xc0):
-		// 		# We expect to find these non-c0 bytes between messages, so
-		// 		# we don't print any warning at standard debug levels.
-		// 		if(debugLevel >= 11):
-		// 			print("Ignoring byte %02X between messages." % (data[0]))
-		// 		ignoredData += data
-		// 		continue
 		if len(msg) == 0 && data[0] != delimiter {
 			continue
 		}
 
-		// 	elif(msgLen > 0 and msgLen < 15 and data[0] == 0xc0):
-		// 		# If you see this when the program is first started, it
-		// 		# means we started listening in the middle of the TWC
-		// 		# sending a message so we didn't see the whole message and
-		// 		# must discard it. That's unavoidable.
-		// 		# If you see this any other time, it means there was some
-		// 		# corruption in what we received. It's normal for that to
-		// 		# happen every once in awhile but there may be a problem
-		// 		# such as incorrect termination or bias resistors on the
-		// 		# rs485 wiring if you see it frequently.
-		// 		if(debugLevel >= 10):
-		// 			print("Found end of message before full-length message received.  " \
-		// 					"Discard and wait for new message.")
-
-		// 		msg = data
-		// 		msgLen = 1
-		// 		continue
 		if len(msg) > 0 && len(msg) < 15 && data[0] == delimiter {
 			fmt.Println("started in middle of message- should not happen")
-			msg = data[0 : dataLen-1]
+			msg = data[0:dataLen]
 			continue
 		}
 
-		// 	if(msgLen == 0):
-		// 		msg = bytearray()
-		// 	msg += data
-		// 	msgLen += 1
-		msg = append(msg, data[0:dataLen-1]...)
-
+		msg = append(msg, data[0:dataLen]...)
 		fmt.Printf("recv: % 0X\n", msg)
 		// 	# Messages are usually 17 bytes or longer and end with \xc0\xfe.
 		// 	# However, when the network lacks termination and bias
@@ -283,16 +221,6 @@ func (h *Master) receive() error {
 		// 	#
 		// 	# Uncorrupted messages can be over 17 bytes long when special
 		// 	# values are "escaped" as two bytes. See notes in send_msg.
-		// 	#
-		// 	# To prevent most noise between messages, add a 120ohm
-		// 	# "termination" resistor in parallel to the D+ and D- lines.
-		// 	# Also add a 680ohm "bias" resistor between the D+ line and +5V
-		// 	# and a second 680ohm "bias" resistor between the D- line and
-		// 	# ground. See here for more information:
-		// 	#   https://www.ni.com/support/serial/resinfo.htm
-		// 	#   http://www.ti.com/lit/an/slyt514/slyt514.pdf
-		// 	# This explains what happens without "termination" resistors:
-		// 	#   https://e2e.ti.com/blogs_/b/analogwire/archive/2016/07/28/rs-485-basics-when-termination-is-necessary-and-how-to-do-it-properly
 		// 	if(msgLen >= 16 and data[0] == 0xc0):
 		// 		break
 		// if len(msg) >= 16 && data[0] == delimiter {
@@ -300,14 +228,8 @@ func (h *Master) receive() error {
 		// 	return nil
 		// }
 
-		// if(msgLen >= 16):
-		// 	msg = unescape_msg(msg, msgLen)
-		// 	# Set msgLen = 0 at start so we don't have to do it on errors below.
-		// 	# len($msg) now contains the unescaped message length.
-		// 	msgLen = 0
 		if len(msg) >= 16 {
 			msg, err := Decode(msg)
-
 			if err != nil {
 				fmt.Printf("decode: %v\n", err)
 				return nil
