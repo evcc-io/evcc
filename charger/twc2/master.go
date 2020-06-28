@@ -84,7 +84,7 @@ func (h *Master) send(msg []byte) error {
 	return err
 }
 
-func (h *Master) sendLinkReady1() error {
+func (h *Master) sendMasterLinkReady1() error {
 	msg := bytes.NewBuffer([]byte{0xFC, 0xE1})
 	msg.Write(fakeTWCID)
 	msg.Write(masterSign)
@@ -93,7 +93,7 @@ func (h *Master) sendLinkReady1() error {
 	return h.send(msg.Bytes())
 }
 
-func (h *Master) sendLinkReady2() error {
+func (h *Master) sendMasterLinkReady2() error {
 	msg := bytes.NewBuffer([]byte{0xFB, 0xE2})
 	msg.Write(fakeTWCID)
 	msg.Write(masterSign)
@@ -105,6 +105,14 @@ func (h *Master) sendLinkReady2() error {
 func (h *Master) Run() {
 RESTART:
 	h.Close()
+
+	// msg := bytes.NewBuffer([]byte{0xFC, 0xE1})
+	// msg.Write(fakeTWCID)
+	// msg.Write(masterSign)
+	// msg.Write([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
+	// b := Encode(msg.Bytes())
+	// fmt.Printf("% 0X\n", b)
+	// panic("foo")
 
 	for {
 		println("--")
@@ -118,10 +126,10 @@ RESTART:
 
 		// link ready 1
 		for i := 0; i < 5; i++ {
-			println("sendLinkReady1")
+			println("sendMasterLinkReady1")
 
-			if err := h.sendLinkReady1(); err != nil {
-				fmt.Printf("sendLinkReady1: %v\n", err)
+			if err := h.sendMasterLinkReady1(); err != nil {
+				fmt.Printf("sendMasterLinkReady1: %v\n", err)
 				goto RESTART
 			}
 
@@ -130,10 +138,10 @@ RESTART:
 
 		// link ready 2
 		for i := 0; i < 5; i++ {
-			println("sendLinkReady2")
+			println("sendMasterLinkReady2")
 
-			if err := h.sendLinkReady2(); err != nil {
-				fmt.Printf("sendLinkReady2: %v\n", err)
+			if err := h.sendMasterLinkReady2(); err != nil {
+				fmt.Printf("sendMasterLinkReady2: %v\n", err)
 				goto RESTART
 			}
 
@@ -179,6 +187,7 @@ func (h *Master) receive() error {
 
 		dataLen, err := h.port.Read(data)
 		if err != nil {
+			fmt.Printf("receive: %v\n", err)
 			return err
 		}
 

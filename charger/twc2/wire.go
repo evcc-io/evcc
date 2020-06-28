@@ -17,7 +17,7 @@ var (
 
 func checksum(msg []byte) byte {
 	var acc byte
-	for _, b := range msg {
+	for _, b := range msg[1:] {
 		acc += b
 	}
 	return acc
