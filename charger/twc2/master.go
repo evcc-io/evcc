@@ -76,8 +76,10 @@ func (h *Master) Close() {
 }
 
 func (h *Master) send(msg []byte) error {
+	fmt.Printf("send1: % 0x\n", msg)
 	msg = Encode(msg)
 	_, err := h.port.Write(msg)
+	fmt.Printf("send2: % 0x\n", msg)
 	h.lastTX = time.Now()
 	return err
 }
