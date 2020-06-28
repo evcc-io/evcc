@@ -36,17 +36,29 @@ func runMeterTWC(cmd *cobra.Command, args []string) {
 	}
 
 	cp := &ConfigProvider{}
-	cp.configureMeters(conf)
+	cp.configureChargers(conf)
 
-	meters := cp.meters
+	chargers := cp.chargers
 	if len(args) == 1 {
 		arg := args[0]
-		meters = map[string]api.Meter{arg: cp.Meter(arg)}
+		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
-	for name, v := range meters {
-		if len(meters) != 1 {
+	for name, v := range chargers {
+		if len(chargers) != 1 {
 			fmt.Println(name)
+		}
+
+		if status, err := v.Status(); err != nil {
+			fmt.Printf("Status: %v\n", err)
+		} else {
+			fmt.Printf("Status: %s\n", status)
+		}
+
+		if enabled, err := v.Enabled(); err != nil {
+			fmt.Printf("Enabled: %v\n", err)
+		} else {
+			fmt.Printf("Enabled: %s\n", truefalse[enabled])
 		}
 
 		dumpAPIs(v)
