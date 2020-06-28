@@ -13,6 +13,7 @@ import (
 
 const (
 	linkDelay      = 100 * time.Millisecond
+	loopDelay      = 25 * time.Millisecond
 	advertiseDelay = 1 * time.Second
 	recvTimeout    = 2 * time.Second
 )
@@ -111,6 +112,8 @@ RESTART:
 			goto RESTART
 		}
 
+		time.Sleep(loopDelay)
+
 		// link ready 1
 		for i := 0; i < 5; i++ {
 			println("sendLinkReady1")
@@ -147,9 +150,9 @@ RESTART:
 					fmt.Printf("sendMasterHeartbeat: %v\n", err)
 					goto RESTART
 				}
-			}
 
-			time.Sleep(linkDelay)
+				time.Sleep(linkDelay)
+			}
 		}
 
 		if err := h.receive(); err != nil {
@@ -204,8 +207,8 @@ func (h *Master) receive() error {
 
 		if dataLen == 0 {
 			if len(msg) == 0 {
-				// return nil
-				continue
+				return nil
+				// continue
 			}
 
 			if time.Since(timeMsgRxStart) > recvTimeout {
