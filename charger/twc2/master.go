@@ -55,8 +55,10 @@ func (h *Master) Open() error {
 		port, err := serial.Open(&serial.Config{
 			Address:  h.dev,
 			BaudRate: 9600,
+			DataBits: 8,
 			Parity:   "N",
 			StopBits: 2,
+			RS485:    serial.RS485Config{Enabled: true},
 		})
 
 		if err != nil {
