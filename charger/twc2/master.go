@@ -99,6 +99,8 @@ RESTART:
 	h.Close()
 
 	for {
+		println("loop")
+
 		if err := h.Open(); err != nil {
 			goto RESTART
 		}
