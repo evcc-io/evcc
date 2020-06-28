@@ -437,7 +437,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		// 			slaveTWC = new_slave(senderID, maxAmps)
 
 		// slaveTWC := h.newSlave(senderID, maxAmps)
-		slaveTWC := h.newSlave([]byte{}, maxAmps)
+		slaveTWC := h.newSlave(senderID, maxAmps)
 
 		// 			if(slaveTWC.protocolVersion == 1 and slaveTWC.minAmpsTWCSupports == 6):
 		// 				if(len(msg) == 14):
@@ -523,7 +523,6 @@ func (h *Master) handleMessage(msg []byte) error {
 		// heartbeatData := match[2]
 		senderID := slaveMsg.SenderID
 		receiverID := slaveMsg.ReceiverID
-		heartbeatData := slaveMsg.Payload
 
 		// 			try:
 		// 				slaveTWC = slaveTWCs[senderID]
@@ -547,7 +546,7 @@ func (h *Master) handleMessage(msg []byte) error {
 
 		// if equals(fakeTWCID, receiverID) {
 		if receiverID == binary.BigEndian.Uint16(fakeTWCID) {
-			return slaveTWC.receiveSlaveHeartbeat(heartbeatData)
+			return slaveTWC.receiveSlaveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
 		}
 
 		// 			else:
@@ -634,7 +633,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	return nil
 }
 
-func (h *Master) newSlave(newSlaveID []byte, maxAmps int) *Slave {
+func (h *Master) newSlave(slaveID uint16, maxAmps int) *Slave {
 	// try:
 	//     slaveTWC = slaveTWCs[newSlaveID]
 	//     # We didn't get KeyError exception, so this slave is already in
@@ -643,8 +642,8 @@ func (h *Master) newSlave(newSlaveID []byte, maxAmps int) *Slave {
 	// except KeyError:
 	//     pass
 
-	u := binary.BigEndian.Uint16(newSlaveID)
-	if slaveTWC, ok := h.slaves[u]; ok {
+	// u := binary.BigEndian.Uint16(newSlaveID)
+	if slaveTWC, ok := h.slaves[slaveID]; ok {
 		return slaveTWC
 	}
 
@@ -657,8 +656,8 @@ func (h *Master) newSlave(newSlaveID []byte, maxAmps int) *Slave {
 	//         "Dropping oldest: " + hex_str(slaveTWCRoundRobin[0].TWCID) + ".")
 	//     delete_slave(slaveTWCRoundRobin[0].TWCID)
 
-	slaveTWC := NewSlave(newSlaveID, maxAmps)
-	h.slaves[u] = slaveTWC
+	slaveTWC := NewSlave(slaveID, maxAmps)
+	h.slaves[slaveID] = slaveTWC
 
 	if len(h.slaves) > 3 {
 		panic("too many slaves")

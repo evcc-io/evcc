@@ -2,6 +2,7 @@ package twc2
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 )
 
@@ -17,14 +18,16 @@ type Slave struct {
 	masterHeartbeatData []byte
 }
 
-func NewSlave(newSlaveID []byte, maxAmps int) *Slave {
+func NewSlave(slaveID uint16, maxAmps int) *Slave {
 	s := &Slave{
-		twcID:               newSlaveID,
+		twcID:               make([]byte, 2),
 		protocolVersion:     1,
 		minAmpsTWCSupports:  6,
 		wiringMaxAmps:       maxAmps,
 		masterHeartbeatData: []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
+
+	binary.BigEndian.PutUint16(s.twcID, slaveID)
 
 	return s
 }
@@ -109,6 +112,6 @@ func (h *Slave) sendMasterHeartbeat() error {
 	return master.send(msg.Bytes())
 }
 
-func (h *Slave) receiveSlaveHeartbeat(heartbeatData []byte) error {
+func (h *Slave) receiveSlaveHeartbeat(heartbeatData SlaveHeartbeatPayload) error {
 	return nil
 }

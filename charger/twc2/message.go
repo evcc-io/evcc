@@ -20,5 +20,11 @@ const SlaveHeartbeatID uint16 = 0xfde0
 type SlaveHeartbeat struct {
 	Type                 uint16
 	SenderID, ReceiverID uint16
-	Payload              []byte
+	SlaveHeartbeatPayload
+}
+
+type SlaveHeartbeatPayload struct {
+	State      byte
+	AmpsMax    uint16
+	AmpsActual uint16
 }
