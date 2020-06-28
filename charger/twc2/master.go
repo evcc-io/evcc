@@ -57,7 +57,7 @@ func (h *Master) Open() error {
 			BaudRate: 9600,
 			DataBits: 8,
 			Parity:   "N",
-			StopBits: 2,
+			StopBits: 1,
 			// RS485:    serial.RS485Config{Enabled: true},
 		})
 
@@ -181,7 +181,7 @@ func (h *Master) receive() error {
 			return err
 		}
 
-		fmt.Println("receive: ", dataLen)
+		fmt.Println("receive:", dataLen)
 
 		// 	if(dataLen == 0):
 		// 		if(msgLen == 0):
@@ -209,7 +209,6 @@ func (h *Master) receive() error {
 		if dataLen == 0 {
 			if len(msg) == 0 {
 				return nil
-				// continue
 			}
 
 			if time.Since(timeMsgRxStart) > recvTimeout {
