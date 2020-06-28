@@ -400,7 +400,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			sign = msgMatch.group(2)
 	// 			maxAmps = ((msgMatch.group(3)[0] << 8) + msgMatch.group(3)[1]) / 100
 
-	re := regexp.MustCompile("^\xfd\xe2(..)(.)(..)\x00\x00\x00\x00\x00\x00.+$")
+	re := regexp.MustCompile(`^\x{fd}\x{e2}(..)(.)(..)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
 	if match := re.FindSubmatch(msg); len(match) > 0 {
 		senderID := match[0]
 		// sign := match[1]
@@ -508,7 +508,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			msgMatch = re.search(b'\A\xfd\xe0(..)(..)(.......+?).\Z', msg, re.DOTALL)
 	// 		if(msgMatch and foundMsgMatch == False):
 
-	re = regexp.MustCompile("^\xfd\xe0(..)(..)(.......+?).$")
+	re = regexp.MustCompile(`^\x{fd}\x{e0}(..)(..)(.......+?).$`)
 	if match := re.FindSubmatch(msg); len(match) > 0 {
 
 		// 			# Handle heartbeat message from slave.
@@ -574,7 +574,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			msgMatch = re.search(b'\A\xfd\xeb(..)(..)(.+?).\Z', msg, re.DOTALL)
 	// 		if(msgMatch and foundMsgMatch == False):
 
-	re = regexp.MustCompile("^\xfd\xeb(..)(..)(.+?).$")
+	re = regexp.MustCompile(`^\x{fd}\x{eb}(..)(..)(.+?).$`)
 	if match := re.FindSubmatch(msg); len(match) > 0 {
 
 		// 			# Handle kWh total and voltage message from slave.
@@ -617,7 +617,7 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			msgMatch = re.search(b'\A\xfc(\xe1|\xe2)(..)(.)\x00\x00\x00\x00\x00\x00\x00\x00.+\Z', msg, re.DOTALL)
 	// 		if(msgMatch and foundMsgMatch == False):
 
-	re = regexp.MustCompile("^\xfc(\xe1|\xe2)(..)(.)\x00\x00\x00\x00\x00\x00\x00\x00.+$")
+	re = regexp.MustCompile(`^\x{fc}(\x{e1}|\x{e2})(..)(.)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
 	if match := re.FindSubmatch(msg); len(match) > 0 {
 
 		// 			foundMsgMatch = True
