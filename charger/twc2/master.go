@@ -318,7 +318,7 @@ func (h *Master) receive() error {
 }
 
 func (h *Master) handleMessage(msg []byte) error {
-	fmt.Printf("handleMessage: % 0x\n", msg)
+	fmt.Printf("handle: % 0x\n", msg)
 	// 	msgRxCount += 1
 
 	// 	# When the sendTWCMsg web command is used to send a message to the
@@ -450,11 +450,12 @@ func (h *Master) handleMessage(msg []byte) error {
 		// 					print(time_now() + ": Set slave TWC %02X%02X protocolVersion to %d, minAmpsTWCSupports to %d." % \
 		// 							(senderID[0], senderID[1], slaveTWC.protocolVersion, slaveTWC.minAmpsTWCSupports))
 
+		// msg length-1 compared to twcmanager as checksum is already removed
 		if slaveTWC.protocolVersion == 1 && slaveTWC.minAmpsTWCSupports == 6 {
-			if len(msg) == 14 {
+			if len(msg) == 13 {
 				slaveTWC.protocolVersion = 1
 				slaveTWC.minAmpsTWCSupports = 5
-			} else if len(msg) == 16 {
+			} else if len(msg) == 15 {
 				slaveTWC.protocolVersion = 2
 				slaveTWC.minAmpsTWCSupports = 6
 			}
