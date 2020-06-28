@@ -104,6 +104,7 @@ RESTART:
 		println("loop")
 
 		if err := h.Open(); err != nil {
+			fmt.Printf("open: %v\n", err)
 			goto RESTART
 		}
 
@@ -115,6 +116,7 @@ RESTART:
 			time.Sleep(linkDelay)
 
 			if err != nil {
+				fmt.Printf("sendLinkReady1: %v\n", err)
 				goto RESTART
 			}
 		}
@@ -127,6 +129,7 @@ RESTART:
 			time.Sleep(linkDelay)
 
 			if err != nil {
+				fmt.Printf("sendLinkReady2: %v\n", err)
 				goto RESTART
 			}
 		}
@@ -139,15 +142,16 @@ RESTART:
 					println("sendMasterHeartbeat")
 
 					if err := slave.sendMasterHeartbeat(); err != nil {
+						fmt.Printf("sendMasterHeartbeat: %v\n", err)
 						goto RESTART
 					}
 				}
 				time.Sleep(linkDelay)
 			}
 
+			println("receive")
 			if err := h.receive(); err != nil {
-				println("receive")
-
+				fmt.Printf("receive: %v\n", err)
 				goto RESTART
 			}
 		}
