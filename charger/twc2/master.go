@@ -206,29 +206,13 @@ func (h *Master) receive() error {
 
 		msg = append(msg, data[0:dataLen]...)
 		fmt.Printf("recv: % 0X\n", msg)
-		// 	# Messages are usually 17 bytes or longer and end with \xc0\xfe.
-		// 	# However, when the network lacks termination and bias
-		// 	# resistors, the last byte (\xfe) may be corrupted or even
-		// 	# missing, and you may receive additional garbage bytes between
-		// 	# messages.
-		// 	#
-		// 	# TWCs seem to account for corruption at the end and between
-		// 	# messages by simply ignoring anything after the final \xc0 in a
-		// 	# message, so we use the same tactic. If c0 happens to be within
-		// 	# the corrupt noise between messages, we ignore it by starting a
-		// 	# new message whenever we see a c0 before 15 or more bytes are
-		// 	# received.
-		// 	#
-		// 	# Uncorrupted messages can be over 17 bytes long when special
-		// 	# values are "escaped" as two bytes. See notes in send_msg.
-		// 	if(msgLen >= 16 and data[0] == 0xc0):
-		// 		break
-		// if len(msg) >= 16 && data[0] == delimiter {
-		// 	println("corrupted - ignoring")
-		// 	return nil
-		// }
 
 		if len(msg) >= 16 {
+			// drop final marker after 0xC0
+			if msg[len(msg)-1] == 0xFE {
+				msg = msg[:len(msg)-1]
+			}
+
 			msg, err := Decode(msg)
 			if err != nil {
 				fmt.Printf("decode: %v\n", err)
