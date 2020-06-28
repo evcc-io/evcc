@@ -112,6 +112,10 @@ RESTART:
 
 	numInitMsgsToSend := 10
 
+	// m, err := Decode([]byte{0xC0, 0xFD, 0xE0, 0x66, 0x17, 0x77, 0x77, 0x09, 0x06, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9A, 0xC0})
+	// fmt.Printf("% 0x\n", m)
+	// panic(err)
+
 	for {
 		if err := h.Open(); err != nil {
 			fmt.Printf("open: %v\n", err)
@@ -306,6 +310,7 @@ func (h *Master) receive() error {
 			fmt.Printf("OUT %0 x\n", msg)
 
 			if err != nil {
+				fmt.Printf("decode: %v\n", err)
 				return err
 			}
 

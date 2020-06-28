@@ -45,17 +45,17 @@ func Decode(msg []byte) ([]byte, error) {
 	}
 
 	// strip delimiters
-	msg = msg[1 : len(msg)-2]
+	msg = msg[1 : len(msg)-1]
 
 	// substitute escape and delimiter sequences
 	msg = bytes.ReplaceAll(msg, delimiterSequence, []byte{delimiter})
 	msg = bytes.ReplaceAll(msg, escapeSequence, []byte{escape})
 
 	// validate checksum
-	cks := checksum(msg[0 : len(msg)-2])
+	cks := checksum(msg[0 : len(msg)-1])
 	if cks != msg[len(msg)-1] {
-		return []byte{}, errors.New("invalid message")
+		return []byte{}, errors.New("invalid checksum")
 	}
 
-	return msg[0 : len(msg)-2], nil
+	return msg[0 : len(msg)-1], nil
 }
