@@ -113,8 +113,6 @@ RESTART:
 	numInitMsgsToSend := 10
 
 	for {
-		println("--")
-
 		if err := h.Open(); err != nil {
 			fmt.Printf("open: %v\n", err)
 			goto RESTART
