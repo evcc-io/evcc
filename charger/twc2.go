@@ -27,9 +27,11 @@ func NewTWC2FromConfig(log *util.Logger, other map[string]interface{}) *TWC2 {
 
 // NewTWC2 creates a TWC2 charger
 func NewTWC2(dev string) *TWC2 {
+	log := util.NewLogger("twc2")
+
 	wb := &TWC2{
-		log:     util.NewLogger("twc2"),
-		handler: twc2.NewMaster(dev),
+		log:     log,
+		handler: twc2.NewMaster(log, dev),
 	}
 
 	wb.log.WARN.Println("-- experimental --")

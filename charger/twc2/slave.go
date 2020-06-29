@@ -3,7 +3,8 @@ package twc2
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
+
+	"github.com/andig/evcc/util"
 )
 
 var (
@@ -12,30 +13,36 @@ var (
 
 // Slave is a TWC slave instance
 type Slave struct {
+	log                 *util.Logger
 	twcID               []byte
 	protocolVersion     int
 	minAmpsTWCSupports  int
 	wiringMaxAmps       int
 	masterHeartbeatData []byte
+	state               byte
+	amps                int
 }
 
 // NewSlave creates a new slave instance
-func NewSlave(slaveID uint16, maxAmps int) *Slave {
-	s := &Slave{
+func NewSlave(log *util.Logger, slaveID uint16, maxAmps int) *Slave {
+	log.DEBUG.Printf("new slave: %4X maxAmps: %d", slaveID, maxAmps)
+
+	h := &Slave{
+		log:                 log,
 		twcID:               make([]byte, 2),
 		protocolVersion:     1,
 		minAmpsTWCSupports:  6,
 		wiringMaxAmps:       maxAmps,
 		masterHeartbeatData: []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
 	}
+	binary.BigEndian.PutUint16(h.twcID, slaveID)
 
-	binary.BigEndian.PutUint16(s.twcID, slaveID)
-
-	return s
+	return h
 }
 
 func (h *Slave) sendMasterHeartbeat() error {
-	fmt.Println("sendMasterHeartbeat")
+	h.log.TRACE.Println("sendMasterHeartbeat")
+
 	// if(len(overrideMasterHeartbeatData) >= 7):
 	// 	self.masterHeartbeatData = overrideMasterHeartbeatData
 
@@ -86,6 +93,11 @@ func (h *Slave) sendMasterHeartbeat() error {
 	return master.send(msg.Bytes())
 }
 
-func (h *Slave) receiveSlaveHeartbeat(heartbeatData SlaveHeartbeatPayload) error {
+func (h *Slave) receiveHeartbeat(payload SlaveHeartbeatPayload) error {
+	h.amps = int(payload.AmpsActual / 100)
+	h.state = payload.State
+
+	h.log.DEBUG.Printf("heartbeat state: %d amps: %d", h.state, h.amps)
+
 	return nil
 }

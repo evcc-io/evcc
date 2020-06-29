@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/andig/evcc/util"
 	"github.com/grid-x/serial"
 	"github.com/lunixbochs/struc"
 )
@@ -27,6 +28,7 @@ var (
 
 // Master simulates a TWC master instance communicating with the slaves
 type Master struct {
+	log    *util.Logger
 	dev    string
 	port   serial.Port
 	slaves map[uint16]*Slave
@@ -34,8 +36,9 @@ type Master struct {
 }
 
 // NewMaster creates TWC master for given serial device
-func NewMaster(dev string) *Master {
+func NewMaster(log *util.Logger, dev string) *Master {
 	h := &Master{
+		log:    log,
 		dev:    dev,
 		slaves: make(map[uint16]*Slave),
 	}
@@ -51,15 +54,12 @@ func NewMaster(dev string) *Master {
 // Open opens the serial device with default configuration
 func (h *Master) Open() error {
 	if h.port == nil {
-		fmt.Println("open", h.dev)
-
 		port, err := serial.Open(&serial.Config{
 			Address:  h.dev,
 			BaudRate: 9600,
 			DataBits: 8,
 			Parity:   "N",
 			StopBits: 1,
-			// RS485:    serial.RS485Config{Enabled: true},
 		})
 
 		if err != nil {
@@ -75,7 +75,6 @@ func (h *Master) Open() error {
 // Close closes the serial port and sets it to nil
 func (h *Master) Close() {
 	if h.port != nil {
-		println("close")
 		_ = h.port.Close()
 	}
 	h.port = nil
@@ -83,7 +82,7 @@ func (h *Master) Close() {
 
 func (h *Master) send(msg []byte) error {
 	msg = Encode(msg)
-	fmt.Printf("send: % 0X\n", msg)
+	h.log.TRACE.Printf("send: % 0X", msg)
 	_, err := h.port.Write(msg)
 	h.lastTX = time.Now()
 	return err
@@ -116,7 +115,6 @@ RESTART:
 
 	for {
 		if err := h.Open(); err != nil {
-			fmt.Printf("open: %v\n", err)
 			goto RESTART
 		}
 
@@ -125,8 +123,6 @@ RESTART:
 		switch {
 		// link ready 1
 		case numInitMsgsToSend > 5:
-			println("sendMasterLinkReady1")
-
 			if err := h.sendMasterLinkReady1(); err != nil {
 				fmt.Printf("sendMasterLinkReady1: %v\n", err)
 				goto RESTART
@@ -137,8 +133,6 @@ RESTART:
 
 		// link ready 2
 		case numInitMsgsToSend > 0:
-			println("sendMasterLinkReady2")
-
 			if err := h.sendMasterLinkReady2(); err != nil {
 				fmt.Printf("sendMasterLinkReady2: %v\n", err)
 				goto RESTART
@@ -151,8 +145,6 @@ RESTART:
 		// TODO send to one slave at a time, use channel?
 		case time.Since(h.lastTX) > advertiseDelay:
 			for _, slave := range h.slaves {
-				println("sendMasterHeartbeat")
-
 				if err := slave.sendMasterHeartbeat(); err != nil {
 					fmt.Printf("sendMasterHeartbeat: %v\n", err)
 					goto RESTART
@@ -188,7 +180,7 @@ func (h *Master) receive() error {
 			}
 
 			if time.Since(timeMsgRxStart) > recvTimeout {
-				fmt.Println("recv: timeout")
+				h.log.TRACE.Println("recv: timeout")
 				return nil
 			}
 		}
@@ -199,16 +191,16 @@ func (h *Master) receive() error {
 
 		timeMsgRxStart = time.Now()
 		if len(msg) > 0 && len(msg) < 15 && data[0] == delimiter {
-			fmt.Println("recv: started in middle of message- should not happen")
+			h.log.TRACE.Println("recv: started in middle of message")
 			msg = data[0:dataLen]
 			continue
 		}
 
 		msg = append(msg, data[0:dataLen]...)
-		fmt.Printf("recv: % 0X\n", msg)
+		h.log.TRACE.Printf("recv: % 0X", msg)
 
 		if len(msg) >= 16 && bytes.Count(msg, []byte{delimiter}) > 2 {
-			fmt.Println("recv: invalid message- ignoring")
+			h.log.TRACE.Println("recv: invalid message")
 			msg = []byte{}
 			continue
 		}
@@ -221,12 +213,12 @@ func (h *Master) receive() error {
 
 			msg, err := Decode(msg)
 			if err != nil {
-				fmt.Printf("decode: %v\n", err)
+				h.log.TRACE.Printf("decode: %v", err)
 				return nil
 			}
 
 			if err := h.handleMessage(msg); err != nil {
-				fmt.Printf("handle: %v\n", err)
+				h.log.TRACE.Printf("handle: %v", err)
 			}
 
 			return nil
@@ -254,7 +246,6 @@ func (h *Master) handleMessage(msg []byte) error {
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-		fmt.Println("SlaveLinkReady:", slaveMsg)
 
 		if slaveMsg.SenderID == binary.BigEndian.Uint16(fakeTWCID) {
 			return fmt.Errorf("slave reports same TWCID as master")
@@ -281,7 +272,6 @@ func (h *Master) handleMessage(msg []byte) error {
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-		fmt.Println("SlaveHeartbeat:", slaveMsg)
 
 		slaveTWC, ok := h.slaves[slaveMsg.SenderID]
 		if !ok {
@@ -289,7 +279,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		}
 
 		if slaveMsg.ReceiverID == binary.BigEndian.Uint16(fakeTWCID) {
-			return slaveTWC.receiveSlaveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
+			return slaveTWC.receiveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
 		}
 
 		return fmt.Errorf("slave replied to unexpected master: %02X", slaveMsg.ReceiverID)
@@ -329,15 +319,15 @@ func (h *Master) handleMessage(msg []byte) error {
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-		fmt.Println("SlaveConsumption:", slaveMsg)
+		h.log.DEBUG.Printf("consumption: %d voltage: %v", slaveMsg.Energy, slaveMsg.Voltage)
 
 		break
 
 	case MasterMode1ID, MasterMode2ID:
-		fmt.Println("TWC is set to master mode and cannot be controller")
+		h.log.ERROR.Println("TWC is set to master mode and cannot be controller")
 
 	default:
-		fmt.Println("unknown message received")
+		h.log.TRACE.Println("recv: unknown message")
 	}
 
 	return nil
@@ -348,11 +338,11 @@ func (h *Master) newSlave(slaveID uint16, maxAmps int) *Slave {
 		return slaveTWC
 	}
 
-	slaveTWC := NewSlave(slaveID, maxAmps)
+	slaveTWC := NewSlave(h.log, slaveID, maxAmps)
 	h.slaves[slaveID] = slaveTWC
 
 	if len(h.slaves) > 3 {
-		panic("twc2: too many slaves")
+		h.log.ERROR.Println("too many slaves")
 	}
 
 	return slaveTWC
