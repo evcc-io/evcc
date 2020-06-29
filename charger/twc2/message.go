@@ -8,7 +8,7 @@ const (
 	MasterMode2ID      uint16 = 0xfce2
 )
 
-// Header is generic message structure
+// Header is the generic message header containing type and sender
 type Header struct {
 	Type     uint16
 	SenderID uint16
