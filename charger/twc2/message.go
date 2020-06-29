@@ -6,8 +6,11 @@ type SlaveMessage struct {
 }
 
 const (
-	SlaveLinkReadyID uint16 = 0xfde2
-	SlaveHeartbeatID uint16 = 0xfde0
+	SlaveLinkReadyID   uint16 = 0xfde2
+	SlaveHeartbeatID   uint16 = 0xfde0
+	SlaveConsumptionID uint16 = 0xfdeb
+	MasterMode1ID      uint16 = 0xfce1
+	MasterMode2ID      uint16 = 0xfce2
 )
 
 type SlaveLinkReady struct {
@@ -28,4 +31,15 @@ type SlaveHeartbeatPayload struct {
 	State      byte
 	AmpsMax    uint16
 	AmpsActual uint16
+}
+
+type SlaveConsumption struct {
+	Type                 uint16
+	SenderID, ReceiverID uint16
+	Energy               uint64
+	Voltage
+}
+
+type Voltage struct {
+	L1, L2, L3 uint16
 }

@@ -15,7 +15,8 @@ var (
 	escapeSequence    = []byte{0xDB, 0xDD}
 )
 
-func checksum(msg []byte) byte {
+// Checksum calculates message checksum starting from 2nd byte
+func Checksum(msg []byte) byte {
 	var acc byte
 	for _, b := range msg[1:] {
 		acc += b
@@ -23,8 +24,9 @@ func checksum(msg []byte) byte {
 	return acc
 }
 
+// Encode adds checksum, escapes special characters and adds delimiters
 func Encode(msg []byte) []byte {
-	msg = append(msg, checksum(msg))
+	msg = append(msg, Checksum(msg))
 
 	// substitute escape and delimiter characters
 	msg = bytes.ReplaceAll(msg, []byte{escape}, escapeSequence)
@@ -38,6 +40,7 @@ func Encode(msg []byte) []byte {
 	return buf.Bytes()
 }
 
+// Decode reverses Encode
 func Decode(msg []byte) ([]byte, error) {
 	// must be at least 2 delimiters, payload and checksum
 	if len(msg) < 4 {
@@ -52,7 +55,7 @@ func Decode(msg []byte) ([]byte, error) {
 	msg = bytes.ReplaceAll(msg, escapeSequence, []byte{escape})
 
 	// validate checksum
-	cks := checksum(msg[0 : len(msg)-1])
+	cks := Checksum(msg[0 : len(msg)-1])
 	if cks != msg[len(msg)-1] {
 		return []byte{}, errors.New("invalid checksum")
 	}

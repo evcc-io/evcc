@@ -293,10 +293,6 @@ func (h *Master) handleMessage(msg []byte) error {
 
 		return fmt.Errorf("slave replied to unexpected master: %02X", slaveMsg.ReceiverID)
 
-	// 		else:
-	// 			msgMatch = re.search(b'\A\xfd\xeb(..)(..)(.+?).\Z', msg, re.DOTALL)
-	// 		if(msgMatch and foundMsgMatch == False):
-
 	// re = regexp.MustCompile(`^\x{fd}\x{eb}(..)(..)(.+?).$`)
 	// if match := re.FindSubmatch(msg); len(match) > 0 {
 
@@ -327,25 +323,18 @@ func (h *Master) handleMessage(msg []byte) error {
 	// 			receiverID = msgMatch.group(2)
 	// 			data = msgMatch.group(3)
 
-	// 		else:
-	// 			msgMatch = re.search(b'\A\xfc(\xe1|\xe2)(..)(.)\x00\x00\x00\x00\x00\x00\x00\x00.+\Z', msg, re.DOTALL)
-	// 		if(msgMatch and foundMsgMatch == False):
+	case SlaveConsumptionID:
+		var slaveMsg SlaveConsumption
+		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
+			panic(err)
+		}
+		fmt.Println("SlaveConsumption:", slaveMsg)
 
-	// re = regexp.MustCompile(`^\x{fc}(\x{e1}|\x{e2})(..)(.)\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}\x{00}.+$`)
-	// if match := re.FindSubmatch(msg); len(match) > 0 {
+		break
 
-	// 			foundMsgMatch = True
-	// 			print(time_now() + " ERROR: TWC is set to Master mode so it can't be controlled by TWCManager.  " \
-	// 					"Search installation instruction PDF for 'rotary switch' and set " \
-	// 					"switch so its arrow points to F on the dial.")
+	case MasterMode1ID, MasterMode2ID:
+		fmt.Println("TWC is set to master mode and cannot be controller")
 
-	// 	panic("TWC is set to master mode and cannot be controlled")
-	// }
-
-	// 		if(foundMsgMatch == False):
-	// 			print(time_now() + ": *** UNKNOWN MESSAGE FROM SLAVE:" + hex_str(msg)
-	// 					+ "\nPlease private message user CDragon at http://teslamotorsclub.com " \
-	// 					"with a copy of this error.")
 	default:
 		fmt.Println("unknown message received")
 	}

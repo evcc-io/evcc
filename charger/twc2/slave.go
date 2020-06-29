@@ -10,6 +10,7 @@ var (
 	slaveHeartbeatData = []byte{0x01, 0x0F, 0xA0, 0x0F, 0xA0, 0x00, 0x00, 0x00, 0x00}
 )
 
+// Slave is a TWC slave instance
 type Slave struct {
 	twcID               []byte
 	protocolVersion     int
@@ -18,6 +19,7 @@ type Slave struct {
 	masterHeartbeatData []byte
 }
 
+// NewSlave creates a new slave instance
 func NewSlave(slaveID uint16, maxAmps int) *Slave {
 	s := &Slave{
 		twcID:               make([]byte, 2),
@@ -31,34 +33,6 @@ func NewSlave(slaveID uint16, maxAmps int) *Slave {
 
 	return s
 }
-
-// func (h *Slave) sendSlaveHeartbeat(masterID []byte) error {
-// 	// if(self.protocolVersion == 1 and len(slaveHeartbeatData) > 7):
-// 	//     # Cut array down to length 7
-// 	//     slaveHeartbeatData = slaveHeartbeatData[0:7]
-// 	// elif(self.protocolVersion == 2):
-// 	//     while(len(slaveHeartbeatData) < 9):
-// 	//         # Increase array length to 9
-// 	//         slaveHeartbeatData.append(0x00)
-
-// 	// send_msg(bytearray(b'\xFD\xE0') + fakeTWCID + bytearray(masterID) + bytearray(slaveHeartbeatData))
-
-// 	if h.protocolVersion == 1 && len(slaveHeartbeatData) > 7 {
-// 		slaveHeartbeatData = slaveHeartbeatData[0:6]
-// 	}
-// 	if h.protocolVersion == 2 {
-// 		for len(slaveHeartbeatData) < 9 {
-// 			slaveHeartbeatData = append(slaveHeartbeatData, 0x00)
-// 		}
-// 	}
-
-// 	msg := bytes.NewBuffer([]byte{0xFD, 0xE0})
-// 	msg.Write(fakeTWCID)
-// 	msg.Write(masterID)
-// 	msg.Write(slaveHeartbeatData)
-
-// 	return master.send(msg.Bytes())
-// }
 
 func (h *Slave) sendMasterHeartbeat() error {
 	fmt.Println("sendMasterHeartbeat")
