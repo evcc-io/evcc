@@ -40,13 +40,6 @@ func NewSlave(log *util.Logger, slaveID uint16, maxAmps int) *Slave {
 }
 
 func (h *Slave) sendMasterHeartbeat() error {
-	h.log.TRACE.Println("sendMasterHeartbeat")
-
-	// msg := bytes.NewBuffer([]byte{0xFB, 0xE0})
-	// msg.Write(fakeTWCID)
-	// msg.Write(h.twcID)
-	// msg.Write(h.masterHeartbeatData)
-
 	msg := MasterHeartbeat{
 		Header: Header{
 			Type:     MasterHeartbeatID,
@@ -55,10 +48,11 @@ func (h *Slave) sendMasterHeartbeat() error {
 		ReceiverID: binary.BigEndian.Uint16(h.twcID),
 		MasterHeartbeatPayload: MasterHeartbeatPayload{
 			Command: CmdNOP,
+			AmpsMax: 0,
 		},
 	}
 
-	h.log.TRACE.Printf("slave %4X send heartbeat cmd: %d ampsMax: %d", h.twcID, msg.Command, msg.AmpsMax)
+	h.log.TRACE.Printf("send: slave %4X heartbeat cmd: %d ampsMax: %d", h.twcID, msg.Command, msg.AmpsMax)
 
 	buf := bytes.NewBuffer(nil)
 	if err := struc.Pack(buf, &msg); err != nil {
@@ -72,7 +66,7 @@ func (h *Slave) receiveHeartbeat(payload SlaveHeartbeatPayload) error {
 	h.amps = int(payload.AmpsActual / 100)
 	h.state = payload.State
 
-	h.log.TRACE.Printf("slave %4X heartbeat state: %d amps: %d", h.twcID, h.state, h.amps)
+	h.log.TRACE.Printf("recv: slave %4X heartbeat state: %d amps: %d", h.twcID, h.state, h.amps)
 
 	return nil
 }
