@@ -8,10 +8,6 @@ import (
 	"github.com/lunixbochs/struc"
 )
 
-var (
-	slaveHeartbeatData = []byte{0x01, 0x0F, 0xA0, 0x0F, 0xA0, 0x00, 0x00, 0x00, 0x00}
-)
-
 // Slave is a TWC slave instance
 type Slave struct {
 	log                *util.Logger
@@ -47,7 +43,7 @@ func (h *Slave) sendMasterHeartbeat() error {
 		},
 		ReceiverID: binary.BigEndian.Uint16(h.twcID),
 		MasterHeartbeatPayload: MasterHeartbeatPayload{
-			Command: CmdNOP,
+			Command: CmdNop,
 			AmpsMax: 0,
 		},
 	}

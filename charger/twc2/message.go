@@ -10,7 +10,7 @@ const (
 	MasterHeartbeatID  uint16 = 0xfbe0
 
 	// master commands
-	CmdNOP         byte = 0x00
+	CmdNop         byte = 0x00
 	CmdMaxCurrent  byte = 0x05 // protocol 1 command (before charging starts)
 	CmdMaxCurrent2 byte = 0x09 // protocol 2 command (before and after charging starts)
 )
