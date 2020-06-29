@@ -25,6 +25,7 @@ var (
 	masterSign = []byte{0x77}
 )
 
+// Master simulates a TWC master instance communicating with the slaves
 type Master struct {
 	dev    string
 	port   serial.Port
@@ -106,15 +107,12 @@ func (h *Master) sendMasterLinkReady2() error {
 	return h.send(msg.Bytes())
 }
 
+// Run handles the TWC communication
 func (h *Master) Run() {
 RESTART:
 	h.Close()
 
 	numInitMsgsToSend := 10
-
-	// m, err := Decode([]byte{0xC0, 0xFD, 0xE0, 0x66, 0x17, 0x77, 0x77, 0x09, 0x06, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9A, 0xC0})
-	// fmt.Printf("% 0x\n", m)
-	// panic(err)
 
 	for {
 		if err := h.Open(); err != nil {
@@ -124,8 +122,9 @@ RESTART:
 
 		time.Sleep(loopDelay)
 
-		if numInitMsgsToSend > 5 {
-			// link ready 1
+		switch {
+		// link ready 1
+		case numInitMsgsToSend > 5:
 			println("sendMasterLinkReady1")
 
 			if err := h.sendMasterLinkReady1(); err != nil {
@@ -135,8 +134,9 @@ RESTART:
 
 			numInitMsgsToSend--
 			time.Sleep(linkDelay)
-		} else if numInitMsgsToSend > 0 {
-			// link ready 2
+
+		// link ready 2
+		case numInitMsgsToSend > 0:
 			println("sendMasterLinkReady2")
 
 			if err := h.sendMasterLinkReady2(); err != nil {
@@ -146,9 +146,10 @@ RESTART:
 
 			numInitMsgsToSend--
 			time.Sleep(linkDelay)
-		} else if time.Since(h.lastTX) > advertiseDelay {
-			// master heartbeat
-			// TODO send to one slave at a time, use channel?
+
+		// master heartbeat
+		// TODO send to one slave at a time, use channel?
+		case time.Since(h.lastTX) > advertiseDelay:
 			for _, slave := range h.slaves {
 				println("sendMasterHeartbeat")
 
@@ -242,12 +243,12 @@ func (h *Master) handleMessage(msg []byte) error {
 		return nil
 	}
 
-	var slaveMsgType SlaveMessage
-	if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsgType); err != nil {
+	var header Header
+	if err := struc.Unpack(bytes.NewBuffer(msg), &header); err != nil {
 		panic(err)
 	}
 
-	switch slaveMsgType.Type {
+	switch header.Type {
 	case SlaveLinkReadyID:
 		var slaveMsg SlaveLinkReady
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {

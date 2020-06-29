@@ -1,10 +1,5 @@
 package twc2
 
-type SlaveMessage struct {
-	Type     uint16
-	SenderID uint16
-}
-
 const (
 	SlaveLinkReadyID   uint16 = 0xfde2
 	SlaveHeartbeatID   uint16 = 0xfde0
@@ -13,33 +8,40 @@ const (
 	MasterMode2ID      uint16 = 0xfce2
 )
 
+// Header is generic message structure
+type Header struct {
+	Type     uint16
+	SenderID uint16
+}
+
+// SlaveLinkReady is the slave's response to the master's link ready message
 type SlaveLinkReady struct {
-	Type        uint16
-	SenderID    uint16
+	Header
 	Sign        byte
 	MaxAmps     uint16
 	ZeroPadding [6]byte
 }
 
+// SlaveHeartbeat is the slave's regular heartbeat message
 type SlaveHeartbeat struct {
-	Type                 uint16
-	SenderID, ReceiverID uint16
+	Header
+	ReceiverID uint16
 	SlaveHeartbeatPayload
 }
 
+// SlaveHeartbeatPayload is the payload for the SlaveHeartbeat message
 type SlaveHeartbeatPayload struct {
 	State      byte
 	AmpsMax    uint16
 	AmpsActual uint16
 }
 
+// SlaveConsumption is the slave's consumption message
 type SlaveConsumption struct {
-	Type                 uint16
-	SenderID, ReceiverID uint16
-	Energy               uint64
-	Voltage
-}
-
-type Voltage struct {
-	L1, L2, L3 uint16
+	Header
+	ReceiverID uint16
+	Energy     uint64
+	Voltage    struct {
+		L1, L2, L3 uint16
+	}
 }
