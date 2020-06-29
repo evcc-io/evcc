@@ -97,7 +97,7 @@ func (h *Slave) receiveHeartbeat(payload SlaveHeartbeatPayload) error {
 	h.amps = int(payload.AmpsActual / 100)
 	h.state = payload.State
 
-	h.log.DEBUG.Printf("heartbeat state: %d amps: %d", h.state, h.amps)
+	h.log.DEBUG.Printf("slave %4X heartbeat state: %d amps: %d", h.twcID, h.state, h.amps)
 
 	return nil
 }

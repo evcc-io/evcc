@@ -227,8 +227,6 @@ func (h *Master) receive() error {
 }
 
 func (h *Master) handleMessage(msg []byte) error {
-	fmt.Printf("handle: % 0x\n", msg)
-
 	// msg length-1 compared to twcmanager as checksum is already removed
 	if len(msg) != 13 && len(msg) != 15 && len(msg) != 19 {
 		fmt.Println("ignoring message of unexpected length:", len(msg))
@@ -275,14 +273,17 @@ func (h *Master) handleMessage(msg []byte) error {
 
 		slaveTWC, ok := h.slaves[slaveMsg.SenderID]
 		if !ok {
-			return fmt.Errorf("invalid slave id: %02X", slaveMsg.SenderID)
+			if len(h.slaves) == 0 {
+				return fmt.Errorf("slave %04X waiting for registration", slaveMsg.SenderID)
+			}
+			return fmt.Errorf("slave %04X invalid id", slaveMsg.SenderID)
 		}
 
 		if slaveMsg.ReceiverID == binary.BigEndian.Uint16(fakeTWCID) {
 			return slaveTWC.receiveHeartbeat(slaveMsg.SlaveHeartbeatPayload)
 		}
 
-		return fmt.Errorf("slave replied to unexpected master: %02X", slaveMsg.ReceiverID)
+		return fmt.Errorf("slave %04X replied to unexpected master %04X", slaveMsg.SenderID, slaveMsg.ReceiverID)
 
 	// re = regexp.MustCompile(`^\x{fd}\x{eb}(..)(..)(.+?).$`)
 	// if match := re.FindSubmatch(msg); len(match) > 0 {
@@ -319,7 +320,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		if err := struc.Unpack(bytes.NewBuffer(msg), &slaveMsg); err != nil {
 			panic(err)
 		}
-		h.log.DEBUG.Printf("consumption: %d voltage: %v", slaveMsg.Energy, slaveMsg.Voltage)
+		h.log.DEBUG.Printf("slave %04X consumption: %d voltage: %v", slaveMsg.SenderID, slaveMsg.Energy, slaveMsg.Voltage)
 
 		break
 
@@ -327,7 +328,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		h.log.ERROR.Println("TWC is set to master mode and cannot be controller")
 
 	default:
-		h.log.TRACE.Println("recv: unknown message")
+		h.log.TRACE.Printf("recv: unknown message %4X", header.Type)
 	}
 
 	return nil
@@ -341,8 +342,8 @@ func (h *Master) newSlave(slaveID uint16, maxAmps int) *Slave {
 	slaveTWC := NewSlave(h.log, slaveID, maxAmps)
 	h.slaves[slaveID] = slaveTWC
 
-	if len(h.slaves) > 3 {
-		h.log.ERROR.Println("too many slaves")
+	if cnt := len(h.slaves); cnt > 3 {
+		h.log.ERROR.Printf("too many slaves: %d", cnt)
 	}
 
 	return slaveTWC
