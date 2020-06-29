@@ -43,6 +43,8 @@ func NewTWC2(dev string) *TWC2 {
 
 // Status implements the Charger.Status interface
 func (wb *TWC2) Status() (api.ChargeStatus, error) {
+	state := wb.handler.PlugState()
+	_ = state
 	return api.StatusA, nil
 }
 

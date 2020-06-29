@@ -9,6 +9,10 @@ const (
 	MasterMode2ID      uint16 = 0xfce2
 	MasterHeartbeatID  uint16 = 0xfbe0
 
+	// command/response IDs
+	GetPlugState         uint16 = 0xfbb4
+	GetPlugStateResponse uint16 = 0xfdb4
+
 	// master commands
 	CmdNop         byte = 0x00
 	CmdMaxCurrent  byte = 0x05 // protocol 1 command (before charging starts)
@@ -65,4 +69,19 @@ type MasterHeartbeatPayload struct {
 	AmpsMax     uint16
 	PlugState   byte
 	ZeroPadding [3]byte
+}
+
+// PlugState is the payload for the MasterHeartbeat message
+type PlugState struct {
+	Header
+	ReceiverID  uint16
+	ZeroPadding [7]byte
+}
+
+// PlugStateResponse answers the GetPlugState message
+type PlugStateResponse struct {
+	Header
+	ReceiverID  uint16
+	State       byte
+	ZeroPadding [6]byte
 }

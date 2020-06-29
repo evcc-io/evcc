@@ -27,19 +27,21 @@ var (
 
 // Master simulates a TWC master instance communicating with the slaves
 type Master struct {
-	log    *util.Logger
-	dev    string
-	port   serial.Port
-	slaves map[uint16]*Slave
-	lastTX time.Time
+	log               *util.Logger
+	dev               string
+	numInitMsgsToSend int
+	port              serial.Port
+	slaves            map[uint16]*Slave
+	lastTX            time.Time
 }
 
 // NewMaster creates TWC master for given serial device
 func NewMaster(log *util.Logger, dev string) *Master {
 	h := &Master{
-		log:    log,
-		dev:    dev,
-		slaves: make(map[uint16]*Slave),
+		log:               log,
+		dev:               dev,
+		numInitMsgsToSend: 10,
+		slaves:            make(map[uint16]*Slave),
 	}
 
 	// set singleton instance
@@ -79,6 +81,12 @@ func (h *Master) Close() {
 	h.port = nil
 }
 
+// init resets the linkReady message counter
+func (h *Master) init() {
+	h.numInitMsgsToSend = 10
+}
+
+// send encodes and sends the message
 func (h *Master) send(msg []byte) error {
 	msg = Encode(msg)
 	h.log.TRACE.Printf("send: % 0X", msg)
@@ -110,8 +118,6 @@ func (h *Master) Run() {
 RESTART:
 	h.Close()
 
-	numInitMsgsToSend := 10
-
 	for {
 		if err := h.Open(); err != nil {
 			goto RESTART
@@ -121,23 +127,23 @@ RESTART:
 
 		switch {
 		// link ready 1
-		case numInitMsgsToSend > 5:
+		case h.numInitMsgsToSend > 5:
 			if err := h.sendLinkReady1(); err != nil {
 				fmt.Printf("sendLinkReady1: %v\n", err)
 				goto RESTART
 			}
 
-			numInitMsgsToSend--
+			h.numInitMsgsToSend--
 			time.Sleep(linkDelay)
 
 		// link ready 2
-		case numInitMsgsToSend > 0:
+		case h.numInitMsgsToSend > 0:
 			if err := h.sendLinkReady2(); err != nil {
 				fmt.Printf("sendLinkReady2: %v\n", err)
 				goto RESTART
 			}
 
-			numInitMsgsToSend--
+			h.numInitMsgsToSend--
 			time.Sleep(linkDelay)
 
 		// master heartbeat
@@ -231,8 +237,7 @@ func (h *Master) receive() error {
 func (h *Master) handleMessage(msg []byte) error {
 	// msg length-1 compared to twcmanager as checksum is already removed
 	if len(msg) != 13 && len(msg) != 15 && len(msg) != 19 {
-		fmt.Println("ignoring message of unexpected length:", len(msg))
-		return nil
+		return fmt.Errorf("ignoring message of unexpected length: %d", len(msg))
 	}
 
 	var header Header
@@ -248,6 +253,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		}
 
 		if slaveMsg.SenderID == binary.BigEndian.Uint16(fakeTWCID) {
+			h.init() // reset message counter
 			return fmt.Errorf("slave reports same TWCID as master")
 		}
 
@@ -286,7 +292,7 @@ func (h *Master) handleMessage(msg []byte) error {
 		break
 
 	case MasterMode1ID, MasterMode2ID:
-		h.log.ERROR.Println("TWC is set to master mode and cannot be controller")
+		h.log.ERROR.Println("TWC is set to master mode and cannot be controlled")
 
 	default:
 		h.log.TRACE.Printf("recv: unknown message %4X", header.Type)
