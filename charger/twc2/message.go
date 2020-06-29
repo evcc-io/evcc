@@ -40,7 +40,7 @@ type SlaveHeartbeatPayload struct {
 type SlaveConsumption struct {
 	Header
 	ReceiverID uint16
-	Energy     uint64
+	Energy     uint32
 	Voltage    struct {
 		L1, L2, L3 uint16
 	}
