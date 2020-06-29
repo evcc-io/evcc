@@ -172,7 +172,7 @@ func (h *Master) receive() error {
 			// return error here- this might be a problem with the device
 			return err
 		}
-		h.log.TRACE.Printf("rx %d % 0X")
+		h.log.TRACE.Printf("rx %d % 0X", dataLen, data[0:dataLen])
 
 		if dataLen == 0 {
 			if len(msg) == 0 {

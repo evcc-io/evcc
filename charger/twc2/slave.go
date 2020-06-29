@@ -61,7 +61,7 @@ func (h *Slave) sendMasterHeartbeat() error {
 	h.log.TRACE.Printf("slave %4X send heartbeat cmd: %d ampsMax: %d", h.twcID, msg.Command, msg.AmpsMax)
 
 	buf := bytes.NewBuffer(nil)
-	if err := struc.Pack(buf, msg); err != nil {
+	if err := struc.Pack(buf, &msg); err != nil {
 		h.log.ERROR.Println(err)
 	}
 
