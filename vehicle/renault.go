@@ -86,11 +86,11 @@ type batteryAttributes struct {
 type Renault struct {
 	*embed
 	*util.HTTPHelper
-	user, password, vin                string
-	gigya, kamereon                    configServer
-	gigyaJwtToken, kamereonAccessToken string
-	accountID                          string
-	chargeStateG                       provider.FloatGetter
+	user, password, vin string
+	gigya, kamereon     configServer
+	gigyaJwtToken       string
+	accountID           string
+	chargeStateG        provider.FloatGetter
 }
 
 // NewRenaultFromConfig creates a new vehicle
@@ -168,12 +168,6 @@ func (v *Renault) authFlow() error {
 						return errors.New("missing vin")
 					}
 				}
-
-				token, err := v.kamereonToken(v.accountID)
-				if err != nil || token == "" {
-					return fmt.Errorf("refreshing kamereon access token failed: %v", err)
-				}
-				v.kamereonAccessToken = token
 			}
 		}
 	}
@@ -267,20 +261,25 @@ func (v *Renault) kamereonHeaders(additional ...map[string]string) map[string]st
 	return headers
 }
 
-func (v *Renault) kamereonPerson(personID string) (string, error) {
-	var kr kamereonResponse
-	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
-
+func (v *Renault) kamereonRequest(uri string, kr interface{}) error {
 	data := url.Values{"country": []string{"DE"}}
 	headers := v.kamereonHeaders()
 
 	req, err := v.request(uri, data, headers)
 	if err == nil {
 		_, err = v.RequestJSON(req, &kr)
+	}
 
-		if len(kr.Accounts) == 0 {
-			return "", nil
-		}
+	return err
+}
+
+func (v *Renault) kamereonPerson(personID string) (string, error) {
+	var kr kamereonResponse
+	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
+
+	err := v.kamereonRequest(uri, &kr)
+	if len(kr.Accounts) == 0 {
+		return "", err
 	}
 
 	return kr.Accounts[0].AccountID, err
@@ -290,13 +289,8 @@ func (v *Renault) kamereonVehicles(accountID string) (string, error) {
 	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
 
-	data := url.Values{"country": []string{"DE"}}
-	headers := v.kamereonHeaders()
-
-	req, err := v.request(uri, data, headers)
+	err := v.kamereonRequest(uri, &kr)
 	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
-
 		for _, v := range kr.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
 				return v.VIN, nil
@@ -307,58 +301,12 @@ func (v *Renault) kamereonVehicles(accountID string) (string, error) {
 	return "", err
 }
 
-func (v *Renault) kamereonToken(accountID string) (string, error) {
-	var kr kamereonResponse
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/token", v.kamereon.Target, accountID)
-
-	data := url.Values{"country": []string{"DE"}}
-	headers := v.kamereonHeaders()
-
-	req, err := v.request(uri, data, headers)
-	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
-	}
-
-	return kr.AccessToken, err
-}
-
-func (v *Renault) kamereonRequest(uri string) (*http.Request, error) {
-	if v.kamereonAccessToken == "" {
-		if err := v.authFlow(); err != nil {
-			return nil, err
-		}
-	}
-
-	data := url.Values{"country": []string{"DE"}}
-	headers := v.kamereonHeaders(map[string]string{"x-kamereon-authorization": "Bearer " + v.kamereonAccessToken})
-
-	return v.request(uri, data, headers)
-}
-
-// doJSONRequest executes request and handles token expiry
-func (v *Renault) doKamereonRequest(uri string, kr interface{}) error {
-	req, err := v.kamereonRequest(uri)
-	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
-		if err != nil {
-			if resp := v.LastResponse(); resp != nil && resp.StatusCode == http.StatusUnauthorized {
-				v.kamereonAccessToken = ""
-			}
-		}
-	}
-	return err
-}
-
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Renault) chargeState() (float64, error) {
 	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 
-	// do request with retry
-	err := v.doKamereonRequest(uri, &kr)
-	if err != nil && v.kamereonAccessToken == "" {
-		err = v.doKamereonRequest(uri, &kr)
-	}
+	err := v.kamereonRequest(uri, &kr)
 
 	return float64(kr.Data.Attributes.BatteryLevel), err
 }
