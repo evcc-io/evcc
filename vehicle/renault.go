@@ -246,38 +246,26 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 	return gr.IDToken, err
 }
 
-func (v *Renault) kamereonHeaders(additional ...map[string]string) map[string]string {
+func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
+	data := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
 		"apikey":           v.kamereon.APIKey,
 	}
 
-	for _, h := range additional {
-		for k, v := range h {
-			headers[k] = v
-		}
-	}
-
-	return headers
-}
-
-func (v *Renault) kamereonRequest(uri string, kr interface{}) error {
-	data := url.Values{"country": []string{"DE"}}
-	headers := v.kamereonHeaders()
-
+	var kr kamereonResponse
 	req, err := v.request(uri, data, headers)
 	if err == nil {
 		_, err = v.RequestJSON(req, &kr)
 	}
 
-	return err
+	return kr, err
 }
 
 func (v *Renault) kamereonPerson(personID string) (string, error) {
-	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
+	kr, err := v.kamereonRequest(uri)
 
-	err := v.kamereonRequest(uri, &kr)
 	if len(kr.Accounts) == 0 {
 		return "", err
 	}
@@ -286,10 +274,9 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 }
 
 func (v *Renault) kamereonVehicles(accountID string) (string, error) {
-	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
+	kr, err := v.kamereonRequest(uri)
 
-	err := v.kamereonRequest(uri, &kr)
 	if err == nil {
 		for _, v := range kr.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
@@ -303,10 +290,8 @@ func (v *Renault) kamereonVehicles(accountID string) (string, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Renault) chargeState() (float64, error) {
-	var kr kamereonResponse
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
-
-	err := v.kamereonRequest(uri, &kr)
+	kr, err := v.kamereonRequest(uri)
 
 	return float64(kr.Data.Attributes.BatteryLevel), err
 }
