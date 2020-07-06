@@ -10,7 +10,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger/nrgble"
 	"github.com/andig/evcc/util"
-	"github.com/godbus/dbus"
+	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"
 	"github.com/muka/go-bluetooth/bluez/profile/adapter"
 	"github.com/muka/go-bluetooth/bluez/profile/agent"
