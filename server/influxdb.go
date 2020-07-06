@@ -13,9 +13,10 @@ import (
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log    *util.Logger
-	client influxdb2.Client
-	writer influxdb2.WriteApi
+	log      *util.Logger
+	client   influxdb2.Client
+	org      string
+	database string
 }
 
 // NewInfluxClient creates new publisher for influx
@@ -28,20 +29,22 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	}
 
 	client := influxdb2.NewClient(url, token)
-	writer := client.WriteApi(org, database)
 
 	return &Influx{
-		log:    log,
-		client: client,
-		writer: writer,
+		log:      log,
+		client:   client,
+		org:      org,
+		database: database,
 	}
 }
 
 // Run Influx publisher
 func (m *Influx) Run(in <-chan core.Param) {
+	writer := m.client.WriteApi(m.org, m.database)
+
 	// log errors
 	go func() {
-		for err := range m.writer.Errors() {
+		for err := range writer.Errors() {
 			m.log.ERROR.Println(err)
 		}
 	}()
@@ -65,7 +68,7 @@ func (m *Influx) Run(in <-chan core.Param) {
 		)
 
 		// write asynchronously
-		m.writer.WritePoint(p)
+		writer.WritePoint(p)
 	}
 
 	m.client.Close()
