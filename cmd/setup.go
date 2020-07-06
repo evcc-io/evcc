@@ -7,12 +7,35 @@ import (
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/push"
+	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
 	"github.com/spf13/viper"
 )
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
+}
+
+// setup influx databases
+func configureDatabase(in <-chan util.Param, conf server.InfluxConfig) {
+	influx := server.NewInfluxClient(
+		conf.URL,
+		conf.Token,
+		conf.Org,
+		conf.User,
+		conf.Password,
+		conf.Database,
+	)
+
+	// eliminate duplicate values
+	dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
+	in = dedupe.Pipe(in)
+
+	// reduce number of values written to influx
+	limiter := server.NewLimiter(5 * time.Second)
+	in = limiter.Pipe(in)
+
+	go influx.Run(in)
 }
 
 func configureMessengers(conf messagingConfig) chan push.Event {

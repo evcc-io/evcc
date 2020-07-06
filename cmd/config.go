@@ -16,7 +16,7 @@ type config struct {
 	Log        string
 	Interval   time.Duration
 	Mqtt       mqttConfig
-	Influx     influxConfig
+	Influx     server.InfluxConfig
 	Menu       []server.MenuConfig
 	Messaging  messagingConfig
 	Meters     []qualifiedConfig
@@ -44,14 +44,6 @@ type mqttConfig struct {
 	Broker   string
 	User     string
 	Password string
-}
-
-type influxConfig struct {
-	URL      string
-	Database string
-	User     string
-	Password string
-	Interval time.Duration
 }
 
 // ConfigProvider provides configuration items

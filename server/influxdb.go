@@ -1,138 +1,63 @@
 package server
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
-	influxdb "github.com/influxdata/influxdb1-client/v2"
+	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
 
-const (
-	influxWriteTimeout  = 10 * time.Second
-	influxWriteInterval = 30 * time.Second
-	precision           = "s"
-)
+// InfluxConfig is the influx db configuration
+type InfluxConfig struct {
+	URL      string
+	Database string
+	Token    string
+	Org      string
+	User     string
+	Password string
+	Interval time.Duration
+}
 
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log        *util.Logger
-	client     influxdb.Client
-	points     []*influxdb.Point
-	pointsConf influxdb.BatchPointsConfig
-	interval   time.Duration
+	log      *util.Logger
+	client   influxdb2.Client
+	org      string
+	database string
 }
 
 // NewInfluxClient creates new publisher for influx
-func NewInfluxClient(
-	url string,
-	database string,
-	interval time.Duration,
-	user string,
-	password string,
-) *Influx {
+func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	log := util.NewLogger("iflx")
 
-	if database == "" {
-		log.FATAL.Fatal("missing database")
-	}
-	if interval == 0 {
-		interval = influxWriteInterval
+	// InfluxDB v1 compatibility
+	if token == "" && user != "" {
+		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	client, err := influxdb.NewHTTPClient(influxdb.HTTPConfig{
-		Addr:     url,
-		Username: user,
-		Password: password,
-		Timeout:  influxWriteTimeout,
-	})
-	if err != nil {
-		log.FATAL.Fatalf("error creating client: %v", err)
-	}
-
-	// check connection
-	go func(client influxdb.Client) {
-		if _, _, err := client.Ping(influxWriteTimeout); err != nil {
-			log.FATAL.Fatalf("%v", err)
-		}
-	}(client)
+	client := influxdb2.NewClient(url, token)
 
 	return &Influx{
 		log:      log,
 		client:   client,
-		interval: interval,
-		pointsConf: influxdb.BatchPointsConfig{
-			Database:  database,
-			Precision: precision,
-		},
+		org:      org,
+		database: database,
 	}
-}
-
-// writeBatchPoints asynchronously writes the collected points
-func (m *Influx) writeBatchPoints() {
-	m.Lock()
-
-	// get current batch
-	if len(m.points) == 0 {
-		m.Unlock()
-		return
-	}
-
-	// create new batch
-	batch, err := influxdb.NewBatchPoints(m.pointsConf)
-	if err != nil {
-		m.log.ERROR.Print(err)
-		m.Unlock()
-		return
-	}
-
-	// replace current batch
-	points := m.points
-	m.points = nil
-	m.Unlock()
-
-	// write batch
-	batch.AddPoints(points)
-	m.log.TRACE.Printf("writing %d point(s)", len(points))
-
-	if err := m.client.Write(batch); err != nil {
-		m.log.ERROR.Print(err)
-
-		// put points back at beginning of next batch
-		m.Lock()
-		m.points = append(points, m.points...)
-		m.Unlock()
-	}
-}
-
-// asyncWriter periodically calls writeBatchPoints
-func (m *Influx) asyncWriter(exit <-chan struct{}) <-chan struct{} {
-	done := make(chan struct{}) // signal writer stopped
-
-	// async batch writer
-	go func() {
-		ticker := time.NewTicker(m.interval)
-		for {
-			select {
-			case <-ticker.C:
-				m.writeBatchPoints()
-			case <-exit:
-				ticker.Stop()
-				m.writeBatchPoints()
-				close(done)
-				return
-			}
-		}
-	}()
-
-	return done
 }
 
 // Run Influx publisher
 func (m *Influx) Run(in <-chan util.Param) {
-	exit := make(chan struct{}) // exit signals to stop writer
-	done := m.asyncWriter(exit) // done signals writer stopped
+	writer := m.client.WriteApi(m.org, m.database)
+
+	// log errors
+	go func() {
+		for err := range writer.Errors() {
+			m.log.ERROR.Println(err)
+		}
+	}()
 
 	// add points to batch for async writing
 	for param := range in {
@@ -141,29 +66,20 @@ func (m *Influx) Run(in <-chan util.Param) {
 			continue
 		}
 
-		p, err := influxdb.NewPoint(
-			param.Key,
-			map[string]string{
-				"loadpoint": param.LoadPoint,
-			},
-			map[string]interface{}{
-				"value": param.Val,
-			},
-			time.Now(),
-		)
-		if err != nil {
-			m.log.ERROR.Printf("failed creating point: %v", err)
-			continue
+		tags := map[string]string{}
+		if param.LoadPoint != "" {
+			tags["loadpoint"] = param.LoadPoint
 		}
 
-		m.Lock()
-		m.points = append(m.points, p)
-		m.Unlock()
-	}
+		fields := map[string]interface{}{
+			"value": param.Val,
+		}
 
-	// close write loop
-	exit <- struct{}{}
-	<-done
+		// write asynchronously
+		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, param.Val, tags)
+		p := influxdb2.NewPoint(param.Key, tags, fields, time.Now())
+		writer.WritePoint(p)
+	}
 
 	m.client.Close()
 }

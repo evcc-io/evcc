@@ -158,25 +158,9 @@ func run(cmd *cobra.Command, args []string) {
 	cache := util.NewCache()
 	go cache.Run(tee.Attach())
 
-	// setup influx
-	if viper.Get("influx") != nil {
-		influx := server.NewInfluxClient(
-			conf.Influx.URL,
-			conf.Influx.Database,
-			conf.Influx.Interval,
-			conf.Influx.User,
-			conf.Influx.Password,
-		)
-
-		// eliminate duplicate values
-		dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
-		pipeChan := dedupe.Pipe(tee.Attach())
-
-		// reduce number of values written to influx
-		limiter := server.NewLimiter(5 * time.Second)
-		pipeChan = limiter.Pipe(pipeChan)
-
-		go influx.Run(pipeChan)
+	// setup database
+	if conf.Influx.URL != "" {
+		configureDatabase(tee.Attach(), conf.Influx)
 	}
 
 	// create webserver
