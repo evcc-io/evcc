@@ -5,10 +5,20 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
+
+// InfluxConfig is the influx db configuration
+type InfluxConfig struct {
+	URL      string
+	Database string
+	Token    string
+	Org      string
+	User     string
+	Password string
+	Interval time.Duration
+}
 
 // Influx is a influx publisher
 type Influx struct {
@@ -23,8 +33,8 @@ type Influx struct {
 func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	log := util.NewLogger("iflx")
 
+	// InfluxDB v1 compatibility
 	if token == "" && user != "" {
-		// InfluxDB v1 compatibility
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
@@ -39,7 +49,7 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(in <-chan core.Param) {
+func (m *Influx) Run(in <-chan util.Param) {
 	writer := m.client.WriteApi(m.org, m.database)
 
 	// log errors
@@ -56,18 +66,18 @@ func (m *Influx) Run(in <-chan core.Param) {
 			continue
 		}
 
-		p := influxdb2.NewPoint(
-			param.Key,
-			map[string]string{
-				"loadpoint": param.LoadPoint,
-			},
-			map[string]interface{}{
-				"value": param.Val,
-			},
-			time.Now(),
-		)
+		tags := map[string]string{}
+		if param.LoadPoint != "" {
+			tags["loadpoint"] = param.LoadPoint
+		}
+
+		fields := map[string]interface{}{
+			"value": param.Val,
+		}
 
 		// write asynchronously
+		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, param.Val, tags)
+		p := influxdb2.NewPoint(param.Key, tags, fields, time.Now())
 		writer.WritePoint(p)
 	}
 

@@ -159,7 +159,9 @@ func run(cmd *cobra.Command, args []string) {
 	go cache.Run(tee.Attach())
 
 	// setup database
-	configureDatabase(tee.Attach(), conf)
+	if conf.Influx.URL != "" {
+		configureDatabase(tee.Attach(), conf.Influx)
+	}
 
 	// create webserver
 	socketHub := server.NewSocketHub()

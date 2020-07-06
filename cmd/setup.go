@@ -16,36 +16,26 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func dbTee(valueChan *chan core.Param) <-chan core.Param {
-	var teeChan <-chan core.Param
-	*valueChan, teeChan = tee(*valueChan)
+// setup influx databases
+func configureDatabase(in <-chan util.Param, conf server.InfluxConfig) {
+	influx := server.NewInfluxClient(
+		conf.URL,
+		conf.Token,
+		conf.Org,
+		conf.User,
+		conf.Password,
+		conf.Database,
+	)
 
 	// eliminate duplicate values
 	dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
-	teeChan = dedupe.Pipe(teeChan)
+	in = dedupe.Pipe(in)
 
 	// reduce number of values written to influx
 	limiter := server.NewLimiter(5 * time.Second)
-	teeChan = limiter.Pipe(teeChan)
+	in = limiter.Pipe(in)
 
-	return teeChan
-}
-
-// setup influx databases
-func configureDatabase(in chan util.Param, conf config) {
-	if viper.Get("influx") != nil {
-		influx := server.NewInfluxClient(
-			conf.Influx.URL,
-			conf.Influx.Token,
-			conf.Influx.Org,
-			conf.Influx.User,
-			conf.Influx.Password,
-			conf.Influx.Database,
-		)
-
-		teeChan := dbTee(valueChan)
-		go influx.Run(teeChan)
-	}
+	go influx.Run(in)
 }
 
 func configureMessengers(conf messagingConfig) chan push.Event {
