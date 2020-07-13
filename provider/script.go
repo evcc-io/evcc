@@ -28,7 +28,7 @@ func NewScriptProvider(timeout time.Duration) *Script {
 }
 
 // StringGetter returns string from exec result. Only STDOUT is considered.
-func (e *Script) StringGetter(script string) StringGetter {
+func (e *Script) StringGetter(script string) func() (string, error) {
 	args, err := shellquote.Split(script)
 	if err != nil {
 		panic(err)
@@ -63,7 +63,7 @@ func (e *Script) StringGetter(script string) StringGetter {
 }
 
 // IntGetter parses int64 from exec result
-func (e *Script) IntGetter(script string) IntGetter {
+func (e *Script) IntGetter(script string) func() (int64, error) {
 	exec := e.StringGetter(script)
 
 	// return func to access cached value
@@ -78,7 +78,7 @@ func (e *Script) IntGetter(script string) IntGetter {
 }
 
 // FloatGetter parses float from exec result
-func (e *Script) FloatGetter(script string) FloatGetter {
+func (e *Script) FloatGetter(script string) func() (float64, error) {
 	exec := e.StringGetter(script)
 
 	// return func to access cached value
@@ -93,7 +93,7 @@ func (e *Script) FloatGetter(script string) FloatGetter {
 }
 
 // BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (e *Script) BoolGetter(script string) BoolGetter {
+func (e *Script) BoolGetter(script string) func() (bool, error) {
 	exec := e.StringGetter(script)
 
 	// return func to access cached value
@@ -108,7 +108,7 @@ func (e *Script) BoolGetter(script string) BoolGetter {
 }
 
 // IntSetter invokes script with parameter replaced by int value
-func (e *Script) IntSetter(param, script string) IntSetter {
+func (e *Script) IntSetter(param, script string) func(int64) error {
 	// return func to access cached value
 	return func(i int64) error {
 		cmd, err := util.ReplaceFormatted(script, map[string]interface{}{
@@ -128,7 +128,7 @@ func (e *Script) IntSetter(param, script string) IntSetter {
 }
 
 // BoolSetter invokes script with parameter replaced by bool value
-func (e *Script) BoolSetter(param, script string) BoolSetter {
+func (e *Script) BoolSetter(param, script string) func(bool) error {
 	// return func to access cached value
 	return func(b bool) error {
 		cmd, err := util.ReplaceFormatted(script, map[string]interface{}{

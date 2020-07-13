@@ -34,7 +34,10 @@ type SocketClient struct {
 
 // writePump pumps messages from the hub to the websocket connection.
 func (c *SocketClient) writePump() {
-	defer c.conn.Close()
+	defer func() {
+		c.conn.Close()
+		c.hub.unregister <- c
+	}()
 
 	for msg := range c.send {
 		if err := c.conn.SetWriteDeadline(time.Now().Add(socketWriteTimeout)); err != nil {
@@ -108,53 +111,49 @@ func kv(i util.Param) string {
 	return "\"" + i.Key + "\":" + val
 }
 
-func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+// paramToJSON converts util.Param to JSON as expected by UI
+func paramToJSON(p util.Param) string {
 	var msg strings.Builder
 
-	// build json object
-	_, _ = msg.WriteString("{")
-	for _, p := range params {
-		if p.Key == "error" || p.Key == "warn" {
-			continue
-		}
-		if msg.Len() > 1 {
-			_, _ = msg.WriteString(",")
-		}
-		msg.WriteString(kv(p))
+	msg.WriteString("{")
+	if p.LoadPoint != nil {
+		msg.WriteString(fmt.Sprintf("\"loadpoint\":%d,", *p.LoadPoint))
 	}
-	_, _ = msg.WriteString("}")
+	msg.WriteString(kv(p))
+	msg.WriteString("}")
 
-	// add client if send successful
-	select {
-	case client.send <- []byte(msg.String()):
-		h.clients[client] = true
-	default:
-		close(client.send)
+	return msg.String()
+}
+
+func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
+	h.clients[client] = true
+
+	for _, p := range params {
+		msg := paramToJSON(p)
+		select {
+		case client.send <- []byte(msg):
+		default:
+			close(client.send)
+		}
 	}
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
 	if len(h.clients) > 0 {
-		message := fmt.Sprintf("{%s}", kv(p))
+		msg := paramToJSON(p)
 
 		for client := range h.clients {
 			select {
-			case client.send <- []byte(message):
+			case client.send <- []byte(msg):
 			default:
-				close(client.send)
-				delete(h.clients, client)
+				h.unregister <- client
 			}
 		}
 	}
 }
 
-// Cacher gives access to current cache state
-type Cacher interface {
-	All() []util.Param
-}
-
 // Run starts data and status distribution
-func (h *SocketHub) Run(in <-chan util.Param, cache Cacher) {
+func (h *SocketHub) Run(in <-chan util.Param, cache *util.Cache) {
 	for {
 		select {
 		case client := <-h.register:

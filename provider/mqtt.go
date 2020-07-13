@@ -102,7 +102,7 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 }
 
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
-func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) FloatGetter {
+func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) func() (float64, error) {
 	h := &msgHandler{
 		log:   m.log,
 		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
@@ -115,7 +115,7 @@ func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Durat
 }
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) IntGetter {
+func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) func() (int64, error) {
 	h := &msgHandler{
 		log:   m.log,
 		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
@@ -128,7 +128,7 @@ func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration)
 }
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
-func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGetter {
+func (m *MqttClient) StringGetter(topic string, timeout time.Duration) func() (string, error) {
 	h := &msgHandler{
 		log:   m.log,
 		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
@@ -140,7 +140,7 @@ func (m *MqttClient) StringGetter(topic string, timeout time.Duration) StringGet
 }
 
 // BoolGetter creates handler for string from MQTT topic that returns cached value
-func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) BoolGetter {
+func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) func() (bool, error) {
 	h := &msgHandler{
 		log:   m.log,
 		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
@@ -163,7 +163,7 @@ func (m *MqttClient) formatValue(param, message string, v interface{}) (string, 
 }
 
 // IntSetter publishes topic with parameter replaced by int value
-func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
+func (m *MqttClient) IntSetter(param, topic, message string) func(int64) error {
 	return func(v int64) error {
 		payload, err := m.formatValue(param, message, v)
 		if err != nil {
@@ -181,7 +181,7 @@ func (m *MqttClient) IntSetter(param, topic, message string) IntSetter {
 }
 
 // BoolSetter invokes script with parameter replaced by bool value
-func (m *MqttClient) BoolSetter(param, topic, message string) BoolSetter {
+func (m *MqttClient) BoolSetter(param, topic, message string) func(bool) error {
 	return func(v bool) error {
 		payload, err := m.formatValue(param, message, v)
 		if err != nil {

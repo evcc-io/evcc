@@ -32,7 +32,7 @@ type BMW struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	chargeStateG        provider.FloatGetter
+	chargeStateG        func() (float64, error)
 }
 
 // NewBMWFromConfig creates a new vehicle

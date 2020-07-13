@@ -50,7 +50,7 @@ type Audi struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	chargeStateG        provider.FloatGetter
+	chargeStateG        func() (float64, error)
 }
 
 // NewAudiFromConfig creates a new vehicle

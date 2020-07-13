@@ -81,7 +81,7 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 	return m
 }
 
-// floatGetter executes configured modbus read operation and implements provider.FloatGetter
+// floatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 	m.conn.Slave(m.slaveID)
 

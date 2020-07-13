@@ -9,6 +9,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/util"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -29,7 +30,7 @@ type MenuConfig struct {
 }
 
 type chargeModeJSON struct {
-	Mode string `json:"mode"`
+	Mode api.ChargeMode `json:"mode"`
 }
 
 type route struct {
@@ -38,11 +39,11 @@ type route struct {
 	HandlerFunc http.HandlerFunc
 }
 
-// loadPoint is the minimal interface for accessing loadpoint methods
-type loadPoint interface {
+// site is the minimal interface for accessing site methods
+type site interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
-	Configuration() core.Configuration
+	Configuration() core.SiteConfiguration
 }
 
 // routeLogger traces matched routes including their executing time
@@ -93,46 +94,47 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
+func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(content); err != nil {
+		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+	}
+}
+
 // HealthHandler returns current charge mode
-func HealthHandler(lp loadPoint) http.HandlerFunc {
+func HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := struct{ OK bool }{OK: true}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		jsonResponse(w, r, res)
 	}
 }
 
 // ConfigHandler returns current charge mode
-func ConfigHandler(lp loadPoint) http.HandlerFunc {
+func ConfigHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := lp.Configuration()
+		res := site.Configuration()
+		jsonResponse(w, r, res)
+	}
+}
 
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+// StateHandler returns current charge mode
+func StateHandler(cache *util.Cache) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := cache.State()
+		jsonResponse(w, r, res)
 	}
 }
 
 // CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(lp loadPoint) http.HandlerFunc {
+func CurrentChargeModeHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := chargeModeJSON{
-			Mode: string(lp.GetMode()),
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		res := chargeModeJSON{Mode: site.GetMode()}
+		jsonResponse(w, r, res)
 	}
 }
 
 // ChargeModeHandler updates charge mode
-func ChargeModeHandler(lp loadPoint) http.HandlerFunc {
+func ChargeModeHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -142,16 +144,10 @@ func ChargeModeHandler(lp loadPoint) http.HandlerFunc {
 			return
 		}
 
-		lp.SetMode(api.ChargeMode(mode))
+		site.SetMode(api.ChargeMode(mode))
 
-		res := chargeModeJSON{
-			Mode: string(lp.GetMode()),
-		}
-
-		w.WriteHeader(http.StatusOK)
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
-		}
+		res := chargeModeJSON{Mode: site.GetMode()}
+		jsonResponse(w, r, res)
 	}
 }
 
@@ -163,15 +159,17 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, links []MenuConfig, lp loadPoint, hub *SocketHub) *http.Server {
+func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
 	var routes = []route{{
-		[]string{"GET"}, "/health", HealthHandler(lp),
+		[]string{"GET"}, "/health", HealthHandler(),
 	}, {
-		[]string{"GET"}, "/config", ConfigHandler(lp),
+		[]string{"GET"}, "/config", ConfigHandler(site),
 	}, {
-		[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp),
+		[]string{"GET"}, "/state", StateHandler(cache),
 	}, {
-		[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp),
+		[]string{"GET"}, "/mode", CurrentChargeModeHandler(site),
+	}, {
+		[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site),
 	}}
 
 	router := mux.NewRouter().StrictSlash(true)

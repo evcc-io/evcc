@@ -23,7 +23,7 @@ type Modbus struct {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interface{}) *Modbus {
+func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
@@ -102,7 +102,7 @@ func NewModbusFromConfig(log *util.Logger, typ string, other map[string]interfac
 	}
 }
 
-// FloatGetter executes configured modbus read operation and implements provider.FloatGetter
+// FloatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) FloatGetter() (float64, error) {
 	m.conn.Slave(m.slaveID)
 

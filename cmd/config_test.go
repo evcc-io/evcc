@@ -42,7 +42,7 @@ func TestDistConfig(t *testing.T) {
 	}
 
 	// check config is valid
-	loadConfig(conf, nil)
+	_ = loadConfig(conf)
 }
 
 func TestMeterConfig(t *testing.T) {

@@ -61,7 +61,7 @@ func scriptFromConfig(log *util.Logger, other map[string]interface{}) scriptConf
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
-func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter) {
+func NewFloatGetterFromConfig(log *util.Logger, config Config) (res func() (float64, error)) {
 	switch strings.ToLower(config.Type) {
 	case "calc":
 		res = NewCalcFromConfig(log, config.Other)
@@ -79,7 +79,7 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter)
 			res = NewCached(log, res, pc.Cache).FloatGetter()
 		}
 	case "modbus":
-		res = FloatGetter(NewModbusFromConfig(log, config.Type, config.Other).FloatGetter)
+		res = NewModbusFromConfig(log, config.Other).FloatGetter
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
 	}
@@ -88,7 +88,7 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res FloatGetter)
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config
-func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
+func NewIntGetterFromConfig(log *util.Logger, config Config) (res func() (int64, error)) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).IntGetter
@@ -103,8 +103,8 @@ func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
 		if pc.Cache > 0 {
 			res = NewCached(log, res, pc.Cache).IntGetter()
 		}
-	case "modbus-rtu", "modbus-tcp", "modbus-rtuovertcp", "modbus-tcprtu", "modbus-rtutcp":
-		res = IntGetter(NewModbusFromConfig(log, config.Type, config.Other).IntGetter)
+	case "modbus":
+		res = NewModbusFromConfig(log, config.Other).IntGetter
 	default:
 		log.FATAL.Fatalf("invalid provider type %s", config.Type)
 	}
@@ -113,7 +113,7 @@ func NewIntGetterFromConfig(log *util.Logger, config Config) (res IntGetter) {
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(log *util.Logger, config Config) (res StringGetter) {
+func NewStringGetterFromConfig(log *util.Logger, config Config) (res func() (string, error)) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).StringGetter
@@ -138,7 +138,7 @@ func NewStringGetterFromConfig(log *util.Logger, config Config) (res StringGette
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(log *util.Logger, config Config) (res BoolGetter) {
+func NewBoolGetterFromConfig(log *util.Logger, config Config) (res func() (bool, error)) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).BoolGetter
@@ -161,7 +161,7 @@ func NewBoolGetterFromConfig(log *util.Logger, config Config) (res BoolGetter) {
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(log *util.Logger, param string, config Config) (res IntSetter) {
+func NewIntSetterFromConfig(log *util.Logger, param string, config Config) (res func(int64) error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).IntSetter
@@ -179,7 +179,7 @@ func NewIntSetterFromConfig(log *util.Logger, param string, config Config) (res 
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(log *util.Logger, param string, config Config) (res BoolSetter) {
+func NewBoolSetterFromConfig(log *util.Logger, param string, config Config) (res func(bool) error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
 		res = NewHTTPProviderFromConfig(log, config.Other).BoolSetter

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/andig/evcc/core"
@@ -17,7 +18,7 @@ func init() {
 }
 
 // setup influx databases
-func configureDatabase(in <-chan util.Param, conf server.InfluxConfig) {
+func configureDatabase(conf server.InfluxConfig, loadPoints []*core.LoadPoint, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,
@@ -35,12 +36,12 @@ func configureDatabase(in <-chan util.Param, conf server.InfluxConfig) {
 	limiter := server.NewLimiter(5 * time.Second)
 	in = limiter.Pipe(in)
 
-	go influx.Run(in)
+	go influx.Run(loadPoints, in)
 }
 
-func configureMessengers(conf messagingConfig) chan push.Event {
+func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
-	notificationHub := push.NewHub(conf.Events)
+	notificationHub := push.NewHub(conf.Events, cache)
 
 	for _, service := range conf.Services {
 		impl := push.NewMessengerFromConfig(service.Type, service.Other)
@@ -57,10 +58,21 @@ func clientID() string {
 	return fmt.Sprintf("evcc-%d", pid)
 }
 
-func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.LoadPoint) {
+func loadConfig(conf config) *core.Site {
 	cp := &ConfigProvider{}
 	cp.configure(conf)
 
+	loadPoints := configureLoadPoints(conf, cp)
+	site := configureSite(conf.Site, cp, loadPoints)
+
+	return site
+}
+
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
+	return core.NewSiteFromConfig(log, cp, conf, loadPoints)
+}
+
+func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.LoadPoint) {
 	// slice of loadpoints
 	lps, ok := viper.AllSettings()["loadpoints"]
 	if !ok {
@@ -71,7 +83,8 @@ func loadConfig(conf config, eventsChan chan push.Event) (loadPoints []*core.Loa
 	var lpc []map[string]interface{}
 	util.DecodeOther(log, lps, &lpc)
 
-	for _, lpc := range lpc {
+	for id, lpc := range lpc {
+		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
 		lp := core.NewLoadPointFromConfig(log, cp, lpc)
 		loadPoints = append(loadPoints, lp)
 	}

@@ -6,10 +6,10 @@ import (
 )
 
 type openWBStatusProvider struct {
-	plugged, charging BoolGetter
+	plugged, charging func() (bool, error)
 }
 
-func openWBStatusFromConfig(log *util.Logger, other map[string]interface{}) StringGetter {
+func openWBStatusFromConfig(log *util.Logger, other map[string]interface{}) func() (string, error) {
 	cc := struct {
 		Plugged, Charging Config
 	}{}

@@ -26,7 +26,7 @@ func (m *embed) Capacity() int64 {
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
-	chargeG provider.FloatGetter
+	chargeG func() (float64, error)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle

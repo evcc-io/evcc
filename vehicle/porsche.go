@@ -55,7 +55,7 @@ type Porsche struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	chargeStateG        provider.FloatGetter
+	chargeStateG        func() (float64, error)
 }
 
 // NewPorscheFromConfig creates a new vehicle
