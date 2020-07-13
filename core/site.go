@@ -28,7 +28,7 @@ type Site struct {
 
 	// configuration
 	Title         string         `mapstructure:"title"`         // UI title
-	VoltageRef    float64        `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	Voltage       float64        `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64        `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Mode          api.ChargeMode `mapstructure:"mode"`          // Charge mode, guarded by mutex
 	Meters        MetersConfig   // Meter references
@@ -90,12 +90,7 @@ func NewSiteFromConfig(
 		site.loadpoints = append(site.loadpoints, lp)
 	}
 
-	// validate single voltage
-	if Voltage != 0 && Voltage != site.VoltageRef {
-		site.log.FATAL.Fatal("config: only single voltage allowed")
-	}
-
-	Voltage = site.VoltageRef
+	Voltage = site.Voltage
 
 	return site
 }
@@ -106,7 +101,7 @@ func NewSite() *Site {
 		log:         util.NewLogger("core"),
 		triggerChan: make(chan struct{}, 1),
 		Mode:        api.ModeOff,
-		VoltageRef:  230, // V
+		Voltage:     230, // V
 	}
 
 	return lp

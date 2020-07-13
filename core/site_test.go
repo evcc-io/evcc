@@ -50,7 +50,7 @@ func TestSiteUpdateMultipleLoadpoints(t *testing.T) {
 
 	for _, usedPower := range lps {
 		lp := mock.NewMockLoadPointer(ctrl)
-		site.loadPoints = append(site.loadPoints, lp)
+		site.loadpoints = append(site.loadpoints, lp)
 
 		lp.EXPECT().Update(api.ModePV, availablePower).Return(usedPower)
 		availablePower += usedPower
