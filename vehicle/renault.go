@@ -149,6 +149,11 @@ func (v *Renault) authFlow() error {
 		v.gigyaJwtToken, err = v.jwtToken(sessionCookie)
 
 		if err == nil {
+			if v.accountID != "" {
+				// personID, accountID and VIN have already been read, skip remainder of flow
+				return nil
+			}
+
 			var personID string
 			personID, err = v.personID(sessionCookie)
 			if personID == "" {
