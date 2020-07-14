@@ -35,7 +35,7 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	log := util.NewLogger("iflx")
 
 	// InfluxDB v1 compatibility
-	if token == "" && user != "" {
+	if token == "" {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
