@@ -267,7 +267,7 @@ func (site *Site) updateMeters() (err error) {
 		if m != nil {
 			e := retry.Do(func() error {
 				return site.updateMeter(s, m, f)
-			}, retry.Attempts(3))
+			}, retryOptions...)
 
 			if e != nil {
 				err = errors.Wrapf(e, "updating %s meter", s)

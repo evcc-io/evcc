@@ -373,7 +373,7 @@ func (lp *LoadPoint) updateMeters() (err error) {
 		if m != nil {
 			e := retry.Do(func() error {
 				return lp.updateMeter(s, m, f)
-			}, retry.Attempts(3))
+			}, retryOptions...)
 
 			if e != nil {
 				err = errors.Wrapf(e, "updating %s meter", s)
@@ -465,7 +465,7 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	lp.publishSoC()
 
 	// read and publish status
-	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
+	if err := retry.Do(lp.updateChargeStatus, retryOptions...); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
 		return lp.chargePower
 	}
