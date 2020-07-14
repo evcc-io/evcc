@@ -160,7 +160,7 @@ Vue.component('message-toast', {
     $(id).toast('show');
     $(id).on('hidden.bs.toast', function () {
       toasts.remove(this.item);
-    })
+    }.bind(this))
   },
 });
 

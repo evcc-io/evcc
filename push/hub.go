@@ -55,12 +55,13 @@ func (h *Hub) Run(events <-chan Event) {
 		definition, ok := h.definitions[ev.Event]
 		if !ok {
 			log.ERROR.Printf("invalid event %v", ev.Event)
-			break
+			continue
 		}
 
 		msg, err := h.apply(ev, definition.Msg)
 		if err != nil {
 			log.ERROR.Printf("invalid template for %s: %v", ev.Event, err)
+			continue
 		}
 
 		for _, sender := range h.sender {

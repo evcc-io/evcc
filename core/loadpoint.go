@@ -393,6 +393,7 @@ func (lp *LoadPoint) chargeDuration() time.Duration {
 	d, err := lp.chargeTimer.ChargingTime()
 	if err != nil {
 		lp.log.ERROR.Printf("charge timer error: %v", err)
+		return 0
 	}
 	return d
 }
@@ -402,6 +403,7 @@ func (lp *LoadPoint) chargedEnergy() float64 {
 	f, err := lp.chargeRater.ChargedEnergy()
 	if err != nil {
 		lp.log.ERROR.Printf("charge rater error: %v", err)
+		return 0
 	}
 	return f
 }
@@ -458,6 +460,10 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
+	// update progress and soc before status is updated
+	lp.publishChargeProgress()
+	lp.publishSoC()
+
 	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retry.Attempts(3)); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
@@ -503,9 +509,6 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
-
-	lp.publishChargeProgress()
-	lp.publishSoC()
 
 	return lp.chargePower
 }
