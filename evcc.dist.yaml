@@ -27,10 +27,10 @@ messaging:
   events:
     start: # charge start event
       title: Charge started
-      msg: ${loadpoint} started charging in "${mode}" mode
+      msg: Started charging in "${mode}" mode
     stop: # charge stop event
       title: Charge finished
-      msg: ${loadpoint} finished charging. Charged ${energy:%.1f}kWh in ${duration}.
+      msg: Finished charging ${energy:%.1fk}kWh in ${duration}.
   services:
   - type: pushover
     app: # app id
