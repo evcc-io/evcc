@@ -244,14 +244,16 @@
   <div class="col-6 col-md-2 my-4">
     <div class="mb-2">Dauer</div>
     <h2>
-      {{fmtShortDuration(state.chargeDuration)}}
+      {{fmtShortDuration(state.chargeDuration)}} <small
+        class="text-muted">{{fmtShortDurationUnit(state.chargeDuration)}}</small>
     </h2>
   </div>
 
   <div class="col-6 col-md-2 my-4">
     <div class="mb-2">Restzeit</div>
     <h2>
-      {{fmtShortDuration(state.chargeEstimate)}}
+      {{fmtShortDuration(state.chargeEstimate)}} <small
+        class="text-muted">{{fmtShortDurationUnit(state.chargeEstimate)}}</small>
     </h2>
   </div>
 </div>

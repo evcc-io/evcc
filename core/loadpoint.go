@@ -265,8 +265,11 @@ func (lp *LoadPoint) updateChargeStatus() error {
 			lp.log.INFO.Println("start charging ->")
 			lp.bus.Publish(evChargeStart)
 		} else {
-			lp.log.INFO.Println("stop charging <-")
-			lp.bus.Publish(evChargeStop)
+			// omit initial stop event before started
+			if prevStatus != api.StatusNone {
+				lp.log.INFO.Println("stop charging <-")
+				lp.bus.Publish(evChargeStop)
+			}
 		}
 	}
 

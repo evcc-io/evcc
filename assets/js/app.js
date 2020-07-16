@@ -55,12 +55,22 @@ let formatter = {
       var tm;
       if (hours >= 1) {
         minutes = "0" + minutes;
-        tm = hours + ":" + minutes.substr(-2) + "h";
+        tm = hours + ":" + minutes.substr(-2);
       } else {
         var seconds = "0" + (d % 60);
-        tm = minutes + ":" + seconds.substr(-2) + "m";
+        tm = minutes + ":" + seconds.substr(-2);
       }
       return tm;
+    },
+    fmtShortDurationUnit: function (d) {
+      if (d <= 0 || d == null) {
+        return '';
+      }
+      var hours = Math.floor(d / 3600);
+      if (hours >= 1) {
+        return "h";
+      }
+      return "m";
     },
   }
 }
