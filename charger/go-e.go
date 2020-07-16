@@ -136,6 +136,11 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	return status, err
 }
 
+// isValid checks is status response is local
+func isValid(status goeStatusResponse) bool {
+	return status.Fwv != ""
+}
+
 // Status implements the Charger.Status interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
 	status, err := c.apiStatus()
@@ -180,7 +185,7 @@ func (c *GoE) Enable(enable bool) error {
 	}
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && status.Fwv != "" && status.Alw != b {
+	if err == nil && isValid(status) && status.Alw != b {
 		return fmt.Errorf("alw update failed: %d", status.Amp)
 	}
 
@@ -190,7 +195,7 @@ func (c *GoE) Enable(enable bool) error {
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amp=%d", current))
-	if err == nil && status.Fwv != "" && int64(status.Amp) != current {
+	if err == nil && isValid(status) && int64(status.Amp) != current {
 		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
 
