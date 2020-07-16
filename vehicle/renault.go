@@ -90,7 +90,7 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	chargeStateG        provider.FloatGetter
+	chargeStateG        func() (float64, error)
 }
 
 // NewRenaultFromConfig creates a new vehicle

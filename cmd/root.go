@@ -141,31 +141,29 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
-	// setup messaging
-	notificationChan := configureMessengers(conf.Messaging)
-
 	// setup mqtt
 	if viper.Get("mqtt") != nil {
 		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
 	}
 
 	// setup loadpoints
-	loadPoints := loadConfig(conf, notificationChan)
+	site := loadConfig(conf)
 
 	// start broadcasting values
 	tee := &Tee{}
 
+	// value cache
 	cache := util.NewCache()
 	go cache.Run(tee.Attach())
 
 	// setup database
 	if conf.Influx.URL != "" {
-		configureDatabase(tee.Attach(), conf.Influx)
+		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
 	}
 
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(uri, conf.Menu, loadPoints[0], socketHub)
+	httpd := server.NewHTTPd(uri, conf.Menu, site, socketHub, cache)
 
 	// publish to UI
 	go socketHub.Run(tee.Attach(), cache)
@@ -177,12 +175,14 @@ func run(cmd *cobra.Command, args []string) {
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
 
-	// start all loadpoints
-	for _, lp := range loadPoints {
-		lp.Dump()
-		lp.Prepare(valueChan, notificationChan)
-		go lp.Run(conf.Interval)
-	}
+	// setup messaging
+	pushChan := configureMessengers(conf.Messaging, cache)
+
+	// set channels
+	site.Prepare(valueChan, pushChan)
+
+	site.DumpConfig()
+	go site.Run(conf.Interval)
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

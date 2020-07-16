@@ -5,11 +5,11 @@ import (
 )
 
 type calcProvider struct {
-	add []FloatGetter
+	add []func() (float64, error)
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(log *util.Logger, other map[string]interface{}) FloatGetter {
+func NewCalcFromConfig(log *util.Logger, other map[string]interface{}) func() (float64, error) {
 	cc := struct {
 		Add []Config
 	}{}

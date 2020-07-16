@@ -13,8 +13,8 @@ import (
 type Tesla struct {
 	*embed
 	vehicle        *tesla.Vehicle
-	chargeStateG   provider.FloatGetter
-	chargedEnergyG provider.FloatGetter
+	chargeStateG   func() (float64, error)
+	chargedEnergyG func() (float64, error)
 }
 
 // NewTeslaFromConfig creates a new Tesla vehicle

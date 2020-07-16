@@ -5,65 +5,109 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 )
 
-// ChargerHandler handles steering of the charger state and allowed current
-type ChargerHandler struct {
-	clock clock.Clock // mockable time
-	bus   evbus.Bus   // event bus
-
-	charger api.Charger // Charger
-
-	Name          string
+// HandlerConfig contains the public configuration for the ChargerHandler
+type HandlerConfig struct {
 	Sensitivity   int64         // Step size of current change
 	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    int64         // Max allowed current. Physically ensured by the charge controller
 	GuardDuration time.Duration // charger enable/disable minimum holding time
+}
 
-	enabled       bool // Charger enabled state
-	targetCurrent int64
+// ChargerHandler handles steering of the charger state and allowed current
+type ChargerHandler struct {
+	clock clock.Clock // mockable time
+	bus   evbus.Bus   // event bus
+	log   *util.Logger
+
+	charger api.Charger // Charger
+
+	HandlerConfig // public configuration
+
+	enabled       bool  // Charger enabled state
+	targetCurrent int64 // Charger target current
 
 	// contactor switch guard
 	guardUpdated time.Time // charger enabled/disabled timestamp
 }
 
-// NewChargerHandler creates handler with default settings
-func NewChargerHandler(name string, clock clock.Clock, bus evbus.Bus) ChargerHandler {
-	return ChargerHandler{
-		Name:          name,
-		clock:         clock, // mockable time
-		bus:           bus,   // event bus
-		MinCurrent:    6,     // A
-		MaxCurrent:    16,    // A
-		Sensitivity:   10,    // A
-		GuardDuration: 5 * time.Minute,
+// Status returns charger status
+func (lp *ChargerHandler) Status() (api.ChargeStatus, error) {
+	return lp.charger.Status()
+}
+
+// Enabled returns handler enabled state
+func (lp *ChargerHandler) Enabled() bool {
+	return lp.enabled
+}
+
+// TargetCurrent returns handler target current
+func (lp *ChargerHandler) TargetCurrent() int64 {
+	return lp.targetCurrent
+}
+
+// Prepare synchronizes initial charger enabled state and current
+func (lp *ChargerHandler) Prepare() {
+	// read initial enabled state
+	enabled, err := lp.charger.Enabled()
+	if err == nil {
+		lp.enabled = enabled
+		lp.log.INFO.Printf("charger %sd", status[lp.enabled])
+
+		// prevent immediately disabling charger
+		if lp.enabled {
+			lp.guardUpdated = lp.clock.Now()
+		}
+	} else {
+		lp.log.ERROR.Printf("charger error: %v", err)
+	}
+
+	// set current to known value
+	if err = lp.setTargetCurrent(lp.MinCurrent); err != nil {
+		lp.log.ERROR.Println(err)
+	}
+	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
+}
+
+// SyncSettings synchronizes charger settings to expected state
+func (lp *ChargerHandler) SyncSettings() {
+	enabled, err := lp.charger.Enabled()
+	if err == nil && enabled != lp.enabled {
+		lp.log.DEBUG.Printf("sync enabled state to %s", status[lp.enabled])
+		err = lp.charger.Enable(lp.enabled)
+	}
+
+	if err != nil {
+		lp.log.ERROR.Printf("charge controller error: %v", err)
 	}
 }
 
 // chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
 func (lp *ChargerHandler) chargerEnable(enable bool) error {
 	if lp.targetCurrent != 0 && lp.targetCurrent != lp.MinCurrent {
-		log.FATAL.Fatal("charger enable/disable called without setting min current first")
+		lp.log.FATAL.Fatal("charger enable/disable called without setting min current first")
 	}
 
 	if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
-		log.DEBUG.Printf("%s charger %s - contactor delay %v", lp.Name, status[enable], remaining)
+		lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enable], remaining)
 		return nil
 	}
 
 	if lp.enabled != enable {
 		if err := lp.charger.Enable(enable); err != nil {
-			return fmt.Errorf("%s charge controller error: %v", lp.Name, err)
+			return fmt.Errorf("charge controller error: %v", err)
 		}
 
 		lp.enabled = enable // cache
-		log.INFO.Printf("%s charger %s", lp.Name, status[enable])
+		lp.log.INFO.Printf("charger %s", status[enable])
 		lp.guardUpdated = lp.clock.Now()
 	} else {
-		log.DEBUG.Printf("%s charger %s", lp.Name, status[enable])
+		lp.log.DEBUG.Printf("charger %s", status[enable])
 	}
 
 	// if not enabled, current will be reduced to 0 in handler
@@ -77,18 +121,19 @@ func (lp *ChargerHandler) chargerEnable(enable bool) error {
 func (lp *ChargerHandler) setTargetCurrent(targetCurrentIn int64) error {
 	targetCurrent := clamp(targetCurrentIn, lp.MinCurrent, lp.MaxCurrent)
 	if targetCurrent != targetCurrentIn {
-		log.WARN.Printf("%s hard limit charge current: %dA", lp.Name, targetCurrent)
+		lp.log.WARN.Printf("hard limit charge current: %dA", targetCurrent)
 	}
 
 	if lp.targetCurrent != targetCurrent {
-		log.DEBUG.Printf("%s set charge current: %dA", lp.Name, targetCurrent)
+		lp.log.DEBUG.Printf("set charge current: %dA", targetCurrent)
 		if err := lp.charger.MaxCurrent(targetCurrent); err != nil {
-			return fmt.Errorf("%s charge controller error: %v", lp.Name, err)
+			return fmt.Errorf("charge controller error: %v", err)
 		}
 
 		lp.targetCurrent = targetCurrent // cache
 	}
 
+	// if not enabled, current will be reduced to 0 in handler
 	lp.bus.Publish(evChargeCurrent, targetCurrent)
 
 	return nil
@@ -140,4 +185,25 @@ func (lp *ChargerHandler) rampOn(target int64) error {
 	}
 
 	return lp.setTargetCurrent(target)
+}
+
+// Ramp performs ramping charger current up and down where targetCurrent=0
+// signals disabled state
+func (lp *ChargerHandler) Ramp(targetCurrent int64, force ...bool) error {
+	// reset guard updated
+	if len(force) == 1 && force[0] {
+		lp.guardUpdated = time.Time{}
+	}
+
+	// if targetCurrent == 0 ramp down to disabled state
+	if targetCurrent == 0 {
+		return lp.rampOff()
+	}
+
+	// targetCurrent != 0 and not enabled ramp to enabled state
+	if !lp.enabled {
+		return lp.rampOn(targetCurrent)
+	}
+
+	return lp.rampUpDown(targetCurrent)
 }

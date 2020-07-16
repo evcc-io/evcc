@@ -14,7 +14,7 @@ import (
 type Nissan struct {
 	*embed
 	session      *carwings.Session
-	chargeStateG provider.FloatGetter
+	chargeStateG func() (float64, error)
 }
 
 // NewNissanFromConfig creates a new vehicle

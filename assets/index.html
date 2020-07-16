@@ -35,6 +35,13 @@
   <!-- VueJS -->
   <script src="js/vue.min.js"></script>
   <script src="js/vue-router.min.js"></script>
+
+  <style>
+    /* reverse loading animation */
+    .progress-bar-animated {
+      animation-direction: reverse;
+    }
+  </style>
 </head>
 <body>
 
@@ -84,7 +91,7 @@
 </div>
 
 <script type="text/x-template" id="message-template">
-  <div class="toast" data-delay="10000" v-bind:data-autohide="item.type == 'warn' ? 'true' : 'false'">
+  <div class="toast" data-delay="10000" v-bind:data-autohide="true">
     <div class="toast-header">
       <strong class="mr-auto" v-if="item.type != 'warn'"><i class="text-danger fas fa-exclamation-triangle"></i> Error</strong>
       <strong class="mr-auto" v-if="item.type == 'warn'"><i class="text-warning fas fa-exclamation-triangle"></i> Warning</strong>
@@ -99,240 +106,239 @@
 
 <script type="text/x-template" id="main-template">
   <div class="container">
-    <div class="pricing-header px-3 pt-3 mx-auto text-center">
-      <h1 class="display-4">Laden</h1>
-      <p class="lead">Lademodus auswählen und EV verbinden um Ladevorgang zu starten.</p>
-    </div>
-    <modeswitch></modeswitch>
-    <datapanel></datapanel>
+    <site></site>
   </div>
 </script>
 
 <script type="text/x-template" id="mode-template">
-  <div class="pricing-header px-3 pb-3 mx-auto text-center">
-    <div class="btn-group btn-group-toggle py-4 mb-2">
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
-        <input type="radio" value="off" v-on:click="mode='off'">Stop
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
-        <input type="radio" value="now" v-on:click="mode='now'">
-        <span class="d-inline d-sm-none">Sofort</span>
-        <span class="d-none d-sm-inline">Sofortladen</span>
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
-        <input type="radio" value="minpv" v-on:click="mode='minpv'">
-        <span class="d-inline d-sm-none">Min</span>
-        <span class="d-none d-sm-inline">Minimum + PV</span>
-      </label>
-      <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
-        <input type="radio" value="pv" v-on:click="mode='pv'">
-        <span class="d-inline d-sm-none">PV</span>
-        <span class="d-none d-sm-inline">Nur PV</span>
-      </label>
+  <div class="row">
+    <div class="col-12">
+      <div class="btn-group btn-group-toggle bg-white">
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
+          <input type="radio" value="off" v-on:click="mode='off'">Stop
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
+          <input type="radio" value="now" v-on:click="mode='now'">
+          <span class="d-inline d-sm-none">Sofort</span>
+          <span class="d-none d-sm-inline">Sofortladen</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
+          <input type="radio" value="minpv" v-on:click="mode='minpv'">
+          <span class="d-inline d-sm-none">Min + PV</span>
+          <span class="d-none d-sm-inline">Minimum + PV</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
+          <input type="radio" value="pv" v-on:click="mode='pv'">
+          <span class="d-inline d-sm-none">PV</span>
+          <span class="d-none d-sm-inline">Nur PV</span>
+        </label>
+      </div>
     </div>
   </div>
 </script>
 
-<script type="text/x-template" id="data-template">
+<script type="text/x-template" id="site-template">
 <div>
 
-  <div class="card-deck mb-3 text-center">
-    <div class="col-12" v-if="state.soc" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Batterie</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{state.socCharge}} <small class="text-muted">%</small>
-          </h2>
-          <p>Ladezustand</p>
-        </div>
-      </div>
-    </div>
+<div class="row mt-4 border-bottom">
+  <div class="col-12 col-md-4">
+    <p class="h1">{{state.title||"Home"}}</p>
+  </div>
+  <div class="d-none col-12 col-md-8 pt-1"
+    v-bind:class="{'d-md-block': state.loadpoints.length>1}">
+    <modeswitch></modeswitch>
+  </div>
+</div>
 
-    <div class="col-12" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Wallbox</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
-          </h2>
-          <p>Ladeleistung <i class="text-primary fas fa-leaf" v-if="state.chargePower"></i></p>
-        </div>
-      </div>
+<div class="row">
+  <div class="d-none d-md-block col-md-4 my-4">
+  </div>
+  <div class="col-6 col-md-2 my-4" v-if="state.gridMeter">
+    <div class="mb-2" v-if="state.gridPower > 0">
+      Bezug <i class="text-primary fas fa-arrow-down"></i>
+    </div><div class="mb-2" v-else>
+      Einspeisung <i class="text-primary fas fa-arrow-up"></i>
     </div>
-
-    <div class="col-12" v-if="state.gridMeter" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">Netz</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">{{fmt(state.gridPower)}} <small
-              class="text-muted">{{fmtUnit(state.gridPower)}}W</small></h2>
-          <p v-if="state.gridPower > 0">
-            Bezug <i class="text-primary fas fa-arrow-down"></i>
-          </p>
-          <p v-else>
-            Einspeisung <i class="text-primary fas fa-arrow-up"></i>
-          </p>
-        </div>
-      </div>
+    <h2>
+      {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
+    </h2>
+  </div>
+  <div class="col-6 col-md-2 my-4" v-if="state.pvMeter">
+    <div class="mb-2">Erzeugung <i class="text-primary fas fas fa-sun" v-if="state.pvPower < 0"></i></div>
+    <h2>
+      {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
+    </h2>
+  </div>
+  <div class="col-6 col-md-2 my-4" v-if="state.batteryMeter">
+    <div class="mb-2">Batterie <i class="text-primary fas"
+        v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
+    <h2>
+      {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
+    </h2>
+  </div>
+  <div class="d-block col-12 text-center pt-4 pb-4 mb-4 bg-light"
+    v-bind:class="{ 'd-md-none': state.loadpoints.length>1 }">
+    <modeswitch></modeswitch>
+  </div>
+</div>
 
-    <div class="col-12" v-if="state.pvMeter" v-bind:class="{
-      'col-md-6':items==2, 'col-md-4':items==3, 'col-md-6':items==4,
-      'col-lg-6':items==2, 'col-lg-3':items==4 }">
-      <div class="card mb-4 shadow-sm">
-        <div class="card-header">
-          <h4 class="my-0 font-weight-normal">PV</h4>
-        </div>
-        <div class="card-body">
-          <h2 class="card-title pricing-card-title">
-            {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
-          </h2>
-          <p>Erzeugung <i class="text-primary fas fas fa-sun" v-if="false"></i></p>
-        </div>
-      </div>
+<loadpoint v-for="(loadpoint,id) in state.loadpoints" v-bind:state="loadpoint" :id="'loadpoint-'+id">
+</loadpoint>
+
+</div>
+</script>
+
+<script type="text/x-template" id="loadpoint-template">
+<div>
+<div class="row border-bottom">
+  <div class="col-12">
+    <p class="h1">{{state.title||"Ladepunkt"}}</p>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12 col-md-4 my-4">
+    <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
+    <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
+      <div class="progress-bar" role="progressbar" v-if="!state.soc"
+        v-bind:class="{
+          'progress-bar-striped': state.charging,
+          'progress-bar-animated': state.charging,
+          'bg-primary': state.connected,
+          'bg-light': !(state.connected || state.charging),
+          'text-secondary': !(state.connected || state.charging),
+        }"
+        v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}</div>
+      <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9"
+        v-bind:class="{
+          'progress-bar-striped': state.charging,
+          'progress-bar-animated': state.charging,
+          'bg-primary': !state.charging && state.connected,
+        }"
+        v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
+      <div class="progress-bar" role="progressbar" v-else
+        v-bind:class="{
+          'progress-bar-striped': state.charging,
+          'progress-bar-animated': state.charging,
+          'bg-primary': !state.charging && state.connected,
+        }"
+        v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Fahrzeug:
-        </div>
-        <div class="col-6 text-primary h5">
-          <span v-if="state.connected">verbunden</span><span v-else>&mdash;</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Geladen:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmt(state.chargedEnergy)}} <small>{{fmtUnit(state.chargedEnergy)}}Wh</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Ladedauer:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmtDuration(state.chargeDuration)}}
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-6 col-lg-3">
-      <div class="row py-2">
-        <div class="col-6 text-muted text-right">
-          Restladezeit:
-        </div>
-        <div class="col-6 text-primary h5">
-          {{fmtDuration(state.chargeEstimate)}}
-        </div>
-      </div>
-    </div>
+  <div class="col-6 col-md-2 my-4">
+    <div class="mb-2">Leistung</div>
+    <h2>
+      {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
+      <!-- <span class="text-muted">/</span>
+      {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small> -->
+    </h2>
+  </div>
+  <div class="col-6 col-md-2 my-4">
+    <div class="mb-2">Energie</div>
+    <h2>
+      {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
+    </h2>
   </div>
 
+  <div class="col-6 col-md-2 my-4">
+    <div class="mb-2">Dauer</div>
+    <h2>
+      {{fmtShortDuration(state.chargeDuration)}}
+    </h2>
+  </div>
+
+  <div class="col-6 col-md-2 my-4">
+    <div class="mb-2">Restzeit</div>
+    <h2>
+      {{fmtShortDuration(state.chargeEstimate)}}
+    </h2>
+  </div>
+</div>
 </div>
 </script>
 
 <script type="text/x-template" id="config-template">
   <div class="container">
-    <h1 class="display-4 pt-3 mx-auto text-center">Konfiguration</h1>
-    <p class="lead mx-auto text-center">Details der Fahrzeug-, Wallbox- und Zählerkonfiguration.</p>
+    <!-- <h1 class="display-4 pt-3 mx-auto text-center">Konfiguration</h1>
+    <p class="lead mx-auto text-center">Details der Fahrzeug-, Wallbox- und Zählerkonfiguration.</p> -->
 
-    <h5 class="pb-2 pt-4 mx-auto text-center">Fahrzeug</h5>
-    <div class="row py-2">
-      <div class="col-6 col-md-3 text-right">
-        Modell:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.socTitle">{{state.socTitle}}</span>
-        <span v-else>&mdash;</span>
-      </div>
-      <div class="col-6 col-md-3 text-right">
-        Kapazität:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.socCapacity">{{state.socCapacity}} kWh</span>
-        <span v-else>&mdash;</span>
+    <div class="row mt-4 border-bottom">
+      <div class="col-12">
+        <p class="h1">{{state.title||"Home"}}</p>
       </div>
     </div>
 
-    <h5 class="pb-2 pt-4 mx-auto text-center">Wallbox</h5>
-    <div class="row py-2">
-      <div class="col-6 col-md-3 text-right">
-        Phasen:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.phases">{{state.phases}}p</span>
-        <span v-else>&mdash;</span>
-      </div>
-      <div class="col-6 col-md-3 text-right">
-        Phasenumschaltung:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.phases">nicht implementiert</span>
-      </div>
-      <div class="col-6 col-md-3 text-right">
-        Min. Ladestrom:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.minCurrent !== undefined">{{state.minCurrent}} A</span>
-        <span v-else>&mdash;</span>
-      </div>
-      <div class="col-6 col-md-3 text-right">
-        Max. Ladestrom:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.maxCurrent !== undefined">{{state.maxCurrent}} A</span>
-        <span v-else>&mdash;</span>
-      </div>
-    </div>
-
-    <h5 class="pb-2 pt-4 mx-auto text-center">Zähler</h5>
-    <div class="row py-2">
-      <div class="col-6 col-md-3 text-right">
-        PV Zähler:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.pvMeter">✓</span>
-        <span v-else>&mdash;</span>
-      </div>
-      <div class="col-6 col-md-3 text-right">
+    <div class="row h5">
+      <div class="col-md-4"></div>
+      <div class="col-6 col-md-2 py-3">
         Netzzähler:
+        <span class="text-primary" v-if="state.gridMeter">✓</span>
+        <span class="text-primary" v-else>&mdash;</span>
       </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.gridMeter">✓</span>
-        <span v-else>&mdash;</span>
+      <div class="col-6 col-md-2 py-3">
+        PV Zähler:
+        <span class="text-primary" v-if="state.pvMeter">✓</span>
+        <span class="text-primary" v-else>&mdash;</span>
       </div>
-      <div class="col-6 col-md-3 text-right">
-        Ladezähler:
-      </div>
-      <div class="col-6 col-md-3 text-primary h5">
-        <span v-if="state.chargeMeter">✓</span>
-        <span v-else>&mdash;</span>
+      <div class="col-6 col-md-2 py-3">
+        Batteriezähler:
+        <span class="text-primary" v-if="state.batteryMeter">✓</span>
+        <span class="text-primary" v-else>&mdash;</span>
       </div>
     </div>
+
+    <div v-for="(loadpoint,id) in state.loadpoints" v-bind:loadpoint="loadpoint" :id="'loadpoint-'+id">
+
+      <div class="row mt-4 border-bottom">
+        <div class="col-12">
+          <p class="h1">{{loadpoint.title||"Ladepunkt"}}</p>
+        </div>
+      </div>
+
+      <div class="row h5">
+        <div class="col-md-4"></div>
+        <div class="col-6 col-md-2 py-3">
+          Ladezähler:
+          <span class="text-primary" v-if="loadpoint.chargeMeter">✓</span>
+          <span class="text-primary" v-else>&mdash;</span>
+        </div>
+        <div class="col-6 col-md-2 py-3">
+          Phasen:
+          <span class="text-primary">{{loadpoint.phases}}p</span>
+        </div>
+        <div class="col-6 col-md-2 py-3">
+          Min. Strom:
+          <span class="text-primary">{{loadpoint.minCurrent}}A</span>
+        </div>
+        <div class="col-6 col-md-2 py-3">
+          Max. Strom:
+          <span class="text-primary">{{loadpoint.maxCurrent}}A</span>
+        </div>
+      </div>
+
+      <div class="row h5">
+        <div class="col-md-4"></div>
+        <div class="col-md-8 h2">
+          <div class="row py-3 h2 border-bottom">
+            <div class="col-12">
+              Fahrzeug
+            </div>
+          </div>
+          <div class="row h5">
+            <div class="col-6 py-3">
+              Modell:
+              <span class="text-primary">{{loadpoint.socTitle||"—"}}</span>
+            </div>
+            <div class="col-6 py-3">
+              Kapazität:
+              <span class="text-primary">{{loadpoint.socCapacity}}kWh</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </script>
 

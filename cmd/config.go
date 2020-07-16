@@ -22,6 +22,7 @@ type config struct {
 	Meters     []qualifiedConfig
 	Chargers   []qualifiedConfig
 	Vehicles   []qualifiedConfig
+	Site       map[string]interface{}
 	LoadPoints []map[string]interface{}
 }
 

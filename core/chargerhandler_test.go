@@ -6,30 +6,46 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/mock"
+	"github.com/andig/evcc/util"
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 )
 
 const (
-	minA        int64 = 6
-	maxA        int64 = 16
-	sensitivity       = 1
-	dt                = time.Hour
+	minA          int64 = 6
+	maxA          int64 = 16
+	sensitivity         = 1
+	guardDuration       = 5 * time.Minute
+	dt                  = time.Hour
 )
 
-func newChargerHandler(clock clock.Clock, mc api.Charger) ChargerHandler {
-	r := NewChargerHandler("", clock, evbus.New())
+func newChargerHandler(clock clock.Clock, mc api.Charger) *ChargerHandler {
+	h := &ChargerHandler{
+		log:     util.NewLogger("foo"),
+		clock:   clock,
+		bus:     evbus.New(),
+		charger: mc,
+		HandlerConfig: HandlerConfig{
+			MinCurrent:    minA,
+			MaxCurrent:    maxA,
+			Sensitivity:   sensitivity,
+			GuardDuration: guardDuration,
+		},
+	}
 
-	r.charger = mc
-	r.Sensitivity = sensitivity
-	r.guardUpdated = clock.Now()
+	// prepare charger and set guardUpdated
+	mc.(*mock.MockCharger).EXPECT().Enabled().Return(true, nil)
+	mc.(*mock.MockCharger).EXPECT().MaxCurrent(int64(6)).Return(nil)
+	h.Prepare()
 
-	return r
+	return h
 }
 
+// test here to ensure loadpoint defaults are valid
 func TestNewChargerHandler(t *testing.T) {
-	r := NewChargerHandler("", nil, nil)
+	// LoadPoint contains ChargerHandler configuration
+	r := NewLoadPoint(util.NewLogger("foo"))
 
 	if r.MinCurrent != minA {
 		t.Errorf("expected %v, got %v", minA, r.MinCurrent)
@@ -40,18 +56,18 @@ func TestNewChargerHandler(t *testing.T) {
 	if r.Sensitivity != 10 {
 		t.Errorf("expected %v, got %v", 10, r.Sensitivity)
 	}
-	if r.GuardDuration != 5*time.Minute {
-		t.Errorf("expected %v, got %v", 5*time.Minute, r.GuardDuration)
+	if r.GuardDuration != guardDuration {
+		t.Errorf("expected %v, got %v", guardDuration, r.GuardDuration)
 	}
 }
 
 func TestEnable(t *testing.T) {
 	tc := []struct {
-		enabledI       bool
-		dt             time.Duration
-		enable         bool
-		targetCurrentI int64
-		expect         func(*mock.MockCharger)
+		enabled       bool
+		dt            time.Duration
+		enable        bool
+		targetCurrent int64
+		expect        func(*mock.MockCharger)
 	}{
 		// any test with current != 0 or min will fail
 		{false, 0, false, 0, func(mc *mock.MockCharger) {
@@ -91,8 +107,8 @@ func TestEnable(t *testing.T) {
 
 		clock := clock.NewMock()
 		r := newChargerHandler(clock, mc)
-		r.enabled = tc.enabledI
-		r.targetCurrent = tc.targetCurrentI
+		r.enabled = tc.enabled
+		r.targetCurrent = tc.targetCurrent
 
 		tc.expect(mc)
 		clock.Add(tc.dt)
@@ -317,13 +333,13 @@ func TestRampUpDown(t *testing.T) {
 		t.Log(tc)
 
 		clock := clock.NewMock()
-		r := newChargerHandler(clock, mc)
-		r.enabled = true
-		r.targetCurrent = tc.targetCurrentI
+		h := newChargerHandler(clock, mc)
+		h.enabled = true
+		h.targetCurrent = tc.targetCurrentI
 
 		tc.expect(mc)
 
-		if err := r.rampUpDown(tc.targetCurrent); err != nil {
+		if err := h.rampUpDown(tc.targetCurrent); err != nil {
 			t.Error(err)
 		}
 

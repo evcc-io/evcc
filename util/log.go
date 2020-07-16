@@ -84,9 +84,8 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 	s := string(w.re.ReplaceAll(p, []byte{}))
 
 	uiChan <- Param{
-		LoadPoint: "",
-		Key:       w.level,
-		Val:       strings.Trim(strconv.Quote(s), "\""),
+		Key: w.level,
+		Val: strings.Trim(strconv.Quote(s), "\"\n"),
 	}
 
 	return 0, nil

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go"
 )
@@ -49,7 +50,7 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(in <-chan util.Param) {
+func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
 	writer := m.client.WriteApi(m.org, m.database)
 
 	// log errors
@@ -67,8 +68,8 @@ func (m *Influx) Run(in <-chan util.Param) {
 		}
 
 		tags := map[string]string{}
-		if param.LoadPoint != "" {
-			tags["loadpoint"] = param.LoadPoint
+		if param.LoadPoint != nil {
+			tags["loadpoint"] = loadPoints[*param.LoadPoint].Name()
 		}
 
 		fields := map[string]interface{}{

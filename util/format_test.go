@@ -65,7 +65,7 @@ func TestReplaceNoMatch(t *testing.T) {
 		"bar": "baz",
 	})
 
-	if s != "" || err == nil {
+	if err == nil {
 		t.Error(s, err)
 	}
 }

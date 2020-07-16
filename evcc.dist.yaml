@@ -27,10 +27,10 @@ messaging:
   events:
     start: # charge start event
       title: Charge started
-      msg: ${loadpoint} started charging in "${mode}" mode
+      msg: Started charging in "${mode}" mode
     stop: # charge stop event
       title: Charge finished
-      msg: ${loadpoint} finished charging. Charged ${energy:%.1f}kWh in ${duration}.
+      msg: Finished charging ${energy:%.1fk}kWh in ${duration}.
   services:
   - type: pushover
     app: # app id
@@ -121,7 +121,7 @@ chargers:
 - name: go-e
   type: go-e # go-eCharger
   uri: http://192.168.1.4 # either go-e local address
-  token: 4711c # or go-e cloud API token
+  # token: 4711c # or go-e cloud API token
   cache: 10s # go-e cloud API cache duration
 - name: keba
   type: keba # KEBA charger
@@ -209,14 +209,20 @@ vehicles:
 #   vin: WP...
 #   cache: 5m
 
-loadpoints:
-- name: main # name for logging
-  vehicle: audi
-  charger: wallbe # charger
+site:
+  title: Home
   meters:
     grid: grid # grid meter
     pv: pv # pv meter
     battery: battery # battery meter
+
+loadpoints:
+- title: Ladepunkt # ui display name
+  vehicle: audi
+  charger: wallbe # charger
+  phases: 3 # ev phases (default 3)
+  sensitivity: 1 # current raise/lower step size (default 10A)
+  meters:
     charge: charge # charge meter
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
@@ -227,5 +233,3 @@ loadpoints:
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
-  phases: 3 # ev phases (default 3)
-  sensitivity: 1 # current raise/lower step size (default 10A)

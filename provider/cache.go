@@ -29,69 +29,69 @@ func NewCached(log *util.Logger, getter interface{}, cache time.Duration) *Cache
 }
 
 // FloatGetter gets float value
-func (c *Cached) FloatGetter() FloatGetter {
+func (c *Cached) FloatGetter() func() (float64, error) {
 	g, ok := c.getter.(func() (float64, error))
 	if !ok {
 		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
-	return FloatGetter(func() (float64, error) {
+	return func() (float64, error) {
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
 
 		return c.val.(float64), c.err
-	})
+	}
 }
 
 // IntGetter gets int value
-func (c *Cached) IntGetter() IntGetter {
+func (c *Cached) IntGetter() func() (int64, error) {
 	g, ok := c.getter.(func() (int64, error))
 	if !ok {
 		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
-	return IntGetter(func() (int64, error) {
+	return func() (int64, error) {
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
 
 		return c.val.(int64), c.err
-	})
+	}
 }
 
 // StringGetter gets string value
-func (c *Cached) StringGetter() StringGetter {
+func (c *Cached) StringGetter() func() (string, error) {
 	g, ok := c.getter.(func() (string, error))
 	if !ok {
 		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
-	return StringGetter(func() (string, error) {
+	return func() (string, error) {
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
 
 		return c.val.(string), c.err
-	})
+	}
 }
 
 // BoolGetter gets bool value
-func (c *Cached) BoolGetter() BoolGetter {
+func (c *Cached) BoolGetter() func() (bool, error) {
 	g, ok := c.getter.(func() (bool, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", g)
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
-	return BoolGetter(func() (bool, error) {
+	return func() (bool, error) {
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
 
 		return c.val.(bool), c.err
-	})
+	}
 }

@@ -34,7 +34,7 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 }
 
 // NewConfigurable creates a new charger
-func NewConfigurable(currentPowerG provider.FloatGetter) api.Meter {
+func NewConfigurable(currentPowerG func() (float64, error)) api.Meter {
 	return &Meter{
 		currentPowerG: currentPowerG,
 	}
@@ -42,7 +42,7 @@ func NewConfigurable(currentPowerG provider.FloatGetter) api.Meter {
 
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
-	currentPowerG provider.FloatGetter
+	currentPowerG func() (float64, error)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -52,11 +52,11 @@ func (m *Meter) CurrentPower() (float64, error) {
 
 // MeterEnergy is an api.MeterEnergy implementation with configurable getters and setters.
 type MeterEnergy struct {
-	totalEnergyG provider.FloatGetter
+	totalEnergyG func() (float64, error)
 }
 
 // NewMeterEnergy creates a new charger
-func NewMeterEnergy(totalEnergyG provider.FloatGetter) api.MeterEnergy {
+func NewMeterEnergy(totalEnergyG func() (float64, error)) api.MeterEnergy {
 	return &MeterEnergy{
 		totalEnergyG: totalEnergyG,
 	}

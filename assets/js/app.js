@@ -9,56 +9,97 @@ axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 //
+// Mixins
+//
+
+let formatter = {
+  data: function () {
+    return {
+      fmtLimit: 100,
+      fmtDigits: 1,
+    }
+  },
+  methods: {
+    round: function(num, precision) {
+      var base = 10 ** precision;
+      return (Math.round(num * base) / base).toFixed(precision);
+    },
+    fmt: function (val) {
+      if (val === undefined || val === null) {
+        return 0;
+      }
+      val = Math.abs(val);
+      return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
+    },
+    fmtUnit: function (val) {
+      return Math.abs(val) >= this.fmtLimit ? "k" : "";
+    },
+    fmtDuration: function (d) {
+      if (d <= 0 || d == null) {
+        return '—';
+      }
+      var seconds = "0" + (d % 60);
+      var minutes = "0" + (Math.floor(d / 60) % 60);
+      var hours = "" + Math.floor(d / 3600);
+      if (hours.length < 2) {
+        hours = "0" + hours;
+      }
+      return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+    },
+    fmtShortDuration: function (d) {
+      if (d <= 0 || d == null) {
+        return '—';
+      }
+      var minutes = (Math.floor(d / 60) % 60);
+      var hours = Math.floor(d / 3600);
+      var tm;
+      if (hours >= 1) {
+        minutes = "0" + minutes;
+        tm = hours + ":" + minutes.substr(-2) + "h";
+      } else {
+        var seconds = "0" + (d % 60);
+        tm = minutes + ":" + seconds.substr(-2) + "m";
+      }
+      return tm;
+    },
+  }
+}
+
+//
 // State
 //
 
 let store = {
-  initialized: false,
   state: {
-    // configuration
-    mode: null,
-    soc: null,
-    socCapacity: null,
-    socTitle: null,
-    gridMeter: true,
-    pvMeter: true,
-    chargeMeter: true,
-    phases: null,
-    minCurrent: null,
-    maxCurrent: null,
-    // runtime
-    connected: null,
-    charging: null,
-    gridPower: null,
-    pvPower: null,
-    chargePower: null,
-    chargeDuration: null,
-    chargeEstimate: -1,
-    chargedEnergy: null,
-    socCharge: "—"
+    loadpoints: [],
   },
-  update: function(msg, force) {
-    Object.keys(msg).forEach(function(k) {
-      if (force || this[k] !== undefined) {
-        this[k] = msg[k];
-      } else {
-        if (k == "error") {
-          toasts.error({message: msg[k]});
-        } else if (k == "warn") {
-          toasts.warn({message: msg[k]});
-        } else {
-          console.log("invalid key: " + k);
-        }
+  update: function(msg) {
+    let target = this.state;
+    if (msg.loadpoint !== undefined) {
+      while (this.state.loadpoints.length <= msg.loadpoint) {
+        this.state.loadpoints.push({});
       }
-    }, this.state);
+      target = this.state.loadpoints[msg.loadpoint];
+    }
+
+    Object.keys(msg).forEach(function (k) {
+      if (typeof toasts[k] === "function") {
+        toasts[k]({message: msg[k]})
+      } else {
+        Vue.set(target, k, msg[k]);
+      }
+    });
   },
   init: function() {
-    if (!store.initialized) {
-      axios.get("config").then(function(response) {
-        store.update(response.data);
-        store.initialized = true;
-      }).catch(toasts.error);
-    }
+    axios.get("config").then(function(msg) {
+      for (let i=0; i<msg.data.loadpoints.length; i++) {
+        let data = Object.assign(msg.data.loadpoints[i], { loadpoint: i });
+        this.update(data);
+      }
+
+      delete msg.data.loadpoints;
+      this.update(msg.data);
+    }.bind(this)).catch(toasts.error);
   }
 };
 
@@ -119,7 +160,7 @@ Vue.component('message-toast', {
     $(id).toast('show');
     $(id).on('hidden.bs.toast', function () {
       toasts.remove(this.item);
-    })
+    }.bind(this))
   },
 });
 
@@ -138,62 +179,21 @@ Vue.component('modeswitch', {
       set: function(mode) {
         axios.post('mode/' + mode).then(function(response) {
           this.state.mode = response.data.mode;
-        }.bind(this)).catch(error.raise);
+        }.bind(this)).catch(toasts.error);
       }
     }
   },
 });
 
-Vue.component("datapanel", {
-  template: "#data-template",
+Vue.component("site", {
+  template: "#site-template",
+  mixins: [formatter],
   data: function() {
     return {
-      tickerHandle: null,
       state: store.state // global state
     };
   },
-  computed: {
-    items: function() {
-      if (this.state.soc && this.state.pvMeter) {
-        return 4;
-      } else if (this.state.soc || this.state.pvMeter) {
-        return 3;
-      } else {
-        return 2;
-      }
-    }
-  },
-  watch: {
-    "state.chargeDuration": function() {
-      window.clearInterval(this.tickerHandle);
-      if (this.state.charging) {
-        // only ticker if actually charging
-        this.tickerHandle = window.setInterval(function() {
-          this.state.chargeDuration += 1;
-        }.bind(this), 1000);
-      }
-    },
-  },
   methods: {
-    fmt: function(val) {
-      val = Math.abs(val);
-      return val >= 100 ? (val / 1e3).toFixed(1) : val.toFixed(0);
-    },
-    fmtUnit: function(val) {
-      return Math.abs(val) >= 100 ? "k" : "";
-    },
-    fmtDuration: function(d) {
-      if (d < 0) {
-        return '—';
-      }
-      var seconds = "0" + (d % 60);
-      var minutes = "0" + (Math.floor(d / 60) % 60);
-      var hours = "" + Math.floor(d / 3600);
-      if (hours.length < 2) {
-        hours = "0" + hours;
-      }
-      return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
-    },
     connect: function() {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
       const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/ws";
@@ -217,6 +217,28 @@ Vue.component("datapanel", {
   },
   created: function() {
     this.connect();
+  }
+});
+
+Vue.component("loadpoint", {
+  template: "#loadpoint-template",
+  props: { state: Object },
+  mixins: [formatter],
+  data: function() {
+    return {
+      tickerHandle: null,
+    };
+  },
+  watch: {
+    "state.chargeDuration": function() {
+      window.clearInterval(this.tickerHandle);
+      // only ticker if actually charging
+      if (this.state.charging && this.state.chargeDuration >= 0) {
+        this.tickerHandle = window.setInterval(function() {
+          this.state.chargeDuration += 1;
+        }.bind(this), 1000);
+      }
+    },
   },
   destroyed: function() {
     window.clearInterval(this.tickerHandle);

@@ -6,12 +6,13 @@ import (
 
 	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/mock"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 	"github.com/golang/mock/gomock"
 )
 
 func TestNoMeter(t *testing.T) {
-	cr := NewChargeRater("foo", nil)
+	cr := NewChargeRater(util.NewLogger("foo"), nil)
 	clck := clock.NewMock()
 	cr.clck = clck
 
@@ -53,7 +54,7 @@ func TestWrappedMeter(t *testing.T) {
 		TotalEnergy().
 		Return(3.0, nil)
 
-	cr := NewChargeRater("foo", cm)
+	cr := NewChargeRater(util.NewLogger("foo"), cm)
 	clck := clock.NewMock()
 	cr.clck = clck
 

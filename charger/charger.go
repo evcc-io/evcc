@@ -8,10 +8,10 @@ import (
 
 // Charger is an api.Charger implementation with configurable getters and setters.
 type Charger struct {
-	statusG     provider.StringGetter
-	enabledG    provider.BoolGetter
-	enableS     provider.BoolSetter
-	maxCurrentS provider.IntSetter
+	statusG     func() (string, error)
+	enabledG    func() (bool, error)
+	enableS     func(bool) error
+	maxCurrentS func(int64) error
 }
 
 // NewConfigurableFromConfig creates a new configurable charger
@@ -31,10 +31,10 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 
 // NewConfigurable creates a new charger
 func NewConfigurable(
-	statusG provider.StringGetter,
-	enabledG provider.BoolGetter,
-	enableS provider.BoolSetter,
-	maxCurrentS provider.IntSetter,
+	statusG func() (string, error),
+	enabledG func() (bool, error),
+	enableS func(bool) error,
+	maxCurrentS func(int64) error,
 ) api.Charger {
 	return &Charger{
 		statusG:     statusG,

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
 )
 
@@ -14,8 +15,8 @@ import (
 // keeps track of consumed energy by regularly updating consumed power.
 type ChargeRater struct {
 	sync.Mutex
+	log           *util.Logger
 	clck          clock.Clock
-	name          string
 	meter         api.Meter
 	charging      bool
 	start         time.Time
@@ -24,10 +25,10 @@ type ChargeRater struct {
 }
 
 // NewChargeRater creates charge rater and initializes realtime clock
-func NewChargeRater(name string, meter api.Meter) *ChargeRater {
+func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
+		log:   log,
 		clck:  clock.New(),
-		name:  name,
 		meter: meter,
 	}
 }
@@ -46,9 +47,9 @@ func (cr *ChargeRater) StartCharge() {
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.startEnergy = f
-			log.DEBUG.Printf("%s charge start energy: %.0fkWh", cr.name, f)
+			cr.log.DEBUG.Printf("charge start energy: %.0fkWh", f)
 		} else {
-			log.ERROR.Printf("%s charge meter error %v", cr.name, err)
+			cr.log.ERROR.Printf("charge meter error %v", err)
 		}
 	} else {
 		cr.chargedEnergy = 0
@@ -67,9 +68,9 @@ func (cr *ChargeRater) StopCharge() {
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
 		if f, err := m.TotalEnergy(); err == nil {
 			cr.chargedEnergy = f - cr.startEnergy
-			log.DEBUG.Printf("%s final charge energy: %.0fkWh", cr.name, cr.chargedEnergy)
+			cr.log.DEBUG.Printf("final charge energy: %.0fkWh", cr.chargedEnergy)
 		} else {
-			log.ERROR.Printf("%s charge meter error %v", cr.name, err)
+			cr.log.ERROR.Printf("charge meter error %v", err)
 		}
 	}
 }
@@ -111,7 +112,7 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 			return f - cr.startEnergy, nil
 		}
 
-		return 0, fmt.Errorf("%s charge meter error %v", cr.name, err)
+		return 0, fmt.Errorf("charge meter error %v", err)
 	}
 
 	// return charged energy sofar if meter is not used
