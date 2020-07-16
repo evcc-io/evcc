@@ -24,7 +24,7 @@ type goeCloudResponse struct {
 
 // goeStatusResponse is the API response if status not OK
 type goeStatusResponse struct {
-	Fwv string `json:"fwv,string"` // firmware version - indicates local response
+	Fwv string `json:"fwv"`        // firmware version - indicates local response
 	Car int    `json:"car,string"` // car status
 	Alw int    `json:"alw,string"` // allow charging
 	Amp int    `json:"amp,string"` // current [A]
