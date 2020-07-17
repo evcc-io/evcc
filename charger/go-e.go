@@ -24,14 +24,15 @@ type goeCloudResponse struct {
 
 // goeStatusResponse is the API response if status not OK
 type goeStatusResponse struct {
-	Car int   `json:"car,string"` // car status
-	Alw int   `json:"alw,string"` // allow charging
-	Amp int   `json:"amp,string"` // current [A]
-	Err int   `json:"err,string"` // error
-	Stp int   `json:"stp,string"` // stop state
-	Tmp int   `json:"tmp,string"` // temperature [°C]
-	Dws int   `json:"dws,string"` // energy [Ws]
-	Nrg []int `json:"nrg"`        // voltage, current, power
+	Fwv string `json:"fwv"`        // firmware version - indicates local response
+	Car int    `json:"car,string"` // car status
+	Alw int    `json:"alw,string"` // allow charging
+	Amp int    `json:"amp,string"` // current [A]
+	Err int    `json:"err,string"` // error
+	Stp int    `json:"stp,string"` // stop state
+	Tmp int    `json:"tmp,string"` // temperature [°C]
+	Dws int    `json:"dws,string"` // energy [Ws]
+	Nrg []int  `json:"nrg"`        // voltage, current, power
 }
 
 // GoE charger implementation
@@ -119,6 +120,8 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 	return status, err
 }
 
+// apiUpdate invokes either cloud or local api
+// goeStatusResponse is only valid for local api. Use Fwv if valid.
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
 		return c.localResponse("mqtt", payload)
@@ -131,6 +134,11 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	}
 
 	return status, err
+}
+
+// isValid checks is status response is local
+func isValid(status goeStatusResponse) bool {
+	return status.Fwv != ""
 }
 
 // Status implements the Charger.Status interface
@@ -177,7 +185,7 @@ func (c *GoE) Enable(enable bool) error {
 	}
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && status.Alw != b {
+	if err == nil && isValid(status) && status.Alw != b {
 		return fmt.Errorf("alw update failed: %d", status.Amp)
 	}
 
@@ -187,7 +195,7 @@ func (c *GoE) Enable(enable bool) error {
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amp=%d", current))
-	if err == nil && int64(status.Amp) != current {
+	if err == nil && isValid(status) && int64(status.Amp) != current {
 		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
 
