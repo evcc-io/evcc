@@ -25,6 +25,10 @@ type bmwDynamicResponse struct {
 	}
 }
 
+type bmwVehiclesResponse []struct {
+	Vin string `json:"vin"`
+}
+
 // BMW is an api.Vehicle implementation for BMW cars
 type BMW struct {
 	*embed
@@ -45,12 +49,28 @@ func NewBMWFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicl
 	}{}
 	util.DecodeOther(log, other, &cc)
 
+	log = util.NewLogger("bmw ")
+
 	v := &BMW{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("bmw ")),
+		HTTPHelper: util.NewHTTPHelper(log),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,
+	}
+
+	if cc.VIN == "" {
+		vehicles, err := v.vehicles()
+		if err != nil {
+			log.FATAL.Fatalf("cannot get vehicles: %v", err)
+		}
+
+		if len(vehicles) != 1 {
+			log.FATAL.Fatalf("cannot find vehicle: %v", vehicles)
+		}
+
+		v.vin = vehicles[0].Vin
+		log.DEBUG.Printf("found vehicle: %v", v.vin)
 	}
 
 	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
@@ -118,17 +138,31 @@ func (v *BMW) request(uri string) (*http.Request, error) {
 	return req, nil
 }
 
+// vehicles implements returns the list of user vehicles
+func (v *BMW) vehicles() (bmwVehiclesResponse, error) {
+	var br bmwVehiclesResponse
+	uri := fmt.Sprintf("%s/me/vehicles/v2/", bmwAPI)
+
+	req, err := v.request(uri)
+	if err != nil {
+		return br, err
+	}
+
+	_, err = v.RequestJSON(req, &br)
+	return br, err
+}
+
 // chargeState implements the Vehicle.ChargeState interface
 func (v *BMW) chargeState() (float64, error) {
+	var br bmwDynamicResponse
 	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
+
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
 	}
 
-	var br bmwDynamicResponse
 	_, err = v.RequestJSON(req, &br)
-
 	return br.AttributesMap.ChargingLevelHv, err
 }
 
