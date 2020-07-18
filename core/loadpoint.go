@@ -295,7 +295,7 @@ func (lp *LoadPoint) detectPhases() {
 			lp.Phases = min(phases, lp.Phases)
 			lp.log.TRACE.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
 
-			lp.publish("phases", lp.Phases)
+			lp.publish("activePhases", lp.Phases)
 		}
 	}
 }
