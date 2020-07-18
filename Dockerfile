@@ -34,7 +34,12 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 
 COPY bin/* /evcc/
 
-EXPOSE 7070
+# UI and /api
+EXPOSE 7070/tcp
+# KEBA charger
+EXPOSE 7090/udp
+# SMA Energy Manager
+EXPOSE 9522/udp
 
 ENTRYPOINT [ "/evcc/entrypoint.sh" ]
 CMD [ "evcc" ]
