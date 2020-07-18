@@ -78,8 +78,10 @@ func indexHandler(links []MenuConfig, liveAssets bool) http.HandlerFunc {
 		// w.WriteHeader(http.StatusOK)
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Debug": debug,
-			"Links": links,
+			"Version": Version,
+			"Commit":  Commit,
+			"Debug":   debug,
+			"Links":   links,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
 		}

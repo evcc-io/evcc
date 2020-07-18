@@ -235,7 +235,7 @@
     </h2>
   </div>
   <div class="col-6 col-md-2 my-4">
-    <div class="mb-2">Energie</div>
+    <div class="mb-2">Geladen</div>
     <h2>
       {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
     </h2>
@@ -347,8 +347,11 @@
 <footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-md-5 border-top">
   <div class="container">
     <div class="row">
-      <div class="col-12 col-md">
+      <div class="col-6">
         <small class="text-muted">&copy; 2020</small>
+      </div>
+      <div class="col-6 text-right">
+        <small class="text-muted"><< .Version>> << if ne .Version .Commit>>(<< .Commit>>)<< end>></small>
       </div>
     </div>
   </div>
