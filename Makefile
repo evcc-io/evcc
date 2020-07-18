@@ -33,11 +33,11 @@ build:
 
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,amd64
+	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,amd64
+	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
 
 test-release:
 	goreleaser --snapshot --skip-publish --rm-dist
