@@ -105,7 +105,9 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 		}
 	}
 
-	if err == nil {
+	if err != nil {
+		m.conn.Close() // close connection in case of modbus error
+	} else {
 		m.log.TRACE.Printf("%+v", res)
 	}
 

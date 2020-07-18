@@ -124,6 +124,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		}
 
 		if err != nil {
+			m.conn.Close() // close connection in case of modbus error
 			return 0, errors.Wrap(err, "read failed")
 		}
 
@@ -144,7 +145,9 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		}
 	}
 
-	if err == nil {
+	if err != nil {
+		m.conn.Close() // close connection in case of modbus error
+	} else {
 		m.log.TRACE.Printf("%+v", res)
 	}
 
