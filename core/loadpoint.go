@@ -19,6 +19,8 @@ const (
 	evChargeStop    = "stop"    // update chargeTimer
 	evChargeCurrent = "current" // update fakeChargeMeter
 	evChargePower   = "power"   // update chargeRater
+
+	minActiveCurrent = 1 // minimum current at which a phase is treated as active
 )
 
 // ThresholdConfig defines enable/disable hysteresis parameters
@@ -276,6 +278,31 @@ func (lp *LoadPoint) updateChargeStatus() error {
 	return nil
 }
 
+// detectPhases uses MeterCurrent interface to count phases with current >=1A
+func (lp *LoadPoint) detectPhases() {
+	if phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent); ok {
+		i1, i2, i3, err := phaseMeter.Currents()
+		if err != nil {
+			lp.log.ERROR.Printf("charge meter error: %v", err)
+			return
+		}
+
+		var phases int64
+		for _, i := range []float64{i1, i2, i3} {
+			if i >= minActiveCurrent {
+				phases++
+			}
+		}
+
+		if phases > 0 {
+			lp.Phases = min(phases, lp.Phases)
+			lp.log.TRACE.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
+
+			lp.publish("activePhases", lp.Phases)
+		}
+	}
+}
+
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	// grid meter will always be available, if as wrapped pv meter
 	targetPower := lp.chargePower - lp.sitePower
@@ -479,6 +506,11 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	// sync settings with charger
 	if lp.status != api.StatusA {
 		lp.handler.SyncSettings()
+	}
+
+	// phase detection - run only when actually charging
+	if lp.charging {
+		lp.detectPhases()
 	}
 
 	// check if car connected and ready for charging
