@@ -151,9 +151,9 @@
 </div>
 
 <div class="row">
-  <div class="d-none d-md-block col-md-4 my-4">
+  <div class="d-none d-md-block col-md-4">
   </div>
-  <div class="col-6 col-md-2 my-4" v-if="state.gridMeter">
+  <div class="col-6 col-md-2 mt-3" v-if="state.gridMeter">
     <div class="mb-2" v-if="state.gridPower > 0">
       Bezug <i class="text-primary fas fa-arrow-down"></i>
     </div><div class="mb-2" v-else>
@@ -163,13 +163,13 @@
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-2 my-4" v-if="state.pvMeter">
+  <div class="col-6 col-md-2 mt-3" v-if="state.pvMeter">
     <div class="mb-2">Erzeugung <i class="text-primary fas fas fa-sun" v-if="state.pvPower < 0"></i></div>
     <h2>
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-2 my-4" v-if="state.batteryMeter">
+  <div class="d-none col-md-2 mt-3" v-if="state.batteryMeter">
     <div class="mb-2">Batterie <i class="text-primary fas"
         v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
@@ -177,7 +177,7 @@
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
     </h2>
   </div>
-  <div class="d-block col-12 text-center pt-4 pb-4 mb-4 bg-light"
+  <div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light"
     v-bind:class="{ 'd-md-none': state.loadpoints.length>1 }">
     <modeswitch></modeswitch>
   </div>
@@ -191,13 +191,13 @@
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
-<div class="row border-bottom">
+<div class="row mt-3 mt-md-5 border-bottom">
   <div class="col-12">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
 </div>
 <div class="row">
-  <div class="col-12 col-md-4 my-4">
+  <div class="col-12 col-md-4 mt-3">
     <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
       <div class="progress-bar" role="progressbar" v-if="!state.soc"
@@ -226,7 +226,7 @@
     </div>
   </div>
 
-  <div class="col-6 col-md-2 my-4">
+  <div class="col-6 col-md-2 mt-3">
     <div class="mb-2">Leistung</div>
     <h2>
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
@@ -234,14 +234,14 @@
       {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small> -->
     </h2>
   </div>
-  <div class="col-6 col-md-2 my-4">
+  <div class="col-6 col-md-2 mt-3">
     <div class="mb-2">Geladen</div>
     <h2>
       {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 my-4">
+  <div class="col-6 col-md-2 mt-3">
     <div class="mb-2">Dauer</div>
     <h2>
       {{fmtShortDuration(state.chargeDuration)}} <small
@@ -249,7 +249,7 @@
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 my-4">
+  <div class="col-6 col-md-2 mt-3">
     <div class="mb-2">Restzeit</div>
     <h2>
       {{fmtShortDuration(state.chargeEstimate)}} <small
@@ -344,7 +344,7 @@
   </div>
 </script>
 
-<footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-md-5 border-top">
+<footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-3 mt-md-5 border-top">
   <div class="container">
     <div class="row">
       <div class="col-6">
