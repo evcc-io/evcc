@@ -18,11 +18,6 @@ func powerToCurrent(power float64, phases int64) int64 {
 	return int64(power / (float64(phases) * Voltage))
 }
 
-// currentToPower is a helper function to convert phase current to total power
-func currentToPower(current, phases int64) float64 {
-	return float64(current*phases) * Voltage
-}
-
 // consumedPower estimates how much power the charger might have consumed given it was the only load
 // func consumedPower(pv, battery, grid float64) float64 {
 // 	return math.Abs(pv) + battery + grid

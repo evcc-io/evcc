@@ -63,6 +63,9 @@ func NewSiteFromConfig(
 	site := NewSite()
 	util.DecodeOther(log, other, &site)
 
+	Voltage = site.Voltage
+	site.loadpoints = loadpoints
+
 	// workaround mapstructure
 	if site.Mode == "0" {
 		site.Mode = api.ModeOff
@@ -84,13 +87,6 @@ func NewSiteFromConfig(
 	if site.Meters.BatteryMeterRef != "" {
 		site.batteryMeter = cp.Meter(site.Meters.BatteryMeterRef)
 	}
-
-	// convert loadpoints to interfaces
-	for _, lp := range loadpoints {
-		site.loadpoints = append(site.loadpoints, lp)
-	}
-
-	Voltage = site.Voltage
 
 	return site
 }
