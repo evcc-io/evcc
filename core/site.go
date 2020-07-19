@@ -251,24 +251,31 @@ func (site *Site) updateMeter(name string, meter api.Meter, power *float64) erro
 }
 
 // updateMeter updates and publishes single meter
-func (site *Site) updateMeters() (err error) {
-	retryMeter := func(s string, m api.Meter, f *float64) {
-		if m != nil {
-			e := retry.Do(func() error {
-				return site.updateMeter(s, m, f)
-			}, retryOptions...)
-
-			if e != nil {
-				err = errors.Wrapf(e, "updating %s meter", s)
-				site.log.ERROR.Println(err)
-			}
+func (site *Site) updateMeters() error {
+	retryMeter := func(s string, m api.Meter, f *float64) error {
+		if m == nil {
+			return nil
 		}
+
+		err := retry.Do(func() error {
+			return site.updateMeter(s, m, f)
+		}, retryOptions...)
+
+		if err != nil {
+			err = errors.Wrapf(err, "updating %s meter", s)
+			site.log.ERROR.Println(err)
+		}
+
+		return err
 	}
 
-	// read PV meter before charge meter
-	retryMeter("grid", site.gridMeter, &site.gridPower)
-	retryMeter("pv", site.pvMeter, &site.pvPower)
-	retryMeter("battery", site.batteryMeter, &site.batteryPower)
+	// pv meter is not critical for operation
+	_ = retryMeter("pv", site.pvMeter, &site.pvPower)
+
+	err := retryMeter("grid", site.gridMeter, &site.gridPower)
+	if err == nil {
+		err = retryMeter("battery", site.batteryMeter, &site.batteryPower)
+	}
 
 	return err
 }
