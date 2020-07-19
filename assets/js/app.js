@@ -251,12 +251,26 @@ Vue.component("site", {
 
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
-  props: { state: Object },
+  props: { state: Object, id: String },
   mixins: [formatter],
   data: function() {
     return {
       tickerHandle: null,
+      modeOverride: "pv",
     };
+  },
+  computed: {
+    targetSoC: {
+      get: function () {
+        return this.state.targetSoC;
+      },
+      set: function (targetSoC) {
+        axios.post('mode/' + targetSoC).then(function (response) {
+          console.log(response)
+          this.state.targetSoC = response.data.targetSoC;
+        }.bind(this)).catch(toasts.error);
+      }
+    }
   },
   watch: {
     "state.chargeDuration": function() {
