@@ -29,18 +29,6 @@ type ThresholdConfig struct {
 	Threshold float64
 }
 
-//go:generate mockgen -package mock -destination ../mock/mock_chargerhandler.go github.com/andig/evcc/core Handler
-
-// Handler is the charger handler responsible for enabled state, target current and guard durations
-type Handler interface {
-	Prepare()
-	SyncSettings()
-	Enabled() bool
-	Status() (api.ChargeStatus, error)
-	TargetCurrent() int64
-	Ramp(int64, ...bool) error
-}
-
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -73,7 +61,6 @@ type LoadPoint struct {
 	status      api.ChargeStatus // Charger status
 	charging    bool             // Charging cycle
 	chargePower float64          // Charging power
-	sitePower   float64          // Available power from site
 
 	pvTimer time.Time
 }
@@ -303,13 +290,11 @@ func (lp *LoadPoint) detectPhases() {
 	}
 }
 
-func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
-	// grid meter will always be available, if as wrapped pv meter
-	targetPower := lp.chargePower - lp.sitePower
-	lp.log.DEBUG.Printf("target power: %.0fW = %.0fW charge - %.0fW available", targetPower, lp.chargePower, lp.sitePower)
-
-	// get max charge current
-	targetCurrent := clamp(powerToCurrent(targetPower, Voltage, lp.Phases), 0, lp.MaxCurrent)
+// maxCurrent calculates the maximum target current for PV mode
+func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
+	// calculate target charge current from delta power and actual current
+	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
+	targetCurrent := clamp(lp.handler.TargetCurrent()+deltaCurrent, 0, lp.MaxCurrent)
 
 	// in MinPV mode return at least minCurrent
 	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
@@ -332,8 +317,8 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 
 	if mode == api.ModePV && enabled && targetCurrent < lp.MinCurrent {
 		// kick off disable sequence
-		if lp.sitePower >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("site power %.0f >= disable threshold %.0f", lp.sitePower, lp.Disable.Threshold)
+		if sitePower >= lp.Disable.Threshold {
+			lp.log.DEBUG.Printf("site power %.0f >= disable threshold %.0f", sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Println("start pv disable timer")
@@ -355,8 +340,8 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	if mode == api.ModePV && !enabled {
 		// kick off enable sequence
 		if targetCurrent >= lp.MinCurrent ||
-			(lp.Enable.Threshold != 0 && lp.sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0f < enable threshold %.0f", lp.sitePower, lp.Enable.Threshold)
+			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
+			lp.log.DEBUG.Printf("site power %.0f < enable threshold %.0f", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Println("start pv enable timer")
@@ -382,40 +367,25 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode) int64 {
 	return targetCurrent
 }
 
-// updateMeter updates and publishes single meter
-func (lp *LoadPoint) updateMeter(name string, meter api.Meter, power *float64) error {
-	value, err := meter.CurrentPower()
-	if err != nil {
-		return err
-	}
-
-	*power = value // update value if no error
-
-	lp.log.DEBUG.Printf("%s power: %.1fW", name, *power)
-	lp.publish(name+"Power", *power)
-
-	return nil
-}
-
-// updateMeter updates and publishes single meter
-func (lp *LoadPoint) updateMeters() (err error) {
-	retryMeter := func(s string, m api.Meter, f *float64) {
-		if m != nil {
-			e := retry.Do(func() error {
-				return lp.updateMeter(s, m, f)
-			}, retryOptions...)
-
-			if e != nil {
-				err = errors.Wrapf(e, "updating %s meter", s)
-				lp.log.ERROR.Printf("%v", err)
-			}
+// updateChargeMete updates and publishes single meter
+func (lp *LoadPoint) updateChargeMeter() {
+	err := retry.Do(func() error {
+		value, err := lp.chargeMeter.CurrentPower()
+		if err != nil {
+			return err
 		}
+
+		lp.chargePower = value // update value if no error
+		lp.log.DEBUG.Printf("charge power: %.1fW", value)
+		lp.publish("chargePower", value)
+
+		return nil
+	}, retryOptions...)
+
+	if err != nil {
+		err = errors.Wrapf(err, "updating charge meter")
+		lp.log.ERROR.Printf("%v", err)
 	}
-
-	// read PV meter before charge meter
-	retryMeter("charge", lp.chargeMeter, &lp.chargePower)
-
-	return err
 }
 
 // chargeDuration returns for how long the charge cycle has been running
@@ -480,11 +450,9 @@ func (lp *LoadPoint) publishSoC() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
+func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) {
 	// read and publish meters first
-	_ = lp.updateMeters()
-
-	lp.sitePower = sitePower
+	lp.updateChargeMeter()
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
@@ -497,7 +465,7 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	// read and publish status
 	if err := retry.Do(lp.updateChargeStatus, retryOptions...); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
-		return lp.chargePower
+		return
 	}
 
 	lp.publish("connected", lp.connected())
@@ -505,7 +473,7 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 
 	// sync settings with charger
 	if lp.status != api.StatusA {
-		lp.handler.SyncSettings()
+		lp.handler.SyncEnabled()
 	}
 
 	// phase detection - run only when actually charging
@@ -530,7 +498,7 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 		err = lp.handler.Ramp(current, true)
 
 	case api.ModeMinPV, api.ModePV:
-		targetCurrent := lp.maxCurrent(mode)
+		targetCurrent := lp.maxCurrent(mode, sitePower)
 		if !lp.connected() {
 			// ensure minimum current when not connected
 			// https://github.com/andig/evcc/issues/105
@@ -544,6 +512,4 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) float64 {
 	if err != nil {
 		lp.log.ERROR.Println(err)
 	}
-
-	return lp.chargePower
 }

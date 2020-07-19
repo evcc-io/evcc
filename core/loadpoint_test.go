@@ -146,10 +146,14 @@ func TestUpdate(t *testing.T) {
 		attachListeners(lp)
 
 		handler.EXPECT().Status().Return(tc.status, nil)
-		handler.EXPECT().TargetCurrent().Return(int64(-1))
+		handler.EXPECT().TargetCurrent().Return(int64(0))
 
 		if tc.status != api.StatusA {
-			handler.EXPECT().SyncSettings()
+			handler.EXPECT().SyncEnabled()
+		}
+
+		if tc.mode == api.ModeMinPV || tc.mode == api.ModePV {
+			handler.EXPECT().TargetCurrent().Return(int64(0))
 		}
 
 		if tc.expect != nil {
@@ -326,11 +330,12 @@ func TestPVHysteresisForStatusC(t *testing.T) {
 
 		for step, se := range tc.series {
 			clck.Set(start.Add(se.delay))
-			lp.sitePower = se.site
 
-			// maxCurrent will read enabled state in PV mode
+			// maxCurrent will read actual current and enabled state in PV mode
+			handler.EXPECT().TargetCurrent().Return(int64(0))
 			handler.EXPECT().Enabled().Return(tc.enabled)
-			current := lp.maxCurrent(api.ModePV)
+
+			current := lp.maxCurrent(api.ModePV, se.site)
 
 			if current != se.current {
 				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
@@ -342,7 +347,6 @@ func TestPVHysteresisForStatusC(t *testing.T) {
 }
 
 func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
-
 	clck := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	handler := mock.NewMockHandler(ctrl)
@@ -362,9 +366,12 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	// not connected, test PV mode logic  short-circuited
 	lp.status = api.StatusA
 
+	// maxCurrent will read actual current in PV mode
+	handler.EXPECT().TargetCurrent().Return(int64(0))
+
 	// maxCurrent will read enabled state in PV mode
-	lp.sitePower = -float64(minA*lp.Phases)*Voltage + 1 // 1W below min power
-	current := lp.maxCurrent(api.ModePV)
+	sitePower := -float64(minA*lp.Phases)*Voltage + 1 // 1W below min power
+	current := lp.maxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %d", current)

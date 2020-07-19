@@ -12,11 +12,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core LoadPointer
+//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core Updater
 
-// LoadPointer abstracts the LoadPoint implementation for testing
-type LoadPointer interface {
-	Update(api.ChargeMode, float64) float64
+// Updater abstracts the LoadPoint implementation for testing
+type Updater interface {
+	Update(api.ChargeMode, float64)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -38,7 +38,7 @@ type Site struct {
 	pvMeter      api.Meter // PV generation meter
 	batteryMeter api.Meter // Battery charging meter
 
-	loadpoints []LoadPointer // Loadpoints
+	loadpoints []*LoadPoint // Loadpoints
 
 	// cached state
 	gridPower    float64 // Grid power
@@ -136,11 +136,7 @@ func (lp *LoadPoint) hasChargeMeter() bool {
 
 // LoadPoints returns the array of associated loadpoints
 func (site *Site) LoadPoints() []*LoadPoint {
-	res := make([]*LoadPoint, 0, len(site.loadpoints))
-	for _, lp := range site.loadpoints {
-		res = append(res, lp.(*LoadPoint))
-	}
-	return res
+	return site.loadpoints
 }
 
 // Configuration returns meter configuration
@@ -153,9 +149,7 @@ func (site *Site) Configuration() SiteConfiguration {
 		BatteryMeter: site.batteryMeter != nil,
 	}
 
-	for _, lptr := range site.loadpoints {
-		lp := lptr.(*LoadPoint)
-
+	for _, lp := range site.loadpoints {
 		lpc := LoadpointConfiguration{
 			Title:       lp.Name(),
 			Phases:      lp.Phases,
@@ -184,8 +178,7 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("  pv %s", presence[site.pvMeter != nil])
 	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
 
-	for i, lptr := range site.loadpoints {
-		lp := lptr.(*LoadPoint)
+	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d config:", i)
 
 		lp.log.INFO.Printf("  vehicle %s", presence[lp.vehicle != nil])
@@ -302,30 +295,20 @@ func (site *Site) sitePower() (float64, error) {
 	return sitePower, nil
 }
 
-func (site *Site) update() error {
+func (site *Site) update(lp Updater) {
 	mode := site.GetMode()
 	site.publish("mode", string(mode))
 
-	sitePower, err := site.sitePower()
-	if err != nil {
-		return err
+	if sitePower, err := site.sitePower(); err == nil {
+		lp.Update(mode, sitePower)
 	}
-
-	for idx, lp := range site.loadpoints {
-		usedPower := lp.Update(mode, sitePower)
-		remainingPower := sitePower + usedPower
-		site.log.DEBUG.Printf("lp-%d remaining power: %.0fW = %.0fW - %.0fW", idx+1, remainingPower, sitePower, usedPower)
-		sitePower = remainingPower
-	}
-
-	return nil
 }
 
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
 
-	for id, loadPoint := range site.loadpoints {
+	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)
 		lpPushChan := make(chan push.Event)
 
@@ -343,7 +326,16 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 			}
 		}(id)
 
-		loadPoint.(*LoadPoint).Prepare(lpUIChan, lpPushChan)
+		lp.Prepare(lpUIChan, lpPushChan)
+	}
+}
+
+// loopLoadpoints keeps iterating across loadpoints sending the next to the given channel
+func (site *Site) loopLoadpoints(next chan<- Updater) {
+	for {
+		for _, lp := range site.loadpoints {
+			next <- lp
+		}
 	}
 }
 
@@ -354,14 +346,17 @@ func (site *Site) Run(interval time.Duration) {
 	ticker := time.NewTicker(interval)
 	site.triggerChan <- struct{}{} // start immediately
 
+	loadpointChan := make(chan Updater)
+	go site.loopLoadpoints(loadpointChan)
+
 	for {
 		select {
 		case <-ticker.C:
-			if site.update() != nil {
-				site.triggerChan <- struct{}{} // restart immediately
-			}
+			site.update(<-loadpointChan)
 		case <-site.triggerChan:
-			_ = site.update()
+			for range site.loadpoints {
+				site.update(<-loadpointChan)
+			}
 			ticker.Stop()
 			ticker = time.NewTicker(interval)
 		}
