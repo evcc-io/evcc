@@ -191,13 +191,63 @@
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
-<div class="row mt-3 mt-md-5 border-bottom">
-  <div class="col-12">
+<div class="row">
+  <div class="col-4">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
+  <div class="col-8" style="position: relative;">
+    <a v-bind:href="'#'+id+'-options'" data-toggle="collapse">
+      <i class="text-muted fas fa-sliders-h" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
+    </a>
+  </div>
 </div>
-<div class="row">
-  <div class="col-12 col-md-4 mt-3">
+<div class="collapse bg-light" v-bind:id=" id+'-options'">
+  <div class="row py-3 my-1">
+    <div class="col-4"></div>
+    <div class="col-2">Modus</div>
+    <div class="col-4">
+      <div class="btn-group btn-group-sm btn-group-toggle bg-white">
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='off'}">
+          <input type="radio" value="off" v-on:click="modeOverride='off'">Stop
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='now'}">
+          <input type="radio" value="now" v-on:click="modeOverride='now'">
+          <span class="d-inline d-sm-none">Sofort</span>
+          <span class="d-none d-sm-inline">Sofortladen</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='minpv'}" v-if="state.gridMeter">
+          <input type="radio" value="minpv" v-on:click="modeOverride='minpv'">
+          <span class="d-inline d-sm-none">Min + PV</span>
+          <span class="d-none d-sm-inline">Minimum + PV</span>
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='pv'}" v-if="state.gridMeter">
+          <input type="radio" value="pv" v-on:click="modeOverride='pv'">
+          <span class="d-inline d-sm-none">PV</span>
+          <span class="d-none d-sm-inline">Nur PV</span>
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="row py-3 my-1">
+    <div class="col-4"></div>
+    <div class="col-2">Maximalladung</div>
+    <div class="col-4">
+      <div class="btn-group btn-group-sm btn-group-toggle bg-white">
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==50}">
+          <input type="radio" value="50" v-on:click="targetSoC=50">50{{state.soc?"%":"kWh"}}
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==80}">
+          <input type="radio" value="80" v-on:click="targetSoC=80">80{{state.soc?"%":"kWh"}}
+        </label>
+        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==100}">
+          <input type="radio" value="100" v-on:click="targetSoC=100">100{{state.soc?"%":"kWh"}}
+        </label>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row border-top">
+  <div class="col-12 col-md-4 my-4">
     <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
       <div class="progress-bar" role="progressbar" v-if="!state.soc"
