@@ -183,7 +183,7 @@
   </div>
 </div>
 
-<loadpoint v-for="(loadpoint,id) in state.loadpoints" v-bind:state="loadpoint" :id="'loadpoint-'+id">
+<loadpoint v-for="(loadpoint,id) in state.loadpoints" v-bind:id="id" :state="loadpoint" :local="state.loadpoints.length!=1">
 </loadpoint>
 
 </div>
@@ -191,21 +191,21 @@
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
-<div class="row">
+<div class="row mt-4 border-bottom">
   <div class="col-4">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
   <div class="col-8" style="position: relative;">
-    <a v-bind:href="'#'+id+'-options'" data-toggle="collapse">
+    <a v-bind:href="'#lp'+id+'-options'" data-toggle="collapse">
       <i class="text-muted fas fa-sliders-h" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
     </a>
   </div>
 </div>
-<div class="collapse bg-light" v-bind:id=" id+'-options'">
-  <div class="row py-3 my-1">
-    <div class="col-4"></div>
+<div class="collapse" v-bind:id="'lp'+id+'-options'">
+  <div class="row my-3" v-if="local">
+    <div class="col-4">Einstellungen</div>
     <div class="col-2">Modus</div>
-    <div class="col-4">
+    <div class="col-4" style="margin-top: -0.25rem">
       <div class="btn-group btn-group-sm btn-group-toggle bg-white">
         <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='off'}">
           <input type="radio" value="off" v-on:click="modeOverride='off'">Stop
@@ -228,10 +228,10 @@
       </div>
     </div>
   </div>
-  <div class="row py-3 my-1">
+  <div class="row mt-3 pb-3 border-bottom">
     <div class="col-4"></div>
-    <div class="col-2">Maximalladung</div>
-    <div class="col-4">
+    <div class="col-2">Zielladung</div>
+    <div class="col-4" style="margin-top: -0.25rem">
       <div class="btn-group btn-group-sm btn-group-toggle bg-white">
         <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==50}">
           <input type="radio" value="50" v-on:click="targetSoC=50">50{{state.soc?"%":"kWh"}}
@@ -246,8 +246,8 @@
     </div>
   </div>
 </div>
-<div class="row border-top">
-  <div class="col-12 col-md-4 my-4">
+<div class="row">
+  <div class="col-12 col-md-4 my-3">
     <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
     <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
       <div class="progress-bar" role="progressbar" v-if="!state.soc"
@@ -276,7 +276,7 @@
     </div>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-2 my-3">
     <div class="mb-2">Leistung</div>
     <h2>
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
@@ -284,14 +284,14 @@
       {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small> -->
     </h2>
   </div>
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-2 my-3">
     <div class="mb-2">Geladen</div>
     <h2>
       {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-2 my-3">
     <div class="mb-2">Dauer</div>
     <h2>
       {{fmtShortDuration(state.chargeDuration)}} <small
@@ -299,7 +299,7 @@
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-2 my-3">
     <div class="mb-2">Restzeit</div>
     <h2>
       {{fmtShortDuration(state.chargeEstimate)}} <small
