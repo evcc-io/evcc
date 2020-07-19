@@ -11,6 +11,18 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
+//go:generate mockgen -package mock -destination ../mock/mock_chargerhandler.go github.com/andig/evcc/core Handler
+
+// Handler is the charger handler responsible for enabled state, target current and guard durations
+type Handler interface {
+	Prepare()
+	SyncEnabled()
+	Enabled() bool
+	Status() (api.ChargeStatus, error)
+	TargetCurrent() int64
+	Ramp(int64, ...bool) error
+}
+
 // HandlerConfig contains the public configuration for the ChargerHandler
 type HandlerConfig struct {
 	Sensitivity   int64         // Step size of current change
@@ -74,8 +86,8 @@ func (lp *ChargerHandler) Prepare() {
 	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 }
 
-// SyncSettings synchronizes charger settings to expected state
-func (lp *ChargerHandler) SyncSettings() {
+// SyncEnabled synchronizes charger settings to expected state
+func (lp *ChargerHandler) SyncEnabled() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
 		lp.log.DEBUG.Printf("sync enabled state to %s", status[lp.enabled])

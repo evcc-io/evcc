@@ -93,16 +93,16 @@ func (mr *MockHandlerMockRecorder) Status() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockHandler)(nil).Status))
 }
 
-// SyncSettings mocks base method
-func (m *MockHandler) SyncSettings() {
+// SyncEnabled mocks base method
+func (m *MockHandler) SyncEnabled() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SyncSettings")
+	m.ctrl.Call(m, "SyncEnabled")
 }
 
-// SyncSettings indicates an expected call of SyncSettings
-func (mr *MockHandlerMockRecorder) SyncSettings() *gomock.Call {
+// SyncEnabled indicates an expected call of SyncEnabled
+func (mr *MockHandlerMockRecorder) SyncEnabled() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncSettings", reflect.TypeOf((*MockHandler)(nil).SyncSettings))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncEnabled", reflect.TypeOf((*MockHandler)(nil).SyncEnabled))
 }
 
 // TargetCurrent mocks base method
