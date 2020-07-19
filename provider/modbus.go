@@ -50,6 +50,11 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus
 		log.FATAL.Fatalf("config: modbus cannot have value and register both")
 	}
 
+	if cc.Value == "" && cc.Register.Decode == "" {
+		log.WARN.Println("config: missing modbus value or register - assuming Power")
+		cc.Value = "Power"
+	}
+
 	// model + value configured
 	if cc.Value != "" {
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
