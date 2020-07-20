@@ -17,10 +17,10 @@ import (
 const (
 	evChargeStart       = "start"      // update chargeTimer
 	evChargeStop        = "stop"       // update chargeTimer
-	evVehicleConnect    = "connect"    // vehicle connected
-	evVehicleDisconnect = "disconnect" // vehicle disconnected
 	evChargeCurrent     = "current"    // update fakeChargeMeter
 	evChargePower       = "power"      // update chargeRater
+	evVehicleConnect    = "connect"    // vehicle connected
+	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
 	minActiveCurrent = 1 // minimum current at which a phase is treated as active
 )
