@@ -83,6 +83,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	charger := cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(charger)
 
+	if lp.Enable.Threshold > lp.Disable.Threshold {
+		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
+	}
+
 	lp.handler = &ChargerHandler{
 		log:           lp.log,
 		clock:         lp.clock,
@@ -295,6 +299,8 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	// calculate target charge current from delta power and actual current
 	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
 	targetCurrent := clamp(lp.handler.TargetCurrent()+deltaCurrent, 0, lp.MaxCurrent)
+
+	lp.log.DEBUG.Printf("max charge current: %dA = %dA + %dA (%.0fW @ %dp)", targetCurrent, lp.handler.TargetCurrent(), deltaCurrent, sitePower, lp.Phases)
 
 	// in MinPV mode return at least minCurrent
 	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
