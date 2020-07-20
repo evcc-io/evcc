@@ -36,7 +36,13 @@ messaging:
       msg: Started charging in "${mode}" mode
     stop: # charge stop event
       title: Charge finished
-      msg: Finished charging ${energy:%.1fk}kWh in ${duration}.
+      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+    connect: # vehicle connect event
+      title: Car connected
+      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+    disconnect: # vehicle connected event
+      title: Car disconnected
+      msg: Car disconnected after ${connectedDuration}
   services:
   - type: pushover
     app: # app id
