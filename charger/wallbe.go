@@ -67,7 +67,7 @@ func NewWallbe(conn string) *Wallbe {
 	handler.ProtocolRecoveryTimeout = protocolTimeout
 
 	wb := &Wallbe{
-		log:     util.NewLogger("wlbe"),
+		log:     util.NewLogger("wallbe"),
 		client:  client,
 		handler: handler,
 		factor:  10,

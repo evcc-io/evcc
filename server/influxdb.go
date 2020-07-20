@@ -32,7 +32,7 @@ type Influx struct {
 
 // NewInfluxClient creates new publisher for influx
 func NewInfluxClient(url, token, org, user, password, database string) *Influx {
-	log := util.NewLogger("iflx")
+	log := util.NewLogger("influx")
 
 	// InfluxDB v1 compatibility
 	if token == "" && user != "" {

@@ -61,7 +61,7 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Mete
 // NewTesla creates a Tesla Meter
 func NewTesla(uri, usage string) api.Meter {
 	m := &Tesla{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("tsla")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("tesla")),
 		uri:        uri,
 		usage:      strings.ToLower(usage),
 	}
