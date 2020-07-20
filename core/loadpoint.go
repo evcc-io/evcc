@@ -324,7 +324,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	if mode == api.ModePV && enabled && targetCurrent < lp.MinCurrent {
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("site power %.0f >= disable threshold %.0f", sitePower, lp.Disable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Println("start pv disable timer")
@@ -347,7 +347,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 		// kick off enable sequence
 		if targetCurrent >= lp.MinCurrent ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("site power %.0f < enable threshold %.0f", sitePower, lp.Enable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
 				lp.log.DEBUG.Println("start pv enable timer")
@@ -401,7 +401,7 @@ func (lp *LoadPoint) chargeDuration() time.Duration {
 		lp.log.ERROR.Printf("charge timer error: %v", err)
 		return 0
 	}
-	return d
+	return d.Round(time.Second)
 }
 
 // chargedEnergy returns energy consumption since charge start in kWh
@@ -428,7 +428,7 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 
 	if lp.chargePower > 0 && lp.vehicle != nil {
 		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.vehicle.Capacity())
-		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower)
+		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
 	}
 
 	return -1
