@@ -299,6 +299,7 @@ func (site *Site) sitePower() (float64, error) {
 }
 
 func (site *Site) update(lp Updater) {
+	site.log.DEBUG.Println("----")
 	mode := site.GetMode()
 	site.publish("mode", string(mode))
 

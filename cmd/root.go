@@ -129,12 +129,12 @@ func checkVersion() {
 }
 
 func run(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"))
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
-	util.LogLevel(viper.GetString("log"))
+	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	go checkVersion()
 

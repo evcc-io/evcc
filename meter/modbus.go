@@ -36,7 +36,7 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 	conn := modbus.NewConnection(log, cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
 	device, err := modbus.NewDevice(log, cc.Model, *cc.RTU)
 
-	log = util.NewLogger("modb")
+	log = util.NewLogger("modbus")
 	conn.Logger(log.TRACE)
 
 	// prepare device

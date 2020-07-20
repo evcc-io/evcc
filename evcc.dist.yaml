@@ -1,6 +1,12 @@
 uri: 0.0.0.0:7070 # uri for ui
 interval: 10s # control cycle interval
 
+log: error
+levels:
+  core: debug
+  lp-1: debug
+  lp-2: debug
+
 # mqtt message broker
 mqtt:
   broker: localhost:1883

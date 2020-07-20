@@ -14,6 +14,7 @@ import (
 type config struct {
 	URI        string
 	Log        string
+	Levels     map[string]string
 	Interval   time.Duration
 	Mqtt       mqttConfig
 	Influx     server.InfluxConfig
