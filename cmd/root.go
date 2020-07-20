@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	latest "github.com/tcnksm/go-latest"
 )
 
 var (
@@ -114,20 +113,6 @@ func Execute() {
 	}
 }
 
-// checkVersion validates if updates are available
-func checkVersion() {
-	githubTag := &latest.GithubTag{
-		Owner:      "andig",
-		Repository: "evcc",
-	}
-
-	if res, err := latest.Check(githubTag, server.Version); err == nil {
-		if res.Outdated {
-			log.INFO.Printf("updates available - please upgrade to %s", res.Current)
-		}
-	}
-}
-
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
@@ -136,7 +121,7 @@ func run(cmd *cobra.Command, args []string) {
 	conf := loadConfigFile(cfgFile)
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
-	go checkVersion()
+	go util.Updater.Run(log)
 
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)

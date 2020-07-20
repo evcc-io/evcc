@@ -46,6 +46,15 @@
 <body>
 
 <div id="app">
+  <div class="row p-3 bg-warning d-none">
+    <div class="col-12">
+      New version available: {{"foo"}}
+      <button type="button" class="close float-right" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </div>
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -63,6 +72,7 @@
       </div>
     </div>
   </nav>
+
   <message-toasts></message-toasts>
   <router-view></router-view>
 </div>
