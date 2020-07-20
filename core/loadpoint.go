@@ -297,10 +297,14 @@ func (lp *LoadPoint) detectPhases() {
 // maxCurrent calculates the maximum target current for PV mode
 func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	// calculate target charge current from delta power and actual current
+	effectiveCurrent := lp.handler.TargetCurrent()
+	if lp.status != api.StatusC {
+		effectiveCurrent = 0
+	}
 	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
-	targetCurrent := clamp(lp.handler.TargetCurrent()+deltaCurrent, 0, lp.MaxCurrent)
+	targetCurrent := clamp(effectiveCurrent+deltaCurrent, 0, lp.MaxCurrent)
 
-	lp.log.DEBUG.Printf("max charge current: %dA = %dA + %dA (%.0fW @ %dp)", targetCurrent, lp.handler.TargetCurrent(), deltaCurrent, sitePower, lp.Phases)
+	lp.log.DEBUG.Printf("max charge current: %dA = %dA + %dA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
 
 	// in MinPV mode return at least minCurrent
 	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
