@@ -121,8 +121,6 @@ func run(cmd *cobra.Command, args []string) {
 	conf := loadConfigFile(cfgFile)
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
-	go server.RunUpdater(log)
-
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
@@ -156,6 +154,8 @@ func run(cmd *cobra.Command, args []string) {
 	// setup values channel
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
+
+	go server.RunUpdater(log, valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
