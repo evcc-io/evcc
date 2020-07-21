@@ -71,10 +71,10 @@
 </div>
 
 <script type="text/x-template" id="version-template">
-  <div class="row p-3 bg-warning">
+  <div class="row p-3 bg-warning" id="version-bar">
     <div class="col-12">
       Neue Version verfügbar: <a href="https://github.com/andig/evcc/releases/tag/0.13" class="text-white">{{"foo"}}</a>
-      <button type="button" class="close float-right" aria-label="Close">
+      <button type="button" class="close float-right" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
