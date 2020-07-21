@@ -121,7 +121,7 @@ func run(cmd *cobra.Command, args []string) {
 	conf := loadConfigFile(cfgFile)
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
-	go util.Updater.Run(log)
+	go server.RunUpdater(log)
 
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)

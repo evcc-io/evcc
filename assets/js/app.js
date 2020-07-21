@@ -163,8 +163,8 @@ const toasts = new Vue({
 });
 
 Vue.component('message-toast', {
-  props: ['item'],
   template: '#message-template',
+  props: ['item'],
   mounted: function () {
     const id = "#message-id-" + this.item.id;
     $(id).toast('show');
@@ -172,6 +172,11 @@ Vue.component('message-toast', {
       toasts.remove(this.item);
     }.bind(this))
   },
+});
+
+Vue.component('version', {
+  template: '#version-template',
+  props: ['installed'],
 });
 
 Vue.component('modeswitch', {

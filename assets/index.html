@@ -46,14 +46,7 @@
 <body>
 
 <div id="app">
-  <div class="row p-3 bg-warning d-none">
-    <div class="col-12">
-      New version available: {{"foo"}}
-      <button type="button" class="close float-right" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-  </div>
+  <version></version>
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
@@ -76,6 +69,17 @@
   <message-toasts></message-toasts>
   <router-view></router-view>
 </div>
+
+<script type="text/x-template" id="version-template">
+  <div class="row p-3 bg-warning">
+    <div class="col-12">
+      Neue Version verfügbar: <a href="https://github.com/andig/evcc/releases/tag/0.13" class="text-white">{{"foo"}}</a>
+      <button type="button" class="close float-right" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </div>
+</script>
 
 <script type="text/x-template" id="embed-template">
   <div class="container mx-auto text-center">

@@ -1,7 +1,7 @@
-package util
+package server
 
 import (
-	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/util"
 	latest "github.com/tcnksm/go-latest"
 )
 
@@ -14,28 +14,26 @@ var (
 	Commit = "HEAD"
 )
 
-type Updater struct {
-	log *Logger
+type updater struct {
+	log *util.Logger
 }
 
-func (u Updater) Run(log *Logger) {
-	if updater == nil {
-		updater = &Updater{
-			log: log,
-		}
+func RunUpdater(log *util.Logger) {
+	Updater = &updater{
+		log: log,
 	}
 
-	go updater.run()
+	go Updater.run()
 }
 
 // checkVersion validates if updates are available
-func (u *Updater) checkVersion() {
+func (u *updater) checkVersion() {
 	githubTag := &latest.GithubTag{
 		Owner:      "andig",
 		Repository: "evcc",
 	}
 
-	if res, err := latest.Check(githubTag, server.Version); err == nil {
+	if res, err := latest.Check(githubTag, Version); err == nil {
 		if res.Outdated {
 			u.log.INFO.Printf("new version available - please upgrade to %s", res.Current)
 		}
@@ -43,6 +41,6 @@ func (u *Updater) checkVersion() {
 }
 
 // checkVersion validates if updates are available
-func (u *Updater) run() {
+func (u *updater) run() {
 	u.checkVersion()
 }
