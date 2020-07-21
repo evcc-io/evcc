@@ -184,7 +184,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.connectionChargedEnergy += lp.chargedEnergy // update by publishChargeProgress
+	lp.connectionChargedEnergy += lp.chargedEnergy
 	lp.notify(evChargeStop)
 }
 
