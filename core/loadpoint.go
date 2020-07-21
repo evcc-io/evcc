@@ -63,15 +63,15 @@ type LoadPoint struct {
 	vehicle     api.Vehicle // Vehicle
 
 	// cached state
-	status      api.ChargeStatus // Charger status
-	charging    bool             // Charging cycle
-	chargePower float64          // Charging power
-	pvTimer     time.Time
+	status        api.ChargeStatus // Charger status
+	charging      bool             // Charging cycle
+	chargePower   float64          // Charging power
+	connectedTime time.Time        // Time when vehicle was connected
+	pvTimer       time.Time        // PV enabled/disable timer
 
 	chargedEnergy      float64       // Charged energy while connected
 	deltaChargedEnergy float64       // Charged energy for single cycle
 	chargeDuration     time.Duration // Charge duration
-	connectedTime      time.Time     // time vehicle was connected
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
