@@ -97,7 +97,6 @@ let store = {
       if (typeof toasts[k] === "function") {
         toasts[k]({message: msg[k]})
       } else {
-        console.log(k+": "+msg[k])
         Vue.set(target, k, msg[k]);
       }
     });
