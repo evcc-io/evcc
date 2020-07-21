@@ -48,6 +48,9 @@ type LoadPoint struct {
 	Meters     struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
+	SoC struct {
+		AlwaysUpdate bool `mapstructure:"alwaysUpdate"`
+	}
 	Enable, Disable ThresholdConfig
 
 	handler       Handler
@@ -462,7 +465,7 @@ func (lp *LoadPoint) publishSoC() {
 		return
 	}
 
-	if lp.connected() {
+	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
 			lp.log.DEBUG.Printf("vehicle soc: %.1f%%", f)
