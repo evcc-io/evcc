@@ -135,7 +135,7 @@ func CaptureLogs(c chan<- Param) {
 }
 
 func captureLogger(level string, l *log.Logger) {
-	re, err := regexp.Compile(`^\[\w+\] \w+ .{19} `)
+	re, err := regexp.Compile(`^\[\w+\s+\] \w+ .{19} `)
 	if err != nil {
 		panic(err)
 	}
