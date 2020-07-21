@@ -54,7 +54,6 @@ func (h *Hub) Run(events <-chan Event) {
 
 		definition, ok := h.definitions[ev.Event]
 		if !ok {
-			log.ERROR.Printf("invalid event %v", ev.Event)
 			continue
 		}
 

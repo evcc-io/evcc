@@ -15,10 +15,12 @@ import (
 )
 
 const (
-	evChargeStart   = "start"   // update chargeTimer
-	evChargeStop    = "stop"    // update chargeTimer
-	evChargeCurrent = "current" // update fakeChargeMeter
-	evChargePower   = "power"   // update chargeRater
+	evChargeStart       = "start"      // update chargeTimer
+	evChargeStop        = "stop"       // update chargeTimer
+	evChargeCurrent     = "current"    // update fakeChargeMeter
+	evChargePower       = "power"      // update chargeRater
+	evVehicleConnect    = "connect"    // vehicle connected
+	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
 	minActiveCurrent = 1 // minimum current at which a phase is treated as active
 )
@@ -58,9 +60,10 @@ type LoadPoint struct {
 	vehicle     api.Vehicle // Vehicle
 
 	// cached state
-	status      api.ChargeStatus // Charger status
-	charging    bool             // Charging cycle
-	chargePower float64          // Charging power
+	status        api.ChargeStatus // Charger status
+	charging      bool             // Charging cycle
+	chargePower   float64          // Charging power
+	connectedTime time.Time        // time vehicle was connected
 
 	pvTimer time.Time
 }
@@ -170,13 +173,30 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
+	lp.log.INFO.Println("start charging ->")
 	lp.notify(evChargeStart)
 }
 
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
+	lp.log.INFO.Println("stop charging <-")
 	lp.publishChargeProgress()
 	lp.notify(evChargeStop)
+}
+
+// evVehicleConnectHandler sends external start event
+func (lp *LoadPoint) evVehicleConnectHandler() {
+	lp.log.INFO.Printf("car connected")
+	connectedDuration := lp.clock.Since(lp.connectedTime)
+	lp.publish("connectedDuration", connectedDuration)
+	lp.notify(evVehicleConnect)
+}
+
+// evVehicleDisconnectHandler sends external start event
+func (lp *LoadPoint) evVehicleDisconnectHandler() {
+	lp.log.INFO.Println("car disconnected")
+	lp.connectedTime = lp.clock.Now()
+	lp.notify(evVehicleDisconnect)
 }
 
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
@@ -242,12 +262,12 @@ func (lp *LoadPoint) updateChargeStatus() error {
 
 		// changed from A - connected
 		if prevStatus == api.StatusA {
-			lp.log.INFO.Printf("car connected (%s)", string(status))
+			lp.bus.Publish(evVehicleConnect)
 		}
 
 		// changed to A -  disconnected
 		if status == api.StatusA {
-			lp.log.INFO.Println("car disconnected")
+			lp.bus.Publish(evVehicleDisconnect)
 		}
 
 		// update whenever there is a state change
@@ -255,12 +275,10 @@ func (lp *LoadPoint) updateChargeStatus() error {
 
 		// start/stop charging cycle
 		if lp.charging = status == api.StatusC; lp.charging {
-			lp.log.INFO.Println("start charging ->")
 			lp.bus.Publish(evChargeStart)
 		} else {
 			// omit initial stop event before started
 			if prevStatus != api.StatusNone {
-				lp.log.INFO.Println("stop charging <-")
 				lp.bus.Publish(evChargeStop)
 			}
 		}
