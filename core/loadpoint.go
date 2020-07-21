@@ -63,12 +63,13 @@ type LoadPoint struct {
 	vehicle     api.Vehicle // Vehicle
 
 	// cached state
-	status        api.ChargeStatus // Charger status
-	charging      bool             // Charging cycle
-	chargePower   float64          // Charging power
-	connectedTime time.Time        // time vehicle was connected
-
-	pvTimer time.Time
+	status                  api.ChargeStatus // Charger status
+	charging                bool             // Charging cycle
+	chargePower             float64          // Charging power
+	chargedEnergy           float64          // Charged energy in current charging cycle
+	connectionChargedEnergy float64          // Charged energy while connected
+	connectedTime           time.Time        // time vehicle was connected
+	pvTimer                 time.Time
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -183,22 +184,33 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.publishChargeProgress()
+	lp.connectionChargedEnergy += lp.chargedEnergy // update by publishChargeProgress
 	lp.notify(evChargeStop)
 }
 
 // evVehicleConnectHandler sends external start event
 func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
-	connectedDuration := lp.clock.Since(lp.connectedTime)
-	lp.publish("connectedDuration", connectedDuration)
+
+	// energy
+	lp.connectionChargedEnergy = 0
+	lp.publish("connectionChargedEnergy", 0)
+
+	// duration
+	lp.connectedTime = lp.clock.Now()
+	lp.publish("connectedDuration", 0)
+
 	lp.notify(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
-	lp.connectedTime = lp.clock.Now()
+
+	// energy and duration
+	lp.publish("connectionChargedEnergy", lp.connectionChargedEnergy)
+	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+
 	lp.notify(evVehicleDisconnect)
 }
 
@@ -429,19 +441,15 @@ func (lp *LoadPoint) chargeDuration() time.Duration {
 	return d.Round(time.Second)
 }
 
-// chargedEnergy returns energy consumption since charge start in kWh
-func (lp *LoadPoint) chargedEnergy() float64 {
-	f, err := lp.chargeRater.ChargedEnergy()
-	if err != nil {
-		lp.log.ERROR.Printf("charge rater error: %v", err)
-		return 0
-	}
-	return f
-}
-
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
-	lp.publish("chargedEnergy", 1e3*lp.chargedEnergy()) // return Wh for UI
+	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
+		lp.chargedEnergy = 1e3 * f // convert to Wh
+	} else {
+		lp.log.ERROR.Printf("charge rater error: %v", err)
+	}
+
+	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("chargeDuration", lp.chargeDuration())
 }
 
