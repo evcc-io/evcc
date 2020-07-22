@@ -7,6 +7,7 @@ import (
 
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
 
 	"github.com/spf13/cobra"
@@ -155,7 +156,8 @@ func run(cmd *cobra.Command, args []string) {
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
 
-	go server.RunUpdater(log, valueChan)
+	// version check
+	go updater.Run(log, valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
