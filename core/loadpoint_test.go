@@ -160,7 +160,8 @@ func TestUpdate(t *testing.T) {
 			tc.expect(handler)
 		}
 
-		lp.Update(tc.mode, 0)
+		lp.Mode = tc.mode
+		lp.Update(0)
 
 		ctrl.Finish()
 	}

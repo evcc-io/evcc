@@ -25,11 +25,10 @@ type Site struct {
 	log         *util.Logger
 
 	// configuration
-	Title         string  `mapstructure:"title"`         // UI title
-	Voltage       float64 `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64 `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	// Mode          api.ChargeMode `mapstructure:"mode"`          // Charge mode, guarded by mutex
-	Meters MetersConfig // Meter references
+	Title         string       `mapstructure:"title"`         // UI title
+	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	Meters        MetersConfig // Meter references
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -63,11 +62,6 @@ func NewSiteFromConfig(
 
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
-
-	// // workaround mapstructure
-	// if site.Mode == "0" {
-	// 	site.Mode = api.ModeOff
-	// }
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {

@@ -254,15 +254,10 @@ Vue.component("loadpoint", {
         this.state.mode = response.data.mode;
       }.bind(this)).catch(toasts.error);
     },
-    targetSoC: {
-      get: function () {
-        return this.state.targetSoC;
-      },
-      set: function (targetSoC) {
-        axios.post('lp/' + this.id + '/soc/' + targetSoC).then(function (response) {
-          this.state.targetSoC = response.data.targetSoC;
-        }.bind(this)).catch(toasts.error);
-      }
+    targetSoC: function (targetSoC) {
+      axios.post('lp/' + this.id + '/soc/' + targetSoC).then(function (response) {
+        this.state.targetSoC = response.data.targetSoC;
+      }.bind(this)).catch(toasts.error);
     },
   },
   destroyed: function() {

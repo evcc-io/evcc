@@ -196,18 +196,20 @@
 <script type="text/x-template" id="loadpoint-template">
 <div>
 
-<div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
-  <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+<div class="row">
+  <div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+  </div>
 </div>
 
-<div class="row mt-3 mt-md-5 border-bottom">
+<div class="row mt-3 mt-md-5">
   <div class="col-12 col-md-4">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
   <div class="d-none d-md-block col-md-8 pt-2" v-if="local">
     <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
   </div>
-  <div class="col-12 d-md-none pt-2 pb-3 text-center" v-if="local">
+  <div class="col-12 d-md-none pt-3 pb-3 text-center bg-light" v-if="local">
     <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
   </div>
   <!-- collapse control -->
@@ -225,6 +227,9 @@
     <mode class="btn-group-sm v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
   </div>
 </div> -->
+
+<!-- responsive mode border -->
+<div class="row border-bottom d-none d-md-block"></div>
 
 <div class="row">
   <div class="col-12 col-md-4 mt-3">

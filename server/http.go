@@ -200,6 +200,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		}),
 	))
 
+	// site api
 	for _, r := range routes {
 		api.
 			Methods(r.Methods...).
@@ -211,14 +212,16 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	for id, lp := range site.LoadPoints() {
 		subAPI := api.PathPrefix(fmt.Sprintf("/lp/%d", id)).Subrouter()
 
+		r := routes["getmode"]
 		subAPI.
-			Methods(routes["getmode"].Methods...).
-			Path(routes["getmode"].Pattern).
+			Methods(r.Methods...).
+			Path(r.Pattern).
 			Handler(CurrentChargeModeHandler(lp)) // routeLogger
 
+		r = routes["setmode"]
 		subAPI.
-			Methods(routes["setmode"].Methods...).
-			Path(routes["setmode"].Pattern).
+			Methods(r.Methods...).
+			Path(r.Pattern).
 			Handler(ChargeModeHandler(lp)) // routeLogger
 	}
 
