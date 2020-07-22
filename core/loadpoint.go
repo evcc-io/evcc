@@ -66,9 +66,12 @@ type LoadPoint struct {
 	status        api.ChargeStatus // Charger status
 	charging      bool             // Charging cycle
 	chargePower   float64          // Charging power
-	connectedTime time.Time        // time vehicle was connected
+	connectedTime time.Time        // Time when vehicle was connected
+	pvTimer       time.Time        // PV enabled/disable timer
 
-	pvTimer time.Time
+	chargedEnergy      float64       // Charged energy while connected
+	deltaChargedEnergy float64       // Charged energy for single cycle
+	chargeDuration     time.Duration // Charge duration
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -183,22 +186,33 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.publishChargeProgress()
+	lp.chargedEnergy += lp.deltaChargedEnergy
 	lp.notify(evChargeStop)
 }
 
 // evVehicleConnectHandler sends external start event
 func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.INFO.Printf("car connected")
-	connectedDuration := lp.clock.Since(lp.connectedTime)
-	lp.publish("connectedDuration", connectedDuration)
+
+	// energy
+	lp.chargedEnergy = 0
+	lp.publish("chargedEnergy", 0)
+
+	// duration
+	lp.connectedTime = lp.clock.Now()
+	lp.publish("connectedDuration", 0)
+
 	lp.notify(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
 func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.log.INFO.Println("car disconnected")
-	lp.connectedTime = lp.clock.Now()
+
+	// energy and duration
+	lp.publish("chargedEnergy", lp.chargedEnergy)
+	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
+
 	lp.notify(evVehicleDisconnect)
 }
 
@@ -268,15 +282,7 @@ func (lp *LoadPoint) updateChargeStatus() error {
 			lp.bus.Publish(evVehicleConnect)
 		}
 
-		// changed to A -  disconnected
-		if status == api.StatusA {
-			lp.bus.Publish(evVehicleDisconnect)
-		}
-
-		// update whenever there is a state change
-		lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
-
-		// start/stop charging cycle
+		// start/stop charging cycle - handle before disconnect to update energy
 		if lp.charging = status == api.StatusC; lp.charging {
 			lp.bus.Publish(evChargeStart)
 		} else {
@@ -285,6 +291,14 @@ func (lp *LoadPoint) updateChargeStatus() error {
 				lp.bus.Publish(evChargeStop)
 			}
 		}
+
+		// changed to A -  disconnected
+		if status == api.StatusA {
+			lp.bus.Publish(evVehicleDisconnect)
+		}
+
+		// update whenever there is a state change
+		lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
 	}
 
 	return nil
@@ -419,30 +433,22 @@ func (lp *LoadPoint) updateChargeMeter() {
 	}
 }
 
-// chargeDuration returns for how long the charge cycle has been running
-func (lp *LoadPoint) chargeDuration() time.Duration {
-	d, err := lp.chargeTimer.ChargingTime()
-	if err != nil {
-		lp.log.ERROR.Printf("charge timer error: %v", err)
-		return 0
-	}
-	return d.Round(time.Second)
-}
-
-// chargedEnergy returns energy consumption since charge start in kWh
-func (lp *LoadPoint) chargedEnergy() float64 {
-	f, err := lp.chargeRater.ChargedEnergy()
-	if err != nil {
-		lp.log.ERROR.Printf("charge rater error: %v", err)
-		return 0
-	}
-	return f
-}
-
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
-	lp.publish("chargedEnergy", 1e3*lp.chargedEnergy()) // return Wh for UI
-	lp.publish("chargeDuration", lp.chargeDuration())
+	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
+		lp.deltaChargedEnergy = 1e3 * f // convert to Wh
+	} else {
+		lp.log.ERROR.Printf("charge rater error: %v", err)
+	}
+
+	if d, err := lp.chargeTimer.ChargingTime(); err == nil {
+		lp.chargeDuration = d.Round(time.Second)
+	} else {
+		lp.log.ERROR.Printf("charge timer error: %v", err)
+	}
+
+	lp.publish("chargedEnergy", lp.chargedEnergy+lp.deltaChargedEnergy)
+	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
 // remainingChargeDuration returns the remaining charge time
