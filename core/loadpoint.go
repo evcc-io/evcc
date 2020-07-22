@@ -44,11 +44,13 @@ type LoadPoint struct {
 	log      *util.Logger
 
 	// exposed public configuration
-	Mode       api.ChargeMode `mapstructure:"mode"`    // Charge mode, guarded by mutex
-	Title      string         `mapstructure:"title"`   // UI title
-	Phases     int64          `mapstructure:"phases"`  // Phases- required for converting power and current
-	ChargerRef string         `mapstructure:"charger"` // Charger reference
-	VehicleRef string         `mapstructure:"vehicle"` // Vehicle reference
+	Mode                api.ChargeMode `mapstructure:"mode"`                // Charge mode, guarded by mutex
+	ModeAfterDisconnect api.ChargeMode `mapstructure:"modeAfterDisconnect"` // Charge mode to apply when car disconnected
+
+	Title      string `mapstructure:"title"`   // UI title
+	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
+	ChargerRef string `mapstructure:"charger"` // Charger reference
+	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 	Meters     struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
@@ -245,6 +247,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
 	lp.notify(evVehicleDisconnect)
+
+	// set default mode on disconnect
+	if lp.ModeAfterDisconnect != "" {
+		lp.SetMode(lp.ModeAfterDisconnect)
+	}
 }
 
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow

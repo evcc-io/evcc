@@ -41,9 +41,14 @@ type route struct {
 
 // site is the minimal interface for accessing site methods
 type site interface {
-	// GetMode() api.ChargeMode
-	// SetMode(api.ChargeMode)
 	Configuration() core.SiteConfiguration
+	LoadPoints() []*core.LoadPoint
+}
+
+// mode is the minimal interface for accessing loadpoint methods
+type loadpoint interface {
+	SetMode(api.ChargeMode)
+	GetMode() api.ChargeMode
 }
 
 // routeLogger traces matched routes including their executing time
@@ -127,31 +132,31 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
-// // CurrentChargeModeHandler returns current charge mode
-// func CurrentChargeModeHandler(site site) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		res := chargeModeJSON{Mode: site.GetMode()}
-// 		jsonResponse(w, r, res)
-// 	}
-// }
+// CurrentChargeModeHandler returns current charge mode
+func CurrentChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := chargeModeJSON{Mode: loadpoint.GetMode()}
+		jsonResponse(w, r, res)
+	}
+}
 
-// // ChargeModeHandler updates charge mode
-// func ChargeModeHandler(site site) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		vars := mux.Vars(r)
+// ChargeModeHandler updates charge mode
+func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
 
-// 		mode, ok := vars["mode"]
-// 		if !ok {
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			return
-// 		}
+		mode, ok := vars["mode"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 
-// 		site.SetMode(api.ChargeMode(mode))
+		loadpoint.SetMode(api.ChargeMode(mode))
 
-// 		res := chargeModeJSON{Mode: site.GetMode()}
-// 		jsonResponse(w, r, res)
-// 	}
-// }
+		res := chargeModeJSON{Mode: loadpoint.GetMode()}
+		jsonResponse(w, r, res)
+	}
+}
 
 // SocketHandler attaches websocket handler to uri
 func SocketHandler(hub *SocketHub) http.HandlerFunc {
@@ -162,17 +167,13 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
-	var routes = []route{{
-		[]string{"GET"}, "/health", HealthHandler(),
-	}, {
-		[]string{"GET"}, "/config", ConfigHandler(site),
-	}, {
-		[]string{"GET"}, "/state", StateHandler(cache),
-		// }, {
-		// 	[]string{"GET"}, "/mode", CurrentChargeModeHandler(site),
-		// }, {
-		// 	[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site),
-	}}
+	var routes = map[string]route{
+		"health":  {[]string{"GET"}, "/health", HealthHandler()},
+		"config":  {[]string{"GET"}, "/config", ConfigHandler(site)},
+		"state":   {[]string{"GET"}, "/state", StateHandler(cache)},
+		"getmode": {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site.LoadPoints()[0])},
+		"setmode": {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site.LoadPoints()[0])},
+	}
 
 	router := mux.NewRouter().StrictSlash(true)
 
@@ -204,6 +205,21 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 			Methods(r.Methods...).
 			Path(r.Pattern).
 			Handler(r.HandlerFunc) // routeLogger
+	}
+
+	// loadpoint api
+	for id, lp := range site.LoadPoints() {
+		subAPI := api.PathPrefix(fmt.Sprintf("/lp/%d", id)).Subrouter()
+
+		subAPI.
+			Methods(routes["getmode"].Methods...).
+			Path(routes["getmode"].Pattern).
+			Handler(CurrentChargeModeHandler(lp)) // routeLogger
+
+		subAPI.
+			Methods(routes["setmode"].Methods...).
+			Path(routes["setmode"].Pattern).
+			Handler(ChargeModeHandler(lp)) // routeLogger
 	}
 
 	srv := &http.Server{

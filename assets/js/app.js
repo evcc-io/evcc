@@ -237,18 +237,6 @@ Vue.component("loadpoint", {
       tickerHandle: null,
     };
   },
-  computed: {
-    targetSoC: {
-      get: function () {
-        return this.state.targetSoC;
-      },
-      set: function (targetSoC) {
-        axios.post('lp' + this.id + '/targetSoC/' + targetSoC).then(function (response) {
-          this.state.targetSoC = response.data.targetSoC;
-        }.bind(this)).catch(toasts.error);
-      }
-    },
-  },
   watch: {
     "state.chargeDuration": function() {
       window.clearInterval(this.tickerHandle);
@@ -262,10 +250,20 @@ Vue.component("loadpoint", {
   },
   methods: {
     targetMode: function (mode) {
-      axios.post('lp' + this.id + 'mode/' + mode).then(function (response) {
+      axios.post('lp/' + this.id + '/mode/' + mode).then(function (response) {
         this.state.mode = response.data.mode;
       }.bind(this)).catch(toasts.error);
-    }
+    },
+    targetSoC: {
+      get: function () {
+        return this.state.targetSoC;
+      },
+      set: function (targetSoC) {
+        axios.post('lp/' + this.id + '/soc/' + targetSoC).then(function (response) {
+          this.state.targetSoC = response.data.targetSoC;
+        }.bind(this)).catch(toasts.error);
+      }
+    },
   },
   destroyed: function() {
     window.clearInterval(this.tickerHandle);
