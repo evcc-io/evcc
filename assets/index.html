@@ -131,18 +131,18 @@
 <script type="text/x-template" id="mode-template">
   <div class="btn-group btn-group-toggle bg-white">
     <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
-      <input type="radio" value="off" v-on:click="mode='off'">Stop
+      <input type="radio" value="off" v-on:click="targetMode('off')">Stop
     </label>
     <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
-      <input type="radio" value="now" v-on:click="mode='now'">Sofort
+      <input type="radio" value="now" v-on:click="targetMode('now')">Sofort
     </label>
     <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="pv">
-      <input type="radio" value="minpv" v-on:click="mode='minpv'">
+      <input type="radio" value="minpv" v-on:click="targetMode('minpv')">
       <span class="d-inline d-sm-none">Min + PV</span>
       <span class="d-none d-sm-inline">Minimum + PV</span>
     </label>
     <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="pv">
-      <input type="radio" value="pv" v-on:click="mode='pv'">
+      <input type="radio" value="pv" v-on:click="targetMode('pv')">
       <span class="d-inline d-sm-none">PV</span>
       <span class="d-none d-sm-inline">Nur PV</span>
     </label>
@@ -197,27 +197,32 @@
 <div>
 
 <div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
-  <modeswitch v-bind:state="state" :pv="pv"></modeswitch>
+  <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
 </div>
 
 <div class="row mt-3 mt-md-5 border-bottom">
-  <div class="col-10 col-md-4">
+  <div class="col-12 col-md-4">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
-  <div class="col-8 pt-1">
-    <modeswitch class="btn-group-sm1" v-if="local"></modeswitch>
+  <div class="d-none d-md-block col-md-8 pt-2" v-if="local">
+    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
   </div>
+  <div class="col-12 d-md-none pt-2 pb-3 text-center" v-if="local">
+    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+  </div>
+  <!-- collapse control -->
   <!-- <div class="col-2 col-md-8" style="position: relative; font-size: 1.5rem">
     <a v-bind:href="'#lp'+id+'-options'" data-toggle="collapse" v-if="local">
       <i class="text-primary fas fa-tools" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
     </a>
   </div> -->
 </div>
+<!-- collapsed section -->
 <!-- <div class="row mt-4 mb-0 collapse" v-bind:id="'lp'+id+'-options'" v-if="local">
   <div class="col-12 col-md-4 d-none d-md-block">Einstellungen</div>
   <div class="col-4 col-md-2">Modus</div>
   <div class="col-8 col-md-4" style="margin-top: -0.2rem">
-    <modeswitch class="btn-group-sm"></modeswitch>
+    <mode class="btn-group-sm v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
   </div>
 </div> -->
 
@@ -255,8 +260,6 @@
     <div class="mb-2">Leistung</div>
     <h2>
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
-      <!-- <span class="text-muted">/</span>
-      {{fmt(state.chargeCurrent)}} <small class="text-muted">A</small> -->
     </h2>
   </div>
   <div class="col-6 col-md-2 mt-3">

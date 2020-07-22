@@ -193,29 +193,6 @@ Vue.component('version', {
   }
 });
 
-Vue.component('modeswitch', {
-  template: '#mode-template',
-  props: ["state", "pv"],
-  // data: function() {
-  //   return {
-  //     state: store.state // global state
-  //   };
-  // },
-  computed: {
-    mode: {
-      get: function() {
-        console.warn("mode: "+this.state.mode)
-        return this.state.mode;
-      },
-      set: function(mode) {
-        axios.post('mode/' + mode).then(function(response) {
-          this.state.mode = response.data.mode;
-        }.bind(this)).catch(toasts.error);
-      }
-    }
-  },
-});
-
 Vue.component("site", {
   template: "#site-template",
   mixins: [formatter],
@@ -261,16 +238,6 @@ Vue.component("loadpoint", {
     };
   },
   computed: {
-    modeOverride: {
-      get: function () {
-        return this.state.modeOverride;
-      },
-      set: function (mode) {
-        axios.post('lp' + this.id + '/mode/' + mode).then(function (response) {
-          this.state.mode = response.data.mode;
-        }.bind(this)).catch(toasts.error);
-      }
-    },
     targetSoC: {
       get: function () {
         return this.state.targetSoC;
@@ -293,9 +260,26 @@ Vue.component("loadpoint", {
       }
     },
   },
+  methods: {
+    targetMode: function (mode) {
+      axios.post('lp' + this.id + 'mode/' + mode).then(function (response) {
+        this.state.mode = response.data.mode;
+      }.bind(this)).catch(toasts.error);
+    }
+  },
   destroyed: function() {
     window.clearInterval(this.tickerHandle);
   }
+});
+
+Vue.component("mode", {
+  template: "#mode-template",
+  props: ["mode", "pv"],
+  methods: {
+    targetMode: function (mode) {
+      this.$emit("updated", mode)
+    }
+  },
 });
 
 //
