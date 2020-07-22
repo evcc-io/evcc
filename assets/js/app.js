@@ -81,6 +81,7 @@ let formatter = {
 
 let store = {
   state: {
+    availableVersion: null,
     loadpoints: [],
   },
   update: function(msg) {
@@ -163,8 +164,8 @@ const toasts = new Vue({
 });
 
 Vue.component('message-toast', {
-  props: ['item'],
   template: '#message-template',
+  props: ['item'],
   mounted: function () {
     const id = "#message-id-" + this.item.id;
     $(id).toast('show');
@@ -172,6 +173,24 @@ Vue.component('message-toast', {
       toasts.remove(this.item);
     }.bind(this))
   },
+});
+
+Vue.component('version', {
+  template: '#version-template',
+  props: ['installed'],
+  data: function () {
+    return {
+      state: store.state,
+    };
+  },
+  watch: {
+    "state.availableVersion": function () {
+      if (this.installed != "<<.Version>>" && // go template parsed?
+        this.state.availableVersion != this.installed) {
+        $(this.$refs.bar).collapse("show");
+      }
+    }
+  }
 });
 
 Vue.component('modeswitch', {

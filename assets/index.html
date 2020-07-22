@@ -46,6 +46,8 @@
 <body>
 
 <div id="app">
+  <version installed="<<.Version>>" id="version-bar"></version>
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -55,17 +57,33 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
-        <!-- << range $idx, $link := .Links >> -->
-        <router-link class="nav-item nav-link pb-1" to="/links/<< $idx >>"><< $link.Title >></router-link>
-        <!-- << end >> -->
+        <!-- <<range $idx, $link := .Links>> -->
+        <router-link class="nav-item nav-link pb-1" to="/links/<<$idx>>"><<$link.Title>></router-link>
+        <!-- <<end>> -->
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
         <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
       </div>
     </div>
   </nav>
+
   <message-toasts></message-toasts>
   <router-view></router-view>
 </div>
+
+<script type="text/x-template" id="version-template">
+  <div class="row p-3 bg-warning collapse" ref="bar">
+    <div class="col-12">
+      Neue Version verfügbar!
+      Installiert: {{installed}}.
+      Verfügbar: {{state.availableVersion}}.
+      <b><a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion"
+        class="text-body pr-2">Download...</a></b>
+      <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </div>
+</script>
 
 <script type="text/x-template" id="embed-template">
   <div class="container mx-auto text-center">
@@ -351,7 +369,7 @@
         <small class="text-muted">&copy; 2020</small>
       </div>
       <div class="col-6 text-right">
-        <small class="text-muted"><< .Version>> << if ne .Version .Commit>>(<< .Commit>>)<< end>></small>
+        <small class="text-muted"><<.Version>> <<if ne .Version .Commit>>(<<.Commit>>)<<end>></small>
       </div>
     </div>
   </div>
@@ -360,15 +378,15 @@
 <script>
   function routerLinks() {
     return [
-      // << range $idx, $link := .Links >>
+      // <<range $idx, $link := .Links>>
       {
-        title: "<< $link.Title >>",
-        subtitle: "<< $link.Subtitle >>",
-        img: "<< $link.Img >>",
-        iframe: "<< $link.Iframe >>",
-        link: "<< $link.Link >>"
+        title: "<<$link.Title>>",
+        subtitle: "<<$link.Subtitle>>",
+        img: "<<$link.Img>>",
+        iframe: "<<$link.Iframe>>",
+        link: "<<$link.Link>>"
       },
-      // << end >>
+      // <<end>>
     ];
   }
 </script>

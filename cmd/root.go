@@ -7,11 +7,11 @@ import (
 
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	latest "github.com/tcnksm/go-latest"
 )
 
 var (
@@ -114,20 +114,6 @@ func Execute() {
 	}
 }
 
-// checkVersion validates if updates are available
-func checkVersion() {
-	githubTag := &latest.GithubTag{
-		Owner:      "andig",
-		Repository: "evcc",
-	}
-
-	if res, err := latest.Check(githubTag, server.Version); err == nil {
-		if res.Outdated {
-			log.INFO.Printf("updates available - please upgrade to %s", res.Current)
-		}
-	}
-}
-
 func run(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
@@ -135,8 +121,6 @@ func run(cmd *cobra.Command, args []string) {
 	// load config and re-configure logging after reading config file
 	conf := loadConfigFile(cfgFile)
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-
-	go checkVersion()
 
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
@@ -171,6 +155,9 @@ func run(cmd *cobra.Command, args []string) {
 	// setup values channel
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
+
+	// version check
+	go updater.Run(log, valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
