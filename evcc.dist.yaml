@@ -231,6 +231,7 @@ site:
 loadpoints:
 - title: Ladepunkt # ui display name
   vehicle: audi
+  mode: pv
   soc:
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
   charger: wallbe # charger

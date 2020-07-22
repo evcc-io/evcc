@@ -41,6 +41,7 @@ type LoadPoint struct {
 	bus      evbus.Bus         // event bus
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
+	lpChan   chan<- *LoadPoint // update requests
 	log      *util.Logger
 
 	// exposed public configuration
@@ -158,7 +159,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	// apply immediately
 	if lp.Mode != mode {
 		lp.Mode = mode
-		// lp.Update()
+		lp.lpChan <- lp // request loadpoint update
 	}
 }
 
@@ -286,9 +287,10 @@ func (lp *LoadPoint) Name() string {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
+func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *LoadPoint) {
 	lp.pushChan = pushChan
 	lp.uiChan = uiChan
+	lp.lpChan = lpChan
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)

@@ -20,9 +20,10 @@ type Updater interface {
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	triggerChan chan struct{}     // API updates
-	uiChan      chan<- util.Param // client push messages
-	log         *util.Logger
+	uiChan       chan<- util.Param // client push messages
+	lpUpdateChan chan *LoadPoint
+
+	log *util.Logger
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
@@ -86,9 +87,8 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:         util.NewLogger("core"),
-		triggerChan: make(chan struct{}, 1),
-		Voltage:     230, // V
+		log:     util.NewLogger("core"),
+		Voltage: 230, // V
 	}
 
 	return lp
@@ -182,15 +182,6 @@ func (site *Site) DumpConfig() {
 	}
 }
 
-// Update triggers loadpoint to run main control loop and push messages to UI socket
-func (site *Site) Update() {
-	select {
-	case site.triggerChan <- struct{}{}: // non-blocking send
-	default:
-		site.log.WARN.Printf("update blocked")
-	}
-}
-
 // publish sends values to UI and databases
 func (site *Site) publish(key string, val interface{}) {
 	// test helper
@@ -278,6 +269,7 @@ func (site *Site) update(lp Updater) {
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
+	site.lpUpdateChan = make(chan *LoadPoint)
 
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)
@@ -297,7 +289,7 @@ func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) 
 			}
 		}(id)
 
-		lp.Prepare(lpUIChan, lpPushChan)
+		lp.Prepare(lpUIChan, lpPushChan, site.lpUpdateChan)
 	}
 }
 
@@ -313,23 +305,18 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
 func (site *Site) Run(interval time.Duration) {
-	// update ticker
-	ticker := time.NewTicker(interval)
-	site.triggerChan <- struct{}{} // start immediately
-
 	loadpointChan := make(chan Updater)
 	go site.loopLoadpoints(loadpointChan)
+
+	ticker := time.NewTicker(interval)
+	site.update(<-loadpointChan) // start immediately
 
 	for {
 		select {
 		case <-ticker.C:
 			site.update(<-loadpointChan)
-		case <-site.triggerChan:
-			for range site.loadpoints {
-				site.update(<-loadpointChan)
-			}
-			ticker.Stop()
-			ticker = time.NewTicker(interval)
+		case lp := <-site.lpUpdateChan:
+			site.update(lp)
 		}
 	}
 }
