@@ -1,7 +1,6 @@
 package core
 
 import (
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -16,22 +15,21 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(api.ChargeMode, float64)
+	Update(float64)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Site struct {
-	sync.Mutex                    // guard status
 	triggerChan chan struct{}     // API updates
 	uiChan      chan<- util.Param // client push messages
 	log         *util.Logger
 
 	// configuration
-	Title         string         `mapstructure:"title"`         // UI title
-	Voltage       float64        `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64        `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Mode          api.ChargeMode `mapstructure:"mode"`          // Charge mode, guarded by mutex
-	Meters        MetersConfig   // Meter references
+	Title         string  `mapstructure:"title"`         // UI title
+	Voltage       float64 `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
+	ResidualPower float64 `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	// Mode          api.ChargeMode `mapstructure:"mode"`          // Charge mode, guarded by mutex
+	Meters MetersConfig // Meter references
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -66,10 +64,10 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 
-	// workaround mapstructure
-	if site.Mode == "0" {
-		site.Mode = api.ModeOff
-	}
+	// // workaround mapstructure
+	// if site.Mode == "0" {
+	// 	site.Mode = api.ModeOff
+	// }
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
@@ -96,7 +94,6 @@ func NewSite() *Site {
 	lp := &Site{
 		log:         util.NewLogger("core"),
 		triggerChan: make(chan struct{}, 1),
-		Mode:        api.ModeOff,
 		Voltage:     230, // V
 	}
 
@@ -106,7 +103,6 @@ func NewSite() *Site {
 // SiteConfiguration contains the global site configuration
 type SiteConfiguration struct {
 	Title        string                   `json:"title"`
-	Mode         string                   `json:"mode"`
 	GridMeter    bool                     `json:"gridMeter"`
 	PVMeter      bool                     `json:"pvMeter"`
 	BatteryMeter bool                     `json:"batteryMeter"`
@@ -115,6 +111,7 @@ type SiteConfiguration struct {
 
 // LoadpointConfiguration is the loadpoint feature structure
 type LoadpointConfiguration struct {
+	Mode        string `json:"mode"`
 	Title       string `json:"title"`
 	Phases      int64  `json:"phases"`
 	MinCurrent  int64  `json:"minCurrent"`
@@ -139,7 +136,6 @@ func (site *Site) LoadPoints() []*LoadPoint {
 func (site *Site) Configuration() SiteConfiguration {
 	c := SiteConfiguration{
 		Title:        site.Title,
-		Mode:         string(site.GetMode()),
 		GridMeter:    site.gridMeter != nil,
 		PVMeter:      site.pvMeter != nil,
 		BatteryMeter: site.batteryMeter != nil,
@@ -147,6 +143,7 @@ func (site *Site) Configuration() SiteConfiguration {
 
 	for _, lp := range site.loadpoints {
 		lpc := LoadpointConfiguration{
+			Mode:        string(lp.GetMode()),
 			Title:       lp.Name(),
 			Phases:      lp.Phases,
 			MinCurrent:  lp.MinCurrent,
@@ -169,7 +166,6 @@ func (site *Site) Configuration() SiteConfiguration {
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
 	site.log.INFO.Println("site config:")
-	site.log.INFO.Printf("  mode: %s", site.GetMode())
 	site.log.INFO.Printf("  grid %s", presence[site.gridMeter != nil])
 	site.log.INFO.Printf("  pv %s", presence[site.pvMeter != nil])
 	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
@@ -198,27 +194,6 @@ func (site *Site) Update() {
 	case site.triggerChan <- struct{}{}: // non-blocking send
 	default:
 		site.log.WARN.Printf("update blocked")
-	}
-}
-
-// GetMode returns loadpoint charge mode
-func (site *Site) GetMode() api.ChargeMode {
-	site.Lock()
-	defer site.Unlock()
-	return site.Mode
-}
-
-// SetMode sets loadpoint charge mode
-func (site *Site) SetMode(mode api.ChargeMode) {
-	site.Lock()
-	defer site.Unlock()
-
-	site.log.INFO.Printf("set charge mode: %s", string(mode))
-
-	// apply immediately
-	if site.Mode != mode {
-		site.Mode = mode
-		site.Update()
 	}
 }
 
@@ -300,11 +275,9 @@ func (site *Site) sitePower() (float64, error) {
 
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
-	mode := site.GetMode()
-	site.publish("mode", string(mode))
 
 	if sitePower, err := site.sitePower(); err == nil {
-		lp.Update(mode, sitePower)
+		lp.Update(sitePower)
 	}
 }
 

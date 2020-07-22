@@ -41,8 +41,8 @@ type route struct {
 
 // site is the minimal interface for accessing site methods
 type site interface {
-	GetMode() api.ChargeMode
-	SetMode(api.ChargeMode)
+	// GetMode() api.ChargeMode
+	// SetMode(api.ChargeMode)
 	Configuration() core.SiteConfiguration
 }
 
@@ -127,31 +127,31 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
-// CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(site site) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := chargeModeJSON{Mode: site.GetMode()}
-		jsonResponse(w, r, res)
-	}
-}
+// // CurrentChargeModeHandler returns current charge mode
+// func CurrentChargeModeHandler(site site) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		res := chargeModeJSON{Mode: site.GetMode()}
+// 		jsonResponse(w, r, res)
+// 	}
+// }
 
-// ChargeModeHandler updates charge mode
-func ChargeModeHandler(site site) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+// // ChargeModeHandler updates charge mode
+// func ChargeModeHandler(site site) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		vars := mux.Vars(r)
 
-		mode, ok := vars["mode"]
-		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
+// 		mode, ok := vars["mode"]
+// 		if !ok {
+// 			w.WriteHeader(http.StatusBadRequest)
+// 			return
+// 		}
 
-		site.SetMode(api.ChargeMode(mode))
+// 		site.SetMode(api.ChargeMode(mode))
 
-		res := chargeModeJSON{Mode: site.GetMode()}
-		jsonResponse(w, r, res)
-	}
-}
+// 		res := chargeModeJSON{Mode: site.GetMode()}
+// 		jsonResponse(w, r, res)
+// 	}
+// }
 
 // SocketHandler attaches websocket handler to uri
 func SocketHandler(hub *SocketHub) http.HandlerFunc {
@@ -168,10 +168,10 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		[]string{"GET"}, "/config", ConfigHandler(site),
 	}, {
 		[]string{"GET"}, "/state", StateHandler(cache),
-	}, {
-		[]string{"GET"}, "/mode", CurrentChargeModeHandler(site),
-	}, {
-		[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site),
+		// }, {
+		// 	[]string{"GET"}, "/mode", CurrentChargeModeHandler(site),
+		// }, {
+		// 	[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site),
 	}}
 
 	router := mux.NewRouter().StrictSlash(true)

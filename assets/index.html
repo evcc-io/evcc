@@ -129,29 +129,23 @@
 </script>
 
 <script type="text/x-template" id="mode-template">
-  <div class="row">
-    <div class="col-12">
-      <div class="btn-group btn-group-toggle bg-white">
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
-          <input type="radio" value="off" v-on:click="mode='off'">Stop
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
-          <input type="radio" value="now" v-on:click="mode='now'">
-          <span class="d-inline d-sm-none">Sofort</span>
-          <span class="d-none d-sm-inline">Sofortladen</span>
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="state.gridMeter">
-          <input type="radio" value="minpv" v-on:click="mode='minpv'">
-          <span class="d-inline d-sm-none">Min + PV</span>
-          <span class="d-none d-sm-inline">Minimum + PV</span>
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="state.gridMeter">
-          <input type="radio" value="pv" v-on:click="mode='pv'">
-          <span class="d-inline d-sm-none">PV</span>
-          <span class="d-none d-sm-inline">Nur PV</span>
-        </label>
-      </div>
-    </div>
+  <div class="btn-group btn-group-toggle bg-white">
+    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
+      <input type="radio" value="off" v-on:click="mode='off'">Stop
+    </label>
+    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
+      <input type="radio" value="now" v-on:click="mode='now'">Sofort
+    </label>
+    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="pv">
+      <input type="radio" value="minpv" v-on:click="mode='minpv'">
+      <span class="d-inline d-sm-none">Min + PV</span>
+      <span class="d-none d-sm-inline">Minimum + PV</span>
+    </label>
+    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="pv">
+      <input type="radio" value="pv" v-on:click="mode='pv'">
+      <span class="d-inline d-sm-none">PV</span>
+      <span class="d-none d-sm-inline">Nur PV</span>
+    </label>
   </div>
 </script>
 
@@ -162,15 +156,10 @@
   <div class="col-12 col-md-4">
     <p class="h1">{{state.title||"Home"}}</p>
   </div>
-  <div class="d-none col-12 col-md-8 pt-1"
-    v-bind:class="{'d-md-block': state.loadpoints.length>1}">
-    <modeswitch></modeswitch>
-  </div>
 </div>
 
 <div class="row">
-  <div class="d-none d-md-block col-md-4">
-  </div>
+  <div class="d-none d-md-block col-md-4"></div>
   <div class="col-6 col-md-2 mt-3" v-if="state.gridMeter">
     <div class="mb-2" v-if="state.gridPower > 0">
       Bezug <i class="text-primary fas fa-arrow-down"></i>
@@ -195,13 +184,10 @@
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
     </h2>
   </div>
-  <div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light"
-    v-bind:class="{ 'd-md-none': state.loadpoints.length>1 }">
-    <modeswitch></modeswitch>
-  </div>
 </div>
 
-<loadpoint v-for="(loadpoint,id) in state.loadpoints" v-bind:id="id" :state="loadpoint" :local="state.loadpoints.length!=1">
+<loadpoint v-for="(loadpoint,id) in state.loadpoints"
+  v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :local="state.loadpoints.length!=1">
 </loadpoint>
 
 </div>
@@ -209,61 +195,32 @@
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
+
+<div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+  <modeswitch v-bind:state="state" :pv="pv"></modeswitch>
+</div>
+
 <div class="row mt-3 mt-md-5 border-bottom">
   <div class="col-10 col-md-4">
     <p class="h1">{{state.title||"Ladepunkt"}}</p>
   </div>
-  <div class="col-2 col-md-8" style="position: relative;">
-    <a v-bind:href="'#lp'+id+'-options'" data-toggle="collapse">
-      <i class="text-muted fas fa-sliders-h" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
+  <div class="col-8 pt-1">
+    <modeswitch class="btn-group-sm1" v-if="local"></modeswitch>
+  </div>
+  <!-- <div class="col-2 col-md-8" style="position: relative; font-size: 1.5rem">
+    <a v-bind:href="'#lp'+id+'-options'" data-toggle="collapse" v-if="local">
+      <i class="text-primary fas fa-tools" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
     </a>
-  </div>
+  </div> -->
 </div>
-<div class="collapse" v-bind:id="'lp'+id+'-options'">
-  <div class="row my-3" v-if="local">
-    <div class="col-12 col-md-4 d-none d-md-block">Einstellungen</div>
-    <div class="col-4 col-md-2">Modus</div>
-    <div class="col-8 col-md-4" style="margin-top: -0.25rem">
-      <div class="btn-group btn-group-sm btn-group-toggle bg-white">
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='off'}">
-          <input type="radio" value="off" v-on:click="modeOverride='off'">Stop
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='now'}">
-          <input type="radio" value="now" v-on:click="modeOverride='now'">
-          <span class="d-inline d-sm-none">Sofort</span>
-          <span class="d-none d-sm-inline">Sofortladen</span>
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='minpv'}" v-if="state.gridMeter">
-          <input type="radio" value="minpv" v-on:click="modeOverride='minpv'">
-          <span class="d-inline d-sm-none">Min + PV</span>
-          <span class="d-none d-sm-inline">Minimum + PV</span>
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:modeOverride=='pv'}" v-if="state.gridMeter">
-          <input type="radio" value="pv" v-on:click="modeOverride='pv'">
-          <span class="d-inline d-sm-none">PV</span>
-          <span class="d-none d-sm-inline">Nur PV</span>
-        </label>
-      </div>
-    </div>
+<!-- <div class="row mt-4 mb-0 collapse" v-bind:id="'lp'+id+'-options'" v-if="local">
+  <div class="col-12 col-md-4 d-none d-md-block">Einstellungen</div>
+  <div class="col-4 col-md-2">Modus</div>
+  <div class="col-8 col-md-4" style="margin-top: -0.2rem">
+    <modeswitch class="btn-group-sm"></modeswitch>
   </div>
-  <div class="row mt-3 pb-3 border-bottom">
-    <div class="col-12 col-md-4"></div>
-    <div class="col-4 col-md-2">Zielladung</div>
-    <div class="col-8 col-md-4" style="margin-top: -0.25rem">
-      <div class="btn-group btn-group-sm btn-group-toggle bg-white">
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==50}">
-          <input type="radio" value="50" v-on:click="targetSoC=50">50{{state.soc?"%":"kWh"}}
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==80}">
-          <input type="radio" value="80" v-on:click="targetSoC=80">80{{state.soc?"%":"kWh"}}
-        </label>
-        <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:targetSoC==100}">
-          <input type="radio" value="100" v-on:click="targetSoC=100">100{{state.soc?"%":"kWh"}}
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
+</div> -->
+
 <div class="row">
   <div class="col-12 col-md-4 mt-3">
     <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
