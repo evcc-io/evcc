@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -34,6 +35,8 @@ type ThresholdConfig struct {
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
+	sync.Mutex // guard status
+
 	clock    clock.Clock       // mockable time
 	bus      evbus.Bus         // event bus
 	pushChan chan<- push.Event // notifications
@@ -41,10 +44,11 @@ type LoadPoint struct {
 	log      *util.Logger
 
 	// exposed public configuration
-	Title      string `mapstructure:"title"`   // UI title
-	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
+	Mode       api.ChargeMode `mapstructure:"mode"`    // Charge mode, guarded by mutex
+	Title      string         `mapstructure:"title"`   // UI title
+	Phases     int64          `mapstructure:"phases"`  // Phases- required for converting power and current
+	ChargerRef string         `mapstructure:"charger"` // Charger reference
+	VehicleRef string         `mapstructure:"vehicle"` // Vehicle reference
 	Meters     struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
@@ -75,6 +79,11 @@ type LoadPoint struct {
 func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
 	lp := NewLoadPoint(log)
 	util.DecodeOther(log, other, &lp)
+
+	// workaround mapstructure
+	if lp.Mode == "0" {
+		lp.Mode = api.ModeOff
+	}
 
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
@@ -113,6 +122,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		log:    log,   // logger
 		clock:  clock, // mockable time
 		bus:    bus,   // event bus
+		Mode:   api.ModeOff,
 		Phases: 1,
 		status: api.StatusNone,
 		HandlerConfig: HandlerConfig{
@@ -124,6 +134,27 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
+}
+
+// GetMode returns loadpoint charge mode
+func (lp *LoadPoint) GetMode() api.ChargeMode {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Mode
+}
+
+// SetMode sets loadpoint charge mode
+func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Printf("set charge mode: %s", string(mode))
+
+	// apply immediately
+	if lp.Mode != mode {
+		lp.Mode = mode
+		// lp.Update()
+	}
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -481,7 +512,10 @@ func (lp *LoadPoint) publishSoC() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) {
+func (lp *LoadPoint) Update(sitePower float64) {
+	mode := lp.GetMode()
+	lp.publish("mode", string(mode))
+
 	// read and publish meters first
 	lp.updateChargeMeter()
 

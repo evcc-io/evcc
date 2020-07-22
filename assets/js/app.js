@@ -176,14 +176,16 @@ Vue.component('message-toast', {
 
 Vue.component('modeswitch', {
   template: '#mode-template',
-  data: function() {
-    return {
-      state: store.state // global state
-    };
-  },
+  props: ["state", "pv"],
+  // data: function() {
+  //   return {
+  //     state: store.state // global state
+  //   };
+  // },
   computed: {
     mode: {
       get: function() {
+        console.warn("mode: "+this.state.mode)
         return this.state.mode;
       },
       set: function(mode) {
@@ -232,7 +234,7 @@ Vue.component("site", {
 
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
-  props: ["state", "id", "local"],
+  props: ["state", "id", "pv", "local"],
   mixins: [formatter],
   data: function() {
     return {
