@@ -41,6 +41,9 @@
     .progress-bar-animated {
       animation-direction: reverse;
     }
+    .btn.caption {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -128,55 +131,50 @@
   </div>
 </script>
 
-<script type="text/x-template" id="mode-template">
-  <div class="btn-group btn-group-toggle bg-white">
-    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='off'}">
-      <input type="radio" value="off" v-on:click="targetMode('off')">Stop
-    </label>
-    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='now'}">
-      <input type="radio" value="now" v-on:click="targetMode('now')">Sofort
-    </label>
-    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='minpv'}" v-if="pv">
-      <input type="radio" value="minpv" v-on:click="targetMode('minpv')">
-      <span class="d-inline d-sm-none">Min + PV</span>
-      <span class="d-none d-sm-inline">Minimum + PV</span>
-    </label>
-    <label class="btn btn-outline-primary shadow-none" v-bind:class="{active:mode=='pv'}" v-if="pv">
-      <input type="radio" value="pv" v-on:click="targetMode('pv')">
-      <span class="d-inline d-sm-none">PV</span>
-      <span class="d-none d-sm-inline">Nur PV</span>
-    </label>
-  </div>
-</script>
-
 <script type="text/x-template" id="site-template">
 <div>
-
-<div class="row mt-4 border-bottom">
-  <div class="col-12 col-md-4">
-    <p class="h1">{{state.title||"Home"}}</p>
+  <div class="row mt-4 border-bottom">
+    <div class="col-12 col-md-4 d-flex align-items-end">
+      <p class="h1">{{state.title||"Home"}}</p>
+    </div>
+    <div class="col-12 col-md-8 mt-3" v-if="localSettings">
+      <site-details v-bind:state="state"></site-details>
+    </div>
   </div>
-</div>
 
+  <div class="row" v-if="!localSettings">
+    <div class="d-none d-md-block col-md-4"></div>
+    <div class="col-12 col-md-8">
+      <site-details v-bind:state="state"></site-details>
+    </div>
+  </div>
+
+  <loadpoint v-for="(loadpoint,id) in state.loadpoints"
+    v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :local="localSettings">
+  </loadpoint>
+</div>
+</script>
+
+<script type="text/x-template" id="site-details-template">
 <div class="row">
-  <div class="d-none d-md-block col-md-4"></div>
-  <div class="col-6 col-md-2 mt-3" v-if="state.gridMeter">
+  <div class="col-6 col-md-3 mt-3" v-if="state.gridMeter">
     <div class="mb-2" v-if="state.gridPower > 0">
       Bezug <i class="text-primary fas fa-arrow-down"></i>
-    </div><div class="mb-2" v-else>
+    </div>
+    <div class="mb-2" v-else>
       Einspeisung <i class="text-primary fas fa-arrow-up"></i>
     </div>
     <h2>
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-2 mt-3" v-if="state.pvMeter">
+  <div class="col-6 col-md-3 mt-3" v-if="state.pvMeter">
     <div class="mb-2">Erzeugung <i class="text-primary fas fas fa-sun" v-if="state.pvPower < 0"></i></div>
     <h2>
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="d-none col-md-2 mt-3" v-if="state.batteryMeter">
+  <div class="d-none col-md-3 mt-3" v-if="state.batteryMeter">
     <div class="mb-2">Batterie <i class="text-primary fas"
         v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
@@ -185,96 +183,94 @@
     </h2>
   </div>
 </div>
-
-<loadpoint v-for="(loadpoint,id) in state.loadpoints"
-  v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :local="state.loadpoints.length!=1">
-</loadpoint>
-
-</div>
 </script>
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
-
-<div class="row">
-  <div class="d-block col-12 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
-    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
-  </div>
-</div>
-
-<div class="row mt-3 mt-md-5">
-  <div class="col-12 col-md-4">
-    <p class="h1">{{state.title||"Ladepunkt"}}</p>
-  </div>
-  <div class="d-none d-md-block col-md-8 pt-2" v-if="local">
-    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
-  </div>
-  <div class="col-12 d-md-none pt-3 pb-3 text-center bg-light" v-if="local">
-    <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
-  </div>
-  <!-- collapse control -->
-  <!-- <div class="col-2 col-md-8" style="position: relative; font-size: 1.5rem">
-    <a v-bind:href="'#lp'+id+'-options'" data-toggle="collapse" v-if="local">
-      <i class="text-primary fas fa-tools" style="position: absolute; bottom: 1rem; left: 1rem;"></i>
-    </a>
-  </div> -->
-</div>
-<!-- collapsed section -->
-<!-- <div class="row mt-4 mb-0 collapse" v-bind:id="'lp'+id+'-options'" v-if="local">
-  <div class="col-12 col-md-4 d-none d-md-block">Einstellungen</div>
-  <div class="col-4 col-md-2">Modus</div>
-  <div class="col-8 col-md-4" style="margin-top: -0.2rem">
-    <mode class="btn-group-sm v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
-  </div>
-</div> -->
-
-<!-- responsive mode border -->
-<div class="row border-bottom d-none d-md-block"></div>
-
-<div class="row">
-  <div class="col-12 col-md-4 mt-3">
-    <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
-    <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
-      <div class="progress-bar" role="progressbar" v-if="!state.soc"
-        v-bind:class="{
-          'progress-bar-striped': state.charging,
-          'progress-bar-animated': state.charging,
-          'bg-primary': state.connected,
-          'bg-light': !(state.connected || state.charging),
-          'text-secondary': !(state.connected || state.charging),
-        }"
-        v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}</div>
-      <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9"
-        v-bind:class="{
-          'progress-bar-striped': state.charging,
-          'progress-bar-animated': state.charging,
-          'bg-primary': !state.charging && state.connected,
-        }"
-        v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
-      <div class="progress-bar" role="progressbar" v-else
-        v-bind:class="{
-          'progress-bar-striped': state.charging,
-          'progress-bar-animated': state.charging,
-          'bg-primary': !state.charging && state.connected,
-        }"
-        v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
+  <div class="row">
+    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+    </div>
+    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
     </div>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="row mt-3 mt-md-5">
+    <div class="col-12 col-md-4 d-flex align-items-end">
+      <span class="h1 align-bottom d-inline">{{state.title||"Ladepunkt"}}</span>
+    </div>
+
+    <div class="col-12 col-md-8" v-if="local">
+      <loadpoint-details v-bind:state="state"></loadpoint-details>
+    </div>
+  </div>
+
+  <!-- responsive mode border -->
+  <div class="row border-bottom d-none d-md-block"></div>
+
+  <div class="row">
+    <div class="col-12 col-md-4 mt-3">
+      <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
+      <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
+        <div class="progress-bar" role="progressbar" v-if="!state.soc"
+          v-bind:class="{
+            'progress-bar-striped': state.charging,
+            'progress-bar-animated': state.charging,
+            'bg-primary': state.connected,
+            'bg-light': !(state.connected || state.charging),
+            'text-secondary': !(state.connected || state.charging),
+          }"
+          v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}</div>
+        <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9"
+          v-bind:class="{
+            'progress-bar-striped': state.charging,
+            'progress-bar-animated': state.charging,
+            'bg-primary': !state.charging && state.connected,
+          }"
+          v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
+        <div class="progress-bar" role="progressbar" v-else
+          v-bind:class="{
+            'progress-bar-striped': state.charging,
+            'progress-bar-animated': state.charging,
+            'bg-primary': !state.charging && state.connected,
+          }"
+          v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
+      </div>
+    </div>
+
+   <div class="col-12 col-md-8" v-if="!local">
+     <loadpoint-details v-bind:state="state"></loadpoint-details>
+   </div>
+
+    <div class="col-12 col-md-4 mt-3" v-if="local">
+      <div class="mb-2">Modus</div>
+      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
+    </div>
+    <div class="col-12 col-md-4 mt-3" v-if="local">
+      <div class="mb-2">Ladeziel</div>
+      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC" class="btn-group-sm"></soc>
+    </div>
+  </div>
+</div>
+</script>
+
+<script type="text/x-template" id="loadpoint-details-template">
+<div class="row">
+  <div class="col-6 col-md-3 mt-3">
     <div class="mb-2">Leistung</div>
     <h2>
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-3 mt-3">
     <div class="mb-2">Geladen</div>
     <h2>
       {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-3 mt-3">
     <div class="mb-2">Dauer</div>
     <h2>
       {{fmtShortDuration(state.chargeDuration)}} <small
@@ -282,7 +278,7 @@
     </h2>
   </div>
 
-  <div class="col-6 col-md-2 mt-3">
+  <div class="col-6 col-md-3 mt-3">
     <div class="mb-2">Restzeit</div>
     <h2>
       {{fmtShortDuration(state.chargeEstimate)}} <small
@@ -290,6 +286,49 @@
     </h2>
   </div>
 </div>
+</script>
+
+<script type="text/x-template" id="mode-template">
+<div class="btn-group btn-group-toggle bg-white shadow-none">
+  <label class="btn btn-outline-primary disabled caption font-weight-bold">
+    Modus
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:mode=='off'}">
+    <input type="radio" value="off" v-on:click="targetMode('off')">Stop
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:mode=='now'}">
+    <input type="radio" value="now" v-on:click="targetMode('now')">Sofort
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:mode=='minpv'}" v-if="pv">
+    <input type="radio" value="minpv" v-on:click="targetMode('minpv')">
+    <span class="d-inline d-sm-none">Min + PV</span>
+    <span class="d-none d-sm-inline">Minimum + PV</span>
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:mode=='pv'}" v-if="pv">
+    <input type="radio" value="pv" v-on:click="targetMode('pv')">
+    <span class="d-inline d-sm-none">PV</span>
+    <span class="d-none d-sm-inline">Nur PV</span>
+  </label>
+</div>
+</script>
+
+<script type="text/x-template" id="soc-template">
+<div class="btn-group btn-group-toggle bg-white shadow-none">
+  <label class="btn btn-outline-primary disabled caption font-weight-bold">
+    Ladeziel
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:false}">
+    <input type="radio" value="30" v-on:click="targetSoC('off')">30%
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:false}">
+    <input type="radio" value="50" v-on:click="targetSoC('now')">50%
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:false}">
+    <input type="radio" value="80" v-on:click="targetSoC('minpv')">80%
+  </label>
+  <label class="btn btn-outline-primary" v-bind:class="{active:false}">
+    <input type="radio" value="100" v-on:click="targetSoC('pv')">Max
+  </label>
 </div>
 </script>
 

@@ -201,6 +201,11 @@ Vue.component("site", {
       state: store.state // global state
     };
   },
+  computed: {
+    localSettings: function() {
+      return this.state.loadpoints.length != 1
+    }
+  },
   methods: {
     connect: function() {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
@@ -226,6 +231,12 @@ Vue.component("site", {
   created: function() {
     this.connect();
   }
+});
+
+Vue.component("site-details", {
+  template: "#site-details-template",
+  props: ["state"],
+  mixins: [formatter]
 });
 
 Vue.component("loadpoint", {
@@ -265,11 +276,27 @@ Vue.component("loadpoint", {
   }
 });
 
+Vue.component("loadpoint-details", {
+  template: "#loadpoint-details-template",
+  props: ["state"],
+  mixins: [formatter]
+});
+
 Vue.component("mode", {
   template: "#mode-template",
   props: ["mode", "pv"],
   methods: {
     targetMode: function (mode) {
+      this.$emit("updated", mode)
+    }
+  },
+});
+
+Vue.component("soc", {
+  template: "#soc-template",
+  props: ["soc"],
+  methods: {
+    targetSoC: function (mode) {
       this.$emit("updated", mode)
     }
   },
