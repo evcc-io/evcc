@@ -287,7 +287,7 @@ Vue.component("loadpoint-details", {
 
 Vue.component("mode", {
   template: "#mode-template",
-  props: ["mode", "pv"],
+  props: ["mode", "pv", "caption"],
   methods: {
     targetMode: function (mode) {
       this.$emit("updated", mode)
@@ -297,7 +297,7 @@ Vue.component("mode", {
 
 Vue.component("soc", {
   template: "#soc-template",
-  props: ["soc"],
+  props: ["soc", "caption"],
   methods: {
     targetSoC: function (mode) {
       this.$emit("updated", mode)
