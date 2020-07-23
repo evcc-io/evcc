@@ -244,7 +244,7 @@ func (site *Site) updateMeter(name string, meter api.Meter, power *float64) erro
 
 	*power = value // update value if no error
 
-	site.log.DEBUG.Printf("%s power: %.1fW", name, *power)
+	site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
 	site.publish(name+"Power", *power)
 
 	return nil

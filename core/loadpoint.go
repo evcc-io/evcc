@@ -421,7 +421,7 @@ func (lp *LoadPoint) updateChargeMeter() {
 		}
 
 		lp.chargePower = value // update value if no error
-		lp.log.DEBUG.Printf("charge power: %.1fW", value)
+		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
 		return nil
@@ -474,7 +474,7 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
-			lp.log.DEBUG.Printf("vehicle soc: %.1f%%", f)
+			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", f)
 			lp.publish("socCharge", f)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
