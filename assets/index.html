@@ -137,12 +137,12 @@
     <div class="col-12 col-md-4 d-flex align-items-end">
       <p class="h1">{{state.title||"Home"}}</p>
     </div>
-    <div class="col-12 col-md-8 mt-3" v-if="localSettings">
+    <div class="col-12 col-md-8 mt-3" v-if="multi">
       <site-details v-bind:state="state"></site-details>
     </div>
   </div>
 
-  <div class="row" v-if="!localSettings">
+  <div class="row" v-if="!multi">
     <div class="d-none d-md-block col-md-4"></div>
     <div class="col-12 col-md-8">
       <site-details v-bind:state="state"></site-details>
@@ -150,7 +150,7 @@
   </div>
 
   <loadpoint v-for="(loadpoint,id) in state.loadpoints"
-    v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :local="localSettings">
+    v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :multi="multi">
   </loadpoint>
 </div>
 </script>
@@ -188,10 +188,10 @@
 <script type="text/x-template" id="loadpoint-template">
 <div>
   <div class="row">
-    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!multi">
       <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
-    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!local">
+    <div class="d-block col-12 col-md-6 text-center pt-4 pb-4 mt-3 mt-md-5 mb-0 bg-light" v-if="!multi">
       <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
     </div>
   </div>
@@ -201,7 +201,7 @@
       <span class="h1 align-bottom d-inline">{{state.title||"Ladepunkt"}}</span>
     </div>
 
-    <div class="col-12 col-md-8" v-if="local">
+    <div class="col-12 col-md-8" v-if="multi">
       <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
   </div>

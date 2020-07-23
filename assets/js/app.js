@@ -202,8 +202,8 @@ Vue.component("site", {
     };
   },
   computed: {
-    localSettings: function() {
-      return this.state.loadpoints.length != 1
+    multi: function() {
+      return this.state.loadpoints.length > 1
     }
   },
   methods: {
@@ -241,7 +241,7 @@ Vue.component("site-details", {
 
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
-  props: ["state", "id", "pv", "local"],
+  props: ["state", "id", "pv", "multi"],
   mixins: [formatter],
   data: function() {
     return {
@@ -260,13 +260,16 @@ Vue.component("loadpoint", {
     },
   },
   methods: {
+    api: function (func) {
+      return "lp/" + this.id + "/" + func;
+    },
     targetMode: function (mode) {
-      axios.post('lp/' + this.id + '/mode/' + mode).then(function (response) {
+      axios.post(this.api("mode") + "/" + mode).then(function (response) {
         this.state.mode = response.data.mode;
       }.bind(this)).catch(toasts.error);
     },
     targetSoC: function (targetSoC) {
-      axios.post('lp/' + this.id + '/soc/' + targetSoC).then(function (response) {
+      axios.post(this.api("soc") + "/" + targetSoC).then(function (response) {
         this.state.targetSoC = response.data.targetSoC;
       }.bind(this)).catch(toasts.error);
     },
