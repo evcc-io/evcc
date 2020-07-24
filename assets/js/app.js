@@ -302,7 +302,15 @@ Vue.component("mode", {
 
 Vue.component("soc", {
   template: "#soc-template",
-  props: ["soc", "caption"],
+  props: ["soc", "caption", "levels"],
+  computed: {
+    levelsOrDefault: function() {
+      if (this.levels == null || this.levels.length == 0) {
+        return [30, 50, 80, 100];
+      }
+      return this.levels;
+    }
+  },
   methods: {
     targetSoC: function (mode) {
       this.$emit("updated", mode)

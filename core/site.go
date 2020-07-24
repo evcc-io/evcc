@@ -114,6 +114,7 @@ type LoadpointConfiguration struct {
 	SoC         bool   `json:"soc"`
 	SoCCapacity int64  `json:"socCapacity"`
 	SoCTitle    string `json:"socTitle"`
+	SoCLevels   []int  `json:"socLevels"`
 }
 
 func (lp *LoadPoint) hasChargeMeter() bool {
@@ -149,6 +150,7 @@ func (site *Site) Configuration() SiteConfiguration {
 			lpc.SoC = true
 			lpc.SoCCapacity = lp.vehicle.Capacity()
 			lpc.SoCTitle = lp.vehicle.Title()
+			lpc.SoCLevels = lp.SoC.Levels
 		}
 
 		c.LoadPoints = append(c.LoadPoints, lpc)

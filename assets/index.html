@@ -208,7 +208,7 @@
           <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
         </div>
         <div class="col-12 mt-3">
-          <soc class="w-100" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+          <soc class="w-100" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
         </div>
       </div>
     </div>
@@ -219,7 +219,7 @@
       <mode v-bind:mode="state.mode" :pv="pv" :caption="true" v-on:updated="targetMode"></mode>
     </div>
     <div class="col-md-6 mt-3">
-      <soc v-bind:soc="state.targetSoC" :caption="true" v-on:updated="targetSoC"></soc>
+      <soc v-bind:soc="state.targetSoC" :levels="state.socLevels" :caption="true" v-on:updated="targetSoC"></soc>
     </div>
   </div>
 
@@ -228,7 +228,7 @@
       <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
     <div class="col-12 mt-3">
-      <soc class="w-100" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+      <soc class="w-100" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
     </div>
   </div>
 
@@ -251,7 +251,7 @@
     </div>
     <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
       <div class="mb-2">Ladeziel</div>
-      <soc class="btn-group-sm" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+      <soc class="btn-group-sm" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
     </div>
 
     <div class="col-md-8 d-none d-md-inline-block" v-if="!multi">
@@ -327,17 +327,9 @@
   <label class="btn btn-outline-primary disabled caption font-weight-bold" v-if="caption">
     Ladeziel
   </label>
-  <label class="btn btn-outline-primary" v-bind:class="{active:soc==30,first:!caption}">
-    <input type="radio" value="30" v-on:click="targetSoC(30)">30%
-  </label>
-  <label class="btn btn-outline-primary" v-bind:class="{active:soc==50}">
-    <input type="radio" value="50" v-on:click="targetSoC(50)">50%
-  </label>
-  <label class="btn btn-outline-primary" v-bind:class="{active:soc==80}">
-    <input type="radio" value="80" v-on:click="targetSoC(80)">80%
-  </label>
-  <label class="btn btn-outline-primary" v-bind:class="{active:soc==100}">
-    <input type="radio" value="100" v-on:click="targetSoC(100)">Max
+  <label class="btn btn-outline-primary" v-for="(level,id) in levelsOrDefault" v-bind:level="level" :id="id"
+    :class="{active:soc==level,first:!caption&&id==0}">
+    <input type="radio" v-bind:value="level" v-on:click="targetSoC(level)">{{level}}%
   </label>
 </div>
 </script>
