@@ -214,12 +214,21 @@
   </div>
 
   <div class="row">
-    <div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5 align-items-end">
-      <span class="h1 align-bottom d-inline">{{state.title||"Ladepunkt"}}</span>
+    <div class="col-12 col-md-4 d-md-flex mt-3 mt-md-5 align-items-end" v-bind:class="{'d-none':!multi}">
+      <span class="h1 align-bottom">{{state.title||"Ladepunkt"}}</span>
     </div>
 
-    <div class="col-12 col-md-8 mt-3 mt-md-5" v-if="multi">
+    <div class="col-12 col-md-8 d-none d-md-inline-block mt-3 mt-md-5" v-if="multi">
       <loadpoint-details v-bind:state="state"></loadpoint-details>
+    </div>
+  </div>
+
+  <div class="row d-md-none mt-3 bg-light" v-if="multi">
+    <div class="col-12 py-3 text-center">
+      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+    </div>
+    <div class="col-12 py-3 pt-0 text-center">
+      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
     </div>
   </div>
 
@@ -228,45 +237,24 @@
 
   <div class="row">
     <div class="col-12 col-md-4 mt-3">
-      <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
-      <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
-        <div class="progress-bar" role="progressbar" v-if="!state.soc"
-          v-bind:class="{
-            'progress-bar-striped': state.charging,
-            'progress-bar-animated': state.charging,
-            'bg-primary': state.connected,
-            'bg-light': !(state.connected || state.charging),
-            'text-secondary': !(state.connected || state.charging),
-          }"
-          v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}</div>
-        <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9"
-          v-bind:class="{
-            'progress-bar-striped': state.charging,
-            'progress-bar-animated': state.charging,
-            'bg-primary': !state.charging && state.connected,
-          }"
-          v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
-        <div class="progress-bar" role="progressbar" v-else
-          v-bind:class="{
-            'progress-bar-striped': state.charging,
-            'progress-bar-animated': state.charging,
-            'bg-primary': !state.charging && state.connected,
-          }"
-          v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
-      </div>
+      <vehicle v-bind:state="state"></vehicle>
     </div>
 
-   <div class="col-12 col-md-8" v-if="!multi">
-     <loadpoint-details v-bind:state="state"></loadpoint-details>
-   </div>
+    <div class="col-md-8 d-none d-md-inline-block" v-if="!multi">
+      <loadpoint-details v-bind:state="state"></loadpoint-details>
+    </div>
 
-    <div class="col-12 col-md-4 mt-3" v-if="multi">
+    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
       <div class="mb-2">Modus</div>
       <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
     </div>
-    <div class="col-12 col-md-4 mt-3" v-if="multi">
+    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
       <div class="mb-2">Ladeziel</div>
       <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC" class="btn-group-sm"></soc>
+    </div>
+
+    <div class="col-12 d-md-none">
+      <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
   </div>
 </div>
@@ -346,6 +334,32 @@
   <label class="btn btn-outline-primary" v-bind:class="{active:soc==100}">
     <input type="radio" value="100" v-on:click="targetSoC('pv')">Max
   </label>
+</div>
+</script>
+
+<script type="text/x-template" id="vehicle-template">
+<div>
+  <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
+  <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
+    <div class="progress-bar" role="progressbar" v-if="!state.soc" v-bind:class="{
+        'progress-bar-striped': state.charging,
+        'progress-bar-animated': state.charging,
+        'bg-primary': state.connected,
+        'bg-light': !(state.connected || state.charging),
+        'text-secondary': !(state.connected || state.charging),
+      }" v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}
+    </div>
+    <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9" v-bind:class="{
+        'progress-bar-striped': state.charging,
+        'progress-bar-animated': state.charging,
+        'bg-primary': !state.charging && state.connected,
+      }" v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
+    <div class="progress-bar" role="progressbar" v-else v-bind:class="{
+        'progress-bar-striped': state.charging,
+        'progress-bar-animated': state.charging,
+        'bg-primary': !state.charging && state.connected,
+      }" v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
+  </div>
 </div>
 </script>
 

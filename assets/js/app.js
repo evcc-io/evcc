@@ -285,6 +285,11 @@ Vue.component("loadpoint-details", {
   mixins: [formatter]
 });
 
+Vue.component("vehicle", {
+  template: "#vehicle-template",
+  props: ["state"]
+});
+
 Vue.component("mode", {
   template: "#mode-template",
   props: ["mode", "pv", "caption"],
