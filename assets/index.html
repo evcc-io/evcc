@@ -138,7 +138,7 @@
 <script type="text/x-template" id="site-template">
 <div>
   <div class="row">
-    <div class="col-12 col-md-4 d-none d-md-flex mt-md-4 align-items-end">
+    <div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
       <p class="h1">{{state.title||"Home"}}</p>
     </div>
     <div class="col-12 col-md-8 mt-md-4" v-if="multi">
@@ -149,7 +149,7 @@
   <div class="row d-none d-md-flex border-bottom"></div>
 
   <div class="row" v-if="!multi">
-    <div class="d-none d-md-block col-md-4"></div>
+    <div class="d-none d-md-inline-block col-md-4"></div>
     <div class="col-12 col-md-8">
       <site-details v-bind:state="state"></site-details>
     </div>
@@ -193,64 +193,69 @@
 
 <script type="text/x-template" id="loadpoint-template">
 <div>
-  <!-- full-size -->
-  <div class="row d-none d-md-flex mt-5 bg-light" v-if="!multi">
-    <div class="col-12 col-md-6 py-3 text-center">
-      <mode v-bind:mode="state.mode" :pv="pv" caption="true" v-on:updated="targetMode"></mode>
-    </div>
-    <div class="col-12 col-md-6 py-3 pt-0 text-center">
-      <soc v-bind:soc="state.targetSoC" caption="true" v-on:updated="targetSoC"></soc>
-    </div>
-  </div>
-
-  <!-- responsive -->
-  <div class="row d-md-none mt-3 bg-light" v-if="!multi">
-    <div class="col-12 col-md-6 py-3 text-center">
-      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
-    </div>
-    <div class="col-12 col-md-6 py-3 pt-0 text-center">
-      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-12 col-md-4 d-md-flex mt-3 mt-md-5 align-items-end" v-bind:class="{'d-none':!multi}">
+  <div class="row" v-if="multi">
+    <div class="col-12 col-md-4 d-md-flex mt-3 mt-md-5 align-items-end">
       <span class="h1 align-bottom">{{state.title||"Ladepunkt"}}</span>
     </div>
 
-    <div class="col-12 col-md-8 d-none d-md-inline-block mt-3 mt-md-5" v-if="multi">
+    <div class="col-12 col-md-8 d-none d-md-inline-block mt-3 mt-md-5">
       <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
+
+    <div class="col-12 d-md-none">
+      <div class="row mt-3 pb-3 bg-light">
+        <div class="col-12 mt-3">
+          <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+        </div>
+        <div class="col-12 mt-3">
+          <soc class="w-100" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row d-md-none mt-3 bg-light" v-if="multi">
-    <div class="col-12 py-3 text-center">
-      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+  <div class="row d-none d-md-flex mt-5 py-3 pb-4 text-center bg-light" v-if="!multi">
+    <div class="col-md-6 mt-3">
+      <mode v-bind:mode="state.mode" :pv="pv" :caption="true" v-on:updated="targetMode"></mode>
     </div>
-    <div class="col-12 py-3 pt-0 text-center">
-      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+    <div class="col-md-6 mt-3">
+      <soc v-bind:soc="state.targetSoC" :caption="true" v-on:updated="targetSoC"></soc>
     </div>
   </div>
 
-  <!-- responsive -->
+  <div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
+    <div class="col-12 mt-3">
+      <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
+    </div>
+    <div class="col-12 mt-3">
+      <soc class="w-100" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+    </div>
+  </div>
+
+  <div class="row" v-if="!multi">
+    <div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5 align-items-end">
+      <span class="h1 align-bottom">{{state.title||"Ladepunkt"}}</span>
+    </div>
+  </div>
+
   <div class="row border-bottom d-none d-md-block"></div>
 
   <div class="row">
-    <div class="col-12 col-md-4 mt-3">
+    <div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
       <vehicle v-bind:state="state"></vehicle>
-    </div>
-
-    <div class="col-md-8 d-none d-md-inline-block" v-if="!multi">
-      <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
 
     <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
       <div class="mb-2">Modus</div>
-      <mode v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode" class="btn-group-sm"></mode>
+      <mode class="btn-group-sm" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
     <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
       <div class="mb-2">Ladeziel</div>
-      <soc v-bind:soc="state.targetSoC" v-on:updated="targetSoC" class="btn-group-sm"></soc>
+      <soc class="btn-group-sm" v-bind:soc="state.targetSoC" v-on:updated="targetSoC"></soc>
+    </div>
+
+    <div class="col-md-8 d-none d-md-inline-block" v-if="!multi">
+      <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
 
     <div class="col-12 d-md-none">
@@ -323,16 +328,16 @@
     Ladeziel
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:soc==30,first:!caption}">
-    <input type="radio" value="30" v-on:click="targetSoC('off')">30%
+    <input type="radio" value="30" v-on:click="targetSoC(30)">30%
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:soc==50}">
-    <input type="radio" value="50" v-on:click="targetSoC('now')">50%
+    <input type="radio" value="50" v-on:click="targetSoC(50)">50%
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:soc==80}">
-    <input type="radio" value="80" v-on:click="targetSoC('minpv')">80%
+    <input type="radio" value="80" v-on:click="targetSoC(80)">80%
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:soc==100}">
-    <input type="radio" value="100" v-on:click="targetSoC('pv')">Max
+    <input type="radio" value="100" v-on:click="targetSoC(100)">Max
   </label>
 </div>
 </script>

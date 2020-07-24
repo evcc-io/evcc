@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -33,6 +34,10 @@ type chargeModeJSON struct {
 	Mode api.ChargeMode `json:"mode"`
 }
 
+type targetSoCJSON struct {
+	TargetSoC int `json:"targetSoC"`
+}
+
 type route struct {
 	Methods     []string
 	Pattern     string
@@ -47,8 +52,10 @@ type site interface {
 
 // mode is the minimal interface for accessing loadpoint methods
 type loadpoint interface {
-	SetMode(api.ChargeMode)
 	GetMode() api.ChargeMode
+	SetMode(api.ChargeMode)
+	GetTargetSoC() int
+	SetTargetSoC(targetSoC int)
 }
 
 // routeLogger traces matched routes including their executing time
@@ -158,6 +165,34 @@ func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
 	}
 }
 
+// CurrentTargetSoCHandler returns current target soc
+func CurrentTargetSoCHandler(loadpoint loadpoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
+		jsonResponse(w, r, res)
+	}
+}
+
+// TargetSoCHandler updates target soc
+func TargetSoCHandler(loadpoint loadpoint) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		socS, ok := vars["soc"]
+		soc, err := strconv.ParseInt(socS, 10, 32)
+
+		if !ok || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		loadpoint.SetTargetSoC(int(soc))
+
+		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
+		jsonResponse(w, r, res)
+	}
+}
+
 // SocketHandler attaches websocket handler to uri
 func SocketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -168,11 +203,13 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
 	var routes = map[string]route{
-		"health":  {[]string{"GET"}, "/health", HealthHandler()},
-		"config":  {[]string{"GET"}, "/config", ConfigHandler(site)},
-		"state":   {[]string{"GET"}, "/state", StateHandler(cache)},
-		"getmode": {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site.LoadPoints()[0])},
-		"setmode": {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site.LoadPoints()[0])},
+		"health":       {[]string{"GET"}, "/health", HealthHandler()},
+		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
+		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
+		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site.LoadPoints()[0])},
+		"setmode":      {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site.LoadPoints()[0])},
+		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site.LoadPoints()[0])},
+		"settargetsoc": {[]string{"PUT", "POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site.LoadPoints()[0])},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -202,10 +239,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 
 	// site api
 	for _, r := range routes {
-		api.
-			Methods(r.Methods...).
-			Path(r.Pattern).
-			Handler(r.HandlerFunc) // routeLogger
+		api.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
 	}
 
 	// loadpoint api
@@ -213,16 +247,16 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		subAPI := api.PathPrefix(fmt.Sprintf("/lp/%d", id)).Subrouter()
 
 		r := routes["getmode"]
-		subAPI.
-			Methods(r.Methods...).
-			Path(r.Pattern).
-			Handler(CurrentChargeModeHandler(lp)) // routeLogger
+		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(CurrentChargeModeHandler(lp))
 
 		r = routes["setmode"]
-		subAPI.
-			Methods(r.Methods...).
-			Path(r.Pattern).
-			Handler(ChargeModeHandler(lp)) // routeLogger
+		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(ChargeModeHandler(lp))
+
+		r = routes["gettargetsoc"]
+		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(CurrentTargetSoCHandler(lp))
+
+		r = routes["settargetsoc"]
+		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(TargetSoCHandler(lp))
 	}
 
 	srv := &http.Server{

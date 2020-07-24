@@ -268,8 +268,8 @@ Vue.component("loadpoint", {
         this.state.mode = response.data.mode;
       }.bind(this)).catch(toasts.error);
     },
-    targetSoC: function (targetSoC) {
-      axios.post(this.api("soc") + "/" + targetSoC).then(function (response) {
+    targetSoC: function (soc) {
+      axios.post(this.api("targetsoc") + "/" + soc).then(function (response) {
         this.state.targetSoC = response.data.targetSoC;
       }.bind(this)).catch(toasts.error);
     },
