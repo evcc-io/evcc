@@ -194,14 +194,10 @@ Vue.component('version', {
   }
 });
 
-Vue.component("site", {
-  template: "#site-template",
+Vue.component('site', {
+  template: '#site-template',
+  props: ['state'],
   mixins: [formatter],
-  data: function() {
-    return {
-      state: store.state // global state
-    };
-  },
   computed: {
     multi: function() {
       return this.state.loadpoints.length > 1
@@ -224,7 +220,7 @@ Vue.component("site", {
           store.update(msg);
         }
         catch (e) {
-          console.error(e, evt.data)
+          toasts.error(e, evt.data)
         }
       };
     }
@@ -328,8 +324,18 @@ Vue.component("soc", {
 // Routing
 //
 
-const main = Vue.component("main", {
-  template: "#main-template",
+const main = Vue.component('main', {
+  template: '#main-template',
+  data: function() {
+    return {
+      state: store.state  // global state
+    };
+  },
+  computed: {
+    configured: function() {
+      return this.state.loadpoints.length >= 1
+    }
+  }
 });
 
 const config = Vue.component("config", {

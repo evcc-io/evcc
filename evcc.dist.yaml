@@ -230,6 +230,9 @@ site:
 
 loadpoints:
 - title: Ladepunkt # ui display name
+  charger: wallbe # charger
+  meters:
+    charge: charge # charge meter
   vehicle: audi
   mode: pv
   soc:
@@ -242,11 +245,8 @@ loadpoints:
   onDisconnect:
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge fully
-  charger: wallbe # charger
   phases: 3 # ev phases (default 3)
   sensitivity: 1 # current raise/lower step size (default 10A)
-  meters:
-    charge: charge # charge meter
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
     threshold: 0 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
