@@ -14,6 +14,11 @@ const (
 	ModePV    ChargeMode = "pv"
 )
 
+// String implements Stringer
+func (c ChargeMode) String() string {
+	return string(c)
+}
+
 // ChargeStatus is the EV's charging status from A to F
 type ChargeStatus string
 
@@ -26,6 +31,11 @@ const (
 	StatusE    ChargeStatus = "E" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Kurzschluss)
 	StatusF    ChargeStatus = "F" // Fzg. angeschlossen:   ja    Laden aktiv: nein    - Fehler (Ausfall Wallbox)
 )
+
+// String implements Stringer
+func (c ChargeStatus) String() string {
+	return string(c)
+}
 
 // Meter is able to provide current power in W
 type Meter interface {

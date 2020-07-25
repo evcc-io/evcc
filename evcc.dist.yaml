@@ -231,8 +231,17 @@ site:
 loadpoints:
 - title: Ladepunkt # ui display name
   vehicle: audi
+  mode: pv
   soc:
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
+    levels: # target soc levels for UI
+    - 30
+    - 50
+    - 80
+    - 100
+  onDisconnect:
+    mode: pv # switch back to pv mode
+    targetSoC: 100 # charge fully
   charger: wallbe # charger
   phases: 3 # ev phases (default 3)
   sensitivity: 1 # current raise/lower step size (default 10A)

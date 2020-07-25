@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -38,9 +39,14 @@ type LoadPoint struct {
 	bus      evbus.Bus         // event bus
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
+	lpChan   chan<- *LoadPoint // update requests
 	log      *util.Logger
 
 	// exposed public configuration
+	sync.Mutex                // guard status
+	Mode       api.ChargeMode `mapstructure:"mode"`      // Charge mode, guarded by mutex
+	targetSoC  int            `mapstructure:"targetSoC"` // Target SoC, guarded by mutex
+
 	Title      string `mapstructure:"title"`   // UI title
 	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
 	ChargerRef string `mapstructure:"charger"` // Charger reference
@@ -49,7 +55,12 @@ type LoadPoint struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
 	SoC struct {
-		AlwaysUpdate bool `mapstructure:"alwaysUpdate"`
+		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
+		Levels       []int `mapstructure:"levels"`
+	}
+	OnDisconnect struct {
+		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
+		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
 	}
 	Enable, Disable ThresholdConfig
 
@@ -69,6 +80,7 @@ type LoadPoint struct {
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
 
+	socCharge          float64       // Vehicle SoC
 	chargedEnergy      float64       // Charged energy while connected
 	deltaChargedEnergy float64       // Charged energy for single cycle
 	chargeDuration     time.Duration // Charge duration
@@ -78,6 +90,16 @@ type LoadPoint struct {
 func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
 	lp := NewLoadPoint(log)
 	util.DecodeOther(log, other, &lp)
+
+	// workaround mapstructure
+	if lp.Mode == "0" {
+		lp.Mode = api.ModeOff
+	}
+
+	lp.targetSoC = 100
+	if len(lp.SoC.Levels) > 0 {
+		lp.targetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
+	}
 
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
@@ -116,6 +138,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		log:    log,   // logger
 		clock:  clock, // mockable time
 		bus:    bus,   // event bus
+		Mode:   api.ModeOff,
 		Phases: 1,
 		status: api.StatusNone,
 		HandlerConfig: HandlerConfig{
@@ -127,6 +150,50 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
+}
+
+// GetMode returns loadpoint charge mode
+func (lp *LoadPoint) GetMode() api.ChargeMode {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.Mode
+}
+
+// SetMode sets loadpoint charge mode
+func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Printf("set charge mode: %s", string(mode))
+
+	// apply immediately
+	if lp.Mode != mode {
+		lp.Mode = mode
+		lp.publish("mode", mode)
+		lp.lpChan <- lp // request loadpoint update
+	}
+}
+
+// GetTargetSoC returns loadpoint charge targetSoC
+func (lp *LoadPoint) GetTargetSoC() int {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.targetSoC
+}
+
+// SetTargetSoC sets loadpoint charge targetSoC
+func (lp *LoadPoint) SetTargetSoC(targetSoC int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Println("set target soc:", targetSoC)
+
+	// apply immediately
+	if lp.targetSoC != targetSoC {
+		lp.targetSoC = targetSoC
+		lp.publish("targetSoC", targetSoC)
+		lp.lpChan <- lp // request loadpoint update
+	}
 }
 
 // configureChargerType ensures that chargeMeter, Rate and Timer can use charger capabilities
@@ -214,6 +281,14 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
 	lp.notify(evVehicleDisconnect)
+
+	// set default mode on disconnect
+	if lp.OnDisconnect.Mode != "" {
+		lp.SetMode(lp.OnDisconnect.Mode)
+	}
+	if lp.OnDisconnect.TargetSoC != 0 {
+		lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
+	}
 }
 
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
@@ -248,13 +323,20 @@ func (lp *LoadPoint) Name() string {
 }
 
 // Prepare loadpoint configuration by adding missing helper elements
-func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
-	lp.pushChan = pushChan
+func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event, lpChan chan<- *LoadPoint) {
 	lp.uiChan = uiChan
+	lp.pushChan = pushChan
+	lp.lpChan = lpChan
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
+
+	// publish initial values
+	lp.Lock()
+	lp.publish("mode", lp.Mode)
+	lp.publish("targetSoC", lp.targetSoC)
+	lp.Unlock()
 
 	// prepare charger status
 	lp.handler.Prepare()
@@ -292,7 +374,7 @@ func (lp *LoadPoint) updateChargeStatus() error {
 			}
 		}
 
-		// changed to A -  disconnected
+		// changed to A - disconnected
 		if status == api.StatusA {
 			lp.bus.Publish(evVehicleDisconnect)
 		}
@@ -474,8 +556,9 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
-			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", f)
-			lp.publish("socCharge", f)
+			lp.socCharge = f
+			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
+			lp.publish("socCharge", lp.socCharge)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
 		}
@@ -487,7 +570,10 @@ func (lp *LoadPoint) publishSoC() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) {
+func (lp *LoadPoint) Update(sitePower float64) {
+	mode := lp.GetMode()
+	lp.publish("mode", string(mode))
+
 	// read and publish meters first
 	lp.updateChargeMeter()
 
@@ -522,11 +608,14 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) {
 	var err error
 
 	// execute loading strategy
-	switch mode {
-	case api.ModeOff:
+	switch {
+	case lp.targetSoC > 0 && lp.vehicle != nil && lp.socCharge >= float64(lp.targetSoC):
+		err = lp.handler.Ramp(0)
+
+	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
 
-	case api.ModeNow:
+	case mode == api.ModeNow:
 		// ensure that new connections happen at min current
 		current := lp.MinCurrent
 		if lp.connected() {
@@ -534,7 +623,7 @@ func (lp *LoadPoint) Update(mode api.ChargeMode, sitePower float64) {
 		}
 		err = lp.handler.Ramp(current, true)
 
-	case api.ModeMinPV, api.ModePV:
+	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.maxCurrent(mode, sitePower)
 		if !lp.connected() {
 			// ensure minimum current when not connected

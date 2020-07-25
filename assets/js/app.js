@@ -186,32 +186,12 @@ Vue.component('version', {
   watch: {
     "state.availableVersion": function () {
       if (this.installed != "<<.Version>>" && // go template parsed?
+        this.installed != "0.0.1-alpha" && // make used?
         this.state.availableVersion != this.installed) {
         $(this.$refs.bar).collapse("show");
       }
     }
   }
-});
-
-Vue.component('modeswitch', {
-  template: '#mode-template',
-  data: function() {
-    return {
-      state: store.state // global state
-    };
-  },
-  computed: {
-    mode: {
-      get: function() {
-        return this.state.mode;
-      },
-      set: function(mode) {
-        axios.post('mode/' + mode).then(function(response) {
-          this.state.mode = response.data.mode;
-        }.bind(this)).catch(toasts.error);
-      }
-    }
-  },
 });
 
 Vue.component("site", {
@@ -221,6 +201,11 @@ Vue.component("site", {
     return {
       state: store.state // global state
     };
+  },
+  computed: {
+    multi: function() {
+      return this.state.loadpoints.length > 1
+    }
   },
   methods: {
     connect: function() {
@@ -249,14 +234,25 @@ Vue.component("site", {
   }
 });
 
+Vue.component("site-details", {
+  template: "#site-details-template",
+  props: ["state"],
+  mixins: [formatter]
+});
+
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
-  props: { state: Object },
+  props: ["state", "id", "pv", "multi"],
   mixins: [formatter],
   data: function() {
     return {
       tickerHandle: null,
     };
+  },
+  computed: {
+    hasTargetSoC: function () {
+      return this.state.socLevels != null && this.state.socLevels.length > 0;
+    },
   },
   watch: {
     "state.chargeDuration": function() {
@@ -269,9 +265,63 @@ Vue.component("loadpoint", {
       }
     },
   },
+  methods: {
+    api: function (func) {
+      return "lp/" + this.id + "/" + func;
+    },
+    targetMode: function (mode) {
+      axios.post(this.api("mode") + "/" + mode).then(function (response) {
+        this.state.mode = response.data.mode;
+      }.bind(this)).catch(toasts.error);
+    },
+    targetSoC: function (soc) {
+      axios.post(this.api("targetsoc") + "/" + soc).then(function (response) {
+        this.state.targetSoC = response.data.targetSoC;
+      }.bind(this)).catch(toasts.error);
+    },
+  },
   destroyed: function() {
     window.clearInterval(this.tickerHandle);
   }
+});
+
+Vue.component("loadpoint-details", {
+  template: "#loadpoint-details-template",
+  props: ["state"],
+  mixins: [formatter]
+});
+
+Vue.component("vehicle", {
+  template: "#vehicle-template",
+  props: ["state"]
+});
+
+Vue.component("mode", {
+  template: "#mode-template",
+  props: ["mode", "pv", "caption"],
+  methods: {
+    targetMode: function (mode) {
+      this.$emit("updated", mode)
+    }
+  },
+});
+
+Vue.component("soc", {
+  template: "#soc-template",
+  props: ["soc", "caption", "levels"],
+  computed: {
+    levelsOrDefault: function() {
+      if (this.levels == null || this.levels.length == 0) {
+        return []; // disabled, or use 30, 50, 80, 100
+      }
+      return this.levels;
+    }
+  },
+  methods: {
+    targetSoC: function (mode) {
+      this.$emit("updated", mode)
+    }
+  },
 });
 
 //
