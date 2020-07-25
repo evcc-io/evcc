@@ -249,6 +249,11 @@ Vue.component("loadpoint", {
       tickerHandle: null,
     };
   },
+  computed: {
+    hasTargetSoC: function () {
+      return this.state.socLevels != null && this.levels.length > 0;
+    },
+  },
   watch: {
     "state.chargeDuration": function() {
       window.clearInterval(this.tickerHandle);
@@ -307,7 +312,7 @@ Vue.component("soc", {
   computed: {
     levelsOrDefault: function() {
       if (this.levels == null || this.levels.length == 0) {
-        return [30, 50, 80, 100];
+        return []; // disabled, or use 30, 50, 80, 100
       }
       return this.levels;
     }

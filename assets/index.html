@@ -207,7 +207,7 @@
         <div class="col-12 mt-3">
           <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
         </div>
-        <div class="col-12 mt-3">
+        <div class="col-12 mt-3" v-if="hasTargetSoC">
           <soc class="w-100" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
         </div>
       </div>
@@ -215,10 +215,10 @@
   </div>
 
   <div class="row d-none d-md-flex mt-5 py-3 pb-4 text-center bg-light" v-if="!multi">
-    <div class="col-md-6 mt-3">
+    <div class="mt-3" v-bind:class="{'col-md-6':hasTargetSoC,'col-md-12':!hasTargetSoC}">
       <mode v-bind:mode="state.mode" :pv="pv" :caption="true" v-on:updated="targetMode"></mode>
     </div>
-    <div class="col-md-6 mt-3">
+    <div class="col-md-6 mt-3" v-if="hasTargetSoC">
       <soc v-bind:soc="state.targetSoC" :levels="state.socLevels" :caption="true" v-on:updated="targetSoC"></soc>
     </div>
   </div>
@@ -227,7 +227,7 @@
     <div class="col-12 mt-3">
       <mode class="w-100" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
-    <div class="col-12 mt-3">
+    <div class="col-12 mt-3" v-if="hasTargetSoC">
       <soc class="w-100" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
     </div>
   </div>
@@ -249,7 +249,7 @@
       <div class="mb-2">Modus</div>
       <mode class="btn-group-sm" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
-    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
+    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi && hasTargetSoC">
       <div class="mb-2">Ladeziel</div>
       <soc class="btn-group-sm" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
     </div>
