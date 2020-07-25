@@ -201,7 +201,7 @@ loadpoints:
   <div class="row d-none d-md-flex border-bottom"></div>
 
   <div class="row" v-if="!multi">
-    <div class="d-none d-md-inline-block col-md-4"></div>
+    <div class="d-none d-md-block col-md-4"></div>
     <div class="col-12 col-md-8">
       <site-details v-bind:state="state"></site-details>
     </div>
@@ -232,7 +232,7 @@ loadpoints:
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="d-none d-md-flex col-md-3 mt-3" v-if="state.batteryMeter">
+  <div class="d-none d-inline-block col-md-3 mt-3" v-if="state.batteryMeter">
     <div class="mb-2">Batterie <i class="text-primary fas"
         v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
@@ -250,7 +250,7 @@ loadpoints:
       <span class="h1 align-bottom">{{state.title||"Ladepunkt"}}</span>
     </div>
 
-    <div class="col-12 col-md-8 d-none d-md-inline-block mt-3 mt-md-5">
+    <div class="col-12 col-md-8 d-none d-md-block mt-3 mt-md-5">
       <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
 
@@ -297,16 +297,16 @@ loadpoints:
       <vehicle v-bind:state="state"></vehicle>
     </div>
 
-    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi">
+    <div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
       <div class="mb-2">Modus</div>
       <mode class="btn-group-sm" v-bind:mode="state.mode" :pv="pv" v-on:updated="targetMode"></mode>
     </div>
-    <div class="col-12 col-md-4 d-none d-md-inline-block mt-3" v-if="multi && hasTargetSoC">
+    <div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi && hasTargetSoC">
       <div class="mb-2">Ladeziel</div>
       <soc class="btn-group-sm" v-bind:soc="state.targetSoC" :levels="state.socLevels" v-on:updated="targetSoC"></soc>
     </div>
 
-    <div class="col-md-8 d-none d-md-inline-block" v-if="!multi">
+    <div class="col-md-8 d-none d-md-block" v-if="!multi">
       <loadpoint-details v-bind:state="state"></loadpoint-details>
     </div>
 
