@@ -186,6 +186,7 @@ Vue.component('version', {
   watch: {
     "state.availableVersion": function () {
       if (this.installed != "<<.Version>>" && // go template parsed?
+        this.installed != "0.0.1-alpha" && // make used?
         this.state.availableVersion != this.installed) {
         $(this.$refs.bar).collapse("show");
       }
