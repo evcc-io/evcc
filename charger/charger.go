@@ -19,6 +19,17 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
 	util.DecodeOther(log, other, &cc)
 
+	for k, v := range map[string]string{
+		"status":     cc.Status.Type,
+		"enable":     cc.Enable.Type,
+		"enabled":    cc.Enabled.Type,
+		"maxcurrent": cc.MaxCurrent.Type,
+	} {
+		if v == "" {
+			log.FATAL.Fatalf("default charger config: %s required", k)
+		}
+	}
+
 	charger := NewConfigurable(
 		provider.NewStringGetterFromConfig(log, cc.Status),
 		provider.NewBoolGetterFromConfig(log, cc.Enabled),

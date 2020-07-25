@@ -39,6 +39,12 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 	}{}
 	util.DecodeOther(log, other, &cc)
 
+	for k, v := range map[string]string{"charge": cc.Charge.Type} {
+		if v == "" {
+			log.FATAL.Fatalf("default vehicle config: %s required", k)
+		}
+	}
+
 	getter := provider.NewFloatGetterFromConfig(log, cc.Charge)
 	if cc.Cache > 0 {
 		getter = provider.NewCached(log, getter, cc.Cache).FloatGetter()

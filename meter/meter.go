@@ -20,6 +20,12 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 	}{}
 	util.DecodeOther(log, other, &cc)
 
+	for k, v := range map[string]string{"power": cc.Power.Type} {
+		if v == "" {
+			log.FATAL.Fatalf("default meter config: %s required", k)
+		}
+	}
+
 	m := NewConfigurable(provider.NewFloatGetterFromConfig(log, cc.Power))
 
 	// decorate Meter with MeterEnergy

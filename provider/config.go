@@ -81,7 +81,7 @@ func NewFloatGetterFromConfig(log *util.Logger, config Config) (res func() (floa
 	case "modbus":
 		res = NewModbusFromConfig(log, config.Other).FloatGetter
 	default:
-		log.FATAL.Fatalf("invalid provider type %s", config.Type)
+		log.FATAL.Fatal("invalid plugin type:", config.Type)
 	}
 
 	return
@@ -106,7 +106,7 @@ func NewIntGetterFromConfig(log *util.Logger, config Config) (res func() (int64,
 	case "modbus":
 		res = NewModbusFromConfig(log, config.Other).IntGetter
 	default:
-		log.FATAL.Fatalf("invalid provider type %s", config.Type)
+		log.FATAL.Fatal("invalid plugin type:", config.Type)
 	}
 
 	return
@@ -131,7 +131,7 @@ func NewStringGetterFromConfig(log *util.Logger, config Config) (res func() (str
 	case "combined", "openwb":
 		res = openWBStatusFromConfig(log, config.Other)
 	default:
-		log.FATAL.Fatalf("invalid provider type %s", config.Type)
+		log.FATAL.Fatal("invalid plugin type:", config.Type)
 	}
 
 	return
@@ -154,7 +154,7 @@ func NewBoolGetterFromConfig(log *util.Logger, config Config) (res func() (bool,
 			res = NewCached(log, res, pc.Cache).BoolGetter()
 		}
 	default:
-		log.FATAL.Fatalf("invalid provider type %s", config.Type)
+		log.FATAL.Fatal("invalid plugin type:", config.Type)
 	}
 
 	return
