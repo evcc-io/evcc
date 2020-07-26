@@ -13,13 +13,21 @@ import (
 
 const publishTimeout = 2 * time.Second
 
+// MqttConfig is the public configuration
+type MqttConfig struct {
+	Broker   string
+	User     string
+	Password string
+	Topic    string
+}
+
 // MqttClient is a paho publisher
 type MqttClient struct {
 	log      *util.Logger
 	mux      sync.Mutex
 	Client   mqtt.Client
 	broker   string
-	qos      byte
+	Qos      byte
 	listener map[string]func(string)
 }
 
@@ -37,7 +45,7 @@ func NewMqttClient(
 	mc := &MqttClient{
 		log:      log,
 		broker:   broker,
-		qos:      qos,
+		Qos:      qos,
 		listener: make(map[string]func(string)),
 	}
 
@@ -62,12 +70,12 @@ func NewMqttClient(
 
 // ConnectionLostHandler logs cause of connection loss as warning
 func (m *MqttClient) ConnectionLostHandler(client mqtt.Client, reason error) {
-	m.log.WARN.Printf("%s connection lost: %v", m.broker, reason.Error())
+	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
 }
 
 // ConnectionHandler restores listeners
 func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
-	m.log.TRACE.Printf("%s connected", m.broker)
+	m.log.DEBUG.Printf("%s connected", m.broker)
 
 	m.mux.Lock()
 	defer m.mux.Unlock()
@@ -92,7 +100,7 @@ func (m *MqttClient) Listen(topic string, callback func(string)) {
 
 // listen attaches listener to topic
 func (m *MqttClient) listen(topic string, callback func(string)) {
-	token := m.Client.Subscribe(topic, m.qos, func(c mqtt.Client, msg mqtt.Message) {
+	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
 		s := string(msg.Payload())
 		if len(s) > 0 {
 			callback(s)
@@ -171,7 +179,7 @@ func (m *MqttClient) IntSetter(param, topic, message string) func(int64) error {
 		}
 
 		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.qos, false, payload)
+		token := m.Client.Publish(topic, m.Qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
 		}
@@ -189,7 +197,7 @@ func (m *MqttClient) BoolSetter(param, topic, message string) func(bool) error {
 		}
 
 		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.qos, false, payload)
+		token := m.Client.Publish(topic, m.Qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
 		}

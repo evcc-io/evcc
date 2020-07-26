@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -39,6 +40,21 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []*core.LoadPoint, i
 	go influx.Run(loadPoints, in)
 }
 
+func mqttClientID() string {
+	pid := rand.Int31()
+	return fmt.Sprintf("evcc-%d", pid)
+}
+
+// setup mqtt
+func configureMQTT(conf provider.MqttConfig, site *core.Site, in <-chan util.Param) {
+	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, mqttClientID(), 1)
+
+	if site != nil && conf.Topic != "" {
+		mqtt := &server.MQTT{Handler: provider.MQTT}
+		go mqtt.Run(conf.Topic, site, in)
+	}
+}
+
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
 	notificationHub := push.NewHub(conf.Events, cache)
@@ -51,11 +67,6 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	go notificationHub.Run(notificationChan)
 
 	return notificationChan
-}
-
-func clientID() string {
-	pid := rand.Int31()
-	return fmt.Sprintf("evcc-%d", pid)
 }
 
 func loadConfig(conf config) *core.Site {

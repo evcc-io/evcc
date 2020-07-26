@@ -48,9 +48,10 @@ type route struct {
 type site interface {
 	Configuration() core.SiteConfiguration
 	LoadPoints() []*core.LoadPoint
+	loadpoint
 }
 
-// mode is the minimal interface for accessing loadpoint methods
+// loadpoint is the minimal interface for accessing loadpoint methods
 type loadpoint interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
@@ -72,7 +73,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(links []MenuConfig, liveAssets bool) http.HandlerFunc {
+func indexHandler(links []MenuConfig, site site, liveAssets bool) http.HandlerFunc {
 	indexTemplate, err := FSString(liveAssets, "/index.html")
 	if err != nil {
 		log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
@@ -90,10 +91,11 @@ func indexHandler(links []MenuConfig, liveAssets bool) http.HandlerFunc {
 		// w.WriteHeader(http.StatusOK)
 
 		if err := t.Execute(w, map[string]interface{}{
-			"Version": Version,
-			"Commit":  Commit,
-			"Debug":   debug,
-			"Links":   links,
+			"Version":    Version,
+			"Commit":     Commit,
+			"Debug":      debug,
+			"Links":      links,
+			"Configured": len(site.LoadPoints()) > 0,
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
 		}
@@ -200,16 +202,21 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 	}
 }
 
+// applyRouteHandler applies route with given handler
+func applyRouteHandler(router *mux.Router, r route, handler http.HandlerFunc) {
+	router.Methods(r.Methods...).Path(r.Pattern).Handler(handler)
+}
+
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler()},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
-		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site.LoadPoints()[0])},
-		"setmode":      {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site.LoadPoints()[0])},
-		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site.LoadPoints()[0])},
-		"settargetsoc": {[]string{"PUT", "POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site.LoadPoints()[0])},
+		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
+		"setmode":      {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
+		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
+		"settargetsoc": {[]string{"PUT", "POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -221,7 +228,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	static.HandleFunc("/", indexHandler(links, liveAssets))
+	static.HandleFunc("/", indexHandler(links, site, liveAssets))
 	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
 		prefix := fmt.Sprintf("/%s/", folder)
 		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(liveAssets, prefix))))
@@ -244,19 +251,11 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 
 	// loadpoint api
 	for id, lp := range site.LoadPoints() {
-		subAPI := api.PathPrefix(fmt.Sprintf("/lp/%d", id)).Subrouter()
-
-		r := routes["getmode"]
-		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(CurrentChargeModeHandler(lp))
-
-		r = routes["setmode"]
-		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(ChargeModeHandler(lp))
-
-		r = routes["gettargetsoc"]
-		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(CurrentTargetSoCHandler(lp))
-
-		r = routes["settargetsoc"]
-		subAPI.Methods(r.Methods...).Path(r.Pattern).Handler(TargetSoCHandler(lp))
+		subAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
+		applyRouteHandler(subAPI, routes["getmode"], CurrentChargeModeHandler(lp))
+		applyRouteHandler(subAPI, routes["setmode"], ChargeModeHandler(lp))
+		applyRouteHandler(subAPI, routes["gettargetsoc"], CurrentTargetSoCHandler(lp))
+		applyRouteHandler(subAPI, routes["settargetsoc"], TargetSoCHandler(lp))
 	}
 
 	srv := &http.Server{

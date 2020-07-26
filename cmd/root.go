@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
@@ -125,20 +124,20 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
-	// setup mqtt
-	if viper.Get("mqtt") != nil {
-		provider.MQTT = provider.NewMqttClient(conf.Mqtt.Broker, conf.Mqtt.User, conf.Mqtt.Password, clientID(), 1)
-	}
-
-	// setup loadpoints
-	site := loadConfig(conf)
-
 	// start broadcasting values
 	tee := &Tee{}
 
 	// value cache
 	cache := util.NewCache()
 	go cache.Run(tee.Attach())
+
+	// setup loadpoints
+	site := loadConfig(conf)
+
+	// setup mqtt
+	if conf.Mqtt.Broker != "" {
+		configureMQTT(conf.Mqtt, site, tee.Attach())
+	}
 
 	// setup database
 	if conf.Influx.URL != "" {
