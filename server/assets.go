@@ -3651,7 +3651,7 @@ f6PtvwMAAP//970Y07RNAAA=
 	"/js/app.js": {
 		name:    "app.js",
 		local:   "../assets/js/app.js",
-		size:    8627,
+		size:    8634,
 		modtime: 1566640112,
 		compressed: `
 H4sIAAAAAAAC/7wZ247bxvVdX3EydiMqS1PaBEkKrWmjdVKkhVMDcZI+LBbIiByJE5EcYmYo7cIW0I/o
@@ -3687,17 +3687,17 @@ k27HjHPErX7oNULaWc0OQvjH2zf/DCi3ECfozWWuFGANaCeuxbhvAtAUBN6g2/YmG+FDQ3/ceW/6wRZp
 wXtFvImuqumSTbx6ohtnGKNUioXlMjVsmGnsSfe6yTjWzThX09i5jJtk2qTRBMfm7iI7H5iM8W9xwL+U
 w+xS1vcL+rl6bmW0F/oHnsep6O6QbT0fVo+Em59pTXmrXk2X8XEVMSp6LQ4iNVhGkQnW4Kn7tsisunPB
 ub4SJShJ/RrAJmtOlT1RKrhu5nfi3dW9Cd7lElSePlSGwZbEI1vyNH0A4ibz3bBbdWSR+W6gWl9EeBHC
-arTydgVpn+4v7BsTDWvA5yqE604+dkaJYb0YmHlQzXkhu07GbyNHs7RYtpNSTFUVfyNwb0506+2PKu7P
-iirulAe3ShXKVIMyL6THEKQq1/RIhRj9tRZwQSpUbsSZBwXEgRBqKLdF4mFjiMcsiQNVBilgVPQBRRya
-UVFHG8T6SGUa7iONmptPUYv+xMJYrR4ma+xH5NLpch28UIFHMH9cGT6IREapmGBa3VxmNUmTYnNMEI/P
-UKswqkoe8YKK191E9j0mYdzkKTJpPeaaMbYJgum2zslWqKKpDqiic2Yg+EZiH1hKVZtNjpnu7o3+zv37
-bbI4NzXUAdevtPD+PXSO664QDopnVX9u726wbMfS4MAe+6A0Dvbw1cqHr1c+/HlFNe/MC3PL5ubiXDuZ
-8Z/uCvdy85MqLXaU9tkm4zKHEIY7MJdTGx4e99eCx3X98RZHjW+Xqg1P3e0HpgD3uFjqyTLxyEUi7G4S
-zirOBo74yAr1i+Y4ZN1FP2o/2RKXDNERUmQbEY9lpOMJEen8TF5ZaakoMVNumu8y29HHVvOMDlKZ7zHT
-OjJoVf2D53YG8A4KbpM1dhUfGonWLqJO/uwOp+OIW4+w9GuZ7423CDJetOMFieSDjO+dvWprNaRRCENt
-S8b3PTakoF8rRR/k1UXNti9j48sOicrvKOtAR92+Y/5Ev+k106nvo8dMglvdVmn4zZ2uq9vfZgAo9Pf3
-PLJ/iaw8iFcpN2YNjNMvhuh/Vcoaq3kBz3N+eNG1MS+KwSOqkwgdETylRyWPPeFFgUv+zAWSzCXtIP8L
-AAD//4j75SKzIQAA
+arTydgVpn+4v7BsTDWvA5yqE604+dkaJYb0YmHlQzXkhu07GbyNHt9G9bAemmIor/kac3rjottwfVdwf
+GVXcqRJuoyqUqeZlXkiPIUhVtemtCjH62y3gnlSo3Igz7wqIAyHUUG6ZxMPGHo/ZFQeqDDLBqOgDijg0
+o6KONoj1kco03EcaNTefohb9iYWxWj1MltqPSKnT5XJ4oRCPYP64anwQiYxSMcG0urnMapImxeaYIB6f
+oVZhVAU94gXVsLuJJHxMwrgBVGTSesz1ZOwWBNPtoJMdUUVTjVBF58xA8I3EPrCUijebnDbd3Rv9nfsv
+3GSNbkqpA64fa+H9e+gc180hHNTQqgzd3t1g9Y6lwbk99kFpnO/hq5UPX698+POKSt+Zh+aWzc3F8XYy
+4z/dFe4B5ydVWmws7etNxmUOIQxXYS6nFj087m8Hj2v+42WO+t8uVRueutsPDAPujbHUk2XikftE2F0o
+nFWcDRzxkRXqh81xyLqLftR+siUuGaIjpMg2Ih7LSMcTItL5mbyy0lJRYqbcNN9ltqOPreYZHaQy32Om
+dWTQqvo/z+0M4B0U3CZr7Co+NBKtXUSd/NkdDskRtx5h6dcy3xtvEWS8aKcMEskHGd87e9XWakijEIba
+lozve2xIQb9Wij7Iq4uabV/GxpcdEpXfUdaBjrp9zvyJftOjplPfR4+ZBJe7rdLwmztdV7e/zQBQ6O/v
+eWT/Ell5EK9SbswaGKdfDNH/qpQ1VvMCnuf88KJrY14Ug7dUJxE6InhKb0see8KLAnf9mQskmUtaRf4X
+AAD//5n5oMK6IQAA
 `,
 	},
 
@@ -29395,12 +29395,6 @@ qyfj+jzDqd+3UHB3GYzx8OkQYWBg/k8AAAD//3J5YZY0KQEA
 		isDir: true,
 	},
 
-	"/img": {
-		name:  "img",
-		local: `../assets/img`,
-		isDir: true,
-	},
-
 	"/js": {
 		name:  "js",
 		local: `../assets/js`,
@@ -29419,7 +29413,6 @@ var _escDirs = map[string][]os.FileInfo{
 	"../assets": {
 		_escData["/css"],
 		_escData["/ico"],
-		_escData["/img"],
 		_escData["/index.html"],
 		_escData["/js"],
 		_escData["/webfonts"],
@@ -29445,8 +29438,6 @@ var _escDirs = map[string][]os.FileInfo{
 		_escData["/ico/safari-pinned-tab.svg"],
 		_escData["/ico/site.webmanifest"],
 	},
-
-	"../assets/img": {},
 
 	"../assets/js": {
 		_escData["/js/app.js"],

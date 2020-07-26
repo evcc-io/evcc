@@ -24,11 +24,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [Getting started](#getting-started)
 - [Installation](#installation)
 - [Configuration](#configuration)
+  - [Site](#site)
+  - [Loadpoint](#loadpoint)
   - [Charger](#charger)
   - [Meter](#meter)
   - [Vehicle](#vehicle)
-  - [Loadpoint](#loadpoint)
-  - [Considerations](#considerations)
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
@@ -36,7 +36,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [HTTP](#http-readwrite)
   - [Websocket](#websocket-read-only)
   - [Combined status](#combined-status-read-only)
-- [Developer information](#developer-information)
+- [API](#api)
 - [Background](#background)
 
 ## Getting started
@@ -79,6 +79,12 @@ EVCC can also be run using Docker. Here's and example with given config file and
 docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 ```
 
+If using Docker with a meter or charger that requires UDP like KEBA or SMA Energy Meter, make sure that the Docker container can receive UDP messages on the relevant ports (`:7090` for KEBA and `:9522` for SMA):
+
+```sh
+docker run -p 7070:7070 -p 7090:7090/udp -p 7090:7090/udp -p 9522:9522/udp andig/evcc ...
+```
+
 To build EVCC from source, [Go](2) 1.13 is required:
 
     make
@@ -89,7 +95,45 @@ All components **must** be installed by a certified professional.
 
 ## Configuration
 
-The EVCC consists of four basic elements: *Charger*, *Meter* and *Vehicle* individually configured and attached to *Loadpoints*.
+The EVCC consists of five basic elements: *Site* and *Loadpoints* describe the infrastructure and combine *Charger*s, *Meter*s and *Vehicle*s.
+
+### Site
+
+A site describes the grid connection and is responsible for managing the available power. A minimal site configuration requires a grid meter for managing EVU demand and optionally a PV or battery meter.
+
+```yaml
+site:
+- title: Zuhause # display name for UI
+  meters:
+    grid: sdm630 # grid meter reference
+    pv: sma # pv meter reference
+```
+
+### Loadpoint
+
+Loadpoints combine meters, charger and vehicle together and add optional configuration. A minimal loadpoint configuration requires a charger and optionally a separate charge meter. If charger has an integrated meter it will automatically be used:
+
+```yaml
+loadpoints:
+- title: Garage # display name for UI
+  charger: wallbe # charger reference
+  vehicle: audi # vehicle reference
+  meters:
+    charge: sdm630 # grid meter reference
+```
+
+More options are documented in the `evcc.dist.yaml` sample configuration.
+
+#### Charge modes
+
+The default *charge mode* upon start of EVCC is configured on the loadpoint. Multiple charge modes are supported:
+
+- **Off**: disable the charger, even if car gets connected.
+- **Now** (**Sofortladen**): charge immediately with maximum allowed current.
+- **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
+- **PV**: use PV as available. May not charge the car if PV remains dark.
+
+In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
 
 ### Charger
 
@@ -130,12 +174,6 @@ Compare the value to what you see as *Actual Charge Current Setting* in the Wall
 #### KEBA preparation
 
 KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see KEBA installation manual.
-
-If using Docker, make sure that the Docker container can receive UDP messages on port 7090 used by KEBA by using [host networking](https://docs.docker.com/network/host/) in Docker:
-
-```sh
-docker run --network=host -p 7070:7070 andig/evcc ...
-```
 
 ### Meter
 
@@ -200,71 +238,6 @@ Available vehicle implementations are:
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
-
-### Loadpoint
-
-A loadpoint combines meters, charger and vehicle together and adds optional configuration. A minimal loadpoint configuration needs either pv or grid meter and a charger. More meters can be added as needed:
-
-```yaml
-loadpoints:
-- name: main # name for logging
-  charger: wallbe # charger reference
-  vehicle: audi # vehicle reference
-  meters:
-    grid: sdm630 # grid meter reference
-    pv: sma # pv meter reference
-```
-
-More options are documented in the `evcc.dist.yaml` sample configuration.
-
-#### Charge modes
-
-The default *charge mode* upon start of EVCC is configured on the loadpoint. Multiple charge modes are supported:
-
-- **Off**: disable the charger, even if car gets connected.
-- **Now** (**Sofortladen**): charge immediately with maximum allowed current.
-- **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
-- **PV**: use PV as available. May not charge the car if PV remains dark.
-
-In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again.
-
-### Considerations
-
-For intelligent control of PV power usage, EVCC needs to assess how much residual PV power is available at the grid connection point and how much power the charger actually uses. Various methods are implemented to obtain this information, with different degrees of accuracy.
-
-- **PV meter**: Configuring a *PV meter* is the simplest option. *PV meter* measures the PV generation. The charger is allowed to consume:
-
-      Charge Power = PV Meter Power - Residual Power
-
-  The *pv meter* is expected to deliver negative values for export and should not return positive values.
-
-  *Residual Power* is a configurable assumption how much power remaining facilities beside the charger use.
-
-- **Grid meter**: Configuring a *grid meter* is the preferred option. The *grid meter* is expected to be a two-way meter (import+export) and return the current amount of grid export as negative value measured in Watt (W). The charger is then allowed to consume:
-
-      Charge Power = Current Charge Power - Grid Meter Power - Residual Power
-
-  In this setup, *residual power* is used as margin to account for fluctuations in PV production that may be faster than EVCC's control loop.
-
-- **Battery meter**: *battery meter* is used if a home battery is installed and you want charging the EV take priority over charging the home battery. As the home battery would otherwise "grab" all available PV power, this meter measures the home battery charging power.
-
-  With *grid meter* the charger is then allowed to consume:
-
-      Charge Power = Current Charge Power - Grid Meter Power + Battery Meter Power - Residual Power
-
-  or without *grid meter*
-
-      Charge Power = PV Meter Power + Battery Meter Power - Residual Power
-
-  The *battery meter* is expected to deliver negative values when charging and positive values when discharging.
-
-When using a *grid meter* for accurate control of PV utilization, EVCC needs to be able to determine the current charge power. There are two configurations for determining the *current charge power*:
-
-- **Charge meter**: A *charge meter* is often integrated into the charger but can also be installed separately. EVCC expects the *charge meter* to supply *charge power* in Watt (W) and preferably *total energy* in kWh.
-If *total energy* is supplied, it can be used to calculate the *charged energy* for the current charging cycle.
-
-- **No charge meter**: If no charge meter is installed, *charge power* is deducted from *charge current* as controlled by the charger. This method is less accurate than using a *charge meter* since the EV may chose to use less power than EVCC has allowed for consumption.
-If the charger supplies *total energy* for the charging cycle this value is preferred over the *charge meter*'s value (if present).
 
 ## Plugins
 
@@ -467,37 +440,32 @@ charging:
   topic: openWB/lp/1/boolChargeStat
 ```
 
-## Developer information
+## API
 
-EVCC has the following internal API. The full documentation is available in GoDoc format in https://pkg.go.dev/github.com/andig/evcc/api.
+EVCC provides a REST and MQTT APIs.
 
-### Charger API
+### REST API
 
-- `Status()`: get charge controller status (`A...F`)
-- `Enabled()`: get charger availability
-- `Enable(bool)`: set charger availability
-- `MaxCurrent(int)`: set maximum allowed charge current in A
+- `/api/config`: EVCC static configuration
+- `/api/state`: EVCC dynamic state
+- `/api/mode`: global charge mode, use `/api/mode/<mode>` to modify
+- `/api/targetsoc`: global target SoC, use `/api/targetsoc/<soc>` to modify
+- `/api/loadpoints/<id>/mode`: loadpoint charge mode, use `/api/loadpoints/<id>/mode/<mode>` to modify
+- `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC, use `/api/loadpoints/<id>/targetsoc/<soc>` to modify
 
-Optionally, charger can also provide:
+### MQTT API
 
-- `CurrentPower()`: power in W (used if charge meter is not present)
+The MQTT API follows the REST API's structure:
 
-### Meter API
-
-- `CurrentPower()`: power in W
-- `TotalEnergy()`: energy in kWh (optional)
-
-### Vehicle API
-
-- `Title()`: vehicle name for display in the configuration UI
-- `Capacity()`: battery capacity in kWh
-- `ChargeState()`: state of charge in %
-
-Optionally, vehicles can also provide:
-
-- `CurrentPower()`: charge power in W (used if charge meter not present)
-- `ChargedEnergy()`: charged energy in kWh
-- `ChargeDuration()`: charge duration
+- `evcc`: root topic
+- `evcc/updated`: timestamp of last update
+- `evcc/site`: site dynamic state
+- `evcc/site/mode`: global charge mode, write `<mode>` to `/evcc/site/mode/set` to modify
+- `evcc/site/targetsoc`: global target SoC, write `<soc>` to `/evcc/site/targetsoc/set` to modify
+- `evcc/loadpoints`: number of available loadpoints
+- `evcc/loadpoints/<id>`: loadpoint dynamic state
+- `evcc/loadpoints/<id>/mode`: loadpoint charge mode, write `<mode>` to `/evcc/loadpoints/<id>/mode/set` to modify
+- `evcc/loadpoints/<id>/targetsoc`: loadpoint target SoC, write `<soc>` to `/evcc/loadpoints/<id>/targetsoc/set` to modify
 
 ## Background
 

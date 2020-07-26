@@ -223,14 +223,14 @@ vehicles:
 #   cache: 5m
 
 site:
-  title: Home
+  title: Home # display name for UI
   meters:
     grid: grid # grid meter
     pv: pv # pv meter
     battery: battery # battery meter
 
 loadpoints:
-- title: Ladepunkt # ui display name
+- title: Garage # display name for UI
   charger: wallbe # charger
   meters:
     charge: charge # charge meter

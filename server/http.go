@@ -51,7 +51,7 @@ type site interface {
 	loadpoint
 }
 
-// mode is the minimal interface for accessing loadpoint methods
+// loadpoint is the minimal interface for accessing loadpoint methods
 type loadpoint interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
@@ -251,7 +251,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 
 	// loadpoint api
 	for id, lp := range site.LoadPoints() {
-		subAPI := api.PathPrefix(fmt.Sprintf("/lp/%d", id)).Subrouter()
+		subAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
 		applyRouteHandler(subAPI, routes["getmode"], CurrentChargeModeHandler(lp))
 		applyRouteHandler(subAPI, routes["setmode"], ChargeModeHandler(lp))
 		applyRouteHandler(subAPI, routes["gettargetsoc"], CurrentTargetSoCHandler(lp))

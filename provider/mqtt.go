@@ -4,12 +4,9 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -30,7 +27,7 @@ type MqttClient struct {
 	mux      sync.Mutex
 	Client   mqtt.Client
 	broker   string
-	qos      byte
+	Qos      byte
 	listener map[string]func(string)
 }
 
@@ -48,7 +45,7 @@ func NewMqttClient(
 	mc := &MqttClient{
 		log:      log,
 		broker:   broker,
-		qos:      qos,
+		Qos:      qos,
 		listener: make(map[string]func(string)),
 	}
 
@@ -69,73 +66,6 @@ func NewMqttClient(
 
 	mc.Client = client
 	return mc
-}
-
-func encode(v interface{}) string {
-	var s string
-	switch val := v.(type) {
-	case time.Time:
-		s = strconv.FormatInt(val.Unix(), 10)
-	case time.Duration:
-		// must be before stringer to convert to seconds instead of string
-		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case fmt.Stringer, string:
-		s = fmt.Sprintf("%s", val)
-	case float64:
-		s = fmt.Sprintf("%.3f", val)
-	default:
-		s = fmt.Sprintf("%v", val)
-	}
-	return s
-}
-
-func (m *MqttClient) publish(topic string, retained bool, payload interface{}) {
-	token := m.Client.Publish(topic, m.qos, retained, encode(payload))
-	go m.WaitForToken(token)
-}
-
-type handler interface {
-	SetMode(api.ChargeMode)
-	SetTargetSoC(int)
-}
-
-func (m *MqttClient) listenSetters(topic string, handler handler) {
-	m.Listen(topic+"/mode/set", func(payload string) {
-		handler.SetMode(api.ChargeMode(payload))
-	})
-	m.Listen(topic+"/targetsoc/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
-			handler.SetTargetSoC(soc)
-		}
-	})
-}
-
-// Run starts the MQTT publisher for the MQTT API
-func (m *MqttClient) Run(root string, site *core.Site, in <-chan util.Param) {
-	topic := fmt.Sprintf("%s/site", root)
-	m.publish(topic, true, time.Now()) // alive indicator
-	m.listenSetters(topic, site)
-
-	for id, lp := range site.LoadPoints() {
-		topic := fmt.Sprintf("%s/loadpoint/%d", root, id)
-		m.publish(topic, true, time.Now()) // alive indicator
-		m.listenSetters(topic, lp)
-	}
-
-	for p := range in {
-		topic = fmt.Sprintf("%s/site", root)
-		if p.LoadPoint != nil {
-			topic = fmt.Sprintf("%s/loadpoint/%d", root, *p.LoadPoint)
-		}
-
-		// alive indicator
-		m.publish(topic, true, time.Now())
-
-		// value
-		topic += "/" + strings.ToLower(p.Key)
-		m.publish(topic, false, p.Val)
-	}
 }
 
 // ConnectionLostHandler logs cause of connection loss as warning
@@ -170,7 +100,7 @@ func (m *MqttClient) Listen(topic string, callback func(string)) {
 
 // listen attaches listener to topic
 func (m *MqttClient) listen(topic string, callback func(string)) {
-	token := m.Client.Subscribe(topic, m.qos, func(c mqtt.Client, msg mqtt.Message) {
+	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
 		s := string(msg.Payload())
 		if len(s) > 0 {
 			callback(s)
@@ -249,7 +179,7 @@ func (m *MqttClient) IntSetter(param, topic, message string) func(int64) error {
 		}
 
 		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.qos, false, payload)
+		token := m.Client.Publish(topic, m.Qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
 		}
@@ -267,7 +197,7 @@ func (m *MqttClient) BoolSetter(param, topic, message string) func(bool) error {
 		}
 
 		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.qos, false, payload)
+		token := m.Client.Publish(topic, m.Qos, false, payload)
 		if token.WaitTimeout(publishTimeout) {
 			return token.Error()
 		}

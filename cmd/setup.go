@@ -50,7 +50,8 @@ func configureMQTT(conf provider.MqttConfig, site *core.Site, in <-chan util.Par
 	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, mqttClientID(), 1)
 
 	if site != nil && conf.Topic != "" {
-		go provider.MQTT.Run(conf.Topic, site, in)
+		mqtt := &server.MQTT{Handler: provider.MQTT}
+		go mqtt.Run(conf.Topic, site, in)
 	}
 }
 
