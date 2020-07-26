@@ -263,7 +263,7 @@ Vue.component("loadpoint", {
   },
   methods: {
     api: function (func) {
-      return "loadpoint/" + this.id + "/" + func;
+      return "loadpoints/" + this.id + "/" + func;
     },
     targetMode: function (mode) {
       axios.post(this.api("mode") + "/" + mode).then(function (response) {
