@@ -30,7 +30,7 @@ func runCharger(cmd *cobra.Command, args []string) {
 
 	// setup mqtt
 	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt, nil, nil)
+		configureMQTT(conf.Mqtt)
 	}
 
 	cp := &ConfigProvider{}

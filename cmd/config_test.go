@@ -37,7 +37,7 @@ func TestDistConfig(t *testing.T) {
 
 	// setup mqtt
 	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt, nil, nil)
+		configureMQTT(conf.Mqtt)
 	}
 
 	// check config is valid

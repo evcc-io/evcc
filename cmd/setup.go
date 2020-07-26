@@ -46,13 +46,8 @@ func mqttClientID() string {
 }
 
 // setup mqtt
-func configureMQTT(conf provider.MqttConfig, site *core.Site, in <-chan util.Param) {
+func configureMQTT(conf provider.MqttConfig) {
 	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, mqttClientID(), 1)
-
-	if site != nil && conf.Topic != "" {
-		mqtt := &server.MQTT{Handler: provider.MQTT}
-		go mqtt.Run(conf.Topic, site, in)
-	}
 }
 
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {

@@ -15,6 +15,15 @@ import (
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
 	Handler *provider.MqttClient
+	root    string
+}
+
+// NewMQTT creates MQTT server
+func NewMQTT(root string) *MQTT {
+	return &MQTT{
+		Handler: provider.MQTT,
+		root:    root,
+	}
 }
 
 func (m *MQTT) encode(v interface{}) string {
@@ -58,33 +67,33 @@ func (m *MQTT) listenSetters(topic string, apiHandler apiHandler) {
 }
 
 // Run starts the MQTT publisher for the MQTT API
-func (m *MQTT) Run(root string, site *core.Site, in <-chan util.Param) {
-	topic := fmt.Sprintf("%s/site", root)
+func (m *MQTT) Run(site *core.Site, in <-chan util.Param) {
+	topic := fmt.Sprintf("%s/site", m.root)
 	m.listenSetters(topic, site)
 
 	// number of loadpoints
-	topic = fmt.Sprintf("%s/loadpoints", root)
+	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	for id, lp := range site.LoadPoints() {
-		topic := fmt.Sprintf("%s/loadpoints/%d", root, id)
+		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id)
 		m.listenSetters(topic, lp)
 	}
 
 	// alive indicator
 	updated := time.Now().Unix()
-	m.publish(fmt.Sprintf("%s/updated", root), true, updated)
+	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
 
 	for p := range in {
-		topic = fmt.Sprintf("%s/site", root)
+		topic := fmt.Sprintf("%s/site", m.root)
 		if p.LoadPoint != nil {
-			topic = fmt.Sprintf("%s/loadpoints/%d", root, *p.LoadPoint)
+			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, *p.LoadPoint)
 		}
 
 		// alive indicator
 		if now := time.Now().Unix(); now != updated {
 			updated = now
-			m.publish(fmt.Sprintf("%s/updated", root), true, updated)
+			m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
 		}
 
 		// value

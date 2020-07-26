@@ -117,7 +117,7 @@ func (w *uiWriter) Write(p []byte) (n int, err error) {
 
 	uiChan <- Param{
 		Key: w.level,
-		Val: strings.Trim(strconv.Quote(s), "\"\n"),
+		Val: strings.Trim(strconv.Quote(strings.TrimSpace(s)), "\""),
 	}
 
 	return 0, nil

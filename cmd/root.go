@@ -124,6 +124,11 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
+	// setup mqtt client listener
+	if conf.Mqtt.Broker != "" {
+		configureMQTT(conf.Mqtt)
+	}
+
 	// start broadcasting values
 	tee := &Tee{}
 
@@ -134,14 +139,15 @@ func run(cmd *cobra.Command, args []string) {
 	// setup loadpoints
 	site := loadConfig(conf)
 
-	// setup mqtt
-	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt, site, tee.Attach())
-	}
-
 	// setup database
 	if conf.Influx.URL != "" {
 		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
+	}
+
+	// setup mqtt publisher
+	if conf.Mqtt.Broker != "" && conf.Mqtt.Topic != "" {
+		publisher := server.NewMQTT(conf.Mqtt.Topic)
+		go publisher.Run(site, tee.Attach())
 	}
 
 	// create webserver
