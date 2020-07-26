@@ -79,10 +79,16 @@ EVCC can also be run using Docker. Here's and example with given config file and
 docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 ```
 
-If using Docker with a meter or charger that requires UDP like KEBA or SMA Energy Meter, make sure that the Docker container can receive UDP messages on the relevant ports (`:7090` for KEBA and `:9522` for SMA):
+If using Docker with a meter or charger that requires UDP like KEBA, make sure that the Docker container can receive UDP messages on the relevant ports (`:7090` for KEBA):
 
 ```sh
-docker run -p 7070:7070 -p 7090:7090/udp -p 7090:7090/udp -p 9522:9522/udp andig/evcc ...
+docker run -p 7070:7070 -p 7090:7090/udp andig/evcc ...
+```
+
+When using Docker with a device that requires multicast UDP like SMA, make sure that the Docker container uses the `network_mode: host` configuration:
+
+```sh
+docker run --network host andig/evcc ...
 ```
 
 To build EVCC from source, [Go](2) 1.13 is required:
