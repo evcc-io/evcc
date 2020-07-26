@@ -136,7 +136,7 @@
 
 <script type="text/x-template" id="main-template">
   <div class="container">
-    <site v-bind:state="state" v-if="configured"></site>
+    <site v-bind:state="state" v-if="<<.Configured>>"></site>
     <div v-else>
       <div class="row py-5">
         <div class="col12">

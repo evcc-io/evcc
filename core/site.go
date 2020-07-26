@@ -117,6 +117,32 @@ type LoadpointConfiguration struct {
 	SoCLevels   []int  `json:"socLevels"`
 }
 
+// GetMode Gets loadpoint charge mode
+func (site *Site) GetMode() api.ChargeMode {
+	return site.loadpoints[0].GetMode()
+}
+
+// GetTargetSoC gets loadpoint charge targetSoC
+func (site *Site) GetTargetSoC() int {
+	return site.loadpoints[0].GetTargetSoC()
+}
+
+// SetMode sets loadpoint charge mode
+func (site *Site) SetMode(mode api.ChargeMode) {
+	site.log.INFO.Printf("set global charge mode: %s", string(mode))
+	for _, lp := range site.loadpoints {
+		lp.SetMode(mode)
+	}
+}
+
+// SetTargetSoC sets loadpoint charge targetSoC
+func (site *Site) SetTargetSoC(targetSoC int) {
+	site.log.INFO.Println("set global target soc:", targetSoC)
+	for _, lp := range site.loadpoints {
+		lp.SetTargetSoC(targetSoC)
+	}
+}
+
 func (lp *LoadPoint) hasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
 	return lp.chargeMeter != nil && !isWrapped

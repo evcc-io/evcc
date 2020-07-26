@@ -6,6 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/meter"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/vehicle"
@@ -16,7 +17,7 @@ type config struct {
 	Log        string
 	Levels     map[string]string
 	Interval   time.Duration
-	Mqtt       mqttConfig
+	Mqtt       provider.MqttConfig
 	Influx     server.InfluxConfig
 	Menu       []server.MenuConfig
 	Messaging  messagingConfig
@@ -40,12 +41,6 @@ type typedConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplate
 	Services []typedConfig
-}
-
-type mqttConfig struct {
-	Broker   string
-	User     string
-	Password string
 }
 
 // ConfigProvider provides configuration items
