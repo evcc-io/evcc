@@ -37,10 +37,17 @@ func (p *Waiter) waitForInitialValue() {
 		p.log()
 
 		// wait for initial update
+		waitStarted := time.Now()
 		for p.updated.IsZero() {
 			p.Unlock()
 			time.Sleep(waitTimeout)
 			p.Lock()
+
+			// abort initial wait with error
+			if p.timeout != 0 && time.Since(waitStarted) > p.timeout {
+				p.updated = waitStarted
+				return
+			}
 		}
 	}
 }
