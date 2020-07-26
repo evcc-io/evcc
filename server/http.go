@@ -214,9 +214,9 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
-		"setmode":      {[]string{"PUT", "POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
+		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
 		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
-		"settargetsoc": {[]string{"PUT", "POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
+		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
