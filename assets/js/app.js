@@ -329,11 +329,14 @@ const main = Vue.component('main', {
   data: function() {
     return {
       state: store.state  // global state
-    };
+    }
   },
-  computed: {
-    configured: function() {
-      return this.state.loadpoints.length >= 1
+  methods: {
+    configured: function(val) {
+      if (val == '<<.Configured>>' && val != '0') {
+        return 0+val;
+      }
+      return false;
     }
   }
 });
