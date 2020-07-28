@@ -29,7 +29,7 @@ assets:
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
+	go build -v -tags release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
 
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
