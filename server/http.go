@@ -15,12 +15,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-//go:generate esc -o assets.go -pkg server -modtime 1566640112 -ignore .DS_Store -prefix ../assets ../assets
-
-const (
-	liveAssets = false
-)
-
 // MenuConfig is used to inject the menu configuration into the UI
 type MenuConfig struct {
 	Title    string
@@ -74,21 +68,21 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 }
 
 func indexHandler(links []MenuConfig, site site, liveAssets bool) http.HandlerFunc {
-	indexTemplate, err := FSString(liveAssets, "/index.html")
-	if err != nil {
-		log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
-	}
-
-	t, err := template.New("evcc").Delims("<<", ">>").Parse(indexTemplate)
-	if err != nil {
-		log.FATAL.Fatal("httpd: failed to create main page template: ", err.Error())
-	}
-
 	_, debug := _escData["/js/debug.js"]
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 		// w.WriteHeader(http.StatusOK)
+
+		indexTemplate, err := FSString(liveAssets, "/index.html")
+		if err != nil {
+			log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
+		}
+
+		t, err := template.New("evcc").Delims("<<", ">>").Parse(indexTemplate)
+		if err != nil {
+			log.FATAL.Fatal("httpd: failed to create main page template: ", err.Error())
+		}
 
 		if err := t.Execute(w, map[string]interface{}{
 			"Version":    Version,
