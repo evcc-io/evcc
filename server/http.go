@@ -95,7 +95,7 @@ func indexHandler(links []MenuConfig, site site, liveAssets bool) http.HandlerFu
 			"Commit":     Commit,
 			"Debug":      debug,
 			"Links":      links,
-			"Configured": len(site.LoadPoints()) > 0,
+			"Configured": len(site.LoadPoints()),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
 		}

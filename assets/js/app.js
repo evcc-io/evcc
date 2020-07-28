@@ -332,9 +332,13 @@ const main = Vue.component('main', {
     }
   },
   methods: {
-    configured: function(val) {
-      if (val == '<<.Configured>>' && val != '0') {
-        return 0+val;
+    configured: function (val) {
+      // for development purposes
+      if (val == '<<.Configured>>') {
+        return true;
+      }
+      if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
+        return true;
       }
       return false;
     }
