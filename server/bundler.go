@@ -1,7 +1,7 @@
-// +build dev
+// +build !release
 
 package server
 
 const (
-	liveAssets = true
+	useLocalAssets = true
 )

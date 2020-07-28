@@ -67,14 +67,11 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(links []MenuConfig, site site, liveAssets bool) http.HandlerFunc {
-	_, debug := _escData["/js/debug.js"]
-
+func indexHandler(links []MenuConfig, site site, useLocal bool) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-		// w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
-		indexTemplate, err := FSString(liveAssets, "/index.html")
+		indexTemplate, err := FSString(useLocal, "/index.html")
 		if err != nil {
 			log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
 		}
@@ -87,7 +84,6 @@ func indexHandler(links []MenuConfig, site site, liveAssets bool) http.HandlerFu
 		if err := t.Execute(w, map[string]interface{}{
 			"Version":    Version,
 			"Commit":     Commit,
-			"Debug":      debug,
 			"Links":      links,
 			"Configured": len(site.LoadPoints()),
 		}); err != nil {
@@ -222,10 +218,10 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	static.HandleFunc("/", indexHandler(links, site, liveAssets))
+	static.HandleFunc("/", indexHandler(links, site, useLocalAssets))
 	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
 		prefix := fmt.Sprintf("/%s/", folder)
-		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(liveAssets, prefix))))
+		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(useLocalAssets, prefix))))
 	}
 
 	// api
