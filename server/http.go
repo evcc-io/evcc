@@ -86,6 +86,7 @@ func indexHandler(links []MenuConfig, site site, useLocal bool) http.HandlerFunc
 			"Commit":     Commit,
 			"Links":      links,
 			"Configured": len(site.LoadPoints()),
+			"Tag":        time.Now().Unix(),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
 		}
