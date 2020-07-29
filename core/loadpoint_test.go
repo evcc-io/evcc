@@ -79,13 +79,13 @@ func TestUpdate(t *testing.T) {
 		expect func(h *mock.MockHandler)
 	}{
 		{api.StatusA, api.ModeOff, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0), true)
+			h.EXPECT().Ramp(int64(0))
 		}},
 		{api.StatusA, api.ModeNow, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent, true)
+			h.EXPECT().Ramp(int64(0))
 		}},
 		{api.StatusA, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent)
+			h.EXPECT().Ramp(int64(0))
 		}},
 		{api.StatusA, api.ModePV, func(h *mock.MockHandler) {
 			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
@@ -150,10 +150,10 @@ func TestUpdate(t *testing.T) {
 
 		if tc.status != api.StatusA {
 			handler.EXPECT().SyncEnabled()
-		}
 
-		if tc.mode == api.ModeMinPV || tc.mode == api.ModePV {
-			handler.EXPECT().TargetCurrent().Return(int64(0))
+			if tc.mode == api.ModeMinPV || tc.mode == api.ModePV {
+				handler.EXPECT().TargetCurrent().Return(int64(0))
+			}
 		}
 
 		if tc.expect != nil {
