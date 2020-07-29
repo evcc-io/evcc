@@ -1,10 +1,12 @@
 package provider
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -34,164 +36,257 @@ type scriptConfig struct {
 // MQTT singleton
 var MQTT *MqttClient
 
-func mqttFromConfig(log *util.Logger, other map[string]interface{}) mqttConfig {
+func mqttFromConfig(other map[string]interface{}) (mqttConfig, error) {
+	pc := mqttConfig{Scale: 1}
+	if err := util.DecodeOther(other, &pc); err != nil {
+		return pc, err
+	}
+
 	if MQTT == nil {
-		log.FATAL.Fatal("mqtt not configured")
+		return pc, errors.New("mqtt not configured")
 	}
 
-	var pc mqttConfig
-	util.DecodeOther(log, other, &pc)
-
-	if pc.Scale == 0 {
-		pc.Scale = 1
-	}
-
-	return pc
+	return pc, nil
 }
 
-func scriptFromConfig(log *util.Logger, other map[string]interface{}) scriptConfig {
+func scriptFromConfig(other map[string]interface{}) (scriptConfig, error) {
 	var pc scriptConfig
-	util.DecodeOther(log, other, &pc)
+	if err := util.DecodeOther(other, &pc); err != nil {
+		return pc, err
+	}
 
 	if pc.Timeout == 0 {
 		pc.Timeout = execTimeout
 	}
 
-	return pc
+	return pc, nil
 }
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
-func NewFloatGetterFromConfig(log *util.Logger, config Config) (res func() (float64, error)) {
+func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
 	switch strings.ToLower(config.Type) {
 	case "calc":
-		res = NewCalcFromConfig(log, config.Other)
+		res, err = NewCalcFromConfig(config.Other)
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).FloatGetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.FloatGetter
+		}
 	case "websocket", "ws":
-		res = NewSocketProviderFromConfig(log, config.Other).FloatGetter
+		var prov *Socket
+		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
+			res = prov.FloatGetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
+		if pc, err := mqttFromConfig(config.Other); err == nil {
+			res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		res = NewScriptProvider(pc.Timeout).FloatGetter(pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.FloatGetter(pc.Cmd)
+		}
+
 		if pc.Cache > 0 {
-			res = NewCached(log, res, pc.Cache).FloatGetter()
+			res = NewCached(res, pc.Cache).FloatGetter()
 		}
 	case "modbus":
-		res = NewModbusFromConfig(log, config.Other).FloatGetter
+		var prov *Modbus
+		if prov, err = NewModbusFromConfig(config.Other); err == nil {
+			res = prov.FloatGetter
+		}
 	default:
-		log.FATAL.Fatal("invalid plugin type:", config.Type)
+		return nil, fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return
 }
 
 // NewIntGetterFromConfig creates a IntGetter from config
-func NewIntGetterFromConfig(log *util.Logger, config Config) (res func() (int64, error)) {
+func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).IntGetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.IntGetter
+		}
 	case "websocket", "ws":
-		res = NewSocketProviderFromConfig(log, config.Other).IntGetter
+		var prov *Socket
+		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
+			res = prov.IntGetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
+		var pc mqttConfig
+		if pc, err = mqttFromConfig(config.Other); err == nil {
+			res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		res = NewScriptProvider(pc.Timeout).IntGetter(pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.IntGetter(pc.Cmd)
+		}
+
 		if pc.Cache > 0 {
-			res = NewCached(log, res, pc.Cache).IntGetter()
+			res = NewCached(res, pc.Cache).IntGetter()
 		}
 	case "modbus":
-		res = NewModbusFromConfig(log, config.Other).IntGetter
+		var prov *Modbus
+		if prov, err = NewModbusFromConfig(config.Other); err == nil {
+			res = prov.IntGetter
+		}
 	default:
-		log.FATAL.Fatal("invalid plugin type:", config.Type)
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return
 }
 
 // NewStringGetterFromConfig creates a StringGetter from config
-func NewStringGetterFromConfig(log *util.Logger, config Config) (res func() (string, error)) {
+func NewStringGetterFromConfig(config Config) (res func() (string, error), err error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).StringGetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.StringGetter
+		}
 	case "websocket", "ws":
-		res = NewSocketProviderFromConfig(log, config.Other).StringGetter
+		var prov *Socket
+		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
+			res = prov.StringGetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.StringGetter(pc.Topic, pc.Timeout)
+		var pc mqttConfig
+		if pc, err = mqttFromConfig(config.Other); err == nil {
+			res = MQTT.StringGetter(pc.Topic, pc.Timeout)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		res = NewScriptProvider(pc.Timeout).StringGetter(pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.StringGetter(pc.Cmd)
+		}
+
 		if pc.Cache > 0 {
-			res = NewCached(log, res, pc.Cache).StringGetter()
+			res = NewCached(res, pc.Cache).StringGetter()
 		}
 	case "combined", "openwb":
-		res = openWBStatusFromConfig(log, config.Other)
+		res, err = openWBStatusFromConfig(config.Other)
 	default:
-		log.FATAL.Fatal("invalid plugin type:", config.Type)
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return
 }
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
-func NewBoolGetterFromConfig(log *util.Logger, config Config) (res func() (bool, error)) {
+func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).BoolGetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolGetter
+		}
 	case "websocket", "ws":
-		res = NewSocketProviderFromConfig(log, config.Other).BoolGetter
+		var prov *Socket
+		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolGetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.BoolGetter(pc.Topic, pc.Timeout)
+		var pc mqttConfig
+		if pc, err = mqttFromConfig(config.Other); err == nil {
+			res = MQTT.BoolGetter(pc.Topic, pc.Timeout)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		res = NewScriptProvider(pc.Timeout).BoolGetter(pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.BoolGetter(pc.Cmd)
+		}
+
 		if pc.Cache > 0 {
-			res = NewCached(log, res, pc.Cache).BoolGetter()
+			res = NewCached(res, pc.Cache).BoolGetter()
 		}
 	default:
-		log.FATAL.Fatal("invalid plugin type:", config.Type)
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return
 }
 
 // NewIntSetterFromConfig creates a IntSetter from config
-func NewIntSetterFromConfig(log *util.Logger, param string, config Config) (res func(int64) error) {
+func NewIntSetterFromConfig(param string, config Config) (res func(int64) error, err error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).IntSetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.IntSetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.IntSetter(param, pc.Topic, pc.Payload)
+		var pc mqttConfig
+		if pc, err = mqttFromConfig(config.Other); err == nil {
+			res = MQTT.IntSetter(param, pc.Topic, pc.Payload)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		script := NewScriptProvider(pc.Timeout)
-		res = script.IntSetter(param, pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.IntSetter(param, pc.Cmd)
+		}
 	default:
-		log.FATAL.Fatalf("invalid setter type %s", config.Type)
+		err = fmt.Errorf("invalid setter type %s", config.Type)
 	}
+
 	return
 }
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
-func NewBoolSetterFromConfig(log *util.Logger, param string, config Config) (res func(bool) error) {
+func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error, err error) {
 	switch strings.ToLower(config.Type) {
 	case "http":
-		res = NewHTTPProviderFromConfig(log, config.Other).BoolSetter
+		var prov *HTTP
+		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolSetter
+		}
 	case "mqtt":
-		pc := mqttFromConfig(log, config.Other)
-		res = MQTT.BoolSetter(param, pc.Topic, pc.Payload)
+		var pc mqttConfig
+		if pc, err = mqttFromConfig(config.Other); err == nil {
+			res = MQTT.BoolSetter(param, pc.Topic, pc.Payload)
+		}
 	case "script":
-		pc := scriptFromConfig(log, config.Other)
-		script := NewScriptProvider(pc.Timeout)
-		res = script.BoolSetter(param, pc.Cmd)
+		var pc scriptConfig
+		if pc, err = scriptFromConfig(config.Other); err != nil {
+			break
+		}
+
+		var prov *Script
+		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
+			res = prov.BoolSetter(param, pc.Cmd)
+		}
 	default:
-		log.FATAL.Fatalf("invalid setter type %s", config.Type)
+		err = fmt.Errorf("invalid setter type %s", config.Type)
 	}
+
 	return
 }

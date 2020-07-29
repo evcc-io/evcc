@@ -40,16 +40,19 @@ type BMW struct {
 }
 
 // NewBMWFromConfig creates a new vehicle
-func NewBMWFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
 
-	log = util.NewLogger("bmw ")
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("bmw")
 
 	v := &BMW{
 		embed:      &embed{cc.Title, cc.Capacity},
@@ -62,20 +65,20 @@ func NewBMWFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicl
 	if cc.VIN == "" {
 		vehicles, err := v.vehicles()
 		if err != nil {
-			log.FATAL.Fatalf("cannot get vehicles: %v", err)
+			return nil, fmt.Errorf("cannot get vehicles: %v", err)
 		}
 
 		if len(vehicles) != 1 {
-			log.FATAL.Fatalf("cannot find vehicle: %v", vehicles)
+			return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
 		}
 
 		v.vin = vehicles[0].Vin
 		log.DEBUG.Printf("found vehicle: %v", v.vin)
 	}
 
-	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 func (v *BMW) login(user, password string) error {

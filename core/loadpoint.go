@@ -89,7 +89,9 @@ type LoadPoint struct {
 // NewLoadPointFromConfig creates a new loadpoint
 func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
 	lp := NewLoadPoint(log)
-	util.DecodeOther(log, other, &lp)
+	if err := util.DecodeOther(other, &lp); err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// workaround mapstructure
 	if lp.Mode == "0" {

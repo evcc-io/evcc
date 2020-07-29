@@ -23,15 +23,17 @@ const (
 )
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
-func NewSimpleEVSEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Device string }{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewSimpleEVSE(cc.URI, cc.Device)
 }
 
 // NewSimpleEVSE creates SimpleEVSE charger
-func NewSimpleEVSE(conn, device string) api.Charger {
+func NewSimpleEVSE(conn, device string) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
 	var handler modbus.ClientHandler
@@ -53,7 +55,7 @@ func NewSimpleEVSE(conn, device string) api.Charger {
 		handler.(*modbus.RTUClientHandler).SlaveID = 1
 	}
 	if handler == nil {
-		log.FATAL.Fatal("must define either uri or device")
+		return nil, errors.New("must define either uri or device")
 	}
 
 	evse := &SimpleEVSE{
@@ -64,7 +66,7 @@ func NewSimpleEVSE(conn, device string) api.Charger {
 
 	evse.log.WARN.Println("-- experimental --")
 
-	return evse
+	return evse, nil
 }
 
 // Status implements the Charger.Status interface

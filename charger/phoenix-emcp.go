@@ -26,27 +26,27 @@ type PhoenixEMCP struct {
 }
 
 // NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEMCPFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI string
 		ID  uint8
-	}{}
-	util.DecodeOther(log, other, &cc)
-
-	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
-		log.FATAL.Printf("config: missing or invalid phoenix EM-CP uri: %s", cc.URI)
+	}{
+		ID: 180, // default
 	}
 
-	if cc.ID == 0 {
-		cc.ID = 180
-		log.WARN.Printf("config: missing phoenix EM-CP slave id, assuming default %d", cc.ID)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
+		return nil, fmt.Errorf("config: missing or invalid phoenix EM-CP uri: %s", cc.URI)
 	}
 
 	return NewPhoenixEMCP(cc.URI, cc.ID)
 }
 
 // NewPhoenixEMCP creates a Phoenix charger
-func NewPhoenixEMCP(uri string, id uint8) api.Charger {
+func NewPhoenixEMCP(uri string, id uint8) (api.Charger, error) {
 	log := util.NewLogger("emcp")
 
 	handler := modbus.NewTCPClientHandler(uri)
@@ -62,7 +62,7 @@ func NewPhoenixEMCP(uri string, id uint8) api.Charger {
 		handler: handler,
 	}
 
-	return wb
+	return wb, nil
 }
 
 // Status implements the Charger.Status interface

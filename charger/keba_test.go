@@ -7,7 +7,11 @@ import (
 )
 
 func TestKeba(t *testing.T) {
-	var wb api.Charger = NewKeba("foo", RFID{}, 0)
+	var wb api.Charger
+	wb, err := NewKeba("foo", RFID{}, 0)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if _, ok := wb.(api.MeterEnergy); !ok {
 		t.Error("missing MeterEnergy interface")

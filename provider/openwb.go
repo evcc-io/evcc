@@ -9,18 +9,31 @@ type openWBStatusProvider struct {
 	plugged, charging func() (bool, error)
 }
 
-func openWBStatusFromConfig(log *util.Logger, other map[string]interface{}) func() (string, error) {
+func openWBStatusFromConfig(other map[string]interface{}) (func() (string, error), error) {
 	cc := struct {
 		Plugged, Charging Config
 	}{}
-	util.DecodeOther(log, other, &cc)
-
-	o := &openWBStatusProvider{
-		plugged:  NewBoolGetterFromConfig(log, cc.Plugged),
-		charging: NewBoolGetterFromConfig(log, cc.Charging),
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
-	return o.stringGetter
+	plugged, err := NewBoolGetterFromConfig(cc.Plugged)
+
+	var charging func() (bool, error)
+	if err == nil {
+		charging, err = NewBoolGetterFromConfig(cc.Charging)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	o := &openWBStatusProvider{
+		plugged:  plugged,
+		charging: charging,
+	}
+
+	return o.stringGetter, nil
 }
 
 func (o *openWBStatusProvider) stringGetter() (string, error) {

@@ -2,6 +2,7 @@ package meter
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -35,19 +36,22 @@ type Tesla struct {
 }
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
-func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
+func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage string
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	if cc.Usage == "" {
-		log.FATAL.Fatalf("config: missing usage")
+		return nil, errors.New("config: missing usage")
 	}
 
 	url, err := url.ParseRequestURI(cc.URI)
 	if err != nil {
-		log.FATAL.Fatalf("config: invalid uri %s", cc.URI)
+		return nil, fmt.Errorf("config: invalid uri %s", cc.URI)
 	}
 
 	if url.Path == "" {
@@ -59,7 +63,7 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Mete
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, usage string) api.Meter {
+func NewTesla(uri, usage string) (api.Meter, error) {
 	m := &Tesla{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("tesla")),
 		uri:        uri,
@@ -73,10 +77,10 @@ func NewTesla(uri, usage string) api.Meter {
 
 	// decorate api.MeterEnergy
 	if m.usage == "load" || m.usage == "solar" {
-		return &TeslaEnergy{Tesla: m}
+		return &TeslaEnergy{Tesla: m}, nil
 	}
 
-	return m
+	return m, nil
 }
 
 // CurrentPower implements the Meter.CurrentPower interface

@@ -19,9 +19,9 @@ type Cached struct {
 }
 
 // NewCached wraps a getter with a cache
-func NewCached(log *util.Logger, getter interface{}, cache time.Duration) *Cached {
+func NewCached(getter interface{}, cache time.Duration) *Cached {
 	return &Cached{
-		log:    log,
+		log:    util.NewLogger("cache"),
 		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,

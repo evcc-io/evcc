@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"errors"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -18,7 +19,7 @@ type Tesla struct {
 }
 
 // NewTeslaFromConfig creates a new Tesla vehicle
-func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
 		Capacity               int64
@@ -27,7 +28,10 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehi
 		VIN                    string
 		Cache                  time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	client, err := tesla.NewClient(&tesla.Auth{
 		ClientID:     cc.ClientID,
@@ -36,12 +40,12 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehi
 		Password:     cc.Password,
 	})
 	if err != nil {
-		log.FATAL.Fatalf("cannot create tesla: %v", err)
+		return nil, err
 	}
 
 	vehicles, err := client.Vehicles()
 	if err != nil {
-		log.FATAL.Fatalf("cannot create tesla: %v", err)
+		return nil, err
 	}
 
 	v := &Tesla{
@@ -59,13 +63,13 @@ func NewTeslaFromConfig(log *util.Logger, other map[string]interface{}) api.Vehi
 	}
 
 	if v.vehicle == nil {
-		log.FATAL.Fatal("cannot create tesla: vin not found")
+		return nil, errors.New("vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
-	v.chargedEnergyG = provider.NewCached(log, v.chargedEnergy, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 // chargeState implements the Vehicle.ChargeState interface

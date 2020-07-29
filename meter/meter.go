@@ -1,49 +1,65 @@
 package meter
 
 import (
+	"fmt"
+
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
 
-// MeterEnergyDecorator decorates an api.Meter with api.MeterEnergy
-type MeterEnergyDecorator struct {
+// EnergyDecorator decorates an api.Meter with api.MeterEnergy
+type EnergyDecorator struct {
 	api.Meter
 	api.MeterEnergy
 }
 
 // NewConfigurableFromConfig creates api.Meter from config
-func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
+func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Power  provider.Config
 		Energy *provider.Config // optional
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	for k, v := range map[string]string{"power": cc.Power.Type} {
 		if v == "" {
-			log.FATAL.Fatalf("default meter config: %s required", k)
+			return nil, fmt.Errorf("default meter config: %s required", k)
 		}
 	}
 
-	m := NewConfigurable(provider.NewFloatGetterFromConfig(log, cc.Power))
+	power, err := provider.NewFloatGetterFromConfig(cc.Power)
+	if err != nil {
+		return nil, err
+	}
+
+	m, _ := NewConfigurable(power)
 
 	// decorate Meter with MeterEnergy
 	if cc.Energy != nil {
-		m = &MeterEnergyDecorator{
+		energy, err := provider.NewFloatGetterFromConfig(*cc.Energy)
+		if err != nil {
+			return nil, err
+		}
+
+		m = &EnergyDecorator{
 			Meter:       m,
-			MeterEnergy: NewMeterEnergy(provider.NewFloatGetterFromConfig(log, *cc.Energy)),
+			MeterEnergy: NewMeterEnergy(energy),
 		}
 	}
 
-	return m
+	return m, nil
 }
 
 // NewConfigurable creates a new charger
-func NewConfigurable(currentPowerG func() (float64, error)) api.Meter {
-	return &Meter{
+func NewConfigurable(currentPowerG func() (float64, error)) (api.Meter, error) {
+	m := &Meter{
 		currentPowerG: currentPowerG,
 	}
+	return m, nil
 }
 
 // Meter is an api.Meter implementation with configurable getters and setters.

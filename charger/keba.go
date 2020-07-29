@@ -37,19 +37,21 @@ type Keba struct {
 }
 
 // NewKebaFromConfig creates a new configurable charger
-func NewKebaFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI     string
 		Timeout time.Duration
 		RFID    RFID
 	}{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewKeba(cc.URI, cc.RFID, cc.Timeout)
 }
 
 // NewKeba creates a new charger
-func NewKeba(conn string, rfid RFID, timeout time.Duration) api.Charger {
+func NewKeba(conn string, rfid RFID, timeout time.Duration) (api.Charger, error) {
 	log := util.NewLogger("keba")
 
 	if keba.Instance == nil {
@@ -75,7 +77,7 @@ func NewKeba(conn string, rfid RFID, timeout time.Duration) api.Charger {
 
 	keba.Instance.Subscribe(conn, c.recv)
 
-	return c
+	return c, nil
 }
 
 func (c *Keba) send(msg string) error {

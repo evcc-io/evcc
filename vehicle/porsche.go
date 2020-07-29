@@ -59,14 +59,16 @@ type Porsche struct {
 }
 
 // NewPorscheFromConfig creates a new vehicle
-func NewPorscheFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	v := &Porsche{
 		embed:      &embed{cc.Title, cc.Capacity},
@@ -76,9 +78,9 @@ func NewPorscheFromConfig(log *util.Logger, other map[string]interface{}) api.Ve
 		vin:        cc.VIN,
 	}
 
-	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 // login with a my Porsche account

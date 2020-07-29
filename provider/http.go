@@ -41,7 +41,7 @@ func NewAuth(log *util.Logger, auth Auth, headers map[string]string) {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *HTTP {
+func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	cc := struct {
 		URI, Method string
 		Headers     map[string]string
@@ -51,12 +51,15 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 		Insecure    bool
 		Auth        Auth
 	}{}
-	util.DecodeOther(log, other, &cc)
 
-	logger := util.NewLogger("http")
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("http")
 
 	p := &HTTP{
-		HTTPHelper: util.NewHTTPHelper(logger),
+		HTTPHelper: util.NewHTTPHelper(log),
 		url:        cc.URI,
 		method:     cc.Method,
 		headers:    cc.Headers,
@@ -82,13 +85,13 @@ func NewHTTPProviderFromConfig(log *util.Logger, other map[string]interface{}) *
 	if cc.Jq != "" {
 		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
-			log.FATAL.Fatalf("config: invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("config: invalid jq query: %s", p.jq)
 		}
 
 		p.jq = op
 	}
 
-	return p
+	return p, nil
 }
 
 // request executed the configured request

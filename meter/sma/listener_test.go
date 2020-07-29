@@ -189,7 +189,7 @@ func TestListenerProcessMessage(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			l := &Listener{
-				log: util.NewLogger("sma "),
+				log: util.NewLogger("foo"),
 			}
 
 			buffer := tc.response

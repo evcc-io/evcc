@@ -54,14 +54,16 @@ type Audi struct {
 }
 
 // NewAudiFromConfig creates a new vehicle
-func NewAudiFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	v := &Audi{
 		embed:      &embed{cc.Title, cc.Capacity},
@@ -71,9 +73,9 @@ func NewAudiFromConfig(log *util.Logger, other map[string]interface{}) api.Vehic
 		vin:        cc.VIN,
 	}
 
-	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 func (v *Audi) apiURL(service, part string) string {

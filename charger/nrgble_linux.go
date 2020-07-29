@@ -2,6 +2,7 @@ package charger
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -35,23 +36,25 @@ type NRGKickBLE struct {
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
-func NewNRGKickBLEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ Device, MacAddress, PIN string }{
 		Device: "hci0",
 	}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	// decode PIN with leading zero
 	pin, err := strconv.Atoi(cc.PIN)
 	if err != nil {
-		log.FATAL.Fatalf("config: invalid pin '%s'", cc.PIN)
+		return nil, errors.New("config: invalid pin '%s'", cc.PIN)
 	}
 
 	return NewNRGKickBLE(cc.Device, cc.MacAddress, pin)
 }
 
 // NewNRGKickBLE creates NRGKickBLE charger
-func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
+func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
 	logger := util.NewLogger("nrg-bt")
 
 	// set LE mode
@@ -73,18 +76,18 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 	}
 
 	if err != nil {
-		logger.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	adapt, err := adapter.NewAdapter1FromAdapterID(device)
 	if err != nil {
-		logger.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	//Connect DBus System bus
 	conn, err := dbus.SystemBus()
 	if err != nil {
-		logger.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	// do not reuse agent0 from service
@@ -93,7 +96,7 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 	ag := agent.NewSimpleAgent()
 	err = agent.ExposeAgent(conn, ag, agent.CapNoInputNoOutput, true)
 	if err != nil {
-		logger.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	nrg := &NRGKickBLE{
@@ -106,7 +109,7 @@ func NewNRGKickBLE(device, macaddress string, pin int) *NRGKickBLE {
 		agent:      ag,
 	}
 
-	return nrg
+	return nrg, nil
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {

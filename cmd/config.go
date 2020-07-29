@@ -51,8 +51,8 @@ type ConfigProvider struct {
 }
 
 // Meter provides meters by name
-func (c *ConfigProvider) Meter(name string) api.Meter {
-	if meter, ok := c.meters[name]; ok {
+func (cp *ConfigProvider) Meter(name string) api.Meter {
+	if meter, ok := cp.meters[name]; ok {
 		return meter
 	}
 	log.FATAL.Fatalf("config: invalid meter %s", name)
@@ -60,8 +60,8 @@ func (c *ConfigProvider) Meter(name string) api.Meter {
 }
 
 // Charger provides chargers by name
-func (c *ConfigProvider) Charger(name string) api.Charger {
-	if charger, ok := c.chargers[name]; ok {
+func (cp *ConfigProvider) Charger(name string) api.Charger {
+	if charger, ok := cp.chargers[name]; ok {
 		return charger
 	}
 	log.FATAL.Fatalf("config: invalid charger %s", name)
@@ -69,37 +69,49 @@ func (c *ConfigProvider) Charger(name string) api.Charger {
 }
 
 // Vehicle provides vehicles by name
-func (c *ConfigProvider) Vehicle(name string) api.Vehicle {
-	if vehicle, ok := c.vehicles[name]; ok {
+func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
+	if vehicle, ok := cp.vehicles[name]; ok {
 		return vehicle
 	}
 	log.FATAL.Fatalf("config: invalid vehicle %s", name)
 	return nil
 }
 
-func (c *ConfigProvider) configure(conf config) {
-	c.configureMeters(conf)
-	c.configureChargers(conf)
-	c.configureVehicles(conf)
+func (cp *ConfigProvider) configure(conf config) {
+	cp.configureMeters(conf)
+	cp.configureChargers(conf)
+	cp.configureVehicles(conf)
 }
 
-func (c *ConfigProvider) configureMeters(conf config) {
-	c.meters = make(map[string]api.Meter)
+func (cp *ConfigProvider) configureMeters(conf config) {
+	cp.meters = make(map[string]api.Meter)
 	for _, cc := range conf.Meters {
-		c.meters[cc.Name] = meter.NewFromConfig(log, cc.Type, cc.Other)
+		m, err := meter.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		cp.meters[cc.Name] = m
 	}
 }
 
-func (c *ConfigProvider) configureChargers(conf config) {
-	c.chargers = make(map[string]api.Charger)
+func (cp *ConfigProvider) configureChargers(conf config) {
+	cp.chargers = make(map[string]api.Charger)
 	for _, cc := range conf.Chargers {
-		c.chargers[cc.Name] = charger.NewFromConfig(log, cc.Type, cc.Other)
+		c, err := charger.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		cp.chargers[cc.Name] = c
 	}
 }
 
-func (c *ConfigProvider) configureVehicles(conf config) {
-	c.vehicles = make(map[string]api.Vehicle)
+func (cp *ConfigProvider) configureVehicles(conf config) {
+	cp.vehicles = make(map[string]api.Vehicle)
 	for _, cc := range conf.Vehicles {
-		c.vehicles[cc.Name] = vehicle.NewFromConfig(log, cc.Type, cc.Other)
+		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+		cp.vehicles[cc.Name] = v
 	}
 }

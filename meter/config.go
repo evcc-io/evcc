@@ -1,28 +1,26 @@
 package meter
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
 )
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Meter {
-	var c api.Meter
-
+func NewFromConfig(typ string, other map[string]interface{}) (meter api.Meter, err error) {
 	switch strings.ToLower(typ) {
 	case "default", "configurable":
-		c = NewConfigurableFromConfig(log, other)
+		meter, err = NewConfigurableFromConfig(other)
 	case "modbus":
-		c = NewModbusFromConfig(log, other)
+		meter, err = NewModbusFromConfig(other)
 	case "sma":
-		c = NewSMAFromConfig(log, other)
+		meter, err = NewSMAFromConfig(other)
 	case "tesla", "powerwall":
-		c = NewTeslaFromConfig(log, other)
+		meter, err = NewTeslaFromConfig(other)
 	default:
-		log.FATAL.Fatalf("invalid meter type '%s'", typ)
+		err = fmt.Errorf("invalid meter type: %s", typ)
 	}
 
-	return c
+	return meter, err
 }
