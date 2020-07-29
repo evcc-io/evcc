@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -124,6 +125,35 @@ func ConfigHandler(site site) http.HandlerFunc {
 	}
 }
 
+// TemplatesHandler returns current charge mode
+func TemplatesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		class, ok := vars["class"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		type template = struct {
+			Name   string `json:"name"`
+			Sample string `json:"template"`
+		}
+
+		res := make([]template, 0)
+		for _, conf := range test.ConfigTemplates(class) {
+			typedSample := fmt.Sprintf("type: %s\n%s", conf.Type, conf.Sample)
+			t := template{
+				Name:   conf.Name,
+				Sample: typedSample,
+			}
+			res = append(res, t)
+		}
+
+		jsonResponse(w, r, res)
+	}
+}
+
 // StateHandler returns current charge mode
 func StateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -203,6 +233,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler()},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
+		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
