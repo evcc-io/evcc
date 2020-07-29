@@ -364,8 +364,13 @@ const setup = Vue.component("setup", {
   data: function () {
     return {
       state: store.state,
-      templateMeters: [],
-      selectedMeter: "",
+      templates: [
+        { templateClass: "meter", title: "Zähler", data: [] },
+        { templateClass: "charger", title: "Ladegeräte", data: [] },
+        { templateClass: "vehicle", title: "EVs", data: [] },
+      ],
+      activeTemplateClass: "",
+      selectedItem: "",
       editorInstance : "",
       editorCodeType: "",
       editorContent: "",
@@ -375,6 +380,17 @@ const setup = Vue.component("setup", {
     noCodeAvailable: function () {
       return this.editorContent.length == 0
     }
+  },
+  watch: {
+    "activeTemplateClass": function () {
+      this.updateTemplates(this.activeTemplateClass);
+    },
+    "selectedItem": function () {
+      var templateItem = this.templateByTemplateClass(this.activeTemplateClass)
+      var templateText = templateItem.data[this.selectedItem].template;
+      this.editorCodeType = this.activeTemplateClass;
+      this.editorInstance.setValue(templateText);
+    },
   },
   methods: {
     initEditor: function() {
@@ -392,30 +408,44 @@ const setup = Vue.component("setup", {
     api: function (func) {
       return "config/templates/" + func;
     },
-    update: function (dataset) {
-      while (this.templateMeters.length <= dataset) {
-        this.templateMeters.push({});
+    update: function (target, dataset) {
+      target.data = [];
+      while (target.data.length <= dataset) {
+        target.data.push({});
       }
       for (let i = 0; i < dataset.length; i++) {
         var value = dataset[i];
-        Vue.set(this.templateMeters, i, value);
+        Vue.set(target.data, i, value);
+      }
+    },
+    templateByTemplateClass: function (templateClass) {
+      var templateItem;
+      for (let i = 0; i < this.templates.length; i++) {
+        if (this.templates[i].templateClass == templateClass) {
+          templateItem = this.templates[i];
+        }
+      }
+      return templateItem;
+    },
+    isActiveTemplateClass: function (templateClass) {
+      return this.activeTemplateClass == templateClass;
+    },
+    updateTemplates: function (templateClass) {
+      let templateItem = this.templateByTemplateClass(templateClass);
+      if (templateItem !== undefined) {
+        axios.get(this.api(templateItem.templateClass)).then(function (msg) {
+          this.update(templateItem, msg.data)
+        }.bind(this)).catch(toasts.error);  
       }
     },
     testCode: function (event) {
       var templateText = this.editorInstance.getValue();
       console.log(templateText);
     },
-    onChange: function (event) {
-      var templateText = this.templateMeters[this.selectedMeter].template;
-      this.editorCodeType = "meter";
-      this.editorInstance.setValue(templateText);
-    },
   },
   mounted: function () {
     this.initEditor();
-    axios.get(this.api("meter")).then(function (msg) {
-      this.update(msg.data)
-    }.bind(this)).catch(toasts.error);
+    this.activeTemplateClass = this.templates[0].templateClass;
   }
 });
 

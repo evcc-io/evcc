@@ -505,17 +505,22 @@ loadpoints:
   <div class="container" v-on:>
     <div class="row">
       <div class="col-6">
+        <ul class="nav nav-tabs" v-model="activeTemplateClass">
+          <li v-for="template in templates" class="nav-item"><a class="nav-link" @click="activeTemplateClass = template.templateClass" :class="{active:activeTemplateClass == template.templateClass}">{{template.title}}</a></li>
+        </ul>
+        <div class="tab-content" id="templateTabs" v-for="template in templates">
+          <div class="tab-pane" v-bind:class="{ 'active show': isActiveTemplateClass(template.templateClass) }">
+            <select size="20" v-model="selectedItem">
+              <option v-for="(item, indexItem) in template.data" v-on:click="$emit('selectedItem', indexItem)" :value="indexItem">{{item.name|}}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
         <h2>Konfiguration</h2>
         <div id="editorContainer" style="width:100%;height:600px;border:1px solid grey">
         </div>
         <button @click="testCode()" :disabled='noCodeAvailable'>Test</button>
-      </div>
-      <div class="col-6">
-        <h2>Auswahl</h2>
-        <p>Zähler auswählen</p>
-        <select id="meter" size="20" @change="onChange()" v-model="selectedMeter">
-          <option v-for="(meter, index) in templateMeters" v-on:click="$emit('selectMeter', index)" :value="index">{{meter.name|}}</option>
-        </select>
       </div>
     </div>
   </div>
