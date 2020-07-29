@@ -11,11 +11,13 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
+	github.com/google/go-github/v32 v32.1.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
 	github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1
+	github.com/hashicorp/go-version v1.2.1
 	github.com/influxdata/influxdb-client-go v1.4.0
 	github.com/itchyny/gojq v0.11.0
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
@@ -32,6 +34,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac
+	github.com/yuin/goldmark v1.1.32
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c

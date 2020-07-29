@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -92,12 +93,13 @@ func encode(v interface{}) (string, error) {
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
 		s = fmt.Sprintf("%d", int64(val.Seconds()))
-	case fmt.Stringer, string:
-		s = fmt.Sprintf("\"%s\"", val)
 	case float64:
 		s = fmt.Sprintf("%.3f", val)
 	default:
-		s = fmt.Sprintf("%v", val)
+		// s = fmt.Sprintf("%v", val)
+		if b, err := json.Marshal(v); err == nil {
+			s = string(b)
+		}
 	}
 	return s, nil
 }
