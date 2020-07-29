@@ -252,7 +252,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	static.Use(handlers.CompressHandler)
 
 	static.HandleFunc("/", indexHandler(links, site, useLocalAssets))
-	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
+	for _, folder := range []string{"js", "vs", "css", "webfonts", "ico"} {
 		prefix := fmt.Sprintf("/%s/", folder)
 		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(useLocalAssets, prefix))))
 	}

@@ -23,6 +23,7 @@
   <!-- CSS -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/fontawesome.min.css" rel="stylesheet">
+  <link href="vs/editor/editor.main.css" rel="stylesheet" data-name="vs/editor/editor.main">
 
   <!-- Bootstrap -->
   <script src="js/jquery-3.4.1.slim.min.js"></script>
@@ -71,6 +72,7 @@
         <router-link class="nav-item nav-link pb-1" to="/links/<<$idx>>"><<$link.Title>></router-link>
         <!-- <<end>> -->
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup">Setup</router-link>
         <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
       </div>
     </div>
@@ -499,6 +501,26 @@ loadpoints:
   </div>
 </script>
 
+<script type="text/x-template" id="setup-template" v-on:>
+  <div class="container" v-on:>
+    <div class="row">
+      <div class="col-6">
+        <h2>Konfiguration</h2>
+        <div id="editorContainer" style="width:100%;height:600px;border:1px solid grey">
+        </div>
+        <button @click="testCode()" :disabled='noCodeAvailable'>Test</button>
+      </div>
+      <div class="col-6">
+        <h2>Auswahl</h2>
+        <p>Zähler auswählen</p>
+        <select id="meter" size="20" @change="onChange()" v-model="selectedMeter">
+          <option v-for="(meter, index) in templateMeters" v-on:click="$emit('selectMeter', index)" :value="index">{{meter.name|}}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</script>
+
 <footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-3 mt-md-5 border-top">
   <div class="container">
     <div class="row">
@@ -528,7 +550,10 @@ loadpoints:
   }
 </script>
 
-<script src="js/app.js?<<.Tag>>"></script>
-
+<script>var require = { paths: { 'vs': 'vs' } };</script>
+<script src="vs/loader.js"></script>
+<script src="vs/editor/editor.main.nls.js"></script>
+<script src="vs/editor/editor.main.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

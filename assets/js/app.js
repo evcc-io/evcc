@@ -8,6 +8,7 @@ const loc = window.location.href.indexOf("http://localhost/evcc/assets/") === 0 
 axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/api";
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
+let editor;
 //
 // Mixins
 //
@@ -83,6 +84,7 @@ let store = {
   state: {
     availableVersion: null,
     loadpoints: [],
+    editorContent: "",
   },
   update: function(msg) {
     let target = this.state;
@@ -354,6 +356,70 @@ Vue.component("soc", {
 });
 
 //
+// Setup
+//
+
+const setup = Vue.component("setup", {
+  template: "#setup-template",
+  data: function () {
+    return {
+      state: store.state,
+      templateMeters: [],
+      selectedMeter: "",
+      editorInstance : "",
+      editorCodeType: "",
+      editorContent: "",
+    };
+  },
+  computed: {
+    noCodeAvailable: function () {
+      return this.editorContent.length == 0
+    }
+  },
+  methods: {
+    initEditor: function() {
+      this.editorInstance = monaco.editor.create(document.getElementById('editorContainer'), {
+        value: [
+          ''
+        ].join('\n'),
+        minimap: { enabled: false },
+        language: 'yaml'
+      });
+      this.editorInstance.onDidChangeModelContent(event => {
+        this.editorContent = this.editorInstance.getValue();
+      });
+    },
+    api: function (func) {
+      return "config/templates/" + func;
+    },
+    update: function (dataset) {
+      while (this.templateMeters.length <= dataset) {
+        this.templateMeters.push({});
+      }
+      for (let i = 0; i < dataset.length; i++) {
+        var value = dataset[i];
+        Vue.set(this.templateMeters, i, value);
+      }
+    },
+    testCode: function (event) {
+      var templateText = this.editorInstance.getValue();
+      console.log(templateText);
+    },
+    onChange: function (event) {
+      var templateText = this.templateMeters[this.selectedMeter].template;
+      this.editorCodeType = "meter";
+      this.editorInstance.setValue(templateText);
+    },
+  },
+  mounted: function () {
+    this.initEditor();
+    axios.get(this.api("meter")).then(function (msg) {
+      this.update(msg.data)
+    }.bind(this)).catch(toasts.error);
+  }
+});
+
+//
 // Routing
 //
 
@@ -397,6 +463,7 @@ const routes = [
 ].concat(routerLinks().map(function(props, idx) {
   return { path: "/links/" + idx, component: embed, props: props }
 })).concat([
+  { path: "/setup", component: setup },
   { path: "/config", component: config },
 ]);
 
