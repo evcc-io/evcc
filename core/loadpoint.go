@@ -45,7 +45,7 @@ type LoadPoint struct {
 	// exposed public configuration
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"`      // Charge mode, guarded by mutex
-	targetSoC  int            `mapstructure:"targetSoC"` // Target SoC, guarded by mutex
+	TargetSoC  int            `mapstructure:"targetSoC"` // Target SoC, guarded by mutex
 
 	Title      string `mapstructure:"title"`   // UI title
 	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
@@ -98,9 +98,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.Mode = api.ModeOff
 	}
 
-	lp.targetSoC = 100
+	lp.TargetSoC = 100
 	if len(lp.SoC.Levels) > 0 {
-		lp.targetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
+		lp.TargetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
 	}
 
 	if lp.Meters.ChargeMeterRef != "" {
@@ -180,7 +180,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 func (lp *LoadPoint) GetTargetSoC() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.targetSoC
+	return lp.TargetSoC
 }
 
 // SetTargetSoC sets loadpoint charge targetSoC
@@ -191,8 +191,8 @@ func (lp *LoadPoint) SetTargetSoC(targetSoC int) {
 	lp.log.INFO.Println("set target soc:", targetSoC)
 
 	// apply immediately
-	if lp.targetSoC != targetSoC {
-		lp.targetSoC = targetSoC
+	if lp.TargetSoC != targetSoC {
+		lp.TargetSoC = targetSoC
 		lp.publish("targetSoC", targetSoC)
 		lp.lpChan <- lp // request loadpoint update
 	}
@@ -337,7 +337,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// publish initial values
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
-	lp.publish("targetSoC", lp.targetSoC)
+	lp.publish("targetSoC", lp.TargetSoC)
 	lp.Unlock()
 
 	// prepare charger status
@@ -542,7 +542,8 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 	}
 
 	if lp.chargePower > 0 && lp.vehicle != nil {
-		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(lp.vehicle.Capacity())
+		whTotal := int64(lp.TargetSoC) * lp.vehicle.Capacity()
+		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(whTotal)
 		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
 	}
 
@@ -611,7 +612,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// execute loading strategy
 	switch {
-	case lp.targetSoC > 0 && lp.vehicle != nil && lp.socCharge >= float64(lp.targetSoC):
+	case lp.TargetSoC > 0 && lp.vehicle != nil && lp.socCharge >= float64(lp.TargetSoC):
 		err = lp.handler.Ramp(0)
 
 	case mode == api.ModeOff:

@@ -117,6 +117,7 @@ type LoadpointConfiguration struct {
 	SoCCapacity int64  `json:"socCapacity"`
 	SoCTitle    string `json:"socTitle"`
 	SoCLevels   []int  `json:"socLevels"`
+	TargetSoC   int    `json:"targetSoC"`
 }
 
 // GetMode Gets loadpoint charge mode
@@ -179,6 +180,7 @@ func (site *Site) Configuration() SiteConfiguration {
 			lpc.SoCCapacity = lp.vehicle.Capacity()
 			lpc.SoCTitle = lp.vehicle.Title()
 			lpc.SoCLevels = lp.SoC.Levels
+			lpc.TargetSoC = lp.TargetSoC
 		}
 
 		c.LoadPoints = append(c.LoadPoints, lpc)
