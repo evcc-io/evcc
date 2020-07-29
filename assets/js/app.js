@@ -181,7 +181,13 @@ Vue.component('version', {
   data: function () {
     return {
       state: store.state,
+      notesShown: false,
     };
+  },
+  mounted: function () {
+    $(this.$refs.notes)
+      .on('show.bs.collapse', function () { this.notesShown = true; }.bind(this))
+      .on('hide.bs.collapse', function () { this.notesShown = false; }.bind(this));
   },
   watch: {
     "state.availableVersion": function () {

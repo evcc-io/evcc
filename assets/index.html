@@ -58,8 +58,6 @@
 <body>
 
 <div id="app">
-  <version installed="<<.Version>>" id="version-bar"></version>
-
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -78,21 +76,38 @@
     </div>
   </nav>
 
+  <version installed="<<.Version>>" id="version-bar"></version>
+
   <message-toasts></message-toasts>
   <router-view></router-view>
 </div>
 
 <script type="text/x-template" id="version-template">
-  <div class="row p-3 bg-warning collapse" ref="bar">
-    <div class="col-12">
-      Neue Version verfügbar!
-      Installiert: {{installed}}.
-      Verfügbar: {{state.availableVersion}}.
-      <b><a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion"
-        class="text-body pr-2">Download...</a></b>
-      <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
-        <span aria-hidden="true">&times;</span>
-      </button>
+  <div class="collapse" ref="bar">
+    <div class="row p-3 bg-warning">
+      <div class="col-12">
+        Neue Version verfügbar!
+        Installiert: {{installed}}.
+        Verfügbar: {{state.availableVersion}}.
+        <b class="px-3" data-toggle="collapse" data-target="#release-notes" v-if="state.releaseNotes">
+          <a href="#" class="text-body">
+            Release notes
+            <i class="fas fa-chevron-up" v-if="notesShown"></i>
+            <i class="fas fa-chevron-down" v-else></i>
+          </a>
+        </b>
+        <b class="px-3">
+          <a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion" class="text-body">
+            Download <i class="fas fa-chevron-down"></i>
+          </a>
+        </b>
+        <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    </div>
+    <div class="row p-3 bg-light collapse" id="release-notes" ref="notes">
+      <div class="col-12" v-html="state.releaseNotes"></div>
     </div>
   </div>
 </script>
@@ -113,7 +128,7 @@
 </script>
 
 <div id="toasts">
-  <div aria-atomic="true" style="position: absolute; top: 4rem; right: 0.5rem; min-height: 200px; min-width: 300px">
+  <div aria-atomic="true" style="position: absolute; top: 4rem; right: 0.5rem;">
     <!-- Position it -->
     <message-toast v-for="item in items" v-bind:item="item" :id="'message-id-'+item.id" :key="item.id">
     </message-toast>
