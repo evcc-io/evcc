@@ -111,7 +111,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.ChargerRef == "" {
-		lp.log.FATAL.Fatal("config: missing charger")
+		lp.log.FATAL.Fatal("missing charger")
 	}
 	charger := cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(charger)

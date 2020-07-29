@@ -85,7 +85,7 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 	// slice of loadpoints
 	lps, ok := viper.AllSettings()["loadpoints"]
 	if !ok {
-		log.FATAL.Fatal("config: missing loadpoints")
+		log.FATAL.Fatal("missing loadpoints")
 	}
 
 	// decode slice into slice of maps
@@ -107,7 +107,7 @@ func loadConfigFile(cfgFile string) (conf config) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
+			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 		}
 	} else {
 		log.FATAL.Fatal("missing evcc config")

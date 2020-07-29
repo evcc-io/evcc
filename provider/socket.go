@@ -70,7 +70,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 	if cc.Jq != "" {
 		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
-			return nil, fmt.Errorf("config: invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
 		}
 
 		p.jq = op

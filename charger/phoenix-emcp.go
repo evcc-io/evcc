@@ -39,7 +39,7 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 	}
 
 	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
-		return nil, fmt.Errorf("config: missing or invalid phoenix EM-CP uri: %s", cc.URI)
+		return nil, fmt.Errorf("missing or invalid phoenix uri: %s", cc.URI)
 	}
 
 	return NewPhoenixEMCP(cc.URI, cc.ID)

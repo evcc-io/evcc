@@ -2,7 +2,6 @@ package charger
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -47,7 +46,7 @@ func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) 
 	// decode PIN with leading zero
 	pin, err := strconv.Atoi(cc.PIN)
 	if err != nil {
-		return nil, errors.New("config: invalid pin '%s'", cc.PIN)
+		return nil, fmt.Errorf("invalid pin: %s", cc.PIN)
 	}
 
 	return NewNRGKickBLE(cc.Device, cc.MacAddress, pin)

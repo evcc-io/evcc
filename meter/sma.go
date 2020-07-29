@@ -70,7 +70,7 @@ func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
 	} else if serial != "" {
 		sma.Instance.Subscribe(serial, sm.recv)
 	} else {
-		return nil, errors.New("config: missing uri or serial")
+		return nil, errors.New("missing uri or serial")
 	}
 
 	go sm.receive()

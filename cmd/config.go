@@ -55,7 +55,7 @@ func (cp *ConfigProvider) Meter(name string) api.Meter {
 	if meter, ok := cp.meters[name]; ok {
 		return meter
 	}
-	log.FATAL.Fatalf("config: invalid meter %s", name)
+	log.FATAL.Fatalf("invalid meter: %s", name)
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (cp *ConfigProvider) Charger(name string) api.Charger {
 	if charger, ok := cp.chargers[name]; ok {
 		return charger
 	}
-	log.FATAL.Fatalf("config: invalid charger %s", name)
+	log.FATAL.Fatalf("invalid charger: %s", name)
 	return nil
 }
 
@@ -73,7 +73,7 @@ func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
 	if vehicle, ok := cp.vehicles[name]; ok {
 		return vehicle
 	}
-	log.FATAL.Fatalf("config: invalid vehicle %s", name)
+	log.FATAL.Fatalf("invalid vehicle: %s", name)
 	return nil
 }
 

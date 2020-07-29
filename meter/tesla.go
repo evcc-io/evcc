@@ -46,12 +46,12 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if cc.Usage == "" {
-		return nil, errors.New("config: missing usage")
+		return nil, errors.New("missing usage setting")
 	}
 
 	url, err := url.ParseRequestURI(cc.URI)
 	if err != nil {
-		return nil, fmt.Errorf("config: invalid uri %s", cc.URI)
+		return nil, fmt.Errorf("invalid uri %s", cc.URI)
 	}
 
 	if url.Path == "" {

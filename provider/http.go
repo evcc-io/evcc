@@ -33,7 +33,7 @@ type Auth struct {
 // NewAuth creates authorization headers from config
 func NewAuth(log *util.Logger, auth Auth, headers map[string]string) {
 	if strings.ToLower(auth.Type) != "basic" {
-		log.FATAL.Fatalf("config: unsupported auth type: %s", auth.Type)
+		log.FATAL.Fatalf("unsupported auth type: %s", auth.Type)
 	}
 
 	basicAuth := auth.User + ":" + auth.Password
@@ -85,7 +85,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	if cc.Jq != "" {
 		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
-			return nil, fmt.Errorf("config: invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
 		}
 
 		p.jq = op

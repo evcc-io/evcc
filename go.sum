@@ -20,14 +20,6 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alvaroloes/enumer v1.1.2 h1:5khqHB33TZy1GWCO/lZwcroBFh7u+0j40T83VUbfAMY=
 github.com/alvaroloes/enumer v1.1.2/go.mod h1:FxrjvuXoDAx9isTJrv4c+T410zFi0DtXIT0m65DJ+Wo=
 github.com/andig/evcc v0.0.0-20200727161511-d58eb15f2dc9/go.mod h1:8HONEC6cC2s4k0u3QL7GIjrYOZYTOKiiXybw0FIJL0A=
-github.com/andig/evcc-config v0.0.0-20200728142959-b798a8b6b384 h1:ol6wEK2NJCIKjyVk3cyQsVKsi1QaVm77XlMNKTLidQA=
-github.com/andig/evcc-config v0.0.0-20200728142959-b798a8b6b384/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
-github.com/andig/evcc-config v0.0.0-20200729061908-dff8e0408168 h1:8UjWHD6HTTcTpWDD0pYlCUXaOUUe5R582EtqLy3fPig=
-github.com/andig/evcc-config v0.0.0-20200729061908-dff8e0408168/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
-github.com/andig/evcc-config v0.0.0-20200729092413-106691a8c13d h1:0bcJtdJmdhUfuOkEIsa7bP+eFVXXAN6W0C/AyKZhIAI=
-github.com/andig/evcc-config v0.0.0-20200729092413-106691a8c13d/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
-github.com/andig/evcc-config v0.0.0-20200729093325-899f5b7c2247 h1:Xv3LS07jQriFZTSZnqkvVj5QS82oy8Io1+cGF49DNl4=
-github.com/andig/evcc-config v0.0.0-20200729093325-899f5b7c2247/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
 github.com/andig/evcc-config v0.0.0-20200729105416-7fbb6e0605cc h1:G+Zpx2yBwqGVZPrUMm8CXpb9sOavQlH9d1CS++cV4SY=
 github.com/andig/evcc-config v0.0.0-20200729105416-7fbb6e0605cc/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c h1:AMtX56iHlNYVxMID7fe9efuVtaxgtdjyMeolg7q87IE=

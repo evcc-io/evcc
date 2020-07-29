@@ -55,7 +55,7 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn met
 	}
 
 	if conn == nil {
-		return nil, errors.New("config: invalid modbus configuration: need either uri or device")
+		return nil, errors.New("invalid modbus configuration: need either uri or device")
 	}
 
 	return conn, nil
@@ -70,7 +70,7 @@ func NewDevice(model string, isRS485 bool) (device meters.Device, err error) {
 	}
 
 	if device == nil {
-		err = errors.New("config: invalid modbus configuration: need either uri or device")
+		err = errors.New("invalid modbus configuration: need either uri or device")
 	}
 
 	return device, err

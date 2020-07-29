@@ -32,7 +32,7 @@ func TestDistConfig(t *testing.T) {
 	// check config does not contain surplus keys
 	var conf config
 	if err := viper.UnmarshalExact(&conf); err != nil {
-		log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
+		log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 	}
 
 	// setup mqtt

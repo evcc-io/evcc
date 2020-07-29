@@ -55,18 +55,18 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	var op modbus.Operation
 
 	if cc.Value != "" && cc.Register.Decode != "" {
-		return nil, errors.New("config: modbus cannot have value and register both")
+		return nil, errors.New("modbus cannot have value and register both")
 	}
 
 	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("config: missing modbus value or register - assuming Power")
+		log.WARN.Println("missing modbus value or register - assuming Power")
 		cc.Value = "Power"
 	}
 
 	// model + value configured
 	if cc.Value != "" {
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
-			return nil, fmt.Errorf("config: invalid value %s", cc.Value)
+			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
 
 		// if sunspec reading configured make sure model is defined or device won't be initalized
