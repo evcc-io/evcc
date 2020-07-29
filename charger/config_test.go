@@ -1,4 +1,4 @@
-package meter
+package charger
 
 import (
 	"testing"
@@ -6,10 +6,10 @@ import (
 	"github.com/andig/evcc/util/test"
 )
 
-func TestMeters(t *testing.T) {
-	for _, tmpl := range test.ConfigTemplates("meter") {
+func TestChargers(t *testing.T) {
+	for _, tmpl := range test.ConfigTemplates("charger") {
 		_, err := NewFromConfig(tmpl.Type, tmpl.Config)
-		if err != nil && !test.Acceptable("meter", err) {
+		if err != nil && !test.Acceptable("charger", err) {
 			t.Logf("%s", tmpl.Name)
 			t.Error(err)
 		}
