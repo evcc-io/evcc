@@ -20,12 +20,15 @@ type Modbus struct {
 }
 
 // NewModbusFromConfig creates api.Meter from config
-func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
+func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Power, Energy   string
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	// assume RTU if not set and this is a known RS485 meter model
 	if cc.RTU == nil {
@@ -33,13 +36,17 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 		cc.RTU = &b
 	}
 
-	conn := modbus.NewConnection(log, cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
-	device, err := modbus.NewDevice(log, cc.Model, *cc.RTU)
+	log := util.NewLogger("modbus")
 
-	log = util.NewLogger("modbus")
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
 	conn.Logger(log.TRACE)
 
 	// prepare device
+	var device meters.Device
+	if err == nil {
+		device, err = modbus.NewDevice(cc.Model, *cc.RTU)
+	}
+
 	if err == nil {
 		conn.Slave(cc.ID)
 		err = device.Initialize(conn.ModbusClient())
@@ -49,8 +56,9 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 			err = nil
 		}
 	}
+
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	m := &Modbus{
@@ -75,10 +83,10 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) api.Met
 			log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Power)
 		}
 
-		return &ModbusEnergy{m}
+		return &ModbusEnergy{m}, nil
 	}
 
-	return m
+	return m, nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)

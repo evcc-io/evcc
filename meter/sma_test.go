@@ -52,7 +52,7 @@ func TestSMAUpdateMeterValues(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sm := &SMA{
-				log: util.NewLogger("sma "),
+				log: util.NewLogger("foo"),
 				mux: util.NewWaiter(udpTimeout, func() {}),
 			}
 

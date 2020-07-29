@@ -45,7 +45,7 @@ func TestWrappedMeter(t *testing.T) {
 
 	mm := mock.NewMockMeter(ctrl)
 	me := mock.NewMockMeterEnergy(ctrl)
-	cm := &meter.MeterEnergyDecorator{Meter: mm, MeterEnergy: me}
+	cm := &meter.EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	me.EXPECT().
 		TotalEnergy().

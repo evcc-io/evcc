@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -33,17 +34,20 @@ type SMA struct {
 }
 
 // NewSMAFromConfig creates a SMA Meter from generic config
-func NewSMAFromConfig(log *util.Logger, other map[string]interface{}) api.Meter {
+func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Serial, Power, Energy string
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewSMA(cc.URI, cc.Serial, cc.Power, cc.Energy)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, serial, power, energy string) api.Meter {
+func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
 	sm := &SMA{
@@ -66,17 +70,17 @@ func NewSMA(uri, serial, power, energy string) api.Meter {
 	} else if serial != "" {
 		sma.Instance.Subscribe(serial, sm.recv)
 	} else {
-		log.FATAL.Fatalf("config: missing uri or serial")
+		return nil, errors.New("missing uri or serial")
 	}
 
 	go sm.receive()
 
 	// decorate api.MeterEnergy
 	if energy != "" {
-		return &SMAEnergy{SMA: sm}
+		return &SMAEnergy{SMA: sm}, nil
 	}
 
-	return sm
+	return sm, nil
 }
 
 // update the actual meter data

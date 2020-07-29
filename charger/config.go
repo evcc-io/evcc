@@ -1,44 +1,42 @@
 package charger
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
 )
 
 type apiFunction string
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Charger {
-	var c api.Charger
-
+func NewFromConfig(typ string, other map[string]interface{}) (charger api.Charger, err error) {
 	switch strings.ToLower(typ) {
 	case "default", "configurable":
-		c = NewConfigurableFromConfig(log, other)
+		charger, err = NewConfigurableFromConfig(other)
 	case "wallbe":
-		c = NewWallbeFromConfig(log, other)
+		charger, err = NewWallbeFromConfig(other)
 	case "phoenix-emcp":
-		c = NewPhoenixEMCPFromConfig(log, other)
+		charger, err = NewPhoenixEMCPFromConfig(other)
 	case "phoenix-evcc":
-		c = NewPhoenixEVCCFromConfig(log, other)
+		charger, err = NewPhoenixEVCCFromConfig(other)
 	case "nrgkick-bluetooth", "nrgkick-bt", "nrgble":
-		c = NewNRGKickBLEFromConfig(log, other)
+		charger, err = NewNRGKickBLEFromConfig(other)
 	case "nrgkick-connect", "nrgconnect":
-		c = NewNRGKickConnectFromConfig(log, other)
+		charger, err = NewNRGKickConnectFromConfig(other)
 	case "go-e", "goe":
-		c = NewGoEFromConfig(log, other)
+		charger, err = NewGoEFromConfig(other)
 	case "evsewifi":
-		c = NewEVSEWifiFromConfig(log, other)
+		charger, err = NewEVSEWifiFromConfig(other)
 	case "simpleevse", "evse":
-		c = NewSimpleEVSEFromConfig(log, other)
+		charger, err = NewSimpleEVSEFromConfig(other)
 	case "porsche", "audi", "bentley", "mcc":
-		c = NewMobileConnectFromConfig(log, other)
+		charger, err = NewMobileConnectFromConfig(other)
 	case "keba", "bmw":
-		c = NewKebaFromConfig(log, other)
+		charger, err = NewKebaFromConfig(other)
 	default:
-		log.FATAL.Fatalf("invalid charger type '%s'", typ)
+		return nil, fmt.Errorf("invalid charger type: %s", typ)
 	}
 
-	return c
+	return charger, err
 }

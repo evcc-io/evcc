@@ -1,6 +1,8 @@
 package charger
 
 import (
+	"fmt"
+
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
@@ -15,9 +17,11 @@ type Charger struct {
 }
 
 // NewConfigurableFromConfig creates a new configurable charger
-func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	for k, v := range map[string]string{
 		"status":     cc.Status.Type,
@@ -26,18 +30,32 @@ func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) a
 		"maxcurrent": cc.MaxCurrent.Type,
 	} {
 		if v == "" {
-			log.FATAL.Fatalf("default charger config: %s required", k)
+			return nil, fmt.Errorf("default charger config: %s required", k)
 		}
 	}
 
-	charger := NewConfigurable(
-		provider.NewStringGetterFromConfig(log, cc.Status),
-		provider.NewBoolGetterFromConfig(log, cc.Enabled),
-		provider.NewBoolSetterFromConfig(log, "enable", cc.Enable),
-		provider.NewIntSetterFromConfig(log, "maxcurrent", cc.MaxCurrent),
-	)
+	status, err := provider.NewStringGetterFromConfig(cc.Status)
 
-	return charger
+	var enabled func() (bool, error)
+	if err == nil {
+		enabled, err = provider.NewBoolGetterFromConfig(cc.Enabled)
+	}
+
+	var enable func(bool) error
+	if err == nil {
+		enable, err = provider.NewBoolSetterFromConfig("enable", cc.Enable)
+	}
+
+	var maxcurrent func(int64) error
+	if err == nil {
+		maxcurrent, err = provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConfigurable(status, enabled, enable, maxcurrent)
 }
 
 // NewConfigurable creates a new charger
@@ -46,13 +64,15 @@ func NewConfigurable(
 	enabledG func() (bool, error),
 	enableS func(bool) error,
 	maxCurrentS func(int64) error,
-) api.Charger {
-	return &Charger{
+) (api.Charger, error) {
+	c := &Charger{
 		statusG:     statusG,
 		enabledG:    enabledG,
 		enableS:     enableS,
 		maxCurrentS: maxCurrentS,
 	}
+
+	return c, nil
 }
 
 // Status implements the Charger.Status interface

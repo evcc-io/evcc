@@ -14,6 +14,8 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+const retryDelay = 5 * time.Second
+
 // Socket implements websocket request provider
 type Socket struct {
 	*util.HTTPHelper
@@ -26,7 +28,7 @@ type Socket struct {
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{}) *Socket {
+func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) {
 	cc := struct {
 		URI      string
 		Headers  map[string]string
@@ -36,13 +38,15 @@ func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{})
 		Auth     Auth
 		Timeout  time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
-	logger := util.NewLogger("ws")
+	log := util.NewLogger("ws")
 
 	p := &Socket{
-		HTTPHelper: util.NewHTTPHelper(logger),
-		mux:        util.NewWaiter(cc.Timeout, func() { logger.TRACE.Println("wait for initial value") }),
+		HTTPHelper: util.NewHTTPHelper(log),
+		mux:        util.NewWaiter(cc.Timeout, func() { log.TRACE.Println("wait for initial value") }),
 		url:        cc.URI,
 		headers:    cc.Headers,
 		scale:      cc.Scale,
@@ -66,7 +70,7 @@ func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{})
 	if cc.Jq != "" {
 		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
-			log.FATAL.Fatalf("config: invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
 		}
 
 		p.jq = op
@@ -74,7 +78,7 @@ func NewSocketProviderFromConfig(log *util.Logger, other map[string]interface{})
 
 	go p.listen()
 
-	return p
+	return p, nil
 }
 
 func (p *Socket) listen() {
@@ -88,7 +92,9 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
 		if err != nil {
-			log.ERROR.Println("dial:", err)
+			log.ERROR.Println(err)
+			time.Sleep(retryDelay)
+			continue
 		}
 
 		for {

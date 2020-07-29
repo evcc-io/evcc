@@ -18,17 +18,18 @@ type Nissan struct {
 }
 
 // NewNissanFromConfig creates a new vehicle
-func NewNissanFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
 		Capacity               int64
 		User, Password, Region string
 		Cache                  time.Duration
-	}{}
-	util.DecodeOther(log, other, &cc)
+	}{
+		Region: carwings.RegionEurope,
+	}
 
-	if cc.Region == "" {
-		cc.Region = carwings.RegionEurope
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
 	session := &carwings.Session{
@@ -36,7 +37,7 @@ func NewNissanFromConfig(log *util.Logger, other map[string]interface{}) api.Veh
 	}
 
 	if err := session.Connect(cc.User, cc.Password); err != nil {
-		log.FATAL.Fatalf("cannot create nissan: %v", err)
+		return nil, err
 	}
 
 	v := &Nissan{
@@ -44,9 +45,9 @@ func NewNissanFromConfig(log *util.Logger, other map[string]interface{}) api.Veh
 		session: session,
 	}
 
-	v.chargeStateG = provider.NewCached(log, v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 // chargeState implements the Vehicle.ChargeState interface

@@ -23,14 +23,19 @@ type Modbus struct {
 }
 
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus {
+func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
 		Value           string
 		Scale           float64
-	}{}
-	util.DecodeOther(log, other, &cc)
+	}{
+		Scale: 1,
+	}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	// assume RTU if not set and this is a known RS485 meter model
 	if cc.RTU == nil {
@@ -38,27 +43,30 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus
 		cc.RTU = &b
 	}
 
-	log = util.NewLogger("modb")
-	conn := modbus.NewConnection(log, cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	if err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)
 
-	var err error
 	var device meters.Device
 	var op modbus.Operation
 
 	if cc.Value != "" && cc.Register.Decode != "" {
-		log.FATAL.Fatalf("config: modbus cannot have value and register both")
+		return nil, errors.New("modbus cannot have value and register both")
 	}
 
 	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("config: missing modbus value or register - assuming Power")
+		log.WARN.Println("missing modbus value or register - assuming Power")
 		cc.Value = "Power"
 	}
 
 	// model + value configured
 	if cc.Value != "" {
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
-			log.FATAL.Fatalf("config: invalid value %s", cc.Value)
+			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
 
 		// if sunspec reading configured make sure model is defined or device won't be initalized
@@ -76,7 +84,7 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus
 
 	// model configured
 	if cc.Model != "" {
-		device, err = modbus.NewDevice(log, cc.Model, *cc.RTU)
+		device, err = modbus.NewDevice(cc.Model, *cc.RTU)
 
 		// prepare device
 		if err == nil {
@@ -89,15 +97,12 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus
 			}
 		}
 	}
+
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
-	if cc.Scale == 0 {
-		cc.Scale = 1
-	}
-
-	return &Modbus{
+	mb := &Modbus{
 		log:     log,
 		conn:    conn,
 		device:  device,
@@ -105,6 +110,7 @@ func NewModbusFromConfig(log *util.Logger, other map[string]interface{}) *Modbus
 		scale:   cc.Scale,
 		slaveID: cc.ID,
 	}
+	return mb, nil
 }
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)

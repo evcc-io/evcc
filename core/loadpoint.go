@@ -89,7 +89,9 @@ type LoadPoint struct {
 // NewLoadPointFromConfig creates a new loadpoint
 func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
 	lp := NewLoadPoint(log)
-	util.DecodeOther(log, other, &lp)
+	if err := util.DecodeOther(other, &lp); err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// workaround mapstructure
 	if lp.Mode == "0" {
@@ -109,7 +111,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.ChargerRef == "" {
-		lp.log.FATAL.Fatal("config: missing charger")
+		lp.log.FATAL.Fatal("missing charger")
 	}
 	charger := cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(charger)

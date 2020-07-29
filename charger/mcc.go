@@ -68,17 +68,19 @@ type MobileConnect struct {
 }
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config
-func NewMobileConnectFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Password string }{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewMobileConnect(cc.URI, cc.Password)
 }
 
 // NewMobileConnect creates MCC charger
-func NewMobileConnect(uri string, password string) *MobileConnect {
+func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	mcc := &MobileConnect{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("mcc ")),
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("mcc")),
 		uri:        strings.TrimRight(uri, "/"),
 		password:   password,
 	}
@@ -89,7 +91,7 @@ func NewMobileConnect(uri string, password string) *MobileConnect {
 
 	mcc.HTTPHelper.Client.Transport = customTransport
 
-	return mcc
+	return mcc, nil
 }
 
 // construct the URL for a given apiFunction

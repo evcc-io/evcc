@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -30,30 +31,39 @@ type Vehicle struct {
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
-func NewConfigurableFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title    string
 		Capacity int64
 		Charge   provider.Config
 		Cache    time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	for k, v := range map[string]string{"charge": cc.Charge.Type} {
 		if v == "" {
-			log.FATAL.Fatalf("default vehicle config: %s required", k)
+			return nil, fmt.Errorf("default vehicle config: %s required", k)
 		}
 	}
 
-	getter := provider.NewFloatGetterFromConfig(log, cc.Charge)
-	if cc.Cache > 0 {
-		getter = provider.NewCached(log, getter, cc.Cache).FloatGetter()
+	getter, err := provider.NewFloatGetterFromConfig(cc.Charge)
+	if err != nil {
+		return nil, err
 	}
 
-	return &Vehicle{
+	if cc.Cache > 0 {
+		getter = provider.NewCached(getter, cc.Cache).FloatGetter()
+	}
+
+	v := &Vehicle{
 		embed:   &embed{cc.Title, cc.Capacity},
 		chargeG: getter,
 	}
+
+	return v, nil
 }
 
 // ChargeState implements the Vehicle.ChargeState interface

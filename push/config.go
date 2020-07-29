@@ -1,6 +1,7 @@
 package push
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/andig/evcc/util"
@@ -19,18 +20,21 @@ type EventTemplate struct {
 var log = util.NewLogger("push")
 
 // NewMessengerFromConfig creates a new messenger
-func NewMessengerFromConfig(typ string, other map[string]interface{}) Sender {
+func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sender, err error) {
 	switch strings.ToLower(typ) {
 	case "pushover":
 		var cc pushOverConfig
-		util.DecodeOther(log, other, &cc)
-		return NewPushOverMessenger(cc.App, cc.Recipients)
+		if err = util.DecodeOther(other, &cc); err == nil {
+			res = NewPushOverMessenger(cc.App, cc.Recipients)
+		}
 	case "telegram":
 		var cc telegramConfig
-		util.DecodeOther(log, other, &cc)
-		return NewTelegramMessenger(cc.Token, cc.Chats)
+		if err = util.DecodeOther(other, &cc); err == nil {
+			res = NewTelegramMessenger(cc.Token, cc.Chats)
+		}
+	default:
+		err = fmt.Errorf("unknown messenger type: %s", typ)
 	}
 
-	log.FATAL.Fatalf("unknown messenger type: %s", typ)
-	return nil
+	return res, err
 }

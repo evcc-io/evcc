@@ -1,11 +1,11 @@
 package modbus
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -41,7 +41,7 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(log *util.Logger, uri, device, comset string, baudrate int, rtu bool) (conn meters.Connection) {
+func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn meters.Connection, err error) {
 	if device != "" {
 		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
@@ -55,14 +55,14 @@ func NewConnection(log *util.Logger, uri, device, comset string, baudrate int, r
 	}
 
 	if conn == nil {
-		log.FATAL.Fatalf("config: invalid modbus configuration: need either uri or device")
+		return nil, errors.New("invalid modbus configuration: need either uri or device")
 	}
 
-	return conn
+	return conn, nil
 }
 
 // NewDevice creates physical modbus device from config
-func NewDevice(log *util.Logger, model string, isRS485 bool) (device meters.Device, err error) {
+func NewDevice(model string, isRS485 bool) (device meters.Device, err error) {
 	if isRS485 {
 		device, err = rs485.NewDevice(strings.ToUpper(model))
 	} else {
@@ -70,7 +70,7 @@ func NewDevice(log *util.Logger, model string, isRS485 bool) (device meters.Devi
 	}
 
 	if device == nil {
-		log.FATAL.Fatalf("config: invalid modbus configuration: need either uri or device")
+		err = errors.New("invalid modbus configuration: need either uri or device")
 	}
 
 	return device, err

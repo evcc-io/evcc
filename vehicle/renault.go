@@ -94,24 +94,25 @@ type Renault struct {
 }
 
 // NewRenaultFromConfig creates a new vehicle
-func NewRenaultFromConfig(log *util.Logger, other map[string]interface{}) api.Vehicle {
+func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                       string
 		Capacity                    int64
 		User, Password, Region, VIN string
 		Cache                       time.Duration
-	}{}
-	util.DecodeOther(log, other, &cc)
-
-	if cc.Region == "" {
-		cc.Region = "de_DE"
+	}{
+		Region: "de_DE",
 	}
 
-	logger := util.NewLogger("zoe")
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
+
+	log := util.NewLogger("renault")
 
 	v := &Renault{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(logger),
+		HTTPHelper: util.NewHTTPHelper(log),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,
@@ -122,12 +123,12 @@ func NewRenaultFromConfig(log *util.Logger, other map[string]interface{}) api.Ve
 		err = v.authFlow()
 	}
 	if err != nil {
-		v.HTTPHelper.Log.FATAL.Fatalf("cannot create renault: %v", err)
+		return nil, err
 	}
 
-	v.chargeStateG = provider.NewCached(logger, v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	return v
+	return v, nil
 }
 
 func (v *Renault) apiKeys(region string) error {

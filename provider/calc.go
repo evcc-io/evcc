@@ -9,19 +9,26 @@ type calcProvider struct {
 }
 
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(log *util.Logger, other map[string]interface{}) func() (float64, error) {
+func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), error) {
 	cc := struct {
 		Add []Config
 	}{}
-	util.DecodeOther(log, other, &cc)
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	o := &calcProvider{}
 
 	for _, cc := range cc.Add {
-		o.add = append(o.add, NewFloatGetterFromConfig(log, cc))
+		f, err := NewFloatGetterFromConfig(cc)
+		if err != nil {
+			return nil, err
+		}
+		o.add = append(o.add, f)
 	}
 
-	return o.floatGetter
+	return o.floatGetter, nil
 }
 
 func (o *calcProvider) floatGetter() (float64, error) {

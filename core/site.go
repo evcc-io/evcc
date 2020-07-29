@@ -59,17 +59,19 @@ func NewSiteFromConfig(
 	loadpoints []*LoadPoint,
 ) *Site {
 	site := NewSite()
-	util.DecodeOther(log, other, &site)
+	if err := util.DecodeOther(other, &site); err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
-	// 	site.log.FATAL.Fatal("config: missing either pv or grid meter")
+	// 	site.log.FATAL.Fatal("missing either pv or grid meter")
 	// }
 	if site.Meters.GridMeterRef == "" {
-		site.log.FATAL.Fatal("config: missing grid meter")
+		site.log.FATAL.Fatal("missing grid meter")
 	}
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)

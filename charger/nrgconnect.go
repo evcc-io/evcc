@@ -70,17 +70,20 @@ type NRGKickConnect struct {
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
-func NewNRGKickConnectFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ IP, MacAddress, Password string }{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewNRGKickConnect(cc.IP, cc.MacAddress, cc.Password)
 }
 
 // NewNRGKickConnect creates NRGKickConnect charger
-func NewNRGKickConnect(IP, MacAddress, Password string) *NRGKickConnect {
+func NewNRGKickConnect(IP, MacAddress, Password string) (*NRGKickConnect, error) {
+	log := util.NewLogger("nrgconn")
 	nrg := &NRGKickConnect{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("nrgc")),
+		HTTPHelper: util.NewHTTPHelper(log),
 		IP:         IP,
 		MacAddress: MacAddress,
 		Password:   Password,
@@ -88,7 +91,7 @@ func NewNRGKickConnect(IP, MacAddress, Password string) *NRGKickConnect {
 
 	nrg.HTTPHelper.Log.WARN.Println("-- experimental --")
 
-	return nrg
+	return nrg, nil
 }
 
 func (nrg *NRGKickConnect) apiURL(api apiFunction) string {

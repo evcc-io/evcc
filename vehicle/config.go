@@ -1,34 +1,32 @@
 package vehicle
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
 )
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(log *util.Logger, typ string, other map[string]interface{}) api.Vehicle {
-	var c api.Vehicle
-
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
 	switch strings.ToLower(typ) {
 	case "default", "configurable":
-		c = NewConfigurableFromConfig(log, other)
+		v, err = NewConfigurableFromConfig(other)
 	case "audi", "etron":
-		c = NewAudiFromConfig(log, other)
+		v, err = NewAudiFromConfig(other)
 	case "bmw", "i3":
-		c = NewBMWFromConfig(log, other)
+		v, err = NewBMWFromConfig(other)
 	case "tesla", "model3", "model 3", "models", "model s":
-		c = NewTeslaFromConfig(log, other)
+		v, err = NewTeslaFromConfig(other)
 	case "nissan", "leaf":
-		c = NewNissanFromConfig(log, other)
+		v, err = NewNissanFromConfig(other)
 	case "renault", "zoe":
-		c = NewRenaultFromConfig(log, other)
+		v, err = NewRenaultFromConfig(other)
 	case "porsche", "taycan":
-		c = NewPorscheFromConfig(log, other)
+		v, err = NewPorscheFromConfig(other)
 	default:
-		log.FATAL.Fatalf("invalid vehicle type '%s'", typ)
+		err = fmt.Errorf("invalid vehicle type: %s", typ)
 	}
 
-	return c
+	return
 }

@@ -55,7 +55,10 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	notificationHub := push.NewHub(conf.Events, cache)
 
 	for _, service := range conf.Services {
-		impl := push.NewMessengerFromConfig(service.Type, service.Other)
+		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
 		notificationHub.Add(impl)
 	}
 
@@ -82,12 +85,14 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 	// slice of loadpoints
 	lps, ok := viper.AllSettings()["loadpoints"]
 	if !ok {
-		log.FATAL.Fatal("config: missing loadpoints")
+		log.FATAL.Fatal("missing loadpoints")
 	}
 
 	// decode slice into slice of maps
 	var lpc []map[string]interface{}
-	util.DecodeOther(log, lps, &lpc)
+	if err := util.DecodeOther(lps, &lpc); err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	for id, lpc := range lpc {
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
@@ -102,7 +107,7 @@ func loadConfigFile(cfgFile string) (conf config) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("config: failed parsing config file %s: %v", cfgFile, err)
+			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 		}
 	} else {
 		log.FATAL.Fatal("missing evcc config")

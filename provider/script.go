@@ -20,11 +20,12 @@ type Script struct {
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(timeout time.Duration) *Script {
-	return &Script{
+func NewScriptProvider(timeout time.Duration) (*Script, error) {
+	s := &Script{
 		log:     util.NewLogger("exec"),
 		timeout: timeout,
 	}
+	return s, nil
 }
 
 // StringGetter returns string from exec result. Only STDOUT is considered.

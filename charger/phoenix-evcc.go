@@ -25,22 +25,24 @@ type PhoenixEVCC struct {
 }
 
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEVCCFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
-	var cc modbus.Connection
-	util.DecodeOther(log, other, &cc)
-
-	if cc.ID == 0 {
-		cc.ID = 255
-		log.WARN.Printf("config: missing phoenix EV-CC slave id, assuming default %d", cc.ID)
+func NewPhoenixEVCCFromConfig(other map[string]interface{}) (api.Charger, error) {
+	cc := modbus.Connection{ID: 255}
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
 	return NewPhoenixEVCC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewPhoenixEVCC creates a Phoenix charger
-func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) api.Charger {
+func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (api.Charger, error) {
 	log := util.NewLogger("evcc")
-	conn := modbus.NewConnection(log, uri, device, comset, baudrate, true)
+
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, true)
+	if err != nil {
+		return nil, err
+	}
+
 	conn.Slave(id)
 
 	wb := &PhoenixEVCC{
@@ -49,7 +51,7 @@ func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) api.Char
 		handler: conn,
 	}
 
-	return wb
+	return wb, nil
 }
 
 // Status implements the Charger.Status interface

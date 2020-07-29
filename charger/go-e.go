@@ -45,33 +45,35 @@ type GoE struct {
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
-func NewGoEFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string
 		Cache time.Duration
 	}{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	if cc.URI != "" && cc.Token != "" {
-		log.FATAL.Fatal("config: should only have one of uri/token")
+		return nil, errors.New("go-e config: should only have one of uri/token")
 	}
 	if cc.URI == "" && cc.Token == "" {
-		log.FATAL.Fatal("config: must have one of uri/token")
+		return nil, errors.New("go-e config: must have one of uri/token")
 	}
 
 	return NewGoE(cc.URI, cc.Token, cc.Cache)
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) *GoE {
+func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("go-e")),
 		uri:        strings.TrimRight(uri, "/"),
 		token:      strings.TrimSpace(token),
 	}
 
-	return c
+	return c, nil
 }
 
 func (c *GoE) localResponse(function, payload string) (goeStatusResponse, error) {

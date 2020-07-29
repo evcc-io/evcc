@@ -50,21 +50,23 @@ type EVSEWifi struct {
 }
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
-func NewEVSEWifiFromConfig(log *util.Logger, other map[string]interface{}) api.Charger {
+func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI string }{}
-	util.DecodeOther(log, other, &cc)
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
+	}
 
 	return NewEVSEWifi(cc.URI)
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string) api.Charger {
+func NewEVSEWifi(uri string) (api.Charger, error) {
 	evse := &EVSEWifi{
 		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
 		uri:        strings.TrimRight(uri, "/"),
 	}
 
-	return evse
+	return evse, nil
 }
 
 func (evse *EVSEWifi) apiURL(service apiFunction) string {
