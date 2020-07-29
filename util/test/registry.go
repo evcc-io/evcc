@@ -11,14 +11,20 @@ type ParsedTempalte struct {
 	Config map[string]interface{}
 }
 
+// ConfigFromYAML parses configuration from yaml string
+func ConfigFromYAML(sample string) (map[string]interface{}, error) {
+	var conf map[string]interface{}
+	err := yaml.Unmarshal([]byte(sample), &conf)
+	return conf, err
+}
+
 // ConfigTemplates returns configuration templates for giving class
 func ConfigTemplates(class string) (res []ParsedTempalte) {
 	templates := registry.TemplatesByClass(class)
 
 	for _, tmpl := range templates {
-		var conf map[string]interface{}
-		if err := yaml.Unmarshal([]byte(tmpl.Sample), &conf); err != nil {
-			// silently ignore errors here
+		conf, err := ConfigFromYAML(tmpl.Sample)
+		if err != nil {
 			continue
 		}
 

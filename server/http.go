@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -112,7 +112,9 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 // HealthHandler returns current charge mode
 func HealthHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := struct{ OK bool }{OK: true}
+		res := struct {
+			OK bool `json:"ok"`
+		}{OK: true}
 		jsonResponse(w, r, res)
 	}
 }
@@ -135,19 +137,36 @@ func TemplatesHandler() http.HandlerFunc {
 			return
 		}
 
-		type template = struct {
-			Name   string `json:"name"`
-			Sample string `json:"template"`
+		res := ConfigurationSamplesByClass(class)
+		jsonResponse(w, r, res)
+	}
+}
+
+// TemplatesTestHandler returns current charge mode
+func TemplatesTestHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		class, ok := vars["class"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
-		res := make([]template, 0)
-		for _, conf := range test.ConfigTemplates(class) {
-			typedSample := fmt.Sprintf("type: %s\n%s", conf.Type, conf.Sample)
-			t := template{
-				Name:   conf.Name,
-				Sample: typedSample,
-			}
-			res = append(res, t)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			OK    bool   `json:"ok"`
+			Error string `json:"error"`
+		}{}
+
+		if err := TestConfiguration(class, string(body)); err == nil {
+			res.OK = true
+		} else {
+			res.Error = err.Error()
 		}
 
 		jsonResponse(w, r, res)
@@ -234,6 +253,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		"health":       {[]string{"GET"}, "/health", HealthHandler()},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
 		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		"templates":    {[]string{"POST"}, "/config/templates/{class:[a-z]+}", TemplatesTestHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
