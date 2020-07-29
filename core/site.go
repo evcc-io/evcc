@@ -115,7 +115,7 @@ type LoadpointConfiguration struct {
 	SoCCapacity int64  `json:"socCapacity"`
 	SoCTitle    string `json:"socTitle"`
 	SoCLevels   []int  `json:"socLevels"`
-	TargetSoC   string `json:"targetSoC"`
+	TargetSoC   int    `json:"targetSoC"`
 }
 
 // GetMode Gets loadpoint charge mode
