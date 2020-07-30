@@ -251,15 +251,15 @@ func applyRouteHandler(router *mux.Router, r route, handler http.HandlerFunc) {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
 	var routes = map[string]route{
-		"health":       {[]string{"GET"}, "/health", HealthHandler()},
-		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
-		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
-		"templates":    {[]string{"POST"}, "/config/templates/{class:[a-z]+}", TemplatesTestHandler()},
-		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
-		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
-		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
-		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
-		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
+		"health":        {[]string{"GET"}, "/health", HealthHandler()},
+		"config":        {[]string{"GET"}, "/config", ConfigHandler(site)},
+		"templates":     {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		"templatestest": {[]string{"POST"}, "/config/templates/{class:[a-z]+}", TemplatesTestHandler()},
+		"state":         {[]string{"GET"}, "/state", StateHandler(cache)},
+		"getmode":       {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
+		"setmode":       {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
+		"gettargetsoc":  {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
+		"settargetsoc":  {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
