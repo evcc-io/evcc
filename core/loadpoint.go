@@ -542,8 +542,15 @@ func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duratio
 	}
 
 	if lp.chargePower > 0 && lp.vehicle != nil {
-		whTotal := int64(lp.TargetSoC) * lp.vehicle.Capacity()
-		whRemaining := (1 - chargePercent/100.0) * 1e3 * float64(whTotal)
+		chargePercent = chargePercent / 100.0
+		targetPercent := float64(lp.TargetSoC) / 100
+
+		if chargePercent >= targetPercent {
+			return 0
+		}
+
+		whTotal := float64(lp.vehicle.Capacity()) * 1e3
+		whRemaining := (targetPercent - chargePercent) * whTotal
 		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
 	}
 

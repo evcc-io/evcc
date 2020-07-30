@@ -167,33 +167,6 @@ func TestUpdate(t *testing.T) {
 	}
 }
 
-// func TestConsumedPower(t *testing.T) {
-// 	tc := []struct {
-// 		grid, pv, battery, consumed float64
-// 	}{
-// 		{0, 0, 0, 0},    // silent night
-// 		{1, 0, 0, 1},    // grid import
-// 		{0, 1, 0, 1},    // pv sign ignored
-// 		{0, -1, 0, 1},   // pv sign ignored
-// 		{1, 1, 0, 2},    // grid import + pv, pv sign ignored
-// 		{1, -1, 0, 2},   // grid import + pv, pv sign ignored
-// 		{0, 0, 1, 1},    // battery discharging
-// 		{0, 0, -1, -1},  // battery charging -> negative result cannot occur in reality
-// 		{1, -3, 1, 5},   // grid import + pv + battery discharging
-// 		{1, -3, -1, 3},  // grid import + pv + battery charging -> should not happen in reality
-// 		{0, -3, -1, 2},  // pv + battery charging
-// 		{-1, -4, -1, 2}, // grid export + pv + battery charging
-// 		{-1, -4, 0, 3},  // grid export + pv
-// 	}
-
-// 	for _, tc := range tc {
-// 		res := consumedPower(tc.pv, tc.battery, tc.grid)
-// 		if res != tc.consumed {
-// 			t.Errorf("consumedPower wanted %.f, got %.f", tc.consumed, res)
-// 		}
-// 	}
-// }
-
 func TestPVHysteresisForStatusC(t *testing.T) {
 	dt := time.Minute
 	type se struct {
@@ -379,4 +352,24 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	}
 
 	ctrl.Finish()
+}
+
+func TestRemainingChargeDuration(t *testing.T) {
+	lp := NewLoadPoint(util.NewLogger("foo"))
+
+	ctrl := gomock.NewController(t)
+	vehicle := mock.NewMockVehicle(ctrl)
+
+	lp.vehicle = vehicle
+	lp.charging = true
+
+	soc := 20.0
+	lp.TargetSoC = 80
+	lp.chargePower = 1000
+
+	vehicle.EXPECT().Capacity().Return(int64(10))
+
+	if remaining := lp.remainingChargeDuration(soc); remaining != 6*time.Hour {
+		t.Error("wrong remaining charge duration")
+	}
 }
