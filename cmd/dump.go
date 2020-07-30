@@ -53,4 +53,12 @@ func dumpAPIs(v interface{}) {
 		fmt.Println("Diagnostic dump:")
 		v.Diagnosis()
 	}
+
+	if v, ok := v.(api.Vehicle); ok {
+		if soc, err := v.ChargeState(); err != nil {
+			fmt.Printf("State: %v\n", err)
+		} else {
+			fmt.Printf("State: %.0f%%\n", soc)
+		}
+	}
 }

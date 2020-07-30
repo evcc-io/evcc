@@ -159,12 +159,14 @@ func TemplatesTestHandler() http.HandlerFunc {
 		}
 
 		res := struct {
-			OK    bool   `json:"ok"`
-			Error string `json:"error"`
+			OK    bool               `json:"ok"`
+			Error string             `json:"error,omitempty"`
+			Data  map[string]Reading `json:"data"`
 		}{}
 
-		if err := TestConfiguration(class, string(body)); err == nil {
+		if data, err := TestConfiguration(class, string(body)); err == nil {
 			res.OK = true
+			res.Data = data
 		} else {
 			res.Error = err.Error()
 		}

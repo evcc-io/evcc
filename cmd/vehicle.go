@@ -47,12 +47,6 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			fmt.Println(name)
 		}
 
-		if soc, err := v.ChargeState(); err != nil {
-			fmt.Printf("State: %v\n", err)
-		} else {
-			fmt.Printf("State: %.0f%%\n", soc)
-		}
-
 		dumpAPIs(v)
 	}
 }
