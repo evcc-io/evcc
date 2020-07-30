@@ -506,7 +506,7 @@ loadpoints:
     <div class="row">
       <div class="col-6">
         <ul class="nav nav-tabs" v-model="activeTemplateClass">
-          <li v-for="template in templates" class="nav-item"><a class="nav-link" @click="activeTemplateClass = template.templateClass" :class="{active:activeTemplateClass == template.templateClass}">{{template.title}}</a></li>
+          <li v-for="template in templates" class="nav-item"><a style="cursor:pointer;" class="nav-link" @click="activeTemplateClass = template.templateClass" :class="{active:activeTemplateClass == template.templateClass}">{{template.title}}</a></li>
         </ul>
         <div class="tab-content" id="templateTabs" v-for="template in templates">
           <div class="tab-pane" v-bind:class="{ 'active show': isActiveTemplateClass(template.templateClass) }">

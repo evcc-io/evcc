@@ -399,6 +399,8 @@ const setup = Vue.component("setup", {
           ''
         ].join('\n'),
         minimap: { enabled: false },
+        lineNumbers: "off",
+        folding: false,
         language: 'yaml'
       });
       this.editorInstance.onDidChangeModelContent(event => {
