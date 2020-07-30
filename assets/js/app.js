@@ -445,7 +445,18 @@ const setup = Vue.component("setup", {
           headers: { 'content-type': 'text/plain'},
         }
         axios.post(this.api(this.editorTemplateClass), templateText, options).then(function (msg) {
-          console.log(msg);
+          var error = true;
+          var errorMessage = "Unknown error";
+          if (msg.data.ok === true) {
+            error = false;
+          } else {
+            if (msg.data.error) {
+              errorMessage = msg.data.error;
+            }
+          }
+          if (error === true) {
+            toasts.error({ message: errorMessage });
+          }
         }.bind(this)).catch(toasts.error);  
       }
     },
