@@ -619,6 +619,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// execute loading strategy
 	switch {
+	case !lp.connected():
+		// always disable charger if not connected
+		// https://github.com/andig/evcc/issues/105
+		err = lp.handler.Ramp(0)
+
 	case lp.TargetSoC > 0 && lp.vehicle != nil && lp.socCharge >= float64(lp.TargetSoC):
 		err = lp.handler.Ramp(0)
 
@@ -626,20 +631,10 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.handler.Ramp(0, true)
 
 	case mode == api.ModeNow:
-		// ensure that new connections happen at min current
-		current := lp.MinCurrent
-		if lp.connected() {
-			current = lp.MaxCurrent
-		}
-		err = lp.handler.Ramp(current, true)
+		err = lp.handler.Ramp(lp.MaxCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.maxCurrent(mode, sitePower)
-		if !lp.connected() {
-			// ensure minimum current when not connected
-			// https://github.com/andig/evcc/issues/105
-			targetCurrent = min(lp.MinCurrent, targetCurrent)
-		}
 		lp.log.DEBUG.Printf("target charge current: %dA", targetCurrent)
 
 		err = lp.handler.Ramp(targetCurrent)
