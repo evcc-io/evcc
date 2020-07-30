@@ -372,7 +372,7 @@ const setup = Vue.component("setup", {
       activeTemplateClass: "",
       selectedItem: "",
       editorInstance : "",
-      editorCodeType: "",
+      editorTemplateClass: "",
       editorContent: "",
     };
   },
@@ -388,7 +388,7 @@ const setup = Vue.component("setup", {
     "selectedItem": function () {
       var templateItem = this.templateByTemplateClass(this.activeTemplateClass)
       var templateText = templateItem.data[this.selectedItem].template;
-      this.editorCodeType = this.activeTemplateClass;
+      this.editorTemplateClass = this.activeTemplateClass;
       this.editorInstance.setValue(templateText);
     },
   },
@@ -440,7 +440,14 @@ const setup = Vue.component("setup", {
     },
     testCode: function (event) {
       var templateText = this.editorInstance.getValue();
-      console.log(templateText);
+      if (templateText.length > 0) {
+        var options = {
+          headers: { 'content-type': 'text/plain'},
+        }
+        axios.post(this.api(this.editorTemplateClass), templateText, options).then(function (msg) {
+          console.log(msg);
+        }.bind(this)).catch(toasts.error);  
+      }
     },
   },
   mounted: function () {
