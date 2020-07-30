@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -113,20 +112,14 @@ func TestConfiguration(class, yaml string) (res map[string]Reading, err error) {
 
 	conf, err := test.ConfigFromYAML(yaml)
 	if err != nil {
-		return res, err
+		return res, fmt.Errorf("parsing failed: %v", err)
 	}
 
-	typI, ok := conf["type"]
+	typ, ok := conf["type"].(string)
 	if !ok {
-		return res, errors.New("missing type")
-	}
-	typ, ok := typI.(string)
-	if !ok {
-		return res, errors.New("invalid type")
+		return res, fmt.Errorf("parsing failed: invalid or missing type")
 	}
 	delete(conf, "type")
-
-	fmt.Println(conf)
 
 	var i interface{}
 
@@ -134,19 +127,25 @@ func TestConfiguration(class, yaml string) (res map[string]Reading, err error) {
 	case "meter":
 		if i, err = meter.NewFromConfig(typ, conf); err == nil {
 			testMeter(res, i)
+		} else {
+			err = fmt.Errorf("creating device failed: %v", err)
 		}
 		return res, err
 	case "charger":
 		if i, err := charger.NewFromConfig(typ, conf); err == nil {
 			testCharger(res, i)
+		} else {
+			err = fmt.Errorf("creating device failed: %v", err)
 		}
 		return res, err
 	case "vehicle":
 		if i, err := vehicle.NewFromConfig(typ, conf); err == nil {
 			testVehicle(res, i)
+		} else {
+			err = fmt.Errorf("creating device failed: %v", err)
 		}
 		return res, err
 	default:
-		return res, fmt.Errorf("invalid type: %s", typ)
+		return res, fmt.Errorf("invalid device class: %s", typ)
 	}
 }
