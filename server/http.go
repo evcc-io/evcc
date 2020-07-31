@@ -197,13 +197,15 @@ func ConfigTestResultHandler() http.HandlerFunc {
 		}
 
 		res := struct {
-			OK    bool                      `json:"ok"`
-			Error string                    `json:"error,omitempty"`
-			Data  map[string]config.Reading `json:"data"`
+			OK        bool                      `json:"ok"`
+			Completed bool                      `json:"completed"`
+			Error     string                    `json:"error,omitempty"`
+			Data      map[string]config.Reading `json:"data"`
 		}{}
 
-		if data, err := validator.TestResult(id); err == nil {
+		if completed, data, err := validator.TestResult(id); err == nil {
 			res.OK = true
+			res.Completed = completed
 			res.Data = data
 		} else {
 			res.Error = err.Error()

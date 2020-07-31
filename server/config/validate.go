@@ -140,6 +140,7 @@ func testDevice(class, typ string, conf map[string]interface{}) (res map[string]
 type Validator struct {
 	sync.Mutex
 	generator, id int
+	running       bool
 	err           error
 	result        map[string]Reading
 }
@@ -152,6 +153,9 @@ func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 	v.generator++
 	id := v.generator
 
+	// mark test as running
+	v.running = true
+
 	go func(id int) {
 		res, error := testDevice(class, typ, conf)
 
@@ -162,19 +166,25 @@ func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 		if v.id == id {
 			v.err = error
 			v.result = res
+
+			// mark test completed
+			v.running = false
 		}
 	}(id)
 
 	return id
 }
 
-func (v *Validator) TestResult(id int) (res map[string]Reading, err error) {
+func (v *Validator) TestResult(id int) (completed bool, res map[string]Reading, err error) {
 	v.Lock()
 	defer v.Unlock()
 
 	if v.id == id {
-		return v.result, v.err
+		if v.running {
+			return false, res, nil
+		}
+		return true, v.result, v.err
 	}
 
-	return res, errors.New("request outdated")
+	return false, res, errors.New("request outdated")
 }
