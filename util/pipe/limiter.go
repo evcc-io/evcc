@@ -1,4 +1,4 @@
-package server
+package pipe
 
 import (
 	"time"
@@ -96,6 +96,39 @@ func (l *Limiter) pipe(in <-chan util.Param, out chan<- util.Param) {
 
 // Pipe creates a new filtered output channel for given input channel
 func (l *Limiter) Pipe(in <-chan util.Param) <-chan util.Param {
+	out := make(chan util.Param)
+	go l.pipe(in, out)
+	return out
+}
+
+// Dropper allows filtering of channel data by given criteria
+type Dropper struct {
+	filter []string
+}
+
+// NewDropper creates Dropper
+func NewDropper(filter ...string) Piper {
+	return &Dropper{filter}
+}
+
+func (l *Dropper) pipe(in <-chan util.Param, out chan<- util.Param) {
+	for p := range in {
+		var remove bool
+		for _, filtered := range l.filter {
+			if p.Key == filtered {
+				remove = true
+				break
+			}
+		}
+
+		if !remove {
+			out <- p
+		}
+	}
+}
+
+// Pipe creates a new filtered output channel for given input channel
+func (l *Dropper) Pipe(in <-chan util.Param) <-chan util.Param {
 	out := make(chan util.Param)
 	go l.pipe(in, out)
 	return out

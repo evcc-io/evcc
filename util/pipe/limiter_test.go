@@ -1,4 +1,4 @@
-package server
+package pipe
 
 import (
 	"runtime"
