@@ -1,7 +1,9 @@
-package server
+package config
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
@@ -10,28 +12,9 @@ import (
 	"github.com/andig/evcc/vehicle"
 )
 
-type configSample = struct {
-	Name   string `json:"name"`
-	Sample string `json:"template"`
-}
-
 type Reading = struct {
 	Error string      `json:"error"`
 	Value interface{} `json:"value,omitempty"`
-}
-
-// ConfigurationSamplesByClass returns a slice of configuration templates
-func ConfigurationSamplesByClass(class string) []configSample {
-	res := make([]configSample, 0)
-	for _, conf := range test.ConfigTemplates(class) {
-		typedSample := fmt.Sprintf("type: %s\n%s", conf.Type, conf.Sample)
-		t := configSample{
-			Name:   conf.Name,
-			Sample: typedSample,
-		}
-		res = append(res, t)
-	}
-	return res
 }
 
 func testMeter(res map[string]Reading, i interface{}) {
@@ -100,26 +83,30 @@ func testVehicle(res map[string]Reading, i interface{}) {
 	}
 }
 
-// TestConfiguration executes given configuration
-func TestConfiguration(class, yaml string) (res map[string]Reading, err error) {
-	res = make(map[string]Reading, 0)
-
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic due to %v", r)
-		}
-	}()
-
+func Validate(yaml string) (string, map[string]interface{}, error) {
 	conf, err := test.ConfigFromYAML(yaml)
 	if err != nil {
-		return res, fmt.Errorf("parsing failed: %v", err)
+		return "", conf, err
 	}
 
 	typ, ok := conf["type"].(string)
 	if !ok {
-		return res, fmt.Errorf("parsing failed: invalid or missing type")
+		return "", conf, errors.New("invalid or missing type")
 	}
+
 	delete(conf, "type")
+	return typ, conf, nil
+}
+
+// testDevice executes given configuration
+func testDevice(class, typ string, conf map[string]interface{}) (res map[string]Reading, err error) {
+	res = make(map[string]Reading, 0)
+
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%v", r)
+		}
+	}()
 
 	var i interface{}
 
@@ -148,4 +135,46 @@ func TestConfiguration(class, yaml string) (res map[string]Reading, err error) {
 	default:
 		return res, fmt.Errorf("invalid device class: %s", typ)
 	}
+}
+
+type Validator struct {
+	sync.Mutex
+	generator, id int
+	err           error
+	result        map[string]Reading
+}
+
+func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
+	v.Lock()
+	defer v.Unlock()
+
+	// generate next test id
+	v.generator++
+	id := v.generator
+
+	go func(id int) {
+		res, error := testDevice(class, typ, conf)
+
+		v.Lock()
+		defer v.Unlock()
+
+		// store result if this is still the current test
+		if v.id == id {
+			v.err = error
+			v.result = res
+		}
+	}(id)
+
+	return id
+}
+
+func (v *Validator) TestResult(id int) (res map[string]Reading, err error) {
+	v.Lock()
+	defer v.Unlock()
+
+	if v.id == id {
+		return v.result, v.err
+	}
+
+	return res, errors.New("request outdated")
 }

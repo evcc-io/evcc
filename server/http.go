@@ -11,10 +11,14 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+// global config validator instance
+var validator = &config.Validator{}
 
 // MenuConfig is used to inject the menu configuration into the UI
 type MenuConfig struct {
@@ -137,13 +141,13 @@ func TemplatesHandler() http.HandlerFunc {
 			return
 		}
 
-		res := ConfigurationSamplesByClass(class)
+		res := config.SamplesByClass(class)
 		jsonResponse(w, r, res)
 	}
 }
 
-// TemplatesTestHandler returns current charge mode
-func TemplatesTestHandler() http.HandlerFunc {
+// ConfigTestHandler returns current charge mode
+func ConfigTestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		class, ok := vars["class"]
@@ -159,12 +163,46 @@ func TemplatesTestHandler() http.HandlerFunc {
 		}
 
 		res := struct {
-			OK    bool               `json:"ok"`
-			Error string             `json:"error,omitempty"`
-			Data  map[string]Reading `json:"data"`
+			OK    bool   `json:"ok"`
+			Error string `json:"error,omitempty"`
+			ID    int    `json:"id"`
 		}{}
 
-		if data, err := TestConfiguration(class, string(body)); err == nil {
+		typ, conf, err := config.Validate(string(body))
+		if err == nil {
+			res.OK = true
+			res.ID = validator.Test(class, typ, conf)
+		} else {
+			res.Error = err.Error()
+		}
+
+		jsonResponse(w, r, res)
+	}
+}
+
+// ConfigTestResultHandler returns current charge mode
+func ConfigTestResultHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		s, ok := vars["id"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		id, err := strconv.Atoi(s)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := struct {
+			OK    bool                      `json:"ok"`
+			Error string                    `json:"error,omitempty"`
+			Data  map[string]config.Reading `json:"data"`
+		}{}
+
+		if data, err := validator.TestResult(id); err == nil {
 			res.OK = true
 			res.Data = data
 		} else {
@@ -253,15 +291,16 @@ func applyRouteHandler(router *mux.Router, r route, handler http.HandlerFunc) {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
 	var routes = map[string]route{
-		"health":        {[]string{"GET"}, "/health", HealthHandler()},
-		"config":        {[]string{"GET"}, "/config", ConfigHandler(site)},
-		"templates":     {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
-		"templatestest": {[]string{"POST"}, "/config/templates/{class:[a-z]+}", TemplatesTestHandler()},
-		"state":         {[]string{"GET"}, "/state", StateHandler(cache)},
-		"getmode":       {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
-		"setmode":       {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
-		"gettargetsoc":  {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
-		"settargetsoc":  {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
+		"health":       {[]string{"GET"}, "/health", HealthHandler()},
+		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
+		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		"validate":     {[]string{"POST"}, "/config/validate/{class:[a-z]+}", ConfigTestHandler()},
+		"validated":    {[]string{"GET"}, "/config/validate/{id:[a-z]+}", ConfigTestResultHandler()},
+		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
+		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
+		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
+		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
+		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
