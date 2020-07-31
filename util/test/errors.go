@@ -11,7 +11,7 @@ const config = "../errors.yaml"
 
 var acceptable map[string][]string
 
-// Acceptable returns true is a test error is configured as acceptable
+// Acceptable checks if a test error is configured as acceptable
 func Acceptable(class string, err error) bool {
 	if len(acceptable) == 0 {
 		definitions, err := ioutil.ReadFile(config)

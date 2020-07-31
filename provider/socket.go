@@ -37,7 +37,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 		Insecure bool
 		Auth     Auth
 		Timeout  time.Duration
-	}{}
+	}{Headers: make(map[string]string)}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -54,10 +54,9 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if p.headers == nil {
-			p.headers = make(map[string]string)
+		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
+			return nil, err
 		}
-		NewAuth(log, cc.Auth, p.headers)
 	}
 
 	// ignore the self signed certificate

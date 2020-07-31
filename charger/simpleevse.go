@@ -38,7 +38,7 @@ func NewSimpleEVSE(conn, device string) (api.Charger, error) {
 
 	var handler modbus.ClientHandler
 	if conn != "" && device != "" {
-		log.FATAL.Fatal("cannot define uri and device both")
+		return nil, errors.New("cannot define uri and device both")
 	}
 	if conn != "" {
 		handler = modbus.NewTCPClientHandler(conn)
