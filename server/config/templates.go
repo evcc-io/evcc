@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/util/test"
@@ -23,4 +24,20 @@ func SamplesByClass(class string) []configSample {
 		res = append(res, t)
 	}
 	return res
+}
+
+// Validate validates given yaml
+func Validate(yaml string) (string, map[string]interface{}, error) {
+	conf, err := test.ConfigFromYAML(yaml)
+	if err != nil {
+		return "", conf, err
+	}
+
+	typ, ok := conf["type"].(string)
+	if !ok {
+		return "", conf, errors.New("invalid or missing type")
+	}
+
+	delete(conf, "type")
+	return typ, conf, nil
 }

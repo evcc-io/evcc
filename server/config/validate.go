@@ -8,10 +8,10 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/meter"
-	"github.com/andig/evcc/util/test"
 	"github.com/andig/evcc/vehicle"
 )
 
+// Reading wraps the test result
 type Reading = struct {
 	Error string      `json:"error"`
 	Value interface{} `json:"value,omitempty"`
@@ -83,21 +83,6 @@ func testVehicle(res map[string]Reading, i interface{}) {
 	}
 }
 
-func Validate(yaml string) (string, map[string]interface{}, error) {
-	conf, err := test.ConfigFromYAML(yaml)
-	if err != nil {
-		return "", conf, err
-	}
-
-	typ, ok := conf["type"].(string)
-	if !ok {
-		return "", conf, errors.New("invalid or missing type")
-	}
-
-	delete(conf, "type")
-	return typ, conf, nil
-}
-
 // testDevice executes given configuration
 func testDevice(class, typ string, conf map[string]interface{}) (res map[string]Reading, err error) {
 	res = make(map[string]Reading, 0)
@@ -114,29 +99,27 @@ func testDevice(class, typ string, conf map[string]interface{}) (res map[string]
 	case "meter":
 		if i, err = meter.NewFromConfig(typ, conf); err == nil {
 			testMeter(res, i)
-		} else {
-			err = fmt.Errorf("creating device failed: %v", err)
 		}
-		return res, err
 	case "charger":
 		if i, err := charger.NewFromConfig(typ, conf); err == nil {
 			testCharger(res, i)
-		} else {
-			err = fmt.Errorf("creating device failed: %v", err)
 		}
-		return res, err
 	case "vehicle":
 		if i, err := vehicle.NewFromConfig(typ, conf); err == nil {
 			testVehicle(res, i)
-		} else {
-			err = fmt.Errorf("creating device failed: %v", err)
 		}
-		return res, err
 	default:
-		return res, fmt.Errorf("invalid device class: %s", typ)
+		err = fmt.Errorf("invalid device class: %s", typ)
 	}
+
+	if err != nil {
+		err = fmt.Errorf("creating device failed: %v", err)
+	}
+
+	return res, err
 }
 
+// Validator manages test execution
 type Validator struct {
 	sync.Mutex
 	generator, id int
@@ -145,6 +128,7 @@ type Validator struct {
 	result        map[string]Reading
 }
 
+// Test schedules the test for execution and returns unique test id
 func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 	v.Lock()
 	defer v.Unlock()
@@ -175,6 +159,7 @@ func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 	return id
 }
 
+// TestResult returns test results by test id
 func (v *Validator) TestResult(id int) (completed bool, res map[string]Reading, err error) {
 	v.Lock()
 	defer v.Unlock()
