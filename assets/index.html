@@ -510,7 +510,7 @@ loadpoints:
         </ul>
         <div class="tab-content" id="templateTabs" v-for="template in templates">
           <div class="tab-pane" v-bind:class="{ 'active show': isActiveTemplateClass(template.templateClass) }">
-            <select size="20" v-model="selectedItem">
+            <select size="20" v-model="selectedItem" :disabled="isTestInProgress">
               <option v-for="(item, indexItem) in template.data" v-on:click="$emit('selectedItem', indexItem)" :value="indexItem">{{item.name|}}</option>
             </select>
           </div>
@@ -520,7 +520,13 @@ loadpoints:
         <h2>Konfiguration</h2>
         <div id="editorContainer" style="width:100%;height:600px;border:1px solid grey">
         </div>
-        <button @click="testCode()" :disabled='noCodeAvailable'>Test</button>
+        <button @click="valicateConfig()" :disabled="testButtonInActive">Test</button>
+        <div class="spinner-border text-info" role="status" v-if="isTestInProgress">
+          <span class="sr-only">Testing...</span>
+        </div>
+        <button @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
+        <div v-if="testSuccessMessageActive">Yeah, this works!</div>
+        <div v-if="testFailureMessageActive" v-model="errorMessage">Error: {{errorMessage}}</div>
       </div>
     </div>
   </div>

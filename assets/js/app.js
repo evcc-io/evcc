@@ -374,11 +374,25 @@ const setup = Vue.component("setup", {
       editorInstance : "",
       editorTemplateClass: "",
       editorContent: "",
+      errorMessage: "",
+      currentTestIDInProgress: 0,
+      testInProgress: false,
+      testFailed: false,
+      testSuccessful: false,
     };
   },
   computed: {
-    noCodeAvailable: function () {
-      return this.editorContent.length == 0
+    testButtonInActive: function () {
+      return this.editorContent.length == 0 || this.testInProgress == true
+    },
+    isTestInProgress: function () {
+      return this.testInProgress == true
+    },
+    testSuccessMessageActive: function () {
+      return this.testSuccessful == true
+    },
+    testFailureMessageActive: function () {
+      return this.testFailed == true && this.testInProgress == false
     }
   },
   watch: {
@@ -390,6 +404,12 @@ const setup = Vue.component("setup", {
       var templateText = templateItem.data[this.selectedItem].template;
       this.editorTemplateClass = this.activeTemplateClass;
       this.editorInstance.setValue(templateText);
+      // Reset variables
+      this.currentTestIDInProgress = 0;
+      this.testInProgress = false;
+      this.errorMessage = "";
+      this.testSuccessful = false;
+      this.testFailed = false;
     },
   },
   methods: {
@@ -407,8 +427,11 @@ const setup = Vue.component("setup", {
         this.editorContent = this.editorInstance.getValue();
       });
     },
-    api: function (func) {
+    templatesAPI: function (func) {
       return "config/templates/" + func;
+    },
+    validateAPI: function (func) {
+      return "config/validate/" + func;
     },
     update: function (target, dataset) {
       target.data = [];
@@ -435,31 +458,86 @@ const setup = Vue.component("setup", {
     updateTemplates: function (templateClass) {
       let templateItem = this.templateByTemplateClass(templateClass);
       if (templateItem !== undefined) {
-        axios.get(this.api(templateItem.templateClass)).then(function (msg) {
+        axios.get(this.templatesAPI(templateItem.templateClass)).then(function (msg) {
           this.update(templateItem, msg.data)
-        }.bind(this)).catch(toasts.error);  
+        }.bind(this)).catch(this.showErrorMessage);  
       }
     },
-    testCode: function (event) {
+    showErrorMessage: function (error) {
+      this.errorMessage = error.message;
+    },
+    errorValidating: function (error) {
+      this.testInProgress = false;
+      this.testFailed = true;
+      this.showErrorMessage(error);
+    },
+    cancelValidation: function () {
+      this.testInProgress = false;
+      this.testFailed = false;     
+    },
+    checkValidation: function (validationID) {
+      axios.get(this.validateAPI(validationID)).then(msg => {
+        if (validationID != this.currentTestIDInProgress) {
+          // ignore this, probably was a cancelled test
+        } else if (msg.data.ok === false && msg.data.error == "request outdated") {
+          this.errorValidating({ message: "something went wrong :(" });
+        } else if (msg.data.completed === false) {
+          window.setTimeout(this.checkValidation.bind(this, validationID), 1000);
+        } else if (msg.data.completed == true) {
+          // check if any data element has an error
+          var errorMessage = "";
+          var foundError = false;
+          for (const key in msg.data.data) {
+            const element = msg.data.data[key];
+            if (element.error) {
+              if (errorMessage.length > 0) {
+                errorMessage = errorMessage + "; ";
+              }
+              errorMessage = errorMessage + key + ": " + element.error;
+              foundError = true
+            }
+          }
+          if (foundError == true) {
+            this.errorValidating({ message: errorMessage });
+          } else {
+            this.testInProgress = false;
+            this.testSuccessful = true;
+          }
+        } else {
+          this.errorValidating({ message: "something went very wrong as this should not occur :(" });
+        }
+      }).catch(err => this.errorValidating(err));
+    },
+    valicateConfig: function (event) {
       var templateText = this.editorInstance.getValue();
       if (templateText.length > 0) {
         var options = {
           headers: { 'content-type': 'text/plain'},
         }
-        axios.post(this.api(this.editorTemplateClass), templateText, options).then(function (msg) {
+        this.testInProgress = true;
+        axios.post(this.validateAPI(this.editorTemplateClass), templateText, options).then(msg => {
           var error = true;
           var errorMessage = "Unknown error";
+          var validationID = 0;
           if (msg.data.ok === true) {
             error = false;
+            if (msg.data.id) {
+              validationID = msg.data.id;
+            }
           } else {
             if (msg.data.error) {
               errorMessage = msg.data.error;
             }
           }
           if (error === true) {
-            toasts.error({ message: errorMessage });
+            this.errorValidating({ message: errorMessage });
+          } else if (validationID > 0) {
+            this.currentTestIDInProgress = validationID;
+            window.setTimeout(this.checkValidation.bind(this, validationID), 1000);
+          } else {
+            this.testInProgress = false;
           }
-        }.bind(this)).catch(toasts.error);  
+        }).catch(err => this.errorValidating(err));  
       }
     },
   },
