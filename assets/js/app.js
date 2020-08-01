@@ -518,7 +518,7 @@ const setup = Vue.component("setup", {
         }
       }).catch(err => this.errorValidating(err));
     },
-    valicateConfig: function (event) {
+    validateConfig: function (event) {
       this.testSuccessful = false;
       this.testFailed = false;
       this.errorMessage = "";

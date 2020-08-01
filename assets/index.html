@@ -534,9 +534,9 @@ loadpoints:
       </div>
       <div class="col-6">
         <h2>Konfiguration</h2>
-        <div id="editorContainer" style="width:100%;height:600px;border:1px solid grey">
+        <div id="editorContainer" style="width:100%;height:300px;border:1px solid grey">
         </div>
-        <button @click="valicateConfig()" :disabled="testButtonInActive">Test</button>
+        <button @click="validateConfig()" :disabled="testButtonInActive">Test</button>
         <div class="spinner-border text-info" role="status" v-if="isTestInProgress">
           <span class="sr-only">Testing...</span>
         </div>
