@@ -297,7 +297,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
 		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"validate":     {[]string{"POST"}, "/config/validate/{class:[a-z]+}", ConfigTestHandler()},
-		"validated":    {[]string{"GET"}, "/config/validate/{id:[a-z]+}", ConfigTestResultHandler()},
+		"validated":    {[]string{"GET"}, "/config/validate/{id:[0-9]+}", ConfigTestResultHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
