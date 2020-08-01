@@ -202,6 +202,11 @@ Vue.component('version', {
   }
 });
 
+Vue.component('setup-banner', {
+  template: '#setup-banner-template',
+  props: ['setup']
+});
+
 Vue.component('site', {
   template: '#site-template',
   props: ['state'],
@@ -460,7 +465,7 @@ const setup = Vue.component("setup", {
       if (templateItem !== undefined) {
         axios.get(this.templatesAPI(templateItem.templateClass)).then(function (msg) {
           this.update(templateItem, msg.data)
-        }.bind(this)).catch(this.showErrorMessage);  
+        }.bind(this)).catch(this.showErrorMessage);
       }
     },
     showErrorMessage: function (error) {
@@ -473,7 +478,7 @@ const setup = Vue.component("setup", {
     },
     cancelValidation: function () {
       this.testInProgress = false;
-      this.testFailed = false;     
+      this.testFailed = false;
     },
     checkValidation: function (validationID) {
       axios.get(this.validateAPI(validationID)).then(msg => {
@@ -545,7 +550,7 @@ const setup = Vue.component("setup", {
           } else {
             this.testInProgress = false;
           }
-        }).catch(err => this.errorValidating(err));  
+        }).catch(err => this.errorValidating(err));
       }
     },
   },
