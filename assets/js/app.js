@@ -514,6 +514,9 @@ const setup = Vue.component("setup", {
       }).catch(err => this.errorValidating(err));
     },
     valicateConfig: function (event) {
+      this.testSuccessful = false;
+      this.testFailed = false;
+      this.errorMessage = "";
       var templateText = this.editorInstance.getValue();
       if (templateText.length > 0) {
         var options = {
