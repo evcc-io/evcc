@@ -142,14 +142,14 @@ func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 	v.running = true
 
 	go func(id int) {
-		res, error := testDevice(class, typ, conf)
+		res, err := testDevice(class, typ, conf)
 
 		v.Lock()
 		defer v.Unlock()
 
 		// store result if this is still the current test
 		if v.id == id {
-			v.err = error
+			v.err = err
 			v.result = res
 
 			// mark test completed
@@ -167,10 +167,11 @@ func (v *Validator) TestResult(id int) (completed bool, res map[string]Reading, 
 
 	if v.id == id {
 		if v.running {
-			return false, res, nil
+			return false, nil, nil
 		}
+
 		return true, v.result, v.err
 	}
 
-	return false, res, errors.New("request outdated")
+	return true, res, errors.New("request outdated")
 }
