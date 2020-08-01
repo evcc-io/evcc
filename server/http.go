@@ -198,12 +198,16 @@ func ConfigTestResultHandler() http.HandlerFunc {
 
 		res := struct {
 			Completed bool                      `json:"completed"`
-			Error     error                     `json:"error,omitempty"`
+			Error     string                    `json:"error,omitempty"`
 			Data      map[string]config.Reading `json:"data,omitempty"`
 		}{
 			Completed: completed,
-			Error:     err,
-			Data:      data,
+
+			Data: data,
+		}
+
+		if err != nil {
+			res.Error = err.Error()
 		}
 
 		jsonResponse(w, r, res)
