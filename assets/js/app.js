@@ -503,6 +503,8 @@ const setup = Vue.component("setup", {
             }
           } else if (msg.error) {
             errorMessage = msg.error;
+          } else if (msg.data.error) {
+            errorMessage = msg.data.error;
           } else {
             console.log(msg);
             errorMessage = "This should not happen, but we got an undefined state response from the server!";
