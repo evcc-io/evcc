@@ -198,11 +198,11 @@ func ConfigTestResultHandler() http.HandlerFunc {
 
 		res := struct {
 			Completed bool                      `json:"completed"`
-			Error     string                    `json:"error,omitempty"`
+			Error     error                     `json:"error,omitempty"`
 			Data      map[string]config.Reading `json:"data,omitempty"`
 		}{
 			Completed: completed,
-			Error:     err.Error(),
+			Error:     err,
 			Data:      data,
 		}
 
