@@ -484,11 +484,9 @@ const setup = Vue.component("setup", {
       axios.get(this.validateAPI(validationID)).then(msg => {
         if (validationID != this.currentTestIDInProgress) {
           // ignore this, probably was a cancelled test
-        } else if (msg.data.ok === false && msg.data.error == "request outdated") {
-          this.errorValidating({ message: "something went wrong :(" });
-        } else if (msg.data.completed === false) {
+        } else if (!msg.data.completed) {
           window.setTimeout(this.checkValidation.bind(this, validationID), 1000);
-        } else if (msg.data.completed == true) {
+        } else if (msg.data.completed) {
           // check if any data element has an error
           var errorMessage = "";
           if (msg.data.data) {
