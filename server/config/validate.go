@@ -136,6 +136,7 @@ func (v *Validator) Test(class, typ string, conf map[string]interface{}) int {
 	// generate next test id
 	v.generator++
 	id := v.generator
+	v.id = id
 
 	// mark test as running
 	v.running = true
