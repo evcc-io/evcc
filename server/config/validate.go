@@ -101,11 +101,11 @@ func testDevice(class, typ string, conf map[string]interface{}) (res map[string]
 			testMeter(res, i)
 		}
 	case "charger":
-		if i, err := charger.NewFromConfig(typ, conf); err == nil {
+		if i, err = charger.NewFromConfig(typ, conf); err == nil {
 			testCharger(res, i)
 		}
 	case "vehicle":
-		if i, err := vehicle.NewFromConfig(typ, conf); err == nil {
+		if i, err = vehicle.NewFromConfig(typ, conf); err == nil {
 			testVehicle(res, i)
 		}
 	default:
