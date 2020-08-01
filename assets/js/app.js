@@ -498,6 +498,9 @@ const setup = Vue.component("setup", {
                 foundError = true;
               }
             }
+          } else if (msg.error) {
+            foundError = true;
+            errorMessage = msg.error;
           } else {
             foundError = true;
             console.log(msg);
@@ -523,14 +526,10 @@ const setup = Vue.component("setup", {
         this.testInProgress = true;
         this.validationID = 0;
         axios.post(this.validateAPI(this.editorTemplateClass), templateText, options).then(msg => {
-          var error = true;
-          var errorMessage = "Unknown error";
+          var errorMessage = "";
           var validationID = 0;
-          if (msg.data.ok === true) {
-            error = false;
-            if (msg.data.id) {
-              validationID = msg.data.id;
-            }
+          if (msg.data.id) {
+            validationID = msg.data.id;
           } else {
             if (msg.data.error) {
               errorMessage = msg.data.error;
@@ -539,7 +538,7 @@ const setup = Vue.component("setup", {
               errorMessage = "This should not happen, but we got an undefined state response from the server!";
             }
           }
-          if (error === true) {
+          if (errorMessage != "") {
             this.errorValidating({ message: errorMessage });
           } else if (validationID > 0) {
             this.currentTestIDInProgress = validationID;
