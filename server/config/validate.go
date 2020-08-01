@@ -13,7 +13,7 @@ import (
 
 // Reading wraps the test result
 type Reading = struct {
-	Error string      `json:"error"`
+	Error string      `json:"error,omitempty"`
 	Value interface{} `json:"value,omitempty"`
 }
 
