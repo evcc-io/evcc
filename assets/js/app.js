@@ -515,6 +515,7 @@ const setup = Vue.component("setup", {
           headers: { 'content-type': 'text/plain'},
         }
         this.testInProgress = true;
+        this.validationID = 0;
         axios.post(this.validateAPI(this.editorTemplateClass), templateText, options).then(msg => {
           var error = true;
           var errorMessage = "Unknown error";
