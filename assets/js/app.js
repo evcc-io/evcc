@@ -487,15 +487,21 @@ const setup = Vue.component("setup", {
           // check if any data element has an error
           var errorMessage = "";
           var foundError = false;
-          for (const key in msg.data.data) {
-            const element = msg.data.data[key];
-            if (element.error) {
-              if (errorMessage.length > 0) {
-                errorMessage = errorMessage + "; ";
+          if (msg.data.data) {
+            for (const key in msg.data.data) {
+              const element = msg.data.data[key];
+              if (element.error) {
+                if (errorMessage.length > 0) {
+                  errorMessage = errorMessage + "; ";
+                }
+                errorMessage = errorMessage + key + ": " + element.error;
+                foundError = true;
               }
-              errorMessage = errorMessage + key + ": " + element.error;
-              foundError = true
             }
+          } else {
+            foundError = true;
+            console.log(msg);
+            errorMessage = "This should not happen, but we got an undefined state response from the server!";
           }
           if (foundError == true) {
             this.errorValidating({ message: errorMessage });
@@ -528,6 +534,9 @@ const setup = Vue.component("setup", {
           } else {
             if (msg.data.error) {
               errorMessage = msg.data.error;
+            } else {
+              console.log(msg);
+              errorMessage = "This should not happen, but we got an undefined state response from the server!";
             }
           }
           if (error === true) {
