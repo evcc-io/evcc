@@ -481,6 +481,7 @@ const setup = Vue.component("setup", {
         lineNumbers: "off",
         folding: false,
         scrollBeyondLastLine: false,
+        fontSize: 14,
         language: 'yaml',
       });
       this.editorInstance.onDidChangeModelContent(event => {
