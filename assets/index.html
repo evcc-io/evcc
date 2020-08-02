@@ -517,32 +517,67 @@ loadpoints:
   </div>
 </script>
 
-<script type="text/x-template" id="setup-template" v-on:>
-  <div class="container" v-on:>
-    <div class="row">
-      <div class="col-6">
-        <ul class="nav nav-tabs" v-model="activeTemplateClass">
-          <li v-for="template in templates" class="nav-item"><a style="cursor:pointer;" class="nav-link" @click="activeTemplateClass = template.templateClass" :class="{active:activeTemplateClass == template.templateClass}">{{template.title}}</a></li>
+<script type="text/x-template" id="setup-template">
+  <div class="container">
+    <div class="row mt-4">
+      <div class="col-12">
+        <ul class="nav nav-pills nav-justified thumbnail setup-panel">
+          <li v-for="step in wizardSteps" class="nav-item">
+            <a class="nav-link" :class="{active:activeWizardStep == step.step}">
+              <h4 class="list-group-item-heading">{{ step.title }}</h4>
+              <p class="list-group-item-text">Schritt {{ step.step }}</p>
+            </a>
+          </li>
         </ul>
-        <div class="tab-content" id="templateTabs" v-for="template in templates">
-          <div class="tab-pane" v-bind:class="{ 'active show': isActiveTemplateClass(template.templateClass) }">
-            <select size="20" v-model="selectedItem" :disabled="isTestInProgress">
-              <option v-for="(item, indexItem) in template.data" v-on:click="$emit('selectedItem', indexItem)" :value="indexItem">{{item.name|}}</option>
-            </select>
+      </div>
+    </div>
+    <div class="tab-content" id="wizardSteps">
+      <div v-for="step in wizardSteps" class="tab-pane" :class="{ 'active show': activeWizardStep == step.step }" :id="'step-'+step.step">
+        <div class="row mt-4">
+          <div class="col-12 text-left">
+            <p>{{step.description}}</p>
           </div>
         </div>
       </div>
+    </div>
+    <div class="row mt-4">
       <div class="col-6">
-        <h2>Konfiguration</h2>
-        <div id="editorContainer" style="width:100%;height:300px;border:1px solid grey">
+        <div v-if="activeWizardStepHasTemplateClass">
+          <h2>Geräteauswahl</h2>
+          <select size="20" v-model="selectedItem" :disabled="isTestInProgress">
+            <option v-for="(item, indexItem) in activeWizardStepTemplatesItem.data" v-on:click="$emit('selectedItem', indexItem)" :value="indexItem">{{item.name|}}</option>
+          </select>
         </div>
-        <button @click="validateConfig()" :disabled="testButtonInActive">Test</button>
-        <div class="spinner-border text-info" role="status" v-if="isTestInProgress">
-          <span class="sr-only">Testing...</span>
+      </div>
+      <div class="col-6">
+        <div class="row">
+          <div class="col">
+            <h2>Konfiguration</h2>
+            <div id="editorContainer" style="width:100%;height:300px;border:1px solid grey;"></div>
+          </div>
         </div>
-        <button @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
-        <div v-if="testSuccessMessageActive">Yeah, this works!</div>
-        <div v-if="testFailureMessageActive" v-model="errorMessage">Error: {{errorMessage}}</div>
+        <div class="row mt-4">
+          <div class="col">
+            <button class="btn btn-primary" @click="validateConfig()" :disabled="testButtonInactive" v-if="isTestInProgress == false">Test</button>
+            <button class="btn btn-primary" type="button" disabled v-if="isTestInProgress">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Testing...
+            </button>
+            <button class="btn btn-danger" @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
+          </div>
+        </div>
+        <div class="row mt-4">
+          <div class="col">
+            <div class="alert alert-danger" role="alert" v-if="testFailureMessageActive" v-model="errorMessage">Fehler: {{errorMessage}}</div>
+            <div class="alert alert-success" role="alert" v-if="testSuccessMessageActive">Super, diese Konfiguration funktioniert!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-12 text-center">
+        <button type="submit" class="btn btn-primary" v-on:click="previousWizardStep" :disabled="activeWizardStep <= 1">Vorheriger Schritt</button>
+        <button type="submit" class="btn btn-primary" v-on:click="nextWizardStep" :disabled="activeWizardStepAllowNext">Nächster Schritt</button>
       </div>
     </div>
   </div>
