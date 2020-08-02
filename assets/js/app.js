@@ -447,23 +447,6 @@ const setup = Vue.component("setup", {
     "activeTemplateClass": function () {
       this.updateTemplates(this.activeTemplateClass);
     },
-    "selectedItem": function () {
-      var templateItem = this.templateByTemplateClass(this.activeTemplateClass)
-      var templateText = "";
-      if (this.selectedItem >= 0)
-        templateText = templateItem.data[this.selectedItem].template;
-      // in case the wizard step was already processed, we don't want to overwrite the user config with defaults
-      if (this.wizardStepInitInProgress == true) {
-        return
-      }
-      // Reset variables
-      this.currentTestIDInProgress = 0;
-      this.testInProgress = false;
-      this.errorMessage = "";
-      this.testSuccessful = false;
-      this.testFailed = false;
-      this.editorInstance.setValue(templateText);
-    },
   },
   methods: {
     initWizardSteps: function () {
@@ -533,6 +516,25 @@ const setup = Vue.component("setup", {
       }
       this.editorInstance.setValue(wizardStep.configuration);
       this.activeTemplateClass = wizardStep.templateClass;      
+    },
+    selectTemplateItem: function (itemIndex) {
+      var templateItem = this.templateByTemplateClass(this.activeTemplateClass)
+      var templateText = "";
+      this.selectedItem = itemIndex;
+      if (itemIndex >= 0) {
+        templateText = templateItem.data[itemIndex].template;
+      }
+      // in case the wizard step was already processed, we don't want to overwrite the user config with defaults
+      if (this.wizardStepInitInProgress == true) {
+        return
+      }
+      // Reset variables
+      this.currentTestIDInProgress = 0;
+      this.testInProgress = false;
+      this.errorMessage = "";
+      this.testSuccessful = false;
+      this.testFailed = false;
+      this.editorInstance.setValue(templateText);
     },
     templatesAPI: function (func) {
       return "config/templates/" + func;
