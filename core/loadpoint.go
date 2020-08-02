@@ -349,6 +349,12 @@ func (lp *LoadPoint) connected() bool {
 	return lp.status == api.StatusB || lp.status == api.StatusC
 }
 
+// targetSocReached checks if targetSoC configured and reached
+func (lp *LoadPoint) targetSocReached(socCharge, targetSoC float64) bool {
+	// check for vehicle != nil is not necessary as socCharge would be zero then
+	return targetSoC > 0 && targetSoC < 100 && socCharge >= targetSoC
+}
+
 // updateChargeStatus updates car status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargeStatus() error {
 	status, err := lp.handler.Status()
@@ -624,7 +630,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		// https://github.com/andig/evcc/issues/105
 		err = lp.handler.Ramp(0)
 
-	case lp.TargetSoC > 0 && lp.vehicle != nil && lp.socCharge >= float64(lp.TargetSoC):
+	case lp.targetSocReached(lp.socCharge, float64(lp.TargetSoC)):
 		err = lp.handler.Ramp(0)
 
 	case mode == api.ModeOff:
