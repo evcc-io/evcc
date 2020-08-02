@@ -474,7 +474,23 @@ const setup = Vue.component("setup", {
         wizardStep.configuration = ''; // stores the entered (and validated) configuration
       }
     },
-    initEditor: function() {
+    initEditor: function () {
+      var backgroundColor = '#f8f9fa';
+      monaco.editor.defineTheme('evcc', {
+        base: 'vs',
+        inherit: true,
+        rules: [{ background: backgroundColor }],
+        colors: {
+          'editor.background': backgroundColor,
+          'editor.lineHighlightBorder': backgroundColor,
+          'editorOverviewRuler.border': backgroundColor,
+//          'scrollbar.shadow': '', // Scrollbar shadow to indicate that the view is scrolled.
+//          'scrollbarSlider.background': '', // Slider background color.
+//          'scrollbarSlider.hoverBackground': '', // Slider background color when hovering.
+//          'scrollbarSlider.activeBackground': '', // Slider background color when active.
+        }
+      });
+      monaco.editor.setTheme('evcc');
       this.editorInstance = monaco.editor.create(document.getElementById('editorContainer'), {
         value: [
           ''
@@ -482,7 +498,8 @@ const setup = Vue.component("setup", {
         minimap: { enabled: false },
         lineNumbers: "off",
         folding: false,
-        language: 'yaml'
+        scrollBeyondLastLine: false,
+        language: 'yaml',
       });
       this.editorInstance.onDidChangeModelContent(event => {
         if (this.wizardStepInitInProgress == false) {
