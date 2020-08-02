@@ -381,7 +381,7 @@ const setup = Vue.component("setup", {
           templateClass: "", // the template class to use for allowing the user to select items from
           emptyAllowed: true, // can this step be skipped with no configuration data provided?
           description: "Mit EVCC können Sie das Laden ihres E-Autos nach verschiedenen Bedürfnissen steuern. Zum Beispiel mit der maximal möglichen Leistung, oder auch PV-Überschuß geführt.\nUm dies zu ermöglichen benötigt EVCC einige Angaben zu ihren Geräten. Die folgenden Schritte helfen die Konfiguration durchzuführen und das ihr E-Auto wie gewünscht zu laden.",
-          selectedItem: "", // internal usage, stores the selected template index from the list
+          selectedItem: -1, // internal usage, stores the selected template index from the list
           configuration: '', // internal usage, stores the entered (and validated) configuration
           summary: false, // internal usage, if this is as step where the complete configuration will be presented
         },
@@ -391,7 +391,7 @@ const setup = Vue.component("setup", {
           templateClass: "meter",
           emptyAllowed: false,
           description: "Nun benötigen wir das Gerät, welches den Strombezug und die Netzeinspeisung zum Stromnetzbetreiber zur Verfügung stellt. Wählen Sie dazu ein Gerät aus der Liste aus und editieren Sie die Eigenschaften auf der rechten Seite. Mit den Knopf 'Test' können Sie überprüfen ob die Eingaben korrekt sind und auf das Gerät zugegriffen werden kann.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: false,
         },
@@ -401,7 +401,7 @@ const setup = Vue.component("setup", {
           templateClass: "meter",
           emptyAllowed: true,
           description: "Hier können sie optional einen PV Wechselrichter oder Meßgerät für die Leistung einer PV Anlage einrichten. Mit dieser kann EVCC anzeigen wieviel des produzierten PV Stroms zur Ladung genutzt wird.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: false,
         },
@@ -411,7 +411,7 @@ const setup = Vue.component("setup", {
           templateClass: "meter",
           emptyAllowed: true,
           description: "Hier können Sie optional eine vorhandene Hausbatterie auswählen. Mit dieser kann EVCC den Ladestrom der Hausbatterie auch als potentiellen Ladestrom des E-Autos berücksichtigen.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: false,
         },
@@ -421,7 +421,7 @@ const setup = Vue.component("setup", {
           templateClass: "charger",
           emptyAllowed: true,
           description: "Wählen Sie hier ihr Ladegerät aus.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: false,
         },
@@ -431,7 +431,7 @@ const setup = Vue.component("setup", {
           templateClass: "vehicle",
           emptyAllowed: true,
           description: "Wir sind fast am Ende. Wählen sie nun optional ihr E-Auto aus, damit EVCC den aktuellen Ladezustand anzeigen kann.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: false,
         },
@@ -441,7 +441,7 @@ const setup = Vue.component("setup", {
           templateClass: "",
           emptyAllowed: true,
           description: "Hier ist nun die komplette Konfiguration.",
-          selectedItem: "",
+          selectedItem: -1,
           configuration: '',
           summary: true,
         },
@@ -449,7 +449,7 @@ const setup = Vue.component("setup", {
       siteTitle: "",
       activeWizardStep: 1,
       activeTemplateClass: "",
-      selectedItem: "",
+      selectedItem: -1,
       editorInstance: "",
       editorTemplateClass: "",
       editorContent: "",
@@ -497,7 +497,7 @@ const setup = Vue.component("setup", {
     "selectedItem": function () {
       var templateItem = this.templateByTemplateClass(this.activeTemplateClass)
       var templateText = "";
-      if (this.selectedItem != "")
+      if (this.selectedItem >= 0)
         templateText = templateItem.data[this.selectedItem].template;
       this.editorTemplateClass = this.activeTemplateClass;
       // in case the wizard step was already processed, we don't want to overwrite the user config with defaults
