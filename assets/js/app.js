@@ -378,31 +378,31 @@ const setup = Vue.component("setup", {
           step: 1, // the step number as shown on the page
           title: "Netzzähler", // the title of the step as shown on the page
           templateClass: "meter", // the template class to use for allowing the user to select items from
-          description: "Nun benötigen wir das Gerät, welches den Strombezug und die Netzeinspeisung zum Stromnetzbetreiber zur Verfügung stellt. Wählen Sie dazu ein Gerät aus der Liste aus und editieren Sie die Eigenschaften auf der rechten Seite. Mit den Knopf 'Test' können Sie überprüfen ob die Eingaben korrekt sind und auf das Gerät zugegriffen werden kann.",
+          description: "Ein Netzzähler wird benötigt um den PV Überschuss zu erkennen und damit das Laden zu steuern.",
         },
         {
           step: 2,
           title: "PV",
           templateClass: "meter",
-          description: "Hier können sie optional einen PV Wechselrichter oder Meßgerät für die Leistung einer PV Anlage einrichten. Mit dieser kann EVCC anzeigen wieviel des produzierten PV Stroms zur Ladung genutzt wird.",
+          description: "Ein PV Zähler oder direkt der PV Wechselrichter ermöglicht die Anzeige wieviel des PV Stroms erzeugt wird.",
         },
         {
           step: 3,
           title: "Hausbatterie",
           templateClass: "meter",
-          description: "Hier können Sie optional eine vorhandene Hausbatterie auswählen. Mit dieser kann EVCC den Ladestrom der Hausbatterie auch als potentiellen Ladestrom des E-Autos berücksichtigen.",
+          description: "Daten eines vorhandenen Batterie-Wechselrichter ermöglichen dessen Ladestrom für das Laden des EV zu berücksichtigen.",
         },
         {
           step: 4,
           title: "Ladegerät",
           templateClass: "charger",
-          description: "Wählen Sie hier ihr Ladegerät aus.",
+          description: "Das Ladegerät welches gesteuert werden soll.",
         },
         {
           step: 5,
           title: "E-Auto",
           templateClass: "vehicle",
-          description: "Wir sind fast am Ende. Wählen sie nun optional ihr E-Auto aus, damit EVCC den aktuellen Ladezustand anzeigen kann.",
+          description: "Die Angabe des E-Autos ermöglicht die Anzeige des aktuellen Ladezustandes.",
         },
       ],
       activeWizardStep: 1,
