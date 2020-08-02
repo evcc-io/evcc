@@ -475,7 +475,7 @@ const setup = Vue.component("setup", {
       }
     },
     initEditor: function () {
-      var backgroundColor = '#f8f9fa';
+      var backgroundColor = '#ffffff';
       monaco.editor.defineTheme('evcc', {
         base: 'vs',
         inherit: true,
