@@ -523,9 +523,8 @@ loadpoints:
       <div class="col-12">
         <ul class="nav nav-pills nav-justified thumbnail setup-panel">
           <li v-for="step in wizardSteps" class="nav-item">
-            <a class="nav-link" :class="{active:activeWizardStep == step.step}">
+            <a class="nav-link" :class="{active:activeWizardStep == step.step}" style="cursor:pointer" v-on:click="selectWizardStep(step.step)">
               <h4 class="list-group-item-heading">{{ step.title }}</h4>
-              <p class="list-group-item-text">Schritt {{ step.step }}</p>
             </a>
           </li>
         </ul>
@@ -572,12 +571,6 @@ loadpoints:
             <div class="alert alert-success" role="alert" v-if="testSuccessMessageActive">Super, diese Konfiguration funktioniert!</div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="row mt-4">
-      <div class="col-12 text-center">
-        <button type="submit" class="btn btn-primary" v-on:click="previousWizardStep" :disabled="activeWizardStep <= 1">Vorheriger Schritt</button>
-        <button type="submit" class="btn btn-primary" v-on:click="nextWizardStep" :disabled="activeWizardStepAllowNext">Nächster Schritt</button>
       </div>
     </div>
   </div>

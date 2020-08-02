@@ -84,7 +84,6 @@ let store = {
   state: {
     availableVersion: null,
     loadpoints: [],
-    editorContent: "",
   },
   update: function(msg) {
     let target = this.state;
@@ -377,82 +376,39 @@ const setup = Vue.component("setup", {
       wizardSteps: [
         {
           step: 1, // the step number as shown on the page
-          title: "Einführung", // the title of the step as shown on the page
-          templateClass: "", // the template class to use for allowing the user to select items from
-          emptyAllowed: true, // can this step be skipped with no configuration data provided?
-          description: "Mit EVCC können Sie das Laden ihres E-Autos nach verschiedenen Bedürfnissen steuern. Zum Beispiel mit der maximal möglichen Leistung, oder auch PV-Überschuß geführt.\nUm dies zu ermöglichen benötigt EVCC einige Angaben zu ihren Geräten. Die folgenden Schritte helfen die Konfiguration durchzuführen und das ihr E-Auto wie gewünscht zu laden.",
-          selectedItem: -1, // internal usage, stores the selected template index from the list
-          configuration: '', // internal usage, stores the entered (and validated) configuration
-          summary: false, // internal usage, if this is as step where the complete configuration will be presented
+          title: "Netzzähler", // the title of the step as shown on the page
+          templateClass: "meter", // the template class to use for allowing the user to select items from
+          description: "Nun benötigen wir das Gerät, welches den Strombezug und die Netzeinspeisung zum Stromnetzbetreiber zur Verfügung stellt. Wählen Sie dazu ein Gerät aus der Liste aus und editieren Sie die Eigenschaften auf der rechten Seite. Mit den Knopf 'Test' können Sie überprüfen ob die Eingaben korrekt sind und auf das Gerät zugegriffen werden kann.",
         },
         {
           step: 2,
-          title: "Netzzähler",
+          title: "PV",
           templateClass: "meter",
-          emptyAllowed: false,
-          description: "Nun benötigen wir das Gerät, welches den Strombezug und die Netzeinspeisung zum Stromnetzbetreiber zur Verfügung stellt. Wählen Sie dazu ein Gerät aus der Liste aus und editieren Sie die Eigenschaften auf der rechten Seite. Mit den Knopf 'Test' können Sie überprüfen ob die Eingaben korrekt sind und auf das Gerät zugegriffen werden kann.",
-          selectedItem: -1,
-          configuration: '',
-          summary: false,
+          description: "Hier können sie optional einen PV Wechselrichter oder Meßgerät für die Leistung einer PV Anlage einrichten. Mit dieser kann EVCC anzeigen wieviel des produzierten PV Stroms zur Ladung genutzt wird.",
         },
         {
           step: 3,
-          title: "PV",
+          title: "Hausbatterie",
           templateClass: "meter",
-          emptyAllowed: true,
-          description: "Hier können sie optional einen PV Wechselrichter oder Meßgerät für die Leistung einer PV Anlage einrichten. Mit dieser kann EVCC anzeigen wieviel des produzierten PV Stroms zur Ladung genutzt wird.",
-          selectedItem: -1,
-          configuration: '',
-          summary: false,
+          description: "Hier können Sie optional eine vorhandene Hausbatterie auswählen. Mit dieser kann EVCC den Ladestrom der Hausbatterie auch als potentiellen Ladestrom des E-Autos berücksichtigen.",
         },
         {
           step: 4,
-          title: "Hausbatterie",
-          templateClass: "meter",
-          emptyAllowed: true,
-          description: "Hier können Sie optional eine vorhandene Hausbatterie auswählen. Mit dieser kann EVCC den Ladestrom der Hausbatterie auch als potentiellen Ladestrom des E-Autos berücksichtigen.",
-          selectedItem: -1,
-          configuration: '',
-          summary: false,
+          title: "Ladegerät",
+          templateClass: "charger",
+          description: "Wählen Sie hier ihr Ladegerät aus.",
         },
         {
           step: 5,
-          title: "Ladegerät",
-          templateClass: "charger",
-          emptyAllowed: true,
-          description: "Wählen Sie hier ihr Ladegerät aus.",
-          selectedItem: -1,
-          configuration: '',
-          summary: false,
-        },
-        {
-          step: 6,
           title: "E-Auto",
           templateClass: "vehicle",
-          emptyAllowed: true,
           description: "Wir sind fast am Ende. Wählen sie nun optional ihr E-Auto aus, damit EVCC den aktuellen Ladezustand anzeigen kann.",
-          selectedItem: -1,
-          configuration: '',
-          summary: false,
-        },
-        {
-          step: 7,
-          title: "Abschluß",
-          templateClass: "",
-          emptyAllowed: true,
-          description: "Hier ist nun die komplette Konfiguration.",
-          selectedItem: -1,
-          configuration: '',
-          summary: true,
         },
       ],
-      siteTitle: "",
       activeWizardStep: 1,
       activeTemplateClass: "",
       selectedItem: -1,
-      editorInstance: "",
-      editorTemplateClass: "",
-      editorContent: "",
+      editorInstance: null,
       errorMessage: "",
       currentTestIDInProgress: 0,
       testInProgress: false,
@@ -469,16 +425,13 @@ const setup = Vue.component("setup", {
       if(this.activeWizardStep >= this.wizardSteps.length - 1) {
         return false;
       }
-      if (this.wizardSteps[this.activeWizardStep - 1].emptyAllowed == true) {
-        return false;
-      }
       return (this.testSuccessful == false);     
     },
     activeWizardStepTemplatesItem: function () {
       return this.templateByTemplateClass(this.wizardSteps[this.activeWizardStep - 1].templateClass);
     },
     testButtonInactive: function () {
-      return this.editorContent.length == 0 || this.testInProgress == true
+      return (this.editorInstance != null && this.editorInstance.getValue().length == 0) || this.testInProgress == true
     },
     isTestInProgress: function () {
       return this.testInProgress == true
@@ -499,7 +452,6 @@ const setup = Vue.component("setup", {
       var templateText = "";
       if (this.selectedItem >= 0)
         templateText = templateItem.data[this.selectedItem].template;
-      this.editorTemplateClass = this.activeTemplateClass;
       // in case the wizard step was already processed, we don't want to overwrite the user config with defaults
       if (this.wizardStepInitInProgress == true) {
         return
@@ -514,6 +466,14 @@ const setup = Vue.component("setup", {
     },
   },
   methods: {
+    initWizardSteps: function () {
+      // add internal variable defaults
+      for (var i = 0; i < this.wizardSteps.length; i++) {
+        var wizardStep = this.wizardSteps[i];
+        wizardStep.selectedItem = -1; // stores the selected template index from the list
+        wizardStep.configuration = ''; // stores the entered (and validated) configuration
+      }
+    },
     initEditor: function() {
       this.editorInstance = monaco.editor.create(document.getElementById('editorContainer'), {
         value: [
@@ -525,7 +485,6 @@ const setup = Vue.component("setup", {
         language: 'yaml'
       });
       this.editorInstance.onDidChangeModelContent(event => {
-        this.editorContent = this.editorInstance.getValue();
         if (this.wizardStepInitInProgress == false) {
           this.testInProgress = false;
           this.errorMessage = "";
@@ -544,36 +503,17 @@ const setup = Vue.component("setup", {
       this.errorMessage = "";
       this.editorInstance.setValue("");
     },
-    previousWizardStep: function () {
+    selectWizardStep: function (newActiveStep) {
       this.wizardStepInitInProgress = true;
       this.resetEditorData();
-      this.activeWizardStep = this.activeWizardStep - 1;
+      this.activeWizardStep = newActiveStep;
       var wizardStep = this.wizardSteps[this.activeWizardStep - 1];
       if (wizardStep.configuration != '') {
         this.testSuccessful = true;
         this.selectedItem = wizardStep.selectedItem;
       }
       this.editorInstance.setValue(wizardStep.configuration);
-      this.activeTemplateClass = wizardStep.templateClass;
-      this.editorInstance.layout();
-    },
-    nextWizardStep: function () {
-      this.wizardStepInitInProgress = true;
-      if (this.editorContent != '' && this.testSuccessful == true) {
-        var wizardStep = this.wizardSteps[this.activeWizardStep - 1];
-        wizardStep.configuration = this.editorContent;
-        wizardStep.selectedItem = this.selectedItem;
-      }
-      this.resetEditorData();
-      this.activeWizardStep = this.activeWizardStep + 1;
-      var wizardStep = this.wizardSteps[this.activeWizardStep - 1];
-      this.selectedItem = wizardStep.selectedItem;
-      this.editorInstance.setValue(wizardStep.configuration);
-      if (wizardStep.configuration != '') {
-        this.testSuccessful = true;
-      }
-      this.activeTemplateClass = wizardStep.templateClass;
-      this.editorInstance.layout();
+      this.activeTemplateClass = wizardStep.templateClass;      
     },
     templatesAPI: function (func) {
       return "config/templates/" + func;
@@ -657,6 +597,10 @@ const setup = Vue.component("setup", {
           } else {
             this.testInProgress = false;
             this.testSuccessful = true;
+            // save the configuration
+            var wizardStep = this.wizardSteps[this.activeWizardStep - 1];
+            wizardStep.configuration = this.editorInstance.getValue();
+            wizardStep.selectedItem = this.selectedItem;
             this.editorInstance.updateOptions({ readOnly: false });
           }
         } else {
@@ -676,7 +620,7 @@ const setup = Vue.component("setup", {
         this.editorInstance.updateOptions({ readOnly: true });
         this.testInProgress = true;
         this.validationID = 0;
-        axios.post(this.validateAPI(this.editorTemplateClass), templateText, options).then(msg => {
+        axios.post(this.validateAPI(this.activeTemplateClass), templateText, options).then(msg => {
           var errorMessage = "";
           var validationID = 0;
           if (msg.data.id) {
@@ -703,6 +647,7 @@ const setup = Vue.component("setup", {
     }
   },
   mounted: function () {
+    this.initWizardSteps();
     this.initEditor();
     this.activeTemplateClass = this.templates[0].templateClass;
   },
