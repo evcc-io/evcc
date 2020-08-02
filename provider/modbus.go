@@ -156,6 +156,12 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		}
 	}
 
+	// silence NaN reading errors by assuming zero
+	if err != nil && errors.Is(err, meters.ErrNaN) {
+		res.Value = 0
+		err = nil
+	}
+
 	if err != nil {
 		m.conn.Close() // close connection in case of modbus error
 	} else {

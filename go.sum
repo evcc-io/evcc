@@ -348,6 +348,8 @@ github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPU
 github.com/valyala/fasttemplate v1.1.0/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac h1:LnvR04M0HuzjTbRzMpE5jRHcNu46CvG1FOtMcZAX8C4=
 github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac/go.mod h1:sldLyJCKVO9GQkit55U5WPNr9U4KmUn1SCdqFN9Gjb4=
+github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6 h1:cs1lwT44CyqStjTmYe0vGDhQHEaBpYZh0dgXPQLeEpY=
+github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6/go.mod h1:sldLyJCKVO9GQkit55U5WPNr9U4KmUn1SCdqFN9Gjb4=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
