@@ -511,6 +511,8 @@ const setup = Vue.component("setup", {
       if (wizardStep.configuration != '') {
         this.testSuccessful = true;
         this.selectedItem = wizardStep.selectedItem;
+      } else {
+        this.selectedItem = -1;
       }
       this.editorInstance.setValue(wizardStep.configuration);
       this.activeTemplateClass = wizardStep.templateClass;      
