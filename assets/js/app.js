@@ -467,10 +467,6 @@ const setup = Vue.component("setup", {
           'editor.background': backgroundColor,
           'editor.lineHighlightBorder': backgroundColor,
           'editorOverviewRuler.border': backgroundColor,
-//          'scrollbar.shadow': '', // Scrollbar shadow to indicate that the view is scrolled.
-//          'scrollbarSlider.background': '', // Slider background color.
-//          'scrollbarSlider.hoverBackground': '', // Slider background color when hovering.
-//          'scrollbarSlider.activeBackground': '', // Slider background color when active.
         }
       });
       monaco.editor.setTheme('evcc');
