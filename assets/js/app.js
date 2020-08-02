@@ -430,6 +430,9 @@ const setup = Vue.component("setup", {
     activeWizardStepTemplatesItem: function () {
       return this.templateByTemplateClass(this.wizardSteps[this.activeWizardStep - 1].templateClass);
     },
+    hideEditor: function () {
+      return (this.testButtonInactive == true && this.testInProgress == false);
+    },
     testButtonInactive: function () {
       return (this.editorInstance != null && this.editorInstance.getValue().length == 0) || this.testInProgress == true
     },
