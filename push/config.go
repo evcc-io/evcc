@@ -9,7 +9,7 @@ import (
 
 // Sender implements message sending
 type Sender interface {
-	Send(event Event, title, msg string)
+	Send(title, msg string)
 }
 
 // EventTemplate is the push message template for an event
@@ -25,12 +25,17 @@ func NewMessengerFromConfig(typ string, other map[string]interface{}) (res Sende
 	case "pushover":
 		var cc pushOverConfig
 		if err = util.DecodeOther(other, &cc); err == nil {
-			res = NewPushOverMessenger(cc.App, cc.Recipients)
+			res, err = NewPushOverMessenger(cc.App, cc.Recipients)
 		}
 	case "telegram":
 		var cc telegramConfig
 		if err = util.DecodeOther(other, &cc); err == nil {
-			res = NewTelegramMessenger(cc.Token, cc.Chats)
+			res, err = NewTelegramMessenger(cc.Token, cc.Chats)
+		}
+	case "email", "shout":
+		var cc shoutrrrConfig
+		if err = util.DecodeOther(other, &cc); err == nil {
+			res, err = NewShoutrrrMessenger(cc.URI)
 		}
 	default:
 		err = fmt.Errorf("unknown messenger type: %s", typ)

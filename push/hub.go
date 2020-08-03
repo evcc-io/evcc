@@ -64,7 +64,7 @@ func (h *Hub) Run(events <-chan Event) {
 		}
 
 		for _, sender := range h.sender {
-			go sender.Send(ev, definition.Title, msg)
+			go sender.Send(definition.Title, msg)
 		}
 	}
 }

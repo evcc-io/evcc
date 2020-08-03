@@ -1,6 +1,7 @@
 package push
 
 import (
+	"errors"
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -25,10 +26,10 @@ func init() {
 }
 
 // NewTelegramMessenger creates new pushover messenger
-func NewTelegramMessenger(token string, chats []int64) *Telegram {
+func NewTelegramMessenger(token string, chats []int64) (*Telegram, error) {
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
-		log.FATAL.Fatal("telegram: invalid bot token")
+		return nil, errors.New("telegram: invalid bot token")
 	}
 
 	m := &Telegram{
@@ -42,7 +43,7 @@ func NewTelegramMessenger(token string, chats []int64) *Telegram {
 
 	go m.trackChats()
 
-	return m
+	return m, nil
 }
 
 // trackChats captures ids of all chats that bot participates in
@@ -66,7 +67,7 @@ func (m *Telegram) trackChats() {
 }
 
 // Send sends to all receivers
-func (m *Telegram) Send(event Event, title, msg string) {
+func (m *Telegram) Send(title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
 		log.TRACE.Printf("telegram: sending to %d", chat)
