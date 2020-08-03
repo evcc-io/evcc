@@ -53,6 +53,8 @@ messaging:
     token: # bot id
     chats:
     - # list of chat ids
+  - type: email
+    uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 
 # meters
 meters:

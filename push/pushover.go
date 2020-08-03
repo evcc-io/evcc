@@ -1,6 +1,8 @@
 package push
 
 import (
+	"errors"
+
 	"github.com/gregdel/pushover"
 )
 
@@ -17,9 +19,9 @@ type pushOverConfig struct {
 }
 
 // NewPushOverMessenger creates new pushover messenger
-func NewPushOverMessenger(app string, recipients []string) *PushOver {
+func NewPushOverMessenger(app string, recipients []string) (*PushOver, error) {
 	if app == "" {
-		log.FATAL.Fatal("pushover: missing app name")
+		return nil, errors.New("pushover: missing app name")
 	}
 
 	m := &PushOver{
@@ -27,11 +29,11 @@ func NewPushOverMessenger(app string, recipients []string) *PushOver {
 		recipients: recipients,
 	}
 
-	return m
+	return m, nil
 }
 
 // Send sends to all receivers
-func (m *PushOver) Send(event Event, title, msg string) {
+func (m *PushOver) Send(title, msg string) {
 	message := pushover.NewMessageWithTitle(msg, title)
 
 	for _, id := range m.recipients {
