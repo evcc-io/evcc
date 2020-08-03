@@ -8,14 +8,16 @@ import (
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/pipe"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	log     = util.NewLogger("main")
-	cfgFile string
+	ignoreParams = []string{"warn", "error", "fatal"} // don't add to cache
+	log          = util.NewLogger("main")
+	cfgFile      string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -134,7 +136,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(tee.Attach())
+	go cache.Run(pipe.NewDropper(ignoreParams...).Pipe(tee.Attach()))
 
 	// setup loadpoints
 	site := loadConfig(conf)

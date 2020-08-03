@@ -8,6 +8,8 @@ before:
 builds:
 - id: evcc
   main: main.go
+  flags:
+  - -tags=release
   ldflags:
   - -X github.com/andig/evcc/server.Version={{.Version}} -X github.com/andig/evcc/server.Commit={{.ShortCommit}}
   env:

@@ -31,13 +31,14 @@ type Auth struct {
 }
 
 // NewAuth creates authorization headers from config
-func NewAuth(log *util.Logger, auth Auth, headers map[string]string) {
+func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
 	if strings.ToLower(auth.Type) != "basic" {
-		log.FATAL.Fatalf("unsupported auth type: %s", auth.Type)
+		return fmt.Errorf("unsupported auth type: %s", auth.Type)
 	}
 
 	basicAuth := auth.User + ":" + auth.Password
 	headers["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth))
+	return nil
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
@@ -50,7 +51,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
-	}{}
+	}{Headers: make(map[string]string)}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -69,10 +70,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if p.headers == nil {
-			p.headers = make(map[string]string)
+		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
+			return nil, err
 		}
-		NewAuth(log, cc.Auth, p.headers)
 	}
 
 	// ignore the self signed certificate

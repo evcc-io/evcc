@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/pipe"
 	"github.com/spf13/viper"
 )
 
@@ -30,11 +31,11 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []*core.LoadPoint, i
 	)
 
 	// eliminate duplicate values
-	dedupe := server.NewDeduplicator(30*time.Minute, "socCharge")
+	dedupe := pipe.NewDeduplicator(30*time.Minute, "socCharge")
 	in = dedupe.Pipe(in)
 
 	// reduce number of values written to influx
-	limiter := server.NewLimiter(5 * time.Second)
+	limiter := pipe.NewLimiter(5 * time.Second)
 	in = limiter.Pipe(in)
 
 	go influx.Run(loadPoints, in)

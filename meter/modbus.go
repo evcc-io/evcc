@@ -1,6 +1,8 @@
 package meter
 
 import (
+	"errors"
+
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
@@ -111,6 +113,12 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 				op.SunSpec.Point,
 			)
 		}
+	}
+
+	// silence NaN reading errors by assuming zero
+	if err != nil && errors.Is(err, meters.ErrNaN) {
+		res.Value = 0
+		err = nil
 	}
 
 	if err != nil {

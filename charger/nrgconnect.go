@@ -64,29 +64,29 @@ type NRGDeviceMetadata struct {
 // NRGKickConnect charger implementation
 type NRGKickConnect struct {
 	*util.HTTPHelper
-	IP         string
-	MacAddress string
-	Password   string
+	uri      string
+	mac      string
+	password string
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
 func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ IP, MacAddress, Password string }{}
+	cc := struct{ URI, Mac, Password string }{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewNRGKickConnect(cc.IP, cc.MacAddress, cc.Password)
+	return NewNRGKickConnect(cc.URI, cc.Mac, cc.Password)
 }
 
 // NewNRGKickConnect creates NRGKickConnect charger
-func NewNRGKickConnect(IP, MacAddress, Password string) (*NRGKickConnect, error) {
+func NewNRGKickConnect(uri, mac, password string) (*NRGKickConnect, error) {
 	log := util.NewLogger("nrgconn")
 	nrg := &NRGKickConnect{
 		HTTPHelper: util.NewHTTPHelper(log),
-		IP:         IP,
-		MacAddress: MacAddress,
-		Password:   Password,
+		uri:        uri,
+		mac:        mac,
+		password:   password,
 	}
 
 	nrg.HTTPHelper.Log.WARN.Println("-- experimental --")
@@ -95,7 +95,7 @@ func NewNRGKickConnect(IP, MacAddress, Password string) (*NRGKickConnect, error)
 }
 
 func (nrg *NRGKickConnect) apiURL(api apiFunction) string {
-	return fmt.Sprintf("%s/api/%s/%s", nrg.IP, api, nrg.MacAddress)
+	return fmt.Sprintf("%s/api/%s/%s", nrg.uri, api, nrg.mac)
 }
 
 func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
@@ -142,7 +142,7 @@ func (nrg *NRGKickConnect) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (nrg *NRGKickConnect) Enable(enable bool) error {
 	settings := NRGSettings{}
-	settings.Values.DeviceMetadata.Password = nrg.Password
+	settings.Values.DeviceMetadata.Password = nrg.password
 	settings.Values.ChargingStatus.Charging = &enable
 
 	return nrg.putJSON(nrg.apiURL(apiSettings), settings)
@@ -151,7 +151,7 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	settings := NRGSettings{}
-	settings.Values.DeviceMetadata.Password = nrg.Password
+	settings.Values.DeviceMetadata.Password = nrg.password
 	settings.Values.ChargingCurrent.Value = float64(current)
 
 	return nrg.putJSON(nrg.apiURL(apiSettings), settings)
