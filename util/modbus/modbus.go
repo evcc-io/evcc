@@ -20,6 +20,7 @@ type Settings struct {
 // Connection contains the ModBus connection configuration
 type Connection struct {
 	ID                  uint8
+	SubDevice           int
 	URI, Device, Comset string
 	Baudrate            int
 	RTU                 *bool // indicates RTU over TCP if true
@@ -62,11 +63,11 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn met
 }
 
 // NewDevice creates physical modbus device from config
-func NewDevice(model string, isRS485 bool) (device meters.Device, err error) {
+func NewDevice(model string, subdevice int, isRS485 bool) (device meters.Device, err error) {
 	if isRS485 {
 		device, err = rs485.NewDevice(strings.ToUpper(model))
 	} else {
-		device = sunspec.NewDevice(strings.ToUpper(model))
+		device = sunspec.NewDevice(strings.ToUpper(model), subdevice)
 	}
 
 	if device == nil {
