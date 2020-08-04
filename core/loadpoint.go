@@ -93,10 +93,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		log.FATAL.Fatal(err)
 	}
 
-	// workaround mapstructure
-	if lp.Mode == "0" {
-		lp.Mode = api.ModeOff
-	}
+	// set sane defaults
+	lp.Mode = api.ChargeModeString(string(lp.Mode))
+	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
 
 	lp.TargetSoC = 100
 	if len(lp.SoC.Levels) > 0 {
