@@ -333,6 +333,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
+	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
+	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
 
 	// publish initial values
 	lp.Lock()
@@ -355,8 +357,8 @@ func (lp *LoadPoint) targetSocReached(socCharge, targetSoC float64) bool {
 	return targetSoC > 0 && targetSoC < 100 && socCharge >= targetSoC
 }
 
-// updateChargeStatus updates car status and detects car connected/disconnected events
-func (lp *LoadPoint) updateChargeStatus() error {
+// updateChargerStatus updates car status and detects car connected/disconnected events
+func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.handler.Status()
 	if err != nil {
 		return err
@@ -372,14 +374,11 @@ func (lp *LoadPoint) updateChargeStatus() error {
 			lp.bus.Publish(evVehicleConnect)
 		}
 
-		// start/stop charging cycle - handle before disconnect to update energy
+		// changed to C - start/stop charging cycle - handle before disconnect to update energy
 		if lp.charging = status == api.StatusC; lp.charging {
 			lp.bus.Publish(evChargeStart)
-		} else {
-			// omit initial stop event before started
-			if prevStatus != api.StatusNone {
-				lp.bus.Publish(evChargeStop)
-			}
+		} else if prevStatus == api.StatusC {
+			lp.bus.Publish(evChargeStop)
 		}
 
 		// changed to A - disconnected
@@ -602,7 +601,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	lp.publishSoC()
 
 	// read and publish status
-	if err := retry.Do(lp.updateChargeStatus, retryOptions...); err != nil {
+	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
 		return
 	}
