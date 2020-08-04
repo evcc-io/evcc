@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andig/evcc/meter"
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/mock"
 	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
@@ -45,7 +45,13 @@ func TestWrappedMeter(t *testing.T) {
 
 	mm := mock.NewMockMeter(ctrl)
 	me := mock.NewMockMeterEnergy(ctrl)
-	cm := &meter.EnergyDecorator{Meter: mm, MeterEnergy: me}
+
+	type EnergyDecorator struct {
+		api.Meter
+		api.MeterEnergy
+	}
+
+	cm := &EnergyDecorator{Meter: mm, MeterEnergy: me}
 
 	me.EXPECT().
 		TotalEnergy().
