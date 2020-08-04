@@ -1,6 +1,7 @@
 package meter
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -8,17 +9,12 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-// EnergyDecorator decorates an api.Meter with api.MeterEnergy
-type EnergyDecorator struct {
-	api.Meter
-	api.MeterEnergy
-}
-
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Power  provider.Config
-		Energy *provider.Config // optional
+		Power    provider.Config
+		Energy   *provider.Config   // optional
+		Currents []*provider.Config // optional
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,15 +36,57 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 	// decorate Meter with MeterEnergy
 	if cc.Energy != nil {
-		energy, err := provider.NewFloatGetterFromConfig(*cc.Energy)
+		energy, err := NewMeterEnergy(*cc.Energy)
 		if err != nil {
 			return nil, err
 		}
 
+		type EnergyDecorator struct {
+			api.Meter
+			api.MeterEnergy
+		}
+
 		m = &EnergyDecorator{
 			Meter:       m,
-			MeterEnergy: NewMeterEnergy(energy),
+			MeterEnergy: energy,
 		}
+	}
+
+	// decorate Meter with MeterEnergy
+	if len(cc.Currents) == 3 {
+		currents, err := NewCurrents(cc.Currents)
+		if err != nil {
+			return nil, err
+		}
+
+		type PowerEnergy interface {
+			api.Meter
+			api.MeterEnergy
+		}
+
+		if pe, ok := m.(PowerEnergy); ok {
+			type CurrentDecorator struct {
+				PowerEnergy
+				api.MeterCurrent
+			}
+
+			m = &CurrentDecorator{
+				PowerEnergy:  pe,
+				MeterCurrent: currents,
+			}
+		} else {
+			type CurrentDecorator struct {
+				api.Meter
+				api.MeterCurrent
+			}
+
+			m = &CurrentDecorator{
+				Meter:        m,
+				MeterCurrent: currents,
+			}
+		}
+	} else if len(cc.Currents) > 0 {
+		return nil, errors.New("default meter config: need 3 currents")
 	}
 
 	return m, nil
@@ -77,14 +115,60 @@ type MeterEnergy struct {
 	totalEnergyG func() (float64, error)
 }
 
-// NewMeterEnergy creates a new charger
-func NewMeterEnergy(totalEnergyG func() (float64, error)) api.MeterEnergy {
-	return &MeterEnergy{
+// NewMeterEnergy creates a new api.MeterEnergy
+func NewMeterEnergy(energyConf provider.Config) (api.MeterEnergy, error) {
+	totalEnergyG, err := provider.NewFloatGetterFromConfig(energyConf)
+	if err != nil {
+		return nil, err
+	}
+
+	e := &MeterEnergy{
 		totalEnergyG: totalEnergyG,
 	}
+
+	return e, nil
 }
 
 // TotalEnergy implements the Meter.TotalEnergy interface
 func (m *MeterEnergy) TotalEnergy() (float64, error) {
 	return m.totalEnergyG()
+}
+
+// Currents is an api.MeterCurrent implementation
+type Currents struct {
+	currentsG []func() (float64, error)
+}
+
+// NewCurrents creates a new api.MeterCurrent
+func NewCurrents(currentsConf []*provider.Config) (api.MeterCurrent, error) {
+	var currentsG []func() (float64, error)
+	for _, currConf := range currentsConf {
+		c, err := provider.NewFloatGetterFromConfig(*currConf)
+		if err != nil {
+			return nil, err
+		}
+
+		currentsG = append(currentsG, c)
+	}
+
+	c := &Currents{
+		currentsG: currentsG,
+	}
+
+	return c, nil
+}
+
+// Currents implements the api.Currents interface
+func (c *Currents) Currents() (float64, float64, float64, error) {
+	var currents []float64
+	for _, currentG := range c.currentsG {
+		c, err := currentG()
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		currents = append(currents, c)
+	}
+
+	return currents[0], currents[1], currents[2], nil
 }
