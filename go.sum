@@ -345,6 +345,8 @@ github.com/spf13/viper v1.4.0/go.mod h1:PTJ7Z/lr49W6bUbkmS1V3by4uWynFiR9p7+dSq/y
 github.com/spf13/viper v1.6.3/go.mod h1:jUMtyi0/lB5yZH/FjyGAoH7IMNrIhlBf6pXZmbMDvzw=
 github.com/spf13/viper v1.7.0 h1:xVKxvI7ouOI5I+U9s2eeiUfMaWBVoXA3AWskkrqK0VM=
 github.com/spf13/viper v1.7.0/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
+github.com/spf13/viper v1.7.1 h1:pM5oEahlgWv/WnHXpgbKz7iLIxRf65tye2Ci+XFK5sk=
+github.com/spf13/viper v1.7.1/go.mod h1:8WkrPz2fc9jxqZNCJI/76HCieCp4Q8HaLFoCha5qpdg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
@@ -370,8 +372,8 @@ github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPU
 github.com/valyala/fasttemplate v1.1.0/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac h1:LnvR04M0HuzjTbRzMpE5jRHcNu46CvG1FOtMcZAX8C4=
 github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac/go.mod h1:sldLyJCKVO9GQkit55U5WPNr9U4KmUn1SCdqFN9Gjb4=
-github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6 h1:cs1lwT44CyqStjTmYe0vGDhQHEaBpYZh0dgXPQLeEpY=
-github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6/go.mod h1:sldLyJCKVO9GQkit55U5WPNr9U4KmUn1SCdqFN9Gjb4=
+github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570 h1:3rchiOlxTpN0tmbHT29PdsnM9CTBgHPuaEMLlsdbW9I=
+github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570/go.mod h1:siHIaeDcajqQjZ/fXHxszesqyo41sKI0YDMUzuFtk6w=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

@@ -84,7 +84,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 
 	// model configured
 	if cc.Model != "" {
-		device, err = modbus.NewDevice(cc.Model, *cc.RTU)
+		device, err = modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
 
 		// prepare device
 		if err == nil {
@@ -92,7 +92,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 			err = device.Initialize(conn.ModbusClient())
 
 			// silence KOSTAL implementation errors
-			if _, partial := err.(meters.SunSpecPartiallyInitialized); partial {
+			if errors.Is(err, meters.ErrPartiallyOpened) {
 				err = nil
 			}
 		}
