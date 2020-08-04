@@ -13,8 +13,8 @@ import (
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Power    provider.Config
-		Energy   *provider.Config   // optional
-		Currents []*provider.Config // optional
+		Energy   *provider.Config  // optional
+		Currents []provider.Config // optional
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,7 +53,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	}
 
 	// decorate Meter with MeterEnergy
-	if len(cc.Currents) == 3 {
+	if len(cc.Currents) > 0 {
 		currents, err := NewCurrents(cc.Currents)
 		if err != nil {
 			return nil, err
@@ -85,8 +85,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 				MeterCurrent: currents,
 			}
 		}
-	} else if len(cc.Currents) > 0 {
-		return nil, errors.New("default meter config: need 3 currents")
 	}
 
 	return m, nil
@@ -116,8 +114,8 @@ type MeterEnergy struct {
 }
 
 // NewMeterEnergy creates a new api.MeterEnergy
-func NewMeterEnergy(energyConf provider.Config) (api.MeterEnergy, error) {
-	totalEnergyG, err := provider.NewFloatGetterFromConfig(energyConf)
+func NewMeterEnergy(ccEnergy provider.Config) (api.MeterEnergy, error) {
+	totalEnergyG, err := provider.NewFloatGetterFromConfig(ccEnergy)
 	if err != nil {
 		return nil, err
 	}
@@ -140,10 +138,14 @@ type Currents struct {
 }
 
 // NewCurrents creates a new api.MeterCurrent
-func NewCurrents(currentsConf []*provider.Config) (api.MeterCurrent, error) {
+func NewCurrents(ccCurrents []provider.Config) (api.MeterCurrent, error) {
+	if len(ccCurrents) != 3 {
+		return nil, errors.New("need 3 currents")
+	}
+
 	var currentsG []func() (float64, error)
-	for _, currConf := range currentsConf {
-		c, err := provider.NewFloatGetterFromConfig(*currConf)
+	for _, cc := range ccCurrents {
+		c, err := provider.NewFloatGetterFromConfig(cc)
 		if err != nil {
 			return nil, err
 		}
