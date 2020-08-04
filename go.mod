@@ -32,9 +32,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
-	github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6
+	github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570
 	github.com/yuin/goldmark v1.1.32
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
