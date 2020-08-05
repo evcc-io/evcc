@@ -377,30 +377,35 @@ const setup = Vue.component("setup", {
         {
           step: 1, // the step number as shown on the page
           title: "Netzzähler", // the title of the step as shown on the page
+          navigation: "grid", // the url category item
           templateClass: "meter", // the template class to use for allowing the user to select items from
           description: "Ein Netzzähler wird benötigt um den PV Überschuss zu erkennen und damit das Laden zu steuern.",
         },
         {
           step: 2,
           title: "PV",
+          navigation: "pv",
           templateClass: "meter",
           description: "Ein PV Zähler oder direkt der PV Wechselrichter ermöglicht die Anzeige wieviel des PV Stroms erzeugt wird.",
         },
         {
           step: 3,
           title: "Hausbatterie",
+          navigation: "battery",
           templateClass: "meter",
           description: "Daten eines vorhandenen Batterie-Wechselrichter ermöglichen dessen Ladestrom für das Laden des EV zu berücksichtigen.",
         },
         {
           step: 4,
           title: "Ladegerät",
+          navigation: "charger",
           templateClass: "charger",
           description: "Das Ladegerät welches gesteuert werden soll.",
         },
         {
           step: 5,
           title: "E-Auto",
+          navigation: "ev",
           templateClass: "vehicle",
           description: "Die Angabe des E-Autos ermöglicht die Anzeige des aktuellen Ladezustandes.",
         },
@@ -420,12 +425,6 @@ const setup = Vue.component("setup", {
   computed: {
     activeWizardStepHasTemplateClass: function () {
       return this.wizardSteps[this.activeWizardStep - 1].templateClass != '';
-    },
-    activeWizardStepAllowNext: function() {
-      if(this.activeWizardStep >= this.wizardSteps.length - 1) {
-        return false;
-      }
-      return (this.testSuccessful == false);     
     },
     activeWizardStepTemplatesItem: function () {
       return this.templateByTemplateClass(this.wizardSteps[this.activeWizardStep - 1].templateClass);
@@ -481,6 +480,7 @@ const setup = Vue.component("setup", {
         lineNumbers: "off",
         folding: false,
         scrollBeyondLastLine: false,
+        automaticLayout: true,
         fontSize: 14,
         language: 'yaml',
       });
@@ -560,6 +560,16 @@ const setup = Vue.component("setup", {
         }
       }
       return templateItem;
+    },
+    wizardStepByNavigationCategory: function (category) {
+      var wizardStep;
+      for (var i = 0; i < this.wizardSteps.length; i++) {
+        var item = this.wizardSteps[i];
+        if (item.navigation == category) {
+          wizardStep = item;
+        }
+      }
+      return wizardStep;
     },
     isActiveTemplateClass: function (templateClass) {
       return this.activeTemplateClass == templateClass;
@@ -667,10 +677,15 @@ const setup = Vue.component("setup", {
       }
     }
   },
+  beforeRouteUpdate: function (to, from, next) {
+    this.selectWizardStep(this.wizardStepByNavigationCategory(to.params.category).step)
+    next();
+  },
   mounted: function () {
     this.initWizardSteps();
     this.initEditor();
     this.activeTemplateClass = this.templates[0].templateClass;
+    this.selectWizardStep(this.wizardStepByNavigationCategory(this.$route.params.category).step)
   },
   updated: function () {
     this.$nextTick(function () {
@@ -725,7 +740,7 @@ const routes = [
 ].concat(routerLinks().map(function(props, idx) {
   return { path: "/links/" + idx, component: embed, props: props }
 })).concat([
-  { path: "/setup", component: setup },
+  { path: "/setup/:category/", component: setup },
   { path: "/config", component: config },
 ]);
 

@@ -54,11 +54,81 @@
       color: #e83e8c;
       word-wrap: break-word;
     }
+
+    .editor-area {
+      min-height:300px;
+      max-height:500px;
+    }
+
+    .editor-sidebar {
+      -ms-flex-order: 0;
+      order: 0;
+      min-width: 280px;
+      max-width: 280px;
+    }
+    
+    @media (min-width: 768px) {
+      .editor-sidebar {
+        border-right:1px solid rgba(0, 0, 0, .1)
+      }
+  
+      @supports ((position: -webkit-sticky) or(position: sticky)) {
+        .editor-sidebar {
+          position: -webkit-sticky;
+          position: sticky;
+          top: 4rem;
+          z-index: 1000;
+        }
+      }
+    }
+    
+    @media (min-width: 1200px) {
+      .editor-sidebar {
+        -ms-flex: 0 1 320px;
+        flex:0 1 320px
+      }
+   }
+    
+    .editor-links {
+      padding: 1rem 1rem 1rem 0;
+    }
+    
+    @media (min-width: 768px) {
+      @supports ((position: -webkit-sticky) or(position: sticky)) {
+        .editor-links {
+          overflow-y: auto
+        }
+      }
+   }
+    
+    @media (min-width: 768px) {
+      .editor-links {
+        display: block !important
+      }
+    }
+
+    .editor-sidebar .nav > li > a {
+      display: block;
+      padding: .25rem 1.5rem;
+      font-size: 90%;
+      color:rgba(0, 0, 0, .65)
+    }
+
+    .editor-sidebar .nav > li > a:hover {
+      color: rgba(0, 0, 0, .85);
+      text-decoration: none;
+      background-color:transparent
+    }
+
+    .editor-sidebar .nav > .active:hover > a, .editor-sidebar .nav > .active > a {
+      font-weight: 600;
+      color: rgba(0, 0, 0, .85);
+      background-color:transparent
+    }
   </style>
 </head>
 <body>
-
-<div id="app">
+<div id="app" class="d-flex flex-column min-vh-100">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
@@ -66,23 +136,45 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
+      <div class="navbar-nav" v-if="<<.Configured>> > 0">
         <router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
         <!-- <<range $idx, $link := .Links>> -->
         <router-link class="nav-item nav-link pb-1" to="/links/<<$idx>>"><<$link.Title>></router-link>
         <!-- <<end>> -->
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
-        <router-link class="nav-item nav-link pb-1" to="/setup">Setup</router-link>
+        <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
+      </div>
+      <div class="navbar-nav" v-else>
+        <router-link class="nav-item nav-link pb-1" to="/">Einführung</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup/grid/">Netzzähler</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup/pv/">PV</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup/battery/">Hausbatterie</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup/charger/">Ladegerät</router-link>
+        <router-link class="nav-item nav-link pb-1" to="/setup/ev/">E-Auto</router-link>
         <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
       </div>
     </div>
   </nav>
-
   <version installed="<<.Version>>" id="version-bar"></version>
   <setup-banner id="setup-bar" setup="<<.Setup>>"></setup-banner>
 
-  <message-toasts></message-toasts>
-  <router-view></router-view>
+  <div class="container-fluid flex-fill d-flex">
+    <message-toasts></message-toasts>
+    <router-view></router-view>
+  </div>
+
+  <footer class="pt-4 pb-2 pb-md-4 border-top">
+    <div class="container">
+      <div class="row">
+        <div class="col-6">
+          <small class="text-muted"><<.Version>> <<if ne .Version .Commit>>(<<.Commit>>)<<end>></small>
+        </div>
+        <div class="col-6 text-right">
+          <small class="text-muted">&copy; 2020</small>
+        </div>
+      </div>
+    </div>
+  </footer>
 </div>
 
 <script type="text/x-template" id="version-template">
@@ -516,81 +608,53 @@ loadpoints:
 </script>
 
 <script type="text/x-template" id="setup-template">
-  <div class="container ">
-    <div class="row mt-4  bg-light">
-      <div class="col-12">
-        <ul class="nav nav-pills nav-justified thumbnail setup-panel">
-          <li v-for="step in wizardSteps" class="nav-item">
-            <a class="nav-link" :class="{active:activeWizardStep == step.step}" style="cursor:pointer" v-on:click="selectWizardStep(step.step)">
-              <h4 class="list-group-item-heading">{{ step.title }}</h4>
-            </a>
-          </li>
+  <div class="row w-100">
+    <div class="col pt-4 flex-column h-100 editor-sidebar">
+      <h4>Geräteauswahl</h4>
+      <nav class="editor-links">
+        <ul class="nav" style="overflow-y:auto;" v-model="selectedItem" :disabled="isTestInProgress">
+          <li v-for="(item, indexItem) in activeWizardStepTemplatesItem.data" :class="{active:selectedItem == indexItem}" style="cursor:pointer" v-on:click="selectTemplateItem(indexItem)"><a>{{item.name|}}</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
-    <div class="tab-content" id="wizardSteps">
-      <div v-for="step in wizardSteps" class="tab-pane" :class="{ 'active show': activeWizardStep == step.step }" :id="'step-'+step.step">
-        <div class="row mt-4">
-          <div class="col-12 text-left">
-            <p>{{step.description}}</p>
+    <div class="col h-100">
+      <div class="d-flex flex-column h-100 w-100">
+        <div class="tab-content w-100" id="wizardSteps">
+          <div v-for="step in wizardSteps" class="tab-pane" :class="{ 'active show': activeWizardStep == step.step }" :id="'step-'+step.step">
+            <div class="row mt-4">
+              <div class="col-12 text-left">
+                <p>{{step.description}}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div class="row mt-4" v-if="testFailureMessageActive || testSuccessMessageActive">
-      <div class="col-12">
-        <div class="alert alert-danger" role="alert" v-if="testFailureMessageActive" v-model="errorMessage">
-          Fehler: {{errorMessage}}
+        <div class="w-100">
+          <h4>Konfiguration</h4>
         </div>
-        <div class="alert alert-success" role="alert" v-if="testSuccessMessageActive">
-          Super, diese Konfiguration funktioniert!
+        <div class="w-100 h-100 d-flex align-items-center justify-content-center editor-area" v-if="hideEditor">
+          <small>Wähle ein Gerät aus um die Eigenschaften hier zu editieren</small>
         </div>
-      </div>
-    </div>
-    <div class="row mt-4">
-      <div class="col-6">
-        <div v-if="activeWizardStepHasTemplateClass">
-          <h2>Geräteauswahl</h2>
-          <div class="list-group" v-model="selectedItem" :disabled="isTestInProgress" style="width:100%;height:300px;overflow:auto">
-            <a class="list-group-item list-group-item-action" v-for="(item, indexItem) in activeWizardStepTemplatesItem.data" style="cursor:pointer" :class="{active:selectedItem == indexItem}" v-on:click="selectTemplateItem(indexItem)">{{item.name|}}</a>
+        <div class="w-100 h-100 editor-area" id="editorContainer" :hidden="hideEditor"></div>
+        <div class="w-100 mt-4 mb-4">
+          <button class="btn btn-primary" @click="validateConfig()" :disabled="testButtonInactive" v-if="isTestInProgress == false">Test</button>
+          <button class="btn btn-primary" type="button" disabled v-if="isTestInProgress">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Testing...
+          </button>
+          <button class="btn btn-danger" @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
+        </div>
+        <div class="w-100" v-if="testFailureMessageActive || testSuccessMessageActive">
+          <div class="alert alert-danger" role="alert" v-if="testFailureMessageActive" v-model="errorMessage">
+            Fehler: {{errorMessage}}
           </div>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="row">
-          <div class="col">
-            <h2>Konfiguration</h2>
-            <div style="width:100%;height:300px;" :hidden="hideEditor == false"><small>Wähle ein Gerät aus um die Eigenschaften hier zu editieren</small></div>
-            <div id="editorContainer" style="width:100%;height:300px;" :hidden="hideEditor"></div>
-          </div>
-        </div>
-        <div class="row mt-4">
-          <div class="col clearfix">
-            <button class="btn btn-primary" @click="validateConfig()" :disabled="testButtonInactive" v-if="isTestInProgress == false">Test</button>
-            <button class="btn btn-primary" type="button" disabled v-if="isTestInProgress">
-              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              Testing...
-            </button>
-            <button class="btn btn-danger" @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
+          <div class="alert alert-success" role="alert" v-if="testSuccessMessageActive">
+            Super, diese Konfiguration funktioniert!
           </div>
         </div>
       </div>
     </div>
   </div>
 </script>
-
-<footer class="pt-4 pb-2 pt-md-5 pb-md-4 mt-3 mt-md-5 border-top">
-  <div class="container">
-    <div class="row">
-      <div class="col-6">
-        <small class="text-muted"><<.Version>> <<if ne .Version .Commit>>(<<.Commit>>)<<end>></small>
-      </div>
-      <div class="col-6 text-right">
-        <small class="text-muted">&copy; 2020</small>
-      </div>
-    </div>
-  </div>
-</footer>
 
 <script>
   function routerLinks() {
