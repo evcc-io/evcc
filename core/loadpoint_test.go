@@ -502,3 +502,117 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 
 	ctrl.Finish()
 }
+
+// cacheExpecter can be used to verify asynchronously written values from cache
+func cacheExpecter(t *testing.T, lp *LoadPoint) (*util.Cache, func(key string, val interface{})) {
+	// attach cache for verifying values
+	paramC := make(chan util.Param)
+	lp.uiChan = paramC
+
+	cache := util.NewCache()
+	go cache.Run(paramC)
+
+	expect := func(key string, val interface{}) {
+		p := cache.Get(key)
+		t.Logf("%s: %.f", key, p.Val) // REMOVE
+		if p.Val != val {
+			t.Errorf("%s wanted: %.0f, got %v", key, val, p.Val)
+		}
+	}
+
+	return cache, expect
+}
+
+func TestChargedEnergyAtDisconnect(t *testing.T) {
+	clock := clock.NewMock()
+	ctrl := gomock.NewController(t)
+	handler := mock.NewMockHandler(ctrl)
+	rater := mock.NewMockChargeRater(ctrl)
+
+	lp := &LoadPoint{
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		chargeMeter: &Null{}, //silence nil panics
+		chargeRater: rater,
+		chargeTimer: &Null{}, //silence nil panics
+		HandlerConfig: HandlerConfig{
+			MinCurrent: lpMinCurrent,
+			MaxCurrent: lpMaxCurrent,
+		},
+		handler: handler,
+		status:  api.StatusC,
+	}
+
+	lp.Mode = api.ModeNow
+	handler.EXPECT().Prepare().Return()
+	attachListeners(t, lp)
+
+	// attach cache for verifying values
+	_, expectCache := cacheExpecter(t, lp)
+
+	// start charging at 0 kWh
+	handler.EXPECT().TargetCurrent().Return(int64(6))
+	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
+	handler.EXPECT().Status().Return(api.StatusC, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+
+	// at 1:00h charging at 5 kWh
+	clock.Add(time.Hour)
+	handler.EXPECT().TargetCurrent().Return(int64(16))
+	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
+	handler.EXPECT().Status().Return(api.StatusC, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	// handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+	expectCache("chargedEnergy", 5000.0)
+
+	// at 1:00h stop charging at 5 kWh
+	clock.Add(time.Second)
+	handler.EXPECT().TargetCurrent().Return(int64(16))
+	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
+	handler.EXPECT().Status().Return(api.StatusB, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+	expectCache("chargedEnergy", 5000.0)
+
+	// at 1:00h restart charging at 5 kWh
+	clock.Add(time.Second)
+	handler.EXPECT().TargetCurrent().Return(int64(16))
+	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
+	handler.EXPECT().Status().Return(api.StatusC, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+	expectCache("chargedEnergy", 5000.0)
+
+	// at 1:30h continue charging at 7.5 kWh
+	clock.Add(30 * time.Minute)
+	handler.EXPECT().TargetCurrent().Return(int64(16))
+	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
+	handler.EXPECT().Status().Return(api.StatusC, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	// handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+	expectCache("chargedEnergy", 7500.0)
+
+	// at 2:00h stop charging at 10 kWh
+	clock.Add(30 * time.Minute)
+	handler.EXPECT().TargetCurrent().Return(int64(16))
+	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
+	handler.EXPECT().Status().Return(api.StatusB, nil)
+	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
+	handler.EXPECT().Ramp(int64(16), true).Return(nil)
+	lp.Update(-1)
+	expectCache("chargedEnergy", 10000.0)
+
+	ctrl.Finish()
+}
