@@ -405,24 +405,12 @@ loadpoints:
 <div>
   <div class="mb-2">{{state.socTitle||"Fahrzeug"}}</div>
   <div class="progress" style="height: 24px; font-size:100%; margin-top:16px">
-    <div class="progress-bar" role="progressbar" v-if="!state.soc" v-bind:class="{
+    <div class="progress-bar" role="progressbar" v-bind:class="{
         'progress-bar-striped': state.charging,
         'progress-bar-animated': state.charging,
-        'bg-primary': state.connected,
-        'bg-light': !(state.connected || state.charging),
-        'text-secondary': !(state.connected || state.charging),
-      }" v-bind:style="{width: '100%'}">{{state.charging ? "laden" : (state.connected ? "verbunden" : "getrennt")}}
-    </div>
-    <div class="progress-bar" role="progressbar" v-else-if="state.socCharge > 9" v-bind:class="{
-        'progress-bar-striped': state.charging,
-        'progress-bar-animated': state.charging,
-        'bg-primary': !state.charging && state.connected,
-      }" v-bind:style="{width: state.socCharge+'%'}">{{state.socCharge}}%</div>
-    <div class="progress-bar" role="progressbar" v-else v-bind:class="{
-        'progress-bar-striped': state.charging,
-        'progress-bar-animated': state.charging,
-        'bg-primary': !state.charging && state.connected,
-      }" v-bind:style="{width: (state.socCharge<0) ? 0 : state.socCharge+'%'}"></div>
+        'bg-light': !state.connected,
+        'text-secondary': !state.connected,
+      }" v-bind:style="{width: socChargeDisplayWidth+'%'}">{{socChargeDisplayValue}}</div>
   </div>
 </div>
 </script>

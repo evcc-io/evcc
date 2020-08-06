@@ -295,7 +295,34 @@ Vue.component("loadpoint-details", {
 
 Vue.component("vehicle", {
   template: "#vehicle-template",
-  props: ["state"]
+  props: ["state"],
+  computed: {
+    socChargeDisplayWidth: function () {
+      if (this.state.soc && this.state.socCharge >= 0) {
+        return this.state.socCharge;
+      }
+      return 100;
+    },
+    socChargeDisplayValue: function () {
+      // no soc or no soc value
+      if (!this.state.soc || this.state.socCharge < 0) {
+        let chargeStatus = "getrennt";
+        if (this.state.charging) {
+          chargeStatus = "laden";
+        } else if (this.state.connected) {
+          chargeStatus = "verbunden";
+        }
+        return chargeStatus;
+      }
+
+      // percent value if enough space
+      let socCharge = this.state.socCharge;
+      if (socCharge >= 10) {
+        socCharge += "%";
+      }
+      return socCharge;
+    }
+  }
 });
 
 Vue.component("mode", {
