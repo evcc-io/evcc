@@ -171,7 +171,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	if lp.Mode != mode {
 		lp.Mode = mode
 		lp.publish("mode", mode)
-		lp.lpChan <- lp // request loadpoint update
+		lp.requestUpdate()
 	}
 }
 
@@ -193,7 +193,15 @@ func (lp *LoadPoint) SetTargetSoC(targetSoC int) {
 	if lp.TargetSoC != targetSoC {
 		lp.TargetSoC = targetSoC
 		lp.publish("targetSoC", targetSoC)
-		lp.lpChan <- lp // request loadpoint update
+		lp.requestUpdate()
+	}
+}
+
+// requestUpdate requests site to update this loadpoint
+func (lp *LoadPoint) requestUpdate() {
+	select {
+	case lp.lpChan <- lp: // request loadpoint update
+	default:
 	}
 }
 

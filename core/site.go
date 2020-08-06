@@ -314,7 +314,7 @@ func (site *Site) update(lp Updater) {
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
-	site.lpUpdateChan = make(chan *LoadPoint)
+	site.lpUpdateChan = make(chan *LoadPoint, 1) // 1 capacity to avoid deadlock
 
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)
