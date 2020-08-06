@@ -65,62 +65,40 @@
       order: 0;
       min-width: 280px;
       max-width: 280px;
+      border-right:1px solid rgba(0, 0, 0, .1);
+      -ms-flex: 0 1 320px;
+      flex:0 1 320px
     }
-    
-    @media (min-width: 768px) {
-      .editor-sidebar {
-        border-right:1px solid rgba(0, 0, 0, .1)
-      }
-  
-      @supports ((position: -webkit-sticky) or(position: sticky)) {
-        .editor-sidebar {
-          position: -webkit-sticky;
-          position: sticky;
-          top: 4rem;
-          z-index: 1000;
-        }
-      }
-    }
-    
-    @media (min-width: 1200px) {
-      .editor-sidebar {
-        -ms-flex: 0 1 320px;
-        flex:0 1 320px
-      }
-   }
     
     .editor-links {
       padding: 1rem 1rem 1rem 0;
-    }
-    
-    @media (min-width: 768px) {
-      @supports ((position: -webkit-sticky) or(position: sticky)) {
-        .editor-links {
-          overflow-y: auto
-        }
-      }
-   }
-    
-    @media (min-width: 768px) {
-      .editor-links {
-        display: block !important
-      }
+      display: block !important
     }
 
-    .editor-sidebar .nav > li > a {
+    .editor-sidebar .nav ul {
+      background-color: sandybrown;
+      display: flex;
+    } 
+
+    .editor-sidebar .nav > li {
+      position: relative;
+      margin-top: 1px;
+      border-top: 1px solid rgba(0, 0, 0, .1);
+      width: 100%;
+      cursor: pointer;
       display: block;
       padding: .25rem 1.5rem;
       font-size: 90%;
       color:rgba(0, 0, 0, .65)
     }
 
-    .editor-sidebar .nav > li > a:hover {
+    .editor-sidebar .nav > li:hover {
       color: rgba(0, 0, 0, .85);
       text-decoration: none;
       background-color:transparent
     }
 
-    .editor-sidebar .nav > .active:hover > a, .editor-sidebar .nav > .active > a {
+    .editor-sidebar .nav > .active:hover, .editor-sidebar .nav > .active {
       font-weight: 600;
       color: rgba(0, 0, 0, .85);
       background-color:transparent
@@ -612,8 +590,8 @@ loadpoints:
     <div class="col pt-4 flex-column h-100 editor-sidebar">
       <h4>Geräteauswahl</h4>
       <nav class="editor-links">
-        <ul class="nav" style="overflow-y:auto;" v-model="selectedItem" :disabled="isTestInProgress">
-          <li v-for="(item, indexItem) in activeWizardStepTemplatesItem.data" :class="{active:selectedItem == indexItem}" style="cursor:pointer" v-on:click="selectTemplateItem(indexItem)"><a>{{item.name|}}</a></li>
+        <ul class="nav" v-model="selectedItem" :disabled="isTestInProgress">
+          <li v-for="(item, indexItem) in activeWizardStepTemplatesItem.data" :class="{active:selectedItem == indexItem}" v-on:click="selectTemplateItem(indexItem)">{{item.name|}}</li>
         </ul>
       </nav>
     </div>
@@ -639,7 +617,7 @@ loadpoints:
           <button class="btn btn-primary" @click="validateConfig()" :disabled="testButtonInactive" v-if="isTestInProgress == false">Test</button>
           <button class="btn btn-primary" type="button" disabled v-if="isTestInProgress">
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            Testing...
+            Testen...
           </button>
           <button class="btn btn-danger" @click="cancelValidation()" v-if="isTestInProgress">Abbrechen</button>
         </div>
