@@ -80,10 +80,9 @@ type LoadPoint struct {
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
 
-	socCharge          float64       // Vehicle SoC
-	chargedEnergy      float64       // Charged energy while connected
-	deltaChargedEnergy float64       // Charged energy for single cycle
-	chargeDuration     time.Duration // Charge duration
+	socCharge      float64       // Vehicle SoC
+	chargedEnergy  float64       // Charged energy while connected
+	chargeDuration time.Duration // Charge duration
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -262,7 +261,6 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.chargedEnergy += lp.deltaChargedEnergy
 	lp.notify(evChargeStop)
 }
 
@@ -272,7 +270,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// energy
 	lp.chargedEnergy = 0
-	lp.publish("chargedEnergy", 0)
+	lp.publish("chargedEnergy", lp.chargedEnergy)
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
@@ -532,7 +530,7 @@ func (lp *LoadPoint) updateChargeMeter() {
 // publish charged energy and duration
 func (lp *LoadPoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
-		lp.deltaChargedEnergy = 1e3 * f // convert to Wh
+		lp.chargedEnergy = 1e3 * f // convert to Wh
 	} else {
 		lp.log.ERROR.Printf("charge rater error: %v", err)
 	}
@@ -543,7 +541,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge timer error: %v", err)
 	}
 
-	lp.publish("chargedEnergy", lp.chargedEnergy+lp.deltaChargedEnergy)
+	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
