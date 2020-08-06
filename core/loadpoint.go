@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -96,9 +97,13 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.Mode = api.ChargeModeString(string(lp.Mode))
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
 
-	lp.TargetSoC = 100
-	if len(lp.SoC.Levels) > 0 {
-		lp.TargetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
+	sort.Ints(lp.SoC.Levels)
+	if lp.TargetSoC == 0 {
+		lp.TargetSoC = 100
+
+		if len(lp.SoC.Levels) > 0 {
+			lp.TargetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
+		}
 	}
 
 	if lp.Meters.ChargeMeterRef != "" {
