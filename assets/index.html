@@ -601,13 +601,9 @@ loadpoints:
     </div>
     <div class="col h-100">
       <div class="d-flex flex-column h-100 w-100">
-        <div class="tab-content w-100" id="wizardSteps">
-          <div v-for="step in wizardSteps" class="tab-pane" :class="{ 'active show': activeWizardStep == step.step }" :id="'step-'+step.step">
-            <div class="row mt-4">
-              <div class="col-12 text-left">
-                <p>{{step.description}}</p>
-              </div>
-            </div>
+        <div class="row mt-4">
+          <div class="col-12 text-left">
+            <p>{{activeWizardStepItem.description}}</p>
           </div>
         </div>
         <div class="w-100">

@@ -423,11 +423,14 @@ const setup = Vue.component("setup", {
     };
   },
   computed: {
+    activeWizardStepItem: function () {
+      return this.wizardSteps[this.activeWizardStep - 1];
+    },
     activeWizardStepHasTemplateClass: function () {
-      return this.wizardSteps[this.activeWizardStep - 1].templateClass != '';
+      return this.activeWizardStepItem.templateClass != '';
     },
     activeWizardStepTemplatesItem: function () {
-      return this.templateByTemplateClass(this.wizardSteps[this.activeWizardStep - 1].templateClass);
+      return this.templateByTemplateClass(this.activeWizardStepItem.templateClass);
     },
     hideEditor: function () {
       return (this.testButtonInactive == true && this.testInProgress == false);
