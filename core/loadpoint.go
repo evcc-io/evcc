@@ -445,7 +445,7 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 		return lp.MinCurrent
 	}
 
-	// in PV mode disable if not connected and minCurrent not possible
+	// in PV mode disable charger if car not charging and minCurrent not possible
 	if mode == api.ModePV && lp.status != api.StatusC {
 		lp.pvTimer = time.Time{}
 
@@ -465,14 +465,17 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Println("start pv disable timer")
+				lp.log.DEBUG.Printf("start pv disable timer: %v", lp.Disable.Delay)
 				lp.pvTimer = lp.clock.Now()
 			}
 
-			if lp.clock.Since(lp.pvTimer) >= lp.Disable.Delay {
+			elapsed := lp.clock.Since(lp.pvTimer)
+			if elapsed >= lp.Disable.Delay {
 				lp.log.DEBUG.Println("pv disable timer elapsed")
 				return 0
 			}
+
+			lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
 			lp.pvTimer = lp.clock.Now()
@@ -488,14 +491,17 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
-				lp.log.DEBUG.Println("start pv enable timer")
+				lp.log.DEBUG.Printf("start pv enable timer: %v", lp.Enable.Delay)
 				lp.pvTimer = lp.clock.Now()
 			}
 
-			if lp.clock.Since(lp.pvTimer) >= lp.Enable.Delay {
+			elapsed := lp.clock.Since(lp.pvTimer)
+			if elapsed >= lp.Enable.Delay {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
 				return lp.MinCurrent
 			}
+
+			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
 			lp.pvTimer = lp.clock.Now()
