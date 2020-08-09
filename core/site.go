@@ -282,6 +282,15 @@ func (site *Site) updateMeters() error {
 		err = retryMeter("battery", site.batteryMeter, &site.batteryPower)
 	}
 
+	// currents
+	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
+		i1, i2, i3, err := phaseMeter.Currents()
+		if err == nil {
+			site.log.TRACE.Printf("grid currents: %vA", []float64{i1, i2, i3})
+			site.publish("gridCurrents", []float64{i1, i2, i3})
+		}
+	}
+
 	return err
 }
 
