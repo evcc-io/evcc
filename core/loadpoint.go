@@ -405,13 +405,21 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // detectPhases uses MeterCurrent interface to count phases with current >=1A
 func (lp *LoadPoint) detectPhases() {
-	if phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent); ok {
-		i1, i2, i3, err := phaseMeter.Currents()
-		if err != nil {
-			lp.log.ERROR.Printf("charge meter error: %v", err)
-			return
-		}
+	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
+	if !ok {
+		return
+	}
 
+	i1, i2, i3, err := phaseMeter.Currents()
+	if err != nil {
+		lp.log.ERROR.Printf("charge meter error: %v", err)
+		return
+	}
+
+	lp.log.TRACE.Printf("charge currents: %vA", []float64{i1, i2, i3})
+	lp.publish("chargeCurrents", []float64{i1, i2, i3})
+
+	if lp.charging {
 		var phases int64
 		for _, i := range []float64{i1, i2, i3} {
 			if i >= minActiveCurrent {
@@ -630,10 +638,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		lp.handler.SyncEnabled()
 	}
 
-	// phase detection - run only when actually charging
-	if lp.charging {
-		lp.detectPhases()
-	}
+	// phase detection
+	lp.detectPhases()
 
 	// check if car connected and ready for charging
 	var err error

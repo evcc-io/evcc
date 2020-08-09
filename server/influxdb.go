@@ -49,6 +49,24 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 	}
 }
 
+// supportedType checks if type can be written as influx value
+func (m *Influx) supportedType(p util.Param) bool {
+	if p.Val == nil {
+		return true
+	}
+
+	switch val := p.Val.(type) {
+	case float64:
+		return true
+	case [3]float64:
+		return true
+	case []float64:
+		return len(val) == 3
+	default:
+		return false
+	}
+}
+
 // Run Influx publisher
 func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
 	writer := m.client.WriteApi(m.org, m.database)
@@ -62,8 +80,7 @@ func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
 
 	// add points to batch for async writing
 	for param := range in {
-		// allow nil value to be written as series gaps
-		if _, ok := param.Val.(float64); param.Val != nil && !ok {
+		if !m.supportedType(param) {
 			continue
 		}
 
@@ -72,9 +89,27 @@ func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
 			tags["loadpoint"] = loadPoints[*param.LoadPoint].Name()
 		}
 
-		fields := map[string]interface{}{
-			"value": param.Val,
+		fields := map[string]interface{}{}
+
+		// array to slice
+		val := param.Val
+		if v, ok := val.([3]float64); ok {
+			val = v[:]
 		}
+
+		// add slice as phase values
+		if phases, ok := val.([]float64); ok {
+			var total float64
+			for i, v := range phases {
+				total += v
+				fields[fmt.Sprintf("l%d", i+1)] = v
+			}
+
+			// add total as "value"
+			val = total
+		}
+
+		fields["value"] = val
 
 		// write asynchronously
 		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, param.Val, tags)

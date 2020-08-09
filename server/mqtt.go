@@ -44,9 +44,25 @@ func (m *MQTT) encode(v interface{}) string {
 	return s
 }
 
-func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
+func (m *MQTT) publishSingleValue(topic string, retained bool, payload interface{}) {
 	token := m.Handler.Client.Publish(topic, m.Handler.Qos, retained, m.encode(payload))
 	go m.Handler.WaitForToken(token)
+}
+
+func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
+	if slice, ok := payload.([]float64); ok && len(slice) == 3 {
+		// publish phase values
+		var total float64
+		for i, v := range slice {
+			total += v
+			m.publishSingleValue(fmt.Sprintf("%s/l%d", topic, i+1), retained, v)
+		}
+
+		// publish sum value
+		payload = total
+	}
+
+	m.publishSingleValue(topic, retained, payload)
 }
 
 type apiHandler interface {
