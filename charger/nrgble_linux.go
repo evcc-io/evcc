@@ -245,7 +245,8 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 
 	nrg.log.TRACE.Printf("read info: %+v", res)
 
-	return !res.PauseCharging || res.ChargingActive, nil
+	//return !res.PauseCharging, nil
+	return !res.PauseCharging || res.ChargingActive, nil // workaround internal NRGkick state change after connecting
 }
 
 // Enable implements the Charger.Enable interface
