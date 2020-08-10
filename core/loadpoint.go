@@ -58,6 +58,7 @@ type LoadPoint struct {
 	SoC struct {
 		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
 		Levels       []int `mapstructure:"levels"`
+		Estimate  bool  `mapstructure:"estimate"`
 	}
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
@@ -81,7 +82,9 @@ type LoadPoint struct {
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
 
-	socCharge      float64       // Vehicle SoC
+	socCharge      float64       // Vehicle SoC estimated
+	socChargeCar   float64       // Vehicle SoC read from car API
+	chargedEnergySinceSocUpdated  float64    // Charged energy since last soc update
 	chargedEnergy  float64       // Charged energy while connected
 	chargeDuration time.Duration // Charge duration
 }
@@ -275,6 +278,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// energy
 	lp.chargedEnergy = 0
+	lp.chargedEnergySinceSocUpdated = 0
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 
 	// duration
@@ -595,8 +599,19 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
-			lp.socCharge = f
-			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
+
+			if lp.SoC.Estimate {
+				// new soc value read from car api
+				if f != lp.socChargeCar {
+					lp.socChargeCar = f
+					lp.chargedEnergySinceSocUpdated = lp.chargedEnergy
+				}
+				lp.socCharge = lp.socChargeCar + (lp.chargedEnergy - lp.chargedEnergySinceSocUpdated) / (float64(lp.vehicle.Capacity()) * 1e3) * 100
+				lp.log.TRACE.Printf("chargedEnergy: %.3f, chargedEnergySinceSocUpdated: %0.3f, cap_car: %0.1f", lp.chargedEnergy, lp.chargedEnergySinceSocUpdated, float64(lp.vehicle.Capacity()))
+				lp.log.TRACE.Printf("vehicle car soc: %.2f%%, esimated soc: %.2f%%", lp.socChargeCar, lp.socCharge)
+			} else {
+				lp.socCharge = f
+			}
 			lp.publish("socCharge", lp.socCharge)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
