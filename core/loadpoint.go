@@ -24,7 +24,7 @@ const (
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
-	minActiveCurrent = 1 // minimum current at which a phase is treated as active
+	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
 // ThresholdConfig defines enable/disable hysteresis parameters
@@ -429,7 +429,7 @@ func (lp *LoadPoint) detectPhases() {
 
 		if phases > 0 {
 			lp.Phases = min(phases, lp.Phases)
-			lp.log.TRACE.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
+			lp.log.DEBUG.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
 
 			lp.publish("activePhases", lp.Phases)
 		}

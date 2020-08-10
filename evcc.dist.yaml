@@ -253,7 +253,7 @@ loadpoints:
   sensitivity: 1 # current raise/lower step size (default 10A)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
-    threshold: 0 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
+    threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
     delay: 5m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
