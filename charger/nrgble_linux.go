@@ -259,7 +259,9 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)
 		nrg.log.TRACE.Printf("write settings (workaround): %+v", settings)
-		nrg.write(nrgble.SettingsService, &settings)
+		if err := nrg.write(nrgble.SettingsService, &settings); err != nil {
+			return err
+		}
 	}
 
 	nrg.pauseCharging = !enable // use cached value to work around API roundtrip delay
