@@ -245,8 +245,9 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 
 	nrg.log.TRACE.Printf("read info: %+v", res)
 
-	//return !res.PauseCharging, nil
-	return !res.PauseCharging || res.ChargingActive, nil // workaround internal NRGkick state change after connecting
+	// workaround internal NRGkick state change after connecting
+	// https://github.com/andig/evcc/pull/274
+	return !res.PauseCharging || res.ChargingActive, nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -256,9 +257,12 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 		return err
 	}
 
-	if !enable && res.PauseCharging { // workaround internal NRGkick state change after connecting
+	// workaround internal NRGkick state change after connecting
+	// https://github.com/andig/evcc/pull/274
+	if !enable && res.PauseCharging {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)
+
 		nrg.log.TRACE.Printf("write settings (workaround): %+v", settings)
 		if err := nrg.write(nrgble.SettingsService, &settings); err != nil {
 			return err
