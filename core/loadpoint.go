@@ -58,6 +58,7 @@ type LoadPoint struct {
 	SoC struct {
 		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
 		Levels       []int `mapstructure:"levels"`
+		Estimate     bool  `mapstructure:"estimate"`
 	}
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
@@ -81,9 +82,12 @@ type LoadPoint struct {
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
 
-	socCharge      float64       // Vehicle SoC
-	chargedEnergy  float64       // Charged energy while connected
-	chargeDuration time.Duration // Charge duration
+	socCharge                float64       // Vehicle SoC estimated
+	socChargeFromApi         float64       // Vehicle SoC read from car API
+	energyPerSocStep         float64       // Energy / SOC
+	chargedEnergyAtSocUpdate float64       // Charged energy at last soc update
+	chargedEnergy            float64       // Charged energy while connected
+	chargeDuration           time.Duration // Charge duration
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -259,6 +263,11 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
+	// soc estimation
+	lp.socChargeFromApi = -1
+	lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
+	lp.energyPerSocStep = float64(lp.vehicle.Capacity()) * 10.0
+
 	lp.log.INFO.Println("start charging ->")
 	lp.notify(evChargeStart)
 }
@@ -595,8 +604,22 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
-			lp.socCharge = f
-			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
+
+			if lp.SoC.Estimate {
+				// new soc value read from car api
+				if f != lp.socChargeFromApi {
+					if lp.socChargeFromApi > 0 {
+						lp.energyPerSocStep = (lp.chargedEnergy - lp.chargedEnergyAtSocUpdate) / (f - lp.socChargeFromApi)
+					}
+					lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
+					lp.socChargeFromApi = f
+				}
+				lp.socCharge = lp.socChargeFromApi + ((lp.chargedEnergy - lp.chargedEnergyAtSocUpdate) / lp.energyPerSocStep)
+				lp.log.TRACE.Printf("chargedEnergy: %.2f Wh, chargedEnergyAtSocUpdate: %0.2f Wh, energyPerSocStep: %0.2f, virtualBatteryCap: %0.1f kWh", lp.chargedEnergy, lp.chargedEnergyAtSocUpdate, lp.energyPerSocStep, lp.energyPerSocStep / 10)
+				lp.log.TRACE.Printf("vehicle car soc: %.2f%%, esimated soc: %.2f%%", lp.socChargeFromApi, lp.socCharge)
+			} else {
+				lp.socCharge = f
+			}
 			lp.publish("socCharge", lp.socCharge)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
