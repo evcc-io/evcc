@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/pkg/errors"
 )
 
 type apiFunction string
@@ -36,6 +37,10 @@ func NewFromConfig(typ string, other map[string]interface{}) (charger api.Charge
 		charger, err = NewKebaFromConfig(other)
 	default:
 		return nil, fmt.Errorf("invalid charger type: %s", typ)
+	}
+
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("cannot create %s charger", typ))
 	}
 
 	return charger, err

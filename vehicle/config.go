@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/pkg/errors"
 )
 
 // NewFromConfig creates vehicle from configuration
@@ -26,6 +27,10 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 		v, err = NewPorscheFromConfig(other)
 	default:
 		err = fmt.Errorf("invalid vehicle type: %s", typ)
+	}
+
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("cannot create %s vehicle", typ))
 	}
 
 	return

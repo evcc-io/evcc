@@ -90,6 +90,11 @@ func (cp *ConfigProvider) configureMeters(conf config) {
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+
+		if _, exists := cp.meters[cc.Name]; exists {
+			log.FATAL.Fatalf("duplicate meter name: %s already defined and must be unique", cc.Name)
+		}
+
 		cp.meters[cc.Name] = m
 	}
 }
@@ -101,6 +106,11 @@ func (cp *ConfigProvider) configureChargers(conf config) {
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+
+		if _, exists := cp.chargers[cc.Name]; exists {
+			log.FATAL.Fatalf("duplicate charger name: %s already defined and must be unique", cc.Name)
+		}
+
 		cp.chargers[cc.Name] = c
 	}
 }
@@ -112,6 +122,11 @@ func (cp *ConfigProvider) configureVehicles(conf config) {
 		if err != nil {
 			log.FATAL.Fatal(err)
 		}
+
+		if _, exists := cp.vehicles[cc.Name]; exists {
+			log.FATAL.Fatalf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
+		}
+
 		cp.vehicles[cc.Name] = v
 	}
 }
