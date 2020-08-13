@@ -114,7 +114,7 @@ chargers:
 - name: phoenix
   type: phoenix-emcp # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # ModBus address
-  id: 1
+  id: 180
 - name: simpleevse-tcp
   type: simpleevse # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # TCP ModBus address
