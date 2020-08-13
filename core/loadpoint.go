@@ -4,6 +4,7 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"math"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
@@ -610,16 +611,19 @@ func (lp *LoadPoint) publishSoC() {
 			if lp.SoC.Estimate {
 				socDelta := f - lp.socChargeFromApi
 				energyDelta := lp.chargedEnergy - lp.chargedEnergyAtSocUpdate
-
-				if (lp.socChargeFromApi > 0) && (socDelta >= 2) && (energyDelta > 0) {
-					lp.energyPerSocStep = energyDelta / socDelta // gradient, wh per soc %
-				}
+				
 				if socDelta != 0 { // soc value updated
+					if (lp.socChargeFromApi > 0) && (socDelta >= 2) && (energyDelta > 0) {
+							lp.energyPerSocStep = energyDelta / socDelta // gradient, wh per soc %
+					}
+					
 					lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
-				}
+					energyDelta = 0
+				}			
+			
 				lp.socChargeFromApi = f
-				lp.socCharge = f + (energyDelta / lp.energyPerSocStep)
-				lp.log.TRACE.Printf("chargedEnergy: %.0fWh, chargedEnergyAtSocUpdate: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", lp.chargedEnergy, lp.chargedEnergyAtSocUpdate, lp.energyPerSocStep, lp.energyPerSocStep / 10)
+				lp.socCharge = math.Min(f + (energyDelta / lp.energyPerSocStep), 100)
+				lp.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", lp.chargedEnergy, energyDelta, lp.energyPerSocStep, lp.energyPerSocStep / 10)
 				lp.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", lp.socChargeFromApi, lp.socCharge)
 			} else {
 				lp.socCharge = f
