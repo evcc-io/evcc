@@ -2,17 +2,18 @@ package test
 
 import (
 	"github.com/andig/evcc-config/registry"
-	_ "github.com/andig/evcc-config/templates"
+	_ "github.com/andig/evcc-config/templates" // import all config templates
 	"gopkg.in/yaml.v3"
 )
 
-type ParsedTempalte struct {
+// ConfigTemplate is a configuration template from https://github.com/andig/evcc-config
+type ConfigTemplate struct {
 	registry.Template
 	Config map[string]interface{}
 }
 
 // ConfigTemplates returns configuration templates for giving class
-func ConfigTemplates(class string) (res []ParsedTempalte) {
+func ConfigTemplates(class string) (res []ConfigTemplate) {
 	templates := registry.TemplatesByClass(class)
 
 	for _, tmpl := range templates {
@@ -22,7 +23,7 @@ func ConfigTemplates(class string) (res []ParsedTempalte) {
 			continue
 		}
 
-		parsed := ParsedTempalte{
+		parsed := ConfigTemplate{
 			Template: tmpl,
 			Config:   conf,
 		}

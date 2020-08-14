@@ -7,9 +7,18 @@ import (
 )
 
 func TestChargers(t *testing.T) {
+	acceptable := []string{
+		"invalid plugin type: ...",
+		"mqtt not configured",
+		"NRGKick bluetooth is only supported on linux",
+		"invalid pin:",
+		"connect: no route to host",
+		"connect: connection refused",
+	}
+
 	for _, tmpl := range test.ConfigTemplates("charger") {
 		_, err := NewFromConfig(tmpl.Type, tmpl.Config)
-		if err != nil && !test.Acceptable("charger", err) {
+		if err != nil && !test.Acceptable(err, acceptable) {
 			t.Logf("%s", tmpl.Name)
 			t.Error(err)
 		}

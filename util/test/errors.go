@@ -1,30 +1,14 @@
 package test
 
 import (
-	"io/ioutil"
 	"strings"
-
-	"gopkg.in/yaml.v3"
 )
 
-const config = "../errors.yaml"
-
-var acceptable map[string][]string
-
-// Acceptable checks if a test error is configured as acceptable
-func Acceptable(class string, err error) bool {
-	if len(acceptable) == 0 {
-		definitions, err := ioutil.ReadFile(config)
-		if err != nil {
-			panic(err)
-		}
-		if err := yaml.Unmarshal(definitions, &acceptable); err != nil {
-			panic(err)
-		}
-	}
-
-	for _, msg := range acceptable[class] {
-		if strings.HasPrefix(err.Error(), msg) {
+// Acceptable checks if a test error is in the list of acceptable errors
+func Acceptable(err error, acceptable []string) bool {
+	for _, msg := range acceptable {
+		err := strings.TrimSpace(err.Error())
+		if strings.HasPrefix(err, msg) || strings.HasSuffix(err, msg) {
 			return true
 		}
 	}
