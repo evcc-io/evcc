@@ -607,6 +607,7 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.vehicle.ChargeState()
 		if err == nil {
+			lp.socCharge = f
 
 			if lp.SoC.Estimate {
 				socDelta := f - lp.socChargeFromApi
@@ -614,7 +615,7 @@ func (lp *LoadPoint) publishSoC() {
 
 				if (socDelta != 0) || (energyDelta < 0) { // soc value updated
 					if (lp.socChargeFromApi > 0) && (socDelta >= 2) && (energyDelta > 0) {
-							lp.energyPerSocStep = energyDelta / socDelta // gradient, wh per soc %
+						lp.energyPerSocStep = energyDelta / socDelta // gradient, wh per soc %
 					}
 					lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
 					energyDelta = 0
@@ -624,9 +625,9 @@ func (lp *LoadPoint) publishSoC() {
 				lp.socCharge = math.Min(f + (energyDelta / lp.energyPerSocStep), 100)
 				lp.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", lp.chargedEnergy, energyDelta, lp.energyPerSocStep, lp.energyPerSocStep / 10)
 				lp.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", lp.socChargeFromApi, lp.socCharge)
-			} else {
-				lp.socCharge = f
 			}
+
+			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
 			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
 			return
