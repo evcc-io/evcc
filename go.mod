@@ -7,6 +7,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
+	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/eclipse/paho.mqtt.golang v1.2.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
@@ -31,9 +32,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
-	github.com/volkszaehler/mbmd v0.0.0-20200802164800-51eb643c23c6
+	github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570
 	github.com/yuin/goldmark v1.1.32
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6

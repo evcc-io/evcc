@@ -175,13 +175,14 @@ func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		mode, ok := vars["mode"]
-		if !ok {
+		modeS, ok := vars["mode"]
+		mode := api.ChargeModeString(modeS)
+		if string(mode) != modeS || !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		loadpoint.SetMode(api.ChargeMode(mode))
+		loadpoint.SetMode(mode)
 
 		res := chargeModeJSON{Mode: loadpoint.GetMode()}
 		jsonResponse(w, r, res)

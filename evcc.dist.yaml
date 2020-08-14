@@ -53,6 +53,8 @@ messaging:
     token: # bot id
     chats:
     - # list of chat ids
+  - type: email
+    uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 
 # meters
 meters:
@@ -112,7 +114,7 @@ chargers:
 - name: phoenix
   type: phoenix-emcp # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # ModBus address
-  id: 1
+  id: 180
 - name: simpleevse-tcp
   type: simpleevse # Charger with Phoenix Contact controller
   uri: 192.168.0.8:502 # TCP ModBus address
@@ -236,6 +238,7 @@ loadpoints:
     charge: charge # charge meter
   vehicle: audi
   mode: pv
+  targetSoC: 100 # charge to 100%
   soc:
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
     levels: # target soc levels for UI
@@ -243,14 +246,14 @@ loadpoints:
     - 50
     - 80
     - 100
-  onDisconnect:
+  onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
-    targetSoC: 100 # charge fully
+    targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   sensitivity: 1 # current raise/lower step size (default 10A)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
-    threshold: 0 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
+    threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
     delay: 5m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)

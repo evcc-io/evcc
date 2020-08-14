@@ -196,20 +196,33 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("  pv %s", presence[site.pvMeter != nil])
 	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
 
+	if site.gridMeter != nil {
+		_, power := site.gridMeter.(api.Meter)
+		_, energy := site.gridMeter.(api.MeterEnergy)
+		_, currents := site.gridMeter.(api.MeterCurrent)
+
+		site.log.INFO.Println("  grid config:")
+		site.log.INFO.Printf("    power %s", presence[power])
+		site.log.INFO.Printf("    energy %s", presence[energy])
+		site.log.INFO.Printf("    currents %s", presence[currents])
+	}
+
 	for i, lp := range site.loadpoints {
-		lp.log.INFO.Printf("loadpoint %d config:", i)
+		lp.log.INFO.Printf("loadpoint %d config:", i+1)
 
 		lp.log.INFO.Printf("  vehicle %s", presence[lp.vehicle != nil])
 		lp.log.INFO.Printf("  charge %s", presence[lp.hasChargeMeter()])
 
 		charger := lp.handler.(*ChargerHandler).charger
 		_, power := charger.(api.Meter)
+		_, currents := charger.(api.MeterCurrent)
 		_, energy := charger.(api.ChargeRater)
 		_, timer := charger.(api.ChargeTimer)
 
 		lp.log.INFO.Println("  charger config:")
 		lp.log.INFO.Printf("    power %s", presence[power])
 		lp.log.INFO.Printf("    energy %s", presence[energy])
+		lp.log.INFO.Printf("    currents %s", presence[currents])
 		lp.log.INFO.Printf("    timer %s", presence[timer])
 	}
 }
@@ -269,6 +282,15 @@ func (site *Site) updateMeters() error {
 		err = retryMeter("battery", site.batteryMeter, &site.batteryPower)
 	}
 
+	// currents
+	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
+		i1, i2, i3, err := phaseMeter.Currents()
+		if err == nil {
+			site.log.TRACE.Printf("grid currents: %vA", []float64{i1, i2, i3})
+			site.publish("gridCurrents", []float64{i1, i2, i3})
+		}
+	}
+
 	return err
 }
 
@@ -301,7 +323,7 @@ func (site *Site) update(lp Updater) {
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
-	site.lpUpdateChan = make(chan *LoadPoint)
+	site.lpUpdateChan = make(chan *LoadPoint, 1) // 1 capacity to avoid deadlock
 
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)

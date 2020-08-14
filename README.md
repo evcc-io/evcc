@@ -1,11 +1,11 @@
 # evcc
 
-[![Build Status](https://travis-ci.org/andig/evcc.svg?branch=master)](https://travis-ci.org/andig/evcc) 
+[![Build Status](https://travis-ci.org/andig/evcc.svg?branch=master)](https://travis-ci.org/andig/evcc)
 [![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
 [![Latest Version](https://img.shields.io/github/tag/andig/evcc.svg)](https://github.com/andig/evcc/releases)
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 
-  
+
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
 
 ## Features
@@ -207,7 +207,7 @@ Meters provide data about power and energy consumption. Available meter implemen
   - name: sma-home-manager
     type: sdm
     uri: 192.168.1.4
-    power: # leave empty for combined import/export power choose obis
+    power: # leave empty for combined import/export power or choose obis
     energy: # leave empty to disable or choose obis 1:1.8.0/1:2.8.0
   ```
 
@@ -217,7 +217,7 @@ Meters provide data about power and energy consumption. Available meter implemen
   - name: powerwall
     type: tesla
     uri: http://192.168.1.4/api/meters/aggregates
-    meter: site # grid meter: `site`, pv: `solar`, battery: `battery`
+    usage: site # grid meter: `site`, pv: `solar`, battery: `battery`
   ```
 
   *Note*: this could also be implemented using a `default` meter with the `http` plugin.

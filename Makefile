@@ -31,6 +31,10 @@ build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	go build -v -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
 
+test-images:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	seihon publish -v "testing" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=amd64
+
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
