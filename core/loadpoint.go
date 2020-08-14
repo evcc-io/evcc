@@ -217,7 +217,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 			lp.chargeMeter = mt
 		} else {
 			mt := &wrapper.ChargeMeter{}
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
+			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() {
 				mt.SetPower(0)
 			})
@@ -304,9 +304,16 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 }
 
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
-// where the charge meter can always be treated as present. It assumes that the charge meter cannot consume
-// more than total household consumption. If physical charge meter is present this handler is not used.
 func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
+	lp.publish("chargeCurrent", current)
+}
+
+// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
+// This simplifies the main flow where the charge meter can always be treated as present.
+// It assumes that the charge meter cannot consume more than total household consumption.
+// If physical charge meter is present this handler is not used.
+// The actual value is published by the evChargeCurrentHandler
+func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current int64) {
 	power := float64(current*lp.Phases) * Voltage
 
 	if !lp.handler.Enabled() || lp.status != api.StatusC {
@@ -324,9 +331,6 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 
 	// handler only called if charge meter was replaced by dummy
 	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
-
-	// expose for UI
-	lp.publish("chargeCurrent", current)
 }
 
 // Name returns the human-readable loadpoint title
@@ -345,6 +349,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
+	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 
 	// publish initial values
 	lp.Lock()
