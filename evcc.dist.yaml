@@ -45,124 +45,55 @@ messaging:
       title: Car disconnected
       msg: Car disconnected after ${connectedDuration}
   services:
-  - type: pushover
-    app: # app id
-    recipients:
-    - # list of recipient ids
-  - type: telegram
-    token: # bot id
-    chats:
-    - # list of chat ids
-  - type: email
-    uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
+  # - type: pushover
+  #   app: # app id
+  #   recipients:
+  #   - # list of recipient ids
+  # - type: telegram
+  #   token: # bot id
+  #   chats:
+  #   - # list of chat ids
+  # - type: email
+  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 
-# meters
+# meter definitions
+# name can be freely chosen and is used as reference when assigning meters to site and loadpoints
 meters:
 - name: grid
-  type: default
-  power: # power reading
-    type: mqtt # use mqtt
-    topic: mbmd/sdm1-1/Power # mqtt topic
-    timeout: 10s # don't use older values
-- name: pv
-  type: default
-  power:
-    type: mqtt
-    topic: mbmd/sdm1-2/Power
-    timeout: 10s # don't use older values
-- name: battery
-  type: default
-  power:
-    type: mqtt
-    topic: mbmd/sma1-1/Power
-    timeout: 10s # don't use older values
-- name: charge
-  type: default
-  power:
-    type: script # use script
-    cmd: /bin/sh -c "echo 0" # actual command
-    timeout: 3s # kill script after 3 seconds
-- name: sma
-  type: sma # SMA Home Manager 2.0 or SMA Energy Meter 30
-  serial: 1234567890 # Serial number of the device, if this is defined uri is not needed!
-  uri: 192.168.1.4 # IP address of the device, if this is defined serial is not needed!
-- name: sdm
   type: modbus
-  model: sdm
+  model: sdm # SDM630
   uri: rs485.fritz.box:23
   rtu: true # rs485 device connected using ethernet adapter
   id: 2
-  power: Power # default values, optionally override
-  energy: Sum # default values, optionally override
-- name: e3dc-battery
-  type: default
-  power:
-    type: modbus
-    uri: e3dc.fritz.box:502
-    id: 1
-    register: # manual register configuration
-      address: 40070
-      type: holding
-      decode: int32
-    scale: -1 # reverse direction
+  power: Power # default value, optionally override
+  energy: Sum # default value, optionally override
+- name: pv
+  type: ... # examples see https://github.com/andig/evcc-config#meters
+- name: battery
+  type: ...
+- name: charge
 
+# charger definitions
+# name can be freely chosen and is used as reference when assigning charger to vehicle
 chargers:
 - name: wallbe
   type: wallbe # Wallbe charger
   uri: 192.168.0.8:502 # ModBus address
-# legacy: true # enable for older Wallbes with Phoenix EV-CC-AC1-M3-CBC-RCM controller
-- name: phoenix
-  type: phoenix-emcp # Charger with Phoenix Contact controller
-  uri: 192.168.0.8:502 # ModBus address
-  id: 180
-- name: simpleevse-tcp
-  type: simpleevse # Charger with Phoenix Contact controller
-  uri: 192.168.0.8:502 # TCP ModBus address
-- name: simpleevse-rtu
-  type: simpleevse # Charger with Phoenix Contact controller
-  device: /dev/usb1 # RS485 ModBus device
-- name: evsewifi
-  type: evsewifi # Charger with Phoenix Contact controller
-  uri: http://192.168.1.4 # SimpleEVSE-Wifi address
-- name: nrg-1
-  type: nrgkick-connect # NRGKick Connect charger
-  uri: http://192.168.1.4 # uri
-  mac: 00:99:22 # MAC address
-  password: # password
-# - name: nrg-2
-#   type: nrgkick-bluetooth # NRGKick charger with Bluetooth
-#   macaddress: 00:99:22 # MAC address
-#   pin: # pin
-- name: go-e
-  type: go-e # go-eCharger
-  uri: http://192.168.1.4 # either go-e local address
-  # token: 4711c # or go-e cloud API token
-  cache: 10s # go-e cloud API cache duration
 - name: keba
-  type: keba # KEBA charger
-  uri: 192.168.1.4:7090 # KEBA address
-  rfid:
-    tag: 765765348 # RFID tag, see `evcc charger` to show tag
-- name: mcc
-  type: mcc # Mobile Charger Connect (Audi, Bentley, Porsche)
-  uri: https://192.168.1.4 # Mobile Charger Connect address
-  password: # home user password
-- name: configurable
-  type: default # Configurable charger
-  status: # charger status A..F
-    type: mqtt
-    topic: some/topic1
-  enabled: # charger enabled state (true/false or 0/1)
-    type: mqtt
-    topic: some/topic2
-  enable: # set charger enabled state
-    type: script
-    cmd: /bin/sh -c "echo ${enable}"
-  maxcurrent: # set charger max current
-    type: script
-    cmd: /bin/sh -c "echo ${maxcurrent}"
+  type: ... # https://github.com/andig/evcc-config#chargers
 
+# vehicle definitions
+# name can be freely chosen and is used as reference when assigning vehicle to loadpoint
 vehicles:
+- name: renault
+  type: renault
+  title: Zoe
+  capacity: 60 # kWh
+  user: # user
+  password: # password
+  region: de_DE # gigya region
+  vin: WREN...
+  cache: 5m
 - name: default
   type: default
   title: Default
@@ -172,14 +103,6 @@ vehicles:
     cmd: /bin/sh -c "echo 50" # actual command
     timeout: 3s # kill script after 3 seconds
   cache: 5m
-- name: audi
-  type: audi
-  title: Q55 TFSIe
-  capacity: 10 # kWh
-  user: # user
-  password: # password
-  vin: WAUZZZ...
-  cache: 5m
 - name: bmw
   type: bmw
   title: i3
@@ -188,42 +111,8 @@ vehicles:
   password: # password
   vin: WBMW...
   cache: 5m
-# - name: tesla
-#   type: tesla
-#   title: Model S
-#   capacity: 90 # kWh
-#   clientid: # client id
-#   clientsecret: # client secret
-#   email: # email
-#   password: # password
-#   vin: WTSLA...
-#   cache: 5m
-# - name: nissan
-#   type: nissan
-#   title: Leaf
-#   capacity: 60 # kWh
-#   user: # user
-#   password: # password
-#   region: NE # carwings region, leave empty for Europe
-#   cache: 5m
-# - name: renault
-#   type: renault
-#   title: Zoe
-#   capacity: 60 # kWh
-#   user: # user
-#   password: # password
-#   region: de_DE # gigya region
-#   vin: WREN...
-#   cache: 5m
-# - name: porsche
-#   type: porsche
-#   title: Taycan
-#   capacity: 83 # kWh
-#   user: # user
-#   password: # password
-#   vin: WP...
-#   cache: 5m
 
+# site describes the EVU connection, PV and home battery
 site:
   title: Home # display name for UI
   meters:
@@ -231,6 +120,7 @@ site:
     pv: pv # pv meter
     battery: battery # battery meter
 
+# loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
 - title: Garage # display name for UI
   charger: wallbe # charger
