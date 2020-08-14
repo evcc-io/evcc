@@ -161,6 +161,8 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
+Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
+
 #### Wallbe preparation
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
@@ -187,53 +189,15 @@ KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see
 
 ### Meter
 
-Meters provide data about power and energy consumption. Available meter implementations are:
+Meters provide data about power and energy consumption or PV production. Available meter implementations are:
 
-- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use:
-
-  ```yaml
-  - name: pv
-    type: modbus
-    model: sdm
-    uri: rs485.fritz.box:23
-    id: 2
-    power: Power # reading as understood by MBMD, leave empty for power default value
-    energy: Export # optional reading for total energy values, specify for charge meter
-  ```
-
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0"):
-
-  ```yaml
-  - name: sma-home-manager
-    type: sdm
-    uri: 192.168.1.4
-    power: # leave empty for combined import/export power or choose obis
-    energy: # leave empty to disable or choose obis 1:1.8.0/1:2.8.0
-  ```
-
-- `tesla`: Tesla PowerWall meter. Use `value` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`)
-
-  ```yaml
-  - name: powerwall
-    type: tesla
-    uri: http://192.168.1.4/api/meters/aggregates
-    usage: site # grid meter: `site`, pv: `solar`, battery: `battery`
-  ```
-
+- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use.
+- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `tesla`: Tesla PowerWall meter. Use `usage` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`).
   *Note*: this could also be implemented using a `default` meter with the `http` plugin.
+- `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugins](#plugins)
 
-- `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugin](#plugins)
-
-  ```yaml
-  - name: vzlogger
-    type: default
-    power:
-      type: http # or any other plugin
-      ...
-    energy:
-      type: http # or any other plugin
-      ...
-  ```
+Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
 
 ### Vehicle
 
@@ -249,9 +213,13 @@ Available vehicle implementations are:
 - `porsche`: Porsche (Taycan)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
+Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
+
 ## Plugins
 
-Plugins are used to integrate physical devices and external data sources with EVCC. Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
+Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `default` type meter, charger or vehicle.
+
+Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
 ### Calc (read only)
 
