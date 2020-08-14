@@ -10,8 +10,6 @@ func TestMeters(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"mqtt not configured",
-		"NRGKick bluetooth is only supported on linux",
-		"invalid pin",
 		"not a SunSpec device",
 		"connect: no route to host",
 		"connect: connection refused",
