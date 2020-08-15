@@ -24,6 +24,8 @@ RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 #############################
 FROM {{ .RuntimeImage }}
 
+ENV TZ=Europe/Berlin
+
 # Import from builder
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

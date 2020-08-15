@@ -23,9 +23,11 @@ RUN make clean install assets build
 # STEP 2 build a small image including module support
 #
 
-FROM alpine:3.11
+FROM alpine:3.12
 
 WORKDIR /evcc
+
+ENV TZ=Europe/Berlin
 
 # Import from builder
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
