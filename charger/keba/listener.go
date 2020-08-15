@@ -36,35 +36,32 @@ type Listener struct {
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger, addr string) *Listener {
+func New(log *util.Logger, addr string) (*Listener, error) {
 	laddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	conn, err := net.ListenUDP("udp", laddr)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	l := &Listener{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		clients: make(map[string]chan<- UDPMsg),
 	}
 
 	go l.listen()
 
-	return l
+	return l, nil
 }
 
 // Subscribe adds a client address and message channel
 func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
-
-	if l.clients == nil {
-		l.clients = make(map[string]chan<- UDPMsg)
-	}
 
 	l.clients[addr] = c
 }
@@ -75,7 +72,7 @@ func (l *Listener) listen() {
 	for {
 		read, addr, err := l.conn.ReadFrom(b)
 		if err != nil {
-			l.log.WARN.Printf("listener: %v", err)
+			l.log.ERROR.Printf("listener: %v", err)
 			continue
 		}
 

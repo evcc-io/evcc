@@ -54,12 +54,16 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewKeba(conn string, rfid RFID, timeout time.Duration) (api.Charger, error) {
 	log := util.NewLogger("keba")
 
+	var err error
 	if keba.Instance == nil {
-		keba.Instance = keba.New(log, fmt.Sprintf(":%s", kebaPort))
+		keba.Instance, err = keba.New(log, fmt.Sprintf(":%s", kebaPort))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// add default port
-	if _, _, err := net.SplitHostPort(conn); err != nil {
+	if _, _, err = net.SplitHostPort(conn); err != nil {
 		conn = fmt.Sprintf("%s:%s", conn, kebaPort)
 	}
 
