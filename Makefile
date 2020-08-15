@@ -35,13 +35,17 @@ test-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish -v "testing" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=amd64
 
+publish-buster:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	docker build --tag andig/evcc:latest-buster -f docker/buster.Dockerfile . && docker push andig/evcc:latest-buster
+
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
+	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64 --template docker/tmpl.Dockerfile -v "$(TAG_NAME)"
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
+	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64 --template docker/tmpl.Dockerfile
 
 test-release:
 	goreleaser --snapshot --skip-publish --rm-dist
