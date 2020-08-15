@@ -2,6 +2,7 @@ package keba
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -59,11 +60,16 @@ func New(log *util.Logger, addr string) (*Listener, error) {
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) {
+func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
+	if _, exists := l.clients[addr]; exists {
+		return fmt.Errorf("duplicate subscription: %s", addr)
+	}
+
 	l.clients[addr] = c
+	return nil
 }
 
 func (l *Listener) listen() {
@@ -98,12 +104,24 @@ func (l *Listener) listen() {
 	}
 }
 
+// addrMatches checks if either message sender or serial matched given addr
+func (l *Listener) addrMatches(addr string, msg UDPMsg) bool {
+	switch {
+	case addr == msg.Addr:
+		return true
+	case msg.Report != nil && addr == msg.Report.Serial:
+		return true
+	default:
+		return false
+	}
+}
+
 func (l *Listener) send(msg UDPMsg) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
 	for addr, client := range l.clients {
-		if addr == msg.Addr {
+		if l.addrMatches(addr, msg) {
 			select {
 			case client <- msg:
 			default:
