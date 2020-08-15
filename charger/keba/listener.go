@@ -2,6 +2,7 @@ package keba
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -36,37 +37,39 @@ type Listener struct {
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger, addr string) *Listener {
+func New(log *util.Logger, addr string) (*Listener, error) {
 	laddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	conn, err := net.ListenUDP("udp", laddr)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	l := &Listener{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		clients: make(map[string]chan<- UDPMsg),
 	}
 
 	go l.listen()
 
-	return l
+	return l, nil
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) {
+func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) error {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	if l.clients == nil {
-		l.clients = make(map[string]chan<- UDPMsg)
+	if _, exists := l.clients[addr]; exists {
+		return fmt.Errorf("duplicate subscription: %s", addr)
 	}
 
 	l.clients[addr] = c
+	return nil
 }
 
 func (l *Listener) listen() {
@@ -75,7 +78,7 @@ func (l *Listener) listen() {
 	for {
 		read, addr, err := l.conn.ReadFrom(b)
 		if err != nil {
-			l.log.WARN.Printf("listener: %v", err)
+			l.log.ERROR.Printf("listener: %v", err)
 			continue
 		}
 
@@ -101,12 +104,24 @@ func (l *Listener) listen() {
 	}
 }
 
+// addrMatches checks if either message sender or serial matched given addr
+func (l *Listener) addrMatches(addr string, msg UDPMsg) bool {
+	switch {
+	case addr == msg.Addr:
+		return true
+	case msg.Report != nil && addr == msg.Report.Serial:
+		return true
+	default:
+		return false
+	}
+}
+
 func (l *Listener) send(msg UDPMsg) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
 	for addr, client := range l.clients {
-		if addr == msg.Addr {
+		if l.addrMatches(addr, msg) {
 			select {
 			case client <- msg:
 			default:
