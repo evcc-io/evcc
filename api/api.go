@@ -67,7 +67,7 @@ type Diagnosis interface {
 
 // ChargePhases provides current charge cycle duration
 type ChargePhases interface {
-	Phases1p3p(int) error
+	Phases1p3p(int64) error
 }
 
 // ChargeTimer provides current charge cycle duration

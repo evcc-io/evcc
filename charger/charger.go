@@ -22,7 +22,10 @@ func init() {
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
+	cc := struct {
+		Status, Enable, Enabled, MaxCurrent provider.Config
+		Phases                              *provider.Config
+	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -55,11 +58,30 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		maxcurrent, err = provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent)
 	}
 
-	if err != nil {
-		return nil, err
+	var c api.Charger
+	if err == nil {
+		c, err = NewConfigurable(status, enabled, enable, maxcurrent)
 	}
 
-	return NewConfigurable(status, enabled, enable, maxcurrent)
+	// decorate Charger with ChargePhases
+	if err == nil && cc.Phases != nil {
+		cp, err := NewChargePhases(*cc.Phases)
+		if err != nil {
+			return nil, err
+		}
+
+		type PhasesDecorator struct {
+			api.Charger
+			api.ChargePhases
+		}
+
+		c = &PhasesDecorator{
+			Charger:      c,
+			ChargePhases: cp,
+		}
+	}
+
+	return c, err
 }
 
 // NewConfigurable creates a new charger
@@ -80,8 +102,8 @@ func NewConfigurable(
 }
 
 // Status implements the Charger.Status interface
-func (m *Charger) Status() (api.ChargeStatus, error) {
-	s, err := m.statusG()
+func (c *Charger) Status() (api.ChargeStatus, error) {
+	s, err := c.statusG()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -90,16 +112,40 @@ func (m *Charger) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (m *Charger) Enabled() (bool, error) {
-	return m.enabledG()
+func (c *Charger) Enabled() (bool, error) {
+	return c.enabledG()
 }
 
 // Enable implements the Charger.Enable interface
-func (m *Charger) Enable(enable bool) error {
-	return m.enableS(enable)
+func (c *Charger) Enable(enable bool) error {
+	return c.enableS(enable)
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (m *Charger) MaxCurrent(current int64) error {
-	return m.maxCurrentS(current)
+func (c *Charger) MaxCurrent(current int64) error {
+	return c.maxCurrentS(current)
+}
+
+// ChargePhases decorates Charger with api.ChargePhases interface
+type ChargePhases struct {
+	phasesS func(int64) error
+}
+
+// NewChargePhases creates a new api.ChargePhases
+func NewChargePhases(ccPhases provider.Config) (api.ChargePhases, error) {
+	phasesS, err := provider.NewIntSetterFromConfig("phases", ccPhases)
+	if err != nil {
+		return nil, err
+	}
+
+	e := &ChargePhases{
+		phasesS: phasesS,
+	}
+
+	return e, nil
+}
+
+// Phases1p3p implements api.ChargePhases interface
+func (c *ChargePhases) Phases1p3p(phases int64) error {
+	return c.phasesS(phases)
 }
