@@ -65,6 +65,11 @@ type Diagnosis interface {
 	Diagnosis()
 }
 
+// ChargePhases provides current charge cycle duration
+type ChargePhases interface {
+	Phases1p3p(int) error
+}
+
 // ChargeTimer provides current charge cycle duration
 type ChargeTimer interface {
 	ChargingTime() (time.Duration, error)
