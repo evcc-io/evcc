@@ -8,7 +8,7 @@ import (
 
 func TestKeba(t *testing.T) {
 	var wb api.Charger
-	wb, err := NewKeba("foo", RFID{}, 0)
+	wb, err := NewKeba("foo", "bar", RFID{}, 0)
 	if err != nil {
 		t.Error(err)
 	}
