@@ -416,20 +416,21 @@ func (lp *LoadPoint) detectPhases() {
 		return
 	}
 
-	lp.log.TRACE.Printf("charge currents: %vA", []float64{i1, i2, i3})
-	lp.publish("chargeCurrents", []float64{i1, i2, i3})
+	currents := []float64{i1, i2, i3}
+	lp.log.TRACE.Printf("charge currents: %vA", currents)
+	lp.publish("chargeCurrents", currents)
 
 	if lp.charging {
 		var phases int64
-		for _, i := range []float64{i1, i2, i3} {
+		for _, i := range currents {
 			if i >= minActiveCurrent {
 				phases++
 			}
 		}
 
 		if phases > 0 {
-			lp.Phases = min(phases, lp.Phases)
-			lp.log.DEBUG.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
+			lp.Phases = phases
+			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.Phases, currents)
 
 			lp.publish("activePhases", lp.Phases)
 		}
