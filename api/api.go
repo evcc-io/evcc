@@ -65,7 +65,7 @@ type Diagnosis interface {
 	Diagnosis()
 }
 
-// ChargePhases provides current charge cycle duration
+// ChargePhases provides 1p3p switching
 type ChargePhases interface {
 	Phases1p3p(int64) error
 }
