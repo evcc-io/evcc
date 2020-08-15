@@ -71,26 +71,24 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	s.socCharge = f
 
 	if s.estimate {
-		socDelta := f - s.prevSoC
-		s.prevSoC = f
-
 		energyDelta := chargedEnergy - s.prevChargedEnergy
+		s.prevChargedEnergy = chargedEnergy
+
+		s.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh", chargedEnergy, energyDelta)
 
 		// soc value updated
-		if socDelta > 0 || energyDelta < 0 {
+		if socDelta := f - s.prevSoC; socDelta > 0 {
+			s.prevSoC = f
+
 			// calculate gradient, wh per soc %
-			if (s.prevSoC > 0) && (socDelta >= 2) && (energyDelta > 0) {
+			if s.prevSoC > 0 && socDelta > 1 && energyDelta > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
+				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.energyPerSocStep, s.energyPerSocStep*100/1e3)
 			}
-
-			s.prevChargedEnergy = chargedEnergy
-			energyDelta = 0
-
-			s.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.chargedEnergy, energyDelta, s.energyPerSocStep, s.energyPerSocStep/10)
 		}
 
-		s.socCharge = math.Min(f+(energyDelta/s.energyPerSocStep), 100)
-		s.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", s.prevSoC, s.socCharge)
+		s.socCharge = math.Min(s.prevSoC+(energyDelta/s.energyPerSocStep), 100)
+		s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.0f%%)", s.socCharge, s.prevSoC)
 	}
 
 	return s.socCharge, nil
