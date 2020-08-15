@@ -599,7 +599,7 @@ func (lp *LoadPoint) publishSoC() {
 	}
 
 	if lp.SoC.AlwaysUpdate || lp.connected() {
-		f, err := lp.socEstimator.ChargeState()
+		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = f
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)

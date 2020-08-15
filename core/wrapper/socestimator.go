@@ -15,10 +15,10 @@ type SocEstimator struct {
 	vehicle  api.Vehicle
 	estimate bool
 
-	socCharge                float64 // Vehicle SoC display (estimated)
-	socChargeFromAPI         float64 // Vehicle SoC read from car API
-	energyPerSocStep         float64 // Energy / SOC
-	chargedEnergyAtSocUpdate float64 // Charged energy at last soc update
+	socCharge         float64 // Vehicle SoC display (estimated)
+	prevSoC           float64 // Previous vehicle SoC
+	prevChargedEnergy float64 // Previous charged energy
+	energyPerSocStep  float64 // Energy / SOC
 
 }
 
@@ -35,8 +35,8 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 }
 
 func (s *SocEstimator) Reset() {
-	s.socChargeFromAPI = -1
-	s.chargedEnergyAtSocUpdate = 0
+	s.prevSoC = -1
+	s.prevChargedEnergy = 0
 	s.energyPerSocStep = float64(s.vehicle.Capacity()) * 1e3 / 100
 }
 
@@ -61,8 +61,8 @@ func (s *SocEstimator) RemainingChargeDuration(chargePercent float64) time.Durat
 	return -1
 }
 
-// ChargeState implements Vehicle.ChargeState interface
-func (s *SocEstimator) ChargeState() (float64, error) {
+// SoC implements Vehicle.ChargeState with addition of given charged energy
+func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
 	if err != nil {
 		return s.socCharge, err
@@ -71,24 +71,26 @@ func (s *SocEstimator) ChargeState() (float64, error) {
 	s.socCharge = f
 
 	if s.estimate {
-		socDelta := f - s.socChargeFromAPI
-		energyDelta := s.chargedEnergy - s.chargedEnergyAtSocUpdate
+		socDelta := f - s.prevSoC
+		s.prevSoC = f
+
+		energyDelta := chargedEnergy - s.prevChargedEnergy
 
 		// soc value updated
 		if socDelta > 0 || energyDelta < 0 {
 			// calculate gradient, wh per soc %
-			if (s.socChargeFromAPI > 0) && (socDelta >= 2) && (energyDelta > 0) {
+			if (s.prevSoC > 0) && (socDelta >= 2) && (energyDelta > 0) {
 				s.energyPerSocStep = energyDelta / socDelta
 			}
 
-			s.chargedEnergyAtSocUpdate = s.chargedEnergy
+			s.prevChargedEnergy = chargedEnergy
 			energyDelta = 0
+
+			s.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.chargedEnergy, energyDelta, s.energyPerSocStep, s.energyPerSocStep/10)
 		}
 
-		s.socChargeFromAPI = f
 		s.socCharge = math.Min(f+(energyDelta/s.energyPerSocStep), 100)
-		s.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.chargedEnergy, energyDelta, s.energyPerSocStep, s.energyPerSocStep/10)
-		s.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", s.socChargeFromAPI, s.socCharge)
+		s.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", s.prevSoC, s.socCharge)
 	}
 
 	return s.socCharge, nil
