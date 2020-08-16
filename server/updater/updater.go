@@ -12,9 +12,6 @@ import (
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
 	latest "github.com/tcnksm/go-latest"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/renderer/html"
 )
 
 var instance *updater
@@ -105,11 +102,6 @@ func releaseNotes(ctx context.Context, from, to string) (rendered string, err er
 	}
 
 	notes := bytes.NewBuffer([]byte{})
-	gm := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
-		goldmark.WithRendererOptions(html.WithHardWraps()),
-	)
-
 	for _, rel := range releases {
 		tag := *rel.TagName
 
@@ -125,8 +117,11 @@ func releaseNotes(ctx context.Context, from, to string) (rendered string, err er
 			}
 
 			notes.WriteString(fmt.Sprintf("<h1>%s</h1>\n", tag))
-			if err = gm.Convert([]byte(body), notes); err != nil {
-				return
+
+			if md, _, err := client.Markdown(context.Background(), body, &github.MarkdownOptions{Mode: "gfm", Context: "google/go-github"}); err == nil {
+				notes.WriteString(md)
+			} else {
+				return "", err
 			}
 		}
 	}
