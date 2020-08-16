@@ -67,9 +67,9 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 
 	s.socCharge = f
 
-	if s.estimate && chargedEnergy >= 0 {
+	if s.estimate {
 		socDelta := f - s.prevSoC
-		energyDelta := chargedEnergy - s.prevChargedEnergy
+		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
 			// calculate gradient, wh per soc %
@@ -79,7 +79,7 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			}
 
 			// sample charged energy at soc change, reset energy delta
-			s.prevChargedEnergy = chargedEnergy
+			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
 			energyDelta = 0
 		}
 
