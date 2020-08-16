@@ -4,7 +4,6 @@ import (
 	"sort"
 	"sync"
 	"time"
-	"math"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/wrapper"
@@ -73,8 +72,9 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter api.Meter   // Charger usage meter
-	vehicle     api.Vehicle // Vehicle
+	chargeMeter  api.Meter   // Charger usage meter
+	vehicle      api.Vehicle // Vehicle
+	socEstimator *wrapper.SocEstimator
 
 	// cached state
 	status        api.ChargeStatus // Charger status
@@ -83,12 +83,9 @@ type LoadPoint struct {
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
 
-	socCharge                float64       // Vehicle SoC display (estimated)
-	socChargeFromApi         float64       // Vehicle SoC read from car API
-	energyPerSocStep         float64       // Energy / SOC
-	chargedEnergyAtSocUpdate float64       // Charged energy at last soc update
-	chargedEnergy            float64       // Charged energy while connected
-	chargeDuration           time.Duration // Charge duration
+	socCharge      float64       // Vehicle SoC
+	chargedEnergy  float64       // Charged energy while connected in Wh
+	chargeDuration time.Duration // Charge duration
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -116,8 +113,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
-		lp.energyPerSocStep = float64(lp.vehicle.Capacity()) * 1e3 / 100
-		lp.socChargeFromApi = -1
+		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
 	}
 
 	if lp.ChargerRef == "" {
@@ -282,16 +278,14 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// energy
 	lp.chargedEnergy = 0
-	lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
 	lp.publish("connectedDuration", 0)
 
-	// soc estimation reset from config
-	lp.socChargeFromApi = -1
-	lp.energyPerSocStep = float64(lp.vehicle.Capacity()) * 1e3 / 100
+	// soc estimation reset on car change
+	lp.socEstimator.Reset()
 
 	lp.notify(evVehicleConnect)
 }
@@ -576,62 +570,28 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-// remainingChargeDuration returns the remaining charge time
-func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duration {
-	if !lp.charging {
-		return -1
-	}
-
-	if lp.chargePower > 0 && lp.vehicle != nil {
-		chargePercent = chargePercent / 100.0
-		targetPercent := float64(lp.TargetSoC) / 100
-
-		if chargePercent >= targetPercent {
-			return 0
-		}
-
-		whTotal := float64(lp.vehicle.Capacity()) * 1e3
-		whRemaining := (targetPercent - chargePercent) * whTotal
-		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
-	}
-
-	return -1
-}
-
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
-	if lp.vehicle == nil {
+	if lp.socEstimator == nil {
 		return
 	}
 
 	if lp.SoC.AlwaysUpdate || lp.connected() {
-		f, err := lp.vehicle.ChargeState()
+		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = f
-
-			if lp.SoC.Estimate {
-				socDelta := f - lp.socChargeFromApi
-				energyDelta := lp.chargedEnergy - lp.chargedEnergyAtSocUpdate
-
-				if (socDelta != 0) || (energyDelta < 0) { // soc value updated
-					if (lp.socChargeFromApi > 0) && (socDelta >= 2) && (energyDelta > 0) {
-						lp.energyPerSocStep = energyDelta / socDelta // gradient, wh per soc %
-					}
-					lp.chargedEnergyAtSocUpdate = lp.chargedEnergy
-					energyDelta = 0
-				}
-
-				lp.socChargeFromApi = f
-				lp.socCharge = math.Min(f + (energyDelta / lp.energyPerSocStep), 100)
-				lp.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh, energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", lp.chargedEnergy, energyDelta, lp.energyPerSocStep, lp.energyPerSocStep / 10)
-				lp.log.TRACE.Printf("last vehicle api soc: %.2f%%, estimated soc: %.2f%%", lp.socChargeFromApi, lp.socCharge)
-			}
-
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
-			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
+
+			chargeEstimate := time.Duration(-1)
+			if lp.charging {
+				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.TargetSoC)
+			}
+			lp.publish("chargeEstimate", chargeEstimate)
+
 			return
 		}
+
 		lp.log.ERROR.Printf("vehicle error: %v", err)
 	}
 
