@@ -113,7 +113,10 @@ func releaseNotes(ctx context.Context, from string) (rendered string, err error)
 
 		if notes := strings.TrimSpace(rel.GetBody()); notes != "" {
 			var md string
-			if md, _, err = client.Markdown(context.Background(), notes, &github.MarkdownOptions{Mode: "gfm", Context: "google/go-github"}); err != nil {
+			if md, _, err = client.Markdown(context.Background(), notes, &github.MarkdownOptions{
+				Mode:    "gfm",
+				Context: fmt.Sprintf("%s/%s", server.Owner, server.Repository),
+			}); err != nil {
 				return
 			}
 
