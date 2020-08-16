@@ -20,7 +20,7 @@ type SocEstimator struct {
 	socCharge         float64 // Vehicle SoC display (estimated)
 	prevSoC           float64 // Previous vehicle SoC
 	prevChargedEnergy float64 // Previous charged energy
-	energyPerSocStep  float64 // Energy / SOC
+	energyPerSocStep  float64 // Energy / SoC percent
 }
 
 // NewSocEstimator creates new estimator
@@ -45,7 +45,7 @@ func (s *SocEstimator) Reset() {
 	s.energyPerSocStep = float64(s.capacity) * 1e3 / 100
 }
 
-// RemainingChargeDuration returns the remaining duration estamate based on SoC, target and charge power
+// RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
 func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
 	if chargePower > 0 {
 		percentRemaining := float64(targetSoC) - s.socCharge
