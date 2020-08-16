@@ -71,20 +71,21 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	s.socCharge = f
 
 	if s.estimate {
+		socDelta := f - s.prevSoC
 		energyDelta := chargedEnergy - s.prevChargedEnergy
-		s.prevChargedEnergy = chargedEnergy
 
-		s.log.TRACE.Printf("chargedEnergy: %.0fWh, energyDelta: %0.0fWh", chargedEnergy, energyDelta)
+		s.prevSoC = f
 
-		// soc value updated
-		if socDelta := f - s.prevSoC; socDelta > 0 {
-			s.prevSoC = f
-
+		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
 			// calculate gradient, wh per soc %
 			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.energyPerSocStep, s.energyPerSocStep*100/1e3)
 			}
+
+			// sample charged energy at soc change, reset energy delta
+			s.prevChargedEnergy = chargedEnergy
+			energyDelta = 0
 		}
 
 		s.socCharge = math.Min(s.prevSoC+(energyDelta/s.energyPerSocStep), 100)
