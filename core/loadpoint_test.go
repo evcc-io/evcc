@@ -366,26 +366,6 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	ctrl.Finish()
 }
 
-func TestRemainingChargeDuration(t *testing.T) {
-	lp := NewLoadPoint(util.NewLogger("foo"))
-
-	ctrl := gomock.NewController(t)
-	vehicle := mock.NewMockVehicle(ctrl)
-
-	lp.vehicle = vehicle
-	lp.charging = true
-
-	soc := 20.0
-	lp.TargetSoC = 80
-	lp.chargePower = 1000
-
-	vehicle.EXPECT().Capacity().Return(int64(10))
-
-	if remaining := lp.remainingChargeDuration(soc); remaining != 6*time.Hour {
-		t.Error("wrong remaining charge duration")
-	}
-}
-
 func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)

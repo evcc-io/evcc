@@ -12,16 +12,18 @@ import (
 // Vehicle SoC can be estimated to provide more granularity
 type SocEstimator struct {
 	log      *util.Logger
-	vehicle  api.Vehicle
 	estimate bool
+
+	vehicle  api.Vehicle
+	capacity int64 // vehicle.Capacity cached to simplify testing
 
 	socCharge         float64 // Vehicle SoC display (estimated)
 	prevSoC           float64 // Previous vehicle SoC
 	prevChargedEnergy float64 // Previous charged energy
 	energyPerSocStep  float64 // Energy / SOC
-
 }
 
+// NewSocEstimator creates new estimator
 func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocEstimator {
 	s := &SocEstimator{
 		log:      log,
@@ -34,12 +36,16 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 	return s
 }
 
+// Reset resets the estimation process to default values
 func (s *SocEstimator) Reset() {
 	s.prevSoC = -1
 	s.prevChargedEnergy = 0
-	s.energyPerSocStep = float64(s.vehicle.Capacity()) * 1e3 / 100
+
+	s.capacity = s.vehicle.Capacity()
+	s.energyPerSocStep = float64(s.capacity) * 1e3 / 100
 }
 
+// RemainingChargeDuration returns the remaining duration estamate based on SoC, target and charge power
 func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
 	if chargePower > 0 {
 		percentRemaining := float64(targetSoC) - s.socCharge
@@ -47,7 +53,7 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 			return 0
 		}
 
-		whTotal := float64(s.vehicle.Capacity()) * 1e3
+		whTotal := float64(s.capacity) * 1e3
 		whRemaining := percentRemaining / 100 * whTotal
 		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
 	}
