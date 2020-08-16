@@ -572,7 +572,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
-	if lp.vehicle == nil {
+	if lp.socEstimator == nil {
 		return
 	}
 
