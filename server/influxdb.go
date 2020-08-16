@@ -7,7 +7,7 @@ import (
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
-	influxdb2 "github.com/influxdata/influxdb-client-go"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
 // InfluxConfig is the influx db configuration
@@ -69,7 +69,7 @@ func (m *Influx) supportedType(p util.Param) bool {
 
 // Run Influx publisher
 func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
-	writer := m.client.WriteApi(m.org, m.database)
+	writer := m.client.WriteAPI(m.org, m.database)
 
 	// log errors
 	go func() {
