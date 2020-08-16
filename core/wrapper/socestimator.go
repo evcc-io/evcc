@@ -40,22 +40,16 @@ func (s *SocEstimator) Reset() {
 	s.energyPerSocStep = float64(s.vehicle.Capacity()) * 1e3 / 100
 }
 
-func (s *SocEstimator) RemainingChargeDuration(chargePercent float64) time.Duration {
-	if !s.charging {
-		return -1
-	}
-
-	if s.chargePower > 0 && s.vehicle != nil {
-		chargePercent = chargePercent / 100.0
-		targetPercent := float64(s.TargetSoC) / 100
-
-		if chargePercent >= targetPercent {
+func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
+	if chargePower > 0 {
+		percentRemaining := float64(targetSoC) - s.socCharge
+		if percentRemaining <= 0 {
 			return 0
 		}
 
 		whTotal := float64(s.vehicle.Capacity()) * 1e3
-		whRemaining := (targetPercent - chargePercent) * whTotal
-		return time.Duration(float64(time.Hour) * whRemaining / s.chargePower).Round(time.Second)
+		whRemaining := percentRemaining / 100 * whTotal
+		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
 	}
 
 	return -1
@@ -81,7 +75,7 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			s.prevSoC = f
 
 			// calculate gradient, wh per soc %
-			if s.prevSoC > 0 && socDelta > 1 && energyDelta > 0 {
+			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.energyPerSocStep, s.energyPerSocStep*100/1e3)
 			}

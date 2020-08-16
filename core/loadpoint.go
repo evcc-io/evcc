@@ -570,28 +570,6 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-// remainingChargeDuration returns the remaining charge time
-// func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duration {
-// 	if !lp.charging {
-// 		return -1
-// 	}
-
-// 	if lp.chargePower > 0 && lp.vehicle != nil {
-// 		chargePercent = chargePercent / 100.0
-// 		targetPercent := float64(lp.TargetSoC) / 100
-
-// 		if chargePercent >= targetPercent {
-// 			return 0
-// 		}
-
-// 		whTotal := float64(lp.vehicle.Capacity()) * 1e3
-// 		whRemaining := (targetPercent - chargePercent) * whTotal
-// 		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
-// 	}
-
-// 	return -1
-// }
-
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
 	if lp.vehicle == nil {
@@ -604,7 +582,13 @@ func (lp *LoadPoint) publishSoC() {
 			lp.socCharge = f
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
-			lp.publish("chargeEstimate", lp.socEstimator.RemainingChargeDuration(lp.socCharge))
+
+			chargeEstimate := time.Duration(-1)
+			if lp.charging {
+				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.TargetSoC)
+			}
+			lp.publish("chargeEstimate", chargeEstimate)
+
 			return
 		}
 
