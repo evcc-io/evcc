@@ -19,7 +19,7 @@ type SocEstimator struct {
 	socCharge         float64 // estimated vehicle SoC
 	prevSoC           float64 // previous vehicle SoC in %
 	prevChargedEnergy float64 // previous charged energy in Wh
-	socPerWh          float64 // SoC percent per Wh
+	energyPerSocStep  float64 // Energy per SoC percent in Wh
 }
 
 // NewSocEstimator creates new estimator
@@ -37,9 +37,10 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 
 // Reset resets the estimation process to default values
 func (s *SocEstimator) Reset() {
-	s.prevSoC = -1                                   // indicate soc and energy invalid
+	s.prevSoC = -1
+	s.prevChargedEnergy = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3 // cache to simplify debugging
-	s.socPerWh = 100 / s.capacity
+	s.energyPerSocStep = s.capacity / 100
 }
 
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
@@ -66,31 +67,25 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 
 	s.socCharge = f
 
-	if s.estimate {
-		socDelta := s.socCharge - s.prevSoC
+	if s.estimate && chargedEnergy >= 0 {
+		socDelta := f - s.prevSoC
 		energyDelta := chargedEnergy - s.prevChargedEnergy
 
-		// soc or energy value changed (including unexpected energy reset)
-		if socDelta != 0 || energyDelta != 0 {
-			// starting point defined?
-			if s.prevSoC > 0 {
-				// re-calculate gradient, soc% per Wh
-				if socDelta > 1 && energyDelta > 0 {
-					s.socPerWh = socDelta / energyDelta
-					s.log.TRACE.Printf("soc gradient: socPerWh %.3f%%/Wh, virtualBattery %.0f", s.socPerWh, s.socPerWh*s.capacity)
-				} else {
-					// soc unchanged, estimate
-					s.socCharge = math.Min(f+energyDelta*s.socPerWh, 100)
-					s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.0f%%)", s.socCharge, f)
-				}
+		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
+			// calculate gradient, wh per soc %
+			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
+				s.energyPerSocStep = energyDelta / socDelta
+				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.energyPerSocStep, s.energyPerSocStep*100/1e3)
 			}
 
-			// sample charged energy at soc change
-			if socDelta != 0 {
-				s.prevChargedEnergy = chargedEnergy
-				s.prevSoC = f
-			}
+			// sample charged energy at soc change, reset energy delta
+			s.prevChargedEnergy = chargedEnergy
+			energyDelta = 0
 		}
+
+		s.socCharge = math.Min(f + (energyDelta / s.energyPerSocStep), 100)
+		s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
+		s.prevSoC = f
 	}
 
 	return s.socCharge, nil
