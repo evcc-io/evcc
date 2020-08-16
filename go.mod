@@ -19,7 +19,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
 	github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1
 	github.com/hashicorp/go-version v1.2.1
-	github.com/influxdata/influxdb-client-go v1.4.0
+	github.com/influxdata/influxdb-client-go/v2 v2.0.1
 	github.com/itchyny/gojq v0.11.0
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
