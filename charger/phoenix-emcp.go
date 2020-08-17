@@ -31,7 +31,8 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 		URI string
 		ID  uint8
 	}{
-		ID: 180, // default
+		URI: "192.168.0.8:502", // default
+		ID:  180,               // default
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
