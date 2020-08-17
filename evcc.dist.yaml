@@ -132,6 +132,7 @@ loadpoints:
   targetSoC: 100 # charge to 100%
   soc:
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
+    estimate: false # set true to interpolate between api updates
     levels: # target soc levels for UI
     - 30
     - 50

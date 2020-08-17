@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/mock"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
@@ -366,31 +367,15 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	ctrl.Finish()
 }
 
-func TestRemainingChargeDuration(t *testing.T) {
-	lp := NewLoadPoint(util.NewLogger("foo"))
-
-	ctrl := gomock.NewController(t)
-	vehicle := mock.NewMockVehicle(ctrl)
-
-	lp.vehicle = vehicle
-	lp.charging = true
-
-	soc := 20.0
-	lp.TargetSoC = 80
-	lp.chargePower = 1000
-
-	vehicle.EXPECT().Capacity().Return(int64(10))
-
-	if remaining := lp.remainingChargeDuration(soc); remaining != 6*time.Hour {
-		t.Error("wrong remaining charge duration")
-	}
-}
-
 func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	clock := clock.NewMock()
 	ctrl := gomock.NewController(t)
 	handler := mock.NewMockHandler(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
+
+	// wrap vehicle with estimator
+	vehicle.EXPECT().Capacity().Return(int64(10))
+	socEstimator := wrapper.NewSocEstimator(util.NewLogger("foo"), vehicle, false)
 
 	lp := &LoadPoint{
 		log:         util.NewLogger("foo"),
@@ -403,10 +388,10 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
 		},
-		handler:   handler,
-		vehicle:   vehicle,
-		status:    api.StatusC,
-		TargetSoC: 90,
+		handler:      handler,
+		socEstimator: socEstimator, // instead of vehicle: vehicle,
+		status:       api.StatusC,
+		TargetSoC:    90,
 	}
 
 	handler.EXPECT().Prepare().Return()
