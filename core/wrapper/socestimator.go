@@ -37,7 +37,7 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 
 // Reset resets the estimation process to default values
 func (s *SocEstimator) Reset() {
-	s.prevSoC = -1
+	s.prevSoC = 0
 	s.prevChargedEnergy = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3 // cache to simplify debugging
 	s.energyPerSocStep = s.capacity / 100
@@ -65,10 +65,10 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 		return s.socCharge, err
 	}
 
-	s.socCharge = f
+	s.socCharge = math.Min(math.Max(f, 0), 100)
 
 	if s.estimate {
-		socDelta := f - s.prevSoC
+		socDelta := s.socCharge - s.prevSoC
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
@@ -81,11 +81,12 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			// sample charged energy at soc change, reset energy delta
 			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
 			energyDelta = 0
+
+			s.prevSoC = s.socCharge
 		}
 
-		s.socCharge = math.Min(f + (energyDelta / s.energyPerSocStep), 100)
+		s.socCharge = math.Min(s.socCharge + energyDelta / s.energyPerSocStep, 100)
 		s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
-		s.prevSoC = f
 	}
 
 	return s.socCharge, nil
