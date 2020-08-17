@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"sort"
 	"sync"
 	"time"
@@ -585,7 +586,7 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.SoC.AlwaysUpdate || lp.connected() {
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
-			lp.socCharge = f
+			lp.socCharge = math.Trunc(f)
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
 
