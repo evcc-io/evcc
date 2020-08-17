@@ -65,7 +65,7 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 		return s.socCharge, err
 	}
 
-	s.socCharge = math.Min(math.Max(f, 0), 100)
+	s.socCharge = f
 
 	if s.estimate {
 		socDelta := s.socCharge - s.prevSoC
@@ -80,13 +80,11 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 
 			// sample charged energy at soc change, reset energy delta
 			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
-			energyDelta = 0
-
 			s.prevSoC = s.socCharge
+		} else {
+			s.socCharge = math.Min(f + energyDelta / s.energyPerSocStep, 100)
+			s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
 		}
-
-		s.socCharge = math.Min(s.socCharge + energyDelta / s.energyPerSocStep, 100)
-		s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
 	}
 
 	return s.socCharge, nil
