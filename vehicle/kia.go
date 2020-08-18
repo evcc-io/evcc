@@ -30,18 +30,13 @@ const (
 	kiaUrlGetStatus   = "https://prd.eu-ccapi.kia.com:8080/api/v2/spa/vehicles/"
 )
 
-type kiaErrorResponse struct {
-	Error       string
-	Description string `json:"error_description"`
-}
-
 // Kia is an api.Vehicle implementation with configurable getters and setters.
 type Kia struct {
 	*embed
 	*util.HTTPHelper
 	user         string
 	password     string
-	pin          int16
+	pin          string
 	cookieJar    *cookiejar.Jar
 	accCode      string
 	accToken     string
@@ -65,7 +60,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Title               string
 		Capacity            int64
 		User, Password, VIN string
-		PIN                 int16
+		PIN                 string
 		Cache               time.Duration
 	}{}
 
@@ -129,9 +124,13 @@ func (v *Kia) getDeviceID() error {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var bbody map[string]interface{}
-	json.Unmarshal([]byte(body), &bbody)
+	err = json.Unmarshal([]byte(body), &bbody)
+	if err != nil {
+		return err
+	}
 
 	v.deviceID = fmt.Sprint(bbody["resMsg"].(map[string]interface{})["deviceId"])
+	fmt.Println("DeviceID: ", v.deviceID)
 
 	return nil
 
@@ -196,6 +195,9 @@ func (v *Kia) login() error {
 	}
 
 	req, err := http.NewRequest(http.MethodPost, kiaUrlLogin, bytes.NewReader(dataj))
+	if err != nil {
+		return err
+	}
 	for k, v := range map[string]string{
 		"Content-type": "application/json",
 	} {
@@ -212,8 +214,10 @@ func (v *Kia) login() error {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var bbody map[string]interface{}
-	json.Unmarshal([]byte(body), &bbody)
-
+	err = json.Unmarshal([]byte(body), &bbody)
+	if err != nil {
+		return err
+	}
 	redirUrl := fmt.Sprint(bbody["redirectUrl"])
 	parsed, err := url.Parse(redirUrl)
 	if err != nil {
@@ -221,6 +225,7 @@ func (v *Kia) login() error {
 	}
 	quer := parsed.Query()
 	v.accCode = quer.Get("code")
+	fmt.Println("authCode: ", v.accCode)
 
 	return nil
 }
@@ -254,10 +259,13 @@ func (v *Kia) getToken() error {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var bbody map[string]interface{}
-	json.Unmarshal([]byte(body), &bbody)
+	err = json.Unmarshal([]byte(body), &bbody)
+	if err != nil {
+		return err
+	}
 
 	v.accToken = fmt.Sprintf("%s %s", bbody["token_type"], bbody["access_token"])
-
+	fmt.Println("accToken:", v.accToken)
 	return nil
 }
 
@@ -289,12 +297,16 @@ func (v *Kia) getVehicles() error {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var bbody map[string]interface{}
-	json.Unmarshal([]byte(body), &bbody)
+	err = json.Unmarshal([]byte(body), &bbody)
+	if err != nil {
+		return err
+	}
 
 	kvid := bbody["resMsg"].(map[string]interface{})["vehicles"]
 	kvid1 := kvid.([]interface{})[0]
 
 	v.vehicleID = fmt.Sprint(kvid1.(map[string]interface{})["vehicleId"])
+	fmt.Println("vehicleId: ", v.vehicleID)
 
 	return nil
 }
@@ -312,6 +324,9 @@ func (v *Kia) prewakeup() error {
 	}
 
 	req, err := http.NewRequest(http.MethodPost, uri, bytes.NewReader(dataj))
+	if err != nil {
+		return err
+	}
 	for k, v := range map[string]string{
 		"Authorization":       v.accToken,
 		"ccsp-device-id":      v.deviceID,
@@ -374,9 +389,13 @@ func (v *Kia) sendPIN() error {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var bbody map[string]interface{}
-	json.Unmarshal([]byte(body), &bbody)
+	err = json.Unmarshal([]byte(body), &bbody)
+	if err != nil {
+		return err
+	}
 
 	v.controlToken = "Bearer " + fmt.Sprint(bbody["controlToken"])
+	fmt.Println("Control Token: ", v.controlToken)
 
 	return nil
 }
@@ -405,15 +424,21 @@ func (v *Kia) getStatus() (float64, error) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	var kr kiaBatteryResponse
-	json.Unmarshal([]byte(body), &kr)
-	SoC := kr.ResMsg.EvStatus.BatteryStatus
+	err = json.Unmarshal([]byte(body), &kr)
+	if err != nil {
+		return 0, err
+	}
+	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
 
-	return SoC, nil
+	fmt.Println("SoC: ", stateOfCharge)
+
+	return stateOfCharge, nil
 }
 
 // now we have all the needed functions to read Kia SoC
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
+	fmt.Println("SoC Abfrage gestartet")
 	err := v.getDeviceID()
 	if err != nil {
 		return 0, errors.New("could not obtain deviceID")
@@ -451,7 +476,7 @@ func (v *Kia) chargeState() (float64, error) {
 	if errf != nil {
 		return 0, errors.New("could not get soc")
 	}
-
+	fmt.Println("SoC: ", soc)
 	return soc, nil
 }
 
