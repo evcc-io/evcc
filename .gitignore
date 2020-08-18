@@ -8,3 +8,5 @@ linux-*.Dockerfile
 !evcc.dist.yaml
 !modules/**
 dist
+go.mod
+go.sum
