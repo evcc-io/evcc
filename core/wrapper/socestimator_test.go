@@ -14,7 +14,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Capacity().Return(int64(10))
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, false)
+	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, false, 1.0)
 	ce.socCharge = 20.0
 
 	chargePower := 1000.0
@@ -30,7 +30,7 @@ func TestSoCEstimation(t *testing.T) {
 	vehicle := mock.NewMockVehicle(ctrl)
 	vehicle.EXPECT().Capacity().Return(int64(10))
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, true)
+	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, true, 1.0)
 	ce.socCharge = 20.0
 
 	tc := []struct {

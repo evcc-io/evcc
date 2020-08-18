@@ -57,9 +57,10 @@ type LoadPoint struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
 	SoC struct {
-		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
-		Levels       []int `mapstructure:"levels"`
-		Estimate     bool  `mapstructure:"estimate"`
+		AlwaysUpdate bool    `mapstructure:"alwaysUpdate"`
+		Levels       []int   `mapstructure:"levels"`
+		Estimate     bool    `mapstructure:"estimate"`
+		Efficiency   float64 `mapstructure:"efficiency"`
 	}
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
@@ -114,7 +115,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
-		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
+		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate, lp.SoC.Efficiency)
 	}
 
 	if lp.ChargerRef == "" {
