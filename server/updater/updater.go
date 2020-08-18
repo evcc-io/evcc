@@ -12,9 +12,6 @@ import (
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
 	latest "github.com/tcnksm/go-latest"
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/renderer/html"
 )
 
 var instance *updater
@@ -67,18 +64,18 @@ func (u *updater) checkVersion() {
 			Val: tag,
 		}
 
-		u.fetchReleaseNotes(res.Current)
+		u.fetchReleaseNotes()
 	} else {
 		u.log.ERROR.Println("version check failed:", err)
 	}
 }
 
 // fetchReleaseNotes retrieves release notes up to semver and sends to client
-func (u *updater) fetchReleaseNotes(to string) {
+func (u *updater) fetchReleaseNotes() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if notes, err := releaseNotes(ctx, tag2semver(server.Version), to); err == nil {
+	if notes, err := releaseNotes(ctx, tag2semver(server.Version)); err == nil {
 		u.cache <- util.Param{
 			Key: "releaseNotes",
 			Val: notes,
@@ -89,12 +86,9 @@ func (u *updater) fetchReleaseNotes(to string) {
 }
 
 // releaseNotes returns github release notes for the (from,to] semver interval
-func releaseNotes(ctx context.Context, from, to string) (rendered string, err error) {
-	var fromVersion, toVersion *version.Version
+func releaseNotes(ctx context.Context, from string) (rendered string, err error) {
+	var fromVersion *version.Version
 	if fromVersion, err = version.NewVersion(from); err != nil {
-		return
-	}
-	if toVersion, err = version.NewVersion(to); err != nil {
 		return
 	}
 
@@ -104,12 +98,7 @@ func releaseNotes(ctx context.Context, from, to string) (rendered string, err er
 		return
 	}
 
-	notes := bytes.NewBuffer([]byte{})
-	gm := goldmark.New(
-		goldmark.WithExtensions(extension.GFM),
-		goldmark.WithRendererOptions(html.WithHardWraps()),
-	)
-
+	history := bytes.NewBuffer([]byte{})
 	for _, rel := range releases {
 		tag := *rel.TagName
 
@@ -118,18 +107,23 @@ func releaseNotes(ctx context.Context, from, to string) (rendered string, err er
 			return
 		}
 
-		if ver.GreaterThan(fromVersion) && ver.LessThanOrEqual(toVersion) {
-			body := strings.TrimSpace(rel.GetBody())
-			if body == "" {
-				continue
-			}
+		if ver.LessThanOrEqual(fromVersion) {
+			continue
+		}
 
-			notes.WriteString(fmt.Sprintf("<h1>%s</h1>\n", tag))
-			if err = gm.Convert([]byte(body), notes); err != nil {
+		if notes := strings.TrimSpace(rel.GetBody()); notes != "" {
+			var md string
+			if md, _, err = client.Markdown(context.Background(), notes, &github.MarkdownOptions{
+				Mode:    "gfm",
+				Context: fmt.Sprintf("%s/%s", server.Owner, server.Repository),
+			}); err != nil {
 				return
 			}
+
+			history.WriteString(fmt.Sprintf("<h1>%s</h1>\n", tag))
+			history.WriteString(md)
 		}
 	}
 
-	return notes.String(), nil
+	return history.String(), nil
 }

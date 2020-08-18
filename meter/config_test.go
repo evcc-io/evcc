@@ -7,9 +7,17 @@ import (
 )
 
 func TestMeters(t *testing.T) {
+	acceptable := []string{
+		"invalid plugin type: ...",
+		"mqtt not configured",
+		"not a SunSpec device",
+		"connect: no route to host",
+		"connect: connection refused",
+	}
+
 	for _, tmpl := range test.ConfigTemplates("meter") {
 		_, err := NewFromConfig(tmpl.Type, tmpl.Config)
-		if err != nil && !test.Acceptable("meter", err) {
+		if err != nil && !test.Acceptable(err, acceptable) {
 			t.Logf("%s", tmpl.Name)
 			t.Error(err)
 		}

@@ -3,7 +3,7 @@ module github.com/andig/evcc
 go 1.13
 
 require (
-	github.com/andig/evcc-config v0.0.0-20200802191931-3e618540d36b
+	github.com/andig/evcc-config v0.0.0-20200814164749-a3589fa3b244
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
@@ -20,7 +20,7 @@ require (
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
 	github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1
 	github.com/hashicorp/go-version v1.2.1
-	github.com/influxdata/influxdb-client-go v1.4.0
+	github.com/influxdata/influxdb-client-go/v2 v2.0.1
 	github.com/itchyny/gojq v0.11.0
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
@@ -37,7 +37,6 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570
-	github.com/yuin/goldmark v1.1.32
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c

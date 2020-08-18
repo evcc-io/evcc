@@ -1,10 +1,12 @@
-.PHONY: default clean install lint test assets build binaries publish-images test-release release
+.PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
 
 TAG_NAME := $(shell git describe --abbrev=0 --tags)
 SHA := $(shell git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
-
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+
+ALPINE := 3.12
+TARGETS := arm.v6,arm.v8,amd64
 
 default: clean install assets lint test build
 
@@ -31,20 +33,23 @@ build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	go build -v -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
 
-test-images:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "testing" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=amd64
-
-publish-images:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "$(TAG_NAME)" -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
-
-publish-latest:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish -v "latest" --image-name andig/evcc --base-runtime-image alpine --dry-run=false --targets=arm.v6,arm.v8,amd64
-
-test-release:
+release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
 
 release:
 	goreleaser --rm-dist
+
+publish-testing:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
+	   --image-name andig/evcc -v "testing" --targets=amd64
+
+publish-latest:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
+	   --image-name andig/evcc -v "latest" --targets=$(TARGETS)
+
+publish-images:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
+	   --image-name andig/evcc -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)

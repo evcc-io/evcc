@@ -1,6 +1,7 @@
 package core
 
 import (
+	"math"
 	"sort"
 	"sync"
 	"time"
@@ -58,6 +59,7 @@ type LoadPoint struct {
 	SoC struct {
 		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
 		Levels       []int `mapstructure:"levels"`
+		Estimate     bool  `mapstructure:"estimate"`
 	}
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
@@ -71,8 +73,9 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter api.Meter   // Charger usage meter
-	vehicle     api.Vehicle // Vehicle
+	chargeMeter  api.Meter   // Charger usage meter
+	vehicle      api.Vehicle // Vehicle
+	socEstimator *wrapper.SocEstimator
 
 	// cached state
 	status        api.ChargeStatus // Charger status
@@ -82,7 +85,7 @@ type LoadPoint struct {
 	pvTimer       time.Time        // PV enabled/disable timer
 
 	socCharge      float64       // Vehicle SoC
-	chargedEnergy  float64       // Charged energy while connected
+	chargedEnergy  float64       // Charged energy while connected in Wh
 	chargeDuration time.Duration // Charge duration
 }
 
@@ -111,6 +114,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 	if lp.VehicleRef != "" {
 		lp.vehicle = cp.Vehicle(lp.VehicleRef)
+		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
 	}
 
 	if lp.ChargerRef == "" {
@@ -217,7 +221,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 			lp.chargeMeter = mt
 		} else {
 			mt := &wrapper.ChargeMeter{}
-			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
+			_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentWrappedMeterHandler)
 			_ = lp.bus.Subscribe(evChargeStop, func() {
 				mt.SetPower(0)
 			})
@@ -281,6 +285,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.connectedTime = lp.clock.Now()
 	lp.publish("connectedDuration", 0)
 
+	// soc estimation reset on car change
+	lp.socEstimator.Reset()
+
 	lp.notify(evVehicleConnect)
 }
 
@@ -304,9 +311,16 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 }
 
 // evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
-// where the charge meter can always be treated as present. It assumes that the charge meter cannot consume
-// more than total household consumption. If physical charge meter is present this handler is not used.
 func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
+	lp.publish("chargeCurrent", current)
+}
+
+// evChargeCurrentWrappedMeterHandler updates the dummy charge meter's charge power.
+// This simplifies the main flow where the charge meter can always be treated as present.
+// It assumes that the charge meter cannot consume more than total household consumption.
+// If physical charge meter is present this handler is not used.
+// The actual value is published by the evChargeCurrentHandler
+func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current int64) {
 	power := float64(current*lp.Phases) * Voltage
 
 	if !lp.handler.Enabled() || lp.status != api.StatusC {
@@ -324,9 +338,6 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 
 	// handler only called if charge meter was replaced by dummy
 	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
-
-	// expose for UI
-	lp.publish("chargeCurrent", current)
 }
 
 // Name returns the human-readable loadpoint title
@@ -345,6 +356,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
 	_ = lp.bus.Subscribe(evVehicleConnect, lp.evVehicleConnectHandler)
 	_ = lp.bus.Subscribe(evVehicleDisconnect, lp.evVehicleDisconnectHandler)
+	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 
 	// publish initial values
 	lp.Lock()
@@ -416,20 +428,21 @@ func (lp *LoadPoint) detectPhases() {
 		return
 	}
 
-	lp.log.TRACE.Printf("charge currents: %vA", []float64{i1, i2, i3})
-	lp.publish("chargeCurrents", []float64{i1, i2, i3})
+	currents := []float64{i1, i2, i3}
+	lp.log.TRACE.Printf("charge currents: %vA", currents)
+	lp.publish("chargeCurrents", currents)
 
 	if lp.charging {
 		var phases int64
-		for _, i := range []float64{i1, i2, i3} {
+		for _, i := range currents {
 			if i >= minActiveCurrent {
 				phases++
 			}
 		}
 
 		if phases > 0 {
-			lp.Phases = min(phases, lp.Phases)
-			lp.log.DEBUG.Printf("detected phases: %d (%v)", lp.Phases, []float64{i1, i2, i3})
+			lp.Phases = phases
+			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.Phases, currents)
 
 			lp.publish("activePhases", lp.Phases)
 		}
@@ -564,43 +577,28 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-// remainingChargeDuration returns the remaining charge time
-func (lp *LoadPoint) remainingChargeDuration(chargePercent float64) time.Duration {
-	if !lp.charging {
-		return -1
-	}
-
-	if lp.chargePower > 0 && lp.vehicle != nil {
-		chargePercent = chargePercent / 100.0
-		targetPercent := float64(lp.TargetSoC) / 100
-
-		if chargePercent >= targetPercent {
-			return 0
-		}
-
-		whTotal := float64(lp.vehicle.Capacity()) * 1e3
-		whRemaining := (targetPercent - chargePercent) * whTotal
-		return time.Duration(float64(time.Hour) * whRemaining / lp.chargePower).Round(time.Second)
-	}
-
-	return -1
-}
-
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
-	if lp.vehicle == nil {
+	if lp.socEstimator == nil {
 		return
 	}
 
 	if lp.SoC.AlwaysUpdate || lp.connected() {
-		f, err := lp.vehicle.ChargeState()
+		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
-			lp.socCharge = f
+			lp.socCharge = math.Trunc(f)
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
-			lp.publish("chargeEstimate", lp.remainingChargeDuration(f))
+
+			chargeEstimate := time.Duration(-1)
+			if lp.charging {
+				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.TargetSoC)
+			}
+			lp.publish("chargeEstimate", chargeEstimate)
+
 			return
 		}
+
 		lp.log.ERROR.Printf("vehicle error: %v", err)
 	}
 
