@@ -13,6 +13,7 @@ require (
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
@@ -29,6 +30,7 @@ require (
 	github.com/mjibson/esc v0.2.0
 	github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
+	github.com/pborman/uuid v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0

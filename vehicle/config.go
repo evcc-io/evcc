@@ -25,6 +25,8 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 		v, err = NewRenaultFromConfig(other)
 	case "porsche", "taycan":
 		v, err = NewPorscheFromConfig(other)
+	case "kia", "esoul":
+		v, err = NewKiaFromConfig(other)
 	default:
 		err = fmt.Errorf("invalid vehicle type: %s", typ)
 	}
