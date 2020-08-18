@@ -130,7 +130,7 @@ func (v *Kia) getDeviceID() error {
 	}
 
 	v.deviceID = fmt.Sprint(bbody["resMsg"].(map[string]interface{})["deviceId"])
-	fmt.Println("DeviceID: ", v.deviceID)
+	//fmt.Println("DeviceID: ", v.deviceID)
 
 	return nil
 
@@ -225,7 +225,7 @@ func (v *Kia) login() error {
 	}
 	quer := parsed.Query()
 	v.accCode = quer.Get("code")
-	fmt.Println("authCode: ", v.accCode)
+	//fmt.Println("authCode: ", v.accCode)
 
 	return nil
 }
@@ -265,7 +265,7 @@ func (v *Kia) getToken() error {
 	}
 
 	v.accToken = fmt.Sprintf("%s %s", bbody["token_type"], bbody["access_token"])
-	fmt.Println("accToken:", v.accToken)
+	//fmt.Println("accToken:", v.accToken)
 	return nil
 }
 
@@ -306,7 +306,7 @@ func (v *Kia) getVehicles() error {
 	kvid1 := kvid.([]interface{})[0]
 
 	v.vehicleID = fmt.Sprint(kvid1.(map[string]interface{})["vehicleId"])
-	fmt.Println("vehicleId: ", v.vehicleID)
+	//fmt.Println("vehicleId: ", v.vehicleID)
 
 	return nil
 }
@@ -395,7 +395,7 @@ func (v *Kia) sendPIN() error {
 	}
 
 	v.controlToken = "Bearer " + fmt.Sprint(bbody["controlToken"])
-	fmt.Println("Control Token: ", v.controlToken)
+	//fmt.Println("Control Token: ", v.controlToken)
 
 	return nil
 }
@@ -430,7 +430,7 @@ func (v *Kia) getStatus() (float64, error) {
 	}
 	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
 
-	fmt.Println("SoC: ", stateOfCharge)
+	//fmt.Println("SoC: ", stateOfCharge)
 
 	return stateOfCharge, nil
 }
@@ -438,45 +438,52 @@ func (v *Kia) getStatus() (float64, error) {
 // now we have all the needed functions to read Kia SoC
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
-	fmt.Println("SoC Abfrage gestartet")
+	//fmt.Println("SoC Abfrage gestartet")
 	err := v.getDeviceID()
 	if err != nil {
 		return 0, errors.New("could not obtain deviceID")
 	}
-
+	time.Sleep(1 * time.Second)
 	err = v.getCookies()
 	if err != nil {
 		return 0, errors.New("could not obtain cookies")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.setLanguage()
 	if err != nil {
 		return 0, errors.New("could not set language to en")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.login()
 	if err != nil {
 		return 0, errors.New("could not login")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.getToken()
 	if err != nil {
 		return 0, errors.New("could not obtain token")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.getVehicles()
 	if err != nil {
 		return 0, errors.New("could not obtain vehicleID")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.prewakeup()
 	if err != nil {
 		return 0, errors.New("could not trigger prewakeup")
 	}
+	time.Sleep(1 * time.Second)
 	err = v.sendPIN()
 	if err != nil {
 		return 0, errors.New("could not send pin")
 	}
+	time.Sleep(1 * time.Second)
 	soc, errf := v.getStatus()
 	if errf != nil {
 		return 0, errors.New("could not get soc")
 	}
-	fmt.Println("SoC: ", soc)
+	//fmt.Println("SoC: ", soc)
 	return soc, nil
 }
 
