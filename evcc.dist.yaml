@@ -133,6 +133,7 @@ loadpoints:
   soc:
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
     estimate: false # set true to interpolate between api updates
+    efficiency: 0.9 # charged to stored energy efficiency
     levels: # target soc levels for UI
     - 30
     - 50
