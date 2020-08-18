@@ -35,7 +35,7 @@ type kiaErrorResponse struct {
 	Description string `json:"error_description"`
 }
 
-// Vehicle is an api.Vehicle implementation with configurable getters and setters.
+// Kia is an api.Vehicle implementation with configurable getters and setters.
 type Kia struct {
 	*embed
 	*util.HTTPHelper
@@ -59,7 +59,7 @@ type kiaBatteryResponse struct {
 	} `json:"resMsg"`
 }
 
-// NewConfigurableFromConfig creates a new Vehicle
+// NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
@@ -85,6 +85,8 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	return v, nil
 }
+
+// the following functions are implemented based on https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 
 func (v *Kia) getDeviceID() error {
 	uniId, _ := uuid.NewUUID()
@@ -254,7 +256,7 @@ func (v *Kia) getToken() error {
 	var bbody map[string]interface{}
 	json.Unmarshal([]byte(body), &bbody)
 
-	v.accToken = fmt.Sprint(bbody["token_type"]) + " " + fmt.Sprint(bbody["access_token"])
+	v.accToken = fmt.Sprintf("%s %s", bbody["token_type"], bbody["access_token"])
 
 	return nil
 }
@@ -409,6 +411,7 @@ func (v *Kia) getStatus() (float64, error) {
 	return SoC, nil
 }
 
+// now we have all the needed functions to read Kia SoC
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
 	err := v.getDeviceID()
