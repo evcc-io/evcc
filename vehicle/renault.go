@@ -220,7 +220,8 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 	uri := fmt.Sprintf("%s/accounts.getAccountInfo", v.gigya.Target)
 
 	data := url.Values{
-		"oauth_token": []string{sessionCookie},
+		"apiKey":      []string{v.gigya.APIKey},
+		"login_token": []string{sessionCookie},
 	}
 
 	req, err := v.request(uri, data)
@@ -237,7 +238,8 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 	uri := fmt.Sprintf("%s/accounts.getJWT", v.gigya.Target)
 
 	data := url.Values{
-		"oauth_token": []string{sessionCookie},
+		"apiKey":      []string{v.gigya.APIKey},
+		"login_token": []string{sessionCookie},
 		"fields":      []string{"data.personId,data.gigyaDataCenter"},
 		"expiration":  []string{"900"},
 	}
