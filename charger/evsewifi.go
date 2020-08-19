@@ -86,12 +86,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
-	params := pr.List[0]
-	if params.AlwaysActive {
-		evse.HTTPHelper.Log.WARN.Println("cannot control evse- alwaysactive is on")
-	}
-
-	return params, nil
+	return pr.List[0], nil
 }
 
 // Status implements the Charger.Status interface
@@ -102,6 +97,8 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	}
 
 	switch params.VehicleState {
+	case 0: // error
+		return api.StatusF, nil
 	case 1: // ready
 		return api.StatusA, nil
 	case 2: // EV is present
@@ -133,7 +130,7 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 
 // Enable implements the Charger.Enable interface
 func (evse *EVSEWifi) Enable(enable bool) error {
-	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
 	return evse.checkError(evse.Get(url))
 }
 
