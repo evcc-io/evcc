@@ -28,6 +28,13 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
+type SoCConfig struct {
+	AlwaysUpdate bool    `mapstructure:"alwaysUpdate"`
+	Levels       []int   `mapstructure:"levels"`
+	Estimate     bool    `mapstructure:"estimate"`
+	Efficiency   float64 `mapstructure:"efficiency"`
+}
+
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration
@@ -56,16 +63,11 @@ type LoadPoint struct {
 	Meters     struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC struct {
-		AlwaysUpdate bool    `mapstructure:"alwaysUpdate"`
-		Levels       []int   `mapstructure:"levels"`
-		Estimate     bool    `mapstructure:"estimate"`
-		Efficiency   float64 `mapstructure:"efficiency"`
-	}
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
 		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
 	}
+	SoC             SoCConfig
 	Enable, Disable ThresholdConfig
 
 	handler       Handler
@@ -151,6 +153,9 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Mode:   api.ModeOff,
 		Phases: 1,
 		status: api.StatusNone,
+		SoC: SoCConfig{
+			Efficiency: 0.9,
+		},
 		HandlerConfig: HandlerConfig{
 			MinCurrent:    6,  // A
 			MaxCurrent:    16, // A
