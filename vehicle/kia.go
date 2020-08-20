@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -237,14 +239,22 @@ func (v *Kia) login(kd *KiaData) error {
 	return nil
 }
 
-func (v *Kia) getToken(kd *KiaData) error {
-	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
-	data = data + kd.accCode
-	req, err := http.NewRequest(http.MethodPost, kiaUrlAccessToken, bytes.NewReader([]byte(data)))
+func (v *Kia) post(uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(http.MethodPost, uri, body)
 	if err != nil {
-		return err
+		return req, err
 	}
-	for k, v := range map[string]string{
+	// req.URL.RawQuery = data.Encode()
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	return req, nil
+}
+
+func (v *Kia) getToken(kd *KiaData) error {
+	headers := map[string]string{
 		"Authorization":   "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		"Content-type":    "application/x-www-form-urlencoded",
 		"Content-Length":  "150",
@@ -252,31 +262,26 @@ func (v *Kia) getToken(kd *KiaData) error {
 		"Connection":      "close",
 		"Accept-Encoding": "gzip, deflate",
 		"User-Agent":      "okhttp/3.10.0",
-	} {
-		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
+	data += kd.accCode
 
-	body, err := ioutil.ReadAll(resp.Body)
+	req, err := v.post(kiaUrlAccessToken, headers, strings.NewReader(data))
 	if err != nil {
 		return err
 	}
 
-	var bbody map[string]interface{}
-	err = json.Unmarshal([]byte(body), &bbody)
-	if err != nil {
-		return err
+	tokens := struct {
+		TokenType   string `json:"token_type"`
+		AccessToken string `json:"access_token"`
+	}{}
+
+	if _, err = v.RequestJSON(req, &tokens); err == nil {
+		kd.accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
 	}
 
-	kd.accToken = fmt.Sprintf("%s %s", bbody["token_type"], bbody["access_token"])
-
-	return nil
+	return err
 }
 
 func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
@@ -463,10 +468,10 @@ func (v *Kia) connectToKiaServer() error {
 	}
 	time.Sleep(1 * time.Second)
 
-	if err = v.setLanguage(&kd); err != nil {
-		return errors.New("could not set language to en")
-	}
-	time.Sleep(1 * time.Second)
+	// if err = v.setLanguage(&kd); err != nil {
+	// 	return errors.New("could not set language to en")
+	// }
+	// time.Sleep(1 * time.Second)
 
 	if err = v.login(&kd); err != nil {
 		return errors.New("could not login")
