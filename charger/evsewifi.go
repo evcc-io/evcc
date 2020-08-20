@@ -97,8 +97,6 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	}
 
 	switch params.VehicleState {
-	case 0: // error
-		return api.StatusF, nil
 	case 1: // ready
 		return api.StatusA, nil
 	case 2: // EV is present
@@ -110,7 +108,7 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	case 5: // failure (e.g. diode check, RCD failure)
 		return api.StatusE, nil
 	default:
-		return api.StatusNone, errors.New("invalid response")
+		return api.StatusNone, fmt.Errorf("invalid status: %d", params.VehicleState)
 	}
 }
 
@@ -130,7 +128,11 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 
 // Enable implements the Charger.Enable interface
 func (evse *EVSEWifi) Enable(enable bool) error {
-	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
+	current := 0
+	if enable {
+		current = 6
+	}
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.checkError(evse.Get(url))
 }
 
