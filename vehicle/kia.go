@@ -490,14 +490,41 @@ func (v *Kia) connectToKiaServer() (KiaAuth, error) {
 func (v *Kia) chargeState() (float64, error) {
 	//fmt.Println("SoC Abfrage gestartet")
 	var auth KiaAuth
+	var soc float64
 	var err error
-	if auth, err = v.connectToKiaServer(); err != nil {
+	const maxretry = 5
+	var i int = 0
+
+	// retry login max 5 times
+	for ok := true; ok; ok = !(err == nil || i > maxretry) {
+		auth, err = v.connectToKiaServer()
+		i++
+
+		if i > 1 {
+			time.Sleep(time.Second * 1)
+			v.Log.DEBUG.Println("Kia login retry")
+		}
+	}
+	if err != nil || i > maxretry {
 		return 0, errors.New("could not connect to Kia server")
 	}
-	soc, errf := v.getStatus(auth)
-	if errf != nil {
+
+	i = 0
+	for ok := true; ok; ok = !((err == nil && soc > 0) || i > maxretry) {
+		soc, err = v.getStatus(auth)
+		i++
+
+		if i > 1 {
+			time.Sleep(time.Second * 1)
+			v.Log.DEBUG.Println("Kia getStatus retry")
+		}
+	}
+
+	if err != nil || i > maxretry {
 		return 0, errors.New("could not get soc")
 	}
+
+	v.Log.DEBUG.Println("SoC received: ", soc)
 
 	return soc, nil
 }
