@@ -161,7 +161,10 @@ func (v *Kia) getCookies(kd *kiaData) (err error) {
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	_, err = kd.cookieClient.Get(kiaURLCookies)
+	if err == nil {
+		_, err = kd.cookieClient.Get(kiaURLCookies)
+	}
+
 	return err
 }
 
@@ -247,10 +250,10 @@ func (v *Kia) getVehicles(kd *kiaData, did string) (string, error) {
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
-		"Host":                "prd.eu-ccapi.kia.com:8080",
-		"Connection":          "close",
-		"Accept-Encoding":     "gzip, deflate",
-		"User-Agent":          "okhttp/3.10.0",
+		// "Host":                "prd.eu-ccapi.kia.com:8080",
+		// "Connection":          "close",
+		// "Accept-Encoding":     "gzip, deflate",
+		"User-Agent": "okhttp/3.10.0",
 	}
 
 	req, err := v.request(http.MethodGet, kiaURLVehicles, headers, nil)
@@ -355,6 +358,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 		err = v.getCookies(&kd)
 	}
 
+	// TODO is this needed?
 	// if err = v.setLanguage(&kd); err != nil {
 	// 	return errors.New("could not set language to en")
 	// }
