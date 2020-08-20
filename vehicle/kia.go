@@ -105,6 +105,20 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
+// request builds an HTTP request with headers and body
+func (v *Kia) request(method string, uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, uri, body)
+	if err != nil {
+		return req, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	return req, nil
+}
+
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 func (v *Kia) getDeviceID() (string, error) {
 	uniID, _ := uuid.NewUUID()
@@ -239,20 +253,6 @@ func (v *Kia) login(kd *KiaData) error {
 	return nil
 }
 
-func (v *Kia) post(uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodPost, uri, body)
-	if err != nil {
-		return req, err
-	}
-	// req.URL.RawQuery = data.Encode()
-
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	return req, nil
-}
-
 func (v *Kia) getToken(kd *KiaData) error {
 	headers := map[string]string{
 		"Authorization":   "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
@@ -267,7 +267,7 @@ func (v *Kia) getToken(kd *KiaData) error {
 	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
 	data += kd.accCode
 
-	req, err := v.post(kiaUrlAccessToken, headers, strings.NewReader(data))
+	req, err := v.request(http.MethodPost, kiaUrlAccessToken, headers, strings.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -285,12 +285,7 @@ func (v *Kia) getToken(kd *KiaData) error {
 }
 
 func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
-
-	req, err := http.NewRequest(http.MethodGet, kiaUrlVehicles, nil)
-	if err != nil {
-		return "", err
-	}
-	for k, v := range map[string]string{
+	headers := map[string]string{
 		"Authorization":       kd.accToken,
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
@@ -299,24 +294,21 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 		"Connection":          "close",
 		"Accept-Encoding":     "gzip, deflate",
 		"User-Agent":          "okhttp/3.10.0",
-	} {
-		req.Header.Set(k, v)
 	}
 
-	body, err := v.Request(req)
-	if err != nil {
-		return "", err
+	req, err := v.request(http.MethodGet, kiaUrlVehicles, headers, nil)
+	if err == nil {
+		var vr vehicleIdResponse
+		if _, err = v.RequestJSON(req, &vr); err == nil {
+			if len(vr.ResMsg.Vehicles) > 0 {
+				return vr.ResMsg.Vehicles[0].VehicleId, nil
+			}
+
+			err = errors.New("couldn't find vehicle")
+		}
 	}
 
-	var vid vehicleIdResponse
-	err = json.Unmarshal([]byte(body), &vid)
-	if err != nil {
-		return "", err
-	}
-
-	vehid := fmt.Sprint(vid.ResMsg.Vehicles[0].VehicleId)
-
-	return vehid, nil
+	return "", err
 }
 
 func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
