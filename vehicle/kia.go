@@ -106,7 +106,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // request builds an HTTP request with headers and body
-func (v *Kia) request(method string, uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
+func (v *Kia) request(method, uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, uri, body)
 	if err != nil {
 		return req, err
@@ -119,26 +119,26 @@ func (v *Kia) request(method string, uri string, headers map[string]string, body
 	return req, nil
 }
 
+// jsonRequest builds an HTTP json request with headers and body
+func (v *Kia) jsonRequest(method, uri string, headers map[string]string, data interface{}) (*http.Request, error) {
+	body, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return v.request(method, uri, headers, bytes.NewReader(body))
+}
+
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 func (v *Kia) getDeviceID() (string, error) {
 	uniID, _ := uuid.NewUUID()
-
 	data := map[string]interface{}{
 		"pushRegId": "1",
 		"pushType":  "GCM",
 		"uuid":      uniID.String(),
 	}
 
-	dataj, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, kiaUrlDeviceID, bytes.NewReader(dataj))
-	if err != nil {
-		return "", err
-	}
-	for k, v := range map[string]string{
+	headers := map[string]string{
 		"ccsp-service-id": "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		"Content-type":    "application/json;charset=UTF-8",
 		"Content-Length":  "80",
@@ -146,16 +146,15 @@ func (v *Kia) getDeviceID() (string, error) {
 		"Connection":      "close",
 		"Accept-Encoding": "gzip, deflate",
 		"User-Agent":      "okhttp/3.10.0",
-	} {
-		req.Header.Set(k, v)
 	}
 
 	var did deviceIdResponse
-	if _, err := v.RequestJSON(req, &did); err != nil {
-		return "", err
+	req, err := v.jsonRequest(http.MethodPost, kiaUrlDeviceID, headers, data)
+	if err == nil {
+		_, err = v.RequestJSON(req, &did)
 	}
 
-	return did.ResMsg.DeviceId, nil
+	return did.ResMsg.DeviceId, err
 }
 
 func (v *Kia) getCookies(kd *KiaData) error {
