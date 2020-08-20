@@ -337,7 +337,7 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 	return err
 }
 
-func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
+func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
 	data := map[string]interface{}{
 		"deviceId": auth.deviceId,
 		"pin":      string(v.pin),
@@ -387,55 +387,50 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 	return kr.ResMsg.EvStatus.BatteryStatus, err
 }
 
-func (v *Kia) connectToKiaServer() error {
+func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
 	var kd KiaData
 	var ad KiaAuth
-	var err error
 
-	if ad.deviceId, err = v.getDeviceID(); err != nil {
-		return errors.New("could not obtain deviceID")
+	ad.deviceId, err = v.getDeviceID()
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		err = v.getCookies(&kd)
 	}
-	time.Sleep(1 * time.Second)
-
-	if err = v.getCookies(&kd); err != nil {
-		return errors.New("could not obtain cookies")
-	}
-	time.Sleep(1 * time.Second)
 
 	// if err = v.setLanguage(&kd); err != nil {
 	// 	return errors.New("could not set language to en")
 	// }
 	// time.Sleep(1 * time.Second)
 
-	if err = v.login(&kd); err != nil {
-		return errors.New("could not login")
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		err = v.login(&kd)
 	}
-	time.Sleep(1 * time.Second)
 
-	if err = v.getToken(&kd); err != nil {
-		return errors.New("could not obtain token")
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		err = v.getToken(&kd)
 	}
-	time.Sleep(1 * time.Second)
 
-	if ad.vehicleID, err = v.getVehicles(&kd, ad.deviceId); err != nil {
-		return errors.New("could not obtain vehicleID")
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		ad.vehicleID, err = v.getVehicles(&kd, ad.deviceId)
 	}
-	time.Sleep(1 * time.Second)
 
-	if err = v.prewakeup(&kd, ad.deviceId, ad.vehicleID); err != nil {
-		return errors.New("could not trigger prewakeup")
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		err = v.prewakeup(&kd, ad.deviceId, ad.vehicleID)
 	}
-	time.Sleep(1 * time.Second)
 
-	if err = v.sendPIN(&ad, &kd); err != nil {
-		return errors.New("could not send pin")
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		if err = v.sendPIN(&ad, kd); err == nil {
+			v.auth = ad
+		}
 	}
-	time.Sleep(1 * time.Second)
-	v.Log.DEBUG.Println("auth received from Kia server")
 
-	v.auth = ad
-	return nil
+	return err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
