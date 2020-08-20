@@ -372,39 +372,19 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
 }
 
 func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
-	uri := kiaUrlGetStatus + ad.vehicleID + "/status"
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		return 0.0, err
-	}
-	for k, v := range map[string]string{
+	headers := map[string]string{
 		"Authorization":  ad.controlToken,
 		"ccsp-device-id": ad.deviceId,
 		"Content-Type":   "application/json",
-	} {
-		req.Header.Set(k, v)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0.0, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
 	}
 
 	var kr kiaBatteryResponse
-	err = json.Unmarshal([]byte(body), &kr)
-	if err != nil {
-		return 0, err
+	req, err := v.request(http.MethodGet, kiaUrlGetStatus+ad.vehicleID+"/status", headers, nil)
+	if err == nil {
+		_, err = v.RequestJSON(req, &kr)
 	}
-	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
 
-	return stateOfCharge, nil
+	return kr.ResMsg.EvStatus.BatteryStatus, err
 }
 
 func (v *Kia) connectToKiaServer() error {
