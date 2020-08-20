@@ -39,20 +39,19 @@ type Kia struct {
 	password string
 	pin      string
 	chargeG  func() (float64, error)
-	auth     KiaAuth
+	auth     kiaAuth
 }
 
-type KiaData struct {
+type kiaData struct {
 	cookieClient *util.HTTPHelper
 	accCode      string
 	accToken     string
 }
 
-type KiaAuth struct {
+type kiaAuth struct {
 	deviceID     string
 	vehicleID    string
 	controlToken string
-	validUntil   time.Time
 }
 
 type kiaBatteryResponse struct {
@@ -156,7 +155,7 @@ func (v *Kia) getDeviceID() (string, error) {
 	return did.ResMsg.DeviceID, err
 }
 
-func (v *Kia) getCookies(kd *KiaData) (err error) {
+func (v *Kia) getCookies(kd *kiaData) (err error) {
 	kd.cookieClient = util.NewHTTPHelper(v.Log) // re-use logger
 	kd.cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -166,7 +165,7 @@ func (v *Kia) getCookies(kd *KiaData) (err error) {
 	return err
 }
 
-func (v *Kia) setLanguage(kd *KiaData) error {
+func (v *Kia) setLanguage(kd *kiaData) error {
 	headers := map[string]string{
 		"Content-type": "application/json",
 	}
@@ -183,7 +182,7 @@ func (v *Kia) setLanguage(kd *KiaData) error {
 	return err
 }
 
-func (v *Kia) login(kd *KiaData) error {
+func (v *Kia) login(kd *kiaData) error {
 	headers := map[string]string{
 		"Content-type": "application/json",
 	}
@@ -211,7 +210,7 @@ func (v *Kia) login(kd *KiaData) error {
 	return err
 }
 
-func (v *Kia) getToken(kd *KiaData) error {
+func (v *Kia) getToken(kd *kiaData) error {
 	headers := map[string]string{
 		"Authorization": "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -242,7 +241,7 @@ func (v *Kia) getToken(kd *KiaData) error {
 	return err
 }
 
-func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
+func (v *Kia) getVehicles(kd *kiaData, did string) (string, error) {
 	headers := map[string]string{
 		"Authorization":       kd.accToken,
 		"ccsp-device-id":      did,
@@ -269,7 +268,7 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 	return "", err
 }
 
-func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
+func (v *Kia) prewakeup(kd *kiaData, did, vid string) error {
 	data := map[string]interface{}{
 		"action":   "prewakeup",
 		"deviceId": did,
@@ -296,7 +295,7 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 	return err
 }
 
-func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
+func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
 	data := map[string]interface{}{
 		"deviceId": auth.deviceID,
 		"pin":      string(v.pin),
@@ -324,13 +323,12 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
 	auth.controlToken = ""
 	if err == nil {
 		auth.controlToken = "Bearer " + token.ControlToken
-		auth.validUntil = time.Now().Add(time.Minute * 10)
 	}
 
 	return err
 }
 
-func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
+func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 	headers := map[string]string{
 		"Authorization":  ad.controlToken,
 		"ccsp-device-id": ad.deviceID,
@@ -348,8 +346,8 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 
 func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
-	var kd KiaData
-	var ad KiaAuth
+	var kd kiaData
+	var ad kiaAuth
 
 	ad.deviceID, err = v.getDeviceID()
 	if err == nil {
