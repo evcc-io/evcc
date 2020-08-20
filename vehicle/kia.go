@@ -20,15 +20,15 @@ import (
 )
 
 const (
-	kiaUrlDeviceID    = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/notifications/register"
-	kiaUrlCookies     = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=fdc85c00-0a2f-4c64-bcb4-2cfb1500730a&redirect_uri=https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect"
-	kiaUrlLang        = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/language"
-	kiaUrlLogin       = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/signin"
-	kiaUrlAccessToken = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/token"
-	kiaUrlVehicles    = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/vehicles"
-	kiaUrlPreWakeup   = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/vehicles/"
-	kiaUrlSendPIN     = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/pin"
-	kiaUrlGetStatus   = "https://prd.eu-ccapi.kia.com:8080/api/v2/spa/vehicles/"
+	kiaURLDeviceID    = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/notifications/register"
+	kiaURLCookies     = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=fdc85c00-0a2f-4c64-bcb4-2cfb1500730a&redirect_uri=https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect"
+	kiaURLLang        = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/language"
+	kiaURLLogin       = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/signin"
+	kiaURLAccessToken = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/token"
+	kiaURLVehicles    = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/vehicles"
+	kiaURLPreWakeup   = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/vehicles/"
+	kiaURLSendPIN     = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/pin"
+	kiaURLGetStatus   = "https://prd.eu-ccapi.kia.com:8080/api/v2/spa/vehicles/"
 )
 
 // Kia is an api.Vehicle implementation with configurable getters and setters.
@@ -49,7 +49,7 @@ type KiaData struct {
 }
 
 type KiaAuth struct {
-	deviceId     string
+	deviceID     string
 	vehicleID    string
 	controlToken string
 	validUntil   time.Time
@@ -63,17 +63,17 @@ type kiaBatteryResponse struct {
 	} `json:"resMsg"`
 }
 
-type vehicleIdResponse struct {
+type vehicleIDResponse struct {
 	ResMsg struct {
 		Vehicles []struct {
-			VehicleId string `json:"vehicleId"`
+			VehicleID string `json:"vehicleId"`
 		} `json:"vehicles"`
 	} `json:"resMsg"`
 }
 
-type deviceIdResponse struct {
+type deviceIDResponse struct {
 	ResMsg struct {
-		DeviceId string `json:"deviceId"`
+		DeviceID string `json:"deviceId"`
 	} `json:"resMsg"`
 }
 
@@ -147,13 +147,13 @@ func (v *Kia) getDeviceID() (string, error) {
 		"User-Agent": "okhttp/3.10.0",
 	}
 
-	var did deviceIdResponse
-	req, err := v.jsonRequest(http.MethodPost, kiaUrlDeviceID, headers, data)
+	var did deviceIDResponse
+	req, err := v.jsonRequest(http.MethodPost, kiaURLDeviceID, headers, data)
 	if err == nil {
 		_, err = v.RequestJSON(req, &did)
 	}
 
-	return did.ResMsg.DeviceId, err
+	return did.ResMsg.DeviceID, err
 }
 
 func (v *Kia) getCookies(kd *KiaData) (err error) {
@@ -162,7 +162,7 @@ func (v *Kia) getCookies(kd *KiaData) (err error) {
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	_, err = kd.cookieClient.Get(kiaUrlCookies)
+	_, err = kd.cookieClient.Get(kiaURLCookies)
 	return err
 }
 
@@ -175,7 +175,7 @@ func (v *Kia) setLanguage(kd *KiaData) error {
 		"lang": "en",
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, kiaUrlLang, headers, data)
+	req, err := v.jsonRequest(http.MethodPost, kiaURLLang, headers, data)
 	if err == nil {
 		_, err = kd.cookieClient.Request(req)
 	}
@@ -193,7 +193,7 @@ func (v *Kia) login(kd *KiaData) error {
 		"password": v.password,
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, kiaUrlLogin, headers, data)
+	req, err := v.jsonRequest(http.MethodPost, kiaURLLogin, headers, data)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (v *Kia) getToken(kd *KiaData) error {
 	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
 	data += kd.accCode
 
-	req, err := v.request(http.MethodPost, kiaUrlAccessToken, headers, strings.NewReader(data))
+	req, err := v.request(http.MethodPost, kiaURLAccessToken, headers, strings.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -254,12 +254,12 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	req, err := v.request(http.MethodGet, kiaUrlVehicles, headers, nil)
+	req, err := v.request(http.MethodGet, kiaURLVehicles, headers, nil)
 	if err == nil {
-		var vr vehicleIdResponse
+		var vr vehicleIDResponse
 		if _, err = v.RequestJSON(req, &vr); err == nil {
 			if len(vr.ResMsg.Vehicles) == 1 {
-				return vr.ResMsg.Vehicles[0].VehicleId, nil
+				return vr.ResMsg.Vehicles[0].VehicleID, nil
 			}
 
 			err = errors.New("couldn't find vehicle")
@@ -288,7 +288,7 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 		"User-Agent": "okhttp/3.10.0",
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, kiaUrlPreWakeup+vid+"/control/engine", headers, data)
+	req, err := v.jsonRequest(http.MethodPost, kiaURLPreWakeup+vid+"/control/engine", headers, data)
 	if err == nil {
 		_, err = v.Request(req)
 	}
@@ -298,7 +298,7 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 
 func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
 	data := map[string]interface{}{
-		"deviceId": auth.deviceId,
+		"deviceId": auth.deviceID,
 		"pin":      string(v.pin),
 	}
 
@@ -316,7 +316,7 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
 		ControlToken string `json:"controlToken"`
 	}
 
-	req, err := v.jsonRequest(http.MethodPut, kiaUrlSendPIN, headers, data)
+	req, err := v.jsonRequest(http.MethodPut, kiaURLSendPIN, headers, data)
 	if err == nil {
 		_, err = v.RequestJSON(req, &token)
 	}
@@ -333,12 +333,12 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd KiaData) error {
 func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 	headers := map[string]string{
 		"Authorization":  ad.controlToken,
-		"ccsp-device-id": ad.deviceId,
+		"ccsp-device-id": ad.deviceID,
 		"Content-Type":   "application/json",
 	}
 
 	var kr kiaBatteryResponse
-	req, err := v.request(http.MethodGet, kiaUrlGetStatus+ad.vehicleID+"/status", headers, nil)
+	req, err := v.request(http.MethodGet, kiaURLGetStatus+ad.vehicleID+"/status", headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &kr)
 	}
@@ -351,7 +351,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 	var kd KiaData
 	var ad KiaAuth
 
-	ad.deviceId, err = v.getDeviceID()
+	ad.deviceID, err = v.getDeviceID()
 	if err == nil {
 		time.Sleep(1 * time.Second)
 		err = v.getCookies(&kd)
@@ -374,12 +374,12 @@ func (v *Kia) connectToKiaServer() (err error) {
 
 	if err == nil {
 		time.Sleep(1 * time.Second)
-		ad.vehicleID, err = v.getVehicles(&kd, ad.deviceId)
+		ad.vehicleID, err = v.getVehicles(&kd, ad.deviceID)
 	}
 
 	if err == nil {
 		time.Sleep(1 * time.Second)
-		err = v.prewakeup(&kd, ad.deviceId, ad.vehicleID)
+		err = v.prewakeup(&kd, ad.deviceID, ad.vehicleID)
 	}
 
 	if err == nil {
