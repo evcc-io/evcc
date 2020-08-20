@@ -338,24 +338,12 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 }
 
 func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
-
-	auth.controlToken = ""
-
 	data := map[string]interface{}{
 		"deviceId": auth.deviceId,
 		"pin":      string(v.pin),
 	}
 
-	dataj, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPut, kiaUrlSendPIN, bytes.NewReader(dataj))
-	if err != nil {
-		return err
-	}
-	for k, v := range map[string]string{
+	headers := map[string]string{
 		"Authorization":   kd.accToken,
 		"Content-type":    "application/json;charset=UTF-8",
 		"Content-Length":  "64",
@@ -363,32 +351,24 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
 		"Connection":      "close",
 		"Accept-Encoding": "gzip, deflate",
 		"User-Agent":      "okhttp/3.10.0",
-	} {
-		req.Header.Set(k, v)
 	}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
+	var token struct {
+		ControlToken string `json:"controlToken"`
 	}
 
-	var bbody map[string]interface{}
-	err = json.Unmarshal([]byte(body), &bbody)
-	if err != nil {
-		return err
+	req, err := v.jsonRequest(http.MethodPut, kiaUrlSendPIN, headers, data)
+	if err == nil {
+		_, err = v.RequestJSON(req, &token)
 	}
 
-	auth.controlToken = "Bearer " + fmt.Sprint(bbody["controlToken"])
-	auth.validUntil = time.Now().Add(time.Minute * 10)
+	auth.controlToken = ""
+	if err == nil {
+		auth.controlToken = "Bearer " + token.ControlToken
+		auth.validUntil = time.Now().Add(time.Minute * 10)
+	}
 
-	return nil
+	return err
 }
 
 func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
