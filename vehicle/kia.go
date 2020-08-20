@@ -138,29 +138,8 @@ func (v *Kia) getDeviceID() (string, error) {
 	if _, err := v.RequestJSON(req, &did); err != nil {
 		return "", err
 	}
-	//v.deviceID = fmt.Sprintf(did.ResMsg.DeviceId)
+
 	devid := fmt.Sprintf(did.ResMsg.DeviceId)
-
-	/*
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-
-		defer resp.Body.Close()
-
-		body, _ := ioutil.ReadAll(resp.Body)
-
-		var bbody map[string]interface{}
-		err = json.Unmarshal([]byte(body), &bbody)
-		if err != nil {
-			return err
-		}
-
-		v.deviceID = fmt.Sprint(bbody["resMsg"].(map[string]interface{})["deviceId"])
-	*/
-	//fmt.Println("DeviceID: ", v.deviceID)
 
 	return devid, nil
 
@@ -255,7 +234,6 @@ func (v *Kia) login(kd *KiaData) error {
 	}
 	quer := parsed.Query()
 	kd.accCode = quer.Get("code")
-	//fmt.Println("authCode: ", v.accCode)
 
 	return nil
 }
@@ -295,7 +273,7 @@ func (v *Kia) getToken(kd *KiaData) error {
 	}
 
 	kd.accToken = fmt.Sprintf("%s %s", bbody["token_type"], bbody["access_token"])
-	//fmt.Println("accToken:", v.accToken)
+
 	return nil
 }
 
@@ -318,16 +296,6 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 		req.Header.Set(k, v)
 	}
 
-	/*
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		body, _ := ioutil.ReadAll(resp.Body)
-	*/
 	body, _ := v.Request(req)
 
 	var vid vehicleIdResponse
@@ -336,22 +304,7 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 		return "", err
 	}
 
-	/*
-		var bbody map[string]interface{}
-		err = json.Unmarshal([]byte(body), &bbody)
-		if err != nil {
-			return err
-		}
-
-		kvid := bbody["resMsg"].(map[string]interface{})["vehicles"]
-		kvid1 := kvid.([]interface{})[0]
-
-		v.vehicleID = fmt.Sprint(kvid1.(map[string]interface{})["vehicleId"])
-		//fmt.Println("vehicleId: ", v.vehicleID)
-	*/
-
 	vehid := fmt.Sprint(vid.ResMsg.Vehicles[0].VehicleId)
-	// fmt.Println("vehicleId: ", vehid)
 
 	return vehid, nil
 }
@@ -447,8 +400,6 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
 	auth.controlToken = "Bearer " + fmt.Sprint(bbody["controlToken"])
 	auth.validUntil = time.Now().Add(time.Minute * 10)
 
-	//fmt.Println("Control Token: ", v.controlToken)
-
 	return nil
 }
 
@@ -481,8 +432,6 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 		return 0, err
 	}
 	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
-
-	//fmt.Println("SoC: ", stateOfCharge)
 
 	return stateOfCharge, nil
 }
@@ -549,7 +498,7 @@ func (v *Kia) chargeState() (float64, error) {
 	if errf != nil {
 		return 0, errors.New("could not get soc")
 	}
-	//fmt.Println("SoC: ", soc)
+
 	return soc, nil
 }
 
