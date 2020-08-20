@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -205,51 +204,34 @@ func (v *Kia) setLanguage(kd *KiaData) error {
 }
 
 func (v *Kia) login(kd *KiaData) error {
+	headers := map[string]string{
+		"Content-type": "application/json",
+	}
+
 	data := map[string]interface{}{
 		"email":    v.user,
 		"password": v.password,
 	}
 
-	dataj, err := json.Marshal(data)
+	req, err := v.jsonRequest(http.MethodPost, kiaUrlLogin, headers, data)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, kiaUrlLogin, bytes.NewReader(dataj))
-	if err != nil {
-		return err
-	}
-	for k, v := range map[string]string{
-		"Content-type": "application/json",
-	} {
-		req.Header.Set(k, v)
+	// HTTPHelper
+	v.Client = &http.Client{Jar: kd.cookieJar}
+
+	var redirect struct {
+		RedirectURL string `json:"redirectUrl"`
 	}
 
-	client := &http.Client{Jar: kd.cookieJar}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
+	if _, err = v.RequestJSON(req, &redirect); err == nil {
+		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
+			kd.accCode = parsed.Query().Get("code")
+		}
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	var bbody map[string]interface{}
-	err = json.Unmarshal([]byte(body), &bbody)
-	if err != nil {
-		return err
-	}
-	redirUrl := fmt.Sprint(bbody["redirectUrl"])
-	parsed, err := url.Parse(redirUrl)
-	if err != nil {
-		return err
-	}
-	quer := parsed.Query()
-	kd.accCode = quer.Get("code")
-
-	return nil
+	return err
 }
 
 func (v *Kia) getToken(kd *KiaData) error {
@@ -271,10 +253,10 @@ func (v *Kia) getToken(kd *KiaData) error {
 		return err
 	}
 
-	tokens := struct {
+	var tokens struct {
 		TokenType   string `json:"token_type"`
 		AccessToken string `json:"access_token"`
-	}{}
+	}
 
 	if _, err = v.RequestJSON(req, &tokens); err == nil {
 		kd.accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
