@@ -351,7 +351,7 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 	*/
 
 	vehid := fmt.Sprint(vid.ResMsg.Vehicles[0].VehicleId)
-	fmt.Println("vehicleId: ", vehid)
+	// fmt.Println("vehicleId: ", vehid)
 
 	return vehid, nil
 }
@@ -386,7 +386,9 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 	} {
 		req.Header.Set(k, v)
 	}
-
+	if err != nil {
+		return err
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -486,7 +488,7 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 }
 
 func (v *Kia) connectToKiaServer() (KiaAuth, error) {
-
+	v.Log.DEBUG.Println("connecting to Kia server")
 	var kd KiaData
 	var ad KiaAuth
 	var err error
@@ -530,7 +532,7 @@ func (v *Kia) connectToKiaServer() (KiaAuth, error) {
 		return ad, errors.New("could not send pin")
 	}
 	time.Sleep(1 * time.Second)
-
+	v.Log.DEBUG.Println("auth received from Kia server")
 	return ad, nil
 }
 
