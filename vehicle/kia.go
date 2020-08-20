@@ -102,8 +102,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-// the following functions are implemented based on https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
-
+// Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 func (v *Kia) getDeviceID() (string, error) {
 	uniId, _ := uuid.NewUUID()
 
