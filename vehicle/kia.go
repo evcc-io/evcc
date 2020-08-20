@@ -38,6 +38,7 @@ type Kia struct {
 	password string
 	pin      string
 	chargeG  func() (float64, error)
+	auth     KiaAuth
 }
 
 type KiaData struct {
@@ -104,12 +105,12 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 func (v *Kia) getDeviceID() (string, error) {
-	uniId, _ := uuid.NewUUID()
+	uniID, _ := uuid.NewUUID()
 
 	data := map[string]interface{}{
 		"pushRegId": "1",
 		"pushType":  "GCM",
-		"uuid":      uniId.String(),
+		"uuid":      uniID.String(),
 	}
 
 	dataj, err := json.Marshal(data)
@@ -138,10 +139,7 @@ func (v *Kia) getDeviceID() (string, error) {
 		return "", err
 	}
 
-	devid := fmt.Sprintf(did.ResMsg.DeviceId)
-
-	return devid, nil
-
+	return did.ResMsg.DeviceId, nil
 }
 
 func (v *Kia) getCookies(kd *KiaData) error {
@@ -449,97 +447,69 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 	return stateOfCharge, nil
 }
 
-func (v *Kia) connectToKiaServer() (KiaAuth, error) {
+func (v *Kia) connectToKiaServer() error {
 	v.Log.DEBUG.Println("connecting to Kia server")
 	var kd KiaData
 	var ad KiaAuth
 	var err error
 
 	if ad.deviceId, err = v.getDeviceID(); err != nil {
-		return ad, errors.New("could not obtain deviceID")
+		return errors.New("could not obtain deviceID")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.getCookies(&kd); err != nil {
-		return ad, errors.New("could not obtain cookies")
+		return errors.New("could not obtain cookies")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.setLanguage(&kd); err != nil {
-		return ad, errors.New("could not set language to en")
+		return errors.New("could not set language to en")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.login(&kd); err != nil {
-		return ad, errors.New("could not login")
+		return errors.New("could not login")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.getToken(&kd); err != nil {
-		return ad, errors.New("could not obtain token")
+		return errors.New("could not obtain token")
 	}
 	time.Sleep(1 * time.Second)
 
 	if ad.vehicleID, err = v.getVehicles(&kd, ad.deviceId); err != nil {
-		return ad, errors.New("could not obtain vehicleID")
+		return errors.New("could not obtain vehicleID")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.prewakeup(&kd, ad.deviceId, ad.vehicleID); err != nil {
-		return ad, errors.New("could not trigger prewakeup")
+		return errors.New("could not trigger prewakeup")
 	}
 	time.Sleep(1 * time.Second)
 
 	if err = v.sendPIN(&ad, &kd); err != nil {
-		return ad, errors.New("could not send pin")
+		return errors.New("could not send pin")
 	}
 	time.Sleep(1 * time.Second)
 	v.Log.DEBUG.Println("auth received from Kia server")
-	return ad, nil
+
+	v.auth = ad
+	return nil
 }
 
-// now we have all the needed functions to read Kia SoC
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
-	//fmt.Println("SoC Abfrage gestartet")
-	var auth KiaAuth
-	var soc float64
-	var err error
-	const maxretry = 5
-	var i int = 0
+	soc, err := v.getStatus(v.auth)
 
-	// retry login max 5 times
-	for ok := true; ok; ok = !(err == nil || i > maxretry) {
-		auth, err = v.connectToKiaServer()
-		i++
-
-		if i > 1 {
-			time.Sleep(time.Second * 1)
-			v.Log.DEBUG.Println("Kia login retry")
-		}
-	}
-	if err != nil || i > maxretry {
-		return 0, errors.New("could not connect to Kia server")
-	}
-
-	i = 0
-	for ok := true; ok; ok = !((err == nil && soc > 0) || i > maxretry) {
-		soc, err = v.getStatus(auth)
-		i++
-
-		if i > 1 {
-			time.Sleep(time.Second * 1)
-			v.Log.DEBUG.Println("Kia getStatus retry")
+	// TODO: recognize AUTH errors
+	if err != nil {
+		if err = v.connectToKiaServer(); err == nil {
+			soc, err = v.getStatus(v.auth)
 		}
 	}
 
-	if err != nil || i > maxretry {
-		return 0, errors.New("could not get soc")
-	}
-
-	v.Log.DEBUG.Println("SoC received: ", soc)
-
-	return soc, nil
+	return soc, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
