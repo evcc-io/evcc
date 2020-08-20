@@ -311,22 +311,12 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 }
 
 func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
-	uri := kiaUrlPreWakeup + vid + "/control/engine"
 	data := map[string]interface{}{
 		"action":   "prewakeup",
 		"deviceId": did,
 	}
 
-	dataj, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, uri, bytes.NewReader(dataj))
-	if err != nil {
-		return err
-	}
-	for k, v := range map[string]string{
+	headers := map[string]string{
 		"Authorization":       kd.accToken,
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
@@ -337,20 +327,14 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 		"Connection":          "close",
 		"Accept-Encoding":     "gzip, deflate",
 		"User-Agent":          "okhttp/3.10.0",
-	} {
-		req.Header.Set(k, v)
 	}
-	if err != nil {
-		return err
-	}
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
 
-	return nil
+	req, err := v.jsonRequest(http.MethodPost, kiaUrlPreWakeup+vid+"/control/engine", headers, data)
+	if err == nil {
+		_, err = v.Request(req)
+	}
+
+	return err
 }
 
 func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
