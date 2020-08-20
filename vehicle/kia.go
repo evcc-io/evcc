@@ -299,7 +299,7 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 	if err == nil {
 		var vr vehicleIdResponse
 		if _, err = v.RequestJSON(req, &vr); err == nil {
-			if len(vr.ResMsg.Vehicles) > 0 {
+			if len(vr.ResMsg.Vehicles) == 1 {
 				return vr.ResMsg.Vehicles[0].VehicleId, nil
 			}
 
