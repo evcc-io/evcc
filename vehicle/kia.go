@@ -141,11 +141,11 @@ func (v *Kia) getDeviceID() (string, error) {
 	headers := map[string]string{
 		"ccsp-service-id": "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		"Content-type":    "application/json;charset=UTF-8",
-		"Content-Length":  "80",
-		"Host":            "prd.eu-ccapi.kia.com:8080",
-		"Connection":      "close",
-		"Accept-Encoding": "gzip, deflate",
-		"User-Agent":      "okhttp/3.10.0",
+		// "Content-Length":  "80",
+		// "Host":            "prd.eu-ccapi.kia.com:8080",
+		// "Connection":      "close",
+		// "Accept-Encoding": "gzip, deflate",
+		"User-Agent": "okhttp/3.10.0",
 	}
 
 	var did deviceIdResponse
@@ -254,13 +254,13 @@ func (v *Kia) login(kd *KiaData) error {
 
 func (v *Kia) getToken(kd *KiaData) error {
 	headers := map[string]string{
-		"Authorization":   "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
-		"Content-type":    "application/x-www-form-urlencoded",
-		"Content-Length":  "150",
-		"Host":            "prd.eu-ccapi.kia.com:8080",
-		"Connection":      "close",
-		"Accept-Encoding": "gzip, deflate",
-		"User-Agent":      "okhttp/3.10.0",
+		"Authorization": "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
+		"Content-type":  "application/x-www-form-urlencoded",
+		// "Content-Length":  "150",
+		// "Host":            "prd.eu-ccapi.kia.com:8080",
+		// "Connection":      "close",
+		// "Accept-Encoding": "gzip, deflate",
+		"User-Agent": "okhttp/3.10.0",
 	}
 
 	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
@@ -322,11 +322,11 @@ func (v *Kia) prewakeup(kd *KiaData, did, vid string) error {
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
 		"Content-Type":        "application/json;charset=UTF-8",
-		"Content-Length":      "72",
-		"Host":                "prd.eu-ccapi.kia.com:8080",
-		"Connection":          "close",
-		"Accept-Encoding":     "gzip, deflate",
-		"User-Agent":          "okhttp/3.10.0",
+		// "Content-Length":      "72",
+		// "Host":                "prd.eu-ccapi.kia.com:8080",
+		// "Connection":          "close",
+		// "Accept-Encoding":     "gzip, deflate",
+		"User-Agent": "okhttp/3.10.0",
 	}
 
 	req, err := v.jsonRequest(http.MethodPost, kiaUrlPreWakeup+vid+"/control/engine", headers, data)
@@ -344,13 +344,13 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
 	}
 
 	headers := map[string]string{
-		"Authorization":   kd.accToken,
-		"Content-type":    "application/json;charset=UTF-8",
-		"Content-Length":  "64",
-		"Host":            "prd.eu-ccapi.kia.com:8080",
-		"Connection":      "close",
-		"Accept-Encoding": "gzip, deflate",
-		"User-Agent":      "okhttp/3.10.0",
+		"Authorization": kd.accToken,
+		"Content-type":  "application/json;charset=UTF-8",
+		// "Content-Length":  "64",
+		// "Host":            "prd.eu-ccapi.kia.com:8080",
+		// "Connection":      "close",
+		// "Accept-Encoding": "gzip, deflate",
+		"User-Agent": "okhttp/3.10.0",
 	}
 
 	var token struct {
