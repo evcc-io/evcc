@@ -220,8 +220,10 @@ func (v *Kia) login(kd *KiaData) error {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	var bbody map[string]interface{}
 	err = json.Unmarshal([]byte(body), &bbody)
 	if err != nil {
@@ -264,7 +266,10 @@ func (v *Kia) getToken(kd *KiaData) error {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	var bbody map[string]interface{}
 	err = json.Unmarshal([]byte(body), &bbody)
@@ -296,7 +301,10 @@ func (v *Kia) getVehicles(kd *KiaData, did string) (string, error) {
 		req.Header.Set(k, v)
 	}
 
-	body, _ := v.Request(req)
+	body, err := v.Request(req)
+	if err != nil {
+		return "", err
+	}
 
 	var vid vehicleIdResponse
 	err = json.Unmarshal([]byte(body), &vid)
@@ -389,7 +397,10 @@ func (v *Kia) sendPIN(auth *KiaAuth, kd *KiaData) error {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 
 	var bbody map[string]interface{}
 	err = json.Unmarshal([]byte(body), &bbody)
@@ -424,7 +435,10 @@ func (v *Kia) getStatus(ad KiaAuth) (float64, error) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
 
 	var kr kiaBatteryResponse
 	err = json.Unmarshal([]byte(body), &kr)
