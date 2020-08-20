@@ -43,9 +43,9 @@ type Kia struct {
 }
 
 type KiaData struct {
-	cookieJar *cookiejar.Jar
-	accCode   string
-	accToken  string
+	cookieClient *util.HTTPHelper
+	accCode      string
+	accToken     string
 }
 
 type KiaAuth struct {
@@ -156,51 +156,31 @@ func (v *Kia) getDeviceID() (string, error) {
 	return did.ResMsg.DeviceId, err
 }
 
-func (v *Kia) getCookies(kd *KiaData) error {
-	kd.cookieJar, _ = cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+func (v *Kia) getCookies(kd *KiaData) (err error) {
+	kd.cookieClient = util.NewHTTPHelper(v.Log) // re-use logger
+	kd.cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
 
-	client := &http.Client{Jar: kd.cookieJar}
-	req, err := http.NewRequest(http.MethodGet, kiaUrlCookies, nil)
-	if err != nil {
-		return err
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	resp.Body.Close()
-
-	return nil
+	_, err = kd.cookieClient.Get(kiaUrlCookies)
+	return err
 }
 
 func (v *Kia) setLanguage(kd *KiaData) error {
+	headers := map[string]string{
+		"Content-type": "application/json",
+	}
+
 	data := map[string]interface{}{
 		"lang": "en",
 	}
 
-	dataj, err := json.Marshal(data)
-	if err != nil {
-		return err
+	req, err := v.jsonRequest(http.MethodPost, kiaUrlLang, headers, data)
+	if err == nil {
+		_, err = kd.cookieClient.Request(req)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, kiaUrlLang, bytes.NewReader(dataj))
-	if err != nil {
-		return err
-	}
-	for k, v := range map[string]string{
-		"Content-type": "application/json",
-	} {
-		req.Header.Set(k, v)
-	}
-
-	client := &http.Client{Jar: kd.cookieJar}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	return nil
+	return err
 }
 
 func (v *Kia) login(kd *KiaData) error {
@@ -218,14 +198,11 @@ func (v *Kia) login(kd *KiaData) error {
 		return err
 	}
 
-	// HTTPHelper
-	v.Client = &http.Client{Jar: kd.cookieJar}
-
 	var redirect struct {
 		RedirectURL string `json:"redirectUrl"`
 	}
 
-	if _, err = v.RequestJSON(req, &redirect); err == nil {
+	if _, err = kd.cookieClient.RequestJSON(req, &redirect); err == nil {
 		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
 			kd.accCode = parsed.Query().Get("code")
 		}
