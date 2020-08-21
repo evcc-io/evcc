@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -53,6 +52,7 @@ type kiaAuth struct {
 	deviceID     string
 	vehicleID    string
 	controlToken string
+	validUntil   time.Time
 }
 
 type kiaBatteryResponse struct {
@@ -100,6 +100,10 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+
+	// make auth invalid by initializing validity 11 minutes in the past
+	// control token is valid for 10 minutes
+	v.auth.validUntil = time.Now().Add(-11 * time.Minute)
 
 	return v, nil
 }
@@ -327,30 +331,41 @@ func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
 	auth.controlToken = ""
 	if err == nil {
 		auth.controlToken = "Bearer " + token.ControlToken
+		auth.validUntil = time.Now().Add(10 * time.Minute)
 	}
 
 	return err
 }
 
-/*
 func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
+	v.Log.DEBUG.Println("getStatus start")
+	if time.Now().After(ad.validUntil) {
+		v.Log.DEBUG.Println("token validity expired")
+		return 0, errors.New("token validity expired")
+	}
 	headers := map[string]string{
 		"Authorization":  ad.controlToken,
 		"ccsp-device-id": ad.deviceID,
 		"Content-Type":   "application/json",
 	}
 
+	v.HTTPHelper.Client.Timeout = 60 * time.Second
 	var kr kiaBatteryResponse
 	req, err := v.request(http.MethodGet, kiaURLGetStatus+ad.vehicleID+"/status", headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &kr)
 	}
-
+	v.Log.DEBUG.Println("soc: ", kr.ResMsg.EvStatus.BatteryStatus)
 	return kr.ResMsg.EvStatus.BatteryStatus, err
 }
-*/
 
+/*
 func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
+	v.Log.DEBUG.Println("getStatus start")
+	if time.Now().After(ad.validUntil) {
+		v.Log.DEBUG.Println("token validity expired")
+		return 0, errors.New("token validity expired")
+	}
 	uri := kiaURLGetStatus + ad.vehicleID + "/status"
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
@@ -382,9 +397,10 @@ func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 		return 0, err
 	}
 	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
-
+	v.Log.DEBUG.Println("getStatus succeded")
 	return stateOfCharge, nil
 }
+*/
 
 func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
@@ -397,7 +413,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 		err = v.getCookies(&kd)
 	}
 
-	// TODO is this needed?
+	// TODO is this needed? -- YES
 	if err == nil {
 		time.Sleep(1 * time.Second)
 		err = v.setLanguage(&kd)
@@ -436,7 +452,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
-	/*soc, err := v.getStatus(v.auth)
+	soc, err := v.getStatus(v.auth)
 
 	// TODO: recognize AUTH errors
 	if err != nil {
@@ -444,12 +460,7 @@ func (v *Kia) chargeState() (float64, error) {
 			soc, err = v.getStatus(v.auth)
 		}
 	}
-	*/
-	var soc float64
-	var err error
-	if err = v.connectToKiaServer(); err == nil {
-		soc, err = v.getStatus(v.auth)
-	}
+
 	return soc, err
 }
 
