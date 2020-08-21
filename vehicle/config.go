@@ -29,7 +29,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 	}
 
 	if err != nil {
-		err = fmt.Errorf("cannot create %s vehicle: %w", typ, err)
+		err = fmt.Errorf("cannot create %s vehicle: %v", typ, err)
 	}
 
 	return

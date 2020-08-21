@@ -554,7 +554,7 @@ func (lp *LoadPoint) updateChargeMeter() {
 	}, retryOptions...)
 
 	if err != nil {
-		err = fmt.Errorf("updating charge meter: %w", err)
+		err = fmt.Errorf("updating charge meter: %v", err)
 		lp.log.ERROR.Printf("%v", err)
 	}
 }

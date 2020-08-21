@@ -23,7 +23,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (meter api.Meter, e
 	}
 
 	if err != nil {
-		err = fmt.Errorf("cannot create %s meter: %w", typ, err)
+		err = fmt.Errorf("cannot create %s meter: %v", typ, err)
 	}
 
 	return meter, err

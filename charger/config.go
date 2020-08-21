@@ -39,7 +39,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (charger api.Charge
 	}
 
 	if err != nil {
-		err = fmt.Errorf("cannot create %s charger: %w", typ, err)
+		err = fmt.Errorf("cannot create %s charger: %v", typ, err)
 	}
 
 	return charger, err

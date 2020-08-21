@@ -136,7 +136,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 
 		if err != nil {
 			m.conn.Close() // close connection in case of modbus error
-			return 0, fmt.Errorf("read failed: %w", err)
+			return 0, fmt.Errorf("read failed: %v", err)
 		}
 
 		return m.scale * op.Transform(bytes), nil

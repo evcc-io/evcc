@@ -23,7 +23,7 @@ func Query(query *gojq.Query, input []byte) (interface{}, error) {
 	}
 
 	if err, ok := v.(error); ok {
-		return nil, fmt.Errorf("jq: query failed: %w", err)
+		return nil, fmt.Errorf("jq: query failed: %v", err)
 	}
 
 	if _, ok := iter.Next(); ok {

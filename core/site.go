@@ -267,7 +267,7 @@ func (site *Site) updateMeters() error {
 		}, retryOptions...)
 
 		if err != nil {
-			err = fmt.Errorf("updating %s meter: %w", s, err)
+			err = fmt.Errorf("updating %s meter: %v", s, err)
 			site.log.ERROR.Println(err)
 		}
 
