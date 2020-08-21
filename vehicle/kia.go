@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -331,6 +332,7 @@ func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
 	return err
 }
 
+/*
 func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 	headers := map[string]string{
 		"Authorization":  ad.controlToken,
@@ -346,6 +348,43 @@ func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 
 	return kr.ResMsg.EvStatus.BatteryStatus, err
 }
+*/
+
+func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
+	uri := kiaURLGetStatus + ad.vehicleID + "/status"
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return 0.0, err
+	}
+	for k, v := range map[string]string{
+		"Authorization":  ad.controlToken,
+		"ccsp-device-id": ad.deviceID,
+		"Content-Type":   "application/json",
+	} {
+		req.Header.Set(k, v)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0.0, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var kr kiaBatteryResponse
+	err = json.Unmarshal([]byte(body), &kr)
+	if err != nil {
+		return 0, err
+	}
+	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
+
+	return stateOfCharge, nil
+}
 
 func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
@@ -359,10 +398,10 @@ func (v *Kia) connectToKiaServer() (err error) {
 	}
 
 	// TODO is this needed?
-	// if err = v.setLanguage(&kd); err != nil {
-	// 	return errors.New("could not set language to en")
-	// }
-	// time.Sleep(1 * time.Second)
+	if err == nil {
+		time.Sleep(1 * time.Second)
+		err = v.setLanguage(&kd)
+	}
 
 	if err == nil {
 		time.Sleep(1 * time.Second)
@@ -388,6 +427,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 		time.Sleep(1 * time.Second)
 		if err = v.sendPIN(&ad, kd); err == nil {
 			v.auth = ad
+			v.Log.DEBUG.Println("auth received")
 		}
 	}
 
@@ -396,7 +436,7 @@ func (v *Kia) connectToKiaServer() (err error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
-	soc, err := v.getStatus(v.auth)
+	/*soc, err := v.getStatus(v.auth)
 
 	// TODO: recognize AUTH errors
 	if err != nil {
@@ -404,7 +444,12 @@ func (v *Kia) chargeState() (float64, error) {
 			soc, err = v.getStatus(v.auth)
 		}
 	}
-
+	*/
+	var soc float64
+	var err error
+	if err = v.connectToKiaServer(); err == nil {
+		soc, err = v.getStatus(v.auth)
+	}
 	return soc, err
 }
 
