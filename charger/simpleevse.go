@@ -22,6 +22,10 @@ const (
 	evseRegTurnOff       = 1004
 )
 
+func init() {
+	registry.Add("simpleevse", NewSimpleEVSEFromConfig)
+}
+
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Device string }{}

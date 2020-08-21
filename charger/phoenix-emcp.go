@@ -25,6 +25,10 @@ type PhoenixEMCP struct {
 	handler *modbus.TCPClientHandler
 }
 
+func init() {
+	registry.Add("phoenix-emcp", NewPhoenixEMCPFromConfig)
+}
+
 // NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {

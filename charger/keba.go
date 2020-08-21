@@ -36,6 +36,10 @@ type Keba struct {
 	recv    chan keba.UDPMsg
 }
 
+func init() {
+	registry.Add("keba", NewKebaFromConfig)
+}
+
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {

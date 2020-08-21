@@ -9,6 +9,10 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+func init() {
+	registry.Add("default", NewConfigurableFromConfig)
+}
+
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {

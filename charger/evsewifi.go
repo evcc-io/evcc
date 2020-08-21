@@ -49,6 +49,10 @@ type EVSEWifi struct {
 	uri string
 }
 
+func init() {
+	registry.Add("evsewifi", NewEVSEWifiFromConfig)
+}
+
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI string }{}
