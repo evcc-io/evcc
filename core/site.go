@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -8,7 +9,6 @@ import (
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
 	"github.com/avast/retry-go"
-	"github.com/pkg/errors"
 )
 
 //go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core Updater
@@ -267,7 +267,7 @@ func (site *Site) updateMeters() error {
 		}, retryOptions...)
 
 		if err != nil {
-			err = errors.Wrapf(err, "updating %s meter", s)
+			err = fmt.Errorf("updating %s meter: %v", s, err)
 			site.log.ERROR.Println(err)
 		}
 

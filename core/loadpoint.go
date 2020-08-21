@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
-	"github.com/pkg/errors"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go"
@@ -554,7 +554,7 @@ func (lp *LoadPoint) updateChargeMeter() {
 	}, retryOptions...)
 
 	if err != nil {
-		err = errors.Wrapf(err, "updating charge meter")
+		err = fmt.Errorf("updating charge meter: %v", err)
 		lp.log.ERROR.Printf("%v", err)
 	}
 }

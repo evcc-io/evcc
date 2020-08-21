@@ -2,10 +2,10 @@ package jq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/itchyny/gojq"
-	"github.com/pkg/errors"
 )
 
 // Query executes a compiled jq query against given input. It expects a single result only.
@@ -23,7 +23,7 @@ func Query(query *gojq.Query, input []byte) (interface{}, error) {
 	}
 
 	if err, ok := v.(error); ok {
-		return nil, errors.Wrap(err, "jq: query failed")
+		return nil, fmt.Errorf("jq: query failed: %v", err)
 	}
 
 	if _, ok := iter.Next(); ok {

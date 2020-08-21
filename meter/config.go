@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/pkg/errors"
 )
 
 // NewFromConfig creates meter from configuration
@@ -24,7 +23,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (meter api.Meter, e
 	}
 
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("cannot create %s meter", typ))
+		err = fmt.Errorf("cannot create %s meter: %v", typ, err)
 	}
 
 	return meter, err

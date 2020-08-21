@@ -1,12 +1,12 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
-	"github.com/pkg/errors"
 )
 
 const (

@@ -1,12 +1,12 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
-	"github.com/pkg/errors"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -136,7 +136,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 
 		if err != nil {
 			m.conn.Close() // close connection in case of modbus error
-			return 0, errors.Wrap(err, "read failed")
+			return 0, fmt.Errorf("read failed: %v", err)
 		}
 
 		return m.scale * op.Transform(bytes), nil

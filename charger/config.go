@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/pkg/errors"
 )
 
 type apiFunction string
@@ -40,7 +39,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (charger api.Charge
 	}
 
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("cannot create %s charger", typ))
+		err = fmt.Errorf("cannot create %s charger: %v", typ, err)
 	}
 
 	return charger, err
