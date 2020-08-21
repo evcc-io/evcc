@@ -18,6 +18,10 @@ type Tesla struct {
 	chargedEnergyG func() (float64, error)
 }
 
+func init() {
+	registry.Add("tesla", NewTeslaFromConfig)
+}
+
 // NewTeslaFromConfig creates a new Tesla vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {

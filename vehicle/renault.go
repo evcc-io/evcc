@@ -93,6 +93,10 @@ type Renault struct {
 	chargeStateG        func() (float64, error)
 }
 
+func init() {
+	registry.Add("renault", NewRenaultFromConfig)
+}
+
 // NewRenaultFromConfig creates a new vehicle
 func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
