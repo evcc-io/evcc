@@ -154,7 +154,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
-- `nrgkick-bt`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
+- `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 - `go-e`: go-eCharger chargers (both local and cloud API are supported)
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))

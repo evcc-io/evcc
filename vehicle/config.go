@@ -28,7 +28,8 @@ var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api
 
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
-	if factory, err := registry.Get(strings.ToLower(typ)); err == nil {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
 		if v, err = factory(other); err != nil {
 			err = fmt.Errorf("cannot create %s vehicle: %w", typ, err)
 		}

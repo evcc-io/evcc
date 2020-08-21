@@ -10,7 +10,7 @@ func TestChargers(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"mqtt not configured",
-		"NRGKick bluetooth is only supported on linux",
+		"invalid charger type: nrgkick-bluetooth",
 		"invalid pin:",
 		"connect: no route to host",
 		"connect: connection refused",

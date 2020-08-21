@@ -28,7 +28,8 @@ var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.M
 
 // NewFromConfig creates meter from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {
-	if factory, err := registry.Get(strings.ToLower(typ)); err == nil {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
 		if v, err = factory(other); err != nil {
 			err = fmt.Errorf("cannot create %s meter: %w", typ, err)
 		}
