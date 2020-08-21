@@ -2,10 +2,10 @@ package jq
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/itchyny/gojq"
-	"github.com/pkg/errors"
 )
 
 // Query executes a compiled jq query against given input. It expects a single result only.

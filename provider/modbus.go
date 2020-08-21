@@ -1,12 +1,12 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
-	"github.com/pkg/errors"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
