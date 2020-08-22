@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc-config/registry"
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
