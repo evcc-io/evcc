@@ -345,37 +345,30 @@ func (v *Kia) connectToKiaServer() (err error) {
 
 	authData.deviceID, err = v.getDeviceID()
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		kiaCookieClient, err = v.getCookies()
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		err = v.setLanguage(kiaCookieClient)
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		kiaAccCode, err = v.login(kiaCookieClient)
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		kiaAccToken, err = v.getToken(kiaAccCode)
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		authData.vehicleID, err = v.getVehicles(kiaAccToken, authData.deviceID)
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		err = v.prewakeup(kiaAccToken, authData.deviceID, authData.vehicleID)
 	}
 
 	if err == nil {
-		//time.Sleep(1 * time.Second)
 		if authData.controlToken, err = v.sendPIN(authData.deviceID, kiaAccToken); err == nil {
 			v.auth = authData
 			v.auth.validUntil = time.Now().Add(10 * time.Minute)
@@ -390,7 +383,6 @@ func (v *Kia) connectToKiaServer() (err error) {
 func (v *Kia) chargeState() (float64, error) {
 	soc, err := v.getStatus(v.auth)
 
-	// TODO: recognize AUTH errors
 	if err != nil {
 		if err = v.connectToKiaServer(); err == nil {
 			soc, err = v.getStatus(v.auth)
