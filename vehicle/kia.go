@@ -133,6 +133,7 @@ func (v *Kia) jsonRequest(method, uri string, headers map[string]string, data in
 }
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
+
 func (v *Kia) getDeviceID() (string, error) {
 	uniID, _ := uuid.NewUUID()
 	data := map[string]interface{}{
@@ -144,11 +145,7 @@ func (v *Kia) getDeviceID() (string, error) {
 	headers := map[string]string{
 		"ccsp-service-id": "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		"Content-type":    "application/json;charset=UTF-8",
-		// "Content-Length":  "80",
-		// "Host":            "prd.eu-ccapi.kia.com:8080",
-		// "Connection":      "close",
-		// "Accept-Encoding": "gzip, deflate",
-		"User-Agent": "okhttp/3.10.0",
+		"User-Agent":      "okhttp/3.10.0",
 	}
 
 	var did deviceIDResponse
@@ -222,11 +219,7 @@ func (v *Kia) getToken(kd *kiaData) error {
 	headers := map[string]string{
 		"Authorization": "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		"Content-type":  "application/x-www-form-urlencoded",
-		// "Content-Length":  "150",
-		// "Host":            "prd.eu-ccapi.kia.com:8080",
-		// "Connection":      "close",
-		// "Accept-Encoding": "gzip, deflate",
-		"User-Agent": "okhttp/3.10.0",
+		"User-Agent":    "okhttp/3.10.0",
 	}
 
 	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
@@ -255,10 +248,7 @@ func (v *Kia) getVehicles(kd *kiaData, did string) (string, error) {
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
-		// "Host":                "prd.eu-ccapi.kia.com:8080",
-		// "Connection":          "close",
-		// "Accept-Encoding":     "gzip, deflate",
-		"User-Agent": "okhttp/3.10.0",
+		"User-Agent":          "okhttp/3.10.0",
 	}
 
 	req, err := v.request(http.MethodGet, kiaURLVehicles, headers, nil)
@@ -288,11 +278,7 @@ func (v *Kia) prewakeup(kd *kiaData, did, vid string) error {
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
 		"Content-Type":        "application/json;charset=UTF-8",
-		// "Content-Length":      "72",
-		// "Host":                "prd.eu-ccapi.kia.com:8080",
-		// "Connection":          "close",
-		// "Accept-Encoding":     "gzip, deflate",
-		"User-Agent": "okhttp/3.10.0",
+		"User-Agent":          "okhttp/3.10.0",
 	}
 
 	req, err := v.jsonRequest(http.MethodPost, kiaURLPreWakeup+vid+"/control/engine", headers, data)
@@ -312,11 +298,7 @@ func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
 	headers := map[string]string{
 		"Authorization": kd.accToken,
 		"Content-type":  "application/json;charset=UTF-8",
-		// "Content-Length":  "64",
-		// "Host":            "prd.eu-ccapi.kia.com:8080",
-		// "Connection":      "close",
-		// "Accept-Encoding": "gzip, deflate",
-		"User-Agent": "okhttp/3.10.0",
+		"User-Agent":    "okhttp/3.10.0",
 	}
 
 	var token struct {
@@ -358,49 +340,6 @@ func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 	v.Log.DEBUG.Println("soc: ", kr.ResMsg.EvStatus.BatteryStatus)
 	return kr.ResMsg.EvStatus.BatteryStatus, err
 }
-
-/*
-func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
-	v.Log.DEBUG.Println("getStatus start")
-	if time.Now().After(ad.validUntil) {
-		v.Log.DEBUG.Println("token validity expired")
-		return 0, errors.New("token validity expired")
-	}
-	uri := kiaURLGetStatus + ad.vehicleID + "/status"
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		return 0.0, err
-	}
-	for k, v := range map[string]string{
-		"Authorization":  ad.controlToken,
-		"ccsp-device-id": ad.deviceID,
-		"Content-Type":   "application/json",
-	} {
-		req.Header.Set(k, v)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return 0.0, err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return 0, err
-	}
-
-	var kr kiaBatteryResponse
-	err = json.Unmarshal([]byte(body), &kr)
-	if err != nil {
-		return 0, err
-	}
-	stateOfCharge := kr.ResMsg.EvStatus.BatteryStatus
-	v.Log.DEBUG.Println("getStatus succeded")
-	return stateOfCharge, nil
-}
-*/
 
 func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
