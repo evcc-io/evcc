@@ -71,6 +71,10 @@ type deviceIDResponse struct {
 	} `json:"resMsg"`
 }
 
+func init() {
+	registry.Add("kia", NewKiaFromConfig)
+}
+
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
