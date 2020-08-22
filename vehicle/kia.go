@@ -42,12 +42,6 @@ type Kia struct {
 	auth     kiaAuth
 }
 
-type kiaData struct {
-	cookieClient *util.HTTPHelper
-	accCode      string
-	accToken     string
-}
-
 type kiaAuth struct {
 	deviceID     string
 	vehicleID    string
@@ -157,20 +151,20 @@ func (v *Kia) getDeviceID() (string, error) {
 	return did.ResMsg.DeviceID, err
 }
 
-func (v *Kia) getCookies(kd *kiaData) (err error) {
-	kd.cookieClient = util.NewHTTPHelper(v.Log) // re-use logger
-	kd.cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
+func (v *Kia) getCookies() (cookieClient *util.HTTPHelper, err error) {
+	cookieClient = util.NewHTTPHelper(v.Log) // re-use logger
+	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
 	if err == nil {
-		_, err = kd.cookieClient.Get(kiaURLCookies)
+		_, err = cookieClient.Get(kiaURLCookies)
 	}
 
-	return err
+	return cookieClient, err
 }
 
-func (v *Kia) setLanguage(kd *kiaData) error {
+func (v *Kia) setLanguage(cookieClient *util.HTTPHelper) error {
 	headers := map[string]string{
 		"Content-type": "application/json",
 	}
@@ -181,13 +175,13 @@ func (v *Kia) setLanguage(kd *kiaData) error {
 
 	req, err := v.jsonRequest(http.MethodPost, kiaURLLang, headers, data)
 	if err == nil {
-		_, err = kd.cookieClient.Request(req)
+		_, err = cookieClient.Request(req)
 	}
 
 	return err
 }
 
-func (v *Kia) login(kd *kiaData) error {
+func (v *Kia) login(cookieClient *util.HTTPHelper) (string, error) {
 	headers := map[string]string{
 		"Content-type": "application/json",
 	}
@@ -199,23 +193,24 @@ func (v *Kia) login(kd *kiaData) error {
 
 	req, err := v.jsonRequest(http.MethodPost, kiaURLLogin, headers, data)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var redirect struct {
 		RedirectURL string `json:"redirectUrl"`
 	}
 
-	if _, err = kd.cookieClient.RequestJSON(req, &redirect); err == nil {
+	var accCode string
+	if _, err = cookieClient.RequestJSON(req, &redirect); err == nil {
 		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
-			kd.accCode = parsed.Query().Get("code")
+			accCode = parsed.Query().Get("code")
 		}
 	}
 
-	return err
+	return accCode, err
 }
 
-func (v *Kia) getToken(kd *kiaData) error {
+func (v *Kia) getToken(accCode string) (string, error) {
 	headers := map[string]string{
 		"Authorization": "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		"Content-type":  "application/x-www-form-urlencoded",
@@ -223,11 +218,11 @@ func (v *Kia) getToken(kd *kiaData) error {
 	}
 
 	data := "grant_type=authorization_code&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect&code="
-	data += kd.accCode
+	data += accCode
 
 	req, err := v.request(http.MethodPost, kiaURLAccessToken, headers, strings.NewReader(data))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var tokens struct {
@@ -235,16 +230,17 @@ func (v *Kia) getToken(kd *kiaData) error {
 		AccessToken string `json:"access_token"`
 	}
 
+	var accToken string
 	if _, err = v.RequestJSON(req, &tokens); err == nil {
-		kd.accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
+		accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
 	}
 
-	return err
+	return accToken, err
 }
 
-func (v *Kia) getVehicles(kd *kiaData, did string) (string, error) {
+func (v *Kia) getVehicles(accToken, did string) (string, error) {
 	headers := map[string]string{
-		"Authorization":       kd.accToken,
+		"Authorization":       accToken,
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
@@ -266,14 +262,14 @@ func (v *Kia) getVehicles(kd *kiaData, did string) (string, error) {
 	return "", err
 }
 
-func (v *Kia) prewakeup(kd *kiaData, did, vid string) error {
+func (v *Kia) prewakeup(accToken, did, vid string) error {
 	data := map[string]interface{}{
 		"action":   "prewakeup",
 		"deviceId": did,
 	}
 
 	headers := map[string]string{
-		"Authorization":       kd.accToken,
+		"Authorization":       accToken,
 		"ccsp-device-id":      did,
 		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
 		"offset":              "1",
@@ -289,14 +285,14 @@ func (v *Kia) prewakeup(kd *kiaData, did, vid string) error {
 	return err
 }
 
-func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
+func (v *Kia) sendPIN(deviceID, accToken string) (string, error) {
 	data := map[string]interface{}{
-		"deviceId": auth.deviceID,
+		"deviceId": deviceID,
 		"pin":      string(v.pin),
 	}
 
 	headers := map[string]string{
-		"Authorization": kd.accToken,
+		"Authorization": accToken,
 		"Content-type":  "application/json;charset=UTF-8",
 		"User-Agent":    "okhttp/3.10.0",
 	}
@@ -310,13 +306,13 @@ func (v *Kia) sendPIN(auth *kiaAuth, kd kiaData) error {
 		_, err = v.RequestJSON(req, &token)
 	}
 
-	auth.controlToken = ""
+	controlToken := ""
 	if err == nil {
-		auth.controlToken = "Bearer " + token.ControlToken
-		auth.validUntil = time.Now().Add(10 * time.Minute)
+		controlToken = "Bearer " + token.ControlToken
+
 	}
 
-	return err
+	return controlToken, err
 }
 
 func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
@@ -343,45 +339,46 @@ func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 
 func (v *Kia) connectToKiaServer() (err error) {
 	v.Log.DEBUG.Println("connecting to Kia server")
-	var kd kiaData
-	var ad kiaAuth
+	var kiaCookieClient *util.HTTPHelper
+	var kiaAccCode, kiaAccToken string
+	var authData kiaAuth
 
-	ad.deviceID, err = v.getDeviceID()
+	authData.deviceID, err = v.getDeviceID()
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		err = v.getCookies(&kd)
-	}
-
-	// TODO is this needed? -- YES
-	if err == nil {
-		time.Sleep(1 * time.Second)
-		err = v.setLanguage(&kd)
+		//time.Sleep(1 * time.Second)
+		kiaCookieClient, err = v.getCookies()
 	}
 
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		err = v.login(&kd)
+		//time.Sleep(1 * time.Second)
+		err = v.setLanguage(kiaCookieClient)
 	}
 
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		err = v.getToken(&kd)
+		//time.Sleep(1 * time.Second)
+		kiaAccCode, err = v.login(kiaCookieClient)
 	}
 
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		ad.vehicleID, err = v.getVehicles(&kd, ad.deviceID)
+		//time.Sleep(1 * time.Second)
+		kiaAccToken, err = v.getToken(kiaAccCode)
 	}
 
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		err = v.prewakeup(&kd, ad.deviceID, ad.vehicleID)
+		//time.Sleep(1 * time.Second)
+		authData.vehicleID, err = v.getVehicles(kiaAccToken, authData.deviceID)
 	}
 
 	if err == nil {
-		time.Sleep(1 * time.Second)
-		if err = v.sendPIN(&ad, kd); err == nil {
-			v.auth = ad
+		//time.Sleep(1 * time.Second)
+		err = v.prewakeup(kiaAccToken, authData.deviceID, authData.vehicleID)
+	}
+
+	if err == nil {
+		//time.Sleep(1 * time.Second)
+		if authData.controlToken, err = v.sendPIN(authData.deviceID, kiaAccToken); err == nil {
+			v.auth = authData
+			v.auth.validUntil = time.Now().Add(10 * time.Minute)
 			v.Log.DEBUG.Println("auth received")
 		}
 	}
