@@ -67,6 +67,10 @@ type MobileConnect struct {
 	cableInformation MCCCurrentCableInformation
 }
 
+func init() {
+	registry.Add("mcc", NewMobileConnectFromConfig)
+}
+
 // NewMobileConnectFromConfig creates a MCC charger from generic config
 func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Password string }{}

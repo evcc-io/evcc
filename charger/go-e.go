@@ -44,6 +44,10 @@ type GoE struct {
 	status     goeStatusResponse
 }
 
+func init() {
+	registry.Add("go-e", NewGoEFromConfig)
+}
+
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {

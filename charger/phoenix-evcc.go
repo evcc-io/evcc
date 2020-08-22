@@ -24,6 +24,10 @@ type PhoenixEVCC struct {
 	client  gridx.Client
 }
 
+func init() {
+	registry.Add("phoenix-evcc", NewPhoenixEVCCFromConfig)
+}
+
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVCCFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := modbus.Connection{ID: 255}

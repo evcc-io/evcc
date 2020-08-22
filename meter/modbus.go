@@ -21,6 +21,10 @@ type Modbus struct {
 	opEnergy modbus.Operation
 }
 
+func init() {
+	registry.Add("modbus", NewModbusFromConfig)
+}
+
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {

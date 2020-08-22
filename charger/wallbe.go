@@ -33,8 +33,12 @@ type Wallbe struct {
 	factor  int64
 }
 
+func init() {
+	registry.Add("wallbe", NewWallbeFromConfig)
+}
+
 // NewWallbeFromConfig creates a Wallbe charger from generic config
-func NewWallbeFromConfig(other map[string]interface{}) (*Wallbe, error) {
+func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI    string
 		Legacy bool

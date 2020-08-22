@@ -30,6 +30,10 @@ type Vehicle struct {
 	chargeG func() (float64, error)
 }
 
+func init() {
+	registry.Add("default", NewConfigurableFromConfig)
+}
+
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {

@@ -33,6 +33,10 @@ type SMA struct {
 	recv    chan sma.Telegram
 }
 
+func init() {
+	registry.Add("sma", NewSMAFromConfig)
+}
+
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {

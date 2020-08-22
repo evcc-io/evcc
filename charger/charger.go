@@ -16,6 +16,10 @@ type Charger struct {
 	maxCurrentS func(int64) error
 }
 
+func init() {
+	registry.Add("default", NewConfigurableFromConfig)
+}
+
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}

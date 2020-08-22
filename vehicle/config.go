@@ -7,29 +7,34 @@ import (
 	"github.com/andig/evcc/api"
 )
 
+type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
+
+func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
+	}
+	r[name] = factory
+}
+
+func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
+	factory, exists := r[name]
+	if !exists {
+		return nil, fmt.Errorf("vehicle type not registered: %s", name)
+	}
+	return factory, nil
+}
+
+var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
+
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
-	switch strings.ToLower(typ) {
-	case "default", "configurable":
-		v, err = NewConfigurableFromConfig(other)
-	case "audi", "etron":
-		v, err = NewAudiFromConfig(other)
-	case "bmw", "i3":
-		v, err = NewBMWFromConfig(other)
-	case "tesla", "model3", "model 3", "models", "model s":
-		v, err = NewTeslaFromConfig(other)
-	case "nissan", "leaf":
-		v, err = NewNissanFromConfig(other)
-	case "renault", "zoe":
-		v, err = NewRenaultFromConfig(other)
-	case "porsche", "taycan":
-		v, err = NewPorscheFromConfig(other)
-	default:
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
+		if v, err = factory(other); err != nil {
+			err = fmt.Errorf("cannot create %s vehicle: %w", typ, err)
+		}
+	} else {
 		err = fmt.Errorf("invalid vehicle type: %s", typ)
-	}
-
-	if err != nil {
-		err = fmt.Errorf("cannot create %s vehicle: %v", typ, err)
 	}
 
 	return

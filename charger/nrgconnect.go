@@ -69,6 +69,10 @@ type NRGKickConnect struct {
 	password string
 }
 
+func init() {
+	registry.Add("nrgkick-connect", NewNRGKickConnectFromConfig)
+}
+
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
 func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Mac, Password string }{}

@@ -35,6 +35,10 @@ type Tesla struct {
 	uri, usage string
 }
 
+func init() {
+	registry.Add("tesla", NewTeslaFromConfig)
+}
+
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {

@@ -9,38 +9,35 @@ import (
 
 type apiFunction string
 
+type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
+
+func (r chargerRegistry) Add(name string, factory func(map[string]interface{}) (api.Charger, error)) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))
+	}
+	r[name] = factory
+}
+
+func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
+	factory, exists := r[name]
+	if !exists {
+		return nil, fmt.Errorf("charger type not registered: %s", name)
+	}
+	return factory, nil
+}
+
+var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
+
 // NewFromConfig creates charger from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (charger api.Charger, err error) {
-	switch strings.ToLower(typ) {
-	case "default", "configurable":
-		charger, err = NewConfigurableFromConfig(other)
-	case "wallbe":
-		charger, err = NewWallbeFromConfig(other)
-	case "phoenix-emcp":
-		charger, err = NewPhoenixEMCPFromConfig(other)
-	case "phoenix-evcc":
-		charger, err = NewPhoenixEVCCFromConfig(other)
-	case "nrgkick-bluetooth", "nrgkick-bt", "nrgble":
-		charger, err = NewNRGKickBLEFromConfig(other)
-	case "nrgkick-connect", "nrgconnect":
-		charger, err = NewNRGKickConnectFromConfig(other)
-	case "go-e", "goe":
-		charger, err = NewGoEFromConfig(other)
-	case "evsewifi":
-		charger, err = NewEVSEWifiFromConfig(other)
-	case "simpleevse", "evse":
-		charger, err = NewSimpleEVSEFromConfig(other)
-	case "porsche", "audi", "bentley", "mcc":
-		charger, err = NewMobileConnectFromConfig(other)
-	case "keba", "bmw":
-		charger, err = NewKebaFromConfig(other)
-	default:
-		return nil, fmt.Errorf("invalid charger type: %s", typ)
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
+		if v, err = factory(other); err != nil {
+			err = fmt.Errorf("cannot create %s charger: %w", typ, err)
+		}
+	} else {
+		err = fmt.Errorf("invalid charger type: %s", typ)
 	}
 
-	if err != nil {
-		err = fmt.Errorf("cannot create %s charger: %v", typ, err)
-	}
-
-	return charger, err
+	return
 }
