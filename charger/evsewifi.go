@@ -47,6 +47,7 @@ type EVSEListEntry struct {
 type EVSEWifi struct {
 	*util.HTTPHelper
 	uri string
+	alwaysActive bool
 }
 
 func init() {
@@ -66,8 +67,9 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (api.Charger, error) {
 	evse := &EVSEWifi{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:        strings.TrimRight(uri, "/"),
+		HTTPHelper:        util.NewHTTPHelper(util.NewLogger("wifi")),
+		uri:               strings.TrimRight(uri, "/"),
+		alwaysActive:      true,
 	}
 
 	return evse, nil
@@ -91,10 +93,11 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	}
 
 	params := pr.List[0]
-	if params.AlwaysActive {
-		evse.HTTPHelper.Log.WARN.Println("cannot control evse- alwaysactive is on")
+	if !params.AlwaysActive {
+		evse.HTTPHelper.Log.WARN.Println("evse should be configured to remote mode")
 	}
 
+	evse.alwaysActive = params.AlwaysActive
 	return params, nil
 }
 
@@ -138,6 +141,14 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 // Enable implements the Charger.Enable interface
 func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
+
+	if evse.alwaysActive {
+		current := 0
+		if enable {
+			current = 6
+		}
+		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
+	}
 	return evse.checkError(evse.Get(url))
 }
 
