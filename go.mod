@@ -13,6 +13,7 @@ require (
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
 	github.com/google/go-github/v32 v32.1.0
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2
