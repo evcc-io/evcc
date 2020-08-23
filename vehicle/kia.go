@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc-config/registry"
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
@@ -321,15 +320,16 @@ func (v *Kia) sendPIN(deviceID, accToken string) (string, error) {
 	return controlToken, err
 }
 
-func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
+func (v *Kia) getStatus() (float64, error) {
 	headers := map[string]string{
-		"Authorization":  ad.controlToken,
-		"ccsp-device-id": ad.deviceID,
+		"Authorization":  v.auth.controlToken,
+		"ccsp-device-id": v.auth.deviceID,
 		"Content-Type":   "application/json",
 	}
 
 	var kr kiaBatteryResponse
-	if req, err := v.request(http.MethodGet, kiaURLGetStatus+ad.vehicleID+"/status", headers, nil); err == nil {
+	req, err := v.request(http.MethodGet, kiaURLGetStatus+v.auth.vehicleID+"/status", headers, nil)
+	if err == nil {
 		_, err = v.RequestJSON(req, &kr)
 	}
 
@@ -337,7 +337,7 @@ func (v *Kia) getStatus(ad kiaAuth) (float64, error) {
 }
 
 func (v *Kia) authFlow() (err error) {
-	v.authData.deviceID, err = v.getDeviceID()
+	v.auth.deviceID, err = v.getDeviceID()
 
 	var cookieClient *util.HTTPHelper
 	if err == nil {
@@ -359,15 +359,15 @@ func (v *Kia) authFlow() (err error) {
 	}
 
 	if err == nil {
-		v.authData.vehicleID, err = v.getVehicles(kiaAccToken, v.authData.deviceID)
+		v.auth.vehicleID, err = v.getVehicles(kiaAccToken, v.auth.deviceID)
 	}
 
 	if err == nil {
-		err = v.preWakeup(kiaAccToken, v.authData.deviceID, v.authData.vehicleID)
+		err = v.preWakeup(kiaAccToken, v.auth.deviceID, v.auth.vehicleID)
 	}
 
 	if err == nil {
-		v.authData.controlToken, err = v.sendPIN(v.authData.deviceID, kiaAccToken)
+		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, kiaAccToken)
 	}
 
 	return err
@@ -375,11 +375,11 @@ func (v *Kia) authFlow() (err error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Kia) chargeState() (float64, error) {
-	soc, err := v.getStatus(v.auth)
+	soc, err := v.getStatus()
 
 	if err != nil && v.HTTPHelper.LastResponse().StatusCode == http.StatusUnauthorized {
 		if err = v.authFlow(); err == nil {
-			soc, err = v.getStatus(v.auth)
+			soc, err = v.getStatus()
 		}
 	}
 
