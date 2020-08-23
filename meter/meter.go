@@ -13,7 +13,7 @@ func init() {
 	registry.Add("default", NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f meterDecorate -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -70,7 +70,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		currentsDeco = m.currents
 	}
 
-	res := decorate(m, energyDeco, currentsDeco)
+	res := meterDecorate(m, energyDeco, currentsDeco)
 
 	return res, nil
 }

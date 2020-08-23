@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
+func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
 	switch {
 	case meterCurrent == nil && meterEnergy == nil:
 		return base
@@ -17,7 +17,7 @@ func decorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent 
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterEnergy: &meterEnergyImpl{
+			MeterEnergy: &meterDecorateMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -28,7 +28,7 @@ func decorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent 
 			api.MeterCurrent
 		}{
 			Meter: base,
-			MeterCurrent: &meterCurrentImpl{
+			MeterCurrent: &meterDecorateMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
 		}
@@ -40,10 +40,10 @@ func decorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent 
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterCurrent: &meterCurrentImpl{
+			MeterCurrent: &meterDecorateMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
-			MeterEnergy: &meterEnergyImpl{
+			MeterEnergy: &meterDecorateMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -52,18 +52,18 @@ func decorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent 
 	return nil
 }
 
-type meterCurrentImpl struct {
+type meterDecorateMeterCurrentImpl struct {
 	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *meterCurrentImpl) Currents() (float64, float64, float64, error) {
+func (impl *meterDecorateMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
 }
 
-type meterEnergyImpl struct {
+type meterDecorateMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *meterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *meterDecorateMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }

@@ -1,5 +1,3 @@
-// +build ignore
-
 package main
 
 import (
@@ -26,6 +24,7 @@ import (
 
 {{define "case"}}
 {{- $combo := .Combo}}
+{{- $prefix := .Prefix}}
 {{- $idx := 0}}
 	case{{range $typ, $def := .Types}}{{if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil{{end}}:
 		return &struct{
@@ -35,30 +34,31 @@ import (
 		}{
 			{{.ShortBase}}: base,
 {{- range $typ, $def := .Types}}{{if contains $combo $typ}}
-			{{$def.ShortType}}: &{{$def.VarName}}Impl{
+			{{$def.ShortType}}: &{{$prefix}}{{$def.ShortType}}Impl{
 				{{$def.VarName}}: {{$def.VarName}},
 			},{{end}}{{end}}
 		}
 {{end -}}
 
-func decorate(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
+func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
 	switch {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
+{{- $prefix := .Function}}
 {{- $types := .Types}}
 {{- $idx := 0}}
 	case{{range $typ, $def := .Types}}{{if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil{{end}}:
 		return base
-{{range $combo := .Combinations}}{{template "case" dict "BaseType" $basetype  "ShortBase" $shortbase "Types" $types "Combo" $combo}}{{end}}	}
+{{range $combo := .Combinations}}{{template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo}}{{end}}	}
 
 	return nil
 }
 
-{{range .Types}}type {{.VarName}}Impl struct {
+{{range .Types}}type {{$prefix}}{{.ShortType}}Impl struct {
 	{{.VarName}} {{.Signature}}
 }
 
-func (impl *{{.VarName}}Impl) {{.Function}}{{slice .Signature 4}} {
+func (impl *{{$prefix}}{{.ShortType}}Impl) {{.Function}}{{slice .Signature 4}} {
 	return impl.{{.VarName}}()
 }
 
@@ -73,7 +73,7 @@ type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName string
 }
 
-func generate(out io.Writer, packageName, baseType string, dynamicTypes ...dynamicType) {
+func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
@@ -118,14 +118,13 @@ func generate(out io.Writer, packageName, baseType string, dynamicTypes ...dynam
 
 	for _, dt := range dynamicTypes {
 		parts := strings.SplitN(dt.typ, ".", 2)
-		varName := strings.ToLower(parts[1][:1]) + parts[1][1:]
 
 		types[dt.typ] = typeStruct{
 			Type:      dt.typ,
 			ShortType: parts[1],
+			VarName:   strings.ToLower(parts[1][:1]) + parts[1][1:],
 			Signature: dt.signature,
 			Function:  dt.function,
-			VarName:   varName,
 		}
 
 		combos = append(combos, dt.typ)
@@ -133,13 +132,15 @@ func generate(out io.Writer, packageName, baseType string, dynamicTypes ...dynam
 
 	baseTypeParts := strings.SplitN(baseType, ".", 2)
 	vars := struct {
-		Package, API        string
+		API                 string
+		Package, Function   string
 		BaseType, ShortBase string
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
 		API:          "github.com/andig/evcc/api",
 		Package:      packageName,
+		Function:     functionName,
 		BaseType:     baseType,
 		ShortBase:    baseTypeParts[1],
 		Types:        types,
@@ -150,10 +151,11 @@ func generate(out io.Writer, packageName, baseType string, dynamicTypes ...dynam
 }
 
 var (
-	target = pflag.StringP("out", "o", "", "output file")
-	base   = pflag.StringP("base", "b", "", "base type")
-	pkg    = pflag.StringP("package", "p", "", "package name")
-	types  = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
+	target   = pflag.StringP("out", "o", "", "output file")
+	pkg      = pflag.StringP("package", "p", "", "package name")
+	function = pflag.StringP("function", "f", "decorate", "function name")
+	base     = pflag.StringP("base", "b", "", "base type")
+	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 
 // Usage prints flags usage
@@ -181,7 +183,7 @@ func main() {
 	}
 
 	var buf bytes.Buffer
-	generate(&buf, *pkg, *base, dynamicTypes...)
+	generate(&buf, *pkg, *function, *base, dynamicTypes...)
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout

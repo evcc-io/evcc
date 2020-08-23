@@ -17,7 +17,7 @@ func decorate(base api.Charger, meterEnergy func() (float64, error), meterCurren
 			api.MeterEnergy
 		}{
 			Charger: base,
-			MeterEnergy: &meterEnergyImpl{
+			MeterEnergy: &decorateMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -28,7 +28,7 @@ func decorate(base api.Charger, meterEnergy func() (float64, error), meterCurren
 			api.MeterCurrent
 		}{
 			Charger: base,
-			MeterCurrent: &meterCurrentImpl{
+			MeterCurrent: &decorateMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
 		}
@@ -40,10 +40,10 @@ func decorate(base api.Charger, meterEnergy func() (float64, error), meterCurren
 			api.MeterEnergy
 		}{
 			Charger: base,
-			MeterCurrent: &meterCurrentImpl{
+			MeterCurrent: &decorateMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
-			MeterEnergy: &meterEnergyImpl{
+			MeterEnergy: &decorateMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -52,18 +52,18 @@ func decorate(base api.Charger, meterEnergy func() (float64, error), meterCurren
 	return nil
 }
 
-type meterCurrentImpl struct {
+type decorateMeterCurrentImpl struct {
 	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *meterCurrentImpl) Currents() (float64, float64, float64, error) {
+func (impl *decorateMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
 }
 
-type meterEnergyImpl struct {
+type decorateMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *meterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
