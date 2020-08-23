@@ -26,30 +26,42 @@ import (
 {{- $combo := .Combo}}
 {{- $prefix := .Prefix}}
 {{- $idx := 0}}
-	case{{range $typ, $def := .Types}}{{if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil{{end}}:
+	case {{- range $typ, $def := .Types}}
+		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
+	{{- end}}:
 		return &struct{
 			{{.BaseType}}
-{{- range $typ, $def := .Types}}{{if contains $combo $typ}}
-			{{$typ}}{{end}}{{end}}
+{{- range $typ, $def := .Types}}
+	{{- if contains $combo $typ}}
+			{{$typ}}
+	{{- end}}
+{{- end}}
 		}{
 			{{.ShortBase}}: base,
-{{- range $typ, $def := .Types}}{{if contains $combo $typ}}
+{{- range $typ, $def := .Types}}
+	{{- if contains $combo $typ}}
 			{{$def.ShortType}}: &{{$prefix}}{{$def.ShortType}}Impl{
 				{{$def.VarName}}: {{$def.VarName}},
-			},{{end}}{{end}}
+			},
+	{{- end}}
+{{- end}}
 		}
 {{end -}}
 
 func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
-	switch {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
 {{- $types := .Types}}
 {{- $idx := 0}}
-	case{{range $typ, $def := .Types}}{{if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil{{end}}:
+	switch {
+	case {{- range $typ, $def := .Types}}
+		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil
+	{{- end}}:
 		return base
-{{range $combo := .Combinations}}{{template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo}}{{end}}	}
+{{range $combo := .Combinations}}
+	{{- template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo -}}
+{{end}}	}
 
 	return nil
 }
