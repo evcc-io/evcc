@@ -28,7 +28,6 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mjibson/esc v0.2.0
 	github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5
-	github.com/mxschmitt/golang-combinations v1.0.1-0.20200702132438-341af75e2cab
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0

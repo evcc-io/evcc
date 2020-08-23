@@ -54,7 +54,7 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run github.com/andig/evcc/cmd/tools/decorate.go -p charger -b api.Charger -o evsewifi_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -b api.Charger -o evsewifi_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
