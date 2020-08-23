@@ -147,7 +147,10 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		Combinations: combinations.All(combos),
 	}
 
-	tmpl.Execute(out, vars)
+	if err := tmpl.Execute(out, vars); err != nil {
+		println(err)
+		os.Exit(2)
+	}
 }
 
 var (
