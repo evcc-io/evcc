@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"text/template"
@@ -68,7 +70,7 @@ type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName string
 }
 
-func generate(baseType string, dynamicTypes ...dynamicType) {
+func generate(out io.Writer, baseType string, dynamicTypes ...dynamicType) {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
@@ -139,12 +141,13 @@ func generate(baseType string, dynamicTypes ...dynamicType) {
 		Combinations: combinations.All(combos),
 	}
 
-	tmpl.Execute(os.Stdout, vars)
+	tmpl.Execute(out, vars)
 }
 
 var (
-	base  = pflag.StringP("base", "b", "", "base type")
-	types = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
+	target = pflag.StringP("out", "o", "", "output file")
+	base   = pflag.StringP("base", "b", "", "base type")
+	types  = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 
 // Usage prints flags usage
@@ -156,10 +159,6 @@ func Usage() {
 }
 
 func main() {
-	// generate("api.Meter", []dynamicType{
-	// 	dynamicType{"api.MeterEnergy", "TotalEnergy", "func() (float64, error)"},
-	// 	dynamicType{"api.MeterCurrent", "Currents", "func() (float64, float64, float64, error)"},
-	// }...)
 	pflag.Usage = Usage
 	pflag.Parse()
 
@@ -175,5 +174,29 @@ func main() {
 		dynamicTypes = append(dynamicTypes, dt)
 	}
 
-	generate(*base, dynamicTypes...)
+	var buf bytes.Buffer
+	generate(&buf, *base, dynamicTypes...)
+	generated := strings.TrimSpace(buf.String()) + "\n"
+
+	var out io.Writer = os.Stdout
+	if *target != "" {
+		name := *target
+		if !strings.HasSuffix(name, ".go") {
+			name += ".go"
+		}
+
+		dst, err := os.Create(name)
+		if err != nil {
+			println(err)
+			os.Exit(2)
+		}
+
+		defer dst.Close()
+		out = dst
+	}
+
+	if _, err := out.Write([]byte(generated)); err != nil {
+		println(err)
+		os.Exit(2)
+	}
 }
