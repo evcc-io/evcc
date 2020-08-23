@@ -46,7 +46,7 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*util.HTTPHelper
-	uri string
+	uri          string
 	alwaysActive bool
 }
 
@@ -67,9 +67,9 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (api.Charger, error) {
 	evse := &EVSEWifi{
-		HTTPHelper:        util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:               strings.TrimRight(uri, "/"),
-		alwaysActive:      true,
+		HTTPHelper:   util.NewHTTPHelper(util.NewLogger("wifi")),
+		uri:          strings.TrimRight(uri, "/"),
+		alwaysActive: true,
 	}
 
 	return evse, nil
@@ -164,13 +164,14 @@ func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
-// // TotalEnergy implements the MeterEnergy interface
-// func (evse *EVSEWifi) TotalEnergy() (float64, error) {
-// 	params, err := evse.getParameters()
-// 	return params.MeterReading, err
-// }
+// TotalEnergy implements the MeterEnergy interface
+func (evse *EVSEWifi) TotalEnergy() (float64, error) {
+	params, err := evse.getParameters()
+	return params.MeterReading, err
+}
 
 // // ChargedEnergy implements the ChargeRater interface
+// // not usable due to https://github.com/CurtRod/SimpleEVSE-WiFi/issues/54
 // func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
 // 	params, err := evse.getParameters()
 // 	return params.Energy, err
