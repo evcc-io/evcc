@@ -1,0 +1,25 @@
+package meter
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/util"
+)
+
+var registry util.Registry[api.Meter] = make(map[string]func(map[string]interface{}) (api.Meter, error))
+
+// NewFromConfig creates meter from configuration
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
+		if v, err = factory(other); err != nil {
+			err = fmt.Errorf("cannot create %s meter: %w", typ, err)
+		}
+	} else {
+		err = fmt.Errorf("invalid meter type: %s", typ)
+	}
+
+	return
+}

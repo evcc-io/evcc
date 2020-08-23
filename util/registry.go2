@@ -1,0 +1,22 @@
+package util
+
+import (
+	"fmt"
+)
+
+type Registry[Elem any] map[string]func(map[string]interface{}) (Elem, error)
+
+func (r Registry[Elem]) Add(name string, factory func(map[string]interface{}) (Elem, error)) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate type: %s", name))
+	}
+	r[name] = factory
+}
+
+func (r Registry[Elem]) Get(name string) (func(map[string]interface{}) (Elem, error), error) {
+	factory, exists := r[name]
+	if !exists {
+		return nil, fmt.Errorf("type not registered: %s", name)
+	}
+	return factory, nil
+}
