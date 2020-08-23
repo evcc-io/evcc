@@ -91,9 +91,8 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	evse := &EVSEWifi{
-		HTTPHelper:   util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:          strings.TrimRight(uri, "/"),
-		alwaysActive: true,
+		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
+		uri:        strings.TrimRight(uri, "/"),
 	}
 
 	return evse, nil
