@@ -46,7 +46,7 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*util.HTTPHelper
-	uri string
+	uri          string
 	alwaysActive bool
 }
 
@@ -54,22 +54,46 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
+//go:generate go run github.com/andig/evcc/cmd/tools/decorate.go -p charger -b api.Charger -o evsewifi_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI string }{}
+	cc := struct {
+		URI   string
+		Meter struct {
+			Energy, Currents bool
+		}
+	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEVSEWifi(cc.URI)
+	evse, err := NewEVSEWifi(cc.URI)
+	if err != nil {
+		return evse, err
+	}
+
+	// decorate Charger with MeterEnergy
+	var energyDeco func() (float64, error)
+	if cc.Meter.Energy {
+		energyDeco = evse.totalEnergy
+	}
+
+	// decorate Charger with MeterCurrent
+	var currentsDeco func() (float64, float64, float64, error)
+	if cc.Meter.Currents {
+		currentsDeco = evse.currents
+	}
+
+	return decorate(evse, energyDeco, currentsDeco), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string) (api.Charger, error) {
+func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	evse := &EVSEWifi{
-		HTTPHelper:        util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:               strings.TrimRight(uri, "/"),
-		alwaysActive:      true,
+		HTTPHelper:   util.NewHTTPHelper(util.NewLogger("wifi")),
+		uri:          strings.TrimRight(uri, "/"),
+		alwaysActive: true,
 	}
 
 	return evse, nil
@@ -164,20 +188,20 @@ func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
-// // TotalEnergy implements the MeterEnergy interface
-// func (evse *EVSEWifi) TotalEnergy() (float64, error) {
-// 	params, err := evse.getParameters()
-// 	return params.MeterReading, err
-// }
+// TotalEnergy implements the MeterEnergy interface
+func (evse *EVSEWifi) totalEnergy() (float64, error) {
+	params, err := evse.getParameters()
+	return params.MeterReading, err
+}
+
+// Currents implements the MeterCurrents interface
+func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
+	params, err := evse.getParameters()
+	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+}
 
 // // ChargedEnergy implements the ChargeRater interface
 // func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
 // 	params, err := evse.getParameters()
 // 	return params.Energy, err
-// }
-
-// // Currents implements the MeterCurrents interface
-// func (evse *EVSEWifi) Currents() (float64, float64, float64, error) {
-// 	params, err := evse.getParameters()
-// 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
 // }

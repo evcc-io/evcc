@@ -31,7 +31,7 @@ import (
 {{- range $typ, $def := .Types}}{{if contains $combo $typ}}
 			{{$typ}}{{end}}{{end}}
 		}{
-			Meter: base,
+			{{.ShortBase}}: base,
 {{- range $typ, $def := .Types}}{{if contains $combo $typ}}
 			{{$def.ShortType}}: &{{$def.VarName}}Impl{
 				{{$def.VarName}}: {{$def.VarName}},
@@ -42,11 +42,12 @@ import (
 func decorate(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
 	switch {
 {{- $basetype := .BaseType}}
+{{- $shortbase := .ShortBase}}
 {{- $types := .Types}}
 {{- $idx := 0}}
 	case{{range $typ, $def := .Types}}{{if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} == nil{{end}}:
 		return base
-{{range $combo := .Combinations}}{{template "case" dict "BaseType" $basetype "Types" $types "Combo" $combo}}{{end}}	}
+{{range $combo := .Combinations}}{{template "case" dict "BaseType" $basetype  "ShortBase" $shortbase "Types" $types "Combo" $combo}}{{end}}	}
 
 	return nil
 }
@@ -70,7 +71,7 @@ type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName string
 }
 
-func generate(out io.Writer, baseType string, dynamicTypes ...dynamicType) {
+func generate(out io.Writer, packageName, baseType string, dynamicTypes ...dynamicType) {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
@@ -128,15 +129,17 @@ func generate(out io.Writer, baseType string, dynamicTypes ...dynamicType) {
 		combos = append(combos, dt.typ)
 	}
 
+	baseTypeParts := strings.SplitN(baseType, ".", 2)
 	vars := struct {
-		Package, API string
-		BaseType     string
-		Types        map[string]typeStruct
-		Combinations [][]string
+		Package, API        string
+		BaseType, ShortBase string
+		Types               map[string]typeStruct
+		Combinations        [][]string
 	}{
-		Package:      "meter",
 		API:          "github.com/andig/evcc/api",
+		Package:      packageName,
 		BaseType:     baseType,
+		ShortBase:    baseTypeParts[1],
 		Types:        types,
 		Combinations: combinations.All(combos),
 	}
@@ -147,6 +150,7 @@ func generate(out io.Writer, baseType string, dynamicTypes ...dynamicType) {
 var (
 	target = pflag.StringP("out", "o", "", "output file")
 	base   = pflag.StringP("base", "b", "", "base type")
+	pkg    = pflag.StringP("package", "p", "", "package name")
 	types  = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 
@@ -162,7 +166,7 @@ func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
 
-	if *base == "" || len(*types) == 0 {
+	if *base == "" || *pkg == "" || len(*types) == 0 {
 		Usage()
 		os.Exit(2)
 	}
@@ -175,7 +179,7 @@ func main() {
 	}
 
 	var buf bytes.Buffer
-	generate(&buf, *base, dynamicTypes...)
+	generate(&buf, *pkg, *base, dynamicTypes...)
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
