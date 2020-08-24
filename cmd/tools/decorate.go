@@ -23,10 +23,11 @@ import (
 )
 
 {{define "case"}}
-{{- $combo := .Combo}}
-{{- $prefix := .Prefix}}
-{{- $idx := 0}}
-	case {{- range $typ, $def := .Types}}
+	{{- $combo := .Combo}}
+	{{- $prefix := .Prefix}}
+	{{- $idx := 0}}
+
+	{{- range $typ, $def := .Types}}
 		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
 	{{- end}}:
 		return &struct{
@@ -46,7 +47,7 @@ import (
 	{{- end}}
 {{- end}}
 		}
-{{end -}}
+{{- end -}}
 
 func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
 {{- $basetype := .BaseType}}
@@ -60,13 +61,14 @@ func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{sl
 	{{- end}}:
 		return base
 {{range $combo := .Combinations}}
-	{{- template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo -}}
+	case {{- template "case" dict "BaseType" $basetype "Prefix" $prefix "ShortBase" $shortbase "Types" $types "Combo" $combo}}
 {{end}}	}
 
 	return nil
 }
 
-{{range .Types}}type {{$prefix}}{{.ShortType}}Impl struct {
+{{range .Types -}}
+type {{$prefix}}{{.ShortType}}Impl struct {
 	{{.VarName}} {{.Signature}}
 }
 
