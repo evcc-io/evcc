@@ -54,14 +54,14 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -b api.Charger -o evsewifi_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -b api.Charger -o evsewifi_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		Meter struct {
-			Energy, Currents bool
+			Power, Energy, Currents bool
 		}
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,6 +71,12 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	evse, err := NewEVSEWifi(cc.URI)
 	if err != nil {
 		return evse, err
+	}
+
+	// decorate Charger with Meter
+	var currentPower func() (float64, error)
+	if cc.Meter.Power {
+		currentPower = evse.currentPower
 	}
 
 	// decorate Charger with MeterEnergy
@@ -85,7 +91,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currents = evse.currents
 	}
 
-	return decorate(evse, totalEnergy, currents), nil
+	return decorate(evse, currentPower, totalEnergy, currents), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -185,6 +191,12 @@ func (evse *EVSEWifi) MaxCurrent(current int64) error {
 func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	params, err := evse.getParameters()
 	return time.Duration(params.Duration) * time.Millisecond, err
+}
+
+// CurrentPower implements the Meter interface
+func (evse *EVSEWifi) currentPower() (float64, error) {
+	params, err := evse.getParameters()
+	return params.ActualPower, err
 }
 
 // TotalEnergy implements the MeterEnergy interface
