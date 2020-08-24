@@ -41,17 +41,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	m, _ := NewConfigurable(power)
 
 	// decorate Meter with MeterEnergy
-	var energyDeco func() (float64, error)
+	var totalEnergy func() (float64, error)
 	if cc.Energy != nil {
 		m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
 		if err != nil {
 			return nil, err
 		}
-		energyDeco = m.totalEnergy
+		totalEnergy = m.totalEnergy
 	}
 
 	// decorate Meter with MeterCurrent
-	var currentsDeco func() (float64, float64, float64, error)
+	var currents func() (float64, float64, float64, error)
 	if len(cc.Currents) > 0 {
 		if len(cc.Currents) != 3 {
 			return nil, errors.New("need 3 currents")
@@ -67,10 +67,10 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			m.currentsG = append(currentsG, c)
 		}
 
-		currentsDeco = m.currents
+		currents = m.currents
 	}
 
-	res := meterDecorate(m, energyDeco, currentsDeco)
+	res := meterDecorate(m, totalEnergy, currents)
 
 	return res, nil
 }
