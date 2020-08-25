@@ -25,7 +25,7 @@ func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f modbusDecorate -b api.Meter -o modbus_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateModbus -b api.Meter -o modbus_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -95,7 +95,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	return modbusDecorate(m, totalEnergy), nil
+	return decorateModbus(m, totalEnergy), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)

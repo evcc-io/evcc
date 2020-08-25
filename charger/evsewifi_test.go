@@ -19,10 +19,6 @@ func TestEvseWifi(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, ok := evse.(api.Meter); !ok {
-		t.Error("missing api.Meter")
-	}
-
 	if _, ok := evse.(api.MeterEnergy); !ok {
 		t.Error("missing api.MeterEnergy")
 	}

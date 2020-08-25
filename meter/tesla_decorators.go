@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func teslaDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
+func decorateTesla(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
 	switch {
 	case meterEnergy == nil:
 		return base
@@ -17,7 +17,7 @@ func teslaDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Mete
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterEnergy: &teslaDecorateMeterEnergyImpl{
+			MeterEnergy: &decorateTeslaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -26,10 +26,10 @@ func teslaDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Mete
 	return nil
 }
 
-type teslaDecorateMeterEnergyImpl struct {
+type decorateTeslaMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *teslaDecorateMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateTeslaMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }

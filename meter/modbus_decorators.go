@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func modbusDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
+func decorateModbus(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
 	switch {
 	case meterEnergy == nil:
 		return base
@@ -17,7 +17,7 @@ func modbusDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Met
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterEnergy: &modbusDecorateMeterEnergyImpl{
+			MeterEnergy: &decorateModbusMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -26,10 +26,10 @@ func modbusDecorate(base api.Meter, meterEnergy func() (float64, error)) api.Met
 	return nil
 }
 
-type modbusDecorateMeterEnergyImpl struct {
+type decorateModbusMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *modbusDecorateMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateModbusMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }

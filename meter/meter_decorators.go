@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
+func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Meter {
 	switch {
 	case meterCurrent == nil && meterEnergy == nil:
 		return base
@@ -17,7 +17,7 @@ func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCur
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterEnergy: &meterDecorateMeterEnergyImpl{
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -28,7 +28,7 @@ func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCur
 			api.MeterCurrent
 		}{
 			Meter: base,
-			MeterCurrent: &meterDecorateMeterCurrentImpl{
+			MeterCurrent: &decorateMeterMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
 		}
@@ -40,10 +40,10 @@ func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCur
 			api.MeterEnergy
 		}{
 			Meter: base,
-			MeterCurrent: &meterDecorateMeterCurrentImpl{
+			MeterCurrent: &decorateMeterMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
-			MeterEnergy: &meterDecorateMeterEnergyImpl{
+			MeterEnergy: &decorateMeterMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -52,18 +52,18 @@ func meterDecorate(base api.Meter, meterEnergy func() (float64, error), meterCur
 	return nil
 }
 
-type meterDecorateMeterCurrentImpl struct {
+type decorateMeterMeterCurrentImpl struct {
 	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *meterDecorateMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+func (impl *decorateMeterMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
 }
 
-type meterDecorateMeterEnergyImpl struct {
+type decorateMeterMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *meterDecorateMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateMeterMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
