@@ -37,7 +37,7 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f smaDecorate -b api.Meter -o sma_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateSMA -b api.Meter -o sma_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -87,7 +87,7 @@ func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
 
 	go sm.receive()
 
-	return smaDecorate(sm, totalEnergy), nil
+	return decorateSMA(sm, totalEnergy), nil
 }
 
 // update the actual meter data
