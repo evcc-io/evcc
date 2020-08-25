@@ -219,13 +219,11 @@ func (v *Kia) getToken(accCode string) (string, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := url.Values{
-		"grant_type":   []string{"authorization_code"},
-		"redirect_uri": []string{"https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect"},
-		"code":         []string{accCode},
-	}
+	data := "grant_type=authorization_code" +
+		"&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect" +
+		"&code=" + accCode
 
-	req, err := v.request(http.MethodPost, kiaURLAccessToken, headers, strings.NewReader(data.Encode()))
+	req, err := v.request(http.MethodPost, kiaURLAccessToken, headers, strings.NewReader(data))
 	if err != nil {
 		return "", err
 	}
