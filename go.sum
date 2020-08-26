@@ -139,10 +139,6 @@ github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0U
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4 h1:QZVozMeLCqyMOOhA+OuqQdNXkyu4uUQEu4+mPBB5pPQ=
 github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
-github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a h1:3UySDE1dqaYXW4tTw5e/8DhSBev4ucKiN8VMtPg5CXo=
-github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a/go.mod h1:cOS1YDRu+JId5eT7kRulYTlfpACFppj2MpftCvHeiuM=
-github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1 h1:BYLp5X1lVALMF3s8aMjBeV1w1Htru75EKzn4Kqtwvv8=
-github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1/go.mod h1:cOS1YDRu+JId5eT7kRulYTlfpACFppj2MpftCvHeiuM=
 github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08 h1:syBxnRYnSPUDdkdo5U4sy2roxBPQDjNiw4od7xlsABQ=
 github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
