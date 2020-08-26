@@ -83,7 +83,7 @@ func (evse *SimpleEVSE) prepare() {
 		h.SlaveID = 1
 	}
 
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 }
 
 // Status implements the Charger.Status interface
