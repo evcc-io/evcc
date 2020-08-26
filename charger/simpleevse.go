@@ -48,6 +48,7 @@ func NewSimpleEVSE(conn, device string) (api.Charger, error) {
 		handler = modbus.NewTCPClientHandler(conn)
 		handler.(*modbus.TCPClientHandler).Timeout = time.Second
 		handler.(*modbus.TCPClientHandler).SlaveID = 1
+		handler.(*modbus.TCPClientHandler).Logger = log.TRACE
 	}
 	if device != "" {
 		handler = modbus.NewRTUClientHandler(device)
@@ -57,6 +58,7 @@ func NewSimpleEVSE(conn, device string) (api.Charger, error) {
 		handler.(*modbus.RTUClientHandler).Parity = "N"
 		handler.(*modbus.RTUClientHandler).Timeout = time.Second
 		handler.(*modbus.RTUClientHandler).SlaveID = 1
+		handler.(*modbus.RTUClientHandler).Logger = log.TRACE
 	}
 	if handler == nil {
 		return nil, errors.New("must define either uri or device")
@@ -76,13 +78,13 @@ func NewSimpleEVSE(conn, device string) (api.Charger, error) {
 // Status implements the Charger.Status interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	b, err := evse.client.ReadHoldingRegisters(evseRegVehicleStatus, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegVehicleStatus, b)
+	evse.log.TRACE.Printf("read status (%d): %0 X", evseRegVehicleStatus, b)
 	if err != nil {
 		evse.handler.Close()
 		return api.StatusNone, err
 	}
 
-	switch b[0] {
+	switch b[1] {
 	case 1: // ready
 		return api.StatusA, nil
 	case 2: // EV is present
@@ -107,7 +109,7 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return b[0] == 1, nil
+	return b[1] == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -120,9 +122,9 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 	}
 
 	if enable {
-		b[0] |= 1
+		b[1] |= 1
 	} else {
-		b[0] &= ^byte(1)
+		b[1] &= ^byte(1)
 	}
 
 	b, err = evse.client.WriteMultipleRegisters(evseRegTurnOff, 1, b)

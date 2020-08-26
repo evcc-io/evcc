@@ -39,3 +39,5 @@ require (
 	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
+
+replace github.com/grid-x/modbus => github.com/andig/gridx-modbus v0.0.0-20200826125157-fae5d19005f7
