@@ -26,6 +26,8 @@ func init() {
 	registry.Add("simpleevse", NewSimpleEVSEFromConfig)
 }
 
+// https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
+
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ URI, Device string }{}
@@ -138,10 +140,10 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
-	u := uint16(current)
+	b := []byte{0, byte(current)}
 
-	b, err := evse.client.WriteSingleRegister(evseRegAmpsConfig, u)
-	evse.log.TRACE.Printf("write max current %d %0X: %0 X", evseRegAmpsConfig, u, b)
+	b, err := evse.client.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
+	evse.log.TRACE.Printf("write max current %d %0X: %0 X", evseRegAmpsConfig, current, b)
 	if err != nil {
 		evse.handler.Close()
 	}
