@@ -26,32 +26,20 @@ type Connection struct {
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
-var connections map[string]meters.Connection
-
-func registeredConnection(key string, newConn meters.Connection) meters.Connection {
-	if connections == nil {
-		connections = make(map[string]meters.Connection)
-	}
-
-	if conn, ok := connections[key]; ok {
-		return conn
-	}
-
-	connections[key] = newConn
-	return newConn
-}
-
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn meters.Connection, err error) {
 	if device != "" {
-		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		if baudrate == 0 || comset == "" {
+			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
+		}
+		conn = meters.NewRTU(device, baudrate, comset)
 	}
 
 	if uri != "" {
 		if rtu {
-			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
+			conn = meters.NewRTUOverTCP(uri)
 		} else {
-			conn = registeredConnection(uri, meters.NewTCP(uri))
+			conn = meters.NewTCP(uri)
 		}
 	}
 
