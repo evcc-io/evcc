@@ -13,6 +13,8 @@ func init() {
 	registry.Add("default", NewConfigurableFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateMeter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
@@ -39,63 +41,42 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	m, _ := NewConfigurable(power)
 
 	// decorate Meter with MeterEnergy
+	var totalEnergy func() (float64, error)
 	if cc.Energy != nil {
-		energy, err := NewMeterEnergy(*cc.Energy)
+		m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
 		if err != nil {
 			return nil, err
 		}
-
-		type EnergyDecorator struct {
-			api.Meter
-			api.MeterEnergy
-		}
-
-		m = &EnergyDecorator{
-			Meter:       m,
-			MeterEnergy: energy,
-		}
+		totalEnergy = m.totalEnergy
 	}
 
 	// decorate Meter with MeterCurrent
+	var currents func() (float64, float64, float64, error)
 	if len(cc.Currents) > 0 {
-		currents, err := NewCurrents(cc.Currents)
-		if err != nil {
-			return nil, err
+		if len(cc.Currents) != 3 {
+			return nil, errors.New("need 3 currents")
 		}
 
-		type PowerEnergy interface {
-			api.Meter
-			api.MeterEnergy
+		var currentsG []func() (float64, error)
+		for _, cc := range cc.Currents {
+			c, err := provider.NewFloatGetterFromConfig(cc)
+			if err != nil {
+				return nil, err
+			}
+
+			m.currentsG = append(currentsG, c)
 		}
 
-		if pe, ok := m.(PowerEnergy); ok {
-			type CurrentDecorator struct {
-				PowerEnergy
-				api.MeterCurrent
-			}
-
-			m = &CurrentDecorator{
-				PowerEnergy:  pe,
-				MeterCurrent: currents,
-			}
-		} else {
-			type CurrentDecorator struct {
-				api.Meter
-				api.MeterCurrent
-			}
-
-			m = &CurrentDecorator{
-				Meter:        m,
-				MeterCurrent: currents,
-			}
-		}
+		currents = m.currents
 	}
 
-	return m, nil
+	res := decorateMeter(m, totalEnergy, currents)
+
+	return res, nil
 }
 
-// NewConfigurable creates a new charger
-func NewConfigurable(currentPowerG func() (float64, error)) (api.Meter, error) {
+// NewConfigurable creates a new meter
+func NewConfigurable(currentPowerG func() (float64, error)) (*Meter, error) {
 	m := &Meter{
 		currentPowerG: currentPowerG,
 	}
@@ -105,6 +86,8 @@ func NewConfigurable(currentPowerG func() (float64, error)) (api.Meter, error) {
 // Meter is an api.Meter implementation with configurable getters and setters.
 type Meter struct {
 	currentPowerG func() (float64, error)
+	totalEnergyG  func() (float64, error)
+	currentsG     []func() (float64, error)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -112,62 +95,15 @@ func (m *Meter) CurrentPower() (float64, error) {
 	return m.currentPowerG()
 }
 
-// MeterEnergy is an api.MeterEnergy implementation with configurable getters and setters.
-type MeterEnergy struct {
-	totalEnergyG func() (float64, error)
-}
-
-// NewMeterEnergy creates a new api.MeterEnergy
-func NewMeterEnergy(ccEnergy provider.Config) (api.MeterEnergy, error) {
-	totalEnergyG, err := provider.NewFloatGetterFromConfig(ccEnergy)
-	if err != nil {
-		return nil, err
-	}
-
-	e := &MeterEnergy{
-		totalEnergyG: totalEnergyG,
-	}
-
-	return e, nil
-}
-
-// TotalEnergy implements the Meter.TotalEnergy interface
-func (m *MeterEnergy) TotalEnergy() (float64, error) {
+// totalEnergy implements the Meter.TotalEnergy interface
+func (m *Meter) totalEnergy() (float64, error) {
 	return m.totalEnergyG()
 }
 
-// Currents is an api.MeterCurrent implementation
-type Currents struct {
-	currentsG []func() (float64, error)
-}
-
-// NewCurrents creates a new api.MeterCurrent
-func NewCurrents(ccCurrents []provider.Config) (api.MeterCurrent, error) {
-	if len(ccCurrents) != 3 {
-		return nil, errors.New("need 3 currents")
-	}
-
-	var currentsG []func() (float64, error)
-	for _, cc := range ccCurrents {
-		c, err := provider.NewFloatGetterFromConfig(cc)
-		if err != nil {
-			return nil, err
-		}
-
-		currentsG = append(currentsG, c)
-	}
-
-	c := &Currents{
-		currentsG: currentsG,
-	}
-
-	return c, nil
-}
-
-// Currents implements the api.Currents interface
-func (c *Currents) Currents() (float64, float64, float64, error) {
+// currents implements the Meter.Currents interface
+func (m *Meter) currents() (float64, float64, float64, error) {
 	var currents []float64
-	for _, currentG := range c.currentsG {
+	for _, currentG := range m.currentsG {
 		c, err := currentG()
 		if err != nil {
 			return 0, 0, 0, err

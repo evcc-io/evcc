@@ -25,6 +25,8 @@ func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateModbus -b api.Meter -o modbus_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
@@ -88,15 +90,16 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	// decorate energy reading
+	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
 			log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Power)
 		}
 
-		return &ModbusEnergy{m}, nil
+		totalEnergy = m.totalEnergy
 	}
 
-	return m, nil
+	return decorateModbus(m, totalEnergy), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
@@ -143,12 +146,7 @@ func (m *Modbus) CurrentPower() (float64, error) {
 	return m.floatGetter(m.opPower)
 }
 
-// ModbusEnergy decorates Modbus with api.MeterEnergy interface
-type ModbusEnergy struct {
-	*Modbus
-}
-
-// TotalEnergy implements the Meter.TotalEnergy interface
-func (m *ModbusEnergy) TotalEnergy() (float64, error) {
+// totalEnergy implements the Meter.TotalEnergy interface
+func (m *Modbus) totalEnergy() (float64, error) {
 	return m.floatGetter(m.opEnergy)
 }

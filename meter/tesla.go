@@ -39,6 +39,8 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
@@ -80,11 +82,12 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 	m.HTTPHelper.Client.Transport = customTransport
 
 	// decorate api.MeterEnergy
+	var totalEnergy func() (float64, error)
 	if m.usage == "load" || m.usage == "solar" {
-		return &TeslaEnergy{Tesla: m}, nil
+		totalEnergy = m.totalEnergy
 	}
 
-	return m, nil
+	return decorateTesla(m, totalEnergy), nil
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -101,13 +104,8 @@ func (m *Tesla) CurrentPower() (float64, error) {
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
-// TeslaEnergy decorates Tesla with api.MeterEnergy interface
-type TeslaEnergy struct {
-	*Tesla
-}
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (m *TeslaEnergy) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (m *Tesla) totalEnergy() (float64, error) {
 	var tr teslaResponse
 	_, err := m.GetJSON(m.uri, &tr)
 

@@ -29,14 +29,15 @@ require (
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mjibson/esc v0.2.0
 	github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5
+	github.com/mxschmitt/golang-combinations v1.0.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
+	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200804054214-122815825570
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
 

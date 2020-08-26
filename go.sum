@@ -266,6 +266,8 @@ github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3Rllmb
 github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5 h1:xnTS/7y0g28W2SJeWNLMYTiTOmfW2P/YdPByoQnPvVo=
 github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5/go.mod h1:yV39+EVOWdnoTe75NyKdo9iuyI3Slyh4t7eQvElUbWE=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
+github.com/mxschmitt/golang-combinations v1.0.0 h1:NFoO7CSP8MUcFlHpe1YdewKwMa15dgDbaqkVLC5DUPI=
+github.com/mxschmitt/golang-combinations v1.0.0/go.mod h1:RbMhWvfCelHR6WROvT2bVfxJvZHoEvBj71SKe+H0MYU=
 github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da h1:qiPWuGGr+1GQE6s9NPSK8iggR/6x/V+0snIoOPYsBgc=
 github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da/go.mod h1:DvuJJ/w1Y59rG8UTDxsMk5U+UJXJwuvUgbiJSm9yhX8=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=

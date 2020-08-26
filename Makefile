@@ -14,7 +14,6 @@ clean:
 	rm -rf dist/
 
 install:
-	go install golang.org/x/tools/cmd/stringer
 	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
 
