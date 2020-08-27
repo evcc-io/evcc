@@ -57,14 +57,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			return nil, errors.New("need 3 currents")
 		}
 
-		var currentsG []func() (float64, error)
 		for _, cc := range cc.Currents {
 			c, err := provider.NewFloatGetterFromConfig(cc)
 			if err != nil {
 				return nil, err
 			}
 
-			m.currentsG = append(currentsG, c)
+			m.currentsG = append(m.currentsG, c)
 		}
 
 		currents = m.currents
