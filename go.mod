@@ -38,7 +38,6 @@ require (
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200829121957-ecdff9ca7332
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	golang.org/x/tools v0.0.0-20200717024301-6ddee64345a6
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
 
