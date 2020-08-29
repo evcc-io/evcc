@@ -82,7 +82,7 @@ func (wb *PhoenixEVCC) Enable(enable bool) error {
 	}
 
 	b, err := wb.conn.WriteSingleCoil(phEVCCRegEnable, u)
-	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", phEVCCRegEnable, u, b)
+	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", phEVCCRegEnable, u, b)
 
 	return err
 }
@@ -94,7 +94,7 @@ func (wb *PhoenixEVCC) MaxCurrent(current int64) error {
 	}
 
 	b, err := wb.conn.WriteSingleRegister(phEVCCRegMaxCurrent, uint16(current))
-	wb.log.TRACE.Printf("write max current %d %0X: %0 X", phEVCCRegMaxCurrent, current, b)
+	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", phEVCCRegMaxCurrent, current, b)
 
 	return err
 }

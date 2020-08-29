@@ -109,7 +109,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 	}
 
 	bb, err := evse.conn.WriteMultipleRegisters(evseRegTurnOff, 1, b)
-	evse.log.TRACE.Printf("write charge enable %d %0X: %0 X", evseRegTurnOff, b, bb)
+	evse.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", evseRegTurnOff, b, bb)
 
 	return err
 }
@@ -119,7 +119,7 @@ func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 
 	b, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
-	evse.log.TRACE.Printf("write max current %d %0X: %0 X", evseRegAmpsConfig, current, b)
+	evse.log.TRACE.Printf("write max current (%d) %0X: %0 X", evseRegAmpsConfig, current, b)
 
 	return err
 }

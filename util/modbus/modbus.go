@@ -74,37 +74,38 @@ func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []b
 	return mb.handle(mb.Connection.ModbusClient().WriteMultipleRegisters(address, quantity, value))
 }
 
-var connections map[string]*Connection
+var connections map[string]meters.Connection
 
-func registeredConnection(key string, slaveID uint8, newConn meters.Connection) *Connection {
+func registeredConnection(key string, newConn meters.Connection) meters.Connection {
 	if connections == nil {
-		connections = make(map[string]*Connection)
+		connections = make(map[string]meters.Connection)
 	}
 
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
 
-	conn := &Connection{
-		slaveID:    slaveID,
-		Connection: newConn,
-	}
-
-	connections[key] = conn
-	return conn
+	connections[key] = newConn
+	return newConn
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (conn *Connection, err error) {
+func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
+	var conn meters.Connection
+
+	if device != "" && uri != "" {
+		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
+	}
+
 	if device != "" {
-		conn = registeredConnection(device, slaveID, meters.NewRTU(device, baudrate, comset))
+		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
 
 	if uri != "" {
 		if rtu {
-			conn = registeredConnection(uri, slaveID, meters.NewRTUOverTCP(uri))
+			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		} else {
-			conn = registeredConnection(uri, slaveID, meters.NewTCP(uri))
+			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
 	}
 
@@ -112,7 +113,12 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		return nil, errors.New("invalid modbus configuration: need either uri or device")
 	}
 
-	return conn, nil
+	slaveConn := &Connection{
+		slaveID:    slaveID,
+		Connection: conn,
+	}
+
+	return slaveConn, nil
 }
 
 // NewDevice creates physical modbus device from config

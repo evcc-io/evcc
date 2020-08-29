@@ -102,7 +102,7 @@ func (wb *PhoenixEMCP) Enable(enable bool) error {
 	}
 
 	b, err := wb.client.WriteSingleCoil(phEMCPRegEnable, u)
-	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", phEMCPRegEnable, u, b)
+	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", phEMCPRegEnable, u, b)
 	if err != nil {
 		wb.handler.Close()
 	}
@@ -117,7 +117,7 @@ func (wb *PhoenixEMCP) MaxCurrent(current int64) error {
 	}
 
 	b, err := wb.client.WriteSingleRegister(phEMCPRegMaxCurrent, uint16(current))
-	wb.log.TRACE.Printf("write max current %d %0X: %0 X", phEMCPRegMaxCurrent, current, b)
+	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", phEMCPRegMaxCurrent, current, b)
 	if err != nil {
 		wb.handler.Close()
 	}
