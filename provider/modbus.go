@@ -14,17 +14,17 @@ import (
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log     *util.Logger
-	conn    meters.Connection
-	device  meters.Device
-	slaveID uint8
-	op      modbus.Operation
-	scale   float64
+	log    *util.Logger
+	conn   *modbus.Connection
+	device meters.Device
+	op     modbus.Operation
+	scale  float64
 }
 
 // NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	cc := struct {
+		Model           string
 		modbus.Settings `mapstructure:",squash"`
 		Register        modbus.Register
 		Value           string
@@ -43,7 +43,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 		cc.RTU = &b
 	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 
 		// prepare device
 		if err == nil {
-			conn.Slave(cc.ID)
+			conn.Slave()
 			err = device.Initialize(conn.ModbusClient())
 
 			// silence KOSTAL implementation errors
@@ -103,33 +103,28 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	}
 
 	mb := &Modbus{
-		log:     log,
-		conn:    conn,
-		device:  device,
-		op:      op,
-		scale:   cc.Scale,
-		slaveID: cc.ID,
+		log:    log,
+		conn:   conn,
+		device: device,
+		op:     op,
+		scale:  cc.Scale,
 	}
 	return mb, nil
 }
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) FloatGetter() (float64, error) {
-	m.conn.Slave(m.slaveID)
-
 	var res meters.MeasurementResult
 	var err error
 
 	// if funccode is configured, execute the read directly
 	if op := m.op.MBMD; op.FuncCode != 0 {
-		client := m.conn.ModbusClient()
-
 		var bytes []byte
 		switch op.FuncCode {
 		case rs485.ReadHoldingReg:
-			bytes, err = client.ReadHoldingRegisters(op.OpCode, op.ReadLen)
+			bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
 		case rs485.ReadInputReg:
-			bytes, err = client.ReadInputRegisters(op.OpCode, op.ReadLen)
+			bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
 		default:
 			return 0, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
@@ -162,9 +157,7 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		err = nil
 	}
 
-	if err != nil {
-		m.conn.Close() // close connection in case of modbus error
-	} else {
+	if err == nil {
 		m.log.TRACE.Printf("%+v", res)
 	}
 
