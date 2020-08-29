@@ -53,6 +53,9 @@
       color: #e83e8c;
       word-wrap: break-word;
     }
+    .value, input[type=radio], label.btn {
+      white-space: nowrap !important;
+    }
   </style>
 </head>
 <body>
@@ -231,27 +234,27 @@ loadpoints:
 <script type="text/x-template" id="site-details-template">
 <div class="row">
   <div class="col-6 col-md-3 mt-3" v-if="state.gridMeter">
-    <div class="mb-2" v-if="state.gridPower > 0">
+    <div class="mb-2 value" v-if="state.gridPower > 0">
       Bezug <i class="text-primary fas fa-arrow-down"></i>
     </div>
-    <div class="mb-2" v-else>
+    <div class="mb-2 value" v-else>
       Einspeisung <i class="text-primary fas fa-arrow-up"></i>
     </div>
-    <h2>
+    <h2 class="value">
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
     </h2>
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.pvMeter">
-    <div class="mb-2">Erzeugung <i class="fas fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i></div>
-    <h2>
+    <div class="mb-2 value">Erzeugung <i class="fas fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i></div>
+    <h2 class="value">
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
   <div class="d-none d-inline-block col-md-3 mt-3" v-if="state.batteryMeter">
-    <div class="mb-2">Batterie <i class="text-primary fas"
+    <div class="mb-2 value">Batterie <i class="text-primary fas"
         v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
-    <h2>
+    <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
     </h2>
   </div>
@@ -335,29 +338,29 @@ loadpoints:
 <script type="text/x-template" id="loadpoint-details-template">
 <div class="row">
   <div class="col-6 col-md-3 mt-3">
-    <div class="mb-2">Leistung</div>
-    <h2>
+    <div class="mb-2 value">Leistung</div>
+    <h2 class="value">
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
     </h2>
   </div>
   <div class="col-6 col-md-3 mt-3">
-    <div class="mb-2">Geladen</div>
-    <h2>
+    <div class="mb-2 value">Geladen</div>
+    <h2 class="value">
       {{fmt(state.chargedEnergy)}} <small class="text-muted">{{fmtUnit(state.chargedEnergy)}}Wh</small>
     </h2>
   </div>
 
   <div class="col-6 col-md-3 mt-3">
-    <div class="mb-2">Dauer</div>
-    <h2>
+    <div class="mb-2 value">Dauer</div>
+    <h2 class="value">
       {{fmtShortDuration(state.chargeDuration)}} <small
         class="text-muted">{{fmtShortDurationUnit(state.chargeDuration)}}</small>
     </h2>
   </div>
 
   <div class="col-6 col-md-3 mt-3" v-if="state.soc">
-    <div class="mb-2">Restzeit</div>
-    <h2>
+    <div class="mb-2 value">Restzeit</div>
+    <h2 class="value">
       {{fmtShortDuration(state.chargeEstimate)}} <small
         class="text-muted">{{fmtShortDurationUnit(state.chargeEstimate)}}</small>
     </h2>
@@ -367,7 +370,7 @@ loadpoints:
 
 <script type="text/x-template" id="mode-template">
 <div class="btn-group btn-group-toggle bg-white shadow-none">
-  <label class="btn btn-outline-primary disabled caption font-weight-bold" v-if="caption">
+  <label class="btn btn-outline-primary value disabled caption font-weight-bold" v-if="caption">
     Modus
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:mode=='off',first:!caption}">
@@ -378,13 +381,13 @@ loadpoints:
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:mode=='minpv'}" v-if="pv">
     <input type="radio" value="minpv" v-on:click="targetMode('minpv')">
-    <span class="d-inline d-sm-none">Min + PV</span>
-    <span class="d-none d-sm-inline">Minimum + PV</span>
+    <span class="d-inline d-lg-none">Min</span>
+    <span class="d-none d-lg-inline">Min + PV</span>
   </label>
   <label class="btn btn-outline-primary" v-bind:class="{active:mode=='pv'}" v-if="pv">
     <input type="radio" value="pv" v-on:click="targetMode('pv')">
-    <span class="d-inline d-sm-none">PV</span>
-    <span class="d-none d-sm-inline">Nur PV</span>
+    <span class="d-inline d-md-none">PV</span>
+    <span class="d-none d-md-inline">Nur PV</span>
   </label>
 </div>
 </script>

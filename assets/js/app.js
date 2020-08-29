@@ -206,7 +206,7 @@ Vue.component('site', {
   mixins: [formatter],
   computed: {
     multi: function() {
-      return this.state.loadpoints.length > 1
+      return this.state.loadpoints.length > 1 || app.compact;
     }
   },
   methods: {
@@ -406,7 +406,15 @@ const router = new VueRouter({
 });
 
 const app = new Vue({
-  router,
-}).$mount("#app");
+  el: '#app',
+  router: router,
+  data: {
+    compact: false,
+  },
+  created: function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.compact = urlParams.get('compact');
+  },
+});
 
 store.init();
