@@ -41,7 +41,7 @@ func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) 
 }
 
 // NewSimpleEVSE creates SimpleEVSE charger
-func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
+func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*SimpleEVSE, error) {
 	log := util.NewLogger("evse")
 
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
