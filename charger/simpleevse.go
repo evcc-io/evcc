@@ -28,18 +28,16 @@ func init() {
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	b := true
 	cc := modbus.Settings{
 		Baudrate: 9600,
 		Comset:   "8N1",
-		RTU:      &b,
 		ID:       1,
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSimpleEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
+	return NewSimpleEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
 }
 
 // NewSimpleEVSE creates SimpleEVSE charger

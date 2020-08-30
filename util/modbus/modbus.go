@@ -98,6 +98,9 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	if device != "" {
+		if baudrate == 0 || comset == "" {
+			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
+		}
 		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
 
