@@ -14,11 +14,15 @@ type Charger struct {
 	enabledG    func() (bool, error)
 	enableS     func(bool) error
 	maxCurrentS func(int64) error
+	phasesS     func(int64) error
 }
 
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
 }
+
+// TODO generation of setters is not yet functional
+// go:generate go run ../cmd/tools/decorate.go -p charger -f decorateCharger -b api.Charger -o charger_decorators -t "api.ChargePhases,Phases1p3p,func(int64) error"
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -58,30 +62,21 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		maxcurrent, err = provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent)
 	}
 
-	var c api.Charger
-	if err == nil {
-		c, err = NewConfigurable(status, enabled, enable, maxcurrent)
+	if err != nil {
+		return nil, err
 	}
 
-	// decorate Charger with ChargePhases
-	if err == nil && cc.Phases != nil {
-		cp, err := NewChargePhases(*cc.Phases)
-		if err != nil {
+	c, _ := NewConfigurable(status, enabled, enable, maxcurrent)
+
+	var phasesS func(int64) error
+	if cc.Phases != nil {
+		if c.phasesS, err = provider.NewIntSetterFromConfig("phases", *cc.Phases); err != nil {
 			return nil, err
 		}
-
-		type PhasesDecorator struct {
-			api.Charger
-			api.ChargePhases
-		}
-
-		c = &PhasesDecorator{
-			Charger:      c,
-			ChargePhases: cp,
-		}
+		phasesS = c.phasesS
 	}
 
-	return c, err
+	return decorateCharger(c, phasesS), nil
 }
 
 // NewConfigurable creates a new charger
@@ -90,7 +85,7 @@ func NewConfigurable(
 	enabledG func() (bool, error),
 	enableS func(bool) error,
 	maxCurrentS func(int64) error,
-) (api.Charger, error) {
+) (*Charger, error) {
 	c := &Charger{
 		statusG:     statusG,
 		enabledG:    enabledG,
@@ -126,26 +121,7 @@ func (c *Charger) MaxCurrent(current int64) error {
 	return c.maxCurrentS(current)
 }
 
-// ChargePhases decorates Charger with api.ChargePhases interface
-type ChargePhases struct {
-	phasesS func(int64) error
-}
-
-// NewChargePhases creates a new api.ChargePhases
-func NewChargePhases(ccPhases provider.Config) (api.ChargePhases, error) {
-	phasesS, err := provider.NewIntSetterFromConfig("phases", ccPhases)
-	if err != nil {
-		return nil, err
-	}
-
-	e := &ChargePhases{
-		phasesS: phasesS,
-	}
-
-	return e, nil
-}
-
-// Phases1p3p implements api.ChargePhases interface
-func (c *ChargePhases) Phases1p3p(phases int64) error {
-	return c.phasesS(phases)
+// Phases1p3p implements the Charger.Phases1p3p interface
+func (c *Charger) phases1p3p(phases int64) error {
+	return c.phases1p3p(phases)
 }

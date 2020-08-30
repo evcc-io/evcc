@@ -43,8 +43,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	// decorate Meter with MeterEnergy
 	var totalEnergy func() (float64, error)
 	if cc.Energy != nil {
-		m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
-		if err != nil {
+		if m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy); err != nil {
 			return nil, err
 		}
 		totalEnergy = m.totalEnergy
