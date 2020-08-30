@@ -1,5 +1,7 @@
 package charger
 
+// This file has been generated - do not modify
+
 import (
 	"github.com/andig/evcc/api"
 )
