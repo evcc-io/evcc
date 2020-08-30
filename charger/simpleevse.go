@@ -2,18 +2,16 @@ package charger
 
 import (
 	"errors"
-	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	"github.com/grid-x/modbus"
+	"github.com/andig/evcc/util/modbus"
 )
 
 // SimpleEVSE charger implementation
 type SimpleEVSE struct {
-	log     *util.Logger
-	client  modbus.Client
-	handler modbus.ClientHandler
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
@@ -30,65 +28,40 @@ func init() {
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI, Device string }{}
+	cc := modbus.Settings{
+		Baudrate: 9600,
+		Comset:   "8N1",
+		ID:       1,
+	}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSimpleEVSE(cc.URI, cc.Device)
+	return NewSimpleEVSE(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
 }
 
 // NewSimpleEVSE creates SimpleEVSE charger
-func NewSimpleEVSE(conn, device string) (api.Charger, error) {
+func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
-	var handler modbus.ClientHandler
-	if conn != "" && device != "" {
-		return nil, errors.New("cannot define uri and device both")
-	}
-	if conn != "" {
-		handler = modbus.NewTCPClientHandler(conn)
-		handler.(*modbus.TCPClientHandler).Timeout = time.Second
-	}
-	if device != "" {
-		handler = modbus.NewRTUClientHandler(device)
-		handler.(*modbus.RTUClientHandler).BaudRate = 9600
-		handler.(*modbus.RTUClientHandler).DataBits = 8
-		handler.(*modbus.RTUClientHandler).StopBits = 1
-		handler.(*modbus.RTUClientHandler).Parity = "N"
-		handler.(*modbus.RTUClientHandler).Timeout = time.Second
-	}
-	if handler == nil {
-		return nil, errors.New("must define either uri or device")
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
+	if err != nil {
+		return nil, err
 	}
 
 	evse := &SimpleEVSE{
-		log:     log,
-		client:  modbus.NewClient(handler),
-		handler: handler,
+		log:  log,
+		conn: conn,
 	}
 
 	return evse, nil
 }
 
-// Prepare for bus operation
-func (evse *SimpleEVSE) Prepare() {
-	if h, ok := evse.handler.(*modbus.TCPClientHandler); ok {
-		h.SlaveID = 1
-	} else if h, ok := evse.handler.(*modbus.RTUClientHandler); ok {
-		h.SlaveID = 1
-	}
-
-	time.Sleep(100 * time.Millisecond)
-}
-
 // Status implements the Charger.Status interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
-	evse.Prepare()
-	b, err := evse.client.ReadHoldingRegisters(evseRegVehicleStatus, 1)
+	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	evse.log.TRACE.Printf("read status (%d): %0 X", evseRegVehicleStatus, b)
 	if err != nil {
-		evse.handler.Close()
 		return api.StatusNone, err
 	}
 
@@ -110,11 +83,9 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
-	evse.Prepare()
-	b, err := evse.client.ReadHoldingRegisters(evseRegTurnOff, 1)
+	b, err := evse.conn.ReadHoldingRegisters(evseRegTurnOff, 1)
 	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
 	if err != nil {
-		evse.handler.Close()
 		return false, err
 	}
 
@@ -123,11 +94,9 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 
 // Enable implements the Charger.Enable interface
 func (evse *SimpleEVSE) Enable(enable bool) error {
-	evse.Prepare()
-	b, err := evse.client.ReadHoldingRegisters(evseRegTurnOff, 1)
+	b, err := evse.conn.ReadHoldingRegisters(evseRegTurnOff, 1)
 	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
 	if err != nil {
-		evse.handler.Close()
 		return err
 	}
 
@@ -137,11 +106,8 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 		b[1] &= ^byte(1)
 	}
 
-	b, err = evse.client.WriteMultipleRegisters(evseRegTurnOff, 1, b)
-	evse.log.TRACE.Printf("write charge enable %d %0X: %0 X", evseRegTurnOff, b, b)
-	if err != nil {
-		evse.handler.Close()
-	}
+	bb, err := evse.conn.WriteMultipleRegisters(evseRegTurnOff, 1, b)
+	evse.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", evseRegTurnOff, b, bb)
 
 	return err
 }
@@ -150,12 +116,8 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 
-	evse.Prepare()
-	b, err := evse.client.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
-	evse.log.TRACE.Printf("write max current %d %0X: %0 X", evseRegAmpsConfig, current, b)
-	if err != nil {
-		evse.handler.Close()
-	}
+	b, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
+	evse.log.TRACE.Printf("write max current (%d) %0X: %0 X", evseRegAmpsConfig, current, b)
 
 	return err
 }

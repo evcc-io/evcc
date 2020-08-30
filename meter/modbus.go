@@ -14,9 +14,8 @@ import (
 // Modbus is an api.Meter implementation with configurable getters and setters.
 type Modbus struct {
 	log      *util.Logger
-	conn     meters.Connection
+	conn     *modbus.Connection
 	device   meters.Device
-	slaveID  uint8
 	opPower  modbus.Operation
 	opEnergy modbus.Operation
 }
@@ -30,6 +29,7 @@ func init() {
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
+		Model           string
 		modbus.Settings `mapstructure:",squash"`
 		Power, Energy   string
 	}{}
@@ -46,7 +46,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	log := util.NewLogger("modbus")
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if err == nil {
-		conn.Slave(cc.ID)
+		conn.Slave()
 		err = device.Initialize(conn.ModbusClient())
 
 		// silence Kostal implementation errors
@@ -74,10 +74,9 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	m := &Modbus{
-		log:     log,
-		conn:    conn,
-		device:  device,
-		slaveID: cc.ID,
+		log:    log,
+		conn:   conn,
+		device: device,
 	}
 
 	// power reading
@@ -104,7 +103,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
-	m.conn.Slave(m.slaveID)
+	m.conn.Slave()
 
 	var res meters.MeasurementResult
 	var err error
@@ -132,9 +131,7 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 		err = nil
 	}
 
-	if err != nil {
-		m.conn.Close() // close connection in case of modbus error
-	} else {
+	if err == nil {
 		m.log.TRACE.Printf("%+v", res)
 	}
 

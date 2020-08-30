@@ -11,14 +11,8 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-// Settings combine physical modbus configuration and MBMD model
+// Settings contains the ModBus settings
 type Settings struct {
-	Model      string
-	Connection `mapstructure:",squash"`
-}
-
-// Connection contains the ModBus connection configuration
-type Connection struct {
 	ID                  uint8
 	SubDevice           int
 	URI, Device, Comset string
@@ -26,20 +20,95 @@ type Connection struct {
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
+// Connection decorates a meters.Connection with slave id and error handling
+type Connection struct {
+	slaveID uint8
+	meters.Connection
+}
+
+func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
+	if err != nil {
+		mb.Connection.Close()
+	}
+	return res, err
+}
+
+// Slave sets slave id
+func (mb *Connection) Slave() {
+	mb.Connection.Slave(mb.slaveID)
+}
+
+// ReadCoils decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().ReadCoils(address, quantity))
+}
+
+// WriteSingleCoil decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().WriteSingleCoil(address, quantity))
+}
+
+// ReadInputRegisters decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().ReadInputRegisters(address, quantity))
+}
+
+// ReadHoldingRegisters decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().ReadHoldingRegisters(address, quantity))
+}
+
+// WriteSingleRegister decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().WriteSingleRegister(address, value))
+}
+
+// WriteMultipleRegisters decorates the mbmd meters.Connection with slave setting and error handling
+func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
+	mb.Connection.Slave(mb.slaveID)
+	return mb.handle(mb.Connection.ModbusClient().WriteMultipleRegisters(address, quantity, value))
+}
+
+var connections map[string]meters.Connection
+
+func registeredConnection(key string, newConn meters.Connection) meters.Connection {
+	if connections == nil {
+		connections = make(map[string]meters.Connection)
+	}
+
+	if conn, ok := connections[key]; ok {
+		return conn
+	}
+
+	connections[key] = newConn
+	return newConn
+}
+
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn meters.Connection, err error) {
+func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
+	var conn meters.Connection
+
+	if device != "" && uri != "" {
+		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
+	}
+
 	if device != "" {
 		if baudrate == 0 || comset == "" {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
-		conn = meters.NewRTU(device, baudrate, comset)
+		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
 
 	if uri != "" {
 		if rtu {
-			conn = meters.NewRTUOverTCP(uri)
+			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		} else {
-			conn = meters.NewTCP(uri)
+			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
 	}
 
@@ -47,7 +116,12 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool) (conn met
 		return nil, errors.New("invalid modbus configuration: need either uri or device")
 	}
 
-	return conn, nil
+	slaveConn := &Connection{
+		slaveID:    slaveID,
+		Connection: conn,
+	}
+
+	return slaveConn, nil
 }
 
 // NewDevice creates physical modbus device from config
