@@ -7,7 +7,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	"github.com/grid-x/modbus"
+	"github.com/andig/evcc/util/modbus"
 )
 
 const (
@@ -25,9 +25,8 @@ const (
 // PhoenixEMCP is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMCP struct {
-	log     *util.Logger
-	client  modbus.Client
-	handler *modbus.TCPClientHandler
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 func init() {
@@ -59,17 +58,14 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 func NewPhoenixEMCP(uri string, id uint8) (api.Charger, error) {
 	log := util.NewLogger("emcp")
 
-	handler := modbus.NewTCPClientHandler(uri)
-	client := modbus.NewClient(handler)
-
-	handler.SlaveID = id
-	handler.Timeout = timeout
-	handler.ProtocolRecoveryTimeout = protocolTimeout
+	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
+	if err != nil {
+		return nil, err
+	}
 
 	wb := &PhoenixEMCP{
-		log:     log,
-		client:  client,
-		handler: handler,
+		log:  log,
+		conn: conn,
 	}
 
 	return wb, nil
@@ -77,10 +73,9 @@ func NewPhoenixEMCP(uri string, id uint8) (api.Charger, error) {
 
 // Status implements the Charger.Status interface
 func (wb *PhoenixEMCP) Status() (api.ChargeStatus, error) {
-	b, err := wb.client.ReadInputRegisters(phEMCPRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(phEMCPRegStatus, 1)
 	wb.log.TRACE.Printf("read status (%d): %0 X", phEMCPRegStatus, b)
 	if err != nil {
-		wb.handler.Close()
 		return api.StatusNone, err
 	}
 
@@ -89,10 +84,9 @@ func (wb *PhoenixEMCP) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *PhoenixEMCP) Enabled() (bool, error) {
-	b, err := wb.client.ReadCoils(phEMCPRegEnable, 1)
+	b, err := wb.conn.ReadCoils(phEMCPRegEnable, 1)
 	wb.log.TRACE.Printf("read charge enable (%d): %0 X", phEMCPRegEnable, b)
 	if err != nil {
-		wb.handler.Close()
 		return false, err
 	}
 
@@ -106,11 +100,8 @@ func (wb *PhoenixEMCP) Enable(enable bool) error {
 		u = 0xFF00
 	}
 
-	b, err := wb.client.WriteSingleCoil(phEMCPRegEnable, u)
+	b, err := wb.conn.WriteSingleCoil(phEMCPRegEnable, u)
 	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", phEMCPRegEnable, u, b)
-	if err != nil {
-		wb.handler.Close()
-	}
 
 	return err
 }
@@ -121,21 +112,17 @@ func (wb *PhoenixEMCP) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	b, err := wb.client.WriteSingleRegister(phEMCPRegMaxCurrent, uint16(current))
+	b, err := wb.conn.WriteSingleRegister(phEMCPRegMaxCurrent, uint16(current))
 	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", phEMCPRegMaxCurrent, current, b)
-	if err != nil {
-		wb.handler.Close()
-	}
 
 	return err
 }
 
 // ChargingTime yields current charge run duration
 func (wb *PhoenixEMCP) ChargingTime() (time.Duration, error) {
-	b, err := wb.client.ReadInputRegisters(phEMCPRegChargeTime, 2)
+	b, err := wb.conn.ReadInputRegisters(phEMCPRegChargeTime, 2)
 	wb.log.TRACE.Printf("read charge time (%d): %0 X", phEMCPRegChargeTime, b)
 	if err != nil {
-		wb.handler.Close()
 		return 0, err
 	}
 
