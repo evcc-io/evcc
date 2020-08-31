@@ -18,7 +18,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
-	github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1
+	github.com/grid-x/modbus v0.0.0-20200831145459-cb26bc3b5d3d // indirect
 	github.com/hashicorp/go-version v1.2.1
 	github.com/influxdata/influxdb-client-go/v2 v2.0.1
 	github.com/itchyny/gojq v0.11.0
@@ -40,5 +40,3 @@ require (
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
-
-replace github.com/grid-x/modbus => github.com/andig/gridx-modbus v0.0.0-20200826125157-fae5d19005f7

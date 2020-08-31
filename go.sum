@@ -24,8 +24,6 @@ github.com/andig/evcc-config v0.0.0-20200822120120-f129cbffa9aa h1:+t8n7jFHvd/QI
 github.com/andig/evcc-config v0.0.0-20200822120120-f129cbffa9aa/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c h1:AMtX56iHlNYVxMID7fe9efuVtaxgtdjyMeolg7q87IE=
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
-github.com/andig/gridx-modbus v0.0.0-20200826125157-fae5d19005f7 h1:iiA2qGJKwmu+KS2lfOCvSsPE0xlixmC7xlW2mnrhCg0=
-github.com/andig/gridx-modbus v0.0.0-20200826125157-fae5d19005f7/go.mod h1:9mi0a7/tbYsUWwsC32q/R0r2p1lkNt+8li81Zaf/yTE=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=
@@ -141,6 +139,10 @@ github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0U
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4 h1:QZVozMeLCqyMOOhA+OuqQdNXkyu4uUQEu4+mPBB5pPQ=
 github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4/go.mod h1:EcaO66Nn1StkpEm1iKtBTV3d2A16SoMsVER1PthX7to=
+github.com/grid-x/modbus v0.0.0-20200108122021-57d05a9f1e1a/go.mod h1:cOS1YDRu+JId5eT7kRulYTlfpACFppj2MpftCvHeiuM=
+github.com/grid-x/modbus v0.0.0-20200704184817-73c05928caa1/go.mod h1:cOS1YDRu+JId5eT7kRulYTlfpACFppj2MpftCvHeiuM=
+github.com/grid-x/modbus v0.0.0-20200831145459-cb26bc3b5d3d h1:kt0nKceIH9ZzpGEC4CvN/E/k1DRRVkqq+qCRc/2+efE=
+github.com/grid-x/modbus v0.0.0-20200831145459-cb26bc3b5d3d/go.mod h1:cOS1YDRu+JId5eT7kRulYTlfpACFppj2MpftCvHeiuM=
 github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08 h1:syBxnRYnSPUDdkdo5U4sy2roxBPQDjNiw4od7xlsABQ=
 github.com/grid-x/serial v0.0.0-20191104121038-e24bc9bf6f08/go.mod h1:kdOd86/VGFWRrtkNwf1MPk0u1gIjc4Y7R2j7nhwc7Rk=
 github.com/grpc-ecosystem/go-grpc-middleware v1.0.0/go.mod h1:FiyG127CGDf3tlThmgyCl78X/SZQqEOJBCDaAfeWzPs=
