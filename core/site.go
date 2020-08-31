@@ -189,6 +189,16 @@ func (site *Site) Configuration() SiteConfiguration {
 	return c
 }
 
+func logMeter(log *util.Logger, meter interface{}) {
+	_, power := meter.(api.Meter)
+	_, energy := meter.(api.MeterEnergy)
+	_, currents := meter.(api.MeterCurrent)
+
+	log.INFO.Printf("    power %s", presence[power])
+	log.INFO.Printf("    energy %s", presence[energy])
+	log.INFO.Printf("    currents %s", presence[currents])
+}
+
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
 	site.log.INFO.Println("site config:")
@@ -197,14 +207,8 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
 
 	if site.gridMeter != nil {
-		_, power := site.gridMeter.(api.Meter)
-		_, energy := site.gridMeter.(api.MeterEnergy)
-		_, currents := site.gridMeter.(api.MeterCurrent)
-
-		site.log.INFO.Println("  grid config:")
-		site.log.INFO.Printf("    power %s", presence[power])
-		site.log.INFO.Printf("    energy %s", presence[energy])
-		site.log.INFO.Printf("    currents %s", presence[currents])
+		site.log.INFO.Println("  grid meter config:")
+		logMeter(site.log, site.gridMeter)
 	}
 
 	for i, lp := range site.loadpoints {
@@ -212,17 +216,16 @@ func (site *Site) DumpConfig() {
 
 		lp.log.INFO.Printf("  vehicle %s", presence[lp.vehicle != nil])
 		lp.log.INFO.Printf("  charge %s", presence[lp.hasChargeMeter()])
+		if lp.hasChargeMeter() {
+			lp.log.INFO.Println("  charge meter config:")
+			logMeter(site.log, lp.chargeMeter)
+		}
 
 		charger := lp.handler.(*ChargerHandler).charger
-		_, power := charger.(api.Meter)
-		_, currents := charger.(api.MeterCurrent)
-		_, energy := charger.(api.ChargeRater)
 		_, timer := charger.(api.ChargeTimer)
 
 		lp.log.INFO.Println("  charger config:")
-		lp.log.INFO.Printf("    power %s", presence[power])
-		lp.log.INFO.Printf("    energy %s", presence[energy])
-		lp.log.INFO.Printf("    currents %s", presence[currents])
+		logMeter(lp.log, charger)
 		lp.log.INFO.Printf("    timer %s", presence[timer])
 	}
 }
