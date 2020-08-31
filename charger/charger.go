@@ -68,15 +68,15 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 
 	c, _ := NewConfigurable(status, enabled, enable, maxcurrent)
 
-	var phasesS func(int64) error
+	var phases func(int64) error
 	if cc.Phases != nil {
 		if c.phasesS, err = provider.NewIntSetterFromConfig("phases", *cc.Phases); err != nil {
 			return nil, err
 		}
-		phasesS = c.phasesS
+		phases = c.phases1p3p
 	}
 
-	return decorateCharger(c, phasesS), nil
+	return decorateCharger(c, phases), nil
 }
 
 // NewConfigurable creates a new charger
