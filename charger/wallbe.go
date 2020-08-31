@@ -1,12 +1,15 @@
 package charger
 
 import (
+	"encoding/binary"
 	"fmt"
+	"math"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	"github.com/grid-x/modbus"
+	"github.com/andig/evcc/util/modbus"
 )
 
 const (
@@ -18,72 +21,100 @@ const (
 	wbRegEnable        = 400 // Coil
 	wbRegMaxCurrent    = 528 // Holding
 
-	timeout         = 1 * time.Second
-	protocolTimeout = 2 * time.Second
+	wbRegPower  = 120 // power reading
+	wbRegEnergy = 128 // energy reading
+
+	encodingSDM = "sdm"
 )
+
+var wbRegCurrents = []uint16{114, 116, 118} // current readings
 
 // Wallbe is an api.ChargeController implementation for Wallbe wallboxes.
 // It supports both wallbe controllers (post 2019 models) and older ones using the
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
-	log     *util.Logger
-	client  modbus.Client
-	handler *modbus.TCPClientHandler
-	factor  int64
+	log      *util.Logger
+	conn     *modbus.Connection
+	factor   int64
+	encoding string
 }
 
 func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -b api.Charger -o wallbe_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI    string
 		Legacy bool
+		Meter  struct {
+			Power, Energy, Currents bool
+			Encoding                string
+		}
 	}{
 		URI: "192.168.0.8:502",
 	}
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb := NewWallbe(cc.URI)
+	wb, err := NewWallbe(cc.URI)
+	if err != nil {
+		return nil, err
+	}
 
 	if cc.Legacy {
 		wb.factor = 1
 	}
 
-	return wb, nil
+	var currentPower func() (float64, error)
+	if cc.Meter.Power {
+		currentPower = wb.currentPower
+	}
+
+	var totalEnergy func() (float64, error)
+	if cc.Meter.Energy {
+		totalEnergy = wb.totalEnergy
+	}
+
+	var currents func() (float64, float64, float64, error)
+	if cc.Meter.Currents {
+		currents = wb.currents
+	}
+
+	// special case for SDM meters
+	if encoding := strings.ToLower(cc.Meter.Encoding); strings.HasPrefix(encoding, encodingSDM) {
+		wb.encoding = encodingSDM
+	}
+
+	return decorateWallbe(wb, currentPower, totalEnergy, currents), nil
 }
 
 // NewWallbe creates a Wallbe charger
-func NewWallbe(conn string) *Wallbe {
-	handler := modbus.NewTCPClientHandler(conn)
-	client := modbus.NewClient(handler)
-
-	handler.SlaveID = wbSlaveID
-	handler.Timeout = timeout
-	handler.ProtocolRecoveryTimeout = protocolTimeout
-
-	wb := &Wallbe{
-		log:     util.NewLogger("wallbe"),
-		client:  client,
-		handler: handler,
-		factor:  10,
+func NewWallbe(uri string) (*Wallbe, error) {
+	conn, err := modbus.NewConnection(uri, "", "", 0, false, wbSlaveID)
+	if err != nil {
+		return nil, err
 	}
 
-	return wb
+	wb := &Wallbe{
+		log:    util.NewLogger("wallbe"),
+		conn:   conn,
+		factor: 10,
+	}
+
+	return wb, nil
 }
 
 // Status implements the Charger.Status interface
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
-	b, err := wb.client.ReadInputRegisters(wbRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
 	wb.log.TRACE.Printf("read status (%d): %0 X", wbRegStatus, b)
 	if err != nil {
-		wb.handler.Close()
 		return api.StatusNone, err
 	}
 
@@ -92,10 +123,9 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *Wallbe) Enabled() (bool, error) {
-	b, err := wb.client.ReadCoils(wbRegEnable, 1)
+	b, err := wb.conn.ReadCoils(wbRegEnable, 1)
 	wb.log.TRACE.Printf("read charge enable (%d): %0 X", wbRegEnable, b)
 	if err != nil {
-		wb.handler.Close()
 		return false, err
 	}
 
@@ -109,11 +139,8 @@ func (wb *Wallbe) Enable(enable bool) error {
 		u = 0xFF00
 	}
 
-	b, err := wb.client.WriteSingleCoil(wbRegEnable, u)
-	wb.log.TRACE.Printf("write charge enable %d %0X: %0 X", wbRegEnable, u, b)
-	if err != nil {
-		wb.handler.Close()
-	}
+	b, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
+	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", wbRegEnable, u, b)
 
 	return err
 }
@@ -126,25 +153,68 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 
 	u := uint16(current * wb.factor)
 
-	b, err := wb.client.WriteSingleRegister(wbRegMaxCurrent, u)
-	wb.log.TRACE.Printf("write max current %d %0X: %0 X", wbRegMaxCurrent, u, b)
-	if err != nil {
-		wb.handler.Close()
-	}
+	b, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", wbRegMaxCurrent, u, b)
 
 	return err
 }
 
 // ChargingTime yields current charge run duration
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
-	b, err := wb.client.ReadInputRegisters(wbRegChargeTime, 2)
+	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
 	wb.log.TRACE.Printf("read charge time (%d): %0 X", wbRegChargeTime, b)
 	if err != nil {
-		wb.handler.Close()
 		return 0, err
 	}
 
 	// 2 words, least significant word first
 	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
 	return time.Duration(time.Duration(secs) * time.Second), nil
+}
+
+func (wb *Wallbe) decodeReading(b []byte) float64 {
+	v := binary.BigEndian.Uint32(b)
+
+	if wb.encoding == encodingSDM {
+		bits := (v&0xffff)<<16 | (v>>16)&0xffff
+		f := math.Float32frombits(bits)
+		return float64(f)
+	}
+
+	return float64(v)
+}
+
+// CurrentPower implements the Meter.CurrentPower interface
+func (wb *Wallbe) currentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return wb.decodeReading(b), err
+}
+
+// totalEnergy implements the Meter.TotalEnergy interface
+func (wb *Wallbe) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return wb.decodeReading(b), err
+}
+
+// currents implements the Meter.Currents interface
+func (wb *Wallbe) currents() (float64, float64, float64, error) {
+	var currents []float64
+	for _, regCurrent := range wbRegCurrents {
+		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		currents = append(currents, wb.decodeReading(b))
+	}
+
+	return currents[0], currents[1], currents[2], nil
 }

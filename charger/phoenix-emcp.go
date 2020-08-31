@@ -17,6 +17,11 @@ const (
 	phEMCPRegEnable     = 400 // Coil
 )
 
+const (
+	timeout         = 1 * time.Second
+	protocolTimeout = 2 * time.Second
+)
+
 // PhoenixEMCP is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMCP struct {
