@@ -18,8 +18,6 @@ func init() {
 	registry.Add("openwb", NewOpenWBFromConfig)
 }
 
-// OpenWB is a clone of SimpleEVSE
-
 // TODO generation of setters is not yet functional
 // go:generate go run ../cmd/tools/decorate.go -p charger -f decorateOpenWB -b api.Charger -o openwb_decorators -t "api.ChargePhases,Phases1p3p,func(int64) error"
 

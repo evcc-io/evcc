@@ -123,5 +123,5 @@ func (c *Charger) MaxCurrent(current int64) error {
 
 // Phases1p3p implements the Charger.Phases1p3p interface
 func (c *Charger) phases1p3p(phases int64) error {
-	return c.phases1p3p(phases)
+	return c.phasesS(phases)
 }
