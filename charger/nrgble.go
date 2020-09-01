@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	registry.Add("ngrkick-bluetooth", NewNRGKickBLEFromConfig)
+	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig)
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
