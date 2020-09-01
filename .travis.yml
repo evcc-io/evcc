@@ -1,11 +1,11 @@
 language: go
-go: "1.13"
+go: "1.15"
 go_import_path: github.com/andig/evcc
 
 cache:
   directories:
   - $HOME/.cache/go-build
-  - $HOME/gopath/pkg/mod
+  - $HOME/gopath
 
 notifications:
   email:
