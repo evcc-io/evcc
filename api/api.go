@@ -81,3 +81,8 @@ type Vehicle interface {
 	Capacity() int64
 	ChargeState() (float64, error)
 }
+
+// ChargeRemainder provides current charge cycle duration
+type ChargeRemainder interface {
+	RemainingTime() (time.Duration, error)
+}

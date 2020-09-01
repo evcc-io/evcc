@@ -80,6 +80,7 @@ type batteryAttributes struct {
 	PlugStatus         int    `json:"plugStatus"`
 	LastUpdateTime     string `json:"lastUpdateTime"`
 	ChargePower        int    `json:"chargePower"`
+	RemainingTime      int    `json:"chargingRemainingTime"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -91,6 +92,7 @@ type Renault struct {
 	gigyaJwtToken       string
 	accountID           string
 	chargeStateG        func() (float64, error)
+	remainingTimeG      func() (time.Duration, error)
 }
 
 func init() {
@@ -131,6 +133,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.remainingTimeG = provider.NewCached(v.remainingTime, cc.Cache).DurationGetter()
 
 	return v, nil
 }
@@ -318,4 +321,24 @@ func (v *Renault) chargeState() (float64, error) {
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Renault) ChargeState() (float64, error) {
 	return v.chargeStateG()
+}
+
+// remainingTime implements the Vehicle.ChargeRemainder interface
+func (v *Renault) remainingTime() (time.Duration, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
+	kr, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			kr, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return time.Duration(kr.Data.Attributes.RemainingTime) * time.Minute, err
+}
+
+// RemainingTime implements the Vehicle.ChargeRemainder interface
+func (v *Renault) RemainingTime() (time.Duration, error) {
+	return v.remainingTimeG()
 }
