@@ -49,6 +49,14 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.ChargeRemainder); ok {
+		if duration, err := v.RemainingTime(); err != nil {
+			fmt.Printf("Remaining: %v\n", err)
+		} else {
+			fmt.Printf("Remaining: %v\n", duration)
+		}
+	}
+
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Println("Diagnostic dump:")
 		v.Diagnosis()
