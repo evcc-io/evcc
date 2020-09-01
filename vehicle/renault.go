@@ -72,6 +72,7 @@ type kamereonData struct {
 }
 
 type batteryAttributes struct {
+	Timestamp          string `json:"timestamp"`
 	ChargeStatus       int    `json:"chargeStatus"`
 	InstantaneousPower int    `json:"instantaneousPower"`
 	RangeHvacOff       int    `json:"rangeHvacOff"`
@@ -335,7 +336,12 @@ func (v *Renault) remainingTime() (time.Duration, error) {
 		}
 	}
 
-	return time.Duration(kr.Data.Attributes.RemainingTime) * time.Minute, err
+	var timestamp time.Time
+	if err == nil {
+		timestamp, err = time.Parse(time.RFC3339, kr.Data.Attributes.Timestamp)
+	}
+
+	return time.Duration(kr.Data.Attributes.RemainingTime)*time.Minute - time.Since(timestamp), err
 }
 
 // RemainingTime implements the Vehicle.ChargeRemainder interface
