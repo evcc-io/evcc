@@ -34,6 +34,10 @@ type NRGKickBLE struct {
 	current       int
 }
 
+func init() {
+	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig)
+}
+
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
 func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct{ Device, MacAddress, PIN string }{
