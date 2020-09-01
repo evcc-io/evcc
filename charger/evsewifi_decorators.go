@@ -6,12 +6,23 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateEVSE(base api.Charger, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
-	case meterCurrent == nil && meterEnergy != nil:
+	case meter != nil && meterCurrent == nil && meterEnergy == nil:
+		return &struct{
+			api.Charger
+			api.Meter
+		}{
+			Charger: base,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+		}
+
+	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct{
 			api.Charger
 			api.MeterEnergy
@@ -22,7 +33,22 @@ func decorateEVSE(base api.Charger, meterEnergy func() (float64, error), meterCu
 			},
 		}
 
-	case meterCurrent != nil && meterEnergy == nil:
+	case meter != nil && meterCurrent == nil && meterEnergy != nil:
+		return &struct{
+			api.Charger
+			api.Meter
+			api.MeterEnergy
+		}{
+			Charger: base,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			MeterEnergy: &decorateEVSEMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct{
 			api.Charger
 			api.MeterCurrent
@@ -33,13 +59,47 @@ func decorateEVSE(base api.Charger, meterEnergy func() (float64, error), meterCu
 			},
 		}
 
-	case meterCurrent != nil && meterEnergy != nil:
+	case meter != nil && meterCurrent != nil && meterEnergy == nil:
+		return &struct{
+			api.Charger
+			api.Meter
+			api.MeterCurrent
+		}{
+			Charger: base,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
+			MeterCurrent: &decorateEVSEMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+		}
+
+	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct{
 			api.Charger
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
 			Charger: base,
+			MeterCurrent: &decorateEVSEMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+			MeterEnergy: &decorateEVSEMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case meter != nil && meterCurrent != nil && meterEnergy != nil:
+		return &struct{
+			api.Charger
+			api.Meter
+			api.MeterCurrent
+			api.MeterEnergy
+		}{
+			Charger: base,
+			Meter: &decorateEVSEMeterImpl{
+				meter: meter,
+			},
 			MeterCurrent: &decorateEVSEMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -50,6 +110,14 @@ func decorateEVSE(base api.Charger, meterEnergy func() (float64, error), meterCu
 	}
 
 	return nil
+}
+
+type decorateEVSEMeterImpl struct {
+	meter func() (float64, error)
+}
+
+func (impl *decorateEVSEMeterImpl) CurrentPower() (float64, error) {
+	return impl.meter()
 }
 
 type decorateEVSEMeterCurrentImpl struct {
