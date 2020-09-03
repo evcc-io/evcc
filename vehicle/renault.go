@@ -306,7 +306,7 @@ func (v *Renault) kamereonVehicles(accountID string) (string, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Renault) chargeState() (float64, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	kr, err := v.kamereonRequest(uri)
 
 	// repeat auth if error
@@ -326,7 +326,7 @@ func (v *Renault) ChargeState() (float64, error) {
 
 // remainingTime implements the Vehicle.ChargeRemainder interface
 func (v *Renault) remainingTime() (time.Duration, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	kr, err := v.kamereonRequest(uri)
 
 	// repeat auth if error
