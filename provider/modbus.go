@@ -88,8 +88,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 
 		// prepare device
 		if err == nil {
-			conn.Slave()
-			err = device.Initialize(conn.ModbusClient())
+			err = device.Initialize(conn)
 
 			// silence KOSTAL implementation errors
 			if errors.Is(err, meters.ErrPartiallyOpened) {
@@ -130,7 +129,6 @@ func (m *Modbus) FloatGetter() (float64, error) {
 		}
 
 		if err != nil {
-			m.conn.Close() // close connection in case of modbus error
 			return 0, fmt.Errorf("read failed: %v", err)
 		}
 
@@ -140,10 +138,11 @@ func (m *Modbus) FloatGetter() (float64, error) {
 	// if funccode is not configured, try find the reading on sunspec
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
 		if m.op.MBMD.IEC61850 != 0 {
-			res, err = dev.QueryOp(m.conn.ModbusClient(), m.op.MBMD.IEC61850)
+			// client := m.conn.ModbusClient()
+			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
 		} else {
 			res, err = dev.QueryPoint(
-				m.conn.ModbusClient(),
+				m.conn,
 				m.op.SunSpec.Model,
 				m.op.SunSpec.Block,
 				m.op.SunSpec.Point,

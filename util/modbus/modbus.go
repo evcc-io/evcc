@@ -20,58 +20,88 @@ type Settings struct {
 	RTU                 *bool // indicates RTU over TCP if true
 }
 
-// Connection decorates a meters.Connection with slave id and error handling
+// Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
-	meters.Connection
+	conn    meters.Connection
 }
 
 func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 	if err != nil {
-		mb.Connection.Close()
+		mb.conn.Close()
 	}
 	return res, err
 }
 
-// Slave sets slave id
-func (mb *Connection) Slave() {
-	mb.Connection.Slave(mb.slaveID)
+// Logger sets logger implementation
+func (mb *Connection) Logger(logger meters.Logger) {
+	mb.conn.Logger(logger)
 }
 
-// ReadCoils decorates the mbmd meters.Connection with slave setting and error handling
+// ReadCoils wraps the underlying implementation
 func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().ReadCoils(address, quantity))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
 }
 
-// WriteSingleCoil decorates the mbmd meters.Connection with slave setting and error handling
+// WriteSingleCoil wraps the underlying implementation
 func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().WriteSingleCoil(address, quantity))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, quantity))
 }
 
-// ReadInputRegisters decorates the mbmd meters.Connection with slave setting and error handling
+// ReadInputRegisters wraps the underlying implementation
 func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().ReadInputRegisters(address, quantity))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
 }
 
-// ReadHoldingRegisters decorates the mbmd meters.Connection with slave setting and error handling
+// ReadHoldingRegisters wraps the underlying implementation
 func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().ReadHoldingRegisters(address, quantity))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
 }
 
-// WriteSingleRegister decorates the mbmd meters.Connection with slave setting and error handling
+// WriteSingleRegister wraps the underlying implementation
 func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().WriteSingleRegister(address, value))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
 }
 
-// WriteMultipleRegisters decorates the mbmd meters.Connection with slave setting and error handling
+// WriteMultipleRegisters wraps the underlying implementation
 func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	mb.Connection.Slave(mb.slaveID)
-	return mb.handle(mb.Connection.ModbusClient().WriteMultipleRegisters(address, quantity, value))
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
+}
+
+// ReadDiscreteInputs wraps the underlying implementation
+func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
+}
+
+// WriteMultipleCoils wraps the underlying implementation
+func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
+}
+
+// ReadWriteMultipleRegisters wraps the underlying implementation
+func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
+}
+
+// MaskWriteRegister wraps the underlying implementation
+func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
+}
+
+// ReadFIFOQueue wraps the underlying implementation
+func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
+	mb.conn.Slave(mb.slaveID)
+	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
 
 var connections map[string]meters.Connection
@@ -117,8 +147,8 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	slaveConn := &Connection{
-		slaveID:    slaveID,
-		Connection: conn,
+		slaveID: slaveID,
+		conn:    conn,
 	}
 
 	return slaveConn, nil

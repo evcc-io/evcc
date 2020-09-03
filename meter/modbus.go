@@ -60,8 +60,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if err == nil {
-		conn.Slave()
-		err = device.Initialize(conn.ModbusClient())
+		err = device.Initialize(conn)
 
 		// silence Kostal implementation errors
 		if errors.Is(err, meters.ErrPartiallyOpened) {
@@ -103,21 +102,19 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
-	m.conn.Slave()
-
 	var res meters.MeasurementResult
 	var err error
 
 	if dev, ok := m.device.(*rs485.RS485); ok {
-		res, err = dev.QueryOp(m.conn.ModbusClient(), op.MBMD)
+		res, err = dev.QueryOp(m.conn, op.MBMD)
 	}
 
 	if dev, ok := m.device.(*sunspec.SunSpec); ok {
 		if op.MBMD.IEC61850 != 0 {
-			res, err = dev.QueryOp(m.conn.ModbusClient(), op.MBMD.IEC61850)
+			res, err = dev.QueryOp(m.conn, op.MBMD.IEC61850)
 		} else {
 			res, err = dev.QueryPoint(
-				m.conn.ModbusClient(),
+				m.conn,
 				op.SunSpec.Model,
 				op.SunSpec.Block,
 				op.SunSpec.Point,
