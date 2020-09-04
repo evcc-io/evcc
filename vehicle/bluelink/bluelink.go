@@ -77,7 +77,7 @@ func New(log *util.Logger,
 		pin:        pin,
 	}
 
-	// api is unbelievably slowwhen retrieving status
+	// api is unbelievably slow when retrieving status
 	v.HTTPHelper.Client.Timeout = 60 * time.Second
 
 	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
