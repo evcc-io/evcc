@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	resOK             = "S"
 	kiaURLDeviceID    = "https://prd.eu-ccapi.kia.com:8080/api/v1/spa/notifications/register"
 	kiaURLCookies     = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=fdc85c00-0a2f-4c64-bcb4-2cfb1500730a&redirect_uri=https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect"
 	kiaURLLang        = "https://prd.eu-ccapi.kia.com:8080/api/v1/user/language"
@@ -48,25 +49,16 @@ type kiaAuth struct {
 	controlToken string
 }
 
-type kiaBatteryResponse struct {
-	ResMsg struct {
+type response struct {
+	RetCode string `json:"retCode"`
+	ResMsg  struct {
+		DeviceID string `json:"deviceId"`
 		EvStatus struct {
 			BatteryStatus float64 `json:"batteryStatus"`
 		} `json:"evStatus"`
-	} `json:"resMsg"`
-}
-
-type vehicleIDResponse struct {
-	ResMsg struct {
 		Vehicles []struct {
 			VehicleID string `json:"vehicleId"`
 		} `json:"vehicles"`
-	} `json:"resMsg"`
-}
-
-type deviceIDResponse struct {
-	ResMsg struct {
-		DeviceID string `json:"deviceId"`
 	} `json:"resMsg"`
 }
 
@@ -144,13 +136,17 @@ func (v *Kia) getDeviceID() (string, error) {
 		"User-Agent":      "okhttp/3.10.0",
 	}
 
-	var did deviceIDResponse
+	var resp response
 	req, err := v.jsonRequest(http.MethodPost, kiaURLDeviceID, headers, data)
 	if err == nil {
-		_, err = v.RequestJSON(req, &did)
+		_, err = v.RequestJSON(req, &resp)
+
+		if err == nil && resp.RetCode != resOK {
+			err = errors.New("unexpected response")
+		}
 	}
 
-	return did.ResMsg.DeviceID, err
+	return resp.ResMsg.DeviceID, err
 }
 
 func (v *Kia) getCookies() (cookieClient *util.HTTPHelper, err error) {
@@ -252,10 +248,14 @@ func (v *Kia) getVehicles(accToken, did string) (string, error) {
 
 	req, err := v.request(http.MethodGet, kiaURLVehicles, headers, nil)
 	if err == nil {
-		var vr vehicleIDResponse
-		if _, err = v.RequestJSON(req, &vr); err == nil {
-			if len(vr.ResMsg.Vehicles) == 1 {
-				return vr.ResMsg.Vehicles[0].VehicleID, nil
+		var resp response
+		if _, err = v.RequestJSON(req, &resp); err == nil {
+			if resp.RetCode != resOK {
+				return "", errors.New("unexpected response")
+			}
+
+			if len(resp.ResMsg.Vehicles) == 1 {
+				return resp.ResMsg.Vehicles[0].VehicleID, nil
 			}
 
 			err = errors.New("couldn't find vehicle")
@@ -318,22 +318,6 @@ func (v *Kia) sendPIN(deviceID, accToken string) (string, error) {
 	return controlToken, err
 }
 
-func (v *Kia) getStatus() (float64, error) {
-	headers := map[string]string{
-		"Authorization":  v.auth.controlToken,
-		"ccsp-device-id": v.auth.deviceID,
-		"Content-Type":   "application/json",
-	}
-
-	var kr kiaBatteryResponse
-	req, err := v.request(http.MethodGet, kiaURLGetStatus+v.auth.vehicleID+"/status", headers, nil)
-	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
-	}
-
-	return kr.ResMsg.EvStatus.BatteryStatus, err
-}
-
 func (v *Kia) authFlow() (err error) {
 	v.auth.deviceID, err = v.getDeviceID()
 
@@ -369,6 +353,26 @@ func (v *Kia) authFlow() (err error) {
 	}
 
 	return err
+}
+
+func (v *Kia) getStatus() (float64, error) {
+	headers := map[string]string{
+		"Authorization":  v.auth.controlToken,
+		"ccsp-device-id": v.auth.deviceID,
+		"Content-Type":   "application/json",
+	}
+
+	var resp response
+	req, err := v.request(http.MethodGet, kiaURLGetStatus+v.auth.vehicleID+"/status", headers, nil)
+	if err == nil {
+		_, err = v.RequestJSON(req, &resp)
+
+		if err == nil && resp.RetCode != resOK {
+			err = errors.New("unexpected response")
+		}
+	}
+
+	return resp.ResMsg.EvStatus.BatteryStatus, err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
