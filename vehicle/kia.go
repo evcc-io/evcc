@@ -29,15 +29,17 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	settings := bluelink.Config{
-		URI:         "https://prd.eu-ccapi.kia.com:8080",
-		DeviceID:    "/api/v1/spa/notifications/register",
-		Cookies:     "/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=fdc85c00-0a2f-4c64-bcb4-2cfb1500730a&redirect_uri=https://prd.eu-ccapi.kia.com:8080/api/v1/user/oauth2/redirect",
-		Lang:        "/api/v1/user/language",
-		Login:       "/api/v1/user/signin",
-		AccessToken: "/api/v1/user/oauth2/token",
-		Vehicles:    "/api/v1/spa/vehicles",
-		SendPIN:     "/api/v1/user/pin",
-		GetStatus:   "/api/v2/spa/vehicles/",
+		URI:               "https://prd.eu-ccapi.kia.com:8080",
+		TokenAuth:         "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
+		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
+		CCSPApplicationID: "693a33fa-c117-43f2-ae3b-61a02d24f417",
+		DeviceID:          "/api/v1/spa/notifications/register",
+		Lang:              "/api/v1/user/language",
+		Login:             "/api/v1/user/signin",
+		AccessToken:       "/api/v1/user/oauth2/token",
+		Vehicles:          "/api/v1/spa/vehicles",
+		SendPIN:           "/api/v1/user/pin",
+		GetStatus:         "/api/v2/spa/vehicles/",
 	}
 
 	log := util.NewLogger("kia")

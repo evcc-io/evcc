@@ -21,15 +21,17 @@ import (
 const resOK = "S"
 
 type Config struct {
-	URI         string
-	DeviceID    string
-	Cookies     string
-	Lang        string
-	Login       string
-	AccessToken string
-	Vehicles    string
-	SendPIN     string
-	GetStatus   string
+	URI               string
+	TokenAuth         string
+	CCSPServiceID     string
+	CCSPApplicationID string
+	DeviceID          string
+	Lang              string
+	Login             string
+	AccessToken       string
+	Vehicles          string
+	SendPIN           string
+	GetStatus         string
 }
 
 // API is an api.Vehicle implementation with configurable getters and setters.
@@ -118,7 +120,7 @@ func (v *API) getDeviceID() (string, error) {
 	}
 
 	headers := map[string]string{
-		"ccsp-service-id": "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
+		"ccsp-service-id": v.config.CCSPServiceID,
 		"Content-type":    "application/json;charset=UTF-8",
 		"User-Agent":      "okhttp/3.10.0",
 	}
@@ -139,7 +141,13 @@ func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
 	})
 
 	if err == nil {
-		_, err = cookieClient.Get(v.config.URI + v.config.Cookies)
+		uri := fmt.Sprintf(
+			"%s/api/v1/user/oauth2/authorize?response_type=code&state=test&client_id=%s&redirect_uri=%s/api/v1/user/oauth2/redirect",
+			v.config.URI,
+			v.config.CCSPServiceID,
+			v.config.URI,
+		)
+		_, err = cookieClient.Get(uri)
 	}
 
 	return cookieClient, err
@@ -193,14 +201,13 @@ func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
 
 func (v *API) getToken(accCode string) (string, error) {
 	headers := map[string]string{
-		"Authorization": "Basic ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
+		"Authorization": "Basic " + v.config.TokenAuth,
 		"Content-type":  "application/x-www-form-urlencoded",
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	data := "grant_type=authorization_code" +
-		"&redirect_uri=https%3A%2F%2Fprd.eu-ccapi.kia.com%3A8080%2Fapi%2Fv1%2Fuser%2Foauth2%2Fredirect" +
-		"&code=" + accCode
+	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
+	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
 
 	req, err := v.request(http.MethodPost, v.config.URI+v.config.AccessToken, headers, strings.NewReader(data))
 	if err != nil {
@@ -224,7 +231,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 	headers := map[string]string{
 		"Authorization":       accToken,
 		"ccsp-device-id":      did,
-		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
+		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
 	}
@@ -253,7 +260,7 @@ func (v *API) preWakeup(accToken, did, vid string) error {
 	headers := map[string]string{
 		"Authorization":       accToken,
 		"ccsp-device-id":      did,
-		"ccsp-application-id": "693a33fa-c117-43f2-ae3b-61a02d24f417",
+		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"Content-Type":        "application/json;charset=UTF-8",
 		"User-Agent":          "okhttp/3.10.0",
