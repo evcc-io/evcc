@@ -5,7 +5,8 @@ go_import_path: github.com/andig/evcc
 cache:
   directories:
   - $HOME/.cache/go-build
-  - $HOME/gopath
+  - $HOME/gopath/pkg/mod
+  - $HOME/gopath/pkg/src
 
 notifications:
   email:
