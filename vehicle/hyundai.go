@@ -8,18 +8,18 @@ import (
 	"github.com/andig/evcc/vehicle/bluelink"
 )
 
-// Kia is an api.Vehicle implementation
-type Kia struct {
+// Hyundai is an api.Vehicle implementation
+type Hyundai struct {
 	*embed
 	*bluelink.API
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
+	registry.Add("hyundai", NewHyundaiFromConfig)
 }
 
-// NewKiaFromConfig creates a new Vehicle
-func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewHyundaiFromConfig creates a new Vehicle
+func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title          string
 		Capacity       int64
@@ -33,10 +33,10 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.kia.com:8080",
-		TokenAuth:         "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
-		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
-		CCSPApplicationID: "693a33fa-c117-43f2-ae3b-61a02d24f417",
+		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
+		TokenAuth:         "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
+		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
+		CCSPApplicationID: "99cfff84-f4e2-4be8-a5ed-e5b755eb6581",
 		DeviceID:          "/api/v1/spa/notifications/register",
 		Lang:              "/api/v1/user/language",
 		Login:             "/api/v1/user/signin",
@@ -46,13 +46,13 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		GetStatus:         "/api/v2/spa/vehicles/",
 	}
 
-	log := util.NewLogger("kia")
+	log := util.NewLogger("hyundai")
 	api, err := bluelink.New(log, cc.User, cc.Password, cc.PIN, cc.Cache, settings)
 	if err != nil {
 		return nil, err
 	}
 
-	v := &Kia{
+	v := &Hyundai{
 		embed: &embed{cc.Title, cc.Capacity},
 		API:   api,
 	}
