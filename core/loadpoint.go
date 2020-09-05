@@ -50,7 +50,7 @@ type LoadPoint struct {
 	TargetSoC  int            `mapstructure:"targetSoC"` // Target SoC, guarded by mutex
 
 	Title      string `mapstructure:"title"`   // UI title
-	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
+	MaxPhases  int64  `mapstructure:"phases"`  // Charger phases
 	ChargerRef string `mapstructure:"charger"` // Charger reference
 	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
 	Meters     struct {
@@ -79,6 +79,7 @@ type LoadPoint struct {
 
 	// cached state
 	status        api.ChargeStatus // Charger status
+	activePhases  int64            // Active phases
 	charging      bool             // Charging cycle
 	chargePower   float64          // Charging power
 	connectedTime time.Time        // Time when vehicle was connected
@@ -99,6 +100,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// set sane defaults
 	lp.Mode = api.ChargeModeString(string(lp.Mode))
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
+	lp.activePhases = lp.MaxPhases
 
 	sort.Ints(lp.SoC.Levels)
 	if lp.TargetSoC == 0 {
@@ -144,12 +146,13 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	bus := evbus.New()
 
 	lp := &LoadPoint{
-		log:    log,   // logger
-		clock:  clock, // mockable time
-		bus:    bus,   // event bus
-		Mode:   api.ModeOff,
-		Phases: 1,
-		status: api.StatusNone,
+		log:          log,   // logger
+		clock:        clock, // mockable time
+		bus:          bus,   // event bus
+		Mode:         api.ModeOff,
+		MaxPhases:    1, // config default
+		activePhases: 1, // current active
+		status:       api.StatusNone,
 		HandlerConfig: HandlerConfig{
 			MinCurrent:    6,  // A
 			MaxCurrent:    16, // A
@@ -321,7 +324,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current int64) {
-	power := float64(current*lp.Phases) * Voltage
+	power := float64(current*lp.activePhases) * Voltage
 
 	if !lp.handler.Enabled() || lp.status != api.StatusC {
 		// if disabled we cannot be charging
@@ -441,25 +444,34 @@ func (lp *LoadPoint) detectPhases() {
 		}
 
 		if phases > 0 {
-			lp.Phases = phases
-			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.Phases, currents)
+			lp.activePhases = phases
+			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.activePhases, currents)
 
-			lp.publish("activePhases", lp.Phases)
+			lp.publish("activePhases", lp.activePhases)
 		}
 	}
 }
 
-// maxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
-	// calculate target charge current from delta power and actual current
+// targetCurrent calculates required charge current from delta power and actual current
+func (lp *LoadPoint) targetCurrent(sitePower float64) (int64, int64) {
 	effectiveCurrent := lp.handler.TargetCurrent()
 	if lp.status != api.StatusC {
 		effectiveCurrent = 0
 	}
-	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
-	targetCurrent := clamp(effectiveCurrent+deltaCurrent, 0, lp.MaxCurrent)
 
-	lp.log.DEBUG.Printf("max charge current: %dA = %dA + %dA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
+	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
+
+	targetCurrent := effectiveCurrent + deltaCurrent
+	clamped := clamp(targetCurrent, 0, lp.MaxCurrent)
+
+	lp.log.DEBUG.Printf("max charge current: %dA = limit(%dA) = %dA + %dA (%.0fW @ %dp)", clamped, targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
+
+	return targetCurrent, clamped
+}
+
+// maxCurrent calculates the maximum target current for PV mode
+func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
+	targetCurrent, clamped := lp.targetCurrent(sitePower)
 
 	// in MinPV mode return at least minCurrent
 	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
@@ -535,7 +547,33 @@ func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	lp.log.DEBUG.Printf("pv timer reset")
 	lp.pvTimer = time.Time{}
 
-	return targetCurrent
+	return clamped
+}
+
+func (lp *LoadPoint) scalePhasesTo(phases int64) error {
+	err := lp.handler.Phases1p3p(phases)
+	if err == nil {
+		lp.activePhases = phases
+	}
+
+	return err
+}
+
+// scalePhases adjusts the number of active phases
+func (lp *LoadPoint) scalePhases(sitePower float64) error {
+	targetCurrent, _ := lp.targetCurrent(sitePower)
+
+	// scale down
+	if lp.activePhases > 1 && targetCurrent < lp.MinCurrent && sitePower >= lp.Disable.Threshold {
+		return lp.scalePhasesTo(1)
+	}
+
+	// scale up
+	if lp.activePhases == 1 && targetCurrent >= lp.MaxCurrent && sitePower <= 0 {
+		return lp.scalePhasesTo(3)
+	}
+
+	return nil
 }
 
 // updateChargeMete updates and publishes single meter
@@ -639,10 +677,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// phase detection
 	lp.detectPhases()
 
-	// check if car connected and ready for charging
-	var err error
-
 	// execute loading strategy
+	var err error
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
@@ -656,13 +692,17 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.handler.Ramp(0, true)
 
 	case mode == api.ModeNow:
-		err = lp.handler.Ramp(lp.MaxCurrent, true)
+		if err = lp.scalePhasesTo(3); err == nil {
+			err = lp.handler.Ramp(lp.MaxCurrent, true)
+		}
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.maxCurrent(mode, sitePower)
 		lp.log.DEBUG.Printf("target charge current: %dA", targetCurrent)
 
-		err = lp.handler.Ramp(targetCurrent)
+		if err = lp.scalePhases(sitePower); err == nil {
+			err = lp.handler.Ramp(targetCurrent)
+		}
 	}
 
 	if err != nil {

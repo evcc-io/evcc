@@ -64,8 +64,8 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
-	if lp.Phases != 1 {
-		t.Errorf("Phases %v", lp.Phases)
+	if lp.activePhases != 1 {
+		t.Errorf("Phases %v", lp.activePhases)
 	}
 	if lp.MinCurrent != lpMinCurrent {
 		t.Errorf("MinCurrent %v", lp.MinCurrent)
@@ -298,8 +298,8 @@ func TestPVHysteresisForStatusC(t *testing.T) {
 				MinCurrent: lpMinCurrent,
 				MaxCurrent: lpMaxCurrent,
 			},
-			handler: handler,
-			Phases:  10,
+			handler:      handler,
+			activePhases: 10,
 			Enable: ThresholdConfig{
 				Threshold: tc.enable,
 				Delay:     dt,
@@ -346,8 +346,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
 		},
-		handler: handler,
-		Phases:  10,
+		handler:      handler,
+		activePhases: 10,
 	}
 
 	// not connected, test PV mode logic  short-circuited
@@ -357,7 +357,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(0))
 
 	// maxCurrent will read enabled state in PV mode
-	sitePower := -float64(minA*lp.Phases)*Voltage + 1 // 1W below min power
+	sitePower := -float64(minA*lp.activePhases)*Voltage + 1 // 1W below min power
 	current := lp.maxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {

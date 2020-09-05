@@ -169,7 +169,7 @@ func (site *Site) Configuration() SiteConfiguration {
 		lpc := LoadpointConfiguration{
 			Mode:        string(lp.GetMode()),
 			Title:       lp.Name(),
-			Phases:      lp.Phases,
+			Phases:      lp.MaxPhases,
 			MinCurrent:  lp.MinCurrent,
 			MaxCurrent:  lp.MaxCurrent,
 			ChargeMeter: lp.hasChargeMeter(),

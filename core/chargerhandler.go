@@ -21,12 +21,13 @@ type Handler interface {
 	Status() (api.ChargeStatus, error)
 	TargetCurrent() int64
 	Ramp(int64, ...bool) error
+	Phases1p3p(phases int64) error
 }
 
 // HandlerConfig contains the public configuration for the ChargerHandler
 type HandlerConfig struct {
 	Sensitivity   int64         // Step size of current change
-	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
+	MinCurrent    int64         // PV mode: start current
 	MaxCurrent    int64         // Max allowed current. Physically ensured by the charge controller
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 }
@@ -43,6 +44,7 @@ type ChargerHandler struct {
 
 	enabled       bool  // Charger enabled state
 	targetCurrent int64 // Charger target current
+	phases        int64 // Charger active phases
 
 	// contactor switch guard
 	guardUpdated time.Time // charger enabled/disabled timestamp
@@ -218,4 +220,21 @@ func (lp *ChargerHandler) Ramp(targetCurrent int64, force ...bool) error {
 	}
 
 	return lp.rampUpDown(targetCurrent)
+}
+
+// Phases1p3p implements the Charger.ChargePhases interface
+func (lp *ChargerHandler) Phases1p3p(phases int64) error {
+	if cp, ok := lp.charger.(api.ChargePhases); ok {
+		// switch only if phases state unknown or change needed
+		if lp.phases != phases {
+			err := cp.Phases1p3p(phases)
+			if err == nil {
+				lp.phases = phases
+			}
+
+			return err
+		}
+	}
+
+	return nil
 }
