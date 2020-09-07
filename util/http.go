@@ -43,6 +43,9 @@ func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
 		return []byte{}, err
 	}
 
+	// maintain body after reading
+	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+
 	if r.Log != nil {
 		r.Log.TRACE.Printf("%s\n%s", resp.Request.URL.String(), string(b))
 	}
