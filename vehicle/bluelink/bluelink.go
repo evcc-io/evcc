@@ -18,8 +18,14 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
-const resOK = "S"
+const (
+	resOK       = "S"
+	resAuthFail = "F"
+)
 
+var errAuthFail = errors.New("authorization failed")
+
+// Config is the bluelink API configuration
 type Config struct {
 	URI               string
 	TokenAuth         string
@@ -45,6 +51,7 @@ type API struct {
 	auth     Auth
 }
 
+// Auth bundles miscellaneous authorization data
 type Auth struct {
 	deviceID     string
 	vehicleID    string
@@ -78,7 +85,7 @@ func New(log *util.Logger,
 	}
 
 	// api is unbelievably slow when retrieving status
-	v.HTTPHelper.Client.Timeout = 60 * time.Second
+	v.HTTPHelper.Client.Timeout = 120 * time.Second
 
 	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
 
@@ -357,6 +364,9 @@ func (v *API) getStatus() (float64, error) {
 
 		if err == nil && resp.RetCode != resOK {
 			err = errors.New("unexpected response")
+			if resp.RetCode == resAuthFail {
+				err = errAuthFail
+			}
 		}
 	}
 
@@ -367,7 +377,7 @@ func (v *API) getStatus() (float64, error) {
 func (v *API) chargeState() (float64, error) {
 	soc, err := v.getStatus()
 
-	if err != nil && v.HTTPHelper.LastResponse().StatusCode == http.StatusUnauthorized {
+	if err != nil && errors.Is(err, errAuthFail) {
 		if err = v.authFlow(); err == nil {
 			soc, err = v.getStatus()
 		}
