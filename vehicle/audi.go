@@ -1,11 +1,9 @@
 package vehicle
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,6 +12,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"golang.org/x/net/publicsuffix"
 )
@@ -54,9 +53,17 @@ type Audi struct {
 	*embed
 	*util.HTTPHelper
 	user, password, vin string
-	token               string
-	tokenValid          time.Time
+	tokens              audiTokenResponse
 	chargeStateG        func() (float64, error)
+}
+
+type providerJSON struct {
+	Issuer      string   `json:"issuer"`
+	AuthURL     string   `json:"authorization_endpoint"`
+	TokenURL    string   `json:"token_endpoint"`
+	JWKSURL     string   `json:"jwks_uri"`
+	UserInfoURL string   `json:"userinfo_endpoint"`
+	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
 }
 
 func init() {
@@ -83,15 +90,12 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:        cc.VIN,
 	}
 
-	// v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
-	if err != nil {
-		panic(err)
-	}
 
 	v.Client = &http.Client{
 		Jar: jar,
@@ -100,177 +104,154 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		},
 	}
 
-	println("1.")
+	if err == nil {
+		err = v.authFlow()
+	}
+	if err == nil {
+		fmt.Printf("%+v", v.tokens)
+	}
 
-	var uri, ref string
+	return v, err
+}
+
+func (v *Audi) authFlow() error {
+	var err error
+	var uri, ref, body string
 	var vars formVars
 	var req *http.Request
 	var resp *http.Response
-	// var dump []byte
 
-	// var res interface{}
-	// uri := "https://app-api.live-my.audi.com/myaudiappidk/v1/openid-configuration"
-	// req, err := http.NewRequest(http.MethodGet, uri, nil)
-	// dump, _ := httputil.DumpRequest(req, true)
-	// fmt.Printf("%s\n", dump)
-	// _, _ = v.RequestJSON(req, &res)
-	// dump, _ = httputil.DumpResponse(v.LastResponse(), true)
-	// fmt.Printf("%s\n\n", dump)
-
-	println("2.")
+	// println("2.")
 
 	uri = "https://identity.vwgroup.io/oidc/v1/authorize?response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
 	resp, err = v.Client.Get(uri)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		// println("3.")
+		uri = resp.Header.Get("Location")
+		resp, err = v.Client.Get(uri)
 	}
 
-	println("3.")
-
-	uri = resp.Header.Get("Location")
-	resp, err = v.Client.Get(uri)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		// println("4.1.")
+		vars, err = formValues(resp.Body, "form#emailPasswordForm")
+	}
+	if err == nil {
+		ref = uri
+		uri = "https://identity.vwgroup.io" + vars.action
+		body := fmt.Sprintf("_csrf=%s&relayState=%s&hmac=%s&email=%s", vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user))
+		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
+	}
+	if err == nil {
+		req.Header.Add("Referer", ref)
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		resp, err = v.Client.Do(req)
 	}
 
-	vars, err = formValues(resp.Body, "form#emailPasswordForm")
-	if err != nil {
-		panic(err)
+	if err == nil {
+		// println("4.2.")
+		ref = uri
+		uri = "https://identity.vwgroup.io" + resp.Header.Get("Location")
+		req, err = http.NewRequest(http.MethodGet, uri, nil)
+
+	}
+	if err == nil {
+		resp, err = v.Client.Do(req)
 	}
 
-	println("4.1.")
-
-	ref = uri
-	uri = "https://identity.vwgroup.io" + vars.action
-	body := fmt.Sprintf("_csrf=%s&relayState=%s&hmac=%s&email=%s", vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user))
-	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	if err != nil {
-		panic(err)
+	if err == nil {
+		// println("5.")
+		vars, err = formValues(resp.Body, "form#credentialsForm")
 	}
-	req.Header.Add("Referer", ref)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err = v.Client.Do(req)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		uri = "https://identity.vwgroup.io" + vars.action
+		body = fmt.Sprintf("_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
+			vars.csrf,
+			vars.relayState,
+			url.QueryEscape(v.user),
+			vars.hmac,
+			url.QueryEscape(v.password),
+		)
+		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
 	}
-
-	println("4.2.")
-
-	ref = uri
-	uri = "https://identity.vwgroup.io" + resp.Header.Get("Location")
-	req, err = http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		panic(err)
-	}
-	resp, err = v.Client.Do(req)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		req.Header.Add("Referer", ref)
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		resp, err = v.Client.Do(req)
 	}
 
-	vars, err = formValues(resp.Body, "form#credentialsForm")
-	if err != nil {
-		panic(err)
+	for i := 6; i < 9; i++ {
+		// println(i, ".")
+		resp, err = v.redirect(resp, err)
 	}
 
-	println("5.")
-
-	uri = "https://identity.vwgroup.io" + vars.action
-	body = fmt.Sprintf("_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
-		vars.csrf,
-		vars.relayState,
-		url.QueryEscape(v.user),
-		vars.hmac,
-		url.QueryEscape(v.password),
-	)
-	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Add("Referer", ref)
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	resp, err = v.Client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-
-	println("6.")
-
-	uri = resp.Header.Get("Location")
-	resp, err = v.Client.Get(uri)
-	if err != nil {
-		panic(err)
-	}
-
-	println("7.")
-
-	uri = resp.Header.Get("Location")
-	resp, err = v.Client.Get(uri)
-	if err != nil {
-		panic(err)
-	}
-
-	println("8.")
-
-	uri = resp.Header.Get("Location")
-	resp, err = v.Client.Get(uri)
-	if err != nil {
-		panic(err)
-	}
-
-	location, err := url.Parse(resp.Header.Get("Location"))
-	if err != nil {
-		panic(err)
-	}
-	code := location.Query().Get("code")
-
-	println("9.")
-
-	uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-	body = fmt.Sprintf("client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
-		url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
-		"authorization_code",
-		code,
-		url.QueryEscape("myaudi:///"),
-		url.QueryEscape("token id_token"),
-	)
-	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	if err != nil {
-		panic(err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp, err = v.Client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	b, err := ioutil.ReadAll(resp.Body)
 	var tokens audiTokenResponse
-	err = json.Unmarshal(b, &tokens)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%+v\n\n", tokens)
+	if err == nil {
+		// println("9.")
+		var code string
+		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
+			code = location.Query().Get("code")
+		}
 
-	println("10.")
+		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
+		body = fmt.Sprintf("client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
+			url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
+			"authorization_code",
+			code,
+			url.QueryEscape("myaudi:///"),
+			url.QueryEscape("token id_token"),
+		)
 
-	uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
-	body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
-	req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("X-App-Version", "3.14.0")
-	req.Header.Add("X-App-Name", "myAudi")
-	req.Header.Add("X-Client-Id", "77869e21-e30a-4a92-b016-48ab7d3db1d8")
-	resp, err = v.Client.Do(req)
-	if err != nil {
-		panic(err)
+		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), map[string]string{"Content-Type": "application/x-www-form-urlencoded"})
 	}
-	err = json.Unmarshal(b, &tokens)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		_, err = v.RequestJSON(req, &tokens)
+		// fmt.Printf("%+v\n\n", tokens)
 	}
-	fmt.Printf("%+v\n", tokens)
 
-	return v, nil
+	if err == nil {
+		// println("10.")
+		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+		body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
+		headers := map[string]string{
+			"Content-Type":  "application/x-www-form-urlencoded",
+			"X-App-Version": "3.14.0",
+			"X-App-Name":    "myAudi",
+			"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+		}
+
+		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), headers)
+	}
+	if err == nil {
+		_, err = v.RequestJSON(req, &tokens)
+		// fmt.Printf("%+v\n", tokens)
+		v.tokens = tokens
+	}
+
+	return err
+}
+
+func (v *Audi) redirect(resp *http.Response, err error) (*http.Response, error) {
+	if err == nil {
+		uri := resp.Header.Get("Location")
+		resp, err = v.Client.Get(uri)
+	}
+
+	return resp, err
+}
+
+func (v *Audi) request(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
+	req, err := http.NewRequest(method, uri, data)
+	if err != nil {
+		return req, err
+	}
+
+	for _, headers := range headers {
+		for k, v := range headers {
+			req.Header.Add(k, v)
+		}
+	}
+
+	return req, nil
 }
 
 type formVars struct {
@@ -322,8 +303,23 @@ func attr(doc *goquery.Selection, path, attr string) (res string, err error) {
 	return v, nil
 }
 
+// chargeState implements the Vehicle.ChargeState interface
+func (v *Audi) chargeState() (float64, error) {
+	// var br bmwDynamicResponse
+	// uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
+
+	// req, err := v.request(uri)
+	// if err != nil {
+	// 	return 0, err
+	// }
+
+	// _, err = v.RequestJSON(req, &br)
+	// return br.AttributesMap.ChargingLevelHv, err
+	return 0, nil
+}
+
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Audi) ChargeState() (float64, error) {
-	// return v.chargeStateG()
+	return v.chargeStateG()
 	return 0, nil
 }

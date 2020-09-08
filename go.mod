@@ -36,6 +36,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
+	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
