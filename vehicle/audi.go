@@ -97,6 +97,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		PublicSuffixList: publicsuffix.List,
 	})
 
+	// track cookies and don't follow redirects
 	v.Client = &http.Client{
 		Jar: jar,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -121,24 +122,25 @@ func (v *Audi) authFlow() error {
 	var req *http.Request
 	var resp *http.Response
 
-	// println("2.")
-
-	uri = "https://identity.vwgroup.io/oidc/v1/authorize?response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
+	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
+		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
+		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
 	resp, err = v.Client.Get(uri)
 	if err == nil {
-		// println("3.")
 		uri = resp.Header.Get("Location")
 		resp, err = v.Client.Get(uri)
 	}
 
 	if err == nil {
-		// println("4.1.")
 		vars, err = formValues(resp.Body, "form#emailPasswordForm")
 	}
 	if err == nil {
 		ref = uri
 		uri = "https://identity.vwgroup.io" + vars.action
-		body := fmt.Sprintf("_csrf=%s&relayState=%s&hmac=%s&email=%s", vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user))
+		body := fmt.Sprintf(
+			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
+			vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user),
+		)
 		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
 	}
 	if err == nil {
@@ -148,7 +150,6 @@ func (v *Audi) authFlow() error {
 	}
 
 	if err == nil {
-		// println("4.2.")
 		ref = uri
 		uri = "https://identity.vwgroup.io" + resp.Header.Get("Location")
 		req, err = http.NewRequest(http.MethodGet, uri, nil)
@@ -159,7 +160,6 @@ func (v *Audi) authFlow() error {
 	}
 
 	if err == nil {
-		// println("5.")
 		vars, err = formValues(resp.Body, "form#credentialsForm")
 	}
 	if err == nil {
@@ -180,20 +180,19 @@ func (v *Audi) authFlow() error {
 	}
 
 	for i := 6; i < 9; i++ {
-		// println(i, ".")
 		resp, err = v.redirect(resp, err)
 	}
 
 	var tokens audiTokenResponse
 	if err == nil {
-		// println("9.")
 		var code string
 		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
 			code = location.Query().Get("code")
 		}
 
 		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-		body = fmt.Sprintf("client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
+		body = fmt.Sprintf(
+			"client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
 			url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
 			"authorization_code",
 			code,
@@ -201,15 +200,15 @@ func (v *Audi) authFlow() error {
 			url.QueryEscape("token id_token"),
 		)
 
-		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), map[string]string{"Content-Type": "application/x-www-form-urlencoded"})
+		req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
+			map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
+		)
 	}
 	if err == nil {
 		_, err = v.RequestJSON(req, &tokens)
-		// fmt.Printf("%+v\n\n", tokens)
 	}
 
 	if err == nil {
-		// println("10.")
 		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 		body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
 		headers := map[string]string{
@@ -223,7 +222,6 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		_, err = v.RequestJSON(req, &tokens)
-		// fmt.Printf("%+v\n", tokens)
 		v.tokens = tokens
 	}
 
