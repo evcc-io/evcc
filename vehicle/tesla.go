@@ -30,7 +30,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Title                  string
 		Capacity               int64
 		ClientID, ClientSecret string
-		Email, Password        string
+		User, Password         string
 		VIN                    string
 		Cache                  time.Duration
 	}{}
@@ -50,7 +50,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	client, err := tesla.NewClient(&tesla.Auth{
 		ClientID:     cc.ClientID,
 		ClientSecret: cc.ClientSecret,
-		Email:        cc.Email,
+		Email:        cc.User,
 		Password:     cc.Password,
 	})
 	if err != nil {
