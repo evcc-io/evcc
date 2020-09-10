@@ -117,14 +117,15 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 func (v *Audi) authFlow() error {
 	var err error
-	var uri, ref, body string
+	var uri, body string
 	var vars formVars
 	var req *http.Request
 	var resp *http.Response
 
 	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
 		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
-		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
+		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
+		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
 	resp, err = v.Client.Get(uri)
 	if err == nil {
 		uri = resp.Header.Get("Location")
@@ -135,7 +136,6 @@ func (v *Audi) authFlow() error {
 		vars, err = formValues(resp.Body, "form#emailPasswordForm")
 	}
 	if err == nil {
-		ref = uri
 		uri = "https://identity.vwgroup.io" + vars.action
 		body := fmt.Sprintf(
 			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
@@ -144,13 +144,11 @@ func (v *Audi) authFlow() error {
 		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
 	}
 	if err == nil {
-		req.Header.Add("Referer", ref)
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		resp, err = v.Client.Do(req)
 	}
 
 	if err == nil {
-		ref = uri
 		uri = "https://identity.vwgroup.io" + resp.Header.Get("Location")
 		req, err = http.NewRequest(http.MethodGet, uri, nil)
 
@@ -164,7 +162,8 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		uri = "https://identity.vwgroup.io" + vars.action
-		body = fmt.Sprintf("_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
+		body = fmt.Sprintf(
+			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
 			vars.csrf,
 			vars.relayState,
 			url.QueryEscape(v.user),
@@ -174,7 +173,6 @@ func (v *Audi) authFlow() error {
 		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
 	}
 	if err == nil {
-		req.Header.Add("Referer", ref)
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		resp, err = v.Client.Do(req)
 	}
@@ -224,6 +222,31 @@ func (v *Audi) authFlow() error {
 		_, err = v.RequestJSON(req, &tokens)
 		v.tokens = tokens
 	}
+
+	// 	s := `
+	// {
+	//     "query": "\n    query ($id: String!, $country: String!, $language: String!, $requestId: String!) {\n      vehicleStatusReportWithWarnings (id: $id, country: $country, language: $language, requestId: $requestId){\n        vin\n
+	// vehicleType\n        lastUpdated\n        engines {\n          type\n          range {\n            value\n            unit\n          }\n          filling {\n            value\n            unit\n          }\n          adBlueRange {\n
+	//         value\n            unit\n          }\n          electric {\n            chargingState\n            chargingTime\n          }\n        }\n        totalRange {\n          value\n          unit\n        }\n        mileage {\n
+	//   value\n          unit\n        }\n        oilLevel {\n          value\n          unit\n        }\n        service {\n          oilChange {\n            time {\n              value\n              unit\n            }\n
+	// distance {\n              value\n              unit\n            }\n          }\n          inspection {\n            time {\n              value\n              unit\n            }\n            distance {\n              value\n
+	//   unit\n            }\n          }\n        }\n        messages {\n          key\n          value\n        }\n        vsrWarnings {\n          textId\n          pictureId\n          timestamp\n        }\n        stoWarnings {\n
+	// eventId\n          txtId\n          picId\n          criticality\n          timeOfOccurence\n        }\n      }\n    }\n  ",
+	//     "variables": {
+	//         "country": "DE",
+	//         "id": "VmVo...",
+	//         "language": "de",
+	//         "requestId": "86931324"
+	//     }
+	// }`
+
+	// 	uri = "https://userinfo.my.audi.com/bvh/v1"
+	// 	req, _ = v.request(http.MethodPost, uri, strings.NewReader(s), map[string]string{
+	// 		"Content-Type": "application/json",
+	// 	})
+	// 	var res interface{}
+	// 	b, _ := v.RequestJSON(req, &res)
+	// 	fmt.Println(string(b))
 
 	return err
 }
@@ -319,5 +342,4 @@ func (v *Audi) chargeState() (float64, error) {
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Audi) ChargeState() (float64, error) {
 	return v.chargeStateG()
-	return 0, nil
 }
