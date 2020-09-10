@@ -177,7 +177,7 @@ func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
 
 		modeS, ok := vars["mode"]
 		mode := api.ChargeModeString(modeS)
-		if string(mode) != modeS || !ok {
+		if mode == "" || string(mode) != modeS || !ok {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
