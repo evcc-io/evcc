@@ -18,10 +18,8 @@ import (
 )
 
 const (
-	vwIdentity     = "https://identity.vwgroup.io"
-	audiURL        = "https://msg.volkswagen.de/fs-car"
-	audiDE         = "Audi/DE"
-	audiAuthPrefix = "AudiAuth 1"
+	vwIdentity = "https://identity.vwgroup.io"
+	vwAPI      = "https://msg.volkswagen.de/fs-car"
 )
 
 type audiTokenResponse struct {
@@ -337,7 +335,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 
 func (v *Audi) vehicles() ([]string, error) {
 	var res audiVehiclesResponse
-	uri := fmt.Sprintf("%s/usermanagement/users/v1/Audi/DE/vehicles", audiURL)
+	uri := fmt.Sprintf("%s/usermanagement/users/v1/Audi/DE/vehicles", vwAPI)
 	err := v.getJSON(uri, &res)
 	return res.UserVehicles.Vehicle, err
 }
@@ -345,7 +343,7 @@ func (v *Audi) vehicles() ([]string, error) {
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Audi) chargeState() (float64, error) {
 	var res audiChargerResponse
-	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", audiURL, v.brand, v.country, v.vin)
+	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", vwAPI, v.brand, v.country, v.vin)
 	err := v.getJSON(uri, &res)
 	return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), err
 }
