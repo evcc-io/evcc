@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	audiURL        = "https://msg.audi.de/fs-car"
+	vwIdentity     = "https://identity.vwgroup.io"
+	audiURL        = "https://msg.volkswagen.de/fs-car"
 	audiDE         = "Audi/DE"
 	audiAuthPrefix = "AudiAuth 1"
 )
@@ -36,7 +37,13 @@ type audiErrorResponse struct {
 	Description string `json:"error_description"`
 }
 
-type audiBatteryResponse struct {
+type audiVehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+}
+
+type audiChargerResponse struct {
 	Charger struct {
 		Status struct {
 			BatteryStatusData struct {
@@ -53,6 +60,7 @@ type Audi struct {
 	*embed
 	*util.HTTPHelper
 	user, password, vin string
+	brand, country      string
 	tokens              audiTokenResponse
 	chargeStateG        func() (float64, error)
 }
@@ -82,12 +90,16 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	log := util.NewLogger("audi")
+
 	v := &Audi{
 		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("audi")),
+		HTTPHelper: util.NewHTTPHelper(log),
 		user:       cc.User,
 		password:   cc.Password,
 		vin:        cc.VIN,
+		brand:      "Audi",
+		country:    "DE",
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -108,147 +120,22 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil {
 		err = v.authFlow()
 	}
-	if err == nil {
-		fmt.Printf("%+v", v.tokens)
+
+	if err == nil && cc.VIN == "" {
+		vehicles, err := v.vehicles()
+		if err != nil {
+			return nil, fmt.Errorf("cannot get vehicles: %v", err)
+		}
+
+		if len(vehicles) != 1 {
+			return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
+		}
+
+		v.vin = vehicles[0]
+		log.DEBUG.Printf("found vehicle: %v", v.vin)
 	}
 
 	return v, err
-}
-
-func (v *Audi) authFlow() error {
-	var err error
-	var uri, body string
-	var vars formVars
-	var req *http.Request
-	var resp *http.Response
-
-	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
-		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
-		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
-		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
-	resp, err = v.Client.Get(uri)
-	if err == nil {
-		uri = resp.Header.Get("Location")
-		resp, err = v.Client.Get(uri)
-	}
-
-	if err == nil {
-		vars, err = formValues(resp.Body, "form#emailPasswordForm")
-	}
-	if err == nil {
-		uri = "https://identity.vwgroup.io" + vars.action
-		body := fmt.Sprintf(
-			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
-			vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user),
-		)
-		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	}
-	if err == nil {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
-	}
-
-	if err == nil {
-		uri = "https://identity.vwgroup.io" + resp.Header.Get("Location")
-		req, err = http.NewRequest(http.MethodGet, uri, nil)
-
-	}
-	if err == nil {
-		resp, err = v.Client.Do(req)
-	}
-
-	if err == nil {
-		vars, err = formValues(resp.Body, "form#credentialsForm")
-	}
-	if err == nil {
-		uri = "https://identity.vwgroup.io" + vars.action
-		body = fmt.Sprintf(
-			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
-			vars.csrf,
-			vars.relayState,
-			url.QueryEscape(v.user),
-			vars.hmac,
-			url.QueryEscape(v.password),
-		)
-		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	}
-	if err == nil {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
-	}
-
-	for i := 6; i < 9; i++ {
-		resp, err = v.redirect(resp, err)
-	}
-
-	var tokens audiTokenResponse
-	if err == nil {
-		var code string
-		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
-			code = location.Query().Get("code")
-		}
-
-		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-		body = fmt.Sprintf(
-			"client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
-			url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
-			"authorization_code",
-			code,
-			url.QueryEscape("myaudi:///"),
-			url.QueryEscape("token id_token"),
-		)
-
-		req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
-			map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
-		)
-	}
-	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
-	}
-
-	if err == nil {
-		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
-		body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
-		headers := map[string]string{
-			"Content-Type":  "application/x-www-form-urlencoded",
-			"X-App-Version": "3.14.0",
-			"X-App-Name":    "myAudi",
-			"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
-		}
-
-		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), headers)
-	}
-	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
-		v.tokens = tokens
-	}
-
-	// 	s := `
-	// {
-	//     "query": "\n    query ($id: String!, $country: String!, $language: String!, $requestId: String!) {\n      vehicleStatusReportWithWarnings (id: $id, country: $country, language: $language, requestId: $requestId){\n        vin\n
-	// vehicleType\n        lastUpdated\n        engines {\n          type\n          range {\n            value\n            unit\n          }\n          filling {\n            value\n            unit\n          }\n          adBlueRange {\n
-	//         value\n            unit\n          }\n          electric {\n            chargingState\n            chargingTime\n          }\n        }\n        totalRange {\n          value\n          unit\n        }\n        mileage {\n
-	//   value\n          unit\n        }\n        oilLevel {\n          value\n          unit\n        }\n        service {\n          oilChange {\n            time {\n              value\n              unit\n            }\n
-	// distance {\n              value\n              unit\n            }\n          }\n          inspection {\n            time {\n              value\n              unit\n            }\n            distance {\n              value\n
-	//   unit\n            }\n          }\n        }\n        messages {\n          key\n          value\n        }\n        vsrWarnings {\n          textId\n          pictureId\n          timestamp\n        }\n        stoWarnings {\n
-	// eventId\n          txtId\n          picId\n          criticality\n          timeOfOccurence\n        }\n      }\n    }\n  ",
-	//     "variables": {
-	//         "country": "DE",
-	//         "id": "VmVo...",
-	//         "language": "de",
-	//         "requestId": "86931324"
-	//     }
-	// }`
-
-	// 	uri = "https://userinfo.my.audi.com/bvh/v1"
-	// 	req, _ = v.request(http.MethodPost, uri, strings.NewReader(s), map[string]string{
-	// 		"Content-Type": "application/json",
-	// 	})
-	// 	var res interface{}
-	// 	b, _ := v.RequestJSON(req, &res)
-	// 	fmt.Println(string(b))
-
-	return err
 }
 
 func (v *Audi) redirect(resp *http.Response, err error) (*http.Response, error) {
@@ -324,19 +211,147 @@ func attr(doc *goquery.Selection, path, attr string) (res string, err error) {
 	return v, nil
 }
 
+func (v *Audi) authFlow() error {
+	var err error
+	var uri, body string
+	var vars formVars
+	var req *http.Request
+	var resp *http.Response
+
+	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
+		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
+		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
+		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
+	resp, err = v.Client.Get(uri)
+	if err == nil {
+		uri = resp.Header.Get("Location")
+		resp, err = v.Client.Get(uri)
+	}
+
+	if err == nil {
+		vars, err = formValues(resp.Body, "form#emailPasswordForm")
+	}
+	if err == nil {
+		uri = vwIdentity + vars.action
+		body := fmt.Sprintf(
+			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
+			vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user),
+		)
+		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
+	}
+	if err == nil {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		resp, err = v.Client.Do(req)
+	}
+
+	if err == nil {
+		uri = vwIdentity + resp.Header.Get("Location")
+		req, err = http.NewRequest(http.MethodGet, uri, nil)
+
+	}
+	if err == nil {
+		resp, err = v.Client.Do(req)
+	}
+
+	if err == nil {
+		vars, err = formValues(resp.Body, "form#credentialsForm")
+	}
+	if err == nil {
+		uri = vwIdentity + vars.action
+		body = fmt.Sprintf(
+			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
+			vars.csrf,
+			vars.relayState,
+			url.QueryEscape(v.user),
+			vars.hmac,
+			url.QueryEscape(v.password),
+		)
+		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
+	}
+	if err == nil {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+		resp, err = v.Client.Do(req)
+	}
+
+	for i := 6; i < 9; i++ {
+		resp, err = v.redirect(resp, err)
+	}
+
+	var tokens audiTokenResponse
+	if err == nil {
+		var code string
+		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
+			code = location.Query().Get("code")
+		}
+
+		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
+		body = fmt.Sprintf(
+			"client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
+			url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
+			"authorization_code",
+			code,
+			url.QueryEscape("myaudi:///"),
+			url.QueryEscape("token id_token"),
+		)
+
+		req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
+			map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
+		)
+	}
+	if err == nil {
+		_, err = v.RequestJSON(req, &tokens)
+	}
+
+	if err == nil {
+		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+		body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
+		headers := map[string]string{
+			"Content-Type":  "application/x-www-form-urlencoded",
+			"X-App-Version": "3.14.0",
+			"X-App-Name":    "myAudi",
+			"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+		}
+
+		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), headers)
+	}
+	if err == nil {
+		_, err = v.RequestJSON(req, &tokens)
+		v.tokens = tokens
+	}
+
+	return err
+}
+
+func (v *Audi) getJSON(uri string, res interface{}) error {
+	req, err := v.request(http.MethodGet, uri, nil, map[string]string{
+		"Accept":        "application/json",
+		"Authorization": "Bearer " + v.tokens.AccessToken,
+	})
+
+	if err == nil {
+		_, err = v.RequestJSON(req, &res)
+	}
+
+	return err
+}
+
+func (v *Audi) vehicles() ([]string, error) {
+	var res audiVehiclesResponse
+	uri := fmt.Sprintf("%s/usermanagement/users/v1/Audi/DE/vehicles", audiURL)
+
+	err := v.getJSON(uri, &res)
+
+	return res.UserVehicles.Vehicle, err
+}
+
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Audi) chargeState() (float64, error) {
-	// var br bmwDynamicResponse
-	// uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
+	var res audiChargerResponse
+	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", audiURL, v.brand, v.country, v.vin)
 
-	// req, err := v.request(uri)
-	// if err != nil {
-	// 	return 0, err
-	// }
+	err := v.getJSON(uri, &res)
 
-	// _, err = v.RequestJSON(req, &br)
-	// return br.AttributesMap.ChargingLevelHv, err
-	return 0, nil
+	return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
