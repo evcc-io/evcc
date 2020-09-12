@@ -12,6 +12,7 @@ func TestVehicles(t *testing.T) {
 		"received status code 404 (INVALID PARAMS)",
 		"missing personID",
 		"401 Unauthorized",
+		"unexpected length",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {
