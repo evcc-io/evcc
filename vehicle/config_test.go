@@ -13,6 +13,7 @@ func TestVehicles(t *testing.T) {
 		"missing personID",
 		"401 Unauthorized",
 		"unexpected length",
+		"i/o timeout",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {
