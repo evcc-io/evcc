@@ -53,6 +53,17 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 			return 0
 		}
 
+		// use vehicle api if available
+		if vr, ok := s.vehicle.(api.ChargeRemainder); ok {
+			timeRemaining, err := vr.RemainingTime()
+			if err == nil {
+				return timeRemaining * time.Duration(percentRemaining/(100-s.socCharge))
+			}
+
+			s.log.WARN.Printf("updating remaining time failed: %v", err)
+		}
+
+		// estimate remaining time
 		whRemaining := percentRemaining / 100 * s.virtualCapacity
 		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
 	}
@@ -69,6 +80,8 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			return s.socCharge, err
 		}
 		f = s.prevSoC // recover last received soc
+		
+		s.log.WARN.Printf("updating soc failed: %v", err)
 	}
 
 	s.socCharge = f
