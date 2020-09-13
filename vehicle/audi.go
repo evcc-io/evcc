@@ -20,6 +20,7 @@ import (
 const (
 	vwIdentity = "https://identity.vwgroup.io"
 	vwAPI      = "https://msg.volkswagen.de/fs-car"
+	vwToken    = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 )
 
 // OIDCResponse is the well-known OIDC provider response
@@ -298,7 +299,6 @@ func (v *Audi) authFlow() error {
 	}
 
 	if err == nil {
-		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 		body = fmt.Sprintf("grant_type=%s&token=%s&scope=%s", "id_token", tokens.IDToken, "sc2:fal")
 		headers := map[string]string{
 			"Content-Type":  "application/x-www-form-urlencoded",
@@ -307,7 +307,7 @@ func (v *Audi) authFlow() error {
 			"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
 		}
 
-		req, err = v.request(http.MethodPost, uri, strings.NewReader(body), headers)
+		req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	}
 	if err == nil {
 		_, err = v.RequestJSON(req, &tokens)
@@ -325,6 +325,25 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 
 	if err == nil {
 		_, err = v.RequestJSON(req, &res)
+
+		// token expired?
+		if err != nil && v.LastResponse().StatusCode == http.StatusUnauthorized {
+			body := fmt.Sprintf("grant_type=%s&refresh_token=%s&scope=%s", "refresh_token", v.tokens.RefreshToken, "sc2:fal")
+			headers := map[string]string{
+				"Content-Type":  "application/x-www-form-urlencoded",
+				"X-App-Version": "3.14.0",
+				"X-App-Name":    "myAudi",
+				"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+			}
+
+			req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
+			if err == nil {
+				_, err = v.RequestJSON(req, &v.tokens)
+			}
+			if err == nil {
+				return v.getJSON(uri, &res)
+			}
+		}
 	}
 
 	return err
