@@ -51,6 +51,17 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 			return 0
 		}
 
+		// use vehicle api if available
+		if vr, ok := s.vehicle.(api.ChargeRemainder); ok {
+			timeRemaining, err := vr.RemainingTime()
+			if err == nil {
+				return timeRemaining * time.Duration(percentRemaining/(100-s.socCharge))
+			}
+
+			s.log.WARN.Printf("updating remaining time failed: %v", err)
+		}
+
+		// estimate remaining time
 		whRemaining := percentRemaining / 100 * s.capacity
 		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
 	}
