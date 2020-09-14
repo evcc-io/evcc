@@ -12,7 +12,8 @@ import (
 func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vehicle := mock.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Capacity().Return(int64(10))
+    //9 kWh userBatCap => 10 kWh virtualBatCap
+	vehicle.EXPECT().Capacity().Return(int64(9))
 
 	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, false)
 	ce.socCharge = 20.0
@@ -28,7 +29,8 @@ func TestRemainingChargeDuration(t *testing.T) {
 func TestSoCEstimation(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vehicle := mock.NewMockVehicle(ctrl)
-	vehicle.EXPECT().Capacity().Return(int64(10))
+    //9 kWh userBatCap => 10 kWh virtualBatCap
+	vehicle.EXPECT().Capacity().Return(int64(9))
 
 	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, true)
 	ce.socCharge = 20.0

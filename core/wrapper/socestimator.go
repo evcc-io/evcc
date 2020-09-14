@@ -16,6 +16,7 @@ type SocEstimator struct {
 	estimate bool
 
 	capacity          float64 // vehicle capacity in Wh cached to simplify testing
+	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
 	socCharge         float64 // estimated vehicle SoC
 	prevSoC           float64 // previous vehicle SoC in %
 	prevChargedEnergy float64 // previous charged energy in Wh
@@ -40,7 +41,8 @@ func (s *SocEstimator) Reset() {
 	s.prevSoC = 0
 	s.prevChargedEnergy = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3 // cache to simplify debugging
-	s.energyPerSocStep = s.capacity / 100
+	s.virtualCapacity = s.capacity / 0.9             // assume charge 90% efficiency
+	s.energyPerSocStep = s.virtualCapacity / 100
 }
 
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
@@ -62,7 +64,7 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 		}
 
 		// estimate remaining time
-		whRemaining := percentRemaining / 100 * s.capacity
+		whRemaining := percentRemaining / 100 * s.virtualCapacity
 		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
 	}
 
@@ -73,7 +75,14 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
 	if err != nil {
-		return s.socCharge, err
+		s.log.WARN.Printf("updating soc failed: %v", err)
+
+		// try to recover from temporary vehicle-api errors
+		if s.prevSoC == 0 { // never received a soc value
+			return s.socCharge, err
+		}
+
+		f = s.prevSoC // recover last received soc
 	}
 
 	s.socCharge = f
@@ -86,7 +95,8 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			// calculate gradient, wh per soc %
 			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
-				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualBatCap: %0.1fkWh", s.energyPerSocStep, s.energyPerSocStep*100/1e3)
+				s.virtualCapacity = s.energyPerSocStep * 100 / 1e3
+				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.1fkWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			// sample charged energy at soc change, reset energy delta
