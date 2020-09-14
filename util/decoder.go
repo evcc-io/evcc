@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/mitchellh/mapstructure"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 var validate = validator.New()

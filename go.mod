@@ -10,7 +10,7 @@ require (
 	github.com/benbjohnson/clock v1.0.3
 	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/eclipse/paho.mqtt.golang v1.2.0
-	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/go-playground/validator/v10 v10.3.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
@@ -45,11 +45,7 @@ require (
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-<<<<<<< HEAD
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-=======
-	gopkg.in/go-playground/validator.v9 v9.31.0
->>>>>>> Validate required fields
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
