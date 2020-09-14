@@ -56,6 +56,10 @@
     .value, input[type=radio], label.btn {
       white-space: nowrap !important;
     }
+    .text-muted a, .text-muted a:hover {
+      color: #6c757d!important;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -506,7 +510,10 @@ loadpoints:
   <div class="container">
     <div class="row">
       <div class="col-6">
-        <small class="text-muted"><<.Version>> <<if ne .Version .Commit>>(<<.Commit>>)<<end>></small>
+        <small class="text-muted">
+          <a href="https://github.com/andig/evcc/releases/tag/<<.Version>>"><<.Version>></a>
+          <<if ne .Version .Commit>>(<a href="https://github.com/andig/evcc/commit/<<.Commit>>"><<.Commit>></a>)<<end>>
+        </small>
       </div>
       <div class="col-6 text-right">
         <small class="text-muted">&copy; 2020</small>
