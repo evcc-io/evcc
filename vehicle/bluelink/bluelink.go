@@ -15,6 +15,7 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/google/uuid"
+	"github.com/imdario/mergo"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -23,7 +24,19 @@ const (
 	resAuthFail = "F"
 )
 
-var errAuthFail = errors.New("authorization failed")
+var (
+	errAuthFail = errors.New("authorization failed")
+
+	defaults = Config{
+		DeviceID:    "/api/v1/spa/notifications/register",
+		Lang:        "/api/v1/user/language",
+		Login:       "/api/v1/user/signin",
+		AccessToken: "/api/v1/user/oauth2/token",
+		Vehicles:    "/api/v1/spa/vehicles",
+		SendPIN:     "/api/v1/user/pin",
+		GetStatus:   "/api/v2/spa/vehicles/",
+	}
+)
 
 // Config is the bluelink API configuration
 type Config struct {
@@ -72,10 +85,11 @@ type response struct {
 }
 
 // New creates a new BlueLink API
-func New(log *util.Logger,
-	user, password, pin string, cache time.Duration,
-	config Config,
-) (*API, error) {
+func New(log *util.Logger, user, password, pin string, cache time.Duration, config Config) (*API, error) {
+	if err := mergo.Merge(&config, defaults); err != nil {
+		return nil, err
+	}
+
 	v := &API{
 		HTTPHelper: util.NewHTTPHelper(log),
 		config:     config,
