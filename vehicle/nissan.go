@@ -24,10 +24,11 @@ func init() {
 // NewNissanFromConfig creates a new vehicle
 func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
-		User, Password, Region string
-		Cache                  time.Duration
+		Title          string
+		Capacity       int64
+		User, Password string `validate:"required"`
+		Region         string
+		Cache          time.Duration
 	}{
 		Region: carwings.RegionEurope,
 	}

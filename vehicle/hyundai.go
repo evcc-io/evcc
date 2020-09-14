@@ -23,7 +23,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title          string
 		Capacity       int64
-		User, Password string
+		User, Password string `validate:"required"`
 		Cache          time.Duration
 	}{}
 

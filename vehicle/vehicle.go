@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -38,19 +37,13 @@ func init() {
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title    string
-		Capacity int64
-		Charge   provider.Config
+		Capacity int64           `validate:"required"`
+		Charge   provider.Config `validate:"required"`
 		Cache    time.Duration
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	for k, v := range map[string]string{"charge": cc.Charge.Type} {
-		if v == "" {
-			return nil, fmt.Errorf("default vehicle config: %s required", k)
-		}
 	}
 
 	getter, err := provider.NewFloatGetterFromConfig(cc.Charge)

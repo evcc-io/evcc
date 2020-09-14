@@ -66,7 +66,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
-		User, Password, VIN string
+		User, Password, VIN string `validate:"required"`
 		Cache               time.Duration
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {

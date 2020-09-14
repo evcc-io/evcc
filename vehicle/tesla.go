@@ -30,8 +30,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
 		Capacity               int64
+		User, Password         string `validate:"required"`
 		ClientID, ClientSecret string
-		User, Password         string
 		VIN                    string
 		Cache                  time.Duration
 	}{}
