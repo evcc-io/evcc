@@ -73,16 +73,16 @@ type Auth struct {
 }
 
 type response struct {
-	RetCode string `json:"retCode"`
+	RetCode string
 	ResMsg  struct {
-		DeviceID string `json:"deviceId"`
+		DeviceID string
 		EvStatus struct {
-			BatteryStatus float64 `json:"batteryStatus"`
-		} `json:"evStatus"`
+			BatteryStatus float64
+		}
 		Vehicles []struct {
-			VehicleID string `json:"vehicleId"`
-		} `json:"vehicles"`
-	} `json:"resMsg"`
+			VehicleID string
+		}
+	}
 }
 
 // New creates a new BlueLink API
@@ -318,13 +318,7 @@ func (v *API) sendPIN(deviceID, accToken string) (string, error) {
 		_, err = v.RequestJSON(req, &token)
 	}
 
-	controlToken := ""
-	if err == nil {
-		controlToken = "Bearer " + token.ControlToken
-
-	}
-
-	return controlToken, err
+	return token.ControlToken, err
 }
 
 func (v *API) authFlow() (err error) {
@@ -366,7 +360,7 @@ func (v *API) authFlow() (err error) {
 
 func (v *API) getStatus() (float64, error) {
 	headers := map[string]string{
-		"Authorization":  v.auth.controlToken,
+		"Authorization":  "Bearer " + v.auth.controlToken,
 		"ccsp-device-id": v.auth.deviceID,
 		"Content-Type":   "application/json",
 	}
