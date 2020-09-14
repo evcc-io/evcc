@@ -158,6 +158,9 @@ func TemplatesHandler() http.HandlerFunc {
 func StateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
+		for _, k := range []string{"availableVersion", "releaseNotes"} {
+			delete(res, k)
+		}
 		jsonResponse(w, r, res)
 	}
 }
