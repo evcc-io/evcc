@@ -53,7 +53,8 @@ type Config struct {
 	GetStatus         string
 }
 
-// API is an api.Vehicle implementation with configurable getters and setters.
+// API implements the Kia/Hyundai bluelink api.
+// Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*util.HTTPHelper
 	user     string
