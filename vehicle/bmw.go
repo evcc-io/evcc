@@ -48,7 +48,7 @@ func init() {
 func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title          string
-		Capacity       int64
+		Capacity       int64  `validate:"required"`
 		User, Password string `validate:"required"`
 		VIN            string
 		Cache          time.Duration
