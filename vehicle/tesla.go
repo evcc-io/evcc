@@ -2,12 +2,14 @@ package vehicle
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/jsgoecke/tesla"
+	"gopkg.in/ini.v1"
 )
 
 // Tesla is an api.Vehicle implementation for Tesla cars
@@ -28,19 +30,27 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Title                  string
 		Capacity               int64
 		ClientID, ClientSecret string
-		Email, Password        string
+		User, Password         string
 		VIN                    string
 		Cache                  time.Duration
 	}{}
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	v := &Tesla{
+		embed: &embed{cc.Title, cc.Capacity},
+	}
+
+	if cc.ClientID == "" {
+		// https://tesla-api.timdorr.com/api-basics/authentication
+		cc.ClientID, cc.ClientSecret = v.downloadClientID("https://pastebin.com/raw/pS7Z6yyP")
 	}
 
 	client, err := tesla.NewClient(&tesla.Auth{
 		ClientID:     cc.ClientID,
 		ClientSecret: cc.ClientSecret,
-		Email:        cc.Email,
+		Email:        cc.User,
 		Password:     cc.Password,
 	})
 	if err != nil {
@@ -50,10 +60,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	vehicles, err := client.Vehicles()
 	if err != nil {
 		return nil, err
-	}
-
-	v := &Tesla{
-		embed: &embed{cc.Title, cc.Capacity},
 	}
 
 	if cc.VIN == "" && len(vehicles) == 1 {
@@ -74,6 +80,23 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
 
 	return v, nil
+}
+
+// download client id and secret
+func (v *Tesla) downloadClientID(uri string) (string, string) {
+	resp, err := http.Get(uri)
+	if err == nil {
+		defer resp.Body.Close()
+
+		cfg, err := ini.Load(resp.Body)
+		if err == nil {
+			id := cfg.Section("").Key("TESLA_CLIENT_ID").String()
+			secret := cfg.Section("").Key("TESLA_CLIENT_SECRET").String()
+			return id, secret
+		}
+	}
+
+	return "", ""
 }
 
 // chargeState implements the Vehicle.ChargeState interface

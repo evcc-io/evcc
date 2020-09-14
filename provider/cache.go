@@ -95,3 +95,20 @@ func (c *Cached) BoolGetter() func() (bool, error) {
 		return c.val.(bool), c.err
 	}
 }
+
+// DurationGetter gets time.Duration value
+func (c *Cached) DurationGetter() func() (time.Duration, error) {
+	g, ok := c.getter.(func() (time.Duration, error))
+	if !ok {
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+	}
+
+	return func() (time.Duration, error) {
+		if c.clock.Since(c.updated) > c.cache {
+			c.val, c.err = g()
+			c.updated = c.clock.Now()
+		}
+
+		return c.val.(time.Duration), c.err
+	}
+}

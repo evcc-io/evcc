@@ -60,7 +60,7 @@ func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(string(b[1])), nil
+	return api.ChargeStatus(string(b[0])), nil
 }
 
 // Enabled implements the Charger.Enabled interface

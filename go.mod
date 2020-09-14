@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
-	github.com/andig/evcc-config v0.0.0-20200822120120-f129cbffa9aa
+	github.com/andig/evcc-config v0.0.0-20200910070755-3ce3d3a7b76f
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
@@ -15,7 +15,7 @@ require (
 	github.com/golang/mock v1.4.3
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.1
-	github.com/gorilla/handlers v1.4.2
+	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/gregdel/pushover v0.0.0-20200416074932-c8ad547caed4
@@ -40,5 +40,6 @@ require (
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )

@@ -11,6 +11,7 @@ func TestChargers(t *testing.T) {
 		"invalid plugin type: ...",
 		"mqtt not configured",
 		"invalid charger type: nrgkick-bluetooth",
+		"NRGKick bluetooth is only supported on linux",
 		"invalid pin:",
 		"connect: no route to host",
 		"connect: connection refused",
