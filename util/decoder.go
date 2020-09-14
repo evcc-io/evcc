@@ -1,7 +1,7 @@
 package util
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -13,8 +13,11 @@ var validate = validator.New()
 // simplifyValidationErrors extract simple error message for single field
 func simplifyValidationErrors(errs validator.ValidationErrors) error {
 	for _, e := range errs {
-		if e.Tag() == "required" {
-			return errors.New("missing " + strings.ToLower(e.Field()))
+		switch e.Tag() {
+		case "required":
+			return fmt.Errorf("missing %s", strings.ToLower(e.Field()))
+		case "required_without":
+			return fmt.Errorf("need either %s or %s", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
 		}
 	}
 
@@ -37,10 +40,8 @@ func DecodeOther(other interface{}, cc interface{}) error {
 
 	if err == nil {
 		err = validate.Struct(cc)
-
-		var validationErrors validator.ValidationErrors
-		if errors.As(err, &validationErrors) {
-			err = simplifyValidationErrors(validationErrors)
+		if err != nil {
+			err = simplifyValidationErrors(err.(validator.ValidationErrors))
 		}
 	}
 
