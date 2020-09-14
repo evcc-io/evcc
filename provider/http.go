@@ -44,14 +44,18 @@ func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
 // NewHTTPProviderFromConfig creates a HTTP provider
 func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	cc := struct {
-		URI, Method string
-		Headers     map[string]string
-		Body        string
-		Jq          string
-		Scale       float64
-		Insecure    bool
-		Auth        Auth
-	}{Headers: make(map[string]string)}
+		URI      string `validate:"required"`
+		Method   string
+		Headers  map[string]string
+		Body     string
+		Jq       string
+		Scale    float64
+		Insecure bool
+		Auth     Auth
+	}{
+		Method:  http.MethodGet,
+		Headers: make(map[string]string),
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

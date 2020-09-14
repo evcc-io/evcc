@@ -8,6 +8,7 @@ import (
 
 func TestEvseWifi(t *testing.T) {
 	evse, err := NewEVSEWifiFromConfig(map[string]interface{}{
+		"uri": "foo",
 		"meter": map[string]interface{}{
 			"power":    true,
 			"energy":   true,

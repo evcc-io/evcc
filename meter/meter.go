@@ -18,7 +18,7 @@ func init() {
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Power    provider.Config
+		Power    provider.Config   `validate:"required"`
 		Energy   *provider.Config  // optional
 		SoC      *provider.Config  // optional
 		Currents []provider.Config // optional

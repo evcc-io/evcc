@@ -43,7 +43,7 @@ func init() {
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI     string
+		URI     string `validate:"required"`
 		Serial  string
 		Timeout time.Duration
 		RFID    RFID

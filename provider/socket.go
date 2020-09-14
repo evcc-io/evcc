@@ -32,7 +32,7 @@ type Socket struct {
 // NewSocketProviderFromConfig creates a HTTP provider
 func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) {
 	cc := struct {
-		URI      string
+		URI      string `validate:"required"`
 		Headers  map[string]string
 		Jq       string
 		Scale    float64

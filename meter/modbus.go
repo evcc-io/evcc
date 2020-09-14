@@ -30,7 +30,7 @@ func init() {
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		Model           string
+		Model           string `validate:"required"`
 		modbus.Settings `mapstructure:",squash"`
 		Power, Energy   string
 	}{

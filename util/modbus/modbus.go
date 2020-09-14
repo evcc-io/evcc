@@ -13,11 +13,13 @@ import (
 
 // Settings contains the ModBus settings
 type Settings struct {
-	ID                  uint8
-	SubDevice           int
-	URI, Device, Comset string
-	Baudrate            int
-	RTU                 *bool // indicates RTU over TCP if true
+	ID        uint8 `validate:"required"`
+	SubDevice int
+	URI       string `validate:"required_without=Device"`
+	Device    string `validate:"required_without=URI"`
+	Comset    string `validate:"required_with=Device"`
+	Baudrate  int
+	RTU       *bool // indicates RTU over TCP if true
 }
 
 // Connection decorates a meters.Connection with transparent slave id and error handling
@@ -194,9 +196,9 @@ func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op 
 
 // Register contains the ModBus register configuration
 type Register struct {
-	Address uint16 // Length  uint16
-	Type    string
-	Decode  string
+	Address uint16 `validate:"required"`
+	Type    string `validate:"required"`
+	Decode  string `validate:"required"`
 }
 
 // RegisterOperation creates a read operation from a register definition

@@ -40,7 +40,9 @@ func init() {
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
 func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Device, MacAddress, PIN string }{
+	cc := struct {
+		Device, MacAddress, PIN string `validate:"required"`
+	}{
 		Device: "hci0",
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {

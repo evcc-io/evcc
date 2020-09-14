@@ -11,7 +11,7 @@ type calcProvider struct {
 // NewCalcFromConfig creates calc provider
 func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), error) {
 	cc := struct {
-		Add []Config
+		Add []Config `validate:"gt=0"`
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
