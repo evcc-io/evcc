@@ -125,17 +125,10 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil && cc.VIN == "" {
-		vehicles, err := v.vehicles()
-		if err != nil {
-			return nil, fmt.Errorf("cannot get vehicles: %v", err)
+		v.vin, err = findVehicle(v.vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
-
-		if len(vehicles) != 1 {
-			return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
-		}
-
-		v.vin = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", v.vin)
 	}
 
 	return v, err

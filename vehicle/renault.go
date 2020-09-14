@@ -129,8 +129,12 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil {
 		err = v.authFlow()
 	}
-	if err != nil {
-		return nil, err
+
+	if err == nil && cc.VIN == "" {
+		v.vin, err = findVehicle(v.kamereonVehicles(v.accountID))
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", v.vin)
+		}
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -173,14 +177,6 @@ func (v *Renault) authFlow() error {
 				v.accountID, err = v.kamereonPerson(personID)
 				if v.accountID == "" {
 					return errors.New("missing accountID")
-				}
-
-				// find VIN
-				if v.vin == "" {
-					v.vin, err = v.kamereonVehicles(v.accountID)
-					if v.vin == "" {
-						return errors.New("missing vin")
-					}
 				}
 			}
 		}
@@ -289,19 +285,20 @@ func (v *Renault) kamereonPerson(personID string) (string, error) {
 	return kr.Accounts[0].AccountID, err
 }
 
-func (v *Renault) kamereonVehicles(accountID string) (string, error) {
+func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
 	kr, err := v.kamereonRequest(uri)
 
+	var vehicles []string
 	if err == nil {
 		for _, v := range kr.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
-				return v.VIN, nil
+				vehicles = append(vehicles, v.VIN)
 			}
 		}
 	}
 
-	return "", err
+	return vehicles, err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
