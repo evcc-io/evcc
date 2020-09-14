@@ -324,6 +324,31 @@ func (v *Audi) authFlow() error {
 	return err
 }
 
+func (v *Audi) refreshToken() error {
+	if v.tokens.RefreshToken == "" {
+		return errors.New("missing refresh token")
+	}
+
+	body := fmt.Sprintf("grant_type=%s&refresh_token=%s&scope=%s", "refresh_token", v.tokens.RefreshToken, "sc2:fal")
+	headers := map[string]string{
+		"Content-Type":  "application/x-www-form-urlencoded",
+		"X-App-Version": "3.14.0",
+		"X-App-Name":    "myAudi",
+		"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+	}
+
+	req, err := v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
+	if err == nil {
+		var tokens audiTokenResponse
+		_, err = v.RequestJSON(req, &tokens)
+		if err == nil {
+			v.tokens = tokens
+		}
+	}
+
+	return err
+}
+
 func (v *Audi) getJSON(uri string, res interface{}) error {
 	req, err := v.request(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
@@ -334,21 +359,24 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 		_, err = v.RequestJSON(req, &res)
 
 		// token expired?
-		if err != nil && v.LastResponse().StatusCode == http.StatusUnauthorized {
-			body := fmt.Sprintf("grant_type=%s&refresh_token=%s&scope=%s", "refresh_token", v.tokens.RefreshToken, "sc2:fal")
-			headers := map[string]string{
-				"Content-Type":  "application/x-www-form-urlencoded",
-				"X-App-Version": "3.14.0",
-				"X-App-Name":    "myAudi",
-				"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+		if err != nil {
+			resp := v.LastResponse()
+
+			// handle http 401
+			if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+				// use refresh token
+				err = v.refreshToken()
+
+				// re-run auth flow
+				if err != nil {
+					err = v.authFlow()
+				}
 			}
 
-			req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
+			// retry original requests
 			if err == nil {
-				_, err = v.RequestJSON(req, &v.tokens)
-			}
-			if err == nil {
-				return v.getJSON(uri, &res)
+				req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
+				_, err = v.RequestJSON(req, &res)
 			}
 		}
 	}
