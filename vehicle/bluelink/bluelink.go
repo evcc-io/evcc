@@ -338,26 +338,26 @@ func (v *API) authFlow() (err error) {
 		err = v.setLanguage(cookieClient)
 	}
 
-	var kiaAccCode string
+	var accCode string
 	if err == nil {
-		kiaAccCode, err = v.login(cookieClient)
+		accCode, err = v.login(cookieClient)
 	}
 
-	var kiaAccToken string
+	var accToken string
 	if err == nil {
-		kiaAccToken, err = v.getToken(kiaAccCode)
-	}
-
-	if err == nil {
-		v.auth.vehicleID, err = v.getVehicles(kiaAccToken, v.auth.deviceID)
+		accToken, err = v.getToken(accCode)
 	}
 
 	if err == nil {
-		err = v.preWakeup(kiaAccToken, v.auth.deviceID, v.auth.vehicleID)
+		v.auth.vehicleID, err = v.getVehicles(accToken, v.auth.deviceID)
 	}
 
 	if err == nil {
-		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, kiaAccToken)
+		err = v.preWakeup(accToken, v.auth.deviceID, v.auth.vehicleID)
+	}
+
+	if err == nil {
+		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, accToken)
 	}
 
 	return err
