@@ -10,16 +10,17 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Features
 
-- simple and clean user interface
-- multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
-- multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
-- different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), Renault ZE (ZOE, ...), and any other vehicle using scripting
-- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
+- simple and clean responsive web user interface to be used on phone, tablet or pc
+- multiple [chargers](#charger) including Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
+- multiple [meters](#meter) including ModBus devices (Eastron SDM, MPM3PM, SBC ALE3, ORNO and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any other Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
+- different [vehicles](#vehicle) to show battery status and charge time estimation like Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), Renault ZE (ZOE, ...), Kia, Hyundai, VW-brands, Porsche and any other vehicle using scripting
+- [plugins](#plugins) for integrating with other hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
+- YAML configuration allows for flexible mixture of infrastructure from any vendor
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
-- electric contactor protection
-- REST API
+- REST API and MQTT
+- single executable and single configuration file
 
 ![Screenshot](docs/screenshot.png)
 
@@ -47,15 +48,17 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 1. Install EVCC. For details see [installation](#installation).
 2. Copy the default configuration file `evcc.dist.yaml` to `evcc.yaml` and open for editing.
-3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). A pv meter can also be replaced by a pv inverter. Both need be combined to a [loadpoint](#loadpoint).
-4. Configure both meter(s) and charger by:
+3. To create a minimal setup you need a [meter](#meter) (either grid meter or at least one pv generation meter) and a supported [charger](#charger). Both need be combined to a [loadpoint](#loadpoint).
+4. Configure meter(s) and charger by:
     - choosing the appropriate `type`
     - add a `name` attribute than can later be referred to
     - add configuration details depending on `type`
   See `evcc.dist.yaml` for examples.
 5. Test your meter, charger and optional vehicle configuration by running
 
-        evcc meter|charger|vehicle
+        evcc meter
+		evcc charger
+		evcc vehicle
 
 6. Configure a loadpoint and refer to the meter, charger and vehicle using the defined `name` attributes.
 7. Provide optional configuration for MQTT, push messaging, database logging and custom menus.
@@ -192,7 +195,7 @@ KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see
 Meters provide data about power and energy consumption or PV production. Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use.
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`).
   *Note*: this could also be implemented using a `default` meter with the `http` plugin.
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugins](#plugins)
@@ -211,7 +214,9 @@ Available vehicle implementations are:
 - `tesla`: Tesla (any model)
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
-- `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
+- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
+- `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any other type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
 
@@ -295,7 +300,9 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
   - `SDM220` Eastron SDM220
   - `SDM230` Eastron SDM230
   - `SDM72` Eastron SDM72
-- TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc)
+  - `ORNO1P` ORNO WE-514 & WE-515
+  - `ORNO3P` ORNO WE-516 & WE-517
+- TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc, ...)
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
 
