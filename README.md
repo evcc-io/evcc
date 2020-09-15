@@ -4,7 +4,7 @@
 [![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
 [![Latest Version](https://img.shields.io/github/tag/andig/evcc.svg)](https://github.com/andig/evcc/releases)
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](cpuidle@gmx.de)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
