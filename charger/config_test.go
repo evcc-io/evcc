@@ -16,6 +16,7 @@ func TestChargers(t *testing.T) {
 		"connect: no route to host",
 		"connect: connection refused",
 		"missing password",
+		"missing pin",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {

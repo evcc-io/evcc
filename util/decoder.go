@@ -16,6 +16,8 @@ func simplifyValidationErrors(errs validator.ValidationErrors) error {
 		switch e.Tag() {
 		case "required":
 			return fmt.Errorf("missing %s", strings.ToLower(e.Field()))
+		case "required_with":
+			return fmt.Errorf("missing %s when %s is specified", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
 		case "required_without":
 			return fmt.Errorf("need either %s or %s", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
 		}
