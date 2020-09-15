@@ -49,11 +49,11 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.ChargeRemainder); ok {
-		if duration, err := v.RemainingTime(); err != nil {
-			fmt.Printf("Remaining: %v\n", err)
+	if v, ok := v.(api.ChargeFinishTimer); ok {
+		if time, err := v.FinishTime(); err != nil {
+			fmt.Printf("Finish time: %v\n", err)
 		} else {
-			fmt.Printf("Remaining: %v\n", duration)
+			fmt.Printf("Finish time: %v\n", time)
 		}
 	}
 
