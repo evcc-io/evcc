@@ -29,7 +29,7 @@ func init() {
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
-		Capacity               int64  `validate:"required"`
+		Capacity               int64
 		User, Password         string `validate:"required"`
 		ClientID, ClientSecret string
 		VIN                    string

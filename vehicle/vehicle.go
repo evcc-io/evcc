@@ -37,7 +37,7 @@ func init() {
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title    string
-		Capacity int64           `validate:"required"`
+		Capacity int64
 		Charge   provider.Config `validate:"required"`
 		Cache    time.Duration
 	}{}

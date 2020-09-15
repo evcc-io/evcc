@@ -15,8 +15,8 @@ import (
 type Settings struct {
 	ID        uint8 `validate:"required"`
 	SubDevice int
-	URI       string `validate:"required_without=Device,fieldexcludes=Device"`
-	Device    string `validate:"required_without=URI,fieldexcludes=URI"`
+	URI       string `validate:"required_without=Device"` // ,fieldexcludes=Device
+	Device    string `validate:"required_without=URI"`    // ,fieldexcludes=URI
 	Comset    string `validate:"required_with=Device"`
 	Baudrate  int    `validate:"required_with=Device"`
 	RTU       *bool  // indicates RTU over TCP if true

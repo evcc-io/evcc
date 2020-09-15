@@ -42,7 +42,9 @@ func init() {
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Serial, Power, Energy string
+		URI           string `validate:"required_without=Serial"`
+		Serial        string `validate:"required_without=URI"`
+		Power, Energy string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

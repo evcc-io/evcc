@@ -25,7 +25,7 @@ func init() {
 func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title          string
-		Capacity       int64  `validate:"required"`
+		Capacity       int64
 		User, Password string `validate:"required"`
 		Region         string
 		Cache          time.Duration

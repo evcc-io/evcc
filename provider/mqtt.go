@@ -16,9 +16,9 @@ const publishTimeout = 2 * time.Second
 // MqttConfig is the public configuration
 type MqttConfig struct {
 	Broker   string `validate:"required"`
+	Topic    string `validate:"required"`
 	User     string
 	Password string
-	Topic    string `validate:"required"`
 }
 
 // MqttClient is a paho publisher

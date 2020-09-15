@@ -20,6 +20,8 @@ func simplifyValidationErrors(errs validator.ValidationErrors) error {
 			return fmt.Errorf("missing %s when %s is specified", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
 		case "required_without":
 			return fmt.Errorf("need either %s or %s", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
+		case "fieldexcludes":
+			return fmt.Errorf("cannot have %s when %s is specified", strings.ToLower(e.Field()), strings.ToLower(e.Param()))
 		}
 	}
 
