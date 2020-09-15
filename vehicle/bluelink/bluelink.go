@@ -15,6 +15,7 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/google/uuid"
+	"github.com/imdario/mergo"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -23,7 +24,19 @@ const (
 	resAuthFail = "F"
 )
 
-var errAuthFail = errors.New("authorization failed")
+var (
+	errAuthFail = errors.New("authorization failed")
+
+	defaults = Config{
+		DeviceID:    "/api/v1/spa/notifications/register",
+		Lang:        "/api/v1/user/language",
+		Login:       "/api/v1/user/signin",
+		AccessToken: "/api/v1/user/oauth2/token",
+		Vehicles:    "/api/v1/spa/vehicles",
+		SendPIN:     "/api/v1/user/pin",
+		GetStatus:   "/api/v2/spa/vehicles/",
+	}
+)
 
 // Config is the bluelink API configuration
 type Config struct {
@@ -40,7 +53,8 @@ type Config struct {
 	GetStatus         string
 }
 
-// API is an api.Vehicle implementation with configurable getters and setters.
+// API implements the Kia/Hyundai bluelink api.
+// Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*util.HTTPHelper
 	user     string
@@ -59,23 +73,24 @@ type Auth struct {
 }
 
 type response struct {
-	RetCode string `json:"retCode"`
+	RetCode string
 	ResMsg  struct {
-		DeviceID string `json:"deviceId"`
+		DeviceID string
 		EvStatus struct {
-			BatteryStatus float64 `json:"batteryStatus"`
-		} `json:"evStatus"`
+			BatteryStatus float64
+		}
 		Vehicles []struct {
-			VehicleID string `json:"vehicleId"`
-		} `json:"vehicles"`
-	} `json:"resMsg"`
+			VehicleID string
+		}
+	}
 }
 
 // New creates a new BlueLink API
-func New(log *util.Logger,
-	user, password, pin string, cache time.Duration,
-	config Config,
-) (*API, error) {
+func New(log *util.Logger, user, password, pin string, cache time.Duration, config Config) (*API, error) {
+	if err := mergo.Merge(&config, defaults); err != nil {
+		return nil, err
+	}
+
 	v := &API{
 		HTTPHelper: util.NewHTTPHelper(log),
 		config:     config,
@@ -303,13 +318,7 @@ func (v *API) sendPIN(deviceID, accToken string) (string, error) {
 		_, err = v.RequestJSON(req, &token)
 	}
 
-	controlToken := ""
-	if err == nil {
-		controlToken = "Bearer " + token.ControlToken
-
-	}
-
-	return controlToken, err
+	return token.ControlToken, err
 }
 
 func (v *API) authFlow() (err error) {
@@ -324,34 +333,38 @@ func (v *API) authFlow() (err error) {
 		err = v.setLanguage(cookieClient)
 	}
 
-	var kiaAccCode string
+	var accCode string
 	if err == nil {
-		kiaAccCode, err = v.login(cookieClient)
+		accCode, err = v.login(cookieClient)
 	}
 
-	var kiaAccToken string
+	var accToken string
 	if err == nil {
-		kiaAccToken, err = v.getToken(kiaAccCode)
-	}
-
-	if err == nil {
-		v.auth.vehicleID, err = v.getVehicles(kiaAccToken, v.auth.deviceID)
+		accToken, err = v.getToken(accCode)
 	}
 
 	if err == nil {
-		err = v.preWakeup(kiaAccToken, v.auth.deviceID, v.auth.vehicleID)
+		v.auth.vehicleID, err = v.getVehicles(accToken, v.auth.deviceID)
 	}
 
 	if err == nil {
-		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, kiaAccToken)
+		err = v.preWakeup(accToken, v.auth.deviceID, v.auth.vehicleID)
+	}
+
+	if err == nil {
+		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, accToken)
 	}
 
 	return err
 }
 
 func (v *API) getStatus() (float64, error) {
+	if v.auth.controlToken == "" {
+		return 0, errAuthFail
+	}
+
 	headers := map[string]string{
-		"Authorization":  v.auth.controlToken,
+		"Authorization":  "Bearer " + v.auth.controlToken,
 		"ccsp-device-id": v.auth.deviceID,
 		"Content-Type":   "application/json",
 	}
@@ -361,6 +374,13 @@ func (v *API) getStatus() (float64, error) {
 	req, err := v.request(http.MethodGet, uri, headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
+
+		if err != nil {
+			resp := v.LastResponse()
+			if resp != nil && resp.StatusCode == http.StatusForbidden {
+				err = errAuthFail
+			}
+		}
 
 		if err == nil && resp.RetCode != resOK {
 			err = errors.New("unexpected response")

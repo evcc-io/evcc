@@ -37,13 +37,6 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		TokenAuth:         "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: "99cfff84-f4e2-4be8-a5ed-e5b755eb6581",
-		DeviceID:          "/api/v1/spa/notifications/register",
-		Lang:              "/api/v1/user/language",
-		Login:             "/api/v1/user/signin",
-		AccessToken:       "/api/v1/user/oauth2/token",
-		Vehicles:          "/api/v1/spa/vehicles",
-		SendPIN:           "/api/v1/user/pin",
-		GetStatus:         "/api/v2/spa/vehicles/",
 	}
 
 	log := util.NewLogger("hyundai")
