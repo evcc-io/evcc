@@ -15,11 +15,11 @@ import (
 type Settings struct {
 	ID        uint8 `validate:"required"`
 	SubDevice int
-	URI       string `validate:"required_without=Device"`
-	Device    string `validate:"required_without=URI"`
+	URI       string `validate:"required_without=Device,fieldexcludes=Device"`
+	Device    string `validate:"required_without=URI,fieldexcludes=URI"`
 	Comset    string `validate:"required_with=Device"`
-	Baudrate  int
-	RTU       *bool // indicates RTU over TCP if true
+	Baudrate  int    `validate:"required_with=Device"`
+	RTU       *bool  // indicates RTU over TCP if true
 }
 
 // Connection decorates a meters.Connection with transparent slave id and error handling
@@ -130,9 +130,6 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	if device != "" {
-		if baudrate == 0 || comset == "" {
-			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
-		}
 		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 	}
 
