@@ -33,8 +33,7 @@ var (
 		Login:       "/api/v1/user/signin",
 		AccessToken: "/api/v1/user/oauth2/token",
 		Vehicles:    "/api/v1/spa/vehicles",
-		SendPIN:     "/api/v1/user/pin",
-		GetStatus:   "/api/v2/spa/vehicles/",
+		Status:      "/api/v1/spa/vehicles/%s/status",
 	}
 )
 
@@ -49,8 +48,7 @@ type Config struct {
 	Login             string
 	AccessToken       string
 	Vehicles          string
-	SendPIN           string
-	GetStatus         string
+	Status            string
 }
 
 // API implements the Kia/Hyundai bluelink api.
@@ -59,7 +57,6 @@ type API struct {
 	*util.HTTPHelper
 	user     string
 	password string
-	pin      string
 	chargeG  func() (float64, error)
 	config   Config
 	auth     Auth
@@ -67,9 +64,9 @@ type API struct {
 
 // Auth bundles miscellaneous authorization data
 type Auth struct {
-	deviceID     string
-	vehicleID    string
-	controlToken string
+	accToken  string
+	deviceID  string
+	vehicleID string
 }
 
 type response struct {
@@ -78,6 +75,11 @@ type response struct {
 		DeviceID string
 		EvStatus struct {
 			BatteryStatus float64
+			RemainTime2   struct {
+				Atc struct {
+					Value, Unit int
+				}
+			}
 		}
 		Vehicles []struct {
 			VehicleID string
@@ -86,7 +88,7 @@ type response struct {
 }
 
 // New creates a new BlueLink API
-func New(log *util.Logger, user, password, pin string, cache time.Duration, config Config) (*API, error) {
+func New(log *util.Logger, user, password string, cache time.Duration, config Config) (*API, error) {
 	if err := mergo.Merge(&config, defaults); err != nil {
 		return nil, err
 	}
@@ -96,7 +98,6 @@ func New(log *util.Logger, user, password, pin string, cache time.Duration, conf
 		config:     config,
 		user:       user,
 		password:   password,
-		pin:        pin,
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -273,54 +274,6 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 	return "", err
 }
 
-func (v *API) preWakeup(accToken, did, vid string) error {
-	data := map[string]interface{}{
-		"action":   "prewakeup",
-		"deviceId": did,
-	}
-
-	headers := map[string]string{
-		"Authorization":       accToken,
-		"ccsp-device-id":      did,
-		"ccsp-application-id": v.config.CCSPApplicationID,
-		"offset":              "1",
-		"Content-Type":        "application/json;charset=UTF-8",
-		"User-Agent":          "okhttp/3.10.0",
-	}
-
-	uri := v.config.URI + v.config.Vehicles + "/" + vid + "/control/engine"
-	req, err := v.jsonRequest(http.MethodPost, uri, headers, data)
-	if err == nil {
-		_, err = v.Request(req)
-	}
-
-	return err
-}
-
-func (v *API) sendPIN(deviceID, accToken string) (string, error) {
-	data := map[string]interface{}{
-		"deviceId": deviceID,
-		"pin":      string(v.pin),
-	}
-
-	headers := map[string]string{
-		"Authorization": accToken,
-		"Content-type":  "application/json;charset=UTF-8",
-		"User-Agent":    "okhttp/3.10.0",
-	}
-
-	var token struct {
-		ControlToken string `json:"controlToken"`
-	}
-
-	req, err := v.jsonRequest(http.MethodPut, v.config.URI+v.config.SendPIN, headers, data)
-	if err == nil {
-		_, err = v.RequestJSON(req, &token)
-	}
-
-	return token.ControlToken, err
-}
-
 func (v *API) authFlow() (err error) {
 	v.auth.deviceID, err = v.getDeviceID()
 
@@ -338,39 +291,32 @@ func (v *API) authFlow() (err error) {
 		accCode, err = v.login(cookieClient)
 	}
 
-	var accToken string
 	if err == nil {
-		accToken, err = v.getToken(accCode)
+		v.auth.accToken, err = v.getToken(accCode)
 	}
 
 	if err == nil {
-		v.auth.vehicleID, err = v.getVehicles(accToken, v.auth.deviceID)
-	}
-
-	if err == nil {
-		err = v.preWakeup(accToken, v.auth.deviceID, v.auth.vehicleID)
-	}
-
-	if err == nil {
-		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, accToken)
+		v.auth.vehicleID, err = v.getVehicles(v.auth.accToken, v.auth.deviceID)
 	}
 
 	return err
 }
 
 func (v *API) getStatus() (float64, error) {
-	if v.auth.controlToken == "" {
+	if v.auth.accToken == "" {
 		return 0, errAuthFail
 	}
 
 	headers := map[string]string{
-		"Authorization":  "Bearer " + v.auth.controlToken,
-		"ccsp-device-id": v.auth.deviceID,
-		"Content-Type":   "application/json",
+		"Authorization":       v.auth.accToken,
+		"ccsp-device-id":      v.auth.deviceID,
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"offset":              "1",
+		"User-Agent":          "okhttp/3.10.0",
 	}
 
 	var resp response
-	uri := v.config.URI + v.config.GetStatus + "/" + v.auth.vehicleID + "/status"
+	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
 	req, err := v.request(http.MethodGet, uri, headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)

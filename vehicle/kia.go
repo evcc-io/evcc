@@ -24,7 +24,6 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Title          string
 		Capacity       int64
 		User, Password string
-		PIN            string
 		Cache          time.Duration
 	}{}
 
@@ -40,7 +39,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("kia")
-	api, err := bluelink.New(log, cc.User, cc.Password, cc.PIN, cc.Cache, settings)
+	api, err := bluelink.New(log, cc.User, cc.Password, cc.Cache, settings)
 	if err != nil {
 		return nil, err
 	}
