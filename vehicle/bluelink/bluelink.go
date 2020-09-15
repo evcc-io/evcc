@@ -283,53 +283,53 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 	return "", err
 }
 
-func (v *API) preWakeup(accToken, did, vid string) error {
-	data := map[string]interface{}{
-		"action":   "prewakeup",
-		"deviceId": did,
-	}
+// func (v *API) preWakeup(accToken, did, vid string) error {
+// 	data := map[string]interface{}{
+// 		"action":   "prewakeup",
+// 		"deviceId": did,
+// 	}
 
-	headers := map[string]string{
-		"Authorization":       accToken,
-		"ccsp-device-id":      did,
-		"ccsp-application-id": v.config.CCSPApplicationID,
-		"offset":              "1",
-		"Content-Type":        "application/json;charset=UTF-8",
-		"User-Agent":          "okhttp/3.10.0",
-	}
+// 	headers := map[string]string{
+// 		"Authorization":       accToken,
+// 		"ccsp-device-id":      did,
+// 		"ccsp-application-id": v.config.CCSPApplicationID,
+// 		"offset":              "1",
+// 		"Content-Type":        "application/json;charset=UTF-8",
+// 		"User-Agent":          "okhttp/3.10.0",
+// 	}
 
-	uri := fmt.Sprintf(v.config.URI+v.config.PreWakeup, vid)
-	req, err := v.jsonRequest(http.MethodPost, uri, headers, data)
-	if err == nil {
-		_, err = v.Request(req)
-	}
+// 	uri := fmt.Sprintf(v.config.URI+v.config.PreWakeup, vid)
+// 	req, err := v.jsonRequest(http.MethodPost, uri, headers, data)
+// 	if err == nil {
+// 		_, err = v.Request(req)
+// 	}
 
-	return err
-}
+// 	return err
+// }
 
-func (v *API) sendPIN(deviceID, accToken string) (string, error) {
-	data := map[string]interface{}{
-		"deviceId": deviceID,
-		"pin":      string(v.pin),
-	}
+// func (v *API) sendPIN(deviceID, accToken string) (string, error) {
+// 	data := map[string]interface{}{
+// 		"deviceId": deviceID,
+// 		"pin":      string(v.pin),
+// 	}
 
-	headers := map[string]string{
-		"Authorization": accToken,
-		"Content-type":  "application/json;charset=UTF-8",
-		"User-Agent":    "okhttp/3.10.0",
-	}
+// 	headers := map[string]string{
+// 		"Authorization": accToken,
+// 		"Content-type":  "application/json;charset=UTF-8",
+// 		"User-Agent":    "okhttp/3.10.0",
+// 	}
 
-	var token struct {
-		ControlToken string `json:"controlToken"`
-	}
+// 	var token struct {
+// 		ControlToken string `json:"controlToken"`
+// 	}
 
-	req, err := v.jsonRequest(http.MethodPut, v.config.URI+v.config.SendPIN, headers, data)
-	if err == nil {
-		_, err = v.RequestJSON(req, &token)
-	}
+// 	req, err := v.jsonRequest(http.MethodPut, v.config.URI+v.config.SendPIN, headers, data)
+// 	if err == nil {
+// 		_, err = v.RequestJSON(req, &token)
+// 	}
 
-	return token.ControlToken, err
-}
+// 	return token.ControlToken, err
+// }
 
 func (v *API) authFlow() (err error) {
 	v.auth.deviceID, err = v.getDeviceID()
