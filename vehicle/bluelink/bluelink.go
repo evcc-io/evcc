@@ -71,10 +71,10 @@ type API struct {
 
 // Auth bundles miscellaneous authorization data
 type Auth struct {
-	accToken     string
-	deviceID     string
-	vehicleID    string
-	controlToken string
+	accToken  string
+	deviceID  string
+	vehicleID string
+	// controlToken string // only needed with v2 api
 }
 
 type response struct {
