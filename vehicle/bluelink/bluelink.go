@@ -359,6 +359,10 @@ func (v *API) authFlow() (err error) {
 }
 
 func (v *API) getStatus() (float64, error) {
+	if v.auth.controlToken == "" {
+		return 0, errAuthFail
+	}
+
 	headers := map[string]string{
 		"Authorization":  "Bearer " + v.auth.controlToken,
 		"ccsp-device-id": v.auth.deviceID,
@@ -370,6 +374,13 @@ func (v *API) getStatus() (float64, error) {
 	req, err := v.request(http.MethodGet, uri, headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
+
+		if err != nil {
+			resp := v.LastResponse()
+			if resp != nil && resp.StatusCode == http.StatusForbidden {
+				err = errAuthFail
+			}
+		}
 
 		if err == nil && resp.RetCode != resOK {
 			err = errors.New("unexpected response")
