@@ -33,8 +33,10 @@ var (
 		Login:       "/api/v1/user/signin",
 		AccessToken: "/api/v1/user/oauth2/token",
 		Vehicles:    "/api/v1/spa/vehicles",
+		PreWakeup:   "/api/v1/spa/vehicles/%s/control/engine",
+		StatusV1:    "/api/v1/spa/vehicles/%s/status",
 		SendPIN:     "/api/v1/user/pin",
-		GetStatus:   "/api/v2/spa/vehicles/",
+		StatusV2:    "/api/v2/spa/vehicles/%s/status",
 	}
 )
 
@@ -49,8 +51,10 @@ type Config struct {
 	Login             string
 	AccessToken       string
 	Vehicles          string
+	PreWakeup         string
 	SendPIN           string
-	GetStatus         string
+	StatusV1          string
+	StatusV2          string
 }
 
 // API implements the Kia/Hyundai bluelink api.
@@ -67,6 +71,7 @@ type API struct {
 
 // Auth bundles miscellaneous authorization data
 type Auth struct {
+	accToken     string
 	deviceID     string
 	vehicleID    string
 	controlToken string
@@ -288,7 +293,7 @@ func (v *API) preWakeup(accToken, did, vid string) error {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	uri := v.config.URI + v.config.Vehicles + "/" + vid + "/control/engine"
+	uri := fmt.Sprintf(v.config.URI+v.config.PreWakeup, vid)
 	req, err := v.jsonRequest(http.MethodPost, uri, headers, data)
 	if err == nil {
 		_, err = v.Request(req)
@@ -338,39 +343,40 @@ func (v *API) authFlow() (err error) {
 		accCode, err = v.login(cookieClient)
 	}
 
-	var accToken string
 	if err == nil {
-		accToken, err = v.getToken(accCode)
+		v.auth.accToken, err = v.getToken(accCode)
 	}
 
 	if err == nil {
-		v.auth.vehicleID, err = v.getVehicles(accToken, v.auth.deviceID)
+		v.auth.vehicleID, err = v.getVehicles(v.auth.accToken, v.auth.deviceID)
 	}
 
-	if err == nil {
-		err = v.preWakeup(accToken, v.auth.deviceID, v.auth.vehicleID)
-	}
-
-	if err == nil {
-		v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, accToken)
-	}
+	// v2 api only
+	// if err == nil {
+	// 	err = v.preWakeup(v.auth.accToken, v.auth.deviceID, v.auth.vehicleID)
+	// }
+	// if err == nil {
+	// 	v.auth.controlToken, err = v.sendPIN(v.auth.deviceID, v.auth.accToken)
+	// }
 
 	return err
 }
 
 func (v *API) getStatus() (float64, error) {
-	if v.auth.controlToken == "" {
+	if v.auth.accToken == "" {
 		return 0, errAuthFail
 	}
 
 	headers := map[string]string{
-		"Authorization":  "Bearer " + v.auth.controlToken,
-		"ccsp-device-id": v.auth.deviceID,
-		"Content-Type":   "application/json",
+		"Authorization":       v.auth.accToken,
+		"ccsp-device-id":      v.auth.deviceID,
+		"ccsp-application-id": v.config.CCSPApplicationID,
+		"offset":              "1",
+		"User-Agent":          "okhttp/3.10.0",
 	}
 
 	var resp response
-	uri := v.config.URI + v.config.GetStatus + "/" + v.auth.vehicleID + "/status"
+	uri := fmt.Sprintf(v.config.URI+v.config.StatusV1, v.auth.vehicleID)
 	req, err := v.request(http.MethodGet, uri, headers, nil)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
