@@ -83,6 +83,11 @@ type response struct {
 		DeviceID string
 		EvStatus struct {
 			BatteryStatus float64
+			RemainTime2   struct {
+				Atc struct {
+					Value, Unit int
+				}
+			}
 		}
 		Vehicles []struct {
 			VehicleID string
