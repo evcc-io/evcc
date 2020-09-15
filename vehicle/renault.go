@@ -93,7 +93,7 @@ type Renault struct {
 	gigyaJwtToken       string
 	accountID           string
 	chargeStateG        func() (float64, error)
-	chargeFinishTimeG   func() (time.Time, error)
+	finishTimeG         func() (time.Time, error)
 }
 
 func init() {
@@ -138,7 +138,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargeFinishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
+	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
 
 	return v, nil
 }
@@ -347,5 +347,5 @@ func (v *Renault) finishTime() (time.Time, error) {
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
-	return v.chargeFinishTimeG()
+	return v.finishTimeG()
 }

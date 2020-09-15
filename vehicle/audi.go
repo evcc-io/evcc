@@ -73,7 +73,7 @@ type Audi struct {
 	brand, country      string
 	tokens              audiTokenResponse
 	chargeStateG        func() (float64, error)
-	chargeFinishTimeG   func() (time.Time, error)
+	finishTimeG         func() (time.Time, error)
 }
 
 func init() {
@@ -105,7 +105,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargeFinishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
+	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -413,5 +413,5 @@ func (v *Audi) finishTime() (time.Time, error) {
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Audi) FinishTime() (time.Time, error) {
-	return v.chargeFinishTimeG()
+	return v.finishTimeG()
 }
