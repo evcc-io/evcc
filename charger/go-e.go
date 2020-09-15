@@ -52,8 +52,8 @@ func init() {
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string `validate:"required_without=Token"`
-		Token string `validate:"required_without=URI"`
+		URI   string `validate:"required_without=Token,fieldexcludes=Token"`
+		Token string `validate:"required_without=URI,fieldexcludes=URI"`
 		Cache time.Duration
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
