@@ -175,8 +175,9 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 func (wb *Wallbe) decodeReading(b []byte) float64 {
 	v := binary.BigEndian.Uint32(b)
 
+	// assuming high register first
 	if wb.encoding == encodingSDM {
-		bits := (v&0xffff)<<16 | (v>>16)&0xffff
+		bits := uint32(b[3])<<0 | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
 		f := math.Float32frombits(bits)
 		return float64(f)
 	}
