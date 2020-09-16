@@ -82,7 +82,7 @@ type Vehicle interface {
 	ChargeState() (float64, error)
 }
 
-// ChargeRemainder provides current charge cycle duration
-type ChargeRemainder interface {
-	RemainingTime() (time.Duration, error)
+// ChargeFinishTimer provides estimated charge cycle finish time
+type ChargeFinishTimer interface {
+	FinishTime() (time.Time, error)
 }

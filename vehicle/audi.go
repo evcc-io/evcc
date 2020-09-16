@@ -73,7 +73,7 @@ type Audi struct {
 	brand, country      string
 	tokens              audiTokenResponse
 	chargeStateG        func() (float64, error)
-	remainingTimeG      func() (time.Duration, error)
+	finishTimeG         func() (time.Time, error)
 }
 
 func init() {
@@ -105,7 +105,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.remainingTimeG = provider.NewCached(v.remainingTime, cc.Cache).DurationGetter()
+	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -397,8 +397,8 @@ func (v *Audi) ChargeState() (float64, error) {
 	return v.chargeStateG()
 }
 
-// remainingTime implements the Vehicle.ChargeRemainder interface
-func (v *Audi) remainingTime() (time.Duration, error) {
+// finishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *Audi) finishTime() (time.Time, error) {
 	var res audiChargerResponse
 	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", vwAPI, v.brand, v.country, v.vin)
 	err := v.getJSON(uri, &res)
@@ -408,10 +408,10 @@ func (v *Audi) remainingTime() (time.Duration, error) {
 		timestamp, err = time.Parse(time.RFC3339, res.Charger.Status.BatteryStatusData.RemainingChargingTime.Timestamp)
 	}
 
-	return time.Duration(res.Charger.Status.BatteryStatusData.RemainingChargingTime.Content)*time.Minute - time.Since(timestamp), err
+	return timestamp.Add(time.Duration(res.Charger.Status.BatteryStatusData.RemainingChargingTime.Content) * time.Minute), err
 }
 
-// RemainingTime implements the Vehicle.ChargeRemainder interface
-func (v *Audi) RemainingTime() (time.Duration, error) {
-	return v.remainingTimeG()
+// FinishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *Audi) FinishTime() (time.Time, error) {
+	return v.finishTimeG()
 }

@@ -81,7 +81,7 @@ type batteryAttributes struct {
 	PlugStatus         int    `json:"plugStatus"`
 	LastUpdateTime     string `json:"lastUpdateTime"`
 	ChargePower        int    `json:"chargePower"`
-	RemainingTime      *int   `json:"chargingRemainingTime"`
+	FinishTime         *int   `json:"chargingFinishTime"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -93,7 +93,7 @@ type Renault struct {
 	gigyaJwtToken       string
 	accountID           string
 	chargeStateG        func() (float64, error)
-	remainingTimeG      func() (time.Duration, error)
+	finishTimeG         func() (time.Time, error)
 }
 
 func init() {
@@ -138,7 +138,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.remainingTimeG = provider.NewCached(v.remainingTime, cc.Cache).DurationGetter()
+	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
 
 	return v, nil
 }
@@ -321,8 +321,8 @@ func (v *Renault) ChargeState() (float64, error) {
 	return v.chargeStateG()
 }
 
-// remainingTime implements the Vehicle.ChargeRemainder interface
-func (v *Renault) remainingTime() (time.Duration, error) {
+// finishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *Renault) finishTime() (time.Time, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	kr, err := v.kamereonRequest(uri)
 
@@ -338,14 +338,14 @@ func (v *Renault) remainingTime() (time.Duration, error) {
 		timestamp, err = time.Parse(time.RFC3339, kr.Data.Attributes.Timestamp)
 	}
 
-	if kr.Data.Attributes.RemainingTime == nil {
-		return 0, errors.New("estimate not available")
+	if kr.Data.Attributes.FinishTime == nil {
+		return time.Time{}, errors.New("estimate not available")
 	}
 
-	return time.Duration(*kr.Data.Attributes.RemainingTime)*time.Minute - time.Since(timestamp), err
+	return timestamp.Add(time.Duration(*kr.Data.Attributes.FinishTime) * time.Minute), err
 }
 
-// RemainingTime implements the Vehicle.ChargeRemainder interface
-func (v *Renault) RemainingTime() (time.Duration, error) {
-	return v.remainingTimeG()
+// FinishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *Renault) FinishTime() (time.Time, error) {
+	return v.finishTimeG()
 }
