@@ -21,7 +21,6 @@ import (
 
 const (
 	sempBaseUrlEnv   = "SEMP_BASE_URL"
-	ssdpMulticast    = "239.255.255.250:1900"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempLocalDevice  = "F-28081973-%s-%.02d"
 	sempSerialNumber = "%s-%d"

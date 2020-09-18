@@ -2,6 +2,7 @@ package semp
 
 import "net"
 
+// LocalIPs returns a slice of local IPv4 addresses
 func LocalIPs() []net.IP {
 	ips := make([]net.IP, 0)
 
