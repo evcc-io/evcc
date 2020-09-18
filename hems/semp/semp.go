@@ -80,6 +80,15 @@ func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	return s, err
 }
 
+func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
+	descriptor := s.callbackURI() + basePath + "/description.xml"
+	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
+	if err != nil {
+		s.log.ERROR.Println(err)
+	}
+	return ad
+}
+
 // Run executes the SEMP runtime
 func (s *SEMP) Run() {
 	if s.closeC != nil {
@@ -87,20 +96,35 @@ func (s *SEMP) Run() {
 	}
 	s.closeC = make(chan struct{})
 
-	s.announce()
+	uid := "uuid:" + s.uid
+	ads := []*ssdp.Advertiser{
+		s.advertise(ssdp.RootDevice, uid+"::"+ssdp.RootDevice),
+		s.advertise(uid, uid),
+		s.advertise(sempGateway, uid+"::"+sempGateway),
+	}
+
 	ticker := time.NewTicker(maxAge * time.Second / 2)
 
 ANNOUNCE:
 	for {
 		select {
 		case <-ticker.C:
-			s.announce()
+			for _, ad := range ads {
+				if err := ad.Alive(); err != nil {
+					s.log.ERROR.Println(err)
+				}
+			}
 		case <-s.closeC:
 			break ANNOUNCE
 		}
 	}
 
-	s.byeBye()
+	for _, ad := range ads {
+		if err := ad.Bye(); err != nil {
+			s.log.ERROR.Println(err)
+		}
+	}
+
 	close(s.doneC)
 }
 
@@ -318,45 +342,4 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	}
 
 	return res
-}
-
-func (s *SEMP) sendAnnounce(usn, nt string) {
-	descriptor := s.callbackURI() + basePath + "/description.xml"
-	if err := ssdp.AnnounceAlive(nt, usn, descriptor, serverName, maxAge, ssdpMulticast); err != nil {
-		s.log.ERROR.Println(err)
-	}
-}
-
-func (s *SEMP) announce() {
-	uid := "uuid:" + s.uid
-	s.sendAnnounce(uid+"::"+ssdp.RootDevice, ssdp.RootDevice)
-	s.sendAnnounce(uid, uid)
-	s.sendAnnounce(uid+"::"+sempGateway, sempGateway)
-}
-
-func (s *SEMP) sendByeBye(usn, nt string) {
-	if err := ssdp.AnnounceBye(nt, usn, ssdpMulticast); err != nil {
-		s.log.ERROR.Println(err)
-	}
-}
-
-func (s *SEMP) byeBye() {
-	uid := "uuid:" + s.uid
-	s.sendByeBye(uid+"::"+ssdp.RootDevice, ssdp.RootDevice)
-	s.sendByeBye(uid, uid)
-	s.sendByeBye(uid+"::"+sempGateway, sempGateway)
-}
-
-// Monitor responds to inbound search requests
-func (s *SEMP) Monitor() {
-	uid := fmt.Sprintf("uuid:%s", s.uid)
-	m := ssdp.Monitor{
-		Search: func(msg *ssdp.SearchMessage) {
-			if msg.Type == ssdp.All || msg.Type == uid || msg.Type == sempGateway {
-				s.log.FATAL.Printf("%+v", msg)
-			}
-		},
-	}
-
-	_ = m.Start()
 }
