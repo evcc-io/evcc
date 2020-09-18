@@ -12,14 +12,21 @@ func TestTimer(t *testing.T) {
 	clck := clock.NewMock()
 	ct.clck = clck
 
-	ct.StartCharge()
+	ct.StartCharge(false)
 	clck.Add(time.Hour)
 	ct.StopCharge()
 	clck.Add(time.Hour)
 
-	d, err := ct.ChargingTime()
+	if d, err := ct.ChargingTime(); d != 1*time.Hour || err != nil {
+		t.Error(d, err)
+	}
 
-	if d != time.Hour || err != nil {
+	// continue
+	ct.StartCharge(true)
+	clck.Add(2 * time.Hour)
+	ct.StopCharge()
+
+	if d, err := ct.ChargingTime(); d != 3*time.Hour || err != nil {
 		t.Error(d, err)
 	}
 }

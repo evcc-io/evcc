@@ -35,7 +35,7 @@ func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
 
 // StartCharge records meter start energy. If meter does not supply TotalEnergy,
 // start time is recorded and  charged energy set to zero.
-func (cr *ChargeRater) StartCharge() {
+func (cr *ChargeRater) StartCharge(continued bool) {
 	cr.Lock()
 	defer cr.Unlock()
 
@@ -51,7 +51,9 @@ func (cr *ChargeRater) StartCharge() {
 		} else {
 			cr.log.ERROR.Printf("charge meter error %v", err)
 		}
-	} else {
+	}
+
+	if !continued {
 		cr.chargedEnergy = 0
 	}
 }
@@ -67,7 +69,7 @@ func (cr *ChargeRater) StopCharge() {
 	// get end energy amount
 	if m, ok := cr.meter.(api.MeterEnergy); ok {
 		if f, err := m.TotalEnergy(); err == nil {
-			cr.chargedEnergy = f - cr.startEnergy
+			cr.chargedEnergy += f - cr.startEnergy
 			cr.log.DEBUG.Printf("final charge energy: %.0fkWh", cr.chargedEnergy)
 		} else {
 			cr.log.ERROR.Printf("charge meter error %v", err)
@@ -109,7 +111,7 @@ func (cr *ChargeRater) ChargedEnergy() (float64, error) {
 		f, err := m.TotalEnergy()
 
 		if err == nil {
-			return f - cr.startEnergy, nil
+			return cr.chargedEnergy + f - cr.startEnergy, nil
 		}
 
 		return 0, fmt.Errorf("charge meter error %v", err)
