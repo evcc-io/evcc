@@ -59,6 +59,7 @@ func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	}
 
 	log := util.NewLogger("semp")
+	ssdp.Logger = log.TRACE
 
 	s := &SEMP{
 		doneC: make(chan struct{}),
