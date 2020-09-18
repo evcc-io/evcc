@@ -232,8 +232,14 @@ func applyRouteHandler(router *mux.Router, r route, handler http.HandlerFunc) {
 	router.Methods(r.Methods...).Path(r.Pattern).Handler(handler)
 }
 
+// HTTPd wraps an http.Server and adds the root router
+type HTTPd struct {
+	*http.Server
+	*mux.Router
+}
+
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *http.Server {
+func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler()},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
@@ -284,13 +290,16 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 		applyRouteHandler(subAPI, routes["settargetsoc"], TargetSoCHandler(lp))
 	}
 
-	srv := &http.Server{
-		Addr:         url,
-		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  120 * time.Second,
-		ErrorLog:     log.ERROR,
+	srv := &HTTPd{
+		Server: &http.Server{
+			Addr:         url,
+			Handler:      router,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			ErrorLog:     log.ERROR,
+		},
+		Router: router,
 	}
 	srv.SetKeepAlivesEnabled(true)
 

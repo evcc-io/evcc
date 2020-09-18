@@ -43,7 +43,7 @@ func NewDeduplicator(interval time.Duration, filter ...string) Piper {
 
 func (l *Deduplicator) pipe(in <-chan util.Param, out chan<- util.Param) {
 	for p := range in {
-		key := p.UniqueID()
+		key := p.UniqueID(p.Key, p.LoadPoint)
 		item, cached := l.cache[key]
 		_, filtered := l.filter[p.Key]
 
@@ -83,7 +83,7 @@ func NewLimiter(interval time.Duration) Piper {
 
 func (l *Limiter) pipe(in <-chan util.Param, out chan<- util.Param) {
 	for p := range in {
-		key := p.UniqueID()
+		key := p.UniqueID(p.Key, p.LoadPoint)
 		item, cached := l.cache[key]
 
 		// forward if not cached or expired

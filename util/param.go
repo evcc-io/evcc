@@ -10,10 +10,14 @@ type Param struct {
 }
 
 // UniqueID returns unique identifier for parameter LoadPoint/Key combination
-func (p Param) UniqueID() string {
-	key := p.Key
-	if p.LoadPoint != nil {
-		key = strconv.Itoa(*p.LoadPoint) + "." + key
+func (p Param) UniqueID(key string, loadpoint *int) string {
+	if loadpoint != nil {
+		key = strconv.Itoa(*loadpoint) + "." + key
 	}
 	return key
+}
+
+// IsNil returns unique identifier for parameter LoadPoint/Key combination
+func (p Param) IsNil() bool {
+	return p.Key == ""
 }

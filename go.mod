@@ -27,6 +27,7 @@ require (
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
+	github.com/koron/go-ssdp v0.0.0-20191105050749-2e1c40ed0b5d
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mjibson/esc v0.2.0
