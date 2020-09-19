@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/andig/evcc/api"
 )
@@ -45,15 +46,15 @@ func dumpAPIs(v interface{}) {
 		if duration, err := v.ChargingTime(); err != nil {
 			fmt.Printf("Duration: %v\n", err)
 		} else {
-			fmt.Printf("Duration: %v\n", duration)
+			fmt.Printf("Duration: %v\n", duration.Truncate(time.Second))
 		}
 	}
 
 	if v, ok := v.(api.ChargeFinishTimer); ok {
-		if time, err := v.FinishTime(); err != nil {
+		if ft, err := v.FinishTime(); err != nil {
 			fmt.Printf("Finish time: %v\n", err)
 		} else {
-			fmt.Printf("Finish time: %v\n", time)
+			fmt.Printf("Finish time: %v\n", ft.Truncate(time.Minute))
 		}
 	}
 
