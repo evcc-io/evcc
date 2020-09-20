@@ -335,7 +335,7 @@ func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
 				Method: method,
 			},
 			Interruptions: Interruptions{
-				InterruptionsAllowed: false,
+				InterruptionsAllowed: true,
 			},
 			Requests: Requests{
 				OptionalEnergy: true,
@@ -373,7 +373,7 @@ func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: false,
+		EMSignalsAccepted: true,
 		PowerConsumption: PowerConsumption{
 			PowerInfo: PowerInfo{
 				AveragePower:      int(chargePower),
@@ -455,6 +455,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err == nil {
+		defer r.Body.Close()
 		err = xml.Unmarshal(body, &msg)
 	}
 

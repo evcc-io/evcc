@@ -72,8 +72,8 @@ type Identification struct {
 type Characteristics struct {
 	MinPowerConsumption int
 	MaxPowerConsumption int
-	MinOnTime           int
-	MinOffTime          int
+	MinOnTime           int `xml:",omitempty"`
+	MinOffTime          int `xml:",omitempty"`
 }
 
 type Capabilities struct {
