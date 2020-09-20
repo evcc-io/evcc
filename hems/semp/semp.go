@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -162,14 +163,18 @@ func (s *SEMP) callbackURI() string {
 
 func (s *SEMP) handlers(router *mux.Router) {
 	sempRouter := router.PathPrefix(basePath).Subrouter()
+	getRouter := sempRouter.Methods(http.MethodGet).Subrouter()
 
-	sempRouter.HandleFunc("/description.xml", s.gatewayDescription)
+	// get description / root / info / status
+	getRouter.HandleFunc("/description.xml", s.gatewayDescription)
+	getRouter.HandleFunc("/", s.deviceRootHandler)
+	getRouter.HandleFunc("/DeviceInfo", s.deviceInfoQuery)
+	getRouter.HandleFunc("/DeviceStatus", s.deviceStatusQuery)
+	getRouter.HandleFunc("/PlanningRequest", s.devicePlanningQuery)
 
-	// get root / info / status
-	sempRouter.HandleFunc("/", s.deviceRootHandler)
-	sempRouter.HandleFunc("/DeviceInfo", s.deviceInfoQuery)
-	sempRouter.HandleFunc("/DeviceStatus", s.deviceStatusQuery)
-	sempRouter.HandleFunc("/PlanningRequest", s.devicePlanningQuery)
+	// post control messages
+	postRouter := sempRouter.Methods(http.MethodPost).Subrouter()
+	postRouter.HandleFunc("/", s.deviceControlHandler)
 }
 
 func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
@@ -422,4 +427,22 @@ func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 	}
 
 	return res
+}
+
+func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
+	var msg EM2Device
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err == nil {
+		err = xml.Unmarshal(body, &msg)
+	}
+
+	s.log.TRACE.Printf("recv: %+v", msg)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

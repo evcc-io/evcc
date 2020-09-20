@@ -138,6 +138,19 @@ type Timeframe struct {
 	MaxRunningTime int
 }
 
+// EM2Device is the EM to device message
+type EM2Device struct {
+	Xmlns           string            `xml:"xmlns,attr"`
+	DeviceControl   []DeviceControl   `xml:",omitempty"`
+	PlanningRequest []PlanningRequest `xml:",omitempty"`
+}
+
+type DeviceControl struct {
+	DeviceID  string `xml:"DeviceId"`
+	On        bool
+	Timestamp int
+}
+
 // DeviceDescription is the populated SEMP device description
 func DeviceDescription(typ, model, uid, callback, basePath string) DeviceMessage {
 	msg := DeviceMessage{
