@@ -156,6 +156,12 @@ func run(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, conf.Menu, site, socketHub, cache)
 
+	// start HEMS server
+	if conf.HEMS != "" {
+		hems := configureHEMS(conf.HEMS, site, cache, httpd)
+		go hems.Run()
+	}
+
 	// publish to UI
 	go socketHub.Run(tee.Attach(), cache)
 

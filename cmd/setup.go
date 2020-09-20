@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/hems"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
@@ -51,6 +52,16 @@ func configureMQTT(conf provider.MqttConfig) {
 	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, mqttClientID(), 1)
 }
 
+// setup HEMS
+func configureHEMS(conf string, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
+	hems, err := hems.NewFromConfig(conf, site, cache, httpd)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+	return hems
+}
+
+// setup messaging
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)
 	notificationHub := push.NewHub(conf.Events, cache)

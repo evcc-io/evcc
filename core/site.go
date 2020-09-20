@@ -146,7 +146,8 @@ func (site *Site) SetTargetSoC(targetSoC int) {
 	}
 }
 
-func (lp *LoadPoint) hasChargeMeter() bool {
+// HasChargeMeter determines if a physical charge meter is attached
+func (lp *LoadPoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
 	return lp.chargeMeter != nil && !isWrapped
 }
@@ -172,7 +173,7 @@ func (site *Site) Configuration() SiteConfiguration {
 			Phases:      lp.Phases,
 			MinCurrent:  lp.MinCurrent,
 			MaxCurrent:  lp.MaxCurrent,
-			ChargeMeter: lp.hasChargeMeter(),
+			ChargeMeter: lp.HasChargeMeter(),
 		}
 
 		if lp.vehicle != nil {
@@ -215,8 +216,8 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("loadpoint %d config:", i+1)
 
 		lp.log.INFO.Printf("  vehicle %s", presence[lp.vehicle != nil])
-		lp.log.INFO.Printf("  charge %s", presence[lp.hasChargeMeter()])
-		if lp.hasChargeMeter() {
+		lp.log.INFO.Printf("  charge %s", presence[lp.HasChargeMeter()])
+		if lp.HasChargeMeter() {
 			lp.log.INFO.Println("  charge meter config:")
 			logMeter(site.log, lp.chargeMeter)
 		}
