@@ -603,7 +603,7 @@ func (lp *LoadPoint) publishSoC() {
 	}
 
 	lp.publish("socCharge", -1)
-	lp.publish("chargeEstimate", -1)
+	lp.publish("chargeEstimate", time.Duration(-1))
 }
 
 // Update is the main control function. It reevaluates meters and charger state
