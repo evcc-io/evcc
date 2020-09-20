@@ -34,6 +34,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Charger](#charger)
   - [Meter](#meter)
   - [Vehicle](#vehicle)
+  - [Home Energy Management System](#home-energy-management-system)
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
@@ -215,6 +216,16 @@ Available vehicle implementations are:
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
+
+### Home Energy Management System
+
+EVCC can integrate itself with Home Energy Management Systems. At this time, the SMA Home Manager (SHM) is the only supported system. To enable add
+
+```yaml
+hems: sma
+```
+
+to the configuration. The EVCC loadpoints can then be added to the SHM configuration.
 
 ## Plugins
 

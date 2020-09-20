@@ -2,6 +2,7 @@ package semp
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -249,6 +250,27 @@ func (s *SEMP) deviceStatusQuery(w http.ResponseWriter, r *http.Request) {
 // devicePlanningQuery answers /semp/PlanningRequest
 func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	msg := Device2EMMsg()
+
+	did := r.URL.Query().Get("DeviceId")
+	if did == "" {
+		msg.PlanningRequest = append(msg.PlanningRequest, s.allPlanningRequest()...)
+	} else {
+		for id, lp := range s.site.LoadPoints() {
+			if did != s.deviceID(id) {
+				continue
+			}
+
+			if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+				msg.PlanningRequest = append(msg.PlanningRequest, pr)
+			}
+		}
+
+		if len(msg.PlanningRequest) == 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+
 	s.writeXML(w, msg)
 }
 
@@ -259,6 +281,18 @@ func (s *SEMP) serialNumber() string {
 
 func (s *SEMP) deviceID(id int) string {
 	return fmt.Sprintf(sempLocalDevice, s.serialNumber(), id)
+}
+
+// cacheGet returns loadpoint value from cache
+func (s *SEMP) cacheGet(id int, key string) (res util.Param, err error) {
+	pid := util.Param{LoadPoint: &id, Key: key}
+
+	res = s.cache.Get(pid.UniqueID())
+	if res.Key == "" {
+		err = errors.New("not found")
+	}
+
+	return res, err
 }
 
 func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
@@ -304,17 +338,13 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 }
 
 func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
-	var pid util.Param
-
 	var chargePower float64
-	chargePowerP := s.cache.Get(pid.UniqueID("chargePower", &id))
-	if !chargePowerP.IsNil() {
+	if chargePowerP, err := s.cacheGet(id, "chargePower"); err == nil {
 		chargePower = chargePowerP.Val.(float64)
 	}
 
 	status := StatusOff
-	statusP := s.cache.Get(pid.UniqueID("status", &id))
-	if !statusP.IsNil() {
+	if statusP, err := s.cacheGet(id, "status"); err == nil {
 		if statusP.Val.(string) == string(api.StatusC) {
 			status = StatusOn
 		}
@@ -338,6 +368,57 @@ func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
 func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	for id, lp := range s.site.LoadPoints() {
 		res = append(res, s.deviceStatus(id, lp))
+	}
+
+	return res
+}
+
+func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest) {
+	mode := api.ModeOff
+	if modeP, err := s.cacheGet(id, "mode"); err == nil {
+		mode = api.ChargeMode(modeP.Val.(string))
+	}
+
+	status := api.StatusA
+	if statusP, err := s.cacheGet(id, "status"); err == nil {
+		status = api.ChargeStatus(statusP.Val.(string))
+	}
+
+	chargeEstimate := time.Duration(-1)
+	if chargeEstimateP, err := s.cacheGet(id, "chargeEstimate"); err == nil {
+		chargeEstimate = chargeEstimateP.Val.(time.Duration)
+	}
+
+	duration := int(chargeEstimate / time.Second)
+	if chargeEstimate <= 0 {
+		duration = 10 * 60 // 10min
+	}
+
+	latestEnd := duration
+	if mode == api.ModePV {
+		latestEnd = 2 * duration
+	}
+
+	if status == api.StatusC {
+		res = PlanningRequest{
+			Timeframe: Timeframe{
+				DeviceID:       s.deviceID(id),
+				EarliestStart:  0,
+				LatestEnd:      latestEnd,
+				MinRunningTime: duration,
+				MaxRunningTime: duration,
+			},
+		}
+	}
+
+	return res
+}
+
+func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
+	for id, lp := range s.site.LoadPoints() {
+		if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+			res = append(res, pr)
+		}
 	}
 
 	return res

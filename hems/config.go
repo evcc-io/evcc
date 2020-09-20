@@ -18,7 +18,7 @@ type HEMS interface {
 // NewFromConfig creates new HEMS from config
 func NewFromConfig(typ string, site *core.Site, cache *util.Cache, httpd *server.HTTPd) (HEMS, error) {
 	switch strings.ToLower(typ) {
-	case "semp":
+	case "sma", "shm", "semp":
 		return semp.New(site, cache, httpd)
 	default:
 		return nil, errors.New("unknown hems: " + typ)

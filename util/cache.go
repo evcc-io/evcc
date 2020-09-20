@@ -23,7 +23,7 @@ func (c *Cache) Run(in <-chan Param) {
 
 	for p := range in {
 		log.TRACE.Printf("%s: %v", p.Key, p.Val)
-		c.Add(p.UniqueID(p.Key, p.LoadPoint), p)
+		c.Add(p.UniqueID(), p)
 	}
 }
 
