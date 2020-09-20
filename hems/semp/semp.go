@@ -290,11 +290,6 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 				msg.PlanningRequest = append(msg.PlanningRequest, pr)
 			}
 		}
-
-		if len(msg.PlanningRequest) == 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
 	}
 
 	s.writeXML(w, msg)
