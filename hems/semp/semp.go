@@ -365,8 +365,8 @@ func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
 	}
 
 	status := StatusOff
-	if statusP, err := s.cacheGet(id, "status"); err == nil {
-		if statusP.Val.(string) == string(api.StatusC) {
+	if statusP, err := s.cacheGet(id, "charging"); err == nil {
+		if statusP.Val.(bool) {
 			status = StatusOn
 		}
 	}
@@ -400,9 +400,9 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		mode = api.ChargeMode(modeP.Val.(string))
 	}
 
-	status := api.StatusA
-	if statusP, err := s.cacheGet(id, "status"); err == nil {
-		status = api.ChargeStatus(statusP.Val.(string))
+	var charging bool
+	if chargingP, err := s.cacheGet(id, "charging"); err == nil {
+		charging = chargingP.Val.(bool)
 	}
 
 	chargeEstimate := time.Duration(-1)
@@ -420,7 +420,7 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		latestEnd = 2 * duration
 	}
 
-	if status == api.StatusC {
+	if charging {
 		res = PlanningRequest{
 			Timeframe: Timeframe{
 				DeviceID:       s.deviceID(id),
