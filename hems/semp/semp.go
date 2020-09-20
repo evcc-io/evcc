@@ -37,13 +37,14 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log    *util.Logger
-	cache  *util.Cache
-	closeC chan struct{}
-	doneC  chan struct{}
-	uid    string
-	port   int
-	site   site
+	log     *util.Logger
+	cache   *util.Cache
+	closeC  chan struct{}
+	doneC   chan struct{}
+	uid     string
+	hostURI string
+	port    int
+	site    site
 }
 
 // site is the minimal interface for accessing site methods
@@ -76,13 +77,15 @@ func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 		s.port, err = strconv.Atoi(port)
 	}
 
+	s.hostURI = s.callbackURI()
+
 	s.handlers(httpd.Router)
 
 	return s, err
 }
 
 func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
-	descriptor := s.callbackURI() + basePath + "/description.xml"
+	descriptor := s.hostURI + basePath + "/description.xml"
 	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 	if err != nil {
 		s.log.ERROR.Println(err)
@@ -191,7 +194,7 @@ func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
 
 func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 	uid := "uuid:" + s.uid
-	msg := DeviceDescription(sempGateway, serverName, uid, s.callbackURI(), basePath)
+	msg := DeviceDescription(sempGateway, serverName, uid, s.hostURI, basePath)
 	s.writeXML(w, msg)
 }
 

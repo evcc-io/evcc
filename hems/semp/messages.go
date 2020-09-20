@@ -135,7 +135,7 @@ type Timeframe struct {
 	EarliestStart  int
 	LatestEnd      int
 	MinRunningTime int
-	MaxRunningTime int
+	MaxRunningTime int `xml:",omitempty"`
 }
 
 // EM2Device is the EM to device message
