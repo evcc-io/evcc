@@ -7,7 +7,7 @@ const (
 	urnSEMPService = "urn:schemas-simple-energy-management-protocol:service-1-0"
 )
 
-type DeviceMessage struct {
+type DeviceDescription struct {
 	XMLName     xml.Name    `xml:"root"`
 	Xmlns       string      `xml:"xmlns,attr"`
 	SpecVersion SpecVersion `xml:"specVersion"`
@@ -149,33 +149,6 @@ type DeviceControl struct {
 	DeviceID  string `xml:"DeviceId"`
 	On        bool
 	Timestamp int
-}
-
-// DeviceDescription is the populated SEMP device description
-func DeviceDescription(typ, model, uid, callback, basePath string) DeviceMessage {
-	msg := DeviceMessage{
-		Xmlns: urnUPNPDevice,
-		SpecVersion: SpecVersion{
-			Major: 1,
-		},
-		Device: Device{
-			DeviceType:   typ,
-			FriendlyName: "evcc",
-			Manufacturer: "github.com/andig/evcc",
-			ModelName:    model,
-			UDN:          uid,
-			SEMPService: SEMPService{
-				Xmlns:          urnSEMPService,
-				Server:         callback,
-				BasePath:       basePath,
-				Transport:      "HTTP/Pull",
-				ExchangeFormat: "XML",
-				WsVersion:      "1.1.0",
-			},
-		},
-	}
-
-	return msg
 }
 
 // Device2EMMsg is the XML message container

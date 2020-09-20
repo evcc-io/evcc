@@ -60,12 +60,9 @@ func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("semp")
-	ssdp.Logger = log.TRACE
-
 	s := &SEMP{
 		doneC: make(chan struct{}),
-		log:   log,
+		log:   util.NewLogger("semp"),
 		cache: cache,
 		site:  site,
 		uid:   uid.String(),
@@ -194,7 +191,28 @@ func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
 
 func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 	uid := "uuid:" + s.uid
-	msg := DeviceDescription(sempGateway, serverName, uid, s.hostURI, basePath)
+
+	msg := DeviceDescription{
+		Xmlns:       urnUPNPDevice,
+		SpecVersion: SpecVersion{Major: 1},
+		Device: Device{
+			DeviceType:      sempGateway,
+			FriendlyName:    "evcc",
+			Manufacturer:    "github.com/andig/evcc",
+			ModelName:       serverName,
+			PresentationURL: s.hostURI,
+			UDN:             uid,
+			SEMPService: SEMPService{
+				Xmlns:          urnSEMPService,
+				Server:         s.hostURI,
+				BasePath:       basePath,
+				Transport:      "HTTP/Pull",
+				ExchangeFormat: "XML",
+				WsVersion:      "1.1.0",
+			},
+		},
+	}
+
 	s.writeXML(w, msg)
 }
 
