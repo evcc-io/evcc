@@ -410,14 +410,19 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		chargeEstimate = chargeEstimateP.Val.(time.Duration)
 	}
 
-	duration := int(chargeEstimate / time.Second)
+	maxDuration := int(chargeEstimate / time.Second)
 	if chargeEstimate <= 0 {
-		duration = 10 * 60 // 10min
+		maxDuration = 10 * 60 // 10min
 	}
 
-	latestEnd := duration
+	minDuration := maxDuration
 	if mode == api.ModePV {
-		latestEnd = 2 * duration
+		minDuration = 0
+	}
+
+	latestEnd := maxDuration
+	if mode == api.ModePV {
+		latestEnd = 2 * maxDuration
 	}
 
 	if charging {
@@ -426,8 +431,8 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 				DeviceID:       s.deviceID(id),
 				EarliestStart:  0,
 				LatestEnd:      latestEnd,
-				MinRunningTime: duration,
-				MaxRunningTime: duration,
+				MinRunningTime: minDuration,
+				MaxRunningTime: maxDuration,
 			},
 		}
 	}
