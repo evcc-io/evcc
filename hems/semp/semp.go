@@ -412,17 +412,16 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 
 	maxDuration := int(chargeEstimate / time.Second)
 	if chargeEstimate <= 0 {
-		maxDuration = 10 * 60 // 10min
-	}
-
-	minDuration := maxDuration
-	if mode == api.ModePV {
-		minDuration = 0
+		maxDuration = 15 * 60 // 15min
 	}
 
 	latestEnd := maxDuration
+	maxEnergy := 0 ///***remaining energy to charge from mains to target soc (soc/100*virtualBatCap) ***
+	minEnergy := maxEnergy
+
 	if mode == api.ModePV {
-		latestEnd = 2 * maxDuration
+		latestEnd = 24 * 60 * 60 // 24h
+		minEnergy = 0 // only optional energy
 	}
 
 	if charging {
@@ -431,8 +430,8 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 				DeviceID:       s.deviceID(id),
 				EarliestStart:  0,
 				LatestEnd:      latestEnd,
-				MinRunningTime: minDuration,
-				MaxRunningTime: maxDuration,
+				MinEnergy: minEnergy,
+				MaxEnergy: maxEnergy,
 			},
 		}
 	}
