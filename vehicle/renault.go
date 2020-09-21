@@ -81,7 +81,7 @@ type batteryAttributes struct {
 	PlugStatus         int    `json:"plugStatus"`
 	LastUpdateTime     string `json:"lastUpdateTime"`
 	ChargePower        int    `json:"chargePower"`
-	FinishTime         *int   `json:"chargingFinishTime"`
+	RemainingTime      *int   `json:"chargingRemainingTime"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -338,11 +338,11 @@ func (v *Renault) finishTime() (time.Time, error) {
 		timestamp, err = time.Parse(time.RFC3339, kr.Data.Attributes.Timestamp)
 	}
 
-	if kr.Data.Attributes.FinishTime == nil {
+	if kr.Data.Attributes.RemainingTime == nil {
 		return time.Time{}, errors.New("estimate not available")
 	}
 
-	return timestamp.Add(time.Duration(*kr.Data.Attributes.FinishTime) * time.Minute), err
+	return timestamp.Add(time.Duration(*kr.Data.Attributes.RemainingTime) * time.Minute), err
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
