@@ -405,6 +405,16 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		charging = chargingP.Val.(bool)
 	}
 
+	chargeEstimate := time.Duration(-1)
+	if chargeEstimateP, err := s.cacheGet(id, "chargeEstimate"); err == nil {
+		chargeEstimate = chargeEstimateP.Val.(time.Duration)
+	}
+
+	latestEnd := int(chargeEstimate / time.Second)
+	if mode == api.ModePV || latestEnd <= 0 {
+		latestEnd = 24 * 3600
+	}
+
 	var maxEnergy int
 	if chargeRemainingEnergyP, err := s.cacheGet(id, "chargeRemainingEnergy"); err == nil {
 		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
@@ -420,7 +430,7 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 			Timeframe: Timeframe{
 				DeviceID:      s.deviceID(id),
 				EarliestStart: 0,
-				LatestEnd:     24 * 3600,
+				LatestEnd:     latestEnd,
 				MinEnergy:     &minEnergy,
 				MaxEnergy:     &maxEnergy,
 			},
