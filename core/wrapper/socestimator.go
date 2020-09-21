@@ -72,6 +72,18 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 	return -1
 }
 
+// RemainingChargeEnergy returns the remaining charge energy in kWh
+func (s *SocEstimator) RemainingChargeEnergy(targetSoC int) float64 {
+	percentRemaining := float64(targetSoC) - s.socCharge
+	if percentRemaining <= 0 {
+		return 0
+	}
+
+	// estimate remaining energy
+	whRemaining := percentRemaining / 100 * s.virtualCapacity
+	return whRemaining / 1e3
+}
+
 // SoC implements Vehicle.ChargeState with addition of given charged energy
 func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()

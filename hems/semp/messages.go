@@ -134,8 +134,10 @@ type Timeframe struct {
 	DeviceID       string `xml:"DeviceId"`
 	EarliestStart  int
 	LatestEnd      int
-	MinRunningTime int
-	MaxRunningTime int `xml:",omitempty"`
+	MinRunningTime *int `xml:",omitempty"`
+	MaxRunningTime *int `xml:",omitempty"`
+	MinEnergy      *int `xml:",omitempty"` // AN EVCharger
+	MaxEnergy      *int `xml:",omitempty"` // AN EVCharger
 }
 
 // EM2Device is the EM to device message
@@ -146,9 +148,10 @@ type EM2Device struct {
 }
 
 type DeviceControl struct {
-	DeviceID  string `xml:"DeviceId"`
-	On        bool
-	Timestamp int
+	DeviceID                    string `xml:"DeviceId"`
+	On                          bool
+	RecommendedPowerConsumption int // AN EVCharger
+	Timestamp                   int
 }
 
 // Device2EMMsg is the XML message container
