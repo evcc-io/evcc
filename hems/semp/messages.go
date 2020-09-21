@@ -76,32 +76,16 @@ type Characteristics struct {
 	MinOffTime          int `xml:",omitempty"`
 }
 
-type Capabilities struct {
-	CurrentPower  CurrentPower
-	Timestamps    Timestamps
-	Interruptions Interruptions
-	Requests      Requests
-}
-
 const (
 	MethodMeasurement = "Measurement"
 	MethodEstimation  = "Estimation"
 )
 
-type CurrentPower struct {
-	Method string
-}
-
-type Timestamps struct {
-	AbsoluteTimestamps bool
-}
-
-type Interruptions struct {
-	InterruptionsAllowed bool
-}
-
-type Requests struct {
-	OptionalEnergy bool
+type Capabilities struct {
+	CurrentPowerMethod   string `xml:"CurrentPower>Method"`
+	AbsoluteTimestamps   bool   `xml:"Timestamps>AbsoluteTimestamps"`
+	InterruptionsAllowed bool   `xml:"Interruptions>InterruptionsAllowed"`
+	OptionalEnergy       bool   `xml:"Requests>OptionalEnergy"`
 }
 
 const (
@@ -113,11 +97,7 @@ type DeviceStatus struct {
 	DeviceID          string `xml:"DeviceId"`
 	EMSignalsAccepted bool
 	Status            string
-	PowerConsumption  PowerConsumption
-}
-
-type PowerConsumption struct {
-	PowerInfo PowerInfo
+	PowerInfo         PowerInfo `xml:"PowerConsumption>PowerInfo"`
 }
 
 type PowerInfo struct {
@@ -127,7 +107,7 @@ type PowerInfo struct {
 }
 
 type PlanningRequest struct {
-	Timeframe Timeframe
+	Timeframe []Timeframe
 }
 
 type Timeframe struct {
@@ -142,9 +122,8 @@ type Timeframe struct {
 
 // EM2Device is the EM to device message
 type EM2Device struct {
-	Xmlns           string            `xml:"xmlns,attr"`
-	DeviceControl   []DeviceControl   `xml:",omitempty"`
-	PlanningRequest []PlanningRequest `xml:",omitempty"`
+	Xmlns         string          `xml:"xmlns,attr"`
+	DeviceControl []DeviceControl `xml:",omitempty"`
 }
 
 type DeviceControl struct {
