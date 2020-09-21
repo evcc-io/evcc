@@ -420,6 +420,11 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
 	}
 
+	// add 1kWh in case we're charging but battery claims full
+	if maxEnergy == 0 {
+		maxEnergy = 1e3 // 1kWh
+	}
+
 	minEnergy := maxEnergy
 	if mode == api.ModePV {
 		minEnergy = 0
