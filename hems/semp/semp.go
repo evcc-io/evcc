@@ -286,7 +286,7 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+			if pr := s.planningRequest(id, lp); len(pr.Timeframe) > 0 {
 				msg.PlanningRequest = append(msg.PlanningRequest, pr)
 			}
 		}
@@ -331,15 +331,9 @@ func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
 			DeviceVendor: "github.com/andig/evcc",
 		},
 		Capabilities: Capabilities{
-			CurrentPower: CurrentPower{
-				Method: method,
-			},
-			Interruptions: Interruptions{
-				InterruptionsAllowed: true,
-			},
-			Requests: Requests{
-				OptionalEnergy: true,
-			},
+			CurrentPowerMethod:   method,
+			InterruptionsAllowed: true,
+			OptionalEnergy:       true,
 		},
 		Characteristics: Characteristics{
 			MinPowerConsumption: 230 * int(lp.MinCurrent),
@@ -374,11 +368,9 @@ func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
 		EMSignalsAccepted: true,
-		PowerConsumption: PowerConsumption{
-			PowerInfo: PowerInfo{
-				AveragePower:      int(chargePower),
-				AveragingInterval: 60,
-			},
+		PowerInfo: PowerInfo{
+			AveragePower:      int(chargePower),
+			AveragingInterval: 60,
 		},
 		Status: status,
 	}
@@ -432,13 +424,13 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 
 	if charging {
 		res = PlanningRequest{
-			Timeframe: Timeframe{
+			Timeframe: []Timeframe{Timeframe{
 				DeviceID:      s.deviceID(id),
 				EarliestStart: 0,
 				LatestEnd:     latestEnd,
 				MinEnergy:     &minEnergy,
 				MaxEnergy:     &maxEnergy,
-			},
+			}},
 		}
 	}
 
@@ -447,7 +439,7 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 
 func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 	for id, lp := range s.site.LoadPoints() {
-		if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+		if pr := s.planningRequest(id, lp); len(pr.Timeframe) > 0 {
 			res = append(res, pr)
 		}
 	}
