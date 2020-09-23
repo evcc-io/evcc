@@ -174,9 +174,15 @@ func (v *VW) authFlow() error {
 		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
 
 	// vw only
-	uri = "https://www.portal.volkswagen-we.com/portal/en_GB/web/guest/home"
+	// GET www.portal.volkswagen-we.com/portal/de_DE/web/guest/home
+	uri = "https://www.portal.volkswagen-we.com/portal/de_DE/web/guest/home"
 	resp, err = v.Client.Get(uri)
 
+	// GET www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
+	uri = "https://www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url"
+	resp, err = v.Client.Get(uri)
+
+	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
 	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
 		"ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&" +
 		"response_type=code&state=gmiJOaB4&" +
@@ -184,6 +190,7 @@ func (v *VW) authFlow() error {
 
 	resp, err = v.Client.Get(uri)
 	if err == nil {
+		// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 		uri = resp.Header.Get("Location")
 		resp, err = v.Client.Get(uri)
 	}
@@ -191,6 +198,7 @@ func (v *VW) authFlow() error {
 		vars, err = formValues(resp.Body, "form#emailPasswordForm")
 	}
 	if err == nil {
+		// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 		uri = vwIdentity + vars.action
 		body := fmt.Sprintf(
 			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
@@ -204,9 +212,9 @@ func (v *VW) authFlow() error {
 	}
 
 	if err == nil {
+		// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
 		uri = vwIdentity + resp.Header.Get("Location")
 		req, err = http.NewRequest(http.MethodGet, uri, nil)
-
 	}
 	if err == nil {
 		resp, err = v.Client.Do(req)
@@ -216,6 +224,7 @@ func (v *VW) authFlow() error {
 		vars, err = formValues(resp.Body, "form#credentialsForm")
 	}
 	if err == nil {
+		// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 		uri = vwIdentity + vars.action
 		body = fmt.Sprintf(
 			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
@@ -232,6 +241,9 @@ func (v *VW) authFlow() error {
 		resp, err = v.Client.Do(req)
 	}
 
+	// GET identity.vwgroup.io/oidc/v1/oauth/sso?clientId=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&userId=bca09cc0-8eba-4110-af71-7242868e1bf1&HMAC=2b01ce6a351fad4dd97dc8110d0967b46c95889ab5010c660a616462e66a83ca
+	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
+	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
 	for i := 6; i < 9; i++ {
 		resp, err = v.redirect(resp, err)
 	}
@@ -247,8 +259,6 @@ func (v *VW) authFlow() error {
 			state = locationURL.Query().Get("state")
 		}
 
-		// resp, err = v.redirect(resp, err)
-
 		if strings.Contains(location, "complete-login") {
 			_ = state
 			_ = code
@@ -259,7 +269,9 @@ func (v *VW) authFlow() error {
 				locationURL.Scheme+"://"+locationURL.Host+locationURL.Path,
 				state,
 			)
-			body = fmt.Sprintf("_33_WAR_cored5portlet_code=%s", code)
+
+			body = fmt.Sprintf("_33_WAR_cored5portlet_code=%s", url.QueryEscape(code))
+
 			req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
 				map[string]string{
 					"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
