@@ -90,7 +90,12 @@ func loadConfig(conf config) *core.Site {
 }
 
 func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
-	return core.NewSiteFromConfig(log, cp, conf, loadPoints)
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	return site
 }
 
 func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.LoadPoint) {
@@ -108,7 +113,10 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 
 	for id, lpc := range lpc {
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
-		lp := core.NewLoadPointFromConfig(log, cp, lpc)
+		lp, err := core.NewLoadPointFromConfig(log, cp, lpc)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
 		loadPoints = append(loadPoints, lp)
 	}
 

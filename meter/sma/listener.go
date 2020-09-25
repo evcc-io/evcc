@@ -96,21 +96,21 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(log *util.Logger) *Listener {
+func New(log *util.Logger) (*Listener, error) {
 	// Parse the string address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
-		log.FATAL.Fatalf("error resolving udp address: %s", err)
+		return nil, fmt.Errorf("error resolving udp address: %s", err)
 	}
 
 	// Open up a connection
 	conn, err := net.ListenMulticastUDP("udp4", nil, gaddr)
 	if err != nil {
-		log.FATAL.Fatalf("error opening connecting: %s", err)
+		return nil, fmt.Errorf("error opening connecting: %s", err)
 	}
 
 	if err := conn.SetReadBuffer(udpBufferSize); err != nil {
-		log.FATAL.Fatalf("error setting read buffer: %s", err)
+		return nil, fmt.Errorf("error setting read buffer: %s", err)
 	}
 
 	l := &Listener{
@@ -120,7 +120,7 @@ func New(log *util.Logger) *Listener {
 
 	go l.listen()
 
-	return l
+	return l, nil
 }
 
 // processMessage converts a SMA multicast data package into Telegram

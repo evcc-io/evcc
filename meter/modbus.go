@@ -2,6 +2,7 @@ package meter
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -84,14 +85,14 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
-		log.FATAL.Fatalf("invalid measurement for power: %s", cc.Power)
+		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
 
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
-			log.FATAL.Fatalf("invalid measurement for energy: %s", cc.Power)
+			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Power)
 		}
 
 		totalEnergy = m.totalEnergy

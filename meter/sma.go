@@ -67,7 +67,11 @@ func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
 	}
 
 	if sma.Instance == nil {
-		sma.Instance = sma.New(log)
+		instance, err := sma.New(log)
+		if err != nil {
+			return nil, err
+		}
+		sma.Instance = instance
 	}
 
 	// we only need to subscribe to one of the two possible identifiers

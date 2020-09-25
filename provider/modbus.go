@@ -78,7 +78,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	// register configured
 	if cc.Register.Decode != "" {
 		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
-			log.TRACE.Fatal(err)
+			return nil, err
 		}
 	}
 
