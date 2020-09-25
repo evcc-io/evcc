@@ -39,7 +39,8 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 		token = fmt.Sprintf("%s:%s", user, password)
 	}
 
-	client := influxdb2.NewClient(url, token)
+	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
+	client := influxdb2.NewClientWithOptions(url, token, options)
 
 	return &Influx{
 		log:      log,
