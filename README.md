@@ -49,7 +49,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 1. Install EVCC. For details see [installation](#installation).
 2. Copy the default configuration file `evcc.dist.yaml` to `evcc.yaml` and open for editing.
-3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). A pv meter can also be replaced by a pv inverter. Both need be combined to a [loadpoint](#loadpoint).
+3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). Many PV inverters contain meters that can be used here.
 4. Configure both meter(s) and charger by:
     - choosing the appropriate `type`
     - add a `name` attribute than can later be referred to
@@ -194,9 +194,8 @@ KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see
 Meters provide data about power and energy consumption or PV production. Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use.
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
-- `tesla`: Tesla PowerWall meter. Use `usage` to choose meter (grid meter: `site`, pv: `solar`, battery: `battery`).
-  *Note*: this could also be implemented using a `default` meter with the `http` plugin.
+- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `tesla`: Tesla PowerWall meter. Use `usage` setting to choose internal meter (grid: `site`, pv: `solar`, battery: `battery`).
 - `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugins](#plugins)
 
 Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
@@ -207,8 +206,10 @@ Vehicle represents a specific EV vehicle and its battery. If vehicle is configur
 
 Available vehicle implementations are:
 
-- `audi`: Audi (eTron)
+- `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
+- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
 - `renault`: Renault (Zoe, Kangoo ZE)
@@ -307,7 +308,9 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
   - `SDM220` Eastron SDM220
   - `SDM230` Eastron SDM230
   - `SDM72` Eastron SDM72
-- TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, KOSTAL, Fronius, Steca etc)
+  - `ORNO1P` ORNO WE-514 & WE-515
+  - `ORNO3P` ORNO WE-516 & WE-517
+- TCP: Sunspec-compatible grid inverters (SMA, SolarEdge, Kaco, KOSTAL, Fronius, Steca etc)
 
 Use `value` to define the value to read from the device. All values that are supported by [MBMD](https://github.com/volkszaehler/mbmd/blob/master/meters/measurements.go#L28) are pre-configured.
 
@@ -438,10 +441,12 @@ EVCC provides a REST and MQTT APIs.
 
 - `/api/config`: EVCC static configuration
 - `/api/state`: EVCC dynamic state
-- `/api/mode`: global charge mode, use `/api/mode/<mode>` to modify
-- `/api/targetsoc`: global target SoC, use `/api/targetsoc/<soc>` to modify
-- `/api/loadpoints/<id>/mode`: loadpoint charge mode, use `/api/loadpoints/<id>/mode/<mode>` to modify
-- `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC, use `/api/loadpoints/<id>/targetsoc/<soc>` to modify
+- `/api/mode`: global charge mode (writable)
+- `/api/targetsoc`: global target SoC (writable)
+- `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
+- `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
+
+Note: to modify writable settings perform a `POST` request appending the value as path segment.
 
 ### MQTT API
 
@@ -450,16 +455,18 @@ The MQTT API follows the REST API's structure:
 - `evcc`: root topic
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
-- `evcc/site/mode`: global charge mode, write `<mode>` to `/evcc/site/mode/set` to modify
-- `evcc/site/targetsoc`: global target SoC, write `<soc>` to `/evcc/site/targetsoc/set` to modify
+- `evcc/site/mode`: global charge mode (writable)
+- `evcc/site/targetsoc`: global target SoC (writable)
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
-- `evcc/loadpoints/<id>/mode`: loadpoint charge mode, write `<mode>` to `/evcc/loadpoints/<id>/mode/set` to modify
-- `evcc/loadpoints/<id>/targetsoc`: loadpoint target SoC, write `<soc>` to `/evcc/loadpoints/<id>/targetsoc/set` to modify
+- `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
+- `evcc/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
+
+Note: to modify writable settings append `/set` to the topic for writing.
 
 ## Background
 
-EVCC is heavily inspired by [OpenWB](1). However, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
+EVCC is heavily inspired by [OpenWB](1). However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
 
 Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for EVCC were:
 
