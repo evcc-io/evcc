@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"sort"
@@ -90,10 +91,10 @@ type LoadPoint struct {
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
-func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) *LoadPoint {
+func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*LoadPoint, error) {
 	lp := NewLoadPoint(log)
 	if err := util.DecodeOther(other, &lp); err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	// set sane defaults
@@ -118,7 +119,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.ChargerRef == "" {
-		lp.log.FATAL.Fatal("missing charger")
+		return nil, errors.New("missing charger")
 	}
 	charger := cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(charger)
@@ -135,7 +136,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		HandlerConfig: lp.HandlerConfig,
 	}
 
-	return lp
+	return lp, nil
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults

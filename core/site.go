@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -57,10 +58,10 @@ func NewSiteFromConfig(
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,
-) *Site {
+) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, &site); err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	Voltage = site.Voltage
@@ -68,10 +69,10 @@ func NewSiteFromConfig(
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
-	// 	site.log.FATAL.Fatal("missing either pv or grid meter")
+	// 	nil, errors.New("missing either pv or grid meter")
 	// }
 	if site.Meters.GridMeterRef == "" {
-		site.log.FATAL.Fatal("missing grid meter")
+		return nil, errors.New("missing grid meter")
 	}
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -83,7 +84,7 @@ func NewSiteFromConfig(
 		site.batteryMeter = cp.Meter(site.Meters.BatteryMeterRef)
 	}
 
-	return site
+	return site, nil
 }
 
 // NewSite creates a Site with sane defaults
