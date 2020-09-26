@@ -81,7 +81,7 @@ func TestSoCEstimation(t *testing.T) {
 
 		// validate soc estimate
 		if tc.estimatedSoC != soc {
-			t.Errorf("expected estimated soc: %g, got: %g (virtual capacity: %v)", tc.estimatedSoC, soc, ce.virtualCapacity)
+			t.Errorf("expected estimated soc: %g, got: %g", tc.estimatedSoC, soc)
 		}
 
 		// validate capacity estimate
@@ -90,10 +90,13 @@ func TestSoCEstimation(t *testing.T) {
 		}
 
 		// validate duration estimate
-		remainingDuration := time.Hour * time.Duration((100-tc.estimatedSoC)/100*tc.virtualCapacity/1e3)
+		chargePower := 1e3
+		targetSoC := 100
+		remainingHours := (float64(targetSoC) - soc) / 100 * tc.virtualCapacity / chargePower
+		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(1e3, 100); rm != remainingDuration {
-			t.Errorf("expected estimated duration: %v, got: %v (virtual capacity: %v)", remainingDuration, rm, ce.virtualCapacity)
+		if rm := ce.RemainingChargeDuration(chargePower, targetSoC); rm != remainingDuration {
+			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 		}
 	}
 }
