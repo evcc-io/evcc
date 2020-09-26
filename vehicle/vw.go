@@ -130,7 +130,7 @@ func (v *VW) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err == nil {
-		b, err := httputil.DumpResponse(resp, true)
+		b, err := httputil.DumpResponse(resp, false)
 		if err == nil {
 			v.HTTPHelper.Log.TRACE.Println("\n" + string(b))
 		}
@@ -218,6 +218,8 @@ func (v *VW) authFlow() error {
 
 	// POST www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
 	ref := uri
+	_ = ref
+	_ = csrf
 	uri = "https://www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url"
 	req, err = v.request(http.MethodPost, uri, nil,
 		map[string]string{
@@ -234,15 +236,15 @@ func (v *VW) authFlow() error {
 		uri, err = v.loginURL(resp)
 	}
 
-	var clientID string
-	_ = clientID
-	if err == nil {
-		var parsed *url.URL
-		parsed, err = url.Parse(uri)
-		if err == nil {
-			clientID = parsed.Query().Get("client_id")
-		}
-	}
+	// var clientID string
+	// _ = clientID
+	// if err == nil {
+	// 	var parsed *url.URL
+	// 	parsed, err = url.Parse(uri)
+	// 	if err == nil {
+	// 		clientID = parsed.Query().Get("client_id")
+	// 	}
+	// }
 
 	if err == nil {
 		// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
@@ -252,12 +254,7 @@ func (v *VW) authFlow() error {
 		// 	"response_type=code&state=gmiJOaB4&" +
 		// 	"redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com"
 
-		println("")
-		println(uri)
-		println("")
 		uri = strings.ReplaceAll(uri, " ", "%20")
-		println(uri)
-		println("")
 
 		req, err = v.request(http.MethodGet, uri, nil,
 			map[string]string{
@@ -346,6 +343,7 @@ func (v *VW) authFlow() error {
 			_ = code
 
 			ref := location
+			_ = ref
 			uri = fmt.Sprintf(
 				"%s?p_auth=%s&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus",
 				locationURL.Scheme+"://"+locationURL.Host+locationURL.Path,
@@ -356,9 +354,8 @@ func (v *VW) authFlow() error {
 
 			req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
 				map[string]string{
-					"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
-					"Referer":    ref,
-					// "Accept-Encoding": "gzip, deflate, br",
+					"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
+					"Referer":         ref,
 					"Accept":          "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
 					"Accept-Language": "en-US,nl;q=0.7,en;q=0.3",
 					"Content-Type":    "application/x-www-form-urlencoded",
@@ -369,6 +366,46 @@ func (v *VW) authFlow() error {
 
 		if err == nil {
 			resp, err = v.Client.Do(req)
+			uri = resp.Header.Get("Location")
+		}
+
+		if err == nil {
+			// html
+			req, err = v.request(http.MethodGet, uri, nil,
+				map[string]string{
+					"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
+					"Referer":         ref,
+					"Accept":          "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
+					"Accept-Language": "en-US,nl;q=0.7,en;q=0.3",
+					"X-CSRF-Token":    csrf,
+				},
+			)
+			resp, err = v.Client.Do(req)
+
+			if err == nil {
+				println(csrf)
+				vars, err = formValues(resp.Body, "meta")
+				csrf := vars.csrf
+				_ = csrf
+			}
+
+			if err == nil {
+				uri += "/-/mainnavigation/get-fully-loaded-cars"
+
+				req, err = v.request(http.MethodGet, uri, nil,
+					map[string]string{
+						"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
+						"Referer":         ref,
+						"Accept":          "application/json, text/plain, */*",
+						"Accept-Language": "en-US,nl;q=0.7,en;q=0.3",
+						"X-CSRF-Token":    csrf,
+					},
+				)
+				resp, err = v.Client.Do(req)
+
+				// v.dumpBody(resp)
+			}
+
 			time.Sleep(time.Second)
 			os.Exit(1)
 		}

@@ -170,7 +170,11 @@ func formValues(reader io.Reader, id string) (formVars, error) {
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err == nil {
 		// only interested in meta tag?
-		if meta := doc.Find("meta[name=_csrf]"); id == "meta" && meta.Length() == 1 {
+		if meta := doc.Find("meta[name=_csrf]"); id == "meta" {
+			if meta.Length() != 1 {
+				return vars, errors.New("unexpected length")
+			}
+
 			var exists bool
 			vars.csrf, exists = meta.Attr("content")
 			if !exists {
