@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -108,20 +107,6 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	return v, nil
 }
 
-// request builds an HTTP request with headers and body
-func (v *API) request(method, uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, uri, body)
-	if err != nil {
-		return req, err
-	}
-
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	return req, nil
-}
-
 // jsonRequest builds an HTTP json request with headers and body
 func (v *API) jsonRequest(method, uri string, headers map[string]string, data interface{}) (*http.Request, error) {
 	body, err := json.Marshal(data)
@@ -129,7 +114,7 @@ func (v *API) jsonRequest(method, uri string, headers map[string]string, data in
 		return nil, err
 	}
 
-	return v.request(method, uri, headers, bytes.NewReader(body))
+	return util.Request(method, uri, bytes.NewReader(body), headers)
 }
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
@@ -232,7 +217,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
 	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
 
-	req, err := v.request(http.MethodPost, v.config.URI+v.config.AccessToken, headers, strings.NewReader(data))
+	req, err := util.Request(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
 	if err != nil {
 		return "", err
 	}
@@ -259,7 +244,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	req, err := v.request(http.MethodGet, v.config.URI+v.config.Vehicles, headers, nil)
+	req, err := util.Request(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
 	if err == nil {
 		var resp response
 		if _, err = v.RequestJSON(req, &resp); err == nil {
@@ -317,7 +302,7 @@ func (v *API) getStatus() (float64, error) {
 
 	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
-	req, err := v.request(http.MethodGet, uri, headers, nil)
+	req, err := util.Request(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
 

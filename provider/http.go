@@ -102,15 +102,12 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	// empty method becomes GET
-	req, err := http.NewRequest(strings.ToUpper(p.method), p.url, b)
-	if err == nil {
-		for k, v := range p.headers {
-			req.Header.Add(k, v)
-		}
-		return p.Do(req)
+	req, err := util.Request(strings.ToUpper(p.method), p.url, b, p.headers)
+	if err != nil {
+		return []byte{}, err
 	}
 
-	return []byte{}, err
+	return p.Do(req)
 }
 
 // FloatGetter parses float from request

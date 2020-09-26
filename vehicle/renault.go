@@ -186,19 +186,12 @@ func (v *Renault) authFlow() error {
 }
 
 func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		return req, err
-	}
-	req.URL.RawQuery = data.Encode()
-
-	for _, headers := range headers {
-		for k, v := range headers {
-			req.Header.Add(k, v)
-		}
+	req, err := util.Request(http.MethodGet, uri, nil, headers)
+	if err == nil {
+		req.URL.RawQuery = data.Encode()
 	}
 
-	return req, nil
+	return req, err
 }
 
 func (v *Renault) sessionCookie(user, password string) (string, error) {

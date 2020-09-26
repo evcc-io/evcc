@@ -105,25 +105,20 @@ func (v *Porsche) login(user, password string) error {
 	}
 
 	// get the login page to get the cookies for the subsequent requests
-	reqLogin, err := http.NewRequest(http.MethodGet, porscheLogin, nil)
+	resp, err := client.Get(porscheLogin)
 	if err != nil {
 		return err
 	}
 
-	respLogin, err := client.Do(reqLogin)
+	values, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
 		return err
 	}
 
-	queryLogin, err := url.ParseQuery(respLogin.Request.URL.RawQuery)
-	if err != nil {
-		return err
-	}
-
-	sec := queryLogin.Get("sec")
-	resume := queryLogin.Get("resume")
-	state := queryLogin.Get("state")
-	thirdPartyID := queryLogin.Get("thirdPartyId")
+	sec := values.Get("sec")
+	resume := values.Get("resume")
+	state := values.Get("state")
+	thirdPartyID := values.Get("thirdPartyId")
 
 	dataLoginAuth := url.Values{
 		"sec":          []string{sec},

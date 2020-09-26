@@ -24,14 +24,10 @@ const (
 	mccAPICurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
-// MCCErrorResponse is the API response if status not OK
-type MCCErrorResponse struct {
-	Error string
-}
-
 // MCCTokenResponse is the apiLogin response
 type MCCTokenResponse struct {
 	Token string
+	Error string
 }
 
 // MCCCurrentSession is the apiCurrentSession response
@@ -106,16 +102,10 @@ func (mcc *MobileConnect) apiURL(api apiFunction) string {
 // process the http request to fetch the auth token for a login or refresh request
 func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
-	b, err := mcc.RequestJSON(request, &tr)
+	_, err := mcc.RequestJSON(request, &tr)
 	if err == nil {
-		if len(tr.Token) == 0 && len(b) > 0 {
-			var error MCCErrorResponse
-
-			if err := json.Unmarshal(b, &error); err != nil {
-				return err
-			}
-
-			return fmt.Errorf("response: %s", error.Error)
+		if len(tr.Token) == 0 {
+			return fmt.Errorf("response: %s", tr.Error)
 		}
 
 		mcc.token = tr.Token

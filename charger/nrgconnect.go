@@ -105,7 +105,7 @@ func (nrg *NRGKickConnect) apiURL(api apiFunction) string {
 }
 
 func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
-	b, err := nrg.GetJSON(url, result)
+	b, err := nrg.GetJSON(url, &result)
 	if err != nil && len(b) > 0 {
 		var error NRGResponse
 		if err := json.Unmarshal(b, &error); err != nil {
@@ -128,7 +128,7 @@ func (nrg *NRGKickConnect) putJSON(url string, request interface{}) error {
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(body))
 
 	if err == nil {
-		if err = nrg.RequestJSON(req, &resp); err != nil {
+		if _, err = nrg.RequestJSON(req, &resp); err != nil {
 			return err
 		}
 	}

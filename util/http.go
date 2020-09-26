@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -37,12 +38,17 @@ func (r *HTTPHelper) LastResponse() *http.Response {
 
 // RoundTrip implements http.Roundtripper
 func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.Log.TRACE.Println(req.RequestURI)
+	println("TRIPPER")
+	if r.Log != nil {
+		r.Log.TRACE.Println(req.RequestURI)
+	}
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err == nil {
 		if b, err := httputil.DumpResponse(resp, false); err == nil {
-			r.Log.TRACE.Println(string(b))
+			if r.Log != nil {
+				r.Log.TRACE.Println(string(b))
+			}
 		}
 	}
 
@@ -65,10 +71,6 @@ func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
 	// maintain body after reading
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 
-	if r.Log != nil {
-		r.Log.TRACE.Printf("%s\n%s", resp.Request.URL.String(), string(b))
-	}
-
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
 	}
@@ -85,26 +87,16 @@ func (r *HTTPHelper) decodeJSON(resp *http.Response, err error, res interface{})
 	return b, err
 }
 
-// Do executes HTTP request returns the response body
+// Do executes HTTP request and returns the response body
 func (r *HTTPHelper) Do(req *http.Request) ([]byte, error) {
 	resp, err := r.Client.Do(req)
 	return r.readBody(resp, err)
 }
 
-// Get executes HTTP GET request returns the response body
+// Get executes HTTP GET request and returns the response body
 func (r *HTTPHelper) Get(url string) ([]byte, error) {
 	resp, err := r.Client.Get(url)
 	return r.readBody(resp, err)
-}
-
-// Put executes HTTP PUT request returns the response body
-func (r *HTTPHelper) Put(url string, body []byte) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(body))
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return r.Do(req)
 }
 
 // RequestJSON executes HTTP request and decodes JSON response
@@ -117,4 +109,18 @@ func (r *HTTPHelper) RequestJSON(req *http.Request, res interface{}) ([]byte, er
 func (r *HTTPHelper) GetJSON(url string, res interface{}) ([]byte, error) {
 	resp, err := r.Client.Get(url)
 	return r.decodeJSON(resp, err, res)
+}
+
+// Request builds and executes HTTP request and returns the response
+func Request(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
+	req, err := http.NewRequest(method, uri, data)
+	if err == nil {
+		for _, headers := range headers {
+			for k, v := range headers {
+				req.Header.Add(k, v)
+			}
+		}
+	}
+
+	return req, nil
 }
