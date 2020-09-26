@@ -102,7 +102,7 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	// empty method becomes GET
-	req, err := util.Request(strings.ToUpper(p.method), p.url, b, p.headers)
+	req, err := util.NewRequest(strings.ToUpper(p.method), p.url, b, p.headers)
 	if err != nil {
 		return []byte{}, err
 	}

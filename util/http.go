@@ -11,6 +11,78 @@ import (
 	"time"
 )
 
+var (
+	// URLEncoding specifies application/x-www-form-urlencoded
+	URLEncoding = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
+
+	// JSONEncoding specifies application/json
+	JSONEncoding = map[string]string{"Content-Type": "application/json"}
+)
+
+// ReadBody reads HTTP response and returns error on response codes other than HTTP 200 or 204
+func ReadBody(resp *http.Response, err error) ([]byte, error) {
+	if err != nil {
+		return []byte{}, err
+	}
+	defer resp.Body.Close()
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// maintain body after reading
+	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
+	}
+
+	return b, nil
+}
+
+// DecodeJSON reads HTTP response and decodes JSON body
+func DecodeJSON(resp *http.Response, err error, res interface{}) ([]byte, error) {
+	b, err := ReadBody(resp, err)
+	if err == nil {
+		err = json.Unmarshal(b, &res)
+	}
+
+	return b, err
+}
+
+// NewRequest builds and executes HTTP request and returns the response
+func NewRequest(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
+	req, err := http.NewRequest(method, uri, data)
+	if err == nil {
+		for _, headers := range headers {
+			for k, v := range headers {
+				req.Header.Add(k, v)
+			}
+		}
+	}
+
+	return req, nil
+}
+
+type errorReader struct {
+	err error
+}
+
+func (r *errorReader) Read(p []byte) (int, error) {
+	return 0, r.err
+}
+
+// MarshalJSON marshals JSON into an io.Reader
+func MarshalJSON(data interface{}) io.Reader {
+	body, err := json.Marshal(data)
+	if err != nil {
+		return &errorReader{err: err}
+	}
+
+	return bytes.NewReader(body)
+}
+
 // HTTPHelper provides utility primitives
 type HTTPHelper struct {
 	Log    *Logger
@@ -44,6 +116,8 @@ func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
+	r.last = resp
+
 	if err == nil {
 		if b, err := httputil.DumpResponse(resp, false); err == nil {
 			if r.Log != nil {
@@ -55,72 +129,26 @@ func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, err
 }
 
-// Response codes other than HTTP 200 or 204 are raised as error
-func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
-	r.last = resp
-	if err != nil {
-		return []byte{}, err
-	}
-	defer resp.Body.Close()
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	// maintain body after reading
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
-	}
-
-	return b, nil
-}
-
-func (r *HTTPHelper) decodeJSON(resp *http.Response, err error, res interface{}) ([]byte, error) {
-	b, err := r.readBody(resp, err)
-	if err == nil {
-		err = json.Unmarshal(b, &res)
-	}
-
-	return b, err
-}
-
 // Do executes HTTP request and returns the response body
 func (r *HTTPHelper) Do(req *http.Request) ([]byte, error) {
 	resp, err := r.Client.Do(req)
-	return r.readBody(resp, err)
+	return ReadBody(resp, err)
 }
 
 // Get executes HTTP GET request and returns the response body
 func (r *HTTPHelper) Get(url string) ([]byte, error) {
 	resp, err := r.Client.Get(url)
-	return r.readBody(resp, err)
+	return ReadBody(resp, err)
 }
 
 // RequestJSON executes HTTP request and decodes JSON response
 func (r *HTTPHelper) RequestJSON(req *http.Request, res interface{}) ([]byte, error) {
 	resp, err := r.Client.Do(req)
-	return r.decodeJSON(resp, err, res)
+	return DecodeJSON(resp, err, res)
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response
 func (r *HTTPHelper) GetJSON(url string, res interface{}) ([]byte, error) {
 	resp, err := r.Client.Get(url)
-	return r.decodeJSON(resp, err, res)
-}
-
-// Request builds and executes HTTP request and returns the response
-func Request(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
-	req, err := http.NewRequest(method, uri, data)
-	if err == nil {
-		for _, headers := range headers {
-			for k, v := range headers {
-				req.Header.Add(k, v)
-			}
-		}
-	}
-
-	return req, nil
+	return DecodeJSON(resp, err, res)
 }

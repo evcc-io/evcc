@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"time"
 
@@ -112,12 +113,16 @@ func (evse *EVSEWifi) apiURL(service apiFunction) string {
 func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var pr EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
-	body, err := evse.GetJSON(url, &pr)
+	_, err := evse.GetJSON(url, &pr)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
 
 	if len(pr.List) != 1 {
+		var body []byte
+		if resp := evse.LastResponse(); resp != nil {
+			body, _ = ioutil.ReadAll(resp.Body)
+		}
 		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 

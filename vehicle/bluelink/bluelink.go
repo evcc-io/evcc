@@ -1,8 +1,6 @@
 package bluelink
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -107,16 +105,6 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	return v, nil
 }
 
-// jsonRequest builds an HTTP json request with headers and body
-func (v *API) jsonRequest(method, uri string, headers map[string]string, data interface{}) (*http.Request, error) {
-	body, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return util.Request(method, uri, bytes.NewReader(body), headers)
-}
-
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 
 func (v *API) getDeviceID() (string, error) {
@@ -134,7 +122,7 @@ func (v *API) getDeviceID() (string, error) {
 	}
 
 	var resp response
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.DeviceID, headers, data)
+	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.DeviceID, util.MarshalJSON(data), headers)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
 	}
@@ -162,15 +150,11 @@ func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
 }
 
 func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
-	headers := map[string]string{
-		"Content-type": "application/json",
-	}
-
 	data := map[string]interface{}{
 		"lang": "en",
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.Lang, headers, data)
+	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.Lang, util.MarshalJSON(data), util.JSONEncoding)
 	if err == nil {
 		_, err = cookieClient.Do(req)
 	}
@@ -179,16 +163,12 @@ func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
 }
 
 func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
-	headers := map[string]string{
-		"Content-type": "application/json",
-	}
-
 	data := map[string]interface{}{
 		"email":    v.user,
 		"password": v.password,
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.Login, headers, data)
+	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.Login, util.MarshalJSON(data), util.JSONEncoding)
 	if err != nil {
 		return "", err
 	}
@@ -217,7 +197,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
 	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
 
-	req, err := util.Request(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
+	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
 	if err != nil {
 		return "", err
 	}
@@ -244,7 +224,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	req, err := util.Request(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
+	req, err := util.NewRequest(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
 	if err == nil {
 		var resp response
 		if _, err = v.RequestJSON(req, &resp); err == nil {
@@ -302,7 +282,7 @@ func (v *API) getStatus() (float64, error) {
 
 	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
-	req, err := util.Request(http.MethodGet, uri, nil, headers)
+	req, err := util.NewRequest(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		_, err = v.RequestJSON(req, &resp)
 

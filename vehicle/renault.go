@@ -186,7 +186,7 @@ func (v *Renault) authFlow() error {
 }
 
 func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (*http.Request, error) {
-	req, err := util.Request(http.MethodGet, uri, nil, headers...)
+	req, err := util.NewRequest(http.MethodGet, uri, nil, headers...)
 	if err == nil {
 		req.URL.RawQuery = data.Encode()
 	}

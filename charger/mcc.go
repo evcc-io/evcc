@@ -128,12 +128,10 @@ func (mcc *MobileConnect) login(password string) error {
 		"pass": []string{mcc.password},
 	}
 
-	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	req, err := util.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()), util.URLEncoding)
 	if err != nil {
 		return err
 	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return mcc.fetchToken(req)
 }

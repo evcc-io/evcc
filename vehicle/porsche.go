@@ -1,10 +1,8 @@
 package vehicle
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -130,15 +128,13 @@ func (v *Porsche) login(user, password string) error {
 		"keeploggedin": []string{"false"},
 	}
 
-	reqLoginAuth, err := http.NewRequest(http.MethodPost, porscheLoginAuth, strings.NewReader(dataLoginAuth.Encode()))
+	req, err := util.NewRequest(http.MethodPost, porscheLoginAuth, strings.NewReader(dataLoginAuth.Encode()), util.URLEncoding)
 	if err != nil {
 		return err
 	}
-	reqLoginAuth.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	// process the auth so the session is authenticated
-	_, err = client.Do(reqLoginAuth)
-	if err != nil {
+	if _, err = client.Do(req); err != nil {
 		return err
 	}
 
@@ -156,23 +152,22 @@ func (v *Porsche) login(user, password string) error {
 		"code_challenge_method": []string{"S256"},
 	}
 
-	reqAPIAuth, err := http.NewRequest(http.MethodGet, porscheAPIAuth, nil)
-	if err != nil {
-		return err
-	}
-	reqAPIAuth.URL.RawQuery = dataAuth.Encode()
-
-	respAPIAuth, err := client.Do(reqAPIAuth)
-	if err != nil {
-		return err
+	req, err = http.NewRequest(http.MethodGet, porscheAPIAuth, nil)
+	if err == nil {
+		req.URL.RawQuery = dataAuth.Encode()
 	}
 
-	queryAPIAuth, err := url.ParseQuery(respAPIAuth.Request.URL.RawQuery)
+	resp, err = client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	authCode := queryAPIAuth.Get("code")
+	values, err = url.ParseQuery(resp.Request.URL.RawQuery)
+	if err != nil {
+		return err
+	}
+
+	authCode := values.Get("code")
 
 	codeVerifier := CodeVerifier.CodeChallengePlain()
 
@@ -185,23 +180,12 @@ func (v *Porsche) login(user, password string) error {
 		"code_verifier": []string{codeVerifier},
 	}
 
-	reqAPIToken, err := http.NewRequest(http.MethodPost, porscheAPIToken, strings.NewReader(dataAPIToken.Encode()))
-	if err != nil {
-		return err
-	}
-	reqAPIToken.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	respAPIToken, err := client.Do(reqAPIToken)
-	if err != nil {
-		return err
-	}
-
-	b, _ := ioutil.ReadAll(respAPIToken.Body)
+	req, err = util.NewRequest(http.MethodPost, porscheAPIToken, strings.NewReader(dataAPIToken.Encode()), util.URLEncoding)
 
 	var pr porscheTokenResponse
-	err = json.Unmarshal(b, &pr)
-	if err != nil {
-		return err
+	if err == nil {
+		resp, err = client.Do(req)
+		_, err = util.DecodeJSON(resp, err, &pr)
 	}
 
 	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
@@ -211,7 +195,7 @@ func (v *Porsche) login(user, password string) error {
 	v.token = pr.AccessToken
 	v.tokenValid = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
 
-	return nil
+	return err
 }
 
 func (v *Porsche) request(uri string) (*http.Request, error) {

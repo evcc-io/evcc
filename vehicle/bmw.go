@@ -91,11 +91,10 @@ func (v *BMW) login(user, password string) error {
 		"locale":        []string{"DE-de"},
 	}
 
-	req, err := http.NewRequest(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()))
+	req, err := util.NewRequest(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()), util.URLEncoding)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{
 		Timeout:       v.HTTPHelper.Client.Timeout,
