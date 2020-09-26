@@ -187,7 +187,7 @@ func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
 
 	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.Lang, headers, data)
 	if err == nil {
-		_, err = cookieClient.Request(req)
+		_, err = cookieClient.Do(req)
 	}
 
 	return err

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"time"
 )
 
@@ -22,6 +23,10 @@ func NewHTTPHelper(log *Logger) *HTTPHelper {
 		Log:    log,
 		Client: &http.Client{Timeout: 10 * time.Second},
 	}
+
+	// intercept for logging
+	r.Client.Transport = r
+
 	return r
 }
 
@@ -30,9 +35,23 @@ func (r *HTTPHelper) LastResponse() *http.Response {
 	return r.last
 }
 
+// RoundTrip implements http.Roundtripper
+func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
+	r.Log.TRACE.Println(req.RequestURI)
+
+	resp, err := http.DefaultTransport.RoundTrip(req)
+	if err == nil {
+		if b, err := httputil.DumpResponse(resp, false); err == nil {
+			r.Log.TRACE.Println(string(b))
+		}
+	}
+
+	return resp, err
+}
+
 // Response codes other than HTTP 200 or 204 are raised as error
 func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
-	r.last = nil
+	r.last = resp
 	if err != nil {
 		return []byte{}, err
 	}
@@ -50,7 +69,6 @@ func (r *HTTPHelper) readBody(resp *http.Response, err error) ([]byte, error) {
 		r.Log.TRACE.Printf("%s\n%s", resp.Request.URL.String(), string(b))
 	}
 
-	r.last = resp
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
 	}
@@ -67,8 +85,8 @@ func (r *HTTPHelper) decodeJSON(resp *http.Response, err error, res interface{})
 	return b, err
 }
 
-// Request executes HTTP request returns the response body
-func (r *HTTPHelper) Request(req *http.Request) ([]byte, error) {
+// Do executes HTTP request returns the response body
+func (r *HTTPHelper) Do(req *http.Request) ([]byte, error) {
 	resp, err := r.Client.Do(req)
 	return r.readBody(resp, err)
 }
@@ -86,8 +104,7 @@ func (r *HTTPHelper) Put(url string, body []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	resp, err := r.Client.Do(req)
-	return r.readBody(resp, err)
+	return r.Do(req)
 }
 
 // RequestJSON executes HTTP request and decodes JSON response
@@ -100,14 +117,4 @@ func (r *HTTPHelper) RequestJSON(req *http.Request, res interface{}) ([]byte, er
 func (r *HTTPHelper) GetJSON(url string, res interface{}) ([]byte, error) {
 	resp, err := r.Client.Get(url)
 	return r.decodeJSON(resp, err, res)
-}
-
-// PutJSON executes HTTP PUT request and returns the response body
-func (r *HTTPHelper) PutJSON(url string, data interface{}) ([]byte, error) {
-	body, err := json.Marshal(data)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return r.Put(url, body)
 }

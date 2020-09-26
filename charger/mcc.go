@@ -196,7 +196,7 @@ func (mcc *MobileConnect) getValue(uri string) ([]byte, error) {
 		return nil, err
 	}
 
-	return mcc.Request(req)
+	return mcc.Do(req)
 }
 
 // use http GET to fetch an escaped JSON string and unmarshal the data in result
@@ -206,7 +206,7 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 		return err
 	}
 
-	b, err := mcc.Request(req)
+	b, err := mcc.Do(req)
 	if err != nil {
 		return err
 	}
@@ -305,7 +305,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 		return err
 	}
 
-	b, err := mcc.Request(req)
+	b, err := mcc.Do(req)
 	if err != nil {
 		return err
 	}

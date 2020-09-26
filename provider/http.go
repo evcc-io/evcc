@@ -107,7 +107,7 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 		for k, v := range p.headers {
 			req.Header.Add(k, v)
 		}
-		return p.Request(req)
+		return p.Do(req)
 	}
 
 	return []byte{}, err
