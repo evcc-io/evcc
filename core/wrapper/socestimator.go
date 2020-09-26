@@ -8,6 +8,8 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+const chargeEfficiency = 0.9 // assume charge 90% efficiency
+
 // SocEstimator provides vehicle soc and charge duration
 // Vehicle SoC can be estimated to provide more granularity
 type SocEstimator struct {
@@ -40,8 +42,8 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 func (s *SocEstimator) Reset() {
 	s.prevSoC = 0
 	s.prevChargedEnergy = 0
-	s.capacity = float64(s.vehicle.Capacity()) * 1e3 // cache to simplify debugging
-	s.virtualCapacity = s.capacity / 0.9             // assume charge 90% efficiency
+	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
+	s.virtualCapacity = s.capacity / chargeEfficiency // initial capacity taking efficiency into account
 	s.energyPerSocStep = s.virtualCapacity / 100
 }
 
@@ -96,7 +98,7 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			// calculate gradient, wh per soc %
 			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
-				s.virtualCapacity = s.energyPerSocStep * 100 / 1e3
+				s.virtualCapacity = s.energyPerSocStep * 100
 				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.1fkWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
