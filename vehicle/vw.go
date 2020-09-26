@@ -1,9 +1,11 @@
 package vehicle
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httputil"
@@ -128,7 +130,7 @@ func (v *VW) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	resp, err := http.DefaultTransport.RoundTrip(req)
 	if err == nil {
-		b, err := httputil.DumpResponse(resp, false)
+		b, err := httputil.DumpResponse(resp, true)
 		if err == nil {
 			v.HTTPHelper.Log.TRACE.Println("\n" + string(b))
 		}
@@ -161,6 +163,38 @@ func (v *VW) request(method, uri string, data io.Reader, headers ...map[string]s
 	return req, nil
 }
 
+func (v *VW) dumpBody(resp *http.Response) {
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	v.HTTPHelper.Log.TRACE.Println(string(b))
+	panic("foo")
+}
+
+func (v *VW) loginURL(resp *http.Response) (string, error) {
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	res := struct {
+		ErrorCode int `json:",string"`
+		LoginURL  struct {
+			Path string
+		}
+	}{}
+
+	err = json.Unmarshal(b, &res)
+	if err == nil && res.ErrorCode != 0 {
+		err = fmt.Errorf("login url error code: %d", res.ErrorCode)
+	}
+
+	return res.LoginURL.Path, err
+}
+
 func (v *VW) authFlow() error {
 	var err error
 	var uri, body string
@@ -168,6 +202,7 @@ func (v *VW) authFlow() error {
 	var req *http.Request
 	var resp *http.Response
 
+	// audi only
 	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
 		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
 		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
@@ -178,17 +213,64 @@ func (v *VW) authFlow() error {
 	uri = "https://www.portal.volkswagen-we.com/portal/de_DE/web/guest/home"
 	resp, err = v.Client.Get(uri)
 
-	// GET www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
+	vars, err = formValues(resp.Body, "meta")
+	csrf := vars.csrf
+
+	// POST www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
+	ref := uri
 	uri = "https://www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url"
-	resp, err = v.Client.Get(uri)
+	req, err = v.request(http.MethodPost, uri, nil,
+		map[string]string{
+			"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
+			"Referer":         ref,
+			"Accept":          "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
+			"Accept-Language": "en-US,nl;q=0.7,en;q=0.3",
+			"X-CSRF-Token":    csrf,
+		},
+	)
+	resp, err = v.Client.Do(req)
 
-	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
-	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
-		"ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&" +
-		"response_type=code&state=gmiJOaB4&" +
-		"redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com"
+	if err == nil {
+		uri, err = v.loginURL(resp)
+	}
 
-	resp, err = v.Client.Get(uri)
+	var clientID string
+	_ = clientID
+	if err == nil {
+		var parsed *url.URL
+		parsed, err = url.Parse(uri)
+		if err == nil {
+			clientID = parsed.Query().Get("client_id")
+		}
+	}
+
+	if err == nil {
+		// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
+
+		// uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
+		// 	"ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&" +
+		// 	"response_type=code&state=gmiJOaB4&" +
+		// 	"redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com"
+
+		println("")
+		println(uri)
+		println("")
+		uri = strings.ReplaceAll(uri, " ", "%20")
+		println(uri)
+		println("")
+
+		req, err = v.request(http.MethodGet, uri, nil,
+			map[string]string{
+				"User-Agent":      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0",
+				"Referer":         ref,
+				"Accept":          "text/html,application/xhtml+xml,application/xml,application/json;q=0.9,*/*;q=0.8",
+				"Accept-Language": "en-US,nl;q=0.7,en;q=0.3",
+				"X-CSRF-Token":    csrf,
+			},
+		)
+		resp, err = v.Client.Do(req)
+	}
+
 	if err == nil {
 		// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 		uri = resp.Header.Get("Location")
