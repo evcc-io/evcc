@@ -20,8 +20,12 @@ type Helper struct {
 // NewHelper creates http helper for simplified PUT GET logic
 func NewHelper(log *util.Logger) *Helper {
 	r := &Helper{
-		log:    log.TRACE,
 		Client: &http.Client{Timeout: 10 * time.Second},
+	}
+
+	// add logger
+	if log != nil {
+		r.log = log.TRACE
 	}
 
 	// intercept for logging
