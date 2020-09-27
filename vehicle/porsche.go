@@ -208,12 +208,11 @@ func (v *Porsche) request(uri string) (*http.Request, error) {
 		}
 	}
 
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err == nil {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", v.token))
-	}
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", v.token),
+	})
 
-	return req, nil
+	return req, err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
