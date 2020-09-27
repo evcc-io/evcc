@@ -46,6 +46,8 @@ type vwChargerResponse struct {
 	}
 }
 
+// based on https://github.com/wez3/volkswagen-carnet-client
+
 // VW is an api.Vehicle implementation for VW cars
 type VW struct {
 	*embed
