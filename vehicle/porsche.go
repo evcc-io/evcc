@@ -109,15 +109,15 @@ func (v *Porsche) login(user, password string) error {
 		return err
 	}
 
-	values, err := url.ParseQuery(resp.Request.URL.RawQuery)
+	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
 		return err
 	}
 
-	sec := values.Get("sec")
-	resume := values.Get("resume")
-	state := values.Get("state")
-	thirdPartyID := values.Get("thirdPartyId")
+	sec := query.Get("sec")
+	resume := query.Get("resume")
+	state := query.Get("state")
+	thirdPartyID := query.Get("thirdPartyId")
 
 	dataLoginAuth := url.Values{
 		"sec":          []string{sec},
@@ -163,12 +163,12 @@ func (v *Porsche) login(user, password string) error {
 		return err
 	}
 
-	values, err = url.ParseQuery(resp.Request.URL.RawQuery)
+	query, err = url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
 		return err
 	}
 
-	authCode := values.Get("code")
+	authCode := query.Get("code")
 
 	codeVerifier := CodeVerifier.CodeChallengePlain()
 

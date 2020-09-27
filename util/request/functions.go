@@ -39,11 +39,13 @@ func ReadBody(resp *http.Response, err error) ([]byte, error) {
 	return b, nil
 }
 
-// DecodeJSON reads HTTP response and decodes JSON body
+// DecodeJSON reads HTTP response and decodes JSON body if error is nil
 func DecodeJSON(resp *http.Response, err error, res interface{}) error {
-	b, err := ReadBody(resp, err)
 	if err == nil {
-		err = json.Unmarshal(b, &res)
+		var b []byte
+		if b, err = ReadBody(resp, err); err == nil {
+			err = json.Unmarshal(b, &res)
+		}
 	}
 
 	return err
