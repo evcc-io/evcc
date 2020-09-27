@@ -114,11 +114,9 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	// track cookies and don't follow redirects
-	v.Client = &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+	v.Client.Jar = jar
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
 
 	if err == nil {

@@ -48,6 +48,7 @@ func (r *helperTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if r.log != nil {
 		msg := fmt.Sprintf("%s %s", req.Method, req.URL)
 		if resp != nil {
+			msg += "\n" + resp.Status
 			if body, _ := ReadBody(resp); len(body) > 0 {
 				msg += "\n" + strings.TrimSpace(string(body))
 			}
