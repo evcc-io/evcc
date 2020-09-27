@@ -87,10 +87,7 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	}
 
 	// ignore the self signed certificate
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	mcc.Helper.Client.Transport = customTransport
+	mcc.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 
 	return mcc, nil
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -78,9 +77,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		customTransport := http.DefaultTransport.(*http.Transport).Clone()
-		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		p.Helper.Client.Transport = customTransport
+		p.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	}
 
 	if cc.Jq != "" {

@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -78,9 +77,7 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 	}
 
 	// ignore the self signed certificate
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	m.Helper.Client.Transport = customTransport
+	m.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)

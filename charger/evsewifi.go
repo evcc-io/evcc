@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strings"
 	"time"
 
@@ -122,14 +121,14 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	if len(pr.List) != 1 {
 		var body []byte
 		if resp := evse.LastResponse(); resp != nil {
-			body, _ = ioutil.ReadAll(resp.Body)
+			body, _ = request.ReadBody(resp, nil)
 		}
 		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
 	params := pr.List[0]
 	if !params.AlwaysActive {
-		evse.Helper.Log.WARN.Println("evse should be configured to remote mode")
+		evse.Log.WARN.Println("evse should be configured to remote mode")
 	}
 
 	evse.alwaysActive = params.AlwaysActive
