@@ -28,7 +28,18 @@ type vwVehiclesResponse struct {
 }
 
 type vwChargerResponse struct {
-	ErrorCode         int `json:",string"`
+	ErrorCode int `json:",string"`
+	// /-/emanager/get-emanager
+	EManager struct {
+		RBC struct {
+			Status struct {
+				BatteryPercentage      int
+				ChargingRemaningHour   int `json:",string"`
+				ChargingRemaningMinute int `json:",string"`
+			}
+		}
+	}
+	// /-/vsr/get-vsr
 	VehicleStatusData struct {
 		BatteryRange int
 		BatteryLevel int
@@ -42,6 +53,7 @@ type VW struct {
 	user, password, vin string
 	baseURI, csrf       string
 	chargeStateG        func() (float64, error)
+	finishTimeG         func() (time.Time, error)
 }
 
 func init() {
@@ -71,6 +83,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -162,7 +175,7 @@ func (v *VW) authFlow() error {
 
 		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
 		if err == nil {
-			resp, err = v.Client.Do(req)
+			resp, err = v.Do(req)
 			uri = resp.Header.Get("Location")
 
 			v.baseURI = uri
@@ -198,7 +211,7 @@ func (v *VW) vehicles() ([]string, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *VW) chargeState() (float64, error) {
-	uri := v.baseURI + "/-/vsr/get-vsr"
+	uri := v.baseURI + "/-/emanager/get-emanager"
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":       "application/json",
 		"X-CSRF-Token": v.csrf,
@@ -209,10 +222,38 @@ func (v *VW) chargeState() (float64, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	return float64(res.VehicleStatusData.BatteryLevel), err
+	return float64(res.EManager.RBC.Status.BatteryPercentage), err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *VW) ChargeState() (float64, error) {
 	return v.chargeStateG()
+}
+
+// finishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *VW) finishTime() (time.Time, error) {
+	uri := v.baseURI + "/-/emanager/get-emanager"
+	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
+		"Accept":       "application/json",
+		"X-CSRF-Token": v.csrf,
+	})
+
+	var res vwChargerResponse
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	var duration time.Duration
+	if err == nil {
+		hour := res.EManager.RBC.Status.ChargingRemaningHour
+		min := res.EManager.RBC.Status.ChargingRemaningMinute
+		duration = time.Hour*time.Duration(hour) + time.Minute*time.Duration(min)
+	}
+
+	return time.Now().Add(duration), err
+}
+
+// FinishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *VW) FinishTime() (time.Time, error) {
+	return v.finishTimeG()
 }
