@@ -148,7 +148,7 @@ func (v *BMW) vehicles() ([]string, error) {
 
 	req, err := v.request(uri)
 	if err == nil {
-		err = v.RequestJSON(req, &br)
+		err = v.DoJSON(req, &br)
 	}
 
 	if err == nil {
@@ -170,7 +170,7 @@ func (v *BMW) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	err = v.RequestJSON(req, &br)
+	err = v.DoJSON(req, &br)
 	return br.AttributesMap.ChargingLevelHv, err
 }
 

@@ -1,8 +1,10 @@
 package request
 
 import (
+	"fmt"
+	"log"
 	"net/http"
-	"net/http/httputil"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -10,7 +12,7 @@ import (
 
 // Helper provides utility primitives
 type Helper struct {
-	Log    *util.Logger
+	log    *log.Logger
 	Client *http.Client
 	last   *http.Response // last response
 }
@@ -18,12 +20,12 @@ type Helper struct {
 // NewHelper creates http helper for simplified PUT GET logic
 func NewHelper(log *util.Logger) *Helper {
 	r := &Helper{
-		Log:    log,
+		log:    log.TRACE,
 		Client: &http.Client{Timeout: 10 * time.Second},
 	}
 
 	// intercept for logging
-	r.Client.Transport = r
+	r.Transport(http.DefaultTransport)
 
 	return r
 }
@@ -33,48 +35,74 @@ func (r *Helper) LastResponse() *http.Response {
 	return r.last
 }
 
-// RoundTrip implements http.Roundtripper
-func (r *Helper) RoundTrip(req *http.Request) (*http.Response, error) {
-	println("TRIPPER")
+type helperTransport struct {
+	log          *log.Logger
+	lastResponse func(*http.Response)
+	roundTripper http.RoundTripper
+}
 
-	if r.Log != nil {
-		r.Log.TRACE.Println(req.RequestURI)
-	}
+func (r *helperTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	resp, err := r.roundTripper.RoundTrip(req)
+	r.lastResponse(resp)
 
-	resp, err := http.DefaultTransport.RoundTrip(req)
-	r.last = resp
-
-	if err == nil {
-		if b, err := httputil.DumpResponse(resp, false); err == nil {
-			if r.Log != nil {
-				r.Log.TRACE.Println(string(b))
+	if r.log != nil {
+		msg := fmt.Sprintf("%s %s", req.Method, req.URL)
+		if resp != nil {
+			if body, _ := ReadBody(resp); len(body) > 0 {
+				msg += "\n" + strings.TrimSpace(string(body))
 			}
 		}
+		r.log.Println(msg)
 	}
 
 	return resp, err
 }
 
+// Transport wraps the provided transport with logging and sets it as client transport
+func (r *Helper) Transport(roundTripper http.RoundTripper) {
+	r.Client.Transport = &helperTransport{
+		log:          r.log,
+		roundTripper: roundTripper,
+		lastResponse: func(resp *http.Response) {
+			r.last = resp
+		},
+	}
+}
+
 // Do executes HTTP request and returns the response body
 func (r *Helper) Do(req *http.Request) ([]byte, error) {
 	resp, err := r.Client.Do(req)
-	return ReadBody(resp, err)
+	var body []byte
+	if err == nil {
+		body, err = ReadBody(resp)
+	}
+	return body, err
 }
 
 // Get executes HTTP GET request and returns the response body
 func (r *Helper) Get(url string) ([]byte, error) {
 	resp, err := r.Client.Get(url)
-	return ReadBody(resp, err)
+	var body []byte
+	if err == nil {
+		body, err = ReadBody(resp)
+	}
+	return body, err
 }
 
-// RequestJSON executes HTTP request and decodes JSON response
-func (r *Helper) RequestJSON(req *http.Request, res interface{}) error {
+// DoJSON executes HTTP request and decodes JSON response
+func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 	resp, err := r.Client.Do(req)
-	return DecodeJSON(resp, err, res)
+	if err == nil {
+		err = DecodeJSON(resp, &res)
+	}
+	return err
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response
 func (r *Helper) GetJSON(url string, res interface{}) error {
 	resp, err := r.Client.Get(url)
-	return DecodeJSON(resp, err, res)
+	if err == nil {
+		err = DecodeJSON(resp, &res)
+	}
+	return err
 }

@@ -296,7 +296,7 @@ func (v *Audi) authFlow() error {
 		)
 	}
 	if err == nil {
-		err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 	}
 
 	if err == nil {
@@ -311,7 +311,7 @@ func (v *Audi) authFlow() error {
 		req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	}
 	if err == nil {
-		err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 		v.tokens = tokens
 	}
 
@@ -334,7 +334,7 @@ func (v *Audi) refreshToken() error {
 	req, err := v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	if err == nil {
 		var tokens audiTokenResponse
-		err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 		if err == nil {
 			v.tokens = tokens
 		}
@@ -350,7 +350,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 	})
 
 	if err == nil {
-		err = v.RequestJSON(req, &res)
+		err = v.DoJSON(req, &res)
 
 		// token expired?
 		if err != nil {
@@ -370,7 +370,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 			// retry original requests
 			if err == nil {
 				req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-				err = v.RequestJSON(req, &res)
+				err = v.DoJSON(req, &res)
 			}
 		}
 	}

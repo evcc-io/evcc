@@ -53,6 +53,7 @@ type Config struct {
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
+	log      *util.Logger
 	user     string
 	password string
 	chargeG  func() (float64, error)
@@ -92,6 +93,7 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	}
 
 	v := &API{
+		log:      log,
 		Helper:   request.NewHelper(log),
 		config:   config,
 		user:     user,
@@ -125,14 +127,14 @@ func (v *API) getDeviceID() (string, error) {
 	var resp response
 	req, err := request.New(http.MethodPost, v.config.URI+v.config.DeviceID, request.MarshalJSON(data), headers)
 	if err == nil {
-		err = v.RequestJSON(req, &resp)
+		err = v.DoJSON(req, &resp)
 	}
 
 	return resp.ResMsg.DeviceID, err
 }
 
 func (v *API) getCookies() (cookieClient *request.Helper, err error) {
-	cookieClient = request.NewHelper(v.Log)
+	cookieClient = request.NewHelper(v.log)
 	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -179,7 +181,7 @@ func (v *API) login(cookieClient *request.Helper) (string, error) {
 	}
 
 	var accCode string
-	if err = cookieClient.RequestJSON(req, &redirect); err == nil {
+	if err = cookieClient.DoJSON(req, &redirect); err == nil {
 		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
 			accCode = parsed.Query().Get("code")
 		}
@@ -209,7 +211,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	}
 
 	var accToken string
-	if err = v.RequestJSON(req, &tokens); err == nil {
+	if err = v.DoJSON(req, &tokens); err == nil {
 		accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
 	}
 
@@ -228,7 +230,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
 	if err == nil {
 		var resp response
-		if err = v.RequestJSON(req, &resp); err == nil {
+		if err = v.DoJSON(req, &resp); err == nil {
 			if len(resp.ResMsg.Vehicles) == 1 {
 				return resp.ResMsg.Vehicles[0].VehicleID, nil
 			}
@@ -285,7 +287,7 @@ func (v *API) getStatus() (float64, error) {
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
-		err = v.RequestJSON(req, &resp)
+		err = v.DoJSON(req, &resp)
 
 		if err != nil {
 			resp := v.LastResponse()

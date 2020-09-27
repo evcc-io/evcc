@@ -77,7 +77,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 	}
 
 	if cc.Jq != "" {

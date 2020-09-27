@@ -20,6 +20,7 @@ const retryDelay = 5 * time.Second
 // Socket implements websocket request provider
 type Socket struct {
 	*request.Helper
+	log     *util.Logger
 	mux     *util.Waiter
 	url     string
 	headers map[string]string
@@ -46,6 +47,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 	log := util.NewLogger("ws")
 
 	p := &Socket{
+		log:     log,
 		Helper:  request.NewHelper(log),
 		mux:     util.NewWaiter(cc.Timeout, func() { log.TRACE.Println("wait for initial value") }),
 		url:     cc.URI,
@@ -62,7 +64,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 	}
 
 	if cc.Jq != "" {
@@ -80,8 +82,6 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) 
 }
 
 func (p *Socket) listen() {
-	log := p.Helper.Log
-
 	headers := make(http.Header)
 	for k, v := range p.headers {
 		headers.Set(k, v)
@@ -90,7 +90,7 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
 		if err != nil {
-			log.ERROR.Println(err)
+			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
 			continue
 		}
@@ -98,12 +98,12 @@ func (p *Socket) listen() {
 		for {
 			_, b, err := client.ReadMessage()
 			if err != nil {
-				log.TRACE.Println("read:", err)
+				p.log.TRACE.Println("read:", err)
 				_ = client.Close()
 				break
 			}
 
-			log.TRACE.Printf("recv: %s", b)
+			p.log.TRACE.Printf("recv: %s", b)
 
 			p.mux.Lock()
 			if p.jq != nil {

@@ -18,10 +18,7 @@ var (
 )
 
 // ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx
-func ReadBody(resp *http.Response, err error) ([]byte, error) {
-	if err != nil {
-		return []byte{}, err
-	}
+func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 
 	b, err := ioutil.ReadAll(resp.Body)
@@ -40,12 +37,10 @@ func ReadBody(resp *http.Response, err error) ([]byte, error) {
 }
 
 // DecodeJSON reads HTTP response and decodes JSON body if error is nil
-func DecodeJSON(resp *http.Response, err error, res interface{}) error {
+func DecodeJSON(resp *http.Response, res interface{}) error {
+	b, err := ReadBody(resp)
 	if err == nil {
-		var b []byte
-		if b, err = ReadBody(resp, err); err == nil {
-			err = json.Unmarshal(b, &res)
-		}
+		err = json.Unmarshal(b, &res)
 	}
 
 	return err

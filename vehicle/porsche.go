@@ -186,7 +186,9 @@ func (v *Porsche) login(user, password string) error {
 	var pr porscheTokenResponse
 	if err == nil {
 		resp, err = client.Do(req)
-		err = request.DecodeJSON(resp, err, &pr)
+		if err == nil {
+			err = request.DecodeJSON(resp, &pr)
+		}
 	}
 
 	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
@@ -223,7 +225,7 @@ func (v *Porsche) chargeState() (float64, error) {
 	}
 
 	var pr porscheVehicleResponse
-	err = v.RequestJSON(req, &pr)
+	err = v.DoJSON(req, &pr)
 
 	return pr.CarControlData.BatteryLevel.Value, err
 }

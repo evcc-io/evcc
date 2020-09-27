@@ -47,6 +47,7 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*request.Helper
+	log          *util.Logger
 	uri          string
 	alwaysActive bool
 }
@@ -97,8 +98,11 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
+	log := util.NewLogger("evse")
+
 	evse := &EVSEWifi{
-		Helper: request.NewHelper(util.NewLogger("wifi")),
+		log:    log,
+		Helper: request.NewHelper(log),
 		uri:    strings.TrimRight(uri, "/"),
 	}
 
@@ -121,14 +125,14 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	if len(pr.List) != 1 {
 		var body []byte
 		if resp := evse.LastResponse(); resp != nil {
-			body, _ = request.ReadBody(resp, nil)
+			body, _ = request.ReadBody(resp)
 		}
 		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
 	params := pr.List[0]
 	if !params.AlwaysActive {
-		evse.Log.WARN.Println("evse should be configured to remote mode")
+		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
 
 	evse.alwaysActive = params.AlwaysActive

@@ -10,10 +10,15 @@ type Transport struct {
 	*http.Transport
 }
 
+// NewDefaultTransport creates a clone of the http.DefaultTransport
+func NewDefaultTransport() *http.Transport {
+	return http.DefaultTransport.(*http.Transport).Clone()
+}
+
 // NewTransport creates an HTTP transport
 func NewTransport() *Transport {
 	t := &Transport{
-		Transport: http.DefaultTransport.(*http.Transport).Clone(),
+		Transport: NewDefaultTransport(),
 	}
 
 	return t

@@ -87,7 +87,7 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	}
 
 	// ignore the self signed certificate
-	mcc.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	mcc.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 
 	return mcc, nil
 }
@@ -100,7 +100,7 @@ func (mcc *MobileConnect) apiURL(api apiFunction) string {
 // process the http request to fetch the auth token for a login or refresh request
 func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
-	err := mcc.RequestJSON(request, &tr)
+	err := mcc.DoJSON(request, &tr)
 	if err == nil {
 		if len(tr.Token) == 0 {
 			return fmt.Errorf("response: %s", tr.Error)

@@ -77,7 +77,7 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 	}
 
 	// ignore the self signed certificate
-	m.Helper.Client.Transport = request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true})
+	m.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)

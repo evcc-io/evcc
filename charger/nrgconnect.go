@@ -65,6 +65,7 @@ type NRGDeviceMetadata struct {
 // NRGKickConnect charger implementation
 type NRGKickConnect struct {
 	*request.Helper
+	log      *util.Logger
 	uri      string
 	mac      string
 	password string
@@ -88,13 +89,14 @@ func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, err
 func NewNRGKickConnect(uri, mac, password string) (*NRGKickConnect, error) {
 	log := util.NewLogger("nrgconn")
 	nrg := &NRGKickConnect{
+		log:      log,
 		Helper:   request.NewHelper(log),
 		uri:      uri,
 		mac:      mac,
 		password: password,
 	}
 
-	nrg.Log.WARN.Println("-- experimental --")
+	nrg.log.WARN.Println("-- experimental --")
 
 	return nrg, nil
 }
@@ -108,7 +110,7 @@ func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
 	if err != nil {
 		var res NRGResponse
 		if resp := nrg.LastResponse(); resp != nil {
-			_ = request.DecodeJSON(resp, nil, &res)
+			_ = request.DecodeJSON(resp, &res)
 		}
 
 		return fmt.Errorf("response: %s", res.Message)
@@ -122,7 +124,7 @@ func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data))
 
 	if err == nil {
-		if err = nrg.RequestJSON(req, &resp); err != nil {
+		if err = nrg.DoJSON(req, &resp); err != nil {
 			if resp.Message != "" {
 				return fmt.Errorf("response: %s", resp.Message)
 			}

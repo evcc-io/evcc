@@ -208,7 +208,7 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.SessionInfo.CookieValue, err
@@ -226,7 +226,7 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.Data.PersonID, err
@@ -246,7 +246,7 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.IDToken, err
@@ -262,7 +262,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	var kr kamereonResponse
 	req, err := v.request(uri, data, headers)
 	if err == nil {
-		err = v.RequestJSON(req, &kr)
+		err = v.DoJSON(req, &kr)
 	}
 
 	return kr, err
