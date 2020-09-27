@@ -176,9 +176,7 @@ func (v *Audi) authFlow() error {
 			url.QueryEscape("token id_token"),
 		)
 
-		req, err = vwidentity.Request(http.MethodPost, uri, strings.NewReader(body),
-			map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
-		)
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
 	}
 	if err == nil {
 		err = v.DoJSON(req, &tokens)
