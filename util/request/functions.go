@@ -17,7 +17,7 @@ var (
 	JSONEncoding = map[string]string{"Content-Type": "application/json"}
 )
 
-// ReadBody reads HTTP response and returns error on response codes other than HTTP 200 or 204
+// ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx
 func ReadBody(resp *http.Response, err error) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
@@ -32,7 +32,7 @@ func ReadBody(resp *http.Response, err error) ([]byte, error) {
 	// maintain body after reading
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
 	}
 
