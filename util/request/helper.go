@@ -12,9 +12,9 @@ import (
 
 // Helper provides utility primitives
 type Helper struct {
-	log    *log.Logger
-	Client *http.Client
-	last   *http.Response // last response
+	*http.Client
+	log  *log.Logger
+	last *http.Response // last response
 }
 
 // NewHelper creates http helper for simplified PUT GET logic
@@ -74,9 +74,9 @@ func (r *Helper) Transport(roundTripper http.RoundTripper) {
 	}
 }
 
-// Do executes HTTP request and returns the response body
-func (r *Helper) Do(req *http.Request) ([]byte, error) {
-	resp, err := r.Client.Do(req)
+// DoBody executes HTTP request and returns the response body
+func (r *Helper) DoBody(req *http.Request) ([]byte, error) {
+	resp, err := r.Do(req)
 	var body []byte
 	if err == nil {
 		body, err = ReadBody(resp)
@@ -84,9 +84,9 @@ func (r *Helper) Do(req *http.Request) ([]byte, error) {
 	return body, err
 }
 
-// Get executes HTTP GET request and returns the response body
-func (r *Helper) Get(url string) ([]byte, error) {
-	resp, err := r.Client.Get(url)
+// GetBody executes HTTP GET request and returns the response body
+func (r *Helper) GetBody(url string) ([]byte, error) {
+	resp, err := r.Get(url)
 	var body []byte
 	if err == nil {
 		body, err = ReadBody(resp)
@@ -96,7 +96,7 @@ func (r *Helper) Get(url string) ([]byte, error) {
 
 // DoJSON executes HTTP request and decodes JSON response
 func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
-	resp, err := r.Client.Do(req)
+	resp, err := r.Do(req)
 	if err == nil {
 		err = DecodeJSON(resp, &res)
 	}
@@ -105,7 +105,7 @@ func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 
 // GetJSON executes HTTP GET request and decodes JSON response
 func (r *Helper) GetJSON(url string, res interface{}) error {
-	resp, err := r.Client.Get(url)
+	resp, err := r.Get(url)
 	if err == nil {
 		err = DecodeJSON(resp, &res)
 	}

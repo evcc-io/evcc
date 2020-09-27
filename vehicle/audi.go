@@ -136,7 +136,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func (v *Audi) redirect(resp *http.Response, err error) (*http.Response, error) {
 	if err == nil {
 		uri := resp.Header.Get("Location")
-		resp, err = v.Client.Get(uri)
+		resp, err = v.Get(uri)
 	}
 
 	return resp, err
@@ -217,10 +217,10 @@ func (v *Audi) authFlow() error {
 		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
 		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
 		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
-	resp, err = v.Client.Get(uri)
+	resp, err = v.Get(uri)
 	if err == nil {
 		uri = resp.Header.Get("Location")
-		resp, err = v.Client.Get(uri)
+		resp, err = v.Get(uri)
 	}
 
 	if err == nil {
@@ -236,7 +236,7 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	if err == nil {
@@ -245,7 +245,7 @@ func (v *Audi) authFlow() error {
 
 	}
 	if err == nil {
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	if err == nil {
@@ -265,7 +265,7 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	for i := 6; i < 9; i++ {

@@ -187,13 +187,13 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
-	return evse.checkError(evse.Get(url))
+	return evse.checkError(evse.GetBody(url))
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
-	return evse.checkError(evse.Get(url))
+	return evse.checkError(evse.GetBody(url))
 }
 
 // ChargingTime yields current charge run duration

@@ -105,7 +105,7 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	return p.Do(req)
+	return p.DoBody(req)
 }
 
 // FloatGetter parses float from request
