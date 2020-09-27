@@ -9,6 +9,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -46,7 +47,7 @@ type EVSEListEntry struct {
 
 // EVSEWifi charger implementation
 type EVSEWifi struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri          string
 	alwaysActive bool
 }
@@ -98,8 +99,8 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	evse := &EVSEWifi{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:        strings.TrimRight(uri, "/"),
+		Helper: request.NewHelper(util.NewLogger("wifi")),
+		uri:    strings.TrimRight(uri, "/"),
 	}
 
 	return evse, nil
@@ -113,7 +114,7 @@ func (evse *EVSEWifi) apiURL(service apiFunction) string {
 func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var pr EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
-	_, err := evse.GetJSON(url, &pr)
+	err := evse.GetJSON(url, &pr)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
@@ -128,7 +129,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 
 	params := pr.List[0]
 	if !params.AlwaysActive {
-		evse.HTTPHelper.Log.WARN.Println("evse should be configured to remote mode")
+		evse.Helper.Log.WARN.Println("evse should be configured to remote mode")
 	}
 
 	evse.alwaysActive = params.AlwaysActive

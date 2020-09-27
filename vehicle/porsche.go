@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
 )
@@ -49,7 +50,7 @@ type porscheVehicleResponse struct {
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
 	*embed
-	*util.HTTPHelper
+	*request.Helper
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
@@ -73,11 +74,11 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Porsche{
-		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("porsche")),
-		user:       cc.User,
-		password:   cc.Password,
-		vin:        cc.VIN,
+		embed:    &embed{cc.Title, cc.Capacity},
+		Helper:   request.NewHelper(util.NewLogger("porsche")),
+		user:     cc.User,
+		password: cc.Password,
+		vin:      cc.VIN,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -96,7 +97,7 @@ func (v *Porsche) login(user, password string) error {
 	// the flow is using Oauth2 and >10 redirects
 	client := &http.Client{
 		Jar:     jar,
-		Timeout: v.HTTPHelper.Client.Timeout,
+		Timeout: v.Helper.Client.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return nil // allow >10 redirects
 		},
@@ -128,7 +129,7 @@ func (v *Porsche) login(user, password string) error {
 		"keeploggedin": []string{"false"},
 	}
 
-	req, err := util.NewRequest(http.MethodPost, porscheLoginAuth, strings.NewReader(dataLoginAuth.Encode()), util.URLEncoding)
+	req, err := request.New(http.MethodPost, porscheLoginAuth, strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
 	if err != nil {
 		return err
 	}
@@ -180,12 +181,12 @@ func (v *Porsche) login(user, password string) error {
 		"code_verifier": []string{codeVerifier},
 	}
 
-	req, err = util.NewRequest(http.MethodPost, porscheAPIToken, strings.NewReader(dataAPIToken.Encode()), util.URLEncoding)
+	req, err = request.New(http.MethodPost, porscheAPIToken, strings.NewReader(dataAPIToken.Encode()), request.URLEncoding)
 
 	var pr porscheTokenResponse
 	if err == nil {
 		resp, err = client.Do(req)
-		_, err = util.DecodeJSON(resp, err, &pr)
+		err = request.DecodeJSON(resp, err, &pr)
 	}
 
 	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
@@ -222,7 +223,7 @@ func (v *Porsche) chargeState() (float64, error) {
 	}
 
 	var pr porscheVehicleResponse
-	_, err = v.RequestJSON(req, &pr)
+	err = v.RequestJSON(req, &pr)
 
 	return pr.CarControlData.BatteryLevel.Value, err
 }

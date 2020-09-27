@@ -12,6 +12,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -54,7 +55,7 @@ type MCCCurrentCableInformation struct {
 
 // MobileConnect charger supporting devices from Audi, Bentley, Porsche
 type MobileConnect struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri              string
 	password         string
 	token            string
@@ -80,16 +81,16 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	mcc := &MobileConnect{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("mcc")),
-		uri:        strings.TrimRight(uri, "/"),
-		password:   password,
+		Helper:   request.NewHelper(util.NewLogger("mcc")),
+		uri:      strings.TrimRight(uri, "/"),
+		password: password,
 	}
 
 	// ignore the self signed certificate
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	mcc.HTTPHelper.Client.Transport = customTransport
+	mcc.Helper.Client.Transport = customTransport
 
 	return mcc, nil
 }
@@ -102,7 +103,7 @@ func (mcc *MobileConnect) apiURL(api apiFunction) string {
 // process the http request to fetch the auth token for a login or refresh request
 func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
-	_, err := mcc.RequestJSON(request, &tr)
+	err := mcc.RequestJSON(request, &tr)
 	if err == nil {
 		if len(tr.Token) == 0 {
 			return fmt.Errorf("response: %s", tr.Error)
@@ -128,7 +129,7 @@ func (mcc *MobileConnect) login(password string) error {
 		"pass": []string{mcc.password},
 	}
 
-	req, err := util.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()), util.URLEncoding)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
 		return err
 	}

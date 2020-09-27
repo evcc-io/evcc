@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -65,7 +66,7 @@ type NRGDeviceMetadata struct {
 
 // NRGKickConnect charger implementation
 type NRGKickConnect struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri      string
 	mac      string
 	password string
@@ -89,13 +90,13 @@ func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, err
 func NewNRGKickConnect(uri, mac, password string) (*NRGKickConnect, error) {
 	log := util.NewLogger("nrgconn")
 	nrg := &NRGKickConnect{
-		HTTPHelper: util.NewHTTPHelper(log),
-		uri:        uri,
-		mac:        mac,
-		password:   password,
+		Helper:   request.NewHelper(log),
+		uri:      uri,
+		mac:      mac,
+		password: password,
 	}
 
-	nrg.HTTPHelper.Log.WARN.Println("-- experimental --")
+	nrg.Helper.Log.WARN.Println("-- experimental --")
 
 	return nrg, nil
 }
@@ -105,14 +106,14 @@ func (nrg *NRGKickConnect) apiURL(api apiFunction) string {
 }
 
 func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
-	b, err := nrg.GetJSON(url, &result)
-	if err != nil && len(b) > 0 {
-		var error NRGResponse
-		if err := json.Unmarshal(b, &error); err != nil {
-			return err
+	err := nrg.GetJSON(url, &result)
+	if err != nil {
+		var res NRGResponse
+		if resp := nrg.LastResponse(); resp != nil {
+			_ = request.DecodeJSON(resp, nil, &res)
 		}
 
-		return fmt.Errorf("response: %s", error.Message)
+		return fmt.Errorf("response: %s", res.Message)
 	}
 
 	return err
@@ -128,7 +129,7 @@ func (nrg *NRGKickConnect) putJSON(url string, request interface{}) error {
 	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(body))
 
 	if err == nil {
-		if _, err = nrg.RequestJSON(req, &resp); err != nil {
+		if err = nrg.RequestJSON(req, &resp); err != nil {
 			return err
 		}
 	}

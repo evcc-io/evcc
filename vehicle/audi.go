@@ -14,6 +14,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -68,7 +69,7 @@ type audiChargerResponse struct {
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
-	*util.HTTPHelper
+	*request.Helper
 	user, password, vin string
 	brand, country      string
 	tokens              audiTokenResponse
@@ -95,13 +96,13 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("audi")
 
 	v := &Audi{
-		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(log),
-		user:       cc.User,
-		password:   cc.Password,
-		vin:        cc.VIN,
-		brand:      "Audi",
-		country:    "DE",
+		embed:    &embed{cc.Title, cc.Capacity},
+		Helper:   request.NewHelper(log),
+		user:     cc.User,
+		password: cc.Password,
+		vin:      cc.VIN,
+		brand:    "Audi",
+		country:  "DE",
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -295,7 +296,7 @@ func (v *Audi) authFlow() error {
 		)
 	}
 	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.RequestJSON(req, &tokens)
 	}
 
 	if err == nil {
@@ -310,7 +311,7 @@ func (v *Audi) authFlow() error {
 		req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	}
 	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.RequestJSON(req, &tokens)
 		v.tokens = tokens
 	}
 
@@ -333,7 +334,7 @@ func (v *Audi) refreshToken() error {
 	req, err := v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	if err == nil {
 		var tokens audiTokenResponse
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.RequestJSON(req, &tokens)
 		if err == nil {
 			v.tokens = tokens
 		}
@@ -349,7 +350,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 	})
 
 	if err == nil {
-		_, err = v.RequestJSON(req, &res)
+		err = v.RequestJSON(req, &res)
 
 		// token expired?
 		if err != nil {
@@ -369,7 +370,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 			// retry original requests
 			if err == nil {
 				req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-				_, err = v.RequestJSON(req, &res)
+				err = v.RequestJSON(req, &res)
 			}
 		}
 	}

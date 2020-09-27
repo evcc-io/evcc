@@ -11,6 +11,7 @@ import (
 
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 	"golang.org/x/net/publicsuffix"
@@ -51,7 +52,7 @@ type Config struct {
 // API implements the Kia/Hyundai bluelink api.
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
-	*util.HTTPHelper
+	*request.Helper
 	user     string
 	password string
 	chargeG  func() (float64, error)
@@ -91,14 +92,14 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	}
 
 	v := &API{
-		HTTPHelper: util.NewHTTPHelper(log),
-		config:     config,
-		user:       user,
-		password:   password,
+		Helper:   request.NewHelper(log),
+		config:   config,
+		user:     user,
+		password: password,
 	}
 
 	// api is unbelievably slow when retrieving status
-	v.HTTPHelper.Client.Timeout = 120 * time.Second
+	v.Helper.Client.Timeout = 120 * time.Second
 
 	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
 
@@ -122,16 +123,16 @@ func (v *API) getDeviceID() (string, error) {
 	}
 
 	var resp response
-	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.DeviceID, util.MarshalJSON(data), headers)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.DeviceID, request.MarshalJSON(data), headers)
 	if err == nil {
-		_, err = v.RequestJSON(req, &resp)
+		err = v.RequestJSON(req, &resp)
 	}
 
 	return resp.ResMsg.DeviceID, err
 }
 
-func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
-	cookieClient = util.NewHTTPHelper(v.Log)
+func (v *API) getCookies() (cookieClient *request.Helper, err error) {
+	cookieClient = request.NewHelper(v.Log)
 	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -149,12 +150,12 @@ func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
 	return cookieClient, err
 }
 
-func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
+func (v *API) setLanguage(cookieClient *request.Helper) error {
 	data := map[string]interface{}{
 		"lang": "en",
 	}
 
-	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.Lang, util.MarshalJSON(data), util.JSONEncoding)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = cookieClient.Do(req)
 	}
@@ -162,13 +163,13 @@ func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
 	return err
 }
 
-func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
+func (v *API) login(cookieClient *request.Helper) (string, error) {
 	data := map[string]interface{}{
 		"email":    v.user,
 		"password": v.password,
 	}
 
-	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.Login, util.MarshalJSON(data), util.JSONEncoding)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.Login, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return "", err
 	}
@@ -178,7 +179,7 @@ func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
 	}
 
 	var accCode string
-	if _, err = cookieClient.RequestJSON(req, &redirect); err == nil {
+	if err = cookieClient.RequestJSON(req, &redirect); err == nil {
 		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
 			accCode = parsed.Query().Get("code")
 		}
@@ -197,7 +198,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
 	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
 
-	req, err := util.NewRequest(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
 	if err != nil {
 		return "", err
 	}
@@ -208,7 +209,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	}
 
 	var accToken string
-	if _, err = v.RequestJSON(req, &tokens); err == nil {
+	if err = v.RequestJSON(req, &tokens); err == nil {
 		accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
 	}
 
@@ -224,10 +225,10 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	req, err := util.NewRequest(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
+	req, err := request.New(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
 	if err == nil {
 		var resp response
-		if _, err = v.RequestJSON(req, &resp); err == nil {
+		if err = v.RequestJSON(req, &resp); err == nil {
 			if len(resp.ResMsg.Vehicles) == 1 {
 				return resp.ResMsg.Vehicles[0].VehicleID, nil
 			}
@@ -242,7 +243,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 func (v *API) authFlow() (err error) {
 	v.auth.deviceID, err = v.getDeviceID()
 
-	var cookieClient *util.HTTPHelper
+	var cookieClient *request.Helper
 	if err == nil {
 		cookieClient, err = v.getCookies()
 	}
@@ -282,9 +283,9 @@ func (v *API) getStatus() (float64, error) {
 
 	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
-	req, err := util.NewRequest(http.MethodGet, uri, nil, headers)
+	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
-		_, err = v.RequestJSON(req, &resp)
+		err = v.RequestJSON(req, &resp)
 
 		if err != nil {
 			resp := v.LastResponse()

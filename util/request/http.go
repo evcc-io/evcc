@@ -1,4 +1,4 @@
-package util
+package request
 
 import (
 	"bytes"
@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/andig/evcc/util"
 )
 
 var (
@@ -42,17 +44,17 @@ func ReadBody(resp *http.Response, err error) ([]byte, error) {
 }
 
 // DecodeJSON reads HTTP response and decodes JSON body
-func DecodeJSON(resp *http.Response, err error, res interface{}) ([]byte, error) {
+func DecodeJSON(resp *http.Response, err error, res interface{}) error {
 	b, err := ReadBody(resp, err)
 	if err == nil {
 		err = json.Unmarshal(b, &res)
 	}
 
-	return b, err
+	return err
 }
 
-// NewRequest builds and executes HTTP request and returns the response
-func NewRequest(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
+// New builds and executes HTTP request and returns the response
+func New(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
 	req, err := http.NewRequest(method, uri, data)
 	if err == nil {
 		for _, headers := range headers {
@@ -83,16 +85,16 @@ func MarshalJSON(data interface{}) io.Reader {
 	return bytes.NewReader(body)
 }
 
-// HTTPHelper provides utility primitives
-type HTTPHelper struct {
-	Log    *Logger
+// Helper provides utility primitives
+type Helper struct {
+	Log    *util.Logger
 	Client *http.Client
 	last   *http.Response // last response
 }
 
-// NewHTTPHelper creates http helper for simplified PUT GET logic
-func NewHTTPHelper(log *Logger) *HTTPHelper {
-	r := &HTTPHelper{
+// NewHelper creates http helper for simplified PUT GET logic
+func NewHelper(log *util.Logger) *Helper {
+	r := &Helper{
 		Log:    log,
 		Client: &http.Client{Timeout: 10 * time.Second},
 	}
@@ -104,12 +106,12 @@ func NewHTTPHelper(log *Logger) *HTTPHelper {
 }
 
 // LastResponse returns last http.Response that was read without error
-func (r *HTTPHelper) LastResponse() *http.Response {
+func (r *Helper) LastResponse() *http.Response {
 	return r.last
 }
 
 // RoundTrip implements http.Roundtripper
-func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
+func (r *Helper) RoundTrip(req *http.Request) (*http.Response, error) {
 	println("TRIPPER")
 	if r.Log != nil {
 		r.Log.TRACE.Println(req.RequestURI)
@@ -130,25 +132,25 @@ func (r *HTTPHelper) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 // Do executes HTTP request and returns the response body
-func (r *HTTPHelper) Do(req *http.Request) ([]byte, error) {
+func (r *Helper) Do(req *http.Request) ([]byte, error) {
 	resp, err := r.Client.Do(req)
 	return ReadBody(resp, err)
 }
 
 // Get executes HTTP GET request and returns the response body
-func (r *HTTPHelper) Get(url string) ([]byte, error) {
+func (r *Helper) Get(url string) ([]byte, error) {
 	resp, err := r.Client.Get(url)
 	return ReadBody(resp, err)
 }
 
 // RequestJSON executes HTTP request and decodes JSON response
-func (r *HTTPHelper) RequestJSON(req *http.Request, res interface{}) ([]byte, error) {
+func (r *Helper) RequestJSON(req *http.Request, res interface{}) error {
 	resp, err := r.Client.Do(req)
 	return DecodeJSON(resp, err, res)
 }
 
 // GetJSON executes HTTP GET request and decodes JSON response
-func (r *HTTPHelper) GetJSON(url string, res interface{}) ([]byte, error) {
+func (r *Helper) GetJSON(url string, res interface{}) error {
 	resp, err := r.Client.Get(url)
 	return DecodeJSON(resp, err, res)
 }
