@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/jq"
+	"github.com/andig/evcc/util/request"
 	"github.com/itchyny/gojq"
 )
 
 // HTTP implements HTTP request provider
 type HTTP struct {
-	*util.HTTPHelper
+	*request.Helper
 	url, method string
 	headers     map[string]string
 	body        string
@@ -60,12 +60,12 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	log := util.NewLogger("http")
 
 	p := &HTTP{
-		HTTPHelper: util.NewHTTPHelper(log),
-		url:        cc.URI,
-		method:     cc.Method,
-		headers:    cc.Headers,
-		body:       cc.Body,
-		scale:      cc.Scale,
+		Helper:  request.NewHelper(log),
+		url:     cc.URI,
+		method:  cc.Method,
+		headers: cc.Headers,
+		body:    cc.Body,
+		scale:   cc.Scale,
 	}
 
 	// handle basic auth
@@ -77,9 +77,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		customTransport := http.DefaultTransport.(*http.Transport).Clone()
-		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		p.HTTPHelper.Client.Transport = customTransport
+		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 	}
 
 	if cc.Jq != "" {
@@ -102,15 +100,12 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	// empty method becomes GET
-	req, err := http.NewRequest(strings.ToUpper(p.method), p.url, b)
-	if err == nil {
-		for k, v := range p.headers {
-			req.Header.Add(k, v)
-		}
-		return p.Request(req)
+	req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+	if err != nil {
+		return []byte{}, err
 	}
 
-	return []byte{}, err
+	return p.DoBody(req)
 }
 
 // FloatGetter parses float from request

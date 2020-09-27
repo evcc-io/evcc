@@ -12,6 +12,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -24,14 +25,10 @@ const (
 	mccAPICurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
-// MCCErrorResponse is the API response if status not OK
-type MCCErrorResponse struct {
-	Error string
-}
-
 // MCCTokenResponse is the apiLogin response
 type MCCTokenResponse struct {
 	Token string
+	Error string
 }
 
 // MCCCurrentSession is the apiCurrentSession response
@@ -58,7 +55,7 @@ type MCCCurrentCableInformation struct {
 
 // MobileConnect charger supporting devices from Audi, Bentley, Porsche
 type MobileConnect struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri              string
 	password         string
 	token            string
@@ -84,16 +81,13 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	mcc := &MobileConnect{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("mcc")),
-		uri:        strings.TrimRight(uri, "/"),
-		password:   password,
+		Helper:   request.NewHelper(util.NewLogger("mcc")),
+		uri:      strings.TrimRight(uri, "/"),
+		password: password,
 	}
 
 	// ignore the self signed certificate
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	mcc.HTTPHelper.Client.Transport = customTransport
+	mcc.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 
 	return mcc, nil
 }
@@ -106,16 +100,10 @@ func (mcc *MobileConnect) apiURL(api apiFunction) string {
 // process the http request to fetch the auth token for a login or refresh request
 func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
-	b, err := mcc.RequestJSON(request, &tr)
+	err := mcc.DoJSON(request, &tr)
 	if err == nil {
-		if len(tr.Token) == 0 && len(b) > 0 {
-			var error MCCErrorResponse
-
-			if err := json.Unmarshal(b, &error); err != nil {
-				return err
-			}
-
-			return fmt.Errorf("response: %s", error.Error)
+		if len(tr.Token) == 0 {
+			return fmt.Errorf("response: %s", tr.Error)
 		}
 
 		mcc.token = tr.Token
@@ -138,12 +126,10 @@ func (mcc *MobileConnect) login(password string) error {
 		"pass": []string{mcc.password},
 	}
 
-	req, err := http.NewRequest(http.MethodPost, uri, strings.NewReader(data.Encode()))
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
 		return err
 	}
-
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return mcc.fetchToken(req)
 }
@@ -196,7 +182,7 @@ func (mcc *MobileConnect) getValue(uri string) ([]byte, error) {
 		return nil, err
 	}
 
-	return mcc.Request(req)
+	return mcc.DoBody(req)
 }
 
 // use http GET to fetch an escaped JSON string and unmarshal the data in result
@@ -206,7 +192,7 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 		return err
 	}
 
-	b, err := mcc.Request(req)
+	b, err := mcc.DoBody(req)
 	if err != nil {
 		return err
 	}
@@ -305,7 +291,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 		return err
 	}
 
-	b, err := mcc.Request(req)
+	b, err := mcc.DoBody(req)
 	if err != nil {
 		return err
 	}

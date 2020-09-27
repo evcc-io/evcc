@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -45,7 +46,8 @@ type EVSEListEntry struct {
 
 // EVSEWifi charger implementation
 type EVSEWifi struct {
-	*util.HTTPHelper
+	*request.Helper
+	log          *util.Logger
 	uri          string
 	alwaysActive bool
 }
@@ -96,9 +98,12 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
+	log := util.NewLogger("evse")
+
 	evse := &EVSEWifi{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("wifi")),
-		uri:        strings.TrimRight(uri, "/"),
+		log:    log,
+		Helper: request.NewHelper(log),
+		uri:    strings.TrimRight(uri, "/"),
 	}
 
 	return evse, nil
@@ -112,18 +117,22 @@ func (evse *EVSEWifi) apiURL(service apiFunction) string {
 func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var pr EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
-	body, err := evse.GetJSON(url, &pr)
+	err := evse.GetJSON(url, &pr)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
 
 	if len(pr.List) != 1 {
+		var body []byte
+		if resp := evse.LastResponse(); resp != nil {
+			body, _ = request.ReadBody(resp)
+		}
 		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
 	}
 
 	params := pr.List[0]
 	if !params.AlwaysActive {
-		evse.HTTPHelper.Log.WARN.Println("evse should be configured to remote mode")
+		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
 
 	evse.alwaysActive = params.AlwaysActive
@@ -178,13 +187,13 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
-	return evse.checkError(evse.Get(url))
+	return evse.checkError(evse.GetBody(url))
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
-	return evse.checkError(evse.Get(url))
+	return evse.checkError(evse.GetBody(url))
 }
 
 // ChargingTime yields current charge run duration

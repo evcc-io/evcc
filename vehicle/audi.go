@@ -14,6 +14,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -68,7 +69,7 @@ type audiChargerResponse struct {
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
-	*util.HTTPHelper
+	*request.Helper
 	user, password, vin string
 	brand, country      string
 	tokens              audiTokenResponse
@@ -95,13 +96,13 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("audi")
 
 	v := &Audi{
-		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(log),
-		user:       cc.User,
-		password:   cc.Password,
-		vin:        cc.VIN,
-		brand:      "Audi",
-		country:    "DE",
+		embed:    &embed{cc.Title, cc.Capacity},
+		Helper:   request.NewHelper(log),
+		user:     cc.User,
+		password: cc.Password,
+		vin:      cc.VIN,
+		brand:    "Audi",
+		country:  "DE",
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -113,11 +114,9 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	// track cookies and don't follow redirects
-	v.Client = &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
+	v.Client.Jar = jar
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
 	}
 
 	if err == nil {
@@ -137,7 +136,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func (v *Audi) redirect(resp *http.Response, err error) (*http.Response, error) {
 	if err == nil {
 		uri := resp.Header.Get("Location")
-		resp, err = v.Client.Get(uri)
+		resp, err = v.Get(uri)
 	}
 
 	return resp, err
@@ -218,10 +217,10 @@ func (v *Audi) authFlow() error {
 		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
 		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
 		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
-	resp, err = v.Client.Get(uri)
+	resp, err = v.Get(uri)
 	if err == nil {
 		uri = resp.Header.Get("Location")
-		resp, err = v.Client.Get(uri)
+		resp, err = v.Get(uri)
 	}
 
 	if err == nil {
@@ -237,7 +236,7 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	if err == nil {
@@ -246,7 +245,7 @@ func (v *Audi) authFlow() error {
 
 	}
 	if err == nil {
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	if err == nil {
@@ -266,7 +265,7 @@ func (v *Audi) authFlow() error {
 	}
 	if err == nil {
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Client.Do(req)
+		resp, err = v.Do(req)
 	}
 
 	for i := 6; i < 9; i++ {
@@ -295,7 +294,7 @@ func (v *Audi) authFlow() error {
 		)
 	}
 	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 	}
 
 	if err == nil {
@@ -310,7 +309,7 @@ func (v *Audi) authFlow() error {
 		req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	}
 	if err == nil {
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 		v.tokens = tokens
 	}
 
@@ -333,7 +332,7 @@ func (v *Audi) refreshToken() error {
 	req, err := v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
 	if err == nil {
 		var tokens audiTokenResponse
-		_, err = v.RequestJSON(req, &tokens)
+		err = v.DoJSON(req, &tokens)
 		if err == nil {
 			v.tokens = tokens
 		}
@@ -349,7 +348,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 	})
 
 	if err == nil {
-		_, err = v.RequestJSON(req, &res)
+		err = v.DoJSON(req, &res)
 
 		// token expired?
 		if err != nil {
@@ -369,7 +368,7 @@ func (v *Audi) getJSON(uri string, res interface{}) error {
 			// retry original requests
 			if err == nil {
 				req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-				_, err = v.RequestJSON(req, &res)
+				err = v.DoJSON(req, &res)
 			}
 		}
 	}

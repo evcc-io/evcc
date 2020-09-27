@@ -1,11 +1,8 @@
 package bluelink
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,6 +11,7 @@ import (
 
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 	"golang.org/x/net/publicsuffix"
@@ -54,7 +52,8 @@ type Config struct {
 // API implements the Kia/Hyundai bluelink api.
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
-	*util.HTTPHelper
+	*request.Helper
+	log      *util.Logger
 	user     string
 	password string
 	chargeG  func() (float64, error)
@@ -94,42 +93,19 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	}
 
 	v := &API{
-		HTTPHelper: util.NewHTTPHelper(log),
-		config:     config,
-		user:       user,
-		password:   password,
+		log:      log,
+		Helper:   request.NewHelper(log),
+		config:   config,
+		user:     user,
+		password: password,
 	}
 
 	// api is unbelievably slow when retrieving status
-	v.HTTPHelper.Client.Timeout = 120 * time.Second
+	v.Helper.Client.Timeout = 120 * time.Second
 
 	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
 
 	return v, nil
-}
-
-// request builds an HTTP request with headers and body
-func (v *API) request(method, uri string, headers map[string]string, body io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, uri, body)
-	if err != nil {
-		return req, err
-	}
-
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	return req, nil
-}
-
-// jsonRequest builds an HTTP json request with headers and body
-func (v *API) jsonRequest(method, uri string, headers map[string]string, data interface{}) (*http.Request, error) {
-	body, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return v.request(method, uri, headers, bytes.NewReader(body))
 }
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
@@ -149,16 +125,16 @@ func (v *API) getDeviceID() (string, error) {
 	}
 
 	var resp response
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.DeviceID, headers, data)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.DeviceID, request.MarshalJSON(data), headers)
 	if err == nil {
-		_, err = v.RequestJSON(req, &resp)
+		err = v.DoJSON(req, &resp)
 	}
 
 	return resp.ResMsg.DeviceID, err
 }
 
-func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
-	cookieClient = util.NewHTTPHelper(v.Log)
+func (v *API) getCookies() (cookieClient *request.Helper, err error) {
+	cookieClient = request.NewHelper(v.log)
 	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
@@ -176,34 +152,26 @@ func (v *API) getCookies() (cookieClient *util.HTTPHelper, err error) {
 	return cookieClient, err
 }
 
-func (v *API) setLanguage(cookieClient *util.HTTPHelper) error {
-	headers := map[string]string{
-		"Content-type": "application/json",
-	}
-
+func (v *API) setLanguage(cookieClient *request.Helper) error {
 	data := map[string]interface{}{
 		"lang": "en",
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.Lang, headers, data)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		_, err = cookieClient.Request(req)
+		_, err = cookieClient.Do(req)
 	}
 
 	return err
 }
 
-func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
-	headers := map[string]string{
-		"Content-type": "application/json",
-	}
-
+func (v *API) login(cookieClient *request.Helper) (string, error) {
 	data := map[string]interface{}{
 		"email":    v.user,
 		"password": v.password,
 	}
 
-	req, err := v.jsonRequest(http.MethodPost, v.config.URI+v.config.Login, headers, data)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.Login, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return "", err
 	}
@@ -213,7 +181,7 @@ func (v *API) login(cookieClient *util.HTTPHelper) (string, error) {
 	}
 
 	var accCode string
-	if _, err = cookieClient.RequestJSON(req, &redirect); err == nil {
+	if err = cookieClient.DoJSON(req, &redirect); err == nil {
 		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
 			accCode = parsed.Query().Get("code")
 		}
@@ -232,7 +200,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
 	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
 
-	req, err := v.request(http.MethodPost, v.config.URI+v.config.AccessToken, headers, strings.NewReader(data))
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
 	if err != nil {
 		return "", err
 	}
@@ -243,7 +211,7 @@ func (v *API) getToken(accCode string) (string, error) {
 	}
 
 	var accToken string
-	if _, err = v.RequestJSON(req, &tokens); err == nil {
+	if err = v.DoJSON(req, &tokens); err == nil {
 		accToken = fmt.Sprintf("%s %s", tokens.TokenType, tokens.AccessToken)
 	}
 
@@ -259,10 +227,10 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	req, err := v.request(http.MethodGet, v.config.URI+v.config.Vehicles, headers, nil)
+	req, err := request.New(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
 	if err == nil {
 		var resp response
-		if _, err = v.RequestJSON(req, &resp); err == nil {
+		if err = v.DoJSON(req, &resp); err == nil {
 			if len(resp.ResMsg.Vehicles) == 1 {
 				return resp.ResMsg.Vehicles[0].VehicleID, nil
 			}
@@ -277,7 +245,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 func (v *API) authFlow() (err error) {
 	v.auth.deviceID, err = v.getDeviceID()
 
-	var cookieClient *util.HTTPHelper
+	var cookieClient *request.Helper
 	if err == nil {
 		cookieClient, err = v.getCookies()
 	}
@@ -317,9 +285,9 @@ func (v *API) getStatus() (float64, error) {
 
 	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
-	req, err := v.request(http.MethodGet, uri, headers, nil)
+	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
-		_, err = v.RequestJSON(req, &resp)
+		err = v.DoJSON(req, &resp)
 
 		if err != nil {
 			resp := v.LastResponse()

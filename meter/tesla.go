@@ -4,12 +4,12 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 // credits to https://github.com/vloschiavo/powerwall2
@@ -31,7 +31,7 @@ type teslaResponse map[string]struct {
 
 // Tesla is the tesla powerwall meter
 type Tesla struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri, usage string
 }
 
@@ -71,15 +71,13 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewTesla creates a Tesla Meter
 func NewTesla(uri, usage string) (api.Meter, error) {
 	m := &Tesla{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("tesla")),
-		uri:        uri,
-		usage:      strings.ToLower(usage),
+		Helper: request.NewHelper(util.NewLogger("tesla")),
+		uri:    uri,
+		usage:  strings.ToLower(usage),
 	}
 
 	// ignore the self signed certificate
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	m.HTTPHelper.Client.Transport = customTransport
+	m.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
@@ -93,7 +91,7 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Tesla) CurrentPower() (float64, error) {
 	var tr teslaResponse
-	_, err := m.GetJSON(m.uri, &tr)
+	err := m.GetJSON(m.uri, &tr)
 
 	if err == nil {
 		if o, ok := tr[m.usage]; ok {
@@ -107,7 +105,7 @@ func (m *Tesla) CurrentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
 	var tr teslaResponse
-	_, err := m.GetJSON(m.uri, &tr)
+	err := m.GetJSON(m.uri, &tr)
 
 	if err == nil {
 		if o, ok := tr[m.usage]; ok {

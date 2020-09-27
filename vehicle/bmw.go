@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 const (
@@ -32,7 +33,7 @@ type bmwVehiclesResponse []struct {
 // BMW is an api.Vehicle implementation for BMW cars
 type BMW struct {
 	*embed
-	*util.HTTPHelper
+	*request.Helper
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
@@ -59,11 +60,11 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("bmw")
 
 	v := &BMW{
-		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(log),
-		user:       cc.User,
-		password:   cc.Password,
-		vin:        cc.VIN,
+		embed:    &embed{cc.Title, cc.Capacity},
+		Helper:   request.NewHelper(log),
+		user:     cc.User,
+		password: cc.Password,
+		vin:      cc.VIN,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -91,14 +92,13 @@ func (v *BMW) login(user, password string) error {
 		"locale":        []string{"DE-de"},
 	}
 
-	req, err := http.NewRequest(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()))
+	req, err := request.New(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	client := &http.Client{
-		Timeout:       v.HTTPHelper.Client.Timeout,
+		Timeout:       v.Helper.Client.Timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }, // don't follow redirects
 	}
 
@@ -148,7 +148,7 @@ func (v *BMW) vehicles() ([]string, error) {
 
 	req, err := v.request(uri)
 	if err == nil {
-		_, err = v.RequestJSON(req, &br)
+		err = v.DoJSON(req, &br)
 	}
 
 	if err == nil {
@@ -170,7 +170,7 @@ func (v *BMW) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	_, err = v.RequestJSON(req, &br)
+	err = v.DoJSON(req, &br)
 	return br.AttributesMap.ChargingLevelHv, err
 }
 

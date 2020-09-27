@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 // https://go-e.co/app/api.pdf
@@ -37,7 +38,7 @@ type goeStatusResponse struct {
 
 // GoE charger implementation
 type GoE struct {
-	*util.HTTPHelper
+	*request.Helper
 	uri, token string
 	cache      time.Duration
 	updated    time.Time
@@ -72,9 +73,9 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewGoE creates GoE charger
 func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{
-		HTTPHelper: util.NewHTTPHelper(util.NewLogger("go-e")),
-		uri:        strings.TrimRight(uri, "/"),
-		token:      strings.TrimSpace(token),
+		Helper: request.NewHelper(util.NewLogger("go-e")),
+		uri:    strings.TrimRight(uri, "/"),
+		token:  strings.TrimSpace(token),
 	}
 
 	return c, nil
@@ -88,7 +89,7 @@ func (c *GoE) localResponse(function, payload string) (goeStatusResponse, error)
 		url += "?payload=" + payload
 	}
 
-	_, err := c.GetJSON(url, &status)
+	err := c.GetJSON(url, &status)
 	return status, err
 }
 
@@ -100,7 +101,7 @@ func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error)
 		url += "&payload=" + payload
 	}
 
-	_, err := c.GetJSON(url, &status)
+	err := c.GetJSON(url, &status)
 	if err == nil && status.Success != nil && !*status.Success {
 		err = errors.New(status.Error)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 )
 
 // Credits to
@@ -87,7 +88,7 @@ type batteryAttributes struct {
 // Renault is an api.Vehicle implementation for Renault cars
 type Renault struct {
 	*embed
-	*util.HTTPHelper
+	*request.Helper
 	user, password, vin string
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
@@ -118,11 +119,11 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("renault")
 
 	v := &Renault{
-		embed:      &embed{cc.Title, cc.Capacity},
-		HTTPHelper: util.NewHTTPHelper(log),
-		user:       cc.User,
-		password:   cc.Password,
-		vin:        cc.VIN,
+		embed:    &embed{cc.Title, cc.Capacity},
+		Helper:   request.NewHelper(log),
+		user:     cc.User,
+		password: cc.Password,
+		vin:      cc.VIN,
 	}
 
 	err := v.apiKeys(cc.Region)
@@ -147,7 +148,7 @@ func (v *Renault) apiKeys(region string) error {
 	uri := fmt.Sprintf(keyStore, region)
 
 	var cr configResponse
-	_, err := v.GetJSON(uri, &cr)
+	err := v.GetJSON(uri, &cr)
 
 	v.gigya = cr.Servers.GigyaProd
 	v.kamereon = cr.Servers.WiredProd
@@ -186,19 +187,12 @@ func (v *Renault) authFlow() error {
 }
 
 func (v *Renault) request(uri string, data url.Values, headers ...map[string]string) (*http.Request, error) {
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err != nil {
-		return req, err
-	}
-	req.URL.RawQuery = data.Encode()
-
-	for _, headers := range headers {
-		for k, v := range headers {
-			req.Header.Add(k, v)
-		}
+	req, err := request.New(http.MethodGet, uri, nil, headers...)
+	if err == nil {
+		req.URL.RawQuery = data.Encode()
 	}
 
-	return req, nil
+	return req, err
 }
 
 func (v *Renault) sessionCookie(user, password string) (string, error) {
@@ -214,7 +208,7 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		_, err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.SessionInfo.CookieValue, err
@@ -232,7 +226,7 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		_, err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.Data.PersonID, err
@@ -252,7 +246,7 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 
 	var gr gigyaResponse
 	if err == nil {
-		_, err = v.RequestJSON(req, &gr)
+		err = v.DoJSON(req, &gr)
 	}
 
 	return gr.IDToken, err
@@ -268,7 +262,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	var kr kamereonResponse
 	req, err := v.request(uri, data, headers)
 	if err == nil {
-		_, err = v.RequestJSON(req, &kr)
+		err = v.DoJSON(req, &kr)
 	}
 
 	return kr, err
