@@ -286,7 +286,7 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+			if pr := s.planningRequest(id, lp); len(pr.Timeframe) > 0 {
 				msg.PlanningRequest = append(msg.PlanningRequest, pr)
 			}
 		}
@@ -331,15 +331,9 @@ func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
 			DeviceVendor: "github.com/andig/evcc",
 		},
 		Capabilities: Capabilities{
-			CurrentPower: CurrentPower{
-				Method: method,
-			},
-			Interruptions: Interruptions{
-				InterruptionsAllowed: true,
-			},
-			Requests: Requests{
-				OptionalEnergy: true,
-			},
+			CurrentPowerMethod:   method,
+			InterruptionsAllowed: true,
+			OptionalEnergy:       true,
 		},
 		Characteristics: Characteristics{
 			MinPowerConsumption: 230 * int(lp.MinCurrent),
@@ -374,11 +368,9 @@ func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
 		EMSignalsAccepted: true,
-		PowerConsumption: PowerConsumption{
-			PowerInfo: PowerInfo{
-				AveragePower:      int(chargePower),
-				AveragingInterval: 60,
-			},
+		PowerInfo: PowerInfo{
+			AveragePower:      int(chargePower),
+			AveragingInterval: 60,
 		},
 		Status: status,
 	}
@@ -410,30 +402,35 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 		chargeEstimate = chargeEstimateP.Val.(time.Duration)
 	}
 
-	maxDuration := int(chargeEstimate / time.Second)
-	if chargeEstimate <= 0 {
-		maxDuration = 10 * 60 // 10min
+	latestEnd := int(chargeEstimate / time.Second)
+	if mode == api.ModePV || latestEnd <= 0 {
+		latestEnd = 24 * 3600
 	}
 
-	minDuration := maxDuration
-	if mode == api.ModePV {
-		minDuration = 0
+	var maxEnergy int
+	if chargeRemainingEnergyP, err := s.cacheGet(id, "chargeRemainingEnergy"); err == nil {
+		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
 	}
 
-	latestEnd := maxDuration
+	// add 1kWh in case we're charging but battery claims full
+	if maxEnergy == 0 {
+		maxEnergy = 1e3 // 1kWh
+	}
+
+	minEnergy := maxEnergy
 	if mode == api.ModePV {
-		latestEnd = 2 * maxDuration
+		minEnergy = 0
 	}
 
 	if charging {
 		res = PlanningRequest{
-			Timeframe: Timeframe{
-				DeviceID:       s.deviceID(id),
-				EarliestStart:  0,
-				LatestEnd:      latestEnd,
-				MinRunningTime: minDuration,
-				MaxRunningTime: maxDuration,
-			},
+			Timeframe: []Timeframe{Timeframe{
+				DeviceID:      s.deviceID(id),
+				EarliestStart: 0,
+				LatestEnd:     latestEnd,
+				MinEnergy:     &minEnergy,
+				MaxEnergy:     &maxEnergy,
+			}},
 		}
 	}
 
@@ -442,7 +439,7 @@ func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest)
 
 func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 	for id, lp := range s.site.LoadPoints() {
-		if pr := s.planningRequest(id, lp); pr.Timeframe.DeviceID != "" {
+		if pr := s.planningRequest(id, lp); len(pr.Timeframe) > 0 {
 			res = append(res, pr)
 		}
 	}

@@ -597,6 +597,9 @@ func (lp *LoadPoint) publishSoC() {
 			}
 			lp.publish("chargeEstimate", chargeEstimate)
 
+			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.TargetSoC)
+			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
+
 			return
 		}
 

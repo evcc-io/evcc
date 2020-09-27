@@ -74,6 +74,18 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 	return -1
 }
 
+// RemainingChargeEnergy returns the remaining charge energy in kWh
+func (s *SocEstimator) RemainingChargeEnergy(targetSoC int) float64 {
+	percentRemaining := float64(targetSoC) - s.socCharge
+	if percentRemaining <= 0 {
+		return 0
+	}
+
+	// estimate remaining energy
+	whRemaining := percentRemaining / 100 * s.virtualCapacity
+	return whRemaining / 1e3
+}
+
 // SoC implements Vehicle.ChargeState with addition of given charged energy
 func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
@@ -99,7 +111,7 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
-				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.1fkWh", s.energyPerSocStep, s.virtualCapacity)
+				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			// sample charged energy at soc change, reset energy delta
