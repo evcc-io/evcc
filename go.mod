@@ -10,7 +10,7 @@ require (
 	github.com/benbjohnson/clock v1.0.3
 	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/eclipse/paho.mqtt.golang v1.2.0
-	github.com/go-playground/validator/v10 v10.3.0
+	github.com/go-playground/validator/v10 v10.3.1-0.20200927191032-704a814277c8
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
@@ -30,7 +30,6 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.0-20191105050749-2e1c40ed0b5d
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mjibson/esc v0.2.0
