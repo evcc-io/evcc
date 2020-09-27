@@ -56,6 +56,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	}{
 		Method:  http.MethodGet,
 		Headers: make(map[string]string),
+		Scale:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -121,7 +122,7 @@ func (p *HTTP) FloatGetter() (float64, error) {
 	}
 
 	f, err := strconv.ParseFloat(s, 64)
-	if err == nil && p.scale != 0 {
+	if err == nil {
 		f *= p.scale
 	}
 
