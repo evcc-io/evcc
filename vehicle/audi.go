@@ -10,18 +10,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/vwidentity"
 	"golang.org/x/net/publicsuffix"
 )
 
 const (
-	vwIdentity = "https://identity.vwgroup.io"
-	vwAPI      = "https://msg.volkswagen.de/fs-car"
-	vwToken    = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+	vwAPI   = "https://msg.volkswagen.de/fs-car"
+	vwToken = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 )
 
 // OIDCResponse is the well-known OIDC provider response
@@ -133,15 +132,6 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *Audi) redirect(resp *http.Response, err error) (*http.Response, error) {
-	if err == nil {
-		uri := resp.Header.Get("Location")
-		resp, err = v.Get(uri)
-	}
-
-	return resp, err
-}
-
 func (v *Audi) request(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
 	req, err := http.NewRequest(method, uri, data)
 	if err != nil {
@@ -157,120 +147,17 @@ func (v *Audi) request(method, uri string, data io.Reader, headers ...map[string
 	return req, nil
 }
 
-type formVars struct {
-	action     string
-	csrf       string
-	relayState string
-	hmac       string
-}
-
-func formValues(reader io.Reader, id string) (formVars, error) {
-	vars := formVars{}
-
-	doc, err := goquery.NewDocumentFromReader(reader)
-	if err == nil {
-		form := doc.Find(id).First()
-		if form.Length() != 1 {
-			return vars, errors.New("unexpected length")
-		}
-
-		var exists bool
-		vars.action, exists = form.Attr("action")
-		if !exists {
-			return vars, errors.New("attribute not found")
-		}
-
-		vars.csrf, err = attr(form, "input[name=_csrf]", "value")
-		if err == nil {
-			vars.relayState, err = attr(form, "input[name=relayState]", "value")
-		}
-		if err == nil {
-			vars.hmac, err = attr(form, "input[name=hmac]", "value")
-		}
-	}
-
-	return vars, err
-}
-
-func attr(doc *goquery.Selection, path, attr string) (res string, err error) {
-	sel := doc.Find(path)
-	if sel.Length() != 1 {
-		return "", errors.New("unexpected length")
-	}
-
-	v, exists := sel.Attr(attr)
-	if !exists {
-		return "", errors.New("attribute not found")
-	}
-
-	return v, nil
-}
-
 func (v *Audi) authFlow() error {
-	var err error
 	var uri, body string
-	var vars formVars
 	var req *http.Request
-	var resp *http.Response
 
 	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" +
 		"response_type=code&client_id=09b6cbec-cd19-4589-82fd-363dfa8c24da%40apps_vw-dilab_com&" +
 		"redirect_uri=myaudi%3A%2F%2F%2F&scope=address%20profile%20badge%20birthdate%20birthplace%20nationalIdentifier%20nationality%20profession%20email%20vin%20phone%20nickname%20name%20picture%20mbb%20gallery%20openid&" +
 		"state=7f8260b5-682f-4db8-b171-50a5189a1c08&nonce=583b9af2-7799-4c72-9cb0-e6c0f42b87b3&prompt=login&ui_locales=de-DE"
-	resp, err = v.Get(uri)
-	if err == nil {
-		uri = resp.Header.Get("Location")
-		resp, err = v.Get(uri)
-	}
 
-	if err == nil {
-		vars, err = formValues(resp.Body, "form#emailPasswordForm")
-	}
-	if err == nil {
-		uri = vwIdentity + vars.action
-		body := fmt.Sprintf(
-			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
-			vars.csrf, vars.relayState, vars.hmac, url.QueryEscape(v.user),
-		)
-		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	}
-	if err == nil {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Do(req)
-	}
-
-	if err == nil {
-		uri = vwIdentity + resp.Header.Get("Location")
-		req, err = http.NewRequest(http.MethodGet, uri, nil)
-
-	}
-	if err == nil {
-		resp, err = v.Do(req)
-	}
-
-	if err == nil {
-		vars, err = formValues(resp.Body, "form#credentialsForm")
-	}
-	if err == nil {
-		uri = vwIdentity + vars.action
-		body = fmt.Sprintf(
-			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
-			vars.csrf,
-			vars.relayState,
-			url.QueryEscape(v.user),
-			vars.hmac,
-			url.QueryEscape(v.password),
-		)
-		req, err = http.NewRequest(http.MethodPost, uri, strings.NewReader(body))
-	}
-	if err == nil {
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		resp, err = v.Do(req)
-	}
-
-	for i := 6; i < 9; i++ {
-		resp, err = v.redirect(resp, err)
-	}
+	identity := &vwidentity.Identity{Client: v.Client}
+	resp, err := identity.Login(uri, v.user, v.password)
 
 	var tokens audiTokenResponse
 	if err == nil {
@@ -289,9 +176,7 @@ func (v *Audi) authFlow() error {
 			url.QueryEscape("token id_token"),
 		)
 
-		req, err = v.request(http.MethodPost, uri, strings.NewReader(body),
-			map[string]string{"Content-Type": "application/x-www-form-urlencoded"},
-		)
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
 	}
 	if err == nil {
 		err = v.DoJSON(req, &tokens)
