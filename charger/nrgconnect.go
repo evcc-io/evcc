@@ -1,8 +1,6 @@
 package charger
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -119,22 +117,19 @@ func (nrg *NRGKickConnect) getJSON(url string, result interface{}) error {
 	return err
 }
 
-func (nrg *NRGKickConnect) putJSON(url string, request interface{}) error {
-	body, err := json.Marshal(request)
-	if err != nil {
-		return err
-	}
-
+func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	var resp NRGResponse
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(body))
+	req, err := request.New(http.MethodPut, url, request.MarshalJSON(data))
 
 	if err == nil {
 		if err = nrg.RequestJSON(req, &resp); err != nil {
-			return err
+			if resp.Message != "" {
+				return fmt.Errorf("response: %s", resp.Message)
+			}
 		}
 	}
 
-	return fmt.Errorf("response: %s", resp.Message)
+	return err
 }
 
 // Status implements the Charger.Status interface
