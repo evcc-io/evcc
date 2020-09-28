@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"strings"
 )
 
 func findVehicle(vehicles []string, err error) (string, error) {
@@ -13,5 +14,10 @@ func findVehicle(vehicles []string, err error) (string, error) {
 		return "", fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 
-	return vehicles[0], nil
+	vin := strings.TrimSpace(vehicles[0])
+	if vin == "" {
+		return "", fmt.Errorf("cannot find vehicle: %v", vehicles)
+	}
+
+	return vin, nil
 }
