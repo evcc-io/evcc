@@ -357,6 +357,13 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 		chargePower = chargePowerP.Val.(float64)
 	}
 
+	isPV := false
+	if modeP, err := s.cacheGet(id, "mode"); err == nil {
+		if mode, ok := modeP.Val.(api.ChargeMode); ok && mode == api.ModePV {
+			isPV = true
+		}
+	}
+
 	status := StatusOff
 	if statusP, err := s.cacheGet(id, "charging"); err == nil {
 		if statusP.Val.(bool) {
@@ -366,7 +373,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: true,
+		EMSignalsAccepted: isPV,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -423,7 +430,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 
 	if charging {
 		res = PlanningRequest{
-			Timeframe: []Timeframe{Timeframe{
+			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
 				EarliestStart: 0,
 				LatestEnd:     latestEnd,
@@ -460,6 +467,27 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	for _, dev := range msg.DeviceControl {
+		did := dev.DeviceID
+
+		for id, lp := range s.site.LoadPoints() {
+			if did != s.deviceID(id) {
+				continue
+			}
+
+			if mode := lp.GetMode(); mode != api.ModePV {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			if dev.On {
+				lp.ChargerEnable()
+			} else {
+				lp.ChargerDisable()
+			}
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
