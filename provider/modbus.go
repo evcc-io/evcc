@@ -65,6 +65,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 
 	// model + value configured
 	if cc.Value != "" {
+		cc.Value = modbus.ReadingName(cc.Value)
 		if err := modbus.ParseOperation(device, cc.Value, &op); err != nil {
 			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}

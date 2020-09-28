@@ -33,7 +33,9 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Model           string
 		modbus.Settings `mapstructure:",squash"`
 		Power, Energy   string
-	}{}
+	}{
+		Power: "Power",
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -79,11 +81,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		device: device,
 	}
 
-	// power reading
-	if cc.Power == "" {
-		cc.Power = "Power"
-	}
-
+	cc.Power = modbus.ReadingName(cc.Power)
 	if err := modbus.ParseOperation(device, cc.Power, &m.opPower); err != nil {
 		return nil, fmt.Errorf("invalid measurement for power: %s", cc.Power)
 	}
@@ -91,6 +89,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	// decorate energy reading
 	var totalEnergy func() (float64, error)
 	if cc.Energy != "" {
+		cc.Energy = modbus.ReadingName(cc.Energy)
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
 			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Power)
 		}
