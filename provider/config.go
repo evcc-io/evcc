@@ -21,14 +21,15 @@ type Config struct {
 
 // mqttConfig is the specific mqtt getter/setter configuration
 type mqttConfig struct {
-	Topic, Payload string // Payload only applies to setters
-	Scale          float64
-	Timeout        time.Duration
+	Topic   string `validate:"required"`
+	Payload string // Payload only applies to setters
+	Scale   float64
+	Timeout time.Duration
 }
 
 // scriptConfig is the specific script getter/setter configuration
 type scriptConfig struct {
-	Cmd     string
+	Cmd     string `validate:"required"`
 	Timeout time.Duration
 	Cache   time.Duration
 }
