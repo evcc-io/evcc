@@ -56,7 +56,7 @@ func configureMQTT(conf provider.MqttConfig) {
 func configureHEMS(conf string, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
 	hems, err := hems.NewFromConfig(conf, site, cache, httpd)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.FATAL.Fatalf("failed configuring hems: %v", err)
 	}
 	return hems
 }
@@ -70,6 +70,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
 		if err != nil {
 			log.FATAL.Fatal(err)
+			log.FATAL.Fatalf("failed configuring messenger %s: %v", service.Type, err)
 		}
 		notificationHub.Add(impl)
 	}
@@ -92,35 +93,34 @@ func loadConfig(conf config) *core.Site {
 func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
 	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.FATAL.Fatalf("failed configuring site: %v", err)
 	}
 
 	return site
 }
 
 func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.LoadPoint) {
-	// slice of loadpoints
-	lps, ok := viper.AllSettings()["loadpoints"]
-	if !ok {
+	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
+	if !ok || len(lpInterfaces) == 0 {
 		log.FATAL.Fatal("missing loadpoints")
 	}
 
-	// decode slice into slice of maps
-	var lpc []map[string]interface{}
-	if err := util.DecodeOther(lps, &lpc); err != nil {
-		log.FATAL.Fatal(err)
-	}
+	for id, lpcI := range lpInterfaces {
+		var lpc map[string]interface{}
+		if err := util.DecodeOther(lpcI, &lpc); err != nil {
+			log.FATAL.Fatalf("failed decoding loadpoint configuration: %v", err)
+		}
 
-	for id, lpc := range lpc {
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
 		lp, err := core.NewLoadPointFromConfig(log, cp, lpc)
 		if err != nil {
-			log.FATAL.Fatal(err)
+			log.FATAL.Fatalf("failed configuring loadpoint: %v", err)
 		}
+
 		loadPoints = append(loadPoints, lp)
 	}
 
-	return
+	return loadPoints
 }
 
 func loadConfigFile(cfgFile string) (conf config) {
@@ -132,5 +132,6 @@ func loadConfigFile(cfgFile string) (conf config) {
 	} else {
 		log.FATAL.Fatal("missing evcc config")
 	}
-	return
+
+	return conf
 }
