@@ -44,8 +44,8 @@ func DecodeOther(other interface{}, cc interface{}) error {
 
 	if err == nil {
 		err = validate.Struct(cc)
-		if err != nil {
-			err = simplifyValidationErrors(err.(validator.ValidationErrors))
+		if e, ok := err.(validator.ValidationErrors); ok {
+			err = simplifyValidationErrors(e)
 		}
 	}
 
