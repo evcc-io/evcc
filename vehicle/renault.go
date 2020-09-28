@@ -333,7 +333,7 @@ func (v *Renault) finishTime() (time.Time, error) {
 	}
 
 	if kr.Data.Attributes.RemainingTime == nil {
-		return time.Time{}, errors.New("estimate not available")
+		return time.Time{}, api.ErrNotAvailable
 	}
 
 	return timestamp.Add(time.Duration(*kr.Data.Attributes.RemainingTime) * time.Minute), err

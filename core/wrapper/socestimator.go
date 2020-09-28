@@ -1,6 +1,7 @@
 package wrapper
 
 import (
+	"errors"
 	"math"
 	"time"
 
@@ -63,7 +64,9 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 				return time.Duration(float64(timeRemaining) * percentRemaining / (100 - s.socCharge))
 			}
 
-			s.log.WARN.Printf("updating remaining time failed: %v", err)
+			if !errors.Is(err, api.ErrNotAvailable) {
+				s.log.WARN.Printf("updating remaining time failed: %v", err)
+			}
 		}
 
 		// estimate remaining time
