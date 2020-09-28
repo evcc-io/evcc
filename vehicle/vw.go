@@ -161,27 +161,26 @@ func (v *VW) authFlow() error {
 
 		location := resp.Header.Get("Location")
 
-		locationURL, err = url.Parse(location)
-		if err == nil {
+		if locationURL, err = url.Parse(location); err == nil {
 			code = locationURL.Query().Get("code")
 			state = locationURL.Query().Get("state")
-		}
 
-		uri = fmt.Sprintf(
-			"%s?p_auth=%s&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus",
-			locationURL.Scheme+"://"+locationURL.Host+locationURL.Path,
-			state,
-		)
+			uri = fmt.Sprintf(
+				"%s?p_auth=%s&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus",
+				locationURL.Scheme+"://"+locationURL.Host+locationURL.Path,
+				state,
+			)
+		}
 
 		body = fmt.Sprintf("_33_WAR_cored5portlet_code=%s", url.QueryEscape(code))
 
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
-		if err == nil {
-			resp, err = v.Do(req)
-			uri = resp.Header.Get("Location")
+		if req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding); err == nil {
+			if resp, err = v.Do(req); err == nil {
+				uri = resp.Header.Get("Location")
 
-			v.baseURI = uri
-			v.csrf = vars.Csrf
+				v.baseURI = uri
+				v.csrf = vars.Csrf
+			}
 		}
 	}
 
