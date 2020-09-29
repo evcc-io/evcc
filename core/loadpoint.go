@@ -287,7 +287,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.publish("connectedDuration", 0)
 
 	// soc estimation reset on car change
-	lp.socEstimator.Reset()
+	if lp.socEstimator != nil {
+		lp.socEstimator.Reset()
+	}
 
 	lp.notify(evVehicleConnect)
 }
