@@ -3,7 +3,6 @@ package vehicle
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -19,8 +18,7 @@ import (
 )
 
 const (
-	vwAPI   = "https://msg.volkswagen.de/fs-car"
-	vwToken = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+	vwAPI = "https://msg.volkswagen.de/fs-car"
 )
 
 // OIDCResponse is the well-known OIDC provider response
@@ -132,21 +130,6 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *Audi) request(method, uri string, data io.Reader, headers ...map[string]string) (*http.Request, error) {
-	req, err := http.NewRequest(method, uri, data)
-	if err != nil {
-		return req, err
-	}
-
-	for _, headers := range headers {
-		for k, v := range headers {
-			req.Header.Add(k, v)
-		}
-	}
-
-	return req, nil
-}
-
 func (v *Audi) authFlow() error {
 	var uri, body string
 	var req *http.Request
@@ -166,20 +149,19 @@ func (v *Audi) authFlow() error {
 			code = location.Query().Get("code")
 		}
 
-		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-		body = fmt.Sprintf(
-			"client_id=%s&grant_type=%s&code=%s&redirect_uri=%s&response_type=%s",
-			url.QueryEscape("09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"),
-			"authorization_code",
-			code,
-			url.QueryEscape("myaudi:///"),
-			url.QueryEscape("token id_token"),
-		)
+		data := url.Values(map[string][]string{
+			"client_id":     {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
+			"grant_type":    {"authorization_code"},
+			"code":          {code},
+			"redirect_uri":  {"myaudi:///"},
+			"response_type": {"token id_token"},
+		})
 
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
-	}
-	if err == nil {
-		err = v.DoJSON(req, &tokens)
+		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+		if err == nil {
+			err = v.DoJSON(req, &tokens)
+		}
 	}
 
 	if err == nil {
@@ -191,11 +173,11 @@ func (v *Audi) authFlow() error {
 			"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
 		}
 
-		req, err = v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
-	}
-	if err == nil {
-		err = v.DoJSON(req, &tokens)
-		v.tokens = tokens
+		req, err = request.New(http.MethodPost, vwidentity.OauthTokenURI, strings.NewReader(body), headers)
+		if err == nil {
+			err = v.DoJSON(req, &tokens)
+			v.tokens = tokens
+		}
 	}
 
 	return err
@@ -214,7 +196,7 @@ func (v *Audi) refreshToken() error {
 		"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
 	}
 
-	req, err := v.request(http.MethodPost, vwToken, strings.NewReader(body), headers)
+	req, err := request.New(http.MethodPost, vwidentity.OauthTokenURI, strings.NewReader(body), headers)
 	if err == nil {
 		var tokens audiTokenResponse
 		err = v.DoJSON(req, &tokens)
@@ -227,7 +209,7 @@ func (v *Audi) refreshToken() error {
 }
 
 func (v *Audi) getJSON(uri string, res interface{}) error {
-	req, err := v.request(http.MethodGet, uri, nil, map[string]string{
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
 		"Authorization": "Bearer " + v.tokens.AccessToken,
 	})
