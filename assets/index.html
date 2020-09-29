@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="EV Charge Controller">
-  <meta name="author" content="andig">
+  <meta name="author" content="andig, mark-sch">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
@@ -18,7 +18,7 @@
   <meta name="msapplication-config" content="ico/browserconfig.xml">
   <meta name="theme-color" content="#ffffff">
 
-  <title>evcc</title>
+  <title>EV Charge Controller</title>
 
   <!-- CSS -->
   <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -66,7 +66,7 @@
 
 <div id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
+    <a class="navbar-brand" href="https://www.sunny5.de" target="_new"><img src="ico/favicon-32x32.png" alt="Sunny5 Logo"></i></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -78,7 +78,7 @@
         <router-link class="nav-item nav-link pb-1" to="/links/<<$idx>>"><<$link.Title>></router-link>
         <!-- <<end>> -->
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
-        <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
+        <a class="nav-item nav-link pb-1" href="https://github.com/mark-sch/evcc/issues">Support</a>
       </div>
     </div>
   </nav>
@@ -104,7 +104,7 @@
           </a>
         </b>
         <b class="px-3">
-          <a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion" class="text-body">
+          <a v-bind:href="'https://github.com/mark-sch/evcc/releases/tag/'+state.availableVersion" class="text-body">
             Download <i class="fas fa-chevron-down"></i>
           </a>
         </b>
@@ -169,7 +169,7 @@
             <ol class="pt-2">
               <li>Erzeugen einer Konfigurationsdatei mit Namen <code>evcc.yaml</code>. Die
                 Standardkonfiguration <code>evcc.dist.yaml</code> kann dafür als Vorlage dienen (<a
-                  href="https://github.com/andig/evcc/blob/master/evcc.dist.yaml">Download</a>).
+                  href="https://github.com/mark-sch/evcc/blob/master/evcc.dist.yaml">Download</a>).
               <li>Konfiguration der Wallbox als <code>chargers</code>.
               <li>Konfiguration des EVU Zählers und evtl. weiterer Zähler unter <code>meters</code>.
               <li>Konfiguration des Netzanschlusses unter <code>site</code>. In einer Site wird der Netzanschluss mit
@@ -203,7 +203,7 @@ loadpoints:
     charge: ladezähler # Ladezählers (optional)
 </pre></code>
           </p>
-          <p>Viel Spass mit <b>evcc</b>! Bei Problemen kannst Du uns auf <a href="https://github.com/andig/evcc/issues">GitHub</a> erreichen.</p>
+          <p>Viel Spass mit <b>evcc</b>! Bei Problemen kannst Du uns auf <a href="https://github.com/mark-sch/evcc/issues">GitHub</a> erreichen.</p>
       </div>
     </div>
   </div>
@@ -254,12 +254,18 @@ loadpoints:
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="d-none d-inline-block col-md-3 mt-3" v-if="state.batteryMeter">
-    <div class="mb-2 value">Batterie <i class="text-primary fas"
+  <div class="col-6 col-md-3 mt-3" v-if="state.batteryMeter">
+    <div class="mb-2 value">Batterie({{state.socPower}}%) <i class="text-primary fas"
         v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
     <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
+    </h2>
+  </div>
+  <div class="col-6 col-md-3 mt-3" v-if="state.consumptionMeter">
+    <div class="mb-2 value">Verbrauch <i class="fas fas fa-plug" v-bind:class="{'text-primary':state.consumptionPower<0,'text-muted':state.consumptionPower>=0}"></i></div>
+    <h2 class="value">
+      {{fmt(state.consumptionPower)}} <small class="text-muted">{{fmtUnit(state.consumptionPower)}}W</small>
     </h2>
   </div>
 </div>
@@ -511,8 +517,8 @@ loadpoints:
     <div class="row">
       <div class="col-6">
         <small class="text-muted">
-          <a href="https://github.com/andig/evcc/releases/tag/<<.Version>>"><<.Version>></a>
-          <<if ne .Version .Commit>>(<a href="https://github.com/andig/evcc/commit/<<.Commit>>"><<.Commit>></a>)<<end>>
+          <a href="https://github.com/mark-sch/evcc/releases/tag/<<.Version>>"><<.Version>></a>
+          <<if ne .Version .Commit>>(<a href="https://github.com/mark-sch/evcc/commit/<<.Commit>>"><<.Commit>></a>)<<end>>
         </small>
       </div>
       <div class="col-6 text-right">

@@ -15,7 +15,7 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 let formatter = {
   data: function () {
     return {
-      fmtLimit: 100,
+      fmtLimit: 1000,
       fmtDigits: 1,
     }
   },
