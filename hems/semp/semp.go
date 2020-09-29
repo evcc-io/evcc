@@ -482,10 +482,9 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if dev.On {
-				lp.ChargerEnable()
-			} else {
-				lp.ChargerDisable()
+			if err = lp.ChargeEnable(dev.On); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
 			}
 		}
 	}

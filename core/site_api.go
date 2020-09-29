@@ -62,3 +62,14 @@ func (site *Site) SetMinSoC(soc int) error {
 	}
 	return nil
 }
+
+// ChargeEnable enables/disables charging
+func (site *Site) ChargeEnable(enable bool) error {
+	site.log.INFO.Printf("enable: %s", status[enable])
+	for _, lp := range site.loadpoints {
+		if err := lp.ChargeEnable(enable); err != nil {
+			return err
+		}
+	}
+	return nil
+}

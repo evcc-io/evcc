@@ -21,6 +21,7 @@ type LoadPointSettingsAPI interface {
 	SetTargetSoC(int) error
 	GetMinSoC() int
 	SetMinSoC(int) error
+	ChargeEnable(enable bool) error
 }
 
 // LoadPointEnergyAPI is the external loadpoint API
@@ -107,6 +108,16 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	}
 
 	return nil
+}
+
+// ChargeEnable enables/disables charging
+func (lp *LoadPoint) ChargeEnable(enable bool) error {
+	var current int64 = 0
+	if enable {
+		current = lp.MinCurrent
+	}
+
+	return lp.handler.Ramp(current, true)
 }
 
 // HasChargeMeter determines if a physical charge meter is attached
