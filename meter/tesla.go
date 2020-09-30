@@ -54,7 +54,6 @@ func init() {
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage string
-		SoC        bool
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,11 +74,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		uri += ":" + url.Port()
 	}
 
-	return NewTesla(cc.URI, cc.Usage, cc.SoC)
+	return NewTesla(cc.URI, cc.Usage)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, usage string, soc bool) (api.Meter, error) {
+func NewTesla(uri, usage string) (api.Meter, error) {
 	m := &Tesla{
 		Helper: request.NewHelper(util.NewLogger("tesla")),
 		uri:    uri,
@@ -97,7 +96,7 @@ func NewTesla(uri, usage string, soc bool) (api.Meter, error) {
 
 	// decorate api.BatterySoC
 	var batterySoC func() (float64, error)
-	if soc {
+	if usage == "battery" {
 		batterySoC = m.batterySoC
 	}
 
