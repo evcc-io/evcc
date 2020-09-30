@@ -48,7 +48,7 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.BatterySoC,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -136,7 +136,7 @@ func (m *Tesla) totalEnergy() (float64, error) {
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
-// batterySoC implements the api.BatterySoC interface
+// batterySoC implements the api.Battery interface
 func (m *Tesla) batterySoC() (float64, error) {
 	var res teslaBatteryResponse
 	err := m.GetJSON(m.uri+teslaBatteryURI, &res)
