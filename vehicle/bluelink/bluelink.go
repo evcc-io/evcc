@@ -197,10 +197,13 @@ func (v *API) getToken(accCode string) (string, error) {
 		"User-Agent":    "okhttp/3.10.0",
 	}
 
-	redirectURL := v.config.URI + "/api/v1/user/oauth2/redirect"
-	data := fmt.Sprintf("grant_type=authorization_code&redirect_uri=%s&code=%s", url.PathEscape(redirectURL), accCode)
+	data := url.Values(map[string][]string{
+		"grant_type":   {"authorization_code"},
+		"redirect_uri": {v.config.URI + "/api/v1/user/oauth2/redirect"},
+		"code":         {accCode},
+	})
 
-	req, err := request.New(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data), headers)
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.AccessToken, strings.NewReader(data.Encode()), headers)
 	if err != nil {
 		return "", err
 	}
