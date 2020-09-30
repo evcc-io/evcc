@@ -14,7 +14,11 @@ import (
 
 // credits to https://github.com/vloschiavo/powerwall2
 
-// /api/meters/aggregates
+const (
+	teslaMeterURI   = "/api/meters/aggregates"
+	teslaBatteryURI = "/api/system_status/soe"
+)
+
 type teslaMeterResponse map[string]struct {
 	LastCommunicationTime string  `json:"last_communication_time"`
 	InstantPower          float64 `json:"instant_power"`
@@ -30,8 +34,7 @@ type teslaMeterResponse map[string]struct {
 	ICCurrent             float64 `json:"i_c_current"`
 }
 
-// /api/system_status/soe
-type teslaBatteryResponse map[string]struct {
+type teslaBatteryResponse struct {
 	Percentage float64 `json:"percentage"`
 }
 
@@ -45,12 +48,13 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.BatterySoC,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage string
+		SoC        bool
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -66,16 +70,16 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, fmt.Errorf("invalid uri %s", cc.URI)
 	}
 
-	if url.Path == "" {
-		url.Path = "api/meters/aggregates"
-		cc.URI = url.String()
+	uri := "https://" + url.Hostname()
+	if url.Port() != "" {
+		uri += ":" + url.Port()
 	}
 
-	return NewTesla(cc.URI, cc.Usage)
+	return NewTesla(cc.URI, cc.Usage, cc.SoC)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, usage string) (api.Meter, error) {
+func NewTesla(uri, usage string, soc bool) (api.Meter, error) {
 	m := &Tesla{
 		Helper: request.NewHelper(util.NewLogger("tesla")),
 		uri:    uri,
@@ -91,16 +95,22 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	return decorateTesla(m, totalEnergy), nil
+	// decorate api.BatterySoC
+	var batterySoC func() (float64, error)
+	if soc {
+		batterySoC = m.batterySoC
+	}
+
+	return decorateTesla(m, totalEnergy, batterySoC), nil
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Tesla) CurrentPower() (float64, error) {
-	var tr teslaMeterResponse
-	err := m.GetJSON(m.uri, &tr)
+	var res teslaMeterResponse
+	err := m.GetJSON(m.uri+teslaMeterURI, &res)
 
 	if err == nil {
-		if o, ok := tr[m.usage]; ok {
+		if o, ok := res[m.usage]; ok {
 			return o.InstantPower, nil
 		}
 	}
@@ -110,11 +120,11 @@ func (m *Tesla) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
-	var tr teslaMeterResponse
-	err := m.GetJSON(m.uri, &tr)
+	var res teslaMeterResponse
+	err := m.GetJSON(m.uri+teslaMeterURI, &res)
 
 	if err == nil {
-		if o, ok := tr[m.usage]; ok {
+		if o, ok := res[m.usage]; ok {
 			if m.usage == "load" {
 				return o.EnergyImported, nil
 			}
@@ -125,4 +135,12 @@ func (m *Tesla) totalEnergy() (float64, error) {
 	}
 
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
+}
+
+// batterySoC implements the api.BatterySoC interface
+func (m *Tesla) batterySoC() (float64, error) {
+	var res teslaBatteryResponse
+	err := m.GetJSON(m.uri+teslaBatteryURI, &res)
+
+	return res.Percentage, err
 }
