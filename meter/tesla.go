@@ -14,7 +14,8 @@ import (
 
 // credits to https://github.com/vloschiavo/powerwall2
 
-type teslaResponse map[string]struct {
+// /api/meters/aggregates
+type teslaMeterResponse map[string]struct {
 	LastCommunicationTime string  `json:"last_communication_time"`
 	InstantPower          float64 `json:"instant_power"`
 	InstantReactivePower  float64 `json:"instant_reactive_power"`
@@ -27,6 +28,11 @@ type teslaResponse map[string]struct {
 	IACurrent             float64 `json:"i_a_current"`
 	IBCurrent             float64 `json:"i_b_current"`
 	ICCurrent             float64 `json:"i_c_current"`
+}
+
+// /api/system_status/soe
+type teslaBatteryResponse map[string]struct {
+	Percentage float64 `json:"percentage"`
 }
 
 // Tesla is the tesla powerwall meter
@@ -90,7 +96,7 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Tesla) CurrentPower() (float64, error) {
-	var tr teslaResponse
+	var tr teslaMeterResponse
 	err := m.GetJSON(m.uri, &tr)
 
 	if err == nil {
@@ -104,7 +110,7 @@ func (m *Tesla) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
-	var tr teslaResponse
+	var tr teslaMeterResponse
 	err := m.GetJSON(m.uri, &tr)
 
 	if err == nil {
