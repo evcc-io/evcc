@@ -74,7 +74,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		uri += ":" + url.Port()
 	}
 
-	return NewTesla(cc.URI, cc.Usage)
+	return NewTesla(uri, cc.Usage)
 }
 
 // NewTesla creates a Tesla Meter
