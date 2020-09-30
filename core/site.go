@@ -320,6 +320,7 @@ func (site *Site) sitePower() (float64, error) {
 			site.log.ERROR.Printf("updating battery soc: %v", err)
 		} else {
 			site.publish("batterySoC", soc)
+
 			if soc < site.BatteryPriority {
 				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
 				batteryPower = 0
