@@ -30,6 +30,8 @@ func init() {
 	registry.Add("audi", NewAudiFromConfig)
 }
 
+const audiClientID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
+
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
@@ -138,7 +140,7 @@ func (v *Audi) authFlow() error {
 
 		req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
-			"X-Client-Id":  "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+			"X-Client-Id":  audiClientID,
 		})
 		if err == nil {
 			if err = v.DoJSON(req, &v.tokens); err == nil && tokens.IDToken == "" {
@@ -155,7 +157,7 @@ func (v *Audi) refreshHeaders() map[string]string {
 		"Content-Type":  "application/x-www-form-urlencoded",
 		"X-App-Version": "3.14.0",
 		"X-App-Name":    "myAudi",
-		"X-Client-Id":   "77869e21-e30a-4a92-b016-48ab7d3db1d8",
+		"X-Client-Id":   audiClientID,
 	}
 }
 

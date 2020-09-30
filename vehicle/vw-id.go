@@ -16,6 +16,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// https://github.com/trocotronic/weconnect
+
 // VWId is an api.Vehicle implementation for VW cars
 type VWId struct {
 	*embed
@@ -28,7 +30,7 @@ type VWId struct {
 }
 
 func init() {
-	registry.Add("vw", NewVWIdFromConfig)
+	registry.Add("vw-id", NewVWIdFromConfig)
 }
 
 // NewVWIdFromConfig creates a new vehicle
