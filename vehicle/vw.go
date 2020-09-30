@@ -18,8 +18,8 @@ import (
 
 // https://github.com/trocotronic/weconnect
 
-// VWId is an api.Vehicle implementation for VW cars
-type VWId struct {
+// VW is an api.Vehicle implementation for VW cars
+type VW struct {
 	*embed
 	*request.Helper
 	user, password string
@@ -30,11 +30,11 @@ type VWId struct {
 }
 
 func init() {
-	registry.Add("vw-id", NewVWIdFromConfig)
+	registry.Add("vw", NewVWFromConfig)
 }
 
-// NewVWIdFromConfig creates a new vehicle
-func NewVWIdFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewVWFromConfig creates a new vehicle
+func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
@@ -45,16 +45,16 @@ func NewVWIdFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("vw-id")
+	log := util.NewLogger("vw")
 
-	v := &VWId{
+	v := &VW{
 		embed:    &embed{cc.Title, cc.Capacity},
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
 	}
 
-	v.api = vw.NewAPI(v.Helper, &v.tokens, v.authFlow, v.refreshHeaders, cc.VIN, "VW", "DE")
+	v.api = vw.NewAPI(v.Helper, &v.tokens, v.authFlow, v.refreshHeaders, strings.ToUpper(cc.VIN), "VW", "DE")
 	v.apiG = provider.NewCached(v.apiCall, cc.Cache).InterfaceGetter()
 
 	var err error
@@ -82,7 +82,7 @@ func NewVWIdFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *VWId) authFlow() error {
+func (v *VW) authFlow() error {
 	var err error
 	var uri string
 	var req *http.Request
@@ -194,7 +194,7 @@ func (v *VWId) authFlow() error {
 	return err
 }
 
-func (v *VWId) refreshHeaders() map[string]string {
+func (v *VW) refreshHeaders() map[string]string {
 	return map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"X-Client-Id":  v.clientID,
@@ -202,13 +202,13 @@ func (v *VWId) refreshHeaders() map[string]string {
 }
 
 // apiCall provides charger api response
-func (v *VWId) apiCall() (interface{}, error) {
+func (v *VW) apiCall() (interface{}, error) {
 	res, err := v.api.Charger()
 	return res, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
-func (v *VWId) ChargeState() (float64, error) {
+func (v *VW) ChargeState() (float64, error) {
 	res, err := v.apiG()
 	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
@@ -218,7 +218,7 @@ func (v *VWId) ChargeState() (float64, error) {
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *VWId) FinishTime() (time.Time, error) {
+func (v *VW) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
 		var timestamp time.Time
