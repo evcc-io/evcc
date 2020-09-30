@@ -12,7 +12,7 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/vwidentity"
+	"github.com/andig/evcc/vehicle/vw"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -48,8 +48,8 @@ type vwChargerResponse struct {
 
 // based on https://github.com/wez3/volkswagen-carnet-client
 
-// VW is an api.Vehicle implementation for VW cars
-type VW struct {
+// VWWe is an api.Vehicle implementation for VW cars
+type VWWe struct {
 	*embed
 	*request.Helper
 	user, password, vin string
@@ -59,11 +59,11 @@ type VW struct {
 }
 
 func init() {
-	registry.Add("vw", NewVWFromConfig)
+	registry.Add("vw-we", NewVWWeFromConfig)
 }
 
-// NewVWFromConfig creates a new vehicle
-func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewVWWeFromConfig creates a new vehicle
+func NewVWWeFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
@@ -74,9 +74,9 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("vw")
+	log := util.NewLogger("vw-we")
 
-	v := &VW{
+	v := &VWWe{
 		embed:    &embed{cc.Title, cc.Capacity},
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
@@ -112,10 +112,10 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *VW) authFlow() error {
+func (v *VWWe) authFlow() error {
 	var err error
 	var uri, body string
-	var vars vwidentity.FormVars
+	var vars vw.FormVars
 	var req *http.Request
 	var resp *http.Response
 
@@ -124,7 +124,7 @@ func (v *VW) authFlow() error {
 	resp, err = v.Get(uri)
 
 	if err == nil {
-		vars, err = vwidentity.FormValues(resp.Body, "meta")
+		vars, err = vw.FormValues(resp.Body, "meta")
 	}
 
 	// POST www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
@@ -150,7 +150,7 @@ func (v *VW) authFlow() error {
 
 	// execute login
 	if err == nil {
-		identity := &vwidentity.Identity{Client: v.Client}
+		identity := &vw.Identity{Client: v.Client}
 		resp, err = identity.Login(uri, v.user, v.password)
 	}
 
@@ -160,7 +160,6 @@ func (v *VW) authFlow() error {
 		var locationURL *url.URL
 
 		location := resp.Header.Get("Location")
-
 		if locationURL, err = url.Parse(location); err == nil {
 			code = locationURL.Query().Get("code")
 			state = locationURL.Query().Get("state")
@@ -187,7 +186,7 @@ func (v *VW) authFlow() error {
 	return err
 }
 
-func (v *VW) vehicles() ([]string, error) {
+func (v *VWWe) vehicles() ([]string, error) {
 	uri := v.baseURI + "/-/mainnavigation/get-fully-loaded-cars"
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":       "application/json",
@@ -211,7 +210,7 @@ func (v *VW) vehicles() ([]string, error) {
 }
 
 // chargeState implements the Vehicle.ChargeState interface
-func (v *VW) chargeState() (float64, error) {
+func (v *VWWe) chargeState() (float64, error) {
 	uri := v.baseURI + "/-/emanager/get-emanager"
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":       "application/json",
@@ -227,12 +226,12 @@ func (v *VW) chargeState() (float64, error) {
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
-func (v *VW) ChargeState() (float64, error) {
+func (v *VWWe) ChargeState() (float64, error) {
 	return v.chargeStateG()
 }
 
 // finishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *VW) finishTime() (time.Time, error) {
+func (v *VWWe) finishTime() (time.Time, error) {
 	uri := v.baseURI + "/-/emanager/get-emanager"
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":       "application/json",
@@ -255,6 +254,6 @@ func (v *VW) finishTime() (time.Time, error) {
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *VW) FinishTime() (time.Time, error) {
+func (v *VWWe) FinishTime() (time.Time, error) {
 	return v.finishTimeG()
 }

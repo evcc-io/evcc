@@ -129,3 +129,20 @@ func (c *Cached) TimeGetter() func() (time.Time, error) {
 		return c.val.(time.Time), c.err
 	}
 }
+
+// InterfaceGetter gets interface value
+func (c *Cached) InterfaceGetter() func() (interface{}, error) {
+	g, ok := c.getter.(func() (interface{}, error))
+	if !ok {
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+	}
+
+	return func() (interface{}, error) {
+		if c.clock.Since(c.updated) > c.cache {
+			c.val, c.err = g()
+			c.updated = c.clock.Now()
+		}
+
+		return c.val, c.err
+	}
+}

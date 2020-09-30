@@ -1,4 +1,4 @@
-package vwidentity
+package vw
 
 import (
 	"errors"

@@ -56,6 +56,9 @@ func (r *helperTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			if body, _ := ReadBody(resp); len(body) > 0 {
 				msg += "\n" + strings.TrimSpace(string(body))
 			}
+			// if body, err := httputil.DumpResponse(resp, true); err == nil {
+			// 	msg += "\n" + strings.TrimSpace(string(body))
+			// }
 		}
 		r.log.Println(msg)
 	}
