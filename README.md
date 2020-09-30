@@ -7,7 +7,7 @@
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 
-EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
+EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). It supports integration with Sunny5 Hybrid-Inverters and pylontech battery storage.
 
 ## Features
 
@@ -100,6 +100,8 @@ docker run --network host andig/evcc ...
 To build EVCC from source, [Go](2) 1.13 is required:
 
     make
+
+Prerequisites: mosquitto and mosquitto-clients packages for mqtt and influxdb for db support. sudo apt install influxdb influxdb-client mosquitto mosquitto-clients. Run influx cli and type: create database evcc
 
 **Note**: EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
