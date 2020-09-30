@@ -123,7 +123,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
-		vin:      cc.VIN,
+		vin:      strings.ToUpper(cc.VIN),
 	}
 
 	err := v.apiKeys(cc.Region)
