@@ -8,57 +8,9 @@ levels:
   lp-1: debug
   lp-2: debug
 
-# mqtt message broker
-mqtt:
-  broker: localhost:1883
-  topic: evcc # root topic for publishing, set empty to disable
-  # user:
-  # password:
-
-# influx database
-influx:
-  url: http://localhost:8086
-  database: evcc
-  # user:
-  # password:
-
-# additional menu entries
-menu:
-# - title: "Verlauf"
-#   subtitle: "Bezugs- und Einspeiseleistung"
-#   img: "http://..."
-#   link: "http://..."
-#   iframe: "http://..."
-
-# push messages
-messaging:
-  events:
-    start: # charge start event
-      title: Charge started
-      msg: Started charging in "${mode}" mode
-    stop: # charge stop event
-      title: Charge finished
-      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
-    connect: # vehicle connect event
-      title: Car connected
-      msg: "Car connected at ${pvPower:%.1fk}kW PV"
-    disconnect: # vehicle connected event
-      title: Car disconnected
-      msg: Car disconnected after ${connectedDuration}
-  services:
-  # - type: pushover
-  #   app: # app id
-  #   recipients:
-  #   - # list of recipient ids
-  # - type: telegram
-  #   token: # bot id
-  #   chats:
-  #   - # list of chat ids
-  # - type: email
-  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
-
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
+# for examples see https://github.com/andig/evcc-config#meters
 meters:
 - name: grid
   type: modbus
@@ -69,22 +21,25 @@ meters:
   power: Power # default value, optionally override
   energy: Sum # default value, optionally override
 - name: pv
-  type: ... # examples see https://github.com/andig/evcc-config#meters
+  type: ...
 - name: battery
   type: ...
 - name: charge
+  type: ...
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
+# for examples see https://github.com/andig/evcc-config#chargers
 chargers:
 - name: wallbe
   type: wallbe # Wallbe charger
   uri: 192.168.0.8:502 # ModBus address
 - name: keba
-  type: ... # https://github.com/andig/evcc-config#chargers
+  type: ...
 
 # vehicle definitions
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
+# for examples see https://github.com/andig/evcc-config#vehicles
 vehicles:
 - name: renault
   type: renault
@@ -92,25 +47,7 @@ vehicles:
   capacity: 60 # kWh
   user: # user
   password: # password
-  region: de_DE # gigya region
   vin: WREN...
-  cache: 5m
-- name: default
-  type: default
-  title: Default
-  capacity: 50 # kWh
-  charge:
-    type: script # use script
-    cmd: /bin/sh -c "echo 50" # actual command
-    timeout: 3s # kill script after 3 seconds
-  cache: 5m
-- name: bmw
-  type: bmw
-  title: i3
-  capacity: 65 # kWh
-  user: # user
-  password: # password
-  vin: WBMW...
   cache: 5m
 
 # site describes the EVU connection, PV and home battery
@@ -152,3 +89,44 @@ loadpoints:
   guardduration: 10m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
+
+# mqtt message broker
+mqtt:
+  broker: localhost:1883
+  topic: evcc # root topic for publishing, set empty to disable
+  # user:
+  # password:
+
+# influx database
+influx:
+  url: http://localhost:8086
+  database: evcc
+  # user:
+  # password:
+
+# push messages
+messaging:
+  events:
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+    stop: # charge stop event
+      title: Charge finished
+      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+    connect: # vehicle connect event
+      title: Car connected
+      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+    disconnect: # vehicle connected event
+      title: Car disconnected
+      msg: Car disconnected after ${connectedDuration}
+  services:
+  # - type: pushover
+  #   app: # app id
+  #   recipients:
+  #   - # list of recipient ids
+  # - type: telegram
+  #   token: # bot id
+  #   chats:
+  #   - # list of chat ids
+  # - type: email
+  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
