@@ -12,7 +12,7 @@ func decorateTesla(base api.Meter, meterEnergy func() (float64, error)) api.Mete
 		return base
 
 	case meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterEnergy
 		}{

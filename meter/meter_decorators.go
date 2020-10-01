@@ -12,7 +12,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCur
 		return base
 
 	case meterCurrent == nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterEnergy
 		}{
@@ -23,7 +23,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCur
 		}
 
 	case meterCurrent != nil && meterEnergy == nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterCurrent
 		}{
@@ -34,7 +34,7 @@ func decorateMeter(base api.Meter, meterEnergy func() (float64, error), meterCur
 		}
 
 	case meterCurrent != nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy

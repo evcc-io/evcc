@@ -12,7 +12,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		return base
 
 	case meter != nil && meterCurrent == nil && meterEnergy == nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.Meter
 		}{
@@ -23,7 +23,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter == nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.MeterEnergy
 		}{
@@ -34,7 +34,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter != nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.Meter
 			api.MeterEnergy
@@ -49,7 +49,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter == nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.MeterCurrent
 		}{
@@ -60,7 +60,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter != nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.Meter
 			api.MeterCurrent
@@ -75,7 +75,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter == nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.MeterCurrent
 			api.MeterEnergy
@@ -90,7 +90,7 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 		}
 
 	case meter != nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Charger
 			api.Meter
 			api.MeterCurrent
