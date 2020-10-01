@@ -9,7 +9,10 @@ import (
 )
 
 const (
-	IdentityURI   = "https://identity.vwgroup.io"
+	// IdentityURI is the VW OIDC identidy provider uri
+	IdentityURI = "https://identity.vwgroup.io"
+
+	// OauthTokenURI is used for refreshing tokens
 	OauthTokenURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 )
 

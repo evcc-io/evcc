@@ -13,12 +13,14 @@ import (
 // BaseURI is the VW api base URI
 const BaseURI = "https://msg.volkswagen.de/fs-car"
 
+// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
 type VehiclesResponse struct {
 	UserVehicles struct {
 		Vehicle []string
 	}
 }
 
+// ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
 type ChargerResponse struct {
 	Charger struct {
 		Status struct {
@@ -36,6 +38,7 @@ type ChargerResponse struct {
 	}
 }
 
+// API is the VW api client
 type API struct {
 	*request.Helper
 	tokens         *Tokens
