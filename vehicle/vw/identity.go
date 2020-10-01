@@ -33,29 +33,6 @@ type OIDCResponse struct {
 	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
 }
 
-type VehiclesResponse struct {
-	UserVehicles struct {
-		Vehicle []string
-	}
-}
-
-type ChargerResponse struct {
-	Charger struct {
-		Status struct {
-			BatteryStatusData struct {
-				StateOfCharge struct {
-					Content   int
-					Timestamp string
-				}
-				RemainingChargingTime struct {
-					Content   int
-					Timestamp string
-				}
-			}
-		}
-	}
-}
-
 // Identity provides the identity.vwgroup.io login
 type Identity struct {
 	*http.Client

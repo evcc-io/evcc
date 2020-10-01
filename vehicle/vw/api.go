@@ -10,7 +10,31 @@ import (
 	"github.com/andig/evcc/util/request"
 )
 
-const APIURI = "https://msg.volkswagen.de/fs-car"
+// BaseURI is the VW api base URI
+const BaseURI = "https://msg.volkswagen.de/fs-car"
+
+type VehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+}
+
+type ChargerResponse struct {
+	Charger struct {
+		Status struct {
+			BatteryStatusData struct {
+				StateOfCharge struct {
+					Content   int
+					Timestamp string
+				}
+				RemainingChargingTime struct {
+					Content   int
+					Timestamp string
+				}
+			}
+		}
+	}
+}
 
 type API struct {
 	*request.Helper
@@ -99,7 +123,7 @@ func (v *API) getJSON(uri string, res interface{}) error {
 // Vehicles implements the /vehicles response
 func (v *API) Vehicles() ([]string, error) {
 	var res VehiclesResponse
-	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", APIURI, v.brand, v.country)
+	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", BaseURI, v.brand, v.country)
 	err := v.getJSON(uri, &res)
 	return res.UserVehicles.Vehicle, err
 }
@@ -107,7 +131,7 @@ func (v *API) Vehicles() ([]string, error) {
 // Charger implements the /charger response
 func (v *API) Charger() (ChargerResponse, error) {
 	var res ChargerResponse
-	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", APIURI, v.brand, v.country, v.VIN)
+	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", BaseURI, v.brand, v.country, v.VIN)
 	err := v.getJSON(uri, &res)
 	return res, err
 }
