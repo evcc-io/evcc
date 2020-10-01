@@ -8,7 +8,7 @@ import (
 	"github.com/containrrr/shoutrrr/pkg/types"
 )
 
-// Shoutrrr implements the shoutrrr messenging aggregator
+// Shoutrrr implements the shoutrrr messaging aggregator
 type Shoutrrr struct {
 	app *router.ServiceRouter
 }

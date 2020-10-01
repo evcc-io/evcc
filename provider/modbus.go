@@ -70,7 +70,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 			return nil, fmt.Errorf("invalid value %s", cc.Value)
 		}
 
-		// if sunspec reading configured make sure model is defined or device won't be initalized
+		// if sunspec reading configured make sure model is defined or device won't be initialized
 		if op.SunSpec.Point != "" && cc.Model == "" {
 			cc.Model = "SunSpec"
 		}
