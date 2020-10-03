@@ -31,6 +31,7 @@ type Site struct {
 	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig // Meter references
+	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -311,7 +312,23 @@ func (site *Site) sitePower() (float64, error) {
 		return 0, err
 	}
 
-	sitePower := sitePower(site.gridPower, site.batteryPower, site.ResidualPower)
+	// honour battery priority
+	batteryPower := site.batteryPower
+	if battery, ok := site.batteryMeter.(api.Battery); ok && site.PrioritySoC > 0 {
+		soc, err := battery.SoC()
+		if err != nil {
+			site.log.ERROR.Printf("updating battery soc: %v", err)
+		} else {
+			site.publish("batterySoC", soc)
+
+			if soc < site.PrioritySoC {
+				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
+				batteryPower = 0
+			}
+		}
+	}
+
+	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
 	return sitePower, nil
