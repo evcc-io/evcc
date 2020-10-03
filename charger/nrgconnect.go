@@ -28,14 +28,14 @@ type NRGMeasurements struct {
 
 // NRGSettings is the /api/settings request/response
 type NRGSettings struct {
-	Message string  `json:"omitempty"` // api message if not ok
-	Info    NRGInfo `json:"omitempty"`
+	Message string  `json:",omitempty"` // api message if not ok
+	Info    NRGInfo `json:",omitempty"`
 	Values  NRGValues
 }
 
 // NRGInfo is NRGSettings.Info
 type NRGInfo struct {
-	Connected bool `json:"omitempty"`
+	Connected bool `json:",omitempty"`
 }
 
 // NRGValues is NRGSettings.Values
@@ -47,12 +47,12 @@ type NRGValues struct {
 
 // NRGChargingStatus is NRGSettings.Values.ChargingStatus
 type NRGChargingStatus struct {
-	Charging *bool `json:"omitempty"` // use pointer to allow omitting false
+	Charging *bool `json:",omitempty"` // use pointer to allow omitting false
 }
 
 // NRGChargingCurrent is NRGSettings.Values.ChargingCurrent
 type NRGChargingCurrent struct {
-	Value float64 `json:"omitempty"`
+	Value float64 `json:",omitempty"`
 }
 
 // NRGDeviceMetadata is NRGSettings.Values.DeviceMetadata
