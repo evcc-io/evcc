@@ -93,8 +93,7 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	chargeStateG        func() (float64, error)
-	finishTimeG         func() (time.Time, error)
+	apiG                func() (interface{}, error)
 }
 
 func init() {
@@ -138,8 +137,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
+	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -244,12 +242,12 @@ func (v *Renault) jwtToken(sessionCookie string) (string, error) {
 
 	req, err := v.request(uri, data)
 
-	var gr gigyaResponse
+	var res gigyaResponse
 	if err == nil {
-		err = v.DoJSON(req, &gr)
+		err = v.DoJSON(req, &res)
 	}
 
-	return gr.IDToken, err
+	return res.IDToken, err
 }
 
 func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
@@ -259,33 +257,33 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 		"apikey":           v.kamereon.APIKey,
 	}
 
-	var kr kamereonResponse
+	var res kamereonResponse
 	req, err := v.request(uri, data, headers)
 	if err == nil {
-		err = v.DoJSON(req, &kr)
+		err = v.DoJSON(req, &res)
 	}
 
-	return kr, err
+	return res, err
 }
 
 func (v *Renault) kamereonPerson(personID string) (string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/persons/%s", v.kamereon.Target, personID)
-	kr, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri)
 
-	if len(kr.Accounts) == 0 {
+	if len(res.Accounts) == 0 {
 		return "", err
 	}
 
-	return kr.Accounts[0].AccountID, err
+	return res.Accounts[0].AccountID, err
 }
 
 func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/vehicles", v.kamereon.Target, accountID)
-	kr, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri)
 
 	var vehicles []string
 	if err == nil {
-		for _, v := range kr.VehicleLinks {
+		for _, v := range res.VehicleLinks {
 			if strings.ToUpper(v.Status) == "ACTIVE" {
 				vehicles = append(vehicles, v.VIN)
 			}
@@ -295,51 +293,48 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	return vehicles, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
-func (v *Renault) chargeState() (float64, error) {
+// batteryAPI provides battery api response
+func (v *Renault) batteryAPI() (interface{}, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
-	kr, err := v.kamereonRequest(uri)
+	res, err := v.kamereonRequest(uri)
 
 	// repeat auth if error
 	if err != nil {
 		if err = v.authFlow(); err == nil {
-			kr, err = v.kamereonRequest(uri)
+			res, err = v.kamereonRequest(uri)
 		}
 	}
 
-	return float64(kr.Data.Attributes.BatteryLevel), err
+	return res, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Renault) ChargeState() (float64, error) {
-	return v.chargeStateG()
-}
+	res, err := v.apiG()
 
-// finishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *Renault) finishTime() (time.Time, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
-	kr, err := v.kamereonRequest(uri)
-
-	// repeat auth if error
-	if err != nil {
-		if err = v.authFlow(); err == nil {
-			kr, err = v.kamereonRequest(uri)
-		}
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		return float64(res.Data.Attributes.BatteryLevel), nil
 	}
 
-	var timestamp time.Time
-	if err == nil {
-		timestamp, err = time.Parse(time.RFC3339, kr.Data.Attributes.Timestamp)
-	}
-
-	if kr.Data.Attributes.RemainingTime == nil {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
-	return timestamp.Add(time.Duration(*kr.Data.Attributes.RemainingTime) * time.Minute), err
+	return 0, err
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
-	return v.finishTimeG()
+	res, err := v.apiG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		var timestamp time.Time
+		if err == nil {
+			timestamp, err = time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
+		}
+
+		if res.Data.Attributes.RemainingTime == nil {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
+		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
+	}
+
+	return time.Time{}, err
 }
