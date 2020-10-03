@@ -1,4 +1,4 @@
-package vwidentity
+package vw
 
 import (
 	"net/http"
@@ -9,9 +9,32 @@ import (
 )
 
 const (
-	RootURI       = "https://identity.vwgroup.io"
+	// IdentityURI is the VW OIDC identidy provider uri
+	IdentityURI = "https://identity.vwgroup.io"
+
+	// OauthTokenURI is used for refreshing tokens
 	OauthTokenURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
 )
+
+// Tokens is an OAuth tokens response
+type Tokens struct {
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	IDToken      string `json:"id_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// OIDCResponse is the well-known OIDC provider response
+// https://{oauth-provider-hostname}/.well-known/openid-configuration
+type OIDCResponse struct {
+	Issuer      string   `json:"issuer"`
+	AuthURL     string   `json:"authorization_endpoint"`
+	TokenURL    string   `json:"token_endpoint"`
+	JWKSURL     string   `json:"jwks_uri"`
+	UserInfoURL string   `json:"userinfo_endpoint"`
+	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
+}
 
 // Identity provides the identity.vwgroup.io login
 type Identity struct {
@@ -54,7 +77,7 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 			"email":      {user},
 		})
 
-		uri = RootURI + vars.Action
+		uri = IdentityURI + vars.Action
 		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
 		if err == nil {
@@ -64,7 +87,7 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 
 	// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
 	if err == nil {
-		uri = RootURI + resp.Header.Get("Location")
+		uri = IdentityURI + resp.Header.Get("Location")
 		req, err = http.NewRequest(http.MethodGet, uri, nil)
 
 		if err == nil {
@@ -86,7 +109,7 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 			"password":   {password},
 		})
 
-		uri = RootURI + vars.Action
+		uri = IdentityURI + vars.Action
 		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
 		if err == nil {

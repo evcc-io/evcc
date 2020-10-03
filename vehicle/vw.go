@@ -1,7 +1,7 @@
 package vehicle
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -12,50 +12,21 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/vwidentity"
+	"github.com/andig/evcc/vehicle/vw"
 	"golang.org/x/net/publicsuffix"
 )
 
-type vwVehiclesResponse struct {
-	FullyLoadedVehiclesResponse struct {
-		CompleteVehicles []struct {
-			VIN string
-		}
-		VehiclesNotFullyLoaded []struct {
-			VIN string
-		}
-	}
-}
-
-type vwChargerResponse struct {
-	ErrorCode int `json:",string"`
-	// /-/emanager/get-emanager
-	EManager struct {
-		RBC struct {
-			Status struct {
-				BatteryPercentage      int
-				ChargingRemaningHour   int `json:",string"`
-				ChargingRemaningMinute int `json:",string"`
-			}
-		}
-	}
-	// /-/vsr/get-vsr
-	VehicleStatusData struct {
-		BatteryRange int
-		BatteryLevel int
-	}
-}
-
-// based on https://github.com/wez3/volkswagen-carnet-client
+// https://github.com/trocotronic/weconnect
 
 // VW is an api.Vehicle implementation for VW cars
 type VW struct {
 	*embed
 	*request.Helper
-	user, password, vin string
-	baseURI, csrf       string
-	chargeStateG        func() (float64, error)
-	finishTimeG         func() (time.Time, error)
+	user, password string
+	clientID       string
+	tokens         vw.Tokens
+	api            *vw.API
+	apiG           func() (interface{}, error)
 }
 
 func init() {
@@ -81,11 +52,10 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
-		vin:      cc.VIN,
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.finishTimeG = provider.NewCached(v.finishTime, cc.Cache).TimeGetter()
+	v.api = vw.NewAPI(v.Helper, &v.tokens, v.authFlow, v.refreshHeaders, strings.ToUpper(cc.VIN), "VW", "DE")
+	v.apiG = provider.NewCached(v.apiCall, cc.Cache).InterfaceGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -103,9 +73,9 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil && cc.VIN == "" {
-		v.vin, err = findVehicle(v.vehicles())
+		v.api.VIN, err = findVehicle(v.api.Vehicles())
 		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", v.vin)
+			log.DEBUG.Printf("found vehicle: %v", v.api.VIN)
 		}
 	}
 
@@ -114,72 +84,109 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 func (v *VW) authFlow() error {
 	var err error
-	var uri, body string
-	var vars vwidentity.FormVars
+	var uri string
 	var req *http.Request
 	var resp *http.Response
-
-	// GET www.portal.volkswagen-we.com/portal/de_DE/web/guest/home
-	uri = "https://www.portal.volkswagen-we.com/portal/de_DE/web/guest/home"
-	resp, err = v.Get(uri)
-
-	if err == nil {
-		vars, err = vwidentity.FormValues(resp.Body, "meta")
-	}
-
-	// POST www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url
-	if err == nil {
-		uri = "https://www.portal.volkswagen-we.com/portal/en_GB/web/guest/home/-/csrftokenhandling/get-login-url"
-		if req, err = request.New(http.MethodPost, uri, nil, map[string]string{"X-CSRF-Token": vars.Csrf}); err == nil {
-
-			res := struct {
-				ErrorCode int `json:",string"`
-				LoginURL  struct {
-					Path string
-				}
-			}{}
-
-			if err = v.DoJSON(req, &res); err == nil {
-				uri = strings.ReplaceAll(res.LoginURL.Path, " ", "%20")
-				if res.ErrorCode != 0 {
-					err = fmt.Errorf("login url error code: %d", res.ErrorCode)
-				}
-			}
-		}
-	}
+	var idToken string
 
 	// execute login
+	challenge, verifier, err := vw.ChallengeVerifier()
+	query := url.Values(map[string][]string{
+		"prompt":                {"login"},
+		"state":                 {vw.RandomString(43)},
+		"response_type":         {"code id_token token"},
+		"code_challenge_method": {"s256"},
+		"scope":                 {"openid profile mbb cars birthdate nickname address phone"},
+		"code_challenge":        {challenge},
+		"redirect_uri":          {"carnet://identity-kit/login"},
+		"client_id":             {"9496332b-ea03-4091-a224-8c746b885068@apps_vw-dilab_com"},
+		"nonce":                 {vw.RandomString(43)},
+	})
+
+	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
 	if err == nil {
-		identity := &vwidentity.Identity{Client: v.Client}
+		identity := &vw.Identity{Client: v.Client}
 		resp, err = identity.Login(uri, v.user, v.password)
 	}
 
-	// get base url
 	if err == nil {
-		var code, state string
-		var locationURL *url.URL
+		// var code string
 
-		location := resp.Header.Get("Location")
-
-		if locationURL, err = url.Parse(location); err == nil {
-			code = locationURL.Query().Get("code")
-			state = locationURL.Query().Get("state")
-
-			uri = fmt.Sprintf(
-				"%s?p_auth=%s&p_p_id=33_WAR_cored5portlet&p_p_lifecycle=1&p_p_state=normal&p_p_mode=view&p_p_col_id=column-1&p_p_col_count=1&_33_WAR_cored5portlet_javax.portlet.action=getLoginStatus",
-				locationURL.Scheme+"://"+locationURL.Host+locationURL.Path,
-				state,
-			)
+		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parsable url
+		if locationURL, err := url.Parse(loc); err == nil {
+			// code = locationURL.Query().Get("code")
+			idToken = locationURL.Query().Get("id_token")
 		}
 
-		body = fmt.Sprintf("_33_WAR_cored5portlet_code=%s", url.QueryEscape(code))
+		_ = verifier
+		// if err == nil {
+		// 	data := url.Values(map[string][]string{
+		// 		"auth_code":     {code},
+		// 		"code_verifier": {verifier},
+		// 		"id_token":      {idToken},
+		// 	})
 
-		if req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding); err == nil {
-			if resp, err = v.Do(req); err == nil {
-				uri = resp.Header.Get("Location")
+		// 	uri := "https://tokenrefreshservice.apps.emea.vwapps.io/exchangeAuthCode"
+		// 	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
-				v.baseURI = uri
-				v.csrf = vars.Csrf
+		// 	// if err == nil {
+		// 	// 	err = v.DoJSON(req, &tokens)
+		// 	// 	if err == nil && tokens.AccessToken == "" {
+		// 	// 		err = errors.New("missing access token")
+		// 	// 	}
+		// 	// }
+		// }
+	}
+
+	// get client id
+	if err == nil {
+		data := struct {
+			AppID       string `json:"appId"`
+			AppName     string `json:"appName"`
+			AppVersion  string `json:"appVersion"`
+			ClientBrand string `json:"client_brand"`
+			ClientName  string `json:"client_name"`
+			Platform    string `json:"platform"`
+		}{
+			AppID:       "de.volkswagen.car-net.eu.e-remote",
+			AppName:     "We Connect",
+			AppVersion:  "5.3.2",
+			ClientBrand: "VW",
+			ClientName:  "iPhone",
+			Platform:    "iOS",
+		}
+
+		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/register/v1"
+		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+		if err == nil {
+			data := struct {
+				ClientID string `json:"client_id"`
+			}{}
+
+			if err = v.DoJSON(req, &data); err == nil && data.ClientID == "" {
+				err = errors.New("missing client id")
+			}
+
+			v.clientID = data.ClientID
+		}
+
+		if err == nil {
+			data := url.Values(map[string][]string{
+				"grant_type": {"id_token"},
+				"scope":      {"sc2:fal"},
+				"token":      {idToken},
+			})
+
+			req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
+				"Content-type": "application/x-www-form-urlencoded",
+				"X-Client-Id":  v.clientID,
+			})
+
+			if err == nil {
+				if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
+					err = errors.New("missing access token")
+				}
 			}
 		}
 	}
@@ -187,74 +194,40 @@ func (v *VW) authFlow() error {
 	return err
 }
 
-func (v *VW) vehicles() ([]string, error) {
-	uri := v.baseURI + "/-/mainnavigation/get-fully-loaded-cars"
-	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
-		"Accept":       "application/json",
-		"X-CSRF-Token": v.csrf,
-	})
-
-	var res vwVehiclesResponse
-	if err == nil {
-		err = v.DoJSON(req, &res)
+func (v *VW) refreshHeaders() map[string]string {
+	return map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"X-Client-Id":  v.clientID,
 	}
-
-	vehicles := make([]string, 0)
-	for _, v := range res.FullyLoadedVehiclesResponse.CompleteVehicles {
-		vehicles = append(vehicles, v.VIN)
-	}
-	for _, v := range res.FullyLoadedVehiclesResponse.VehiclesNotFullyLoaded {
-		vehicles = append(vehicles, v.VIN)
-	}
-
-	return vehicles, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
-func (v *VW) chargeState() (float64, error) {
-	uri := v.baseURI + "/-/emanager/get-emanager"
-	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
-		"Accept":       "application/json",
-		"X-CSRF-Token": v.csrf,
-	})
-
-	var res vwChargerResponse
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return float64(res.EManager.RBC.Status.BatteryPercentage), err
+// apiCall provides charger api response
+func (v *VW) apiCall() (interface{}, error) {
+	res, err := v.api.Charger()
+	return res, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *VW) ChargeState() (float64, error) {
-	return v.chargeStateG()
-}
-
-// finishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *VW) finishTime() (time.Time, error) {
-	uri := v.baseURI + "/-/emanager/get-emanager"
-	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
-		"Accept":       "application/json",
-		"X-CSRF-Token": v.csrf,
-	})
-
-	var res vwChargerResponse
-	if err == nil {
-		err = v.DoJSON(req, &res)
+	res, err := v.apiG()
+	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
+		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
 
-	var duration time.Duration
-	if err == nil {
-		hour := res.EManager.RBC.Status.ChargingRemaningHour
-		min := res.EManager.RBC.Status.ChargingRemaningMinute
-		duration = time.Hour*time.Duration(hour) + time.Minute*time.Duration(min)
-	}
-
-	return time.Now().Add(duration), err
+	return 0, err
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *VW) FinishTime() (time.Time, error) {
-	return v.finishTimeG()
+	res, err := v.apiG()
+	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
+		var timestamp time.Time
+		if err == nil {
+			timestamp, err = time.Parse(time.RFC3339, res.Charger.Status.BatteryStatusData.RemainingChargingTime.Timestamp)
+		}
+
+		return timestamp.Add(time.Duration(res.Charger.Status.BatteryStatusData.RemainingChargingTime.Content) * time.Minute), err
+	}
+
+	return time.Time{}, err
 }

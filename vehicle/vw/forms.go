@@ -1,4 +1,4 @@
-package vwidentity
+package vw
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+// FormVars holds HTML form input values required for login
 type FormVars struct {
 	Action     string
 	Csrf       string
@@ -14,6 +15,7 @@ type FormVars struct {
 	Hmac       string
 }
 
+// FormValues extracts FormVars from given HTML document
 func FormValues(reader io.Reader, id string) (FormVars, error) {
 	vars := FormVars{}
 
