@@ -81,9 +81,10 @@ func (v *API) refreshToken() error {
 
 	if err == nil {
 		var tokens Tokens
+
 		err = v.DoJSON(req, &tokens)
 		if err == nil {
-			v.tokens = &tokens
+			v.tokens.AccessToken = tokens.AccessToken
 		}
 	}
 
@@ -101,10 +102,8 @@ func (v *API) getJSON(uri string, res interface{}) error {
 
 		// token expired?
 		if err != nil {
-			resp := v.LastResponse()
-
 			// handle http 401
-			if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+			if se, ok := err.(request.StatusError); ok && se.StatusCode() == http.StatusUnauthorized {
 				// use refresh token
 				if err = v.refreshToken(); err != nil {
 					// re-run full auth flow
