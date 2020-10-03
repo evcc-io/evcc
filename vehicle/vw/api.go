@@ -85,6 +85,9 @@ func (v *API) refreshToken() error {
 		err = v.DoJSON(req, &tokens)
 		if err == nil {
 			v.tokens.AccessToken = tokens.AccessToken
+			if tokens.RefreshToken != "" {
+				v.tokens.RefreshToken = tokens.RefreshToken
+			}
 		}
 	}
 
