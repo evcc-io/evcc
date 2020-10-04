@@ -258,12 +258,18 @@ Vue.component('version', {
 
 Vue.component('site', {
   template: '#site-template',
-  props: ['state'],
+  props: ['state', 'batteryStyle'],
   mixins: [formatter],
   computed: {
     multi: function() {
       return this.state.loadpoints.length > 1 || app.compact;
     }
+  },
+  watch: {
+    batteryChargeStyle: function() {
+      const styles = ['empty', 'quarter', 'half', 'three-quarters', 'full'];
+      return 'fa-battery-' + styles[this.batteryStyle];
+    },
   },
   methods: {
     connect: function() {
@@ -285,10 +291,16 @@ Vue.component('site', {
           toasts.error(e, evt.data)
         }
       };
-    }
+    },
+    tick: function() {
+      if (++this.batteryStyle > 3) {
+        this.batteryStyle = 0;
+      };
+    },
   },
   created: function() {
     this.connect();
+    this.ticker = window.setInterval(this.tick.bind(this), 1000);
   }
 });
 
