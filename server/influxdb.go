@@ -8,6 +8,7 @@ import (
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
 
 // InfluxConfig is the influx db configuration
@@ -41,6 +42,9 @@ func NewInfluxClient(url, token, org, user, password, database string) *Influx {
 
 	options := influxdb2.DefaultOptions().SetPrecision(time.Second)
 	client := influxdb2.NewClientWithOptions(url, token, options)
+
+	// handle error logging in writer
+	influxlog.Log = nil
 
 	return &Influx{
 		log:      log,
