@@ -93,15 +93,15 @@ loadpoints:
 
 # mqtt message broker
 mqtt:
-  broker: localhost:1883
-  topic: evcc # root topic for publishing, set empty to disable
+  # broker: localhost:1883
+  # topic: evcc # root topic for publishing, set empty to disable
   # user:
   # password:
 
 # influx database
 influx:
-  url: http://localhost:8086
-  database: evcc
+  # url: http://localhost:8086
+  # database: evcc
   # user:
   # password:
 
