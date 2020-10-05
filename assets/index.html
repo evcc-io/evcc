@@ -74,9 +74,6 @@
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
       <div class="navbar-nav">
         <router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
-        <!-- <<range $idx, $link := .Links>> -->
-        <router-link class="nav-item nav-link pb-1" to="/links/<<$idx>>"><<$link.Title>></router-link>
-        <!-- <<end>> -->
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
         <a class="nav-item nav-link pb-1" href="https://github.com/andig/evcc/issues">Support</a>
       </div>
@@ -116,21 +113,6 @@
     <div class="row p-3 bg-light collapse" id="release-notes" ref="notes">
       <div class="col-12" v-html="state.releaseNotes"></div>
     </div>
-  </div>
-</script>
-
-<script type="text/x-template" id="embed-template">
-  <div class="container mx-auto text-center">
-    <h1 class="display-4 pt-3" v-if="title">{{title}}</h1>
-    <p class="lead mx-auto text-center" v-if="subtitle">{{subtitle}}</p>
-    <a v-bind:href="link" v-if="link">
-      <img v-bind:src="img" v-if="img">
-      <iframe v-bind:src="iframe" v-if="iframe">
-    </a>
-    <span v-else>
-      <img class="img-fluid" v-bind:src="img" v-if="img">
-      <iframe v-bind:src="iframe" v-if="iframe">
-    </span>
   </div>
 </script>
 
@@ -521,22 +503,6 @@ loadpoints:
     </div>
   </div>
 </footer>
-
-<script>
-  function routerLinks() {
-    return [
-      // <<range $idx, $link := .Links>>
-      {
-        title: "<<$link.Title>>",
-        subtitle: "<<$link.Subtitle>>",
-        img: "<<$link.Img>>",
-        iframe: "<<$link.Iframe>>",
-        link: "<<$link.Link>>"
-      },
-      // <<end>>
-    ];
-  }
-</script>
 
 <script src="js/app.js?<<.Tag>>"></script>
 
