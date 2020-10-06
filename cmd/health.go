@@ -1,5 +1,3 @@
-// +build health
-
 package cmd
 
 import (
@@ -16,7 +14,7 @@ import (
 // healthCmd represents the meter command
 var healthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Application health check",
+	Short: "Check application health",
 	Run:   runHealth,
 }
 

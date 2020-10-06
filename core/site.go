@@ -130,13 +130,13 @@ type LoadpointConfiguration struct {
 func (site *Site) Healthy() bool {
 	start := time.Now()
 
-	for time.Since(start) < 10*time.Second {
+	for time.Since(start) < time.Second {
 		if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
 			defer atomic.StoreUint32(&site.healthLocker, 0)
-			return time.Since(site.healthUpdated) < 30*time.Second
+			return time.Since(site.healthUpdated) < 60*time.Second
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	return false
@@ -144,10 +144,17 @@ func (site *Site) Healthy() bool {
 
 // updateHealth updates the health timer on each loadpoint update
 func (site *Site) updateHealth() {
-	if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
-		site.healthUpdated = time.Now()
+	start := time.Now()
+
+	for time.Since(start) < time.Second {
+		if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
+			site.healthUpdated = time.Now()
+			atomic.StoreUint32(&site.healthLocker, 0)
+			return
+		}
+
+		time.Sleep(50 * time.Millisecond)
 	}
-	atomic.StoreUint32(&site.healthLocker, 0)
 }
 
 // GetMode fets loadpoint charge mode
