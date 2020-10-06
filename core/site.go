@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 	"fmt"
-	"sync/atomic"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -25,8 +24,7 @@ type Site struct {
 	uiChan       chan<- util.Param // client push messages
 	lpUpdateChan chan *LoadPoint
 
-	healthLocker  uint32 // health mutex
-	healthUpdated time.Time
+	*Health
 
 	log *util.Logger
 
@@ -96,6 +94,7 @@ func NewSiteFromConfig(
 func NewSite() *Site {
 	lp := &Site{
 		log:     util.NewLogger("core"),
+		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
 
@@ -124,37 +123,6 @@ type LoadpointConfiguration struct {
 	SoCTitle    string `json:"socTitle"`
 	SoCLevels   []int  `json:"socLevels"`
 	TargetSoC   int    `json:"targetSoC"`
-}
-
-// Healthy returns health status based on last update timestamp
-func (site *Site) Healthy() bool {
-	start := time.Now()
-
-	for time.Since(start) < time.Second {
-		if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
-			defer atomic.StoreUint32(&site.healthLocker, 0)
-			return time.Since(site.healthUpdated) < 60*time.Second
-		}
-
-		time.Sleep(50 * time.Millisecond)
-	}
-
-	return false
-}
-
-// updateHealth updates the health timer on each loadpoint update
-func (site *Site) updateHealth() {
-	start := time.Now()
-
-	for time.Since(start) < time.Second {
-		if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
-			site.healthUpdated = time.Now()
-			atomic.StoreUint32(&site.healthLocker, 0)
-			return
-		}
-
-		time.Sleep(50 * time.Millisecond)
-	}
 }
 
 // GetMode fets loadpoint charge mode
@@ -375,7 +343,7 @@ func (site *Site) update(lp Updater) {
 
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower)
-		site.updateHealth()
+		site.Health.Update()
 	}
 }
 
