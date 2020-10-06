@@ -196,7 +196,7 @@ Meters provide data about power and energy consumption or PV production. Availab
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use.
 - `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
 - `tesla`: Tesla PowerWall meter. Use `usage` setting to choose internal meter (grid: `site`, pv: `solar`, battery: `battery`).
-- `default`: default meter implementation where meter readings- `power` and `energy` are configured using [plugins](#plugins)
+- `default`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
 Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
 
