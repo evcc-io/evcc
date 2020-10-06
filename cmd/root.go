@@ -154,7 +154,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// create webserver
 	socketHub := server.NewSocketHub()
-	httpd := server.NewHTTPd(uri, conf.Menu, site, socketHub, cache)
+	httpd := server.NewHTTPd(uri, site, socketHub, cache)
 
 	// start HEMS server
 	if conf.HEMS != "" {
