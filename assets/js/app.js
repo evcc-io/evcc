@@ -258,18 +258,21 @@ Vue.component('version', {
 
 Vue.component('site', {
   template: '#site-template',
-  props: ['state', 'batteryStyle'],
+  props: ['state'],
   mixins: [formatter],
   computed: {
     multi: function() {
-      return this.state.loadpoints.length > 1 || app.compact;
-    }
+      return this.state.loadpoints.length > 1 || false;
+    },
   },
   watch: {
-    batteryChargeStyle: function() {
-      const styles = ['empty', 'quarter', 'half', 'three-quarters', 'full'];
-      return 'fa-battery-' + styles[this.batteryStyle];
-    },
+      // batteryChargeStyleIndex: function() {
+      //   const styles = ['empty', 'quarter', 'half', 'three-quarters',
+      //   'full'];
+      //   this.batteryChargeStyle = 'fa-battery-' +
+      //   styles[this.batteryChargeStyleIndex];
+      //   console.log(this.batteryChargeStyle)
+      // },
   },
   methods: {
     connect: function() {
@@ -292,21 +295,15 @@ Vue.component('site', {
         }
       };
     },
-    tick: function() {
-      if (++this.batteryStyle > 3) {
-        this.batteryStyle = 0;
-      };
-    },
   },
   created: function() {
     this.connect();
-    this.ticker = window.setInterval(this.tick.bind(this), 1000);
   }
 });
 
-Vue.component("site-details", {
-  template: "#site-details-template",
-  props: ["state"],
+Vue.component('site-details', {
+  template: '#site-details-template',
+  props: ['state'],
   mixins: [formatter]
 });
 
