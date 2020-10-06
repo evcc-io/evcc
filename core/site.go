@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -23,6 +24,9 @@ type Updater interface {
 type Site struct {
 	uiChan       chan<- util.Param // client push messages
 	lpUpdateChan chan *LoadPoint
+
+	healthLocker  uint32 // health mutex
+	healthUpdated time.Time
 
 	log *util.Logger
 
@@ -122,7 +126,31 @@ type LoadpointConfiguration struct {
 	TargetSoC   int    `json:"targetSoC"`
 }
 
-// GetMode Gets loadpoint charge mode
+// Healthy returns health status based on last update timestamp
+func (site *Site) Healthy() bool {
+	start := time.Now()
+
+	for time.Since(start) < 10*time.Second {
+		if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
+			defer atomic.StoreUint32(&site.healthLocker, 0)
+			return time.Since(site.healthUpdated) < 30*time.Second
+		}
+
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	return false
+}
+
+// updateHealth updates the health timer on each loadpoint update
+func (site *Site) updateHealth() {
+	if atomic.CompareAndSwapUint32(&site.healthLocker, 0, 1) {
+		site.healthUpdated = time.Now()
+	}
+	atomic.StoreUint32(&site.healthLocker, 0)
+}
+
+// GetMode fets loadpoint charge mode
 func (site *Site) GetMode() api.ChargeMode {
 	return site.loadpoints[0].GetMode()
 }
@@ -340,6 +368,7 @@ func (site *Site) update(lp Updater) {
 
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower)
+		site.updateHealth()
 	}
 }
 

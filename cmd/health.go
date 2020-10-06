@@ -16,7 +16,7 @@ import (
 // healthCmd represents the meter command
 var healthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Check evcc application health",
+	Short: "Application health check",
 	Run:   runHealth,
 }
 
