@@ -262,17 +262,8 @@ Vue.component('site', {
   mixins: [formatter],
   computed: {
     multi: function() {
-      return this.state.loadpoints.length > 1 || false;
+      return this.state.loadpoints.length > 1 || app.compact;
     },
-  },
-  watch: {
-      // batteryChargeStyleIndex: function() {
-      //   const styles = ['empty', 'quarter', 'half', 'three-quarters',
-      //   'full'];
-      //   this.batteryChargeStyle = 'fa-battery-' +
-      //   styles[this.batteryChargeStyleIndex];
-      //   console.log(this.batteryChargeStyle)
-      // },
   },
   methods: {
     connect: function() {
