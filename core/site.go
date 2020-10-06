@@ -314,7 +314,7 @@ func (site *Site) sitePower() (float64, error) {
 
 	// honour battery priority
 	batteryPower := site.batteryPower
-	if battery, ok := site.batteryMeter.(api.Battery); ok && site.PrioritySoC > 0 {
+	if battery, ok := site.batteryMeter.(api.Battery); ok {
 		soc, err := battery.SoC()
 		if err != nil {
 			site.log.ERROR.Printf("updating battery soc: %v", err)

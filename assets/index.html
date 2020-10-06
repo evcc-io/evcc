@@ -231,17 +231,27 @@ loadpoints:
     </h2>
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.pvMeter">
-    <div class="mb-2 value">Erzeugung <i class="fas fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i></div>
+    <div class="mb-2 value">
+      Erzeugung <i class="fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i>
+    </div>
     <h2 class="value">
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="d-none d-inline-block col-md-3 mt-3" v-if="state.batteryMeter">
-    <div class="mb-2 value">Batterie <i class="text-primary fas"
-        v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
+  <div class="col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if=" state.batteryMeter">
+    <div class="mb-2 value">Batterie
+      <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
     <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
+    </h2>
+  </div>
+  <div class="col-6 col-md-3 mt-3" v-if="state.batterySoC">
+    <div class="mb-2 value">SoC
+      <i class="text-primary fas fa-battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}"></i>
+    </div>
+    <h2 class="value">
+      {{state.batterySoC}} <small class="text-muted">%</small>
     </h2>
   </div>
 </div>

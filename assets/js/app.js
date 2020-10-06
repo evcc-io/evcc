@@ -263,7 +263,7 @@ Vue.component('site', {
   computed: {
     multi: function() {
       return this.state.loadpoints.length > 1 || app.compact;
-    }
+    },
   },
   methods: {
     connect: function() {
@@ -285,16 +285,16 @@ Vue.component('site', {
           toasts.error(e, evt.data)
         }
       };
-    }
+    },
   },
   created: function() {
     this.connect();
   }
 });
 
-Vue.component("site-details", {
-  template: "#site-details-template",
-  props: ["state"],
+Vue.component('site-details', {
+  template: '#site-details-template',
+  props: ['state'],
   mixins: [formatter]
 });
 
