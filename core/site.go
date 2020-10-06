@@ -24,6 +24,8 @@ type Site struct {
 	uiChan       chan<- util.Param // client push messages
 	lpUpdateChan chan *LoadPoint
 
+	*Health
+
 	log *util.Logger
 
 	// configuration
@@ -92,6 +94,7 @@ func NewSiteFromConfig(
 func NewSite() *Site {
 	lp := &Site{
 		log:     util.NewLogger("core"),
+		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
 
@@ -122,7 +125,7 @@ type LoadpointConfiguration struct {
 	TargetSoC   int    `json:"targetSoC"`
 }
 
-// GetMode Gets loadpoint charge mode
+// GetMode gets loadpoint charge mode
 func (site *Site) GetMode() api.ChargeMode {
 	return site.loadpoints[0].GetMode()
 }
@@ -340,6 +343,7 @@ func (site *Site) update(lp Updater) {
 
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower)
+		site.Health.Update()
 	}
 }
 
