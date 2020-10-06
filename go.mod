@@ -41,6 +41,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
+	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
