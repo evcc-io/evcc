@@ -125,7 +125,7 @@ type LoadpointConfiguration struct {
 	TargetSoC   int    `json:"targetSoC"`
 }
 
-// GetMode fets loadpoint charge mode
+// GetMode gets loadpoint charge mode
 func (site *Site) GetMode() api.ChargeMode {
 	return site.loadpoints[0].GetMode()
 }
