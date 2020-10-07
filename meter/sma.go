@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/sma"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/meter/sma"
+	"github.com/mark-sch/evcc/util"
 )
 
 const udpTimeout = 10 * time.Second

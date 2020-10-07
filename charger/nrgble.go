@@ -5,7 +5,7 @@ package charger
 import (
 	"errors"
 
-	"github.com/andig/evcc/api"
+	"github.com/mark-sch/evcc/api"
 )
 
 func init() {

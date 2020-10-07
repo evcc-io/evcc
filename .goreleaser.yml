@@ -1,6 +1,6 @@
 release:
   github:
-    owner: andig
+    owner: mark-sch
     name: evcc
 before:
   hooks:
@@ -11,7 +11,7 @@ builds:
   flags:
   - -tags=release
   ldflags:
-  - -X github.com/andig/evcc/server.Version={{.Version}} -X github.com/andig/evcc/server.Commit={{.ShortCommit}}
+  - -X github.com/mark-sch/evcc/server.Version={{.Version}} -X github.com/mark-sch/evcc/server.Commit={{.ShortCommit}}
   env:
   - CGO_ENABLED=0
   goos:

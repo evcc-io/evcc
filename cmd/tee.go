@@ -1,6 +1,6 @@
 package cmd
 
-import "github.com/andig/evcc/util"
+import "github.com/mark-sch/evcc/util"
 
 // Tee distributed parameters to subscribers
 type Tee struct {

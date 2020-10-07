@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/mark-sch/evcc/api"
 )
 
 var truefalse = map[bool]string{false: "false", true: "true"}

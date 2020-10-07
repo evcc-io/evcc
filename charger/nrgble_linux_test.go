@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/andig/evcc/api"
+	"github.com/mark-sch/evcc/api"
 )
 
 func TestNRGKickBLE(t *testing.T) {

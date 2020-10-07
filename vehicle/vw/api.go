@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andig/evcc/util/request"
+	"github.com/mark-sch/evcc/util/request"
 )
 
 // BaseURI is the VW api base URI

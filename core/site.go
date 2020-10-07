@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/wrapper"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/core/wrapper"
+	"github.com/mark-sch/evcc/push"
+	"github.com/mark-sch/evcc/util"
 	"github.com/avast/retry-go"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core Updater
+//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/mark-sch/evcc/core Updater
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {

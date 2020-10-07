@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/server"
+	"github.com/mark-sch/evcc/util"
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
 	latest "github.com/tcnksm/go-latest"

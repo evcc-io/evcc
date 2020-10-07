@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/core"
+	"github.com/mark-sch/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )

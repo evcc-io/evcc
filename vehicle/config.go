@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/andig/evcc/api"
+	"github.com/mark-sch/evcc/api"
 )
 
 type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)

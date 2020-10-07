@@ -3,9 +3,9 @@ package vehicle
 import (
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/bluelink"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/vehicle/bluelink"
 )
 
 // Kia is an api.Vehicle implementation

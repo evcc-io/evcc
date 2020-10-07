@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/mark-sch/evcc/provider"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/request"
 	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 	"golang.org/x/net/publicsuffix"

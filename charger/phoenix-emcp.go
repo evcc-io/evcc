@@ -5,9 +5,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/modbus"
 )
 
 const (

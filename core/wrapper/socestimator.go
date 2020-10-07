@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
 )
 
 const chargeEfficiency = 0.9 // assume charge 90% efficiency

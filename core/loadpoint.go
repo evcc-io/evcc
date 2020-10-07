@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/wrapper"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/core/wrapper"
+	"github.com/mark-sch/evcc/push"
+	"github.com/mark-sch/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go"
@@ -652,7 +652,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
-		// https://github.com/andig/evcc/issues/105
+		// https://github.com/mark-sch/evcc/issues/105
 		err = lp.handler.Ramp(0)
 
 	case lp.targetSocReached(lp.socCharge, float64(lp.TargetSoC)):

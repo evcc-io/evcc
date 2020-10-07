@@ -1,6 +1,6 @@
 package core
 
-import "github.com/andig/evcc/api"
+import "github.com/mark-sch/evcc/api"
 
 // configProvider gives access to configuration repository
 type configProvider interface {

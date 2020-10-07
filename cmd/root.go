@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/server/updater"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/pipe"
+	"github.com/mark-sch/evcc/server"
+	"github.com/mark-sch/evcc/server/updater"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/pipe"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

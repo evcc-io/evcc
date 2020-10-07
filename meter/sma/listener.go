@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/util"
 )
 
 type Obis = string

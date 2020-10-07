@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/util"
 )
 
 // Sender implements message sending

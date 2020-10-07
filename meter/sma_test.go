@@ -3,8 +3,8 @@ package meter
 import (
 	"testing"
 
-	"github.com/andig/evcc/meter/sma"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/meter/sma"
+	"github.com/mark-sch/evcc/util"
 )
 
 func TestSMAUpdateMeterValues(t *testing.T) {

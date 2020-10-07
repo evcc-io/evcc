@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/nrgble"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/charger/nrgble"
+	"github.com/mark-sch/evcc/util"
 	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"
 	"github.com/muka/go-bluetooth/bluez/profile/adapter"
@@ -250,7 +250,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	nrg.log.TRACE.Printf("read info: %+v", res)
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/mark-sch/evcc/pull/274
 	return !res.PauseCharging || res.ChargingActive, nil
 }
 
@@ -262,7 +262,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	}
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/mark-sch/evcc/pull/274
 	if !enable && res.PauseCharging {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)

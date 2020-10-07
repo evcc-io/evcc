@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/request"
 )
 
 const (

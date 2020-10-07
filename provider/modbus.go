@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"

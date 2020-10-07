@@ -1,7 +1,7 @@
 package push
 
 import (
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/util"
 )
 
 // Event is a notification event

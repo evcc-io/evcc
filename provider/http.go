@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
-	"github.com/andig/evcc/util/request"
+	"github.com/mark-sch/evcc/util"
+	"github.com/mark-sch/evcc/util/jq"
+	"github.com/mark-sch/evcc/util/request"
 	"github.com/itchyny/gojq"
 )
 

@@ -1,9 +1,10 @@
-module github.com/andig/evcc
+module github.com/mark-sch/evcc
 
 go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
+	github.com/andig/evcc v0.0.0-20201007111029-180469fb3386
 	github.com/andig/evcc-config v0.0.0-20201007090146-de86a8fc8508
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible

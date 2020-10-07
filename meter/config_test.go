@@ -3,7 +3,7 @@ package meter
 import (
 	"testing"
 
-	"github.com/andig/evcc/util/test"
+	"github.com/mark-sch/evcc/util/test"
 )
 
 func TestMeters(t *testing.T) {

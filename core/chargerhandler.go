@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_chargerhandler.go github.com/andig/evcc/core Handler
+//go:generate mockgen -package mock -destination ../mock/mock_chargerhandler.go github.com/mark-sch/evcc/core Handler
 
 // Handler is the charger handler responsible for enabled state, target current and guard durations
 type Handler interface {

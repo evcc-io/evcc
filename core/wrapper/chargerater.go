@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/api"
+	"github.com/mark-sch/evcc/util"
 	"github.com/benbjohnson/clock"
 )
 

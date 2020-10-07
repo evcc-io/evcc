@@ -4,10 +4,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/hems/semp"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/core"
+	"github.com/mark-sch/evcc/hems/semp"
+	"github.com/mark-sch/evcc/server"
+	"github.com/mark-sch/evcc/util"
 )
 
 // HEMS describes the HEMS system interface

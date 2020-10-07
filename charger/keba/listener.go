@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/andig/evcc/util"
+	"github.com/mark-sch/evcc/util"
 )
 
 const (
