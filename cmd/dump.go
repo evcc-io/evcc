@@ -34,6 +34,14 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.Battery); ok {
+		if soc, err := v.SoC(); err != nil {
+			fmt.Printf("SoC: %v\n", err)
+		} else {
+			fmt.Printf("SoC: %.0f%%\n", soc)
+		}
+	}
+
 	if v, ok := v.(api.ChargeRater); ok {
 		if energy, err := v.ChargedEnergy(); err != nil {
 			fmt.Printf("Charged: %v\n", err)

@@ -184,5 +184,8 @@ func run(cmd *cobra.Command, args []string) {
 	site.DumpConfig()
 	go site.Run(conf.Interval)
 
+	// uds health check listener
+	go server.HealthListener(site)
+
 	log.FATAL.Println(httpd.ListenAndServe())
 }

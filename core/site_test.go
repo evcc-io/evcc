@@ -24,3 +24,5 @@ func TestSitePower(t *testing.T) {
 		}
 	}
 }
+
+// TODO add test case for battery priority charging

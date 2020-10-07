@@ -23,6 +23,8 @@ type Site struct {
 	uiChan       chan<- util.Param // client push messages
 	lpUpdateChan chan *LoadPoint
 
+	*Health
+
 	log *util.Logger
 
 	// configuration
@@ -103,6 +105,7 @@ func NewSiteFromConfig(
 func NewSite() *Site {
 	lp := &Site{
 		log:     util.NewLogger("core"),
+		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
 
@@ -135,7 +138,7 @@ type LoadpointConfiguration struct {
 	TargetSoC   int    `json:"targetSoC"`
 }
 
-// GetMode Gets loadpoint charge mode
+// GetMode gets loadpoint charge mode
 func (site *Site) GetMode() api.ChargeMode {
 	return site.loadpoints[0].GetMode()
 }
@@ -333,14 +336,16 @@ func (site *Site) sitePower() (float64, error) {
 
 	// honour battery priority
 	batteryPower := site.batteryPower
-	if battery, ok := site.batteryMeter.(api.Battery); ok && site.PrioritySoC > 0 {
+	if battery, ok := site.batteryMeter.(api.Battery); ok {
 		soc, err := battery.SoC()
 		if err != nil {
 			site.log.ERROR.Printf("updating battery soc: %v", err)
 		} else {
+			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", soc)
 
-			if soc < site.PrioritySoC {
+			// if battery is charging give it priority
+			if soc < site.PrioritySoC && batteryPower < 0 {
 				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
 				batteryPower = 0
 			}
@@ -358,6 +363,7 @@ func (site *Site) update(lp Updater) {
 
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower)
+		site.Health.Update()
 	}
 }
 

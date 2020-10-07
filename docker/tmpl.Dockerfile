@@ -35,5 +35,7 @@ COPY docker/bin/* /evcc/
 
 EXPOSE 7070
 
+HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
+
 ENTRYPOINT [ "/evcc/entrypoint.sh" ]
 CMD [ "evcc" ]

@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
-	github.com/andig/evcc-config v0.0.0-20200910070755-3ce3d3a7b76f
+	github.com/andig/evcc-config v0.0.0-20201007090146-de86a8fc8508
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
@@ -41,6 +41,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
+	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect

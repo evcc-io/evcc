@@ -32,6 +32,7 @@ type route struct {
 
 // site is the minimal interface for accessing site methods
 type site interface {
+	Healthy() bool
 	Configuration() core.SiteConfiguration
 	LoadPoints() []*core.LoadPoint
 	loadpoint
@@ -100,10 +101,15 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 }
 
 // HealthHandler returns current charge mode
-func HealthHandler() http.HandlerFunc {
+func HealthHandler(site site) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := struct{ OK bool }{OK: true}
-		jsonResponse(w, r, res)
+		if !site.Healthy() {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "OK")
 	}
 }
 
@@ -231,7 +237,7 @@ type HTTPd struct {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
-		"health":       {[]string{"GET"}, "/health", HealthHandler()},
+		"health":       {[]string{"GET"}, "/health", HealthHandler(site)},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
 		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
