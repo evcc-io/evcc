@@ -5,7 +5,7 @@ var (
 	Repository = "evcc"
 
 	// Owner of repository
-	Owner = "andig"
+	Owner = "mark-sch"
 
 	// Version of executable
 	Version = "0.0.1-alpha"
