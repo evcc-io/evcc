@@ -19,6 +19,13 @@ jobs:
         go-version: ^1.13
       id: go
 
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
 
