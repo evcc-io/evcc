@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 	"time"
 
@@ -41,6 +42,7 @@ func (r *Helper) LastResponse() *http.Response {
 
 type helperTransport struct {
 	log          *log.Logger
+	detailed     bool
 	lastResponse func(*http.Response)
 	roundTripper http.RoundTripper
 }
@@ -52,9 +54,23 @@ func (r *helperTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if r.log != nil {
 		msg := fmt.Sprintf("%s %s", req.Method, req.URL)
 		if resp != nil {
-			msg += "\n" + resp.Status
-			if body, _ := ReadBody(resp); len(body) > 0 {
-				msg += "\n" + strings.TrimSpace(string(body))
+			if r.detailed {
+				if body, err := httputil.DumpResponse(resp, true); err == nil {
+					msg += "\n" + strings.TrimSpace(string(body))
+				}
+			} else {
+				msg += "\n" + resp.Status
+
+				if body, _ := ReadBody(resp); len(body) > 0 {
+					const max = 2048
+
+					str := string(body)
+					if len(str) >= max {
+						str = str[:max]
+					}
+
+					msg += "\n" + strings.TrimSpace(str)
+				}
 			}
 		}
 		r.log.Println(msg)

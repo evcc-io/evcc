@@ -16,15 +16,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// MenuConfig is used to inject the menu configuration into the UI
-type MenuConfig struct {
-	Title    string
-	Subtitle string
-	Img      string
-	Iframe   string
-	Link     string
-}
-
 type chargeModeJSON struct {
 	Mode api.ChargeMode `json:"mode"`
 }
@@ -68,7 +59,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(links []MenuConfig, site site, useLocal bool) http.HandlerFunc {
+func indexHandler(site site, useLocal bool) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -85,7 +76,6 @@ func indexHandler(links []MenuConfig, site site, useLocal bool) http.HandlerFunc
 		if err := t.Execute(w, map[string]interface{}{
 			"Version":    Version,
 			"Commit":     Commit,
-			"Links":      links,
 			"Configured": len(site.LoadPoints()),
 			"Tag":        time.Now().Unix(),
 		}); err != nil {
@@ -239,7 +229,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
+func NewHTTPd(url string, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler()},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
@@ -260,7 +250,7 @@ func NewHTTPd(url string, links []MenuConfig, site site, hub *SocketHub, cache *
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	static.HandleFunc("/", indexHandler(links, site, useLocalAssets))
+	static.HandleFunc("/", indexHandler(site, useLocalAssets))
 	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
 		prefix := fmt.Sprintf("/%s/", folder)
 		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(useLocalAssets, prefix))))

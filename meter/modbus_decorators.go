@@ -12,7 +12,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error)) api.Met
 		return base
 
 	case meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterEnergy
 		}{

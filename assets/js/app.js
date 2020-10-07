@@ -126,6 +126,62 @@ window.setInterval(function() {
 }, 5000);
 
 //
+// App & Routing
+//
+
+const main = Vue.component('main', {
+  template: '#main-template',
+  data: function() {
+    return {
+      state: store.state  // global state
+    }
+  },
+  methods: {
+    configured: function (val) {
+      // for development purposes
+      if (val == '<<.Configured>>') {
+        return true;
+      }
+      if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
+        return true;
+      }
+      return false;
+    }
+  }
+});
+
+const config = Vue.component("config", {
+  template: "#config-template",
+  data: function() {
+    return {
+      state: store.state // global state
+    };
+  },
+});
+
+const routes = [
+  { path: "/", component: main },
+  { path: "/config", component: config },
+];
+
+const router = new VueRouter({
+  routes, // short for `routes: routes`
+  linkExactActiveClass: "active", // Bootstrap <nav>
+});
+
+const app = new Vue({
+  el: "#app",
+  router: router,
+  data: {
+    compact: false,
+  },
+  created: function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    this.compact = urlParams.get("compact");
+  },
+});
+
+//
 // Components
 //
 
@@ -350,70 +406,6 @@ Vue.component("soc", {
     targetSoC: function (mode) {
       this.$emit("updated", mode)
     }
-  },
-});
-
-//
-// Routing
-//
-
-const main = Vue.component('main', {
-  template: '#main-template',
-  data: function() {
-    return {
-      state: store.state  // global state
-    }
-  },
-  methods: {
-    configured: function (val) {
-      // for development purposes
-      if (val == '<<.Configured>>') {
-        return true;
-      }
-      if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
-        return true;
-      }
-      return false;
-    }
-  }
-});
-
-const config = Vue.component("config", {
-  template: "#config-template",
-  data: function() {
-    return {
-      state: store.state // global state
-    };
-  },
-});
-
-const embed = Vue.component("embed", {
-  template: "#embed-template",
-  props: ["title", "subtitle", "img", "iframe", "link"],
-});
-
-const routes = [
-  { path: "/", component: main },
-].concat(routerLinks().map(function(props, idx) {
-  return { path: "/links/" + idx, component: embed, props: props }
-})).concat([
-  { path: "/config", component: config },
-]);
-
-const router = new VueRouter({
-  routes, // short for `routes: routes`
-  linkExactActiveClass: "active" // Bootstrap <nav>
-});
-
-const app = new Vue({
-  el: '#app',
-  router: router,
-  data: {
-    compact: false,
-  },
-  created: function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    this.compact = urlParams.get('compact');
   },
 });
 

@@ -13,13 +13,14 @@ func init() {
 	registry.Add("default", NewConfigurableFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateMeter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateMeter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		Power    provider.Config
 		Energy   *provider.Config  // optional
+		SoC      *provider.Config  // optional
 		Currents []provider.Config // optional
 	}{}
 
@@ -69,7 +70,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		currents = m.currents
 	}
 
-	res := decorateMeter(m, totalEnergy, currents)
+	// decorate Meter with BatterySoC
+	var batterySoC func() (float64, error)
+	if cc.SoC != nil {
+		m.batterySoCG, err = provider.NewFloatGetterFromConfig(*cc.SoC)
+		if err != nil {
+			return nil, err
+		}
+		batterySoC = m.batterySoC
+	}
+
+	res := decorateMeter(m, totalEnergy, currents, batterySoC)
 
 	return res, nil
 }
@@ -87,6 +98,7 @@ type Meter struct {
 	currentPowerG func() (float64, error)
 	totalEnergyG  func() (float64, error)
 	currentsG     []func() (float64, error)
+	batterySoCG   func() (float64, error)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -112,4 +124,9 @@ func (m *Meter) currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
+}
+
+// batterySoC implements the Battery.SoC interface
+func (m *Meter) batterySoC() (float64, error) {
+	return m.batterySoCG()
 }

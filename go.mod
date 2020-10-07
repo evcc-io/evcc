@@ -22,7 +22,7 @@ require (
 	github.com/grid-x/modbus v0.0.0-20200831145459-cb26bc3b5d3d // indirect
 	github.com/hashicorp/go-version v1.2.1
 	github.com/imdario/mergo v0.3.11
-	github.com/influxdata/influxdb-client-go/v2 v2.0.1
+	github.com/influxdata/influxdb-client-go/v2 v2.1.0
 	github.com/itchyny/gojq v0.11.0
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a

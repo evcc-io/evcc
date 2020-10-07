@@ -12,7 +12,7 @@ func decorateSMA(base api.Meter, meterEnergy func() (float64, error)) api.Meter 
 		return base
 
 	case meterEnergy != nil:
-		return &struct{
+		return &struct {
 			api.Meter
 			api.MeterEnergy
 		}{

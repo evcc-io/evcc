@@ -20,7 +20,6 @@ type config struct {
 	Mqtt       provider.MqttConfig
 	Influx     server.InfluxConfig
 	HEMS       string
-	Menu       []server.MenuConfig
 	Messaging  messagingConfig
 	Meters     []qualifiedConfig
 	Chargers   []qualifiedConfig

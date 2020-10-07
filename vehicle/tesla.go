@@ -3,6 +3,7 @@ package vehicle
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -66,7 +67,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.vehicle = vehicles[0].Vehicle
 	} else {
 		for _, vehicle := range vehicles {
-			if vehicle.Vin == cc.VIN {
+			if vehicle.Vin == strings.ToUpper(cc.VIN) {
 				v.vehicle = vehicle.Vehicle
 			}
 		}

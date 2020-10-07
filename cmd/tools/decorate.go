@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"go/format"
 	"io"
 	"os"
 	"strings"
@@ -30,7 +31,7 @@ import (
 	{{- range $typ, $def := .Types}}
 		{{- if gt $idx 0}} &&{{else}}{{$idx = 1}}{{end}} {{$def.VarName}} {{if contains $combo $typ}}!={{else}}=={{end}} nil
 	{{- end}}:
-		return &struct{
+		return &struct {
 			{{.BaseType}}
 {{- range $typ, $def := .Types}}
 	{{- if contains $combo $typ}}
@@ -220,7 +221,13 @@ func main() {
 		out = dst
 	}
 
-	if _, err := out.Write([]byte(generated)); err != nil {
+	formatted, err := format.Source([]byte(generated))
+	if err != nil {
+		println(err)
+		os.Exit(2)
+	}
+
+	if _, err := out.Write(formatted); err != nil {
 		println(err)
 		os.Exit(2)
 	}

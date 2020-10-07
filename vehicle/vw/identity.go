@@ -1,18 +1,40 @@
-package vwidentity
+package vw
 
 import (
-	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/andig/evcc/util/request"
 )
 
-const RootURI = "https://identity.vwgroup.io"
+const (
+	// IdentityURI is the VW OIDC identidy provider uri
+	IdentityURI = "https://identity.vwgroup.io"
+
+	// OauthTokenURI is used for refreshing tokens
+	OauthTokenURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+)
+
+// Tokens is an OAuth tokens response
+type Tokens struct {
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	IDToken      string `json:"id_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+// OIDCResponse is the well-known OIDC provider response
+// https://{oauth-provider-hostname}/.well-known/openid-configuration
+type OIDCResponse struct {
+	Issuer      string   `json:"issuer"`
+	AuthURL     string   `json:"authorization_endpoint"`
+	TokenURL    string   `json:"token_endpoint"`
+	JWKSURL     string   `json:"jwks_uri"`
+	UserInfoURL string   `json:"userinfo_endpoint"`
+	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
+}
 
 // Identity provides the identity.vwgroup.io login
 type Identity struct {
@@ -26,69 +48,6 @@ func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, err
 	}
 
 	return resp, err
-}
-
-type FormVars struct {
-	Action     string
-	Csrf       string
-	RelayState string
-	Hmac       string
-}
-
-func FormValues(reader io.Reader, id string) (FormVars, error) {
-	vars := FormVars{}
-
-	doc, err := goquery.NewDocumentFromReader(reader)
-	if err == nil {
-		// only interested in meta tag?
-		if meta := doc.Find("meta[name=_csrf]"); id == "meta" {
-			if meta.Length() != 1 {
-				return vars, errors.New("unexpected length")
-			}
-
-			var exists bool
-			vars.Csrf, exists = meta.Attr("content")
-			if !exists {
-				return vars, errors.New("meta not found")
-			}
-			return vars, nil
-		}
-
-		form := doc.Find(id).First()
-		if form.Length() != 1 {
-			return vars, errors.New("unexpected length")
-		}
-
-		var exists bool
-		vars.Action, exists = form.Attr("action")
-		if !exists {
-			return vars, errors.New("attribute not found")
-		}
-
-		vars.Csrf, err = attr(form, "input[name=_csrf]", "value")
-		if err == nil {
-			vars.RelayState, err = attr(form, "input[name=relayState]", "value")
-		}
-		if err == nil {
-			vars.Hmac, err = attr(form, "input[name=hmac]", "value")
-		}
-	}
-
-	return vars, err
-}
-
-func attr(doc *goquery.Selection, path, attr string) (res string, err error) {
-	sel := doc.Find(path)
-	if sel.Length() != 1 {
-		return "", errors.New("unexpected length")
-	}
-
-	v, exists := sel.Attr(attr)
-	if !exists {
-		return "", errors.New("attribute not found")
-	}
-
-	return v, nil
 }
 
 // Login performs the identity.vwgroup.io login
@@ -111,14 +70,16 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
-		uri = RootURI + vars.Action
+		data := url.Values(map[string][]string{
+			"_csrf":      {vars.Csrf},
+			"relayState": {vars.RelayState},
+			"hmac":       {vars.Hmac},
+			"email":      {user},
+		})
 
-		body := fmt.Sprintf(
-			"_csrf=%s&relayState=%s&hmac=%s&email=%s",
-			vars.Csrf, vars.RelayState, vars.Hmac, url.QueryEscape(user),
-		)
+		uri = IdentityURI + vars.Action
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
 		if err == nil {
 			resp, err = v.Do(req)
 		}
@@ -126,7 +87,7 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 
 	// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
 	if err == nil {
-		uri = RootURI + resp.Header.Get("Location")
+		uri = IdentityURI + resp.Header.Get("Location")
 		req, err = http.NewRequest(http.MethodGet, uri, nil)
 
 		if err == nil {
@@ -140,17 +101,17 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
-		uri = RootURI + vars.Action
-		body := fmt.Sprintf(
-			"_csrf=%s&relayState=%s&email=%s&hmac=%s&password=%s",
-			vars.Csrf,
-			vars.RelayState,
-			url.QueryEscape(user),
-			vars.Hmac,
-			url.QueryEscape(password),
-		)
+		data := url.Values(map[string][]string{
+			"_csrf":      {vars.Csrf},
+			"relayState": {vars.RelayState},
+			"hmac":       {vars.Hmac},
+			"email":      {user},
+			"password":   {password},
+		})
 
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(body), request.URLEncoding)
+		uri = IdentityURI + vars.Action
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
 		if err == nil {
 			resp, err = v.Do(req)
 		}

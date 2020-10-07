@@ -17,6 +17,30 @@ var (
 	JSONEncoding = map[string]string{"Content-Type": "application/json"}
 )
 
+// StatusError indicates unsuccessful http response
+type StatusError struct {
+	resp *http.Response
+}
+
+// NewStatusError create new StatusError for given response
+func NewStatusError(resp *http.Response) StatusError {
+	return StatusError{resp: resp}
+}
+
+func (e StatusError) Error() string {
+	return fmt.Sprintf("unexpected status: %d", e.resp.StatusCode)
+}
+
+// Response returns the respose with the unexpected error
+func (e StatusError) Response() *http.Response {
+	return e.resp
+}
+
+// StatusCode returns the respose's status code
+func (e StatusError) StatusCode() int {
+	return e.resp.StatusCode
+}
+
 // ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
@@ -30,7 +54,7 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return b, fmt.Errorf("unexpected response %d: %s", resp.StatusCode, string(b))
+		return b, StatusError{resp: resp}
 	}
 
 	return b, nil

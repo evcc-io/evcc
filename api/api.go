@@ -52,6 +52,11 @@ type MeterCurrent interface {
 	Currents() (float64, float64, float64, error)
 }
 
+// Battery is able to provide battery SoC in %
+type Battery interface {
+	SoC() (float64, error)
+}
+
 // Charger is able to provide current charging status and to enable/disabler charging
 type Charger interface {
 	Status() (ChargeStatus, error)
