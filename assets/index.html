@@ -238,7 +238,7 @@ loadpoints:
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if=" state.batteryMeter">
+  <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryMeter">
     <div class="mb-2 value">Batterie
       <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
