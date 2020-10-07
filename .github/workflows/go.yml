@@ -35,6 +35,11 @@ jobs:
     - name: Assets
       run: make assets
 
+    - name: Clean
+      run: |
+        go mod tidy
+        test -z "$(git status --porcelain)" || (git status; git diff; false)
+
     - name: Build
       run: make build
 
