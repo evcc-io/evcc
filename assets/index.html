@@ -239,7 +239,7 @@ loadpoints:
     </h2>
   </div>
   <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryMeter">
-    <div class="mb-2 value">Batterie({{state.socPower}}%)
+    <div class="mb-2 value">Batterie({{state.batterySoC}}%)
       <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
     <h2 class="value">

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -38,7 +39,6 @@ type Site struct {
 	gridMeter    api.Meter // Grid usage meter
 	pvMeter      api.Meter // PV generation meter
 	batteryMeter api.Meter // Battery charging meter
-	socMeter 	 api.Meter // Battery-SOC  meter
 	consumptionMeter api.Meter // Household consumption meter
 
 	loadpoints []*LoadPoint // Loadpoints
@@ -47,7 +47,6 @@ type Site struct {
 	gridPower    float64 // Grid power
 	pvPower      float64 // PV power
 	batteryPower float64 // Battery charge power
-	socPower float64 // SOC power
 	consumptionPower float64 // Consumption power
 }
 
@@ -56,7 +55,6 @@ type MetersConfig struct {
 	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
 	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
 	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
-	SocMeterRef	    string `mapstructure:"soc"` // Home soc meter reference
 	ConsumptionMeterRef	    string `mapstructure:"consumption"` // Home consumption meter reference
 }
 
@@ -66,10 +64,10 @@ func NewSiteFromConfig(
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,
-) *Site {
+) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, &site); err != nil {
-		log.FATAL.Fatal(err)
+		return nil, err
 	}
 
 	Voltage = site.Voltage
@@ -77,10 +75,10 @@ func NewSiteFromConfig(
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
-	// 	site.log.FATAL.Fatal("missing either pv or grid meter")
+	// 	nil, errors.New("missing either pv or grid meter")
 	// }
 	if site.Meters.GridMeterRef == "" {
-		site.log.FATAL.Fatal("missing grid meter")
+		return nil, errors.New("missing grid meter")
 	}
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -91,14 +89,11 @@ func NewSiteFromConfig(
 	if site.Meters.BatteryMeterRef != "" {
 		site.batteryMeter = cp.Meter(site.Meters.BatteryMeterRef)
 	}
-	if site.Meters.SocMeterRef != "" {
-		site.socMeter = cp.Meter(site.Meters.SocMeterRef)
-	}
 	if site.Meters.ConsumptionMeterRef != "" {
 		site.consumptionMeter = cp.Meter(site.Meters.ConsumptionMeterRef)
 	}
 
-	return site
+	return site, nil
 }
 
 // NewSite creates a Site with sane defaults
@@ -119,7 +114,6 @@ type SiteConfiguration struct {
 	PVMeter      bool                     `json:"pvMeter"`
 	BatteryMeter bool                     `json:"batteryMeter"`
 	ConsumptionMeter bool                     `json:"consumptionMeter"`
-	SocMeter 	 bool                     `json:"socMeter"`
 	LoadPoints   []LoadpointConfiguration `json:"loadpoints"`
 }
 
@@ -182,7 +176,6 @@ func (site *Site) Configuration() SiteConfiguration {
 		GridMeter:    site.gridMeter != nil,
 		PVMeter:      site.pvMeter != nil,
 		BatteryMeter: site.batteryMeter != nil,
-		SocMeter:	  site.socMeter != nil,
 		ConsumptionMeter:	site.consumptionMeter != nil,
 	}
 
@@ -226,7 +219,6 @@ func (site *Site) DumpConfig() {
 	site.log.INFO.Printf("  grid %s", presence[site.gridMeter != nil])
 	site.log.INFO.Printf("  pv %s", presence[site.pvMeter != nil])
 	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
-	site.log.INFO.Printf("  soc %s", presence[site.socMeter != nil])
 	site.log.INFO.Printf("  consumption %s", presence[site.consumptionMeter != nil])
 
 	if site.gridMeter != nil {
@@ -302,7 +294,6 @@ func (site *Site) updateMeters() error {
 
 	// pv meter is not critical for operation
 	_ = retryMeter("pv", site.pvMeter, &site.pvPower)
-	_ = retryMeter("soc", site.socMeter, &site.socPower)
 	_ = retryMeter("consumption", site.consumptionMeter, &site.consumptionPower)
 
 	err := retryMeter("grid", site.gridMeter, &site.gridPower)
