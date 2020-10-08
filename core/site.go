@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -323,7 +324,7 @@ func (site *Site) sitePower() (float64, error) {
 			site.log.ERROR.Printf("updating battery soc: %v", err)
 		} else {
 			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
-			site.publish("batterySoC", soc)
+			site.publish("batterySoC", math.Trunc(soc))
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
