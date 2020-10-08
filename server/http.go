@@ -150,7 +150,7 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 }
 
 // CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func CurrentChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := chargeModeJSON{Mode: loadpoint.GetMode()}
 		jsonResponse(w, r, res)
@@ -158,7 +158,7 @@ func CurrentChargeModeHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
 }
 
 // ChargeModeHandler updates charge mode
-func ChargeModeHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func ChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -177,7 +177,7 @@ func ChargeModeHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
 }
 
 // CurrentTargetSoCHandler returns current target soc
-func CurrentTargetSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func CurrentTargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
 		jsonResponse(w, r, res)
@@ -185,7 +185,7 @@ func CurrentTargetSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
 }
 
 // TargetSoCHandler updates target soc
-func TargetSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func TargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -207,7 +207,7 @@ func TargetSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
 }
 
 // CurrentMinSoCHandler returns current minimum soc
-func CurrentMinSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func CurrentMinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
 		jsonResponse(w, r, res)
@@ -215,7 +215,7 @@ func CurrentMinSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
 }
 
 // MinSoCHandler updates minimum soc
-func MinSoCHandler(loadpoint core.LoadpointAPI) http.HandlerFunc {
+func MinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 

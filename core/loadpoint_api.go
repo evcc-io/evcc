@@ -1,6 +1,34 @@
 package core
 
-import "github.com/andig/evcc/api"
+import (
+	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core/wrapper"
+)
+
+// LoadPointAPI is the external loadpoint API
+type LoadPointAPI interface {
+	Name() string
+	HasChargeMeter() bool
+	LoadPointSettingsAPI
+	LoadPointEnergyAPI
+}
+
+type LoadPointSettingsAPI interface {
+	GetMode() api.ChargeMode
+	SetMode(api.ChargeMode)
+	GetTargetSoC() int
+	SetTargetSoC(int) error
+	GetMinSoC() int
+	SetMinSoC(int) error
+}
+
+// LoadPointEnergyAPI is the external loadpoint API
+type LoadPointEnergyAPI interface {
+	GetMinCurrent() int64
+	GetMaxCurrent() int64
+	GetMinPower() int64
+	GetMaxPower() int64
+}
 
 // GetMode returns loadpoint charge mode
 func (lp *LoadPoint) GetMode() api.ChargeMode {
@@ -78,4 +106,30 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	}
 
 	return nil
+}
+
+// HasChargeMeter determines if a physical charge meter is attached
+func (lp *LoadPoint) HasChargeMeter() bool {
+	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
+	return lp.chargeMeter != nil && !isWrapped
+}
+
+// GetMinCurrent returns the minimal loadpoint current
+func (lp *LoadPoint) GetMinCurrent() int64 {
+	return lp.MinCurrent
+}
+
+// GetMaxCurrent returns the minimal loadpoint current
+func (lp *LoadPoint) GetMaxCurrent() int64 {
+	return lp.MaxCurrent
+}
+
+// GetMinPower returns the minimal loadpoint power for a single phase
+func (lp *LoadPoint) GetMinPower() int64 {
+	return int64(Voltage) * lp.MinCurrent
+}
+
+// GetMaxPower returns the minimal loadpoint power taking active phases into account
+func (lp *LoadPoint) GetMaxPower() int64 {
+	return int64(Voltage) * lp.Phases * lp.MaxCurrent
 }

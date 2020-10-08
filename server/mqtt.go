@@ -65,7 +65,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadpointAPI) {
+func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI) {
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})

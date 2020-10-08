@@ -2,6 +2,23 @@ package core
 
 import "github.com/andig/evcc/api"
 
+// SiteAPI is the external site API
+type SiteAPI interface {
+	Healthy() bool
+	Configuration() SiteConfiguration
+	LoadPoints() []LoadPointAPI
+	LoadPointSettingsAPI
+}
+
+// LoadPoints returns the array of associated loadpoints
+func (site *Site) LoadPoints() []LoadPointAPI {
+	res := make([]LoadPointAPI, len(site.loadpoints))
+	for id, lp := range site.loadpoints {
+		res[id] = lp
+	}
+	return res
+}
+
 // GetMode gets loadpoint charge mode
 func (site *Site) GetMode() api.ChargeMode {
 	return site.loadpoints[0].GetMode()

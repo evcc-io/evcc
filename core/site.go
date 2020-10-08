@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/wrapper"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
 	"github.com/avast/retry-go"
@@ -124,17 +123,6 @@ type LoadpointConfiguration struct {
 	SoCTitle    string `json:"socTitle"`
 	SoCLevels   []int  `json:"socLevels"`
 	TargetSoC   int    `json:"targetSoC"`
-}
-
-// HasChargeMeter determines if a physical charge meter is attached
-func (lp *LoadPoint) HasChargeMeter() bool {
-	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
-	return lp.chargeMeter != nil && !isWrapped
-}
-
-// LoadPoints returns the array of associated loadpoints
-func (site *Site) LoadPoints() []*LoadPoint {
-	return site.loadpoints
 }
 
 // Configuration returns meter configuration
