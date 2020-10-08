@@ -126,32 +126,6 @@ type LoadpointConfiguration struct {
 	TargetSoC   int    `json:"targetSoC"`
 }
 
-// GetMode gets loadpoint charge mode
-func (site *Site) GetMode() api.ChargeMode {
-	return site.loadpoints[0].GetMode()
-}
-
-// GetTargetSoC gets loadpoint charge targetSoC
-func (site *Site) GetTargetSoC() int {
-	return site.loadpoints[0].GetTargetSoC()
-}
-
-// SetMode sets loadpoint charge mode
-func (site *Site) SetMode(mode api.ChargeMode) {
-	site.log.INFO.Printf("set global charge mode: %s", string(mode))
-	for _, lp := range site.loadpoints {
-		lp.SetMode(mode)
-	}
-}
-
-// SetTargetSoC sets loadpoint charge targetSoC
-func (site *Site) SetTargetSoC(targetSoC int) {
-	site.log.INFO.Println("set global target soc:", targetSoC)
-	for _, lp := range site.loadpoints {
-		lp.SetTargetSoC(targetSoC)
-	}
-}
-
 // HasChargeMeter determines if a physical charge meter is attached
 func (lp *LoadPoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
@@ -187,7 +161,7 @@ func (site *Site) Configuration() SiteConfiguration {
 			lpc.SoCCapacity = lp.vehicle.Capacity()
 			lpc.SoCTitle = lp.vehicle.Title()
 			lpc.SoCLevels = lp.SoC.Levels
-			lpc.TargetSoC = lp.TargetSoC
+			lpc.TargetSoC = lp.GetTargetSoC()
 		}
 
 		c.LoadPoints = append(c.LoadPoints, lpc)

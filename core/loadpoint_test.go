@@ -399,7 +399,9 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		handler:      handler,
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		status:       api.StatusC,
-		TargetSoC:    90,
+		SoC: SoCConfig{
+			Target: 90,
+		},
 	}
 
 	handler.EXPECT().Prepare().Return()

@@ -29,6 +29,15 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
+// SoCConfig defines soc settings, estimation and update behaviour
+type SoCConfig struct {
+	AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
+	Levels       []int `mapstructure:"levels"`
+	Estimate     bool  `mapstructure:"estimate"`
+	Min          int   `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
+	Target       int   `mapstructure:"target"` // Default target SoC, guarded by mutex
+}
+
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration
@@ -47,8 +56,7 @@ type LoadPoint struct {
 
 	// exposed public configuration
 	sync.Mutex                // guard status
-	Mode       api.ChargeMode `mapstructure:"mode"`      // Charge mode, guarded by mutex
-	TargetSoC  int            `mapstructure:"targetSoC"` // Target SoC, guarded by mutex
+	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title      string `mapstructure:"title"`   // UI title
 	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
@@ -57,11 +65,7 @@ type LoadPoint struct {
 	Meters     struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC struct {
-		AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
-		Levels       []int `mapstructure:"levels"`
-		Estimate     bool  `mapstructure:"estimate"`
-	}
+	SoC          SoCConfig
 	OnDisconnect struct {
 		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
 		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
@@ -102,11 +106,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
 
 	sort.Ints(lp.SoC.Levels)
-	if lp.TargetSoC == 0 {
-		lp.TargetSoC = 100
+	if lp.SoC.Target == 0 {
+		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
+		if lp.SoC.Target == 0 {
+			lp.SoC.Target = 100
+		}
 
 		if len(lp.SoC.Levels) > 0 {
-			lp.TargetSoC = lp.SoC.Levels[len(lp.SoC.Levels)-1]
+			lp.SoC.Target = lp.SoC.Levels[len(lp.SoC.Levels)-1]
 		}
 	}
 
@@ -160,50 +167,6 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
-}
-
-// GetMode returns loadpoint charge mode
-func (lp *LoadPoint) GetMode() api.ChargeMode {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.Mode
-}
-
-// SetMode sets loadpoint charge mode
-func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.INFO.Printf("set charge mode: %s", string(mode))
-
-	// apply immediately
-	if lp.Mode != mode {
-		lp.Mode = mode
-		lp.publish("mode", mode)
-		lp.requestUpdate()
-	}
-}
-
-// GetTargetSoC returns loadpoint charge targetSoC
-func (lp *LoadPoint) GetTargetSoC() int {
-	lp.Lock()
-	defer lp.Unlock()
-	return lp.TargetSoC
-}
-
-// SetTargetSoC sets loadpoint charge targetSoC
-func (lp *LoadPoint) SetTargetSoC(targetSoC int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	lp.log.INFO.Println("set target soc:", targetSoC)
-
-	// apply immediately
-	if lp.TargetSoC != targetSoC {
-		lp.TargetSoC = targetSoC
-		lp.publish("targetSoC", targetSoC)
-		lp.requestUpdate()
-	}
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -364,7 +327,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// publish initial values
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
-	lp.publish("targetSoC", lp.TargetSoC)
+	lp.publish("targetSoC", lp.SoC.Target)
 	lp.Unlock()
 
 	// prepare charger status
@@ -376,10 +339,10 @@ func (lp *LoadPoint) connected() bool {
 	return lp.status == api.StatusB || lp.status == api.StatusC
 }
 
-// targetSocReached checks if targetSoC configured and reached
-func (lp *LoadPoint) targetSocReached(socCharge, targetSoC float64) bool {
-	// check for vehicle != nil is not necessary as socCharge would be zero then
-	return targetSoC > 0 && targetSoC < 100 && socCharge >= targetSoC
+// socReached checks if target is configured and reached.
+// If vehicle is not comfigured this will always return true if target is also unconfigured
+func (lp *LoadPoint) socReached(target int) bool {
+	return lp.socCharge >= float64(target)
 }
 
 // climateActive checks if vehicle has active climate request
@@ -624,11 +587,11 @@ func (lp *LoadPoint) publishSoC() {
 
 			chargeEstimate := time.Duration(-1)
 			if lp.charging {
-				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.TargetSoC)
+				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
 			}
 			lp.publish("chargeEstimate", chargeEstimate)
 
-			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.TargetSoC)
+			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
 
 			return
@@ -693,6 +656,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
+
+	case !lp.socReached(lp.SoC.Min):
+		err = lp.handler.Ramp(lp.MaxCurrent, true)
 
 	case mode == api.ModeNow:
 		err = lp.handler.Ramp(lp.MaxCurrent, true)

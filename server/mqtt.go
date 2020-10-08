@@ -65,12 +65,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-type apiHandler interface {
-	SetMode(api.ChargeMode)
-	SetTargetSoC(int)
-}
-
-func (m *MQTT) listenSetters(topic string, apiHandler apiHandler) {
+func (m *MQTT) listenSetters(topic string, apiHandler core.LoadpointAPI) {
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
@@ -83,7 +78,7 @@ func (m *MQTT) listenSetters(topic string, apiHandler apiHandler) {
 }
 
 // Run starts the MQTT publisher for the MQTT API
-func (m *MQTT) Run(site *core.Site, in <-chan util.Param) {
+func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	topic := fmt.Sprintf("%s/site", m.root)
 	m.listenSetters(topic, site)
 
