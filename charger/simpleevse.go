@@ -2,6 +2,7 @@ package charger
 
 import (
 	"errors"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -85,6 +86,8 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
+	time.Sleep(100 * time.Millisecond)
+
 	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
