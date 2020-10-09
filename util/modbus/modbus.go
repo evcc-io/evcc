@@ -24,7 +24,7 @@ type Settings struct {
 // Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
-	conn    tickedConnection
+	conn    *tickedConnection
 }
 
 func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
@@ -33,17 +33,6 @@ func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 	}
 	return res, err
 }
-
-// var tickers = make(map[string]*time.Ticker)
-
-// func registeredTicker(key string, delay time.Duration) *time.Ticker {
-// 	if ticker, ok := tickers[key]; ok {
-// 		return ticker
-// 	}
-
-// 	tickers[key] = newticker
-// 	return newticker
-// }
 
 func (mb *Connection) wait() {
 	<-mb.conn.C
@@ -191,7 +180,7 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 
 	slaveConn := &Connection{
 		slaveID: slaveID,
-		conn:    conn,
+		conn:    &conn,
 	}
 
 	return slaveConn, nil
