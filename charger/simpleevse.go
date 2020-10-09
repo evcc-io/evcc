@@ -57,7 +57,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		log:     log,
 		conn:    conn,
 		current: 6, // assume min current
-		ticker:  time.NewTicker(50 * time.Millisecond),
+		ticker:  time.NewTicker(100 * time.Millisecond),
 	}
 
 	return evse, nil
