@@ -35,6 +35,7 @@ func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 }
 
 func (mb *Connection) wait() {
+	fmt.Println("%v %v", mb.conn.delay, mb.conn)
 	<-mb.conn.C
 }
 
