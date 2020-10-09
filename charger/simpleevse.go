@@ -51,7 +51,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	conn.Logger(log.TRACE)
-	conn.Delay(100 * time.Millisecond)
+	conn.Delay(200 * time.Millisecond)
 
 	evse := &SimpleEVSE{
 		log:     log,
