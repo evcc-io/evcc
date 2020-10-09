@@ -701,7 +701,7 @@ func (lp *LoadPoint) publishSoC() {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64) {
 	mode := lp.GetMode()
-	lp.publish("mode", string(mode))
+	lp.publish("mode", mode)
 
 	// read and publish meters first
 	lp.updateChargeMeter()
