@@ -135,14 +135,14 @@ type tickedConnection struct {
 	*time.Ticker
 }
 
-var connections = make(map[string]tickedConnection)
+var connections = make(map[string]*tickedConnection)
 
-func registeredConnection(key string, newConn meters.Connection) tickedConnection {
+func registeredConnection(key string, newConn meters.Connection) *tickedConnection {
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
 
-	tickedConn := tickedConnection{
+	tickedConn := &tickedConnection{
 		Connection: newConn,
 		Ticker:     time.NewTicker(time.Millisecond),
 	}
@@ -153,7 +153,7 @@ func registeredConnection(key string, newConn meters.Connection) tickedConnectio
 
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
-	var conn tickedConnection
+	var conn *tickedConnection
 
 	if device != "" && uri != "" {
 		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
@@ -180,7 +180,7 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 
 	slaveConn := &Connection{
 		slaveID: slaveID,
-		conn:    &conn,
+		conn:    conn,
 	}
 
 	return slaveConn, nil
