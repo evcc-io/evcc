@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -24,6 +25,8 @@ type Settings struct {
 type Connection struct {
 	slaveID uint8
 	conn    meters.Connection
+	delay   time.Duration
+	ticker  *time.Ticker
 }
 
 func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
@@ -33,6 +36,15 @@ func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 	return res, err
 }
 
+// Delay sets delay so use between subsequent modbus operations
+func (mb *Connection) Delay(delay time.Duration) {
+	if delay > mb.delay {
+		mb.delay = delay
+		mb.ticker.Stop()
+		mb.ticker = time.NewTicker(delay)
+	}
+}
+
 // Logger sets logger implementation
 func (mb *Connection) Logger(logger meters.Logger) {
 	mb.conn.Logger(logger)
@@ -40,66 +52,77 @@ func (mb *Connection) Logger(logger meters.Logger) {
 
 // ReadCoils wraps the underlying implementation
 func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
 }
 
 // WriteSingleCoil wraps the underlying implementation
 func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, quantity))
 }
 
 // ReadInputRegisters wraps the underlying implementation
 func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
 }
 
 // ReadHoldingRegisters wraps the underlying implementation
 func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
 }
 
 // WriteSingleRegister wraps the underlying implementation
 func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
 }
 
 // WriteMultipleRegisters wraps the underlying implementation
 func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
 }
 
 // ReadDiscreteInputs wraps the underlying implementation
 func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
 }
 
 // WriteMultipleCoils wraps the underlying implementation
 func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
 }
 
 // ReadWriteMultipleRegisters wraps the underlying implementation
 func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
 }
 
 // MaskWriteRegister wraps the underlying implementation
 func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
 }
 
 // ReadFIFOQueue wraps the underlying implementation
 func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
+	<-mb.ticker.C
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
@@ -149,6 +172,7 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	slaveConn := &Connection{
 		slaveID: slaveID,
 		conn:    conn,
+		ticker:  time.NewTicker(time.Millisecond),
 	}
 
 	return slaveConn, nil
