@@ -54,12 +54,13 @@ func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
 
 		indexTemplate, err := FSString(useLocal, "/index.html")
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
+			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
+			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
 		}
 
 		t, err := template.New("evcc").Delims("<<", ">>").Parse(indexTemplate)
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template: ", err.Error())
+			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
@@ -68,7 +69,7 @@ func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
 			"Configured": len(site.LoadPoints()),
 			"Tag":        time.Now().Unix(),
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
+			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
 	})
 }
