@@ -24,9 +24,7 @@ type Settings struct {
 // Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
-	conn    meters.Connection
-	delay   time.Duration
-	ticker  *time.Ticker
+	conn    tickedConnection
 }
 
 func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
@@ -36,12 +34,27 @@ func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 	return res, err
 }
 
+// var tickers = make(map[string]*time.Ticker)
+
+// func registeredTicker(key string, delay time.Duration) *time.Ticker {
+// 	if ticker, ok := tickers[key]; ok {
+// 		return ticker
+// 	}
+
+// 	tickers[key] = newticker
+// 	return newticker
+// }
+
+func (mb *Connection) wait() {
+	<-mb.conn.C
+}
+
 // Delay sets delay so use between subsequent modbus operations
 func (mb *Connection) Delay(delay time.Duration) {
-	if delay > mb.delay {
-		mb.delay = delay
-		mb.ticker.Stop()
-		mb.ticker = time.NewTicker(delay)
+	if delay > mb.conn.delay {
+		mb.conn.delay = delay
+		mb.conn.Ticker.Stop()
+		mb.conn.Ticker = time.NewTicker(delay)
 	}
 }
 
@@ -52,99 +65,106 @@ func (mb *Connection) Logger(logger meters.Logger) {
 
 // ReadCoils wraps the underlying implementation
 func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadCoils(address, quantity))
 }
 
 // WriteSingleCoil wraps the underlying implementation
 func (mb *Connection) WriteSingleCoil(address, quantity uint16) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleCoil(address, quantity))
 }
 
 // ReadInputRegisters wraps the underlying implementation
 func (mb *Connection) ReadInputRegisters(address, quantity uint16) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadInputRegisters(address, quantity))
 }
 
 // ReadHoldingRegisters wraps the underlying implementation
 func (mb *Connection) ReadHoldingRegisters(address, quantity uint16) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadHoldingRegisters(address, quantity))
 }
 
 // WriteSingleRegister wraps the underlying implementation
 func (mb *Connection) WriteSingleRegister(address, value uint16) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteSingleRegister(address, value))
 }
 
 // WriteMultipleRegisters wraps the underlying implementation
 func (mb *Connection) WriteMultipleRegisters(address, quantity uint16, value []byte) ([]byte, error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleRegisters(address, quantity, value))
 }
 
 // ReadDiscreteInputs wraps the underlying implementation
 func (mb *Connection) ReadDiscreteInputs(address, quantity uint16) (results []byte, err error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadDiscreteInputs(address, quantity))
 }
 
 // WriteMultipleCoils wraps the underlying implementation
 func (mb *Connection) WriteMultipleCoils(address, quantity uint16, value []byte) (results []byte, err error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().WriteMultipleCoils(address, quantity, value))
 }
 
 // ReadWriteMultipleRegisters wraps the underlying implementation
 func (mb *Connection) ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity uint16, value []byte) (results []byte, err error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadWriteMultipleRegisters(readAddress, readQuantity, writeAddress, writeQuantity, value))
 }
 
 // MaskWriteRegister wraps the underlying implementation
 func (mb *Connection) MaskWriteRegister(address, andMask, orMask uint16) (results []byte, err error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().MaskWriteRegister(address, andMask, orMask))
 }
 
 // ReadFIFOQueue wraps the underlying implementation
 func (mb *Connection) ReadFIFOQueue(address uint16) (results []byte, err error) {
-	<-mb.ticker.C
+	mb.wait()
 	mb.conn.Slave(mb.slaveID)
 	return mb.handle(mb.conn.ModbusClient().ReadFIFOQueue(address))
 }
 
-var connections map[string]meters.Connection
+type tickedConnection struct {
+	meters.Connection
+	delay time.Duration
+	*time.Ticker
+}
 
-func registeredConnection(key string, newConn meters.Connection) meters.Connection {
-	if connections == nil {
-		connections = make(map[string]meters.Connection)
-	}
+var connections = make(map[string]tickedConnection)
 
+func registeredConnection(key string, newConn meters.Connection) tickedConnection {
 	if conn, ok := connections[key]; ok {
 		return conn
 	}
 
-	connections[key] = newConn
-	return newConn
+	tickedConn := tickedConnection{
+		Connection: newConn,
+		Ticker:     time.NewTicker(time.Millisecond),
+	}
+	connections[key] = tickedConn
+
+	return tickedConn
 }
 
 // NewConnection creates physical modbus device from config
 func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
-	var conn meters.Connection
+	var conn tickedConnection
 
 	if device != "" && uri != "" {
 		return nil, errors.New("invalid modbus configuration: can only have either uri or device")
@@ -165,14 +185,13 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		}
 	}
 
-	if conn == nil {
+	if conn.Connection == nil {
 		return nil, errors.New("invalid modbus configuration: need either uri or device")
 	}
 
 	slaveConn := &Connection{
 		slaveID: slaveID,
 		conn:    conn,
-		ticker:  time.NewTicker(time.Millisecond),
 	}
 
 	return slaveConn, nil
