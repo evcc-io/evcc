@@ -14,6 +14,7 @@ type SimpleEVSE struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current int64
+	ticker  *time.Ticker
 }
 
 const (
@@ -56,6 +57,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		log:     log,
 		conn:    conn,
 		current: 6, // assume min current
+		ticker:  time.NewTicker(50 * time.Millisecond),
 	}
 
 	return evse, nil
@@ -63,6 +65,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 
 // Status implements the Charger.Status interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
+	<-evse.ticker.C
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -86,8 +89,7 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
-	time.Sleep(100 * time.Millisecond)
-
+	<-evse.ticker.C
 	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
@@ -109,6 +111,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 		b[1] = byte(evse.current)
 	}
 
+	<-evse.ticker.C
 	_, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
 
 	return err
@@ -118,6 +121,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 
+	<-evse.ticker.C
 	_, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
 	if err == nil {
 		evse.current = current
