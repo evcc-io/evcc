@@ -171,6 +171,11 @@ func (v *Audi) apiCall() (interface{}, error) {
 func (v *Audi) ChargeState() (float64, error) {
 	res, err := v.apiG()
 	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
+
+		_, _ = v.api.Any("bs/climatisation/v1/%s/%s/vehicles/%s/climater")
+		_, _ = v.api.Any("bs/rs/v1/%s/%s/vehicles/%s/status")
+		_, _ = v.api.Any("vehicleMgmt/vehicledata/v2/%s/%s/vehicles/%s")
+
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
 

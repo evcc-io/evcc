@@ -140,3 +140,11 @@ func (v *API) Charger() (ChargerResponse, error) {
 	err := v.getJSON(uri, &res)
 	return res, err
 }
+
+// Any implements the /charger response
+func (v *API) Any(base string) (interface{}, error) {
+	var res interface{}
+	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), BaseURI, v.brand, v.country, v.VIN)
+	err := v.getJSON(uri, &res)
+	return res, err
+}
