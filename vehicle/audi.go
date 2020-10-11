@@ -16,6 +16,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// https://github.com/davidgiga1993/AudiAPI
+
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
 	*embed
