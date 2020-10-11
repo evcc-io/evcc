@@ -44,9 +44,7 @@ func (mb *Connection) handle(res []byte, err error) ([]byte, error) {
 
 // Delay sets delay so use between subsequent modbus operations
 func (mb *Connection) Delay(delay time.Duration) {
-	if delay > mb.delay {
-		mb.delay = delay
-	}
+	mb.delay = delay
 }
 
 // Logger sets logger implementation
