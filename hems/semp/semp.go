@@ -177,7 +177,7 @@ func (s *SEMP) handlers(router *mux.Router) {
 }
 
 func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
-	s.log.TRACE.send("recv: %+v", msg)
+	s.log.TRACE.Printf("send: %+v", msg)
 
 	b, err := xml.MarshalIndent(msg, "", "  ")
 	if err != nil {
