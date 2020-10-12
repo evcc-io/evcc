@@ -339,10 +339,20 @@ func (lp *LoadPoint) connected() bool {
 	return lp.status == api.StatusB || lp.status == api.StatusC
 }
 
-// socReached checks if target is configured and reached.
-// If vehicle is not comfigured this will always return true if target is also unconfigured
-func (lp *LoadPoint) socReached(target int) bool {
-	return lp.socCharge >= float64(target)
+// targetSocReached checks if target is configured and reached.
+// If vehicle is not configured this will always return false
+func (lp *LoadPoint) targetSocReached() bool {
+	return lp.vehicle != nil &&
+		lp.SoC.Target > 0 &&
+		lp.socCharge >= float64(lp.SoC.Target)
+}
+
+// minSocNotReached checks if minimum is configured and not reached.
+// If vehicle is not configured this will always return true
+func (lp LoadPoint) minSocNotReached() bool {
+	return lp.vehicle != nil &&
+		lp.SoC.Min > 0 &&
+		lp.socCharge < float64(lp.SoC.Min)
 }
 
 // climateActive checks if vehicle has active climate request
@@ -647,7 +657,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		// https://github.com/andig/evcc/issues/105
 		err = lp.handler.Ramp(0)
 
-	case lp.targetSocReached(lp.socCharge, float64(lp.TargetSoC)):
+	case lp.targetSocReached():
 		var targetCurrent int64
 		if lp.climateActive() {
 			targetCurrent = lp.MinCurrent
@@ -657,7 +667,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
 
-	case !lp.socReached(lp.SoC.Min):
+	case lp.minSocNotReached():
 		err = lp.handler.Ramp(lp.MaxCurrent, true)
 
 	case mode == api.ModeNow:

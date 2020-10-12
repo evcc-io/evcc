@@ -611,3 +611,81 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	ctrl.Finish()
 }
+
+func TestTargetSoC(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vhc := mock.NewMockVehicle(ctrl)
+
+	tc := []struct {
+		vehicle api.Vehicle
+		target  int
+		soc     float64
+		res     bool
+	}{
+		{nil, 0, 0, false},    // never reached without vehicle
+		{nil, 0, 10, false},   // never reached without vehicle
+		{nil, 80, 0, false},   // never reached without vehicle
+		{nil, 80, 80, false},  // never reached without vehicle
+		{nil, 80, 100, false}, // never reached without vehicle
+		{vhc, 0, 0, false},    // target disabled
+		{vhc, 0, 10, false},   // target disabled
+		{vhc, 80, 0, false},   // target not reached
+		{vhc, 80, 80, true},   // target reached
+		{vhc, 80, 100, true},  // target reached
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			vehicle: tc.vehicle,
+			SoC: SoCConfig{
+				Target: tc.target,
+			},
+			socCharge: tc.soc,
+		}
+
+		if res := lp.targetSocReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+
+func TestMinSoC(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vhc := mock.NewMockVehicle(ctrl)
+
+	tc := []struct {
+		vehicle api.Vehicle
+		min     int
+		soc     float64
+		res     bool
+	}{
+		{nil, 0, 0, false},    // never reached without vehicle
+		{nil, 0, 10, false},   // never reached without vehicle
+		{nil, 80, 0, false},   // never reached without vehicle
+		{nil, 80, 80, false},  // never reached without vehicle
+		{nil, 80, 100, false}, // never reached without vehicle
+		{vhc, 0, 0, false},    // min disabled
+		{vhc, 0, 10, false},   // min disabled
+		{vhc, 80, 0, true},    // min not reached
+		{vhc, 80, 80, false},  // min reached
+		{vhc, 80, 100, false}, // min reached
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			vehicle: tc.vehicle,
+			SoC: SoCConfig{
+				Min: tc.min,
+			},
+			socCharge: tc.soc,
+		}
+
+		if res := lp.minSocNotReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
