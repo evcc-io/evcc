@@ -41,7 +41,7 @@ func NewLogger(area string) *Logger {
 	}
 
 	level := LogLevelForArea(area)
-	notepad := jww.NewNotepad(level, level, os.Stdout, ioutil.Discard, padded, log.Ldate|log.Lmicroseconds)
+	notepad := jww.NewNotepad(level, level, os.Stdout, ioutil.Discard, padded, log.Ldate)
 
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
