@@ -2,6 +2,7 @@ package charger
 
 import (
 	"errors"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -10,14 +11,14 @@ import (
 
 // SimpleEVSE charger implementation
 type SimpleEVSE struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log     *util.Logger
+	conn    *modbus.Connection
+	current int64
 }
 
 const (
 	evseRegAmpsConfig    = 1000
 	evseRegVehicleStatus = 1002
-	evseRegTurnOff       = 1004
 )
 
 func init() {
@@ -49,9 +50,13 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		return nil, err
 	}
 
+	conn.Logger(log.TRACE)
+	conn.Delay(200 * time.Millisecond)
+
 	evse := &SimpleEVSE{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		current: 6, // assume min current
 	}
 
 	return evse, nil
@@ -60,7 +65,6 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 // Status implements the Charger.Status interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
-	evse.log.TRACE.Printf("read status (%d): %0 X", evseRegVehicleStatus, b)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -83,31 +87,28 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
-	b, err := evse.conn.ReadHoldingRegisters(evseRegTurnOff, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
+	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return b[1] == 1, nil
+	enabled := b[1] != 0
+	if enabled {
+		evse.current = int64(b[1])
+	}
+
+	return enabled, nil
 }
 
 // Enable implements the Charger.Enable interface
 func (evse *SimpleEVSE) Enable(enable bool) error {
-	b, err := evse.conn.ReadHoldingRegisters(evseRegTurnOff, 1)
-	evse.log.TRACE.Printf("read charge enable (%d): %0 X", evseRegTurnOff, b)
-	if err != nil {
-		return err
-	}
+	b := []byte{0, 0}
 
 	if enable {
-		b[1] |= 1
-	} else {
-		b[1] &= ^byte(1)
+		b[1] = byte(evse.current)
 	}
 
-	bb, err := evse.conn.WriteMultipleRegisters(evseRegTurnOff, 1, b)
-	evse.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", evseRegTurnOff, b, bb)
+	_, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -116,8 +117,10 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 
-	b, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
-	evse.log.TRACE.Printf("write max current (%d) %0X: %0 X", evseRegAmpsConfig, current, b)
+	_, err := evse.conn.WriteMultipleRegisters(evseRegAmpsConfig, 1, b)
+	if err == nil {
+		evse.current = current
+	}
 
 	return err
 }
