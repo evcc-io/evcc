@@ -26,7 +26,7 @@ type TimedInt struct {
 	Timestamp string
 }
 
-// TimedString is an int value with timestamp
+// TimedString is a string value with timestamp
 type TimedString struct {
 	Content   string
 	Timestamp string
