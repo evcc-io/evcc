@@ -9,7 +9,6 @@ import (
 
 // Implementation implements the evcc vehicle api
 type Implementation struct {
-	api      *API
 	chargerG func() (interface{}, error)
 	climateG func() (interface{}, error)
 }
@@ -17,7 +16,6 @@ type Implementation struct {
 // NewImplementation provides the evcc vehicle api implementation
 func NewImplementation(api *API, cache time.Duration) *Implementation {
 	impl := &Implementation{
-		api: api,
 		chargerG: provider.NewCached(func() (interface{}, error) {
 			return api.Charger()
 		}, cache).InterfaceGetter(),
