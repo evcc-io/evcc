@@ -13,6 +13,7 @@ type LoadPointAPI interface {
 	LoadPointEnergyAPI
 }
 
+// LoadPointSettingsAPI is the getter/setter part of the external loadpoint API
 type LoadPointSettingsAPI interface {
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)

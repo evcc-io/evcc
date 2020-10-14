@@ -72,7 +72,7 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 	m.Handler.Listen(topic+"/targetsoc/set", func(payload string) {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {
-			apiHandler.SetTargetSoC(soc)
+			_ = apiHandler.SetTargetSoC(soc)
 		}
 	})
 }

@@ -272,7 +272,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 		lp.SetMode(lp.OnDisconnect.Mode)
 	}
 	if lp.OnDisconnect.TargetSoC != 0 {
-		lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
+		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
 	}
 }
 
@@ -350,7 +350,7 @@ func (lp *LoadPoint) targetSocReached() bool {
 
 // minSocNotReached checks if minimum is configured and not reached.
 // If vehicle is not configured this will always return true
-func (lp LoadPoint) minSocNotReached() bool {
+func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
 		lp.SoC.Min > 0 &&
 		lp.socCharge < float64(lp.SoC.Min)
