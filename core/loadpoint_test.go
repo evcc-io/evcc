@@ -420,7 +420,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(90.0, nil)
 	handler.EXPECT().SyncEnabled().Return()
-	handler.EXPECT().Ramp(int64(0)).Return(nil)
+	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(500)
 
 	// deactivated charger changes status to B
@@ -430,7 +430,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	vehicle.EXPECT().ChargeState().Return(95.0, nil)
 	handler.EXPECT().SyncEnabled().Return()
-	handler.EXPECT().Ramp(int64(0)).Return(nil)
+	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(-5000)
 
 	// soc has fallen below target

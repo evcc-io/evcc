@@ -671,7 +671,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.handler.Ramp(0)
 
 	case lp.targetSocReached(lp.socCharge, float64(lp.TargetSoC)):
-		err = lp.handler.Ramp(0)
+		var targetCurrent int64
+		if lp.climateActive() {
+			targetCurrent = lp.MinCurrent
+		}
+		err = lp.handler.Ramp(targetCurrent, true)
 
 	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
