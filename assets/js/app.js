@@ -377,6 +377,10 @@ Vue.component("vehicle", {
         socCharge += "%";
       }
       return socCharge;
+    },
+    minSoCActive: function () {
+      console.log(this.state);
+      return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
     }
   }
 });

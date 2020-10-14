@@ -413,6 +413,7 @@ loadpoints:
         'progress-bar-animated': state.charging,
         'bg-light': !state.connected,
         'text-secondary': !state.connected,
+        'bg-warning': state.connected && minSoCActive,
       }" v-bind:style="{width: socChargeDisplayWidth+'%'}">{{socChargeDisplayValue}}</div>
   </div>
 </div>
