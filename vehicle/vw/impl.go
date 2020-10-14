@@ -57,9 +57,9 @@ func (v *Implementation) FinishTime() (time.Time, error) {
 func (v *Implementation) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()
 	if res, ok := res.(ClimaterResponse); err == nil && ok {
+		active = "off" != strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 		outsideTemp = Temp2Float(res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content)
 		targetTemp = Temp2Float(res.Climater.Settings.TargetTemperature.Content)
-		active = "off" != strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 
 		return active, outsideTemp, targetTemp, nil
 	}
