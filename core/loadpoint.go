@@ -387,7 +387,7 @@ func (lp *LoadPoint) climateActive() bool {
 	if cl, ok := lp.vehicle.(api.Climater); ok {
 		active, outsideTemp, targetTemp, err := cl.Climater()
 		if err == nil {
-			fmt.Printf("Climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, outsideTemp, targetTemp)
+			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)
 			return active
 		}
 
