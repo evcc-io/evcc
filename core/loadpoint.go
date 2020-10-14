@@ -382,6 +382,21 @@ func (lp *LoadPoint) targetSocReached(socCharge, targetSoC float64) bool {
 	return targetSoC > 0 && targetSoC < 100 && socCharge >= targetSoC
 }
 
+// climateActive checks if vehicle has active climate request
+func (lp *LoadPoint) climateActive() bool {
+	if cl, ok := lp.vehicle.(api.Climater); ok {
+		active, outsideTemp, targetTemp, err := cl.Climater()
+		if err == nil {
+			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)
+			return active
+		}
+
+		lp.log.ERROR.Printf("climater: %v", err)
+	}
+
+	return false
+}
+
 // updateChargerStatus updates car status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.handler.Status()
@@ -656,7 +671,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.handler.Ramp(0)
 
 	case lp.targetSocReached(lp.socCharge, float64(lp.TargetSoC)):
-		err = lp.handler.Ramp(0)
+		var targetCurrent int64
+		if lp.climateActive() {
+			targetCurrent = lp.MinCurrent
+		}
+		err = lp.handler.Ramp(targetCurrent, true)
 
 	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
@@ -668,7 +687,13 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		targetCurrent := lp.maxCurrent(mode, sitePower)
 		lp.log.DEBUG.Printf("target charge current: %dA", targetCurrent)
 
-		err = lp.handler.Ramp(targetCurrent)
+		var required bool // false
+		if targetCurrent == 0 && lp.climateActive() {
+			targetCurrent = lp.MinCurrent
+			required = true
+		}
+
+		err = lp.handler.Ramp(targetCurrent, required)
 	}
 
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/vw"
@@ -22,10 +21,10 @@ import (
 type Audi struct {
 	*embed
 	*request.Helper
-	user, password string
-	tokens         vw.Tokens
-	api            *vw.API
-	apiG           func() (interface{}, error)
+	user, password     string
+	tokens             vw.Tokens
+	api                *vw.API
+	*vw.Implementation // provides the api implementations
 }
 
 func init() {
@@ -56,7 +55,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.api = vw.NewAPI(v.Helper, &v.tokens, v.authFlow, v.refreshHeaders, strings.ToUpper(cc.VIN), "Audi", "DE")
-	v.apiG = provider.NewCached(v.apiCall, cc.Cache).InterfaceGetter()
+	v.Implementation = vw.NewImplementation(v.api, cc.Cache)
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -161,35 +160,4 @@ func (v *Audi) refreshHeaders() map[string]string {
 		"X-App-Name":    "myAudi",
 		"X-Client-Id":   audiClientID,
 	}
-}
-
-// apiCall provides charger api response
-func (v *Audi) apiCall() (interface{}, error) {
-	res, err := v.api.Charger()
-	return res, err
-}
-
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Audi) ChargeState() (float64, error) {
-	res, err := v.apiG()
-	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
-		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
-	}
-
-	return 0, err
-}
-
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *Audi) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
-	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
-		var timestamp time.Time
-		if err == nil {
-			timestamp, err = time.Parse(time.RFC3339, res.Charger.Status.BatteryStatusData.RemainingChargingTime.Timestamp)
-		}
-
-		return timestamp.Add(time.Duration(res.Charger.Status.BatteryStatusData.RemainingChargingTime.Content) * time.Minute), err
-	}
-
-	return time.Time{}, err
 }

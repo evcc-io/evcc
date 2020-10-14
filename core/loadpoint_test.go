@@ -111,10 +111,14 @@ func TestUpdate(t *testing.T) {
 			h.EXPECT().Ramp(lpMaxCurrent, true)
 		}},
 		{api.StatusB, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent) // min since update called with 0
+			// min since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(lpMinCurrent, false)
 		}},
 		{api.StatusB, api.ModePV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
+			// zero since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(int64(0), false)
 			// h.EXPECT().Enabled().Return(false) // short-circuited due to status != C
 		}},
 
@@ -125,10 +129,14 @@ func TestUpdate(t *testing.T) {
 			h.EXPECT().Ramp(lpMaxCurrent, true)
 		}},
 		{api.StatusC, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent) // min since update called with 0
+			// min since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(lpMinCurrent, false)
 		}},
 		{api.StatusC, api.ModePV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
+			// zero since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(int64(0), false)
 			h.EXPECT().Enabled().Return(false)
 		}},
 	}
@@ -412,7 +420,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(90.0, nil)
 	handler.EXPECT().SyncEnabled().Return()
-	handler.EXPECT().Ramp(int64(0)).Return(nil)
+	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(500)
 
 	// deactivated charger changes status to B
@@ -422,7 +430,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	vehicle.EXPECT().ChargeState().Return(95.0, nil)
 	handler.EXPECT().SyncEnabled().Return()
-	handler.EXPECT().Ramp(int64(0)).Return(nil)
+	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(-5000)
 
 	// soc has fallen below target
