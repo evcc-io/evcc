@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -63,6 +64,20 @@ func dumpAPIs(v interface{}) {
 			fmt.Printf("Finish time: %v\n", err)
 		} else {
 			fmt.Printf("Finish time: %v\n", ft.Truncate(time.Minute))
+		}
+	}
+
+	if v, ok := v.(api.Climater); ok {
+		if active, ot, tt, err := v.Climater(); err != nil {
+			fmt.Printf("Climater: %v\n", err)
+		} else {
+			fmt.Printf("Climate active: %v\n", active)
+			if !math.IsNaN(ot) {
+				fmt.Printf("Outside temp: %.1f°C\n", ot)
+			}
+			if !math.IsNaN(tt) {
+				fmt.Printf("Target temp: %.1f°C\n", tt)
+			}
 		}
 	}
 
