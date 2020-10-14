@@ -23,7 +23,8 @@ type Audi struct {
 	user, password string
 	tokens         vw.Tokens
 	api            *vw.API
-	apiG           func() (interface{}, error)
+	chargerG       func() (interface{}, error)
+	climateG       func() (interface{}, error)
 }
 
 func init() {
@@ -54,7 +55,8 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.api = vw.NewAPI(v.Helper, &v.tokens, v.authFlow, v.refreshHeaders, strings.ToUpper(cc.VIN), "Audi", "DE")
-	v.apiG = provider.NewCached(v.apiCall, cc.Cache).InterfaceGetter()
+	v.chargerG = provider.NewCached(v.api.Charger, cc.Cache).InterfaceGetter()
+	v.climateG = provider.NewCached(v.api.Climater, cc.Cache).InterfaceGetter()
 
 	var err error
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -161,23 +163,10 @@ func (v *Audi) refreshHeaders() map[string]string {
 	}
 }
 
-// apiCall provides charger api response
-func (v *Audi) apiCall() (interface{}, error) {
-	res, err := v.api.Charger()
-	return res, err
-}
-
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Audi) ChargeState() (float64, error) {
-	res, err := v.apiG()
+	res, err := v.chargerG()
 	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
-
-		_, _ = v.api.Any("bs/climatisation/v1/%s/%s/vehicles/%s/climater")
-		_, _ = v.api.Any("promoter/portfolio/v1/%s/%s/vehicles/%s/carportdata")
-		// 'https://msg.volkswagen.de/fs-car/promoter/portfolio/v1/VW/DE/vehicle/' + VIN + '/carportdata'
-		// _, _ = v.api.Any("bs/rs/v1/%s/%s/vehicles/%s/status")
-		// _, _ = v.api.Any("vehicleMgmt/vehicledata/v2/%s/%s/vehicles/%s")
-
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
 
@@ -186,7 +175,7 @@ func (v *Audi) ChargeState() (float64, error) {
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Audi) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
+	res, err := v.chargerG()
 	if res, ok := res.(vw.ChargerResponse); err == nil && ok {
 		var timestamp time.Time
 		if err == nil {
@@ -197,4 +186,18 @@ func (v *Audi) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// Climater implements the Vehicle.Climater interface
+func (v *Audi) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.climateG()
+	if res, ok := res.(vw.ClimaterResponse); err == nil && ok {
+		outsideTemp = vw.Temp2Float(res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content)
+		targetTemp = vw.Temp2Float(res.Climater.Settings.TargetTemperature.Content)
+		active = "off" != strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
+
+		return active, outsideTemp, targetTemp, nil
+	}
+
+	return active, outsideTemp, targetTemp, err
 }
