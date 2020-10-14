@@ -111,10 +111,14 @@ func TestUpdate(t *testing.T) {
 			h.EXPECT().Ramp(lpMaxCurrent, true)
 		}},
 		{api.StatusB, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent) // min since update called with 0
+			// min since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(lpMinCurrent, false)
 		}},
 		{api.StatusB, api.ModePV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
+			// zero since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(int64(0), false)
 			// h.EXPECT().Enabled().Return(false) // short-circuited due to status != C
 		}},
 
@@ -125,10 +129,14 @@ func TestUpdate(t *testing.T) {
 			h.EXPECT().Ramp(lpMaxCurrent, true)
 		}},
 		{api.StatusC, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(lpMinCurrent) // min since update called with 0
+			// min since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(lpMinCurrent, false)
 		}},
 		{api.StatusC, api.ModePV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
+			// zero since update called with 0
+			// force = false due to pv mode climater check
+			h.EXPECT().Ramp(int64(0), false)
 			h.EXPECT().Enabled().Return(false)
 		}},
 	}
