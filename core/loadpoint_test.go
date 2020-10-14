@@ -152,9 +152,9 @@ func TestUpdate(t *testing.T) {
 			log:         util.NewLogger("foo"),
 			bus:         evbus.New(),
 			clock:       clck,
-			chargeMeter: &Null{}, //silence nil panics
-			chargeRater: &Null{}, //silence nil panics
-			chargeTimer: &Null{}, //silence nil panics
+			chargeMeter: &Null{}, // silence nil panics
+			chargeRater: &Null{}, // silence nil panics
+			chargeTimer: &Null{}, // silence nil panics
 			HandlerConfig: HandlerConfig{
 				MinCurrent: lpMinCurrent,
 				MaxCurrent: lpMaxCurrent,
@@ -389,16 +389,18 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
-		chargeRater: &Null{}, //silence nil panics
-		chargeTimer: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
 		},
 		handler:      handler,
+		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		status:       api.StatusC,
+		Mode:         api.ModeNow,
 		SoC: SoCConfig{
 			Target: 90,
 		},
@@ -408,7 +410,6 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	attachListeners(t, lp)
 
 	// charging below target
-	lp.Mode = api.ModeNow
 	handler.EXPECT().TargetCurrent().Return(int64(6))
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
@@ -456,9 +457,9 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
-		chargeRater: &Null{}, //silence nil panics
-		chargeTimer: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
@@ -528,9 +529,9 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: rater,
-		chargeTimer: &Null{}, //silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
