@@ -388,6 +388,20 @@ func (lp *LoadPoint) climateActive() bool {
 		active, outsideTemp, targetTemp, err := cl.Climater()
 		if err == nil {
 			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)
+
+			status := "off"
+			if active {
+				status = "on"
+
+				switch {
+				case outsideTemp < targetTemp:
+					status = "heating"
+				case outsideTemp > targetTemp:
+					status = "cooling"
+				}
+			}
+
+			lp.publish("climater", status)
 			return active
 		}
 
