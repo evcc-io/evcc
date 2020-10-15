@@ -455,8 +455,13 @@ func (lp *LoadPoint) detectPhases() {
 	}
 }
 
-// maxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) maxCurrent(mode api.ChargeMode, sitePower float64) int64 {
+// pvDisableTimer puts the pv enable/disable timer into elapsed state
+func (lp *LoadPoint) pvDisableTimer() {
+	lp.pvTimer = time.Now().Add(-lp.Disable.Delay)
+}
+
+// pvMaxCurrent calculates the maximum target current for PV mode
+func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	// calculate target charge current from delta power and actual current
 	effectiveCurrent := lp.handler.TargetCurrent()
 	if lp.status != api.StatusC {
@@ -670,12 +675,13 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case lp.minSocNotReached():
 		err = lp.handler.Ramp(lp.MaxCurrent, true)
+		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeNow:
 		err = lp.handler.Ramp(lp.MaxCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		targetCurrent := lp.maxCurrent(mode, sitePower)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
 		lp.log.DEBUG.Printf("target charge current: %dA", targetCurrent)
 
 		var required bool // false
