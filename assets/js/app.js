@@ -346,7 +346,12 @@ Vue.component("loadpoint", {
 Vue.component("loadpoint-details", {
   template: "#loadpoint-details-template",
   props: ["state"],
-  mixins: [formatter]
+  mixins: [formatter],
+  computed: {
+    minSoCActive: function () {
+      return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+    }
+  }
 });
 
 Vue.component("vehicle", {
@@ -379,7 +384,6 @@ Vue.component("vehicle", {
       return socCharge;
     },
     minSoCActive: function () {
-      console.log(this.state);
       return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
     }
   }
