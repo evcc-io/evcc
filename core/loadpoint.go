@@ -664,7 +664,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.handler.Ramp(0)
 
 	case lp.targetSocReached():
-		var targetCurrent int64
+		var targetCurrent int64 // zero disables
 		if lp.climateActive() {
 			targetCurrent = lp.MinCurrent
 		}
