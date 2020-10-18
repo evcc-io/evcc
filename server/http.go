@@ -24,26 +24,14 @@ type targetSoCJSON struct {
 	TargetSoC int `json:"targetSoC"`
 }
 
+type minSoCJSON struct {
+	MinSoC int `json:"minSoC"`
+}
+
 type route struct {
 	Methods     []string
 	Pattern     string
 	HandlerFunc http.HandlerFunc
-}
-
-// site is the minimal interface for accessing site methods
-type site interface {
-	Healthy() bool
-	Configuration() core.SiteConfiguration
-	LoadPoints() []*core.LoadPoint
-	loadpoint
-}
-
-// loadpoint is the minimal interface for accessing loadpoint methods
-type loadpoint interface {
-	GetMode() api.ChargeMode
-	SetMode(api.ChargeMode)
-	GetTargetSoC() int
-	SetTargetSoC(targetSoC int)
 }
 
 // routeLogger traces matched routes including their executing time
@@ -60,18 +48,19 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(site site, useLocal bool) http.HandlerFunc {
+func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
 		indexTemplate, err := FSString(useLocal, "/index.html")
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to load embedded template: " + err.Error())
+			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
+			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
 		}
 
 		t, err := template.New("evcc").Delims("<<", ">>").Parse(indexTemplate)
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template: ", err.Error())
+			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
@@ -80,7 +69,7 @@ func indexHandler(site site, useLocal bool) http.HandlerFunc {
 			"Configured": len(site.LoadPoints()),
 			"Tag":        time.Now().Unix(),
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page: ", err.Error())
+			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
 	})
 }
@@ -101,7 +90,7 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 }
 
 // HealthHandler returns current charge mode
-func HealthHandler(site site) http.HandlerFunc {
+func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !site.Healthy() {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -114,7 +103,7 @@ func HealthHandler(site site) http.HandlerFunc {
 }
 
 // ConfigHandler returns current charge mode
-func ConfigHandler(site site) http.HandlerFunc {
+func ConfigHandler(site core.SiteAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := site.Configuration()
 		jsonResponse(w, r, res)
@@ -162,7 +151,7 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 }
 
 // CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
+func CurrentChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := chargeModeJSON{Mode: loadpoint.GetMode()}
 		jsonResponse(w, r, res)
@@ -170,7 +159,7 @@ func CurrentChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
 }
 
 // ChargeModeHandler updates charge mode
-func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
+func ChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -189,7 +178,7 @@ func ChargeModeHandler(loadpoint loadpoint) http.HandlerFunc {
 }
 
 // CurrentTargetSoCHandler returns current target soc
-func CurrentTargetSoCHandler(loadpoint loadpoint) http.HandlerFunc {
+func CurrentTargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
 		jsonResponse(w, r, res)
@@ -197,21 +186,53 @@ func CurrentTargetSoCHandler(loadpoint loadpoint) http.HandlerFunc {
 }
 
 // TargetSoCHandler updates target soc
-func TargetSoCHandler(loadpoint loadpoint) http.HandlerFunc {
+func TargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
 		socS, ok := vars["soc"]
 		soc, err := strconv.ParseInt(socS, 10, 32)
 
+		if ok && err == nil {
+			err = loadpoint.SetTargetSoC(int(soc))
+		}
+
 		if !ok || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		loadpoint.SetTargetSoC(int(soc))
-
 		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
+		jsonResponse(w, r, res)
+	}
+}
+
+// CurrentMinSoCHandler returns current minimum soc
+func CurrentMinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
+		jsonResponse(w, r, res)
+	}
+}
+
+// MinSoCHandler updates minimum soc
+func MinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		socS, ok := vars["soc"]
+		soc, err := strconv.ParseInt(socS, 10, 32)
+
+		if ok && err == nil {
+			err = loadpoint.SetMinSoC(int(soc))
+		}
+
+		if !ok || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
 		jsonResponse(w, r, res)
 	}
 }
@@ -235,7 +256,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
+func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler(site)},
 		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
@@ -245,6 +266,8 @@ func NewHTTPd(url string, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
 		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
 		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
+		"getminsoc":    {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(site)},
+		"setminsoc":    {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -284,6 +307,8 @@ func NewHTTPd(url string, site site, hub *SocketHub, cache *util.Cache) *HTTPd {
 		applyRouteHandler(subAPI, routes["setmode"], ChargeModeHandler(lp))
 		applyRouteHandler(subAPI, routes["gettargetsoc"], CurrentTargetSoCHandler(lp))
 		applyRouteHandler(subAPI, routes["settargetsoc"], TargetSoCHandler(lp))
+		applyRouteHandler(subAPI, routes["getminsoc"], CurrentMinSoCHandler(lp))
+		applyRouteHandler(subAPI, routes["setminsoc"], MinSoCHandler(lp))
 	}
 
 	srv := &HTTPd{

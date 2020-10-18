@@ -152,9 +152,9 @@ func TestUpdate(t *testing.T) {
 			log:         util.NewLogger("foo"),
 			bus:         evbus.New(),
 			clock:       clck,
-			chargeMeter: &Null{}, //silence nil panics
-			chargeRater: &Null{}, //silence nil panics
-			chargeTimer: &Null{}, //silence nil panics
+			chargeMeter: &Null{}, // silence nil panics
+			chargeRater: &Null{}, // silence nil panics
+			chargeTimer: &Null{}, // silence nil panics
 			HandlerConfig: HandlerConfig{
 				MinCurrent: lpMinCurrent,
 				MaxCurrent: lpMaxCurrent,
@@ -330,7 +330,7 @@ func TestPVHysteresisForStatusC(t *testing.T) {
 			handler.EXPECT().TargetCurrent().Return(int64(0))
 			handler.EXPECT().Enabled().Return(tc.enabled)
 
-			current := lp.maxCurrent(api.ModePV, se.site)
+			current := lp.pvMaxCurrent(api.ModePV, se.site)
 
 			if current != se.current {
 				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
@@ -366,7 +366,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	// maxCurrent will read enabled state in PV mode
 	sitePower := -float64(minA*lp.Phases)*Voltage + 1 // 1W below min power
-	current := lp.maxCurrent(api.ModePV, sitePower)
+	current := lp.pvMaxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {
 		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %d", current)
@@ -389,24 +389,27 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
-		chargeRater: &Null{}, //silence nil panics
-		chargeTimer: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
 		},
 		handler:      handler,
+		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
 		status:       api.StatusC,
-		TargetSoC:    90,
+		Mode:         api.ModeNow,
+		SoC: SoCConfig{
+			Target: 90,
+		},
 	}
 
 	handler.EXPECT().Prepare().Return()
 	attachListeners(t, lp)
 
 	// charging below target
-	lp.Mode = api.ModeNow
 	handler.EXPECT().TargetCurrent().Return(int64(6))
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
@@ -454,9 +457,9 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
-		chargeRater: &Null{}, //silence nil panics
-		chargeTimer: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
@@ -526,9 +529,9 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		log:         util.NewLogger("foo"),
 		bus:         evbus.New(),
 		clock:       clock,
-		chargeMeter: &Null{}, //silence nil panics
+		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: rater,
-		chargeTimer: &Null{}, //silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
 		HandlerConfig: HandlerConfig{
 			MinCurrent: lpMinCurrent,
 			MaxCurrent: lpMaxCurrent,
@@ -608,4 +611,82 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	expectCache("chargedEnergy", 10000.0)
 
 	ctrl.Finish()
+}
+
+func TestTargetSoC(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vhc := mock.NewMockVehicle(ctrl)
+
+	tc := []struct {
+		vehicle api.Vehicle
+		target  int
+		soc     float64
+		res     bool
+	}{
+		{nil, 0, 0, false},    // never reached without vehicle
+		{nil, 0, 10, false},   // never reached without vehicle
+		{nil, 80, 0, false},   // never reached without vehicle
+		{nil, 80, 80, false},  // never reached without vehicle
+		{nil, 80, 100, false}, // never reached without vehicle
+		{vhc, 0, 0, false},    // target disabled
+		{vhc, 0, 10, false},   // target disabled
+		{vhc, 80, 0, false},   // target not reached
+		{vhc, 80, 80, true},   // target reached
+		{vhc, 80, 100, true},  // target reached
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			vehicle: tc.vehicle,
+			SoC: SoCConfig{
+				Target: tc.target,
+			},
+			socCharge: tc.soc,
+		}
+
+		if res := lp.targetSocReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+
+func TestMinSoC(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vhc := mock.NewMockVehicle(ctrl)
+
+	tc := []struct {
+		vehicle api.Vehicle
+		min     int
+		soc     float64
+		res     bool
+	}{
+		{nil, 0, 0, false},    // never reached without vehicle
+		{nil, 0, 10, false},   // never reached without vehicle
+		{nil, 80, 0, false},   // never reached without vehicle
+		{nil, 80, 80, false},  // never reached without vehicle
+		{nil, 80, 100, false}, // never reached without vehicle
+		{vhc, 0, 0, false},    // min disabled
+		{vhc, 0, 10, false},   // min disabled
+		{vhc, 80, 0, true},    // min not reached
+		{vhc, 80, 80, false},  // min reached
+		{vhc, 80, 100, false}, // min reached
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			vehicle: tc.vehicle,
+			SoC: SoCConfig{
+				Min: tc.min,
+			},
+			socCharge: tc.soc,
+		}
+
+		if res := lp.minSocNotReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
 }

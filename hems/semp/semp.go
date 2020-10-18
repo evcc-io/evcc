@@ -50,7 +50,7 @@ type SEMP struct {
 // site is the minimal interface for accessing site methods
 type site interface {
 	Configuration() core.SiteConfiguration
-	LoadPoints() []*core.LoadPoint
+	LoadPoints() []core.LoadPointAPI
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
@@ -316,7 +316,7 @@ func (s *SEMP) cacheGet(id int, key string) (res util.Param, err error) {
 	return res, err
 }
 
-func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
+func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 	method := MethodEstimation
 	if lp.HasChargeMeter() {
 		method = MethodMeasurement
@@ -336,8 +336,8 @@ func (s *SEMP) deviceInfo(id int, lp *core.LoadPoint) DeviceInfo {
 			OptionalEnergy:       true,
 		},
 		Characteristics: Characteristics{
-			MinPowerConsumption: 230 * int(lp.MinCurrent),
-			MaxPowerConsumption: 230 * int(lp.Phases*lp.MaxCurrent),
+			MinPowerConsumption: int(lp.GetMinPower()),
+			MaxPowerConsumption: int(lp.GetMaxPower()),
 		},
 	}
 
@@ -352,7 +352,7 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 	return res
 }
 
-func (s *SEMP) deviceStatus(id int, lp *core.LoadPoint) DeviceStatus {
+func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 	var chargePower float64
 	if chargePowerP, err := s.cacheGet(id, "chargePower"); err == nil {
 		chargePower = chargePowerP.Val.(float64)
@@ -386,7 +386,7 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	return res
 }
 
-func (s *SEMP) planningRequest(id int, lp *core.LoadPoint) (res PlanningRequest) {
+func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
 	mode := api.ModeOff
 	if modeP, err := s.cacheGet(id, "mode"); err == nil {
 		mode = api.ChargeMode(modeP.Val.(string))

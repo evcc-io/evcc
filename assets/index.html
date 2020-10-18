@@ -335,7 +335,8 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3">
     <div class="mb-2 value">Leistung
-      <i class="text-primary fa fa-temperature-low ml-1" v-if="state.climater=='heating'"></i>
+      <i class="text-warning fas fa-battery-quarter ml-1" v-if="minSoCActive"></i>
+      <i class="text-primary fa fa-temperature-low ml-1" v-else-if="state.climater=='heating'"></i>
       <i class="text-primary fa fa-temperature-high ml-1" v-else-if="state.climater=='cooling'"></i>
       <i class="text-primary fa fa-thermometer-half ml-1" v-else-if="state.climater=='on'"></i>
     </div>
@@ -413,6 +414,7 @@ loadpoints:
         'progress-bar-animated': state.charging,
         'bg-light': !state.connected,
         'text-secondary': !state.connected,
+        'bg-warning': state.connected && minSoCActive,
       }" v-bind:style="{width: socChargeDisplayWidth+'%'}">{{socChargeDisplayValue}}</div>
   </div>
 </div>

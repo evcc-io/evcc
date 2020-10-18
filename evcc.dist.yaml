@@ -67,8 +67,9 @@ loadpoints:
     charge: charge # charge meter
   vehicle: audi
   mode: pv
-  targetSoC: 100 # charge to 100%
   soc:
+    min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
+    target: 100 # always charge to 100%
     alwaysUpdate: false # set true to update vehicle soc even when disconnected
     estimate: false # set true to interpolate between api updates
     levels: # target soc levels for UI

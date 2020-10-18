@@ -6,6 +6,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/andig/evcc/core"
 )
 
 // SocketPath is the unix domain socket path
@@ -24,7 +26,7 @@ func remoteIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site) {
+func HealthListener(site core.SiteAPI) {
 	remoteIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)
