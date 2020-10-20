@@ -41,6 +41,16 @@ func (e StatusError) StatusCode() int {
 	return e.resp.StatusCode
 }
 
+// HasStatus returns true if the respose's status code matches any of the given codes
+func (e StatusError) HasStatus(codes ...int) bool {
+	for _, code := range codes {
+		if e.resp.StatusCode == code {
+			return true
+		}
+	}
+	return false
+}
+
 // ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()

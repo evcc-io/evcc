@@ -1,6 +1,6 @@
 language: go
 go: "1.15"
-go_import_path: github.com/andig/evcc
+go_import_path: github.com/mark-sch/evcc
 
 cache:
   directories:

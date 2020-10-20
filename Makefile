@@ -1,6 +1,6 @@
 .PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
 
-TAG_NAME := 2020.0.29
+TAG_NAME := 2020.0.30
 SHA := $(shell git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')

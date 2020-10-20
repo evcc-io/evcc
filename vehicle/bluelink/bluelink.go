@@ -293,8 +293,8 @@ func (v *API) getStatus() (float64, error) {
 		err = v.DoJSON(req, &resp)
 
 		if err != nil {
-			resp := v.LastResponse()
-			if resp != nil && resp.StatusCode == http.StatusForbidden {
+			// handle http 401, 403
+			if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
 				err = errAuthFail
 			}
 		}

@@ -73,7 +73,7 @@ func (m *Influx) supportedType(p util.Param) bool {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(loadPoints []*core.LoadPoint, in <-chan util.Param) {
+func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	writer := m.client.WriteAPI(m.org, m.database)
 
 	// log errors

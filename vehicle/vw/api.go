@@ -20,22 +20,56 @@ type VehiclesResponse struct {
 	}
 }
 
+// TimedInt is an int value with timestamp
+type TimedInt struct {
+	Content   int
+	Timestamp string
+}
+
+// TimedString is a string value with timestamp
+type TimedString struct {
+	Content   string
+	Timestamp string
+}
+
 // ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
 type ChargerResponse struct {
 	Charger struct {
 		Status struct {
 			BatteryStatusData struct {
-				StateOfCharge struct {
-					Content   int
-					Timestamp string
-				}
-				RemainingChargingTime struct {
-					Content   int
-					Timestamp string
-				}
+				StateOfCharge         TimedInt
+				RemainingChargingTime TimedInt
 			}
 		}
 	}
+}
+
+// ClimaterResponse is the /bs/climatisation/v1/%s/%s/vehicles/%s/climater api
+type ClimaterResponse struct {
+	Climater struct {
+		Settings struct {
+			TargetTemperature TimedInt
+			HeaterSource      TimedString
+		}
+		Status struct {
+			ClimatisationStatusData struct {
+				ClimatisationState         TimedString
+				ClimatisationReason        TimedString
+				RemainingClimatisationTime TimedInt
+			}
+			TemperatureStatusData struct {
+				OutdoorTemperature TimedInt
+			}
+			VehicleParkingClockStatusData struct {
+				VehicleParkingClock TimedString
+			}
+		}
+	}
+}
+
+// Temp2Float converts api temp to float value
+func Temp2Float(val int) float64 {
+	return float64(val)/10 - 273
 }
 
 // API is the VW api client
@@ -137,6 +171,22 @@ func (v *API) Vehicles() ([]string, error) {
 func (v *API) Charger() (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", BaseURI, v.brand, v.country, v.VIN)
+	err := v.getJSON(uri, &res)
+	return res, err
+}
+
+// Climater implements the /climater response
+func (v *API) Climater() (ClimaterResponse, error) {
+	var res ClimaterResponse
+	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", BaseURI, v.brand, v.country, v.VIN)
+	err := v.getJSON(uri, &res)
+	return res, err
+}
+
+// Any implements any api response
+func (v *API) Any(base string) (interface{}, error) {
+	var res interface{}
+	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), BaseURI, v.brand, v.country, v.VIN)
 	err := v.getJSON(uri, &res)
 	return res, err
 }

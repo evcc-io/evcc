@@ -21,7 +21,7 @@ func init() {
 }
 
 // setup influx databases
-func configureDatabase(conf server.InfluxConfig, loadPoints []*core.LoadPoint, in <-chan util.Param) {
+func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,

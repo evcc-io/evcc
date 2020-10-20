@@ -1,3 +1,7 @@
+<div align="center">
+<img src="docs/logo.png" width="400" />
+</div>
+
 # evcc
 
 [![Build Status](https://travis-ci.org/andig/evcc.svg?branch=master)](https://travis-ci.org/andig/evcc)
