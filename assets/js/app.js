@@ -349,7 +349,9 @@ Vue.component("loadpoint-details", {
   mixins: [formatter],
   computed: {
     minSoCActive: function () {
-      return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+      return this.state.connected && (
+        this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC
+      )
     }
   }
 });
