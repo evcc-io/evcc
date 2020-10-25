@@ -93,7 +93,7 @@ func (v *VW) authFlow() error {
 	query := url.Values(map[string][]string{
 		"prompt":                {"login"},
 		"state":                 {vw.RandomString(43)},
-		"response_type":         {"code id_token token"},
+		"response_type":         {"id_token token"},
 		"code_challenge_method": {"s256"},
 		"scope":                 {"openid profile mbb cars birthdate nickname address phone"},
 		"code_challenge":        {challenge},
@@ -109,11 +109,8 @@ func (v *VW) authFlow() error {
 	}
 
 	if err == nil {
-		// var code string
-
-		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parsable url
+		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
 		if locationURL, err := url.Parse(loc); err == nil {
-			// code = locationURL.Query().Get("code")
 			idToken = locationURL.Query().Get("id_token")
 		}
 

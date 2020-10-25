@@ -1,15 +1,11 @@
 package vehicle
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -95,14 +91,15 @@ func (v *Audi) authFlow() error {
 	var uri string
 	var req *http.Request
 	var resp *http.Response
-	var tokens vw.Tokens
+	// var tokens vw.Tokens
+	var idToken string
 
 	const clientID = "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"
 	const clientIDAlias = "934928ef" // "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"
 	const redirectURI = "myaudi:///"
 
 	query := url.Values(map[string][]string{
-		"response_type": {"code"},
+		"response_type": {"id_token", "token"},
 		"client_id":     {clientID},
 		"redirect_uri":  {redirectURI},
 		"scope":         {"address profile badge birthdate birthplace nationalIdentifier nationality profession email vin phone nickname name picture mbb gallery openid"},
@@ -119,51 +116,53 @@ func (v *Audi) authFlow() error {
 	}
 
 	if err == nil {
-		var code string
-		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
-			code = location.Query().Get("code")
+		// var code string
+		loc := resp.Header.Get("Location")
+		fmt.Println(loc)
+		if location, err := url.Parse(loc); err == nil {
+			idToken = location.Query().Get("id_token")
 		}
 
-		data := url.Values(map[string][]string{
-			"client_id":     {clientID},
-			"grant_type":    {"authorization_code"},
-			"code":          {code},
-			"redirect_uri":  {redirectURI},
-			"response_type": {"token id_token"},
-		})
+		// data := url.Values(map[string][]string{
+		// 	"client_id":     {clientID},
+		// 	"grant_type":    {"authorization_code"},
+		// 	"code":          {code},
+		// 	"redirect_uri":  {redirectURI},
+		// 	"response_type": {"token id_token"},
+		// })
 
-		var hash string
-		secret, err := hex.DecodeString(AudiHashSecret)
-		if err == nil {
-			// timestamp rounded to 100s precision
-			ts := strconv.FormatInt(time.Now().Unix()/100, 10)
+		// var hash string
+		// secret, err := hex.DecodeString(AudiHashSecret)
+		// if err == nil {
+		// 	// timestamp rounded to 100s precision
+		// 	ts := strconv.FormatInt(time.Now().Unix()/100, 10)
 
-			mac := hmac.New(sha256.New, secret)
-			_, err = mac.Write([]byte(ts))
+		// 	mac := hmac.New(sha256.New, secret)
+		// 	_, err = mac.Write([]byte(ts))
 
-			hash = fmt.Sprintf("v1:%s:%0x", clientIDAlias, mac.Sum(nil))
-		}
+		// 	hash = fmt.Sprintf("v1:%s:%0x", clientIDAlias, mac.Sum(nil))
+		// }
 
-		if err == nil {
-			uri = "https://app-api.my.audi.com/myaudiappidk/v1/emea/token"
-			req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-				"Content-Type": "application/x-www-form-urlencoded",
-				"X-QMAuth":     hash,
-			})
-		}
+		// if err == nil {
+		// 	uri = "https://app-api.my.audi.com/myaudiappidk/v1/emea/token"
+		// 	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		// 		"Content-Type": "application/x-www-form-urlencoded",
+		// 		"X-QMAuth":     hash,
+		// 	})
+		// }
 
-		if err == nil {
-			if err = v.DoJSON(req, &tokens); err == nil && tokens.IDToken == "" {
-				err = errors.New("missing id token (1)")
-			}
-		}
+		// if err == nil {
+		// 	if err = v.DoJSON(req, &tokens); err == nil && tokens.IDToken == "" {
+		// 		err = errors.New("missing id token (1)")
+		// 	}
+		// }
 	}
 
 	if err == nil {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {tokens.IDToken},
+			"token":      {idToken},
 		})
 
 		req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
@@ -171,8 +170,8 @@ func (v *Audi) authFlow() error {
 			"X-Client-Id":  audiOAuthClientID,
 		})
 		if err == nil {
-			if err = v.DoJSON(req, &v.tokens); err == nil && tokens.IDToken == "" {
-				err = errors.New("missing id token (2)")
+			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
+				err = errors.New("missing id token")
 			}
 		}
 	}
