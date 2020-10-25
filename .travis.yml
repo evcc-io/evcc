@@ -15,7 +15,9 @@ notifications:
 
 env:
   global:
-    - PATH=$HOME/gopath/bin:$PATH
+  - PATH=$HOME/gopath/bin:$PATH
+  # AUDI_HASH_SECRET
+  - secure: FLxALYSoDbHOy70ppjP9rjMA7YMrTTiUQz8cBkOM6CnXOOIFk1canfylmb/nKJWz77nLBvLgbt38jZtUWyiG0dRvAz9IGrRy4KIJ4wrLMS8ub6up4JiSiHkwIvWJl3Z3DUWF7WYpwg3agqp8M2eSbNzZQsjsgwBLDlOEpCKvEpqxN7kjMi2hmH93Fb6SbMxrZKpSRhjPE/GLQWgbrTWHhMLDZMtlcoazOeALJp+QPcncOu6wLeJXEmNhd2NDe5nNMkSe3P9J7dbaVVmCctPyBdD5WWrj9aa11ghtzAiuPOkg578VaSIORr1ZOFZKpTPch0ryCvFjBtCWXJIaTW5Vd6Xz1yv3N/lyz4LsPUcUvHstLP+sWkn8A80+Td6oNw5kR1ji14Mfk0ZYCvYkvj8U20QcmS46gehy6BNCSLQe/PXI2IxJGdjc5s5Bz84fk0+nERvXmTEIf/8V76JeT+1sTahEOp9eUkYvfObhr3Tu22BB2kTkpn42jnvdH25Egr10VmQYQcCa3cHSOQXVnw7fo7En/VvbObUVeW3UwcIIqWQO2eW2tSbWGHa5wN1CbPzpbjVylW++TI7Xzk+kjP3BHOZ2ZGSSoSM0s7F4cj6D3vK4+3grW0TqrvC1+mikwlMA5EeMzlPRaEjWBTwqoTZan3R29VadGYui+LQzbaDk+lw=
 
 before_install:
 # Install linters and misspell

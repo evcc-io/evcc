@@ -1,10 +1,15 @@
 package vehicle
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +36,10 @@ func init() {
 	registry.Add("audi", NewAudiFromConfig)
 }
 
-const audiClientID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
+// AudiHashSecret is used for obtaining the X-QMauth header hash value from the current timestamp
+var AudiHashSecret = "not contained in repo due to legal concerns"
+
+const audiOAuthClientID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
 
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
@@ -90,6 +98,7 @@ func (v *Audi) authFlow() error {
 	var tokens vw.Tokens
 
 	const clientID = "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"
+	const clientIDAlias = "934928ef" // "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"
 	const redirectURI = "myaudi:///"
 
 	query := url.Values(map[string][]string{
@@ -123,8 +132,26 @@ func (v *Audi) authFlow() error {
 			"response_type": {"token id_token"},
 		})
 
-		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+		var hash string
+		var secret []byte
+		if secret, err = hex.DecodeString(AudiHashSecret); err == nil {
+			// timestamp rounded to 100s precision
+			ts := strconv.FormatInt(time.Now().Unix()/100, 10)
+
+			mac := hmac.New(sha256.New, secret)
+			_, err = mac.Write([]byte(ts))
+
+			hash = fmt.Sprintf("v1:%s:%0x", clientIDAlias, mac.Sum(nil))
+		}
+
+		if err == nil {
+			uri = "https://app-api.my.audi.com/myaudiappidk/v1/emea/token"
+			req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+				"Content-Type": "application/x-www-form-urlencoded",
+				"X-QMAuth":     hash,
+			})
+		}
+
 		if err == nil {
 			if err = v.DoJSON(req, &tokens); err == nil && tokens.IDToken == "" {
 				err = errors.New("missing id token (1)")
@@ -141,7 +168,7 @@ func (v *Audi) authFlow() error {
 
 		req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
-			"X-Client-Id":  audiClientID,
+			"X-Client-Id":  audiOAuthClientID,
 		})
 		if err == nil {
 			if err = v.DoJSON(req, &v.tokens); err == nil && tokens.IDToken == "" {
@@ -158,6 +185,6 @@ func (v *Audi) refreshHeaders() map[string]string {
 		"Content-Type":  "application/x-www-form-urlencoded",
 		"X-App-Version": "3.14.0",
 		"X-App-Name":    "myAudi",
-		"X-Client-Id":   audiClientID,
+		"X-Client-Id":   audiOAuthClientID,
 	}
 }
