@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strings"
@@ -51,11 +52,12 @@ func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, err
 }
 
 // Login performs the identity.vwgroup.io login
-func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
+func (v *Identity) Login(query url.Values, user, password string) (string, error) {
 	var vars FormVars
 	var req *http.Request
 
 	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
+	uri := "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
 	resp, err := v.Get(uri)
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
@@ -124,5 +126,19 @@ func (v *Identity) Login(uri, user, password string) (*http.Response, error) {
 		resp, err = v.redirect(resp, err)
 	}
 
-	return resp, err
+	var idToken string
+	if err == nil {
+		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
+
+		var location *url.URL
+		if location, err = url.Parse(loc); err == nil {
+			idToken = location.Query().Get("id_token")
+
+			if idToken == "" {
+				err = errors.New("missing id token")
+			}
+		}
+	}
+
+	return idToken, err
 }

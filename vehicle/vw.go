@@ -82,60 +82,24 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 func (v *VW) authFlow() error {
-	var err error
 	var uri string
 	var req *http.Request
-	var resp *http.Response
-	var idToken string
 
-	// execute login
-	challenge, verifier, err := vw.ChallengeVerifier()
+	const clientID = "9496332b-ea03-4091-a224-8c746b885068@apps_vw-dilab_com"
+	const redirectURI = "carnet://identity-kit/login"
+
 	query := url.Values(map[string][]string{
-		"prompt":                {"login"},
-		"state":                 {vw.RandomString(43)},
-		"response_type":         {"code id_token token"},
-		"code_challenge_method": {"s256"},
+		"response_type":         {"id_token token"},
+		"client_id":             {clientID},
+		"redirect_uri":          {redirectURI},
 		"scope":                 {"openid profile mbb cars birthdate nickname address phone"},
-		"code_challenge":        {challenge},
-		"redirect_uri":          {"carnet://identity-kit/login"},
-		"client_id":             {"9496332b-ea03-4091-a224-8c746b885068@apps_vw-dilab_com"},
+		"state":                 {vw.RandomString(43)},
 		"nonce":                 {vw.RandomString(43)},
+		"prompt":                {"login"},
 	})
 
-	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
-	if err == nil {
-		identity := &vw.Identity{Client: v.Client}
-		resp, err = identity.Login(uri, v.user, v.password)
-	}
-
-	if err == nil {
-		// var code string
-
-		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parsable url
-		if locationURL, err := url.Parse(loc); err == nil {
-			// code = locationURL.Query().Get("code")
-			idToken = locationURL.Query().Get("id_token")
-		}
-
-		_ = verifier
-		// if err == nil {
-		// 	data := url.Values(map[string][]string{
-		// 		"auth_code":     {code},
-		// 		"code_verifier": {verifier},
-		// 		"id_token":      {idToken},
-		// 	})
-
-		// 	uri := "https://tokenrefreshservice.apps.emea.vwapps.io/exchangeAuthCode"
-		// 	req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
-		// 	// if err == nil {
-		// 	// 	err = v.DoJSON(req, &tokens)
-		// 	// 	if err == nil && tokens.AccessToken == "" {
-		// 	// 		err = errors.New("missing access token")
-		// 	// 	}
-		// 	// }
-		// }
-	}
+	identity := &vw.Identity{Client: v.Client}
+	idToken, err := identity.Login(query, v.user, v.password)
 
 	// get client id
 	if err == nil {
