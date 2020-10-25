@@ -133,8 +133,8 @@ func (v *Audi) authFlow() error {
 		})
 
 		var hash string
-		var secret []byte
-		if secret, err = hex.DecodeString(AudiHashSecret); err == nil {
+		secret, err := hex.DecodeString(AudiHashSecret)
+		if err == nil {
 			// timestamp rounded to 100s precision
 			ts := strconv.FormatInt(time.Now().Unix()/100, 10)
 

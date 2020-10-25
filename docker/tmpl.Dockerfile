@@ -17,7 +17,7 @@ RUN go mod download
 
 COPY . .
 RUN make clean install assets
-RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
+RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} AUDI_HASH_SECRET={{ env "AUDI_HASH_SECRET" }} make build
 
 #############################
 ## STEP 2 build a small image

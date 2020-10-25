@@ -17,7 +17,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-RUN make clean install assets build
+RUN make clean install assets
+RUN AUDI_HASH_SECRET={{ env "AUDI_HASH_SECRET" }} make build
 
 #
 # STEP 2 build a small image including module support
