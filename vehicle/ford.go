@@ -59,8 +59,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	var err error
 	if cc.VIN == "" {
-		// v.vin, err = findVehicle(v.vehicles())
-		v.vin, err = findVehicle(nil, nil)
+		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
@@ -108,29 +107,31 @@ func (v *Ford) request(uri string) (*http.Request, error) {
 	return req, err
 }
 
-// // vehicles implements returns the list of user vehicles
-// func (v *Ford) vehicles() ([]string, error) {
-// 	var resp interface{}
-// 	uri := fmt.Sprintf("%s/api/vehicles/v4/status", fordAPI)
+// vehicles implements returns the list of user vehicles
+func (v *Ford) vehicles() ([]string, error) {
+	var resp struct {
+		Vehicles struct {
+			Values []struct {
+				VIN string
+			} `json:"$values"`
+		}
+	}
 
-// 	var vehicles []string
+	var vehicles []string
 
-// 	req, err := v.request(uri)
-// 	if err == nil {
-// 		b, _ := httputil.DumpRequest(req, true)
-// 		fmt.Println(string(b))
-// 		err = v.DoJSON(req, &resp)
-// 	}
+	req, err := v.request("https://api.mps.ford.com/api/users/vehicles")
+	if err == nil {
+		err = v.DoJSON(req, &resp)
+	}
 
-// 	if err == nil {
-// 		for _, v := range resp {
-// 			vehicles = append(vehicles, v.VIN)
-// 		}
-// 	}
+	if err == nil {
+		for _, v := range resp.Vehicles.Values {
+			vehicles = append(vehicles, v.VIN)
+		}
+	}
 
-// 	// return vehicles, err
-// 	return nil, err
-// }
+	return vehicles, err
+}
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *Ford) chargeState() (float64, error) {
@@ -146,17 +147,9 @@ func (v *Ford) chargeState() (float64, error) {
 			}
 		}
 
-		// "chargingStatus": {
-		// 	"value": "EvseNotDetected",
-		// 	"status": "CURRENT",
-		// 	"timestamp": "10-27-2020 12:53:01"
-		// },
-		// "plugStatus": {
-		// 	"value": 1,
-		// 	"status": "CURRENT",
-		// 	"timestamp": "10-27-2020 12:53:01"
-		// },
-		// "batteryChargeStatus": null,
+		// "chargingStatus": { "value": "EvseNotDetected", ...
+		// "plugStatus": { "value": 1, ...
+		// "batteryChargeStatus": null, ...
 	}
 
 	uri := fmt.Sprintf("%s/api/vehicles/v4/%s/status", fordAPI, v.vin)
