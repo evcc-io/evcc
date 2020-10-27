@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/oidc"
 	"github.com/andig/evcc/vehicle/vw"
 	"golang.org/x/net/publicsuffix"
 )
@@ -22,7 +23,7 @@ type Audi struct {
 	*embed
 	*request.Helper
 	user, password     string
-	tokens             vw.Tokens
+	tokens             oidc.Tokens
 	api                *vw.API
 	*vw.Implementation // provides the api implementations
 }
