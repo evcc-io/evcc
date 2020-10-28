@@ -219,7 +219,7 @@ Available vehicle implementations are:
 - `tesla`: Tesla (any model)
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
-- `vw`: VW (eUp, ID.3, ID.4)
+- `vw`: VW (eGolf, eUp, ID.3, ID.4)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
