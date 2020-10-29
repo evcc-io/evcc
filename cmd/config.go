@@ -19,7 +19,7 @@ type config struct {
 	Interval   time.Duration
 	Mqtt       provider.MqttConfig
 	Influx     server.InfluxConfig
-	HEMS       string
+	HEMS       typedConfig
 	Messaging  messagingConfig
 	Meters     []qualifiedConfig
 	Chargers   []qualifiedConfig
