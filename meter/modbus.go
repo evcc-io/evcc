@@ -91,7 +91,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	if cc.Energy != "" {
 		cc.Energy = modbus.ReadingName(cc.Energy)
 		if err := modbus.ParseOperation(device, cc.Energy, &m.opEnergy); err != nil {
-			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Power)
+			return nil, fmt.Errorf("invalid measurement for energy: %s", cc.Energy)
 		}
 
 		totalEnergy = m.totalEnergy
