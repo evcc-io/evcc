@@ -65,7 +65,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	return v, nil
+	return v, err
 }
 
 func (v *Ford) login(user, password string) error {

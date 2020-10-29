@@ -139,7 +139,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 
-	return v, nil
+	return v, err
 }
 
 func (v *Renault) apiKeys(region string) error {
