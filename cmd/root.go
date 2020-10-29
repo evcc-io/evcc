@@ -157,7 +157,7 @@ func run(cmd *cobra.Command, args []string) {
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
 
 	// start HEMS server
-	if conf.HEMS != "" {
+	if conf.HEMS.Type != "" {
 		hems := configureHEMS(conf.HEMS, site, cache, httpd)
 		go hems.Run()
 	}

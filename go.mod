@@ -10,6 +10,7 @@ require (
 	github.com/benbjohnson/clock v1.0.3
 	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/eclipse/paho.mqtt.golang v1.2.0
+	github.com/eduhenke/go-ocpp v1.0.0
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
