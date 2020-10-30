@@ -58,6 +58,9 @@ func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *serve
 		client: client,
 	}
 
+	gocpp.SetDebugLogger(s.log.DEBUG)
+	gocpp.SetErrorLogger(s.log.ERROR)
+
 	if err := s.boot(); err != nil {
 		return nil, fmt.Errorf("could not connect to ocpp central system: %v", err)
 	}
