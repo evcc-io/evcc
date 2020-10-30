@@ -82,10 +82,17 @@ func (s *OCPP) handler(req csreq.CentralSystemRequest) (csresp.CentralSystemResp
 	s.log.TRACE.Printf("recv: %+v", req)
 
 	switch req := req.(type) {
+
+	// case *csreq.StatusNotification:
+	// 	resp = &csresp.StatusNotification{
+	// 		Status: "ok",
+	// 	}
+
 	case *csreq.SetChargingProfile:
 		resp = &csresp.SetChargingProfile{
 			Status: "ok",
 		}
+
 	default:
 		return nil, fmt.Errorf("invalid request: %v", req)
 	}
@@ -101,10 +108,9 @@ func (s *OCPP) boot() error {
 
 	raw, err := s.client.Send(req)
 	if err == nil {
-		resp, ok := raw.(*cpresp.BootNotification)
-		s.log.TRACE.Printf("recv: %+v", resp)
+		s.log.TRACE.Printf("recv: %+v", raw)
 
-		if !ok {
+		if _, ok := raw.(*cpresp.BootNotification); !ok {
 			err = fmt.Errorf("invalid boot response: %+v", err)
 		}
 	}
