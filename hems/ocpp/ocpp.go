@@ -21,9 +21,6 @@ import (
 type OCPP struct {
 	log    *util.Logger
 	cache  *util.Cache
-	closeC chan struct{}
-	doneC  chan struct{}
-	uri    string
 	site   site
 	client cp.ChargePoint
 }
@@ -34,7 +31,9 @@ type site interface {
 	LoadPoints() []core.LoadPointAPI
 }
 
-// New generates SEMP Gateway listening at /semp endpoint
+const retryTimeout = 30 * time.Second
+
+// New generates OCPP chargepoint client
 func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *server.HTTPd) (*OCPP, error) {
 	cc := struct {
 		URI       string
@@ -53,7 +52,6 @@ func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *serve
 	}
 
 	s := &OCPP{
-		doneC:  make(chan struct{}),
 		log:    util.NewLogger("ocpp"),
 		cache:  cache,
 		site:   site,
@@ -67,11 +65,16 @@ func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *serve
 	return s, nil
 }
 
-// Run executes the SEMP runtime
+// Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	go s.heartbeat()
 
-	s.client.Run(context.Background(), nil, s.handler)
+	for {
+		if err := s.client.Run(context.Background(), nil, s.handler); err != nil {
+			s.log.ERROR.Println(err)
+			time.Sleep(retryTimeout)
+		}
+	}
 }
 
 func (s *OCPP) handler(req csreq.CentralSystemRequest) (csresp.CentralSystemResponse, error) {
