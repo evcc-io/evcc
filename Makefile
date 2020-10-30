@@ -9,8 +9,6 @@ IMAGE := andig/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
-AUDI_HASH_SECRET := ${AUDI_HASH_SECRET}
-
 default: clean install assets lint test build
 
 clean:
@@ -33,7 +31,7 @@ assets:
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}" -X "github.com/andig/evcc/vehicle.AudiHashSecret=${AUDI_HASH_SECRET}"'
+	go build -v -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
