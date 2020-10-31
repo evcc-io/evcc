@@ -1,6 +1,6 @@
 {
     "name": "evcc",
-    "version": "0.30",
+    "version": "latest",
     "slug": "evcc",
     "description": "EV Charge Controller!",
     "url": "https://github.com/cathiele/hassio-addons",
