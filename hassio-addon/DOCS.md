@@ -34,7 +34,7 @@ Please [open an issue](https://github.com/cathiele/hassio-addons/issues) in Gith
 
 ## Authors & contributors
 
-The original setup of this repository is by [cathiele](https://github.com/cathiele/hassio-addons).
+The original setup of this repository is by [cathiele](https://github.com/cathiele).
 
 The great evcc project is maintained by [andig](https://github.com/andig/evcc)
 
@@ -44,7 +44,7 @@ Contributions by [Tscherno](https://github.com/Tscherno)
 
 MIT License
 
-Copyright (c) 2020 [cathiele](https://github.com/cathiele/hassio-addons)
+Copyright (c) 2020 [andig](https://github.com/andig/evcc)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
