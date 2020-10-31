@@ -8,6 +8,6 @@ RUN \
 
 WORKDIR /evcc
 
-COPY scripts/run.sh ../evcc.dist.yaml /evcc/
+COPY scripts/run.sh evcc.dist.yaml /evcc/
 
 ENTRYPOINT [ "/evcc/run.sh" ]
