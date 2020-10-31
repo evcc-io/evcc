@@ -1,11 +1,5 @@
-// axios setup with test fallback
-const loc = window.location.href.indexOf("http://localhost/evcc/assets/") === 0 ? {
-  protocol: "http:",
-  hostname: "localhost",
-  port: "7070",
-} : window.location;
-
-axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/api";
+const loc = window.location;
+axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 //
@@ -268,7 +262,7 @@ Vue.component('site', {
   methods: {
     connect: function() {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/ws";
+      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "ws";
       const ws = new WebSocket(uri), self = this;
       ws.onerror = function(evt) {
         ws.close();
