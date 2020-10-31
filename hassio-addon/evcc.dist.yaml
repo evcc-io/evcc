@@ -1,0 +1,151 @@
+uri: 0.0.0.0:7070 # uri for ui
+interval: 10s # control cycle interval
+
+# log settings
+log: error
+levels:
+  core: debug
+  lp-1: debug
+  lp-2: debug
+
+# meter definitions
+# name can be freely chosen and is used as reference when assigning meters to site and loadpoints
+# for examples see https://github.com/andig/evcc-config#meters
+meters:
+- name: grid
+  type: default
+  power:
+    type: script # use script plugin
+    cmd: /bin/sh -c "echo 0" # actual command
+    timeout: 3s # kill script after 3 seconds
+- name: pv
+  type: default
+  power:
+    type: script # use script plugin
+    cmd: /bin/sh -c "echo 0" # actual command
+    timeout: 3s # kill script after 3 seconds
+- name: battery
+  type: default
+  power:
+    type: script # use script plugin
+    cmd: /bin/sh -c "echo 0" # actual command
+    timeout: 3s # kill script after 3 seconds
+- name: charge
+  type: default
+  power:
+    type: script # use script plugin
+    cmd: /bin/sh -c "echo 0" # actual command
+    timeout: 3s # kill script after 3 seconds
+# charger definitions
+# name can be freely chosen and is used as reference when assigning charger to vehicle
+# for examples see https://github.com/andig/evcc-config#chargers
+chargers:
+- name: democharger
+  type: default 
+  status: # charger status A..F
+    type: script
+    cmd: /bin/sh -c "echo 'A'"
+  enabled: # charger enabled state (true/false or 0/1)
+    type: script
+    cmd: /bin/sh -c "echo 0"
+  enable: # set charger enabled state
+    type: script
+    cmd: /bin/sh -c "echo 0"
+  maxcurrent: # set charger max current
+    type: script
+    cmd: /bin/sh -c "echo 0"
+
+  # vehicle definitions
+# name can be freely chosen and is used as reference when assigning vehicle to loadpoint
+# for examples see https://github.com/andig/evcc-config#vehicles
+vehicles:
+- name: renault
+  type: default
+  charge:
+    type: script # use script
+    cmd: /bin/sh -c "echo 0" # actual command
+    timeout: 3s # kill script after 3 seconds
+
+
+# site describes the EVU connection, PV and home battery
+site:
+  title: Home # display name for UI
+  meters:
+    grid: grid # grid meter
+    pv: pv # pv meter
+    battery: battery # battery meter
+  prioritySoC: 60 # give home battery priority up to this soc (0 to disable)
+
+# loadpoint describes the charger, charge meter and connected vehicle
+loadpoints:
+- title: Garage # display name for UI
+  charger: democharger # charger
+  meters:
+    charge: charge # charge meter
+  vehicle: renault
+  mode: pv
+  soc:
+    min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
+    target: 100 # always charge to 100%
+    alwaysUpdate: false # set true to update vehicle soc even when disconnected
+    estimate: false # set true to interpolate between api updates
+    levels: # target soc levels for UI
+    - 30
+    - 50
+    - 80
+    - 100
+  onDisconnect: # set defaults when vehicle disconnects
+    mode: pv # switch back to pv mode
+    targetSoC: 100 # charge to 100%
+  phases: 3 # ev phases (default 3)
+  sensitivity: 1 # current raise/lower step size (default 10A)
+  enable: # pv mode enable behavior
+    delay: 1m # threshold must be exceeded for this long
+    threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
+  disable: # pv mode disable behavior
+    delay: 5m # threshold must be exceeded for this long
+    threshold: 200 # maximum import power (W)
+  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  mincurrent: 6 # minimum charge current (default 6A)
+  maxcurrent: 16 # maximum charge current (default 16A)
+
+# mqtt message broker
+mqtt:
+  # broker: localhost:1883
+  # topic: evcc # root topic for publishing, set empty to disable
+  # user:
+  # password:
+
+# influx database
+influx:
+  # url: http://localhost:8086
+  # database: evcc
+  # user:
+  # password:
+
+# push messages
+messaging:
+  events:
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+    stop: # charge stop event
+      title: Charge finished
+      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+    connect: # vehicle connect event
+      title: Car connected
+      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+    disconnect: # vehicle connected event
+      title: Car disconnected
+      msg: Car disconnected after ${connectedDuration}
+  services:
+  # - type: pushover
+  #   app: # app id
+  #   recipients:
+  #   - # list of recipient ids
+  # - type: telegram
+  #   token: # bot id
+  #   chats:
+  #   - # list of chat ids
+  # - type: email
+  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
