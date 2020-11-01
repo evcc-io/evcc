@@ -383,7 +383,7 @@ timeout: 5s
 
 ### HTTP (read/write)
 
-The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries.
+The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries for REST apis.
 
 Sample read configuration:
 
