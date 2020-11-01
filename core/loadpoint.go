@@ -408,6 +408,9 @@ func (lp *LoadPoint) activeVehicle(vehicle api.Vehicle) {
 
 	lp.vehicle = vehicle
 	lp.socEstimator = wrapper.NewSocEstimator(lp.log, vehicle, lp.SoC.Estimate)
+
+	lp.publish("socCapacity", lp.vehicle.Capacity())
+	lp.publish("socTitle", lp.vehicle.Title())
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
