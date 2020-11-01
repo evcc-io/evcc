@@ -38,9 +38,11 @@ type configServer struct {
 }
 
 type gigyaResponse struct {
-	SessionInfo gigyaSessionInfo `json:"sessionInfo"` // /accounts.login
-	IDToken     string           `json:"id_token"`    // /accounts.getJWT
-	Data        gigyaData        `json:"data"`        // /accounts.getAccountInfo
+	ErrorCode    int              `json:"errorCode"`    // /accounts.login
+	ErrorMessage string           `json:"errorMessage"` // /accounts.login
+	SessionInfo  gigyaSessionInfo `json:"sessionInfo"`  // /accounts.login
+	IDToken      string           `json:"id_token"`     // /accounts.getJWT
+	Data         gigyaData        `json:"data"`         // /accounts.getAccountInfo
 }
 
 type gigyaSessionInfo struct {
@@ -204,12 +206,15 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 
 	req, err := v.request(uri, data)
 
-	var gr gigyaResponse
+	var res gigyaResponse
 	if err == nil {
-		err = v.DoJSON(req, &gr)
+		err = v.DoJSON(req, &res)
+		if err == nil && res.ErrorCode > 0 {
+			err = errors.New(res.ErrorMessage)
+		}
 	}
 
-	return gr.SessionInfo.CookieValue, err
+	return res.SessionInfo.CookieValue, err
 }
 
 func (v *Renault) personID(sessionCookie string) (string, error) {
@@ -222,12 +227,12 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 
 	req, err := v.request(uri, data)
 
-	var gr gigyaResponse
+	var res gigyaResponse
 	if err == nil {
-		err = v.DoJSON(req, &gr)
+		err = v.DoJSON(req, &res)
 	}
 
-	return gr.Data.PersonID, err
+	return res.Data.PersonID, err
 }
 
 func (v *Renault) jwtToken(sessionCookie string) (string, error) {
