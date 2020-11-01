@@ -137,7 +137,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// use first vehicle for estimator
 	if len(lp.vehicles) > 0 {
-		lp.activeVehicle(lp.vehicles[0])
+		lp.setActiveVehicle(lp.vehicles[0])
 	}
 
 	if lp.ChargerRef == "" {
@@ -400,10 +400,10 @@ func (lp *LoadPoint) climateActive() bool {
 	return false
 }
 
-// activeVehicle assigns currently active vehicle and configures soc estimator
-func (lp *LoadPoint) activeVehicle(vehicle api.Vehicle) {
+// setActiveVehicle assigns currently active vehicle and configures soc estimator
+func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle != nil {
-		lp.log.INFO.Printf("active vehicle change: %s, was: %s", vehicle.Name(), lp.vehicle.Name())
+		lp.log.INFO.Printf("active vehicle change: %s, was: %s", vehicle.Title(), lp.vehicle.Title())
 	}
 
 	lp.vehicle = vehicle
@@ -414,16 +414,16 @@ func (lp *LoadPoint) activeVehicle(vehicle api.Vehicle) {
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
-func (lp *LoadPoint) findActiveVehicle(vehicle api.Vehicle) {
+func (lp *LoadPoint) findActiveVehicle() {
 	if len(lp.vehicles) <= 1 {
 		return
 	}
 
-	if vehicle, ok := lp.vehicle.(api.Status); ok {
-		status, err := vehicle.Status()
+	if vs, ok := lp.vehicle.(api.Status); ok {
+		status, err := vs.Status()
 
 		if err == nil {
-			lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Name(), status)
+			lp.log.DEBUG.Printf("vehicle %s status: %s", lp.vehicle.Title(), status)
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
@@ -435,15 +435,17 @@ func (lp *LoadPoint) findActiveVehicle(vehicle api.Vehicle) {
 					continue
 				}
 
-				status, err := vehicle.Status()
+				if vs, ok := lp.vehicle.(api.Status); ok {
+					status, err := vs.Status()
 
-				if err == nil {
-					lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Name(), status)
+					if err == nil {
+						lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Title(), status)
 
-					// vehicle is plugged or charging, so it should be the right one
-					if status == api.StatusB || status == api.StatusC {
-						lp.activeVehicle(vehicle)
-						return
+						// vehicle is plugged or charging, so it should be the right one
+						if status == api.StatusB || status == api.StatusC {
+							lp.setActiveVehicle(vehicle)
+							return
+						}
 					}
 				}
 			}
