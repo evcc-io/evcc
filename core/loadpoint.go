@@ -137,8 +137,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// use first vehicle for estimator
 	if len(lp.vehicles) > 0 {
-		lp.vehicle = lp.vehicles[0]
-		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
+		lp.activeVehicle(lp.vehicles[0])
 	}
 
 	if lp.ChargerRef == "" {
@@ -401,6 +400,54 @@ func (lp *LoadPoint) climateActive() bool {
 	return false
 }
 
+// activeVehicle assigns currently active vehicle and configures soc estimator
+func (lp *LoadPoint) activeVehicle(vehicle api.Vehicle) {
+	if lp.vehicle != nil {
+		lp.log.INFO.Printf("active vehicle change: %s, was: %s", vehicle.Name(), lp.vehicle.Name())
+	}
+
+	lp.vehicle = vehicle
+	lp.socEstimator = wrapper.NewSocEstimator(lp.log, vehicle, lp.SoC.Estimate)
+}
+
+// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
+func (lp *LoadPoint) findActiveVehicle(vehicle api.Vehicle) {
+	if len(lp.vehicles) <= 1 {
+		return
+	}
+
+	if vehicle, ok := lp.vehicle.(api.Status); ok {
+		status, err := vehicle.Status()
+
+		if err == nil {
+			lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Name(), status)
+
+			// vehicle is plugged or charging, so it should be the right one
+			if status == api.StatusB || status == api.StatusC {
+				return
+			}
+
+			for _, vehicle := range lp.vehicles {
+				if vehicle == lp.vehicle {
+					continue
+				}
+
+				status, err := vehicle.Status()
+
+				if err == nil {
+					lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Name(), status)
+
+					// vehicle is plugged or charging, so it should be the right one
+					if status == api.StatusB || status == api.StatusC {
+						lp.activeVehicle(vehicle)
+						return
+					}
+				}
+			}
+		}
+	}
+}
+
 // updateChargerStatus updates car status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.handler.Status()
@@ -650,6 +697,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
+
+	// update active vehicle and publish soc
+	lp.findActiveVehicle()
 	lp.publishSoC()
 
 	// read and publish status

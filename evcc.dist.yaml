@@ -66,6 +66,9 @@ loadpoints:
   meters:
     charge: charge # charge meter
   vehicle: audi
+  # vehicles: # use if multiple vehicle connected to single loadpoint
+  # - ID.3
+  # - e-Up
   mode: pv
   soc:
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
