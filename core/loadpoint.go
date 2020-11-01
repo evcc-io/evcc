@@ -58,11 +58,12 @@ type LoadPoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title      string `mapstructure:"title"`   // UI title
-	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
-	Meters     struct {
+	Title       string   `mapstructure:"title"`    // UI title
+	Phases      int64    `mapstructure:"phases"`   // Phases- required for converting power and current
+	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
+	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
+	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
+	Meters      struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
 	SoC          SoCConfig
@@ -78,8 +79,9 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter  api.Meter   // Charger usage meter
-	vehicle      api.Vehicle // Vehicle
+	chargeMeter  api.Meter     // Charger usage meter
+	vehicle      api.Vehicle   // Currently active vehicle
+	vehicles     []api.Vehicle // Assigned vehicles
 	socEstimator *wrapper.SocEstimator
 
 	// cached state
@@ -120,8 +122,22 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
 	}
+
+	// multiple vehicles
+	for _, ref := range lp.VehiclesRef {
+		vehicle := cp.Vehicle(ref)
+		lp.vehicles = append(lp.vehicles, vehicle)
+	}
+
+	// single vehicle
 	if lp.VehicleRef != "" {
-		lp.vehicle = cp.Vehicle(lp.VehicleRef)
+		vehicle := cp.Vehicle(lp.VehicleRef)
+		lp.vehicles = append(lp.vehicles, vehicle)
+	}
+
+	// use first vehicle for estimator
+	if len(lp.vehicles) > 0 {
+		lp.vehicle = lp.vehicles[0]
 		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
 	}
 

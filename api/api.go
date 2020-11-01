@@ -92,6 +92,11 @@ type ChargeFinishTimer interface {
 	FinishTime() (time.Time, error)
 }
 
+// Status provides the vehicles current charging status
+type Status interface {
+	Status() (ChargeStatus, error)
+}
+
 // Climater provides climatisation data
 type Climater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
