@@ -237,7 +237,9 @@ func (lp *LoadPoint) notify(event string) {
 
 // publish sends values to UI and databases
 func (lp *LoadPoint) publish(key string, val interface{}) {
-	lp.uiChan <- util.Param{Key: key, Val: val}
+	if lp.uiChan != nil {
+		lp.uiChan <- util.Param{Key: key, Val: val}
+	}
 }
 
 // evChargeStartHandler sends external start event
@@ -403,7 +405,7 @@ func (lp *LoadPoint) climateActive() bool {
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle != nil {
-		lp.log.INFO.Printf("active vehicle change: %s, was: %s", vehicle.Title(), lp.vehicle.Title())
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", lp.vehicle.Title(), vehicle.Title())
 	}
 
 	lp.vehicle = vehicle
@@ -419,11 +421,11 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	if vs, ok := lp.vehicle.(api.Status); ok {
+	if vs, ok := lp.vehicle.(api.VehicleStatus); ok {
 		status, err := vs.Status()
 
 		if err == nil {
-			lp.log.DEBUG.Printf("vehicle %s status: %s", lp.vehicle.Title(), status)
+			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
@@ -435,11 +437,11 @@ func (lp *LoadPoint) findActiveVehicle() {
 					continue
 				}
 
-				if vs, ok := lp.vehicle.(api.Status); ok {
+				if vs, ok := vehicle.(api.VehicleStatus); ok {
 					status, err := vs.Status()
 
 					if err == nil {
-						lp.log.DEBUG.Printf("vehicle %s status: %s", vehicle.Title(), status)
+						lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
 
 						// vehicle is plugged or charging, so it should be the right one
 						if status == api.StatusB || status == api.StatusC {

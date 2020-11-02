@@ -6,19 +6,19 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, status func() (api.ChargeStatus, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error)) api.Vehicle {
 	switch {
-	case status == nil:
+	case vehicleStatus == nil:
 		return base
 
-	case status != nil:
+	case vehicleStatus != nil:
 		return &struct {
 			api.Vehicle
-			api.Status
+			api.VehicleStatus
 		}{
 			Vehicle: base,
-			Status: &decorateVehicleStatusImpl{
-				status: status,
+			VehicleStatus: &decorateVehicleVehicleStatusImpl{
+				vehicleStatus: vehicleStatus,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateVehicle(base api.Vehicle, status func() (api.ChargeStatus, error)) 
 	return nil
 }
 
-type decorateVehicleStatusImpl struct {
-	status func() (api.ChargeStatus, error)
+type decorateVehicleVehicleStatusImpl struct {
+	vehicleStatus func() (api.ChargeStatus, error)
 }
 
-func (impl *decorateVehicleStatusImpl) Status() (api.ChargeStatus, error) {
-	return impl.status()
+func (impl *decorateVehicleVehicleStatusImpl) Status() (api.ChargeStatus, error) {
+	return impl.vehicleStatus()
 }

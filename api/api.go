@@ -92,8 +92,8 @@ type ChargeFinishTimer interface {
 	FinishTime() (time.Time, error)
 }
 
-// Status provides the vehicles current charging status
-type Status interface {
+// VehicleStatus provides the vehicles current charging status
+type VehicleStatus interface {
 	Status() (ChargeStatus, error)
 }
 

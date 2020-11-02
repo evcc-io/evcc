@@ -24,7 +24,7 @@ func (m *embed) Capacity() int64 {
 	return m.capacity
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.Status,Status,func() (api.ChargeStatus, error)"
+//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.VehicleStatus,Status,func() (api.ChargeStatus, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -72,6 +72,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	}
 
 	// decorate vehicle with BatterySoC
+	// decorate vehicle with Status
 	var status func() (api.ChargeStatus, error)
 	if cc.Status != nil {
 		v.statusG, err = provider.NewStringGetterFromConfig(*cc.Status)
