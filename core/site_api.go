@@ -70,3 +70,8 @@ func (site *Site) RemoteControl(source string, status RemoteDemand) {
 		lp.RemoteControl(source, status)
 	}
 }
+
+// GetCharging returns loadpoint charging status
+func (site *Site) GetCharging() bool {
+	return site.loadpoints[0].GetCharging()
+}
