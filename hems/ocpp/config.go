@@ -1,17 +1,13 @@
 package ocpp
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/firmware"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/localauth"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/remotetrigger"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/reservation"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
+
+// modified from https://github.com/lorenzodonini/ocpp-go/tree/master/example/1.6/cp
 
 const (
 	AuthorizeRemoteTxRequests               string = "AuthorizeRemoteTxRequests"
@@ -89,35 +85,38 @@ func (c ConfigMap) getBool(key string) (bool, bool) {
 
 func getDefaultConfig() ConfigMap {
 	intBase := 10
-	cfg := map[string]core.ConfigurationKey{}
-	cfg[AuthorizeRemoteTxRequests] = core.ConfigurationKey{Key: AuthorizeRemoteTxRequests, Readonly: true, Value: strconv.FormatBool(false)}
-	cfg[ClockAlignedDataInterval] = core.ConfigurationKey{Key: ClockAlignedDataInterval, Readonly: false, Value: strconv.FormatInt(0, intBase)}
-	cfg[ConnectionTimeOut] = core.ConfigurationKey{Key: ConnectionTimeOut, Readonly: false, Value: strconv.FormatInt(60, intBase)}
-	cfg[ConnectorPhaseRotation] = core.ConfigurationKey{Key: ConnectorPhaseRotation, Readonly: false, Value: "Unknown"}
-	cfg[GetConfigurationMaxKeys] = core.ConfigurationKey{Key: GetConfigurationMaxKeys, Readonly: true, Value: strconv.FormatInt(50, intBase)}
-	cfg[HeartbeatInterval] = core.ConfigurationKey{Key: HeartbeatInterval, Readonly: false, Value: strconv.FormatInt(86400, intBase)}
-	cfg[LocalAuthorizeOffline] = core.ConfigurationKey{Key: LocalAuthorizeOffline, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[LocalPreAuthorize] = core.ConfigurationKey{Key: LocalPreAuthorize, Readonly: false, Value: strconv.FormatBool(false)}
-	cfg[MeterValuesAlignedData] = core.ConfigurationKey{Key: MeterValuesAlignedData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)}
-	cfg[MeterValuesSampledData] = core.ConfigurationKey{Key: MeterValuesSampledData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)}
-	cfg[MeterValueSampleInterval] = core.ConfigurationKey{Key: MeterValueSampleInterval, Readonly: false, Value: strconv.FormatInt(5, intBase)}
-	cfg[NumberOfConnectors] = core.ConfigurationKey{Key: NumberOfConnectors, Readonly: true, Value: strconv.FormatInt(1, intBase)}
-	cfg[ResetRetries] = core.ConfigurationKey{Key: ResetRetries, Readonly: false, Value: strconv.FormatInt(10, intBase)}
-	cfg[StopTransactionOnEVSideDisconnect] = core.ConfigurationKey{Key: StopTransactionOnEVSideDisconnect, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[StopTransactionOnInvalidId] = core.ConfigurationKey{Key: StopTransactionOnInvalidId, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[StopTxnAlignedData] = core.ConfigurationKey{Key: StopTxnAlignedData, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[StopTxnSampledData] = core.ConfigurationKey{Key: StopTxnSampledData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)}
-	cfg[SupportedFeatureProfiles] = core.ConfigurationKey{Key: SupportedFeatureProfiles, Readonly: true, Value: fmt.Sprintf("%v,%v,%v,%v,%v,%v", core.ProfileName, firmware.ProfileName, localauth.ProfileName, reservation.ProfileName, remotetrigger.ProfileName, smartcharging.ProfileName)}
-	cfg[TransactionMessageAttempts] = core.ConfigurationKey{Key: TransactionMessageAttempts, Readonly: false, Value: strconv.FormatInt(5, intBase)}
-	cfg[TransactionMessageRetryInterval] = core.ConfigurationKey{Key: TransactionMessageRetryInterval, Readonly: false, Value: strconv.FormatInt(60, intBase)}
-	cfg[UnlockConnectorOnEVSideDisconnect] = core.ConfigurationKey{Key: UnlockConnectorOnEVSideDisconnect, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[WebSocketPingInterval] = core.ConfigurationKey{Key: WebSocketPingInterval, Readonly: false, Value: strconv.FormatInt(54, intBase)}
-	cfg[LocalAuthListEnabled] = core.ConfigurationKey{Key: LocalAuthListEnabled, Readonly: false, Value: strconv.FormatBool(true)}
-	cfg[LocalAuthListMaxLength] = core.ConfigurationKey{Key: LocalAuthListMaxLength, Readonly: true, Value: strconv.FormatInt(100, intBase)}
-	cfg[SendLocalListMaxLength] = core.ConfigurationKey{Key: SendLocalListMaxLength, Readonly: true, Value: strconv.FormatInt(20, intBase)}
-	cfg[ChargeProfileMaxStackLevel] = core.ConfigurationKey{Key: ChargeProfileMaxStackLevel, Readonly: true, Value: strconv.FormatInt(10, intBase)}
-	cfg[ChargingScheduleAllowedChargingRateUnit] = core.ConfigurationKey{Key: ChargingScheduleAllowedChargingRateUnit, Readonly: true, Value: "Power"}
-	cfg[ChargingScheduleMaxPeriods] = core.ConfigurationKey{Key: ChargingScheduleMaxPeriods, Readonly: true, Value: strconv.FormatInt(5, intBase)}
-	cfg[MaxChargingProfilesInstalled] = core.ConfigurationKey{Key: MaxChargingProfilesInstalled, Readonly: true, Value: strconv.FormatInt(10, intBase)}
+
+	cfg := map[string]core.ConfigurationKey{
+		SupportedFeatureProfiles:                {Key: SupportedFeatureProfiles, Readonly: true, Value: core.ProfileName},
+		AuthorizeRemoteTxRequests:               {Key: AuthorizeRemoteTxRequests, Readonly: true, Value: strconv.FormatBool(false)},
+		ClockAlignedDataInterval:                {Key: ClockAlignedDataInterval, Readonly: false, Value: strconv.FormatInt(0, intBase)},
+		ConnectionTimeOut:                       {Key: ConnectionTimeOut, Readonly: false, Value: strconv.FormatInt(60, intBase)},
+		ConnectorPhaseRotation:                  {Key: ConnectorPhaseRotation, Readonly: false, Value: "Unknown"},
+		GetConfigurationMaxKeys:                 {Key: GetConfigurationMaxKeys, Readonly: true, Value: strconv.FormatInt(50, intBase)},
+		HeartbeatInterval:                       {Key: HeartbeatInterval, Readonly: false, Value: strconv.FormatInt(86400, intBase)},
+		LocalAuthorizeOffline:                   {Key: LocalAuthorizeOffline, Readonly: false, Value: strconv.FormatBool(true)},
+		LocalPreAuthorize:                       {Key: LocalPreAuthorize, Readonly: false, Value: strconv.FormatBool(false)},
+		MeterValuesAlignedData:                  {Key: MeterValuesAlignedData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)},
+		MeterValuesSampledData:                  {Key: MeterValuesSampledData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)},
+		MeterValueSampleInterval:                {Key: MeterValueSampleInterval, Readonly: false, Value: strconv.FormatInt(5, intBase)},
+		NumberOfConnectors:                      {Key: NumberOfConnectors, Readonly: true, Value: strconv.FormatInt(1, intBase)},
+		ResetRetries:                            {Key: ResetRetries, Readonly: false, Value: strconv.FormatInt(10, intBase)},
+		StopTransactionOnEVSideDisconnect:       {Key: StopTransactionOnEVSideDisconnect, Readonly: false, Value: strconv.FormatBool(true)},
+		StopTransactionOnInvalidId:              {Key: StopTransactionOnInvalidId, Readonly: false, Value: strconv.FormatBool(true)},
+		StopTxnAlignedData:                      {Key: StopTxnAlignedData, Readonly: false, Value: strconv.FormatBool(true)},
+		StopTxnSampledData:                      {Key: StopTxnSampledData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)},
+		TransactionMessageAttempts:              {Key: TransactionMessageAttempts, Readonly: false, Value: strconv.FormatInt(5, intBase)},
+		TransactionMessageRetryInterval:         {Key: TransactionMessageRetryInterval, Readonly: false, Value: strconv.FormatInt(60, intBase)},
+		UnlockConnectorOnEVSideDisconnect:       {Key: UnlockConnectorOnEVSideDisconnect, Readonly: false, Value: strconv.FormatBool(true)},
+		WebSocketPingInterval:                   {Key: WebSocketPingInterval, Readonly: false, Value: strconv.FormatInt(54, intBase)},
+		LocalAuthListEnabled:                    {Key: LocalAuthListEnabled, Readonly: false, Value: strconv.FormatBool(true)},
+		LocalAuthListMaxLength:                  {Key: LocalAuthListMaxLength, Readonly: true, Value: strconv.FormatInt(100, intBase)},
+		SendLocalListMaxLength:                  {Key: SendLocalListMaxLength, Readonly: true, Value: strconv.FormatInt(20, intBase)},
+		ChargeProfileMaxStackLevel:              {Key: ChargeProfileMaxStackLevel, Readonly: true, Value: strconv.FormatInt(10, intBase)},
+		ChargingScheduleAllowedChargingRateUnit: {Key: ChargingScheduleAllowedChargingRateUnit, Readonly: true, Value: "Power"},
+		ChargingScheduleMaxPeriods:              {Key: ChargingScheduleMaxPeriods, Readonly: true, Value: strconv.FormatInt(5, intBase)},
+		MaxChargingProfilesInstalled:            {Key: MaxChargingProfilesInstalled, Readonly: true, Value: strconv.FormatInt(10, intBase)},
+	}
+
 	return cfg
 }

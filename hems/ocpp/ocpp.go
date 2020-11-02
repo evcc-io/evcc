@@ -19,15 +19,7 @@ type OCPP struct {
 	uri   string
 	cp    ocpp16.ChargePoint
 
-	connectors    map[int]*ConnectorInfo
 	configuration ConfigMap
-}
-
-type ConnectorInfo struct {
-	status             ocppcore.ChargePointStatus
-	availability       ocppcore.AvailabilityType
-	currentTransaction int
-	currentReservation int
 }
 
 // site is the minimal interface for accessing site methods
@@ -36,7 +28,7 @@ type site interface {
 	LoadPoints() []core.LoadPointAPI
 }
 
-const retryTimeout = 30 * time.Second
+const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
 func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *server.HTTPd) (*OCPP, error) {
@@ -71,6 +63,30 @@ func (s *OCPP) Run() {
 	for {
 		if err := s.cp.Start(s.uri); err != nil {
 			s.log.ERROR.Println(err)
+		} else {
+			s.publish()
+		}
+
+		time.Sleep(retryTimeout)
+	}
+}
+
+// Run executes the OCPP chargepoint client
+func (s *OCPP) publish() {
+	for {
+		for id, lp := range s.site.LoadPoints() {
+			connector := id + 1
+
+			status := ocppcore.ChargePointStatusAvailable
+			if lp.GetCharging() {
+				status = ocppcore.ChargePointStatusCharging
+			}
+
+			_, err := s.cp.StatusNotification(connector, ocppcore.NoError, status)
+			if err != nil {
+				s.log.ERROR.Printf("sending status for %s: %v", lp.Name(), err)
+				return
+			}
 		}
 
 		time.Sleep(retryTimeout)

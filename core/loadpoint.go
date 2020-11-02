@@ -490,11 +490,13 @@ func (lp *LoadPoint) updateChargerStatus() error {
 		}
 
 		// changed to C - start/stop charging cycle - handle before disconnect to update energy
+		lp.Lock()
 		if lp.charging = status == api.StatusC; lp.charging {
 			lp.bus.Publish(evChargeStart)
 		} else if prevStatus == api.StatusC {
 			lp.bus.Publish(evChargeStop)
 		}
+		lp.Unlock()
 
 		// changed to A - disconnected
 		if status == api.StatusA {
@@ -525,7 +527,7 @@ func (lp *LoadPoint) detectPhases() {
 	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
 	lp.publish("chargeCurrents", currents)
 
-	if lp.charging {
+	if lp.GetCharging() {
 		var phases int64
 		for _, i := range currents {
 			if i >= minActiveCurrent {
@@ -689,7 +691,7 @@ func (lp *LoadPoint) publishSoC() {
 			lp.publish("socCharge", lp.socCharge)
 
 			chargeEstimate := time.Duration(-1)
-			if lp.charging {
+			if lp.GetCharging() {
 				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
 			}
 			lp.publish("chargeEstimate", chargeEstimate)
@@ -729,7 +731,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	}
 
 	lp.publish("connected", lp.connected())
-	lp.publish("charging", lp.charging)
+	lp.publish("charging", lp.GetCharging())
 
 	// update active vehicle and publish soc
 	// must be run after updating charger status to make sure
