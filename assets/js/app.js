@@ -381,6 +381,9 @@ Vue.component("vehicle", {
     },
     minSoCActive: function () {
       return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+    },
+    minSoCRemainingDisplayWidth: function () {
+      return this.state.minSoC - this.state.socCharge;
     }
   }
 });
