@@ -66,7 +66,7 @@ loadpoints:
   meters:
     charge: charge # charge meter
   vehicle: audi
-  # vehicles: # use if multiple vehicle connected to single loadpoint
+  # vehicles: # use if multiple vehicles allowed to charge on this loadpoint
   # - ID.3
   # - e-Up
   mode: pv
