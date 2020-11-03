@@ -1,6 +1,7 @@
 __debug_bin
 .vscode
 *.json
+!repository.json
 *.log
 *.yaml
 evcc
