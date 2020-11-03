@@ -37,7 +37,6 @@ COPY --from=builder /build/evcc /usr/local/bin/evcc
 COPY --from=builder /usr/bin/jq /usr/bin/
 COPY --from=builder /usr/lib/libjq.so.1* /usr/lib/
 
-
 COPY docker/bin/* /evcc/
 
 # UI and /api
