@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"sync"
 	"time"
@@ -12,6 +13,12 @@ import (
 )
 
 const publishTimeout = 2 * time.Second
+
+// MqttClientID created unique mqtt client id
+func MqttClientID() string {
+	pid := rand.Int31()
+	return fmt.Sprintf("evcc-%d", pid)
+}
 
 // MqttConfig is the public configuration
 type MqttConfig struct {

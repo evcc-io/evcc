@@ -5,11 +5,13 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-type openWBStatusProvider struct {
+// OpenWBStatus implements status conversion from openWB to api.Status
+type OpenWBStatus struct {
 	plugged, charging func() (bool, error)
 }
 
-func openWBStatusFromConfig(other map[string]interface{}) (func() (string, error), error) {
+// NewOpenWBStatusProviderFromConfig creates OpenWBStatus from given configuration
+func NewOpenWBStatusProviderFromConfig(other map[string]interface{}) (func() (string, error), error) {
 	cc := struct {
 		Plugged, Charging Config
 	}{}
@@ -28,15 +30,21 @@ func openWBStatusFromConfig(other map[string]interface{}) (func() (string, error
 		return nil, err
 	}
 
-	o := &openWBStatusProvider{
+	o := NewOpenWBStatusProvider(plugged, charging)
+
+	return o.StringGetter, nil
+}
+
+// NewOpenWBStatusProvider creates provider for OpenWB status converted from MQTT topics
+func NewOpenWBStatusProvider(plugged, charging func() (bool, error)) *OpenWBStatus {
+	return &OpenWBStatus{
 		plugged:  plugged,
 		charging: charging,
 	}
-
-	return o.stringGetter, nil
 }
 
-func (o *openWBStatusProvider) stringGetter() (string, error) {
+// StringGetter returns string from OpenWB charging/ plugged status
+func (o *OpenWBStatus) StringGetter() (string, error) {
 	charging, err := o.charging()
 	if err != nil {
 		return "", err
