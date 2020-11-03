@@ -16,7 +16,6 @@ type OCPP struct {
 	log   *util.Logger
 	cache *util.Cache
 	site  site
-	uri   string
 	cp    ocpp16.ChargePoint
 
 	configuration ConfigMap
@@ -46,33 +45,23 @@ func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *serve
 	cp := ocpp16.NewChargePoint(cc.StationID, nil, nil)
 
 	s := &OCPP{
-		log:   util.NewLogger("ocpp"),
-		cache: cache,
-		site:  site,
-		uri:   cc.URI,
-		cp:    cp,
+		log:           util.NewLogger("ocpp"),
+		cache:         cache,
+		site:          site,
+		cp:            cp,
+		configuration: getDefaultConfig(),
 	}
 
-	cp.SetCoreHandler(s)
+	err := cp.Start(cc.URI)
+	if err == nil {
+		cp.SetCoreHandler(s)
+	}
 
-	return s, nil
+	return s, err
 }
 
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
-	for {
-		if err := s.cp.Start(s.uri); err != nil {
-			s.log.ERROR.Println(err)
-		} else {
-			s.publish()
-		}
-
-		time.Sleep(retryTimeout)
-	}
-}
-
-// Run executes the OCPP chargepoint client
-func (s *OCPP) publish() {
 	for {
 		for id, lp := range s.site.LoadPoints() {
 			connector := id + 1
@@ -82,10 +71,8 @@ func (s *OCPP) publish() {
 				status = ocppcore.ChargePointStatusCharging
 			}
 
-			_, err := s.cp.StatusNotification(connector, ocppcore.NoError, status)
-			if err != nil {
+			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
 				s.log.ERROR.Printf("sending status for %s: %v", lp.Name(), err)
-				return
 			}
 		}
 

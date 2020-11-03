@@ -9,6 +9,7 @@ import (
 
 // modified from https://github.com/lorenzodonini/ocpp-go/tree/master/example/1.6/cp
 
+// configuration options
 const (
 	AuthorizeRemoteTxRequests               string = "AuthorizeRemoteTxRequests"
 	ClockAlignedDataInterval                string = "ClockAlignedDataInterval"
@@ -24,7 +25,7 @@ const (
 	NumberOfConnectors                      string = "NumberOfConnectors"
 	ResetRetries                            string = "ResetRetries"
 	StopTransactionOnEVSideDisconnect       string = "StopTransactionOnEVSideDisconnect"
-	StopTransactionOnInvalidId              string = "StopTransactionOnInvalidId"
+	StopTransactionOnInvalidID              string = "StopTransactionOnInvalidId"
 	StopTxnAlignedData                      string = "StopTxnAlignedData"
 	StopTxnSampledData                      string = "StopTxnSampledData"
 	SupportedFeatureProfiles                string = "SupportedFeatureProfiles"
@@ -41,47 +42,48 @@ const (
 	MaxChargingProfilesInstalled            string = "MaxChargingProfilesInstalled"
 )
 
+// ConfigMap defines the active configuration settings
 type ConfigMap map[string]core.ConfigurationKey
 
-func (c ConfigMap) updateInt(key string, i int64) {
-	configKey, ok := c[key]
-	if ok {
-		configKey.Value = strconv.FormatInt(i, 10)
-	}
-	c[key] = configKey
-}
+// func (c ConfigMap) updateInt(key string, i int64) {
+// 	configKey, ok := c[key]
+// 	if ok {
+// 		configKey.Value = strconv.FormatInt(i, 10)
+// 	}
+// 	c[key] = configKey
+// }
 
-func (c ConfigMap) updateBool(key string, b bool) {
-	configKey, ok := c[key]
-	if ok {
-		configKey.Value = strconv.FormatBool(b)
-	}
-	c[key] = configKey
-}
+// func (c ConfigMap) updateBool(key string, b bool) {
+// 	configKey, ok := c[key]
+// 	if ok {
+// 		configKey.Value = strconv.FormatBool(b)
+// 	}
+// 	c[key] = configKey
+// }
 
-func (c ConfigMap) getInt(key string) (int, bool) {
-	configKey, ok := c[key]
-	if !ok {
-		return 0, ok
-	}
-	result, err := strconv.ParseInt(configKey.Value, 10, 32)
-	if err != nil {
-		return 0, false
-	}
-	return int(result), true
-}
+// func (c ConfigMap) getInt(key string) (int, bool) {
+// 	configKey, ok := c[key]
+// 	if !ok {
+// 		return 0, ok
+// 	}
+// 	result, err := strconv.ParseInt(configKey.Value, 10, 32)
+// 	if err != nil {
+// 		return 0, false
+// 	}
+// 	return int(result), true
+// }
 
-func (c ConfigMap) getBool(key string) (bool, bool) {
-	configKey, ok := c[key]
-	if !ok {
-		return false, ok
-	}
-	result, err := strconv.ParseBool(configKey.Value)
-	if err != nil {
-		return false, false
-	}
-	return result, true
-}
+// func (c ConfigMap) getBool(key string) (bool, bool) {
+// 	configKey, ok := c[key]
+// 	if !ok {
+// 		return false, ok
+// 	}
+// 	result, err := strconv.ParseBool(configKey.Value)
+// 	if err != nil {
+// 		return false, false
+// 	}
+// 	return result, true
+// }
 
 func getDefaultConfig() ConfigMap {
 	intBase := 10
@@ -102,7 +104,7 @@ func getDefaultConfig() ConfigMap {
 		NumberOfConnectors:                      {Key: NumberOfConnectors, Readonly: true, Value: strconv.FormatInt(1, intBase)},
 		ResetRetries:                            {Key: ResetRetries, Readonly: false, Value: strconv.FormatInt(10, intBase)},
 		StopTransactionOnEVSideDisconnect:       {Key: StopTransactionOnEVSideDisconnect, Readonly: false, Value: strconv.FormatBool(true)},
-		StopTransactionOnInvalidId:              {Key: StopTransactionOnInvalidId, Readonly: false, Value: strconv.FormatBool(true)},
+		StopTransactionOnInvalidID:              {Key: StopTransactionOnInvalidId, Readonly: false, Value: strconv.FormatBool(true)},
 		StopTxnAlignedData:                      {Key: StopTxnAlignedData, Readonly: false, Value: strconv.FormatBool(true)},
 		StopTxnSampledData:                      {Key: StopTxnSampledData, Readonly: false, Value: string(types.MeasurandEnergyActiveExportRegister)},
 		TransactionMessageAttempts:              {Key: TransactionMessageAttempts, Readonly: false, Value: strconv.FormatInt(5, intBase)},
