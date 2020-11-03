@@ -20,18 +20,10 @@ type OpenWB struct {
 	api.Charger
 	api.Meter
 }
-
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Broker         string
-		User, Password string
-		Topic          string
-		ID             int
-		Timeout        time.Duration
-	}{
-		Topic:   "openWB",
-		ID:      1,
 		Timeout: 5 * time.Second,
 	}
 
