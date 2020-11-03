@@ -38,9 +38,11 @@ type configServer struct {
 }
 
 type gigyaResponse struct {
-	SessionInfo gigyaSessionInfo `json:"sessionInfo"` // /accounts.login
-	IDToken     string           `json:"id_token"`    // /accounts.getJWT
-	Data        gigyaData        `json:"data"`        // /accounts.getAccountInfo
+	ErrorCode    int              `json:"errorCode"`    // /accounts.login
+	ErrorMessage string           `json:"errorMessage"` // /accounts.login
+	SessionInfo  gigyaSessionInfo `json:"sessionInfo"`  // /accounts.login
+	IDToken      string           `json:"id_token"`     // /accounts.getJWT
+	Data         gigyaData        `json:"data"`         // /accounts.getAccountInfo
 }
 
 type gigyaSessionInfo struct {
@@ -69,20 +71,20 @@ type kamereonVehicle struct {
 }
 
 type kamereonData struct {
-	Attributes batteryAttributes `json:"attributes"`
+	Attributes attributes `json:"attributes"`
 }
 
-type batteryAttributes struct {
-	Timestamp          string `json:"timestamp"`
-	ChargeStatus       int    `json:"chargeStatus"`
-	InstantaneousPower int    `json:"instantaneousPower"`
-	RangeHvacOff       int    `json:"rangeHvacOff"`
-	BatteryLevel       int    `json:"batteryLevel"`
-	BatteryTemperature int    `json:"batteryTemperature"`
-	PlugStatus         int    `json:"plugStatus"`
-	LastUpdateTime     string `json:"lastUpdateTime"`
-	ChargePower        int    `json:"chargePower"`
-	RemainingTime      *int   `json:"chargingRemainingTime"`
+type attributes struct {
+	Timestamp          string  `json:"timestamp"`
+	ChargingStatus     float32 `json:"chargingStatus"`
+	InstantaneousPower int     `json:"instantaneousPower"`
+	RangeHvacOff       int     `json:"rangeHvacOff"`
+	BatteryLevel       int     `json:"batteryLevel"`
+	BatteryTemperature int     `json:"batteryTemperature"`
+	PlugStatus         int     `json:"plugStatus"`
+	LastUpdateTime     string  `json:"lastUpdateTime"`
+	ChargePower        int     `json:"chargePower"`
+	RemainingTime      *int    `json:"chargingRemainingTime"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -204,12 +206,15 @@ func (v *Renault) sessionCookie(user, password string) (string, error) {
 
 	req, err := v.request(uri, data)
 
-	var gr gigyaResponse
+	var res gigyaResponse
 	if err == nil {
-		err = v.DoJSON(req, &gr)
+		err = v.DoJSON(req, &res)
+		if err == nil && res.ErrorCode > 0 {
+			err = errors.New(res.ErrorMessage)
+		}
 	}
 
-	return gr.SessionInfo.CookieValue, err
+	return res.SessionInfo.CookieValue, err
 }
 
 func (v *Renault) personID(sessionCookie string) (string, error) {
@@ -222,12 +227,12 @@ func (v *Renault) personID(sessionCookie string) (string, error) {
 
 	req, err := v.request(uri, data)
 
-	var gr gigyaResponse
+	var res gigyaResponse
 	if err == nil {
-		err = v.DoJSON(req, &gr)
+		err = v.DoJSON(req, &res)
 	}
 
-	return gr.Data.PersonID, err
+	return res.Data.PersonID, err
 }
 
 func (v *Renault) jwtToken(sessionCookie string) (string, error) {
@@ -317,6 +322,23 @@ func (v *Renault) ChargeState() (float64, error) {
 	}
 
 	return 0, err
+}
+
+// Status implements the Vehicle.Status interface
+func (v *Renault) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.apiG()
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		if res.Data.Attributes.PlugStatus > 0 {
+			status = api.StatusB
+		}
+		if res.Data.Attributes.ChargingStatus > 1.0 {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface

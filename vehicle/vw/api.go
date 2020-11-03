@@ -41,6 +41,12 @@ type ChargerResponse struct {
 				StateOfCharge         TimedInt
 				RemainingChargingTime TimedInt
 			}
+			ChargingStatusData struct {
+				ChargingState TimedString
+			}
+			PlugStatusData struct {
+				PlugState TimedString
+			}
 		}
 	}
 }

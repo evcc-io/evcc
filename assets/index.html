@@ -60,6 +60,9 @@
       color: #6c757d!important;
       text-decoration: none;
     }
+    .bg-muted {
+      opacity: 0.25;
+    }
   </style>
 </head>
 <body>
@@ -335,8 +338,7 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3">
     <div class="mb-2 value">Leistung
-      <i class="text-warning fas fa-battery-quarter ml-1" v-if="minSoCActive"></i>
-      <i class="text-primary fa fa-temperature-low ml-1" v-else-if="state.climater=='heating'"></i>
+      <i class="text-primary fa fa-temperature-low ml-1" v-if="state.climater=='heating'"></i>
       <i class="text-primary fa fa-temperature-high ml-1" v-else-if="state.climater=='cooling'"></i>
       <i class="text-primary fa fa-thermometer-half ml-1" v-else-if="state.climater=='on'"></i>
     </div>
@@ -415,7 +417,15 @@ loadpoints:
         'bg-light': !state.connected,
         'text-secondary': !state.connected,
         'bg-warning': state.connected && minSoCActive,
-      }" v-bind:style="{width: socChargeDisplayWidth+'%'}">{{socChargeDisplayValue}}</div>
+      }" v-bind:style="{width: socChargeDisplayWidth+'%'}">{{socChargeDisplayValue}}
+    </div>
+    <div class="progress-bar" role="progressbar" v-bind:class="{
+        'progress-bar-striped': state.charging,
+        'progress-bar-animated': state.charging,
+        'bg-warning': true,
+        'bg-muted': true,
+      }" v-bind:style="{width: minSoCRemainingDisplayWidth+'%'}" v-if="minSoCActive">
+    </div>
   </div>
 </div>
 </script>
