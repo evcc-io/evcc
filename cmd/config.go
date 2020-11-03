@@ -19,6 +19,7 @@ type config struct {
 	Interval   time.Duration
 	Mqtt       provider.MqttConfig
 	Influx     server.InfluxConfig
+	AutoConf   map[string]interface{}
 	HEMS       string
 	Messaging  messagingConfig
 	Meters     []qualifiedConfig
