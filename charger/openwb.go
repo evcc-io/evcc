@@ -11,17 +11,13 @@ import (
 
 // OpenWB is an api.Charger implementation for an OpenWB slave
 // using the default charger implementation and MQTT
-type OpenWB struct {
-	statusG     func() (string, error)
-	enabledG    func() (bool, error)
-	enableS     func(bool) error
-	maxCurrentS func(int64) error
-}
+type OpenWB struct{}
 
 func init() {
 	registry.Add("openwb", NewOpenWBFromConfig)
 }
 
+// predefined openWB topic names
 const (
 	OpenWBConfiguredTopic = "boolChargePointConfigured"
 	OpenWBEnabledTopic    = "ChargePointEnabled"
