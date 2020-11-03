@@ -2,7 +2,7 @@
 set -e
 
 # started as hassio addon
-HASSIO_OPTIONSFILE=data/options.json
+HASSIO_OPTIONSFILE=/data/options.json
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
     CONFIG=$(jq -r .config_file ${HASSIO_OPTIONSFILE})
     echo "Using configurationfile: ${CONFIG}"
