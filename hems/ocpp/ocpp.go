@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
@@ -13,10 +12,9 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log   *util.Logger
-	cache *util.Cache
-	site  site
-	cp    ocpp16.ChargePoint
+	log  *util.Logger
+	site site
+	cp   ocpp16.ChargePoint
 
 	configuration ConfigMap
 }
@@ -30,7 +28,7 @@ type site interface {
 const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
-func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *server.HTTPd) (*OCPP, error) {
+func New(conf map[string]interface{}, site site) (*OCPP, error) {
 	cc := struct {
 		URI       string
 		StationID string
@@ -46,7 +44,6 @@ func New(conf map[string]interface{}, site site, cache *util.Cache, httpd *serve
 
 	s := &OCPP{
 		log:           util.NewLogger("ocpp"),
-		cache:         cache,
 		site:          site,
 		cp:            cp,
 		configuration: getDefaultConfig(),

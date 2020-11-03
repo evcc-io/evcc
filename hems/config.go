@@ -22,7 +22,7 @@ func NewFromConfig(typ string, other map[string]interface{}, site *core.Site, ca
 	case "sma", "shm", "semp":
 		return semp.New(site, cache, httpd)
 	case "ocpp":
-		return ocpp.New(other, site, cache, httpd)
+		return ocpp.New(other, site, cache)
 	default:
 		return nil, errors.New("unknown hems: " + typ)
 	}
