@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 )
 
@@ -49,6 +50,23 @@ func (v *Implementation) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// Status implements the Vehicle.Status interface
+func (v *Implementation) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.chargerG()
+	if res, ok := res.(ChargerResponse); err == nil && ok {
+		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
+			status = api.StatusB
+		}
+		if res.Charger.Status.ChargingStatusData.ChargingState.Content == "charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
 }
 
 // Climater implements the Vehicle.Climater interface
