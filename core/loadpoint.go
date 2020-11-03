@@ -58,11 +58,12 @@ type LoadPoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
-	Title      string `mapstructure:"title"`   // UI title
-	Phases     int64  `mapstructure:"phases"`  // Phases- required for converting power and current
-	ChargerRef string `mapstructure:"charger"` // Charger reference
-	VehicleRef string `mapstructure:"vehicle"` // Vehicle reference
-	Meters     struct {
+	Title       string   `mapstructure:"title"`    // UI title
+	Phases      int64    `mapstructure:"phases"`   // Phases- required for converting power and current
+	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
+	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
+	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
+	Meters      struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
 	SoC          SoCConfig
@@ -78,8 +79,9 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter  api.Meter   // Charger usage meter
-	vehicle      api.Vehicle // Vehicle
+	chargeMeter  api.Meter     // Charger usage meter
+	vehicle      api.Vehicle   // Currently active vehicle
+	vehicles     []api.Vehicle // Assigned vehicles
 	socEstimator *wrapper.SocEstimator
 
 	// cached state
@@ -120,9 +122,22 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
 	}
+
+	// multiple vehicles
+	for _, ref := range lp.VehiclesRef {
+		vehicle := cp.Vehicle(ref)
+		lp.vehicles = append(lp.vehicles, vehicle)
+	}
+
+	// single vehicle
 	if lp.VehicleRef != "" {
-		lp.vehicle = cp.Vehicle(lp.VehicleRef)
-		lp.socEstimator = wrapper.NewSocEstimator(log, lp.vehicle, lp.SoC.Estimate)
+		vehicle := cp.Vehicle(lp.VehicleRef)
+		lp.vehicles = append(lp.vehicles, vehicle)
+	}
+
+	// use first vehicle for estimator
+	if len(lp.vehicles) > 0 {
+		lp.setActiveVehicle(lp.vehicles[0])
 	}
 
 	if lp.ChargerRef == "" {
@@ -222,7 +237,9 @@ func (lp *LoadPoint) notify(event string) {
 
 // publish sends values to UI and databases
 func (lp *LoadPoint) publish(key string, val interface{}) {
-	lp.uiChan <- util.Param{Key: key, Val: val}
+	if lp.uiChan != nil {
+		lp.uiChan <- util.Param{Key: key, Val: val}
+	}
 }
 
 // evChargeStartHandler sends external start event
@@ -383,6 +400,59 @@ func (lp *LoadPoint) climateActive() bool {
 	}
 
 	return false
+}
+
+// setActiveVehicle assigns currently active vehicle and configures soc estimator
+func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
+	if lp.vehicle != nil {
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", lp.vehicle.Title(), vehicle.Title())
+	}
+
+	lp.vehicle = vehicle
+	lp.socEstimator = wrapper.NewSocEstimator(lp.log, vehicle, lp.SoC.Estimate)
+
+	lp.publish("socCapacity", lp.vehicle.Capacity())
+	lp.publish("socTitle", lp.vehicle.Title())
+}
+
+// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
+func (lp *LoadPoint) findActiveVehicle() {
+	if len(lp.vehicles) <= 1 {
+		return
+	}
+
+	if vs, ok := lp.vehicle.(api.VehicleStatus); ok {
+		status, err := vs.Status()
+
+		if err == nil {
+			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
+
+			// vehicle is plugged or charging, so it should be the right one
+			if status == api.StatusB || status == api.StatusC {
+				return
+			}
+
+			for _, vehicle := range lp.vehicles {
+				if vehicle == lp.vehicle {
+					continue
+				}
+
+				if vs, ok := vehicle.(api.VehicleStatus); ok {
+					status, err := vs.Status()
+
+					if err == nil {
+						lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
+
+						// vehicle is plugged or charging, so it should be the right one
+						if status == api.StatusB || status == api.StatusC {
+							lp.setActiveVehicle(vehicle)
+							return
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // updateChargerStatus updates car status and detects car connected/disconnected events
@@ -634,6 +704,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
+
+	// update active vehicle and publish soc
+	lp.findActiveVehicle()
 	lp.publishSoC()
 
 	// read and publish status

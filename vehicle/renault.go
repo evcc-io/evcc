@@ -71,20 +71,20 @@ type kamereonVehicle struct {
 }
 
 type kamereonData struct {
-	Attributes batteryAttributes `json:"attributes"`
+	Attributes attributes `json:"attributes"`
 }
 
-type batteryAttributes struct {
-	Timestamp          string `json:"timestamp"`
-	ChargeStatus       int    `json:"chargeStatus"`
-	InstantaneousPower int    `json:"instantaneousPower"`
-	RangeHvacOff       int    `json:"rangeHvacOff"`
-	BatteryLevel       int    `json:"batteryLevel"`
-	BatteryTemperature int    `json:"batteryTemperature"`
-	PlugStatus         int    `json:"plugStatus"`
-	LastUpdateTime     string `json:"lastUpdateTime"`
-	ChargePower        int    `json:"chargePower"`
-	RemainingTime      *int   `json:"chargingRemainingTime"`
+type attributes struct {
+	Timestamp          string  `json:"timestamp"`
+	ChargingStatus     float32 `json:"chargingStatus"`
+	InstantaneousPower int     `json:"instantaneousPower"`
+	RangeHvacOff       int     `json:"rangeHvacOff"`
+	BatteryLevel       int     `json:"batteryLevel"`
+	BatteryTemperature int     `json:"batteryTemperature"`
+	PlugStatus         int     `json:"plugStatus"`
+	LastUpdateTime     string  `json:"lastUpdateTime"`
+	ChargePower        int     `json:"chargePower"`
+	RemainingTime      *int    `json:"chargingRemainingTime"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -322,6 +322,23 @@ func (v *Renault) ChargeState() (float64, error) {
 	}
 
 	return 0, err
+}
+
+// Status implements the Vehicle.Status interface
+func (v *Renault) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.apiG()
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		if res.Data.Attributes.PlugStatus > 0 {
+			status = api.StatusB
+		}
+		if res.Data.Attributes.ChargingStatus > 1.0 {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
