@@ -2,10 +2,13 @@ package openwb
 
 // predefined openWB topic names
 const (
+	// configured
+	ConfiguredTopic             = "boolChargePointConfigured"
+	HouseBatteryConfiguredTopic = "boolHouseBatteryConfigured"
+
 	// status
-	PluggedTopic    = "boolPlugStat"
-	ChargingTopic   = "boolChargeStat"
-	ConfiguredTopic = "boolChargePointConfigured"
+	PluggedTopic  = "boolPlugStat"
+	ChargingTopic = "boolChargeStat"
 
 	// getter/setter
 	EnabledTopic    = "ChargePointEnabled"

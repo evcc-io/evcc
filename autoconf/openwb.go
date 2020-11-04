@@ -72,6 +72,21 @@ func (d *openWBdetector) site() (*core.Site, error) {
 	_ = grid
 	_ = pv
 
+	// battery
+	configuredG := d.client.BoolGetter(fmt.Sprintf("%s/housebattery/%s", d.topic, openwb.HouseBatteryConfiguredTopic), timeout)
+	configured, err := configuredG()
+	if err != nil {
+		d.log.ERROR.Println(err)
+	} else if configured {
+		batteryG := d.client.FloatGetter(fmt.Sprintf("%s/housebattery/%s", d.topic, openwb.PowerTopic), 1, timeout)
+		battery, err := meter.NewConfigurable(batteryG)
+		if err != nil {
+			return nil, err
+		}
+
+		_ = battery
+	}
+
 	return site, nil
 }
 
