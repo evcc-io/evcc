@@ -285,7 +285,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.notify(evVehicleDisconnect)
 
 	// set default mode on disconnect
-	if lp.OnDisconnect.Mode != "" {
+	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(lp.OnDisconnect.Mode)
 	}
 	if lp.OnDisconnect.TargetSoC != 0 {
