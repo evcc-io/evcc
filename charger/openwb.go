@@ -20,6 +20,7 @@ type OpenWB struct {
 	api.Charger
 	api.Meter
 }
+
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
