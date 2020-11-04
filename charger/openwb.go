@@ -5,24 +5,14 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/charger/openwb"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
 
-// OpenWB is an api.Charger implementation for an OpenWB slave
-// using the default charger implementation and MQTT
-type OpenWB struct{}
-
 func init() {
 	registry.Add("openwb", NewOpenWBFromConfig)
 }
-
-// predefined openWB topic names
-const (
-	OpenWBConfiguredTopic = "boolChargePointConfigured"
-	OpenWBEnabledTopic    = "ChargePointEnabled"
-	OpenWBMaxCurrentTopic = "DirectChargeAmps"
-)
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -46,14 +36,16 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	client := provider.NewMqttClient(cc.Broker, cc.User, cc.Password, clientID, 1)
 
 	// adapt plugged/charging to status
-	plugged := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, "boolPlugStat"), cc.Timeout)
-	charging := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, "boolChargeStat"), cc.Timeout)
+	plugged := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.PluggedTopic), cc.Timeout)
+	charging := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargingTopic), cc.Timeout)
 	status := provider.NewOpenWBStatusProvider(plugged, charging).StringGetter
 
-	enabled := client.BoolGetter(fmt.Sprintf("%s/%d/%s", cc.Topic, cc.ID, OpenWBEnabledTopic), cc.Timeout)
+	// remaining getters
+	enabled := client.BoolGetter(fmt.Sprintf("%s/%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), cc.Timeout)
 
-	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, OpenWBEnabledTopic), "%enable%")
-	maxcurrent := client.IntSetter("current", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, OpenWBMaxCurrentTopic), "%current%")
+	// setters
+	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), "${enable}")
+	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic), "${maxcurrent}")
 
 	return NewConfigurable(status, enabled, enable, maxcurrent)
 }
