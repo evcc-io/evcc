@@ -91,6 +91,7 @@ func (d *openWBdetector) loadpoint(id int) *core.LoadPoint {
 		c, err := charger.NewOpenWB(d.broker, d.user, d.password, d.topic, id, timeout)
 		if err != nil {
 			d.log.ERROR.Printf("openWB: configuring loadpoint %d failed:", err)
+			return nil
 		}
 
 		_ = c
