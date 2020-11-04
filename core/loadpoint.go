@@ -455,7 +455,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 	}
 }
 
-// updateChargerStatus updates car status and detects car connected/disconnected events
+// updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.handler.Status()
 	if err != nil {
