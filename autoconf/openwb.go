@@ -7,6 +7,7 @@ import (
 	"github.com/andig/evcc/charger"
 	"github.com/andig/evcc/charger/openwb"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
@@ -36,7 +37,10 @@ func DetectOpenWB(broker, user, password, topic string) (*core.Site, error) {
 		topic:    topic,
 	}
 
-	site := d.site()
+	site, err := d.site()
+	if err != nil {
+		return nil, err
+	}
 
 	var loadpoints []*core.LoadPoint
 	for id := 1; id <= 8; id++ {
@@ -49,9 +53,26 @@ func DetectOpenWB(broker, user, password, topic string) (*core.Site, error) {
 	return site, nil
 }
 
-func (d *openWBdetector) site() *core.Site {
+func (d *openWBdetector) site() (*core.Site, error) {
 	site := core.NewSite()
-	return site
+
+	gridG := d.client.FloatGetter(fmt.Sprintf("%s/evu/%s", d.topic, openwb.PowerTopic), 1, timeout)
+	pvG := d.client.FloatGetter(fmt.Sprintf("%s/pv/%s", d.topic, openwb.PowerTopic), 1, timeout)
+
+	grid, err := meter.NewConfigurable(gridG)
+	if err != nil {
+		return nil, err
+	}
+
+	pv, err := meter.NewConfigurable(pvG)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = grid
+	_ = pv
+
+	return site, nil
 }
 
 func (d *openWBdetector) loadpoint(id int) *core.LoadPoint {
