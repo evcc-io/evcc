@@ -42,17 +42,14 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	m, _ := NewConfigurable(power)
 
 	// decorate Meter with MeterEnergy
-	var totalEnergy func() (float64, error)
 	if cc.Energy != nil {
 		m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
 		if err != nil {
 			return nil, err
 		}
-		totalEnergy = m.totalEnergy
 	}
 
 	// decorate Meter with MeterCurrent
-	var currents func() (float64, float64, float64, error)
 	if len(cc.Currents) > 0 {
 		if len(cc.Currents) != 3 {
 			return nil, errors.New("need 3 currents")
@@ -66,21 +63,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 			m.currentsG = append(m.currentsG, c)
 		}
-
-		currents = m.currents
 	}
 
 	// decorate Meter with BatterySoC
-	var batterySoC func() (float64, error)
 	if cc.SoC != nil {
 		m.batterySoCG, err = provider.NewFloatGetterFromConfig(*cc.SoC)
 		if err != nil {
 			return nil, err
 		}
-		batterySoC = m.batterySoC
 	}
 
-	res := decorateMeter(m, totalEnergy, currents, batterySoC)
+	res := m.Decorate(m.totalEnergyG, m.currentsG, m.batterySoCG)
 
 	return res, nil
 }
@@ -99,6 +92,33 @@ type Meter struct {
 	totalEnergyG  func() (float64, error)
 	currentsG     []func() (float64, error)
 	batterySoCG   func() (float64, error)
+}
+
+// Decorate attaches additional capabilities to the base meter
+func (m *Meter) Decorate(
+	totalEnergyG func() (float64, error),
+	currentsG []func() (float64, error),
+	batterySoCG func() (float64, error),
+) api.Meter {
+	var totalEnergy func() (float64, error)
+	if totalEnergyG != nil {
+		m.totalEnergyG = totalEnergyG
+		totalEnergy = m.totalEnergy
+	}
+
+	var currents func() (float64, float64, float64, error)
+	if currentsG != nil {
+		m.currentsG = currentsG
+		currents = m.currents
+	}
+
+	var batterySoC func() (float64, error)
+	if batterySoCG != nil {
+		m.batterySoCG = batterySoCG
+		batterySoC = m.batterySoC
+	}
+
+	return decorateMeter(m, totalEnergy, currents, batterySoC)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface

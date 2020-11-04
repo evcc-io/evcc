@@ -6,12 +6,19 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/charger/openwb"
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
 
 func init() {
 	registry.Add("openwb", NewOpenWBFromConfig)
+}
+
+// OpenWB configures generic charger and charge meter for an openWB loadpoint
+type OpenWB struct {
+	api.Charger
+	api.Meter
 }
 
 // NewOpenWBFromConfig creates a new configurable charger
@@ -41,11 +48,35 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	status := provider.NewOpenWBStatusProvider(plugged, charging).StringGetter
 
 	// remaining getters
-	enabled := client.BoolGetter(fmt.Sprintf("%s/%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), cc.Timeout)
+	enabled := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), cc.Timeout)
 
 	// setters
-	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), "${enable}")
-	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic), "${maxcurrent}")
+	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), "")
+	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic), "")
 
-	return NewConfigurable(status, enabled, enable, maxcurrent)
+	power := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargePowerTopic), 1, cc.Timeout)
+	totalEnergy := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargeTotalEnergyTopic), 1, cc.Timeout)
+
+	var currents []func() (float64, error)
+	for i := 1; i <= 3; i++ {
+		current := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s%d", cc.Topic, cc.ID, openwb.CurrentTopic, i), 1, cc.Timeout)
+		currents = append(currents, current)
+	}
+
+	c, err := NewConfigurable(status, enabled, enable, maxcurrent)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := meter.NewConfigurable(power)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &OpenWB{
+		Charger: c,
+		Meter:   m.Decorate(totalEnergy, currents, nil),
+	}
+
+	return res, nil
 }
