@@ -705,10 +705,6 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 
-	// update active vehicle and publish soc
-	lp.findActiveVehicle()
-	lp.publishSoC()
-
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
@@ -717,6 +713,12 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
+
+	// update active vehicle and publish soc
+	// must be run after updating charger status to make sure
+	// initial update of connected state matches charger status
+	lp.findActiveVehicle()
+	lp.publishSoC()
 
 	// sync settings with charger
 	if lp.status != api.StatusA {
