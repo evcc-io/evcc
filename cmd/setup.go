@@ -80,11 +80,14 @@ func loadConfig(conf config) *core.Site {
 	cp := &ConfigProvider{}
 	cp.configure(conf)
 
-	loadPoints := configureLoadPoints(conf, cp)
-	site := configureSite(conf.Site, cp, loadPoints)
-
-	if err := autoconf.Detect(conf.AutoConf); err != nil {
+	site, err := autoconf.Detect(conf.AutoConf)
+	if err != nil {
 		log.ERROR.Printf("autoconf: %v", err)
+	}
+
+	if site == nil {
+		loadPoints := configureLoadPoints(conf, cp)
+		site = configureSite(conf.Site, cp, loadPoints)
 	}
 
 	return site
