@@ -196,6 +196,8 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Println("  charger config:")
 		logMeter(lp.log, charger)
 		lp.log.INFO.Printf("    timer %s", presence[timer])
+
+		lp.log.INFO.Printf("  mode: %s", lp.GetMode())
 	}
 }
 
