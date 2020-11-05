@@ -37,27 +37,54 @@ func DetectOpenWB(broker, user, password, topic string) (*core.Site, error) {
 		topic:    topic,
 	}
 
-	site, err := d.site()
-	if err != nil {
-		return nil, err
-	}
-
 	var loadpoints []*core.LoadPoint
 	for id := 1; id <= 8; id++ {
-		lp := d.loadpoint(id)
+		lp := d.createLoadpoint(id)
 		if lp != nil {
 			loadpoints = append(loadpoints, lp)
 		}
 	}
 
+	site, err := d.createSite(loadpoints)
+	if err != nil {
+		return nil, err
+	}
+
 	return site, nil
 }
 
-func (d *openWBdetector) site() (*core.Site, error) {
-	site := core.NewSite()
+func (d *openWBdetector) createLoadpoint(id int) *core.LoadPoint {
+	lpTopic := fmt.Sprintf("%s/lp/%d/%s", d.topic, id, openwb.ConfiguredTopic)
+	configuredG := d.client.BoolGetter(lpTopic, timeout)
 
-	gridG := d.client.FloatGetter(fmt.Sprintf("%s/evu/%s", d.topic, openwb.PowerTopic), 1, timeout)
+	configured, err := configuredG()
+	if err != nil {
+		d.log.ERROR.Println(err)
+		return nil
+	}
+
+	if !configured {
+		return nil
+	}
+
+	d.log.INFO.Printf("openWB: found loadpoint: %d", id)
+
+	c, err := charger.NewOpenWB(d.broker, d.user, d.password, d.topic, id, timeout)
+	if err != nil {
+		d.log.ERROR.Printf("openWB: configuring loadpoint %d failed:", err)
+		return nil
+	}
+
+	_ = c
+
+	lp := core.NewLoadPoint(nil)
+
+	return lp
+}
+
+func (d *openWBdetector) createSite(loadpoints []*core.LoadPoint) (*core.Site, error) {
 	pvG := d.client.FloatGetter(fmt.Sprintf("%s/pv/%s", d.topic, openwb.PowerTopic), 1, timeout)
+	gridG := d.client.FloatGetter(fmt.Sprintf("%s/evu/%s", d.topic, openwb.PowerTopic), 1, timeout)
 
 	grid, err := meter.NewConfigurable(gridG)
 	if err != nil {
@@ -69,8 +96,10 @@ func (d *openWBdetector) site() (*core.Site, error) {
 		return nil, err
 	}
 
-	_ = grid
-	_ = pv
+	options := []core.SiteOption{
+		core.NewSiteOption(core.OptionGrid, grid),
+		core.NewSiteOption(core.OptionPV, pv),
+	}
 
 	// battery
 	configuredG := d.client.BoolGetter(fmt.Sprintf("%s/housebattery/%s", d.topic, openwb.HouseBatteryConfiguredTopic), timeout)
@@ -84,37 +113,10 @@ func (d *openWBdetector) site() (*core.Site, error) {
 			return nil, err
 		}
 
-		_ = battery
+		options = append(options, core.NewSiteOption(core.OptionBattery, battery))
 	}
+
+	site := core.NewSite(loadpoints, options...)
 
 	return site, nil
-}
-
-func (d *openWBdetector) loadpoint(id int) *core.LoadPoint {
-	lpTopic := fmt.Sprintf("%s/lp/%d/%s", d.topic, id, openwb.ConfiguredTopic)
-	configuredG := d.client.BoolGetter(lpTopic, timeout)
-
-	configured, err := configuredG()
-	if err != nil {
-		d.log.ERROR.Println(err)
-		return nil
-	}
-
-	if configured {
-		d.log.INFO.Printf("openWB: found loadpoint: %d", id)
-
-		c, err := charger.NewOpenWB(d.broker, d.user, d.password, d.topic, id, timeout)
-		if err != nil {
-			d.log.ERROR.Printf("openWB: configuring loadpoint %d failed:", err)
-			return nil
-		}
-
-		_ = c
-
-		lp := core.NewLoadPoint(nil)
-
-		_ = lp
-	}
-
-	return nil
 }

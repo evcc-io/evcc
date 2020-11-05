@@ -60,23 +60,23 @@ func NewSiteFromConfig(
 	log *util.Logger,
 	cp configProvider,
 	other map[string]interface{},
-	loadpoints []*LoadPoint,
+	site *Site,
 ) (*Site, error) {
-	site := NewSite()
 	if err := util.DecodeOther(other, &site); err != nil {
 		return nil, err
 	}
 
 	Voltage = site.Voltage
-	site.loadpoints = loadpoints
 
 	// configure meter from references
 	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
 	// 	nil, errors.New("missing either pv or grid meter")
 	// }
-	if site.Meters.GridMeterRef == "" {
+
+	if site.gridMeter == nil && site.Meters.GridMeterRef == "" {
 		return nil, errors.New("missing grid meter")
 	}
+
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
 	}
@@ -91,14 +91,19 @@ func NewSiteFromConfig(
 }
 
 // NewSite creates a Site with sane defaults
-func NewSite() *Site {
-	lp := &Site{
-		log:     util.NewLogger("site"),
-		Health:  NewHealth(60 * time.Second),
-		Voltage: 230, // V
+func NewSite(loadpoints []*LoadPoint, options ...SiteOption) *Site {
+	site := &Site{
+		log:        util.NewLogger("site"),
+		Health:     NewHealth(60 * time.Second),
+		Voltage:    230,        // V
+		loadpoints: loadpoints, // meter
 	}
 
-	return lp
+	for _, opt := range options {
+		opt.apply(site)
+	}
+
+	return site
 }
 
 // SiteConfiguration contains the global site configuration

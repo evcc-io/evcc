@@ -94,7 +94,8 @@ func loadConfig(conf config) *core.Site {
 }
 
 func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
+	template := core.NewSite(loadPoints)
+	site, err := core.NewSiteFromConfig(log, cp, conf, template)
 	if err != nil {
 		log.FATAL.Fatalf("failed configuring site: %v", err)
 	}
