@@ -505,7 +505,7 @@ func (lp *LoadPoint) detectPhases() {
 	}
 
 	currents := []float64{i1, i2, i3}
-	lp.log.TRACE.Printf("charge currents: %vA", currents)
+	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
 	lp.publish("chargeCurrents", currents)
 
 	if lp.charging {
@@ -518,7 +518,7 @@ func (lp *LoadPoint) detectPhases() {
 
 		if phases > 0 {
 			lp.Phases = phases
-			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.Phases, currents)
+			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", lp.Phases, currents)
 
 			lp.publish("activePhases", lp.Phases)
 		}
