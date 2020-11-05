@@ -2,6 +2,7 @@ package autoconf
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/andig/evcc/charger"
@@ -75,9 +76,9 @@ func (d *openWBdetector) createLoadpoint(id int) *core.LoadPoint {
 		return nil
 	}
 
-	_ = c
+	log := util.NewLogger("lp-" + strconv.Itoa(id))
 
-	lp := core.NewLoadPoint(nil)
+	lp := core.NewLoadPoint(log)
 
 	return lp
 }
