@@ -63,13 +63,10 @@ func (site *Site) SetMinSoC(soc int) error {
 	return nil
 }
 
-// ChargeEnable enables/disables charging
-func (site *Site) ChargeEnable(enable bool) error {
-	site.log.INFO.Printf("enable: %s", status[enable])
+// RemoteControl sets remote status demand
+func (site *Site) RemoteControl(status RemoteDemand) {
+	site.log.INFO.Println("remote status demand:", status)
 	for _, lp := range site.loadpoints {
-		if err := lp.ChargeEnable(enable); err != nil {
-			return err
-		}
+		lp.RemoteControl(status)
 	}
-	return nil
 }

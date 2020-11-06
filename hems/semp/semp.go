@@ -474,15 +474,17 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if mode := lp.GetMode(); mode != api.ModePV {
+			if mode := lp.GetMode(); mode != api.ModePV && mode != api.ModeMinPV {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 
-			if err = lp.ChargeEnable(dev.On); err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				return
+			demand := core.RemoteSoftDisable
+			if dev.On {
+				demand = core.RemoteEnable
 			}
+
+			lp.RemoteControl(demand)
 		}
 	}
 

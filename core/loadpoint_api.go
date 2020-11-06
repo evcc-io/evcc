@@ -21,7 +21,7 @@ type LoadPointSettingsAPI interface {
 	SetTargetSoC(int) error
 	GetMinSoC() int
 	SetMinSoC(int) error
-	ChargeEnable(enable bool) error
+	RemoteControl(RemoteDemand)
 }
 
 // LoadPointEnergyAPI is the external loadpoint API
@@ -110,14 +110,19 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	return nil
 }
 
-// ChargeEnable enables/disables charging
-func (lp *LoadPoint) ChargeEnable(enable bool) error {
-	var current int64 = 0
-	if enable {
-		current = lp.MinCurrent
-	}
+// RemoteControl sets remote status demand
+func (lp *LoadPoint) RemoteControl(status RemoteDemand) {
+	lp.Lock()
+	defer lp.Unlock()
 
-	return lp.handler.Ramp(current, true)
+	lp.log.INFO.Println("remote status demand:", status)
+
+	// apply immediately
+	if lp.remoteStatus != status {
+		lp.remoteStatus = status
+		lp.publish("remoteStatus", status)
+		lp.requestUpdate()
+	}
 }
 
 // HasChargeMeter determines if a physical charge meter is attached
