@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	sempBaseUrlEnv   = "SEMP_BASE_URL"
+	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempLocalDevice  = "F-28081973-%s-%.02d"
 	sempSerialNumber = "%s-%d"
@@ -44,16 +44,11 @@ type SEMP struct {
 	uid     string
 	hostURI string
 	port    int
-	site    site
-}
-
-// site is the minimal interface for accessing site methods
-type site interface {
-	LoadPoints() []core.LoadPointAPI
+	site    core.SiteAPI
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
@@ -142,7 +137,7 @@ func (s *SEMP) Done() chan struct{} {
 }
 
 func (s *SEMP) callbackURI() string {
-	if uri := os.Getenv(sempBaseUrlEnv); uri != "" {
+	if uri := os.Getenv(sempBaseURLEnv); uri != "" {
 		return strings.TrimSuffix(uri, "/")
 	}
 
@@ -151,11 +146,11 @@ func (s *SEMP) callbackURI() string {
 	if len(ips) > 0 {
 		ip = ips[0].String()
 	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseUrlEnv)
+		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseUrlEnv, uri)
+	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }
@@ -203,7 +198,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
-			SEMPService: SEMPService{
+			ServiceDefinition: ServiceDefinition{
 				Xmlns:          urnSEMPService,
 				Server:         s.hostURI,
 				BasePath:       basePath,

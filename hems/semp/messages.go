@@ -7,6 +7,7 @@ const (
 	urnSEMPService = "urn:schemas-simple-energy-management-protocol:service-1-0"
 )
 
+// DeviceDescription message definition
 type DeviceDescription struct {
 	XMLName     xml.Name    `xml:"root"`
 	Xmlns       string      `xml:"xmlns,attr"`
@@ -14,22 +15,25 @@ type DeviceDescription struct {
 	Device      Device      `xml:"device"`
 }
 
+// SpecVersion message definition
 type SpecVersion struct {
 	Major int `xml:"major"`
 	Minor int `xml:"minor"`
 }
 
+// Device message definition
 type Device struct {
-	DeviceType      string      `xml:"deviceType"`
-	FriendlyName    string      `xml:"friendlyName"`
-	Manufacturer    string      `xml:"manufacturer"`
-	ModelName       string      `xml:"modelName"`
-	UDN             string      `xml:"UDN"`
-	PresentationURL string      `xml:"presentationURL"`
-	SEMPService     SEMPService `xml:"semp:X_SEMPSERVICE"`
-	ServiceList     []Service   `xml:"serviceList"` // optional
+	DeviceType        string            `xml:"deviceType"`
+	FriendlyName      string            `xml:"friendlyName"`
+	Manufacturer      string            `xml:"manufacturer"`
+	ModelName         string            `xml:"modelName"`
+	UDN               string            `xml:"UDN"`
+	PresentationURL   string            `xml:"presentationURL"`
+	ServiceDefinition ServiceDefinition `xml:"semp:X_SEMPSERVICE"`
+	ServiceList       []Service         `xml:"serviceList"` // optional
 }
 
+// Service message definition
 type Service struct {
 	ServiceType string `xml:"serviceType"`
 	ServiceID   string `xml:"serviceId"`
@@ -38,7 +42,8 @@ type Service struct {
 	EventSubURL string `xml:"eventSubURL"`
 }
 
-type SEMPService struct {
+// ServiceDefinition message definition
+type ServiceDefinition struct {
 	Xmlns          string `xml:"xmlns:semp,attr"`
 	Server         string `xml:"semp:server"`
 	BasePath       string `xml:"semp:basePath"`
@@ -55,12 +60,14 @@ type Device2EM struct {
 	PlanningRequest []PlanningRequest `xml:",omitempty"`
 }
 
+// DeviceInfo message definition
 type DeviceInfo struct {
 	Identification  Identification
 	Characteristics Characteristics
 	Capabilities    Capabilities
 }
 
+// Identification message definition
 type Identification struct {
 	DeviceID     string `xml:"DeviceId"`
 	DeviceName   string
@@ -69,6 +76,7 @@ type Identification struct {
 	DeviceVendor string
 }
 
+// Characteristics message definition
 type Characteristics struct {
 	MinPowerConsumption int
 	MaxPowerConsumption int
@@ -76,11 +84,13 @@ type Characteristics struct {
 	MinOffTime          int `xml:",omitempty"`
 }
 
+// method definitions
 const (
 	MethodMeasurement = "Measurement"
 	MethodEstimation  = "Estimation"
 )
 
+// Capabilities message definition
 type Capabilities struct {
 	CurrentPowerMethod   string `xml:"CurrentPower>Method"`
 	AbsoluteTimestamps   bool   `xml:"Timestamps>AbsoluteTimestamps"`
@@ -88,11 +98,13 @@ type Capabilities struct {
 	OptionalEnergy       bool   `xml:"Requests>OptionalEnergy"`
 }
 
+// status definitions
 const (
 	StatusOn  = "On"
 	StatusOff = "Off"
 )
 
+// DeviceStatus message definition
 type DeviceStatus struct {
 	DeviceID          string `xml:"DeviceId"`
 	EMSignalsAccepted bool
@@ -100,16 +112,19 @@ type DeviceStatus struct {
 	PowerInfo         PowerInfo `xml:"PowerConsumption>PowerInfo"`
 }
 
+// PowerInfo message definition
 type PowerInfo struct {
 	AveragePower      int
 	Timestamp         int
 	AveragingInterval int
 }
 
+// PlanningRequest message definition
 type PlanningRequest struct {
 	Timeframe []Timeframe
 }
 
+// Timeframe message definition
 type Timeframe struct {
 	DeviceID       string `xml:"DeviceId"`
 	EarliestStart  int
@@ -126,6 +141,7 @@ type EM2Device struct {
 	DeviceControl []DeviceControl `xml:",omitempty"`
 }
 
+// DeviceControl message definition
 type DeviceControl struct {
 	DeviceID                    string `xml:"DeviceId"`
 	On                          bool
