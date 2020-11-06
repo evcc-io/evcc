@@ -93,7 +93,7 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("core"),
+		log:     util.NewLogger("site"),
 		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
