@@ -21,7 +21,7 @@ type LoadPointSettingsAPI interface {
 	SetTargetSoC(int) error
 	GetMinSoC() int
 	SetMinSoC(int) error
-	RemoteControl(RemoteDemand)
+	RemoteControl(string, RemoteDemand)
 }
 
 // LoadPointEnergyAPI is the external loadpoint API
@@ -111,7 +111,7 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 }
 
 // RemoteControl sets remote status demand
-func (lp *LoadPoint) RemoteControl(status RemoteDemand) {
+func (lp *LoadPoint) RemoteControl(source string, status RemoteDemand) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -120,7 +120,14 @@ func (lp *LoadPoint) RemoteControl(status RemoteDemand) {
 	// apply immediately
 	if lp.remoteStatus != status {
 		lp.remoteStatus = status
-		lp.publish("remoteStatus", status)
+		lp.publish("remoteDemand", status)
+
+		// set source if disabled
+		if status == RemoteEnable {
+			source = ""
+		}
+		lp.publish("remoteDisabledSource", source)
+
 		lp.requestUpdate()
 	}
 }

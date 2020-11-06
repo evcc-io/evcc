@@ -748,6 +748,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// check if car connected and ready for charging
 	var err error
 
+	// track if remote disabled is actually active
+	remoteDisabled := RemoteEnable
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -764,6 +767,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// OCPP
 	case lp.remoteControlled(RemoteHardDisable):
+		remoteDisabled = RemoteHardDisable
 		fallthrough
 
 	case mode == api.ModeOff:
@@ -787,13 +791,17 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		}
 
 		// Sunny Home Manager
-		if lp.remoteControlled(RemoteSoftDisable) {
+		if mode == api.ModePV && lp.remoteControlled(RemoteSoftDisable) {
+			remoteDisabled = RemoteSoftDisable
 			targetCurrent = 0
 			required = true
 		}
 
 		err = lp.handler.Ramp(targetCurrent, required)
 	}
+
+	// effective disabled status
+	lp.publish("remoteDisabled", remoteDisabled)
 
 	if err != nil {
 		lp.log.ERROR.Println(err)

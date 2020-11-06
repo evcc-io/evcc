@@ -5,7 +5,7 @@ type RemoteDemand string
 
 // remote status demand definition
 const (
-	RemoteEnable      RemoteDemand = "enable"
-	RemoteHardDisable RemoteDemand = "disable"
-	RemoteSoftDisable RemoteDemand = "softdisable"
+	RemoteEnable      RemoteDemand = ""
+	RemoteHardDisable RemoteDemand = "hard"
+	RemoteSoftDisable RemoteDemand = "soft"
 )

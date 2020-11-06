@@ -22,6 +22,7 @@ import (
 )
 
 const (
+	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempLocalDevice  = "F-28081973-%s-%.02d"
@@ -474,7 +475,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if mode := lp.GetMode(); mode != api.ModePV && mode != api.ModeMinPV {
+			if mode := lp.GetMode(); mode != api.ModePV {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -484,7 +485,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				demand = core.RemoteEnable
 			}
 
-			lp.RemoteControl(demand)
+			lp.RemoteControl(sempController, demand)
 		}
 	}
 
