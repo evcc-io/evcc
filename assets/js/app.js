@@ -1,3 +1,12 @@
+import $ from "jquery";
+import "popper.js"
+import "bootstrap"
+import Vue from "vue"
+import VueRouter from "vue-router"
+import axios from "axios"
+
+Vue.use(VueRouter)
+
 const loc = window.location;
 axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
 axios.defaults.headers.post['Content-Type'] = 'application/json';
@@ -123,7 +132,7 @@ window.setInterval(function() {
 // App & Routing
 //
 
-const main = Vue.component('main', {
+const main = Vue.component('Main', {
   template: '#main-template',
   data: function() {
     return {
@@ -133,7 +142,7 @@ const main = Vue.component('main', {
   methods: {
     configured: function (val) {
       // for development purposes
-      if (val == '<<.Configured>>') {
+      if (val == '[[.Configured]]') {
         return true;
       }
       if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
@@ -241,7 +250,7 @@ Vue.component('version', {
   },
   watch: {
     "state.availableVersion": function () {
-      if (this.installed != "<<.Version>>" && // go template parsed?
+      if (this.installed != "[[.Version]]" && // go template parsed?
         this.installed != "0.0.1-alpha" && // make used?
         this.state.availableVersion != this.installed) {
         $(this.$refs.bar).collapse("show");

@@ -21,49 +21,9 @@
   <title>evcc</title>
 
   <!-- CSS -->
-  <link href="css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/fontawesome.min.css" rel="stylesheet">
-
-  <!-- Bootstrap -->
-  <script src="js/jquery-3.4.1.slim.min.js"></script>
-  <script src="js/popper.min.js"></script>
-  <script src="js/bootstrap.bundle.min.js"></script>
-
-  <!-- Axios -->
-  <script src="js/axios.min.js"></script>
-
-  <!-- VueJS -->
-  <script src="js/vue.min.js"></script>
-  <script src="js/vue-router.min.js"></script>
-
-  <style>
-    /* reverse loading animation */
-    .progress-bar-animated {
-      animation-direction: reverse;
-    }
-    .btn.caption {
-      opacity: 1;
-    }
-    .btn.first {
-      border-top-left-radius: .2rem;
-      border-bottom-left-radius: .2rem;
-    }
-    code {
-      font-size: 87.5%;
-      color: #e83e8c;
-      word-wrap: break-word;
-    }
-    .value, input[type=radio], label.btn {
-      white-space: nowrap !important;
-    }
-    .text-muted a, .text-muted a:hover {
-      color: #6c757d!important;
-      text-decoration: none;
-    }
-    .bg-muted {
-      opacity: 0.25;
-    }
-  </style>
+  <link href="../node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet">
+  <link href="../node_modules/@fortawesome/fontawesome-free/css/all.css" rel="stylesheet">
+  <link href="./css/app.css" rel="stylesheet">
 </head>
 <body>
 
@@ -83,7 +43,7 @@
     </div>
   </nav>
 
-  <version installed="<<.Version>>" id="version-bar"></version>
+  <version installed="[[.Version]]" id="version-bar"></version>
 
   <message-toasts></message-toasts>
   <router-view></router-view>
@@ -143,7 +103,7 @@
 
 <script type="text/x-template" id="main-template">
   <div class="container">
-    <site v-bind:state="state" v-if="configured('<<.Configured>>')"></site>
+    <site v-bind:state="state" v-if="configured('[[.Configured]]')"></site>
     <div v-else>
       <div class="row py-5">
         <div class="col12">
@@ -154,14 +114,14 @@
             <ol class="pt-2">
               <li>Erzeugen einer Konfigurationsdatei mit Namen <code>evcc.yaml</code>. Die
                 Standardkonfiguration <code>evcc.dist.yaml</code> kann dafür als Vorlage dienen (<a
-                  href="https://github.com/andig/evcc/blob/master/evcc.dist.yaml">Download</a>).
-              <li>Konfiguration der Wallbox als <code>chargers</code>.
-              <li>Konfiguration des EVU Zählers und evtl. weiterer Zähler unter <code>meters</code>.
+                  href="https://github.com/andig/evcc/blob/master/evcc.dist.yaml">Download</a>).</li>
+              <li>Konfiguration der Wallbox als <code>chargers</code>.</li>
+              <li>Konfiguration des EVU Zählers und evtl. weiterer Zähler unter <code>meters</code>.</li>
               <li>Konfiguration des Netzanschlusses unter <code>site</code>. In einer Site wird der Netzanschluss mit
-                dem konfigurierten EVU Zähler (<code>meter</code>) verbunden.
+                dem konfigurierten EVU Zähler (<code>meter</code>) verbunden.</li>
               <li>Konfiguration eines Ladepunktes unter <code>loadpoints</code>. In einem Ladepunkt wird die
-                konfigurierte Wallbox (<code>charger</code>) mit dem Ladepunkt verbunden.
-              <li>Start von <b>evcc</b> mit der neu erstellten Konfiguration: <code>evcc -c evcc.yaml</code>
+                konfigurierte Wallbox (<code>charger</code>) mit dem Ladepunkt verbunden.</li>
+              <li>Start von <b>evcc</b> mit der neu erstellten Konfiguration: <code>evcc -c evcc.yaml</code></li>
             </ol>
           </p>
           <p>Minimale Beispielkonfiguration für <b>evcc</b>:</p>
@@ -189,6 +149,7 @@ loadpoints:
 </pre></code>
           </p>
           <p>Viel Spass mit <b>evcc</b>! Bei Problemen kannst Du uns auf <a href="https://github.com/andig/evcc/issues">GitHub</a> erreichen.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -520,8 +481,8 @@ loadpoints:
     <div class="row">
       <div class="col-6">
         <small class="text-muted">
-          <a href="https://github.com/andig/evcc/releases/tag/<<.Version>>"><<.Version>></a>
-          <<if ne .Version .Commit>>(<a href="https://github.com/andig/evcc/commit/<<.Commit>>"><<.Commit>></a>)<<end>>
+          <a href="https://github.com/andig/evcc/releases/tag/[[.Version]]">[[.Version]]</a>
+          (<a href="https://github.com/andig/evcc/commit/[[.Commit]]">[[.Commit]]</a>)
         </small>
       </div>
       <div class="col-6 text-right">
@@ -530,8 +491,7 @@ loadpoints:
     </div>
   </div>
 </footer>
-
-<script src="js/app.js?<<.Tag>>"></script>
+<script src="js/app.js"></script>
 
 </body>
 </html>

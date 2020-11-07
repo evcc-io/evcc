@@ -1,7 +1,9 @@
 __debug_bin
 .vscode
 *.json
+!package*.json
 *.log
+.cache
 *.yaml
 evcc
 linux-*.Dockerfile
@@ -9,3 +11,5 @@ linux-*.Dockerfile
 !modules/**
 dist
 *.py
+node_modules
+server/assets.go
