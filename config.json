@@ -3,7 +3,7 @@
     "version": "latest",
     "slug": "evcc",
     "description": "EV Charge Controller!",
-    "url": "https://github.com/cathiele/hassio-addons",
+    "url": "https://github.com/andig/evcc",
     "arch": ["armhf", "armv7", "aarch64", "amd64", "i386"],
     "startup": "application",
     "panel_icon": "mdi:ev-station",
