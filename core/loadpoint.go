@@ -285,7 +285,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.notify(evVehicleDisconnect)
 
 	// set default mode on disconnect
-	if lp.OnDisconnect.Mode != "" {
+	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(lp.OnDisconnect.Mode)
 	}
 	if lp.OnDisconnect.TargetSoC != 0 {
@@ -455,7 +455,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 	}
 }
 
-// updateChargerStatus updates car status and detects car connected/disconnected events
+// updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
 	status, err := lp.handler.Status()
 	if err != nil {
@@ -505,7 +505,7 @@ func (lp *LoadPoint) detectPhases() {
 	}
 
 	currents := []float64{i1, i2, i3}
-	lp.log.TRACE.Printf("charge currents: %vA", currents)
+	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
 	lp.publish("chargeCurrents", currents)
 
 	if lp.charging {
@@ -518,7 +518,7 @@ func (lp *LoadPoint) detectPhases() {
 
 		if phases > 0 {
 			lp.Phases = phases
-			lp.log.DEBUG.Printf("detected phases: %dp %vA", lp.Phases, currents)
+			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", lp.Phases, currents)
 
 			lp.publish("activePhases", lp.Phases)
 		}
@@ -705,10 +705,6 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// update progress and soc before status is updated
 	lp.publishChargeProgress()
 
-	// update active vehicle and publish soc
-	lp.findActiveVehicle()
-	lp.publishSoC()
-
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
 		lp.log.ERROR.Printf("charge controller error: %v", err)
@@ -717,6 +713,12 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging)
+
+	// update active vehicle and publish soc
+	// must be run after updating charger status to make sure
+	// initial update of connected state matches charger status
+	lp.findActiveVehicle()
+	lp.publishSoC()
 
 	// sync settings with charger
 	if lp.status != api.StatusA {

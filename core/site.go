@@ -93,7 +93,7 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("core"),
+		log:     util.NewLogger("site"),
 		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
@@ -196,6 +196,8 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Println("  charger config:")
 		logMeter(lp.log, charger)
 		lp.log.INFO.Printf("    timer %s", presence[timer])
+
+		lp.log.INFO.Printf("  mode: %s", lp.GetMode())
 	}
 }
 
@@ -258,7 +260,7 @@ func (site *Site) updateMeters() error {
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
-			site.log.TRACE.Printf("grid currents: %vA", []float64{i1, i2, i3})
+			site.log.TRACE.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		}
 	}

@@ -424,7 +424,8 @@ loadpoints:
         'progress-bar-animated': state.charging,
         'bg-warning': true,
         'bg-muted': true,
-      }" v-bind:style="{width: minSoCRemainingDisplayWidth+'%'}" v-if="minSoCActive">
+      }" v-bind:style="{width: minSoCRemainingDisplayWidth+'%'}"
+      v-if="minSoCActive && (socChargeDisplayWidth < 100)">
     </div>
   </div>
 </div>
