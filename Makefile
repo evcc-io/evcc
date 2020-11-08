@@ -17,7 +17,7 @@ clean:
 install:
 	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
-	npm install
+	npm ci
 
 lint:
 	golangci-lint run
