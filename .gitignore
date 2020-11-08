@@ -8,7 +8,6 @@ __debug_bin
 evcc
 linux-*.Dockerfile
 !evcc.dist.yaml
-!modules/**
 dist
 *.py
 node_modules
