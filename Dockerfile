@@ -35,6 +35,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 COPY --from=builder /usr/bin/jq /usr/bin/
+COPY --from=builder /usr/lib/libonig.so.5* /usr/lib/
 COPY --from=builder /usr/lib/libjq.so.1* /usr/lib/
 
 COPY docker/bin/* /evcc/
