@@ -1,0 +1,33 @@
+{
+  "name": "evcc",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rimraf dist; parcel watch assets/index.html --public-url /dist/",
+    "build": "rimraf dist; parcel build assets/index.html --public-url /dist/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4",
+    "rimraf": "^3.0.2"
+  },
+  "engines": {
+    "npm": "^6.0.0",
+    "node": "^14.0.0"
+  },
+  "alias": {
+    "vue": "./node_modules/vue/dist/vue.js"
+  },
+  "repository": "github:andig/evcc",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.1",
+    "axios": "^0.21.0",
+    "bootstrap": "^4.5.3",
+    "jquery": "^3.5.1",
+    "popper.js": "^1.16.1",
+    "vue": "^2.6.12",
+    "vue-router": "^3.4.7"
+  }
+}

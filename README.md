@@ -101,7 +101,7 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 docker run --network host andig/evcc ...
 ```
 
-To build EVCC from source, [Go](2) 1.13 is required:
+To build EVCC from source, [Go](2) 1.13 and [Node](3) 14 are required:
 
     make
 
@@ -383,7 +383,7 @@ timeout: 5s
 
 ### HTTP (read/write)
 
-The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries.
+The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries for REST apis.
 
 Sample read configuration:
 
@@ -478,12 +478,13 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 
 - typed language with ability for systematic testing - achieved by using [Go](2)
 - structured configuration - supports YAML-based [config file](evcc.dist.yaml)
-- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
-- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
+- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
+- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
 - support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
-[3]: https://getbootstrap.org
-[4]: https://hub.docker.com/repository/docker/andig/evcc
-[5]: https://github.com/volkszaehler/mbmd
+[3]: https://nodejs.org
+[4]: https://getbootstrap.org
+[5]: https://hub.docker.com/repository/docker/andig/evcc
+[6]: https://github.com/volkszaehler/mbmd
