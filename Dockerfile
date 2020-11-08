@@ -7,7 +7,7 @@ FROM golang:1.14-alpine as builder
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git jq ca-certificates tzdata alpine-sdk npm && update-ca-certificates
+RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk npm && update-ca-certificates
 
 WORKDIR /build
 
@@ -34,9 +34,6 @@ ENV TZ=Europe/Berlin
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
-COPY --from=builder /usr/bin/jq /usr/bin/
-COPY --from=builder /usr/lib/libonig.so.5* /usr/lib/
-COPY --from=builder /usr/lib/libjq.so.1* /usr/lib/
 
 COPY docker/bin/* /evcc/
 
