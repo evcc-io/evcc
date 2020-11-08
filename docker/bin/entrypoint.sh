@@ -5,7 +5,7 @@ set -e
 HASSIO_OPTIONSFILE=/data/options.json
 
 if [ -f ${HASSIO_OPTIONSFILE} ]; then
-    CONFIG=$(jq -r .config_file ${HASSIO_OPTIONSFILE})
+    CONFIG=$(grep config_file ${HASSIO_OPTIONSFILE}| cut -d ':' -f 2 | sed s/[\"}]//g )
     echo "Using config file: ${CONFIG}"
 
     if [ ! -f ${CONFIG} ]; then
