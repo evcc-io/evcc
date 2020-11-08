@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "rimraf dist; parcel watch assets/index.html --public-url /dist/",
     "build": "rimraf dist; parcel build assets/index.html --public-url /dist/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "fix-audit": "npm-force-resolutions"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "parcel-bundler": "^1.12.4",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "npm-force-resolutions": "0.0.3"
   },
   "engines": {
     "npm": "^6.0.0",
@@ -29,5 +31,8 @@
     "popper.js": "^1.16.1",
     "vue": "^2.6.12",
     "vue-router": "^3.4.7"
+  },
+  "resolutions": {
+    "node-forge": "0.10.0"
   }
 }
