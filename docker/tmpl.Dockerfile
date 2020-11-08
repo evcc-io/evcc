@@ -6,7 +6,7 @@ FROM golang:1.14-alpine as builder
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
+RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk npm && update-ca-certificates
 
 WORKDIR /build
 
@@ -16,8 +16,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-RUN make clean install assets
-RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} AUDI_HASH_SECRET={{ env "AUDI_HASH_SECRET" }} make build
+RUN make clean install ui assets
+RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 
 #############################
 ## STEP 2 build a small image
