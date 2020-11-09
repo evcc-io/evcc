@@ -15,6 +15,6 @@ jobs:
     - name: Install
       run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
     - name: Login
-      run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
     - name: Build
       run: make publish-latest
