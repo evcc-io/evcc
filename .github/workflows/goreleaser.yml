@@ -2,25 +2,37 @@ name: Release
 
 on:
   push:
-    tags:
-      - '*'
+   tags:
+     - '*'
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      -
-        name: Set up Go
+      - name: Setup
         uses: actions/setup-go@v2
         with:
           go-version: 1.14
-      -
-        name: Run GoReleaser
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Tools
+        run: make install
+
+      - name: UI
+        run: make ui
+
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
