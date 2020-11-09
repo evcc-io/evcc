@@ -2,8 +2,9 @@ name: Release
 
 on:
   push:
-    tags:
-      - '*'
+#    tags:
+#      - '*'
+    branches: [ ci-test ]
 
 jobs:
   goreleaser:
