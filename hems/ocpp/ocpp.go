@@ -52,14 +52,19 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 
 	err := cp.Start(cc.URI)
 	if err == nil {
+		s.log.DEBUG.Println("OCPP client started")
 		cp.SetCoreHandler(s)
-
-		for err := range <-cp.Errors() {
-			log.ERROR.Println(err)
-		}
+		go s.errorHandler()
 	}
 
 	return s, err
+}
+
+// errorHandler logs the charge point error
+func (s *OCPP) errorHandler() {
+	for err := range s.cp.Errors() {
+		s.log.ERROR.Println(err)
+	}
 }
 
 // Run executes the OCPP chargepoint client
@@ -73,8 +78,12 @@ func (s *OCPP) Run() {
 				status = ocppcore.ChargePointStatusCharging
 			}
 
+			s.log.DEBUG.Printf("OCPP notifying lp-%d", connector)
+
 			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
 				s.log.ERROR.Printf("sending status for %s: %v", lp.Name(), err)
+			} else {
+				s.log.DEBUG.Println("OCPP no error")
 			}
 		}
 
