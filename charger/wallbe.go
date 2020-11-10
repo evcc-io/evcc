@@ -185,7 +185,7 @@ func (wb *Wallbe) decodeReading(b []byte) float64 {
 	return float64(v)
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// currentPower implements the Meter.CurrentPower interface
 func (wb *Wallbe) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
 	if err != nil {
