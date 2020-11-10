@@ -1,13 +1,18 @@
 package ocpp
 
 import (
+	"fmt"
+	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/util"
+	"github.com/denisbrodbeck/machineid"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ws"
 )
 
 // OCPP is an OCPP client
@@ -32,16 +37,26 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 	cc := struct {
 		URI       string
 		StationID string
-	}{
-		StationID: "evcc",
-	}
+	}{}
 
 	if err := util.DecodeOther(conf, &cc); err != nil {
 		return nil, err
 	}
 
 	log := util.NewLogger("ocpp")
-	cp := ocpp16.NewChargePoint(cc.StationID, nil, nil)
+
+	if cc.StationID == "" {
+		id, err := machineid.ID()
+		if err == nil {
+			cc.StationID = fmt.Sprintf("evcc-%s", strings.ToLower(id))
+		} else {
+			cc.StationID = fmt.Sprintf("evcc-%d", rand.Int31())
+		}
+		log.DEBUG.Println("station id:", cc.StationID)
+	}
+
+	ws := ws.NewClient()
+	cp := ocpp16.NewChargePoint(cc.StationID, nil, ws)
 
 	s := &OCPP{
 		log:           log,
@@ -52,17 +67,17 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 
 	err := cp.Start(cc.URI)
 	if err == nil {
-		s.log.DEBUG.Println("OCPP client started")
 		cp.SetCoreHandler(s)
-		go s.errorHandler()
+		go s.errorHandler(ws.Errors())
+		go s.errorHandler(cp.Errors())
 	}
 
 	return s, err
 }
 
-// errorHandler logs the charge point error
-func (s *OCPP) errorHandler() {
-	for err := range s.cp.Errors() {
+// errorHandler logs error channel
+func (s *OCPP) errorHandler(errC <-chan error) {
+	for err := range errC {
 		s.log.ERROR.Println(err)
 	}
 }
