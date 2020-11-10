@@ -48,3 +48,5 @@ require (
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )
+
+replace github.com/lorenzodonini/ocpp-go => github.com/andig/ocpp-go v0.12.1-0.20201110090118-4fdb491db96c

@@ -40,10 +40,11 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 		return nil, err
 	}
 
+	log := util.NewLogger("ocpp")
 	cp := ocpp16.NewChargePoint(cc.StationID, nil, nil)
 
 	s := &OCPP{
-		log:           util.NewLogger("ocpp"),
+		log:           log,
 		site:          site,
 		cp:            cp,
 		configuration: getDefaultConfig(),
@@ -52,6 +53,10 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 	err := cp.Start(cc.URI)
 	if err == nil {
 		cp.SetCoreHandler(s)
+
+		for err := range <-cp.Errors() {
+			log.ERROR.Println(err)
+		}
 	}
 
 	return s, err
