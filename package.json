@@ -3,8 +3,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "rimraf dist; parcel watch assets/index.html --public-url /dist/",
-    "build": "rimraf dist; parcel build assets/index.html --public-url /dist/",
+    "dev": "rimraf dist; parcel watch assets/index.html --public-url dist/",
+    "build": "rimraf dist; parcel build assets/index.html --public-url dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fix-audit": "npm-force-resolutions"
   },
