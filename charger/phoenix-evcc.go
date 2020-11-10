@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -12,7 +13,12 @@ const (
 	phEVCCRegStatus     = 24000 // Input
 	phEVCCRegMaxCurrent = 22000 // Holding
 	phEVCCRegEnable     = 20000 // Coil
+
+	phRegPower  = 337 // power reading
+	phRegEnergy = 341 // energy reading
 )
+
+var phRegCurrents = []uint16{334, 335, 336} // current readings
 
 // PhoenixEVCC is an api.ChargeController implementation for Phoenix EV-CC-AC1-M wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
@@ -25,18 +31,47 @@ func init() {
 	registry.Add("phoenix-evcc", NewPhoenixEVCCFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEVCC -b api.Charger -o phoenix-evcc_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVCCFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{ID: 255}
+	cc := struct {
+		modbus.Settings `mapstructure:",squash"`
+		Meter           struct {
+			Power, Energy, Currents bool
+		}
+	}{
+		Settings: modbus.Settings{
+			ID: 255,
+		},
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewPhoenixEVCC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	wb, err := NewPhoenixEVCC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+
+	var currentPower func() (float64, error)
+	if cc.Meter.Power {
+		currentPower = wb.currentPower
+	}
+
+	var totalEnergy func() (float64, error)
+	if cc.Meter.Energy {
+		totalEnergy = wb.totalEnergy
+	}
+
+	var currents func() (float64, float64, float64, error)
+	if cc.Meter.Currents {
+		currents = wb.currents
+	}
+
+	return decoratePhoenixEVCC(wb, currentPower, totalEnergy, currents), err
 }
 
 // NewPhoenixEVCC creates a Phoenix charger
-func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (api.Charger, error) {
+func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*PhoenixEVCC, error) {
 	log := util.NewLogger("evcc")
 
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, true, id)
@@ -97,4 +132,44 @@ func (wb *PhoenixEVCC) MaxCurrent(current int64) error {
 	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", phEVCCRegMaxCurrent, current, b)
 
 	return err
+}
+
+func (wb *PhoenixEVCC) decodeReading(b []byte) float64 {
+	v := binary.BigEndian.Uint16(b)
+	return float64(v)
+}
+
+// CurrentPower implements the Meter.CurrentPower interface
+func (wb *PhoenixEVCC) currentPower() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(phRegPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return wb.decodeReading(b), err
+}
+
+// totalEnergy implements the Meter.TotalEnergy interface
+func (wb *PhoenixEVCC) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(phRegEnergy, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return wb.decodeReading(b), err
+}
+
+// currents implements the Meter.Currents interface
+func (wb *PhoenixEVCC) currents() (float64, float64, float64, error) {
+	var currents []float64
+	for _, regCurrent := range phRegCurrents {
+		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 1)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		currents = append(currents, wb.decodeReading(b))
+	}
+
+	return currents[0], currents[1], currents[2], nil
 }
