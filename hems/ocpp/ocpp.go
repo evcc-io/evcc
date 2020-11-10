@@ -93,9 +93,9 @@ func (s *OCPP) Run() {
 				status = ocppcore.ChargePointStatusCharging
 			}
 
-			s.log.TRACE.Printf("send: %s status: %+v", lp.Name(), status)
+			s.log.TRACE.Printf("send: lp-%d status: %+v", connector, status)
 			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
-				s.log.ERROR.Printf("%s: %v", lp.Name(), err)
+				s.log.ERROR.Printf("lp-%d: %v", connector, err)
 			}
 		}
 
