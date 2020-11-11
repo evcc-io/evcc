@@ -155,19 +155,24 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 
 Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
 
-- `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
-- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers like the ESL Walli (Ethernet connection).
-- `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
-- `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
-- `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
-- `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 - `go-e`: go-eCharger chargers (both local and cloud API are supported)
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
+- `openWB`: openWB chargers using openWB's MQTT interface
+- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers like the ESL Walli (Ethernet connection).
+- `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
+- `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
+- `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
+- `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
+- `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
+
+#### KEBA preparation
+
+KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see KEBA installation manual.
 
 #### Wallbe preparation
 
@@ -189,9 +194,6 @@ Compare the value to what you see as *Actual Charge Current Setting* in the Wall
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
-#### KEBA preparation
-
-KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see KEBA installation manual.
 
 ### Meter
 
