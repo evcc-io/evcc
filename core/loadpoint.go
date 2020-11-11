@@ -162,7 +162,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults
-func NewLoadPoint(log *util.Logger) *LoadPoint {
+func NewLoadPoint(log *util.Logger, options ...LoadpointOption) *LoadPoint {
 	clock := clock.New()
 	bus := evbus.New()
 
@@ -179,6 +179,10 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 			Sensitivity:   10, // A
 			GuardDuration: 5 * time.Minute,
 		},
+	}
+
+	for _, opt := range options {
+		opt.apply(lp)
 	}
 
 	return lp
