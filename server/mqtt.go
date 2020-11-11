@@ -3,7 +3,6 @@ package server
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -20,6 +19,10 @@ type MQTT struct {
 
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
+	if root == "" {
+		root = "evcc"
+	}
+
 	return &MQTT{
 		Handler: provider.MQTT,
 		root:    root,
@@ -37,7 +40,7 @@ func (m *MQTT) encode(v interface{}) string {
 	case fmt.Stringer, string:
 		s = fmt.Sprintf("%s", val)
 	case float64:
-		s = fmt.Sprintf("%.3f", val)
+		s = fmt.Sprintf("%.4g", val)
 	default:
 		s = fmt.Sprintf("%v", val)
 	}
@@ -87,7 +90,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	for id, lp := range site.LoadPoints() {
-		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id)
+		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		m.listenSetters(topic, lp)
 	}
 
@@ -98,7 +101,8 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	for p := range in {
 		topic := fmt.Sprintf("%s/site", m.root)
 		if p.LoadPoint != nil {
-			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, *p.LoadPoint)
+			id := *p.LoadPoint + 1
+			topic = fmt.Sprintf("%s/loadpoints/%d", m.root, id)
 		}
 
 		// alive indicator
@@ -108,7 +112,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 		}
 
 		// value
-		topic += "/" + strings.ToLower(p.Key)
+		topic += "/" + p.Key
 		m.publish(topic, false, p.Val)
 	}
 }

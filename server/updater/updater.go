@@ -39,8 +39,7 @@ func Run(log *util.Logger, cache chan<- util.Param) {
 		cache: cache,
 	}
 
-	instance.checkVersion()
-	for range time.NewTicker(24 * time.Hour).C {
+	for range time.NewTicker(time.Hour).C {
 		instance.checkVersion()
 	}
 }
