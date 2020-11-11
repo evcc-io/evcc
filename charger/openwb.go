@@ -42,6 +42,12 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	clientID := provider.MqttClientID()
 	client := provider.NewMqttClient(cc.Broker, cc.User, cc.Password, clientID, 1)
 
+	// check if loadpoint configured
+	configured := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ConfiguredTopic), cc.Timeout)
+	if isConfigured, err := configured(); err != nil || !isConfigured {
+		return nil, fmt.Errorf("openWB loadpoint %d is not configured", cc.ID)
+	}
+
 	// adapt plugged/charging to status
 	plugged := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.PluggedTopic), cc.Timeout)
 	charging := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargingTopic), cc.Timeout)
@@ -54,6 +60,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), "")
 	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic), "")
 
+	// meter getters
 	power := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargePowerTopic), 1, cc.Timeout)
 	totalEnergy := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargeTotalEnergyTopic), 1, cc.Timeout)
 
