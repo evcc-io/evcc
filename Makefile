@@ -29,7 +29,7 @@ ui:
 	npm ci
 	npm run build
 	# hack around https://github.com/parcel-bundler/parcel/issues/5333
-	sed -E -i .bak 's#url\(/?dist/#url(#g' dist/*.css
+	sed -i .bak -E 's#url\(/?dist/#url(#g' dist/*.css
 	rm dist/*.bak
 
 assets:
