@@ -1,4 +1,4 @@
-package autoconf
+package autodetect
 
 import (
 	"github.com/andig/evcc/core"

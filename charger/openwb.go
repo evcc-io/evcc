@@ -25,6 +25,13 @@ type OpenWB struct {
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Broker         string
+		User, Password string
+		Topic          string
+		ID             int
+		Timeout        time.Duration
+	}{
+		Topic:   "openWB",
+		ID:      1,
 		Timeout: 5 * time.Second,
 	}
 
@@ -41,9 +48,9 @@ func NewOpenWB(broker, user, password, topic string, id int, timeout time.Durati
 	client := provider.NewMqttClient(broker, user, password, clientID, 1)
 
 	// check if loadpoint configured
-	configured := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ConfiguredTopic), cc.Timeout)
+	configured := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ConfiguredTopic), timeout)
 	if isConfigured, err := configured(); err != nil || !isConfigured {
-		return nil, fmt.Errorf("openWB loadpoint %d is not configured", cc.ID)
+		return nil, fmt.Errorf("openWB loadpoint %d is not configured", id)
 	}
 
 	// adapt plugged/charging to status
@@ -59,8 +66,8 @@ func NewOpenWB(broker, user, password, topic string, id int, timeout time.Durati
 	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.MaxCurrentTopic), "")
 
 	// meter getters
-	power := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargePowerTopic), 1, cc.Timeout)
-	totalEnergy := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargeTotalEnergyTopic), 1, cc.Timeout)
+	power := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic), 1, timeout)
+	totalEnergy := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargeTotalEnergyTopic), 1, timeout)
 
 	var currents []func() (float64, error)
 	for i := 1; i <= 3; i++ {
@@ -84,5 +91,4 @@ func NewOpenWB(broker, user, password, topic string, id int, timeout time.Durati
 	}
 
 	return res, nil
-
 }

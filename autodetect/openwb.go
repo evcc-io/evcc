@@ -1,4 +1,4 @@
-package autoconf
+package autodetect
 
 import (
 	"fmt"

@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/autoconf"
+	"github.com/andig/evcc/autodetect"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/hems"
 	"github.com/andig/evcc/provider"
@@ -80,9 +80,9 @@ func loadConfig(conf config) *core.Site {
 	cp := &ConfigProvider{}
 	cp.configure(conf)
 
-	site, err := autoconf.Detect(conf.AutoConf)
+	site, err := autodetect.Detect(conf.AutoDetect)
 	if err != nil {
-		log.ERROR.Printf("autoconf: %v", err)
+		log.ERROR.Printf("autodetect: %v", err)
 	}
 
 	if site == nil {
