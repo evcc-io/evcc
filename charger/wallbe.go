@@ -34,7 +34,6 @@ var wbRegCurrents = []uint16{114, 116, 118} // current readings
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
-	log      *util.Logger
 	conn     *modbus.Connection
 	factor   int64
 	encoding string
@@ -101,8 +100,10 @@ func NewWallbe(uri string) (*Wallbe, error) {
 		return nil, err
 	}
 
+	log := util.NewLogger("wallbe")
+	conn.Logger(log.TRACE)
+
 	wb := &Wallbe{
-		log:    util.NewLogger("wallbe"),
 		conn:   conn,
 		factor: 10,
 	}
@@ -113,7 +114,6 @@ func NewWallbe(uri string) (*Wallbe, error) {
 // Status implements the Charger.Status interface
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
-	wb.log.TRACE.Printf("read status (%d): %0 X", wbRegStatus, b)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -124,7 +124,6 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (wb *Wallbe) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(wbRegEnable, 1)
-	wb.log.TRACE.Printf("read charge enable (%d): %0 X", wbRegEnable, b)
 	if err != nil {
 		return false, err
 	}
@@ -139,8 +138,7 @@ func (wb *Wallbe) Enable(enable bool) error {
 		u = 0xFF00
 	}
 
-	b, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
-	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", wbRegEnable, u, b)
+	_, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
 
 	return err
 }
@@ -152,9 +150,7 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 	}
 
 	u := uint16(current * wb.factor)
-
-	b, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
-	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", wbRegMaxCurrent, u, b)
+	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
 
 	return err
 }
@@ -162,7 +158,6 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 // ChargingTime yields current charge run duration
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
-	wb.log.TRACE.Printf("read charge time (%d): %0 X", wbRegChargeTime, b)
 	if err != nil {
 		return 0, err
 	}

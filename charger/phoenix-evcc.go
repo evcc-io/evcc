@@ -23,7 +23,6 @@ var phRegCurrents = []uint16{334, 335, 336} // current readings
 // PhoenixEVCC is an api.ChargeController implementation for Phoenix EV-CC-AC1-M wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type PhoenixEVCC struct {
-	log  *util.Logger
 	conn *modbus.Connection
 }
 
@@ -72,15 +71,15 @@ func NewPhoenixEVCCFromConfig(other map[string]interface{}) (api.Charger, error)
 
 // NewPhoenixEVCC creates a Phoenix charger
 func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*PhoenixEVCC, error) {
-	log := util.NewLogger("evcc")
-
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, true, id)
 	if err != nil {
 		return nil, err
 	}
 
+	log := util.NewLogger("evcc")
+	conn.Logger(log.TRACE)
+
 	wb := &PhoenixEVCC{
-		log:  log,
 		conn: conn,
 	}
 
@@ -90,7 +89,6 @@ func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*Phoeni
 // Status implements the Charger.Status interface
 func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phEVCCRegStatus, 1)
-	wb.log.TRACE.Printf("read status (%d): %0 X", phEVCCRegStatus, b)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -101,7 +99,6 @@ func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (wb *PhoenixEVCC) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(phEVCCRegEnable, 1)
-	wb.log.TRACE.Printf("read charge enable (%d): %0 X", phEVCCRegEnable, b)
 	if err != nil {
 		return false, err
 	}
@@ -116,8 +113,7 @@ func (wb *PhoenixEVCC) Enable(enable bool) error {
 		u = 0xFF00
 	}
 
-	b, err := wb.conn.WriteSingleCoil(phEVCCRegEnable, u)
-	wb.log.TRACE.Printf("write charge enable (%d) %0X: %0 X", phEVCCRegEnable, u, b)
+	_, err := wb.conn.WriteSingleCoil(phEVCCRegEnable, u)
 
 	return err
 }
@@ -128,8 +124,7 @@ func (wb *PhoenixEVCC) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	b, err := wb.conn.WriteSingleRegister(phEVCCRegMaxCurrent, uint16(current))
-	wb.log.TRACE.Printf("write max current (%d) %0X: %0 X", phEVCCRegMaxCurrent, current, b)
+	_, err := wb.conn.WriteSingleRegister(phEVCCRegMaxCurrent, uint16(current))
 
 	return err
 }
