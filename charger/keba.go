@@ -19,7 +19,7 @@ import (
 
 const (
 	udpTimeout = time.Second
-	kebaPort   = "7090"
+	kebaPort   = 7090
 )
 
 // RFID contains access credentials
@@ -63,16 +63,14 @@ func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger
 
 	var err error
 	if keba.Instance == nil {
-		keba.Instance, err = keba.New(log, fmt.Sprintf(":%s", kebaPort))
+		keba.Instance, err = keba.New(log, fmt.Sprintf(":%d", kebaPort))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// add default port
-	if _, _, err = net.SplitHostPort(conn); err != nil {
-		conn = fmt.Sprintf("%s:%s", conn, kebaPort)
-	}
+	conn = util.DefaultPort(conn, kebaPort)
 
 	c := &Keba{
 		log:     log,

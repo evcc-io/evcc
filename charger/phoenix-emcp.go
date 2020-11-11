@@ -3,7 +3,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -50,10 +49,6 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if _, _, err := net.SplitHostPort(cc.URI); err != nil {
-		return nil, fmt.Errorf("missing or invalid phoenix uri: %s", cc.URI)
 	}
 
 	wb, err := NewPhoenixEMCP(cc.URI, cc.ID)

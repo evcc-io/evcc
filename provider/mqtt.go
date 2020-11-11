@@ -47,6 +47,8 @@ func NewMqttClient(
 	qos byte,
 ) *MqttClient {
 	log := util.NewLogger("mqtt")
+
+	broker = util.DefaultPort(broker, 1883)
 	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
 	mc := &MqttClient{

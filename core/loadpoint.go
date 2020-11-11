@@ -342,6 +342,12 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	_ = lp.bus.Subscribe(evChargeCurrent, lp.evChargeCurrentHandler)
 
 	// publish initial values
+	lp.publish("title", lp.Title)
+	lp.publish("minCurrent", lp.MinCurrent)
+	lp.publish("maxCurrent", lp.MaxCurrent)
+	lp.publish("phases", lp.Phases)
+	lp.publish("activePhases", lp.Phases)
+
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
@@ -411,8 +417,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.vehicle = vehicle
 	lp.socEstimator = wrapper.NewSocEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
-	lp.publish("socCapacity", lp.vehicle.Capacity())
 	lp.publish("socTitle", lp.vehicle.Title())
+	lp.publish("socCapacity", lp.vehicle.Capacity())
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
