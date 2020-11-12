@@ -94,9 +94,8 @@ func encode(v interface{}) (string, error) {
 		// must be before stringer to convert to seconds instead of string
 		s = fmt.Sprintf("%d", int64(val.Seconds()))
 	case float64:
-		s = fmt.Sprintf("%.3f", val)
+		s = fmt.Sprintf("%.5g", val)
 	default:
-		// s = fmt.Sprintf("%v", val)
 		if b, err := json.Marshal(v); err == nil {
 			s = string(b)
 		}
@@ -104,25 +103,20 @@ func encode(v interface{}) (string, error) {
 	return s, nil
 }
 
-func kv(i util.Param) string {
-	val, err := encode(i.Val)
+func kv(p util.Param) string {
+	val, err := encode(p.Val)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		panic(err)
 	}
 
-	return "\"" + i.Key + "\":" + val
-}
-
-// paramToJSON converts util.Param to JSON as expected by UI
-func paramToJSON(p util.Param) string {
 	var msg strings.Builder
-
-	msg.WriteString("{")
+	msg.WriteString("\"")
 	if p.LoadPoint != nil {
-		msg.WriteString(fmt.Sprintf("\"loadpoint\":%d,", *p.LoadPoint))
+		msg.WriteString(fmt.Sprintf("loadpoints.%d.", *p.LoadPoint))
 	}
-	msg.WriteString(kv(p))
-	msg.WriteString("}")
+	msg.WriteString(p.Key)
+	msg.WriteString("\":")
+	msg.WriteString(val)
 
 	return msg.String()
 }
@@ -130,19 +124,26 @@ func paramToJSON(p util.Param) string {
 func (h *SocketHub) welcome(client *SocketClient, params []util.Param) {
 	h.clients[client] = true
 
+	var msg strings.Builder
+	msg.WriteString("{")
 	for _, p := range params {
-		msg := paramToJSON(p)
-		select {
-		case client.send <- []byte(msg):
-		default:
-			close(client.send)
+		if msg.Len() > 1 {
+			msg.WriteString(",")
 		}
+		msg.WriteString(kv(p))
+	}
+	msg.WriteString("}")
+
+	select {
+	case client.send <- []byte(msg.String()):
+	default:
+		close(client.send)
 	}
 }
 
 func (h *SocketHub) broadcast(p util.Param) {
 	if len(h.clients) > 0 {
-		msg := paramToJSON(p)
+		msg := "{" + kv(p) + "}"
 
 		for client := range h.clients {
 			select {

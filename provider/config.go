@@ -184,7 +184,7 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 			res = NewCached(res, pc.Cache).StringGetter()
 		}
 	case "combined", "openwb":
-		res, err = openWBStatusFromConfig(config.Other)
+		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
 	default:
 		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}

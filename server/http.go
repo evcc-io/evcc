@@ -67,7 +67,6 @@ func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
 			"Version":    Version,
 			"Commit":     Commit,
 			"Configured": len(site.LoadPoints()),
-			"Tag":        time.Now().Unix(),
 		}); err != nil {
 			log.ERROR.Println("httpd: failed to render main page:", err.Error())
 		}
@@ -99,14 +98,6 @@ func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintln(w, "OK")
-	}
-}
-
-// ConfigHandler returns current charge mode
-func ConfigHandler(site core.SiteAPI) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := site.Configuration()
-		jsonResponse(w, r, res)
 	}
 }
 
@@ -259,9 +250,8 @@ type HTTPd struct {
 func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler(site)},
-		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
-		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
+		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
 		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},

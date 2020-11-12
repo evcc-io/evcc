@@ -49,7 +49,6 @@ type SEMP struct {
 
 // site is the minimal interface for accessing site methods
 type site interface {
-	Configuration() core.SiteConfiguration
 	LoadPoints() []core.LoadPointAPI
 }
 

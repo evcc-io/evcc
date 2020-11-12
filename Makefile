@@ -17,7 +17,6 @@ clean:
 install:
 	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
-	npm ci
 
 lint:
 	golangci-lint run
@@ -27,7 +26,9 @@ test:
 	go test ./...
 
 ui:
+	npm ci
 	npm run build
+	go generate main.go
 
 assets:
 	@echo "Generating embedded assets"

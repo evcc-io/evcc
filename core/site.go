@@ -109,106 +109,91 @@ func NewSite() *Site {
 	return lp
 }
 
-// SiteConfiguration contains the global site configuration
-type SiteConfiguration struct {
-	Title        string                   `json:"title"`
-	GridMeter    bool                     `json:"gridMeter"`
-	PVMeter      bool                     `json:"pvMeter"`
-	BatteryMeter bool                     `json:"batteryMeter"`
-	ConsumptionMeter bool                     `json:"consumptionMeter"`
-	LoadPoints   []LoadpointConfiguration `json:"loadpoints"`
-}
-
-// LoadpointConfiguration is the loadpoint feature structure
-type LoadpointConfiguration struct {
-	Mode        string `json:"mode"`
-	Title       string `json:"title"`
-	Phases      int64  `json:"phases"`
-	MinCurrent  int64  `json:"minCurrent"`
-	MaxCurrent  int64  `json:"maxCurrent"`
-	ChargeMeter bool   `json:"chargeMeter"`
-	SoC         bool   `json:"soc"`
-	SoCCapacity int64  `json:"socCapacity"`
-	SoCTitle    string `json:"socTitle"`
-	SoCLevels   []int  `json:"socLevels"`
-	TargetSoC   int    `json:"targetSoC"`
-}
-
-// Configuration returns meter configuration
-func (site *Site) Configuration() SiteConfiguration {
-	c := SiteConfiguration{
-		Title:        site.Title,
-		GridMeter:    site.gridMeter != nil,
-		PVMeter:      site.pvMeter != nil,
-		BatteryMeter: site.batteryMeter != nil,
-		ConsumptionMeter:	site.consumptionMeter != nil,
-	}
-
-	for _, lp := range site.loadpoints {
-		lpc := LoadpointConfiguration{
-			Mode:        string(lp.GetMode()),
-			Title:       lp.Name(),
-			Phases:      lp.Phases,
-			MinCurrent:  lp.MinCurrent,
-			MaxCurrent:  lp.MaxCurrent,
-			ChargeMeter: lp.HasChargeMeter(),
-		}
-
-		if lp.vehicle != nil {
-			lpc.SoC = true
-			lpc.SoCCapacity = lp.vehicle.Capacity()
-			lpc.SoCTitle = lp.vehicle.Title()
-			lpc.SoCLevels = lp.SoC.Levels
-			lpc.TargetSoC = lp.GetTargetSoC()
-		}
-
-		c.LoadPoints = append(c.LoadPoints, lpc)
-	}
-
-	return c
-}
-
-func logMeter(log *util.Logger, meter interface{}) {
+func meterCapabilities(name string, meter interface{}) string {
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)
 	_, currents := meter.(api.MeterCurrent)
 
-	log.INFO.Printf("    power %s", presence[power])
-	log.INFO.Printf("    energy %s", presence[energy])
-	log.INFO.Printf("    currents %s", presence[currents])
+	name += ":"
+	return fmt.Sprintf("    %-8s power %s energy %s currents %s",
+		name,
+		presence[power],
+		presence[energy],
+		presence[currents],
+	)
 }
 
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
-	site.log.INFO.Println("site config:")
-	site.log.INFO.Printf("  grid %s", presence[site.gridMeter != nil])
-	site.log.INFO.Printf("  pv %s", presence[site.pvMeter != nil])
-	site.log.INFO.Printf("  battery %s", presence[site.batteryMeter != nil])
-	site.log.INFO.Printf("  consumption %s", presence[site.consumptionMeter != nil])
+	site.publish("title", site.Title)
 
+	site.log.INFO.Println("site config:")
+	site.log.INFO.Printf("  meters:    grid %s pv %s battery %s consumption %s",
+		presence[site.gridMeter != nil],
+		presence[site.pvMeter != nil],
+		presence[site.batteryMeter != nil],
+		presence[site.consumptionMeter != nil],
+	)
+
+	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
-		site.log.INFO.Println("  grid meter config:")
-		logMeter(site.log, site.gridMeter)
+		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
+	}
+
+	site.publish("pvConfigured", site.pvMeter != nil)
+	if site.pvMeter != nil {
+		site.log.INFO.Println(meterCapabilities("pv", site.pvMeter))
+	}
+
+	site.publish("batteryConfigured", site.batteryMeter != nil)
+	if site.batteryMeter != nil {
+		_, ok := site.batteryMeter.(api.Battery)
+		site.log.INFO.Println(
+			meterCapabilities("battery", site.batteryMeter),
+			fmt.Sprintf("soc %s", presence[ok]),
+		)
+	}
+
+	site.publish("consumptionConfigured", site.consumptionMeter != nil)
+	if site.consumptionMeter != nil {
+		site.log.INFO.Println(meterCapabilities("consumption", site.consumptionMeter))
 	}
 
 	for i, lp := range site.loadpoints {
-		lp.log.INFO.Printf("loadpoint %d config:", i+1)
+		lp.log.INFO.Printf("loadpoint %d:", i+1)
 
-		lp.log.INFO.Printf("  vehicle %s", presence[lp.vehicle != nil])
-		lp.log.INFO.Printf("  charge %s", presence[lp.HasChargeMeter()])
-		if lp.HasChargeMeter() {
-			lp.log.INFO.Println("  charge meter config:")
-			logMeter(site.log, lp.chargeMeter)
-		}
+		lp.log.INFO.Printf("  mode:      %s", lp.GetMode())
 
 		charger := lp.handler.(*ChargerHandler).charger
+		_, power := charger.(api.Meter)
+		_, energy := charger.(api.MeterEnergy)
+		_, currents := charger.(api.MeterCurrent)
 		_, timer := charger.(api.ChargeTimer)
 
-		lp.log.INFO.Println("  charger config:")
-		logMeter(lp.log, charger)
-		lp.log.INFO.Printf("    timer %s", presence[timer])
+		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s timer %s",
+			presence[power],
+			presence[energy],
+			presence[currents],
+			presence[timer],
+		)
 
-		lp.log.INFO.Printf("  mode: %s", lp.GetMode())
+		lp.log.INFO.Printf("  meters:    charge %s", presence[lp.HasChargeMeter()])
+
+		lp.publish("chargeConfigured", lp.HasChargeMeter())
+		if lp.HasChargeMeter() {
+			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
+		}
+
+		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
+
+		for i, v := range lp.vehicles {
+			_, estimate := v.(api.ChargeFinishTimer)
+			_, status := v.(api.VehicleStatus)
+			_, climate := v.(api.Climater)
+			lp.log.INFO.Printf("    car %d:   estimate %s status %s climate %s",
+				i, presence[estimate], presence[status], presence[climate],
+			)
+		}
 	}
 }
 

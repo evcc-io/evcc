@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -42,14 +41,10 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 	go influx.Run(loadPoints, in)
 }
 
-func mqttClientID() string {
-	pid := rand.Int31()
-	return fmt.Sprintf("evcc-%d", pid)
-}
-
 // setup mqtt
 func configureMQTT(conf provider.MqttConfig) {
-	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, mqttClientID(), 1)
+	clientID := provider.MqttClientID()
+	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, clientID, 1)
 }
 
 // setup HEMS

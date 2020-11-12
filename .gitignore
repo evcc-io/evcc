@@ -11,4 +11,3 @@ linux-*.Dockerfile
 dist
 *.py
 node_modules
-server/assets.go
