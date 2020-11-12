@@ -167,7 +167,7 @@ func (site *Site) DumpConfig() {
 
 		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
-			lp.log.INFO.Printf(meterCapabilities("  charge", lp.chargeMeter))
+			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
 		}
 
 		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
