@@ -2,7 +2,6 @@ package semp
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -301,18 +300,6 @@ func (s *SEMP) deviceID(id int) string {
 	return fmt.Sprintf(sempLocalDevice, s.serialNumber(), id)
 }
 
-// cacheGet returns loadpoint value from cache
-func (s *SEMP) cacheGet(id int, key string) (res util.Param, err error) {
-	pid := util.Param{LoadPoint: &id, Key: key}
-
-	res = s.cache.Get(pid.UniqueID())
-	if res.Key == "" {
-		err = errors.New("not found")
-	}
-
-	return res, err
-}
-
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 	method := MethodEstimation
 	if lp.HasChargeMeter() {
@@ -351,19 +338,19 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 
 func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 	var chargePower float64
-	if chargePowerP, err := s.cacheGet(id, "chargePower"); err == nil {
+	if chargePowerP, err := s.cache.GetChecked(id, "chargePower"); err == nil {
 		chargePower = chargePowerP.Val.(float64)
 	}
 
 	isPV := false
-	if modeP, err := s.cacheGet(id, "mode"); err == nil {
+	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
 		if mode, ok := modeP.Val.(api.ChargeMode); ok && mode == api.ModePV {
 			isPV = true
 		}
 	}
 
 	status := StatusOff
-	if statusP, err := s.cacheGet(id, "charging"); err == nil {
+	if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
 		if statusP.Val.(bool) {
 			status = StatusOn
 		}
@@ -392,17 +379,17 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 
 func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
 	mode := api.ModeOff
-	if modeP, err := s.cacheGet(id, "mode"); err == nil {
+	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
 		mode = api.ChargeMode(modeP.Val.(string))
 	}
 
 	var charging bool
-	if chargingP, err := s.cacheGet(id, "charging"); err == nil {
+	if chargingP, err := s.cache.GetChecked(id, "charging"); err == nil {
 		charging = chargingP.Val.(bool)
 	}
 
 	chargeEstimate := time.Duration(-1)
-	if chargeEstimateP, err := s.cacheGet(id, "chargeEstimate"); err == nil {
+	if chargeEstimateP, err := s.cache.GetChecked(id, "chargeEstimate"); err == nil {
 		chargeEstimate = chargeEstimateP.Val.(time.Duration)
 	}
 
@@ -412,7 +399,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	var maxEnergy int
-	if chargeRemainingEnergyP, err := s.cacheGet(id, "chargeRemainingEnergy"); err == nil {
+	if chargeRemainingEnergyP, err := s.cache.GetChecked(id, "chargeRemainingEnergy"); err == nil {
 		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
 	}
 
