@@ -1,7 +1,3 @@
-<div align="center">
-<img src="docs/logo.png" width="400" />
-</div>
-
 # evcc
 
 [![Build Status](https://travis-ci.com/andig/evcc.svg?branch=master)](https://travis-ci.com/andig/evcc)
@@ -10,8 +6,7 @@
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
-
-EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). It supports integration with Sunny5 Hybrid-Inverters and pylontech battery storage.
+<img src="docs/logo.png" style="float: right" align="left" width="300" />EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). It supports integration with <b>[Sunny5 Hybrid-Inverters](https://www.sunny5.de)</b> and <b>Pylontech</b> battery storage.<br/>
 
 ## Features
 
