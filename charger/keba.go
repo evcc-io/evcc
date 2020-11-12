@@ -195,7 +195,7 @@ func (c *Keba) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
+	return kr.EnableUser == 1, nil
 }
 
 // enableRFID sends RFID credentials to enable charge
@@ -241,7 +241,7 @@ func (c *Keba) Enable(enable bool) error {
 	// ...and verify value
 	res, err := c.Enabled()
 	if err == nil && res != enable {
-		return fmt.Errorf("ena could not enable: %s", resp)
+		return fmt.Errorf("ena could not enable=%d: %s", enable, resp)
 	}
 
 	return err
