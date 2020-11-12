@@ -286,7 +286,6 @@ Vue.component('site', {
   mixins: [formatter],
   computed: {
     multi: function() {
-      console.log(this.state);
       return this.state.loadpoints.length > 1 || app.compact;
     },
   }
