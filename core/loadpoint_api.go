@@ -120,12 +120,8 @@ func (lp *LoadPoint) RemoteControl(source string, status RemoteDemand) {
 	// apply immediately
 	if lp.remoteStatus != status {
 		lp.remoteStatus = status
-		lp.publish("remoteDemand", status)
 
-		// set source if disabled
-		if status == RemoteEnable {
-			source = ""
-		}
+		lp.publish("remoteDisabled", status)
 		lp.publish("remoteDisabledSource", source)
 
 		lp.requestUpdate()
