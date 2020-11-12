@@ -527,7 +527,7 @@ func (lp *LoadPoint) detectPhases() {
 	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
 	lp.publish("chargeCurrents", currents)
 
-	if lp.GetCharging() {
+	if lp.charging {
 		var phases int64
 		for _, i := range currents {
 			if i >= minActiveCurrent {
@@ -691,7 +691,7 @@ func (lp *LoadPoint) publishSoC() {
 			lp.publish("socCharge", lp.socCharge)
 
 			chargeEstimate := time.Duration(-1)
-			if lp.GetCharging() {
+			if lp.charging {
 				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
 			}
 			lp.publish("chargeEstimate", chargeEstimate)
@@ -731,7 +731,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	}
 
 	lp.publish("connected", lp.connected())
-	lp.publish("charging", lp.GetCharging())
+	lp.publish("charging", lp.charging)
 
 	// update active vehicle and publish soc
 	// must be run after updating charger status to make sure

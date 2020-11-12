@@ -17,23 +17,22 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log  *util.Logger
-	site site
-	cp   ocpp16.ChargePoint
-
+	log           *util.Logger
+	cache         *util.Cache
+	site          site
+	cp            ocpp16.ChargePoint
 	configuration ConfigMap
 }
 
 // site is the minimal interface for accessing site methods
 type site interface {
-	Configuration() core.SiteConfiguration
 	LoadPoints() []core.LoadPointAPI
 }
 
 const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
-func New(conf map[string]interface{}, site site) (*OCPP, error) {
+func New(conf map[string]interface{}, site site, cache *util.Cache) (*OCPP, error) {
 	cc := struct {
 		URI       string
 		StationID string
@@ -60,6 +59,7 @@ func New(conf map[string]interface{}, site site) (*OCPP, error) {
 
 	s := &OCPP{
 		log:           log,
+		cache:         cache,
 		site:          site,
 		cp:            cp,
 		configuration: getDefaultConfig(),
@@ -85,12 +85,14 @@ func (s *OCPP) errorHandler(errC <-chan error) {
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	for {
-		for id, lp := range s.site.LoadPoints() {
+		for id := range s.site.LoadPoints() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable
-			if lp.GetCharging() {
-				status = ocppcore.ChargePointStatusCharging
+			if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
+				if statusP.Val.(bool) {
+					status = ocppcore.ChargePointStatusCharging
+				}
 			}
 
 			s.log.TRACE.Printf("send: lp-%d status: %+v", connector, status)
