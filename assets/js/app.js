@@ -82,38 +82,36 @@ let formatter = {
 // State
 //
 
+function setProperty(obj, props, value) {
+  const prop = props.shift()
+  if (!obj[prop]) {
+    Vue.set(obj, prop, {})
+  }
+
+  if (!props.length) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      obj[prop] = { ...obj[prop], ...value }
+    } else {
+      obj[prop] = value
+    }
+    return
+  }
+
+  setProperty(obj[prop], props, value)
+}
+
 let store = {
   state: {
-    availableVersion: null,
-    loadpoints: [],
+    loadpoints: [], // ensure array type
   },
   update: function(msg) {
-    let target = this.state;
-    if (msg.loadpoint !== undefined) {
-      while (this.state.loadpoints.length <= msg.loadpoint) {
-        this.state.loadpoints.push({});
-      }
-      target = this.state.loadpoints[msg.loadpoint];
-    }
-
     Object.keys(msg).forEach(function (k) {
       if (typeof toasts[k] === "function") {
         toasts[k]({message: msg[k]})
       } else {
-        Vue.set(target, k, msg[k]);
+        setProperty(store.state, k.split('.'), msg[k])
       }
     });
-  },
-  init: function() {
-    axios.get("config").then(function(msg) {
-      for (let i=0; i<msg.data.loadpoints.length; i++) {
-        let data = Object.assign(msg.data.loadpoints[i], { loadpoint: i });
-        this.update(data);
-      }
-
-      delete msg.data.loadpoints;
-      this.update(msg.data);
-    }.bind(this)).catch(toasts.error);
   }
 };
 
@@ -178,9 +176,32 @@ const app = new Vue({
   data: {
     compact: false,
   },
+  methods: {
+    connect: function() {
+      const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
+      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "ws";
+      const ws = new WebSocket(uri), self = this;
+      ws.onerror = function(evt) {
+        ws.close();
+      };
+      ws.onclose = function(evt) {
+        window.setTimeout(self.connect, 1000);
+      };
+      ws.onmessage = function(evt) {
+        try {
+          var msg = JSON.parse(evt.data);
+          store.update(msg);
+        }
+        catch (e) {
+          toasts.error(e, evt.data)
+        }
+      };
+    },
+  },
   created: function () {
     const urlParams = new URLSearchParams(window.location.search);
     this.compact = urlParams.get("compact");
+    this.connect(); // websocket listener
   },
 });
 
@@ -265,33 +286,9 @@ Vue.component('site', {
   mixins: [formatter],
   computed: {
     multi: function() {
+      console.log(this.state);
       return this.state.loadpoints.length > 1 || app.compact;
     },
-  },
-  methods: {
-    connect: function() {
-      const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "ws";
-      const ws = new WebSocket(uri), self = this;
-      ws.onerror = function(evt) {
-        ws.close();
-      };
-      ws.onclose = function(evt) {
-        window.setTimeout(self.connect, 1000);
-      };
-      ws.onmessage = function(evt) {
-        try {
-          var msg = JSON.parse(evt.data);
-          store.update(msg);
-        }
-        catch (e) {
-          toasts.error(e, evt.data)
-        }
-      };
-    },
-  },
-  created: function() {
-    this.connect();
   }
 });
 
@@ -424,5 +421,3 @@ Vue.component("soc", {
     }
   },
 });
-
-store.init();

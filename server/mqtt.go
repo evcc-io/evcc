@@ -40,7 +40,7 @@ func (m *MQTT) encode(v interface{}) string {
 	case fmt.Stringer, string:
 		s = fmt.Sprintf("%s", val)
 	case float64:
-		s = fmt.Sprintf("%.4g", val)
+		s = fmt.Sprintf("%.5g", val)
 	default:
 		s = fmt.Sprintf("%v", val)
 	}

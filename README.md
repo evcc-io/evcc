@@ -447,8 +447,7 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
-- `/api/config`: EVCC static configuration
-- `/api/state`: EVCC dynamic state
+- `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/mode`: global charge mode (writable)
 - `/api/targetsoc`: global target SoC (writable)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)

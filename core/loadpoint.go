@@ -352,6 +352,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
 	lp.publish("minSoC", lp.SoC.Min)
+	lp.publish("socLevels", lp.SoC.Levels)
 	lp.Unlock()
 
 	// prepare charger status
