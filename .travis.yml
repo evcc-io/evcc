@@ -27,8 +27,8 @@ script:
 # build
 - make
 - go mod tidy
-# ensure all changes are committed
-- test -z "$(git status --porcelain)" || (git status; git diff; false)
+# ensure all changes are committed; currently disabled using <true>
+- test -z "$(git status --porcelain)" || (git status; git diff; true)
 
 before_deploy:
 - curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | bash -s -- -b $GOPATH/bin
