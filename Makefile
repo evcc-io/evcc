@@ -28,6 +28,7 @@ test:
 ui:
 	npm ci
 	npm run build
+	go generate main.go
 
 assets:
 	@echo "Generating embedded assets"
