@@ -5,7 +5,6 @@ import "github.com/andig/evcc/api"
 // SiteAPI is the external site API
 type SiteAPI interface {
 	Healthy() bool
-	Configuration() SiteConfiguration
 	LoadPoints() []LoadPointAPI
 	LoadPointSettingsAPI
 }

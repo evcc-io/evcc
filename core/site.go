@@ -101,63 +101,6 @@ func NewSite() *Site {
 	return lp
 }
 
-// SiteConfiguration contains the global site configuration
-type SiteConfiguration struct {
-	Title        string                   `json:"title"`
-	GridMeter    bool                     `json:"gridMeter"`
-	PVMeter      bool                     `json:"pvMeter"`
-	BatteryMeter bool                     `json:"batteryMeter"`
-	LoadPoints   []LoadpointConfiguration `json:"loadpoints"`
-}
-
-// LoadpointConfiguration is the loadpoint feature structure
-type LoadpointConfiguration struct {
-	Mode        string `json:"mode"`
-	Title       string `json:"title"`
-	Phases      int64  `json:"phases"`
-	MinCurrent  int64  `json:"minCurrent"`
-	MaxCurrent  int64  `json:"maxCurrent"`
-	ChargeMeter bool   `json:"chargeMeter"`
-	SoC         bool   `json:"soc"`
-	SoCCapacity int64  `json:"socCapacity"`
-	SoCTitle    string `json:"socTitle"`
-	SoCLevels   []int  `json:"socLevels"`
-	TargetSoC   int    `json:"targetSoC"`
-}
-
-// Configuration returns meter configuration
-func (site *Site) Configuration() SiteConfiguration {
-	c := SiteConfiguration{
-		Title:        site.Title,
-		GridMeter:    site.gridMeter != nil,
-		PVMeter:      site.pvMeter != nil,
-		BatteryMeter: site.batteryMeter != nil,
-	}
-
-	for _, lp := range site.loadpoints {
-		lpc := LoadpointConfiguration{
-			Mode:        string(lp.GetMode()),
-			Title:       lp.Name(),
-			Phases:      lp.Phases,
-			MinCurrent:  lp.MinCurrent,
-			MaxCurrent:  lp.MaxCurrent,
-			ChargeMeter: lp.HasChargeMeter(),
-		}
-
-		if lp.vehicle != nil {
-			lpc.SoC = true
-			lpc.SoCCapacity = lp.vehicle.Capacity()
-			lpc.SoCTitle = lp.vehicle.Title()
-			lpc.SoCLevels = lp.SoC.Levels
-			lpc.TargetSoC = lp.GetTargetSoC()
-		}
-
-		c.LoadPoints = append(c.LoadPoints, lpc)
-	}
-
-	return c
-}
-
 func meterCapabilities(name string, meter interface{}) string {
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)

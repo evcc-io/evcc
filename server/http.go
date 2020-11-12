@@ -102,14 +102,6 @@ func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 	}
 }
 
-// ConfigHandler returns current charge mode
-func ConfigHandler(site core.SiteAPI) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := site.Configuration()
-		jsonResponse(w, r, res)
-	}
-}
-
 // TemplatesHandler returns current charge mode
 func TemplatesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -259,9 +251,8 @@ type HTTPd struct {
 func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
 	var routes = map[string]route{
 		"health":       {[]string{"GET"}, "/health", HealthHandler(site)},
-		"config":       {[]string{"GET"}, "/config", ConfigHandler(site)},
-		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
+		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
 		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
 		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
