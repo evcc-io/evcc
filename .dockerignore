@@ -5,6 +5,9 @@
 *.sh
 *.yaml
 Dockerfile
+.cache
+dist
+node_modules
 !entrypoint.sh
-!modules/**
 !evcc.dist.yaml
+!package*.json

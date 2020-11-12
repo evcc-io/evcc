@@ -51,6 +51,14 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.VehicleStatus); ok {
+		if status, err := v.Status(); err != nil {
+			fmt.Printf("Charge status: %v\n", err)
+		} else {
+			fmt.Printf("Charge status: %v\n", status)
+		}
+	}
+
 	if v, ok := v.(api.ChargeTimer); ok {
 		if duration, err := v.ChargingTime(); err != nil {
 			fmt.Printf("Duration: %v\n", err)

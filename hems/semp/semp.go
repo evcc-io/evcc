@@ -328,7 +328,7 @@ func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 			DeviceName:   lp.Name(),
 			DeviceType:   sempCharger,
 			DeviceSerial: fmt.Sprintf(sempSerialNumber, s.serialNumber(), id),
-			DeviceVendor: "github.com/andig/evcc",
+			DeviceVendor: "github.com/mark-sch/evcc",
 		},
 		Capabilities: Capabilities{
 			CurrentPowerMethod:   method,

@@ -24,10 +24,13 @@ func (m *embed) Capacity() int64 {
 	return m.capacity
 }
 
+//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.VehicleStatus,Status,func() (api.ChargeStatus, error)"
+
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
 	chargeG func() (float64, error)
+	statusG func() (string, error)
 }
 
 func init() {
@@ -40,6 +43,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Title    string
 		Capacity int64
 		Charge   provider.Config
+		Status   *provider.Config
 		Cache    time.Duration
 	}{}
 
@@ -67,10 +71,35 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		chargeG: getter,
 	}
 
-	return v, nil
+	// decorate vehicle with BatterySoC
+	// decorate vehicle with Status
+	var status func() (api.ChargeStatus, error)
+	if cc.Status != nil {
+		v.statusG, err = provider.NewStringGetterFromConfig(*cc.Status)
+		if err != nil {
+			return nil, err
+		}
+		status = v.status
+	}
+
+	res := decorateVehicle(v, status)
+
+	return res, nil
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (m *Vehicle) ChargeState() (float64, error) {
 	return m.chargeG()
+}
+
+// ChargeState implements the Vehicle.ChargeState interface
+func (m *Vehicle) status() (api.ChargeStatus, error) {
+	status := api.StatusF
+
+	statusS, err := m.statusG()
+	if err == nil {
+		status = api.ChargeStatus(statusS)
+	}
+
+	return status, err
 }

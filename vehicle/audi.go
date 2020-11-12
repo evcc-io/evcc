@@ -11,6 +11,7 @@ import (
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/util"
 	"github.com/mark-sch/evcc/util/request"
+	"github.com/mark-sch/evcc/vehicle/oidc"
 	"github.com/mark-sch/evcc/vehicle/vw"
 	"golang.org/x/net/publicsuffix"
 )
@@ -22,7 +23,7 @@ type Audi struct {
 	*embed
 	*request.Helper
 	user, password     string
-	tokens             vw.Tokens
+	tokens             oidc.Tokens
 	api                *vw.API
 	*vw.Implementation // provides the api implementations
 }
@@ -83,60 +84,30 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 func (v *Audi) authFlow() error {
-	var err error
-	var uri string
 	var req *http.Request
-	var resp *http.Response
-	var tokens vw.Tokens
 
 	const clientID = "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"
 	const redirectURI = "myaudi:///"
 
 	query := url.Values(map[string][]string{
-		"response_type": {"code"},
+		"response_type": {"id_token token"},
 		"client_id":     {clientID},
 		"redirect_uri":  {redirectURI},
-		"scope":         {"address profile badge birthdate birthplace nationalIdentifier nationality profession email vin phone nickname name picture mbb gallery openid"},
-		"state":         {"7f8260b5-682f-4db8-b171-50a5189a1c08"},
-		"nonce":         {"7f8260b5-682f-4db8-b171-50a5189a1c08"},
+		"scope":         {"openid profile mbb vin badge birthdate nickname email address phone name picture"},
+		"state":         {vw.RandomString(43)},
+		"nonce":         {vw.RandomString(43)},
 		"prompt":        {"login"},
 		"ui_locales":    {"de-DE"},
 	})
 
-	uri = "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
-	if err == nil {
-		identity := &vw.Identity{Client: v.Client}
-		resp, err = identity.Login(uri, v.user, v.password)
-	}
-
-	if err == nil {
-		var code string
-		if location, err := url.Parse(resp.Header.Get("Location")); err == nil {
-			code = location.Query().Get("code")
-		}
-
-		data := url.Values(map[string][]string{
-			"client_id":     {clientID},
-			"grant_type":    {"authorization_code"},
-			"code":          {code},
-			"redirect_uri":  {redirectURI},
-			"response_type": {"token id_token"},
-		})
-
-		uri = "https://app-api.my.audi.com/myaudiappidk/v1/token"
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-		if err == nil {
-			if err = v.DoJSON(req, &tokens); err == nil && tokens.IDToken == "" {
-				err = errors.New("missing id token (1)")
-			}
-		}
-	}
+	identity := &vw.Identity{Client: v.Client}
+	idToken, err := identity.Login(query, v.user, v.password)
 
 	if err == nil {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {tokens.IDToken},
+			"token":      {idToken},
 		})
 
 		req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
@@ -144,8 +115,8 @@ func (v *Audi) authFlow() error {
 			"X-Client-Id":  audiClientID,
 		})
 		if err == nil {
-			if err = v.DoJSON(req, &v.tokens); err == nil && tokens.IDToken == "" {
-				err = errors.New("missing id token (2)")
+			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
+				err = errors.New("missing access token")
 			}
 		}
 	}

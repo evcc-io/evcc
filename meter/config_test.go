@@ -18,7 +18,7 @@ func TestMeters(t *testing.T) {
 	for _, tmpl := range test.ConfigTemplates("meter") {
 		_, err := NewFromConfig(tmpl.Type, tmpl.Config)
 		if err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("%s", tmpl.Name)
+			t.Logf("%s: %+v", tmpl.Name, tmpl.Config)
 			t.Error(err)
 		}
 	}

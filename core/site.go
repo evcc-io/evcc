@@ -34,6 +34,7 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig // Meter references
 	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
+	count 		  int
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -92,6 +93,7 @@ func NewSiteFromConfig(
 	if site.Meters.ConsumptionMeterRef != "" {
 		site.consumptionMeter = cp.Meter(site.Meters.ConsumptionMeterRef)
 	}
+	site.count = 0
 
 	return site, nil
 }
@@ -99,7 +101,7 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("core"),
+		log:     util.NewLogger("site"),
 		Health:  NewHealth(60 * time.Second),
 		Voltage: 230, // V
 	}
@@ -205,6 +207,8 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Println("  charger config:")
 		logMeter(lp.log, charger)
 		lp.log.INFO.Printf("    timer %s", presence[timer])
+
+		lp.log.INFO.Printf("  mode: %s", lp.GetMode())
 	}
 }
 
@@ -268,7 +272,7 @@ func (site *Site) updateMeters() error {
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
-			site.log.TRACE.Printf("grid currents: %vA", []float64{i1, i2, i3})
+			site.log.TRACE.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		}
 	}
@@ -315,10 +319,12 @@ func (site *Site) sitePower() (float64, error) {
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
-	if sitePower, err := site.sitePower(); err == nil {
+	if sitePower, err := site.sitePower(); err == nil && site.count > 15 {
 		lp.Update(sitePower)
 		site.Health.Update()
+		site.count=0
 	}
+	site.count+=1
 }
 
 // Prepare attaches communication channels to site and loadpoints

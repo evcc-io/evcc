@@ -4,7 +4,7 @@
 
 # evcc
 
-[![Build Status](https://travis-ci.org/andig/evcc.svg?branch=master)](https://travis-ci.org/andig/evcc)
+[![Build Status](https://travis-ci.com/andig/evcc.svg?branch=master)](https://travis-ci.com/andig/evcc)
 [![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
 [![Latest Version](https://img.shields.io/github/tag/andig/evcc.svg)](https://github.com/mark-sch/evcc/releases)
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
@@ -18,7 +18,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
-- different [vehicles](#vehicle) to show battery status: Audi (eTron), BMW (i3), Tesla, Nissan (Leaf), Renault ZE (ZOE, ...), and any other vehicle using scripting
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen and any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -101,7 +101,7 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 docker run --network host andig/evcc ...
 ```
 
-To build EVCC from source, [Go](2) 1.13 is required:
+To build EVCC from source, [Go](2) 1.13 and [Node](3) 14 are required:
 
     make
 
@@ -199,7 +199,7 @@ KEBA chargers require UDP function to be enabled with DIP switch 1.3 = `ON`, see
 
 Meters provide data about power and energy consumption or PV production. Available meter implementations are:
 
-- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use.
+- `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
 - `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
 - `tesla`: Tesla PowerWall meter. Use `usage` setting to choose internal meter (grid: `site`, pv: `solar`, battery: `battery`).
 - `default`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
@@ -210,16 +210,18 @@ Configuration examples are documented at [andig/evcc-config#meters](https://gith
 
 Vehicle represents a specific EV vehicle and its battery. If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 
-Available vehicle implementations are:
+Available vehicle remote interface implementations are:
 
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
+- `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Bluelink vehicles like Soul 2019)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
+- `vw`: Volkswagen (eGolf, eUp, ID.3, ID.4)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -383,7 +385,7 @@ timeout: 5s
 
 ### HTTP (read/write)
 
-The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries.
+The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries for REST apis.
 
 Sample read configuration:
 
@@ -478,12 +480,13 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 
 - typed language with ability for systematic testing - achieved by using [Go](2)
 - structured configuration - supports YAML-based [config file](evcc.dist.yaml)
-- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](3)
-- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](4)
+- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
+- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
 - support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
-[3]: https://getbootstrap.org
-[4]: https://hub.docker.com/repository/docker/andig/evcc
-[5]: https://github.com/volkszaehler/mbmd
+[3]: https://nodejs.org
+[4]: https://getbootstrap.org
+[5]: https://hub.docker.com/repository/docker/andig/evcc
+[6]: https://github.com/volkszaehler/mbmd

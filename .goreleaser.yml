@@ -4,7 +4,7 @@ release:
     name: evcc
 before:
   hooks:
-    - make assets
+  - make assets
 builds:
 - id: evcc
   main: main.go
@@ -24,16 +24,18 @@ builds:
   goarm:
   - "6"
 archives:
-  - builds:
-    - evcc
-    replacements:
-      amd64: 64-bit
-      386: 32-bit
-      darwin: macOS
-    format: tar.gz
-    format_overrides:
-    - goos: windows
-      format: zip
+- builds:
+  - evcc
+  replacements:
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
+  format: tar.gz
+  format_overrides:
+  - goos: windows
+    format: zip
+  files:
+  - evcc.dist.yaml
 checksum:
   name_template: 'checksums.txt'
 snapshot:

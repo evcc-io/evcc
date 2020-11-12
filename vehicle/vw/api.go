@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/mark-sch/evcc/util/request"
+	"github.com/mark-sch/evcc/vehicle/oidc"
 )
 
 // BaseURI is the VW api base URI
@@ -39,6 +40,12 @@ type ChargerResponse struct {
 			BatteryStatusData struct {
 				StateOfCharge         TimedInt
 				RemainingChargingTime TimedInt
+			}
+			ChargingStatusData struct {
+				ChargingState TimedString
+			}
+			PlugStatusData struct {
+				PlugState TimedString
 			}
 		}
 	}
@@ -75,7 +82,7 @@ func Temp2Float(val int) float64 {
 // API is the VW api client
 type API struct {
 	*request.Helper
-	tokens         *Tokens
+	tokens         *oidc.Tokens
 	authFlow       func() error
 	refreshHeaders func() map[string]string
 	brand, country string
@@ -84,7 +91,7 @@ type API struct {
 
 // NewAPI creates a new api client
 func NewAPI(
-	helper *request.Helper, tokens *Tokens,
+	helper *request.Helper, tokens *oidc.Tokens,
 	authFlow func() error, refreshHeaders func() map[string]string,
 	vin, brand, country string,
 ) *API {
@@ -114,7 +121,7 @@ func (v *API) refreshToken() error {
 	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), v.refreshHeaders())
 
 	if err == nil {
-		var tokens Tokens
+		var tokens oidc.Tokens
 
 		err = v.DoJSON(req, &tokens)
 		if err == nil {

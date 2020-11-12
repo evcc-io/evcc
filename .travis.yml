@@ -15,7 +15,7 @@ notifications:
 
 env:
   global:
-    - PATH=$HOME/gopath/bin:$PATH
+  - PATH=$HOME/gopath/bin:$PATH
 
 before_install:
 # Install linters and misspell

@@ -52,13 +52,13 @@ func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
-		indexTemplate, err := FSString(useLocal, "/index.html")
+		indexTemplate, err := FSString(useLocal, "/dist/index.html")
 		if err != nil {
 			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
 			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
 		}
 
-		t, err := template.New("evcc").Delims("<<", ">>").Parse(indexTemplate)
+		t, err := template.New("evcc").Delims("[[", "]]").Parse(indexTemplate)
 		if err != nil {
 			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
 		}
@@ -280,10 +280,11 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	static.Use(handlers.CompressHandler)
 
 	static.HandleFunc("/", indexHandler(site, useLocalAssets))
-	for _, folder := range []string{"js", "css", "webfonts", "ico"} {
-		prefix := fmt.Sprintf("/%s/", folder)
-		static.PathPrefix(prefix).Handler(http.StripPrefix(prefix, http.FileServer(Dir(useLocalAssets, prefix))))
+	var distDir = Dir(false, "/dist/")
+	if useLocalAssets {
+		distDir = http.Dir("./dist")
 	}
+	static.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", http.FileServer(distDir)))
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()

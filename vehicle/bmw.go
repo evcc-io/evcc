@@ -77,7 +77,7 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	return v, nil
+	return v, err
 }
 
 func (v *BMW) login(user, password string) error {
@@ -141,18 +141,18 @@ func (v *BMW) request(uri string) (*http.Request, error) {
 
 // vehicles implements returns the list of user vehicles
 func (v *BMW) vehicles() ([]string, error) {
-	var br bmwVehiclesResponse
+	var resp bmwVehiclesResponse
 	uri := fmt.Sprintf("%s/me/vehicles/v2/", bmwAPI)
 
 	var vehicles []string
 
 	req, err := v.request(uri)
 	if err == nil {
-		err = v.DoJSON(req, &br)
+		err = v.DoJSON(req, &resp)
 	}
 
 	if err == nil {
-		for _, v := range br {
+		for _, v := range resp {
 			vehicles = append(vehicles, v.VIN)
 		}
 	}
@@ -162,7 +162,7 @@ func (v *BMW) vehicles() ([]string, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *BMW) chargeState() (float64, error) {
-	var br bmwDynamicResponse
+	var resp bmwDynamicResponse
 	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
 
 	req, err := v.request(uri)
@@ -170,8 +170,8 @@ func (v *BMW) chargeState() (float64, error) {
 		return 0, err
 	}
 
-	err = v.DoJSON(req, &br)
-	return br.AttributesMap.ChargingLevelHv, err
+	err = v.DoJSON(req, &resp)
+	return resp.AttributesMap.ChargingLevelHv, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface

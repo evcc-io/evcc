@@ -1,11 +1,14 @@
-// axios setup with test fallback
-const loc = window.location.href.indexOf("http://localhost/evcc/assets/") === 0 ? {
-  protocol: "http:",
-  hostname: "localhost",
-  port: "7070",
-} : window.location;
+import $ from "jquery";
+import "popper.js"
+import "bootstrap"
+import Vue from "vue"
+import VueRouter from "vue-router"
+import axios from "axios"
 
-axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/api";
+Vue.use(VueRouter)
+
+const loc = window.location;
+axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 //
@@ -129,7 +132,7 @@ window.setInterval(function() {
 // App & Routing
 //
 
-const main = Vue.component('main', {
+const main = Vue.component('Main', {
   template: '#main-template',
   data: function() {
     return {
@@ -139,7 +142,7 @@ const main = Vue.component('main', {
   methods: {
     configured: function (val) {
       // for development purposes
-      if (val == '<<.Configured>>') {
+      if (val == '[[.Configured]]') {
         return true;
       }
       if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
@@ -247,7 +250,7 @@ Vue.component('version', {
   },
   watch: {
     "state.availableVersion": function () {
-      if (this.installed != "<<.Version>>" && // go template parsed?
+      if (this.installed != "[[.Version]]" && // go template parsed?
         this.installed != "0.0.1-alpha" && // make used?
         this.state.availableVersion != this.installed) {
         $(this.$refs.bar).collapse("show");
@@ -268,7 +271,7 @@ Vue.component('site', {
   methods: {
     connect: function() {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + "/ws";
+      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "ws";
       const ws = new WebSocket(uri), self = this;
       ws.onerror = function(evt) {
         ws.close();
@@ -349,7 +352,9 @@ Vue.component("loadpoint-details", {
   mixins: [formatter],
   computed: {
     minSoCActive: function () {
-      return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+      return this.state.connected && (
+        this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC
+      )
     }
   }
 });
@@ -385,6 +390,9 @@ Vue.component("vehicle", {
     },
     minSoCActive: function () {
       return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+    },
+    minSoCRemainingDisplayWidth: function () {
+      return this.state.minSoC - this.state.socCharge;
     }
   }
 });
