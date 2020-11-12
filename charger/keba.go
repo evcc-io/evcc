@@ -238,6 +238,8 @@ func (c *Keba) Enable(enable bool) error {
 	var resp string
 	_ = c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp)
 
+	time.Sleep(2 * time.Second)
+
 	// ...and verify value
 	res, err := c.Enabled()
 	if err == nil && res != enable {
