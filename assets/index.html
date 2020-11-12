@@ -176,14 +176,14 @@ loadpoints:
   </div>
 
   <loadpoint v-for="(loadpoint,id) in state.loadpoints"
-    v-bind:id="id" :state="loadpoint" :pv="state.gridMeter" :multi="multi">
+    v-bind:id="id" :key="id" :state="loadpoint" :pv="state.gridConfigured" :multi="multi">
   </loadpoint>
 </div>
 </script>
 
 <script type="text/x-template" id="site-details-template">
 <div class="row">
-  <div class="col-6 col-md-3 mt-3" v-if="state.gridMeter">
+  <div class="col-6 col-md-3 mt-3" v-if="state.gridConfigured">
     <div class="mb-2 value" v-if="state.gridPower > 0">
       Bezug <i class="text-primary fas fa-arrow-down"></i>
     </div>
@@ -194,7 +194,7 @@ loadpoints:
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
     </h2>
   </div>
-  <div class="col-6 col-md-3 mt-3" v-if="state.pvMeter">
+  <div class="col-6 col-md-3 mt-3" v-if="state.pvConfigured">
     <div class="mb-2 value">
       Erzeugung <i class="fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i>
     </div>
@@ -202,7 +202,7 @@ loadpoints:
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
     </h2>
   </div>
-  <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryMeter">
+  <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryConfigured">
     <div class="mb-2 value">Batterie
       <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
     </div>
@@ -407,23 +407,22 @@ loadpoints:
       <div class="col-md-4"></div>
       <div class="col-6 col-md-2 py-3">
         Netzzähler:
-        <span class="text-primary" v-if="state.gridMeter">✓</span>
+        <span class="text-primary" v-if="state.gridConfigured">✓</span>
         <span class="text-primary" v-else>&mdash;</span>
       </div>
       <div class="col-6 col-md-2 py-3">
         PV Zähler:
-        <span class="text-primary" v-if="state.pvMeter">✓</span>
+        <span class="text-primary" v-if="state.pvConfigured">✓</span>
         <span class="text-primary" v-else>&mdash;</span>
       </div>
       <div class="col-6 col-md-2 py-3">
         Batteriezähler:
-        <span class="text-primary" v-if="state.batteryMeter">✓</span>
+        <span class="text-primary" v-if="state.batteryConfigured">✓</span>
         <span class="text-primary" v-else>&mdash;</span>
       </div>
     </div>
 
     <div v-for="(loadpoint,id) in state.loadpoints" v-bind:loadpoint="loadpoint" :id="'loadpoint-'+id">
-
       <div class="row mt-4 border-bottom">
         <div class="col-12">
           <p class="h1">{{loadpoint.title||"Ladepunkt"}}</p>
@@ -434,7 +433,7 @@ loadpoints:
         <div class="col-md-4"></div>
         <div class="col-6 col-md-2 py-3">
           Ladezähler:
-          <span class="text-primary" v-if="loadpoint.chargeMeter">✓</span>
+          <span class="text-primary" v-if="loadpoint.chargeConfigured">✓</span>
           <span class="text-primary" v-else>&mdash;</span>
         </div>
         <div class="col-6 col-md-2 py-3">
