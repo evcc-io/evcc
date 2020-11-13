@@ -214,11 +214,11 @@ func (c *Keba) enableRFID() error {
 	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
 		return err
 	}
-	if resp == keba.OK {
-		return nil
+	if resp != keba.OK {
+		return fmt.Errorf("start %s unexpected response: %s", c.rfid.Tag, resp)
 	}
 
-	return fmt.Errorf("start unexpected response: %s", resp)
+	return nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -236,41 +236,29 @@ func (c *Keba) Enable(enable bool) error {
 
 	// ignore result...
 	var resp string
-	_ = c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp)
-
-	// ...and verify value
-	res, err := c.Enabled()
-	if err == nil && res != enable {
-		return fmt.Errorf("ena could not enable: %s", resp)
+	if err := c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp); err != nil {
+		return err
+	}
+	if resp != keba.OK {
+		return fmt.Errorf("ena %d unexpected response: %s", d, resp)
 	}
 
-	return err
-}
-
-// actualCurrent returns the actual current
-func (c *Keba) actualCurrent() (int64, error) {
-	var kr keba.Report2
-	err := c.roundtrip("report 2", 2, &kr)
-	if err != nil {
-		return 0, err
-	}
-
-	return int64(kr.Curruser) / 1000, nil
+	return nil
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *Keba) MaxCurrent(current int64) error {
-	// ignore result...
-	var resp string
-	_ = c.roundtrip(fmt.Sprintf("curr %d", 1000*current), 0, &resp)
+	d := 1000 * current
 
-	// ...and verify value
-	res, err := c.actualCurrent()
-	if err == nil && res != current {
-		return fmt.Errorf("curr could not set: %s", resp)
+	var resp string
+	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
+		return err
+	}
+	if resp != keba.OK {
+		return fmt.Errorf("curr %d unexpected response: %s", d, resp)
 	}
 
-	return err
+	return nil
 }
 
 // CurrentPower implements the Meter interface
