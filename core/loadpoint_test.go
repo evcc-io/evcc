@@ -633,7 +633,7 @@ func TestTargetSoC(t *testing.T) {
 		{vhc, 80, 0, false},    // target not reached
 		{vhc, 80, 80, true},    // target reached
 		{vhc, 80, 100, true},   // target reached
-		{vhc, 100, 100, false}, // target reached
+		{vhc, 100, 100, false}, // target reached, let ev control deactivation
 	}
 
 	for _, tc := range tc {
