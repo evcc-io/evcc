@@ -195,7 +195,7 @@ func (c *Keba) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return kr.EnableUser == 1, nil
+	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
 }
 
 // enableRFID sends RFID credentials to enable charge
