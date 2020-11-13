@@ -215,7 +215,7 @@ func (c *Keba) enableRFID() error {
 		return err
 	}
 	if resp != keba.OK {
-		return fmt.Errorf("start unexpected response: %s", resp)
+		return fmt.Errorf("start %s unexpected response: %s", c.rfid.Tag, resp)
 	}
 
 	return nil
