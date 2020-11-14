@@ -29,6 +29,7 @@ require (
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.0-20191105050749-2e1c40ed0b5d
+	github.com/korylprince/ipnetgen v0.0.0-20160712025547-34a2abb431f4
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/lorenzodonini/ocpp-go v0.12.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
