@@ -90,13 +90,13 @@ func (v *VW) authFlow() error {
 	const redirectURI = "carnet://identity-kit/login"
 
 	query := url.Values(map[string][]string{
-		"response_type":         {"id_token token"},
-		"client_id":             {clientID},
-		"redirect_uri":          {redirectURI},
-		"scope":                 {"openid profile mbb cars birthdate nickname address phone"},
-		"state":                 {vw.RandomString(43)},
-		"nonce":                 {vw.RandomString(43)},
-		"prompt":                {"login"},
+		"response_type": {"id_token token"},
+		"client_id":     {clientID},
+		"redirect_uri":  {redirectURI},
+		"scope":         {"openid profile mbb cars birthdate nickname address phone"},
+		"state":         {vw.RandomString(43)},
+		"nonce":         {vw.RandomString(43)},
+		"prompt":        {"login"},
 	})
 
 	identity := &vw.Identity{Client: v.Client}
@@ -163,4 +163,23 @@ func (v *VW) refreshHeaders() map[string]string {
 		"Content-Type": "application/x-www-form-urlencoded",
 		"X-Client-Id":  v.clientID,
 	}
+}
+
+// Logout closes the vehicle session
+func (v *VW) Close() error {
+	data := url.Values(map[string][]string{
+		"token_type_hint": {"refresh_token"},
+		"token":           {v.tokens.RefreshToken},
+	})
+
+	req, err := request.New(http.MethodPost, vw.OauthRevokeURI, strings.NewReader(data.Encode()), map[string]string{
+		"Content-type": "application/x-www-form-urlencoded",
+		"X-Client-Id":  v.clientID,
+	})
+
+	if err == nil {
+		_, err = v.Do(req)
+	}
+
+	return err
 }
