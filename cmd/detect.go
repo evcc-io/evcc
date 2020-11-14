@@ -96,23 +96,6 @@ func worker(tasks <-chan net.IP) {
 func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
-	ips := semp.LocalIPs()
-	if len(ips) == 0 {
-		log.FATAL.Fatal("could not find ip")
-	}
-
-	ip := ips[0]
-	log.INFO.Println("my ip:", ip.IP)
-
-	// subnet := ip.String()
-	subnet := "192.168.0.201/24"
-	log.INFO.Println("subnet:", subnet)
-
-	gen, err := ipnetgen.New(subnet)
-	if err != nil {
-		log.FATAL.Fatal("could not create iterator")
-	}
-
 	tasks := make(chan net.IP)
 
 	var wg sync.WaitGroup
@@ -124,12 +107,33 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}()
 	}
 
-	tasks <- net.ParseIP("127.0.0.1")
-
-	for ip := gen.Next(); ip != nil; ip = gen.Next() {
-		tasks <- ip
+	ips := semp.LocalIPs()
+	if len(ips) == 0 {
+		log.FATAL.Fatal("could not find ip")
 	}
 
+	log.INFO.Println("my ip:", ips[0].IP)
+
+	for _, ip := range ips {
+		subnet := ip.String()
+
+		if bits, _ := ip.Mask.Size(); bits < 24 {
+			log.INFO.Println("skipping large subnet:", subnet)
+			continue
+		}
+
+		log.INFO.Println("subnet:", subnet)
+
+		gen, err := ipnetgen.New(subnet)
+		if err != nil {
+			log.FATAL.Fatal("could not create iterator")
+		}
+
+		// tasks <- net.ParseIP("127.0.0.1")
+		for ip := gen.Next(); ip != nil; ip = gen.Next() {
+			tasks <- ip
+		}
+	}
 	close(tasks)
 
 	wg.Wait()
