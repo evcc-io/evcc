@@ -88,6 +88,15 @@ func init() {
 			"port": 1883,
 		},
 	})
+
+	taskList.Add(Task{
+		ID:      "mqtt",
+		Type:    "mqtt",
+		Depends: "tcp_1883",
+		Config: map[string]interface{}{
+			"topic": "openWB",
+		},
+	})
 }
 
 func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
@@ -113,7 +122,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
 	tasks := make(chan net.IP)
-	wg := workers(20, tasks)
+	wg := workers(50, tasks)
 
 	ips := semp.LocalIPs()
 	if len(ips) == 0 {
