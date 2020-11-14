@@ -3,6 +3,7 @@ package cmd
 import (
 	"net"
 	"sync"
+	"time"
 
 	"github.com/andig/evcc/hems/semp"
 	"github.com/andig/evcc/util"
@@ -34,6 +35,10 @@ func init() {
 	taskList = append(taskList, Task{
 		ID:   "ping",
 		Type: "ping",
+		Config: map[string]interface{}{
+			"count":   3,
+			"timeout": time.Second,
+		},
 	})
 
 	taskList = append(taskList, Task{
@@ -87,6 +92,19 @@ func init() {
 	taskList = taskList.Sorted()
 }
 
+func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
+	var wg sync.WaitGroup
+	for i := 0; i < num; i++ {
+		wg.Add(1)
+		go func() {
+			worker(tasks)
+			wg.Done()
+		}()
+	}
+
+	return &wg
+}
+
 func worker(tasks <-chan net.IP) {
 	for ip := range tasks {
 		taskList.Test(ip)
@@ -97,20 +115,14 @@ func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
 	tasks := make(chan net.IP)
-
-	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			worker(tasks)
-			wg.Done()
-		}()
-	}
+	wg := workers(50, tasks)
 
 	ips := semp.LocalIPs()
 	if len(ips) == 0 {
 		log.FATAL.Fatal("could not find ip")
 	}
+
+	log.INFO.Println(ips)
 
 	log.INFO.Println("my ip:", ips[0].IP)
 
