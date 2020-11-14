@@ -15,7 +15,7 @@ func init() {
 
 func TcpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := TcpHandler{
-		Timeout: 100 * time.Millisecond,
+		Timeout: timeout,
 	}
 	err := util.DecodeOther(conf, &handler)
 

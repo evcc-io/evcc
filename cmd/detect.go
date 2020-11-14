@@ -28,20 +28,20 @@ type Task struct {
 	Config   map[string]interface{}
 }
 
-var taskList TaskList
-var registry TaskHandlerRegistry = make(map[string]func(map[string]interface{}) (TaskHandler, error))
+const timeout = 100 * time.Millisecond
+
+var (
+	taskList                     = &TaskList{}
+	registry TaskHandlerRegistry = make(map[string]func(map[string]interface{}) (TaskHandler, error))
+)
 
 func init() {
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:   "ping",
 		Type: "ping",
-		Config: map[string]interface{}{
-			"count":   3,
-			"timeout": time.Second,
-		},
 	})
 
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:      "tcp_502",
 		Type:    "tcp",
 		Depends: "ping",
@@ -50,7 +50,7 @@ func init() {
 		},
 	})
 
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:      "modbus_common",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -60,7 +60,7 @@ func init() {
 		},
 	})
 
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:      "modbus_sma",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -70,7 +70,7 @@ func init() {
 		},
 	})
 
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:      "modbus_kostal",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -80,7 +80,7 @@ func init() {
 		},
 	})
 
-	taskList = append(taskList, Task{
+	taskList.Add(Task{
 		ID:      "tcp_1883",
 		Type:    "tcp",
 		Depends: "ping",
@@ -88,8 +88,6 @@ func init() {
 			"port": 1883,
 		},
 	})
-
-	taskList = taskList.Sorted()
 }
 
 func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
@@ -115,17 +113,16 @@ func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
 	tasks := make(chan net.IP)
-	wg := workers(50, tasks)
+	wg := workers(20, tasks)
 
 	ips := semp.LocalIPs()
 	if len(ips) == 0 {
 		log.FATAL.Fatal("could not find ip")
 	}
 
-	log.INFO.Println(ips)
-
 	log.INFO.Println("my ip:", ips[0].IP)
 
+	tasks <- net.ParseIP("127.0.0.1")
 	for _, ip := range ips {
 		subnet := ip.String()
 
@@ -141,7 +138,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal("could not create iterator")
 		}
 
-		// tasks <- net.ParseIP("127.0.0.1")
 		for ip := gen.Next(); ip != nil; ip = gen.Next() {
 			tasks <- ip
 		}

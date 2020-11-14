@@ -14,7 +14,8 @@ func init() {
 
 func PingHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := PingHandler{
-		Timeout: 100 * time.Millisecond,
+		Count:   1,
+		Timeout: timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)
