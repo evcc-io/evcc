@@ -47,7 +47,7 @@ require (
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
+	github.com/volkszaehler/mbmd v0.0.0-20201115202927-ff826598e117
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
