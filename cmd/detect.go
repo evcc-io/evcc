@@ -74,6 +74,35 @@ func init() {
 			"topic": "openWB",
 		},
 	})
+
+	taskList.Add(Task{
+		ID:      "tcp_80",
+		Type:    "tcp",
+		Depends: "ping",
+		Config: map[string]interface{}{
+			"port": 80,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "go-e",
+		Type:    "http",
+		Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"path":    "/status",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "volkszähler",
+		Type:    "http",
+		Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"path":    "/middleware.php/entity.json",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
 }
 
 func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {

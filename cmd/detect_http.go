@@ -38,7 +38,6 @@ type HttpHandler struct {
 }
 
 func (h *HttpHandler) Test(ip net.IP) bool {
-
 	uri := fmt.Sprintf("%s://%s/%s", h.Schema, ip, strings.TrimLeft(h.Path, "/"))
 	req, err := http.NewRequest(strings.ToUpper(h.Method), uri, nil)
 	if err != nil {
