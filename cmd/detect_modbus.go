@@ -61,19 +61,26 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 			continue
 		}
 
-		_, point, err := dev.QueryPointAny(
+		_, md, err := dev.QueryPointAny(
 			conn.ModbusClient(),
 			model1.ModelID,
 			0,
 			model1.Md,
 		)
-		_ = point
-		// fmt.Println(point)
 
 		if err != nil {
 			fmt.Println("modbus:", err)
 			continue
 		}
+
+		_, mn, _ := dev.QueryPointAny(
+			conn.ModbusClient(),
+			model1.ModelID,
+			0,
+			model1.Mn,
+		)
+
+		fmt.Printf("modbus: %s/%s\n", mn.Value(), md.Value())
 
 		return true
 	}
