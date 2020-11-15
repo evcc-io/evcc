@@ -19,31 +19,34 @@ func init() {
 func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := ModbusHandler{
 		Port:    502,
-		Min:     1,
-		Max:     5,
+		IDs:     []uint8{1},
 		Timeout: timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)
 
-	if err == nil && handler.Max == 0 {
-		err = errors.New("missing max")
+	if err == nil && len(handler.IDs) == 0 {
+		err = errors.New("missing slave IDs")
 	}
 
 	return &handler, err
 }
 
 type ModbusHandler struct {
-	Port     int
-	Min, Max uint8
-	Timeout  time.Duration
+	Port    int
+	IDs     []uint8
+	Timeout time.Duration
 }
 
 func (h *ModbusHandler) Test(ip net.IP) bool {
-	for slaveID := h.Min; slaveID <= h.Max; slaveID++ {
+	for idx, slaveID := range h.IDs {
 		addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
 
-		// conn, err := modbus.NewConnection(addr, "", "", 0, false, slaveID)
+		// grace period for id switch
+		if idx > 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+
 		conn := meters.NewTCP(addr)
 		dev := sunspec.NewDevice("sunspec")
 

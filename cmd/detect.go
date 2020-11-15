@@ -51,41 +51,12 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      "modbus_common",
+		ID:      "modbus",
 		Type:    "modbus",
 		Depends: "tcp_502",
 		Config: map[string]interface{}{
-			"min": 1,
-			"max": 6,
-		},
-	})
-
-	taskList.Add(Task{
-		ID:      "modbus_sma",
-		Type:    "modbus",
-		Depends: "tcp_502",
-		Config: map[string]interface{}{
-			"min": 126,
-			"max": 126,
-		},
-	})
-
-	taskList.Add(Task{
-		ID:      "modbus_kostal",
-		Type:    "modbus",
-		Depends: "tcp_502",
-		Config: map[string]interface{}{
-			"min": 71,
-			"max": 71,
-		},
-	})
-
-	taskList.Add(Task{
-		ID:      "tcp_1883",
-		Type:    "tcp",
-		Depends: "ping",
-		Config: map[string]interface{}{
-			"port": 1883,
+			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			"timeout": time.Second,
 		},
 	})
 
@@ -93,6 +64,12 @@ func init() {
 		ID:      "mqtt",
 		Type:    "mqtt",
 		Depends: "tcp_1883",
+	})
+
+	taskList.Add(Task{
+		ID:      "openwb",
+		Type:    "mqtt",
+		Depends: "mqtt",
 		Config: map[string]interface{}{
 			"topic": "openWB",
 		},
@@ -151,7 +128,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 			tasks <- ip
 		}
 	}
-	close(tasks)
 
+	close(tasks)
 	wg.Wait()
 }
