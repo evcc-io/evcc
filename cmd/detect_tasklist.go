@@ -100,7 +100,7 @@ HANDLERS:
 		if ok {
 			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
 		} else {
-			// log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
+			log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
 			failed[task.ID] = true
 		}
 	}

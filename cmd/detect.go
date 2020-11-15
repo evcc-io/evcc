@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -107,7 +108,22 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	log.INFO.Println("my ip:", ips[0].IP)
 
-	tasks <- net.ParseIP("127.0.0.1")
+	fmt.Println(args)
+	if len(args) > 0 {
+		ips = nil
+
+		for _, arg := range args {
+			_, ipnet, err := net.ParseCIDR(arg + "/32")
+			if err != nil {
+				log.FATAL.Fatal("could not parse", arg)
+			}
+
+			ips = append(ips, *ipnet)
+		}
+	} else {
+		tasks <- net.ParseIP("127.0.0.1")
+	}
+
 	for _, ip := range ips {
 		subnet := ip.String()
 
