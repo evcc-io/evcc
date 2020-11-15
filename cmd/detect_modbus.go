@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/util"
-	"github.com/andig/gosunspec/models/model1"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
@@ -20,6 +19,8 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := ModbusHandler{
 		Port:    502,
 		IDs:     []uint8{1},
+		Models:  []int{1},
+		Point:   "Md", // Model
 		Timeout: timeout,
 	}
 
@@ -35,6 +36,8 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 type ModbusHandler struct {
 	Port    int
 	IDs     []uint8
+	Models  []int
+	Point   string
 	Timeout time.Duration
 }
 
@@ -61,30 +64,25 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 			continue
 		}
 
-		_, md, err := dev.QueryPointAny(
-			conn.ModbusClient(),
-			model1.ModelID,
-			0,
-			model1.Md,
-		)
-
-		if err != nil {
-			fmt.Println("modbus:", err)
-			continue
+		if len(h.Models) == 0 {
+			return true
 		}
 
-		_, mn, _ := dev.QueryPointAny(
-			conn.ModbusClient(),
-			model1.ModelID,
-			0,
-			model1.Mn,
-		)
+		for _, model := range h.Models {
+			_, res, err := dev.QueryPointAny(
+				conn.ModbusClient(),
+				model,
+				0,
+				h.Point,
+			)
 
-		// fmt.Printf("modbus: %s/%s\n", mn.Value(), md.Value())
-		_ = mn
-		_ = md
+			if err == nil {
+				fmt.Printf("modbus: %d.%s/%v %+v\n", model, h.Point, res.Value(), res)
+				return true
+			}
+		}
 
-		return true
+		return false
 	}
 
 	return false

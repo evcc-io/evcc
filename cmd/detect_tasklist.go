@@ -16,6 +16,10 @@ func (l *TaskList) Add(task Task) {
 	l.tasks = append(l.tasks, task)
 }
 
+func (l *TaskList) Count() int {
+	return len(l.tasks)
+}
+
 func (l *TaskList) delete(i int) {
 	if len(l.tasks) == 1 {
 		l.tasks = nil

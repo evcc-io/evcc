@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/hems/semp"
 	"github.com/andig/evcc/util"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/korylprince/ipnetgen"
 	"github.com/spf13/cobra"
 )
@@ -29,7 +30,18 @@ type Task struct {
 	Config   map[string]interface{}
 }
 
-const timeout = 100 * time.Millisecond
+type Detector int
+
+const (
+	timeout = 100 * time.Millisecond
+
+	_ Detector = iota
+	Ping
+	Tcp
+	Modbus
+	Mqtt
+	Http
+)
 
 var (
 	taskList                     = &TaskList{}
@@ -62,6 +74,42 @@ func init() {
 	})
 
 	taskList.Add(Task{
+		ID:      "modbus_inverter",
+		Type:    "modbus",
+		Depends: "modbus",
+		Config: map[string]interface{}{
+			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			"models":  []int{101, 103},
+			"point":   "W",
+			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "modbus_meter",
+		Type:    "modbus",
+		Depends: "modbus",
+		Config: map[string]interface{}{
+			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			"models":  []int{201, 203},
+			"point":   "W",
+			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "modbus_battery",
+		Type:    "modbus",
+		Depends: "modbus",
+		Config: map[string]interface{}{
+			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			"models":  []int{124},
+			"point":   "ChaState",
+			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(Task{
 		ID:   "mqtt",
 		Type: "mqtt",
 	})
@@ -75,34 +123,34 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
-		ID:      "tcp_80",
-		Type:    "tcp",
-		Depends: "ping",
-		Config: map[string]interface{}{
-			"port": 80,
-		},
-	})
+	// taskList.Add(Task{
+	// 	ID:      "tcp_80",
+	// 	Type:    "tcp",
+	// 	Depends: "ping",
+	// 	Config: map[string]interface{}{
+	// 		"port": 80,
+	// 	},
+	// })
 
-	taskList.Add(Task{
-		ID:      "go-e",
-		Type:    "http",
-		Depends: "tcp_80",
-		Config: map[string]interface{}{
-			"path":    "/status",
-			"timeout": 500 * time.Millisecond,
-		},
-	})
+	// taskList.Add(Task{
+	// 	ID:      "go-e",
+	// 	Type:    "http",
+	// 	Depends: "tcp_80",
+	// 	Config: map[string]interface{}{
+	// 		"path":    "/status",
+	// 		"timeout": 500 * time.Millisecond,
+	// 	},
+	// })
 
-	taskList.Add(Task{
-		ID:      "volkszähler",
-		Type:    "http",
-		Depends: "tcp_80",
-		Config: map[string]interface{}{
-			"path":    "/middleware.php/entity.json",
-			"timeout": 500 * time.Millisecond,
-		},
-	})
+	// taskList.Add(Task{
+	// 	ID:      "volkszähler",
+	// 	Type:    "http",
+	// 	Depends: "tcp_80",
+	// 	Config: map[string]interface{}{
+	// 		"path":    "/middleware.php/entity.json",
+	// 		"timeout": 500 * time.Millisecond,
+	// 	},
+	// })
 }
 
 func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
@@ -110,7 +158,7 @@ func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
 	for i := 0; i < num; i++ {
 		wg.Add(1)
 		go func() {
-			worker(tasks)
+			work(tasks)
 			wg.Done()
 		}()
 	}
@@ -118,7 +166,7 @@ func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
 	return &wg
 }
 
-func worker(tasks <-chan net.IP) {
+func work(tasks <-chan net.IP) {
 	for ip := range tasks {
 		taskList.Test(ip)
 	}
@@ -153,11 +201,16 @@ func runDetect(cmd *cobra.Command, args []string) {
 		tasks <- net.ParseIP("127.0.0.1")
 	}
 
+	segment := 255
+	count := len(ips) * segment
+	bar := pb.StartNew(count)
+
 	for _, ipnet := range ips {
 		subnet := ipnet.String()
 
 		if bits, _ := ipnet.Mask.Size(); bits < 24 {
 			log.INFO.Println("skipping large subnet:", subnet)
+			bar.Add(segment)
 			continue
 		}
 
@@ -168,9 +221,17 @@ func runDetect(cmd *cobra.Command, args []string) {
 			log.FATAL.Fatal("could not create iterator")
 		}
 
+		var count int
 		for ip := gen.Next(); ip != nil; ip = gen.Next() {
 			// log.INFO.Println("ip:", ip)
 			tasks <- ip
+
+			bar.Increment()
+			count++
+		}
+
+		if count < segment {
+			bar.Add(segment - count)
 		}
 	}
 
