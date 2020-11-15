@@ -80,7 +80,9 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 			model1.Mn,
 		)
 
-		fmt.Printf("modbus: %s/%s\n", mn.Value(), md.Value())
+		// fmt.Printf("modbus: %s/%s\n", mn.Value(), md.Value())
+		_ = mn
+		_ = md
 
 		return true
 	}
