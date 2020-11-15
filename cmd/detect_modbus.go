@@ -39,20 +39,19 @@ type ModbusHandler struct {
 }
 
 func (h *ModbusHandler) Test(ip net.IP) bool {
-	for idx, slaveID := range h.IDs {
-		addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
+	addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
+	conn := meters.NewTCP(addr)
+	dev := sunspec.NewDevice("sunspec")
 
+	conn.Timeout(timeout)
+
+	for idx, slaveID := range h.IDs {
 		// grace period for id switch
 		if idx > 0 {
 			time.Sleep(100 * time.Millisecond)
 		}
 
-		conn := meters.NewTCP(addr)
-		dev := sunspec.NewDevice("sunspec")
-
-		conn.Timeout(timeout)
 		conn.Slave(slaveID)
-
 		err := dev.Initialize(conn.ModbusClient())
 
 		if errors.Is(err, meters.ErrPartiallyOpened) {
@@ -62,15 +61,16 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 			continue
 		}
 
-		res, err := dev.QueryPoint(
+		_, point, err := dev.QueryPointAny(
 			conn.ModbusClient(),
 			model1.ModelID,
 			0,
 			model1.Md,
 		)
-		fmt.Println(res)
+		// fmt.Println(point)
 
 		if err != nil {
+			fmt.Println("modbus:", err)
 			continue
 		}
 
