@@ -67,6 +67,7 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 			0,
 			model1.Md,
 		)
+		_ = point
 		// fmt.Println(point)
 
 		if err != nil {
