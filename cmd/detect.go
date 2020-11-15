@@ -61,9 +61,8 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      "mqtt",
-		Type:    "mqtt",
-		Depends: "tcp_1883",
+		ID:   "mqtt",
+		Type: "mqtt",
 	})
 
 	taskList.Add(Task{
