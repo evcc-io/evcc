@@ -124,10 +124,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 		tasks <- net.ParseIP("127.0.0.1")
 	}
 
-	for _, ip := range ips {
-		subnet := ip.String()
+	for _, ipnet := range ips {
+		subnet := ipnet.String()
 
-		if bits, _ := ip.Mask.Size(); bits < 24 {
+		if bits, _ := ipnet.Mask.Size(); bits < 24 {
 			log.INFO.Println("skipping large subnet:", subnet)
 			continue
 		}
@@ -140,6 +140,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 		}
 
 		for ip := gen.Next(); ip != nil; ip = gen.Next() {
+			// log.INFO.Println("ip:", ip)
 			tasks <- ip
 		}
 	}

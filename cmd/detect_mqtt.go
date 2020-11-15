@@ -56,12 +56,14 @@ func (h *MqttHandler) Test(ip net.IP) bool {
 		})
 
 		timer := time.NewTimer(timeout)
+	WAIT:
 		for {
 			select {
 			case <-recv:
-				break
+				break WAIT
 			case <-timer.C:
 				ok = false
+				break WAIT
 			}
 		}
 	}
