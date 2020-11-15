@@ -370,6 +370,7 @@ func (lp *LoadPoint) connected() bool {
 func (lp *LoadPoint) targetSocReached() bool {
 	return lp.vehicle != nil &&
 		lp.SoC.Target > 0 &&
+		lp.SoC.Target < 100 &&
 		lp.socCharge >= float64(lp.SoC.Target)
 }
 
