@@ -39,6 +39,9 @@ func init() {
 
 var (
 	taskList = &detect.TaskList{}
+
+	// modbus ids
+	sunspecIDs = []int{1, 2, 3, 71, 126}
 )
 
 func init() {
@@ -61,7 +64,7 @@ func init() {
 		Type:    "modbus",
 		Depends: "tcp_502",
 		Config: map[string]interface{}{
-			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			"ids":     sunspecIDs,
 			"timeout": time.Second,
 		},
 	})
@@ -71,21 +74,11 @@ func init() {
 		Type:    "modbus",
 		Depends: "sunspec",
 		Config: map[string]interface{}{
-			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			// "port": 1502,
+			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
-			"point":   "W",
-			"timeout": time.Second,
-		},
-	})
-
-	taskList.Add(detect.Task{
-		ID:      "modbus_meter",
-		Type:    "modbus",
-		Depends: "sunspec",
-		Config: map[string]interface{}{
-			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
-			"models":  []int{201, 203},
-			"point":   "W",
+			"point":   "W", // status
+			"invalid": []int{65535},
 			"timeout": time.Second,
 		},
 	})
@@ -95,9 +88,23 @@ func init() {
 		Type:    "modbus",
 		Depends: "sunspec",
 		Config: map[string]interface{}{
-			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
+			// "port": 1502,
+			"ids":     sunspecIDs,
 			"models":  []int{124},
-			"point":   "ChaState",
+			"point":   "ChaSt", // status
+			"invalid": []int{65535},
+			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(detect.Task{
+		ID:      "modbus_meter",
+		Type:    "modbus",
+		Depends: "sunspec",
+		Config: map[string]interface{}{
+			"ids":     sunspecIDs,
+			"models":  []int{201, 203},
+			"point":   "W",
 			"timeout": time.Second,
 		},
 	})

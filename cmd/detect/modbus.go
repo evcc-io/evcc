@@ -48,6 +48,7 @@ type ModbusHandler struct {
 	Point    string
 	Register modbus.Register `mapstructure:",squash"`
 	Values   []int
+	Invalid  []int
 	op       rs485.Operation
 	Timeout  time.Duration
 }
@@ -112,7 +113,26 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 		)
 
 		if err == nil {
-			fmt.Printf("modbus: %d.%s/%v %+v\n", model, h.Point, res.Value(), res)
+			// fmt.Printf("modbus: %d.%s/%v %+v %s\n", model, h.Point, res.Value(), res, res.Type())
+
+			var val int
+			switch typ := res.Type(); typ {
+			case "int16":
+				val = int(res.Int16())
+			case "uint16":
+				val = int(res.Uint16())
+			case "enum16":
+				val = int(res.Enum16())
+			default:
+				panic("invalid point type: " + typ)
+			}
+
+			for _, inv := range h.Invalid {
+				if val == inv {
+					return false
+				}
+			}
+
 			return true
 		}
 	}
