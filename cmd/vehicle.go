@@ -56,9 +56,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		dumpAPIs(v)
 
 		if v, ok := v.(api.Closer); ok {
-			if err := v.Close(); err != nil {
-				fmt.Printf("Error closing: %v\n", err)
-			}
+			_ = v.Close()
 		}
 	}
 }

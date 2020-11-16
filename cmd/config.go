@@ -130,3 +130,12 @@ func (cp *ConfigProvider) configureVehicles(conf config) {
 		cp.vehicles[cc.Name] = v
 	}
 }
+
+// Close performs cleanup activities on all entities maintained by the config provider
+func (cp *ConfigProvider) Close() {
+	for _, o := range cp.meters {
+		if c, ok := o.(api.Closer); ok {
+			c.Close()
+		}
+	}
+}

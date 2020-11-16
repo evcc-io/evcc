@@ -19,6 +19,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+var cp = &ConfigProvider{}
+
 // setup influx databases
 func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
@@ -76,7 +78,6 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 }
 
 func loadConfig(conf config) *core.Site {
-	cp := &ConfigProvider{}
 	cp.configure(conf)
 
 	loadPoints := configureLoadPoints(conf, cp)
