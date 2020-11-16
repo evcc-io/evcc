@@ -1,6 +1,8 @@
 package push
 
 import (
+	"time"
+
 	"github.com/andig/evcc/util"
 )
 
@@ -34,6 +36,9 @@ func (h *Hub) Add(sender Sender) {
 // apply applies the event template to the content to produce the actual message
 func (h *Hub) apply(ev Event, template string) (string, error) {
 	attr := make(map[string]interface{})
+
+	// let cache catch up, refs reverted https://github.com/andig/evcc/pull/445
+	time.Sleep(100 * time.Millisecond)
 
 	// get all values from cache
 	for _, p := range h.cache.All() {
