@@ -200,10 +200,13 @@ func run(cmd *cobra.Command, args []string) {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC    // wait for signal
+		<-signalC // wait for signal
+		log.FATAL.Println("signal received")
 		close(stopC) // signal loop to end
 		<-exitC      // wait for loop to end
-		cp.Close()   // cleanup
+		log.FATAL.Println("loop stopped")
+		cp.Close() // cleanup
+		log.FATAL.Println("cleanup done")
 
 		os.Exit(1)
 	}()
