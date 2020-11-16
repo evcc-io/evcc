@@ -34,7 +34,6 @@ func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
 		panic(err)
 	}
 
-	pinger.SetPrivileged(true)
 	pinger.Count = h.Count
 	pinger.Timeout = h.Timeout
 
