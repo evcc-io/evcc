@@ -37,15 +37,14 @@ func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
 	pinger.Count = h.Count
 	pinger.Timeout = h.Timeout
 
-	err = pinger.Run()
-	if err != nil {
+	if err = pinger.Run(); err != nil {
 		log.ERROR.Println("ping:", err)
 	}
 
 	stat := pinger.Statistics()
-	if err != nil {
-		log.ERROR.Printf("ping: %+v\n", stat)
-	}
+	// if err != nil {
+	// 	log.ERROR.Printf("ping: %+v\n", stat)
+	// }
 
 	return stat.PacketsRecv > 0
 }
