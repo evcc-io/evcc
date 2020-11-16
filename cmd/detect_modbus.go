@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"net"
@@ -24,7 +25,7 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 		IDs:     []uint8{1},
 		Models:  []int{1},
 		Point:   "Md", // Model
-		Timeout: timeout,
+		Timeout: 5 * timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)
@@ -34,10 +35,7 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	}
 
 	if handler.Register.Address > 0 {
-		var err error
-		if handler.op, err = modbus.RegisterOperation(handler.Register); err != nil {
-			return nil, err
-		}
+		handler.op, err = modbus.RegisterOperation(handler.Register)
 	}
 
 	return &handler, err
@@ -49,6 +47,7 @@ type ModbusHandler struct {
 	Models   []int
 	Point    string
 	Register modbus.Register `mapstructure:",squash"`
+	Values   []int
 	op       rs485.Operation
 	Timeout  time.Duration
 }
@@ -64,8 +63,31 @@ func (h *ModbusHandler) testRegister(conn gridx.Client) bool {
 		bytes, err = conn.ReadInputRegisters(h.op.OpCode, h.op.ReadLen)
 	}
 
-	fmt.Println(bytes)
-	return err == nil
+	if err != nil {
+		return false
+	}
+
+	if len(h.Values) == 0 {
+		return true
+	}
+
+	var u uint64
+	switch h.op.ReadLen {
+	case 1:
+		u = uint64(binary.BigEndian.Uint16(bytes))
+	case 2:
+		u = uint64(binary.BigEndian.Uint32(bytes))
+	case 4:
+		u = binary.BigEndian.Uint64(bytes)
+	}
+
+	for _, val := range h.Values {
+		if u == uint64(val) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec) bool {
@@ -103,7 +125,7 @@ func (h *ModbusHandler) Test(ip net.IP) bool {
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 
-	conn.Timeout(timeout)
+	conn.Timeout(h.Timeout)
 
 	for idx, slaveID := range h.IDs {
 		// grace period for id switch

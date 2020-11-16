@@ -114,10 +114,10 @@ func init() {
 		Depends: "tcp_502",
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
-			"address": 40001,
+			"address": 40000,
 			"type":    "holding",
 			"decode":  "uint16",
-			// "value":   58332, // 0xE3DC
+			"values":  []int{58332}, // 0xE3DC
 		},
 	})
 
@@ -126,11 +126,11 @@ func init() {
 		Type:    "modbus",
 		Depends: "tcp_502",
 		Config: map[string]interface{}{
-			"ids":     []int{1, 2, 3, 4, 5, 6},
+			"ids":     []int{255},
 			"address": 100,
-			"type":    "holding",
+			"type":    "input",
 			"decode":  "uint16",
-			// "values":   [], // A..C
+			"values":  []int{65, 66, 67}, // A..C
 		},
 	})
 
@@ -260,9 +260,10 @@ func runDetect(cmd *cobra.Command, args []string) {
 		tasks <- net.ParseIP("127.0.0.1")
 	}
 
+	var bar *pb.ProgressBar
 	segment := 255
-	count := len(ips) * segment
-	bar := pb.StartNew(count)
+	// count := len(ips) * segment
+	// bar = pb.StartNew(count)
 
 	for _, ipnet := range ips {
 		subnet := ipnet.String()
@@ -285,11 +286,13 @@ func runDetect(cmd *cobra.Command, args []string) {
 			// log.INFO.Println("ip:", ip)
 			tasks <- ip
 
-			bar.Increment()
-			count++
+			if bar != nil {
+				bar.Increment()
+				count++
+			}
 		}
 
-		if count < segment {
+		if bar != nil && count < segment {
 			bar.Add(segment - count)
 		}
 	}
