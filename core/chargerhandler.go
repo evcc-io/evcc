@@ -90,7 +90,7 @@ func (lp *ChargerHandler) Prepare() {
 func (lp *ChargerHandler) SyncEnabled() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
-		lp.log.DEBUG.Printf("sync enabled state to %s", status[lp.enabled])
+		lp.log.WARN.Printf("sync enabled state to %s", status[lp.enabled])
 		err = lp.charger.Enable(lp.enabled)
 	}
 
