@@ -33,8 +33,12 @@ func runCharger(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
-	cp := &ConfigProvider{}
-	cp.configureChargers(conf)
+	if err := cp.configureChargers(conf); err != nil {
+		cp.Close() // cleanup any open sessions
+		log.FATAL.Fatal(err)
+	}
+
+	defer cp.Close() // cleanup on exit
 
 	chargers := cp.chargers
 	if len(args) == 1 {

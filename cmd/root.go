@@ -141,7 +141,11 @@ func run(cmd *cobra.Command, args []string) {
 	go cache.Run(pipe.NewDropper(ignoreParams...).Pipe(tee.Attach()))
 
 	// setup loadpoints
-	site := loadConfig(conf)
+	site, err := loadConfig(conf)
+	if err != nil {
+		cp.Close()
+		log.FATAL.Fatal(err)
+	}
 
 	// setup database
 	if conf.Influx.URL != "" {
@@ -200,13 +204,10 @@ func run(cmd *cobra.Command, args []string) {
 		signalC := make(chan os.Signal, 1)
 		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
 
-		<-signalC // wait for signal
-		log.FATAL.Println("signal received")
+		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
 		<-exitC      // wait for loop to end
-		log.FATAL.Println("loop stopped")
-		cp.Close() // cleanup
-		log.FATAL.Println("cleanup done")
+		cp.Close()   // cleanup
 
 		os.Exit(1)
 	}()
