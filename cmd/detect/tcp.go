@@ -1,4 +1,4 @@
-package cmd
+package detect
 
 import (
 	"errors"
@@ -33,7 +33,7 @@ type TcpHandler struct {
 	dialer  net.Dialer
 }
 
-func (h *TcpHandler) Test(ip net.IP) bool {
+func (h *TcpHandler) Test(log *util.Logger, ip net.IP) bool {
 	addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
 	conn, err := h.dialer.Dial("tcp", addr)
 	if err == nil {

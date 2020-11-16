@@ -1,4 +1,4 @@
-package cmd
+package detect
 
 import (
 	"encoding/binary"
@@ -120,7 +120,7 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 	return false
 }
 
-func (h *ModbusHandler) Test(ip net.IP) bool {
+func (h *ModbusHandler) Test(log *util.Logger, ip net.IP) bool {
 	addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")

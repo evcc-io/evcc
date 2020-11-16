@@ -1,4 +1,4 @@
-package cmd
+package detect
 
 import (
 	"net"
@@ -28,7 +28,7 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(ip net.IP) bool {
+func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
 	pinger, err := ping.NewPinger(ip.String())
 	if err != nil {
 		panic(err)

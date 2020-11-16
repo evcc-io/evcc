@@ -1,4 +1,4 @@
-package cmd
+package detect
 
 import (
 	"fmt"
@@ -59,7 +59,7 @@ type HttpHandler struct {
 	Timeout              time.Duration
 }
 
-func (h *HttpHandler) Test(ip net.IP) bool {
+func (h *HttpHandler) Test(log *util.Logger, ip net.IP) bool {
 	uri := fmt.Sprintf("%s://%s%s/%s", h.Schema, ip, h.optionalPort, strings.TrimLeft(h.Path, "/"))
 	req, err := http.NewRequest(strings.ToUpper(h.Method), uri, nil)
 	if err != nil {

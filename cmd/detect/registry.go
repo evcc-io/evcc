@@ -1,15 +1,19 @@
-package cmd
+package detect
 
 import (
 	"fmt"
 	"net"
+
+	"github.com/andig/evcc/util"
 )
 
 type TaskHandler interface {
-	Test(ip net.IP) bool
+	Test(log *util.Logger, ip net.IP) bool
 }
 
 type TaskHandlerRegistry map[string]func(map[string]interface{}) (TaskHandler, error)
+
+var registry TaskHandlerRegistry = make(map[string]func(map[string]interface{}) (TaskHandler, error))
 
 func (r TaskHandlerRegistry) Add(name string, factory func(map[string]interface{}) (TaskHandler, error)) {
 	if _, exists := r[name]; exists {

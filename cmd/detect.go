@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/cmd/detect"
 	"github.com/andig/evcc/hems/semp"
 	"github.com/andig/evcc/util"
 	"github.com/cheggaaa/pb/v3"
@@ -23,37 +24,30 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 }
 
-type Task struct {
-	ID, Type string
-	Depends  string
-	Config   map[string]interface{}
-}
+// type Detector int
 
-type Detector int
+// const (
+// 	timeout = 100 * time.Millisecond
 
-const (
-	timeout = 100 * time.Millisecond
-
-	_ Detector = iota
-	Ping
-	Tcp
-	Modbus
-	Mqtt
-	Http
-)
+// 	_ Detector = iota
+// 	Ping
+// 	Tcp
+// 	Modbus
+// 	Mqtt
+// 	Http
+// )
 
 var (
-	taskList                     = &TaskList{}
-	registry TaskHandlerRegistry = make(map[string]func(map[string]interface{}) (TaskHandler, error))
+	taskList = &detect.TaskList{}
 )
 
 func init() {
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:   "ping",
 		Type: "ping",
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "tcp_502",
 		Type:    "tcp",
 		Depends: "ping",
@@ -62,7 +56,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "sunspec",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -72,7 +66,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "modbus_inverter",
 		Type:    "modbus",
 		Depends: "sunspec",
@@ -84,7 +78,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "modbus_meter",
 		Type:    "modbus",
 		Depends: "sunspec",
@@ -96,7 +90,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "modbus_battery",
 		Type:    "modbus",
 		Depends: "sunspec",
@@ -108,7 +102,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "modbus_e3dc_simple",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -121,7 +115,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "modbus_wallbe",
 		Type:    "modbus",
 		Depends: "tcp_502",
@@ -134,12 +128,12 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:   "mqtt",
 		Type: "mqtt",
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "openwb",
 		Type:    "mqtt",
 		Depends: "mqtt",
@@ -148,7 +142,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "tcp_80",
 		Type:    "tcp",
 		Depends: "ping",
@@ -157,7 +151,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "go-e",
 		Type:    "http",
 		Depends: "tcp_80",
@@ -168,7 +162,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "evsewifi",
 		Type:    "http",
 		Depends: "tcp_80",
@@ -179,7 +173,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:   "sonnen",
 		Type: "http",
 		// Depends: "tcp_80",
@@ -191,7 +185,7 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(detect.Task{
 		ID:      "powerwall",
 		Type:    "http",
 		Depends: "tcp_80",
@@ -202,7 +196,7 @@ func init() {
 		},
 	})
 
-	// taskList.Add(Task{
+	// taskList.Add(detect.Task{
 	// 	ID:      "volkszähler",
 	// 	Type:    "http",
 	// 	Depends: "tcp_80",
@@ -228,7 +222,7 @@ func workers(num int, tasks <-chan net.IP) *sync.WaitGroup {
 
 func work(tasks <-chan net.IP) {
 	for ip := range tasks {
-		taskList.Test(ip)
+		taskList.Test(log, ip)
 	}
 }
 

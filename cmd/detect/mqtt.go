@@ -1,4 +1,4 @@
-package cmd
+package detect
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(ip net.IP) bool {
+func (h *MqttHandler) Test(log *util.Logger, ip net.IP) bool {
 	broker := fmt.Sprintf("%s:%d", ip.String(), h.Port)
 
 	opt := mqtt.NewClientOptions()

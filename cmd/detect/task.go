@@ -1,10 +1,18 @@
-package cmd
+package detect
 
 import (
 	"fmt"
 	"net"
 	"sync"
+
+	"github.com/andig/evcc/util"
 )
+
+type Task struct {
+	ID, Type string
+	Depends  string
+	Config   map[string]interface{}
+}
 
 type TaskList struct {
 	tasks    []Task
@@ -80,7 +88,7 @@ func (l *TaskList) createHandlers() {
 	}
 }
 
-func (l *TaskList) Test(ip net.IP) {
+func (l *TaskList) Test(log *util.Logger, ip net.IP) {
 	l.once.Do(func() {
 		l.sort()
 		l.createHandlers()
@@ -100,7 +108,7 @@ HANDLERS:
 
 		// log.INFO.Printf("ip: %s task: %s ...", ip, task.ID)
 
-		ok := handler.Test(ip)
+		ok := handler.Test(log, ip)
 		if ok {
 			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
 		} else {
