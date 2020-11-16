@@ -115,6 +115,10 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 		if err == nil {
 			// fmt.Printf("modbus: %d.%s/%v %+v %s\n", model, h.Point, res.Value(), res, res.Type())
 
+			if len(h.Invalid) == 0 {
+				return true
+			}
+
 			var val int
 			switch typ := res.Type(); typ {
 			case "int16":
@@ -128,12 +132,10 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 			}
 
 			for _, inv := range h.Invalid {
-				if val == inv {
-					return false
+				if val != inv {
+					return true
 				}
 			}
-
-			return true
 		}
 	}
 
