@@ -100,6 +100,6 @@ func (h *HttpHandler) Test(ip net.IP) bool {
 		return true
 	}
 
-	_, err := jq.Query(h.query, body)
+	_, err = jq.Query(h.query, body)
 	return err == nil
 }

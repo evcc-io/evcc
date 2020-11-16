@@ -270,7 +270,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 		if bits, _ := ipnet.Mask.Size(); bits < 24 {
 			log.INFO.Println("skipping large subnet:", subnet)
-			bar.Add(segment)
+			if bar != nil {
+				bar.Add(segment)
+			}
 			continue
 		}
 
