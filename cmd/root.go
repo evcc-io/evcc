@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/andig/evcc/server"
@@ -139,7 +141,11 @@ func run(cmd *cobra.Command, args []string) {
 	go cache.Run(pipe.NewDropper(ignoreParams...).Pipe(tee.Attach()))
 
 	// setup loadpoints
-	site := loadConfig(conf)
+	site, err := loadConfig(conf)
+	if err != nil {
+		cp.Close()
+		log.FATAL.Fatal(err)
+	}
 
 	// setup database
 	if conf.Influx.URL != "" {
@@ -180,12 +186,31 @@ func run(cmd *cobra.Command, args []string) {
 
 	// set channels
 	site.Prepare(valueChan, pushChan)
-
 	site.DumpConfig()
-	go site.Run(conf.Interval)
+
+	stopC := make(chan struct{})
+	exitC := make(chan struct{})
+
+	go func() {
+		site.Run(stopC, conf.Interval)
+		close(exitC)
+	}()
 
 	// uds health check listener
 	go server.HealthListener(site)
+
+	// catch signals
+	go func() {
+		signalC := make(chan os.Signal, 1)
+		signal.Notify(signalC, os.Interrupt, syscall.SIGTERM)
+
+		<-signalC    // wait for signal
+		close(stopC) // signal loop to end
+		<-exitC      // wait for loop to end
+		cp.Close()   // cleanup
+
+		os.Exit(1)
+	}()
 
 	log.FATAL.Println(httpd.ListenAndServe())
 }

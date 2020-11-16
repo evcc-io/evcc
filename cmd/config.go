@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -77,56 +78,76 @@ func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
 	return nil
 }
 
-func (cp *ConfigProvider) configure(conf config) {
-	cp.configureMeters(conf)
-	cp.configureChargers(conf)
-	cp.configureVehicles(conf)
+func (cp *ConfigProvider) configure(conf config) error {
+	err := cp.configureMeters(conf)
+	if err == nil {
+		err = cp.configureChargers(conf)
+	}
+	if err == nil {
+		err = cp.configureVehicles(conf)
+	}
+	return err
 }
 
-func (cp *ConfigProvider) configureMeters(conf config) {
+func (cp *ConfigProvider) configureMeters(conf config) error {
 	cp.meters = make(map[string]api.Meter)
 	for _, cc := range conf.Meters {
 		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
+			return err
 		}
 
 		if _, exists := cp.meters[cc.Name]; exists {
-			log.FATAL.Fatalf("duplicate meter name: %s already defined and must be unique", cc.Name)
+			return fmt.Errorf("duplicate meter name: %s already defined and must be unique", cc.Name)
 		}
 
 		cp.meters[cc.Name] = m
 	}
+
+	return nil
 }
 
-func (cp *ConfigProvider) configureChargers(conf config) {
+func (cp *ConfigProvider) configureChargers(conf config) error {
 	cp.chargers = make(map[string]api.Charger)
 	for _, cc := range conf.Chargers {
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
+			return err
 		}
 
 		if _, exists := cp.chargers[cc.Name]; exists {
-			log.FATAL.Fatalf("duplicate charger name: %s already defined and must be unique", cc.Name)
+			return fmt.Errorf("duplicate charger name: %s already defined and must be unique", cc.Name)
 		}
 
 		cp.chargers[cc.Name] = c
 	}
+
+	return nil
 }
 
-func (cp *ConfigProvider) configureVehicles(conf config) {
+func (cp *ConfigProvider) configureVehicles(conf config) error {
 	cp.vehicles = make(map[string]api.Vehicle)
 	for _, cc := range conf.Vehicles {
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
+			return err
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
-			log.FATAL.Fatalf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
+			return fmt.Errorf("duplicate vehicle name: %s already defined and must be unique", cc.Name)
 		}
 
 		cp.vehicles[cc.Name] = v
+	}
+
+	return nil
+}
+
+// Close performs cleanup activities on all entities maintained by the config provider
+func (cp *ConfigProvider) Close() {
+	for _, o := range cp.vehicles {
+		if c, ok := o.(api.Closer); ok {
+			c.Close()
+		}
 	}
 }

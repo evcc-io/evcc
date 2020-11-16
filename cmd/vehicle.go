@@ -33,8 +33,12 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
-	cp := &ConfigProvider{}
-	cp.configureVehicles(conf)
+	if err := cp.configureVehicles(conf); err != nil {
+		cp.Close() // cleanup any open sessions
+		log.FATAL.Fatal(err)
+	}
+
+	defer cp.Close() // cleanup on exit
 
 	vehicles := cp.vehicles
 	if len(args) == 1 {

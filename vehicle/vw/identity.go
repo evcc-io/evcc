@@ -15,6 +15,9 @@ const (
 
 	// OauthTokenURI is used for refreshing tokens
 	OauthTokenURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/token"
+
+	// OauthRevokeURI is used for revoking tokens
+	OauthRevokeURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/revoke"
 )
 
 // Identity provides the identity.vwgroup.io login
