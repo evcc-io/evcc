@@ -77,16 +77,18 @@ func (h *HttpHandler) Test(ip net.IP) bool {
 
 	defer resp.Body.Close()
 
-	var status bool
-	for _, code := range h.Codes {
-		if resp.StatusCode == code {
-			status = true
-			break
+	if len(h.Codes) > 0 {
+		var status bool
+		for _, code := range h.Codes {
+			if resp.StatusCode == code {
+				status = true
+				break
+			}
 		}
-	}
 
-	if !status {
-		return false
+		if !status {
+			return false
+		}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -94,12 +96,10 @@ func (h *HttpHandler) Test(ip net.IP) bool {
 		return false
 	}
 
-	if h.query != nil {
-		_, err := jq.Query(h.query, body)
-		if err == nil {
-			return true
-		}
+	if h.query == nil {
+		return true
 	}
 
-	return false
+	_, err := jq.Query(h.query, body)
+	return err == nil
 }
