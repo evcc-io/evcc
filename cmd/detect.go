@@ -63,7 +63,7 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      "modbus",
+		ID:      "sunspec",
 		Type:    "modbus",
 		Depends: "tcp_502",
 		Config: map[string]interface{}{
@@ -75,7 +75,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      "modbus_inverter",
 		Type:    "modbus",
-		Depends: "modbus",
+		Depends: "sunspec",
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
 			"models":  []int{101, 103},
@@ -87,7 +87,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      "modbus_meter",
 		Type:    "modbus",
-		Depends: "modbus",
+		Depends: "sunspec",
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
 			"models":  []int{201, 203},
@@ -99,7 +99,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      "modbus_battery",
 		Type:    "modbus",
-		Depends: "modbus",
+		Depends: "sunspec",
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6, 71, 126},
 			"models":  []int{124},
@@ -111,14 +111,26 @@ func init() {
 	taskList.Add(Task{
 		ID:      "modbus_e3dc_simple",
 		Type:    "modbus",
-		Depends: "modbus",
+		Depends: "tcp_502",
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
 			"address": 40001,
 			"type":    "holding",
 			"decode":  "uint16",
 			// "value":   58332, // 0xE3DC
-			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "modbus_wallbe",
+		Type:    "modbus",
+		Depends: "tcp_502",
+		Config: map[string]interface{}{
+			"ids":     []int{1, 2, 3, 4, 5, 6},
+			"address": 100,
+			"type":    "holding",
+			"decode":  "uint16",
+			// "values":   [], // A..C
 		},
 	})
 
