@@ -7,13 +7,16 @@ import (
 // Cache is a data store
 type Cache struct {
 	sync.Mutex
-	val map[string]Param
+	val        map[string]Param
+	prio, done chan struct{}
 }
 
 // NewCache creates cache
 func NewCache() *Cache {
 	return &Cache{
-		val: make(map[string]Param),
+		val:  make(map[string]Param),
+		prio: make(chan struct{}), // signal prio to Run method
+		done: make(chan struct{}), // signal messages consumed to caller
 	}
 }
 
@@ -21,9 +24,26 @@ func NewCache() *Cache {
 func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
-	for p := range in {
-		log.TRACE.Printf("%s: %v", p.Key, p.Val)
-		c.Add(p.UniqueID(), p)
+	for {
+		select {
+		case p := <-in:
+			log.TRACE.Printf("%s: %v", p.Key, p.Val)
+			c.Add(p.UniqueID(), p)
+
+		case <-c.prio:
+		CONSUME:
+			for {
+				select {
+				case p := <-in:
+					log.TRACE.Printf("%s: %v", p.Key, p.Val)
+					c.Add(p.UniqueID(), p)
+				default:
+					break CONSUME
+				}
+			}
+
+			c.done <- struct{}{}
+		}
 	}
 }
 
@@ -59,8 +79,16 @@ func (c *Cache) State() map[string]interface{} {
 	return res
 }
 
+// sync hands processing over to the Run method to consume all outstanding messages. Must not be called when locked.
+func (c *Cache) sync() {
+	c.prio <- struct{}{}
+	<-c.done
+}
+
 // All provides a copy of the cached values
 func (c *Cache) All() []Param {
+	c.sync()
+
 	c.Lock()
 	defer c.Unlock()
 
