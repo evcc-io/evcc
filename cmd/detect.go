@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -110,6 +109,20 @@ func init() {
 	})
 
 	taskList.Add(Task{
+		ID:      "modbus_e3dc_simple",
+		Type:    "modbus",
+		Depends: "modbus",
+		Config: map[string]interface{}{
+			"ids":     []int{1, 2, 3, 4, 5, 6},
+			"address": 40001,
+			"type":    "holding",
+			"decode":  "uint16",
+			// "value":   58332, // 0xE3DC
+			"timeout": time.Second,
+		},
+	})
+
+	taskList.Add(Task{
 		ID:   "mqtt",
 		Type: "mqtt",
 	})
@@ -123,24 +136,59 @@ func init() {
 		},
 	})
 
-	// taskList.Add(Task{
-	// 	ID:      "tcp_80",
-	// 	Type:    "tcp",
-	// 	Depends: "ping",
-	// 	Config: map[string]interface{}{
-	// 		"port": 80,
-	// 	},
-	// })
+	taskList.Add(Task{
+		ID:      "tcp_80",
+		Type:    "tcp",
+		Depends: "ping",
+		Config: map[string]interface{}{
+			"port": 80,
+		},
+	})
 
-	// taskList.Add(Task{
-	// 	ID:      "go-e",
-	// 	Type:    "http",
-	// 	Depends: "tcp_80",
-	// 	Config: map[string]interface{}{
-	// 		"path":    "/status",
-	// 		"timeout": 500 * time.Millisecond,
-	// 	},
-	// })
+	taskList.Add(Task{
+		ID:      "go-e",
+		Type:    "http",
+		Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"path":    "/status",
+			"jq":      ".car",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "evsewifi",
+		Type:    "http",
+		Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"path":    "/getParameters",
+			"jq":      ".type",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:   "sonnen",
+		Type: "http",
+		// Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"port":    8080,
+			"path":    "/api/v1/status",
+			"jq":      ".GridFeedIn_W",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      "powerwall",
+		Type:    "http",
+		Depends: "tcp_80",
+		Config: map[string]interface{}{
+			"path":    "/api/meters/aggregates",
+			"jq":      ".load",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
 
 	// taskList.Add(Task{
 	// 	ID:      "volkszähler",
@@ -185,7 +233,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	log.INFO.Println("my ip:", ips[0].IP)
 
-	fmt.Println(args)
 	if len(args) > 0 {
 		ips = nil
 
