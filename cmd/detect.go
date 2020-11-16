@@ -40,8 +40,8 @@ func init() {
 var (
 	taskList = &detect.TaskList{}
 
-	// modbus ids
-	sunspecIDs = []int{1, 2, 3, 71, 126}
+	sunspecIDs   = []int{1, 2, 3, 71, 126} // modbus ids
+	chargeStatus = []int{65, 66, 67}       // status values A..C
 )
 
 func init() {
@@ -131,7 +131,20 @@ func init() {
 			"address": 100,
 			"type":    "input",
 			"decode":  "uint16",
-			"values":  []int{65, 66, 67}, // A..C
+			"values":  chargeStatus,
+		},
+	})
+
+	taskList.Add(detect.Task{
+		ID:      "modbus_emcp",
+		Type:    "modbus",
+		Depends: "tcp_502",
+		Config: map[string]interface{}{
+			"ids":     []int{180},
+			"address": 100,
+			"type":    "input",
+			"decode":  "uint16",
+			"values":  chargeStatus,
 		},
 	})
 
