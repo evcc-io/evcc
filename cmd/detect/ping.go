@@ -38,7 +38,10 @@ func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
 	pinger.Timeout = h.Timeout
 
 	if err = pinger.Run(); err != nil {
-		log.ERROR.Println("ping:", err)
+		log.FATAL.Println("ping:", err)
+		log.FATAL.Println("In order to run evcc in discovery mode, make sure to allow ping:")
+		log.FATAL.Println("")
+		log.FATAL.Fatalln("	sudo sysctl -w net.ipv4.ping_group_range=\"0 2147483647\"")
 	}
 
 	stat := pinger.Statistics()

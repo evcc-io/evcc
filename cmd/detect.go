@@ -149,8 +149,9 @@ func init() {
 	})
 
 	taskList.Add(detect.Task{
-		ID:   "mqtt",
-		Type: "mqtt",
+		ID:      "mqtt",
+		Type:    "mqtt",
+		Depends: "ping",
 	})
 
 	taskList.Add(detect.Task{
@@ -194,9 +195,9 @@ func init() {
 	})
 
 	taskList.Add(detect.Task{
-		ID:   "sonnen",
-		Type: "http",
-		// Depends: "tcp_80",
+		ID:      "sonnen",
+		Type:    "http",
+		Depends: "ping",
 		Config: map[string]interface{}{
 			"port":    8080,
 			"path":    "/api/v1/status",
