@@ -33,12 +33,16 @@ type TcpHandler struct {
 	dialer  net.Dialer
 }
 
-func (h *TcpHandler) Test(log *util.Logger, ip net.IP) bool {
-	addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
+func (h *TcpHandler) Test(log *util.Logger, ip string) []interface{} {
+	addr := fmt.Sprintf("%s:%d", ip, h.Port)
 	conn, err := h.dialer.Dial("tcp", addr)
 	if err == nil {
 		defer conn.Close()
 	}
 
-	return err == nil
+	if err == nil {
+		return []interface{}{nil}
+	}
+
+	return nil
 }

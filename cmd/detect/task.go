@@ -2,7 +2,6 @@ package detect
 
 import (
 	"fmt"
-	"net"
 	"sync"
 
 	"github.com/andig/evcc/util"
@@ -88,7 +87,7 @@ func (l *TaskList) createHandlers() {
 	}
 }
 
-func (l *TaskList) Test(log *util.Logger, ip net.IP) {
+func (l *TaskList) Test(log *util.Logger, ip string) (res []Result) {
 	l.once.Do(func() {
 		l.sort()
 		l.createHandlers()
@@ -106,14 +105,22 @@ HANDLERS:
 			}
 		}
 
-		// log.INFO.Printf("ip: %s task: %s ...", ip, task.ID)
-
-		ok := handler.Test(log, ip)
-		if ok {
+		details := handler.Test(log, ip)
+		if len(details) > 0 {
 			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
+
+			for _, detail := range details {
+				res = append(res, Result{
+					Task:    task,
+					Host:    ip,
+					Details: detail,
+				})
+			}
 		} else {
 			// log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
 			failed[task.ID] = true
 		}
 	}
+
+	return res
 }

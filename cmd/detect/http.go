@@ -3,7 +3,6 @@ package detect
 import (
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -26,7 +25,7 @@ func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 		Header: map[string]string{
 			"Content-type": "application/json",
 		},
-		Timeout: timeout,
+		Timeout: 3 * timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)
@@ -59,11 +58,11 @@ type HttpHandler struct {
 	Timeout              time.Duration
 }
 
-func (h *HttpHandler) Test(log *util.Logger, ip net.IP) bool {
+func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 	uri := fmt.Sprintf("%s://%s%s/%s", h.Schema, ip, h.optionalPort, strings.TrimLeft(h.Path, "/"))
 	req, err := http.NewRequest(strings.ToUpper(h.Method), uri, nil)
 	if err != nil {
-		return false
+		return nil
 	}
 
 	client := http.Client{
@@ -72,7 +71,7 @@ func (h *HttpHandler) Test(log *util.Logger, ip net.IP) bool {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return false
+		return nil
 	}
 
 	defer resp.Body.Close()
@@ -87,19 +86,22 @@ func (h *HttpHandler) Test(log *util.Logger, ip net.IP) bool {
 		}
 
 		if !status {
-			return false
+			return nil
 		}
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return false
+		return nil
 	}
 
-	if h.query == nil {
-		return true
+	if h.query != nil {
+		_, err = jq.Query(h.query, body)
 	}
 
-	_, err = jq.Query(h.query, body)
-	return err == nil
+	if err == nil {
+		return []interface{}{nil}
+	}
+
+	return nil
 }

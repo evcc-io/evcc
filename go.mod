@@ -40,6 +40,7 @@ require (
 	github.com/muka/go-bluetooth v0.0.0-20200619025933-f6113f7141c5
 	github.com/mxschmitt/golang-combinations v1.0.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
+	github.com/olekukonko/tablewriter v0.0.4
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5

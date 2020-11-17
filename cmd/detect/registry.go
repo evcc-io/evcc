@@ -2,13 +2,12 @@ package detect
 
 import (
 	"fmt"
-	"net"
 
 	"github.com/andig/evcc/util"
 )
 
 type TaskHandler interface {
-	Test(log *util.Logger, ip net.IP) bool
+	Test(log *util.Logger, ip string) []interface{}
 }
 
 type TaskHandlerRegistry map[string]func(map[string]interface{}) (TaskHandler, error)

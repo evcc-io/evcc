@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -14,6 +13,10 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
+
+type ModbusResult struct {
+	SlaveID uint8
+}
 
 func init() {
 	registry.Add("modbus", ModbusHandlerFactory)
@@ -142,8 +145,8 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 	return false
 }
 
-func (h *ModbusHandler) Test(log *util.Logger, ip net.IP) bool {
-	addr := fmt.Sprintf("%s:%d", ip.String(), h.Port)
+func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+	addr := fmt.Sprintf("%s:%d", ip, h.Port)
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 
@@ -164,9 +167,11 @@ func (h *ModbusHandler) Test(log *util.Logger, ip net.IP) bool {
 		}
 
 		if ok {
-			return true
+			res = append(res, ModbusResult{
+				SlaveID: slaveID,
+			})
 		}
 	}
 
-	return false
+	return res
 }

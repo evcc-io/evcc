@@ -1,7 +1,6 @@
 package detect
 
 import (
-	"net"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -28,8 +27,8 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
-	pinger, err := ping.NewPinger(ip.String())
+func (h *PingHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+	pinger, err := ping.NewPinger(ip)
 	if err != nil {
 		panic(err)
 	}
@@ -48,5 +47,9 @@ func (h *PingHandler) Test(log *util.Logger, ip net.IP) bool {
 
 	stat := pinger.Statistics()
 
-	return stat.PacketsRecv > 0
+	if stat.PacketsRecv == 0 {
+		return nil
+	}
+
+	return []interface{}{nil}
 }

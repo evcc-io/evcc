@@ -3,7 +3,6 @@ package detect
 import (
 	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -34,8 +33,8 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(log *util.Logger, ip net.IP) bool {
-	broker := fmt.Sprintf("%s:%d", ip.String(), h.Port)
+func (h *MqttHandler) Test(log *util.Logger, ip string) []interface{} {
+	broker := fmt.Sprintf("%s:%d", ip, h.Port)
 
 	opt := mqtt.NewClientOptions()
 	opt.AddBroker(broker)
@@ -68,5 +67,9 @@ func (h *MqttHandler) Test(log *util.Logger, ip net.IP) bool {
 		}
 	}
 
-	return ok
+	if ok {
+		return []interface{}{nil}
+	}
+
+	return nil
 }
