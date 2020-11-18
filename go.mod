@@ -8,10 +8,10 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
-	github.com/cheggaaa/pb/v3 v3.0.5
 	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.2.0
+	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20201022122018-3977ed72668a
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
@@ -27,6 +27,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/influxdata/influxdb-client-go/v2 v2.1.0
 	github.com/itchyny/gojq v0.11.0
+	github.com/jeremywohl/flatten v1.0.1
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51

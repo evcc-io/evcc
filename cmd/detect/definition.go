@@ -1,54 +1,71 @@
-package cmd
+package detect
 
 import (
 	"time"
-
-	"github.com/andig/evcc/cmd/detect"
 )
 
 var (
-	taskList = &detect.TaskList{}
+	taskList = &TaskList{}
 
 	sunspecIDs   = []int{1, 2, 3, 71, 126} // modbus ids
 	chargeStatus = []int{65, 66, 67}       // status values A..C
 )
 
+const (
+	taskPing    = "ping"
+	taskTCP80   = "tcp_80"
+	taskTCP502  = "tcp_502"
+	taskSunspec = "sunspec"
+
+	taskOpenwb      = "openwb"
+	taskSMA         = "sma"
+	taskE3DC        = "e3dc_simple"
+	taskSonnen      = "sonnen"
+	taskPowerwall   = "powerwall"
+	taskWallbe      = "wallbe"
+	taskPhoenixEMCP = "emcp"
+	taskEVSEWifi    = "evsewifi"
+	taskGoE         = "go-e"
+	taskInverter    = "inverter"
+	taskBattery     = "battery"
+	taskMeter       = "meter"
+)
+
 func init() {
-	taskList.Add(detect.Task{
-		ID:   "sma",
+	taskList.Add(Task{
+		ID:   taskSMA,
 		Type: "sma",
 	})
 
-	taskList.Add(detect.Task{
-		ID:   "ping",
+	taskList.Add(Task{
+		ID:   taskPing,
 		Type: "ping",
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "tcp_502",
+	taskList.Add(Task{
+		ID:      taskTCP502,
 		Type:    "tcp",
-		Depends: "ping",
+		Depends: taskPing,
 		Config: map[string]interface{}{
 			"port": 502,
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "sunspec",
+	taskList.Add(Task{
+		ID:      taskSunspec,
 		Type:    "modbus",
-		Depends: "tcp_502",
+		Depends: taskTCP502,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
 			"timeout": time.Second,
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_inverter",
+	taskList.Add(Task{
+		ID:      taskInverter,
 		Type:    "modbus",
-		Depends: "sunspec",
+		Depends: taskSunspec,
 		Config: map[string]interface{}{
-			// "port": 1502,
 			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
 			"point":   "W", // status
@@ -57,10 +74,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_battery",
+	taskList.Add(Task{
+		ID:      taskBattery,
 		Type:    "modbus",
-		Depends: "sunspec",
+		Depends: taskSunspec,
 		Config: map[string]interface{}{
 			// "port": 1502,
 			"ids":     sunspecIDs,
@@ -71,10 +88,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_meter",
+	taskList.Add(Task{
+		ID:      taskMeter,
 		Type:    "modbus",
-		Depends: "sunspec",
+		Depends: taskSunspec,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
 			"models":  []int{201, 203},
@@ -83,10 +100,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_e3dc_simple",
+	taskList.Add(Task{
+		ID:      taskE3DC,
 		Type:    "modbus",
-		Depends: "tcp_502",
+		Depends: taskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
 			"address": 40000,
@@ -96,10 +113,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_wallbe",
+	taskList.Add(Task{
+		ID:      taskWallbe,
 		Type:    "modbus",
-		Depends: "tcp_502",
+		Depends: taskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{255},
 			"address": 100,
@@ -109,10 +126,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "modbus_emcp",
+	taskList.Add(Task{
+		ID:      taskPhoenixEMCP,
 		Type:    "modbus",
-		Depends: "tcp_502",
+		Depends: taskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{180},
 			"address": 100,
@@ -122,54 +139,48 @@ func init() {
 		},
 	})
 
-	// taskList.Add(detect.Task{
-	// 	ID:      "mqtt",
-	// 	Type:    "mqtt",
-	// 	Depends: "ping",
-	// })
-
-	taskList.Add(detect.Task{
-		ID:      "openwb",
+	taskList.Add(Task{
+		ID:      taskOpenwb,
 		Type:    "mqtt",
-		Depends: "ping",
+		Depends: taskPing,
 		Config: map[string]interface{}{
 			"topic": "openWB",
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "tcp_80",
+	taskList.Add(Task{
+		ID:      taskTCP80,
 		Type:    "tcp",
-		Depends: "ping",
+		Depends: taskPing,
 		Config: map[string]interface{}{
 			"port": 80,
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "go-e",
+	taskList.Add(Task{
+		ID:      taskGoE,
 		Type:    "http",
-		Depends: "tcp_80",
+		Depends: taskTCP80,
 		Config: map[string]interface{}{
 			"path": "/status",
 			"jq":   ".car",
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "evsewifi",
+	taskList.Add(Task{
+		ID:      taskEVSEWifi,
 		Type:    "http",
-		Depends: "tcp_80",
+		Depends: taskTCP80,
 		Config: map[string]interface{}{
 			"path": "/getParameters",
 			"jq":   ".type",
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "sonnen",
+	taskList.Add(Task{
+		ID:      taskSonnen,
 		Type:    "http",
-		Depends: "ping",
+		Depends: taskPing,
 		Config: map[string]interface{}{
 			"port": 8080,
 			"path": "/api/v1/status",
@@ -177,10 +188,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(detect.Task{
-		ID:      "powerwall",
+	taskList.Add(Task{
+		ID:      taskPowerwall,
 		Type:    "http",
-		Depends: "tcp_80",
+		Depends: taskTCP80,
 		Config: map[string]interface{}{
 			"path": "/api/meters/aggregates",
 			"jq":   ".load",
@@ -188,20 +199,20 @@ func init() {
 	})
 
 	// // see https://github.com/andig/evcc-config/pull/5/files
-	// taskList.Add(detect.Task{
+	// taskList.Add(Task{
 	// 	ID:      "fronius",
 	// 	Type:    "http",
-	// 	Depends: "tcp_80",
+	// 	Depends: taskTCP80,
 	// 	Config: map[string]interface{}{
 	// 		"path": "/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
 	// 		"jq":   ".Body.Data.Site.P_Grid",
 	// 	},
 	// })
 
-	// taskList.Add(detect.Task{
+	// taskList.Add(Task{
 	// 	ID:      "volkszähler",
 	// 	Type:    "http",
-	// 	Depends: "tcp_80",
+	// 	Depends: taskTCP80,
 	// 	Config: map[string]interface{}{
 	// 		"path":    "/middleware.php/entity.json",
 	// 		"timeout": 500 * time.Millisecond,

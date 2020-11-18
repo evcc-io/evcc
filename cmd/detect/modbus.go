@@ -94,7 +94,7 @@ func (h *ModbusHandler) testRegister(conn gridx.Client) bool {
 	return false
 }
 
-func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec) bool {
+func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec, mr *ModbusResult) bool {
 	err := dev.Initialize(conn.ModbusClient())
 	if errors.Is(err, meters.ErrPartiallyOpened) {
 		err = nil
@@ -159,17 +159,19 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 			time.Sleep(100 * time.Millisecond)
 		}
 
+		mr := ModbusResult{
+			SlaveID: slaveID,
+		}
+
 		var ok bool
 		if h.op.OpCode > 0 {
 			ok = h.testRegister(conn.ModbusClient())
 		} else {
-			ok = h.testSunSpec(conn, dev)
+			ok = h.testSunSpec(conn, dev, &mr)
 		}
 
 		if ok {
-			res = append(res, ModbusResult{
-				SlaveID: slaveID,
-			})
+			res = append(res, mr)
 		}
 	}
 

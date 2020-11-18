@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/andig/evcc/cmd/detect"
@@ -65,12 +64,49 @@ func ParseHostIPNet(arg string) (res []string) {
 	return IPsFromSubnet(arg)
 }
 
+func dump(res []detect.Result) {
+	fmt.Println("")
+	fmt.Println("SUMMARY")
+	fmt.Println("-------")
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"}) // "Charger", "Charge", "Grid", "PV", "Battery"
+
+	for _, hit := range res {
+		switch hit.ID {
+		// case "ping", "tcp_80", "tcp_502", "sunspec":
+		case "ping", "tcp_80", "tcp_502":
+			continue
+		default:
+			host := ""
+			hosts, err := net.LookupAddr(hit.Host)
+			if err == nil && len(hosts) > 0 {
+				host = hosts[0]
+				host = strings.TrimSuffix(host, ".")
+			}
+
+			details := ""
+			if hit.Details != nil {
+				details = fmt.Sprintf("%+v", hit.Details)
+			}
+
+			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
+
+			// charger, charge, grid, pv, battery := applicability(hit)
+			table.Append([]string{hit.Host, host, hit.ID, details}) // charger, charge, grid, pv, battery
+		}
+	}
+
+	fmt.Println("")
+	table.Render()
+	fmt.Println("")
+}
+
 func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
-	var hosts []string
-
 	// args
+	var hosts []string
 	for _, arg := range args {
 		hosts = append(hosts, ParseHostIPNet(arg)...)
 	}
@@ -90,55 +126,57 @@ func runDetect(cmd *cobra.Command, args []string) {
 	}
 
 	// magic happens here
-	res := work(50, hosts)
+	res := detect.Work(log, 50, hosts)
 
-	fmt.Println("")
-	fmt.Println("SUMMARY")
-	fmt.Println("-------")
-	fmt.Println("")
+	// res := []detect.Result{
+	// 	{
+	// 		Task: detect.Task{
+	// 			ID:   "sma",
+	// 			Type: "sma",
+	// 		},
+	// 		Host: "server",
+	// 		Details: detect.SmaResult{
+	// 			Addr:   "sem",
+	// 			Serial: "0815",
+	// 			Http:   true,
+	// 		},
+	// 	}, {
+	// 		Task: detect.Task{
+	// 			ID:   "sma",
+	// 			Type: "sma",
+	// 		},
+	// 		Host: "server",
+	// 		Details: detect.SmaResult{
+	// 			Addr:   "sem-2",
+	// 			Serial: "0815-2",
+	// 			Http:   true,
+	// 		},
+	// 	}, {
+	// 		Task: detect.Task{
+	// 			ID:   "sma",
+	// 			Type: "sma",
+	// 		},
+	// 		Host: "server",
+	// 		Details: detect.SmaResult{
+	// 			Addr:   "shm",
+	// 			Serial: "4711",
+	// 			Http:   false,
+	// 		},
+	// 	}, {
+	// 		Task: detect.Task{
+	// 			ID:   "modbus_inverter",
+	// 			Type: "modbus",
+	// 		},
+	// 		Host: "wr",
+	// 		Details: detect.ModbusResult{
+	// 			SlaveID: 126,
+	// 		},
+	// 	},
+	// }
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"IP", "Hostname", "Task", "Details", "Charger", "Charge", "Grid", "PV", "Battery"})
+	res = detect.Prepare(res)
+	dump(res)
 
-	// use ip from SMA result
-	for idx, hit := range res {
-		if sma, ok := hit.Details.(detect.SmaResult); ok {
-			hit.Host = sma.Addr
-			res[idx] = hit
-		}
-	}
-
-	// sort by host
-	sort.Slice(res, func(i, j int) bool { return res[i].Host < res[j].Host })
-
-	for _, hit := range res {
-		switch hit.ID {
-		case "ping", "tcp_80", "tcp_502", "sunspec":
-			continue
-		default:
-			host := ""
-			hosts, err := net.LookupAddr(hit.Host)
-			if err == nil && len(hosts) > 0 {
-				host = hosts[0]
-				host = strings.TrimSuffix(host, ".")
-			}
-
-			details := ""
-			if hit.Details != nil {
-				details = fmt.Sprintf("%+v", hit.Details)
-			}
-
-			fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
-
-			charger, charge, grid, pv, battery := applicability(hit)
-
-			table.Append([]string{
-				hit.Host, host, hit.ID, details,
-				charger, charge, grid, pv, battery,
-			})
-		}
-	}
-
-	fmt.Println("")
-	table.Render()
+	sum := detect.Consolidate(res)
+	fmt.Printf("%+v\n", sum)
 }
