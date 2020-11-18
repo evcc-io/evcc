@@ -51,8 +51,11 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 
 	resp, err := client.Get(uri)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
+
+	fmt.Println("ok")
 
 	resp.Body.Close()
 	return true

@@ -104,6 +104,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 		case "ping", "tcp_80", "tcp_502":
 			continue
 		default:
+			// use ip from SMA result
+			if sma, ok := hit.Details.(detect.SmaResult); ok {
+				hit.Host = sma.Addr
+			}
+
 			host := ""
 			hosts, err := net.LookupAddr(hit.Host)
 			if err == nil && len(hosts) > 0 {
