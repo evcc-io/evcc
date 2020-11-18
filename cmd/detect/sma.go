@@ -11,8 +11,8 @@ import (
 )
 
 type SmaResult struct {
-	sma.Telegram
-	Webserver bool
+	Addr, Serial string
+	Http         bool
 }
 
 func init() {
@@ -82,8 +82,9 @@ WAIT:
 			}
 
 			r := SmaResult{
-				Telegram:  t,
-				Webserver: h.httpAvailable(t.Addr),
+				Addr:   t.Addr,
+				Serial: t.Serial,
+				Http:   h.httpAvailable(t.Addr),
 			}
 
 			res = append(res, r)
