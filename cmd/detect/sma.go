@@ -1,6 +1,7 @@
 package detect
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"sync"
@@ -36,10 +37,16 @@ type SMAHandler struct {
 }
 
 func (h *SMAHandler) httpAvailable(ip string) bool {
-	uri := fmt.Sprintf("http://%s", ip)
+	uri := fmt.Sprintf("https://%s", ip)
 
 	client := http.Client{
 		Timeout: 3 * timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+		// CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		// 	return http.ErrUseLastResponse
+		// },
 	}
 
 	resp, err := client.Get(uri)
