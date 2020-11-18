@@ -44,18 +44,12 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
-		// CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		// 	return http.ErrUseLastResponse
-		// },
 	}
 
 	resp, err := client.Get(uri)
 	if err != nil {
-		fmt.Println(err)
 		return false
 	}
-
-	fmt.Println("ok")
 
 	resp.Body.Close()
 	return true
