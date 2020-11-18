@@ -33,8 +33,12 @@ func runMeter(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
-	cp := &ConfigProvider{}
-	cp.configureMeters(conf)
+	if err := cp.configureMeters(conf); err != nil {
+		cp.Close() // cleanup any open sessions
+		log.FATAL.Fatal(err)
+	}
+
+	defer cp.Close() // cleanup on exit
 
 	meters := cp.meters
 	if len(args) == 1 {

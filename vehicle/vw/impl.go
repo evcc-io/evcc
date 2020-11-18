@@ -41,12 +41,17 @@ func (v *Implementation) ChargeState() (float64, error) {
 func (v *Implementation) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
-		var timestamp time.Time
-		if err == nil {
-			timestamp, err = time.Parse(time.RFC3339, res.Charger.Status.BatteryStatusData.RemainingChargingTime.Timestamp)
+		rct := res.Charger.Status.BatteryStatusData.RemainingChargingTime
+
+		// estimate not available
+		if rct.Content == 65535 {
+			return time.Time{}, api.ErrNotAvailable
 		}
 
-		return timestamp.Add(time.Duration(res.Charger.Status.BatteryStatusData.RemainingChargingTime.Content) * time.Minute), err
+		var timestamp time.Time
+		timestamp, err = time.Parse(time.RFC3339, rct.Timestamp)
+
+		return timestamp.Add(time.Duration(rct.Content) * time.Minute), err
 	}
 
 	return time.Time{}, err

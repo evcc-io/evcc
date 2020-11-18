@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -18,6 +20,8 @@ import (
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
+
+var cp = &ConfigProvider{}
 
 // setup influx databases
 func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI, in <-chan util.Param) {
@@ -75,47 +79,50 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	return notificationChan
 }
 
-func loadConfig(conf config) *core.Site {
-	cp := &ConfigProvider{}
-	cp.configure(conf)
+func loadConfig(conf config) (site *core.Site, err error) {
+	if err = cp.configure(conf); err == nil {
+		var loadPoints []*core.LoadPoint
+		loadPoints, err = configureLoadPoints(conf, cp)
 
-	loadPoints := configureLoadPoints(conf, cp)
-	site := configureSite(conf.Site, cp, loadPoints)
-
-	return site
-}
-
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) *core.Site {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
-	if err != nil {
-		log.FATAL.Fatalf("failed configuring site: %v", err)
+		if err == nil {
+			site, err = configureSite(conf.Site, cp, loadPoints)
+		}
 	}
 
-	return site
+	return site, err
 }
 
-func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.LoadPoint) {
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
+	if err != nil {
+		return nil, fmt.Errorf("failed configuring site: %w", err)
+	}
+
+	return site, nil
+}
+
+func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.LoadPoint, err error) {
 	lpInterfaces, ok := viper.AllSettings()["loadpoints"].([]interface{})
 	if !ok || len(lpInterfaces) == 0 {
-		log.FATAL.Fatal("missing loadpoints")
+		return nil, errors.New("missing loadpoints")
 	}
 
 	for id, lpcI := range lpInterfaces {
 		var lpc map[string]interface{}
 		if err := util.DecodeOther(lpcI, &lpc); err != nil {
-			log.FATAL.Fatalf("failed decoding loadpoint configuration: %v", err)
+			return nil, fmt.Errorf("failed decoding loadpoint configuration: %w", err)
 		}
 
 		log := util.NewLogger("lp-" + strconv.Itoa(id+1))
 		lp, err := core.NewLoadPointFromConfig(log, cp, lpc)
 		if err != nil {
-			log.FATAL.Fatalf("failed configuring loadpoint: %v", err)
+			return nil, fmt.Errorf("failed configuring loadpoint: %w", err)
 		}
 
 		loadPoints = append(loadPoints, lp)
 	}
 
-	return loadPoints
+	return loadPoints, nil
 }
 
 func loadConfigFile(cfgFile string) (conf config) {

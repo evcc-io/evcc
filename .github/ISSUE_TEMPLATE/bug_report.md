@@ -21,9 +21,33 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **EVCC details:**
-Show output of `evcc -v`
-Show evcc log output with `--log trace`
+Show output of `evcc -v` between the quotes below:
+
+```
+<- paste here
+```
+
+Show evcc configuration file `evcc.yaml` between the quotes below:
+
+```
+<- paste here
+```
+
+Show evcc log output with `--log trace` between the quotes below:
+
+```
+<- paste here
+```
 
 **If using Docker:**
-Show output of `docker run andig/evcc -v`
-Show evcc log output with `docker logs <container id>`
+Show output of `docker run andig/evcc -v` between the quotes below:
+
+```
+<- paste here
+```
+
+Show evcc log output with `docker logs <container id>` between the quotes below:
+
+```
+<- paste here
+```

@@ -304,7 +304,7 @@ func (site *Site) sitePower() (float64, error) {
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
-	if sitePower, err := site.sitePower(); err == nil && site.count > 15 {
+	if sitePower, err := site.sitePower(); err == nil && site.count > 5 {
 		lp.Update(sitePower)
 		site.Health.Update()
 		site.count=0
@@ -350,7 +350,7 @@ func (site *Site) loopLoadpoints(next chan<- Updater) {
 
 // Run is the main control loop. It reacts to trigger events by
 // updating measurements and executing control logic.
-func (site *Site) Run(interval time.Duration) {
+func (site *Site) Run(stopC chan struct{}, interval time.Duration) {
 	loadpointChan := make(chan Updater)
 	go site.loopLoadpoints(loadpointChan)
 
@@ -363,6 +363,8 @@ func (site *Site) Run(interval time.Duration) {
 			site.update(<-loadpointChan)
 		case lp := <-site.lpUpdateChan:
 			site.update(lp)
+		case <-stopC:
+			return
 		}
 	}
 }
