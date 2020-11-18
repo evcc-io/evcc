@@ -135,11 +135,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
 
-	// use first vehicle for estimator
-	if len(lp.vehicles) > 0 {
-		lp.setActiveVehicle(lp.vehicles[0])
-	}
-
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
 	}
@@ -355,6 +350,12 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.publish("socLevels", lp.SoC.Levels)
 	lp.Unlock()
+
+	// use first vehicle for estimator
+	// run during prepare() to ensure cache has been attached
+	if len(lp.vehicles) > 0 {
+		lp.setActiveVehicle(lp.vehicles[0])
+	}
 
 	// prepare charger status
 	lp.handler.Prepare()
