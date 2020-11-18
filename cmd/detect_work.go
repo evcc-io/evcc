@@ -29,6 +29,7 @@ func workunit(tasks <-chan string, hits chan<- []detect.Result) {
 func work(num int, hosts []string) []detect.Result {
 	tasks := make(chan string)
 	hits := make(chan []detect.Result)
+	done := make(chan struct{})
 	wg := workers(num, tasks, hits)
 
 	var res []detect.Result
@@ -36,6 +37,7 @@ func work(num int, hosts []string) []detect.Result {
 		for hits := range hits {
 			res = append(res, hits...)
 		}
+		done <- struct{}{}
 	}()
 
 	for _, host := range hosts {
@@ -46,5 +48,7 @@ func work(num int, hosts []string) []detect.Result {
 	wg.Wait()
 
 	close(hits)
+	<-done
+
 	return res
 }
