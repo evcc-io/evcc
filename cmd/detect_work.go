@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/andig/evcc/cmd/detect"
@@ -23,7 +22,6 @@ func workers(num int, tasks <-chan string, hits chan<- []detect.Result) *sync.Wa
 func workunit(tasks <-chan string, hits chan<- []detect.Result) {
 	for ip := range tasks {
 		res := taskList.Test(log, ip)
-		fmt.Println(res)
 		hits <- res
 	}
 }
@@ -37,7 +35,6 @@ func work(num int, hosts []string) []detect.Result {
 	go func() {
 		for hits := range hits {
 			res = append(res, hits...)
-			fmt.Println(res)
 		}
 	}()
 
@@ -47,8 +44,6 @@ func work(num int, hosts []string) []detect.Result {
 
 	close(tasks)
 	wg.Wait()
-
-	fmt.Println(res)
 
 	close(hits)
 	return res

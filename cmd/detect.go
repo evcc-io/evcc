@@ -99,6 +99,8 @@ func runDetect(cmd *cobra.Command, args []string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details", "Charger", "Charge", "Grid", "PV", "Battery"})
 
+	fmt.Println(len(res))
+
 	for _, hit := range res {
 		switch hit.ID {
 		case "ping", "tcp_80", "tcp_502":
