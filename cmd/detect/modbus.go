@@ -28,7 +28,7 @@ func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 		IDs:     []uint8{1},
 		Models:  []int{1},
 		Point:   "Md", // Model
-		Timeout: 5 * timeout,
+		Timeout: 10 * timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)

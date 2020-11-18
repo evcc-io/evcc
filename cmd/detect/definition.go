@@ -1,8 +1,6 @@
 package detect
 
-import (
-	"time"
-)
+import "time"
 
 var (
 	taskList = &TaskList{}
@@ -12,6 +10,8 @@ var (
 )
 
 const (
+	timeout = 100 * time.Millisecond
+
 	taskPing    = "ping"
 	taskTCP80   = "tcp_80"
 	taskTCP502  = "tcp_502"
@@ -56,8 +56,7 @@ func init() {
 		Type:    "modbus",
 		Depends: taskTCP502,
 		Config: map[string]interface{}{
-			"ids":     sunspecIDs,
-			"timeout": time.Second,
+			"ids": sunspecIDs,
 		},
 	})
 
@@ -68,9 +67,8 @@ func init() {
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
-			"point":   "W", // status
-			"invalid": []int{65535},
-			"timeout": time.Second,
+			"point":   "W",
+			"invalid": []int{0xFFFF},
 		},
 	})
 
@@ -79,12 +77,10 @@ func init() {
 		Type:    "modbus",
 		Depends: taskSunspec,
 		Config: map[string]interface{}{
-			// "port": 1502,
 			"ids":     sunspecIDs,
 			"models":  []int{124},
-			"point":   "ChaSt", // status
-			"invalid": []int{65535},
-			"timeout": time.Second,
+			"point":   "ChaSt",
+			"invalid": []int{0xFFFF},
 		},
 	})
 
@@ -93,10 +89,9 @@ func init() {
 		Type:    "modbus",
 		Depends: taskSunspec,
 		Config: map[string]interface{}{
-			"ids":     sunspecIDs,
-			"models":  []int{201, 203},
-			"point":   "W",
-			"timeout": time.Second,
+			"ids":    sunspecIDs,
+			"models": []int{201, 203},
+			"point":  "W",
 		},
 	})
 
@@ -109,7 +104,7 @@ func init() {
 			"address": 40000,
 			"type":    "holding",
 			"decode":  "uint16",
-			"values":  []int{58332}, // 0xE3DC
+			"values":  []int{0xE3DC},
 		},
 	})
 
