@@ -1,0 +1,97 @@
+package detect
+
+import (
+	"fmt"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/andig/evcc/meter/sma"
+	"github.com/andig/evcc/util"
+)
+
+type SmaResult struct {
+	sma.Telegram
+	Webserver bool
+}
+
+func init() {
+	registry.Add("sma", SMAHandlerFactory)
+}
+
+func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
+	handler := SMAHandler{
+		Timeout: 5 * time.Second,
+	}
+
+	err := util.DecodeOther(conf, &handler)
+
+	return &handler, err
+}
+
+type SMAHandler struct {
+	mux      sync.Mutex
+	listener *sma.Listener
+	Timeout  time.Duration
+}
+
+func (h *SMAHandler) httpAvailable(ip string) bool {
+	uri := fmt.Sprintf("http://%s", ip)
+
+	client := http.Client{
+		Timeout: h.Timeout,
+	}
+
+	resp, err := client.Get(uri)
+	if err != nil {
+		return false
+	}
+
+	resp.Body.Close()
+	return true
+}
+
+func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+	h.mux.Lock()
+
+	if h.listener != nil {
+		h.mux.Unlock()
+		return res
+	}
+
+	var err error
+	if h.listener, err = sma.New(log); err != nil {
+		log.ERROR.Println("sma:", err)
+		return nil
+	}
+	h.mux.Unlock()
+
+	resC := make(chan sma.Telegram)
+	h.listener.Subscribe(sma.All, resC)
+
+	timer := time.NewTimer(h.Timeout)
+WAIT:
+	for {
+		select {
+		case t := <-resC:
+			// eliminate duplicates
+			for _, r := range res {
+				if r.(SmaResult).Serial == t.Serial {
+					continue WAIT
+				}
+			}
+
+			r := SmaResult{
+				Telegram:  t,
+				Webserver: h.httpAvailable(t.Addr),
+			}
+
+			res = append(res, r)
+
+		case <-timer.C:
+			break WAIT
+		}
+	}
+
+	return res
+}

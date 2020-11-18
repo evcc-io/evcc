@@ -15,6 +15,11 @@ var (
 
 func init() {
 	taskList.Add(detect.Task{
+		ID:   "sma",
+		Type: "sma",
+	})
+
+	taskList.Add(detect.Task{
 		ID:   "ping",
 		Type: "ping",
 	})
