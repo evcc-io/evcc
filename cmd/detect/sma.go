@@ -98,6 +98,5 @@ WAIT:
 		}
 	}
 
-	fmt.Println(res)
 	return res
 }
