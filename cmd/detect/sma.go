@@ -39,7 +39,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	uri := fmt.Sprintf("http://%s", ip)
 
 	client := http.Client{
-		Timeout: h.Timeout,
+		Timeout: timeout,
 	}
 
 	resp, err := client.Get(uri)
