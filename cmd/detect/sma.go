@@ -40,7 +40,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	uri := fmt.Sprintf("https://%s", ip)
 
 	client := http.Client{
-		Timeout: 3 * timeout,
+		Timeout: time.Second,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
@@ -66,7 +66,7 @@ func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 
 	if h.listener != nil {
 		h.mux.Unlock()
-		return res
+		return nil
 	}
 
 	var err error
@@ -104,5 +104,6 @@ WAIT:
 		}
 	}
 
+	fmt.Println(res)
 	return res
 }
