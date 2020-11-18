@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/andig/evcc/cmd/detect"
@@ -99,16 +100,22 @@ func runDetect(cmd *cobra.Command, args []string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details", "Charger", "Charge", "Grid", "PV", "Battery"})
 
+	// use ip from SMA result
+	for idx, hit := range res {
+		if sma, ok := hit.Details.(detect.SmaResult); ok {
+			hit.Host = sma.Addr
+			res[idx] = hit
+		}
+	}
+
+	// sort by host
+	sort.Slice(res, func(i, j int) bool { return res[i].Host < res[j].Host })
+
 	for _, hit := range res {
 		switch hit.ID {
-		case "ping", "tcp_80", "tcp_502":
+		case "ping", "tcp_80", "tcp_502", "sunspec":
 			continue
 		default:
-			// use ip from SMA result
-			if sma, ok := hit.Details.(detect.SmaResult); ok {
-				hit.Host = sma.Addr
-			}
-
 			host := ""
 			hosts, err := net.LookupAddr(hit.Host)
 			if err == nil && len(hosts) > 0 {
