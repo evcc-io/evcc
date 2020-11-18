@@ -11,8 +11,6 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-type Obis = string
-
 const (
 	multicastAddr = "239.12.255.254:9522"
 	udpBufferSize = 8192
@@ -21,6 +19,15 @@ const (
 	msgPreamble   = 28 // preamble size in bytes
 	msgCodeLength = 4  // length in bytes
 
+	// All subscriber receives all messages
+	All = "<all>"
+)
+
+// Obis defines an Obis code as understood my the EMETER protocol
+type Obis = string
+
+// obis code definitions
+const (
 	ImportPower  Obis = "1:1.4.0"  // Wirkleistung (W)
 	ExportPower  Obis = "1:2.4.0"  // Wirkleistung (W)
 	ImportEnergy Obis = "1:1.8.0"  // Wirkarbeit (Ws) +
@@ -100,22 +107,23 @@ func New(log *util.Logger) (*Listener, error) {
 	// Parse the string address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
-		return nil, fmt.Errorf("error resolving udp address: %s", err)
+		return nil, fmt.Errorf("error resolving udp address: %w", err)
 	}
 
 	// Open up a connection
 	conn, err := net.ListenMulticastUDP("udp4", nil, gaddr)
 	if err != nil {
-		return nil, fmt.Errorf("error opening connecting: %s", err)
+		return nil, fmt.Errorf("error opening connecting: %w", err)
 	}
 
 	if err := conn.SetReadBuffer(udpBufferSize); err != nil {
-		return nil, fmt.Errorf("error setting read buffer: %s", err)
+		return nil, fmt.Errorf("error setting read buffer: %w", err)
 	}
 
 	l := &Listener{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		clients: make(map[string]chan<- Telegram),
 	}
 
 	go l.listen()
@@ -187,10 +195,6 @@ func (l *Listener) Subscribe(identifier string, c chan<- Telegram) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	if l.clients == nil {
-		l.clients = make(map[string]chan<- Telegram)
-	}
-
 	l.clients[identifier] = c
 }
 
@@ -199,7 +203,7 @@ func (l *Listener) send(msg Telegram) {
 	defer l.mux.Unlock()
 
 	for identifier, client := range l.clients {
-		if identifier == msg.Addr || identifier == msg.Serial {
+		if identifier == msg.Addr || identifier == msg.Serial || identifier == All {
 			select {
 			case client <- msg:
 			default:
