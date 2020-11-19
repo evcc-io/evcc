@@ -96,7 +96,6 @@ results above into a new issue. Please tell us:
 
 	1. Is the scan result correct?
 	2. If not correct: please describe your hardware setup.`)
-	fmt.Println("")
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
