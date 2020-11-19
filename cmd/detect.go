@@ -65,7 +65,7 @@ func display(res []detect.Result) {
 
 	for _, hit := range res {
 		switch hit.ID {
-		case "ping", "tcp_80", "tcp_502":
+		case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
 			continue
 		default:
 			host := ""

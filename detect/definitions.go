@@ -9,14 +9,18 @@ var (
 	chargeStatus = []int{65, 66, 67}       // status values A..C
 )
 
+const timeout = 100 * time.Millisecond
+
+// public task ids
 const (
-	timeout = 100 * time.Millisecond
+	TaskPing    = "ping"
+	TaskTCP80   = "tcp_80"
+	TaskTCP502  = "tcp_502"
+	TaskSunspec = "sunspec"
+)
 
-	taskPing    = "ping"
-	taskTCP80   = "tcp_80"
-	taskTCP502  = "tcp_502"
-	taskSunspec = "sunspec"
-
+// private task ids
+const (
 	taskOpenwb      = "openwb"
 	taskSMA         = "sma"
 	taskE3DC        = "e3dc_simple"
@@ -38,23 +42,23 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:   taskPing,
+		ID:   TaskPing,
 		Type: "ping",
 	})
 
 	taskList.Add(Task{
-		ID:      taskTCP502,
+		ID:      TaskTCP502,
 		Type:    "tcp",
-		Depends: taskPing,
+		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"port": 502,
 		},
 	})
 
 	taskList.Add(Task{
-		ID:      taskSunspec,
+		ID:      TaskSunspec,
 		Type:    "modbus",
-		Depends: taskTCP502,
+		Depends: TaskTCP502,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
 			"models": []int{1},
@@ -65,7 +69,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskInverter,
 		Type:    "modbus",
-		Depends: taskSunspec,
+		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
@@ -77,7 +81,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskBattery,
 		Type:    "modbus",
-		Depends: taskSunspec,
+		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
 			"models":  []int{124},
@@ -89,7 +93,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskMeter,
 		Type:    "modbus",
-		Depends: taskSunspec,
+		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
 			"models": []int{201, 203},
@@ -100,7 +104,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskE3DC,
 		Type:    "modbus",
-		Depends: taskTCP502,
+		Depends: TaskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
 			"address": 40000,
@@ -113,7 +117,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskWallbe,
 		Type:    "modbus",
-		Depends: taskTCP502,
+		Depends: TaskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{255},
 			"address": 100,
@@ -126,7 +130,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskPhoenixEMCP,
 		Type:    "modbus",
-		Depends: taskTCP502,
+		Depends: TaskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{180},
 			"address": 100,
@@ -139,16 +143,16 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskOpenwb,
 		Type:    "mqtt",
-		Depends: taskPing,
+		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"topic": "openWB",
 		},
 	})
 
 	taskList.Add(Task{
-		ID:      taskTCP80,
+		ID:      TaskTCP80,
 		Type:    "tcp",
-		Depends: taskPing,
+		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"port": 80,
 		},
@@ -157,7 +161,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskGoE,
 		Type:    "http",
-		Depends: taskTCP80,
+		Depends: TaskTCP80,
 		Config: map[string]interface{}{
 			"path": "/status",
 			"jq":   ".car",
@@ -167,7 +171,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskEVSEWifi,
 		Type:    "http",
-		Depends: taskTCP80,
+		Depends: TaskTCP80,
 		Config: map[string]interface{}{
 			"path": "/getParameters",
 			"jq":   ".type",
@@ -177,7 +181,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskSonnen,
 		Type:    "http",
-		Depends: taskPing,
+		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"port": 8080,
 			"path": "/api/v1/status",
@@ -188,7 +192,7 @@ func init() {
 	taskList.Add(Task{
 		ID:      taskPowerwall,
 		Type:    "http",
-		Depends: taskTCP80,
+		Depends: TaskTCP80,
 		Config: map[string]interface{}{
 			"path": "/api/meters/aggregates",
 			"jq":   ".load",
@@ -199,7 +203,7 @@ func init() {
 	// taskList.Add(Task{
 	// 	ID:      "fronius",
 	// 	Type:    "http",
-	// 	Depends: taskTCP80,
+	// 	Depends: TaskTCP80,
 	// 	Config: map[string]interface{}{
 	// 		"path": "/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
 	// 		"jq":   ".Body.Data.Site.P_Grid",
@@ -209,7 +213,7 @@ func init() {
 	// taskList.Add(Task{
 	// 	ID:      "volkszähler",
 	// 	Type:    "http",
-	// 	Depends: taskTCP80,
+	// 	Depends: TaskTCP80,
 	// 	Config: map[string]interface{}{
 	// 		"path":    "/middleware.php/entity.json",
 	// 		"timeout": 500 * time.Millisecond,
