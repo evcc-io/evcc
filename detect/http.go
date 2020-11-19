@@ -36,12 +36,12 @@ func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	}
 
 	if handler.Jq != "" {
-		op, err := gojq.Parse(handler.Jq)
+		query, err := gojq.Parse(handler.Jq)
 		if err != nil {
 			return nil, fmt.Errorf("invalid jq query: %s (%s)", handler.Jq, err)
 		}
 
-		handler.query = op
+		handler.query = query
 	}
 
 	return &handler, err
@@ -99,14 +99,12 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 	}
 
 	if h.query != nil {
-		_, err = jq.Query(h.query, body)
-		fmt.Println("jq:", err)
+		if val, err := jq.Query(h.query, body); val == nil || err != nil {
+			return nil
+		}
 	}
 
 	if err == nil {
-		if h.query != nil {
-			fmt.Println(string(body))
-		}
 		return []interface{}{nil}
 	}
 
