@@ -1,0 +1,147 @@
+uri: 0.0.0.0:7070 # uri for ui
+interval: 1s # control cycle interval
+
+log: error
+levels:
+  core: debug
+  lp-1: debug
+  lp-2: debug
+
+# mqtt message broker
+mqtt:
+  broker: localhost:1883
+  topic: evcc
+  # user:
+  # password:
+
+# influx database (v1)
+influx:
+  url: http://localhost:8086
+  database: evcc
+  # user:
+  # password:
+
+# additional menu entries
+menu:
+# - title: "Verlauf"
+#   subtitle: "Bezugs- und Einspeiseleistung"
+#   img: "http://..."
+#   link: "http://..."
+#   iframe: "http://..."
+
+# push messages
+messaging:
+  events:
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+    stop: # charge stop event
+      title: Charge finished
+      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+    connect: # vehicle connect event
+      title: Car connected
+      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+    disconnect: # vehicle connected event
+      title: Car disconnected
+      msg: Car disconnected after ${connectedDuration}
+  services:
+  #- type: pushover
+  #  app: # app id
+  #  recipients:
+  #  - # list of recipient ids
+  #- type: telegram
+  #  token: # bot id
+  #  chats:
+  #  - # list of chat ids
+
+meters:
+- name: sunny5pv
+  type: default
+  power: # power reading
+    type: mqtt # use mqtt plugin
+    topic: sunny5/pv_energy # mqtt topic
+    timeout: 60s # don't use older values
+- name: sunny5grid
+  type: default
+  power: # power reading
+    type: mqtt # use mqtt plugin
+    topic: sunny5/grid # mqtt topic
+    timeout: 60s # don't use older values
+- name: sunny5battery
+  type: default
+  power: # power reading
+    type: mqtt # use mqtt plugin
+    topic: sunny5/battery # mqtt topic
+    timeout: 60s # don't use older values
+    scale: -1
+  soc: 
+    type: mqtt # use mqtt plugin
+    topic: sunny5/soc # mqtt topic
+    timeout: 60s # don't use older values
+- name: sunny5consumption
+  type: default
+  power: # power reading
+    type: mqtt # use mqtt plugin
+    topic: sunny5/consumption # mqtt topic
+    timeout: 60s # don't use older values
+
+chargers:
+- name: keba
+  type: keba # KEBA charger
+  uri: # KEBA address
+  rfid:
+    tag: 12345678 # RFID tag, see on the backside of white rfid card
+
+#vehicles:
+#- name: default
+  #type: vw
+  #type: default
+  #title: e-Golf # display name for UI
+  #capacity: 31.5 # kWh
+
+  #user: # user
+  #password: # password
+  #vin: WVWZZZAUZL1234567 # optional
+  #cache: 5m # cache API response
+
+site:
+  title: Sunny5
+  meters:
+    grid: sunny5grid # grid meter
+    pv: sunny5pv # pv meter
+    battery: sunny5battery # battery meter
+    consumption: sunny5consumption # consumption meter
+  prioritySoC: 50 # give home battery priority up to this soc (0 to disable)
+
+loadpoints:
+- title: Ladepunkt # ui display name
+  #vehicle: default
+  mode: pv
+  
+  soc:
+    min: 25 # immediately charge to 25% regardless of mode unless "off" (disabled)
+    target: 100 # always charge to 100%
+    alwaysUpdate: true # set true to update vehicle soc even when disconnected
+    estimate: true # set true to interpolate between api updates
+    levels: # target soc levels for UI
+    - 30
+    - 50
+    - 80
+    - 100
+  charger: keba # charger
+  onDisconnect: # set defaults when vehicle disconnects
+    mode: pv # switch back to pv mode
+    targetSoC: 100 # charge to 100%
+  #phases: 1 # ev phases (default 3)
+  sensitivity: 4 # current raise/lower step size (default 10A)
+  #meters:
+  #  charge: charge # charge meter
+  enable: # pv mode enable behavior
+    delay: 1m # threshold must be exceeded for this long
+    threshold: -100 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
+  disable: # pv mode disable behavior
+    delay: 1m # threshold must be exceeded for this long
+    threshold: 50 # maximum import power (W)
+  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  mincurrent: 6 # minimum charge current (default 6A)
+  maxcurrent: 16 # maximum charge current (default 16A)
