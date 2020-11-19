@@ -60,16 +60,12 @@ func ParseHostIPNet(arg string) (res []string) {
 }
 
 func display(res []detect.Result) {
-	fmt.Println("")
-	fmt.Println("SUMMARY")
-	fmt.Println("-------")
-
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
 
 	for _, hit := range res {
 		switch hit.ID {
-		case "ping", "tcp_80", "tcp_502", "sunspec":
+		case "ping", "tcp_80", "tcp_502":
 			continue
 		default:
 			host := ""
@@ -85,15 +81,19 @@ func display(res []detect.Result) {
 			}
 
 			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
-
-			// charger, charge, grid, pv, battery := applicability(hit)
 			table.Append([]string{hit.Host, host, hit.ID, details})
 		}
 	}
 
 	fmt.Println("")
 	table.Render()
-	fmt.Println("")
+
+	fmt.Println(`
+Please open https://github.com/andig/evcc/issues/new in your browser and copy the
+results above into a new issue. Please tell us:
+
+	1. Is the scan result correct?
+	2. If it's not correct: please describe your hardware setup.`
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
