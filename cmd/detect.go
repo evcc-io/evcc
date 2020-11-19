@@ -95,7 +95,7 @@ Please open https://github.com/andig/evcc/issues/new in your browser and copy th
 results above into a new issue. Please tell us:
 
 	1. Is the scan result correct?
-	2. If it's not correct: please describe your hardware setup.`)
+	2. If not correct: please describe your hardware setup.`)
 	fmt.Println("")
 }
 
