@@ -71,7 +71,7 @@ func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 	h.mux.Unlock()
 
 	resC := make(chan sma.Telegram)
-	h.listener.Subscribe(sma.All, resC)
+	h.listener.Subscribe(sma.Any, resC)
 
 	timer := time.NewTimer(h.Timeout)
 WAIT:

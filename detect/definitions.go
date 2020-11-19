@@ -23,6 +23,7 @@ const (
 const (
 	taskOpenwb      = "openwb"
 	taskSMA         = "sma"
+	taskKEBA        = "KEBA"
 	taskE3DC        = "e3dc_simple"
 	taskSonnen      = "sonnen"
 	taskPowerwall   = "powerwall"
@@ -39,6 +40,11 @@ func init() {
 	taskList.Add(Task{
 		ID:   taskSMA,
 		Type: "sma",
+	})
+
+	taskList.Add(Task{
+		ID:   taskKEBA,
+		Type: "keba",
 	})
 
 	taskList.Add(Task{

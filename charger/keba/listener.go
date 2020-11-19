@@ -13,8 +13,14 @@ import (
 const (
 	udpBufferSize = 1024
 
+	// Port is the KEBA UDP port
+	Port = 7090
+
 	// OK is the KEBA confirmation message
 	OK = "TCH-OK :done"
+
+	// Any subscriber receives all messages
+	Any = "<any>"
 )
 
 // Instance is the KEBA listener instance
@@ -37,8 +43,8 @@ type Listener struct {
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger, addr string) (*Listener, error) {
-	laddr, err := net.ResolveUDPAddr("udp", addr)
+func New(log *util.Logger) (*Listener, error) {
+	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", Port))
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +113,8 @@ func (l *Listener) listen() {
 // addrMatches checks if either message sender or serial matched given addr
 func (l *Listener) addrMatches(addr string, msg UDPMsg) bool {
 	switch {
+	case addr == Any:
+		return true
 	case addr == msg.Addr:
 		return true
 	case msg.Report != nil && addr == msg.Report.Serial:
@@ -125,7 +133,7 @@ func (l *Listener) send(msg UDPMsg) {
 			select {
 			case client <- msg:
 			default:
-				l.log.TRACE.Println("listener: recv blocked")
+				l.log.TRACE.Println("recv: listener blocked")
 			}
 			break
 		}
