@@ -103,7 +103,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel("info", nil)
 
 	fmt.Println(`
-
 Auto detection will now start to scan the network for available devices.
 We're focusing on devices that are commonly used that are detectable with reasonable efforts.
 On successful detection, suggestions for EVCC configuration can be made.

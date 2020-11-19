@@ -9,7 +9,7 @@ var (
 	chargeStatus = []int{0x41, 0x42, 0x43} // status values A..C
 )
 
-const timeout = 100 * time.Millisecond
+const timeout = 200 * time.Millisecond
 
 // public task ids
 const (

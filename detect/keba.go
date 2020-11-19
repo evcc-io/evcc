@@ -18,7 +18,7 @@ func init() {
 
 func KEBAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := KEBAHandler{
-		Timeout: 5 * time.Second,
+		Timeout: 5 * timeout,
 	}
 
 	err := util.DecodeOther(conf, &handler)
@@ -32,27 +32,37 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *KEBAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+var instance *keba.Listener
+
+func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
 	h.mux.Lock()
 
-	if h.listener != nil {
+	if h.listener == nil {
+		var err error
+		if h.listener, err = keba.New(log); err != nil {
+			log.ERROR.Println("keba:", err)
+		}
+
 		h.mux.Unlock()
 		return nil
 	}
 
-	var err error
-	if h.listener, err = keba.New(log); err != nil {
-		log.ERROR.Println("keba:", err)
-		return nil
-	}
 	h.mux.Unlock()
 
 	resC := make(chan keba.UDPMsg)
-	h.listener.Subscribe(keba.Any, resC)
+	h.listener.Subscribe(ip, resC)
+
+	sender, err := keba.NewSender(ip)
+	if err != nil {
+		log.ERROR.Println("keba:", err)
+		return nil
+	}
 
 	timer := time.NewTimer(h.Timeout)
 WAIT:
 	for {
+		sender.Send("report 1")
+
 		select {
 		case t := <-resC:
 			log.INFO.Println(t)
@@ -60,24 +70,17 @@ WAIT:
 				continue
 			}
 
-			// eliminate duplicates
-			for _, r := range res {
-				if r.(KebaResult).Serial == t.Report.Serial {
-					continue WAIT
-				}
-			}
-
 			r := KebaResult{
 				Addr:   t.Addr,
 				Serial: t.Report.Serial,
 			}
 
-			res = append(res, r)
+			return []interface{}{r}
 
 		case <-timer.C:
 			break WAIT
 		}
 	}
 
-	return res
+	return nil
 }
