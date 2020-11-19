@@ -55,6 +55,7 @@ WAIT:
 	for {
 		select {
 		case t := <-resC:
+			log.INFO.Println(t)
 			if t.Report == nil {
 				continue
 			}
