@@ -1,54 +1,14 @@
 package detect
 
-import (
-	"sort"
-	"strings"
-
-	"github.com/fatih/structs"
-	"github.com/jeremywohl/flatten"
-)
-
-type TypeSummary struct {
-	Results       []Result
-	Found, Unique bool
-}
-
-type Summary struct {
-	Charger, Grid, PV, Charge, Battery, Meter TypeSummary
-}
-
 type Criteria map[string]interface{}
-
-// Prepare results
-func Prepare(res []Result) []Result {
-	for idx, hit := range res {
-		if sma, ok := hit.Details.(SmaResult); ok {
-			hit.Host = sma.Addr
-		}
-
-		hit.Attributes = make(map[string]interface{})
-		flat, _ := flatten.Flatten(structs.Map(hit), "", flatten.DotStyle)
-		for k, v := range flat {
-			hit.Attributes[strings.ToLower(k)] = v
-		}
-		// fmt.Println(hit.Attributes)
-
-		res[idx] = hit
-	}
-
-	// sort by host
-	sort.Slice(res, func(i, j int) bool { return res[i].Host < res[j].Host })
-
-	return res
-}
 
 func filter(list []Result, criteria []Criteria) (match []Result) {
 	for _, res := range list {
-		for _, matcher := range criteria {
+		for _, criterium := range criteria {
 			ok := true
 
-			for k, matchVal := range matcher {
-				if foundVal, found := res.Attributes[k]; !found || foundVal != matchVal {
+			for matchKey, matchVal := range criterium {
+				if foundVal, found := res.Attributes[matchKey]; !found || foundVal != matchVal {
 					ok = false
 					break
 				}
@@ -61,6 +21,15 @@ func filter(list []Result, criteria []Criteria) (match []Result) {
 	}
 
 	return match
+}
+
+type TypeSummary struct {
+	Results       []Result
+	Found, Unique bool
+}
+
+type Summary struct {
+	Charger, Grid, PV, Charge, Battery, Meter TypeSummary
 }
 
 func summarize(res []Result) TypeSummary {

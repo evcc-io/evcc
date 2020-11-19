@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/andig/evcc/cmd/detect"
-	"github.com/andig/evcc/hems/semp"
+	"github.com/andig/evcc/detect"
 	"github.com/andig/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
@@ -17,16 +16,12 @@ import (
 // detectCmd represents the vehicle command
 var detectCmd = &cobra.Command{
 	Use:   "detect",
-	Short: "Detect compatible hardware",
+	Short: "Auto-detect compatible hardware",
 	Run:   runDetect,
 }
 
 func init() {
 	rootCmd.AddCommand(detectCmd)
-}
-
-func applicability(hit detect.Result) (string, string, string, string, string) {
-	return "", "", "", "", ""
 }
 
 func IPsFromSubnet(arg string) (res []string) {
@@ -64,18 +59,17 @@ func ParseHostIPNet(arg string) (res []string) {
 	return IPsFromSubnet(arg)
 }
 
-func dump(res []detect.Result) {
+func display(res []detect.Result) {
 	fmt.Println("")
 	fmt.Println("SUMMARY")
 	fmt.Println("-------")
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"}) // "Charger", "Charge", "Grid", "PV", "Battery"
+	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
 
 	for _, hit := range res {
 		switch hit.ID {
-		// case "ping", "tcp_80", "tcp_502", "sunspec":
-		case "ping", "tcp_80", "tcp_502":
+		case "ping", "tcp_80", "tcp_502", "sunspec":
 			continue
 		default:
 			host := ""
@@ -93,7 +87,7 @@ func dump(res []detect.Result) {
 			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
 
 			// charger, charge, grid, pv, battery := applicability(hit)
-			table.Append([]string{hit.Host, host, hit.ID, details}) // charger, charge, grid, pv, battery
+			table.Append([]string{hit.Host, host, hit.ID, details})
 		}
 	}
 
@@ -113,7 +107,7 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// autodetect
 	if len(hosts) == 0 {
-		ips := semp.LocalIPs()
+		ips := util.LocalIPs()
 		if len(ips) == 0 {
 			log.FATAL.Fatal("could not find ip")
 		}
@@ -127,7 +121,6 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	// magic happens here
 	res := detect.Work(log, 50, hosts)
-
 	// res := []detect.Result{
 	// 	{
 	// 		Task: detect.Task{
@@ -174,9 +167,8 @@ func runDetect(cmd *cobra.Command, args []string) {
 	// 	},
 	// }
 
-	res = detect.Prepare(res)
-	dump(res)
+	display(res)
 
-	sum := detect.Consolidate(res)
-	fmt.Printf("%+v\n", sum)
+	// sum := detect.Consolidate(res)
+	// fmt.Printf("%+v\n", sum)
 }

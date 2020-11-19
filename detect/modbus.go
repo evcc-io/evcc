@@ -16,6 +16,9 @@ import (
 
 type ModbusResult struct {
 	SlaveID uint8
+	Model   int
+	Point   string
+	Value   interface{}
 }
 
 func init() {
@@ -117,6 +120,9 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 
 		if err == nil {
 			// fmt.Printf("modbus: %d.%s/%v %+v %s\n", model, h.Point, res.Value(), res, res.Type())
+			mr.Model = model
+			mr.Point = h.Point
+			mr.Value = res.Value()
 
 			if len(h.Invalid) == 0 {
 				return true

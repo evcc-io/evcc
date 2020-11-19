@@ -56,7 +56,9 @@ func init() {
 		Type:    "modbus",
 		Depends: taskTCP502,
 		Config: map[string]interface{}{
-			"ids": sunspecIDs,
+			"ids":    sunspecIDs,
+			"models": []int{1},
+			"point":  "Mn",
 		},
 	})
 

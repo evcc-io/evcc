@@ -1,9 +1,13 @@
 package detect
 
 import (
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/andig/evcc/util"
+	"github.com/fatih/structs"
+	"github.com/jeremywohl/flatten"
 )
 
 type Result struct {
@@ -56,6 +60,28 @@ func Work(log *util.Logger, num int, hosts []string) []Result {
 
 	close(hits)
 	<-done
+
+	return postProcess(res)
+}
+
+func postProcess(res []Result) []Result {
+	for idx, hit := range res {
+		if sma, ok := hit.Details.(SmaResult); ok {
+			hit.Host = sma.Addr
+		}
+
+		hit.Attributes = make(map[string]interface{})
+		flat, _ := flatten.Flatten(structs.Map(hit), "", flatten.DotStyle)
+		for k, v := range flat {
+			hit.Attributes[strings.ToLower(k)] = v
+		}
+		// fmt.Println(hit.Attributes)
+
+		res[idx] = hit
+	}
+
+	// sort by host
+	sort.Slice(res, func(i, j int) bool { return res[i].Host < res[j].Host })
 
 	return res
 }
