@@ -61,7 +61,9 @@ func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
 	timer := time.NewTimer(h.Timeout)
 WAIT:
 	for {
-		sender.Send("report 1")
+		go func() {
+			_ = sender.Send("report 1")
+		}()
 
 		select {
 		case t := <-resC:
