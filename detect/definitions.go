@@ -6,7 +6,7 @@ var (
 	taskList = &TaskList{}
 
 	sunspecIDs   = []int{1, 2, 3, 71, 126} // modbus ids
-	chargeStatus = []int{65, 66, 67}       // status values A..C
+	chargeStatus = []int{0x41, 0x42, 0x43} // status values A..C
 )
 
 const timeout = 100 * time.Millisecond
@@ -28,7 +28,7 @@ const (
 	taskSonnen      = "sonnen"
 	taskPowerwall   = "powerwall"
 	taskWallbe      = "wallbe"
-	taskPhoenixEMCP = "emcp"
+	taskPhoenixEMCP = "em-cp"
 	taskEVSEWifi    = "evsewifi"
 	taskGoE         = "go-e"
 	taskInverter    = "inverter"
