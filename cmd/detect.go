@@ -62,6 +62,8 @@ func ParseHostIPNet(arg string) (res []string) {
 func display(res []detect.Result) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
+	table.SetAutoMergeCells(true)
+	table.SetRowLine(true)
 
 	for _, hit := range res {
 		switch hit.ID {
@@ -93,7 +95,7 @@ Please open https://github.com/andig/evcc/issues/new in your browser and copy th
 results above into a new issue. Please tell us:
 
 	1. Is the scan result correct?
-	2. If it's not correct: please describe your hardware setup.`
+	2. If it's not correct: please describe your hardware setup.`)
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
