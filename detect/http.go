@@ -65,6 +65,7 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 		return nil
 	}
 
+	fmt.Println("uri:", uri)
 	client := http.Client{
 		Timeout: h.Timeout,
 	}
@@ -75,6 +76,8 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 	}
 
 	defer resp.Body.Close()
+
+	fmt.Println("code:", resp.StatusCode)
 
 	if len(h.Codes) > 0 {
 		var status bool
@@ -97,9 +100,13 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 
 	if h.query != nil {
 		_, err = jq.Query(h.query, body)
+		fmt.Println("jq:", err)
 	}
 
 	if err == nil {
+		if h.query != nil {
+			fmt.Println(string(body))
+		}
 		return []interface{}{nil}
 	}
 
