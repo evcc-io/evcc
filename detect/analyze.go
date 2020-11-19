@@ -76,6 +76,7 @@ func Consolidate(res []Result) Summary {
 
 	charge := filter(res, []Criteria{
 		{tid: taskOpenwb},
+		{tid: taskKEBA},
 	})
 
 	meter := filter(res, []Criteria{

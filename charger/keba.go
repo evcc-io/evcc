@@ -84,7 +84,9 @@ func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger
 		serial = conn
 	}
 
-	return c, keba.Instance.Subscribe(serial, c.recv)
+	keba.Instance.Subscribe(serial, c.recv)
+
+	return c, nil
 }
 
 func (c *Keba) send(msg string) error {

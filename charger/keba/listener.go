@@ -66,16 +66,11 @@ func New(log *util.Logger) (*Listener, error) {
 }
 
 // Subscribe adds a client address and message channel
-func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) error {
+func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
 
-	if _, exists := l.clients[addr]; exists {
-		return fmt.Errorf("duplicate subscription: %s", addr)
-	}
-
 	l.clients[addr] = c
-	return nil
 }
 
 func (l *Listener) listen() {
