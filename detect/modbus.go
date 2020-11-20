@@ -178,8 +178,6 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 	conn.Timeout(h.Timeout)
 
 	for _, slaveID := range h.IDs {
-		log.DEBUG.Printf("slave id: %d", slaveID)
-
 		// grace period for id switch
 		conn.Slave(slaveID)
 		time.Sleep(100 * time.Millisecond)
@@ -190,8 +188,10 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 
 		var ok bool
 		if h.op.OpCode > 0 {
+			log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
 			ok = h.testRegister(log, conn.ModbusClient())
 		} else {
+			log.DEBUG.Printf("slave id: %d models: %v", slaveID, h.Models)
 			ok = h.testSunSpec(log, conn, dev, &mr)
 		}
 
