@@ -16,7 +16,7 @@ import (
 
 // detectCmd represents the vehicle command
 var detectCmd = &cobra.Command{
-	Use:   "detect [subnet/host]",
+	Use:   "detect [host ...] [subnet ...]",
 	Short: "Auto-detect compatible hardware",
 	Long: `Automatic discovery using detect scans the local network for available devices.
 Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
