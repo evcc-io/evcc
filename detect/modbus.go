@@ -59,7 +59,7 @@ type ModbusHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *ModbusHandler) testRegister(conn gridx.Client) bool {
+func (h *ModbusHandler) testRegister(log *util.Logger, conn gridx.Client) bool {
 	var bytes []byte
 	var err error
 
@@ -97,12 +97,13 @@ func (h *ModbusHandler) testRegister(conn gridx.Client) bool {
 	return false
 }
 
-func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec, mr *ModbusResult) bool {
+func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, dev *sunspec.SunSpec, mr *ModbusResult) bool {
 	err := dev.Initialize(conn.ModbusClient())
 	if errors.Is(err, meters.ErrPartiallyOpened) {
 		err = nil
 	}
 	if err != nil {
+		log.TRACE.Println("init:", err)
 		return false
 	}
 
@@ -123,6 +124,8 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 			mr.Model = model
 			mr.Point = h.Point
 			mr.Value = res.Value()
+
+			log.TRACE.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
 
 			if len(h.Invalid) == 0 {
 				return true
@@ -145,6 +148,8 @@ func (h *ModbusHandler) testSunSpec(conn meters.Connection, dev *sunspec.SunSpec
 					return true
 				}
 			}
+		} else {
+			log.TRACE.Printf("model %d: %v", model, err)
 		}
 	}
 
@@ -172,9 +177,9 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 
 		var ok bool
 		if h.op.OpCode > 0 {
-			ok = h.testRegister(conn.ModbusClient())
+			ok = h.testRegister(log, conn.ModbusClient())
 		} else {
-			ok = h.testSunSpec(conn, dev, &mr)
+			ok = h.testSunSpec(log, conn, dev, &mr)
 		}
 
 		if ok {
