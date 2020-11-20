@@ -29,7 +29,6 @@ type goeStatusResponse struct {
 	Car int    `json:"car,string"` // car status
 	Alw int    `json:"alw,string"` // allow charging
 	Amp int    `json:"amp,string"` // current [A], goes to EEPROM
-	Amx int    `json:"amx,string"` // current [A], doesn't go to EEPROM
 	Err int    `json:"err,string"` // error
 	Stp int    `json:"stp,string"` // stop state
 	Tmp int    `json:"tmp,string"` // temperature [°C]
@@ -202,9 +201,9 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
-	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil && isValid(status) && int64(status.Amx) != current {
-		return fmt.Errorf("amx update failed: %d", status.Amx)
+	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current)) // set amx is visible in amp response
+	if err == nil && isValid(status) && int64(status.Amp) != current {
+		return fmt.Errorf("amx update failed: %d", status.Amp)
 	}
 
 	return err
