@@ -75,13 +75,17 @@ func postProcess(res []Result) []Result {
 		for k, v := range flat {
 			hit.Attributes[strings.ToLower(k)] = v
 		}
-		// fmt.Println(hit.Attributes)
 
 		res[idx] = hit
 	}
 
 	// sort by host
-	sort.Slice(res, func(i, j int) bool { return res[i].Host < res[j].Host })
+	sort.Slice(res, func(i, j int) bool {
+		if res[i].Host == res[j].Host {
+			return res[i].Type < res[j].Type
+		}
+		return res[i].Host < res[j].Host
+	})
 
 	return res
 }

@@ -156,6 +156,7 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 
+	conn.Logger(log.TRACE)
 	conn.Timeout(h.Timeout)
 
 	for idx, slaveID := range h.IDs {

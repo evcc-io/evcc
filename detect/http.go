@@ -16,6 +16,10 @@ func init() {
 	registry.Add("http", HttpHandlerFactory)
 }
 
+type HttpResult struct {
+	Jq interface{}
+}
+
 func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := HttpHandler{
 		Schema: "http",
@@ -95,14 +99,18 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 		return nil
 	}
 
+	var res HttpResult
 	if h.query != nil {
-		if val, err := jq.Query(h.query, body); val == nil || err != nil {
+		val, err := jq.Query(h.query, body)
+		res.Jq = val
+
+		if val == nil || err != nil {
 			return nil
 		}
 	}
 
 	if err == nil {
-		return []interface{}{nil}
+		return []interface{}{res}
 	}
 
 	return nil

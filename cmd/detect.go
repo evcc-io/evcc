@@ -11,6 +11,7 @@ import (
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // detectCmd represents the vehicle command
@@ -22,6 +23,12 @@ var detectCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(detectCmd)
+
+	detectCmd.PersistentFlags().StringP(
+		"log", "l",
+		"info",
+		"Log level (fatal, error, warn, info, debug, trace)",
+	)
 }
 
 func IPsFromSubnet(arg string) (res []string) {
@@ -69,12 +76,12 @@ func display(res []detect.Result) {
 		switch hit.ID {
 		case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
 			continue
+
 		default:
 			host := ""
 			hosts, err := net.LookupAddr(hit.Host)
 			if err == nil && len(hosts) > 0 {
-				host = hosts[0]
-				host = strings.TrimSuffix(host, ".")
+				host = strings.TrimSuffix(hosts[0], ".")
 			}
 
 			details := ""
@@ -99,7 +106,7 @@ results above into a new issue. Please tell us:
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
-	util.LogLevel("info", nil)
+	util.LogLevel(viper.GetString("log"), nil)
 
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.
