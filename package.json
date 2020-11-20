@@ -11,9 +11,15 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@vue/eslint-config-standard": "^5.1.2",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-vue": "^7.1.0",
+    "npm-force-resolutions": "0.0.3",
     "parcel-bundler": "^1.12.4",
-    "rimraf": "^3.0.2",
-    "npm-force-resolutions": "0.0.3"
+    "prettier": "^2.2.0",
+    "rimraf": "^3.0.2"
   },
   "engines": {
     "npm": "^6.0.0",
