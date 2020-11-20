@@ -156,7 +156,7 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
-- `go-e`: go-eCharger chargers (both local and cloud API are supported, firmware 40.0 required)
+- `go-e`: go-eCharger chargers (both local and cloud API are supported)
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `openWB`: openWB chargers using openWB's MQTT interface
