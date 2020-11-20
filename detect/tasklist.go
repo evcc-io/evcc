@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/andig/evcc/util"
+	"github.com/thoas/go-funk"
 )
 
 type Task struct {
@@ -93,16 +94,14 @@ func (l *TaskList) Test(log *util.Logger, ip string) (res []Result) {
 		l.createHandlers()
 	})
 
-	failed := make(map[string]bool)
+	failed := make([]string, 0)
 
 HANDLERS:
 	for id, handler := range l.handlers {
 		task := l.tasks[id]
 
-		for failure := range failed {
-			if failure == task.Depends {
-				continue HANDLERS
-			}
+		if funk.ContainsString(failed, task.Depends) {
+			continue HANDLERS
 		}
 
 		results := handler.Test(log, ip)
@@ -118,7 +117,7 @@ HANDLERS:
 			}
 		} else {
 			// log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
-			failed[task.ID] = true
+			failed = append(failed, task.ID)
 		}
 	}
 
