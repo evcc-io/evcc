@@ -16,9 +16,14 @@ import (
 
 // detectCmd represents the vehicle command
 var detectCmd = &cobra.Command{
-	Use:   "detect",
+	Use:   "detect [subnet/host]",
 	Short: "Auto-detect compatible hardware",
-	Run:   runDetect,
+	Long: `Automatic discovery using detect scans the local network for available devices.
+Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
+
+On successful detection, suggestions for EVCC configuration can be made. The suggestions should simplify
+configuring EVCC but are probably not sufficent for fully automatic configuration.`,
+	Run: runDetect,
 }
 
 func init() {
