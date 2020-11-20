@@ -22,7 +22,7 @@ var detectCmd = &cobra.Command{
 Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
 
 On successful detection, suggestions for EVCC configuration can be made. The suggestions should simplify
-configuring EVCC but are probably not sufficent for fully automatic configuration.`,
+configuring EVCC but are probably not sufficient for fully automatic configuration.`,
 	Run: runDetect,
 }
 
@@ -36,8 +36,8 @@ func init() {
 	)
 }
 
+// IPsFromSubnet creates a list of ip addresses for given subnet
 func IPsFromSubnet(arg string) (res []string) {
-	// create ips
 	gen, err := ipnetgen.New(arg)
 	if err != nil {
 		log.FATAL.Fatal("could not create iterator")
@@ -50,6 +50,7 @@ func IPsFromSubnet(arg string) (res []string) {
 	return res
 }
 
+// ParseHostIPNet converts host or cidr into a host list
 func ParseHostIPNet(arg string) (res []string) {
 	if ip := net.ParseIP(arg); ip != nil {
 		return []string{ip.String()}
@@ -115,9 +116,9 @@ func runDetect(cmd *cobra.Command, args []string) {
 
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.
-We're focusing on devices that are commonly used that are detectable with reasonable efforts.
-On successful detection, suggestions for EVCC configuration can be made.
-Full auto configuration is probably no achievable.`)
+Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
+On successful detection, suggestions for EVCC configuration can be made. The suggestions should simplify
+configuring EVCC but are probably not sufficient for fully automatic configuration.`)
 	fmt.Println()
 
 	// args
