@@ -14,6 +14,10 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+func init() {
+	registry.Add("modbus", ModbusHandlerFactory)
+}
+
 type ModbusResult struct {
 	SlaveID uint8
 	Model   int
@@ -21,8 +25,15 @@ type ModbusResult struct {
 	Value   interface{}
 }
 
-func init() {
-	registry.Add("modbus", ModbusHandlerFactory)
+func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
+	port := handler.(*ModbusHandler).Port
+	cc := map[string]interface{}{
+		"uri":   fmt.Sprintf("%s:%d", res.Host, port),
+		"model": "sunspec",
+		"id":    r.SlaveID,
+	}
+
+	return cc
 }
 
 func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
