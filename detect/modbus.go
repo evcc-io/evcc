@@ -130,7 +130,8 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 		)
 
 		if err == nil {
-			// fmt.Printf("modbus: %d.%s/%v %+v %s\n", model, h.Point, res.Value(), res, res.Type())
+			fmt.Printf("modbus: %d.%s/%v %+v %s\n", model, h.Point, res.Value(), res, res.Type())
+
 			mr.Model = model
 			mr.Point = h.Point
 			mr.Value = res.Value()
