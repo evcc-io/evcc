@@ -117,6 +117,8 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 		return false
 	}
 
+	defer conn.Close()
+
 	if len(h.Models) == 0 {
 		return true
 	}
