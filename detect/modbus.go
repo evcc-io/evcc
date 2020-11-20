@@ -114,7 +114,6 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 		err = nil
 	}
 	if err != nil {
-		log.TRACE.Println("init:", err)
 		return false
 	}
 

@@ -28,12 +28,6 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 
 func init() {
 	rootCmd.AddCommand(detectCmd)
-
-	detectCmd.PersistentFlags().StringP(
-		"log", "l",
-		"info",
-		"Log level (fatal, error, warn, info, debug, trace)",
-	)
 }
 
 // IPsFromSubnet creates a list of ip addresses for given subnet
@@ -112,6 +106,7 @@ results above into a new issue. Please tell us:
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
+	rootCmd.PersistentFlags().Lookup("log").DefValue = "info"
 	util.LogLevel(viper.GetString("log"), nil)
 
 	fmt.Println(`
