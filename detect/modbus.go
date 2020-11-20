@@ -117,8 +117,6 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 		return false
 	}
 
-	defer conn.Close()
-
 	if len(h.Models) == 0 {
 		return true
 	}
@@ -174,19 +172,20 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 
+	defer conn.Close()
+
 	conn.Logger(log.TRACE)
 	conn.Timeout(h.Timeout)
 
-	for idx, slaveID := range h.IDs {
+	for _, slaveID := range h.IDs {
 		// grace period for id switch
 		conn.Slave(slaveID)
-		if idx > 0 {
-			time.Sleep(100 * time.Millisecond)
-		}
+		time.Sleep(100 * time.Millisecond)
 
 		mr := ModbusResult{
 			SlaveID: slaveID,
 		}
+		fmt.Println(mr)
 
 		var ok bool
 		if h.op.OpCode > 0 {
