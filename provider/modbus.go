@@ -63,6 +63,21 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 		cc.Value = "Power"
 	}
 
+	// model configured
+	if cc.Model != "" {
+		device, err = modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
+
+		// prepare device
+		if err == nil {
+			err = device.Initialize(conn)
+
+			// silence KOSTAL implementation errors
+			if errors.Is(err, meters.ErrPartiallyOpened) {
+				err = nil
+			}
+		}
+	}
+
 	// model + value configured
 	if cc.Value != "" {
 		cc.Value = modbus.ReadingName(cc.Value)
@@ -80,21 +95,6 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	if cc.Register.Decode != "" {
 		if op.MBMD, err = modbus.RegisterOperation(cc.Register); err != nil {
 			return nil, err
-		}
-	}
-
-	// model configured
-	if cc.Model != "" {
-		device, err = modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
-
-		// prepare device
-		if err == nil {
-			err = device.Initialize(conn)
-
-			// silence KOSTAL implementation errors
-			if errors.Is(err, meters.ErrPartiallyOpened) {
-				err = nil
-			}
 		}
 	}
 
