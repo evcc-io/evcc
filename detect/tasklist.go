@@ -105,11 +105,11 @@ HANDLERS:
 			}
 		}
 
-		details := handler.Test(log, ip)
-		if len(details) > 0 {
+		results := handler.Test(log, ip)
+		if len(results) > 0 {
 			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
 
-			for _, detail := range details {
+			for _, detail := range results {
 				res = append(res, Result{
 					Task:    task,
 					Host:    ip,

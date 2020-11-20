@@ -41,6 +41,7 @@ func Work(log *util.Logger, num int, hosts []string) []Result {
 	tasks := make(chan string)
 	hits := make(chan []Result)
 	done := make(chan struct{})
+
 	wg := workers(log, num, tasks, hits)
 
 	var res []Result
