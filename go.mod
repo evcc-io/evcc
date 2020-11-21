@@ -5,12 +5,14 @@ go 1.13
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/andig/evcc-config v0.0.0-20201030211256-8664d1cdae95
+	github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c
 	github.com/asaskevich/EventBus v0.0.0-20200428142821-4fc0642a29f3
 	github.com/avast/retry-go v2.6.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
 	github.com/containrrr/shoutrrr v0.0.0-20200721140131-bafc331a1968
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.2.0
+	github.com/go-ping/ping v0.0.0-20201022122018-3977ed72668a
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.3
@@ -46,7 +48,7 @@ require (
 	github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20200831092453-b235d6a65b21
-	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c
 )

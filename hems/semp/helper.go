@@ -1,11 +1,11 @@
 package semp
 
-import "net"
+import (
+	"net"
+)
 
 // LocalIPs returns a slice of local IPv4 addresses
-func LocalIPs() []net.IP {
-	ips := make([]net.IP, 0)
-
+func LocalIPs() (ips []net.IPNet) {
 	ifaces, err := net.Interfaces()
 	if err != nil {
 		panic(err)
@@ -18,9 +18,10 @@ func LocalIPs() []net.IP {
 		}
 
 		for _, addr := range addrs {
+			// fmt.Println(addr)
 			if ip, ok := addr.(*net.IPNet); ok {
 				if !ip.IP.IsLoopback() && ip.IP.To4() != nil {
-					ips = append(ips, ip.IP)
+					ips = append(ips, *ip)
 				}
 			}
 		}
