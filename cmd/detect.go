@@ -106,9 +106,9 @@ results above into a new issue. Please tell us:
 }
 
 func runDetect(cmd *cobra.Command, args []string) {
-	rootCmd.PersistentFlags().Lookup("log").DefValue = "info"
 	util.LogLevel(viper.GetString("log"), nil)
 
+	println(viper.GetString("log"))
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.
 Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
@@ -138,54 +138,5 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 
 	// magic happens here
 	res := detect.Work(log, 50, hosts)
-	// res := []detect.Result{
-	// 	{
-	// 		Task: detect.Task{
-	// 			ID:   "sma",
-	// 			Type: "sma",
-	// 		},
-	// 		Host: "server",
-	// 		Details: detect.SmaResult{
-	// 			Addr:   "sem",
-	// 			Serial: "0815",
-	// 			Http:   true,
-	// 		},
-	// 	}, {
-	// 		Task: detect.Task{
-	// 			ID:   "sma",
-	// 			Type: "sma",
-	// 		},
-	// 		Host: "server",
-	// 		Details: detect.SmaResult{
-	// 			Addr:   "sem-2",
-	// 			Serial: "0815-2",
-	// 			Http:   true,
-	// 		},
-	// 	}, {
-	// 		Task: detect.Task{
-	// 			ID:   "sma",
-	// 			Type: "sma",
-	// 		},
-	// 		Host: "server",
-	// 		Details: detect.SmaResult{
-	// 			Addr:   "shm",
-	// 			Serial: "4711",
-	// 			Http:   false,
-	// 		},
-	// 	}, {
-	// 		Task: detect.Task{
-	// 			ID:   "modbus_inverter",
-	// 			Type: "modbus",
-	// 		},
-	// 		Host: "wr",
-	// 		Details: detect.ModbusResult{
-	// 			SlaveID: 126,
-	// 		},
-	// 	},
-	// }
-
 	display(res)
-
-	// sum := detect.Consolidate(res)
-	// fmt.Printf("%+v\n", sum)
 }

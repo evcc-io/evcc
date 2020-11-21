@@ -134,10 +134,9 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:       taskPhoenixEMCP,
-		Type:     "modbus",
-		Depends:  TaskTCP502,
-		Excludes: []string{TaskSunspec},
+		ID:      taskPhoenixEMCP,
+		Type:    "modbus",
+		Depends: TaskTCP502,
 		Config: map[string]interface{}{
 			"ids":     []int{180},
 			"address": 100,

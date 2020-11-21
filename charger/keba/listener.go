@@ -79,7 +79,7 @@ func (l *Listener) listen() {
 	for {
 		read, addr, err := l.conn.ReadFrom(b)
 		if err != nil {
-			l.log.ERROR.Printf("listener: %v", err)
+			l.log.TRACE.Printf("listener: %v", err)
 			continue
 		}
 
