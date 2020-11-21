@@ -3,8 +3,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "rimraf dist; parcel watch assets/* --public-url /dist/",
-    "build": "rimraf dist; parcel build assets/* --public-url /dist/",
+    "dev": "rimraf dist; parcel watch assets/* --public-url ./dist/",
+    "build": "rimraf dist; parcel build assets/* --public-url ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "fix-audit": "npm-force-resolutions"
   },
@@ -25,6 +25,9 @@
   "repository": "github:andig/evcc",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.1",
+    "@fortawesome/fontawesome-svg-core": "^1.2.32",
+    "@fortawesome/free-solid-svg-icons": "^5.15.1",
+    "@fortawesome/vue-fontawesome": "^2.0.0",
     "axios": "^0.21.0",
     "bootstrap": "^4.5.3",
     "jquery": "^3.5.1",

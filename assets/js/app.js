@@ -4,6 +4,13 @@ import "bootstrap"
 import Vue from "vue"
 import VueRouter from "vue-router"
 import axios from "axios"
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faSun, faArrowUp, faArrowDown, faTemperatureLow, faTemperatureHigh, faThermometerHalf, faLeaf, faChevronUp, faChevronDown, faExclamationTriangle }from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+library.add(faSun, faArrowUp, faArrowDown, faTemperatureLow, faTemperatureHigh, faThermometerHalf, faLeaf, faChevronUp, faChevronDown, faExclamationTriangle)
+
+Vue.component('fa-icon', FontAwesomeIcon)
 
 Vue.use(VueRouter)
 

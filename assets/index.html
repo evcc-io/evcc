@@ -22,16 +22,13 @@
 
   <!-- CSS -->
   <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="../node_modules/@fortawesome/fontawesome-free/css/fontawesome.min.css" rel="stylesheet">
-  <link href="../node_modules/@fortawesome/fontawesome-free/css/regular.min.css" rel="stylesheet">
-  <link href="../node_modules/@fortawesome/fontawesome-free/css/solid.min.css" rel="stylesheet">
   <link href="./css/app.css" rel="stylesheet">
 </head>
 <body>
 
 <div id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="https://github.com/andig/evcc"><i class="text-primary fas fa-leaf mr-2"></i>evcc</a>
+    <a class="navbar-brand" href="https://github.com/andig/evcc"><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -61,13 +58,13 @@
         <b class="px-3" data-toggle="collapse" data-target="#release-notes" v-if="state.releaseNotes">
           <a href="#" class="text-body">
             Release notes
-            <i class="fas fa-chevron-up" v-if="notesShown"></i>
-            <i class="fas fa-chevron-down" v-else></i>
+            <fa-icon icon="chevron-up" v-if="notesShown"></fa-icon>
+            <fa-icon icon="chevron-down" v-else></fa-icon>
           </a>
         </b>
         <b class="px-3">
           <a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion" class="text-body">
-            Download <i class="fas fa-chevron-down"></i>
+            Download <fa-icon icon="chevron-down"></fa-icon>
           </a>
         </b>
         <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
@@ -92,8 +89,8 @@
 <script type="text/x-template" id="message-template">
   <div class="toast" data-delay="10000" v-bind:data-autohide="true">
     <div class="toast-header">
-      <strong class="mr-auto" v-if="item.type != 'warn'"><i class="text-danger fas fa-exclamation-triangle"></i> Error</strong>
-      <strong class="mr-auto" v-if="item.type == 'warn'"><i class="text-warning fas fa-exclamation-triangle"></i> Warning</strong>
+      <strong class="mr-auto" v-if="item.type != 'warn'"><fa-icon class="text-danger" icon="exclamation-triangle"></fa-icon> Error</strong>
+      <strong class="mr-auto" v-if="item.type == 'warn'"><fa-icon class="text-warning" icon="exclamation-triangle"></fa-icon> Warning</strong>
       <small v-if="item.status">HTTP {{item.status}}</small>
       <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -187,10 +184,10 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3" v-if="state.gridConfigured">
     <div class="mb-2 value" v-if="state.gridPower > 0">
-      Bezug <i class="text-primary fas fa-arrow-down"></i>
+      Bezug <fa-icon icon="arrow-down" class="text-primary"></fa-icon>
     </div>
     <div class="mb-2 value" v-else>
-      Einspeisung <i class="text-primary fas fa-arrow-up"></i>
+      Einspeisung <fa-icon icon="arrow-up" class="text-primary"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
@@ -198,7 +195,7 @@ loadpoints:
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.pvConfigured">
     <div class="mb-2 value">
-      Erzeugung <i class="fas fa-sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></i>
+      Erzeugung <fa-icon icon="sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
@@ -206,7 +203,8 @@ loadpoints:
   </div>
   <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryConfigured">
     <div class="mb-2 value">Batterie
-      <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
+      <fa-icon class="text-primary" icon="arrow-down" v-if="state.batteryPower < 0"></fa-icon>
+      <fa-icon class="text-primary" icon="arrow-up" v-if="state.batteryPower > 0"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
@@ -214,7 +212,7 @@ loadpoints:
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.batterySoC">
     <div class="mb-2 value">SoC
-      <i class="text-primary fas fa-battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}"></i>
+      <fa-icon class="text-primary" icon="battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}"></fa-icon>
     </div>
     <h2 class="value">
       {{state.batterySoC}} <small class="text-muted">%</small>
@@ -318,9 +316,9 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3">
     <div class="mb-2 value">Leistung
-      <i class="text-primary fa fa-temperature-low ml-1" v-if="state.climater=='heating'"></i>
-      <i class="text-primary fa fa-temperature-high ml-1" v-else-if="state.climater=='cooling'"></i>
-      <i class="text-primary fa fa-thermometer-half ml-1" v-else-if="state.climater=='on'"></i>
+      <fa-icon class="text-primary ml-1" icon="temperature-low" v-if="state.climater=='heating'"></fa-icon>
+      <fa-icon class="text-primary ml-1" icon="temperature-high" v-else-if="state.climater=='cooling'"></fa-icon>
+      <fa-icon class="text-primary ml-1" icon="thermometer-half" v-else-if="state.climater=='on'"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>
