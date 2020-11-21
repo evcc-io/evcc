@@ -111,17 +111,17 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 }
 
 // RemoteControl sets remote status demand
-func (lp *LoadPoint) RemoteControl(source string, status RemoteDemand) {
+func (lp *LoadPoint) RemoteControl(source string, demand RemoteDemand) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.log.INFO.Println("remote status demand:", status)
+	lp.log.INFO.Println("remote demand:", demand)
 
 	// apply immediately
-	if lp.remoteStatus != status {
-		lp.remoteStatus = status
+	if lp.remoteDemand != demand {
+		lp.remoteDemand = demand
 
-		lp.publish("remoteDisabled", status)
+		lp.publish("remoteDisabled", demand)
 		lp.publish("remoteDisabledSource", source)
 
 		lp.requestUpdate()

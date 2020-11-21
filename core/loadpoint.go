@@ -86,7 +86,7 @@ type LoadPoint struct {
 
 	// cached state
 	status        api.ChargeStatus // Charger status
-	remoteStatus  RemoteDemand     // External status demand
+	remoteDemand  RemoteDemand     // External status demand
 	charging      bool             // Charging cycle
 	chargePower   float64          // Charging power
 	connectedTime time.Time        // Time when vehicle was connected
@@ -412,11 +412,11 @@ func (lp *LoadPoint) climateActive() bool {
 }
 
 // remoteControlled returns true if remote control status is active
-func (lp *LoadPoint) remoteControlled(status RemoteDemand) bool {
+func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 	lp.Lock()
 	defer lp.Unlock()
 
-	return lp.remoteStatus == status
+	return lp.remoteDemand == demand
 }
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
