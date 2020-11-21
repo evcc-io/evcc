@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -19,7 +16,6 @@ import (
 
 const (
 	udpTimeout = time.Second
-	kebaPort   = 7090
 )
 
 // RFID contains access credentials
@@ -34,6 +30,7 @@ type Keba struct {
 	rfid    RFID
 	timeout time.Duration
 	recv    chan keba.UDPMsg
+	sender  *keba.Sender
 }
 
 func init() {
@@ -58,19 +55,20 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewKeba creates a new charger
-func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
+func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
 	log := util.NewLogger("keba")
 
 	var err error
 	if keba.Instance == nil {
-		keba.Instance, err = keba.New(log, fmt.Sprintf(":%d", kebaPort))
+		keba.Instance, err = keba.New(log)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// add default port
-	conn = util.DefaultPort(conn, kebaPort)
+	conn := util.DefaultPort(uri, keba.Port)
+	sender, err := keba.NewSender(uri)
 
 	c := &Keba{
 		log:     log,
@@ -78,6 +76,7 @@ func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger
 		rfid:    rfid,
 		timeout: timeout,
 		recv:    make(chan keba.UDPMsg),
+		sender:  sender,
 	}
 
 	// use serial to subscribe if defined for docker scenarios
@@ -85,24 +84,9 @@ func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger
 		serial = conn
 	}
 
-	return c, keba.Instance.Subscribe(serial, c.recv)
-}
+	keba.Instance.Subscribe(serial, c.recv)
 
-func (c *Keba) send(msg string) error {
-	raddr, err := net.ResolveUDPAddr("udp", c.conn)
-	if err != nil {
-		return err
-	}
-
-	conn, err := net.DialUDP("udp", nil, raddr)
-	if err != nil {
-		return err
-	}
-
-	defer conn.Close()
-
-	_, err = io.Copy(conn, strings.NewReader(msg))
-	return err
+	return c, err
 }
 
 func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, closeC <-chan struct{}) {
@@ -140,7 +124,7 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 
 	go c.receive(report, resC, errC, closeC)
 
-	if err := c.send(msg); err != nil {
+	if err := c.sender.Send(msg); err != nil {
 		return err
 	}
 
