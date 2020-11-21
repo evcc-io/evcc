@@ -28,7 +28,7 @@
 
 <div id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="https://github.com/andig/evcc"><font-awesome-icon icon="leaf" class="text-primary mr-2" />evcc</a>
+    <a class="navbar-brand" href="https://github.com/andig/evcc"><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -58,13 +58,13 @@
         <b class="px-3" data-toggle="collapse" data-target="#release-notes" v-if="state.releaseNotes">
           <a href="#" class="text-body">
             Release notes
-            <font-awesome-icon icon="chevron-up" v-if="notesShown" />
-            <font-awesome-icon icon="chevron-down" v-else />
+            <fa-icon icon="chevron-up" v-if="notesShown"></fa-icon>
+            <fa-icon icon="chevron-down" v-else></fa-icon>
           </a>
         </b>
         <b class="px-3">
           <a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion" class="text-body">
-            Download <font-awesome-icon icon="chevron-down" />
+            Download <fa-icon icon="chevron-down"></fa-icon>
           </a>
         </b>
         <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
@@ -89,8 +89,8 @@
 <script type="text/x-template" id="message-template">
   <div class="toast" data-delay="10000" v-bind:data-autohide="true">
     <div class="toast-header">
-      <strong class="mr-auto" v-if="item.type != 'warn'"><font-awesome-icon class="text-danger" icon="exclamation-triangle" /> Error</strong>
-      <strong class="mr-auto" v-if="item.type == 'warn'"><font-awesome-icon class="text-warning" icon="exclamation-triangle" /> Warning</strong>
+      <strong class="mr-auto" v-if="item.type != 'warn'"><fa-icon class="text-danger" icon="exclamation-triangle"></fa-icon> Error</strong>
+      <strong class="mr-auto" v-if="item.type == 'warn'"><fa-icon class="text-warning" icon="exclamation-triangle"></fa-icon> Warning</strong>
       <small v-if="item.status">HTTP {{item.status}}</small>
       <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -184,10 +184,10 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3" v-if="state.gridConfigured">
     <div class="mb-2 value" v-if="state.gridPower > 0">
-      Bezug <font-awesome-icon icon="arrow-down" class="text-primary"/>
+      Bezug <fa-icon icon="arrow-down" class="text-primary"></fa-icon>
     </div>
     <div class="mb-2 value" v-else>
-      Einspeisung <font-awesome-icon icon="arrow-up" class="text-primary"/>
+      Einspeisung <fa-icon icon="arrow-up" class="text-primary"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.gridPower)}} <small class="text-muted">{{fmtUnit(state.gridPower)}}W</small>
@@ -195,7 +195,7 @@ loadpoints:
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.pvConfigured">
     <div class="mb-2 value">
-      Erzeugung <font-awesome-icon icon="sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"/>
+      Erzeugung <fa-icon icon="sun" v-bind:class="{'text-primary':state.pvPower<0,'text-muted':state.pvPower>=0}"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.pvPower)}} <small class="text-muted">{{fmtUnit(state.pvPower)}}W</small>
@@ -203,8 +203,8 @@ loadpoints:
   </div>
   <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryConfigured">
     <div class="mb-2 value">Batterie
-      <font-awesome-icon class="text-primary" icon="arrow-down" v-if="state.batteryPower < 0" />
-      <font-awesome-icon class="text-primary" icon="arrow-up" v-if="state.batteryPower > 0" />
+      <fa-icon class="text-primary" icon="arrow-down" v-if="state.batteryPower < 0"></fa-icon>
+      <fa-icon class="text-primary" icon="arrow-up" v-if="state.batteryPower > 0"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
@@ -212,7 +212,7 @@ loadpoints:
   </div>
   <div class="col-6 col-md-3 mt-3" v-if="state.batterySoC">
     <div class="mb-2 value">SoC
-      <font-awesome-icon class="text-primary" icon="battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}" />
+      <fa-icon class="text-primary" icon="battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}"></fa-icon>
     </div>
     <h2 class="value">
       {{state.batterySoC}} <small class="text-muted">%</small>
@@ -316,9 +316,9 @@ loadpoints:
 <div class="row">
   <div class="col-6 col-md-3 mt-3">
     <div class="mb-2 value">Leistung
-      <font-awesome-icon class="text-primary ml-1" icon="temperature-low" v-if="state.climater=='heating'" />
-      <font-awesome-icon class="text-primary ml-1" icon="temperature-high" v-else-if="state.climater=='cooling'" />
-      <font-awesome-icon class="text-primary ml-1" icon="thermometer-half" v-else-if="state.climater=='on'" />
+      <fa-icon class="text-primary ml-1" icon="temperature-low" v-if="state.climater=='heating'"></fa-icon>
+      <fa-icon class="text-primary ml-1" icon="temperature-high" v-else-if="state.climater=='cooling'"></fa-icon>
+      <fa-icon class="text-primary ml-1" icon="thermometer-half" v-else-if="state.climater=='on'"></fa-icon>
     </div>
     <h2 class="value">
       {{fmt(state.chargePower)}} <small class="text-muted">{{fmtUnit(state.chargePower)}}W</small>

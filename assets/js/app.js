@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 library.add(faSun, faArrowUp, faArrowDown, faTemperatureLow, faTemperatureHigh, faThermometerHalf, faLeaf, faChevronUp, faChevronDown, faExclamationTriangle)
 
-Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.component('fa-icon', FontAwesomeIcon)
 
 Vue.use(VueRouter)
 
