@@ -165,7 +165,7 @@ func (v *VW) refreshHeaders() map[string]string {
 	}
 }
 
-// Logout closes the vehicle session
+// Close closes the vehicle session
 func (v *VW) Close() error {
 	data := url.Values(map[string][]string{
 		"token_type_hint": {"refresh_token"},
