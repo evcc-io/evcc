@@ -62,3 +62,11 @@ func (site *Site) SetMinSoC(soc int) error {
 	}
 	return nil
 }
+
+// RemoteControl sets remote status demand
+func (site *Site) RemoteControl(source string, demand RemoteDemand) {
+	site.log.INFO.Println("remote demand:", demand)
+	for _, lp := range site.loadpoints {
+		lp.RemoteControl(source, demand)
+	}
+}

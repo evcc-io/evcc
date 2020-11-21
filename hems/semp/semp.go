@@ -2,7 +2,6 @@ package semp
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -22,7 +21,8 @@ import (
 )
 
 const (
-	sempBaseUrlEnv   = "SEMP_BASE_URL"
+	sempController   = "Sunny Home Manager"
+	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
 	sempLocalDevice  = "F-28081973-%s-%.02d"
 	sempSerialNumber = "%s-%d"
@@ -44,16 +44,11 @@ type SEMP struct {
 	uid     string
 	hostURI string
 	port    int
-	site    site
-}
-
-// site is the minimal interface for accessing site methods
-type site interface {
-	LoadPoints() []core.LoadPointAPI
+	site    core.SiteAPI
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(site site, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
@@ -142,7 +137,7 @@ func (s *SEMP) Done() chan struct{} {
 }
 
 func (s *SEMP) callbackURI() string {
-	if uri := os.Getenv(sempBaseUrlEnv); uri != "" {
+	if uri := os.Getenv(sempBaseURLEnv); uri != "" {
 		return strings.TrimSuffix(uri, "/")
 	}
 
@@ -151,11 +146,11 @@ func (s *SEMP) callbackURI() string {
 	if len(ips) > 0 {
 		ip = ips[0].String()
 	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseUrlEnv)
+		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseUrlEnv, uri)
+	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }
@@ -177,6 +172,8 @@ func (s *SEMP) handlers(router *mux.Router) {
 }
 
 func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
+	s.log.TRACE.Printf("send: %+v", msg)
+
 	b, err := xml.MarshalIndent(msg, "", "  ")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -201,7 +198,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
-			SEMPService: SEMPService{
+			ServiceDefinition: ServiceDefinition{
 				Xmlns:          urnSEMPService,
 				Server:         s.hostURI,
 				BasePath:       basePath,
@@ -303,18 +300,6 @@ func (s *SEMP) deviceID(id int) string {
 	return fmt.Sprintf(sempLocalDevice, s.serialNumber(), id)
 }
 
-// cacheGet returns loadpoint value from cache
-func (s *SEMP) cacheGet(id int, key string) (res util.Param, err error) {
-	pid := util.Param{LoadPoint: &id, Key: key}
-
-	res = s.cache.Get(pid.UniqueID())
-	if res.Key == "" {
-		err = errors.New("not found")
-	}
-
-	return res, err
-}
-
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 	method := MethodEstimation
 	if lp.HasChargeMeter() {
@@ -353,12 +338,19 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 
 func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 	var chargePower float64
-	if chargePowerP, err := s.cacheGet(id, "chargePower"); err == nil {
+	if chargePowerP, err := s.cache.GetChecked(id, "chargePower"); err == nil {
 		chargePower = chargePowerP.Val.(float64)
 	}
 
+	isPV := false
+	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
+		if mode, ok := modeP.Val.(api.ChargeMode); ok && mode == api.ModePV {
+			isPV = true
+		}
+	}
+
 	status := StatusOff
-	if statusP, err := s.cacheGet(id, "charging"); err == nil {
+	if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
 		if statusP.Val.(bool) {
 			status = StatusOn
 		}
@@ -366,7 +358,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: true,
+		EMSignalsAccepted: isPV,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -387,17 +379,17 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 
 func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
 	mode := api.ModeOff
-	if modeP, err := s.cacheGet(id, "mode"); err == nil {
+	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
 		mode = api.ChargeMode(modeP.Val.(string))
 	}
 
 	var charging bool
-	if chargingP, err := s.cacheGet(id, "charging"); err == nil {
+	if chargingP, err := s.cache.GetChecked(id, "charging"); err == nil {
 		charging = chargingP.Val.(bool)
 	}
 
 	chargeEstimate := time.Duration(-1)
-	if chargeEstimateP, err := s.cacheGet(id, "chargeEstimate"); err == nil {
+	if chargeEstimateP, err := s.cache.GetChecked(id, "chargeEstimate"); err == nil {
 		chargeEstimate = chargeEstimateP.Val.(time.Duration)
 	}
 
@@ -407,7 +399,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	var maxEnergy int
-	if chargeRemainingEnergyP, err := s.cacheGet(id, "chargeRemainingEnergy"); err == nil {
+	if chargeRemainingEnergyP, err := s.cache.GetChecked(id, "chargeRemainingEnergy"); err == nil {
 		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
 	}
 
@@ -423,7 +415,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 
 	if charging {
 		res = PlanningRequest{
-			Timeframe: []Timeframe{Timeframe{
+			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
 				EarliestStart: 0,
 				LatestEnd:     latestEnd,
@@ -460,6 +452,28 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	for _, dev := range msg.DeviceControl {
+		did := dev.DeviceID
+
+		for id, lp := range s.site.LoadPoints() {
+			if did != s.deviceID(id) {
+				continue
+			}
+
+			if mode := lp.GetMode(); mode != api.ModePV {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			demand := core.RemoteSoftDisable
+			if dev.On {
+				demand = core.RemoteEnable
+			}
+
+			lp.RemoteControl(sempController, demand)
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)

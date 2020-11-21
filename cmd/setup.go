@@ -52,8 +52,8 @@ func configureMQTT(conf provider.MqttConfig) {
 }
 
 // setup HEMS
-func configureHEMS(conf string, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
-	hems, err := hems.NewFromConfig(conf, site, cache, httpd)
+func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
+	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, cache, httpd)
 	if err != nil {
 		log.FATAL.Fatalf("failed configuring hems: %v", err)
 	}

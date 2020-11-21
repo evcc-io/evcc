@@ -86,6 +86,7 @@ type LoadPoint struct {
 
 	// cached state
 	status        api.ChargeStatus // Charger status
+	remoteDemand  RemoteDemand     // External status demand
 	charging      bool             // Charging cycle
 	chargePower   float64          // Charging power
 	connectedTime time.Time        // Time when vehicle was connected
@@ -412,6 +413,14 @@ func (lp *LoadPoint) climateActive() bool {
 	return false
 }
 
+// remoteControlled returns true if remote control status is active
+func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
+	lp.Lock()
+	defer lp.Unlock()
+
+	return lp.remoteDemand == demand
+}
+
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle != nil {
@@ -703,7 +712,7 @@ func (lp *LoadPoint) publishSoC() {
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64) {
 	mode := lp.GetMode()
-	lp.publish("mode", string(mode))
+	lp.publish("mode", mode)
 
 	// read and publish meters first
 	lp.updateChargeMeter()
@@ -741,6 +750,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// check if car connected and ready for charging
 	var err error
 
+	// track if remote disabled is actually active
+	remoteDisabled := RemoteEnable
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -754,6 +766,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 			targetCurrent = lp.MinCurrent
 		}
 		err = lp.handler.Ramp(targetCurrent, true)
+
+	// OCPP
+	case lp.remoteControlled(RemoteHardDisable):
+		remoteDisabled = RemoteHardDisable
+		fallthrough
 
 	case mode == api.ModeOff:
 		err = lp.handler.Ramp(0, true)
@@ -775,8 +792,18 @@ func (lp *LoadPoint) Update(sitePower float64) {
 			required = true
 		}
 
+		// Sunny Home Manager
+		if mode == api.ModePV && lp.remoteControlled(RemoteSoftDisable) {
+			remoteDisabled = RemoteSoftDisable
+			targetCurrent = 0
+			required = true
+		}
+
 		err = lp.handler.Ramp(targetCurrent, required)
 	}
+
+	// effective disabled status
+	lp.publish("remoteDisabled", remoteDisabled)
 
 	if err != nil {
 		lp.log.ERROR.Println(err)
