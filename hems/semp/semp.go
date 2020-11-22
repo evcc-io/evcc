@@ -409,7 +409,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	minEnergy := maxEnergy
-	if mode == api.ModePV || mode == api.ModePV {
+	if mode == api.ModeMinPV || mode == api.ModePV {
 		minEnergy = 0
 	}
 
@@ -462,7 +462,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if mode := lp.GetMode(); mode != api.ModePV && mode != api.ModePV {
+			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
