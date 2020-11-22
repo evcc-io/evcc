@@ -20,6 +20,7 @@ install:
 
 lint:
 	golangci-lint run
+	npm run lint
 
 test:
 	@echo "Running testsuite"
