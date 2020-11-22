@@ -93,7 +93,7 @@ func (s *SocEstimator) RemainingChargeEnergy(targetSoC int) float64 {
 func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
 	if err != nil {
-		s.log.WARN.Printf("updating soc failed: %v", err)
+		//s.log.WARN.Printf("updating soc failed: %v", err)
 
 		// try to recover from temporary vehicle-api errors
 		if s.prevSoC == 0 { // never received a soc value

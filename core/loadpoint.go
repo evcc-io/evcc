@@ -693,7 +693,7 @@ func (lp *LoadPoint) publishSoC() {
 			return
 		}
 
-		lp.log.ERROR.Printf("vehicle error: %v", err)
+		//lp.log.ERROR.Printf("vehicle error: %v", err)
 	}
 
 	lp.publish("socCharge", -1)
