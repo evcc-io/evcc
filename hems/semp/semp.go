@@ -380,7 +380,7 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
 	mode := api.ModeOff
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		mode = api.ChargeMode(modeP.Val.(string))
+		mode = modeP.Val.(api.ChargeMode)
 	}
 
 	var charging bool
