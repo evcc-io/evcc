@@ -34,6 +34,7 @@ type EVSEListEntry struct {
 	ActualPower    float64 `json:"actualPower"`
 	Duration       int64   `json:"duration"`
 	AlwaysActive   bool    `json:"alwaysActive"`
+	HasMeter       bool    `json:"hasMeter"`
 	LastActionUser string  `json:"lastActionUser"`
 	LastActionUID  string  `json:"lastActionUID"`
 	Energy         float64 `json:"energy"`
@@ -73,6 +74,13 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	evse, err := NewEVSEWifi(cc.URI)
 	if err != nil {
 		return evse, err
+	}
+
+	// auto-detect EVSE meter
+	if meter, err := evse.HasMeter(); meter && err == nil {
+		cc.Meter.Energy = true
+		cc.Meter.Energy = true
+		cc.Meter.Currents = true
 	}
 
 	// decorate Charger with Meter
@@ -137,6 +145,12 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 
 	evse.alwaysActive = params.AlwaysActive
 	return params, nil
+}
+
+// HasMeter returns the useMeter api response
+func (evse *EVSEWifi) HasMeter() (bool, error) {
+	params, err := evse.getParameters()
+	return params.HasMeter, err
 }
 
 // Status implements the Charger.Status interface
