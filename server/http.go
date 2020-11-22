@@ -228,6 +228,38 @@ func MinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 	}
 }
 
+// RemoteDemandHandler updates minimum soc
+func RemoteDemandHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		demandS, ok := vars["demand"]
+
+		var source string
+		if ok {
+			source, ok = vars["source"]
+		}
+
+		demand, err := core.RemoteDemandString(demandS)
+
+		if !ok || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		loadpoint.RemoteControl(source, demand)
+
+		res := struct {
+			Demand core.RemoteDemand `json:"demand"`
+			Source string            `json:"source"`
+		}{
+			Source: source,
+			Demand: demand,
+		}
+		jsonResponse(w, r, res)
+	}
+}
+
 // SocketHandler attaches websocket handler to uri
 func SocketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -258,6 +290,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
 		"getminsoc":    {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(site)},
 		"setminsoc":    {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(site)},
+		"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(site)},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -300,6 +333,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		applyRouteHandler(subAPI, routes["settargetsoc"], TargetSoCHandler(lp))
 		applyRouteHandler(subAPI, routes["getminsoc"], CurrentMinSoCHandler(lp))
 		applyRouteHandler(subAPI, routes["setminsoc"], MinSoCHandler(lp))
+		applyRouteHandler(subAPI, routes["remotedemand"], RemoteDemandHandler(lp))
 	}
 
 	srv := &HTTPd{

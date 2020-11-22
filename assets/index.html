@@ -263,25 +263,19 @@ loadpoints:
   </div>
 
   <div class="row" v-if="!multi">
-    <div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5 ">
+    <div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5">
       <span class="h1 ">{{state.title||"Ladepunkt"}}</span>
     </div>
-    <div class="col-12 col-md-8  mt-3 mt-md-5 align-items-end"
+    <div class="col-12 col-md-8 d-flex d-md-flex mt-3 mt-md-5 pt-3"
       v-if="state.remoteDisabled">
-      <h1 class="d-md-inline d-none">
-        <span class="badge badge-warning font-base" v-if="state.remoteDisabled == 'soft'">
-          Adaptives PV-Laden deaktiviert durch {{state.remoteDisabledSource}}
+      <h5 class="w-100">
+        <span class="badge badge-warning w-100" v-if="state.remoteDisabled == 'soft'">
+          {{state.remoteDisabledSource}}: Adaptives PV-Laden deaktiviert
         </span>
-        <span class="badge badge-danger font-base" v-if="state.remoteDisabled == 'hard'">
-          Deaktiviert durch {{state.remoteDisabledSource}}
+        <span class="badge badge-danger w-100" v-if="state.remoteDisabled == 'hard'">
+          {{state.remoteDisabledSource}}: Deaktiviert
         </span>
-      </h1>
-      <span class="d-md-none badge badge-warning font-base" v-if="state.remoteDisabled == 'soft'">
-        Adaptives PV-Laden deaktiviert durch {{state.remoteDisabledSource}}
-      </span>
-      <span class="d-md-none badge badge-danger font-base" v-if="state.remoteDisabled == 'hard'">
-        Deaktiviert durch {{state.remoteDisabledSource}}
-      </span>
+      </h5>
     </div>
   </div>
 
