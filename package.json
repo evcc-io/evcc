@@ -60,9 +60,11 @@
     }
   },
   "lint-staged": {
-    "assets/**/*.{html,js,vue,json,css}": [
-      "prettier --write",
+    "assets/**/*.{js,vue,json}": [
       "eslint --fix"
+    ],
+    "assets/**/*.{html,js,vue,json,css}": [
+      "prettier --write"
     ]
   }
 }
