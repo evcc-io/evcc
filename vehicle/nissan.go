@@ -27,19 +27,16 @@ import (
 
 // api constants
 const (
-	nissanAPIVersion = "protocol=1.0,resource=2.1"
-	nissanSRPKey     = "D5AF0E14718E662D12DBB4FE42304DF5A8E48359E22261138B40AA16CC85C76A11B43200A1EECB3C9546A262D1FBD51ACE6FCDE558C00665BBF93FF86B9F8F76AA7A53CA74F5B4DFF9A4B847295E7D82450A2078B5A28814A7A07F8BBDD34F8EEB42B0E70499087A242AA2C5BA9513C8F9D35A81B33A121EEF0A71F3F9071CCD"
-
-	nissanClientID             = "a-ncb-prod-android"
-	nissanClientSecret         = "3LBs0yOx2XO-3m4mMRW27rKeJzskhfWF0A8KUtnim8i/qYQPl8ZItp3IaqJXaYj_"
-	nissanScope                = "openid profile vehicles"
-	nissanAuthBaseURL          = "https://prod.eu.auth.kamereon.org/kauth"
-	nissanRealm                = "a-ncb-prod"
-	nissanRedirectURI          = "org.kamereon.service.nci:/oauth2redirect"
-	nissanCarAdapterBaseURL    = "https://alliance-platform-caradapter-prod.apps.eu.kamereon.io/car-adapter"
-	nissanNotificationsBaseURL = "https://alliance-platform-notifications-prod.apps.eu.kamereon.io/notifications"
-	nissanUserAdapterBaseURL   = "https://alliance-platform-usersadapter-prod.apps.eu.kamereon.io/user-adapter"
-	nissanUserBaseURL          = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
+	nissanAPIVersion         = "protocol=1.0,resource=2.1"
+	nissanClientID           = "a-ncb-prod-android"
+	nissanClientSecret       = "3LBs0yOx2XO-3m4mMRW27rKeJzskhfWF0A8KUtnim8i/qYQPl8ZItp3IaqJXaYj_"
+	nissanScope              = "openid profile vehicles"
+	nissanAuthBaseURL        = "https://prod.eu.auth.kamereon.org/kauth"
+	nissanRealm              = "a-ncb-prod"
+	nissanRedirectURI        = "org.kamereon.service.nci:/oauth2redirect"
+	nissanCarAdapterBaseURL  = "https://alliance-platform-caradapter-prod.apps.eu.kamereon.io/car-adapter"
+	nissanUserAdapterBaseURL = "https://alliance-platform-usersadapter-prod.apps.eu.kamereon.io/user-adapter"
+	nissanUserBaseURL        = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
 )
 
 // Nissan is an api.Vehicle implementation for Nissan cars
@@ -179,7 +176,7 @@ func (v *Nissan) authFlow() error {
 		}
 
 		uri += "?" + data.Encode()
-		req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		req, err = request.New(http.MethodGet, uri, nil, map[string]string{
 			"Cookie": "i18next=en-UK; amlbcookie=05; kauthSession=" + oauth.TokenID,
 		})
 
@@ -188,10 +185,12 @@ func (v *Nissan) authFlow() error {
 			resp, err = v.Do(req)
 			v.Client.CheckRedirect = nil
 
-			var location *url.URL
-			if location, err = url.Parse(resp.Header.Get("Location")); err == nil {
-				if code = location.Query().Get("code"); code == "" {
-					err = fmt.Errorf("missing auth code: %v", location)
+			if err == nil {
+				var location *url.URL
+				if location, err = url.Parse(resp.Header.Get("Location")); err == nil {
+					if code = location.Query().Get("code"); code == "" {
+						err = fmt.Errorf("missing auth code: %v", location)
+					}
 				}
 			}
 		}
