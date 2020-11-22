@@ -344,7 +344,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	isPV := false
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		if mode, ok := modeP.Val.(api.ChargeMode); ok && mode == api.ModeMinPV && mode == api.ModePV {
+		if mode, ok := modeP.Val.(api.ChargeMode); ok && (mode == api.ModeMinPV || mode == api.ModePV) {
 			isPV = true
 		}
 	}
