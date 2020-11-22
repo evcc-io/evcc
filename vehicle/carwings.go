@@ -10,19 +10,19 @@ import (
 	"github.com/joeshaw/carwings"
 )
 
-// Nissan is an api.Vehicle implementation for Nissan cars
-type Nissan struct {
+// CarWings is an api.Vehicle implementation for CarWings cars
+type CarWings struct {
 	*embed
 	session      *carwings.Session
 	chargeStateG func() (float64, error)
 }
 
 func init() {
-	registry.Add("nissan", NewNissanFromConfig)
+	registry.Add("carwings", NewCarWingsFromConfig)
 }
 
-// NewNissanFromConfig creates a new vehicle
-func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewCarWingsFromConfig creates a new vehicle
+func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
 		Capacity               int64
@@ -44,7 +44,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &Nissan{
+	v := &CarWings{
 		embed:   &embed{cc.Title, cc.Capacity},
 		session: session,
 	}
@@ -55,12 +55,12 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // chargeState implements the Vehicle.ChargeState interface
-func (v *Nissan) chargeState() (float64, error) {
+func (v *CarWings) chargeState() (float64, error) {
 	bs, err := v.session.BatteryStatus()
 	return float64(bs.StateOfCharge), err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
-func (v *Nissan) ChargeState() (float64, error) {
+func (v *CarWings) ChargeState() (float64, error) {
 	return v.chargeStateG()
 }
