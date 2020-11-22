@@ -32,8 +32,6 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-var instance *keba.Listener
-
 func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
 	h.mux.Lock()
 
