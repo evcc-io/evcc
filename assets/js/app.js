@@ -1,22 +1,50 @@
 import $ from "jquery";
-import "popper.js"
-import "bootstrap"
-import Vue from "vue"
-import VueRouter from "vue-router"
-import axios from "axios"
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faSun, faArrowUp, faArrowDown, faTemperatureLow, faTemperatureHigh, faThermometerHalf, faLeaf, faChevronUp, faChevronDown, faExclamationTriangle }from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import "popper.js";
+import "bootstrap";
+import Vue from "vue";
+import VueRouter from "vue-router";
+import axios from "axios";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import {
+  faSun,
+  faArrowUp,
+  faArrowDown,
+  faTemperatureLow,
+  faTemperatureHigh,
+  faThermometerHalf,
+  faLeaf,
+  faChevronUp,
+  faChevronDown,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-library.add(faSun, faArrowUp, faArrowDown, faTemperatureLow, faTemperatureHigh, faThermometerHalf, faLeaf, faChevronUp, faChevronDown, faExclamationTriangle)
+library.add(
+  faSun,
+  faArrowUp,
+  faArrowDown,
+  faTemperatureLow,
+  faTemperatureHigh,
+  faThermometerHalf,
+  faLeaf,
+  faChevronUp,
+  faChevronDown,
+  faExclamationTriangle
+);
 
-Vue.component('fa-icon', FontAwesomeIcon)
+Vue.component("font-awesome-icon", FontAwesomeIcon);
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
 const loc = window.location;
-axios.defaults.baseURL = loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+axios.defaults.baseURL =
+  loc.protocol +
+  "//" +
+  loc.hostname +
+  (loc.port ? ":" + loc.port : "") +
+  loc.pathname +
+  "api";
+axios.defaults.headers.post["Content-Type"] = "application/json";
 
 //
 // Mixins
@@ -27,10 +55,10 @@ let formatter = {
     return {
       fmtLimit: 100,
       fmtDigits: 1,
-    }
+    };
   },
   methods: {
-    round: function(num, precision) {
+    round: function (num, precision) {
       var base = 10 ** precision;
       return (Math.round(num * base) / base).toFixed(precision);
     },
@@ -39,14 +67,16 @@ let formatter = {
         return 0;
       }
       val = Math.abs(val);
-      return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
+      return val >= this.fmtLimit
+        ? this.round(val / 1e3, this.fmtDigits)
+        : this.round(val, 0);
     },
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },
     fmtDuration: function (d) {
       if (d <= 0 || d == null) {
-        return '—';
+        return "—";
       }
       var seconds = "0" + (d % 60);
       var minutes = "0" + (Math.floor(d / 60) % 60);
@@ -58,9 +88,9 @@ let formatter = {
     },
     fmtShortDuration: function (d) {
       if (d <= 0 || d == null) {
-        return '—';
+        return "—";
       }
-      var minutes = (Math.floor(d / 60) % 60);
+      var minutes = Math.floor(d / 60) % 60;
       var hours = Math.floor(d / 3600);
       var tm;
       if (hours >= 1) {
@@ -74,7 +104,7 @@ let formatter = {
     },
     fmtShortDurationUnit: function (d) {
       if (d <= 0 || d == null) {
-        return '';
+        return "";
       }
       var hours = Math.floor(d / 3600);
       if (hours >= 1) {
@@ -82,54 +112,54 @@ let formatter = {
       }
       return "m";
     },
-  }
-}
+  },
+};
 
 //
 // State
 //
 
 function setProperty(obj, props, value) {
-  const prop = props.shift()
+  const prop = props.shift();
   if (!obj[prop]) {
-    Vue.set(obj, prop, {})
+    Vue.set(obj, prop, {});
   }
 
   if (!props.length) {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      obj[prop] = { ...obj[prop], ...value }
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      obj[prop] = { ...obj[prop], ...value };
     } else {
-      obj[prop] = value
+      obj[prop] = value;
     }
-    return
+    return;
   }
 
-  setProperty(obj[prop], props, value)
+  setProperty(obj[prop], props, value);
 }
 
 let store = {
   state: {
     loadpoints: [], // ensure array type
   },
-  update: function(msg) {
+  update: function (msg) {
     Object.keys(msg).forEach(function (k) {
       if (typeof toasts[k] === "function") {
-        toasts[k]({message: msg[k]})
+        toasts[k]({ message: msg[k] });
       } else {
-        setProperty(store.state, k.split('.'), msg[k])
+        setProperty(store.state, k.split("."), msg[k]);
       }
     });
-  }
+  },
 };
 
 //
 // Heartbeat
 //
 
-window.setInterval(function() {
-  axios.get("health").catch(function(res) {
+window.setInterval(function () {
+  axios.get("health").catch(function (res) {
     res.message = "Server unavailable";
-    toasts.error(res)
+    toasts.error(res);
   });
 }, 5000);
 
@@ -137,32 +167,32 @@ window.setInterval(function() {
 // App & Routing
 //
 
-const main = Vue.component('Main', {
-  template: '#main-template',
-  data: function() {
+const main = Vue.component("Main", {
+  template: "#main-template",
+  data: function () {
     return {
-      state: store.state  // global state
-    }
+      state: store.state, // global state
+    };
   },
   methods: {
     configured: function (val) {
       // for development purposes
-      if (val == '[[.Configured]]') {
+      if (val == "[[.Configured]]") {
         return true;
       }
       if (!isNaN(parseInt(val)) && parseInt(val) > 0) {
         return true;
       }
       return false;
-    }
-  }
+    },
+  },
 });
 
 const config = Vue.component("config", {
   template: "#config-template",
-  data: function() {
+  data: function () {
     return {
-      state: store.state // global state
+      state: store.state, // global state
     };
   },
 });
@@ -184,23 +214,29 @@ const app = new Vue({
     compact: false,
   },
   methods: {
-    connect: function() {
+    connect: function () {
       const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
-      const uri = protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "ws";
-      const ws = new WebSocket(uri), self = this;
-      ws.onerror = function(evt) {
+      const uri =
+        protocol +
+        "//" +
+        loc.hostname +
+        (loc.port ? ":" + loc.port : "") +
+        loc.pathname +
+        "ws";
+      const ws = new WebSocket(uri),
+        self = this;
+      ws.onerror = function () {
         ws.close();
       };
-      ws.onclose = function(evt) {
+      ws.onclose = function () {
         window.setTimeout(self.connect, 1000);
       };
-      ws.onmessage = function(evt) {
+      ws.onmessage = function (evt) {
         try {
           var msg = JSON.parse(evt.data);
           store.update(msg);
-        }
-        catch (e) {
-          toasts.error(e, evt.data)
+        } catch (e) {
+          toasts.error(e, evt.data);
         }
       };
     },
@@ -238,7 +274,7 @@ const toasts = new Vue({
     },
     error: function (msg) {
       msg.type = "error";
-      this.raise(msg)
+      this.raise(msg);
     },
     warn: function (msg) {
       msg.type = "warn";
@@ -247,24 +283,27 @@ const toasts = new Vue({
     remove: function (msg) {
       Vue.delete(this.items, msg.id);
     },
-  }
-});
-
-Vue.component('message-toast', {
-  template: '#message-template',
-  props: ['item'],
-  mounted: function () {
-    const id = "#message-id-" + this.item.id;
-    $(id).toast('show');
-    $(id).on('hidden.bs.toast', function () {
-      toasts.remove(this.item);
-    }.bind(this))
   },
 });
 
-Vue.component('version', {
-  template: '#version-template',
-  props: ['installed'],
+Vue.component("message-toast", {
+  template: "#message-template",
+  props: ["item"],
+  mounted: function () {
+    const id = "#message-id-" + this.item.id;
+    $(id).toast("show");
+    $(id).on(
+      "hidden.bs.toast",
+      function () {
+        toasts.remove(this.item);
+      }.bind(this)
+    );
+  },
+});
+
+Vue.component("version", {
+  template: "#version-template",
+  props: ["installed"],
   data: function () {
     return {
       state: store.state,
@@ -273,42 +312,54 @@ Vue.component('version', {
   },
   mounted: function () {
     $(this.$refs.notes)
-      .on('show.bs.collapse', function () { this.notesShown = true; }.bind(this))
-      .on('hide.bs.collapse', function () { this.notesShown = false; }.bind(this));
+      .on(
+        "show.bs.collapse",
+        function () {
+          this.notesShown = true;
+        }.bind(this)
+      )
+      .on(
+        "hide.bs.collapse",
+        function () {
+          this.notesShown = false;
+        }.bind(this)
+      );
   },
   watch: {
     "state.availableVersion": function () {
-      if (this.installed != "[[.Version]]" && // go template parsed?
+      if (
+        this.installed != "[[.Version]]" && // go template parsed?
         this.installed != "0.0.1-alpha" && // make used?
-        this.state.availableVersion != this.installed) {
+        this.state.availableVersion != this.installed
+      ) {
         $(this.$refs.bar).collapse("show");
       }
-    }
-  }
+    },
+  },
 });
 
-Vue.component('site', {
-  template: '#site-template',
-  props: ['state'],
+Vue.component("site", {
+  template: "#site-template",
+  props: ["state"],
   mixins: [formatter],
   computed: {
-    multi: function() {
+    multi: function () {
       return this.state.loadpoints.length > 1 || app.compact;
     },
-  }
+  },
 });
 
-Vue.component('site-details', {
-  template: '#site-details-template',
-  props: ['state'],
-  mixins: [formatter]
+Vue.component("site-details", {
+  template: "#site-details-template",
+  props: ["state"],
+  mixins: [formatter],
 });
 
 Vue.component("loadpoint", {
   template: "#loadpoint-template",
   props: ["state", "id", "pv", "multi"],
   mixins: [formatter],
-  data: function() {
+  data: function () {
     return {
       tickerHandle: null,
     };
@@ -319,13 +370,17 @@ Vue.component("loadpoint", {
     },
   },
   watch: {
-    "state.chargeDuration": function() {
+    "state.chargeDuration": function () {
       window.clearInterval(this.tickerHandle);
       // only ticker if actually charging
       if (this.state.charging && this.state.chargeDuration >= 0) {
-        this.tickerHandle = window.setInterval(function() {
-          this.state.chargeDuration += 1;
-        }.bind(this), 1000);
+        this.tickerHandle = window.setInterval(
+          function () {
+            // eslint-disable-next-line vue/no-mutating-props
+            this.state.chargeDuration += 1;
+          }.bind(this),
+          1000
+        );
       }
     },
   },
@@ -334,19 +389,31 @@ Vue.component("loadpoint", {
       return "loadpoints/" + this.id + "/" + func;
     },
     targetMode: function (mode) {
-      axios.post(this.api("mode") + "/" + mode).then(function (response) {
-        this.state.mode = response.data.mode;
-      }.bind(this)).catch(toasts.error);
+      axios
+        .post(this.api("mode") + "/" + mode)
+        .then(
+          function (response) {
+            // eslint-disable-next-line vue/no-mutating-props
+            this.state.mode = response.data.mode;
+          }.bind(this)
+        )
+        .catch(toasts.error);
     },
     targetSoC: function (soc) {
-      axios.post(this.api("targetsoc") + "/" + soc).then(function (response) {
-        this.state.targetSoC = response.data.targetSoC;
-      }.bind(this)).catch(toasts.error);
+      axios
+        .post(this.api("targetsoc") + "/" + soc)
+        .then(
+          function (response) {
+            // eslint-disable-next-line vue/no-mutating-props
+            this.state.targetSoC = response.data.targetSoC;
+          }.bind(this)
+        )
+        .catch(toasts.error);
     },
   },
-  destroyed: function() {
+  destroyed: function () {
     window.clearInterval(this.tickerHandle);
-  }
+  },
 });
 
 Vue.component("loadpoint-details", {
@@ -355,11 +422,13 @@ Vue.component("loadpoint-details", {
   mixins: [formatter],
   computed: {
     minSoCActive: function () {
-      return this.state.connected && (
-        this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC
-      )
-    }
-  }
+      return (
+        this.state.connected &&
+        this.state.minSoC > 0 &&
+        this.state.socCharge < this.state.minSoC
+      );
+    },
+  },
 });
 
 Vue.component("vehicle", {
@@ -396,8 +465,8 @@ Vue.component("vehicle", {
     },
     minSoCRemainingDisplayWidth: function () {
       return this.state.minSoC - this.state.socCharge;
-    }
-  }
+    },
+  },
 });
 
 Vue.component("mode", {
@@ -405,8 +474,8 @@ Vue.component("mode", {
   props: ["mode", "pv", "caption"],
   methods: {
     targetMode: function (mode) {
-      this.$emit("updated", mode)
-    }
+      this.$emit("updated", mode);
+    },
   },
 });
 
@@ -414,16 +483,16 @@ Vue.component("soc", {
   template: "#soc-template",
   props: ["soc", "caption", "levels"],
   computed: {
-    levelsOrDefault: function() {
+    levelsOrDefault: function () {
       if (this.levels == null || this.levels.length == 0) {
         return []; // disabled, or use 30, 50, 80, 100
       }
       return this.levels;
-    }
+    },
   },
   methods: {
     targetSoC: function (mode) {
-      this.$emit("updated", mode)
-    }
+      this.$emit("updated", mode);
+    },
   },
 });
