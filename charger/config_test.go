@@ -16,6 +16,7 @@ func TestChargers(t *testing.T) {
 		"connect: no route to host",
 		"connect: connection refused",
 		"error connecting: Network Error",
+		"i/o timeout",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {
