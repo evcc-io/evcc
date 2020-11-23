@@ -5,12 +5,11 @@ on:
   #   branches:
   #   - actions
   workflow_run:
-    workflows:
-    - Build
+    workflows: [Build]
     types:
     - completed
-    branches:
-    - actions
+    # branches:
+    # - actions
 
 jobs:
 
