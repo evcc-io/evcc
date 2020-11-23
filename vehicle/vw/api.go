@@ -42,10 +42,14 @@ type ChargerResponse struct {
 				RemainingChargingTime TimedInt
 			}
 			ChargingStatusData struct {
-				ChargingState TimedString
+				ChargingState            TimedString // off, charging
+				ChargingMode             TimedString // invalid, AC
+				ChargingReason           TimedString // invalid, immediate
+				ExternalPowerSupplyState TimedString // unavailable, available
+				EnergyFlow               TimedString // on, off
 			}
 			PlugStatusData struct {
-				PlugState TimedString
+				PlugState TimedString // connected
 			}
 		}
 	}
