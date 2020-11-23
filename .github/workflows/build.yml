@@ -31,6 +31,8 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
+      # use unshallow due to https://stackoverflow.com/questions/4916492/git-describe-fails-with-fatal-no-names-found-cannot-describe-anything
+      run: git fetch --prune --unshallow
 
     - name: Install tools
       run: make install
