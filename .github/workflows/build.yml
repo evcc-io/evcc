@@ -2,15 +2,18 @@ name: Build
 
 on:
   push:
-    branches: [ master ]
+    branches:
+    - actions
   pull_request:
-    branches: [ master ]
+    branches:
+    - actions
 
 jobs:
 
   build:
     name: Build
     runs-on: ubuntu-latest
+
     steps:
 
     - name: Setup
@@ -22,24 +25,28 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
-    - name: Tools
+    # https://github.com/streamlink/streamlink/pull/2932
+    # https://github.com/actions/checkout/issues/217#issuecomment-636481619
+    # - name: Fetch tags
+    #   # run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+    #   run: git fetch
+
+    - name: Install tools
       run: make install
 
-    - name: UI
-      run: make ui
-
-
-    - name: Assets
+    - name: Assets & UI
       run: make assets
 
-    - name: Clean
+    - name: Porcelain
       run: |
         go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
