@@ -6,10 +6,8 @@ on:
     - Build
     types:
     - completed
-    branches:
-    - actions
-    # tags:
-    # - '*'
+    tags:
+    - '*'
 
 jobs:
 
@@ -20,7 +18,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 1
+        fetch-depth: 0
 
     - name: GoReleaser
       uses: goreleaser/goreleaser-action@v2
