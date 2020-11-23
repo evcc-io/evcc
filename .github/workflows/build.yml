@@ -32,9 +32,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    # use unshallow due to https://stackoverflow.com/questions/4916492/git-describe-fails-with-fatal-no-names-found-cannot-describe-anything
+    # https://github.com/streamlink/streamlink/pull/2932
     - name: Fetch tags
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
 
     - name: Install tools
       run: make install
