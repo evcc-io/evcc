@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
     - name: Setup
       uses: actions/setup-go@v2
       with:
@@ -24,7 +23,9 @@ jobs:
 
     - uses: actions/cache@v2
       with:
-        path: ~/go/pkg/mod
+        path: |
+          ~/go/pkg/mod
+          **/node_modules
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-go-
