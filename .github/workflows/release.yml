@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows:
+    - Build
     branches:
     - actions
     # tags:

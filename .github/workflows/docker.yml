@@ -1,7 +1,12 @@
 name: Docker
 
 on:
-  push:
+  # push:
+  #   branches:
+  #   - actions
+  workflow_run:
+    workflows:
+    - Build
     branches:
     - actions
 
