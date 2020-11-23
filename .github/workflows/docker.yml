@@ -5,18 +5,18 @@ on:
   #   branches:
   #   - actions
   workflow_run:
-    workflows: [Build]
+    workflows:
+    - Build
     types:
     - completed
-    # branches:
-    # - actions
+    branches:
+    - actions
 
 jobs:
 
-  build:
+  docker:
     name: Docker
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
     - uses: actions/checkout@v2
