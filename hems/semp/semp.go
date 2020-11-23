@@ -144,7 +144,7 @@ func (s *SEMP) callbackURI() string {
 	ip := "localhost"
 	ips := util.LocalIPs()
 	if len(ips) > 0 {
-		ip = ips[0].String()
+		ip = ips[0].IP.String()
 	} else {
 		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
