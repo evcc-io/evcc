@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/server"
@@ -46,9 +47,12 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
 	}
 
+	w := dumpFormat()
+
 	for name, v := range vehicles {
 		if len(vehicles) != 1 {
-			fmt.Println(name)
+			fmt.Fprintln(w, name)
+			fmt.Fprintln(w, strings.Repeat("-", len(name)))
 		}
 
 		if soc, err := v.ChargeState(); err != nil {
@@ -57,6 +61,12 @@ func runVehicle(cmd *cobra.Command, args []string) {
 			fmt.Printf("State: %.0f%%\n", soc)
 		}
 
-		dumpAPIs(v)
+		dumpAPIs(w, v)
+
+		if len(vehicles) != 1 {
+			fmt.Fprintln(w)
+		}
+
+		w.Flush()
 	}
 }

@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"math"
+	"os"
+	"text/tabwriter"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -10,87 +13,91 @@ import (
 
 var truefalse = map[bool]string{false: "false", true: "true"}
 
-func dumpAPIs(v interface{}) {
+func dumpFormat() *tabwriter.Writer {
+	return tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+}
+
+func dumpAPIs(w io.Writer, v interface{}) {
 	if v, ok := v.(api.Meter); ok {
 		if power, err := v.CurrentPower(); err != nil {
-			fmt.Printf("Power: %v\n", err)
+			fmt.Fprintf(w, "Power:\t%v\n", err)
 		} else {
-			fmt.Printf("Power: %.0fW\n", power)
+			fmt.Fprintf(w, "Power:\t%.0fW\n", power)
 		}
 	}
 
 	if v, ok := v.(api.MeterEnergy); ok {
 		if energy, err := v.TotalEnergy(); err != nil {
-			fmt.Printf("Energy: %v\n", err)
+			fmt.Fprintf(w, "Energy:\t%v\n", err)
 		} else {
-			fmt.Printf("Energy: %.1fkWh\n", energy)
+			fmt.Fprintf(w, "Energy:\t%.1fkWh\n", energy)
 		}
 	}
 
 	if v, ok := v.(api.MeterCurrent); ok {
 		if i1, i2, i3, err := v.Currents(); err != nil {
-			fmt.Printf("Current L1..L3: %v\n", err)
+			fmt.Fprintf(w, "Current L1..L3:\t%v\n", err)
 		} else {
-			fmt.Printf("Current L1..L3: %.1fA %.1fA %.1fA\n", i1, i2, i3)
+			fmt.Fprintf(w, "Current L1..L3:\t%.1fA %.1fA %.1fA\n", i1, i2, i3)
 		}
 	}
 
 	if v, ok := v.(api.Battery); ok {
 		if soc, err := v.SoC(); err != nil {
-			fmt.Printf("SoC: %v\n", err)
+			fmt.Fprintf(w, "SoC:\t%v\n", err)
 		} else {
-			fmt.Printf("SoC: %.0f%%\n", soc)
+			fmt.Fprintf(w, "SoC:\t%.0f%%\n", soc)
 		}
 	}
 
 	if v, ok := v.(api.ChargeRater); ok {
 		if energy, err := v.ChargedEnergy(); err != nil {
-			fmt.Printf("Charged: %v\n", err)
+			fmt.Fprintf(w, "Charged:\t%v\n", err)
 		} else {
-			fmt.Printf("Charged: %.1fkWh\n", energy)
+			fmt.Fprintf(w, "Charged:\t%.1fkWh\n", energy)
 		}
 	}
 
 	if v, ok := v.(api.VehicleStatus); ok {
 		if status, err := v.Status(); err != nil {
-			fmt.Printf("Charge status: %v\n", err)
+			fmt.Fprintf(w, "Charge status:\t%v\n", err)
 		} else {
-			fmt.Printf("Charge status: %v\n", status)
+			fmt.Fprintf(w, "Charge status:\t%v\n", status)
 		}
 	}
 
 	if v, ok := v.(api.ChargeTimer); ok {
 		if duration, err := v.ChargingTime(); err != nil {
-			fmt.Printf("Duration: %v\n", err)
+			fmt.Fprintf(w, "Duration:\t%v\n", err)
 		} else {
-			fmt.Printf("Duration: %v\n", duration.Truncate(time.Second))
+			fmt.Fprintf(w, "Duration:\t%v\n", duration.Truncate(time.Second))
 		}
 	}
 
 	if v, ok := v.(api.ChargeFinishTimer); ok {
 		if ft, err := v.FinishTime(); err != nil {
-			fmt.Printf("Finish time: %v\n", err)
+			fmt.Fprintf(w, "Finish time:\t%v\n", err)
 		} else {
-			fmt.Printf("Finish time: %v\n", ft.Truncate(time.Minute))
+			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute))
 		}
 	}
 
 	if v, ok := v.(api.Climater); ok {
 		if active, ot, tt, err := v.Climater(); err != nil {
-			fmt.Printf("Climater: %v\n", err)
+			fmt.Fprintf(w, "Climater:\t%v\n", err)
 		} else {
-			fmt.Printf("Climate active: %v\n", active)
+			fmt.Fprintf(w, "Climate active:\t%v\n", active)
 			if !math.IsNaN(ot) {
-				fmt.Printf("Outside temp: %.1f°C\n", ot)
+				fmt.Fprintf(w, "Outside temp:\t%.1f°C\n", ot)
 			}
 			if !math.IsNaN(tt) {
-				fmt.Printf("Target temp: %.1f°C\n", tt)
+				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
 			}
 		}
 	}
 
 	if v, ok := v.(api.Diagnosis); ok {
-		fmt.Println("Diagnostic dump:")
+		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnosis()
 	}
 }

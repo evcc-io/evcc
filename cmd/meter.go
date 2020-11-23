@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/server"
@@ -46,11 +47,20 @@ func runMeter(cmd *cobra.Command, args []string) {
 		meters = map[string]api.Meter{arg: cp.Meter(arg)}
 	}
 
+	w := dumpFormat()
+
 	for name, v := range meters {
 		if len(meters) != 1 {
-			fmt.Println(name)
+			fmt.Fprintln(w, name)
+			fmt.Fprintln(w, strings.Repeat("-", len(name)))
 		}
 
-		dumpAPIs(v)
+		dumpAPIs(w, v)
+
+		if len(meters) != 1 {
+			fmt.Fprintln(w)
+		}
+
+		w.Flush()
 	}
 }
