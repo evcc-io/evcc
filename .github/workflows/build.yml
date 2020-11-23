@@ -35,7 +35,8 @@ jobs:
     # https://github.com/streamlink/streamlink/pull/2932
     # https://github.com/actions/checkout/issues/217#issuecomment-636481619
     - name: Fetch tags
-      run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      # run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      run: git fetch
 
     - name: Install tools
       run: make install
