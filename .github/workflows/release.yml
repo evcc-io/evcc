@@ -40,6 +40,8 @@ jobs:
       # - name: UI
       #   run: make ui
 
+
+
       - name: GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
