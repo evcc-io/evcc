@@ -11,6 +11,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+
     steps:
 
     - name: Setup
@@ -22,24 +23,20 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: Tools
+    - name: Install tools
       run: make install
 
-    - name: UI
-      run: make ui
-
-
-    - name: Assets
+    - name: Assets & UI
       run: make assets
 
-    - name: Clean
+    - name: Porcelain
       run: |
         go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
