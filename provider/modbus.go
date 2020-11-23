@@ -63,8 +63,12 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 		cc.Value = "Power"
 	}
 
-	// model configured
-	if cc.Model != "" {
+	if cc.Model == "" && cc.Value != "" {
+		return nil, errors.New("need modbus model when value configured")
+	}
+
+	// no registered configured - need device
+	if cc.Register.Decode == "" {
 		device, err = modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
 
 		// prepare device
@@ -153,7 +157,11 @@ func (m *Modbus) FloatGetter() (float64, error) {
 	}
 
 	if err == nil {
-		m.log.TRACE.Printf("%+v", res)
+		if m.op.MBMD.IEC61850 != 0 {
+			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
+		} else {
+			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
+		}
 	}
 
 	return m.scale * res.Value, err
