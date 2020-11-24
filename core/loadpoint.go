@@ -793,7 +793,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		}
 
 		// Sunny Home Manager
-		if mode == api.ModePV && lp.remoteControlled(RemoteSoftDisable) {
+		if lp.remoteControlled(RemoteSoftDisable) {
 			remoteDisabled = RemoteSoftDisable
 			targetCurrent = 0
 			required = true

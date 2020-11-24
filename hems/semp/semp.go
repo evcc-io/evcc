@@ -216,6 +216,7 @@ func (s *SEMP) deviceRootHandler(w http.ResponseWriter, r *http.Request) {
 	msg := Device2EMMsg()
 	msg.DeviceInfo = append(msg.DeviceInfo, s.allDeviceInfo()...)
 	msg.DeviceStatus = append(msg.DeviceStatus, s.allDeviceStatus()...)
+	msg.PlanningRequest = append(msg.PlanningRequest, s.allPlanningRequest()...)
 	s.writeXML(w, msg)
 }
 
@@ -344,7 +345,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	isPV := false
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		if mode, ok := modeP.Val.(api.ChargeMode); ok && mode == api.ModePV {
+		if mode, ok := modeP.Val.(api.ChargeMode); ok && (mode == api.ModeMinPV || mode == api.ModePV) {
 			isPV = true
 		}
 	}
@@ -394,7 +395,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	latestEnd := int(chargeEstimate / time.Second)
-	if mode == api.ModePV || latestEnd <= 0 {
+	if mode == api.ModeMinPV || mode == api.ModePV || latestEnd <= 0 {
 		latestEnd = 24 * 3600
 	}
 
@@ -404,7 +405,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	// add 1kWh in case we're charging but battery claims full
-	if maxEnergy == 0 {
+	if charging && maxEnergy == 0 {
 		maxEnergy = 1e3 // 1kWh
 	}
 
@@ -413,7 +414,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
-	if charging {
+	if maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
@@ -462,7 +463,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if mode := lp.GetMode(); mode != api.ModePV {
+			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
