@@ -235,7 +235,8 @@ Configuration examples are documented at [andig/evcc-config#vehicles](https://gi
 EVCC can integrate itself with Home Energy Management Systems. At this time, the SMA Home Manager (SHM) is the only supported system. To enable add
 
 ```yaml
-hems: sma
+hems: 
+- type: sma
 ```
 
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration.
