@@ -10,6 +10,7 @@ import (
 
 const (
 	phEVCCRegEnable     = 20000 // Coil
+	phEVCCRegOUT        = 23000 // Coil
 	phEVCCRegMaxCurrent = 22000 // Holding
 	phEVCCRegStatus     = 24000 // Input
 )
@@ -83,11 +84,11 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (wb *PhoenixEVCC) Enable(enable bool) error {
 	var u uint16
-	if enable {
+	if !enable {
 		u = 0xFF00
 	}
-
-	_, err := wb.conn.WriteSingleCoil(phEVCCRegEnable, u)
+//Low-signal on  pin OUT of the EV_CC_AC1-M  board ("Invert" relay necessary necessary!!) 
+	_, err := wb.conn.WriteSingleCoil(phEVCCRegOUT, u)
 
 	return err
 }
