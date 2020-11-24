@@ -236,7 +236,7 @@ EVCC can integrate itself with Home Energy Management Systems. At this time, the
 
 ```yaml
 hems: 
-- type: sma
+  type: sma
 ```
 
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration.
