@@ -144,7 +144,7 @@ func (s *SEMP) callbackURI() string {
 	ip := "localhost"
 	ips := util.LocalIPs()
 	if len(ips) > 0 {
-		ip = ips[0].String()
+		ip = ips[0].IP.String()
 	} else {
 		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
@@ -216,6 +216,7 @@ func (s *SEMP) deviceRootHandler(w http.ResponseWriter, r *http.Request) {
 	msg := Device2EMMsg()
 	msg.DeviceInfo = append(msg.DeviceInfo, s.allDeviceInfo()...)
 	msg.DeviceStatus = append(msg.DeviceStatus, s.allDeviceStatus()...)
+	msg.PlanningRequest = append(msg.PlanningRequest, s.allPlanningRequest()...)
 	s.writeXML(w, msg)
 }
 
@@ -380,7 +381,7 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
 	mode := api.ModeOff
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		mode = api.ChargeMode(modeP.Val.(string))
+		mode = modeP.Val.(api.ChargeMode)
 	}
 
 	var charging bool
@@ -404,16 +405,16 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	}
 
 	// add 1kWh in case we're charging but battery claims full
-	if maxEnergy == 0 {
+	if charging && maxEnergy == 0 {
 		maxEnergy = 1e3 // 1kWh
 	}
 
 	minEnergy := maxEnergy
-	if mode == api.ModeMinPV || mode == api.ModePV {
+	if mode == api.ModePV {
 		minEnergy = 0
 	}
 
-	if charging {
+	if maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
