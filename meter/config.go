@@ -31,7 +31,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err e
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create %s meter: %w", typ, err)
+			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
 		}
 	} else {
 		err = fmt.Errorf("invalid meter type: %s", typ)

@@ -64,7 +64,7 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 	}
 
 	if cc.Model == "" && cc.Value != "" {
-		return nil, errors.New("need modbus model when value configured")
+		return nil, errors.New("need device model when value configured")
 	}
 
 	// no registered configured - need device
