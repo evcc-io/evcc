@@ -69,13 +69,23 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI) {
+	m.publishSingleValue(topic+"/mode/set", true, "ok")
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
-		apiHandler.SetMode(api.ChargeMode(payload))
+		if payload != "ok" { 
+			apiHandler.SetMode(api.ChargeMode(payload))
+			//confirm /set change
+			m.publishSingleValue(topic+"/mode/set", true, "ok") 
+		}
 	})
+	m.publishSingleValue(topic+"/targetsoc/set", true, "ok")
 	m.Handler.Listen(topic+"/targetsoc/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
-			_ = apiHandler.SetTargetSoC(soc)
+		if payload != "ok" { 
+			soc, err := strconv.Atoi(payload)
+			if err == nil {
+				_ = apiHandler.SetTargetSoC(soc)
+				//confirm /set change
+				m.publishSingleValue(topic+"/mode/set", true, "ok") 
+			}
 		}
 	})
 }
