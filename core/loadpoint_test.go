@@ -73,9 +73,6 @@ func TestNew(t *testing.T) {
 	if lp.MaxCurrent != lpMaxCurrent {
 		t.Errorf("MaxCurrent %v", lp.MaxCurrent)
 	}
-	if lp.Sensitivity != 10 {
-		t.Errorf("Sensitivity %v", lp.Sensitivity)
-	}
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
 	}

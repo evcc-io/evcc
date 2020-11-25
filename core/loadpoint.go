@@ -172,7 +172,6 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		HandlerConfig: HandlerConfig{
 			MinCurrent:    6,  // A
 			MaxCurrent:    16, // A
-			Sensitivity:   10, // A
 			GuardDuration: 5 * time.Minute,
 		},
 	}
