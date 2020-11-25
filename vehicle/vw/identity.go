@@ -28,6 +28,10 @@ type Identity struct {
 func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, error) {
 	if err == nil {
 		uri := resp.Header.Get("Location")
+		if uri == "" {
+			return nil, errors.New("could not find expected HTTP redirect header\ngo to https://www.portal.volkswagen-we.com/ check account status")
+		}
+
 		resp, err = v.Get(uri)
 	}
 
