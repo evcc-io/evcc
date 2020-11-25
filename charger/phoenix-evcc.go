@@ -10,7 +10,7 @@ import (
 
 const (
 	phEVCCRegEnable     = 20000 // Coil
-	phEVCCRegOUT        = 23000 // Coil
+	phEVCCRegOUT        = 23000 // Holding
 	phEVCCRegMaxCurrent = 22000 // Holding
 	phEVCCRegStatus     = 24000 // Input
 )
@@ -85,10 +85,10 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
 func (wb *PhoenixEVCC) Enable(enable bool) error {
 	var u uint16
 	if !enable {
-		u = 0xFF00
+		u = 0x0001
 	}
 //Low-signal on  pin OUT of the EV_CC_AC1-M  board ("Invert" relay necessary necessary!!) 
-	_, err := wb.conn.WriteSingleCoil(phEVCCRegOUT, u)
+	_, err := wb.conn.WriteSingleRegister(phEVCCRegOUT, u)
 
 	return err
 }
