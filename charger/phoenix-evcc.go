@@ -73,12 +73,13 @@ func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *PhoenixEVCC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(phEVCCRegEnable, 1)
+	b, err := wb.conn.ReadInputRegisters(phEVCCRegOUT, 1)
 	if err != nil {
 		return false, err
 	}
 
-	return b[0] == 1, nil
+//        return b[0], nil
+	return b[1] == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
