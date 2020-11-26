@@ -388,7 +388,7 @@ func (lp *LoadPoint) setLimit(maxCurrent int64, force bool) (err error) {
 	}
 
 	// set enabled
-	if enabled := maxCurrent != 0; err == nil && enabled != lp.enabled {
+	if enabled := maxCurrent != 0; enabled != lp.enabled && err == nil {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enabled], remaining)
 			return nil
