@@ -153,7 +153,12 @@ func (lp *ChargerHandler) Ramp(targetCurrent int64, force ...bool) error {
 
 	// if targetCurrent == 0 disable
 	if targetCurrent == 0 {
-		return lp.chargerEnable(false)
+		err := lp.chargerEnable(false)
+		if err == nil && lp.enabled && lp.targetCurrent > lp.MinCurrent {
+			err = lp.setTargetCurrent(lp.MinCurrent)
+		}
+
+		return err
 	}
 
 	// else set targetCurrent and optionally enable

@@ -263,6 +263,7 @@ func TestRampOff(t *testing.T) {
 		}},
 		// on at max, set disable
 		{true, maxA, 0, func(mc *mock.MockCharger) {
+			mc.EXPECT().MaxCurrent(minA).Return(nil)
 			// guard duration
 		}},
 		// on at max, set disable
