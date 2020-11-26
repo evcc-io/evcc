@@ -84,10 +84,10 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (wb *PhoenixEVCC) Enable(enable bool) error {
 	var u uint16
-	if !enable {
+	if enable {
 		u = 0x0001
 	}
-//Low-signal on  pin OUT of the EV_CC_AC1-M  board ("Invert" relay necessary necessary!!) 
+//High-signal on pin OUT of the EV_CC_AC1-M  board (wire bridge between OUT and ENABLE necessary!!) 
 	_, err := wb.conn.WriteSingleRegister(phEVCCRegOUT, u)
 
 	return err
