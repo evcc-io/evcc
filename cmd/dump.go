@@ -51,12 +51,20 @@ func dumpAPIs(v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.VehicleRange); ok {
+		if rangekm, err := v.RangeKM(); err != nil {
+			fmt.Printf("Vehicle range: %v\n", err)
+		} else {
+			fmt.Printf("Vehicle range: %vkm\n", rangekm)
+		}
+	}
+
 	if v, ok := v.(api.VehicleStatus); ok {
 		if status, err := v.Status(); err != nil {
 			fmt.Printf("Charge status: %v\n", err)
 		} else {
 			fmt.Printf("Charge status: %v\n", status)
-		}
+		}		
 	}
 
 	if v, ok := v.(api.ChargeTimer); ok {

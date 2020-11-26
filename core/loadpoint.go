@@ -709,6 +709,17 @@ func (lp *LoadPoint) publishSoC() {
 	lp.publish("chargeEstimate", time.Duration(-1))
 }
 
+// publish remaining vehicle range
+func (lp *LoadPoint) publishRangeKM() {
+	if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+		rangekm, err := vs.RangeKM()
+		if err == nil {
+			lp.log.DEBUG.Printf("vehicle range: %vkm", rangekm)
+			lp.publish("rangeKM", rangekm)
+		}
+	}
+}
+
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64) {
 	mode := lp.GetMode()
@@ -738,6 +749,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// initial update of connected state matches charger status
 	lp.findActiveVehicle()
 	lp.publishSoC()
+	lp.publishRangeKM()
 
 	// sync settings with charger
 	if lp.status != api.StatusA {

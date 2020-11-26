@@ -74,6 +74,17 @@ func (v *Implementation) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+func (v *Implementation) RangeKM() (int, error) {
+	rangekm := 0
+
+	res, err := v.chargerG()
+	if res, ok := res.(ChargerResponse); err == nil && ok {
+		rangekm = res.Charger.Status.CruisingRangeStatusData.HybridRange.Content
+	}
+
+	return rangekm, err
+}
+
 // Climater implements the Vehicle.Climater interface
 func (v *Implementation) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()

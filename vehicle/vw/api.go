@@ -51,6 +51,9 @@ type ChargerResponse struct {
 			PlugStatusData struct {
 				PlugState TimedString // connected
 			}
+			CruisingRangeStatusData struct {
+				HybridRange TimedInt
+			}
 		}
 	}
 }
