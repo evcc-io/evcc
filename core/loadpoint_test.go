@@ -88,16 +88,16 @@ func TestUpdate(t *testing.T) {
 		expect func(h *mock.MockHandler)
 	}{
 		{api.StatusA, api.ModeOff, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0))
+			h.EXPECT().Ramp(int64(0), false)
 		}},
 		{api.StatusA, api.ModeNow, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0))
+			h.EXPECT().Ramp(int64(0), false)
 		}},
 		{api.StatusA, api.ModeMinPV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0))
+			h.EXPECT().Ramp(int64(0), false)
 		}},
 		{api.StatusA, api.ModePV, func(h *mock.MockHandler) {
-			h.EXPECT().Ramp(int64(0)) // zero since update called with 0
+			h.EXPECT().Ramp(int64(0), false) // zero since update called with 0
 			// h.EXPECT().Enabled().Return(false) // short-circuited due to status != C
 		}},
 
@@ -486,7 +486,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	handler.EXPECT().Status().Return(api.StatusA, nil)
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
-	handler.EXPECT().Ramp(int64(0)).Return(nil)
+	handler.EXPECT().Ramp(int64(0), false).Return(nil)
 	lp.Update(-3000)
 
 	if lp.Mode != api.ModeOff {

@@ -20,7 +20,7 @@ type Handler interface {
 	Enabled() bool
 	Status() (api.ChargeStatus, error)
 	TargetCurrent() int64
-	Ramp(int64, ...bool) error
+	Ramp(int64, bool) error
 }
 
 // HandlerConfig contains the public configuration for the ChargerHandler
@@ -145,9 +145,9 @@ func (lp *ChargerHandler) setTargetCurrent(targetCurrent int64) error {
 
 // Ramp performs ramping charger current up and down where targetCurrent=0
 // signals disabled state
-func (lp *ChargerHandler) Ramp(targetCurrent int64, force ...bool) error {
+func (lp *ChargerHandler) Ramp(targetCurrent int64, force bool) error {
 	// reset guard updated
-	if len(force) == 1 && force[0] {
+	if force {
 		lp.guardUpdated = time.Time{}
 	}
 

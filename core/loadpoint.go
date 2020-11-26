@@ -757,7 +757,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/andig/evcc/issues/105
-		err = lp.handler.Ramp(0)
+		err = lp.handler.Ramp(0, false)
 
 	case lp.targetSocReached():
 		var targetCurrent int64 // zero disables

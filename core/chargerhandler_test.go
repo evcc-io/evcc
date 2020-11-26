@@ -225,7 +225,7 @@ func TestRampOn(t *testing.T) {
 		tc.expect(mc)
 		clock.Add(tc.dt)
 
-		if err := r.Ramp(tc.targetCurrent); err != nil {
+		if err := r.Ramp(tc.targetCurrent, false); err != nil {
 			t.Error(err)
 		}
 
@@ -286,7 +286,7 @@ func TestRampOff(t *testing.T) {
 		tc.expect(mc)
 		clock.Add(tc.dt)
 
-		if err := r.Ramp(0); err != nil {
+		if err := r.Ramp(0, false); err != nil {
 			t.Error(err)
 		}
 
@@ -338,7 +338,7 @@ func TestRampUpDown(t *testing.T) {
 
 		tc.expect(mc)
 
-		if err := h.Ramp(tc.targetCurrent); err != nil {
+		if err := h.Ramp(tc.targetCurrent, false); err != nil {
 			t.Error(err)
 		}
 

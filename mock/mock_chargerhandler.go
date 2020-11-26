@@ -60,22 +60,17 @@ func (mr *MockHandlerMockRecorder) Prepare() *gomock.Call {
 }
 
 // Ramp mocks base method
-func (m *MockHandler) Ramp(arg0 int64, arg1 ...bool) error {
+func (m *MockHandler) Ramp(arg0 int64, arg1 bool) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Ramp", varargs...)
+	ret := m.ctrl.Call(m, "Ramp", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Ramp indicates an expected call of Ramp
-func (mr *MockHandlerMockRecorder) Ramp(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *MockHandlerMockRecorder) Ramp(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ramp", reflect.TypeOf((*MockHandler)(nil).Ramp), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ramp", reflect.TypeOf((*MockHandler)(nil).Ramp), arg0, arg1)
 }
 
 // Status mocks base method
