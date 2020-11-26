@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -47,32 +44,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
-	w := dumpFormat()
-
+	d := dumper{len: len(chargers)}
 	for name, v := range chargers {
-		if len(chargers) != 1 {
-			fmt.Fprintln(w, name)
-			fmt.Fprintln(w, strings.Repeat("-", len(name)))
-		}
-
-		if status, err := v.Status(); err != nil {
-			fmt.Fprintf(w, "Status:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Status:\t%s\n", status)
-		}
-
-		if enabled, err := v.Enabled(); err != nil {
-			fmt.Fprintf(w, "Enabled:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Enabled:\t%s\n", truefalse[enabled])
-		}
-
-		dumpAPIs(w, v)
-
-		if len(chargers) != 1 {
-			fmt.Fprintln(w)
-		}
-
-		w.Flush()
+		d.DumpWithHeader(name, v)
 	}
 }
