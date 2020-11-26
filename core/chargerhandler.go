@@ -16,7 +16,7 @@ import (
 // Handler is the charger handler responsible for enabled state, target current and guard durations
 type Handler interface {
 	Prepare()
-	SyncEnabled()
+	Sync()
 	Enabled() bool
 	Status() (api.ChargeStatus, error)
 	TargetCurrent() int64
@@ -85,8 +85,8 @@ func (lp *ChargerHandler) Prepare() {
 	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 }
 
-// SyncEnabled synchronizes charger settings to expected state
-func (lp *ChargerHandler) SyncEnabled() {
+// Sync synchronizes charger settings to expected state
+func (lp *ChargerHandler) Sync() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
 		lp.log.WARN.Printf("sync enabled state to %s", status[lp.enabled])

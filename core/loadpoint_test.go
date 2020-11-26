@@ -167,7 +167,7 @@ func TestUpdate(t *testing.T) {
 		handler.EXPECT().TargetCurrent().Return(int64(0))
 
 		if tc.status != api.StatusA {
-			handler.EXPECT().SyncEnabled()
+			handler.EXPECT().Sync()
 
 			if tc.mode == api.ModeMinPV || tc.mode == api.ModePV {
 				handler.EXPECT().TargetCurrent().Return(int64(0))
@@ -410,7 +410,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(6))
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(500)
 
@@ -419,7 +419,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	handler.EXPECT().Status().Return(api.StatusC, nil)
 	vehicle.EXPECT().ChargeState().Return(90.0, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(500)
 
@@ -429,7 +429,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().Status().Return(api.StatusB, nil)
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	vehicle.EXPECT().ChargeState().Return(95.0, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(0), true).Return(nil) // true due to immediately handling climate requests
 	lp.Update(-5000)
 
@@ -438,7 +438,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(0))
 	handler.EXPECT().Status().Return(api.StatusB, nil)
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(16), true).Return(nil) // TODO don't treat this as forced change
 	lp.Update(-5000)
 
@@ -478,7 +478,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	lp.Mode = api.ModeNow
 	handler.EXPECT().TargetCurrent().Return(int64(6))
 	handler.EXPECT().Status().Return(api.StatusC, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(500)
 
@@ -548,7 +548,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(6))
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	handler.EXPECT().Status().Return(api.StatusC, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
 
@@ -557,7 +557,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	handler.EXPECT().Status().Return(api.StatusC, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	// handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
@@ -568,7 +568,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	handler.EXPECT().Status().Return(api.StatusB, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
@@ -579,7 +579,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	handler.EXPECT().Status().Return(api.StatusC, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
@@ -590,7 +590,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
 	handler.EXPECT().Status().Return(api.StatusC, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	// handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
@@ -601,7 +601,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	handler.EXPECT().TargetCurrent().Return(int64(16))
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
 	handler.EXPECT().Status().Return(api.StatusB, nil)
-	handler.EXPECT().SyncEnabled().Return()
+	handler.EXPECT().Sync().Return()
 	handler.EXPECT().TargetCurrent().Return(int64(0)) // once more for status changes
 	handler.EXPECT().Ramp(int64(16), true).Return(nil)
 	lp.Update(-1)
