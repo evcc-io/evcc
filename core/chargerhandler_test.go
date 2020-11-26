@@ -15,7 +15,6 @@ import (
 const (
 	minA          int64 = 6
 	maxA          int64 = 16
-	sensitivity         = 1
 	guardDuration       = 5 * time.Minute
 	dt                  = time.Hour
 )
@@ -29,7 +28,6 @@ func newChargerHandler(clock clock.Clock, mc api.Charger) *ChargerHandler {
 		HandlerConfig: HandlerConfig{
 			MinCurrent:    minA,
 			MaxCurrent:    maxA,
-			Sensitivity:   sensitivity,
 			GuardDuration: guardDuration,
 		},
 	}
@@ -52,9 +50,6 @@ func TestNewChargerHandler(t *testing.T) {
 	}
 	if r.MaxCurrent != maxA {
 		t.Errorf("expected %v, got %v", maxA, r.MaxCurrent)
-	}
-	if r.Sensitivity != 10 {
-		t.Errorf("expected %v, got %v", 10, r.Sensitivity)
 	}
 	if r.GuardDuration != guardDuration {
 		t.Errorf("expected %v, got %v", guardDuration, r.GuardDuration)
@@ -230,7 +225,7 @@ func TestRampOn(t *testing.T) {
 		tc.expect(mc)
 		clock.Add(tc.dt)
 
-		if err := r.rampOn(tc.targetCurrent); err != nil {
+		if err := r.Ramp(tc.targetCurrent, false); err != nil {
 			t.Error(err)
 		}
 
@@ -259,17 +254,21 @@ func TestRampOff(t *testing.T) {
 		}},
 		// on at min, disable
 		{true, minA, 0, func(mc *mock.MockCharger) {
-			// we are at min: current call omitted
 			// guard duration
 		}},
+		// on at min, set disable
 		{true, minA, dt, func(mc *mock.MockCharger) {
 			// we are at min: current call omitted
 			mc.EXPECT().Enable(false).Return(nil)
 		}},
-		// on at max, set min
+		// on at max, set disable
 		{true, maxA, 0, func(mc *mock.MockCharger) {
 			mc.EXPECT().MaxCurrent(minA).Return(nil)
-			// we are not at min: enable call omitted
+			// guard duration
+		}},
+		// on at max, set disable
+		{true, maxA, dt, func(mc *mock.MockCharger) {
+			mc.EXPECT().Enable(false).Return(nil)
 		}},
 	}
 
@@ -287,7 +286,7 @@ func TestRampOff(t *testing.T) {
 		tc.expect(mc)
 		clock.Add(tc.dt)
 
-		if err := r.rampOff(); err != nil {
+		if err := r.Ramp(0, false); err != nil {
 			t.Error(err)
 		}
 
@@ -314,11 +313,11 @@ func TestRampUpDown(t *testing.T) {
 		}},
 		// at min: set max
 		{minA, maxA, func(mc *mock.MockCharger) {
-			mc.EXPECT().MaxCurrent(minA + sensitivity).Return(nil)
+			mc.EXPECT().MaxCurrent(maxA).Return(nil)
 		}},
 		// at max: set min
 		{maxA, minA, func(mc *mock.MockCharger) {
-			mc.EXPECT().MaxCurrent(maxA - sensitivity).Return(nil)
+			mc.EXPECT().MaxCurrent(minA).Return(nil)
 		}},
 		// at max: set >max
 		{maxA, maxA + 100, func(mc *mock.MockCharger) {
@@ -339,7 +338,7 @@ func TestRampUpDown(t *testing.T) {
 
 		tc.expect(mc)
 
-		if err := h.rampUpDown(tc.targetCurrent); err != nil {
+		if err := h.Ramp(tc.targetCurrent, false); err != nil {
 			t.Error(err)
 		}
 

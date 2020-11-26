@@ -16,16 +16,15 @@ import (
 // Handler is the charger handler responsible for enabled state, target current and guard durations
 type Handler interface {
 	Prepare()
-	SyncEnabled()
+	Sync()
 	Enabled() bool
 	Status() (api.ChargeStatus, error)
 	TargetCurrent() int64
-	Ramp(int64, ...bool) error
+	Ramp(int64, bool) error
 }
 
 // HandlerConfig contains the public configuration for the ChargerHandler
 type HandlerConfig struct {
-	Sensitivity   int64         // Step size of current change
 	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    int64         // Max allowed current. Physically ensured by the charge controller
 	GuardDuration time.Duration // charger enable/disable minimum holding time
@@ -86,8 +85,8 @@ func (lp *ChargerHandler) Prepare() {
 	lp.bus.Publish(evChargeCurrent, lp.MinCurrent)
 }
 
-// SyncEnabled synchronizes charger settings to expected state
-func (lp *ChargerHandler) SyncEnabled() {
+// Sync synchronizes charger settings to expected state
+func (lp *ChargerHandler) Sync() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
 		lp.log.WARN.Printf("sync enabled state to %s", status[lp.enabled])
@@ -101,10 +100,6 @@ func (lp *ChargerHandler) SyncEnabled() {
 
 // chargerEnable switches charging on or off. Minimum cycle duration is guaranteed.
 func (lp *ChargerHandler) chargerEnable(enable bool) error {
-	if lp.targetCurrent != 0 && lp.targetCurrent != lp.MinCurrent {
-		lp.log.FATAL.Fatal("charger enable/disable called without setting min current first")
-	}
-
 	if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 {
 		lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enable], remaining)
 		return nil
@@ -130,92 +125,47 @@ func (lp *ChargerHandler) chargerEnable(enable bool) error {
 
 // setTargetCurrent guards setting current against changing to identical value
 // and violating MaxCurrent
-func (lp *ChargerHandler) setTargetCurrent(targetCurrentIn int64) error {
-	targetCurrent := clamp(targetCurrentIn, lp.MinCurrent, lp.MaxCurrent)
-	if targetCurrent != targetCurrentIn {
-		lp.log.WARN.Printf("hard limit charge current: %dA", targetCurrent)
-	}
+func (lp *ChargerHandler) setTargetCurrent(targetCurrent int64) error {
+	target := clamp(targetCurrent, lp.MinCurrent, lp.MaxCurrent)
 
-	if lp.targetCurrent != targetCurrent {
-		lp.log.DEBUG.Printf("set charge current: %dA", targetCurrent)
-		if err := lp.charger.MaxCurrent(targetCurrent); err != nil {
+	if lp.targetCurrent != target {
+		lp.log.DEBUG.Printf("set charge current: %dA", target)
+		if err := lp.charger.MaxCurrent(target); err != nil {
 			return fmt.Errorf("charge controller error: %v", err)
 		}
 
-		lp.targetCurrent = targetCurrent // cache
+		lp.targetCurrent = target // cache
 	}
 
 	// if not enabled, current will be reduced to 0 in handler
-	lp.bus.Publish(evChargeCurrent, targetCurrent)
+	lp.bus.Publish(evChargeCurrent, target)
 
 	return nil
-}
-
-// rampUpDown moves stepwise towards target current.
-// It does not enable or disable the charger.
-func (lp *ChargerHandler) rampUpDown(target int64) error {
-	current := lp.targetCurrent
-	if current == target {
-		return nil
-	}
-
-	var step int64
-	if current < target {
-		step = min(current+lp.Sensitivity, target)
-	} else if current > target {
-		step = max(current-lp.Sensitivity, target)
-	}
-
-	step = clamp(step, lp.MinCurrent, lp.MaxCurrent)
-
-	return lp.setTargetCurrent(step)
-}
-
-// rampOff disables charger after setting minCurrent.
-// Setting current and disabling are two steps. If already disabled, this is a nop.
-func (lp *ChargerHandler) rampOff() error {
-	if lp.enabled {
-		if lp.targetCurrent != lp.MinCurrent {
-			return lp.setTargetCurrent(lp.MinCurrent)
-		}
-
-		return lp.chargerEnable(false)
-	}
-
-	return nil
-}
-
-// rampOn enables charger immediately after setting minCurrent.
-// If already enabled, target will be set.
-func (lp *ChargerHandler) rampOn(target int64) error {
-	if !lp.enabled {
-		if err := lp.setTargetCurrent(lp.MinCurrent); err != nil {
-			return err
-		}
-
-		return lp.chargerEnable(true)
-	}
-
-	return lp.setTargetCurrent(target)
 }
 
 // Ramp performs ramping charger current up and down where targetCurrent=0
 // signals disabled state
-func (lp *ChargerHandler) Ramp(targetCurrent int64, force ...bool) error {
+func (lp *ChargerHandler) Ramp(targetCurrent int64, force bool) error {
 	// reset guard updated
-	if len(force) == 1 && force[0] {
+	if force {
 		lp.guardUpdated = time.Time{}
 	}
 
-	// if targetCurrent == 0 ramp down to disabled state
+	// if targetCurrent == 0 disable
 	if targetCurrent == 0 {
-		return lp.rampOff()
+		err := lp.chargerEnable(false)
+		if err == nil && lp.enabled && lp.targetCurrent > lp.MinCurrent {
+			err = lp.setTargetCurrent(lp.MinCurrent)
+		}
+
+		return err
 	}
 
-	// targetCurrent != 0 and not enabled ramp to enabled state
-	if !lp.enabled {
-		return lp.rampOn(targetCurrent)
+	// else set targetCurrent and optionally enable
+	err := lp.setTargetCurrent(targetCurrent)
+	if err == nil && !lp.enabled {
+		err = lp.chargerEnable(true)
 	}
 
-	return lp.rampUpDown(targetCurrent)
+	return err
 }

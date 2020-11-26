@@ -172,7 +172,6 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		HandlerConfig: HandlerConfig{
 			MinCurrent:    6,  // A
 			MaxCurrent:    16, // A
-			Sensitivity:   10, // A
 			GuardDuration: 5 * time.Minute,
 		},
 	}
@@ -226,8 +225,8 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 }
 
-// notify sends push messages to clients
-func (lp *LoadPoint) notify(event string) {
+// triggerEvent sends push messages to clients
+func (lp *LoadPoint) triggerEvent(event string) {
 	lp.pushChan <- push.Event{Event: event}
 }
 
@@ -241,13 +240,13 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
-	lp.notify(evChargeStart)
+	lp.triggerEvent(evChargeStart)
 }
 
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.notify(evChargeStop)
+	lp.triggerEvent(evChargeStop)
 }
 
 // evVehicleConnectHandler sends external start event
@@ -267,7 +266,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	lp.notify(evVehicleConnect)
+	lp.triggerEvent(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -278,7 +277,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
-	lp.notify(evVehicleDisconnect)
+	lp.triggerEvent(evVehicleDisconnect)
 
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
@@ -289,7 +288,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 }
 
-// evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
+// evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 	lp.publish("chargeCurrent", current)
 }
@@ -741,7 +740,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// sync settings with charger
 	if lp.status != api.StatusA {
-		lp.handler.SyncEnabled()
+		lp.handler.Sync()
 	}
 
 	// phase detection
@@ -758,7 +757,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/andig/evcc/issues/105
-		err = lp.handler.Ramp(0)
+		err = lp.handler.Ramp(0, false)
 
 	case lp.targetSocReached():
 		var targetCurrent int64 // zero disables

@@ -60,22 +60,17 @@ func (mr *MockHandlerMockRecorder) Prepare() *gomock.Call {
 }
 
 // Ramp mocks base method
-func (m *MockHandler) Ramp(arg0 int64, arg1 ...bool) error {
+func (m *MockHandler) Ramp(arg0 int64, arg1 bool) error {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Ramp", varargs...)
+	ret := m.ctrl.Call(m, "Ramp", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Ramp indicates an expected call of Ramp
-func (mr *MockHandlerMockRecorder) Ramp(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+func (mr *MockHandlerMockRecorder) Ramp(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ramp", reflect.TypeOf((*MockHandler)(nil).Ramp), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ramp", reflect.TypeOf((*MockHandler)(nil).Ramp), arg0, arg1)
 }
 
 // Status mocks base method
@@ -93,16 +88,16 @@ func (mr *MockHandlerMockRecorder) Status() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockHandler)(nil).Status))
 }
 
-// SyncEnabled mocks base method
-func (m *MockHandler) SyncEnabled() {
+// Sync mocks base method
+func (m *MockHandler) Sync() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SyncEnabled")
+	m.ctrl.Call(m, "Sync")
 }
 
-// SyncEnabled indicates an expected call of SyncEnabled
-func (mr *MockHandlerMockRecorder) SyncEnabled() *gomock.Call {
+// Sync indicates an expected call of Sync
+func (mr *MockHandlerMockRecorder) Sync() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SyncEnabled", reflect.TypeOf((*MockHandler)(nil).SyncEnabled))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sync", reflect.TypeOf((*MockHandler)(nil).Sync))
 }
 
 // TargetCurrent mocks base method
