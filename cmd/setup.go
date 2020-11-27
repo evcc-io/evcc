@@ -47,8 +47,14 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 
 // setup mqtt
 func configureMQTT(conf provider.MqttConfig) {
+	log := util.NewLogger("mqtt")
 	clientID := provider.MqttClientID()
-	provider.MQTT = provider.NewMqttClient(conf.Broker, conf.User, conf.Password, clientID, 1)
+
+	var err error
+	provider.MQTT, err = provider.NewMqttClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	if err != nil {
+		log.FATAL.Fatalf("failed configuring hems: %v", err)
+	}
 }
 
 // setup HEMS

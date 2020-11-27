@@ -32,7 +32,7 @@ func init() {
 	registry.Add("phoenix-emcp", NewPhoenixEMCPFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMCP -b api.Charger -o phoenix-emcp_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMCP -b api.Charger -o phoenix-em-cp_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error) {

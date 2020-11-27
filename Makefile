@@ -1,7 +1,7 @@
 .PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
 
-TAG_NAME := 2020.0.31
-SHA := $(shell git rev-parse --short HEAD)
+TAG_NAME := 2020.0.33
+SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
@@ -9,7 +9,7 @@ IMAGE := mark-sch/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
-default: clean install ui assets lint test build
+default: clean install npm assets lint test build
 
 clean:
 	rm -rf dist/
@@ -17,6 +17,7 @@ clean:
 install:
 	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
+	npm ci
 
 lint:
 	golangci-lint run
@@ -25,8 +26,10 @@ test:
 	@echo "Running testsuite"
 	go test ./...
 
+npm:
+	npm run build
+
 ui:
-	npm ci
 	npm run build
 	go generate main.go
 

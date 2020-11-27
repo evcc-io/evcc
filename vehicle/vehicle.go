@@ -24,13 +24,14 @@ func (m *embed) Capacity() int64 {
 	return m.capacity
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.VehicleStatus,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,RangeKM,func() (int, error)"
+//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.VehicleStatus,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
 	chargeG func() (float64, error)
 	statusG func() (string, error)
+	rangeG  func() (int64, error)
 }
 
 func init() {
@@ -44,6 +45,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Capacity int64
 		Charge   provider.Config
 		Status   *provider.Config
+		Range    *provider.Config
 		Cache    time.Duration
 	}{}
 
@@ -73,7 +75,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	// decorate vehicle with Status
 	var status func() (api.ChargeStatus, error)
-	var rangekm func() (int, error)
+	
 	if cc.Status != nil {
 		v.statusG, err = provider.NewStringGetterFromConfig(*cc.Status)
 		if err != nil {
@@ -82,7 +84,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		status = v.status
 	}
 
-	res := decorateVehicle(v, status, rangekm)
+	// decorate vehicle with Range
+	var rng func() (int64, error)
+	if cc.Range != nil {
+		v.rangeG, err = provider.NewIntGetterFromConfig(*cc.Range)
+		if err != nil {
+			return nil, err
+		}
+		rng = v.rng
+	}
+
+	res := decorateVehicle(v, status, rng)
 
 	return res, nil
 }
@@ -102,4 +114,9 @@ func (m *Vehicle) status() (api.ChargeStatus, error) {
 	}
 
 	return status, err
+}
+
+// rng implements the Vehicle.Range interface
+func (m *Vehicle) rng() (int64, error) {
+	return m.rangeG()
 }

@@ -94,6 +94,7 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 	for _, cc := range conf.Meters {
 		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
+			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 			return err
 		}
 
@@ -112,6 +113,7 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 	for _, cc := range conf.Chargers {
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
+			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			return err
 		}
 
@@ -130,6 +132,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	for _, cc := range conf.Vehicles {
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
+			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			return err
 		}
 

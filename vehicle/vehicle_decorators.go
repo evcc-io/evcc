@@ -6,7 +6,7 @@ import (
 	"github.com/mark-sch/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error), vehicleRange func() (int, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error), vehicleRange func() (int64, error)) api.Vehicle {
 	switch {
 	case vehicleRange == nil && vehicleStatus == nil:
 		return base
@@ -53,10 +53,10 @@ func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, e
 }
 
 type decorateVehicleVehicleRangeImpl struct {
-	vehicleRange func() (int, error)
+	vehicleRange func() (int64, error)
 }
 
-func (impl *decorateVehicleVehicleRangeImpl) RangeKM() (int, error) {
+func (impl *decorateVehicleVehicleRangeImpl) Range() (int64, error) {
 	return impl.vehicleRange()
 }
 

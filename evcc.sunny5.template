@@ -133,7 +133,6 @@ loadpoints:
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
   #phases: 1 # ev phases (default 3)
-  sensitivity: 4 # current raise/lower step size (default 10A)
   #meters:
   #  charge: charge # charge meter
   enable: # pv mode enable behavior

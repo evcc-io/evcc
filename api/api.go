@@ -99,7 +99,7 @@ type VehicleStatus interface {
 
 // VehicleRange provides the vehicles remaining km range
 type VehicleRange interface {
-	RangeKM() (int, error)
+	Range() (int64, error)
 }
 
 // Climater provides climatisation data

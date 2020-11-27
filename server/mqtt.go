@@ -77,6 +77,19 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 			m.publishSingleValue(topic+"/mode/set", true, "ok") 
 		}
 	})
+	
+	m.publishSingleValue(topic+"/minsoc/set", false, "ok")
+	m.Handler.Listen(topic+"/minsoc/set", func(payload string) {
+		if payload != "ok" { 
+			soc, err := strconv.Atoi(payload)
+			if err == nil {
+				_ = apiHandler.SetMinSoC(soc)
+				//confirm /set change
+				m.publishSingleValue(topic+"/minsoc/set", true, "ok") 
+			}
+		}
+	})
+	
 	m.publishSingleValue(topic+"/targetsoc/set", false, "ok")
 	m.Handler.Listen(topic+"/targetsoc/set", func(payload string) {
 		if payload != "ok" { 
@@ -84,7 +97,7 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 			if err == nil {
 				_ = apiHandler.SetTargetSoC(soc)
 				//confirm /set change
-				m.publishSingleValue(topic+"/mode/set", true, "ok") 
+				m.publishSingleValue(topic+"/targetsoc/set", true, "ok") 
 			}
 		}
 	})
