@@ -46,14 +46,14 @@ func runDump(cmd *cobra.Command, args []string) {
 	d.Header("config", "=")
 	fmt.Println("")
 
-	if site.Meters.GridMeterRef != "" {
-		d.DumpWithHeader("grid", cp.Meter(site.Meters.GridMeterRef))
+	if name := site.Meters.GridMeterRef; name != "" {
+		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), cp.Meter(name))
 	}
-	if site.Meters.PVMeterRef != "" {
-		d.DumpWithHeader("pv", cp.Meter(site.Meters.PVMeterRef))
+	if name := site.Meters.PVMeterRef; name != "" {
+		d.DumpWithHeader(fmt.Sprintf("pv: %s", name), cp.Meter(name))
 	}
-	if site.Meters.BatteryMeterRef != "" {
-		d.DumpWithHeader("battery", cp.Meter(site.Meters.BatteryMeterRef))
+	if name := site.Meters.BatteryMeterRef; name != "" {
+		d.DumpWithHeader(fmt.Sprintf("battery: %s", name), cp.Meter(name))
 	}
 
 	for id, lpI := range site.LoadPoints() {
@@ -62,12 +62,12 @@ func runDump(cmd *cobra.Command, args []string) {
 		d.Header(fmt.Sprintf("loadpoint %d", id+1), "=")
 		fmt.Println("")
 
-		if lp.Meters.ChargeMeterRef != "" {
-			d.DumpWithHeader("charge", cp.Meter(lp.Meters.ChargeMeterRef))
+		if name := lp.Meters.ChargeMeterRef; name != "" {
+			d.DumpWithHeader(fmt.Sprintf("charge: %s", name), cp.Meter(name))
 		}
 
-		if lp.ChargerRef != "" {
-			d.DumpWithHeader("charger", cp.Charger(lp.ChargerRef))
+		if name := lp.ChargerRef; name != "" {
+			d.DumpWithHeader(fmt.Sprintf("charger: %s", name), cp.Charger(name))
 		}
 
 		for id, v := range lp.VehiclesRef {
