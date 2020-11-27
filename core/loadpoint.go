@@ -357,13 +357,12 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if enabled, err := lp.charger.Enabled(); err == nil {
 		if lp.enabled = enabled; enabled {
 			lp.guardUpdated = lp.clock.Now()
+			// set defined current for use by pv mode
+			_ = lp.setLimit(lp.MinCurrent, false)
 		}
 	} else {
 		lp.log.ERROR.Printf("charger error: %v", err)
 	}
-
-	// prepare charger status
-	_ = lp.setLimit(lp.MinCurrent, false)
 }
 
 func (lp *LoadPoint) syncCharger() {
