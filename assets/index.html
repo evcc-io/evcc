@@ -28,11 +28,7 @@
 
 <div id="app">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-<<<<<<< HEAD
     <a class="navbar-brand" href="https://www.sunny5.de" target="_new"><img src="ico/favicon-32x32.png" alt="Sunny5 Logo"></i></a>
-=======
-    <a class="navbar-brand" href="https://github.com/andig/evcc"><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a>
->>>>>>> upstream/master
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
       aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -67,13 +63,8 @@
           </a>
         </b>
         <b class="px-3">
-<<<<<<< HEAD
           <a v-bind:href="'https://github.com/mark-sch/evcc/releases/tag/'+state.availableVersion" class="text-body">
             Download <i class="fas fa-chevron-down"></i>
-=======
-          <a v-bind:href="'https://github.com/andig/evcc/releases/tag/'+state.availableVersion" class="text-body">
-            Download <fa-icon icon="chevron-down"></fa-icon>
->>>>>>> upstream/master
           </a>
         </b>
         <button type="button" class="close float-right" style="margin-top: -2px" aria-label="Close" data-toggle="collapse" data-target="#version-bar">
@@ -211,28 +202,15 @@ loadpoints:
     </h2>
   </div>
   <div class="d-md-block col-6 col-md-3 mt-3" v-bind:class="{'d-none':!state.batterySoC}" v-if="state.batteryConfigured">
-<<<<<<< HEAD
     <div class="mb-2 value">Batterie({{state.batterySoC}}%)
       <i class="text-primary fas" v-bind:class="{'fa-arrow-down':state.batteryPower<0, 'fa-arrow-up':state.batteryPower>0}"></i>
-=======
-    <div class="mb-2 value">Batterie
-      <fa-icon class="text-primary" icon="arrow-down" v-if="state.batteryPower < 0"></fa-icon>
-      <fa-icon class="text-primary" icon="arrow-up" v-if="state.batteryPower > 0"></fa-icon>
->>>>>>> upstream/master
     </div>
     <h2 class="value">
       {{fmt(state.batteryPower)}} <small class="text-muted">{{fmtUnit(state.batteryPower)}}W</small>
     </h2>
   </div>
-<<<<<<< HEAD
   <div class="col-6 col-md-3 mt-3" v-if="state.consumptionConfigured">
     <div class="mb-2 value">Verbrauch <i class="fas fas fa-plug" v-bind:class="{'text-primary':state.consumptionPower<0,'text-muted':state.consumptionPower>=0}"></i></div>
-=======
-  <div class="col-6 col-md-3 mt-3" v-if="state.batterySoC">
-    <div class="mb-2 value">SoC
-      <fa-icon class="text-primary" icon="battery-three-quarters" v-bind:class="{'text-primary':state.batteryPower>0,'text-muted':state.batteryPower<0}"></fa-icon>
-    </div>
->>>>>>> upstream/master
     <h2 class="value">
       {{fmt(state.consumptionPower)}} <small class="text-muted">{{fmtUnit(state.consumptionPower)}}W</small>
     </h2>
