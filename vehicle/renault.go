@@ -341,6 +341,17 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+// Range implements the Vehicle.Range interface
+func (v *Renault) Range() (int64, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		return int64(res.Data.Attributes.RangeHvacOff), nil
+	}
+
+	return 0, err
+}
+
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
