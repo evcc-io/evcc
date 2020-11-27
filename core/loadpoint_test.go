@@ -174,7 +174,7 @@ func TestUpdatePowerZero(t *testing.T) {
 	}
 }
 
-func TestPVHysteresisForStatusC(t *testing.T) {
+func TestPVHysteresis(t *testing.T) {
 	dt := time.Minute
 	type se struct {
 		site    float64
@@ -277,51 +277,54 @@ func TestPVHysteresisForStatusC(t *testing.T) {
 		}},
 	}
 
-	for _, tc := range tc {
-		t.Log(tc)
+	for _, status := range []api.ChargeStatus{api.StatusB, api.StatusC} {
 
-		clck := clock.NewMock()
-		ctrl := gomock.NewController(t)
-		charger := mock.NewMockCharger(ctrl)
+		for _, tc := range tc {
+			t.Log(tc)
 
-		Voltage = 100
-		lp := &LoadPoint{
-			log:        util.NewLogger("foo"),
-			clock:      clck,
-			charger:    charger,
-			MinCurrent: minA,
-			MaxCurrent: maxA,
-			Phases:     10,
-			Enable: ThresholdConfig{
-				Threshold: tc.enable,
-				Delay:     dt,
-			},
-			Disable: ThresholdConfig{
-				Threshold: tc.disable,
-				Delay:     dt,
-			},
-		}
+			clck := clock.NewMock()
+			ctrl := gomock.NewController(t)
+			charger := mock.NewMockCharger(ctrl)
 
-		// charging, otherwise PV mode logic is short-circuited
-		lp.status = api.StatusC
-
-		start := clck.Now()
-
-		for step, se := range tc.series {
-			clck.Set(start.Add(se.delay))
-
-			// maxCurrent will read actual current and enabled state in PV mode
-			// charger.EXPECT().Enabled().Return(tc.enabled, nil)
-
-			lp.enabled = tc.enabled
-			current := lp.pvMaxCurrent(api.ModePV, se.site)
-
-			if current != se.current {
-				t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+			Voltage = 100
+			lp := &LoadPoint{
+				log:        util.NewLogger("foo"),
+				clock:      clck,
+				charger:    charger,
+				MinCurrent: minA,
+				MaxCurrent: maxA,
+				Phases:     10,
+				Enable: ThresholdConfig{
+					Threshold: tc.enable,
+					Delay:     dt,
+				},
+				Disable: ThresholdConfig{
+					Threshold: tc.disable,
+					Delay:     dt,
+				},
 			}
-		}
 
-		ctrl.Finish()
+			// charging, otherwise PV mode logic is short-circuited
+			lp.status = status
+
+			start := clck.Now()
+
+			for step, se := range tc.series {
+				clck.Set(start.Add(se.delay))
+
+				// maxCurrent will read actual current and enabled state in PV mode
+				// charger.EXPECT().Enabled().Return(tc.enabled, nil)
+
+				lp.enabled = tc.enabled
+				current := lp.pvMaxCurrent(api.ModePV, se.site)
+
+				if current != se.current {
+					t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+				}
+			}
+
+			ctrl.Finish()
+		}
 	}
 }
 
