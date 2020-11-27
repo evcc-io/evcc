@@ -201,7 +201,7 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *GoE) MaxCurrent(current int64) error {
-	status, err := c.apiUpdate(fmt.Sprintf("amp=%d", current))
+	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
 	if err == nil && isValid(status) && int64(status.Amp) != current {
 		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
