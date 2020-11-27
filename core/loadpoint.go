@@ -609,17 +609,6 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 		return lp.MinCurrent
 	}
 
-	// in PV mode disable charger if car not charging and minCurrent not possible
-	if mode == api.ModePV && lp.status != api.StatusC {
-		lp.pvTimer = time.Time{}
-
-		if targetCurrent < lp.MinCurrent {
-			return 0
-		}
-
-		return lp.MinCurrent
-	}
-
 	// read only once to simplify testing
 	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
 		// kick off disable sequence
