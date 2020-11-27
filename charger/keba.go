@@ -15,7 +15,7 @@ import (
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
 
 const (
-	udpTimeout = time.Second
+	udpTimeout = 3 * time.Second
 )
 
 // RFID contains access credentials
@@ -154,6 +154,8 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
+	time.Sleep(1 * time.Second)
+
 	if kr.AuthON == 1 && c.rfid.Tag == "" {
 		c.log.WARN.Println("missing credentials for RFID authorization")
 	}
@@ -178,6 +180,8 @@ func (c *Keba) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	time.Sleep(1 * time.Second)
 
 	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
 }
@@ -207,6 +211,7 @@ func (c *Keba) enableRFID() error {
 
 // Enable implements the Charger.Enable interface
 func (c *Keba) Enable(enable bool) error {
+	fmt.Printf(">>>>> set enable %t", enable)
 	if enable && c.rfid.Tag != "" {
 		if err := c.enableRFID(); err != nil {
 			return err
@@ -220,18 +225,22 @@ func (c *Keba) Enable(enable bool) error {
 
 	// ignore result...
 	var resp string
-	if err := c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp); err != nil {
-		return err
-	}
-	if resp != keba.OK {
-		return fmt.Errorf("ena %d unexpected response: %s", d, resp)
+	_ = c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp)
+
+	time.Sleep(1 * time.Second)
+
+	// ...and verify value
+	res, err := c.Enabled()
+	if err == nil && res != enable {
+		return fmt.Errorf("ena could not enable: %s", resp)
 	}
 
-	return nil
+	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *Keba) MaxCurrent(current int64) error {
+	fmt.Println(">>>>> MaxCurrent")
 	d := 1000 * current
 
 	var resp string
