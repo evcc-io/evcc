@@ -15,8 +15,17 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
+# install go and node tools
+COPY Makefile .
+COPY package*.json ./
+RUN make install
+
+# build ui
+COPY assets assets
+RUN make clean npm
+
 COPY . .
-RUN make clean install ui assets
+RUN make assets
 RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 
 #############################

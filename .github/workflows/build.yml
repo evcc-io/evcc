@@ -34,7 +34,7 @@ jobs:
       run: make install
 
     - name: Assets & UI
-      run: make assets
+      run: make npm assets
 
     - name: Porcelain
       run: |

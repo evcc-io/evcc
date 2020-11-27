@@ -1,7 +1,7 @@
 .PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
 
-TAG_NAME := $(shell git describe --abbrev=0 --tags)
-SHA := $(shell git rev-parse --short HEAD)
+TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
+SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
@@ -9,7 +9,7 @@ IMAGE := andig/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
-default: clean install assets lint test build
+default: clean install npm assets lint test build
 
 clean:
 	rm -rf dist/
@@ -26,13 +26,15 @@ test:
 	@echo "Running testsuite"
 	go test ./...
 
+npm:
+	npm run build
+
 ui:
 	npm run build
 	go generate main.go
 
 assets:
 	@echo "Generating embedded assets"
-	npm run build
 	go generate ./...
 
 build:
