@@ -61,7 +61,7 @@ site:
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
-- title: Garage # display name for UI
+- title: Garage # display name for UI		fmt.Printf("mqtt %s/mode/set called: %s\n", topic, payload)
   charger: wallbe # charger
   meters:
     charge: charge # charge meter
@@ -98,7 +98,7 @@ loadpoints:
 # mqtt message broker
 mqtt:
   # broker: localhost:1883
-  # topic: evcc # root topic for publishing, set empty to disable
+  # topic: /evcc # root topic for publishing, set empty to disable
   # user:
   # password:
 
