@@ -74,12 +74,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// charger
 
 	if v, ok := v.(api.Charger); ok {
-		// if status, err := v.Status(); err != nil {
-		// 	fmt.Fprintf(w, "Status:\t%v\n", err)
-		// } else {
-		// 	fmt.Fprintf(w, "Status:\t%s\n", status)
-		// }
-
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
@@ -103,23 +97,23 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.ChargeFinishTimer); ok {
-		if ft, err := v.FinishTime(); err != nil {
-			fmt.Fprintf(w, "Finish time:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute))
-		}
-	}
-
 	// vehicle
 
 	if v, ok := v.(api.Vehicle); ok {
-		fmt.Printf("Capacity: %dkWh\n", v.Capacity())
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 
 		if soc, err := v.ChargeState(); err != nil {
-			fmt.Printf("State: %v\n", err)
+			fmt.Fprintf(w, "State:\t%v\n", err)
 		} else {
-			fmt.Printf("State: %.0f%%\n", soc)
+			fmt.Fprintf(w, "State:\t%.0f%%\n", soc)
+		}
+	}
+
+	if v, ok := v.(api.VehicleRange); ok {
+		if rng, err := v.Range(); err != nil {
+			fmt.Fprintf(w, "Vehicle range:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Vehicle range:\t%vkm\n", rng)
 		}
 	}
 
@@ -128,6 +122,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Charge status:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Charge status:\t%v\n", status)
+		}
+	}
+
+	if v, ok := v.(api.ChargeFinishTimer); ok {
+		if ft, err := v.FinishTime(); err != nil {
+			fmt.Fprintf(w, "Finish time:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute))
 		}
 	}
 

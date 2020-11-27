@@ -51,6 +51,13 @@ type ChargerResponse struct {
 			PlugStatusData struct {
 				PlugState TimedString // connected
 			}
+			CruisingRangeStatusData struct {
+				EngineTypeFirstEngine  TimedString // typeIsElectric, petrolGasoline
+				EngineTypeSecondEngine TimedString // typeIsElectric, petrolGasoline
+				PrimaryEngineRange     TimedInt
+				SecondaryEngineRange   TimedInt
+				HybridRange            TimedInt
+			}
 		}
 	}
 }
