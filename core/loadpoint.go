@@ -363,7 +363,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// prepare charger status
-	lp.setLimit(lp.MinCurrent, false)
+	_ = lp.setLimit(lp.MinCurrent, false)
 }
 
 func (lp *LoadPoint) syncCharger() {
