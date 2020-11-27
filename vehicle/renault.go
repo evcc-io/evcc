@@ -79,6 +79,7 @@ type attributes struct {
 	ChargingStatus     float32 `json:"chargingStatus"`
 	InstantaneousPower int     `json:"instantaneousPower"`
 	RangeHvacOff       int     `json:"rangeHvacOff"`
+	BatteryAutonomy    int     `json:"batteryAutonomy"`
 	BatteryLevel       int     `json:"batteryLevel"`
 	BatteryTemperature int     `json:"batteryTemperature"`
 	PlugStatus         int     `json:"plugStatus"`
@@ -346,7 +347,7 @@ func (v *Renault) Range() (int64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
-		return int64(res.Data.Attributes.RangeHvacOff), nil
+		return int64(res.Data.Attributes.BatteryAutonomy), nil
 	}
 
 	return 0, err
