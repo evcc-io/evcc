@@ -424,6 +424,7 @@ func (lp *LoadPoint) targetSocReached() bool {
 func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
 		lp.SoC.Min > 0 &&
+		lp.socCharge != 0 &&
 		lp.socCharge < float64(lp.SoC.Min)
 }
 
@@ -819,6 +820,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, true)
 
 	case lp.minSocNotReached():
+		fmt.Printf(">>> minSocNotReached!!!")
 		err = lp.setLimit(lp.MaxCurrent, true)
 		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 

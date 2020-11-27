@@ -629,7 +629,7 @@ func TestMinSoC(t *testing.T) {
 		{nil, 80, 100, false}, // never reached without vehicle
 		{vhc, 0, 0, false},    // min disabled
 		{vhc, 0, 10, false},   // min disabled
-		{vhc, 80, 0, true},    // min not reached
+		{vhc, 80, 5, true},    // min not reached
 		{vhc, 80, 80, false},  // min reached
 		{vhc, 80, 100, false}, // min reached
 	}
