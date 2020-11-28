@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	phEVCCRegEnConfig   =  4000 // Holding, Remanent
 	phEVCCRegEnable     = 20000 // Coil
 	phEVCCRegOUT        = 23000 // Holding
 	phEVCCRegMaxCurrent = 22000 // Holding
@@ -75,13 +76,36 @@ func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (wb *PhoenixEVCC) Enabled() (bool, error) {
-	b, err := wb.conn.ReadInputRegisters(phEVCCRegOUT, 1)
+        var EN bool
+	r, err := wb.conn.ReadInputRegisters(phEVCCRegEnConfig, 1)
+        if err != nil {
+                return false, err
+        }
+	if r[1] == 1 { 
+ 		b, err := wb.conn.ReadInputRegisters(phEVCCRegOUT, 1)
+       		if err != nil {
+        	        return false, err
+ 	       }
+ 	        wb.log.TRACE.Printf("Register 23000 is %d)", b)
+
+		EN = b[1] == 1
+	}else if r[1] == 3 {
+		b, err := wb.conn.ReadCoils(phEVCCRegEnable, 1)
+                if err != nil {
+                        return false, err
+               }
+                wb.log.TRACE.Printf("Register 20000 is %d)", b)
+
+                 EN = b[0] == 1
+ 	}else {
+		wb.log.WARN.Printf("Register 4000 setting (%d) invalid",r[1])
+	}
 	if err != nil {
 		return false, err
 	}
-	wb.log.TRACE.Printf("enabled: %t", b[1] == 1)
+	wb.log.TRACE.Printf("enabled: %t  (Register 4000 setting is %d)", EN, r[1])
 
-	return b[1] == 1, nil
+	return EN, nil
 }
 
 // Enable implements the Charger.Enable interface
