@@ -17,7 +17,8 @@ const (
 
 // PhoenixEVCC is an api.ChargeController implementation for Phoenix EV-CC-AC1-M wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
-type PhoenixEVCC struct {
+type PhoenixEVCC struct { 
+	log *util.Logger 
 	conn *modbus.Connection
 }
 
@@ -54,7 +55,8 @@ func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*Phoeni
 	log := util.NewLogger("evcc")
 	conn.Logger(log.TRACE)
 
-	wb := &PhoenixEVCC{
+	wb := &PhoenixEVCC{ 
+		log: log, 
 		conn: conn,
 	}
 
@@ -77,8 +79,8 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	wb.log.TRACE.Printf("enabled: %t", b[1] == 1)
 
-//        return b[0], nil
 	return b[1] == 1, nil
 }
 
@@ -88,7 +90,7 @@ func (wb *PhoenixEVCC) Enable(enable bool) error {
 	if enable {
 		u = 0x0001
 	}
-//High-signal on pin OUT of the EV_CC_AC1-M  board (wire bridge between OUT and ENABLE necessary!!) 
+	//High-signal on pin OUT of the EV_CC_AC1-M  board (wire bridge between OUT and ENABLE necessary!!) 
 	_, err := wb.conn.WriteSingleRegister(phEVCCRegOUT, u)
 
 	return err
