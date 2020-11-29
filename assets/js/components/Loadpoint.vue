@@ -73,8 +73,21 @@
 		</div>
 
 		<div class="row" v-if="!multi">
-			<div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5 align-items-end">
-				<span class="h1 align-bottom">{{ state.title || "Ladepunkt" }}</span>
+			<div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5">
+				<span class="h1">{{ state.title || "Ladepunkt" }}</span>
+			</div>
+			<div
+				class="col-12 col-md-8 d-flex d-md-flex mt-3 mt-md-5 pt-3"
+				v-if="state.remoteDisabled"
+			>
+				<h5 class="w-100">
+					<span class="badge badge-warning w-100" v-if="state.remoteDisabled == 'soft'">
+						{{ state.remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
+					</span>
+					<span class="badge badge-danger w-100" v-if="state.remoteDisabled == 'hard'">
+						{{ state.remoteDisabledSource }}: Deaktiviert
+					</span>
+				</h5>
 			</div>
 		</div>
 
