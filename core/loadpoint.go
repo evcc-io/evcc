@@ -73,9 +73,15 @@ type LoadPoint struct {
 	}
 	Enable, Disable ThresholdConfig
 
-	handler       Handler
-	HandlerConfig `mapstructure:",squash"` // handle charger state and current
+	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
+	MaxCurrent    int64         // Max allowed current. Physically ensured by the charger
+	GuardDuration time.Duration // charger enable/disable minimum holding time
 
+	enabled      bool      // Charger enabled state
+	maxCurrent   int64     // Charger current limit
+	guardUpdated time.Time // Charger enabled/disabled timestamp
+
+	charger     api.Charger
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
@@ -139,19 +145,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
 	}
-	charger := cp.Charger(lp.ChargerRef)
-	lp.configureChargerType(charger)
+	lp.charger = cp.Charger(lp.ChargerRef)
+	lp.configureChargerType(lp.charger)
 
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
-	}
-
-	lp.handler = &ChargerHandler{
-		log:           lp.log,
-		clock:         lp.clock,
-		bus:           lp.bus,
-		charger:       charger,
-		HandlerConfig: lp.HandlerConfig,
 	}
 
 	return lp, nil
@@ -163,18 +161,15 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	bus := evbus.New()
 
 	lp := &LoadPoint{
-		log:    log,   // logger
-		clock:  clock, // mockable time
-		bus:    bus,   // event bus
-		Mode:   api.ModeOff,
-		Phases: 1,
-		status: api.StatusNone,
-		HandlerConfig: HandlerConfig{
-			MinCurrent:    6,  // A
-			MaxCurrent:    16, // A
-			Sensitivity:   10, // A
-			GuardDuration: 5 * time.Minute,
-		},
+		log:           log,   // logger
+		clock:         clock, // mockable time
+		bus:           bus,   // event bus
+		Mode:          api.ModeOff,
+		Phases:        1,
+		status:        api.StatusNone,
+		MinCurrent:    6,  // A
+		MaxCurrent:    16, // A
+		GuardDuration: 5 * time.Minute,
 	}
 
 	return lp
@@ -226,8 +221,8 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 }
 
-// notify sends push messages to clients
-func (lp *LoadPoint) notify(event string) {
+// triggerEvent sends push messages to clients
+func (lp *LoadPoint) triggerEvent(event string) {
 	lp.pushChan <- push.Event{Event: event}
 }
 
@@ -241,13 +236,13 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
-	lp.notify(evChargeStart)
+	lp.triggerEvent(evChargeStart)
 }
 
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.notify(evChargeStop)
+	lp.triggerEvent(evChargeStop)
 }
 
 // evVehicleConnectHandler sends external start event
@@ -267,7 +262,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	lp.notify(evVehicleConnect)
+	lp.triggerEvent(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -278,7 +273,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
-	lp.notify(evVehicleDisconnect)
+	lp.triggerEvent(evVehicleDisconnect)
 
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
@@ -289,7 +284,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 }
 
-// evChargeCurrentHandler updates the dummy charge meter's charge power. This simplifies the main flow
+// evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 	lp.publish("chargeCurrent", current)
 }
@@ -302,7 +297,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current int64) {
 	power := float64(current*lp.Phases) * Voltage
 
-	if !lp.handler.Enabled() || lp.status != api.StatusC {
+	if !lp.enabled || lp.status != api.StatusC {
 		// if disabled we cannot be charging
 		power = 0
 	}
@@ -358,8 +353,55 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		lp.setActiveVehicle(lp.vehicles[0])
 	}
 
-	// prepare charger status
-	lp.handler.Prepare()
+	// read initial charger state to prevent immediately disabling charger
+	if enabled, err := lp.charger.Enabled(); err == nil {
+		if lp.enabled = enabled; enabled {
+			lp.guardUpdated = lp.clock.Now()
+			// set defined current for use by pv mode
+			_ = lp.setLimit(lp.MinCurrent, false)
+		}
+	} else {
+		lp.log.ERROR.Printf("charger error: %v", err)
+	}
+}
+
+func (lp *LoadPoint) syncCharger() {
+	enabled, err := lp.charger.Enabled()
+	if err == nil && enabled != lp.enabled {
+		lp.log.WARN.Println("charger out of sync")
+		err = lp.charger.Enable(lp.enabled)
+	}
+
+	if err != nil {
+		lp.log.ERROR.Printf("charger error: %v", err)
+	}
+}
+
+func (lp *LoadPoint) setLimit(maxCurrent int64, force bool) (err error) {
+	// set current
+	if maxCurrent != lp.maxCurrent && maxCurrent >= lp.MinCurrent {
+		if err = lp.charger.MaxCurrent(maxCurrent); err == nil {
+			lp.maxCurrent = maxCurrent
+			lp.bus.Publish(evChargeCurrent, maxCurrent)
+		}
+	}
+
+	// set enabled
+	if enabled := maxCurrent != 0; enabled != lp.enabled && err == nil {
+		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
+			lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enabled], remaining)
+			return nil
+		}
+
+		if err = lp.charger.Enable(enabled); err == nil {
+			lp.enabled = enabled
+			lp.guardUpdated = lp.clock.Now()
+			lp.log.DEBUG.Printf("charger %s", status[enabled])
+			lp.bus.Publish(evChargeCurrent, maxCurrent)
+		}
+	}
+
+	return err
 }
 
 // connected returns the EVs connection state
@@ -476,7 +518,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 // updateChargerStatus updates charger status and detects car connected/disconnected events
 func (lp *LoadPoint) updateChargerStatus() error {
-	status, err := lp.handler.Status()
+	status, err := lp.charger.Status()
 	if err != nil {
 		return err
 	}
@@ -504,7 +546,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 		}
 
 		// update whenever there is a state change
-		lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
+		lp.bus.Publish(evChargeCurrent, lp.maxCurrent)
 	}
 
 	return nil
@@ -552,7 +594,7 @@ func (lp *LoadPoint) pvDisableTimer() {
 // pvMaxCurrent calculates the maximum target current for PV mode
 func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 {
 	// calculate target charge current from delta power and actual current
-	effectiveCurrent := lp.handler.TargetCurrent()
+	effectiveCurrent := lp.maxCurrent
 	if lp.status != api.StatusC {
 		effectiveCurrent = 0
 	}
@@ -566,21 +608,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 		return lp.MinCurrent
 	}
 
-	// in PV mode disable charger if car not charging and minCurrent not possible
-	if mode == api.ModePV && lp.status != api.StatusC {
-		lp.pvTimer = time.Time{}
-
-		if targetCurrent < lp.MinCurrent {
-			return 0
-		}
-
-		return lp.MinCurrent
-	}
-
 	// read only once to simplify testing
-	enabled := lp.handler.Enabled()
-
-	if mode == api.ModePV && enabled && targetCurrent < lp.MinCurrent {
+	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
 			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
@@ -605,7 +634,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 		return lp.MinCurrent
 	}
 
-	if mode == api.ModePV && !enabled {
+	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
 		if targetCurrent >= lp.MinCurrent ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
@@ -709,6 +738,20 @@ func (lp *LoadPoint) publishSoC() {
 	lp.publish("chargeEstimate", time.Duration(-1))
 }
 
+// publish remaining vehicle range
+func (lp *LoadPoint) publishRange() {
+	if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+		if rng, err := vs.Range(); err == nil {
+			lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+			lp.publish("range", rng)
+
+			return
+		}
+	}
+
+	lp.publish("range", -1)
+}
+
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64) {
 	mode := lp.GetMode()
@@ -718,7 +761,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	lp.updateChargeMeter()
 
 	// update ChargeRater here to make sure initial meter update is caught
-	lp.bus.Publish(evChargeCurrent, lp.handler.TargetCurrent())
+	lp.bus.Publish(evChargeCurrent, lp.maxCurrent)
 	lp.bus.Publish(evChargePower, lp.chargePower)
 
 	// update progress and soc before status is updated
@@ -726,7 +769,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
-		lp.log.ERROR.Printf("charge controller error: %v", err)
+		lp.log.ERROR.Printf("charger error: %v", err)
 		return
 	}
 
@@ -738,11 +781,10 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// initial update of connected state matches charger status
 	lp.findActiveVehicle()
 	lp.publishSoC()
+	lp.publishRange()
 
 	// sync settings with charger
-	if lp.status != api.StatusA {
-		lp.handler.SyncEnabled()
-	}
+	lp.syncCharger()
 
 	// phase detection
 	lp.detectPhases()
@@ -758,14 +800,14 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	case !lp.connected():
 		// always disable charger if not connected
 		// https://github.com/andig/evcc/issues/105
-		err = lp.handler.Ramp(0)
+		err = lp.setLimit(0, false)
 
 	case lp.targetSocReached():
 		var targetCurrent int64 // zero disables
 		if lp.climateActive() {
 			targetCurrent = lp.MinCurrent
 		}
-		err = lp.handler.Ramp(targetCurrent, true)
+		err = lp.setLimit(targetCurrent, true)
 
 	// OCPP
 	case lp.remoteControlled(RemoteHardDisable):
@@ -773,14 +815,14 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		fallthrough
 
 	case mode == api.ModeOff:
-		err = lp.handler.Ramp(0, true)
+		err = lp.setLimit(0, true)
 
 	case lp.minSocNotReached():
-		err = lp.handler.Ramp(lp.MaxCurrent, true)
+		err = lp.setLimit(lp.MaxCurrent, true)
 		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeNow:
-		err = lp.handler.Ramp(lp.MaxCurrent, true)
+		err = lp.setLimit(lp.MaxCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
@@ -793,13 +835,13 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		}
 
 		// Sunny Home Manager
-		if mode == api.ModePV && lp.remoteControlled(RemoteSoftDisable) {
+		if lp.remoteControlled(RemoteSoftDisable) {
 			remoteDisabled = RemoteSoftDisable
 			targetCurrent = 0
 			required = true
 		}
 
-		err = lp.handler.Ramp(targetCurrent, required)
+		err = lp.setLimit(targetCurrent, required)
 	}
 
 	// effective disabled status

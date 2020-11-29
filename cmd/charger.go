@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -46,23 +44,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 		chargers = map[string]api.Charger{arg: cp.Charger(arg)}
 	}
 
+	d := dumper{len: len(chargers)}
 	for name, v := range chargers {
-		if len(chargers) != 1 {
-			fmt.Println(name)
-		}
-
-		if status, err := v.Status(); err != nil {
-			fmt.Printf("Status: %v\n", err)
-		} else {
-			fmt.Printf("Status: %s\n", status)
-		}
-
-		if enabled, err := v.Enabled(); err != nil {
-			fmt.Printf("Enabled: %v\n", err)
-		} else {
-			fmt.Printf("Enabled: %s\n", truefalse[enabled])
-		}
-
-		dumpAPIs(v)
+		d.DumpWithHeader(name, v)
 	}
 }

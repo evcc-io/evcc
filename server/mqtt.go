@@ -72,6 +72,12 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
+	m.Handler.Listen(topic+"/minsoc/set", func(payload string) {
+		soc, err := strconv.Atoi(payload)
+		if err == nil {
+			_ = apiHandler.SetMinSoC(soc)
+		}
+	})
 	m.Handler.Listen(topic+"/targetsoc/set", func(payload string) {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {

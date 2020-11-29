@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -46,17 +44,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		vehicles = map[string]api.Vehicle{arg: cp.Vehicle(arg)}
 	}
 
+	d := dumper{len: len(vehicles)}
 	for name, v := range vehicles {
-		if len(vehicles) != 1 {
-			fmt.Println(name)
-		}
-
-		if soc, err := v.ChargeState(); err != nil {
-			fmt.Printf("State: %v\n", err)
-		} else {
-			fmt.Printf("State: %.0f%%\n", soc)
-		}
-
-		dumpAPIs(v)
+		d.DumpWithHeader(name, v)
 	}
 }

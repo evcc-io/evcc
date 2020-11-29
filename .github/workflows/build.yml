@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.14
+      id: go
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          **/node_modules
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install tools
+      run: make install
+
+    - name: Assets & UI
+      run: make npm assets
+
+    - name: Porcelain
+      run: |
+        go mod tidy
+        test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+    - name: Build
+      run: make build
+
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: v1.33
+
+    - name: Test
+      run: make test
+
+
+  publish:
+    name: Publish
+    if: "startsWith(github.ref, 'refs/heads/master')"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Install
+      run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
+
+    - name: Login
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+
+    - name: Publish
+      run: make publish-latest
+
+
+  release:
+    name: Release
+    if: "startsWith(github.ref, 'refs/tags')"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        ref: refs/heads/master # force master
+        fetch-depth: 0
+
+    - name: Install
+      run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
+
+    - name: Login
+      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+
+    - name: Publish
+      run: make publish-release
+
+    - name: Release
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

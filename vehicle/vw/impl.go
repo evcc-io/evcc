@@ -74,6 +74,21 @@ func (v *Implementation) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+// Range implements the Vehicle.Range interface
+func (v *Implementation) Range() (rng int64, err error) {
+	res, err := v.chargerG()
+	if res, ok := res.(ChargerResponse); err == nil && ok {
+		crsd := res.Charger.Status.CruisingRangeStatusData
+
+		rng = int64(crsd.PrimaryEngineRange.Content)
+		if crsd.EngineTypeFirstEngine.Content != "typeIsElectric" {
+			rng = int64(crsd.SecondaryEngineRange.Content)
+		}
+	}
+
+	return rng, err
+}
+
 // Climater implements the Vehicle.Climater interface
 func (v *Implementation) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()

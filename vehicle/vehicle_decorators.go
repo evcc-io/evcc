@@ -6,12 +6,12 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error), vehicleRange func() (int64, error)) api.Vehicle {
 	switch {
-	case vehicleStatus == nil:
+	case vehicleRange == nil && vehicleStatus == nil:
 		return base
 
-	case vehicleStatus != nil:
+	case vehicleRange == nil && vehicleStatus != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleStatus
@@ -21,9 +21,43 @@ func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, e
 				vehicleStatus: vehicleStatus,
 			},
 		}
+
+	case vehicleRange != nil && vehicleStatus == nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case vehicleRange != nil && vehicleStatus != nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleRange
+			api.VehicleStatus
+		}{
+			Vehicle: base,
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+			VehicleStatus: &decorateVehicleVehicleStatusImpl{
+				vehicleStatus: vehicleStatus,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateVehicleVehicleRangeImpl struct {
+	vehicleRange func() (int64, error)
+}
+
+func (impl *decorateVehicleVehicleRangeImpl) Range() (int64, error) {
+	return impl.vehicleRange()
 }
 
 type decorateVehicleVehicleStatusImpl struct {

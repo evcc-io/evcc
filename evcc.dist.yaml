@@ -84,14 +84,13 @@ loadpoints:
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
-  sensitivity: 1 # current raise/lower step size (default 10A)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
     threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
     delay: 5m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
-  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
 
