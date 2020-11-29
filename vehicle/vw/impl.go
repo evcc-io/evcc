@@ -94,7 +94,7 @@ func (v *Implementation) Climater() (active bool, outsideTemp float64, targetTem
 	res, err := v.climateG()
 	if res, ok := res.(ClimaterResponse); err == nil && ok {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
-		active := state != "off" && state != "invalid"
+		active := state != "off" && state != "invalid" && state != "error"
 
 		outsideTemp = Temp2Float(res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content)
 		targetTemp = Temp2Float(res.Climater.Settings.TargetTemperature.Content)
