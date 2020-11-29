@@ -47,7 +47,7 @@ export default {
 	data: function () {
 		return {
 			compact: false,
-			store: this.$root.$data,
+			store: this.$root.$data.store,
 			installed: window.evcc.version,
 		};
 	},

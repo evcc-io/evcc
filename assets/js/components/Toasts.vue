@@ -12,41 +12,11 @@
 </template>
 
 <script>
-import Vue from "vue";
+import MessageToast from "./MessageToast";
 
 export default {
 	name: "Toasts",
-	data: function () {
-		return {
-			items: {},
-			count: 0,
-		};
-	},
-	methods: {
-		raise: function (msg) {
-			let found = false;
-			Object.keys(this.items).forEach(function (k) {
-				let m = this.items[k];
-				if (m.type == msg.type && m.message == msg.message) {
-					found = true;
-				}
-			}, this);
-			if (!found) {
-				msg.id = this.count++;
-				Vue.set(this.items, msg.id, msg);
-			}
-		},
-		error: function (msg) {
-			msg.type = "error";
-			this.raise(msg);
-		},
-		warn: function (msg) {
-			msg.type = "warn";
-			this.raise(msg);
-		},
-		remove: function (msg) {
-			Vue.delete(this.items, msg.id);
-		},
-	},
+	components: { MessageToast },
+	props: ["items", "count"],
 };
 </script>
