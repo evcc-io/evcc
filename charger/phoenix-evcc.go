@@ -10,7 +10,8 @@ import (
 
 const (
 	phEVCCRegEnConfig   =  4000 // Holding, Remanent
-	phEVCCRegEnable     = 20000 // Coil
+        phEVCCRegOutConfig  =  5500 // Holding, Remanent
+ 	phEVCCRegEnable     = 20000 // Coil
 	phEVCCRegOUT        = 23000 // Holding
 	phEVCCRegMaxCurrent = 22000 // Holding
 	phEVCCRegStatus     = 24000 // Input
@@ -21,6 +22,7 @@ const (
 type PhoenixEVCC struct { 
 	log *util.Logger 
 	conn *modbus.Connection
+	enMode string
 }
 
 func init() {
@@ -52,14 +54,50 @@ func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*Phoeni
 	if err != nil {
 		return nil, err
 	}
-
+	var enMode string
+//	enMode = "modbus"
 	log := util.NewLogger("evcc")
 	conn.Logger(log.TRACE)
 
 	wb := &PhoenixEVCC{ 
 		log: log, 
 		conn: conn,
+		enMode: enMode,
 	}
+
+wb.conn.WriteSingleRegister(phEVCCRegEnConfig, 3)
+wb.conn.WriteSingleRegister(phEVCCRegOutConfig, 1)
+//if err != nil {
+//        return nil, err
+//}
+ 
+
+        RegEnConfig, err := wb.conn.ReadInputRegisters(phEVCCRegEnConfig, 1)
+        if err != nil {
+                return nil, err
+        }
+        wb.log.TRACE.Printf("Register 4000 is %d",RegEnConfig[1])
+        
+	RegOutConfig, err := wb.conn.ReadInputRegisters(phEVCCRegOutConfig, 1)
+        if err != nil {
+                return nil, err
+        }
+        wb.log.TRACE.Printf("Register 5500 is %d", RegOutConfig[1])
+
+ 	if  RegEnConfig[1] == 1 && RegOutConfig[1] == 0 {
+
+                enMode = "out-pin"
+	        wb.log.TRACE.Printf("enMode: %s; Charger is enabled by switching the digital OUT on.", enMode)
+
+        }else if RegEnConfig[1] == 3 {
+                enMode = "modbus"
+                wb.log.TRACE.Printf("enMode: %s; Charger is enabled by modbus.", enMode)
+
+        }else {
+		wb.log.ERROR.Printf("Registers 4000 = %d (and 5500 = %d) of Phoenix evcc are not configured for remote enabling", RegEnConfig[1], RegOutConfig[1])
+        }
+	
+	wb.enMode = enMode
 
 	return wb, nil
 }
@@ -77,11 +115,9 @@ func (wb *PhoenixEVCC) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (wb *PhoenixEVCC) Enabled() (bool, error) {
         var EN bool
-	r, err := wb.conn.ReadInputRegisters(phEVCCRegEnConfig, 1)
-        if err != nil {
-                return false, err
-        }
-	if r[1] == 1 { 
+wb.log.TRACE.Printf("enMode: %s;", wb.enMode)
+
+	if wb.enMode == "out-pin" { 
  		b, err := wb.conn.ReadInputRegisters(phEVCCRegOUT, 1)
        		if err != nil {
         	        return false, err
@@ -89,7 +125,7 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
  	        wb.log.TRACE.Printf("Register 23000 is %d)", b)
 
 		EN = b[1] == 1
-	}else if r[1] == 3 {
+	}else if wb.enMode == "modbus" {
 		b, err := wb.conn.ReadCoils(phEVCCRegEnable, 1)
                 if err != nil {
                         return false, err
@@ -97,13 +133,9 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
                 wb.log.TRACE.Printf("Register 20000 is %d)", b)
 
                  EN = b[0] == 1
- 	}else {
-		wb.log.WARN.Printf("Register 4000 setting (%d) invalid",r[1])
 	}
-	if err != nil {
-		return false, err
-	}
-	wb.log.TRACE.Printf("enabled: %t  (Register 4000 setting is %d)", EN, r[1])
+
+	wb.log.TRACE.Printf("enabled: %t", EN)
 
 	return EN, nil
 }
@@ -111,11 +143,27 @@ func (wb *PhoenixEVCC) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (wb *PhoenixEVCC) Enable(enable bool) error {
 	var u uint16
-	if enable {
-		u = 0x0001
+wb.log.TRACE.Printf("enMode: %s;", wb.enMode)
+
+        if enable {
+		u = 0xFF00
 	}
-	//High-signal on pin OUT of the EV_CC_AC1-M  board (wire bridge between OUT and ENABLE necessary!!) 
-	_, err := wb.conn.WriteSingleRegister(phEVCCRegOUT, u)
+        _, err := wb.conn.WriteSingleCoil(phEVCCRegEnable, u)
+        if err != nil {
+                return err
+        }
+  
+        if wb.enMode == "out-pin" {
+	        if enable {
+	                u = 0x0001
+	        }
+	 	//High-signal on pin OUT of the EV_CC_AC1-M  board (wire bridge between OUT and ENABLE necessary!!) 
+		_, err := wb.conn.WriteSingleRegister(phEVCCRegOUT, u)
+                if err != nil {
+                        return err
+               }
+ 	
+ 	}
 
 	return err
 }
