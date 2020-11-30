@@ -133,10 +133,9 @@ func (v *ID) authFlow() error {
 		})
 
 		uri = vw.IdentityURI + vars.Action
-		if resp, err = v.PostForm(uri, data); err == nil {
+		if _, err = v.PostForm(uri, data); err == nil {
 			vwDomain, _ := url.Parse("https://www.volkswagen.de/")
 			cookies := v.Client.Jar.Cookies(vwDomain)
-			fmt.Println(cookies)
 
 			for _, c := range cookies {
 				if c.Name == "csrf_token" {
@@ -157,7 +156,9 @@ func (v *ID) authFlow() error {
 			"X-csrf-token": v.csrf,
 		})
 
-		err = v.DoJSON(req, &v.userInfo)
+		if err == nil {
+			err = v.DoJSON(req, &v.userInfo)
+		}
 	}
 
 	if err == nil {
@@ -167,9 +168,11 @@ func (v *ID) authFlow() error {
 			"X-csrf-token": v.csrf,
 		})
 
-		if err = v.DoJSON(req, &v.carTokens); err == nil {
-			if v.carTokens.AccessToken == "" {
-				err = errors.New("missing vw-de access token")
+		if err == nil {
+			if err = v.DoJSON(req, &v.carTokens); err == nil {
+				if v.carTokens.AccessToken == "" {
+					err = errors.New("missing vw-de access token")
+				}
 			}
 		}
 	}
@@ -181,9 +184,11 @@ func (v *ID) authFlow() error {
 			"X-csrf-token": v.csrf,
 		})
 
-		if err = v.DoJSON(req, &v.weTokens); err == nil {
-			if v.weTokens.AccessToken == "" {
-				err = errors.New("missing vwag-weconnect access token")
+		if err == nil {
+			if err = v.DoJSON(req, &v.weTokens); err == nil {
+				if v.weTokens.AccessToken == "" {
+					err = errors.New("missing vwag-weconnect access token")
+				}
 			}
 		}
 
@@ -194,10 +199,12 @@ func (v *ID) authFlow() error {
 				"Authorization": "Bearer " + v.weTokens.AccessToken,
 			})
 
-			if resp, err = v.Do(req); err == nil {
-				var body []byte
-				if body, err = request.ReadBody(resp); err == nil {
-					v.weTokens.AccessToken = string(body)
+			if err == nil {
+				if resp, err = v.Do(req); err == nil {
+					var body []byte
+					if body, err = request.ReadBody(resp); err == nil {
+						v.weTokens.AccessToken = string(body)
+					}
 				}
 			}
 		}
