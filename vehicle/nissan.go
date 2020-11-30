@@ -249,7 +249,6 @@ func (v *Nissan) refreshToken() error {
 		if err = v.DoJSON(req, &tokens); err == nil && v.tokens.AccessToken == "" {
 			err = errors.New("missing access token")
 		}
-		fmt.Println(tokens)
 	}
 
 	return err
