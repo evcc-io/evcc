@@ -51,6 +51,7 @@ type EVSEWifi struct {
 	log          *util.Logger
 	uri          string
 	alwaysActive bool
+	current      int64
 }
 
 func init() {
@@ -109,9 +110,10 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
-		log:    log,
-		Helper: request.NewHelper(log),
-		uri:    strings.TrimRight(uri, "/"),
+		log:     log,
+		Helper:  request.NewHelper(log),
+		uri:     strings.TrimRight(uri, "/"),
+		current: 6, // 6A defined value
 	}
 
 	return evse, nil
@@ -195,9 +197,9 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 
 	if evse.alwaysActive {
-		current := 0
+		var current int64
 		if enable {
-			current = 6
+			current = evse.current
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
@@ -206,6 +208,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
+	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.checkError(evse.GetBody(url))
 }
