@@ -7,6 +7,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -23,7 +24,7 @@ type ID struct {
 	*embed
 	*request.Helper
 	user, password string
-	VIN            string
+	vin            string
 	userInfo       UserInfo
 	csrf           string
 	carTokens      oidc.Tokens
@@ -65,6 +66,7 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
+		vin:      strings.ToUpper(cc.VIN),
 	}
 
 	var err error
@@ -83,9 +85,9 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil && cc.VIN == "" {
-		v.VIN, err = findVehicle(v.vehicles())
+		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", v.VIN)
+			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
 	}
 
@@ -246,7 +248,7 @@ type idData struct {
 }
 
 func (v *ID) chargeState() (interface{}, error) {
-	uri := fmt.Sprintf("https://cardata.apps.emea.vwapps.io/vehicles/%s/fuel/status", v.VIN)
+	uri := fmt.Sprintf("https://cardata.apps.emea.vwapps.io/vehicles/%s/fuel/status", v.vin)
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
 		"Authorization": "Bearer " + v.weTokens.AccessToken,
