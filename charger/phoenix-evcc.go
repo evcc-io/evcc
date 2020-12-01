@@ -65,8 +65,8 @@ func NewPhoenixEVCC(uri, device, comset string, baudrate int, id uint8) (*Phoeni
 		enMode: enMode,
 	}
 
-	wb.conn.WriteSingleRegister(phEVCCRegEnConfig, 1)  //write to registers for debugging
-	wb.conn.WriteSingleRegister(phEVCCRegOutConfig, 0) //write to registers for debugging
+//	wb.conn.WriteSingleRegister(phEVCCRegEnConfig, 1)  //write to registers for debugging
+//	wb.conn.WriteSingleRegister(phEVCCRegOutConfig, 0) //write to registers for debugging
 
 	RegEnConfig, err := wb.conn.ReadInputRegisters(phEVCCRegEnConfig, 1)
 	if err != nil {
