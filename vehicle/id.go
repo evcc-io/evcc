@@ -99,7 +99,6 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func (v *ID) authFlow() error {
 	var uri string
 	var req *http.Request
-	_ = req
 
 	uri = "https://www.volkswagen.de/app/authproxy/login?fag=vw-de,vwag-weconnect&scope-vw-de=profile,address,phone,carConfigurations,dealers,cars,vin,profession&scope-vwag-weconnect=openid&prompt-vw-de=login&prompt-vwag-weconnect=none&redirectUrl=https://www.volkswagen.de/de/besitzer-und-nutzer/myvolkswagen.html"
 	resp, err := v.Get(uri)
@@ -238,6 +237,10 @@ func (v *ID) vehicles() (res []string, err error) {
 }
 
 type idData struct {
+	Error struct {
+		Code    int
+		Message string
+	}
 	Data []struct {
 		ID                   string
 		CarCapturedTimestamp string
@@ -257,7 +260,16 @@ func (v *ID) chargeState() (interface{}, error) {
 
 	var state idData
 	if err == nil {
-		err = v.DoJSON(req, &state)
+		if err = v.DoJSON(req, &state); err == nil && state.Error.Code > 0 {
+			if strings.Index(state.Error.Message, "unauthorized") > 0 {
+				// re-auth and retry
+				if err = v.authFlow(); err == nil {
+					err = v.DoJSON(req, &state)
+				}
+			} else {
+				err = errors.New(state.Error.Message)
+			}
+		}
 	}
 
 	return state, err
