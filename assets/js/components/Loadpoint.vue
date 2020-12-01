@@ -36,12 +36,12 @@
 				class="mt-3"
 				v-bind:class="{ 'col-md-6': hasTargetSoC, 'col-md-12': !hasTargetSoC }"
 			>
-				<mode
+				<Mode
 					v-bind:mode="state.mode"
 					:pv="pv"
 					:caption="true"
 					v-on:updated="targetMode"
-				></mode>
+				></Mode>
 			</div>
 			<div class="col-md-6 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -55,12 +55,12 @@
 
 		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
 			<div class="col-12 mt-3">
-				<mode
+				<Mode
 					class="w-100"
 					v-bind:mode="state.mode"
 					:pv="pv"
 					v-on:updated="targetMode"
-				></mode>
+				></Mode>
 			</div>
 			<div class="col-12 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -100,12 +100,12 @@
 
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
 				<div class="mb-2">Modus</div>
-				<mode
+				<Mode
 					class="btn-group-sm"
 					v-bind:mode="state.mode"
 					:pv="pv"
 					v-on:updated="targetMode"
-				></mode>
+				></Mode>
 			</div>
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi && hasTargetSoC">
 				<div class="mb-2">Ladeziel</div>

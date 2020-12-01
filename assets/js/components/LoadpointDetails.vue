@@ -11,12 +11,12 @@
 				<font-awesome-icon
 					class="text-primary ml-1"
 					icon="temperature-high"
-					if="state.climater == 'cooling'"
+					v-if="state.climater == 'cooling'"
 				/>
 				<font-awesome-icon
 					class="text-primary ml-1"
 					icon="thermometer-half"
-					if="state.climater == 'on'"
+					v-if="state.climater == 'on'"
 				/>
 			</div>
 			<h2 class="value">
