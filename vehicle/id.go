@@ -227,10 +227,10 @@ func (v *ID) vehicles() (res []string, err error) {
 
 	if err == nil {
 		err = v.DoJSON(req, &vehicles)
-	}
 
-	for _, v := range vehicles {
-		res = append(res, v.VIN)
+		for _, v := range vehicles {
+			res = append(res, v.VIN)
+		}
 	}
 
 	return res, err
