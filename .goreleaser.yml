@@ -4,7 +4,7 @@ release:
     name: evcc
 before:
   hooks:
-  - make assets
+  - make npm assets
 builds:
 - id: evcc
   main: main.go
@@ -17,6 +17,7 @@ builds:
   goos:
   - linux
   - darwin
+  - windows
   goarch:
   - amd64
   - arm
