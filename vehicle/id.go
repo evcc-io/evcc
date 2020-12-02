@@ -260,14 +260,14 @@ func (v *ID) chargeState() (interface{}, error) {
 
 	var state idData
 	if err == nil {
-		if err = v.DoJSON(req, &state); err == nil && state.Error.Code > 0 {
-			if strings.Index(state.Error.Message, "unauthorized") > 0 {
-				// re-auth and retry
+		err = v.DoJSON(req, &state)
+
+		if err != nil {
+			// handle http 401, 403
+			if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
 				if err = v.authFlow(); err == nil {
 					err = v.DoJSON(req, &state)
 				}
-			} else {
-				err = errors.New(state.Error.Message)
 			}
 		}
 	}
