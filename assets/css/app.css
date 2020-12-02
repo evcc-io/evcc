@@ -1,26 +1,29 @@
 /* reverse loading animation */
 .progress-bar-animated {
-  animation-direction: reverse;
+	animation-direction: reverse;
 }
 .btn.caption {
-  opacity: 1;
+	opacity: 1;
 }
 .btn.first {
-  border-top-left-radius: .2rem;
-  border-bottom-left-radius: .2rem;
+	border-top-left-radius: 0.2rem;
+	border-bottom-left-radius: 0.2rem;
 }
 code {
-  font-size: 87.5%;
-  color: #e83e8c;
-  word-wrap: break-word;
+	font-size: 87.5%;
+	color: #e83e8c;
+	word-wrap: break-word;
 }
-.value, input[type=radio], label.btn {
-  white-space: nowrap !important;
+.value,
+input[type="radio"],
+label.btn {
+	white-space: nowrap !important;
 }
-.text-muted a, .text-muted a:hover {
-  color: #6c757d!important;
-  text-decoration: none;
+.text-muted a,
+.text-muted a:hover {
+	color: #6c757d !important;
+	text-decoration: none;
 }
 .bg-muted {
-  opacity: 0.25;
+	opacity: 0.25;
 }

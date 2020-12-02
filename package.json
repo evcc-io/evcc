@@ -6,14 +6,29 @@
     "dev": "rimraf dist; parcel watch assets/* --public-url ./dist/",
     "build": "rimraf dist; parcel build assets/* --public-url ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "fix-audit": "npm-force-resolutions"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@vue/component-compiler-utils": "^3.2.0",
+    "@vue/eslint-config-standard": "^5.1.2",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.1.0",
+    "eslint-plugin-vue": "^7.1.0",
+    "husky": "^4.3.0",
+    "lint-staged": "^10.5.1",
+    "npm-force-resolutions": "0.0.3",
     "parcel-bundler": "^1.12.4",
+    "prettier": "^2.2.0",
     "rimraf": "^3.0.2",
-    "npm-force-resolutions": "0.0.3"
+    "vue-template-compiler": "^2.6.12"
   },
   "engines": {
     "npm": "^6.0.0",
@@ -33,9 +48,23 @@
     "jquery": "^3.5.1",
     "popper.js": "^1.16.1",
     "vue": "^2.6.12",
+    "vue-hot-reload-api": "^2.3.4",
     "vue-router": "^3.4.7"
   },
   "resolutions": {
     "node-forge": "0.10.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "assets/**/*.{js,vue,json}": [
+      "eslint --fix"
+    ],
+    "assets/**/*.{html,js,vue,json,css}": [
+      "prettier --write"
+    ]
   }
 }
