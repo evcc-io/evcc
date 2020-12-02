@@ -6,6 +6,7 @@ export default {
   title: "Example/Mode",
   component: Mode,
   argTypes: {
+    pv: "pv",
     mode: { control: { type: "select", options: ["off", "now", "minpv", "pv"] } },
   },
 };
@@ -17,6 +18,4 @@ const Template = (args, { argTypes }) => ({
 });
 
 export const Primary = Template.bind({});
-Primary.args = {
-  pv: "pv",
-};
+Primary.args = {};
