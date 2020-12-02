@@ -78,7 +78,7 @@ type LoadPoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled      bool      // Charger enabled state
-	maxCurrent   int64     // Charger current limit
+	maxCurrent   float64   // Charger current limit
 	guardUpdated time.Time // Charger enabled/disabled timestamp
 
 	charger     api.Charger
@@ -285,7 +285,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 }
 
 // evChargeCurrentHandler publishes the charge current
-func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
+func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 	lp.publish("chargeCurrent", current)
 }
 
@@ -294,8 +294,8 @@ func (lp *LoadPoint) evChargeCurrentHandler(current int64) {
 // It assumes that the charge meter cannot consume more than total household consumption.
 // If physical charge meter is present this handler is not used.
 // The actual value is published by the evChargeCurrentHandler
-func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current int64) {
-	power := float64(current*lp.Phases) * Voltage
+func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
+	power := current * float64(lp.Phases) * Voltage
 
 	if !lp.enabled || lp.status != api.StatusC {
 		// if disabled we cannot be charging
@@ -358,7 +358,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		if lp.enabled = enabled; enabled {
 			lp.guardUpdated = lp.clock.Now()
 			// set defined current for use by pv mode
-			_ = lp.setLimit(lp.MinCurrent, false)
+			_ = lp.setLimit(float64(lp.MinCurrent), false)
 		}
 	} else {
 		lp.log.ERROR.Printf("charger error: %v", err)
@@ -377,10 +377,16 @@ func (lp *LoadPoint) syncCharger() {
 	}
 }
 
-func (lp *LoadPoint) setLimit(maxCurrent int64, force bool) (err error) {
+func (lp *LoadPoint) setLimit(maxCurrent float64, force bool) (err error) {
 	// set current
-	if maxCurrent != lp.maxCurrent && maxCurrent >= lp.MinCurrent {
-		if err = lp.charger.MaxCurrent(maxCurrent); err == nil {
+	if maxCurrent != lp.maxCurrent && maxCurrent >= float64(lp.MinCurrent) {
+		if charger, ok := lp.charger.(api.ChargerEx); ok {
+			err = charger.MaxCurrentMillis(maxCurrent)
+		} else {
+			err = lp.charger.MaxCurrent(int64(maxCurrent))
+		}
+
+		if err == nil {
 			lp.maxCurrent = maxCurrent
 			lp.bus.Publish(evChargeCurrent, maxCurrent)
 		}
@@ -592,24 +598,24 @@ func (lp *LoadPoint) pvDisableTimer() {
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 {
+func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float64 {
 	// calculate target charge current from delta power and actual current
 	effectiveCurrent := lp.maxCurrent
 	if lp.status != api.StatusC {
 		effectiveCurrent = 0
 	}
 	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
-	targetCurrent := clamp(effectiveCurrent+deltaCurrent, 0, lp.MaxCurrent)
+	targetCurrent := math.Max(math.Min(effectiveCurrent+deltaCurrent, float64(lp.MaxCurrent)), 0)
 
-	lp.log.DEBUG.Printf("max charge current: %dA = %dA + %dA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
+	lp.log.DEBUG.Printf("max charge current: %.2gA = %.2gA + %.2gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
 
 	// in MinPV mode return at least minCurrent
-	if mode == api.ModeMinPV && targetCurrent < lp.MinCurrent {
-		return lp.MinCurrent
+	if mode == api.ModeMinPV && targetCurrent < float64(lp.MinCurrent) {
+		return float64(lp.MinCurrent)
 	}
 
 	// read only once to simplify testing
-	if mode == api.ModePV && lp.enabled && targetCurrent < lp.MinCurrent {
+	if mode == api.ModePV && lp.enabled && targetCurrent < float64(lp.MinCurrent) {
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
 			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
@@ -631,12 +637,12 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 			lp.pvTimer = lp.clock.Now()
 		}
 
-		return lp.MinCurrent
+		return float64(lp.MinCurrent)
 	}
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		if targetCurrent >= lp.MinCurrent ||
+		if targetCurrent >= float64(lp.MinCurrent) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
 			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
@@ -648,7 +654,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Enable.Delay {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
-				return lp.MinCurrent
+				return float64(lp.MinCurrent)
 			}
 
 			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
@@ -803,9 +809,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, false)
 
 	case lp.targetSocReached():
-		var targetCurrent int64 // zero disables
+		var targetCurrent float64 // zero disables
 		if lp.climateActive() {
-			targetCurrent = lp.MinCurrent
+			targetCurrent = float64(lp.MinCurrent)
 		}
 		err = lp.setLimit(targetCurrent, true)
 
@@ -818,19 +824,19 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, true)
 
 	case lp.minSocNotReached():
-		err = lp.setLimit(lp.MaxCurrent, true)
+		err = lp.setLimit(float64(lp.MaxCurrent), true)
 		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeNow:
-		err = lp.setLimit(lp.MaxCurrent, true)
+		err = lp.setLimit(float64(lp.MaxCurrent), true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
-		lp.log.DEBUG.Printf("target charge current: %dA", targetCurrent)
+		lp.log.DEBUG.Printf("target charge current: %.2gA", targetCurrent)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			targetCurrent = lp.MinCurrent
+			targetCurrent = float64(lp.MinCurrent)
 			required = true
 		}
 

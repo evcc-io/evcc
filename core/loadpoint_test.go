@@ -318,8 +318,8 @@ func TestPVHysteresis(t *testing.T) {
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site)
 
-				if current != se.current {
-					t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+				if current != float64(se.current) {
+					t.Errorf("step %d: wanted %d, got %.f", step, se.current, current)
 				}
 			}
 
@@ -351,7 +351,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	current := lp.pvMaxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {
-		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %d", current)
+		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
 	}
 
 	ctrl.Finish()
@@ -389,7 +389,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = minA
+	lp.maxCurrent = float64(minA)
 
 	t.Log("charging below target")
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
@@ -452,7 +452,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = minA
+	lp.maxCurrent = float64(minA)
 	lp.Mode = api.ModeNow
 
 	t.Log("charging at min")
@@ -517,7 +517,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = maxA
+	lp.maxCurrent = float64(maxA)
 	lp.Mode = api.ModeNow
 
 	// attach cache for verifying values

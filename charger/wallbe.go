@@ -155,6 +155,18 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 	return err
 }
 
+// MaxCurrentMillis implements the ChargerEx interface
+func (wb *Wallbe) MaxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.5g", current)
+	}
+
+	u := uint16(current * float64(wb.factor))
+	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+
+	return err
+}
+
 // ChargingTime yields current charge run duration
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
