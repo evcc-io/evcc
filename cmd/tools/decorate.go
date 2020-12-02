@@ -88,7 +88,7 @@ type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName string
 }
 
-func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) {
+func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
@@ -127,8 +127,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			return ordered
 		},
 	}).Parse(srcTmpl)
+
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, dt := range dynamicTypes {
@@ -162,10 +163,7 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		Combinations: combinations.All(combos),
 	}
 
-	if err := tmpl.Execute(out, vars); err != nil {
-		println(err)
-		os.Exit(2)
-	}
+	return tmpl.Execute(out, vars)
 }
 
 var (
@@ -201,7 +199,10 @@ func main() {
 	}
 
 	var buf bytes.Buffer
-	generate(&buf, *pkg, *function, *base, dynamicTypes...)
+	if err := generate(&buf, *pkg, *function, *base, dynamicTypes...); err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
@@ -213,7 +214,7 @@ func main() {
 
 		dst, err := os.Create(name)
 		if err != nil {
-			println(err)
+			fmt.Println(err)
 			os.Exit(2)
 		}
 
@@ -223,12 +224,13 @@ func main() {
 
 	formatted, err := format.Source([]byte(generated))
 	if err != nil {
-		println(err)
+		fmt.Println(err)
+		fmt.Println(generated)
 		os.Exit(2)
 	}
 
 	if _, err := out.Write(formatted); err != nil {
-		println(err)
+		fmt.Println(err)
 		os.Exit(2)
 	}
 }
