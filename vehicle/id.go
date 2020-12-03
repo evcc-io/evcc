@@ -266,6 +266,8 @@ func (v *ID) chargeState() (interface{}, error) {
 			// handle http 401, 403
 			if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
 				if err = v.authFlow(); err == nil {
+					// re-do request with new token
+					req.Header.Set("Authorization", "Bearer "+v.weTokens.AccessToken)
 					err = v.DoJSON(req, &state)
 				}
 			}
