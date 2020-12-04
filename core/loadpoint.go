@@ -58,6 +58,7 @@ type LoadPoint struct {
 	sync.Mutex                // guard status
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
+	ForeignEV	bool	// Status to determine if a non configured car is connected
 	Title       string   `mapstructure:"title"`    // UI title
 	Phases      int64    `mapstructure:"phases"`   // Phases- required for converting power and current
 	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
@@ -133,6 +134,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// multiple vehicles
 	for _, ref := range lp.VehiclesRef {
 		vehicle := cp.Vehicle(ref)
+		lp.log.DEBUG.Printf("Adding vehicle to loadpoint: %s", vehicle.Title())
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
 
@@ -141,6 +143,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		vehicle := cp.Vehicle(lp.VehicleRef)
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
+	lp.ForeignEV = false
 
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
@@ -262,6 +265,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
+	//on connect the vehicle and soc is unknown, so hide values from prev. ev
+	lp.publish("soc", -1)
+
 	lp.triggerEvent(evVehicleConnect)
 }
 
@@ -278,6 +284,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(lp.OnDisconnect.Mode)
+		lp.ForeignEV = false
 	}
 	if lp.OnDisconnect.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
@@ -351,6 +358,10 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
 		lp.setActiveVehicle(lp.vehicles[0])
+		lp.publish("socTitle", "Fahrzeug")
+		lp.publish("soc", false)
+		lp.publish("socCharge", 100)
+		lp.ForeignEV = true
 	}
 
 	// read initial charger state to prevent immediately disabling charger
@@ -451,7 +462,7 @@ func (lp *LoadPoint) climateActive() bool {
 			return active
 		}
 
-		lp.log.ERROR.Printf("climater: %v", err)
+		//lp.log.ERROR.Printf("climater: %v", err)
 	}
 
 	return false
@@ -476,45 +487,43 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
+	lp.publish("soc", true)
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
-	if len(lp.vehicles) <= 1 {
+	if len(lp.vehicles) < 1 {
 		return
 	}
 
-	if vs, ok := lp.vehicle.(api.VehicleStatus); ok {
-		status, err := vs.Status()
+	found := false
 
-		if err == nil {
-			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
+	for _, vehicle := range lp.vehicles {
+		if vs, ok := vehicle.(api.VehicleStatus); ok {
+			status, err := vs.Status()
+			lp.log.DEBUG.Printf("vehicle status: %s (%s / %dkWh)", status, vehicle.Title(), vehicle.Capacity())
+			if err != nil { lp.log.DEBUG.Printf("error: %+v", err) }
 
-			// vehicle is plugged or charging, so it should be the right one
-			if status == api.StatusB || status == api.StatusC {
-				return
-			}
-
-			for _, vehicle := range lp.vehicles {
-				if vehicle == lp.vehicle {
-					continue
-				}
-
-				if vs, ok := vehicle.(api.VehicleStatus); ok {
-					status, err := vs.Status()
-
-					if err == nil {
-						lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
-
-						// vehicle is plugged or charging, so it should be the right one
-						if status == api.StatusB || status == api.StatusC {
-							lp.setActiveVehicle(vehicle)
-							return
-						}
+			if err == nil {
+				// found a vehicle which is plugged or charging, so it should be the right one
+				if status == api.StatusB || status == api.StatusC {
+					if vehicle != lp.vehicle || lp.ForeignEV {
+						lp.setActiveVehicle(vehicle)
+						if lp.OnDisconnect.Mode != "" && lp.GetMode() == api.ModeOff { lp.SetMode(lp.OnDisconnect.Mode) }
 					}
+					found = true
+					lp.ForeignEV = false
 				}
 			}
 		}
+	}
+
+	if lp.connected() && !found && !lp.ForeignEV {
+		lp.publish("socTitle", "Fahrzeug")
+		lp.publish("soc", false)
+		lp.publish("socCharge", 100)
+		lp.ForeignEV = true
+		lp.SetMode(api.ModeOff)
 	}
 }
 
@@ -669,7 +678,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) int64 
 	return targetCurrent
 }
 
-// updateChargeMete updates and publishes single meter
+// updateChargeMeter updates and publishes single meter
 func (lp *LoadPoint) updateChargeMeter() {
 	err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
@@ -736,7 +745,7 @@ func (lp *LoadPoint) publishSoC() {
 		//lp.log.ERROR.Printf("vehicle error: %v", err)
 	}
 
-	lp.publish("socCharge", -1)
+	lp.publish("socCharge", 100)
 	lp.publish("chargeEstimate", time.Duration(-1))
 }
 
@@ -820,7 +829,6 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, true)
 
 	case lp.minSocNotReached():
-		fmt.Printf(">>> minSocNotReached!!!")
 		err = lp.setLimit(lp.MaxCurrent, true)
 		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 
