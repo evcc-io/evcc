@@ -3,17 +3,17 @@
 		<div class="col-6 col-md-3 mt-3">
 			<div class="mb-2 value">
 				Leistung
-				<font-awesome-icon
+				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-low"
 					v-if="state.climater == 'heating'"
 				/>
-				<font-awesome-icon
+				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-high"
 					v-if="state.climater == 'cooling'"
 				/>
-				<font-awesome-icon
+				<fa-icon
 					class="text-primary ml-1"
 					icon="thermometer-half"
 					v-if="state.climater == 'on'"
