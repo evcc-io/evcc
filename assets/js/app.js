@@ -82,6 +82,27 @@ let formatter = {
       }
       return "m";
     },
+    fmtDurationRangeName: function (range) {
+      if (range === undefined || range === null) {
+        return 'Dauer'
+      } else {
+        return 'Reichweite'
+      }
+    },
+    fmtDurationRangeValue: function (duration, range) {
+      if (range === undefined || range === null) {
+        return this.fmtShortDuration(duration)
+      } else {
+        return range
+      }
+    },
+    fmtDurationRangeValueUnit: function (duration, range) {
+      if (range === undefined || range === null) {
+        return this.fmtShortDurationUnit(duration)
+      } else {
+        return 'km'
+      }
+    },
   }
 }
 

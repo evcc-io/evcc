@@ -325,10 +325,10 @@ loadpoints:
   </div>
 
   <div class="col-6 col-md-3 mt-3">
-    <div class="mb-2 value">Dauer</div>
+    <div class="mb-2 value">{{fmtDurationRangeName(state.soc ? state.range : null)}}</div>
     <h2 class="value">
-      {{fmtShortDuration(state.chargeDuration)}} <small
-        class="text-muted">{{fmtShortDurationUnit(state.chargeDuration)}}</small>
+      {{fmtDurationRangeValue(state.chargeDuration, state.soc ? state.range : null)}} <small
+        class="text-muted">{{fmtDurationRangeValueUnit(state.chargeDuration, state.soc ? state.range : null)}}</small>
     </h2>
   </div>
 
