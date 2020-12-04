@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/mark-sch/evcc/api"
@@ -15,7 +18,8 @@ import (
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
 
 const (
-	udpTimeout = 3 * time.Second
+	udpTimeout = 3*time.Second
+	kebaPort   = "7090"
 )
 
 // RFID contains access credentials
@@ -30,7 +34,6 @@ type Keba struct {
 	rfid    RFID
 	timeout time.Duration
 	recv    chan keba.UDPMsg
-	sender  *keba.Sender
 }
 
 func init() {
@@ -55,20 +58,21 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewKeba creates a new charger
-func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
+func NewKeba(conn, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
 	log := util.NewLogger("keba")
 
 	var err error
 	if keba.Instance == nil {
-		keba.Instance, err = keba.New(log)
+		keba.Instance, err = keba.New(log, fmt.Sprintf(":%s", kebaPort))
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	// add default port
-	conn := util.DefaultPort(uri, keba.Port)
-	sender, err := keba.NewSender(uri)
+	if _, _, err = net.SplitHostPort(conn); err != nil {
+		conn = fmt.Sprintf("%s:%s", conn, kebaPort)
+	}
 
 	c := &Keba{
 		log:     log,
@@ -76,7 +80,6 @@ func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger,
 		rfid:    rfid,
 		timeout: timeout,
 		recv:    make(chan keba.UDPMsg),
-		sender:  sender,
 	}
 
 	// use serial to subscribe if defined for docker scenarios
@@ -84,9 +87,24 @@ func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger,
 		serial = conn
 	}
 
-	keba.Instance.Subscribe(serial, c.recv)
+	return c, keba.Instance.Subscribe(serial, c.recv)
+}
 
-	return c, err
+func (c *Keba) send(msg string) error {
+	raddr, err := net.ResolveUDPAddr("udp", c.conn)
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialUDP("udp", nil, raddr)
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	_, err = io.Copy(conn, strings.NewReader(msg))
+	return err
 }
 
 func (c *Keba) receive(report int, resC chan<- keba.UDPMsg, errC chan<- error, closeC <-chan struct{}) {
@@ -124,7 +142,7 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 
 	go c.receive(report, resC, errC, closeC)
 
-	if err := c.sender.Send(msg); err != nil {
+	if err := c.send(msg); err != nil {
 		return err
 	}
 
@@ -154,8 +172,6 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 		return api.StatusA, err
 	}
 
-	time.Sleep(1 * time.Second)
-
 	if kr.AuthON == 1 && c.rfid.Tag == "" {
 		c.log.WARN.Println("missing credentials for RFID authorization")
 	}
@@ -181,8 +197,6 @@ func (c *Keba) Enabled() (bool, error) {
 		return false, err
 	}
 
-	time.Sleep(1 * time.Second)
-
 	return kr.EnableSys == 1 || kr.EnableUser == 1, nil
 }
 
@@ -202,16 +216,15 @@ func (c *Keba) enableRFID() error {
 	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
 		return err
 	}
-	if resp != keba.OK {
-		return fmt.Errorf("start %s unexpected response: %s", c.rfid.Tag, resp)
+	if resp == keba.OK {
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("start unexpected response: %s", resp)
 }
 
 // Enable implements the Charger.Enable interface
 func (c *Keba) Enable(enable bool) error {
-	fmt.Printf(">>>>> set enable %t", enable)
 	if enable && c.rfid.Tag != "" {
 		if err := c.enableRFID(); err != nil {
 			return err
@@ -238,20 +251,30 @@ func (c *Keba) Enable(enable bool) error {
 	return err
 }
 
+// actualCurrent returns the actual current
+func (c *Keba) actualCurrent() (int64, error) {
+	var kr keba.Report2
+	err := c.roundtrip("report 2", 2, &kr)
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(kr.Curruser) / 1000, nil
+}
+
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *Keba) MaxCurrent(current int64) error {
-	fmt.Println(">>>>> MaxCurrent")
-	d := 1000 * current
-
+	// ignore result...
 	var resp string
-	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
-		return err
-	}
-	if resp != keba.OK {
-		return fmt.Errorf("curr %d unexpected response: %s", d, resp)
+	_ = c.roundtrip(fmt.Sprintf("curr %d", 1000*current), 0, &resp)
+
+	// ...and verify value
+	res, err := c.actualCurrent()
+	if err == nil && res != current {
+		return fmt.Errorf("curr could not set: %s", resp)
 	}
 
-	return nil
+	return err
 }
 
 // CurrentPower implements the Meter interface
