@@ -32,7 +32,7 @@ library.add(
   faExclamationTriangle
 );
 
-Vue.component("font-awesome-icon", FontAwesomeIcon);
+Vue.component("fa-icon", FontAwesomeIcon);
 
 const loc = window.location;
 axios.defaults.baseURL =

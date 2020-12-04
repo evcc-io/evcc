@@ -2,7 +2,7 @@
 	<div>
 		<nav class="navbar navbar-expand-lg navbar-light bg-light">
 			<a class="navbar-brand" href="https://github.com/andig/evcc"
-				><font-awesome-icon icon="leaf" class="text-primary mr-2" />evcc</a
+				><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
 			>
 			<button
 				class="navbar-toggler"
