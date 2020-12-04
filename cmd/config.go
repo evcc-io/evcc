@@ -133,7 +133,8 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
-			return err
+			log.ERROR.Printf("%s", err)
+			//return err
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
