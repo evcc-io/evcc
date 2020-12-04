@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/andig/evcc/util"
 )
 
@@ -20,10 +22,10 @@ func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), e
 
 	o := &calcProvider{}
 
-	for _, cc := range cc.Add {
+	for idx, cc := range cc.Add {
 		f, err := NewFloatGetterFromConfig(cc)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
 		o.add = append(o.add, f)
 	}

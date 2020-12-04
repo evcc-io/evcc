@@ -71,7 +71,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	// handle basic auth
 	if cc.Auth.Type != "" {
 		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("http auth: %w", err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 	if cc.Jq != "" {
 		op, err := gojq.Parse(cc.Jq)
 		if err != nil {
-			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
 		}
 
 		p.jq = op
