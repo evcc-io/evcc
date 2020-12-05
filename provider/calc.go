@@ -35,10 +35,10 @@ func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), e
 
 func (o *calcProvider) floatGetter() (float64, error) {
 	var sum float64
-	for _, p := range o.add {
+	for idx, p := range o.add {
 		v, err := p()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("add[%d]: %w", idx, err)
 		}
 		sum += v
 	}
