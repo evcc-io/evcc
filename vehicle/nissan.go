@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -21,6 +22,7 @@ import (
 // Credits to
 //   https://github.com/Tobiaswk/dartnissanconnect
 //   https://github.com/mitchellrj/kamereon-python
+//   https://gitlab.com/tobiaswkjeldsen/carwingsflutter
 
 // OAuth base url
 // 	 https://prod.eu.auth.kamereon.org/kauth/oauth2/a-ncb-prod/.well-known/openid-configuration
@@ -43,9 +45,12 @@ const (
 type Nissan struct {
 	*embed
 	*request.Helper
+	log                 *util.Logger
 	user, password, vin string
 	userID              string
 	tokens              oidc.Tokens
+	cache               *provider.UpdatableInterfaceGetter
+	locker              uint32
 	*kamereon.API
 }
 
@@ -73,6 +78,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Nissan{
 		embed:    &embed{cc.Title, cc.Capacity},
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     cc.User,
 		password: cc.Password,
 		vin:      strings.ToUpper(cc.VIN),
@@ -87,7 +93,8 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.API = kamereon.New(provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter())
+	v.cache = provider.NewCached(v.batteryAPI, cc.Cache).UpdatableInterfaceGetter()
+	v.API = kamereon.New(v.cache.Get)
 
 	return v, err
 }
@@ -300,12 +307,39 @@ func (v *Nissan) vehicles(userID string) ([]string, error) {
 	return vehicles, err
 }
 
+// refreshBattery provides battery api response
+func (v *Nissan) refreshBattery() {
+	// acquire lock
+	if !atomic.CompareAndSwapUint32(&v.locker, 0, 1) {
+		return
+	}
+	defer atomic.StoreUint32(&v.locker, 0)
+
+	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", nissanCarAdapterBaseURL, v.vin)
+
+	data := strings.NewReader(`{"data": {"type": "RefreshBatteryStatus"}}`)
+	req, err := request.New(http.MethodPost, uri, data, map[string]string{
+		"Content-Type":  "application/vnd.api+json",
+		"Authorization": "Bearer " + v.tokens.AccessToken,
+	})
+
+	if err == nil {
+		if _, err = v.Do(req); err == nil {
+			v.cache.Expire()
+		} else {
+			v.log.ERROR.Printf("status refresh: %s", err)
+		}
+	}
+}
+
 // batteryAPI provides battery api response
 func (v *Nissan) batteryAPI() (interface{}, error) {
 	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", nissanCarAdapterBaseURL, v.vin)
 
 	var res kamereon.Response
 	err := v.request(uri, &res)
+
+	go v.refreshBattery()
 
 	return res, err
 }

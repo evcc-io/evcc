@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -145,4 +146,50 @@ func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 
 		return c.val, c.err
 	}
+}
+
+// UpdatableInterfaceGetter gets interface value
+func (c *Cached) UpdatableInterfaceGetter() *UpdatableInterfaceGetter {
+	g, ok := c.getter.(func() (interface{}, error))
+	if !ok {
+		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+	}
+
+	return &UpdatableInterfaceGetter{
+		clock: c.clock,
+		cache: c.cache,
+		g:     g,
+	}
+}
+
+// UpdatableInterfaceGetter allows asynchronously updating cache value
+type UpdatableInterfaceGetter struct {
+	sync.Mutex
+	clock   clock.Clock
+	updated time.Time
+	cache   time.Duration
+	g       func() (interface{}, error)
+	val     interface{}
+	err     error
+}
+
+// Get returns the cache value. Get may update
+func (c *UpdatableInterfaceGetter) Get() (interface{}, error) {
+	c.Lock()
+	defer c.Unlock()
+
+	if c.clock.Since(c.updated) > c.cache {
+		c.val, c.err = c.g()
+		c.updated = c.clock.Now()
+	}
+
+	return c.val, c.err
+}
+
+// Expire expires the cached value
+func (c *UpdatableInterfaceGetter) Expire() {
+	c.Lock()
+	defer c.Unlock()
+
+	c.updated = c.clock.Now().Add(-c.cache - time.Second)
 }
