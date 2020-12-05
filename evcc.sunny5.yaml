@@ -88,7 +88,7 @@ meters:
 chargers:
 - name: keba
   type: keba # KEBA charger
-  uri: # KEBA address
+  uri: 192.168.5.45:7090 # wallbox address
   rfid:
     tag: 12345678 # RFID tag, see on the backside of white rfid card
 
@@ -141,6 +141,6 @@ loadpoints:
   disable: # pv mode disable behavior
     delay: 1m # threshold must be exceeded for this long
     threshold: 50 # maximum import power (W)
-  guardduration: 10m # switch charger contactor not more often than this (default 10m)
+  guardduration: 3m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
