@@ -108,7 +108,6 @@ results above into a new issue. Please tell us:
 func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), nil)
 
-	println(viper.GetString("log"))
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.
 Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.
