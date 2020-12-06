@@ -112,6 +112,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Cache                       time.Duration
 	}{
 		Region: "de_DE",
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

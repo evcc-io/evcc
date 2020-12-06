@@ -7,6 +7,8 @@ import (
 	"github.com/andig/evcc/api"
 )
 
+const interval = 15 * time.Minute
+
 type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
 
 func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {

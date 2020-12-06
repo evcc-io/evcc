@@ -47,7 +47,9 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		Status   *provider.Config
 		Range    *provider.Config
 		Cache    time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
