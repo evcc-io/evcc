@@ -149,7 +149,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
-		v.Diagnosis()
+		v.Diagnose()
 	}
 
 	w.Flush()

@@ -50,7 +50,7 @@ import (
 		}
 {{- end -}}
 
-func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
+func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.ReturnType}} {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
@@ -146,11 +146,21 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		combos = append(combos, dt.typ)
 	}
 
-	baseTypeParts := strings.SplitN(baseType, ".", 2)
+	returnType := *ret
+	if returnType == "" {
+		returnType = baseType
+	}
+
+	shortBase := strings.TrimLeft(baseType, "*")
+	if baseTypeParts := strings.SplitN(baseType, ".", 2); len(baseTypeParts) > 1 {
+		shortBase = baseTypeParts[1]
+	}
+
 	vars := struct {
 		API                 string
 		Package, Function   string
 		BaseType, ShortBase string
+		ReturnType          string
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
@@ -158,7 +168,8 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		Package:      packageName,
 		Function:     functionName,
 		BaseType:     baseType,
-		ShortBase:    baseTypeParts[1],
+		ShortBase:    shortBase,
+		ReturnType:   returnType,
 		Types:        types,
 		Combinations: combinations.All(combos),
 	}
@@ -171,6 +182,7 @@ var (
 	pkg      = pflag.StringP("package", "p", "", "package name")
 	function = pflag.StringP("function", "f", "decorate", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
+	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 

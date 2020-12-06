@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decoratePhoenixEMCP(base *PhoenixEMCP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixEMCP(base *PhoenixEMCP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) *PhoenixEMCP {
 	switch {
 	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base

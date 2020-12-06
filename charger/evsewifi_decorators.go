@@ -6,17 +6,17 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateEVSE(base *EVSEWifi, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
 	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.Meter
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
@@ -24,10 +24,10 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.MeterEnergy
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			MeterEnergy: &decorateEVSEMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -35,11 +35,11 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
@@ -50,10 +50,10 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.MeterCurrent
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			MeterCurrent: &decorateEVSEMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -61,11 +61,11 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},
@@ -76,11 +76,11 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			MeterCurrent: &decorateEVSEMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -91,12 +91,12 @@ func decorateEVSE(base api.Charger, meter func() (float64, error), meterEnergy f
 
 	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*EVSEWifi
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			EVSEWifi: base,
 			Meter: &decorateEVSEMeterImpl{
 				meter: meter,
 			},

@@ -303,8 +303,8 @@ github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyC
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/valyala/fasttemplate v1.1.0/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/volkszaehler/mbmd v0.0.0-20200717102329-c4d965bd1eac/go.mod h1:sldLyJCKVO9GQkit55U5WPNr9U4KmUn1SCdqFN9Gjb4=
-github.com/volkszaehler/mbmd v0.0.0-20201115202927-ff826598e117 h1:jKhfYg79as+otwlxGbZcGT8tzfi12oRddmsRQrFtSxw=
-github.com/volkszaehler/mbmd v0.0.0-20201115202927-ff826598e117/go.mod h1:rq6/XBs3AGX2d7qgpTgpVrbwN56o19RBQl5FopJMIZ4=
+github.com/volkszaehler/mbmd v0.0.0-20201205173745-5106cb0b334e h1:oloZUkvUxMEm6ztDBByJdZ2GpF33yOCu/82VZwoj1Rs=
+github.com/volkszaehler/mbmd v0.0.0-20201205173745-5106cb0b334e/go.mod h1:rq6/XBs3AGX2d7qgpTgpVrbwN56o19RBQl5FopJMIZ4=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

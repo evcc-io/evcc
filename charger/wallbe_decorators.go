@@ -6,17 +6,17 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), chargerEx func(current float64) error) api.Charger {
+func decorateWallbe(base *Wallbe, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), chargerEx func(current float64) error) api.Charger {
 	switch {
 	case chargerEx == nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
 	case chargerEx == nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.Meter
 		}{
-			Charger: base,
+			Wallbe: base,
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
@@ -24,10 +24,10 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			MeterEnergy: &decorateWallbeMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -35,11 +35,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
@@ -50,10 +50,10 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.MeterCurrent
 		}{
-			Charger: base,
+			Wallbe: base,
 			MeterCurrent: &decorateWallbeMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -61,11 +61,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: base,
+			Wallbe: base,
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
@@ -76,11 +76,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			MeterCurrent: &decorateWallbeMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -91,12 +91,12 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx == nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			Meter: &decorateWallbeMeterImpl{
 				meter: meter,
 			},
@@ -110,10 +110,10 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -121,11 +121,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.Meter
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -136,11 +136,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -151,12 +151,12 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -170,11 +170,11 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.MeterCurrent
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -185,12 +185,12 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -204,12 +204,12 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},
@@ -223,13 +223,13 @@ func decorateWallbe(base api.Charger, meter func() (float64, error), meterEnergy
 
 	case chargerEx != nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*Wallbe
 			api.ChargerEx
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			Wallbe: base,
 			ChargerEx: &decorateWallbeChargerExImpl{
 				chargerEx: chargerEx,
 			},

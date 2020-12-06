@@ -72,7 +72,7 @@ type ChargerEx interface {
 
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
-	Diagnosis()
+	Diagnose()
 }
 
 // ChargeTimer provides current charge cycle duration
