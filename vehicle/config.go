@@ -3,6 +3,7 @@ package vehicle
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/api"
 )
