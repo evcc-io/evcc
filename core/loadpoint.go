@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,12 +32,22 @@ const (
 
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
-	AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
-	Levels       []int `mapstructure:"levels"`
-	Estimate     bool  `mapstructure:"estimate"`
-	Min          int   `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target       int   `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Poll         string `mapstructure:"poll"`
+	AlwaysUpdate bool   `mapstructure:"alwaysUpdate"`
+	Levels       []int  `mapstructure:"levels"`
+	Estimate     bool   `mapstructure:"estimate"`
+	Min          int    `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
+	Target       int    `mapstructure:"target"` // Default target SoC, guarded by mutex
 }
+
+// Poll modes
+const (
+	pollCharging  = "charging"
+	pollConnected = "connected"
+	pollAlways    = "always"
+
+	pollConnectedInterval = 60 * time.Minute
+)
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
@@ -80,6 +91,7 @@ type LoadPoint struct {
 	enabled      bool      // Charger enabled state
 	maxCurrent   float64   // Charger current limit
 	guardUpdated time.Time // Charger enabled/disabled timestamp
+	socUpdated   time.Time // SoC updated timestamp (poll: connected)
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -115,6 +127,22 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
 
 	sort.Ints(lp.SoC.Levels)
+
+	switch lp.SoC.Poll = strings.ToLower(lp.SoC.Poll); lp.SoC.Poll {
+	case pollCharging:
+	case pollConnected, pollAlways:
+		log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)
+	default:
+		if lp.SoC.Poll != "" {
+			log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll)
+		}
+		if lp.SoC.AlwaysUpdate {
+			log.WARN.Println("alwaysUpdate is deprecated and will be removed in a future release. Use poll instead.")
+		} else {
+			lp.SoC.Poll = pollConnected
+		}
+	}
+
 	if lp.SoC.Target == 0 {
 		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
 		if lp.SoC.Target == 0 {
@@ -712,13 +740,23 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
+func (lp *LoadPoint) pollAllowed() bool {
+	connectedUpdateAllowed := lp.clock.Since(lp.socUpdated) >= pollConnectedInterval
+
+	return lp.SoC.Poll == pollAlways ||
+		lp.SoC.Poll == pollCharging && lp.charging ||
+		lp.SoC.Poll == pollConnected && lp.connected() && connectedUpdateAllowed
+}
+
 // publish state of charge and remaining charge duration
 func (lp *LoadPoint) publishSoC() {
 	if lp.socEstimator == nil {
 		return
 	}
 
-	if lp.SoC.AlwaysUpdate || lp.connected() {
+	if lp.pollAllowed() {
+		lp.socUpdated = lp.clock.Now()
+
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)

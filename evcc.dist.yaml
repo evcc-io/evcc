@@ -71,9 +71,15 @@ loadpoints:
   # - e-Up
   mode: pv
   soc:
+    # poll defines how vehicle API is used:
+    #   charging: update vehicle only when charging (recommended)
+    #   connected: update vehicle when connected (not only charging)
+    #   always: always update vehicle regardless of connection state
+    # using connected or always MAY deplete your vehicle's battery and lead
+    # to manufacturer banning you from API use. USE AT YOUR OWN RISK.
+    poll: charging
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
-    alwaysUpdate: false # set true to update vehicle soc even when disconnected
     estimate: false # set true to interpolate between api updates
     levels: # target soc levels for UI
     - 30
