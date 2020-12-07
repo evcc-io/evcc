@@ -51,7 +51,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
-	}{Headers: make(map[string]string)}
+	}{
+		Headers: make(map[string]string),
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

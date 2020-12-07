@@ -43,6 +43,7 @@ require (
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
@@ -53,6 +54,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20201205173745-5106cb0b334e
 	golang.org/x/net v0.0.0-20200904194848-62affa334b73
 	gopkg.in/ini.v1 v1.62.0
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
 

@@ -72,6 +72,11 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
 			res = prov.FloatGetter
 		}
+	case "js":
+		var prov *Javascript
+		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
+			res = prov.FloatGetter
+		}
 	case "websocket", "ws":
 		var prov *Socket
 		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
@@ -113,6 +118,11 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 	case "http":
 		var prov *HTTP
 		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.IntGetter
+		}
+	case "js":
+		var prov *Javascript
+		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
 			res = prov.IntGetter
 		}
 	case "websocket", "ws":
@@ -159,6 +169,11 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
 			res = prov.StringGetter
 		}
+	case "js":
+		var prov *Javascript
+		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
+			res = prov.StringGetter
+		}
 	case "websocket", "ws":
 		var prov *Socket
 		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
@@ -198,6 +213,11 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 	case "http":
 		var prov *HTTP
 		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolGetter
+		}
+	case "js":
+		var prov *Javascript
+		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
 			res = prov.BoolGetter
 		}
 	case "websocket", "ws":
