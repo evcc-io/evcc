@@ -30,14 +30,20 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
+// PollConfig defines the vehicle polling mode and interval
+type PollConfig struct {
+	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
+	Interval time.Duration `mapstructure:"interval"` // interval when not charging
+}
+
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
-	Poll         string `mapstructure:"poll"`
-	AlwaysUpdate bool   `mapstructure:"alwaysUpdate"`
-	Levels       []int  `mapstructure:"levels"`
-	Estimate     bool   `mapstructure:"estimate"`
-	Min          int    `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target       int    `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Poll         PollConfig `mapstructure:"poll"`
+	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
+	Levels       []int      `mapstructure:"levels"`
+	Estimate     bool       `mapstructure:"estimate"`
+	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
+	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 }
 
 // Poll modes
@@ -128,18 +134,28 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	sort.Ints(lp.SoC.Levels)
 
-	switch lp.SoC.Poll = strings.ToLower(lp.SoC.Poll); lp.SoC.Poll {
+	// set vehicle polling mode
+	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
 	case pollCharging:
 	case pollConnected, pollAlways:
 		log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)
 	default:
-		if lp.SoC.Poll != "" {
-			log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll)
+		if lp.SoC.Poll.Mode != "" {
+			log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
 		if lp.SoC.AlwaysUpdate {
 			log.WARN.Println("alwaysUpdate is deprecated and will be removed in a future release. Use poll instead.")
 		} else {
-			lp.SoC.Poll = pollConnected
+			lp.SoC.Poll.Mode = pollConnected
+		}
+	}
+
+	// set vehicle polling interval
+	if lp.SoC.Poll.Interval < pollInterval {
+		if lp.SoC.Poll.Interval == 0 {
+			lp.SoC.Poll.Interval = pollInterval
+		} else {
+			log.WARN.Printf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll.Interval, pollInterval)
 		}
 	}
 
@@ -754,11 +770,11 @@ func (lp *LoadPoint) publishChargeProgress() {
 
 // socPollAllowed validates charging state against polling mode
 func (lp *LoadPoint) socPollAllowed() bool {
-	remaining := pollInterval - lp.clock.Since(lp.socUpdated)
+	remaining := lp.SoC.Poll.Interval - lp.clock.Since(lp.socUpdated)
 	updateAllowed := lp.socUpdated.IsZero() || remaining <= 0
 
-	honourUpdateInterval := lp.SoC.Poll == pollAlways ||
-		lp.SoC.Poll == pollConnected && lp.connected()
+	honourUpdateInterval := lp.SoC.Poll.Mode == pollAlways ||
+		lp.SoC.Poll.Mode == pollConnected && lp.connected()
 
 	if honourUpdateInterval && remaining > 0 {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
@@ -807,7 +823,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	// reset if poll: connected/charging and not connected
-	if lp.SoC.Poll != pollAlways && !lp.connected() {
+	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
 		lp.publish("socCharge", -1)
 		lp.publish("chargeEstimate", time.Duration(-1))
 

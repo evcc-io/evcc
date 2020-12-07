@@ -382,7 +382,10 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		Mode:         api.ModeNow,
 		SoC: SoCConfig{
 			Target: 90,
-			Poll:   pollConnected, // allow polling when connected
+			Poll: PollConfig{
+				Mode:     pollConnected, // allow polling when connected
+				Interval: pollInterval,
+			},
 		},
 	}
 
