@@ -46,7 +46,7 @@ const (
 	pollConnected = "connected"
 	pollAlways    = "always"
 
-	pollConnectedInterval = 60 * time.Minute
+	pollInterval = 60 * time.Minute
 )
 
 // ThresholdConfig defines enable/disable hysteresis parameters
@@ -754,16 +754,17 @@ func (lp *LoadPoint) publishChargeProgress() {
 
 // socPollAllowed validates charging state against polling mode
 func (lp *LoadPoint) socPollAllowed() bool {
-	remaining := pollConnectedInterval - lp.clock.Since(lp.socUpdated)
-	connectedUpdateAllowed := lp.socUpdated.IsZero() || remaining <= 0
+	remaining := pollInterval - lp.clock.Since(lp.socUpdated)
+	updateAllowed := lp.socUpdated.IsZero() || remaining <= 0
 
-	if lp.SoC.Poll == pollConnected && lp.connected() && remaining > 0 {
+	honourUpdateInterval := lp.SoC.Poll == pollAlways ||
+		lp.SoC.Poll == pollConnected && lp.connected()
+
+	if honourUpdateInterval && remaining > 0 {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 	}
 
-	return lp.SoC.Poll == pollAlways ||
-		lp.SoC.Poll == pollCharging && lp.charging ||
-		lp.SoC.Poll == pollConnected && lp.connected() && connectedUpdateAllowed
+	return lp.charging || honourUpdateInterval && updateAllowed
 }
 
 // publish state of charge and remaining charge duration
@@ -773,7 +774,6 @@ func (lp *LoadPoint) publishSoC() {
 	}
 
 	if lp.socPollAllowed() {
-		println("pollAllowed")
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
