@@ -265,12 +265,18 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.triggerEvent(evChargeStart)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.triggerEvent(evChargeStop)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evVehicleConnectHandler sends external start event
@@ -284,6 +290,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	// duration
 	lp.connectedTime = lp.clock.Now()
 	lp.publish("connectedDuration", 0)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 
 	// soc estimation reset on car change
 	if lp.socEstimator != nil {
@@ -310,6 +319,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	if lp.OnDisconnect.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
 	}
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evChargeCurrentHandler publishes the charge current
@@ -740,8 +752,14 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-func (lp *LoadPoint) pollAllowed() bool {
-	connectedUpdateAllowed := lp.clock.Since(lp.socUpdated) >= pollConnectedInterval
+// socPollAllowed validates charging state against polling mode
+func (lp *LoadPoint) socPollAllowed() bool {
+	remaining := pollConnectedInterval - lp.clock.Since(lp.socUpdated)
+	connectedUpdateAllowed := lp.socUpdated.IsZero() || remaining <= 0
+
+	if lp.SoC.Poll == pollConnected && lp.connected() && remaining > 0 {
+		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+	}
 
 	return lp.SoC.Poll == pollAlways ||
 		lp.SoC.Poll == pollCharging && lp.charging ||
@@ -754,7 +772,8 @@ func (lp *LoadPoint) publishSoC() {
 		return
 	}
 
-	if lp.pollAllowed() {
+	if lp.socPollAllowed() {
+		println("pollAllowed")
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
