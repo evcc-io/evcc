@@ -767,8 +767,8 @@ func (lp *LoadPoint) socPollAllowed() bool {
 	return lp.charging || honourUpdateInterval && updateAllowed
 }
 
-// publish state of charge and remaining charge duration
-func (lp *LoadPoint) publishSoC() {
+// publish state of charge, remaining charge duration and range
+func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socEstimator == nil {
 		return
 	}
@@ -776,6 +776,7 @@ func (lp *LoadPoint) publishSoC() {
 	if lp.socPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
+		// soc
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)
@@ -790,30 +791,29 @@ func (lp *LoadPoint) publishSoC() {
 
 			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
-
-			return
+		} else {
+			lp.log.ERROR.Printf("vehicle error: %v", err)
 		}
 
-		lp.log.ERROR.Printf("vehicle error: %v", err)
-	} else if !lp.connected() {
-		// reset if poll: connected/charging and not connected
+		// range
+		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+				lp.publish("range", rng)
+			}
+		}
+
+		return
+	}
+
+	// reset if poll: connected/charging and not connected
+	if lp.SoC.Poll != pollAlways && !lp.connected() {
 		lp.publish("socCharge", -1)
 		lp.publish("chargeEstimate", time.Duration(-1))
+
+		// range
+		lp.publish("range", -1)
 	}
-}
-
-// publish remaining vehicle range
-func (lp *LoadPoint) publishRange() {
-	if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-			lp.publish("range", rng)
-
-			return
-		}
-	}
-
-	lp.publish("range", -1)
 }
 
 // Update is the main control function. It reevaluates meters and charger state
@@ -844,8 +844,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// must be run after updating charger status to make sure
 	// initial update of connected state matches charger status
 	lp.findActiveVehicle()
-	lp.publishSoC()
-	lp.publishRange()
+	lp.publishSoCAndRange()
 
 	// sync settings with charger
 	lp.syncCharger()
