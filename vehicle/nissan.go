@@ -90,8 +90,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.cache = provider.NewCached(v.batteryAPI, cc.Cache).UpdatableInterfaceGetter()
-	v.API = kamereon.New(v.cache.Get)
+	v.API = kamereon.New(provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter())
 
 	return v, err
 }
