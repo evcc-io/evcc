@@ -795,10 +795,11 @@ func (lp *LoadPoint) publishSoC() {
 		}
 
 		lp.log.ERROR.Printf("vehicle error: %v", err)
+	} else if !lp.connected() {
+		// reset if poll: connected/charging and not connected
+		lp.publish("socCharge", -1)
+		lp.publish("chargeEstimate", time.Duration(-1))
 	}
-
-	lp.publish("socCharge", -1)
-	lp.publish("chargeEstimate", time.Duration(-1))
 }
 
 // publish remaining vehicle range
