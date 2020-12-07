@@ -6,17 +6,17 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixEMCP(base *PhoenixEMCP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
 	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.Meter
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			Meter: &decoratePhoenixEMCPMeterImpl{
 				meter: meter,
 			},
@@ -24,10 +24,10 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.MeterEnergy
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			MeterEnergy: &decoratePhoenixEMCPMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -35,11 +35,11 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			Meter: &decoratePhoenixEMCPMeterImpl{
 				meter: meter,
 			},
@@ -50,10 +50,10 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.MeterCurrent
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -61,11 +61,11 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			Meter: &decoratePhoenixEMCPMeterImpl{
 				meter: meter,
 			},
@@ -76,11 +76,11 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -91,12 +91,12 @@ func decoratePhoenixEMCP(base api.Charger, meter func() (float64, error), meterE
 
 	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			api.Charger
+			*PhoenixEMCP
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: base,
+			PhoenixEMCP: base,
 			Meter: &decoratePhoenixEMCPMeterImpl{
 				meter: meter,
 			},
