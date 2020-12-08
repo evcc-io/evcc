@@ -242,7 +242,7 @@ hems:
 
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
-to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode. 
+to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
 
 ## Plugins
 
@@ -265,9 +265,20 @@ add:
 
 The `calc` plugin is useful e.g. to combine power values if import and export power are separate like with S0 meters. Use `scale` on one of the elements to implement a subtraction.
 
+### Javascript (read only)
+
+The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
+
+```yaml
+type: js
+script: |
+  var res = 500;
+  2 * res; // returns 1000
+```
+
 ### Modbus (read only)
 
-The `modbus` plugins is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
+The `modbus` plugin is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
 
 The meter configuration consists of the actual physical connection and the value to be read.
 
