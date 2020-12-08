@@ -96,7 +96,9 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	err = v.authFlow()
+	if err == nil {
+		err = v.authFlow()
+	}
 
 	if err == nil && cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
@@ -104,6 +106,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
 	}
+
 	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
 	return v, err
