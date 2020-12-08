@@ -117,60 +117,62 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
 func (m *Modbus) FloatGetter() func() (float64, error) {
-	return func() (float64, error) {
-		var res meters.MeasurementResult
-		var err error
+	return m.floatGetter
+}
 
-		// if funccode is configured, execute the read directly
-		if op := m.op.MBMD; op.FuncCode != 0 {
-			var bytes []byte
-			switch op.FuncCode {
-			case rs485.ReadHoldingReg:
-				bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-			case rs485.ReadInputReg:
-				bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
-			default:
-				return 0, fmt.Errorf("unknown function code %d", op.FuncCode)
-			}
+func (m *Modbus) floatGetter() (float64, error) {
+	var res meters.MeasurementResult
+	var err error
 
-			if err != nil {
-				return 0, fmt.Errorf("read failed: %v", err)
-			}
-
-			return m.scale * op.Transform(bytes), nil
+	// if funccode is configured, execute the read directly
+	if op := m.op.MBMD; op.FuncCode != 0 {
+		var bytes []byte
+		switch op.FuncCode {
+		case rs485.ReadHoldingReg:
+			bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
+		case rs485.ReadInputReg:
+			bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+		default:
+			return 0, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
 
-		// if funccode is not configured, try find the reading on sunspec
-		if dev, ok := m.device.(*sunspec.SunSpec); ok {
-			if m.op.MBMD.IEC61850 != 0 {
-				// client := m.conn.ModbusClient()
-				res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
-			} else {
-				res, err = dev.QueryPoint(
-					m.conn,
-					m.op.SunSpec.Model,
-					m.op.SunSpec.Block,
-					m.op.SunSpec.Point,
-				)
-			}
+		if err != nil {
+			return 0, fmt.Errorf("read failed: %v", err)
 		}
 
-		// silence NaN reading errors by assuming zero
-		if err != nil && errors.Is(err, meters.ErrNaN) {
-			res.Value = 0
-			err = nil
-		}
-
-		if err == nil {
-			if m.op.MBMD.IEC61850 != 0 {
-				m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
-			} else {
-				m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
-			}
-		}
-
-		return m.scale * res.Value, err
+		return m.scale * op.Transform(bytes), nil
 	}
+
+	// if funccode is not configured, try find the reading on sunspec
+	if dev, ok := m.device.(*sunspec.SunSpec); ok {
+		if m.op.MBMD.IEC61850 != 0 {
+			// client := m.conn.ModbusClient()
+			res, err = dev.QueryOp(m.conn, m.op.MBMD.IEC61850)
+		} else {
+			res, err = dev.QueryPoint(
+				m.conn,
+				m.op.SunSpec.Model,
+				m.op.SunSpec.Block,
+				m.op.SunSpec.Point,
+			)
+		}
+	}
+
+	// silence NaN reading errors by assuming zero
+	if err != nil && errors.Is(err, meters.ErrNaN) {
+		res.Value = 0
+		err = nil
+	}
+
+	if err == nil {
+		if m.op.MBMD.IEC61850 != 0 {
+			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
+		} else {
+			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
+		}
+	}
+
+	return m.scale * res.Value, err
 }
 
 // IntGetter executes configured modbus read operation and implements provider.IntGetter
