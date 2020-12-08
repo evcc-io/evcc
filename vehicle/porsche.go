@@ -44,6 +44,14 @@ type porscheVehicleResponse struct {
 			Unit  string
 			Value float64
 		}
+		RemainingRanges struct {
+			ElectricalRange struct {
+				Distance struct {
+					Unit  string
+					Value float64
+				}
+			}
+		}
 	}
 }
 
@@ -54,7 +62,7 @@ type Porsche struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	chargeStateG        func() (float64, error)
+	chargerG            func() (interface{}, error)
 }
 
 func init() {
@@ -84,7 +92,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -219,7 +227,7 @@ func (v *Porsche) request(uri string) (*http.Request, error) {
 }
 
 // chargeState implements the Vehicle.ChargeState interface
-func (v *Porsche) chargeState() (float64, error) {
+func (v *Porsche) chargeState() (interface{}, error) {
 	uri := fmt.Sprintf("%s/vehicles/%s", porscheAPI, v.vin)
 	req, err := v.request(uri)
 	if err != nil {
@@ -229,10 +237,25 @@ func (v *Porsche) chargeState() (float64, error) {
 	var pr porscheVehicleResponse
 	err = v.DoJSON(req, &pr)
 
-	return pr.CarControlData.BatteryLevel.Value, err
+	return pr, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *Porsche) ChargeState() (float64, error) {
-	return v.chargeStateG()
+	res, err := v.chargerG()
+	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+		return res.CarControlData.BatteryLevel.Value, nil
+	}
+
+	return 0, err
+}
+
+// Range implements the Vehicle.Range interface
+func (v *Porsche) Range() (int64, error) {
+	res, err := v.chargerG()
+	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
+	}
+
+	return 0, err
 }
