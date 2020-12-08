@@ -45,12 +45,11 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 		if client == nil {
 			client, err = mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
-
-			if err == nil {
-				mqtt.Registry.Add(cc.Config.Broker, client)
-			} else {
+			if err != nil {
 				return nil, err
 			}
+
+			mqtt.Registry.Add(cc.Config.Broker, client)
 		}
 	}
 
