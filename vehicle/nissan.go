@@ -21,6 +21,7 @@ import (
 // Credits to
 //   https://github.com/Tobiaswk/dartnissanconnect
 //   https://github.com/mitchellrj/kamereon-python
+//   https://gitlab.com/tobiaswkjeldsen/carwingsflutter
 
 // OAuth base url
 // 	 https://prod.eu.auth.kamereon.org/kauth/oauth2/a-ncb-prod/.well-known/openid-configuration
@@ -43,6 +44,7 @@ const (
 type Nissan struct {
 	*embed
 	*request.Helper
+	log                 *util.Logger
 	user, password, vin string
 	userID              string
 	tokens              oidc.Tokens
@@ -74,6 +76,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v := &Nissan{
 		embed:    &embed{cc.Title, cc.Capacity},
 		Helper:   request.NewHelper(log),
+		log:      log,
 		user:     cc.User,
 		password: cc.Password,
 		vin:      strings.ToUpper(cc.VIN),
@@ -221,8 +224,10 @@ func (v *Nissan) authFlow() error {
 		uri = fmt.Sprintf("%s/v1/users/current", nissanUserAdapterBaseURL)
 
 		var user struct{ UserID string }
-		if err = v.request(uri, &user); err == nil {
-			v.userID = user.UserID
+		if req, err = request.New(http.MethodGet, uri, nil, nil); err == nil {
+			if err = v.request(req, &user); err == nil {
+				v.userID = user.UserID
+			}
 		}
 
 		if v.userID == "" {
@@ -255,12 +260,10 @@ func (v *Nissan) refreshToken() error {
 	return err
 }
 
-func (v *Nissan) request(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, nil)
-	if err == nil {
-		req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-		err = v.DoJSON(req, &res)
-	}
+// request executes given request and handles token refresh
+func (v *Nissan) request(req *http.Request, res interface{}) error {
+	req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
+	err := v.DoJSON(req, &res)
 
 	// repeat auth if error
 	if err != nil {
@@ -268,7 +271,8 @@ func (v *Nissan) request(uri string, res interface{}) error {
 			err = v.authFlow()
 		}
 		if err == nil {
-			err = v.request(uri, &res)
+			req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
+			err = v.DoJSON(req, &res)
 		}
 	}
 
@@ -289,7 +293,10 @@ func (v *Nissan) vehicles(userID string) ([]string, error) {
 	uri := fmt.Sprintf("%s/v2/users/%s/cars", nissanUserBaseURL, userID)
 
 	var res nissanVehicles
-	err := v.request(uri, &res)
+	req, err := request.New(http.MethodGet, uri, nil, nil)
+	if err == nil {
+		err = v.request(req, &res)
+	}
 
 	var vehicles []string
 	if err == nil {
@@ -303,10 +310,27 @@ func (v *Nissan) vehicles(userID string) ([]string, error) {
 
 // batteryAPI provides battery api response
 func (v *Nissan) batteryAPI() (interface{}, error) {
-	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", nissanCarAdapterBaseURL, v.vin)
+	// refresh battery status
+	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", nissanCarAdapterBaseURL, v.vin)
+
+	data := strings.NewReader(`{"data": {"type": "RefreshBatteryStatus"}}`)
+	req, err := request.New(http.MethodPost, uri, data, map[string]string{
+		"Content-Type": "application/vnd.api+json",
+	})
 
 	var res kamereon.Response
-	err := v.request(uri, &res)
+	if err == nil {
+		err = v.request(req, &res)
+	}
+
+	// request battery status
+	if err == nil {
+		uri = fmt.Sprintf("%s/v1/cars/%s/battery-status", nissanCarAdapterBaseURL, v.vin)
+
+		if req, err = request.New(http.MethodGet, uri, nil, nil); err == nil {
+			err = v.request(req, &res)
+		}
+	}
 
 	return res, err
 }
