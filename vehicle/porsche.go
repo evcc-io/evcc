@@ -106,7 +106,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
-	return v, nil
+	return v, err
 }
 
 // login with a my Porsche account
