@@ -20,6 +20,10 @@ type Mqtt struct {
 	timeout time.Duration
 }
 
+func init() {
+	registry.Add("mqtt", NewMqttFromConfig)
+}
+
 // NewMqttFromConfig creates Mqtt provider
 func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
