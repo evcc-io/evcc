@@ -225,7 +225,8 @@ Available vehicle remote interface implementations are:
 - `tesla`: Tesla (any model)
 - `renault`: Renault (Zoe, Kangoo ZE)
 - `porsche`: Porsche (Taycan)
-- `vw`: Volkswagen (eGolf, eUp, ID.3, ID.4)
+- `vw`: Volkswagen (eGolf, eUp)
+- `id`: Volkswagen (ID.3, ID.4)
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -235,7 +236,7 @@ Configuration examples are documented at [andig/evcc-config#vehicles](https://gi
 EVCC can integrate itself with Home Energy Management Systems. At this time, the SMA Home Manager (SHM) is the only supported system. To enable add
 
 ```yaml
-hems: 
+hems:
   type: sma
 ```
 

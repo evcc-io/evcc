@@ -48,11 +48,17 @@ type helperTransport struct {
 }
 
 func (r *helperTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	msg := fmt.Sprintf("%s %s", req.Method, req.URL)
+	if r.detailed {
+		if body, err := httputil.DumpRequest(req, true); err == nil {
+			msg += "\n" + strings.TrimSpace(string(body)) + "\n"
+		}
+	}
+
 	resp, err := r.roundTripper.RoundTrip(req)
 	r.lastResponse(resp)
 
 	if r.log != nil {
-		msg := fmt.Sprintf("%s %s", req.Method, req.URL)
 		if resp != nil {
 			if r.detailed {
 				if body, err := httputil.DumpResponse(resp, true); err == nil {
