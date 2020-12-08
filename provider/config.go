@@ -46,20 +46,6 @@ func (r providerRegistry) Get(name string) (func(map[string]interface{}) (IntPro
 
 var registry providerRegistry = make(map[string]func(map[string]interface{}) (IntProvider, error))
 
-// newFromConfig creates plugin from configuration
-func newFromConfig(typ string, other map[string]interface{}) (v IntProvider, err error) {
-	factory, err := registry.Get(strings.ToLower(typ))
-	if err == nil {
-		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
-		}
-	} else {
-		err = fmt.Errorf("invalid plugin type: %s", typ)
-	}
-
-	return
-}
-
 // Config is the general provider config
 type Config struct {
 	Type  string
@@ -92,7 +78,8 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 		res, err = NewCalcFromConfig(config.Other)
 
 	default:
-		factory, err := registry.Get(typ)
+		var factory func(map[string]interface{}) (IntProvider, error)
+		factory, err = registry.Get(typ)
 		if err == nil {
 			var provider IntProvider
 			provider, err = factory(config.Other)
@@ -117,7 +104,8 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
 
 	default:
-		factory, err := registry.Get(typ)
+		var factory func(map[string]interface{}) (IntProvider, error)
+		factory, err = registry.Get(typ)
 		if err == nil {
 			var provider IntProvider
 			provider, err = factory(config.Other)
