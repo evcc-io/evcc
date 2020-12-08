@@ -80,6 +80,10 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Cache: interval,
 	}
 
+	log := util.NewLogger("porsche")
+
+	var err error
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -92,6 +96,14 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
+	err = v.authFlow()
+
+	if err == nil && cc.VIN == "" {
+		v.vin, err = findVehicle(v.vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", v.vin)
+		}
+	}
 	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
 	return v, nil
@@ -99,7 +111,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // login with a my Porsche account
 // looks like the backend is using a PingFederate Server with OAuth2
-func (v *Porsche) login(user, password string) error {
+func (v *Porsche) authFlow() error {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
@@ -135,8 +147,8 @@ func (v *Porsche) login(user, password string) error {
 		"resume":       []string{resume},
 		"thirdPartyId": []string{thirdPartyID},
 		"state":        []string{state},
-		"username":     []string{user},
-		"password":     []string{password},
+		"username":     []string{v.user},
+		"password":     []string{v.password},
 		"keeploggedin": []string{"false"},
 	}
 
@@ -214,7 +226,7 @@ func (v *Porsche) login(user, password string) error {
 
 func (v *Porsche) request(uri string) (*http.Request, error) {
 	if v.token == "" || time.Since(v.tokenValid) > 0 {
-		if err := v.login(v.user, v.password); err != nil {
+		if err := v.authFlow(); err != nil {
 			return nil, err
 		}
 	}
@@ -224,6 +236,25 @@ func (v *Porsche) request(uri string) (*http.Request, error) {
 	})
 
 	return req, err
+}
+
+func (v *Porsche) vehicles() (res []string, err error) {
+	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
+	req, err := v.request(uri)
+
+	var vehicles []struct {
+		VIN string
+	}
+
+	if err == nil {
+		err = v.DoJSON(req, &vehicles)
+
+		for _, v := range vehicles {
+			res = append(res, v.VIN)
+		}
+	}
+
+	return res, err
 }
 
 // chargeState implements the Vehicle.ChargeState interface
