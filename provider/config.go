@@ -39,7 +39,7 @@ func (r providerRegistry) Add(name string, factory func(map[string]interface{}) 
 func (r providerRegistry) Get(name string) (func(map[string]interface{}) (IntProvider, error), error) {
 	factory, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("plugin type not registered: %s", name)
+		return nil, fmt.Errorf("invalid plugin type: %s", name)
 	}
 	return factory, nil
 }

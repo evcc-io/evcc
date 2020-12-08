@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -44,17 +45,18 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	var err error
 	client := mqtt.Instance
 
-	if cc.Config.Broker != "" {
-		client, _ = mqtt.Registry.Get(cc.Config.Broker)
+	if client == nil && cc.Config.Broker == "" {
+		return nil, errors.New("missing mqtt broker configuration")
+	}
 
-		if client == nil {
-			client, err = mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
-			if err != nil {
-				return nil, err
-			}
-
-			mqtt.Registry.Add(cc.Config.Broker, client)
+	client, _ = mqtt.Registry.Get(cc.Config.Broker)
+	if client == nil {
+		client, err = mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
+		if err != nil {
+			return nil, err
 		}
+
+		mqtt.Registry.Add(cc.Config.Broker, client)
 	}
 
 	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)

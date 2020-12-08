@@ -9,6 +9,7 @@ import (
 func TestMeters(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
+		"missing mqtt broker configuration",
 		"mqtt not configured",
 		"not a SunSpec device",
 		"connect: no route to host",
