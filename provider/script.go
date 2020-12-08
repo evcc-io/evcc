@@ -87,43 +87,57 @@ func (e *Script) exec(script string) (string, error) {
 }
 
 // StringGetter returns string from exec result. Only STDOUT is considered.
-func (e *Script) StringGetter() (string, error) {
-	if time.Since(e.updated) > e.cache {
-		e.val, e.err = e.exec(e.script)
-		e.updated = time.Now()
-	}
+func (e *Script) StringGetter() func() (string, error) {
+	return func() (string, error) {
+		if time.Since(e.updated) > e.cache {
+			e.val, e.err = e.exec(e.script)
+			e.updated = time.Now()
+		}
 
-	return e.val, e.err
+		return e.val, e.err
+	}
 }
 
 // IntGetter parses int64 from exec result
-func (e *Script) IntGetter() (int64, error) {
-	s, err := e.StringGetter()
-	if err != nil {
-		return 0, err
-	}
+func (e *Script) IntGetter() func() (int64, error) {
+	g := e.StringGetter()
 
-	return strconv.ParseInt(s, 10, 64)
+	return func() (int64, error) {
+		s, err := g()
+		if err != nil {
+			return 0, err
+		}
+
+		return strconv.ParseInt(s, 10, 64)
+	}
 }
 
 // FloatGetter parses float from exec result
-func (e *Script) FloatGetter() (float64, error) {
-	s, err := e.StringGetter()
-	if err != nil {
-		return 0, err
-	}
+func (e *Script) FloatGetter() func() (float64, error) {
+	g := e.StringGetter()
 
-	return strconv.ParseFloat(s, 64)
+	return func() (float64, error) {
+		s, err := g()
+		if err != nil {
+			return 0, err
+		}
+
+		return strconv.ParseFloat(s, 64)
+	}
 }
 
 // BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (e *Script) BoolGetter() (bool, error) {
-	s, err := e.StringGetter()
-	if err != nil {
-		return false, err
-	}
+func (e *Script) BoolGetter() func() (bool, error) {
+	g := e.StringGetter()
 
-	return util.Truish(s), nil
+	return func() (bool, error) {
+		s, err := g()
+		if err != nil {
+			return false, err
+		}
+
+		return util.Truish(s), nil
+	}
 }
 
 // IntSetter invokes script with parameter replaced by int value

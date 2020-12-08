@@ -1,4 +1,4 @@
-package provider
+package mqtt
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
 const (
@@ -15,49 +16,52 @@ const (
 	publishTimeout = 2 * time.Second
 )
 
-// MqttClientID created unique mqtt client id
-func MqttClientID() string {
+// Instance is the paho Mqtt client singleton
+var Instance *Client
+
+// ClientID created unique mqtt client id
+func ClientID() string {
 	pid := rand.Int31()
 	return fmt.Sprintf("evcc-%d", pid)
 }
 
-// MqttConfig is the public configuration
-type MqttConfig struct {
+// Config is the public configuration
+type Config struct {
 	Broker   string
 	User     string
 	Password string
 }
 
-// MqttClient capsulates mqtt publish/subscribe functions
-type MqttClient struct {
+// Client encapsulates mqtt publish/subscribe functions
+type Client struct {
 	log      *util.Logger
 	mux      sync.Mutex
-	Client   mqtt.Client
+	Client   paho.Client
 	broker   string
 	Qos      byte
 	listener map[string]func(string)
 }
 
-// NewMqttClient creates new publisher for paho
-func NewMqttClient(
+// NewClient creates new publisher for paho
+func NewClient(
 	log *util.Logger,
 	broker string,
 	user string,
 	password string,
 	clientID string,
 	qos byte,
-) (*MqttClient, error) {
+) (*Client, error) {
 	broker = util.DefaultPort(broker, 1883)
 	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
-	mc := &MqttClient{
+	mc := &Client{
 		log:      log,
 		broker:   broker,
 		Qos:      qos,
 		listener: make(map[string]func(string)),
 	}
 
-	options := mqtt.NewClientOptions()
+	options := paho.NewClientOptions()
 	options.AddBroker(broker)
 	options.SetUsername(user)
 	options.SetPassword(password)
@@ -74,16 +78,17 @@ func NewMqttClient(
 	}
 
 	mc.Client = client
+
 	return mc, nil
 }
 
 // ConnectionLostHandler logs cause of connection loss as warning
-func (m *MqttClient) ConnectionLostHandler(client mqtt.Client, reason error) {
+func (m *Client) ConnectionLostHandler(client mqtt.Client, reason error) {
 	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
 }
 
 // ConnectionHandler restores listeners
-func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
+func (m *Client) ConnectionHandler(client mqtt.Client) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
 
 	m.mux.Lock()
@@ -96,7 +101,7 @@ func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
 }
 
 // Publish synchronously pulishes payload using client qos
-func (m *MqttClient) Publish(topic string, retained bool, payload interface{}) error {
+func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
 	token := m.Client.Publish(topic, m.Qos, retained, payload)
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
@@ -105,7 +110,7 @@ func (m *MqttClient) Publish(topic string, retained bool, payload interface{}) e
 }
 
 // Listen validates uniqueness and registers and attaches listener
-func (m *MqttClient) Listen(topic string, callback func(string)) {
+func (m *Client) Listen(topic string, callback func(string)) {
 	m.mux.Lock()
 	if _, ok := m.listener[topic]; ok {
 		m.log.FATAL.Fatalf("%s: duplicate listener not allowed", topic)
@@ -117,7 +122,7 @@ func (m *MqttClient) Listen(topic string, callback func(string)) {
 }
 
 // listen attaches listener to topic
-func (m *MqttClient) listen(topic string, callback func(string)) {
+func (m *Client) listen(topic string, callback func(string)) {
 	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
 		s := string(msg.Payload())
 		if len(s) > 0 {
@@ -128,7 +133,7 @@ func (m *MqttClient) listen(topic string, callback func(string)) {
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *MqttClient) WaitForToken(token mqtt.Token) {
+func (m *Client) WaitForToken(token mqtt.Token) {
 	if token.WaitTimeout(publishTimeout) {
 		if token.Error() != nil {
 			m.log.ERROR.Printf("error: %s", token.Error())

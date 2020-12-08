@@ -115,51 +115,63 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 }
 
 // FloatGetter parses float from request
-func (p *HTTP) FloatGetter() (float64, error) {
-	s, err := p.StringGetter()
-	if err != nil {
-		return 0, err
-	}
+func (p *HTTP) FloatGetter() func() (float64, error) {
+	g := p.StringGetter()
 
-	f, err := strconv.ParseFloat(s, 64)
-	if err == nil && p.scale != 0 {
-		f *= p.scale
-	}
+	return func() (float64, error) {
+		s, err := g()
+		if err != nil {
+			return 0, err
+		}
 
-	return f, err
+		f, err := strconv.ParseFloat(s, 64)
+		if err == nil && p.scale != 0 {
+			f *= p.scale
+		}
+
+		return f, err
+	}
 }
 
 // IntGetter parses int64 from request
-func (p *HTTP) IntGetter() (int64, error) {
-	f, err := p.FloatGetter()
-	return int64(math.Round(f)), err
+func (p *HTTP) IntGetter() func() (int64, error) {
+	g := p.FloatGetter()
+
+	return func() (int64, error) {
+		f, err := g()
+		return int64(math.Round(f)), err
+	}
 }
 
 // StringGetter sends string request
-func (p *HTTP) StringGetter() (string, error) {
-	b, err := p.request()
-	if err != nil {
+func (p *HTTP) StringGetter() func() (string, error) {
+	return func() (string, error) {
+		b, err := p.request()
+		if err != nil {
+			return string(b), err
+		}
+
+		if p.jq != nil {
+			v, err := jq.Query(p.jq, b)
+			return fmt.Sprintf("%v", v), err
+		}
+
 		return string(b), err
 	}
-
-	if p.jq != nil {
-		v, err := jq.Query(p.jq, b)
-		return fmt.Sprintf("%v", v), err
-	}
-
-	return string(b), err
 }
 
 // BoolGetter parses bool from request
-func (p *HTTP) BoolGetter() (bool, error) {
-	s, err := p.StringGetter()
-	return util.Truish(s), err
+func (p *HTTP) BoolGetter() func() (bool, error) {
+	g := p.StringGetter()
+
+	return func() (bool, error) {
+		s, err := g()
+		return util.Truish(s), err
+	}
 }
 
 func (p *HTTP) set(param string, val interface{}) error {
-	body, err := util.ReplaceFormatted(p.body, map[string]interface{}{
-		param: val,
-	})
+	body, err := setFormattedValue(p.body, param, val)
 
 	if err == nil {
 		_, err = p.request(body)

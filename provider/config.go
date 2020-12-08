@@ -7,10 +7,18 @@ import (
 
 // provider types
 type (
-	IntProvider    interface{ IntGetter() (int64, error) }
-	StringProvider interface{ StringGetter() (string, error) }
-	FloatProvider  interface{ FloatGetter() (float64, error) }
-	BoolProvider   interface{ BoolGetter() (bool, error) }
+	IntProvider interface {
+		IntGetter() func() (int64, error)
+	}
+	StringProvider interface {
+		StringGetter() func() (string, error)
+	}
+	FloatProvider interface {
+		FloatGetter() func() (float64, error)
+	}
+	BoolProvider interface {
+		BoolGetter() func() (bool, error)
+	}
 	SetIntProvider interface {
 		IntSetter(param string) func(int64) error
 	}
@@ -66,7 +74,7 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 		provider, err = factory(config.Other)
 
 		if err == nil {
-			res = provider.IntGetter
+			res = provider.IntGetter()
 		}
 	}
 
@@ -90,7 +98,7 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 			provider, err = factory(config.Other)
 
 			if prov, ok := provider.(FloatProvider); ok {
-				res = prov.FloatGetter
+				res = prov.FloatGetter()
 			}
 		}
 
@@ -115,7 +123,7 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 			provider, err = factory(config.Other)
 
 			if prov, ok := provider.(StringProvider); ok {
-				res = prov.StringGetter
+				res = prov.StringGetter()
 			}
 		}
 
@@ -135,7 +143,7 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 		provider, err = factory(config.Other)
 
 		if prov, ok := provider.(BoolProvider); ok {
-			res = prov.BoolGetter
+			res = prov.BoolGetter()
 		}
 	}
 

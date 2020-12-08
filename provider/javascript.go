@@ -38,43 +38,51 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 }
 
 // FloatGetter parses float from request
-func (p *Javascript) FloatGetter() (res float64, err error) {
-	v, err := p.vm.Eval(p.script)
-	if err == nil {
-		res, err = v.ToFloat()
-	}
+func (p *Javascript) FloatGetter() func() (float64, error) {
+	return func() (res float64, err error) {
+		v, err := p.vm.Eval(p.script)
+		if err == nil {
+			res, err = v.ToFloat()
+		}
 
-	return res, err
+		return res, err
+	}
 }
 
 // IntGetter parses int64 from request
-func (p *Javascript) IntGetter() (res int64, err error) {
-	v, err := p.vm.Eval(p.script)
-	if err == nil {
-		res, err = v.ToInteger()
-	}
+func (p *Javascript) IntGetter() func() (int64, error) {
+	return func() (res int64, err error) {
+		v, err := p.vm.Eval(p.script)
+		if err == nil {
+			res, err = v.ToInteger()
+		}
 
-	return res, err
+		return res, err
+	}
 }
 
 // StringGetter sends string request
-func (p *Javascript) StringGetter() (res string, err error) {
-	v, err := p.vm.Eval(p.script)
-	if err == nil {
-		res, err = v.ToString()
-	}
+func (p *Javascript) StringGetter() func() (string, error) {
+	return func() (res string, err error) {
+		v, err := p.vm.Eval(p.script)
+		if err == nil {
+			res, err = v.ToString()
+		}
 
-	return res, err
+		return res, err
+	}
 }
 
 // BoolGetter parses bool from request
-func (p *Javascript) BoolGetter() (res bool, err error) {
-	v, err := p.vm.Eval(p.script)
-	if err == nil {
-		res, err = v.ToBoolean()
-	}
+func (p *Javascript) BoolGetter() func() (bool, error) {
+	return func() (res bool, err error) {
+		v, err := p.vm.Eval(p.script)
+		if err == nil {
+			res, err = v.ToBoolean()
+		}
 
-	return res, err
+		return res, err
+	}
 }
 
 // IntSetter sends int request
