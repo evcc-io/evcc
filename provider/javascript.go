@@ -17,7 +17,7 @@ func init() {
 }
 
 // NewJavascriptProviderFromConfig creates a HTTP provider
-func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		Script string
 	}{}

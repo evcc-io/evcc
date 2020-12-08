@@ -28,7 +28,7 @@ func init() {
 }
 
 // NewScriptProviderFromConfig creates a script provider.
-func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
+func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		Cmd     string
 		Timeout time.Duration
