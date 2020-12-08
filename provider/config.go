@@ -9,10 +9,6 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-const (
-	execTimeout = 5 * time.Second
-)
-
 // Config is the general provider config
 type Config struct {
 	Type  string
@@ -49,19 +45,6 @@ func mqttFromConfig(other map[string]interface{}) (mqttConfig, error) {
 	return pc, nil
 }
 
-func scriptFromConfig(other map[string]interface{}) (scriptConfig, error) {
-	var pc scriptConfig
-	if err := util.DecodeOther(other, &pc); err != nil {
-		return pc, err
-	}
-
-	if pc.Timeout == 0 {
-		pc.Timeout = execTimeout
-	}
-
-	return pc, nil
-}
-
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
 	switch strings.ToLower(config.Type) {
@@ -87,18 +70,9 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 			res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
-		}
-
 		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.FloatGetter(pc.Cmd)
-		}
-
-		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).FloatGetter()
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.FloatGetter
 		}
 	case "modbus":
 		var prov *Modbus
@@ -136,18 +110,9 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 			res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
-		}
-
 		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.IntGetter(pc.Cmd)
-		}
-
-		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).IntGetter()
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.IntGetter
 		}
 	case "modbus":
 		var prov *Modbus
@@ -185,18 +150,9 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 			res = MQTT.StringGetter(pc.Topic, pc.Timeout)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
-		}
-
 		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.StringGetter(pc.Cmd)
-		}
-
-		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).StringGetter()
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.StringGetter
 		}
 	case "combined", "openwb":
 		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
@@ -231,18 +187,9 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 			res = MQTT.BoolGetter(pc.Topic, pc.Timeout)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
-		}
-
 		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.BoolGetter(pc.Cmd)
-		}
-
-		if pc.Cache > 0 {
-			res = NewCached(res, pc.Cache).BoolGetter()
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolGetter
 		}
 	default:
 		err = fmt.Errorf("invalid plugin type: %s", config.Type)
@@ -265,14 +212,9 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 			res = MQTT.IntSetter(param, pc.Topic, pc.Payload)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
-		}
-
 		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.IntSetter(param, pc.Cmd)
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.IntSetter(param)
 		}
 	default:
 		err = fmt.Errorf("invalid setter type %s", config.Type)
@@ -295,15 +237,11 @@ func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error,
 			res = MQTT.BoolSetter(param, pc.Topic, pc.Payload)
 		}
 	case "script":
-		var pc scriptConfig
-		if pc, err = scriptFromConfig(config.Other); err != nil {
-			break
+		var prov *Script
+		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
+			res = prov.BoolSetter(param)
 		}
 
-		var prov *Script
-		if prov, err = NewScriptProvider(pc.Timeout); err == nil {
-			res = prov.BoolSetter(param, pc.Cmd)
-		}
 	default:
 		err = fmt.Errorf("invalid setter type %s", config.Type)
 	}
