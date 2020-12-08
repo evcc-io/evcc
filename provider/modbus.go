@@ -21,8 +21,12 @@ type Modbus struct {
 	scale  float64
 }
 
+func init() {
+	registry.Add("modbus", NewModbusFromConfig)
+}
+
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
+func NewModbusFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		Model           string
 		modbus.Settings `mapstructure:",squash"`

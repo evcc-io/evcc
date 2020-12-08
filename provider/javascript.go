@@ -12,8 +12,12 @@ type Javascript struct {
 	script string
 }
 
+func init() {
+	registry.Add("js", NewJavascriptProviderFromConfig)
+}
+
 // NewJavascriptProviderFromConfig creates a HTTP provider
-func NewJavascriptProviderFromConfig(other map[string]interface{}) (*Javascript, error) {
+func NewJavascriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		Script string
 	}{}
@@ -73,23 +77,35 @@ func (p *Javascript) BoolGetter() (res bool, err error) {
 	return res, err
 }
 
-// // IntSetter sends int request
-// func (p *Javascript) IntSetter(param int64) error {
-// 	body := util.FormatValue(p.body, param)
-// 	_, err := p.request(body)
-// 	return err
-// }
+// IntSetter sends int request
+func (p *Javascript) IntSetter(param string) func(int64) error {
+	return func(val int64) error {
+		err := p.vm.Set(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}
 
-// // StringSetter sends string request
-// func (p *Javascript) StringSetter(param string) error {
-// 	body := util.FormatValue(p.body, param)
-// 	_, err := p.request(body)
-// 	return err
-// }
+// StringSetter sends string request
+func (p *Javascript) StringSetter(param string) func(string) error {
+	return func(val string) error {
+		err := p.vm.Set(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}
 
-// // BoolSetter sends bool request
-// func (p *Javascript) BoolSetter(param bool) error {
-// 	body := util.FormatValue(p.body, param)
-// 	_, err := p.request(body)
-// 	return err
-// }
+// BoolSetter sends bool request
+func (p *Javascript) BoolSetter(param string) func(bool) error {
+	return func(val bool) error {
+		err := p.vm.Set(param, val)
+		if err == nil {
+			_, err = p.vm.Eval(p.script)
+		}
+		return err
+	}
+}

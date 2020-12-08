@@ -41,6 +41,10 @@ type MqttClient struct {
 	listener map[string]func(string)
 }
 
+func NewMqttFromConfig() (Provider, error) {
+	return nil, nil
+}
+
 // NewMqttClient creates new publisher for paho
 func NewMqttClient(
 	log *util.Logger,

@@ -25,6 +25,10 @@ type HTTP struct {
 	jq          *gojq.Query
 }
 
+func init() {
+	registry.Add("http", NewHTTPProviderFromConfig)
+}
+
 // Auth is the authorization config
 type Auth struct {
 	Type, User, Password string
@@ -42,7 +46,7 @@ func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
+func NewHTTPProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI, Method string
 		Headers     map[string]string
@@ -152,23 +156,35 @@ func (p *HTTP) BoolGetter() (bool, error) {
 	return util.Truish(s), err
 }
 
-// IntSetter sends int request
-func (p *HTTP) IntSetter(param int64) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
+func (p *HTTP) set(param string, val interface{}) error {
+	body, err := util.ReplaceFormatted(p.body, map[string]interface{}{
+		param: val,
+	})
+
+	if err == nil {
+		_, err = p.request(body)
+	}
+
 	return err
+}
+
+// IntSetter sends int request
+func (p *HTTP) IntSetter(param string) func(int64) error {
+	return func(val int64) error {
+		return p.set(param, val)
+	}
 }
 
 // StringSetter sends string request
-func (p *HTTP) StringSetter(param string) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
-	return err
+func (p *HTTP) StringSetter(param string) func(string) error {
+	return func(val string) error {
+		return p.set(param, val)
+	}
 }
 
 // BoolSetter sends bool request
-func (p *HTTP) BoolSetter(param bool) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
-	return err
+func (p *HTTP) BoolSetter(param string) func(bool) error {
+	return func(val bool) error {
+		return p.set(param, val)
+	}
 }

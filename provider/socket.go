@@ -29,8 +29,13 @@ type Socket struct {
 	val     interface{}
 }
 
+func init() {
+	registry.Add("ws", NewSocketProviderFromConfig)
+	registry.Add("websocket", NewSocketProviderFromConfig)
+}
+
 // NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) {
+func NewSocketProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		URI      string
 		Headers  map[string]string

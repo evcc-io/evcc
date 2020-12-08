@@ -23,8 +23,12 @@ type Script struct {
 	err     error
 }
 
+func init() {
+	registry.Add("script", NewScriptProviderFromConfig)
+}
+
 // NewScriptProviderFromConfig creates a script provider.
-func NewScriptProviderFromConfig(other map[string]interface{}) (*Script, error) {
+func NewScriptProviderFromConfig(other map[string]interface{}) (Provider, error) {
 	cc := struct {
 		Cmd     string
 		Timeout time.Duration

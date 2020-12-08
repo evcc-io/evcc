@@ -9,6 +9,63 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+type Provider interface {
+	IntGetter() (int64, error)
+}
+
+type StringProvider interface {
+	StringGetter() (string, error)
+}
+
+type FloatProvider interface {
+	FloatGetter() (float64, error)
+}
+
+type BoolProvider interface {
+	BoolGetter() (bool, error)
+}
+
+type SetProvider interface {
+	IntSetter(param string) func(int64) error
+}
+
+type SetBoolProvider interface {
+	BoolSetter(param string) func(bool) error
+}
+
+type providerRegistry map[string]func(map[string]interface{}) (Provider, error)
+
+func (r providerRegistry) Add(name string, factory func(map[string]interface{}) (Provider, error)) {
+	if _, exists := r[name]; exists {
+		panic(fmt.Sprintf("cannot register duplicate plugin type: %s", name))
+	}
+	r[name] = factory
+}
+
+func (r providerRegistry) Get(name string) (func(map[string]interface{}) (Provider, error), error) {
+	factory, exists := r[name]
+	if !exists {
+		return nil, fmt.Errorf("plugin type not registered: %s", name)
+	}
+	return factory, nil
+}
+
+var registry providerRegistry = make(map[string]func(map[string]interface{}) (Provider, error))
+
+// newFromConfig creates plugin from configuration
+func newFromConfig(typ string, other map[string]interface{}) (v Provider, err error) {
+	factory, err := registry.Get(strings.ToLower(typ))
+	if err == nil {
+		if v, err = factory(other); err != nil {
+			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
+		}
+	} else {
+		err = fmt.Errorf("invalid plugin type: %s", typ)
+	}
+
+	return
+}
+
 // Config is the general provider config
 type Config struct {
 	Type  string
@@ -40,40 +97,28 @@ func mqttFromConfig(other map[string]interface{}) (mqttConfig, error) {
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
-	switch strings.ToLower(config.Type) {
+	switch typ := strings.ToLower(config.Type); typ {
 	case "calc":
 		res, err = NewCalcFromConfig(config.Other)
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.FloatGetter
-		}
-	case "js":
-		var prov *Javascript
-		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
-			res = prov.FloatGetter
-		}
-	case "websocket", "ws":
-		var prov *Socket
-		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
-			res = prov.FloatGetter
-		}
 	case "mqtt":
 		if pc, err := mqttFromConfig(config.Other); err == nil {
 			res = MQTT.FloatGetter(pc.Topic, pc.Scale, pc.Timeout)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.FloatGetter
-		}
-	case "modbus":
-		var prov *Modbus
-		if prov, err = NewModbusFromConfig(config.Other); err == nil {
-			res = prov.FloatGetter
-		}
+
 	default:
-		return nil, fmt.Errorf("invalid plugin type: %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if prov, ok := provider.(FloatProvider); ok {
+				res = prov.FloatGetter
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
@@ -81,39 +126,27 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 
 // NewIntGetterFromConfig creates a IntGetter from config
 func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error) {
-	switch strings.ToLower(config.Type) {
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.IntGetter
-		}
-	case "js":
-		var prov *Javascript
-		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
-			res = prov.IntGetter
-		}
-	case "websocket", "ws":
-		var prov *Socket
-		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
-			res = prov.IntGetter
-		}
+	switch typ := strings.ToLower(config.Type); typ {
 	case "mqtt":
 		var pc mqttConfig
 		if pc, err = mqttFromConfig(config.Other); err == nil {
 			res = MQTT.IntGetter(pc.Topic, int64(pc.Scale), pc.Timeout)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.IntGetter
-		}
-	case "modbus":
-		var prov *Modbus
-		if prov, err = NewModbusFromConfig(config.Other); err == nil {
-			res = prov.IntGetter
-		}
+
 	default:
-		err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if err == nil {
+				res = provider.IntGetter
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
@@ -121,36 +154,29 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 
 // NewStringGetterFromConfig creates a StringGetter from config
 func NewStringGetterFromConfig(config Config) (res func() (string, error), err error) {
-	switch strings.ToLower(config.Type) {
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.StringGetter
-		}
-	case "js":
-		var prov *Javascript
-		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
-			res = prov.StringGetter
-		}
-	case "websocket", "ws":
-		var prov *Socket
-		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
-			res = prov.StringGetter
-		}
+	switch typ := strings.ToLower(config.Type); typ {
 	case "mqtt":
 		var pc mqttConfig
 		if pc, err = mqttFromConfig(config.Other); err == nil {
 			res = MQTT.StringGetter(pc.Topic, pc.Timeout)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.StringGetter
-		}
 	case "combined", "openwb":
 		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
+
 	default:
-		err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if prov, ok := provider.(StringProvider); ok {
+				res = prov.StringGetter
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
@@ -158,34 +184,27 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
 func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error) {
-	switch strings.ToLower(config.Type) {
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolGetter
-		}
-	case "js":
-		var prov *Javascript
-		if prov, err = NewJavascriptProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolGetter
-		}
-	case "websocket", "ws":
-		var prov *Socket
-		if prov, err = NewSocketProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolGetter
-		}
+	switch typ := strings.ToLower(config.Type); typ {
 	case "mqtt":
 		var pc mqttConfig
 		if pc, err = mqttFromConfig(config.Other); err == nil {
 			res = MQTT.BoolGetter(pc.Topic, pc.Timeout)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolGetter
-		}
+
 	default:
-		err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if prov, ok := provider.(BoolProvider); ok {
+				res = prov.BoolGetter
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
@@ -193,24 +212,27 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 
 // NewIntSetterFromConfig creates a IntSetter from config
 func NewIntSetterFromConfig(param string, config Config) (res func(int64) error, err error) {
-	switch strings.ToLower(config.Type) {
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.IntSetter
-		}
+	switch typ := strings.ToLower(config.Type); typ {
 	case "mqtt":
 		var pc mqttConfig
 		if pc, err = mqttFromConfig(config.Other); err == nil {
 			res = MQTT.IntSetter(param, pc.Topic, pc.Payload)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.IntSetter(param)
-		}
+
 	default:
-		err = fmt.Errorf("invalid setter type %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if prov, ok := provider.(SetProvider); ok {
+				res = prov.IntSetter(param)
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
@@ -218,25 +240,27 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
 func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error, err error) {
-	switch strings.ToLower(config.Type) {
-	case "http":
-		var prov *HTTP
-		if prov, err = NewHTTPProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolSetter
-		}
+	switch typ := strings.ToLower(config.Type); typ {
 	case "mqtt":
 		var pc mqttConfig
 		if pc, err = mqttFromConfig(config.Other); err == nil {
 			res = MQTT.BoolSetter(param, pc.Topic, pc.Payload)
 		}
-	case "script":
-		var prov *Script
-		if prov, err = NewScriptProviderFromConfig(config.Other); err == nil {
-			res = prov.BoolSetter(param)
-		}
 
 	default:
-		err = fmt.Errorf("invalid setter type %s", config.Type)
+		factory, err := registry.Get(typ)
+		if err == nil {
+			var provider Provider
+			provider, err = factory(config.Other)
+
+			if prov, ok := provider.(SetBoolProvider); ok {
+				res = prov.BoolSetter(param)
+			}
+		}
+
+		if err == nil && res == nil {
+			err = fmt.Errorf("invalid plugin type: %s", config.Type)
+		}
 	}
 
 	return
