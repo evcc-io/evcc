@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,14 +30,30 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
+// PollConfig defines the vehicle polling mode and interval
+type PollConfig struct {
+	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
+	Interval time.Duration `mapstructure:"interval"` // interval when not charging
+}
+
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
-	AlwaysUpdate bool  `mapstructure:"alwaysUpdate"`
-	Levels       []int `mapstructure:"levels"`
-	Estimate     bool  `mapstructure:"estimate"`
-	Min          int   `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target       int   `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Poll         PollConfig `mapstructure:"poll"`
+	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
+	Levels       []int      `mapstructure:"levels"`
+	Estimate     bool       `mapstructure:"estimate"`
+	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
+	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 }
+
+// Poll modes
+const (
+	pollCharging  = "charging"
+	pollConnected = "connected"
+	pollAlways    = "always"
+
+	pollInterval = 60 * time.Minute
+)
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
@@ -80,6 +97,7 @@ type LoadPoint struct {
 	enabled      bool      // Charger enabled state
 	maxCurrent   float64   // Charger current limit
 	guardUpdated time.Time // Charger enabled/disabled timestamp
+	socUpdated   time.Time // SoC updated timestamp (poll: connected)
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -115,6 +133,32 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
 
 	sort.Ints(lp.SoC.Levels)
+
+	// set vehicle polling mode
+	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
+	case pollCharging:
+	case pollConnected, pollAlways:
+		log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)
+	default:
+		if lp.SoC.Poll.Mode != "" {
+			log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
+		}
+		if lp.SoC.AlwaysUpdate {
+			log.WARN.Println("alwaysUpdate is deprecated and will be removed in a future release. Use poll instead.")
+		} else {
+			lp.SoC.Poll.Mode = pollConnected
+		}
+	}
+
+	// set vehicle polling interval
+	if lp.SoC.Poll.Interval < pollInterval {
+		if lp.SoC.Poll.Interval == 0 {
+			lp.SoC.Poll.Interval = pollInterval
+		} else {
+			log.WARN.Printf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll.Interval, pollInterval)
+		}
+	}
+
 	if lp.SoC.Target == 0 {
 		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
 		if lp.SoC.Target == 0 {
@@ -237,12 +281,18 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.triggerEvent(evChargeStart)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.triggerEvent(evChargeStop)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evVehicleConnectHandler sends external start event
@@ -256,6 +306,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	// duration
 	lp.connectedTime = lp.clock.Now()
 	lp.publish("connectedDuration", 0)
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 
 	// soc estimation reset on car change
 	if lp.socEstimator != nil {
@@ -282,6 +335,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	if lp.OnDisconnect.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
 	}
+
+	// soc estimation reset
+	lp.socUpdated = time.Time{}
 }
 
 // evChargeCurrentHandler publishes the charge current
@@ -712,13 +768,31 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-// publish state of charge and remaining charge duration
-func (lp *LoadPoint) publishSoC() {
+// socPollAllowed validates charging state against polling mode
+func (lp *LoadPoint) socPollAllowed() bool {
+	remaining := lp.SoC.Poll.Interval - lp.clock.Since(lp.socUpdated)
+	updateAllowed := lp.socUpdated.IsZero() || remaining <= 0
+
+	honourUpdateInterval := lp.SoC.Poll.Mode == pollAlways ||
+		lp.SoC.Poll.Mode == pollConnected && lp.connected()
+
+	if honourUpdateInterval && remaining > 0 {
+		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
+	}
+
+	return lp.charging || honourUpdateInterval && updateAllowed
+}
+
+// publish state of charge, remaining charge duration and range
+func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socEstimator == nil {
 		return
 	}
 
-	if lp.SoC.AlwaysUpdate || lp.connected() {
+	if lp.socPollAllowed() {
+		lp.socUpdated = lp.clock.Now()
+
+		// soc
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)
@@ -733,29 +807,29 @@ func (lp *LoadPoint) publishSoC() {
 
 			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
-
-			return
+		} else {
+			lp.log.ERROR.Printf("vehicle error: %v", err)
 		}
 
-		lp.log.ERROR.Printf("vehicle error: %v", err)
-	}
-
-	lp.publish("socCharge", -1)
-	lp.publish("chargeEstimate", time.Duration(-1))
-}
-
-// publish remaining vehicle range
-func (lp *LoadPoint) publishRange() {
-	if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-			lp.publish("range", rng)
-
-			return
+		// range
+		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+			if rng, err := vs.Range(); err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+				lp.publish("range", rng)
+			}
 		}
+
+		return
 	}
 
-	lp.publish("range", -1)
+	// reset if poll: connected/charging and not connected
+	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
+		lp.publish("socCharge", -1)
+		lp.publish("chargeEstimate", time.Duration(-1))
+
+		// range
+		lp.publish("range", -1)
+	}
 }
 
 // Update is the main control function. It reevaluates meters and charger state
@@ -786,8 +860,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// must be run after updating charger status to make sure
 	// initial update of connected state matches charger status
 	lp.findActiveVehicle()
-	lp.publishSoC()
-	lp.publishRange()
+	lp.publishSoCAndRange()
 
 	// sync settings with charger
 	lp.syncCharger()

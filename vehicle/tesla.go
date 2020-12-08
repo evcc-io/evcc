@@ -34,7 +34,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		User, Password         string
 		VIN                    string
 		Cache                  time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

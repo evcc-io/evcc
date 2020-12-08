@@ -3,9 +3,12 @@ package vehicle
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/api"
 )
+
+const interval = 15 * time.Minute
 
 type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
 

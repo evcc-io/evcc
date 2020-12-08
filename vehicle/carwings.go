@@ -30,6 +30,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Cache                  time.Duration
 	}{
 		Region: carwings.RegionEurope,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {

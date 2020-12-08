@@ -379,10 +379,13 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
-		status:       api.StatusC,
 		Mode:         api.ModeNow,
 		SoC: SoCConfig{
 			Target: 90,
+			Poll: PollConfig{
+				Mode:     pollConnected, // allow polling when connected
+				Interval: pollInterval,
+			},
 		},
 	}
 
@@ -391,14 +394,14 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	lp.enabled = true
 	lp.maxCurrent = float64(minA)
 
-	t.Log("charging below target")
+	t.Log("charging below soc target")
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(maxA).Return(nil)
 	lp.Update(500)
 
-	t.Log("charging above target deactivates charger")
+	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().ChargeState().Return(90.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
@@ -413,8 +416,14 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000)
 
-	t.Log("soc has fallen below target")
+	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
+	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	lp.Update(-5000)
+
+	t.Log("soc has fallen below target - soc update timer expired")
+	clock.Add(pollInterval)
 	vehicle.EXPECT().ChargeState().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
