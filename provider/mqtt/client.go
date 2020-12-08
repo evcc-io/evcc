@@ -8,7 +8,6 @@ import (
 
 	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
 const (
@@ -36,7 +35,7 @@ type Config struct {
 type Client struct {
 	log      *util.Logger
 	mux      sync.Mutex
-	Client   paho.Client
+	Client   mqtt.Client
 	broker   string
 	Qos      byte
 	listener map[string]func(string)
@@ -61,7 +60,7 @@ func NewClient(
 		listener: make(map[string]func(string)),
 	}
 
-	options := paho.NewClientOptions()
+	options := mqtt.NewClientOptions()
 	options.AddBroker(broker)
 	options.SetUsername(user)
 	options.SetPassword(password)
