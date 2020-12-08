@@ -22,13 +22,6 @@ type mqttConfig struct {
 	Timeout        time.Duration
 }
 
-// scriptConfig is the specific script getter/setter configuration
-type scriptConfig struct {
-	Cmd     string
-	Timeout time.Duration
-	Cache   time.Duration
-}
-
 // MQTT singleton
 var MQTT *MqttClient
 
