@@ -8,17 +8,17 @@ import (
 
 type clientRegistry map[string]*Client
 
-func (r clientRegistry) Add(name string, client *Client) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate plugin type: %s", name))
+func (r clientRegistry) Add(broker string, client *Client) {
+	if _, exists := r[broker]; exists {
+		panic(fmt.Sprintf("cannot register duplicate broker: %s", broker))
 	}
-	r[name] = client
+	r[broker] = client
 }
 
-func (r clientRegistry) Get(name string) (*Client, error) {
-	client, exists := r[name]
+func (r clientRegistry) Get(broker string) (*Client, error) {
+	client, exists := r[broker]
 	if !exists {
-		return nil, fmt.Errorf("plugin type not registered: %s", name)
+		return nil, fmt.Errorf("missing mqtt broker configuration: %s", broker)
 	}
 	return client, nil
 }
