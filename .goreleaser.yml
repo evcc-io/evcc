@@ -2,9 +2,9 @@ release:
   github:
     owner: andig
     name: evcc
-before:
-  hooks:
-  - make npm assets
+# before:
+#   hooks:
+#   - make npm assets
 builds:
 - id: evcc
   main: main.go
