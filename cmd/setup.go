@@ -51,7 +51,7 @@ func configureMQTT(conf mqttConfig) {
 	clientID := mqtt.ClientID()
 
 	var err error
-	mqtt.Instance, err = mqtt.NewClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
 	if err != nil {
 		log.FATAL.Fatalf("failed configuring mqtt: %v", err)
 	}

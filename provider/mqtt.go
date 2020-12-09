@@ -49,14 +49,11 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, errors.New("missing mqtt broker configuration")
 	}
 
-	client, _ = mqtt.Registry.Get(cc.Config.Broker)
 	if client == nil {
-		client, err = mqtt.NewClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
+		client, err = mqtt.RegisteredClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
 		if err != nil {
 			return nil, err
 		}
-
-		mqtt.Registry.Add(cc.Config.Broker, client)
 	}
 
 	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)

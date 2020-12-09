@@ -41,15 +41,8 @@ type Client struct {
 	listener map[string]func(string)
 }
 
-// NewClient creates new publisher for paho
-func NewClient(
-	log *util.Logger,
-	broker string,
-	user string,
-	password string,
-	clientID string,
-	qos byte,
-) (*Client, error) {
+// NewClient creates new Mqtt publisher
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte) (*Client, error) {
 	broker = util.DefaultPort(broker, 1883)
 	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
