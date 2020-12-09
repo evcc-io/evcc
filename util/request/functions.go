@@ -91,5 +91,5 @@ func New(method, uri string, data io.Reader, headers ...map[string]string) (*htt
 		}
 	}
 
-	return req, nil
+	return req, err
 }
