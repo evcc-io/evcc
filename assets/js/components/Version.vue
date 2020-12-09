@@ -12,8 +12,8 @@
 				>
 					<a href="#" class="text-body">
 						Release notes
-						<fa-icon icon="chevron-up" v-if="notesShown" />
-						<fa-icon icon="chevron-down" v-if="!notesShown" />
+						<fa-icon icon="chevron-up" v-if="notesShown"></fa-icon>
+						<fa-icon icon="chevron-down" v-else></fa-icon>
 					</a>
 				</b>
 				<b class="px-3">
@@ -23,7 +23,7 @@
 						"
 						class="text-body"
 					>
-						Download <fa-icon icon="chevron-down" />
+						Download <fa-icon icon="chevron-down"></fa-icon>
 					</a>
 				</b>
 				<button

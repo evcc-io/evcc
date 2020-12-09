@@ -7,17 +7,17 @@
 					class="text-primary ml-1"
 					icon="temperature-low"
 					v-if="state.climater == 'heating'"
-				/>
+				></fa-icon>
 				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-high"
 					v-if="state.climater == 'cooling'"
-				/>
+				></fa-icon>
 				<fa-icon
 					class="text-primary ml-1"
 					icon="thermometer-half"
 					v-if="state.climater == 'on'"
-				/>
+				></fa-icon>
 			</div>
 			<h2 class="value">
 				{{ fmt(state.chargePower) }}
