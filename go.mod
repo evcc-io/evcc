@@ -43,6 +43,7 @@ require (
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/prometheus/client_golang v1.8.0
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0

@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/pipe"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -161,6 +162,9 @@ func run(cmd *cobra.Command, args []string) {
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
+
+	// metrics
+	httpd.Handle("/metrics", promhttp.Handler())
 
 	// start HEMS server
 	if conf.HEMS.Type != "" {
