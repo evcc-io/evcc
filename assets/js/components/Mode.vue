@@ -31,7 +31,11 @@
 <script>
 export default {
 	name: "Mode",
-	props: ["mode", "pv", "caption"],
+	props: {
+		mode: String,
+		pv: Boolean,
+		caption: Boolean,
+	},
 	methods: {
 		targetMode: function (mode) {
 			this.$emit("updated", mode);
