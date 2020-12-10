@@ -342,6 +342,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 // evChargeCurrentHandler publishes the charge current
 func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
+	if !lp.enabled {
+		current = 0
+	}
 	lp.publish("chargeCurrent", current)
 }
 
