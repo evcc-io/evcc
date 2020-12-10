@@ -51,7 +51,7 @@ func (e StatusError) HasStatus(codes ...int) bool {
 	return false
 }
 
-// ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx
+// ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx. It closes the request body after reading.
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 

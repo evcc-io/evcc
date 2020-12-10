@@ -109,6 +109,7 @@ func (v *ID) authFlow() error {
 	var vars vw.FormVars
 	if err == nil {
 		vars, err = vw.FormValues(resp.Body, "form#emailPasswordForm")
+		resp.Body.Close()
 	}
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier

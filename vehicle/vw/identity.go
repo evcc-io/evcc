@@ -23,6 +23,7 @@ type Identity struct {
 	*http.Client
 }
 
+// redirect follows HTTP redirect header if error is nil. Request body is closed.
 func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, error) {
 	if err == nil {
 		uri := resp.Header.Get("Location")
@@ -30,7 +31,9 @@ func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, err
 			return nil, errors.New("could not find expected HTTP redirect header\ngo to https://www.portal.volkswagen-we.com/ check account status")
 		}
 
-		resp, err = v.Get(uri)
+		if resp, err = v.Get(uri); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return resp, err
@@ -44,6 +47,9 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
 	uri := "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
 	resp, err := v.Get(uri)
+	if err == nil {
+		resp.Body.Close()
+	}
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 	if err == nil {
@@ -52,6 +58,7 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 
 		if err == nil {
 			vars, err = FormValues(resp.Body, "form#emailPasswordForm")
+			resp.Body.Close()
 		}
 	}
 
@@ -79,6 +86,7 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 
 		if err == nil {
 			vars, err = FormValues(resp.Body, "form#credentialsForm")
+			resp.Body.Close()
 		}
 	}
 

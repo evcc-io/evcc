@@ -108,6 +108,7 @@ func (v *BMW) login(user, password string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Header.Get("Location"))
 	if err != nil {

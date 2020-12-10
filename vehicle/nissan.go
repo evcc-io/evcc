@@ -190,6 +190,8 @@ func (v *Nissan) authFlow() error {
 			v.Client.CheckRedirect = nil
 
 			if err == nil {
+				resp.Body.Close()
+
 				var location *url.URL
 				if location, err = url.Parse(resp.Header.Get("Location")); err == nil {
 					if code = location.Query().Get("code"); code == "" {

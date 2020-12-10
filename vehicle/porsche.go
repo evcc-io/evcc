@@ -134,6 +134,7 @@ func (v *Porsche) authFlow() error {
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
@@ -161,9 +162,10 @@ func (v *Porsche) authFlow() error {
 	}
 
 	// process the auth so the session is authenticated
-	if _, err = client.Do(req); err != nil {
+	if resp, err = client.Do(req); err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	var CodeVerifier, _ = cv.CreateCodeVerifier()
 	codeChallenge := CodeVerifier.CodeChallengeS256()
@@ -188,6 +190,7 @@ func (v *Porsche) authFlow() error {
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	query, err = url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
