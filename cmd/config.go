@@ -16,6 +16,8 @@ import (
 type config struct {
 	URI        string
 	Log        string
+	Metrics    bool
+	Profile    bool
 	Levels     map[string]string
 	Interval   time.Duration
 	Mqtt       provider.MqttConfig
