@@ -8,6 +8,7 @@ import (
 	"github.com/andig/evcc/charger/openwb"
 	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/util"
 )
 
@@ -24,11 +25,10 @@ type OpenWB struct {
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Broker         string
-		User, Password string
-		Topic          string
-		ID             int
-		Timeout        time.Duration
+		mqtt.Config `mapstructure:",squash"`
+		Topic       string
+		ID          int
+		Timeout     time.Duration
 	}{
 		Topic:   "openWB",
 		ID:      1,
@@ -41,37 +41,50 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	log := util.NewLogger("openwb")
 
-	clientID := provider.MqttClientID()
-	client, err := provider.NewMqttClient(log, cc.Broker, cc.User, cc.Password, clientID, 1)
+	clientID := mqtt.ClientID()
+	client, err := mqtt.RegisteredClient(log, cc.Broker, cc.User, cc.Password, clientID, 1)
 	if err != nil {
 		return nil, err
 	}
 
+	// getters
+	boolG := func(topic string) func() (bool, error) {
+		return provider.NewMqtt(log, client, topic, "", 1, cc.Timeout).BoolGetter()
+	}
+
+	floatG := func(topic string) func() (float64, error) {
+		return provider.NewMqtt(log, client, topic, "", 1, cc.Timeout).FloatGetter()
+	}
+
 	// check if loadpoint configured
-	configured := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ConfiguredTopic), cc.Timeout)
+	configured := boolG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ConfiguredTopic))
 	if isConfigured, err := configured(); err != nil || !isConfigured {
 		return nil, fmt.Errorf("openWB loadpoint %d is not configured", cc.ID)
 	}
 
 	// adapt plugged/charging to status
-	plugged := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.PluggedTopic), cc.Timeout)
-	charging := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargingTopic), cc.Timeout)
+	plugged := boolG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.PluggedTopic))
+	charging := boolG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargingTopic))
 	status := provider.NewOpenWBStatusProvider(plugged, charging).StringGetter
 
 	// remaining getters
-	enabled := client.BoolGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), cc.Timeout)
+	enabled := boolG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic))
 
 	// setters
-	enable := client.BoolSetter("enable", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic), "")
-	maxcurrent := client.IntSetter("maxcurrent", fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic), "")
+	enable := provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.EnabledTopic),
+		"", 1, cc.Timeout).BoolSetter("enable")
+	maxcurrent := provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/set/lp%d/%s", cc.Topic, cc.ID, openwb.MaxCurrentTopic),
+		"", 1, cc.Timeout).IntSetter("maxcurrent")
 
 	// meter getters
-	power := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargePowerTopic), 1, cc.Timeout)
-	totalEnergy := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargeTotalEnergyTopic), 1, cc.Timeout)
+	power := floatG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargePowerTopic))
+	totalEnergy := floatG(fmt.Sprintf("%s/lp/%d/%s", cc.Topic, cc.ID, openwb.ChargeTotalEnergyTopic))
 
 	var currents []func() (float64, error)
 	for i := 1; i <= 3; i++ {
-		current := client.FloatGetter(fmt.Sprintf("%s/lp/%d/%s%d", cc.Topic, cc.ID, openwb.CurrentTopic, i), 1, cc.Timeout)
+		current := floatG(fmt.Sprintf("%s/lp/%d/%s%d", cc.Topic, cc.ID, openwb.CurrentTopic, i))
 		currents = append(currents, current)
 	}
 

@@ -7,13 +7,13 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/util"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
-	Handler *provider.MqttClient
+	Handler *mqtt.Client
 	root    string
 }
 
@@ -24,7 +24,7 @@ func NewMQTT(root string) *MQTT {
 	}
 
 	return &MQTT{
-		Handler: provider.MQTT,
+		Handler: mqtt.Instance,
 		root:    root,
 	}
 }

@@ -9,7 +9,7 @@ import (
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/hems"
-	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -46,14 +46,14 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 }
 
 // setup mqtt
-func configureMQTT(conf provider.MqttConfig) {
+func configureMQTT(conf mqttConfig) {
 	log := util.NewLogger("mqtt")
-	clientID := provider.MqttClientID()
+	clientID := mqtt.ClientID()
 
 	var err error
-	provider.MQTT, err = provider.NewMqttClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		log.FATAL.Fatalf("failed configuring mqtt: %v", err)
 	}
 }
 

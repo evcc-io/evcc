@@ -29,8 +29,13 @@ type Socket struct {
 	val     interface{}
 }
 
+func init() {
+	registry.Add("ws", NewSocketProviderFromConfig)
+	registry.Add("websocket", NewSocketProviderFromConfig)
+}
+
 // NewSocketProviderFromConfig creates a HTTP provider
-func NewSocketProviderFromConfig(other map[string]interface{}) (*Socket, error) {
+func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		URI      string
 		Headers  map[string]string
@@ -133,66 +138,74 @@ func (p *Socket) hasValue() (interface{}, error) {
 }
 
 // StringGetter sends string request
-func (p *Socket) StringGetter() (string, error) {
-	v, err := p.hasValue()
-	if err != nil {
-		return "", err
-	}
+func (p *Socket) StringGetter() func() (string, error) {
+	return func() (string, error) {
+		v, err := p.hasValue()
+		if err != nil {
+			return "", err
+		}
 
-	return jq.String(v)
+		return jq.String(v)
+	}
 }
 
 // FloatGetter parses float from string getter
-func (p *Socket) FloatGetter() (float64, error) {
-	v, err := p.hasValue()
-	if err != nil {
-		return 0, err
-	}
-
-	// v is always string when jq not used
-	if p.jq == nil {
-		v, err = strconv.ParseFloat(v.(string), 64)
+func (p *Socket) FloatGetter() func() (float64, error) {
+	return func() (float64, error) {
+		v, err := p.hasValue()
 		if err != nil {
 			return 0, err
 		}
-	}
 
-	f, err := jq.Float64(v)
-	return f * p.scale, err
+		// v is always string when jq not used
+		if p.jq == nil {
+			v, err = strconv.ParseFloat(v.(string), 64)
+			if err != nil {
+				return 0, err
+			}
+		}
+
+		f, err := jq.Float64(v)
+		return f * p.scale, err
+	}
 }
 
 // IntGetter parses int64 from float getter
-func (p *Socket) IntGetter() (int64, error) {
-	v, err := p.hasValue()
-	if err != nil {
-		return 0, err
-	}
-
-	// v is always string when jq not used
-	if p.jq == nil {
-		v, err = strconv.ParseInt(v.(string), 10, 64)
+func (p *Socket) IntGetter() func() (int64, error) {
+	return func() (int64, error) {
+		v, err := p.hasValue()
 		if err != nil {
 			return 0, err
 		}
+
+		// v is always string when jq not used
+		if p.jq == nil {
+			v, err = strconv.ParseInt(v.(string), 10, 64)
+			if err != nil {
+				return 0, err
+			}
+		}
+
+		i, err := jq.Int64(v)
+		f := float64(i) * p.scale
+
+		return int64(math.Round(f)), err
 	}
-
-	i, err := jq.Int64(v)
-	f := float64(i) * p.scale
-
-	return int64(math.Round(f)), err
 }
 
 // BoolGetter parses bool from string getter
-func (p *Socket) BoolGetter() (bool, error) {
-	v, err := p.hasValue()
-	if err != nil {
-		return false, err
-	}
+func (p *Socket) BoolGetter() func() (bool, error) {
+	return func() (bool, error) {
+		v, err := p.hasValue()
+		if err != nil {
+			return false, err
+		}
 
-	// v is always string when jq not used
-	if p.jq == nil {
-		v = util.Truish(v.(string))
-	}
+		// v is always string when jq not used
+		if p.jq == nil {
+			v = util.Truish(v.(string))
+		}
 
-	return jq.Bool(v)
+		return jq.Bool(v)
+	}
 }

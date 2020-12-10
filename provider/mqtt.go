@@ -1,231 +1,152 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 	"math"
-	"math/rand"
 	"strconv"
-	"sync"
 	"time"
 
+	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/util"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const (
-	connectTimeout = 2 * time.Second
-	publishTimeout = 2 * time.Second
-)
-
-// MqttClientID created unique mqtt client id
-func MqttClientID() string {
-	pid := rand.Int31()
-	return fmt.Sprintf("evcc-%d", pid)
+// Mqtt provider
+type Mqtt struct {
+	log     *util.Logger
+	client  *mqtt.Client
+	topic   string
+	payload string
+	scale   float64
+	timeout time.Duration
 }
 
-// MqttConfig is the public configuration
-type MqttConfig struct {
-	Broker   string
-	User     string
-	Password string
-	Topic    string
+func init() {
+	registry.Add("mqtt", NewMqttFromConfig)
 }
 
-// MqttClient is a paho publisher
-type MqttClient struct {
-	log      *util.Logger
-	mux      sync.Mutex
-	Client   mqtt.Client
-	broker   string
-	Qos      byte
-	listener map[string]func(string)
-}
-
-// NewMqttClient creates new publisher for paho
-func NewMqttClient(
-	log *util.Logger,
-	broker string,
-	user string,
-	password string,
-	clientID string,
-	qos byte,
-) (*MqttClient, error) {
-	broker = util.DefaultPort(broker, 1883)
-	log.INFO.Printf("connecting %s at %s", clientID, broker)
-
-	mc := &MqttClient{
-		log:      log,
-		broker:   broker,
-		Qos:      qos,
-		listener: make(map[string]func(string)),
+// NewMqttFromConfig creates Mqtt provider
+func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
+	cc := struct {
+		mqtt.Config    `mapstructure:",squash"`
+		Topic, Payload string // Payload only applies to setters
+		Scale          float64
+		Timeout        time.Duration
+	}{
+		Scale: 1,
 	}
 
-	options := mqtt.NewClientOptions()
-	options.AddBroker(broker)
-	options.SetUsername(user)
-	options.SetPassword(password)
-	options.SetClientID(clientID)
-	options.SetCleanSession(true)
-	options.SetAutoReconnect(true)
-	options.SetOnConnectHandler(mc.ConnectionHandler)
-	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
-	options.SetConnectTimeout(connectTimeout)
-
-	client := mqtt.NewClient(options)
-	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, fmt.Errorf("error connecting: %w", token.Error())
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
 
-	mc.Client = client
-	return mc, nil
-}
+	log := util.NewLogger("mqtt")
 
-// ConnectionLostHandler logs cause of connection loss as warning
-func (m *MqttClient) ConnectionLostHandler(client mqtt.Client, reason error) {
-	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
-}
+	var err error
+	client := mqtt.Instance
 
-// ConnectionHandler restores listeners
-func (m *MqttClient) ConnectionHandler(client mqtt.Client) {
-	m.log.DEBUG.Printf("%s connected", m.broker)
-
-	m.mux.Lock()
-	defer m.mux.Unlock()
-
-	for topic, l := range m.listener {
-		m.log.TRACE.Printf("%s subscribe %s", m.broker, topic)
-		go m.listen(topic, l)
+	if client == nil && cc.Config.Broker == "" {
+		return nil, errors.New("missing mqtt broker configuration")
 	}
-}
 
-// Listen validates uniqueness and registers and attaches listener
-func (m *MqttClient) Listen(topic string, callback func(string)) {
-	m.mux.Lock()
-	if _, ok := m.listener[topic]; ok {
-		m.log.FATAL.Fatalf("%s: duplicate listener not allowed", topic)
-	}
-	m.listener[topic] = callback
-	m.mux.Unlock()
-
-	m.listen(topic, callback)
-}
-
-// listen attaches listener to topic
-func (m *MqttClient) listen(topic string, callback func(string)) {
-	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
-		s := string(msg.Payload())
-		if len(s) > 0 {
-			callback(s)
+	if client == nil {
+		client, err = mqtt.RegisteredClient(log, cc.Broker, cc.User, cc.Password, mqtt.ClientID(), 1)
+		if err != nil {
+			return nil, err
 		}
-	})
-	m.WaitForToken(token)
+	}
+
+	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)
+
+	return m, err
+}
+
+// NewMqtt creates mqtt provider for given topic
+func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, payload string, scale float64, timeout time.Duration) *Mqtt {
+	m := &Mqtt{
+		log:     log,
+		client:  client,
+		topic:   topic,
+		payload: payload,
+		scale:   scale,
+		timeout: timeout,
+	}
+	return m
 }
 
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
-func (m *MqttClient) FloatGetter(topic string, scale float64, timeout time.Duration) func() (float64, error) {
+func (m *Mqtt) FloatGetter() func() (float64, error) {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
-		topic: topic,
-		scale: scale,
+		topic: m.topic,
+		scale: m.scale,
+		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
 
-	m.Listen(topic, h.Receive)
+	m.client.Listen(m.topic, h.receive)
 	return h.floatGetter
 }
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
-func (m *MqttClient) IntGetter(topic string, scale int64, timeout time.Duration) func() (int64, error) {
+func (m *Mqtt) IntGetter() func() (int64, error) {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
-		topic: topic,
-		scale: float64(scale),
+		topic: m.topic,
+		scale: float64(m.scale),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
 
-	m.Listen(topic, h.Receive)
+	m.client.Listen(m.topic, h.receive)
 	return h.intGetter
 }
 
 // StringGetter creates handler for string from MQTT topic that returns cached value
-func (m *MqttClient) StringGetter(topic string, timeout time.Duration) func() (string, error) {
+func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
-		topic: topic,
+		topic: m.topic,
+		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
 
-	m.Listen(topic, h.Receive)
+	m.client.Listen(m.topic, h.receive)
 	return h.stringGetter
 }
 
 // BoolGetter creates handler for string from MQTT topic that returns cached value
-func (m *MqttClient) BoolGetter(topic string, timeout time.Duration) func() (bool, error) {
+func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
 		log:   m.log,
-		mux:   util.NewWaiter(timeout, func() { m.log.TRACE.Printf("%s wait for initial value", topic) }),
-		topic: topic,
+		topic: m.topic,
+		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
 
-	m.Listen(topic, h.Receive)
+	m.client.Listen(m.topic, h.receive)
 	return h.boolGetter
 }
 
-// formatValue formats a message template of returns the value formatted as %v is template is empty
-func (m *MqttClient) formatValue(param, message string, v interface{}) (string, error) {
-	if message == "" {
-		return fmt.Sprintf("%v", v), nil
-	}
-
-	return util.ReplaceFormatted(message, map[string]interface{}{
-		param: v,
-	})
-}
-
 // IntSetter publishes topic with parameter replaced by int value
-func (m *MqttClient) IntSetter(param, topic, message string) func(int64) error {
+func (m *Mqtt) IntSetter(param string) func(int64) error {
 	return func(v int64) error {
-		payload, err := m.formatValue(param, message, v)
+		payload, err := setFormattedValue(m.payload, param, v)
 		if err != nil {
 			return err
 		}
 
-		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.Qos, false, payload)
-		if token.WaitTimeout(publishTimeout) {
-			return token.Error()
-		}
-
-		return fmt.Errorf("%s send timeout", topic)
+		m.log.TRACE.Printf("send %s: '%s'", m.topic, payload)
+		return m.client.Publish(m.topic, false, payload)
 	}
 }
 
 // BoolSetter invokes script with parameter replaced by bool value
-func (m *MqttClient) BoolSetter(param, topic, message string) func(bool) error {
+func (m *Mqtt) BoolSetter(param string) func(bool) error {
 	return func(v bool) error {
-		payload, err := m.formatValue(param, message, v)
+		payload, err := setFormattedValue(m.payload, param, v)
 		if err != nil {
 			return err
 		}
 
-		m.log.TRACE.Printf("send %s: '%s'", topic, payload)
-		token := m.Client.Publish(topic, m.Qos, false, payload)
-		if token.WaitTimeout(publishTimeout) {
-			return token.Error()
-		}
-
-		return fmt.Errorf("%s send timeout", topic)
-	}
-}
-
-// WaitForToken synchronously waits until token operation completed
-func (m *MqttClient) WaitForToken(token mqtt.Token) {
-	if token.WaitTimeout(publishTimeout) {
-		if token.Error() != nil {
-			m.log.ERROR.Printf("error: %s", token.Error())
-		}
-	} else {
-		m.log.DEBUG.Println("timeout")
+		m.log.TRACE.Printf("send %s: '%s'", m.topic, payload)
+		return m.client.Publish(m.topic, false, payload)
 	}
 }
 
@@ -237,7 +158,7 @@ type msgHandler struct {
 	payload string
 }
 
-func (h *msgHandler) Receive(payload string) {
+func (h *msgHandler) receive(payload string) {
 	h.log.TRACE.Printf("recv %s: '%s'", h.topic, payload)
 
 	h.mux.Lock()

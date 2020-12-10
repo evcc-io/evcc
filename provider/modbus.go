@@ -21,8 +21,12 @@ type Modbus struct {
 	scale  float64
 }
 
+func init() {
+	registry.Add("modbus", NewModbusFromConfig)
+}
+
 // NewModbusFromConfig creates Modbus plugin
-func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
+func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		Model           string
 		modbus.Settings `mapstructure:",squash"`
@@ -112,7 +116,11 @@ func NewModbusFromConfig(other map[string]interface{}) (*Modbus, error) {
 }
 
 // FloatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) FloatGetter() (float64, error) {
+func (m *Modbus) FloatGetter() func() (float64, error) {
+	return m.floatGetter
+}
+
+func (m *Modbus) floatGetter() (float64, error) {
 	var res meters.MeasurementResult
 	var err error
 
@@ -168,7 +176,11 @@ func (m *Modbus) FloatGetter() (float64, error) {
 }
 
 // IntGetter executes configured modbus read operation and implements provider.IntGetter
-func (m *Modbus) IntGetter() (int64, error) {
-	res, err := m.FloatGetter()
-	return int64(math.Round(res)), err
+func (m *Modbus) IntGetter() func() (int64, error) {
+	g := m.FloatGetter()
+
+	return func() (int64, error) {
+		res, err := g()
+		return int64(math.Round(res)), err
+	}
 }

@@ -9,6 +9,7 @@ import (
 func TestVehicles(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
+		"missing mqtt broker configuration",
 		"received status code 404 (INVALID PARAMS)", // Nissan
 		"missing personID",
 		"401 Unauthorized",
