@@ -47,9 +47,13 @@ func runHealth(cmd *cobra.Command, args []string) {
 	var ok bool
 	resp, err := client.Get(fmt.Sprintf("http+unix://%s/health", serviceName))
 
-	if err == nil && resp.StatusCode == http.StatusOK {
-		log.INFO.Printf("health check ok")
-		ok = true
+	if err == nil {
+		resp.Body.Close()
+
+		if resp.StatusCode == http.StatusOK {
+			log.INFO.Printf("health check ok")
+			ok = true
+		}
 	}
 
 	if !ok {

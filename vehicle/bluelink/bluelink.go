@@ -146,7 +146,11 @@ func (v *API) getCookies() (cookieClient *request.Helper, err error) {
 			v.config.CCSPServiceID,
 			v.config.URI,
 		)
-		_, err = cookieClient.Get(uri)
+
+		var resp *http.Response
+		if resp, err = cookieClient.Get(uri); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return cookieClient, err
@@ -159,7 +163,10 @@ func (v *API) setLanguage(cookieClient *request.Helper) error {
 
 	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		_, err = cookieClient.Do(req)
+		var resp *http.Response
+		if resp, err = cookieClient.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return err

@@ -178,7 +178,10 @@ func (v *VW) Close() error {
 	})
 
 	if err == nil {
-		_, err = v.Do(req)
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return err
