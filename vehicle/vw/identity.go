@@ -72,7 +72,9 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 		})
 
 		uri = IdentityURI + vars.Action
-		resp, err = v.PostForm(uri, data)
+		if resp, err = v.PostForm(uri, data); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
@@ -101,7 +103,9 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 		})
 
 		uri = IdentityURI + vars.Action
-		resp, err = v.PostForm(uri, data)
+		if resp, err = v.PostForm(uri, data); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	// GET identity.vwgroup.io/oidc/v1/oauth/sso?clientId=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&userId=bca09cc0-8eba-4110-af71-7242868e1bf1&HMAC=2b01ce6a351fad4dd97dc8110d0967b46c95889ab5010c660a616462e66a83ca

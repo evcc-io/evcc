@@ -124,6 +124,7 @@ func (v *ID) authFlow() error {
 		uri = vw.IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
 			vars, err = vw.FormValues(resp.Body, "form#credentialsForm")
+			resp.Body.Close()
 		}
 	}
 
@@ -138,7 +139,9 @@ func (v *ID) authFlow() error {
 		})
 
 		uri = vw.IdentityURI + vars.Action
-		if _, err = v.PostForm(uri, data); err == nil {
+		if resp, err = v.PostForm(uri, data); err == nil {
+			resp.Body.Close()
+
 			vwDomain, _ := url.Parse("https://www.volkswagen.de/")
 			cookies := v.Client.Jar.Cookies(vwDomain)
 
