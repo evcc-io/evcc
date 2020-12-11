@@ -31,7 +31,12 @@
 			</div>
 		</nav>
 
-		<Version :installed="installed" id="version-bar"></Version>
+		<Version
+			id="version-bar"
+			:installed="installed"
+			:availableVersion="availableVersion"
+			:releaseNotes="releaseNotes"
+		></Version>
 
 		<router-view></router-view>
 	</div>

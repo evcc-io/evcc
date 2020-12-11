@@ -1,6 +1,6 @@
 <template>
 	<div class="container">
-		<Site v-bind:state="state" v-if="configured"></Site>
+		<Site v-bind="state" v-if="configured"></Site>
 		<div v-else>
 			<div class="row py-5">
 				<div class="col12">
@@ -86,9 +86,7 @@ export default {
 	name: "Main",
 	components: { Site },
 	data: function () {
-		return {
-			state: this.$root.$data.store.state, // global state
-		};
+		return this.$root.$data.store; // global state
 	},
 	computed: {
 		configured: function () {

@@ -3,7 +3,7 @@
 		<!-- Position it -->
 		<MessageToast
 			v-for="item in items"
-			v-bind:item="item"
+			:item="item"
 			:id="'message-id-' + item.id"
 			:key="item.id"
 		>
@@ -17,6 +17,8 @@ import MessageToast from "./MessageToast";
 export default {
 	name: "Toasts",
 	components: { MessageToast },
-	props: ["items", "count"],
+	props: {
+		items: Array,
+	},
 };
 </script>
