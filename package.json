@@ -66,11 +66,6 @@
   "resolutions": {
     "node-forge": "0.10.0"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "assets/**/*.{js,vue,json}": [
       "eslint --fix"
