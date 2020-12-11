@@ -6,36 +6,36 @@
 				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-low"
-					v-if="state.climater == 'heating'"
+					v-if="climater == 'heating'"
 				></fa-icon>
 				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-high"
-					v-if="state.climater == 'cooling'"
+					v-if="climater == 'cooling'"
 				></fa-icon>
 				<fa-icon
 					class="text-primary ml-1"
 					icon="thermometer-half"
-					v-if="state.climater == 'on'"
+					v-if="climater == 'on'"
 				></fa-icon>
 			</div>
 			<h2 class="value">
-				{{ fmt(state.chargePower) }}
-				<small class="text-muted">{{ fmtUnit(state.chargePower) }}W</small>
+				{{ fmt(chargePower) }}
+				<small class="text-muted">{{ fmtUnit(chargePower) }}W</small>
 			</h2>
 		</div>
 		<div class="col-6 col-md-3 mt-3">
 			<div class="mb-2 value">Geladen</div>
 			<h2 class="value">
-				{{ fmt(state.chargedEnergy) }}
-				<small class="text-muted">{{ fmtUnit(state.chargedEnergy) }}Wh</small>
+				{{ fmt(chargedEnergy) }}
+				<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
 			</h2>
 		</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="state.range >= 0">
+		<div class="col-6 col-md-3 mt-3" v-if="range >= 0">
 			<div class="mb-2 value">Reichweite</div>
 			<h2 class="value">
-				{{ state.range }}
+				{{ range }}
 				<small class="text-muted">km</small>
 			</h2>
 		</div>
@@ -43,16 +43,16 @@
 		<div class="col-6 col-md-3 mt-3" v-else>
 			<div class="mb-2 value">Dauer</div>
 			<h2 class="value">
-				{{ fmtShortDuration(state.chargeDuration) }}
-				<small class="text-muted">{{ fmtShortDurationUnit(state.chargeDuration) }}</small>
+				{{ fmtShortDuration(chargeDuration) }}
+				<small class="text-muted">{{ fmtShortDurationUnit(chargeDuration) }}</small>
 			</h2>
 		</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="state.soc">
+		<div class="col-6 col-md-3 mt-3" v-if="soc">
 			<div class="mb-2 value">Restzeit</div>
 			<h2 class="value">
-				{{ fmtShortDuration(state.chargeEstimate) }}
-				<small class="text-muted">{{ fmtShortDurationUnit(state.chargeEstimate) }}</small>
+				{{ fmtShortDuration(chargeEstimate) }}
+				<small class="text-muted">{{ fmtShortDurationUnit(chargeEstimate) }}</small>
 			</h2>
 		</div>
 	</div>
@@ -63,15 +63,22 @@ import formatter from "../mixins/formatter";
 
 export default {
 	name: "LoadpointDetails",
-	props: ["state"],
+	props: {
+		connected: Boolean,
+		minSoC: Number,
+		socCharge: Number,
+		climater: Boolean,
+		chargePower: Number,
+		chargedEnergy: Number,
+		range: Number,
+		chargeDuration: Number,
+		soc: Boolean,
+		chargeEstimate: Number,
+	},
 	mixins: [formatter],
 	computed: {
 		minSoCActive: function () {
-			return (
-				this.state.connected &&
-				this.state.minSoC > 0 &&
-				this.state.socCharge < this.state.minSoC
-			);
+			return this.connected && this.minSoC > 0 && this.socCharge < this.minSoC;
 		},
 	},
 };

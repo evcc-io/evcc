@@ -19,7 +19,11 @@
 <script>
 export default {
 	name: "Soc",
-	props: ["soc", "caption", "levels"],
+	props: {
+		soc: Number,
+		caption: Boolean,
+		levels: Array,
+	},
 	computed: {
 		levelsOrDefault: function () {
 			if (this.levels == null || this.levels.length == 0) {

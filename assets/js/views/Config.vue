@@ -5,7 +5,7 @@
 
 		<div class="row mt-4 border-bottom">
 			<div class="col-12">
-				<p class="h1">{{ state.title || "Home" }}</p>
+				<p class="h1">{{ title || "Home" }}</p>
 			</div>
 		</div>
 
@@ -13,23 +13,23 @@
 			<div class="col-md-4"></div>
 			<div class="col-6 col-md-2 py-3">
 				Netzzähler:
-				<span class="text-primary" v-if="state.gridConfigured">✓</span>
+				<span class="text-primary" v-if="gridConfigured">✓</span>
 				<span class="text-primary" v-else>&mdash;</span>
 			</div>
 			<div class="col-6 col-md-2 py-3">
 				PV Zähler:
-				<span class="text-primary" v-if="state.pvConfigured">✓</span>
+				<span class="text-primary" v-if="pvConfigured">✓</span>
 				<span class="text-primary" v-else>&mdash;</span>
 			</div>
 			<div class="col-6 col-md-2 py-3">
 				Batteriezähler:
-				<span class="text-primary" v-if="state.batteryConfigured">✓</span>
+				<span class="text-primary" v-if="batteryConfigured">✓</span>
 				<span class="text-primary" v-else>&mdash;</span>
 			</div>
 		</div>
 
 		<div
-			v-for="(loadpoint, id) in state.loadpoints"
+			v-for="(loadpoint, id) in loadpoints"
 			v-bind:loadpoint="loadpoint"
 			:key="id"
 			:id="'loadpoint-' + id"
@@ -87,9 +87,7 @@
 export default {
 	name: "Config",
 	data: function () {
-		return {
-			state: this.$root.$data.store.state, // global state
-		};
+		return this.$root.$data.store.state; // global state
 	},
 };
 </script>
