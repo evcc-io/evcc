@@ -14,8 +14,8 @@ const Template = (args, { argTypes }) => ({
   template: '<Mode v-bind="$props"></Mode>',
 });
 
+export const Base = Template.bind({});
+Base.args = {};
+
 export const CaptionAndPV = Template.bind({});
 CaptionAndPV.args = { caption: true, pv: true, mode: "pv" };
-
-export const Minimal = Template.bind({});
-Minimal.args = {};
