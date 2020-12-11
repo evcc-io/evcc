@@ -48,13 +48,12 @@ import $ from "jquery";
 export default {
 	name: "Version",
 	props: {
-		installed: Boolean,
 		availableVersion: String,
 		releaseNotes: String,
 	},
 	data: function () {
 		return {
-			state: this.$root.$data.store.state,
+			installed: window.evcc.version,
 			notesShown: false,
 		};
 	},

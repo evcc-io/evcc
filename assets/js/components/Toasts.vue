@@ -18,7 +18,7 @@ export default {
 	name: "Toasts",
 	components: { MessageToast },
 	props: {
-		items: Array,
+		items: Object,
 	},
 };
 </script>
