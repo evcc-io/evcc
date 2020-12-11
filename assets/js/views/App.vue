@@ -33,9 +33,8 @@
 
 		<Version
 			id="version-bar"
-			:installed="installed"
-			:availableVersion="availableVersion"
-			:releaseNotes="releaseNotes"
+			:availableVersion="store.state.availableVersion"
+			:releaseNotes="store.state.releaseNotes"
 		></Version>
 
 		<router-view></router-view>
@@ -53,7 +52,6 @@ export default {
 		return {
 			compact: false,
 			store: this.$root.$data.store,
-			installed: window.evcc.version,
 		};
 	},
 	methods: {
