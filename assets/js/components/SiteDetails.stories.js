@@ -11,14 +11,26 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
-  props: ["state"],
+  props: Object.keys(argTypes),
   components: { SiteDetails },
   template: '<SiteDetails v-bind="$props"></SiteDetails>',
 });
 
-export const Base = Template.bind({});
-Base.args = {};
-// CaptionAndPV.args = { caption: true, pv: true, mode: "pv" };
+export const GridAndPV = Template.bind({});
+GridAndPV.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  gridPower: 100,
+  pvPower: 100,
+};
 
-// export const Minimal = Template.bind({});
-// Minimal.args = {};
+export const WithBattery = Template.bind({});
+WithBattery.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  gridPower: 100,
+  pvPower: 100,
+  batteryPower: 100,
+  batterySoC: 1,
+};
