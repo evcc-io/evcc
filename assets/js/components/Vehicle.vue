@@ -5,27 +5,27 @@
 			<div
 				class="progress-bar"
 				role="progressbar"
-				v-bind:class="{
+				:class="{
 					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 					'bg-light': !connected,
 					'text-secondary': !connected,
 					'bg-warning': connected && minSoCActive,
 				}"
-				v-bind:style="{ width: socChargeDisplayWidth + '%' }"
+				:style="{ width: socChargeDisplayWidth + '%' }"
 			>
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
 				class="progress-bar"
 				role="progressbar"
-				v-bind:class="{
+				:class="{
 					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 					'bg-warning': true,
 					'bg-muted': true,
 				}"
-				v-bind:style="{ width: minSoCRemainingDisplayWidth + '%' }"
+				:style="{ width: minSoCRemainingDisplayWidth + '%' }"
 				v-if="minSoCActive && socChargeDisplayWidth < 100"
 			></div>
 		</div>
