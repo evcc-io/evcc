@@ -1,5 +1,5 @@
 <template>
-	<div class="toast" data-delay="10000" v-bind:data-autohide="true">
+	<div class="toast" data-delay="10000" :data-autohide="true">
 		<div class="toast-header">
 			<strong class="mr-auto" v-if="item.type != 'warn'"
 				><fa-icon class="text-danger" icon="exclamation-triangle"></fa-icon> Error</strong

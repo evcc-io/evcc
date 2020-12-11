@@ -17,7 +17,7 @@
 				Erzeugung
 				<fa-icon
 					icon="sun"
-					v-bind:class="{
+					:class="{
 						'text-primary': pvPower < 0,
 						'text-muted': pvPower >= 0,
 					}"
@@ -30,7 +30,7 @@
 		</div>
 		<div
 			class="d-md-block col-6 col-md-3 mt-3"
-			v-bind:class="{ 'd-none': !batterySoC }"
+			:class="{ 'd-none': !batterySoC }"
 			v-if="batteryConfigured"
 		>
 			<div class="mb-2 value">
@@ -48,7 +48,7 @@
 				SoC
 				<fa-icon
 					icon="battery-three-quarters"
-					v-bind:class="{
+					:class="{
 						'text-primary': batteryPower > 0,
 						'text-muted': batteryPower < 0,
 					}"
