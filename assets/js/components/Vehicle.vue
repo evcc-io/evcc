@@ -1,16 +1,16 @@
 <template>
 	<div>
-		<div class="mb-2">{{ state.socTitle || "Fahrzeug" }}</div>
+		<div class="mb-2">{{ socTitle || "Fahrzeug" }}</div>
 		<div class="progress" style="height: 24px; font-size: 100%; margin-top: 16px">
 			<div
 				class="progress-bar"
 				role="progressbar"
 				v-bind:class="{
-					'progress-bar-striped': state.charging,
-					'progress-bar-animated': state.charging,
-					'bg-light': !state.connected,
-					'text-secondary': !state.connected,
-					'bg-warning': state.connected && minSoCActive,
+					'progress-bar-striped': charging,
+					'progress-bar-animated': charging,
+					'bg-light': !connected,
+					'text-secondary': !connected,
+					'bg-warning': connected && minSoCActive,
 				}"
 				v-bind:style="{ width: socChargeDisplayWidth + '%' }"
 			>
@@ -20,8 +20,8 @@
 				class="progress-bar"
 				role="progressbar"
 				v-bind:class="{
-					'progress-bar-striped': state.charging,
-					'progress-bar-animated': state.charging,
+					'progress-bar-striped': charging,
+					'progress-bar-animated': charging,
 					'bg-warning': true,
 					'bg-muted': true,
 				}"
@@ -35,38 +35,45 @@
 <script>
 export default {
 	name: "Vehicle",
-	props: ["state"],
+	props: {
+		socTitle: String,
+		charging: Boolean,
+		connected: Boolean,
+		soc: Boolean,
+		socCharge: Number,
+		minSoC: Number,
+	},
 	computed: {
 		socChargeDisplayWidth: function () {
-			if (this.state.soc && this.state.socCharge >= 0) {
-				return this.state.socCharge;
+			if (this.soc && this.socCharge >= 0) {
+				return this.socCharge;
 			}
 			return 100;
 		},
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.state.soc || this.state.socCharge < 0) {
+			if (!this.soc || this.socCharge < 0) {
 				let chargeStatus = "getrennt";
-				if (this.state.charging) {
+				if (this.charging) {
 					chargeStatus = "laden";
-				} else if (this.state.connected) {
+				} else if (this.connected) {
 					chargeStatus = "verbunden";
 				}
 				return chargeStatus;
 			}
 
 			// percent value if enough space
-			let socCharge = this.state.socCharge;
+			let socCharge = this.socCharge;
 			if (socCharge >= 10) {
 				socCharge += "%";
 			}
 			return socCharge;
 		},
 		minSoCActive: function () {
-			return this.state.minSoC > 0 && this.state.socCharge < this.state.minSoC;
+			return this.minSoC > 0 && this.socCharge < this.minSoC;
 		},
 		minSoCRemainingDisplayWidth: function () {
-			return this.state.minSoC - this.state.socCharge;
+			return this.minSoC - this.socCharge;
 		},
 	},
 };
