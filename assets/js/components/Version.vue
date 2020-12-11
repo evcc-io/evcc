@@ -18,9 +18,7 @@
 				</b>
 				<b class="px-3">
 					<a
-						v-bind:href="
-							'https://github.com/andig/evcc/releases/tag/' + availableVersion
-						"
+						:href="'https://github.com/andig/evcc/releases/tag/' + availableVersion"
 						class="text-body"
 					>
 						Download <fa-icon icon="chevron-down"></fa-icon>

@@ -7,7 +7,7 @@
 
 			<div class="col-12 col-md-8 d-none d-md-block mt-3 mt-md-5">
 				<LoadpointDetails
-					v-bind:connected="connected"
+					:connected="connected"
 					:minSoC="minSoC"
 					:socCharge="socCharge"
 					:climater="climater"
@@ -25,7 +25,7 @@
 					<div class="col-12 mt-3">
 						<Mode
 							class="w-100"
-							v-bind:mode="mode"
+							:mode="mode"
 							:pv="pv"
 							v-on:updated="setTargetMode"
 						></Mode>
@@ -33,7 +33,7 @@
 					<div class="col-12 mt-3" v-if="hasTargetSoC">
 						<Soc
 							class="w-100"
-							v-bind:soc="targetSoC"
+							:soc="targetSoC"
 							:levels="socLevels"
 							v-on:updated="setTargetSoC"
 						></Soc>
@@ -43,20 +43,12 @@
 		</div>
 
 		<div class="row d-none d-md-flex mt-5 py-3 pb-4 text-center bg-light" v-if="!multi">
-			<div
-				class="mt-3"
-				v-bind:class="{ 'col-md-6': hasTargetSoC, 'col-md-12': !hasTargetSoC }"
-			>
-				<Mode
-					v-bind:mode="mode"
-					:pv="pv"
-					:caption="true"
-					v-on:updated="setTargetMode"
-				></Mode>
+			<div class="mt-3" :class="{ 'col-md-6': hasTargetSoC, 'col-md-12': !hasTargetSoC }">
+				<Mode :mode="mode" :pv="pv" :caption="true" v-on:updated="setTargetMode"></Mode>
 			</div>
 			<div class="col-md-6 mt-3" v-if="hasTargetSoC">
 				<Soc
-					v-bind:soc="targetSoC"
+					:soc="targetSoC"
 					:levels="socLevels"
 					:caption="true"
 					v-on:updated="targetSoC"
@@ -66,12 +58,12 @@
 
 		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
 			<div class="col-12 mt-3">
-				<Mode class="w-100" v-bind:mode="mode" :pv="pv" v-on:updated="setTargetMode"></Mode>
+				<Mode class="w-100" :mode="mode" :pv="pv" v-on:updated="setTargetMode"></Mode>
 			</div>
 			<div class="col-12 mt-3" v-if="hasTargetSoC">
 				<Soc
 					class="w-100"
-					v-bind:soc="targetSoC"
+					:soc="targetSoC"
 					:levels="socLevels"
 					v-on:updated="targetSoC"
 				></Soc>
@@ -99,7 +91,7 @@
 		<div class="row">
 			<div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
 				<Vehicle
-					v-bind:charging="charging"
+					:charging="charging"
 					:connected="connected"
 					:minSoC="minSoC"
 					:soc="soc"
@@ -112,7 +104,7 @@
 				<div class="mb-2">Modus</div>
 				<Mode
 					class="btn-group-sm"
-					v-bind:mode="mode"
+					:mode="mode"
 					:pv="pv"
 					v-on:updated="setTargetMode"
 				></Mode>
@@ -121,7 +113,7 @@
 				<div class="mb-2">Ladeziel</div>
 				<Soc
 					class="btn-group-sm"
-					v-bind:soc="targetSoC"
+					:soc="targetSoC"
 					:levels="socLevels"
 					v-on:updated="targetSoC"
 				></Soc>
@@ -129,7 +121,7 @@
 
 			<div class="col-md-8 d-none d-md-block" v-if="!multi">
 				<LoadpointDetails
-					v-bind:connected="connected"
+					:connected="connected"
 					:minSoC="minSoC"
 					:socCharge="socCharge"
 					:climater="climater"
@@ -144,7 +136,7 @@
 
 			<div class="col-12 d-md-none">
 				<LoadpointDetails
-					v-bind:connected="connected"
+					:connected="connected"
 					:minSoC="minSoC"
 					:socCharge="socCharge"
 					:climater="climater"

@@ -30,7 +30,7 @@
 
 		<div
 			v-for="(loadpoint, id) in loadpoints"
-			v-bind:loadpoint="loadpoint"
+			:loadpoint="loadpoint"
 			:key="id"
 			:id="'loadpoint-' + id"
 		>
