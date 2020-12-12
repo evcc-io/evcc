@@ -111,7 +111,6 @@ type LoadPoint struct {
 	// cached state
 	status        api.ChargeStatus // Charger status
 	remoteDemand  RemoteDemand     // External status demand
-	charging      bool             // Charging cycle
 	chargePower   float64          // Charging power
 	connectedTime time.Time        // Time when vehicle was connected
 	pvTimer       time.Time        // PV enabled/disable timer
@@ -474,6 +473,11 @@ func (lp *LoadPoint) connected() bool {
 	return lp.status == api.StatusB || lp.status == api.StatusC
 }
 
+// charging returns the EVs charging state
+func (lp *LoadPoint) charging() bool {
+	return lp.status == api.StatusC
+}
+
 // targetSocReached checks if target is configured and reached.
 // If vehicle is not configured this will always return false
 func (lp *LoadPoint) targetSocReached() bool {
@@ -599,7 +603,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 		}
 
 		// changed to C - start/stop charging cycle - handle before disconnect to update energy
-		if lp.charging = status == api.StatusC; lp.charging {
+		if lp.charging() {
 			lp.bus.Publish(evChargeStart)
 		} else if prevStatus == api.StatusC {
 			lp.bus.Publish(evChargeStop)
@@ -634,7 +638,7 @@ func (lp *LoadPoint) detectPhases() {
 	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
 	lp.publish("chargeCurrents", currents)
 
-	if lp.charging {
+	if lp.charging() {
 		var phases int64
 		for _, i := range currents {
 			if i >= minActiveCurrent {
@@ -774,7 +778,6 @@ func (lp *LoadPoint) publishChargeProgress() {
 // socPollAllowed validates charging state against polling mode
 func (lp *LoadPoint) socPollAllowed() bool {
 	remaining := lp.SoC.Poll.Interval - lp.clock.Since(lp.socUpdated)
-	updateAllowed := lp.socUpdated.IsZero() || remaining <= 0
 
 	honourUpdateInterval := lp.SoC.Poll.Mode == pollAlways ||
 		lp.SoC.Poll.Mode == pollConnected && lp.connected()
@@ -783,7 +786,12 @@ func (lp *LoadPoint) socPollAllowed() bool {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 	}
 
-	return lp.charging || honourUpdateInterval && updateAllowed
+	res := lp.charging() || lp.socUpdated.IsZero() || honourUpdateInterval && remaining <= 0
+	if res {
+		lp.socUpdated = lp.clock.Now()
+	}
+
+	return res
 }
 
 // publish state of charge, remaining charge duration and range
@@ -793,9 +801,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	if lp.socPollAllowed() {
-		lp.socUpdated = lp.clock.Now()
-
-		// soc
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)
@@ -803,7 +808,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			lp.publish("socCharge", lp.socCharge)
 
 			chargeEstimate := time.Duration(-1)
-			if lp.charging {
+			if lp.charging() {
 				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
 			}
 			lp.publish("chargeEstimate", chargeEstimate)
@@ -811,6 +816,9 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
 		} else {
+			// we need a value- so retry on error
+			lp.socUpdated = lp.clock.Now()
+
 			lp.log.ERROR.Printf("vehicle error: %v", err)
 		}
 
@@ -857,7 +865,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	}
 
 	lp.publish("connected", lp.connected())
-	lp.publish("charging", lp.charging)
+	lp.publish("charging", lp.charging())
+	lp.publish("enabled", lp.enabled)
 
 	// update active vehicle and publish soc
 	// must be run after updating charger status to make sure
@@ -885,8 +894,10 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, false)
 
 	case lp.targetSocReached():
+		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.socCharge, lp.SoC.Target)
 		var targetCurrent float64 // zero disables
 		if lp.climateActive() {
+			lp.log.DEBUG.Println("climater active")
 			targetCurrent = float64(lp.MinCurrent)
 		}
 		err = lp.setLimit(targetCurrent, true)
