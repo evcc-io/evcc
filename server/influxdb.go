@@ -61,8 +61,6 @@ func (m *Influx) supportedType(p util.Param) bool {
 	}
 
 	switch val := p.Val.(type) {
-	case int64, int:
-		return true
 	case float64:
 		return true
 	case [3]float64:
