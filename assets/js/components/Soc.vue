@@ -11,7 +11,7 @@
 			:id="id"
 			:class="{ active: soc == level, first: !caption && id == 0 }"
 		>
-			<input type="radio" :value="level" v-on:click="targetSoC(level)" />{{ level }}%
+			<input type="radio" :value="level" v-on:click="setTargetSoC(level)" />{{ level }}%
 		</label>
 	</div>
 </template>
@@ -33,7 +33,7 @@ export default {
 		},
 	},
 	methods: {
-		targetSoC: function (mode) {
+		setTargetSoC: function (mode) {
 			this.$emit("updated", mode);
 		},
 	},

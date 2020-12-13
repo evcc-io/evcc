@@ -43,6 +43,7 @@
 </template>
 
 <script>
+import "../icons";
 import $ from "jquery";
 
 export default {

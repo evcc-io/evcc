@@ -21,7 +21,7 @@
 import $ from "jquery";
 
 export default {
-	name: "MessageToast",
+	name: "ToastMessage",
 	props: ["item"],
 	mounted: function () {
 		const id = "#message-id-" + this.item.id;

@@ -56,6 +56,7 @@
 </template>
 
 <script>
+import "../icons";
 import formatter from "../mixins/formatter";
 
 export default {
