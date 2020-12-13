@@ -39,8 +39,8 @@
 			v-bind="loadpoint"
 			:id="id"
 			:key="id"
-			:pv="pvConfigured"
 			:multi="multi"
+			:pvConfigured="pvConfigured"
 		>
 		</Loadpoint>
 	</div>
