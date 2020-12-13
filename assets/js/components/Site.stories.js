@@ -52,9 +52,11 @@ Multi.args = {
   batterySoC: 0,
   loadpoints: [
     {
-      title: "Ladepunkt 2",
+      title: "Ladepunkt 1",
       socLevels: [20, 50, 80, 100],
     },
-    {},
+    {
+      title: "Ladepunkt 2",
+    },
   ],
 };
