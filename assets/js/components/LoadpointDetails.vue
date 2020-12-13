@@ -64,22 +64,14 @@ import formatter from "../mixins/formatter";
 export default {
 	name: "LoadpointDetails",
 	props: {
-		connected: Boolean,
-		minSoC: Number,
-		socCharge: Number,
-		climater: Boolean,
 		chargePower: Number,
 		chargedEnergy: Number,
-		range: Number,
 		chargeDuration: Number,
 		soc: Boolean,
+		climater: String,
+		range: Number,
 		chargeEstimate: Number,
 	},
 	mixins: [formatter],
-	computed: {
-		minSoCActive: function () {
-			return this.connected && this.minSoC > 0 && this.socCharge < this.minSoC;
-		},
-	},
 };
 </script>

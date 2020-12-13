@@ -18,4 +18,8 @@ export const Base = Template.bind({});
 Base.args = {};
 
 export const CaptionAndPV = Template.bind({});
-CaptionAndPV.args = { caption: true, pv: true, mode: "pv" };
+CaptionAndPV.args = {
+  caption: true,
+  pvConfigured: true,
+  mode: "pv",
+};

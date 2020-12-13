@@ -3,11 +3,7 @@ import SiteDetails from "./SiteDetails.vue";
 export default {
   title: "Main/SiteDetails",
   component: SiteDetails,
-  argTypes: {
-    gridConfigured: { control: { type: "boolean" } },
-    pvConfigured: { control: { type: "boolean" } },
-    batteryConfigured: { control: { type: "boolean" } },
-  },
+  argTypes: {},
 };
 
 const Template = (args, { argTypes }) => ({
@@ -32,5 +28,5 @@ WithBattery.args = {
   gridPower: 100,
   pvPower: 100,
   batteryPower: 100,
-  batterySoC: 1,
+  batterySoC: 0,
 };

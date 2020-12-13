@@ -26,7 +26,7 @@
 						<Mode
 							class="w-100"
 							:mode="mode"
-							:pv="pv"
+							:pvConfigured="pvConfigured"
 							v-on:updated="setTargetMode"
 						></Mode>
 					</div>
@@ -44,7 +44,12 @@
 
 		<div class="row d-none d-md-flex mt-5 py-3 pb-4 text-center bg-light" v-if="!multi">
 			<div class="mt-3" :class="{ 'col-md-6': hasTargetSoC, 'col-md-12': !hasTargetSoC }">
-				<Mode :mode="mode" :pv="pv" :caption="true" v-on:updated="setTargetMode"></Mode>
+				<Mode
+					:mode="mode"
+					:pvConfigured="pvConfigured"
+					:caption="true"
+					v-on:updated="setTargetMode"
+				></Mode>
 			</div>
 			<div class="col-md-6 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -58,7 +63,12 @@
 
 		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
 			<div class="col-12 mt-3">
-				<Mode class="w-100" :mode="mode" :pv="pv" v-on:updated="setTargetMode"></Mode>
+				<Mode
+					class="w-100"
+					:mode="mode"
+					:pvConfigured="pvConfigured"
+					v-on:updated="setTargetMode"
+				></Mode>
 			</div>
 			<div class="col-12 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -105,7 +115,7 @@
 				<Mode
 					class="btn-group-sm"
 					:mode="mode"
-					:pv="pv"
+					:pvConfigured="pvConfigured"
 					v-on:updated="setTargetMode"
 				></Mode>
 			</div>
@@ -163,8 +173,8 @@ export default {
 	name: "Loadpoint",
 	props: {
 		id: Number,
-		pv: Boolean,
 		multi: Boolean,
+		pvConfigured: Boolean,
 
 		// main
 		title: String,
@@ -177,19 +187,19 @@ export default {
 		charging: Boolean,
 
 		// vehicle
+		connected: Boolean,
 		socTitle: String,
+		socCharge: Number,
+		minSoC: Number,
 
 		// details
+		chargePower: Number,
 		chargedEnergy: Number,
 		// chargeDuration: Number,
-		chargeEstimate: Number,
-		chargePower: Number,
-		climater: Boolean,
-		connected: Boolean,
-		minSoC: Number,
-		range: Number,
 		soc: Boolean,
-		socCharge: Number,
+		climater: String,
+		range: Number,
+		chargeEstimate: Number,
 	},
 	components: { LoadpointDetails, Soc, Mode, Vehicle },
 	mixins: [formatter],

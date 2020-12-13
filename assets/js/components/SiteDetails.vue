@@ -28,11 +28,7 @@
 				<small class="text-muted">{{ fmtUnit(pvPower) }}W</small>
 			</h2>
 		</div>
-		<div
-			class="d-md-block col-6 col-md-3 mt-3"
-			:class="{ 'd-none': !batterySoC }"
-			v-if="batteryConfigured"
-		>
+		<div class="d-md-block col-6 col-md-3 mt-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
 				Batterie
 				<fa-icon class="text-primary" icon="arrow-down" v-if="batteryPower < 0"></fa-icon>
@@ -43,7 +39,7 @@
 				<small class="text-muted">{{ fmtUnit(batteryPower) }}W</small>
 			</h2>
 		</div>
-		<div class="col-6 col-md-3 mt-3" v-if="batterySoC">
+		<div class="col-6 col-md-3 mt-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
 				SoC
 				<fa-icon
