@@ -56,7 +56,7 @@
 					:soc="targetSoC"
 					:levels="socLevels"
 					:caption="true"
-					v-on:updated="targetSoC"
+					v-on:updated="setTargetSoC"
 				></Soc>
 			</div>
 		</div>
@@ -75,7 +75,7 @@
 					class="w-100"
 					:soc="targetSoC"
 					:levels="socLevels"
-					v-on:updated="targetSoC"
+					v-on:updated="setTargetSoC"
 				></Soc>
 			</div>
 		</div>
@@ -125,7 +125,7 @@
 					class="btn-group-sm"
 					:soc="targetSoC"
 					:levels="socLevels"
-					v-on:updated="targetSoC"
+					v-on:updated="setTargetSoC"
 				></Soc>
 			</div>
 
