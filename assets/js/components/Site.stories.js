@@ -33,5 +33,28 @@ Single.args = {
   batteryConfigured: true,
   batteryPower: 100,
   batterySoC: 0,
-  loadpoints: [],
+  loadpoints: [
+    {
+      title: "Ladepunkt 1",
+      socLevels: [20, 50, 80, 100],
+    },
+  ],
+};
+
+export const Multi = Template.bind({});
+Multi.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  gridPower: 100,
+  pvPower: 100,
+  batteryConfigured: true,
+  batteryPower: 100,
+  batterySoC: 0,
+  loadpoints: [
+    {
+      title: "Ladepunkt 2",
+      socLevels: [20, 50, 80, 100],
+    },
+    {},
+  ],
 };

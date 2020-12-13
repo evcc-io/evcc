@@ -35,7 +35,7 @@
 		<div class="col-6 col-md-3 mt-3" v-if="range >= 0">
 			<div class="mb-2 value">Reichweite</div>
 			<h2 class="value">
-				{{ range }}
+				{{ Math.round(range) }}
 				<small class="text-muted">km</small>
 			</h2>
 		</div>
@@ -59,6 +59,7 @@
 </template>
 
 <script>
+import "../icons";
 import formatter from "../mixins/formatter";
 
 export default {

@@ -19,16 +19,16 @@ Base.args = {
   connected: true,
 };
 
-export const VehicleConfigured = Template.bind({});
-VehicleConfigured.args = {
+export const Car = Template.bind({});
+Car.args = {
   soc: true,
   socTitle: "Mein Auto",
   connected: true,
   socCharge: 15,
 };
 
-export const VehicleConfiguredWithMin = Template.bind({});
-VehicleConfiguredWithMin.args = {
+export const CarWithMin = Template.bind({});
+CarWithMin.args = {
   soc: true,
   socTitle: "Mein Auto",
   connected: true,
