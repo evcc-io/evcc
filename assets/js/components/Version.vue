@@ -2,8 +2,7 @@
 	<div class="collapse" ref="bar">
 		<div class="row p-3 bg-warning">
 			<div class="col-12">
-				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
-				{{ availableVersion }}.
+				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar: {{ available }}.
 				<b
 					class="px-3"
 					data-toggle="collapse"
@@ -18,7 +17,7 @@
 				</b>
 				<b class="px-3">
 					<a
-						:href="'https://github.com/andig/evcc/releases/tag/' + availableVersion"
+						:href="'https://github.com/andig/evcc/releases/tag/' + available"
 						class="text-body"
 					>
 						Download <fa-icon icon="chevron-down"></fa-icon>
@@ -49,12 +48,12 @@ import $ from "jquery";
 export default {
 	name: "Version",
 	props: {
-		availableVersion: String,
+		installed: String,
+		available: String,
 		releaseNotes: String,
 	},
 	data: function () {
 		return {
-			installed: window.evcc.version,
 			notesShown: false,
 		};
 	},
@@ -74,11 +73,11 @@ export default {
 			);
 	},
 	watch: {
-		availableVersion: function () {
+		available: function () {
 			if (
-				this.installed != window.evcc.version && // go template parsed?
+				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
-				this.availableVersion != this.installed
+				this.available != this.installed
 			) {
 				$(this.$refs.bar).collapse("show");
 			}
