@@ -7,9 +7,9 @@
     "build": "rimraf dist; parcel build assets/* --public-url ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
-    "fix-audit": "npm-force-resolutions",
     "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "fix-audit": "npm-force-resolutions"
   },
   "author": "",
   "license": "MIT",
@@ -48,17 +48,13 @@
   },
   "repository": "github:andig/evcc",
   "dependencies": {
-    "@babel/runtime-corejs2": "^7.12.5",
-    "@babel/runtime-corejs3": "^7.12.5",
     "@fortawesome/fontawesome-svg-core": "^1.2.32",
     "@fortawesome/free-solid-svg-icons": "^5.15.1",
     "@fortawesome/vue-fontawesome": "^2.0.0",
     "axios": "^0.21.0",
     "bootstrap": "^4.5.3",
-    "core-js": "^3.8.0",
     "jquery": "^3.5.1",
     "popper.js": "^1.16.1",
-    "regenerator-runtime": "^0.13.7",
     "vue": "^2.6.12",
     "vue-hot-reload-api": "^2.3.4",
     "vue-router": "^3.4.7"
