@@ -37,8 +37,8 @@ export default {
 	name: "Vehicle",
 	props: {
 		socTitle: String,
-		charging: Boolean,
 		connected: Boolean,
+		charging: Boolean,
 		soc: Boolean,
 		socCharge: Number,
 		minSoC: Number,
