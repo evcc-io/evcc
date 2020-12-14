@@ -1,7 +1,7 @@
 <template>
 	<div class="container">
 		<!-- <h1 class="display-4 pt-3 mx-auto text-center">Konfiguration</h1>
-        <p class="lead mx-auto text-center">Details der Fahrzeug-, Wallbox- und Zählerkonfiguration.</p> -->
+		<p class="lead mx-auto text-center">Details der Fahrzeug-, Wallbox- und Zählerkonfiguration.</p> -->
 
 		<div class="row mt-4 border-bottom">
 			<div class="col-12">

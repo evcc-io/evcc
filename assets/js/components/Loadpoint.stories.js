@@ -5,7 +5,7 @@ export default {
   component: Loadpoint,
   argTypes: {
     mode: { control: { type: "inline-radio", options: ["off", "now", "minpv", "pv"] } },
-    climater: { control: { type: "select", options: ["on", "heating", "cooling"] } },
+    climater: { control: { type: "inline-radio", options: ["on", "heating", "cooling"] } },
   },
 };
 

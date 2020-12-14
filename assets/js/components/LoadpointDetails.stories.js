@@ -4,7 +4,7 @@ export default {
   title: "Main/LoadpointDetails",
   component: LoadpointDetails,
   argTypes: {
-    climater: { control: { type: "select", options: ["on", "heating", "cooling"] } },
+    climater: { control: { type: "inline-radio", options: ["on", "heating", "cooling"] } },
   },
 };
 
