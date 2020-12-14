@@ -30,8 +30,6 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.1.0",
     "eslint-plugin-vue": "^7.1.0",
-    "husky": "^4.3.0",
-    "lint-staged": "^10.5.1",
     "npm-force-resolutions": "0.0.3",
     "parcel-bundler": "^1.12.4",
     "prettier": "^2.2.0",
@@ -61,13 +59,5 @@
   },
   "resolutions": {
     "node-forge": "0.10.0"
-  },
-  "lint-staged": {
-    "assets/**/*.{js,vue,json}": [
-      "eslint --fix"
-    ],
-    "assets/**/*.{html,js,vue,json,css}": [
-      "prettier --write"
-    ]
   }
 }
