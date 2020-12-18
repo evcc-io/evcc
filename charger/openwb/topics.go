@@ -2,6 +2,9 @@ package openwb
 
 // predefined openWB topic names
 const (
+	// alive
+	TimestampTopic = "Timestamp"
+
 	// status
 	PluggedTopic    = "boolPlugStat"
 	ChargingTopic   = "boolChargeStat"
