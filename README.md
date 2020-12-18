@@ -240,6 +240,7 @@ EVCC can integrate itself with Home Energy Management Systems. At this time, the
 ```yaml
 hems:
   type: sma
+  allowcontrol: false # set true to allow SHM controlling charger in PV modes
 ```
 
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
