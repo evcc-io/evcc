@@ -37,29 +37,39 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log     *util.Logger
-	cache   *util.Cache
-	closeC  chan struct{}
-	doneC   chan struct{}
-	uid     string
-	hostURI string
-	port    int
-	site    core.SiteAPI
+	log          *util.Logger
+	cache        *util.Cache
+	closeC       chan struct{}
+	doneC        chan struct{}
+	controllable bool
+	uid          string
+	hostURI      string
+	port         int
+	site         core.SiteAPI
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+	cc := struct {
+		AllowControl bool
+	}{}
+
+	if err := util.DecodeOther(conf, &cc); err != nil {
+		return nil, err
+	}
+
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
 	}
 
 	s := &SEMP{
-		doneC: make(chan struct{}),
-		log:   util.NewLogger("semp"),
-		cache: cache,
-		site:  site,
-		uid:   uid.String(),
+		doneC:        make(chan struct{}),
+		log:          util.NewLogger("semp"),
+		cache:        cache,
+		site:         site,
+		uid:          uid.String(),
+		controllable: cc.AllowControl,
 	}
 
 	// find external port
@@ -464,6 +474,12 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// ignore requests if not controllable
+			if !s.controllable {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
