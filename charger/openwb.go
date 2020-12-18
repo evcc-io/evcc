@@ -49,8 +49,8 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	// timeout handler
 	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic),
-		"", 1, cc.Timeout).IntGetter()
+		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), "", 1, cc.Timeout,
+	).IntGetter()
 
 	// getters
 	boolG := func(topic string) func() (bool, error) {
