@@ -56,8 +56,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	boolG := func(topic string) func() (bool, error) {
 		g := provider.NewMqtt(log, client, topic, "", 1, 0).BoolGetter()
 		return func() (val bool, err error) {
-			val, err = g()
-			if err == nil {
+			if val, err = g(); err == nil {
 				_, err = timer()
 			}
 			return val, err
@@ -67,8 +66,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	floatG := func(topic string) func() (float64, error) {
 		g := provider.NewMqtt(log, client, topic, "", 1, 0).FloatGetter()
 		return func() (val float64, err error) {
-			val, err = g()
-			if err == nil {
+			if val, err = g(); err == nil {
 				_, err = timer()
 			}
 			return val, err
