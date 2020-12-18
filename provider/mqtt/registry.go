@@ -28,11 +28,12 @@ var registry clientRegistry = make(map[string]*Client)
 
 // RegisteredClient reuses an registered Mqtt publisher or creates a new one
 func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte) (*Client, error) {
-	client, err := registry.Get(broker)
+	key := fmt.Sprintf("%s.%s", broker, log.Name())
+	client, err := registry.Get(key)
 
 	if err != nil {
 		if client, err = NewClient(log, broker, user, password, ClientID(), qos); err == nil {
-			registry.Add(broker, client)
+			registry.Add(key, client)
 		}
 	}
 
