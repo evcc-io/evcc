@@ -74,6 +74,14 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		uri += ":" + url.Port()
 	}
 
+	// support default meter names
+	switch strings.ToLower(cc.Usage) {
+	case "grid":
+		cc.Usage = "site"
+	case "pv":
+		cc.Usage = "solar"
+	}
+
 	return NewTesla(uri, cc.Usage)
 }
 
