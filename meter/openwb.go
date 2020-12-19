@@ -35,8 +35,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	log := util.NewLogger("openwb")
 
-	clientID := mqtt.ClientID()
-	client, err := mqtt.RegisteredClient(log, cc.Broker, cc.User, cc.Password, clientID, 1)
+	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {
 		return nil, err
 	}

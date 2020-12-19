@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/util"
@@ -35,6 +36,23 @@ func RegisteredClient(log *util.Logger, broker, user, password, clientID string,
 		if client, err = NewClient(log, broker, user, password, ClientID(), qos); err == nil {
 			registry.Add(key, client)
 		}
+	}
+
+	return client, err
+}
+
+// RegisteredClientOrDefault reuses an registered Mqtt publisher or creates a new one.
+// If no publisher is configured, it uses the default instance.
+func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
+	var err error
+	client := Instance
+
+	if client == nil && cc.Broker == "" {
+		return nil, errors.New("missing mqtt broker configuration")
+	}
+
+	if client == nil {
+		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, ClientID(), 1)
 	}
 
 	return client, err
