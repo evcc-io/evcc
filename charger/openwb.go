@@ -27,12 +27,12 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
-		ID          int
 		Timeout     time.Duration
+		ID          int
 	}{
 		Topic:   "openWB",
-		ID:      1,
 		Timeout: 15 * time.Second,
+		ID:      1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
