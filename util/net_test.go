@@ -16,3 +16,25 @@ func TestDefaultPort(t *testing.T) {
 		t.Errorf("expected %s, got %s", expect, uri)
 	}
 }
+
+func TestDefaultScheme(t *testing.T) {
+	expect := "http://localhost"
+
+	if uri := DefaultScheme("localhost", "http"); uri != expect {
+		t.Errorf("expected %s, got %s", expect, uri)
+	}
+
+	if uri := DefaultScheme("http://localhost", "http"); uri != expect {
+		t.Errorf("expected %s, got %s", expect, uri)
+	}
+
+	if uri := DefaultScheme("http://localhost", "https"); uri != expect {
+		t.Errorf("expected %s, got %s", expect, uri)
+	}
+
+	expect = "ws://localhost:8080"
+
+	if uri := DefaultScheme("localhost:8080", "ws"); uri != expect {
+		t.Errorf("expected %s, got %s", expect, uri)
+	}
+}

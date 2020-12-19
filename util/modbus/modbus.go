@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/util"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -146,6 +147,8 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	if uri != "" {
+		uri = util.DefaultPort(uri, 502)
+
 		if rtu {
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		} else {

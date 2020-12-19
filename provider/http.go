@@ -65,9 +65,14 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	log := util.NewLogger("http")
 
+	url := util.DefaultScheme(cc.URI, "http")
+	if url != cc.URI {
+		log.WARN.Printf("missing scheme for %s, assuming http", cc.URI)
+	}
+
 	p := &HTTP{
 		Helper:  request.NewHelper(log),
-		url:     cc.URI,
+		url:     url,
 		method:  cc.Method,
 		headers: cc.Headers,
 		body:    cc.Body,

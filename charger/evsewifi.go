@@ -68,11 +68,12 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 			Power, Energy, Currents bool
 		}
 	}{}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(cc.URI)
+	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
 	if err != nil {
 		return evse, err
 	}

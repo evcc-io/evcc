@@ -44,18 +44,26 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		Insecure bool
 		Auth     Auth
 		Timeout  time.Duration
-	}{Headers: make(map[string]string)}
+	}{
+		Headers: make(map[string]string),
+	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	log := util.NewLogger("ws")
 
+	url := util.DefaultScheme(cc.URI, "ws")
+	if url != cc.URI {
+		log.WARN.Printf("missing scheme for %s, assuming ws", cc.URI)
+	}
+
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
 		mux:     util.NewWaiter(cc.Timeout, func() { log.TRACE.Println("wait for initial value") }),
-		url:     cc.URI,
+		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
 	}
