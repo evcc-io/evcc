@@ -21,4 +21,8 @@ const (
 	// general measurements
 	PowerTopic   = "W"
 	CurrentTopic = "APhase" // 1..3
+
+	// configuration
+	PvConfigured      = "boolPVConfigured"
+	BatteryConfigured = "boolHouseBatteryConfigured"
 )
