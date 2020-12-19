@@ -20,6 +20,7 @@ const (
 
 	// general measurements
 	PowerTopic   = "W"
+	SoCTopic     = "%Soc"
 	CurrentTopic = "APhase" // 1..3
 
 	// configuration
