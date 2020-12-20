@@ -55,6 +55,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 1. Install EVCC. For details see [installation](#installation).
 2. Copy the default configuration file `evcc.dist.yaml` to `evcc.yaml` and open for editing.
+We recommend to use an editor like [VS Code](https://code.visualstudio.com) with the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) for syntax highlighting.
 3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). Many PV inverters contain meters that can be used here.
 4. Configure both meter(s) and charger by:
     - choosing the appropriate `type`
