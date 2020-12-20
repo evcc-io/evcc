@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EVCC configuration schema",
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "interval": {
+      "$ref": "#/definitions/duration"
+    },
+    "log": {
+      "description": "Global log level",
+      "$ref": "#/definitions/loglevel"
+    },
+    "levels": {
+      "type": "object",
+      "description": "Log levels per area",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "chargers": {
+      "type": "array",
+      "description": "List of chargers",
+      "items": {
+        "$ref": "#/definitions/namedObject"
+      }
+    },
+    "meters": {
+      "type": "array",
+      "description": "List of meters",
+      "items": {
+        "$ref": "#/definitions/namedObject"
+      }
+    },
+    "vehicles": {
+      "type": "array",
+      "description": "List of vehicles",
+      "items": {
+        "$ref": "#/definitions/namedObject"
+      }
+    },
+    "site": {
+      "type": "object",
+      "required": [
+        "meters"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "meters": {
+          "type": "object",
+          "properties": {
+            "grid": {
+              "type": "string"
+            },
+            "pv": {
+              "type": "string"
+            },
+            "battery": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "loadpoints": {
+      "type": "array",
+      "description": "List of loadpoints",
+      "items": {
+        "type": "object",
+        "required": [
+          "charger"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/definitions/mode"
+          },
+          "charger": {
+            "type": "string"
+          },
+          "meters": {
+            "type": "object",
+            "properties": {
+              "charge": {
+                "type": "string"
+              }
+            }
+          },
+          "vehicles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "soc": {
+            "type": "object",
+            "properties": {
+              "poll": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "type": "string"
+                  },
+                  "interval": {
+                    "$ref": "#/definitions/duration"
+                  }
+                }
+              },
+              "min": {
+                "type": "integer"
+              },
+              "target": {
+                "type": "integer"
+              },
+              "levels": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "estimate": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "duration": {
+      "type": "string",
+      "pattern": "\\d[msh]$"
+    },
+    "namedObject": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "loglevel": {
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "error",
+        "fatal"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "off",
+        "on",
+        "pv",
+        "minpv"
+      ]
+    }
+  }
+}
