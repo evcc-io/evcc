@@ -38,8 +38,15 @@ export default {
 	},
 	data: function () {
 		return {
-			value: 0,
+			value: null,
 		};
+	},
+	watch: {
+		value: function (val, old) {
+			if (old !== null) {
+				this.$emit("updated", val);
+			}
+		},
 	},
 	mounted: function () {
 		this.value = this.val;

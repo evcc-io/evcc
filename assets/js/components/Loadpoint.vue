@@ -57,7 +57,7 @@
 					<div class="col-12 col-md-6 pb-3">
 						<div class="row">
 							<div class="col-12">
-								<Range id="pvrange" title="Eco Restenergiebezug" val="15" unit="%">
+								<Range id="pvrange" title="Eco Restenergiebezug" unit="%" :val="15">
 								</Range>
 							</div>
 							<div class="col-5 d-inline d-xl-none">0% (Kein Bezug)</div>
@@ -73,7 +73,14 @@
 					<div class="col-12 col-md-6 pb-3">
 						<div class="row">
 							<div class="col-12">
-								<Range id="socrange" title="Ladeziel" val="15" unit="%"> </Range>
+								<Range
+									id="socrange"
+									title="Ladeziel"
+									unit="%"
+									:val="state.targetSoC"
+									v-on:updated="targetSoC"
+								>
+								</Range>
 							</div>
 							<div class="col-6">0% (Deaktiviert)</div>
 							<div class="col-6 text-right">100% (Maximal)</div>
