@@ -55,6 +55,12 @@ type MetersConfig struct {
 	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
 }
 
+// SiteAPI is the external site API
+type SiteAPI interface {
+	Healthy() bool
+	LoadPoints() []LoadPointAPI
+}
+
 // NewSiteFromConfig creates a new site
 func NewSiteFromConfig(
 	log *util.Logger,
@@ -99,6 +105,15 @@ func NewSite() *Site {
 	}
 
 	return lp
+}
+
+// LoadPoints returns the array of associated loadpoints
+func (site *Site) LoadPoints() []LoadPointAPI {
+	res := make([]LoadPointAPI, len(site.loadpoints))
+	for id, lp := range site.loadpoints {
+		res[id] = lp
+	}
+	return res
 }
 
 func meterCapabilities(name string, meter interface{}) string {

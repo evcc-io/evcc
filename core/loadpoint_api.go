@@ -9,12 +9,8 @@ import (
 type LoadPointAPI interface {
 	Name() string
 	HasChargeMeter() bool
-	LoadPointSettingsAPI
-	LoadPointEnergyAPI
-}
 
-// LoadPointSettingsAPI is the getter/setter part of the external loadpoint API
-type LoadPointSettingsAPI interface {
+	// settings
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
 	GetTargetSoC() int
@@ -22,10 +18,8 @@ type LoadPointSettingsAPI interface {
 	GetMinSoC() int
 	SetMinSoC(int) error
 	RemoteControl(string, RemoteDemand)
-}
 
-// LoadPointEnergyAPI is the external loadpoint API
-type LoadPointEnergyAPI interface {
+	// energy
 	GetMinCurrent() int64
 	GetMaxCurrent() int64
 	GetMinPower() int64
