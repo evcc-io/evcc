@@ -1,4 +1,4 @@
-.PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
+.PHONY: default clean install-backend install-ui lint-backend lint-ui test assets build binaries test-release release publish-testing publish-latest publish-images
 
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
@@ -14,14 +14,22 @@ default: clean install npm assets lint test build
 clean:
 	rm -rf dist/
 
-install:
+install-backend:
 	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
+
+install-ui:
 	npm ci
 
-lint:
+install: install-backend install-ui
+
+lint-backend:
 	golangci-lint run
+
+lint-ui:
 	npm run lint
+
+lint: lint-backend lint-ui
 
 test:
 	@echo "Running testsuite"
