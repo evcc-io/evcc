@@ -1,6 +1,6 @@
 .PHONY: default clean install-backend install-ui lint-backend lint-ui test assets build binaries test-release release publish-testing publish-latest publish-images
 
-TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
+TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags || false)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
