@@ -6,18 +6,7 @@
 			</div>
 
 			<div class="col-12 col-md-8 d-none d-md-block mt-3 mt-md-5">
-				<LoadpointDetails
-					:connected="connected"
-					:minSoC="minSoC"
-					:socCharge="socCharge"
-					:climater="climater"
-					:chargePower="chargePower"
-					:chargedEnergy="chargedEnergy"
-					:range="range"
-					:chargeDuration="chargeDurationDisplayed"
-					:chargeEstimate="chargeEstimate"
-				>
-				</LoadpointDetails>
+				<LoadpointDetails v-bind="details"> </LoadpointDetails>
 			</div>
 
 			<div class="col-12 d-md-none">
@@ -130,32 +119,11 @@
 			</div>
 
 			<div class="col-md-8 d-none d-md-block" v-if="!multi">
-				<LoadpointDetails
-					:connected="connected"
-					:minSoC="minSoC"
-					:socCharge="socCharge"
-					:climater="climater"
-					:chargePower="chargePower"
-					:chargedEnergy="chargedEnergy"
-					:range="range"
-					:chargeDuration="chargeDurationDisplayed"
-					:soc="soc"
-					:chargeEstimate="chargeEstimate"
-				></LoadpointDetails>
+				<LoadpointDetails v-bind="details"></LoadpointDetails>
 			</div>
 
 			<div class="col-12 d-md-none">
-				<LoadpointDetails
-					:connected="connected"
-					:minSoC="minSoC"
-					:socCharge="socCharge"
-					:climater="climater"
-					:chargePower="chargePower"
-					:chargedEnergy="chargedEnergy"
-					:range="range"
-					:chargeDuration="chargeDurationDisplayed"
-					:chargeEstimate="chargeEstimate"
-				></LoadpointDetails>
+				<LoadpointDetails v-bind="details"></LoadpointDetails>
 			</div>
 		</div>
 	</div>
@@ -211,6 +179,19 @@ export default {
 		};
 	},
 	computed: {
+		details: function () {
+			return {
+				connected: this.connected,
+				minSoC: this.minSoC,
+				socCharge: this.socCharge,
+				climater: this.climater,
+				chargePower: this.chargePower,
+				chargedEnergy: this.chargedEnergy,
+				range: this.range,
+				chargeDuration: this.chargeDurationDisplayed,
+				chargeEstimate: this.chargeEstimate,
+			};
+		},
 		hasTargetSoC: function () {
 			return this.socLevels != null && this.socLevels.length > 0;
 		},
