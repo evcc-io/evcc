@@ -34,7 +34,7 @@ type EVSEListEntry struct {
 	ActualPower    float64 `json:"actualPower"`
 	Duration       int64   `json:"duration"`
 	AlwaysActive   bool    `json:"alwaysActive"`
-	HasMeter       bool    `json:"hasMeter"`
+	UseMeter       bool    `json:"useMeter"`
 	LastActionUser string  `json:"lastActionUser"`
 	LastActionUID  string  `json:"lastActionUID"`
 	Energy         float64 `json:"energy"`
@@ -153,7 +153,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 // HasMeter returns the useMeter api response
 func (evse *EVSEWifi) HasMeter() (bool, error) {
 	params, err := evse.getParameters()
-	return params.HasMeter, err
+	return params.UseMeter, err
 }
 
 // Status implements the Charger.Status interface
