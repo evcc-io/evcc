@@ -39,6 +39,17 @@
 					:caption="true"
 					v-on:updated="targetMode"
 				></Mode>
+
+				<div class="btn-group btn-group-toggle bg-white shadow-none ml-5">
+					<label class="btn btn-outline-secondary">
+						<input
+							type="checkbox"
+							class="disabled"
+							v-on:click="alert('not implemented- use api')"
+						/>
+						<fa-icon icon="sliders-h"></fa-icon>
+					</label>
+				</div>
 			</div>
 			<!-- <div class="col-md-6 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -50,7 +61,7 @@
 			</div> -->
 		</div>
 
-		<div class="row bg-light pt-0" v-if="!multi">
+		<div id="settings" class="row bg-light pt-0" v-if="!multi">
 			<div class="col px-4">
 				<hr />
 				<div class="row py-3">

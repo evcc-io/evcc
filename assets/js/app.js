@@ -14,6 +14,7 @@ import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faSlidersH } from "@fortawesome/free-solid-svg-icons/faSlidersH";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import App from "./views/App";
 import Toasts from "./components/Toasts";
@@ -31,7 +32,8 @@ library.add(
   faLeaf,
   faChevronUp,
   faChevronDown,
-  faExclamationTriangle
+  faExclamationTriangle,
+  faSlidersH
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);
