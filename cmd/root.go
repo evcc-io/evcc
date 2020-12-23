@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/andig/evcc/core/settings"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
@@ -175,6 +176,9 @@ func run(cmd *cobra.Command, args []string) {
 		publisher := server.NewMQTT(conf.Mqtt.Topic)
 		go publisher.Run(site, tee.Attach())
 	}
+
+	// setup settings storage
+	go settings.NewStorage("/var/lib/evcc.settings").Run(tee.Attach())
 
 	// create webserver
 	socketHub := server.NewSocketHub()
