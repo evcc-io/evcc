@@ -10,11 +10,13 @@ import (
 
 // Sender is a KEBA UDP sender
 type Sender struct {
+	log  *util.Logger
+	addr string
 	conn *net.UDPConn
 }
 
 // NewSender creates KEBA UDP sender
-func NewSender(addr string) (*Sender, error) {
+func NewSender(log *util.Logger, addr string) (*Sender, error) {
 	addr = util.DefaultPort(addr, Port)
 	raddr, err := net.ResolveUDPAddr("udp", addr)
 
@@ -24,6 +26,8 @@ func NewSender(addr string) (*Sender, error) {
 	}
 
 	c := &Sender{
+		log:  log,
+		addr: addr,
 		conn: conn,
 	}
 
@@ -32,6 +36,7 @@ func NewSender(addr string) (*Sender, error) {
 
 // Send msg to receiver
 func (c *Sender) Send(msg string) error {
+	c.log.TRACE.Printf("send to %s %v", c.addr, msg)
 	_, err := io.Copy(c.conn, strings.NewReader(msg))
 	return err
 }
