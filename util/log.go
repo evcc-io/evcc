@@ -31,6 +31,7 @@ const padding = 6 // padding of log areas
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
 	*jww.Notepad
+	name string
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
@@ -46,9 +47,17 @@ func NewLogger(area string) *Logger {
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
 
-	logger := &Logger{notepad}
+	logger := &Logger{
+		Notepad: notepad,
+		name:    area,
+	}
 	loggers[area] = logger
 	return logger
+}
+
+// Name returns the loggers name
+func (l *Logger) Name() string {
+	return l.name
 }
 
 // Loggers invokes callback for each configured logger

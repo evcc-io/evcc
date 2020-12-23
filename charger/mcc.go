@@ -75,7 +75,7 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 		return nil, err
 	}
 
-	return NewMobileConnect(cc.URI, cc.Password)
+	return NewMobileConnect(util.DefaultScheme(cc.URI, "https"), cc.Password)
 }
 
 // NewMobileConnect creates MCC charger

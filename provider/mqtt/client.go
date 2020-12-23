@@ -38,7 +38,7 @@ type Client struct {
 	Client   mqtt.Client
 	broker   string
 	Qos      byte
-	listener map[string]func(string)
+	listener map[string][]func(string)
 }
 
 // NewClient creates new Mqtt publisher
@@ -50,7 +50,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		log:      log,
 		broker:   broker,
 		Qos:      qos,
-		listener: make(map[string]func(string)),
+		listener: make(map[string][]func(string)),
 	}
 
 	options := mqtt.NewClientOptions()
@@ -86,9 +86,9 @@ func (m *Client) ConnectionHandler(client mqtt.Client) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	for topic, l := range m.listener {
+	for topic := range m.listener {
 		m.log.TRACE.Printf("%s subscribe %s", m.broker, topic)
-		go m.listen(topic, l)
+		go m.listen(topic)
 	}
 }
 
@@ -104,21 +104,24 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 // Listen validates uniqueness and registers and attaches listener
 func (m *Client) Listen(topic string, callback func(string)) {
 	m.mux.Lock()
-	if _, ok := m.listener[topic]; ok {
-		m.log.FATAL.Fatalf("%s: duplicate listener not allowed", topic)
-	}
-	m.listener[topic] = callback
+	m.listener[topic] = append(m.listener[topic], callback)
 	m.mux.Unlock()
 
-	m.listen(topic, callback)
+	m.listen(topic)
 }
 
 // listen attaches listener to topic
-func (m *Client) listen(topic string, callback func(string)) {
+func (m *Client) listen(topic string) {
 	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
 		s := string(msg.Payload())
 		if len(s) > 0 {
-			callback(s)
+			m.mux.Lock()
+			callbacks := m.listener[topic]
+			m.mux.Unlock()
+
+			for _, cb := range callbacks {
+				cb(s)
+			}
 		}
 	})
 	m.WaitForToken(token)

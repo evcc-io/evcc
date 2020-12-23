@@ -2,6 +2,9 @@ package openwb
 
 // predefined openWB topic names
 const (
+	// alive
+	TimestampTopic = "Timestamp"
+
 	// status
 	PluggedTopic    = "boolPlugStat"
 	ChargingTopic   = "boolChargeStat"
@@ -17,5 +20,10 @@ const (
 
 	// general measurements
 	PowerTopic   = "W"
+	SoCTopic     = "%Soc"
 	CurrentTopic = "APhase" // 1..3
+
+	// configuration
+	PvConfigured      = "boolPVConfigured"
+	BatteryConfigured = "boolHouseBatteryConfigured"
 )

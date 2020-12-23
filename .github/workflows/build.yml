@@ -1,4 +1,4 @@
-name: CI
+name: Build
 
 on:
   push:
@@ -55,7 +55,9 @@ jobs:
 
   publish:
     name: Publish
-    if: "startsWith(github.ref, 'refs/heads/master')"
+    if: |
+      startsWith(github.ref, 'refs/heads/master')
+      && ! contains(github.head_ref, 'refs/heads/chore/')
     needs: build
     runs-on: ubuntu-latest
 

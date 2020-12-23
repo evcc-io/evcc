@@ -19,7 +19,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
 - wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen and any other vehicle using scripting
-- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), MQTT and shell scripts
+- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
@@ -42,9 +42,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [Plugins](#plugins)
   - [Modbus](#modbus-read-only)
   - [MQTT](#mqtt-readwrite)
-  - [Script](#script-readwrite)
   - [HTTP](#http-readwrite)
   - [Websocket](#websocket-read-only)
+  - [Javascript](#javascript-readwrite)
+  - [Shell Script](#shell-script-readwrite)
+  - [Calc (meter aggregation)](#calc-read-only)
   - [Combined status](#combined-status-read-only)
 - [API](#api)
 - [Background](#background)
@@ -204,8 +206,9 @@ Compare the value to what you see as *Actual Charge Current Setting* in the Wall
 Meters provide data about power and energy consumption or PV production. Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
+- `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
-- `tesla`: Tesla PowerWall meter. Use `usage` setting to choose internal meter (grid: `site`, pv: `solar`, battery: `battery`).
+- `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `default`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
 Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
@@ -238,6 +241,7 @@ EVCC can integrate itself with Home Energy Management Systems. At this time, the
 ```yaml
 hems:
   type: sma
+  allowcontrol: false # set true to allow SHM controlling charger in PV modes
 ```
 
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
@@ -249,32 +253,6 @@ to the left makes **Min+PV** behave as described above. Pushing completely to th
 Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `default` type meter, charger or vehicle.
 
 Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
-
-### Calc (read only)
-
-The `calc` plugin allows calculating the sum of other plugins:
-
-```yaml
-type: calc
-add:
-- type: ...
-  ...
-- type: ...
-  ...
-```
-
-The `calc` plugin is useful e.g. to combine power values if import and export power are separate like with S0 meters. Use `scale` on one of the elements to implement a subtraction.
-
-### Javascript (read only)
-
-The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
-
-```yaml
-type: js
-script: |
-  var res = 500;
-  2 * res; // returns 1000
-```
 
 ### Modbus (read only)
 
@@ -382,26 +360,6 @@ payload: ${var:%d}
 
 For write access, the data is provided using the `payload` attribute. If `payload` is missing, the value will be written in default format.
 
-### Script (read/write)
-
-The `script` plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
-
-Sample read configuration:
-
-```yaml
-type: script
-cmd: /bin/bash -c "cat /dev/urandom"
-timeout: 5s
-```
-
-Sample write configuration:
-
-```yaml
-type: script
-cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
-timeout: 5s
-```
-
 ### HTTP (read/write)
 
 The `http` plugin executes HTTP requests to read or update data. Includes the ability to read and parse JSON using jq-like queries for REST apis.
@@ -443,6 +401,63 @@ jq: .data | select(.uuid=="<uuid>") .tuples[0][1] # parse message json
 scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
 timeout: 30s # error if no update received in 30 seconds
 ```
+
+### Javascript (read/write)
+
+EVCC includes a bundled Javascript interpreter with Underscore.js library installed. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
+
+```yaml
+type: js
+script: |
+  var res = 500;
+  2 * res; // returns 1000
+```
+
+When using the `js` plugin for writing, the value to write is handed to the script as pre-populated variable:
+
+```yaml
+charger:
+- type: generic
+  maxcurrent:
+    type: js
+    script: |
+      console.log(maxcurrent);
+```
+
+### Shell Script (read/write)
+
+The `script` plugin executes external scripts to read or update data. This plugin is useful to implement any type of external functionality.
+
+Sample read configuration:
+
+```yaml
+type: script
+cmd: /bin/bash -c "cat /dev/urandom"
+timeout: 5s
+```
+
+Sample write configuration:
+
+```yaml
+type: script
+cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
+timeout: 5s
+```
+
+### Calc (read only)
+
+The `calc` plugin allows calculating the sum of other plugins:
+
+```yaml
+type: calc
+add:
+- type: ...
+  ...
+- type: ...
+  ...
+```
+
+The `calc` plugin is useful e.g. to combine power values if import and export power are separate like with S0 meters. Use `scale: -1` on one of the elements to implement a subtraction or `scale: 1000` to implement Wh to kWh conversion.
 
 ### Combined status (read only)
 

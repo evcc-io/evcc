@@ -27,12 +27,12 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
-		ID          int
 		Timeout     time.Duration
+		ID          int
 	}{
 		Topic:   "openWB",
+		Timeout: 15 * time.Second,
 		ID:      1,
-		Timeout: 5 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -41,19 +41,35 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	log := util.NewLogger("openwb")
 
-	clientID := mqtt.ClientID()
-	client, err := mqtt.RegisteredClient(log, cc.Broker, cc.User, cc.Password, clientID, 1)
+	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {
 		return nil, err
 	}
 
+	// timeout handler
+	timer := provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), "", 1, cc.Timeout,
+	).IntGetter()
+
 	// getters
 	boolG := func(topic string) func() (bool, error) {
-		return provider.NewMqtt(log, client, topic, "", 1, cc.Timeout).BoolGetter()
+		g := provider.NewMqtt(log, client, topic, "", 1, 0).BoolGetter()
+		return func() (val bool, err error) {
+			if val, err = g(); err == nil {
+				_, err = timer()
+			}
+			return val, err
+		}
 	}
 
 	floatG := func(topic string) func() (float64, error) {
-		return provider.NewMqtt(log, client, topic, "", 1, cc.Timeout).FloatGetter()
+		g := provider.NewMqtt(log, client, topic, "", 1, 0).FloatGetter()
+		return func() (val float64, err error) {
+			if val, err = g(); err == nil {
+				_, err = timer()
+			}
+			return val, err
+		}
 	}
 
 	// check if loadpoint configured
