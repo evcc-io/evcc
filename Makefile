@@ -9,7 +9,7 @@ IMAGE := andig/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
-default: clean install npm assets lint test build
+default: clean install ui assets lint test build
 
 clean:
 	rm -rf dist/
@@ -40,7 +40,7 @@ npm:
 
 ui:
 	npm run build
-	go generate main.go
+	esc -o server/assets.go -pkg server -modtime 1566640112 -ignore .DS_Store dist
 
 assets:
 	@echo "Generating embedded assets"
