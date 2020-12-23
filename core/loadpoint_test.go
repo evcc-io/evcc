@@ -639,53 +639,58 @@ func TestSoCPoll(t *testing.T) {
 		status api.ChargeStatus
 		dt     time.Duration
 		res    bool
-		fun    func()
 	}{
 		// pollCharging
-		{pollCharging, api.StatusA, 0, true, nil}, // allow update on very first call (resets timer)
-		{pollCharging, api.StatusA, 0, false, nil},
-		{pollCharging, api.StatusA, tRefresh, false, nil},
-		{pollCharging, api.StatusB, 0, true, func() { // poll once when car gets connected
-			lp.socUpdated = time.Time{}
-		}},
-		{pollCharging, api.StatusB, tRefresh, false, nil},
-		{pollCharging, api.StatusC, 0, true, nil},
-		{pollCharging, api.StatusC, tNoRefresh, true, nil}, // cached by vehicle
-		{pollCharging, api.StatusC, tRefresh, true, nil},
+		{pollCharging, api.StatusA, -1, false},
+		{pollCharging, api.StatusA, 0, false},
+		{pollCharging, api.StatusA, tRefresh, false},
+		{pollCharging, api.StatusB, -1, false},
+		{pollCharging, api.StatusB, 0, false},
+		{pollCharging, api.StatusB, tRefresh, false},
+		{pollCharging, api.StatusC, -1, true},
+		{pollCharging, api.StatusC, 0, true},
+		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollCharging, api.StatusC, tRefresh, true},
 
 		// pollConnected
-		{pollConnected, api.StatusA, 0, false, nil},
-		{pollConnected, api.StatusA, tRefresh, false, nil},
-		{pollConnected, api.StatusB, 0, true, nil},
-		{pollConnected, api.StatusB, tNoRefresh, false, nil},
-		{pollConnected, api.StatusB, tRefresh, true, nil},
-		{pollConnected, api.StatusC, 0, true, nil},
-		{pollConnected, api.StatusC, tNoRefresh, true, nil}, // cached by vehicle
-		{pollConnected, api.StatusC, tRefresh, true, nil},
+		{pollConnected, api.StatusA, -1, false},
+		{pollConnected, api.StatusA, 0, false},
+		{pollConnected, api.StatusA, tRefresh, false},
+		{pollConnected, api.StatusB, -1, true},
+		{pollConnected, api.StatusB, 0, false},
+		{pollConnected, api.StatusB, tNoRefresh, false},
+		{pollConnected, api.StatusB, tRefresh, true},
+		{pollConnected, api.StatusC, -1, true},
+		{pollConnected, api.StatusC, 0, true},
+		{pollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollConnected, api.StatusC, tRefresh, true},
 
 		// pollAlways
-		{pollAlways, api.StatusA, 0, false, nil},
-		{pollAlways, api.StatusA, tNoRefresh, false, nil},
-		{pollAlways, api.StatusA, tRefresh, true, nil},
-		{pollAlways, api.StatusB, 0, false, nil},
-		{pollAlways, api.StatusB, tNoRefresh, false, nil},
-		{pollAlways, api.StatusB, tRefresh, true, nil},
-		{pollAlways, api.StatusC, 0, true, nil},
-		{pollAlways, api.StatusC, tNoRefresh, true, nil}, // cached by vehicle
-		{pollAlways, api.StatusC, tRefresh, true, nil},
+		{pollAlways, api.StatusA, -1, true},
+		{pollAlways, api.StatusA, 0, false},
+		{pollAlways, api.StatusA, tNoRefresh, false},
+		{pollAlways, api.StatusA, tRefresh, true},
+		{pollAlways, api.StatusB, -1, true},
+		{pollAlways, api.StatusB, 0, false},
+		{pollAlways, api.StatusB, tNoRefresh, false},
+		{pollAlways, api.StatusB, tRefresh, true},
+		{pollAlways, api.StatusC, -1, true},
+		{pollAlways, api.StatusC, 0, true},
+		{pollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollAlways, api.StatusC, tRefresh, true},
 	}
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		clock.Add(tc.dt)
+		if tc.dt < 0 {
+			lp.socUpdated = time.Time{}
+		} else {
+			clock.Add(tc.dt)
+		}
 
 		lp.SoC.Poll.Mode = tc.mode
 		lp.status = tc.status
-
-		if tc.fun != nil {
-			tc.fun()
-		}
 
 		if res := lp.socPollAllowed(); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
