@@ -786,7 +786,7 @@ func (lp *LoadPoint) socPollAllowed() bool {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 	}
 
-	res := lp.charging() || lp.socUpdated.IsZero() || honourUpdateInterval && remaining <= 0
+	res := lp.charging() || honourUpdateInterval && (lp.socUpdated.IsZero() || remaining <= 0)
 	if res {
 		lp.socUpdated = lp.clock.Now()
 	}
