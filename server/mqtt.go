@@ -68,7 +68,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI) {
+func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
@@ -88,11 +88,8 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 
 // Run starts the MQTT publisher for the MQTT API
 func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
-	topic := fmt.Sprintf("%s/site", m.root)
-	m.listenSetters(topic, site)
-
 	// number of loadpoints
-	topic = fmt.Sprintf("%s/loadpoints", m.root)
+	topic := fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	for id, lp := range site.LoadPoints() {

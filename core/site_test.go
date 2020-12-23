@@ -4,6 +4,10 @@ import (
 	"testing"
 )
 
+func TestSiteApi(t *testing.T) {
+	var _ SiteAPI = NewSite()
+}
+
 func TestSitePower(t *testing.T) {
 	tc := []struct {
 		grid, battery, site float64

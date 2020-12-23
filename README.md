@@ -492,13 +492,11 @@ Note: to modify writable settings perform a `POST` request appending the value a
 
 ### MQTT API
 
-The MQTT API follows the REST API's structure:
+The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
 
 - `evcc`: root topic
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
-- `evcc/site/mode`: global charge mode (writable)
-- `evcc/site/targetSoC`: global target SoC (writable)
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)

@@ -142,7 +142,7 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 }
 
 // CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func CurrentChargeModeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := chargeModeJSON{Mode: loadpoint.GetMode()}
 		jsonResponse(w, r, res)
@@ -150,7 +150,7 @@ func CurrentChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerF
 }
 
 // ChargeModeHandler updates charge mode
-func ChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func ChargeModeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -169,7 +169,7 @@ func ChargeModeHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 }
 
 // CurrentTargetSoCHandler returns current target soc
-func CurrentTargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func CurrentTargetSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
 		jsonResponse(w, r, res)
@@ -177,7 +177,7 @@ func CurrentTargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFu
 }
 
 // TargetSoCHandler updates target soc
-func TargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func TargetSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -199,7 +199,7 @@ func TargetSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 }
 
 // CurrentMinSoCHandler returns current minimum soc
-func CurrentMinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func CurrentMinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
 		jsonResponse(w, r, res)
@@ -207,7 +207,7 @@ func CurrentMinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc 
 }
 
 // MinSoCHandler updates minimum soc
-func MinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func MinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -229,7 +229,7 @@ func MinSoCHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
 }
 
 // RemoteDemandHandler updates minimum soc
-func RemoteDemandHandler(loadpoint core.LoadPointSettingsAPI) http.HandlerFunc {
+func RemoteDemandHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -267,11 +267,6 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 	}
 }
 
-// applyRouteHandler applies route with given handler
-func applyRouteHandler(router *mux.Router, r route, handler http.HandlerFunc) {
-	router.Methods(r.Methods...).Path(r.Pattern).Handler(handler)
-}
-
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
@@ -280,17 +275,10 @@ type HTTPd struct {
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
-	var routes = map[string]route{
-		"health":       {[]string{"GET"}, "/health", HealthHandler(site)},
-		"state":        {[]string{"GET"}, "/state", StateHandler(cache)},
-		"templates":    {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
-		"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(site)},
-		"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(site)},
-		"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(site)},
-		"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(site)},
-		"getminsoc":    {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(site)},
-		"setminsoc":    {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(site)},
-		"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(site)},
+	routes := map[string]route{
+		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
+		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
+		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -326,14 +314,21 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 
 	// loadpoint api
 	for id, lp := range site.LoadPoints() {
-		subAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
-		applyRouteHandler(subAPI, routes["getmode"], CurrentChargeModeHandler(lp))
-		applyRouteHandler(subAPI, routes["setmode"], ChargeModeHandler(lp))
-		applyRouteHandler(subAPI, routes["gettargetsoc"], CurrentTargetSoCHandler(lp))
-		applyRouteHandler(subAPI, routes["settargetsoc"], TargetSoCHandler(lp))
-		applyRouteHandler(subAPI, routes["getminsoc"], CurrentMinSoCHandler(lp))
-		applyRouteHandler(subAPI, routes["setminsoc"], MinSoCHandler(lp))
-		applyRouteHandler(subAPI, routes["remotedemand"], RemoteDemandHandler(lp))
+		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
+
+		routes := map[string]route{
+			"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp)},
+			"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp)},
+			"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(lp)},
+			"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
+			"getminsoc":    {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
+			"setminsoc":    {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
+			"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
+		}
+
+		for _, r := range routes {
+			lpAPI.Methods(r.Methods...).Path(r.Pattern).Handler(r.HandlerFunc)
+		}
 	}
 
 	srv := &HTTPd{
