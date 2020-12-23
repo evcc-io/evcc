@@ -1,5 +1,5 @@
 <template>
-	<div class="btn-group btn-group-toggle bg-white shadow-none">
+	<div class="btn-group btn-group-toggle bg-white shadow-none w-50">
 		<label
 			class="btn btn-outline-primary value disabled caption font-weight-bold"
 			v-if="caption"
@@ -24,6 +24,10 @@
 			<input type="radio" value="pv" v-on:click="targetMode('pv')" />
 			<span>Eco</span>
 			<!-- <span class="d-none d-md-inline">Nur PV</span> -->
+		</label>
+		<label class="btn btn-outline-primary">
+			<input type="checkbox" data-toggle="collapse" data-target="#settings" />
+			<fa-icon icon="sliders-h"></fa-icon>
 		</label>
 	</div>
 </template>

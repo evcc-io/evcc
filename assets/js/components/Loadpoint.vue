@@ -40,7 +40,7 @@
 					v-on:updated="targetMode"
 				></Mode>
 
-				<div class="btn-group btn-group-toggle bg-white shadow-none ml-5">
+				<!-- <div class="btn-group btn-group-toggle bg-white shadow-none ml-5">
 					<label class="btn btn-outline-secondary">
 						<input
 							type="checkbox"
@@ -49,7 +49,14 @@
 						/>
 						<fa-icon icon="sliders-h"></fa-icon>
 					</label>
-				</div>
+				</div> -->
+
+				<!-- <div class="btn-group-toggle d-inline ml-5" data-toggle="buttons">
+					<label class="btn btn-secondary">
+						<input type="checkbox" data-toggle="collapse" data-target="#settings" />
+						Einstellungen
+					</label>
+				</div> -->
 			</div>
 			<!-- <div class="col-md-6 mt-3" v-if="hasTargetSoC">
 				<Soc
@@ -61,26 +68,29 @@
 			</div> -->
 		</div>
 
-		<div id="settings" class="row bg-light pt-0" v-if="!multi">
-			<div class="col px-4">
-				<hr />
-				<div class="row py-3">
-					<div class="col-12 col-md-6 pb-3">
-						<div class="row">
-							<div class="col-12">
-								<Range id="pvrange" title="Eco Restenergiebezug" unit="%" :val="15">
-								</Range>
-							</div>
-							<div class="col-5 d-inline d-xl-none">0% (Kein Bezug)</div>
-							<div class="col-7 d-inline d-xl-none text-right">
-								100% (Keine Einspeisung)
-							</div>
-							<div class="col-5 d-none d-xl-inline">0% (Kein Energiebezug)</div>
-							<div class="col-7 d-none d-xl-inline text-right">
-								100% (Keine PV-Einspeisung)
-							</div>
-						</div>
-					</div>
+		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
+			<div class="col-12 mt-3">
+				<Mode
+					class="w-100"
+					v-bind:mode="state.mode"
+					:pv="pv"
+					v-on:updated="targetMode"
+				></Mode>
+			</div>
+			<!-- <div class="col-12 mt-3" v-if="hasTargetSoC">
+				<Soc
+					class="w-100"
+					v-bind:soc="state.targetSoC"
+					:levels="state.socLevels"
+					v-on:updated="targetSoC"
+				></Soc>
+			</div> -->
+		</div>
+
+		<div id="settings" class="row bg-light pt-0 collapse" v-if="!multi">
+			<div class="col px-3 px-md-4">
+				<!-- <hr /> -->
+				<div class="row py-md-1 py-md-3">
 					<div class="col-12 col-md-6 pb-3">
 						<div class="row">
 							<div class="col-12">
@@ -97,26 +107,24 @@
 							<div class="col-6 text-right">100% (Maximal)</div>
 						</div>
 					</div>
-				</div>
-			</div>
-		</div>
 
-		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
-			<div class="col-12 mt-3">
-				<Mode
-					class="w-100"
-					v-bind:mode="state.mode"
-					:pv="pv"
-					v-on:updated="targetMode"
-				></Mode>
-			</div>
-			<div class="col-12 mt-3" v-if="hasTargetSoC">
-				<Soc
-					class="w-100"
-					v-bind:soc="state.targetSoC"
-					:levels="state.socLevels"
-					v-on:updated="targetSoC"
-				></Soc>
+					<div class="col-12 col-md-6 pb-3">
+						<div class="row">
+							<div class="col-12">
+								<Range id="pvrange" title="Eco Restenergiebezug" unit="%" :val="15">
+								</Range>
+							</div>
+							<div class="col-5 d-inline d-xl-none">0% (Kein Bezug)</div>
+							<div class="col-7 d-inline d-xl-none text-right">
+								100% (Keine Einspeisung)
+							</div>
+							<div class="col-5 d-none d-xl-inline">0% (Kein Energiebezug)</div>
+							<div class="col-7 d-none d-xl-inline text-right">
+								100% (Keine PV-Einspeisung)
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 
