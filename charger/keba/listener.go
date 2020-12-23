@@ -40,6 +40,7 @@ type Listener struct {
 	log     *util.Logger
 	conn    *net.UDPConn
 	clients map[string]chan<- UDPMsg
+	cache   map[string]string
 }
 
 // New creates a UDP listener that clients can subscribe to
@@ -58,6 +59,7 @@ func New(log *util.Logger) (*Listener, error) {
 		log:     log,
 		conn:    conn,
 		clients: make(map[string]chan<- UDPMsg),
+		cache:   make(map[string]string),
 	}
 
 	go l.listen()
@@ -65,7 +67,7 @@ func New(log *util.Logger) (*Listener, error) {
 	return l, nil
 }
 
-// Subscribe adds a client address and message channel
+// Subscribe adds a client address or serial and message channel to the list of subscribers
 func (l *Listener) Subscribe(addr string, c chan<- UDPMsg) {
 	l.mux.Lock()
 	defer l.mux.Unlock()
@@ -94,7 +96,7 @@ func (l *Listener) listen() {
 		if body != OK {
 			var report Report
 			if err := json.Unmarshal([]byte(body), &report); err != nil {
-				l.log.WARN.Printf("listener: %v", err)
+				l.log.WARN.Printf("recv: invalid message: %v", err)
 				continue
 			}
 
@@ -105,15 +107,25 @@ func (l *Listener) listen() {
 	}
 }
 
-// addrMatches checks if either message sender or serial matched given addr
+// addrMatches checks if either message sender or serial matches given addr
 func (l *Listener) addrMatches(addr string, msg UDPMsg) bool {
 	switch {
 	case addr == Any:
 		return true
+
 	case addr == msg.Addr:
 		return true
-	case msg.Report != nil && addr == msg.Report.Serial:
+
+	// simple response like TCH :OK where cached serial for sender address matches
+	case l.cache[addr] == msg.Addr:
 		return true
+
+	// report response with matching serial
+	case msg.Report != nil && addr == msg.Report.Serial:
+		// cache address for serial to make simple TCH :OK messages routable using serial
+		l.cache[msg.Report.Serial] = msg.Addr
+		return true
+
 	default:
 		return false
 	}

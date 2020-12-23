@@ -50,7 +50,7 @@ func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
 	resC := make(chan keba.UDPMsg)
 	h.listener.Subscribe(ip, resC)
 
-	sender, err := keba.NewSender(ip)
+	sender, err := keba.NewSender(log, ip)
 	if err != nil {
 		log.ERROR.Println("keba:", err)
 		return nil

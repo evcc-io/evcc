@@ -58,8 +58,8 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
 	log := util.NewLogger("keba")
 
-	var err error
 	if keba.Instance == nil {
+		var err error
 		keba.Instance, err = keba.New(log)
 		if err != nil {
 			return nil, err
@@ -68,7 +68,7 @@ func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger,
 
 	// add default port
 	conn := util.DefaultPort(uri, keba.Port)
-	sender, err := keba.NewSender(uri)
+	sender, err := keba.NewSender(log, conn)
 
 	c := &Keba{
 		log:     log,
