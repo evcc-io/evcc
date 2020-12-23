@@ -7,13 +7,21 @@
     "build": "rimraf dist; parcel build assets/* --public-url ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
+    "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist",
+    "build-storybook": "build-storybook",
     "fix-audit": "npm-force-resolutions"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.12.9",
+    "@storybook/addon-actions": "^6.1.10",
+    "@storybook/addon-essentials": "^6.1.10",
+    "@storybook/addon-links": "^6.1.10",
+    "@storybook/vue": "^6.1.10",
     "@vue/component-compiler-utils": "^3.2.0",
     "@vue/eslint-config-standard": "^5.1.2",
+    "babel-loader": "^8.2.2",
     "eslint": "^7.14.0",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-import": "^2.22.1",
@@ -22,12 +30,11 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.1.0",
     "eslint-plugin-vue": "^7.1.0",
-    "husky": "^4.3.0",
-    "lint-staged": "^10.5.1",
     "npm-force-resolutions": "0.0.3",
     "parcel-bundler": "^1.12.4",
     "prettier": "^2.2.0",
     "rimraf": "^3.0.2",
+    "vue-loader": "^15.9.5",
     "vue-template-compiler": "^2.6.12"
   },
   "engines": {
@@ -52,18 +59,5 @@
   },
   "resolutions": {
     "node-forge": "0.10.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "assets/**/*.{js,vue,json}": [
-      "eslint --fix"
-    ],
-    "assets/**/*.{html,js,vue,json,css}": [
-      "prettier --write"
-    ]
   }
 }

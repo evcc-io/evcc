@@ -31,13 +31,19 @@
 			</div>
 		</nav>
 
-		<Version :installed="installed" id="version-bar"></Version>
+		<Version
+			id="version-bar"
+			:installed="installedVersion"
+			:available="store.state.availableVersion"
+			:releaseNotes="store.state.releaseNotes"
+		></Version>
 
 		<router-view></router-view>
 	</div>
 </template>
 
 <script>
+import "../icons";
 import Version from "../components/Version";
 import store from "../store";
 
@@ -48,7 +54,7 @@ export default {
 		return {
 			compact: false,
 			store: this.$root.$data.store,
-			installed: window.evcc.version,
+			installedVersion: window.evcc.version,
 		};
 	},
 	methods: {

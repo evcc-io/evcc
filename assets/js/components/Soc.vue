@@ -7,11 +7,11 @@
 			class="btn btn-outline-primary"
 			v-for="(level, id) in levelsOrDefault"
 			:key="id"
-			v-bind:level="level"
+			:level="level"
 			:id="id"
 			:class="{ active: soc == level, first: !caption && id == 0 }"
 		>
-			<input type="radio" v-bind:value="level" v-on:click="targetSoC(level)" />{{ level }}%
+			<input type="radio" :value="level" v-on:click="setTargetSoC(level)" />{{ level }}%
 		</label>
 	</div>
 </template>
@@ -19,7 +19,11 @@
 <script>
 export default {
 	name: "Soc",
-	props: ["soc", "caption", "levels"],
+	props: {
+		soc: Number,
+		caption: Boolean,
+		levels: Array,
+	},
 	computed: {
 		levelsOrDefault: function () {
 			if (this.levels == null || this.levels.length == 0) {
@@ -29,7 +33,7 @@ export default {
 		},
 	},
 	methods: {
-		targetSoC: function (mode) {
+		setTargetSoC: function (mode) {
 			this.$emit("updated", mode);
 		},
 	},

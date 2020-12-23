@@ -6,22 +6,27 @@
 		>
 			Modus
 		</label>
+		<label class="btn btn-outline-primary" :class="{ active: mode == 'off', first: !caption }">
+			<input type="radio" value="off" v-on:click="setTargetMode('off')" />Stop
+		</label>
+		<label class="btn btn-outline-primary" :class="{ active: mode == 'now' }">
+			<input type="radio" value="now" v-on:click="setTargetMode('now')" />Sofort
+		</label>
 		<label
 			class="btn btn-outline-primary"
-			v-bind:class="{ active: mode == 'off', first: !caption }"
+			:class="{ active: mode == 'minpv' }"
+			v-if="pvConfigured"
 		>
-			<input type="radio" value="off" v-on:click="targetMode('off')" />Stop
-		</label>
-		<label class="btn btn-outline-primary" v-bind:class="{ active: mode == 'now' }">
-			<input type="radio" value="now" v-on:click="targetMode('now')" />Sofort
-		</label>
-		<label class="btn btn-outline-primary" v-bind:class="{ active: mode == 'minpv' }" v-if="pv">
-			<input type="radio" value="minpv" v-on:click="targetMode('minpv')" />
+			<input type="radio" value="minpv" v-on:click="setTargetMode('minpv')" />
 			<span class="d-inline d-lg-none">Min</span>
 			<span class="d-none d-lg-inline">Min + PV</span>
 		</label>
-		<label class="btn btn-outline-primary" v-bind:class="{ active: mode == 'pv' }" v-if="pv">
-			<input type="radio" value="pv" v-on:click="targetMode('pv')" />
+		<label
+			class="btn btn-outline-primary"
+			:class="{ active: mode == 'pv' }"
+			v-if="pvConfigured"
+		>
+			<input type="radio" value="pv" v-on:click="setTargetMode('pv')" />
 			<span class="d-inline d-md-none">PV</span>
 			<span class="d-none d-md-inline">Nur PV</span>
 		</label>
@@ -31,9 +36,13 @@
 <script>
 export default {
 	name: "Mode",
-	props: ["mode", "pv", "caption"],
+	props: {
+		mode: String,
+		pvConfigured: Boolean,
+		caption: Boolean,
+	},
 	methods: {
-		targetMode: function (mode) {
+		setTargetMode: function (mode) {
 			this.$emit("updated", mode);
 		},
 	},

@@ -1,5 +1,5 @@
 <template>
-	<div class="toast" data-delay="10000" v-bind:data-autohide="true">
+	<div class="toast" data-delay="10000" :data-autohide="true">
 		<div class="toast-header">
 			<strong class="mr-auto" v-if="item.type != 'warn'"
 				><fa-icon class="text-danger" icon="exclamation-triangle"></fa-icon> Error</strong
@@ -18,10 +18,11 @@
 </template>
 
 <script>
+import "../icons";
 import $ from "jquery";
 
 export default {
-	name: "MessageToast",
+	name: "ToastMessage",
 	props: ["item"],
 	mounted: function () {
 		const id = "#message-id-" + this.item.id;

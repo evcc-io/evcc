@@ -1,3 +1,5 @@
+.cache
+.storybook
 .vscode
 *.conf
 *.Dockerfile
@@ -5,7 +7,6 @@
 *.sh
 *.yaml
 Dockerfile
-.cache
 dist
 node_modules
 !entrypoint.sh

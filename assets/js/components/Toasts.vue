@@ -1,22 +1,25 @@
 <template>
 	<div aria-atomic="true" style="position: absolute; top: 4rem; right: 0.5rem">
 		<!-- Position it -->
-		<MessageToast
+		<ToastMessage
 			v-for="item in items"
-			v-bind:item="item"
+			:item="item"
 			:id="'message-id-' + item.id"
 			:key="item.id"
 		>
-		</MessageToast>
+		</ToastMessage>
 	</div>
 </template>
 
 <script>
-import MessageToast from "./MessageToast";
+import "../icons";
+import ToastMessage from "./ToastMessage";
 
 export default {
 	name: "Toasts",
-	components: { MessageToast },
-	props: ["items", "count"],
+	components: { ToastMessage },
+	props: {
+		items: Object,
+	},
 };
 </script>

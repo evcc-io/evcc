@@ -2,13 +2,12 @@
 	<div class="collapse" ref="bar">
 		<div class="row p-3 bg-warning">
 			<div class="col-12">
-				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
-				{{ state.availableVersion }}.
+				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar: {{ available }}.
 				<b
 					class="px-3"
 					data-toggle="collapse"
 					data-target="#release-notes"
-					v-if="state.releaseNotes"
+					v-if="releaseNotes"
 				>
 					<a href="#" class="text-body">
 						Release notes
@@ -18,9 +17,7 @@
 				</b>
 				<b class="px-3">
 					<a
-						v-bind:href="
-							'https://github.com/andig/evcc/releases/tag/' + state.availableVersion
-						"
+						:href="'https://github.com/andig/evcc/releases/tag/' + available"
 						class="text-body"
 					>
 						Download <fa-icon icon="chevron-down"></fa-icon>
@@ -39,20 +36,24 @@
 			</div>
 		</div>
 		<div class="row p-3 bg-light collapse" id="release-notes" ref="notes">
-			<div class="col-12" v-html="state.releaseNotes"></div>
+			<div class="col-12" v-html="releaseNotes"></div>
 		</div>
 	</div>
 </template>
 
 <script>
+import "../icons";
 import $ from "jquery";
 
 export default {
 	name: "Version",
-	props: ["installed"],
+	props: {
+		installed: String,
+		available: String,
+		releaseNotes: String,
+	},
 	data: function () {
 		return {
-			state: this.$root.$data.store.state,
 			notesShown: false,
 		};
 	},
@@ -72,11 +73,11 @@ export default {
 			);
 	},
 	watch: {
-		"state.availableVersion": function () {
+		available: function () {
 			if (
-				this.installed != window.evcc.version && // go template parsed?
+				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
-				this.state.availableVersion != this.installed
+				this.available != this.installed
 			) {
 				$(this.$refs.bar).collapse("show");
 			}
