@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
+	"github.com/spf13/viper"
 )
 
 type Storage struct {
@@ -17,10 +20,81 @@ type Storage struct {
 	dirty    bool
 }
 
-func NewStorage(filename string) *Storage {
+func NewStorage(path string) *Storage {
+	filename := fmt.Sprintf("%s/evcc", strings.TrimRight(path, "/"))
+
 	return &Storage{
 		filename: filename,
 		cache:    make(map[string]interface{}),
+	}
+}
+
+func (p *Storage) Load() {
+	b, err := ioutil.ReadFile(p.filename)
+	if err != nil {
+		return
+	}
+
+	data := make(map[string]string)
+
+	for _, val := range strings.Split(string(b), "\n") {
+		val = strings.Trim(val, "\r\n")
+		kv := strings.SplitN(val, ":", 2)
+
+		data[kv[0]] = kv[1]
+	}
+
+	p.load(data)
+}
+
+func deepMerge(obj interface{}, path []string, val interface{}) interface{} {
+	if len(path) == 0 {
+		return val
+	}
+
+	el := path[0]
+
+	if el, err := strconv.Atoi(el); err == nil {
+		m, ok := obj.([]interface{})
+		if !ok {
+			if obj != nil {
+				panic(fmt.Sprintf("expected slice type, got %T", obj))
+			}
+			m = make([]interface{}, 0)
+		}
+
+		for i := 0; i <= el; i++ {
+			if len(m) <= i {
+				m = append(m, nil)
+			}
+		}
+
+		m[el] = deepMerge(m[el], path[1:], val)
+		return m
+	}
+
+	m, ok := obj.(map[string]interface{})
+	if !ok {
+		if obj != nil {
+			panic(fmt.Sprintf("expected map type, got %T", obj))
+		}
+		m = make(map[string]interface{})
+	}
+	m[el] = deepMerge(m[el], path[1:], val)
+
+	return m
+}
+
+func (p *Storage) load(data map[string]string) {
+	p.mux.Lock()
+	defer p.mux.Unlock()
+
+	for k, v := range data {
+		path := strings.Split(k, ".")
+		config := viper.Get(path[0])
+
+		deepMerge(config, path[1:], v)
+		viper.Set(path[0], config)
 	}
 }
 

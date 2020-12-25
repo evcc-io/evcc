@@ -152,6 +152,10 @@ func run(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// load user-defined settings
+	storage := settings.NewStorage("/var/lib/")
+	storage.Load()
+
 	// start broadcasting values
 	tee := &Tee{}
 
@@ -178,7 +182,7 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// setup settings storage
-	go settings.NewStorage("/var/lib/evcc.settings").Run(tee.Attach())
+	go storage.Run(tee.Attach())
 
 	// create webserver
 	socketHub := server.NewSocketHub()
