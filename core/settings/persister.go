@@ -54,6 +54,7 @@ func deepMerge(obj interface{}, path []string, val interface{}) interface{} {
 
 	el := path[0]
 
+	// slices
 	if el, err := strconv.Atoi(el); err == nil {
 		m, ok := obj.([]interface{})
 		if !ok {
@@ -73,6 +74,7 @@ func deepMerge(obj interface{}, path []string, val interface{}) interface{} {
 		return m
 	}
 
+	// maps
 	m, ok := obj.(map[string]interface{})
 	if !ok {
 		if obj != nil {
@@ -80,8 +82,8 @@ func deepMerge(obj interface{}, path []string, val interface{}) interface{} {
 		}
 		m = make(map[string]interface{})
 	}
-	m[el] = deepMerge(m[el], path[1:], val)
 
+	m[el] = deepMerge(m[el], path[1:], val)
 	return m
 }
 

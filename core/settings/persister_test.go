@@ -61,5 +61,4 @@ func TestDeepMergeSlice(t *testing.T) {
 	if expect := map[string]interface{}{"foo": []interface{}{"baz", nil, "bar"}}; !reflect.DeepEqual(expect, res) {
 		t.Errorf("expected %+v, got %+v", expect, res)
 	}
-
 }
