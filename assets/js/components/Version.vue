@@ -58,19 +58,17 @@ export default {
 		};
 	},
 	mounted: function () {
-		$(this.$refs.notes)
-			.on(
-				"show.bs.collapse",
-				function () {
+		// wait for child components to mount
+		// https://github.com/storybookjs/storybook/issues/10806#issuecomment-629840053
+		this.$nextTick(() =>
+			$(this.$refs.notes)
+				.on("show.bs.collapse", () => {
 					this.notesShown = true;
-				}.bind(this)
-			)
-			.on(
-				"hide.bs.collapse",
-				function () {
+				})
+				.on("hide.bs.collapse", () => {
 					this.notesShown = false;
-				}.bind(this)
-			);
+				})
+		);
 	},
 	watch: {
 		available: function () {

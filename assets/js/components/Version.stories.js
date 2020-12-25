@@ -16,7 +16,5 @@ export const Base = Template.bind({});
 Base.args = {
   installed: "0.36",
   available: "0.40",
-  // soc: false,
-  // socTitle: "Mein Auto",
-  // connected: true,
+  releaseNotes: "<li>feature 1<li>feature 2",
 };
