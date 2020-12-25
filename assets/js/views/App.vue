@@ -32,7 +32,6 @@
 		</nav>
 
 		<Version
-			id="version-bar"
 			:installed="installedVersion"
 			:available="store.state.availableVersion"
 			:releaseNotes="store.state.releaseNotes"
