@@ -13,6 +13,9 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+// WriteSingleRegister 16-bit wise write access
+const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
+
 // Settings contains the ModBus settings
 type Settings struct {
 	ID                  uint8
@@ -225,6 +228,8 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.FuncCode = rs485.ReadHoldingReg
 	case "input":
 		op.FuncCode = rs485.ReadInputReg
+	case "writesingle":
+		op.FuncCode = WriteSingleRegister // modbus.FuncCodeWriteSingleRegister
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
 	}
