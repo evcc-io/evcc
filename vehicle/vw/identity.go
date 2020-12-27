@@ -3,8 +3,14 @@ package vw
 import (
 	"errors"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
+
+	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/oidc"
+	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -20,7 +26,29 @@ const (
 
 // Identity provides the identity.vwgroup.io login
 type Identity struct {
-	*http.Client
+	*request.Helper
+	clientID string
+	tokens   oidc.Tokens
+}
+
+// NewIdentity creates VW identity
+func NewIdentity(log *util.Logger, clientID string) *Identity {
+	v := &Identity{
+		Helper:   request.NewHelper(log),
+		clientID: clientID,
+	}
+
+	jar, _ := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+
+	// track cookies and don't follow redirects
+	v.Client.Jar = jar
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	return v
 }
 
 // redirect follows HTTP redirect header if error is nil. Request body is closed.
@@ -40,9 +68,13 @@ func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, err
 }
 
 // Login performs the identity.vwgroup.io login
-func (v *Identity) Login(query url.Values, user, password string) (string, error) {
+func (v *Identity) Login(query url.Values, user, password string) error {
 	var vars FormVars
 	var req *http.Request
+
+	// add nonce and state
+	query.Set("nonce", RandomString(43))
+	query.Set("state", RandomString(43))
 
 	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
 	uri := "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
@@ -115,19 +147,75 @@ func (v *Identity) Login(query url.Values, user, password string) (string, error
 		resp, err = v.redirect(resp, err)
 	}
 
-	var idToken string
 	if err == nil {
 		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
 
 		var location *url.URL
 		if location, err = url.Parse(loc); err == nil {
-			idToken = location.Query().Get("id_token")
+			v.tokens.IDToken = location.Query().Get("id_token")
 
-			if idToken == "" {
+			if v.tokens.IDToken == "" {
 				err = errors.New("missing id token")
 			}
 		}
 	}
 
-	return idToken, err
+	if err == nil {
+		data := url.Values(map[string][]string{
+			"grant_type": {"id_token"},
+			"scope":      {"sc2:fal"},
+			"token":      {v.tokens.IDToken},
+		})
+
+		req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
+			"Content-Type": "application/x-www-form-urlencoded",
+			"X-Client-Id":  v.clientID,
+		})
+		if err == nil {
+			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
+				err = errors.New("missing access token")
+			}
+		}
+	}
+
+	return err
+}
+
+// Token returns the access token
+func (v *Identity) Token() string {
+	return v.tokens.AccessToken
+}
+
+// RefreshToken uses the refresh token to obtain a new access token
+func (v *Identity) RefreshToken() error {
+	if v.tokens.RefreshToken == "" {
+		return errors.New("missing refresh token")
+	}
+
+	data := url.Values(map[string][]string{
+		"grant_type":    {"refresh_token"},
+		"refresh_token": {v.tokens.RefreshToken},
+		"scope":         {"sc2:fal"},
+	})
+
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"X-Client-Id":  v.clientID,
+	}
+
+	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), headers)
+
+	if err == nil {
+		var tokens oidc.Tokens
+
+		err = v.DoJSON(req, &tokens)
+		if err == nil {
+			v.tokens.AccessToken = tokens.AccessToken
+			if tokens.RefreshToken != "" {
+				v.tokens.RefreshToken = tokens.RefreshToken
+			}
+		}
+	}
+
+	return err
 }
