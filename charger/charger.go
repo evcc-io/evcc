@@ -40,7 +40,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 
 	status, err := provider.NewStringGetterFromConfig(cc.Status)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("status: %w", err)
 	}
 
 	enabled, err := provider.NewBoolGetterFromConfig(cc.Enabled)

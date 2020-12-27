@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
@@ -115,9 +117,19 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	return mb, nil
 }
 
-// FloatGetter executes configured modbus read operation and implements func() (float64, error)
-func (m *Modbus) FloatGetter() func() (float64, error) {
-	return m.floatGetter
+func (m *Modbus) bytesGetter() (bytes []byte, err error) {
+	if op := m.op.MBMD; op.FuncCode != 0 {
+		switch op.FuncCode {
+		case rs485.ReadHoldingReg:
+			bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
+		case rs485.ReadInputReg:
+			bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+		default:
+			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
+		}
+	}
+
+	return nil, errors.New("expected rtu reading")
 }
 
 func (m *Modbus) floatGetter() (float64, error) {
@@ -127,17 +139,8 @@ func (m *Modbus) floatGetter() (float64, error) {
 	// if funccode is configured, execute the read directly
 	if op := m.op.MBMD; op.FuncCode != 0 {
 		var bytes []byte
-		switch op.FuncCode {
-		case rs485.ReadHoldingReg:
-			bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
-		case rs485.ReadInputReg:
-			bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
-		default:
-			return 0, fmt.Errorf("unknown function code %d", op.FuncCode)
-		}
-
-		if err != nil {
-			return 0, fmt.Errorf("read failed: %v", err)
+		if bytes, err = m.bytesGetter(); err != nil {
+			return 0, fmt.Errorf("read failed: %w", err)
 		}
 
 		return m.scale * op.Transform(bytes), nil
@@ -175,6 +178,11 @@ func (m *Modbus) floatGetter() (float64, error) {
 	return m.scale * res.Value, err
 }
 
+// FloatGetter executes configured modbus read operation and implements func() (float64, error)
+func (m *Modbus) FloatGetter() func() (float64, error) {
+	return m.floatGetter
+}
+
 // IntGetter executes configured modbus read operation and implements IntProvider
 func (m *Modbus) IntGetter() func() (int64, error) {
 	g := m.FloatGetter()
@@ -182,6 +190,30 @@ func (m *Modbus) IntGetter() func() (int64, error) {
 	return func() (int64, error) {
 		res, err := g()
 		return int64(math.Round(res)), err
+	}
+}
+
+// StringGetter executes configured modbus read operation and implements IntProvider
+func (m *Modbus) StringGetter() func() (string, error) {
+	return func() (string, error) {
+		bytes, err := m.bytesGetter()
+		if err != nil {
+			return "", err
+		}
+
+		return strings.TrimSpace(string(bytes)), nil
+	}
+}
+
+// BoolGetter executes configured modbus read operation and implements IntProvider
+func (m *Modbus) BoolGetter() func() (bool, error) {
+	return func() (bool, error) {
+		bytes, err := m.bytesGetter()
+		if err != nil {
+			return false, err
+		}
+
+		return strconv.ParseBool(strings.TrimSpace(string(bytes)))
 	}
 }
 
