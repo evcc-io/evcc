@@ -152,12 +152,3 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 
 	return nil
 }
-
-// Close performs cleanup activities on all entities maintained by the config provider
-func (cp *ConfigProvider) Close() {
-	for _, o := range cp.vehicles {
-		if c, ok := o.(api.Closer); ok {
-			c.Close()
-		}
-	}
-}

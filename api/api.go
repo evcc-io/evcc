@@ -111,8 +111,3 @@ type VehicleRange interface {
 type Climater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
-
-// Closer ends open sessions or connections
-type Closer interface {
-	Close() error
-}
