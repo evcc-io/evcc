@@ -33,6 +33,8 @@ func init() {
 	registry.Add("vw", NewVWFromConfig)
 }
 
+const vwClientID = "38761134-34d0-41f3-9a73-c4be88d7d337"
+
 // NewVWFromConfig creates a new vehicle
 func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
@@ -83,7 +85,6 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 func (v *VW) authFlow() error {
-	var uri string
 	var req *http.Request
 
 	const clientID = "9496332b-ea03-4091-a224-8c746b885068@apps_vw-dilab_com"
@@ -102,55 +103,21 @@ func (v *VW) authFlow() error {
 	identity := &vw.Identity{Client: v.Client}
 	idToken, err := identity.Login(query, v.user, v.password)
 
-	// get client id
 	if err == nil {
-		data := struct {
-			AppID       string `json:"appId"`
-			AppName     string `json:"appName"`
-			AppVersion  string `json:"appVersion"`
-			ClientBrand string `json:"client_brand"`
-			ClientName  string `json:"client_name"`
-			Platform    string `json:"platform"`
-		}{
-			AppID:       "de.volkswagen.car-net.eu.e-remote",
-			AppName:     "We Connect",
-			AppVersion:  "5.3.2",
-			ClientBrand: "VW",
-			ClientName:  "iPhone",
-			Platform:    "iOS",
-		}
+		data := url.Values(map[string][]string{
+			"grant_type": {"id_token"},
+			"scope":      {"sc2:fal"},
+			"token":      {idToken},
+		})
 
-		uri = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/register/v1"
-		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
+			"Content-type": "application/x-www-form-urlencoded",
+			"X-Client-Id":  vwClientID,
+		})
 
 		if err == nil {
-			data := struct {
-				ClientID string `json:"client_id"`
-			}{}
-
-			if err = v.DoJSON(req, &data); err == nil && data.ClientID == "" {
-				err = errors.New("missing client id")
-			}
-
-			v.clientID = data.ClientID
-		}
-
-		if err == nil {
-			data := url.Values(map[string][]string{
-				"grant_type": {"id_token"},
-				"scope":      {"sc2:fal"},
-				"token":      {idToken},
-			})
-
-			req, err = request.New(http.MethodPost, vw.OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
-				"Content-type": "application/x-www-form-urlencoded",
-				"X-Client-Id":  v.clientID,
-			})
-
-			if err == nil {
-				if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
-					err = errors.New("missing access token")
-				}
+			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
+				err = errors.New("missing access token")
 			}
 		}
 	}
@@ -161,28 +128,6 @@ func (v *VW) authFlow() error {
 func (v *VW) refreshHeaders() map[string]string {
 	return map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
-		"X-Client-Id":  v.clientID,
+		"X-Client-Id":  vwClientID,
 	}
-}
-
-// Close closes the vehicle session
-func (v *VW) Close() error {
-	data := url.Values(map[string][]string{
-		"token_type_hint": {"refresh_token"},
-		"token":           {v.tokens.RefreshToken},
-	})
-
-	req, err := request.New(http.MethodPost, vw.OauthRevokeURI, strings.NewReader(data.Encode()), map[string]string{
-		"Content-type": "application/x-www-form-urlencoded",
-		"X-Client-Id":  v.clientID,
-	})
-
-	if err == nil {
-		var resp *http.Response
-		if resp, err = v.Do(req); err == nil {
-			resp.Body.Close()
-		}
-	}
-
-	return err
 }
