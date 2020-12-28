@@ -117,13 +117,13 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	return mb, nil
 }
 
-func (m *Modbus) bytesGetter() (bytes []byte, err error) {
+func (m *Modbus) bytesGetter() ([]byte, error) {
 	if op := m.op.MBMD; op.FuncCode != 0 {
 		switch op.FuncCode {
 		case rs485.ReadHoldingReg:
-			bytes, err = m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
+			return m.conn.ReadHoldingRegisters(op.OpCode, op.ReadLen)
 		case rs485.ReadInputReg:
-			bytes, err = m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
+			return m.conn.ReadInputRegisters(op.OpCode, op.ReadLen)
 		default:
 			return nil, fmt.Errorf("unknown function code %d", op.FuncCode)
 		}
@@ -230,7 +230,7 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 			case modbus.WriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
 			default:
-				return fmt.Errorf("unknown function code %d", op.FuncCode)
+				err = fmt.Errorf("unknown function code %d", op.FuncCode)
 			}
 		} else {
 			err = errors.New("modbus plugin does not support writing to sunspec")
