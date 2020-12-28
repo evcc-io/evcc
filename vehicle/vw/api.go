@@ -114,21 +114,6 @@ func (v *API) getJSON(uri string, res interface{}) error {
 
 	if err == nil {
 		err = v.DoJSON(req, &res)
-
-		// token expired?
-		if err != nil {
-			// handle http 401
-			if se, ok := err.(request.StatusError); ok && se.StatusCode() == http.StatusUnauthorized {
-				// refresh the token
-				err = v.identity.RefreshToken()
-			}
-
-			// retry original requests
-			if err == nil {
-				req.Header.Set("Authorization", "Bearer "+v.identity.Token())
-				err = v.DoJSON(req, &res)
-			}
-		}
 	}
 
 	return err
