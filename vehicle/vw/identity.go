@@ -6,6 +6,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -26,6 +27,7 @@ const (
 
 // Identity provides the identity.vwgroup.io login
 type Identity struct {
+	log *util.Logger
 	*request.Helper
 	clientID string
 	tokens   oidc.Tokens
@@ -34,6 +36,7 @@ type Identity struct {
 // NewIdentity creates VW identity
 func NewIdentity(log *util.Logger, clientID string) *Identity {
 	v := &Identity{
+		log:      log,
 		Helper:   request.NewHelper(log),
 		clientID: clientID,
 	}
@@ -81,6 +84,19 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	resp, err := v.Get(uri)
 	if err == nil {
 		resp.Body.Close()
+	}
+
+	// ID - get login url (previous request is ignored)
+	if v.clientID == "" {
+		uri := "https://login.apps.emea.vwapps.io/authorize?nonce=NZ2Q3T6jak0E5pDh&redirect_uri=weconnect://authenticated"
+		if resp, err = v.Get(uri); err == nil {
+			resp.Body.Close()
+
+			uri = resp.Header.Get("Location")
+			if resp, err = v.Get(uri); err == nil {
+				resp.Body.Close()
+			}
+		}
 	}
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
@@ -147,33 +163,58 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		resp, err = v.redirect(resp, err)
 	}
 
+	var location *url.URL
+
 	if err == nil {
 		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
+		location, err = url.Parse(loc)
 
-		var location *url.URL
-		if location, err = url.Parse(loc); err == nil {
-			v.tokens.IDToken = location.Query().Get("id_token")
-
-			if v.tokens.IDToken == "" {
-				err = errors.New("missing id token")
-			}
+		if err == nil && location.Query().Get("id_token") == "" {
+			err = errors.New("missing id token")
 		}
 	}
 
-	if err == nil {
+	// VW or Audi
+	if err == nil && v.clientID != "" {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {v.tokens.IDToken},
+			"token":      {location.Query().Get("id_token")},
 		})
 
 		req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
 			"X-Client-Id":  v.clientID,
 		})
+
 		if err == nil {
-			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
-				err = errors.New("missing access token")
+			var tokens oidc.Tokens
+			if err = v.DoJSON(req, &tokens); err == nil {
+				err = v.validateTokens(tokens)
+			}
+		}
+	}
+
+	// ID
+	if err == nil && v.clientID == "" {
+		q := location.Query()
+
+		data := map[string]string{
+			"state":             q.Get("state"),
+			"id_token":          q.Get("id_token"),
+			"redirect_uri":      "weconnect://authenticated",
+			"region":            "emea",
+			"access_token":      q.Get("access_token"),
+			"authorizationCode": q.Get("code"),
+		}
+
+		uri := "https://login.apps.emea.vwapps.io/login/v1"
+		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+		if err == nil {
+			var tokens idTokens
+			if err = v.DoJSON(req, &tokens); err == nil {
+				err = v.validateTokens(tokens.AsOIDC())
 			}
 		}
 	}
@@ -181,8 +222,31 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	return err
 }
 
-// Token returns the access token
+// validateTokens checks if token is present and sets valid time
+func (v *Identity) validateTokens(tokens oidc.Tokens) error {
+	if tokens.AccessToken == "" {
+		return errors.New("missing access token")
+	}
+
+	v.tokens.AccessToken = tokens.AccessToken
+	v.tokens.Valid = time.Now().Add(time.Second * time.Duration(tokens.ExpiresIn))
+
+	// re-use refresh token
+	if tokens.RefreshToken != "" {
+		v.tokens.RefreshToken = tokens.RefreshToken
+	}
+
+	return nil
+}
+
+// Token returns the access token, refreshed if necessary
 func (v *Identity) Token() string {
+	if time.Since(v.tokens.Valid) > 0 {
+		if err := v.RefreshToken(); err != nil {
+			v.log.ERROR.Printf("token refresh failed: %v", err)
+		}
+	}
+
 	return v.tokens.AccessToken
 }
 
@@ -190,6 +254,10 @@ func (v *Identity) Token() string {
 func (v *Identity) RefreshToken() error {
 	if v.tokens.RefreshToken == "" {
 		return errors.New("missing refresh token")
+	}
+
+	if v.clientID == "" {
+		return v.refreshIDToken()
 	}
 
 	data := url.Values(map[string][]string{
@@ -207,13 +275,28 @@ func (v *Identity) RefreshToken() error {
 
 	if err == nil {
 		var tokens oidc.Tokens
+		if err = v.DoJSON(req, &tokens); err == nil {
+			err = v.validateTokens(tokens)
+		}
+	}
 
-		err = v.DoJSON(req, &tokens)
-		if err == nil {
-			v.tokens.AccessToken = tokens.AccessToken
-			if tokens.RefreshToken != "" {
-				v.tokens.RefreshToken = tokens.RefreshToken
-			}
+	return err
+}
+
+func (v *Identity) refreshIDToken() error {
+	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
+
+	headers := map[string]string{
+		"Accept":        "application/json",
+		"Authorization": "Bearer " + v.tokens.RefreshToken,
+	}
+
+	req, err := request.New(http.MethodGet, uri, nil, headers)
+
+	if err == nil {
+		var tokens idTokens
+		if err = v.DoJSON(req, &tokens); err == nil {
+			err = v.validateTokens(tokens.AsOIDC())
 		}
 	}
 
