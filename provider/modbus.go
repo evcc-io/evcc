@@ -1,10 +1,10 @@
 package provider
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math"
-	"strconv"
 	"strings"
 
 	"github.com/andig/evcc/util"
@@ -213,7 +213,17 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 			return false, err
 		}
 
-		return strconv.ParseBool(strings.TrimSpace(string(bytes)))
+		var u uint64
+		switch len(bytes) {
+		case 2:
+			u = uint64(binary.BigEndian.Uint16(bytes))
+		case 4:
+			u = uint64(binary.BigEndian.Uint32(bytes))
+		case 8:
+			u = binary.BigEndian.Uint64(bytes)
+		}
+
+		return u > 0, nil
 	}
 }
 
