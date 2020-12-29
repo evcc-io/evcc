@@ -187,11 +187,11 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
-			_, estimate := v.(api.ChargeFinishTimer)
+			_, finish := v.(api.ChargeFinishTimer)
 			_, status := v.(api.VehicleStatus)
 			_, climate := v.(api.Climater)
-			lp.log.INFO.Printf("    car %d:   estimate %s status %s climate %s",
-				i, presence[estimate], presence[status], presence[climate],
+			lp.log.INFO.Printf("    car %d:   finish %s status %s climate %s",
+				i, presence[finish], presence[status], presence[climate],
 			)
 		}
 	}
