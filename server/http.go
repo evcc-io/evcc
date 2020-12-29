@@ -55,10 +55,6 @@ func indexHandler(site core.SiteAPI) http.HandlerFunc {
 
 		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
-			// embedded assets
-			indexTemplate, err = fs.ReadFile(Assets, "dist/index.html")
-		}
-		if err != nil {
 			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
 			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
 		}
