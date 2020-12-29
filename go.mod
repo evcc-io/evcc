@@ -1,6 +1,6 @@
 module github.com/andig/evcc
 
-go 1.13
+go 1.16
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.0
@@ -38,7 +38,6 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.12.1-0.20201122163044-c8e61b6f96d2
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mitchellh/mapstructure v1.3.3
-	github.com/mjibson/esc v0.2.0
 	github.com/muka/go-bluetooth v0.0.0-20200928120822-44d49b402aee
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
