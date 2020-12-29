@@ -205,6 +205,22 @@ func (m *Modbus) StringGetter() func() (string, error) {
 	}
 }
 
+// UintFromBytes converts byte slice to bigendian uint value
+func UintFromBytes(bytes []byte) (u uint64, err error) {
+	switch l := len(bytes); l {
+	case 2:
+		u = uint64(binary.BigEndian.Uint16(bytes))
+	case 4:
+		u = uint64(binary.BigEndian.Uint32(bytes))
+	case 8:
+		u = binary.BigEndian.Uint64(bytes)
+	default:
+		err = fmt.Errorf("unexpected length: %d", l)
+	}
+
+	return u, err
+}
+
 // BoolGetter executes configured modbus read operation and implements IntProvider
 func (m *Modbus) BoolGetter() func() (bool, error) {
 	return func() (bool, error) {
@@ -213,17 +229,8 @@ func (m *Modbus) BoolGetter() func() (bool, error) {
 			return false, err
 		}
 
-		var u uint64
-		switch len(bytes) {
-		case 2:
-			u = uint64(binary.BigEndian.Uint16(bytes))
-		case 4:
-			u = uint64(binary.BigEndian.Uint32(bytes))
-		case 8:
-			u = binary.BigEndian.Uint64(bytes)
-		}
-
-		return u > 0, nil
+		u, err := UintFromBytes(bytes)
+		return u > 0, err
 	}
 }
 
