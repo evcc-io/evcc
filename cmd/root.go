@@ -161,7 +161,6 @@ func run(cmd *cobra.Command, args []string) {
 	// setup loadpoints
 	site, err := loadConfig(conf)
 	if err != nil {
-		cp.Close()
 		log.FATAL.Fatal(err)
 	}
 
@@ -236,7 +235,6 @@ func run(cmd *cobra.Command, args []string) {
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
 		<-exitC      // wait for loop to end
-		cp.Close()   // cleanup
 
 		os.Exit(1)
 	}()

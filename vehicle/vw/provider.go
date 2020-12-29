@@ -8,27 +8,27 @@ import (
 	"github.com/andig/evcc/provider"
 )
 
-// Implementation implements the evcc vehicle api
-type Implementation struct {
+// Provider implements the evcc vehicle api
+type Provider struct {
 	chargerG func() (interface{}, error)
 	climateG func() (interface{}, error)
 }
 
-// NewImplementation provides the evcc vehicle api implementation
-func NewImplementation(api *API, cache time.Duration) *Implementation {
-	impl := &Implementation{
+// NewProvider provides the evcc vehicle api provider
+func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+	impl := &Provider{
 		chargerG: provider.NewCached(func() (interface{}, error) {
-			return api.Charger()
+			return api.Charger(vin)
 		}, cache).InterfaceGetter(),
 		climateG: provider.NewCached(func() (interface{}, error) {
-			return api.Climater()
+			return api.Climater(vin)
 		}, cache).InterfaceGetter(),
 	}
 	return impl
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
-func (v *Implementation) ChargeState() (float64, error) {
+func (v *Provider) ChargeState() (float64, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
@@ -38,7 +38,7 @@ func (v *Implementation) ChargeState() (float64, error) {
 }
 
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
-func (v *Implementation) FinishTime() (time.Time, error) {
+func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
 		rct := res.Charger.Status.BatteryStatusData.RemainingChargingTime
@@ -58,7 +58,7 @@ func (v *Implementation) FinishTime() (time.Time, error) {
 }
 
 // Status implements the Vehicle.Status interface
-func (v *Implementation) Status() (api.ChargeStatus, error) {
+func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargerG()
@@ -75,7 +75,7 @@ func (v *Implementation) Status() (api.ChargeStatus, error) {
 }
 
 // Range implements the Vehicle.Range interface
-func (v *Implementation) Range() (rng int64, err error) {
+func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
 		crsd := res.Charger.Status.CruisingRangeStatusData
@@ -90,7 +90,7 @@ func (v *Implementation) Range() (rng int64, err error) {
 }
 
 // Climater implements the Vehicle.Climater interface
-func (v *Implementation) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()
 	if res, ok := res.(ClimaterResponse); err == nil && ok {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)

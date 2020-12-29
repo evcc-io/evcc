@@ -35,11 +35,8 @@ func runDump(cmd *cobra.Command, args []string) {
 
 	site, err := loadConfig(conf)
 	if err != nil {
-		cp.Close() // cleanup any open sessions
 		log.FATAL.Fatal(err)
 	}
-
-	defer cp.Close() // cleanup on exit
 
 	d := dumper{len: 2}
 
