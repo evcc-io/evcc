@@ -111,7 +111,8 @@ func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
 			// calculate gradient, wh per soc %
-			if socDelta > 1 && energyDelta > 0 && s.prevSoC > 0 {
+			// TODO: drop samples with unmatching state of evse and vehicle
+			if socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
 				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
