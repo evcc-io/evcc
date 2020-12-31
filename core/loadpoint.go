@@ -469,7 +469,16 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		if err = lp.charger.Enable(enabled); err == nil {
 			lp.enabled = enabled
 			lp.guardUpdated = lp.clock.Now()
+
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+			lp.log.DEBUG.Printf("charger %s", status[enabled])
+
+			// wake up vehicle
+			if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+				if err := car.StartCharge(); err != nil {
+					lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
+				}
+			}
 		} else {
 			lp.log.ERROR.Printf("charger %s: %v", status[enabled], err)
 		}
