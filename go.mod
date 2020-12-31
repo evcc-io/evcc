@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.0
-	github.com/andig/evcc-config v0.0.0-20201219105822-c89d29a41875
+	github.com/andig/evcc-config v0.0.0-20201219164310-ee176b2c66ef
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
