@@ -40,7 +40,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
 - [Plugins](#plugins)
-  - [Modbus](#modbus-read-only)
+  - [Modbus](#modbus-readwrite)
   - [MQTT](#mqtt-readwrite)
   - [HTTP](#http-readwrite)
   - [Websocket](#websocket-read-only)
@@ -255,9 +255,9 @@ Plugins are used to integrate various devices and external data sources with EVC
 
 Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
-### Modbus (read only)
+### Modbus (read/write)
 
-The `modbus` plugin is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)).
+The `modbus` plugin is able to read data from any Modbus meter or SunSpec-compatible solar inverter. Many meters are already pre-configured (see [MBMD Supported Devices](https://github.com/volkszaehler/mbmd#supported-devices)). It also supports writing Modbus registers for integration of additional chargers.
 
 The meter configuration consists of the actual physical connection and the value to be read.
 
@@ -337,6 +337,8 @@ scale: -1 # floating point factor applied to result, e.g. for kW to W conversion
 ```
 
 The `int32s/uint32s` decodings apply swapped word order and are useful e.g. with E3/DC devices.
+
+To write a register use `type: writesingle` which writes a single 16bit register (either `int` or `bool`). The encoding is always `uint16` in this case.
 
 ### MQTT (read/write)
 
