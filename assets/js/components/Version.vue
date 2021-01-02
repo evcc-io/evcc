@@ -97,6 +97,7 @@ export default {
 .fade-leave-to {
 	opacity: 0;
 }
+
 .expand-icon {
 	transition: transform 0.25s ease-in;
 	transform: rotate(0);
