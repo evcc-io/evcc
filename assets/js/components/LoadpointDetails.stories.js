@@ -53,3 +53,15 @@ VehicleClimater.args = {
   chargeEstimate: 5 * 3600,
   climater: "on",
 };
+
+export const VehicleTimer = Template.bind({});
+VehicleTimer.args = {
+  chargePower: 2800,
+  chargedEnergy: 11e3,
+  chargeDuration: 95 * 60,
+  soc: true,
+  range: 240.123,
+  chargeEstimate: 5 * 3600,
+  socTimerSet: true,
+  socTimerActive: true,
+};
