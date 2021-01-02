@@ -8,8 +8,12 @@
 					<b class="px-3" v-if="releaseNotes">
 						<a href="#" class="text-body" @click="toggleReleaseNotes">
 							Release notes
-							<fa-icon icon="chevron-up" v-if="dismissed"></fa-icon>
-							<fa-icon icon="chevron-down" v-else></fa-icon>
+							<fa-icon
+								icon="chevron-down"
+								class="expand-icon"
+								:class="{ 'expand-icon-rotated': releaseNotesExpanded }"
+							>
+							</fa-icon>
 						</a>
 					</b>
 					<b class="px-3">
@@ -92,5 +96,12 @@ export default {
 .fade-enter,
 .fade-leave-to {
 	opacity: 0;
+}
+.expand-icon {
+	transition: transform 0.25s ease-in;
+	transform: rotate(0);
+}
+.expand-icon-rotated {
+	transform: rotate(-180deg);
 }
 </style>
