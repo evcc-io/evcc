@@ -19,6 +19,18 @@ type API struct {
 	identity *vw.Identity
 }
 
+// Actions and action values
+const (
+	ActionCharge         = "charging"
+	ActionChargeStart    = "start"
+	ActionChargeStop     = "stop"
+	ActionChargeSettings = "settings" // body: targetSOC_pct
+
+	ActionClimatisation      = "climatisation"
+	ActionClimatisationStart = "start"
+	ActionClimatisationStop  = "stop"
+)
+
 // NewAPI creates a new vehicle
 func NewAPI(log *util.Logger, identity *vw.Identity) *API {
 	v := &API{

@@ -21,7 +21,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
 		startChargeAction: func() error {
-			return api.Action(vin, "charging", "start")
+			return api.Action(vin, ActionCharge, ActionChargeStart)
 		},
 	}
 	return impl
