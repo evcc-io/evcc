@@ -47,6 +47,19 @@
 					:caption="true"
 					v-on:updated="setTargetSoC"
 				></Soc>
+				<!-- <div class="btn-group btn-group-toggle bg-white shadow-none">
+					<label class="btn btn-outline-primary">
+						<input
+							type="checkbox"
+							class="disabled"
+							v-on:click="alert('not implemented - use api')"
+						/>
+						<fa-icon
+							icon="clock"
+							v-bind:class="{ fas: socTimerActive, far: !socTimerActive }"
+						></fa-icon>
+					</label>
+				</div> -->
 			</div>
 		</div>
 
@@ -160,6 +173,8 @@ export default {
 		socTitle: String,
 		socCharge: Number,
 		minSoC: Number,
+		socTimerSet: Boolean,
+		socTimerActive: Boolean,
 
 		// details
 		chargePower: Number,
