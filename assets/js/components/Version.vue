@@ -1,49 +1,51 @@
 <template>
-	<div class="collapse" ref="bar">
-		<div class="row p-3 bg-warning">
-			<div class="col-12">
-				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar: {{ available }}.
-				<b
-					class="px-3"
-					data-toggle="collapse"
-					data-target="#release-notes"
-					v-if="releaseNotes"
-				>
-					<a href="#" class="text-body">
-						Release notes
-						<fa-icon icon="chevron-up" v-if="notesShown"></fa-icon>
-						<fa-icon icon="chevron-down" v-else></fa-icon>
-					</a>
-				</b>
-				<b class="px-3">
-					<a
-						:href="'https://github.com/andig/evcc/releases/tag/' + available"
-						class="text-body"
+	<transition name="fade">
+		<div v-if="active">
+			<div class="row p-3 bg-warning">
+				<div class="col-12">
+					Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
+					{{ available }}.
+					<b class="px-3" v-if="releaseNotes">
+						<a href="#" class="text-body" @click="toggleReleaseNotes">
+							Release notes
+							<fa-icon
+								icon="chevron-down"
+								class="expand-icon"
+								:class="{ 'expand-icon-rotated': releaseNotesExpanded }"
+							>
+							</fa-icon>
+						</a>
+					</b>
+					<b class="px-3">
+						<a
+							:href="'https://github.com/andig/evcc/releases/tag/' + available"
+							class="text-body"
+						>
+							Download <fa-icon icon="chevron-down"></fa-icon>
+						</a>
+					</b>
+					<button
+						type="button"
+						class="close float-right"
+						style="margin-top: -2px"
+						aria-label="Close"
+						@click="dismiss"
 					>
-						Download <fa-icon icon="chevron-down"></fa-icon>
-					</a>
-				</b>
-				<button
-					type="button"
-					class="close float-right"
-					style="margin-top: -2px"
-					aria-label="Close"
-					data-toggle="collapse"
-					data-target="#version-bar"
-				>
-					<span aria-hidden="true">&times;</span>
-				</button>
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
 			</div>
+			<transition name="fade">
+				<div class="row p-3 bg-light" v-if="releaseNotesExpanded">
+					<div class="col-12" v-html="releaseNotes"></div>
+				</div>
+			</transition>
 		</div>
-		<div class="row p-3 bg-light collapse" id="release-notes" ref="notes">
-			<div class="col-12" v-html="releaseNotes"></div>
-		</div>
-	</div>
+	</transition>
 </template>
 
 <script>
 import "../icons";
-import $ from "jquery";
 
 export default {
 	name: "Version",
@@ -54,34 +56,54 @@ export default {
 	},
 	data: function () {
 		return {
-			notesShown: false,
+			dismissed: false,
+			releaseNotesExpanded: false,
 		};
 	},
-	mounted: function () {
-		$(this.$refs.notes)
-			.on(
-				"show.bs.collapse",
-				function () {
-					this.notesShown = true;
-				}.bind(this)
-			)
-			.on(
-				"hide.bs.collapse",
-				function () {
-					this.notesShown = false;
-				}.bind(this)
+	methods: {
+		dismiss: function () {
+			this.dismissed = true;
+		},
+		toggleReleaseNotes: function (e) {
+			e.preventDefault();
+			this.releaseNotesExpanded = !this.releaseNotesExpanded;
+		},
+	},
+	computed: {
+		active: function () {
+			return (
+				this.installed != "[[.Version]]" && // go template parsed?
+				this.installed != "0.0.1-alpha" && // make used?
+				this.available != this.installed &&
+				this.dismissed === false
 			);
+		},
 	},
 	watch: {
 		available: function () {
-			if (
-				this.installed != "[[.Version]]" && // go template parsed?
-				this.installed != "0.0.1-alpha" && // make used?
-				this.available != this.installed
-			) {
-				$(this.$refs.bar).collapse("show");
-			}
+			this.dismissed = false;
+			this.releaseNotesExpanded = false;
 		},
 	},
 };
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.25s ease-in;
+}
+
+.fade-enter,
+.fade-leave-to {
+	opacity: 0;
+}
+
+.expand-icon {
+	transition: transform 0.25s ease-in;
+	transform: rotate(0);
+}
+.expand-icon-rotated {
+	transform: rotate(-180deg);
+}
+</style>
