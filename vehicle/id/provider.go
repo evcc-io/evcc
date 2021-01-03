@@ -1,8 +1,10 @@
 package id
 
 import (
+	"strings"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 )
 
@@ -31,6 +33,23 @@ func (v *Provider) ChargeState() (float64, error) {
 	return 0, err
 }
 
+// Status implements the Vehicle.Status interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		if res.Data.PlugStatus.PlugConnectionState == "connected" {
+			status = api.StatusB
+		}
+		if res.Data.ChargingStatus.ChargingState == "charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
@@ -51,4 +70,27 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	return 0, err
+}
+
+// Climater implements the Vehicle.Climater interface
+func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
+
+		if state == "" {
+			return false, 0, 0, api.ErrNotAvailable
+		}
+
+		active := state != "off" && state != "invalid" && state != "error"
+
+		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
+
+		// TODO: not available; use target temp to avoid wrong heating/cooling display
+		outsideTemp = targetTemp
+
+		return active, outsideTemp, targetTemp, nil
+	}
+
+	return active, outsideTemp, targetTemp, err
 }
