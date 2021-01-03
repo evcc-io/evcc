@@ -21,7 +21,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install tools
-      run: make install
+      run: npm ci
 
     - name: Assets & UI
       run: make npm
