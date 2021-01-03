@@ -443,14 +443,18 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= float64(lp.MinCurrent) {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
+			lp.log.DEBUG.Printf("max charge current: %.2g", chargeCurrent)
 			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
+			lp.log.DEBUG.Printf("max charge current: %d", int64(chargeCurrent))
 			err = lp.charger.MaxCurrent(int64(chargeCurrent))
 		}
 
 		if err == nil {
 			lp.chargeCurrent = chargeCurrent
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+		} else {
+			lp.log.ERROR.Printf("max charge current %.2g: %v", chargeCurrent, err)
 		}
 	}
 
@@ -461,11 +465,13 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			return nil
 		}
 
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		if err = lp.charger.Enable(enabled); err == nil {
 			lp.enabled = enabled
 			lp.guardUpdated = lp.clock.Now()
-			lp.log.DEBUG.Printf("charger %s", status[enabled])
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+		} else {
+			lp.log.ERROR.Printf("charger %s: %v", status[enabled], err)
 		}
 	}
 
@@ -935,7 +941,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
-		lp.log.DEBUG.Printf("target charge current: %.2gA", targetCurrent)
+		lp.log.DEBUG.Printf("pv max charge current: %.2gA", targetCurrent)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
