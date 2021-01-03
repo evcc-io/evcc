@@ -1,47 +1,46 @@
 <template>
-	<transition name="fade">
-		<div v-if="active">
-			<div class="row p-3 bg-warning">
-				<div class="col-12">
-					Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
-					{{ available }}.
-					<b class="px-3" v-if="releaseNotes">
-						<a href="#" class="text-body" @click="toggleReleaseNotes">
-							Release notes
-							<fa-icon
-								icon="chevron-down"
-								class="expand-icon"
-								:class="{ 'expand-icon-rotated': releaseNotesExpanded }"
-							>
-							</fa-icon>
-						</a>
-					</b>
-					<b class="px-3">
-						<a
-							:href="'https://github.com/andig/evcc/releases/tag/' + available"
-							class="text-body"
+	<!-- <transition name="fade"> -->
+	<div v-if="active">
+		<div class="row p-3 bg-warning">
+			<div class="col-12">
+				Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar: {{ available }}.
+				<b class="px-3" v-if="releaseNotes">
+					<a href="#" class="text-body" @click="toggleReleaseNotes">
+						Release notes
+						<fa-icon
+							icon="chevron-down"
+							class="expand-icon"
+							:class="{ 'expand-icon-rotated': releaseNotesExpanded }"
 						>
-							Download <fa-icon icon="chevron-down"></fa-icon>
-						</a>
-					</b>
-					<button
-						type="button"
-						class="close float-right"
-						style="margin-top: -2px"
-						aria-label="Close"
-						@click="dismiss"
+						</fa-icon>
+					</a>
+				</b>
+				<b class="px-3">
+					<a
+						:href="'https://github.com/andig/evcc/releases/tag/' + available"
+						class="text-body"
 					>
-						<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
+						Download <fa-icon icon="chevron-down"></fa-icon>
+					</a>
+				</b>
+				<button
+					type="button"
+					class="close float-right"
+					style="margin-top: -2px"
+					aria-label="Close"
+					@click="dismiss"
+				>
+					<span aria-hidden="true">&times;</span>
+				</button>
 			</div>
-			<transition name="fade">
-				<div class="row p-3 bg-light" v-if="releaseNotesExpanded">
-					<div class="col-12" v-html="releaseNotes"></div>
-				</div>
-			</transition>
 		</div>
-	</transition>
+		<!-- <transition name="fade"> -->
+		<div class="row p-3 bg-light" v-if="releaseNotesExpanded">
+			<div class="col-12" v-html="releaseNotes"></div>
+		</div>
+		<!-- </transition> -->
+	</div>
+	<!-- </transition> -->
 </template>
 
 <script>
@@ -87,4 +86,21 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+	transition: opacity 0.25s ease-in;
+}
 
+.fade-enter,
+.fade-leave-to {
+	opacity: 0;
+}
+.expand-icon {
+	transition: transform 0.25s ease-in;
+	transform: rotate(0);
+}
+.expand-icon-rotated {
+	transform: rotate(-180deg);
+}
+</style>
