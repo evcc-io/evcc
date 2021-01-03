@@ -87,21 +87,4 @@ export default {
 	},
 };
 </script>
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-	transition: opacity 0.25s ease-in;
-}
 
-.fade-enter,
-.fade-leave-to {
-	opacity: 0;
-}
-.expand-icon {
-	transition: transform 0.25s ease-in;
-	transform: rotate(0);
-}
-.expand-icon-rotated {
-	transform: rotate(-180deg);
-}
-</style>
