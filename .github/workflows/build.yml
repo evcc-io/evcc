@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # - name: Setup
-    #   uses: actions/setup-go@v2
-    #   with:
-    #     go-version: ^1.14
-    #   id: go
 
     - uses: actions/setup-node@v2
       with:
@@ -38,21 +33,9 @@ jobs:
       run: make install
 
     - name: Assets & UI
-      # run: make npm assets
       run: make ui
 
     - name: Porcelain
       run: |
         go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
-
-    # - name: Build
-    #   run: make build
-
-    # - name: Lint
-    #   uses: golangci/golangci-lint-action@v2
-    #   with:
-    #     version: v1.33
-
-    # - name: Test
-    #   run: make test
