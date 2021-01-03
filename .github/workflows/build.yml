@@ -33,7 +33,7 @@ jobs:
       run: make install
 
     - name: Assets & UI
-      run: make ui
+      run: make npm
 
     - name: Porcelain
       run: |
