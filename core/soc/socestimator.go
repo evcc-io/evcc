@@ -1,4 +1,4 @@
-package wrapper
+package soc
 
 import (
 	"errors"
@@ -11,9 +11,9 @@ import (
 
 const chargeEfficiency = 0.9 // assume charge 90% efficiency
 
-// SocEstimator provides vehicle soc and charge duration
+// Estimator provides vehicle soc and charge duration
 // Vehicle SoC can be estimated to provide more granularity
-type SocEstimator struct {
+type Estimator struct {
 	log      *util.Logger
 	vehicle  api.Vehicle
 	estimate bool
@@ -26,9 +26,9 @@ type SocEstimator struct {
 	energyPerSocStep  float64 // Energy per SoC percent in Wh
 }
 
-// NewSocEstimator creates new estimator
-func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocEstimator {
-	s := &SocEstimator{
+// NewEstimator creates new estimator
+func NewEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *Estimator {
+	s := &Estimator{
 		log:      log,
 		vehicle:  vehicle,
 		estimate: estimate,
@@ -40,7 +40,7 @@ func NewSocEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *SocE
 }
 
 // Reset resets the estimation process to default values
-func (s *SocEstimator) Reset() {
+func (s *Estimator) Reset() {
 	s.prevSoC = 0
 	s.prevChargedEnergy = 0
 	s.capacity = float64(s.vehicle.Capacity()) * 1e3  // cache to simplify debugging
@@ -49,7 +49,7 @@ func (s *SocEstimator) Reset() {
 }
 
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
-func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
+func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
 	if chargePower > 0 {
 		percentRemaining := float64(targetSoC) - s.socCharge
 		if percentRemaining <= 0 {
@@ -78,7 +78,7 @@ func (s *SocEstimator) RemainingChargeDuration(chargePower float64, targetSoC in
 }
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
-func (s *SocEstimator) RemainingChargeEnergy(targetSoC int) float64 {
+func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 	percentRemaining := float64(targetSoC) - s.socCharge
 	if percentRemaining <= 0 {
 		return 0
@@ -90,7 +90,7 @@ func (s *SocEstimator) RemainingChargeEnergy(targetSoC int) float64 {
 }
 
 // SoC implements Vehicle.ChargeState with addition of given charged energy
-func (s *SocEstimator) SoC(chargedEnergy float64) (float64, error) {
+func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
 	if err != nil {
 		s.log.WARN.Printf("updating soc failed: %v", err)

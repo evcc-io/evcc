@@ -37,6 +37,23 @@ func (v *Provider) ChargeState() (float64, error) {
 	return 0, err
 }
 
+// Status implements the Vehicle.Status interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.chargerG()
+	if res, ok := res.(ChargerResponse); err == nil && ok {
+		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
+			status = api.StatusB
+		}
+		if res.Charger.Status.ChargingStatusData.ChargingState.Content == "charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
 // FinishTime implements the Vehicle.ChargeFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
@@ -55,23 +72,6 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
-}
-
-// Status implements the Vehicle.Status interface
-func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
-	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
-		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
-			status = api.StatusB
-		}
-		if res.Charger.Status.ChargingStatusData.ChargingState.Content == "charging" {
-			status = api.StatusC
-		}
-	}
-
-	return status, err
 }
 
 // Range implements the Vehicle.Range interface

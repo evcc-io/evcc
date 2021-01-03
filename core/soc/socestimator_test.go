@@ -1,4 +1,4 @@
-package wrapper
+package soc
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	//9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, false)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, false)
 	ce.socCharge = 20.0
 
 	chargePower := 1000.0
@@ -34,7 +34,7 @@ func TestSoCEstimation(t *testing.T) {
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, true)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, true)
 	ce.socCharge = 20.0
 
 	tc := []struct {

@@ -3,11 +3,15 @@ package id
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/vw"
 )
+
+// https://identity-userinfo.vwgroup.io/oidc/userinfo
+// https://customer-profile.apps.emea.vwapps.io/v1/customers/<userId>/realCarData
 
 // API is an api.Vehicle implementation for VW ID cars
 type API struct {
@@ -35,7 +39,8 @@ func (v *API) Vehicles() (res []string, err error) {
 
 	var vehicles struct {
 		Data []struct {
-			VIN string
+			VIN      string
+			Nickname string
 		}
 	}
 
@@ -55,10 +60,11 @@ type Status struct {
 	Data struct {
 		BatteryStatus         BatteryStatus
 		ChargingStatus        ChargingStatus
+		ChargingSettings      ChargingSettings
 		PlugStatus            PlugStatus
 		RangeStatus           RangeStatus
 		ClimatisationSettings ClimatisationSettings
-		// ClimatisationStatus   ClimatisationStatus // currently not available
+		ClimatisationStatus   ClimatisationStatus // may be currently not available
 	}
 }
 
@@ -72,16 +78,16 @@ type BatteryStatus struct {
 // ChargingStatus is the /status.chargingStatus api
 type ChargingStatus struct {
 	CarCapturedTimestamp               string
-	ChargingState                      string
-	RemainingChargingTimeToCompleteMin int `json:"remainingChargingTimeToComplete_min"`
-	ChargePowerKW                      int `json:"chargePower_kW"`
-	ChargeRateKmph                     int `json:"chargeRate_kmph"`
+	ChargingState                      string // readyForCharging
+	RemainingChargingTimeToCompleteMin int    `json:"remainingChargingTimeToComplete_min"`
+	ChargePowerKW                      int    `json:"chargePower_kW"`
+	ChargeRateKmph                     int    `json:"chargeRate_kmph"`
 }
 
 // ChargingSettings is the /status.chargingSettings api
 type ChargingSettings struct {
 	CarCapturedTimestamp      string
-	MaxChargeCurrentAC        string
+	MaxChargeCurrentAC        string // reduced, maximum
 	AutoUnlockPlugWhenCharged string
 	TargetSOCPercent          int `json:"targetSOC_pct"`
 }
@@ -89,8 +95,15 @@ type ChargingSettings struct {
 // PlugStatus is the /status.plugStatus api
 type PlugStatus struct {
 	CarCapturedTimestamp string
-	PlugConnectionState  string
+	PlugConnectionState  string // connected, disconnected
 	PlugLockState        string
+}
+
+// ClimatisationStatus is the /status.climatisationStatus api
+type ClimatisationStatus struct {
+	CarCapturedTimestamp          string
+	RemainingClimatisationTimeMin int    `json:"remainingClimatisationTime_min"`
+	ClimatisationState            string // off
 }
 
 // ClimatisationSettings is the /status.climatisationSettings api
@@ -99,7 +112,7 @@ type ClimatisationSettings struct {
 	TargetTemperatureK                float64 `json:"targetTemperature_K"`
 	TargetTemperatureC                float64 `json:"targetTemperature_C"`
 	ClimatisationWithoutExternalPower bool
-	ClimatizationAtUnlock             bool
+	ClimatisationAtUnlock             bool // ClimatizationAtUnlock?
 	WindowHeatingEnabled              bool
 	ZoneFrontLeftEnabled              bool
 	ZoneFrontRightEnabled             bool
@@ -128,6 +141,25 @@ func (v *API) Status(vin string) (res Status, err error) {
 		"Authorization": "Bearer " + v.identity.Token(),
 	})
 
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
+// Any implements any api response
+func (v *API) Any(uri, vin string) (interface{}, error) {
+	if strings.Contains(uri, "%s") {
+		uri = fmt.Sprintf(uri, vin)
+	}
+
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Accept":        "application/json",
+		"Authorization": "Bearer " + v.identity.Token(),
+	})
+
+	var res interface{}
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
