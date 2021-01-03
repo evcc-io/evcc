@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "rimraf dist; parcel watch assets/* --public-url ./dist/",
-    "build": "rimraf dist; parcel info; parcel build assets/* --public-url ./dist/",
+    "build": "rimraf dist; parcel info; parcel build assets/* --no-minify --no-content-hash --no-source-maps --public-url ./dist/",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist",
