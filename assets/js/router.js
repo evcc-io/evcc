@@ -10,7 +10,7 @@ const routes = [
   { path: "/config", component: Config },
 ];
 
-module.exports = new VueRouter({
+export default new VueRouter({
   routes,
   linkExactActiveClass: "active", // Bootstrap <nav>
 });

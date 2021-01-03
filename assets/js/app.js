@@ -1,3 +1,5 @@
+import "../css/app.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "popper.js";
 import "bootstrap";
 import Vue from "vue";
