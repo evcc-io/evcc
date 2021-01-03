@@ -344,7 +344,11 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	if useLocalAssets {
 		distDir = http.Dir("./dist")
 	}
-	static.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", http.FileServer(distDir)))
+	for _, public := range []string{"css", "js", "ico"} {
+		static.PathPrefix(fmt.Sprintf("/%s/", public)).Handler(
+			http.Handler(http.FileServer(distDir)),
+		)
+	}
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
