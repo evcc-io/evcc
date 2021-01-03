@@ -15,15 +15,6 @@ jobs:
       with:
         node-version: '14.15.3'
 
-    # - uses: actions/cache@v2
-    #   with:
-    #     path: |
-    #       ~/go/pkg/mod
-    #       **/node_modules
-    #     key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
-    #     restore-keys: |
-    #       ${{ runner.os }}-go-
-
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -37,5 +28,4 @@ jobs:
 
     - name: Porcelain
       run: |
-        go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
