@@ -35240,15 +35240,6 @@ require("../icons");
 //
 //
 //
-//
-//
-//
-//
-//
-//
-//
-//
-//
 var _default = {
   name: "Version",
   props: {
@@ -35294,7 +35285,7 @@ exports.default = _default;
     
         /* template */
         Object.assign($971b0b, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return (_vm.active)?_c('div',[_c('div',{staticClass:"row p-3 bg-warning"},[_c('div',{staticClass:"col-12"},[_vm._v("\n\t\t\tNeue Version verfügbar! Installiert: "+_vm._s(_vm.installed)+". Verfügbar: "+_vm._s(_vm.available)+".\n\t\t\t"),(_vm.releaseNotes)?_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":"#"},on:{"click":_vm.toggleReleaseNotes}},[_vm._v("\n\t\t\t\t\tRelease notes\n\t\t\t\t\t"),_c('fa-icon',{staticClass:"expand-icon",class:{ 'expand-icon-rotated': _vm.releaseNotesExpanded },attrs:{"icon":"chevron-down"}})],1)]):_vm._e(),_vm._v(" "),_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":'https://github.com/andig/evcc/releases/tag/' + _vm.available}},[_vm._v("\n\t\t\t\t\tDownload "),_c('fa-icon',{attrs:{"icon":"chevron-down"}})],1)]),_vm._v(" "),_c('button',{staticClass:"close float-right",staticStyle:{"margin-top":"-2px"},attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])])])]),_vm._v(" "),(_vm.releaseNotesExpanded)?_c('div',{staticClass:"row p-3 bg-light"},[_c('div',{staticClass:"col-12",domProps:{"innerHTML":_vm._s(_vm.releaseNotes)}})]):_vm._e()]):_vm._e()}
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row p-3 bg-warning"},[_c('div',{staticClass:"col-12"},[_vm._v("\n\t\tNeue Version verfügbar! Installiert: "+_vm._s(_vm.installed)+". Verfügbar: "+_vm._s(_vm.available)+".\n\t\t"),(_vm.releaseNotes)?_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":"#"},on:{"click":_vm.toggleReleaseNotes}},[_vm._v("\n\t\t\t\tRelease notes\n\t\t\t\t"),_c('fa-icon',{staticClass:"expand-icon",class:{ 'expand-icon-rotated': _vm.releaseNotesExpanded },attrs:{"icon":"chevron-down"}})],1)]):_vm._e(),_vm._v(" "),_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":'https://github.com/andig/evcc/releases/tag/' + _vm.available}},[_vm._v("\n\t\t\t\tDownload "),_c('fa-icon',{attrs:{"icon":"chevron-down"}})],1)]),_vm._v(" "),_c('button',{staticClass:"close float-right",staticStyle:{"margin-top":"-2px"},attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])])])])}
 var staticRenderFns = []
 
           return {

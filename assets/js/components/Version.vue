@@ -32,9 +32,6 @@
 			</button>
 		</div>
 	</div>
-	<div class="row p-3 bg-light" v-if="releaseNotesExpanded">
-		<div class="col-12" v-html="releaseNotes"></div>
-	</div>
 </template>
 
 <script>
