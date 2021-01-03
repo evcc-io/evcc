@@ -35204,6 +35204,17 @@ exports.default = void 0;
 
 require("../icons");
 
+var _jquery = _interopRequireDefault(require("jquery"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//
+//
+//
+//
+//
+//
+//
 //
 //
 //
@@ -35249,30 +35260,23 @@ var _default = {
   },
   data: function data() {
     return {
-      dismissed: false,
-      releaseNotesExpanded: false
+      notesShown: false
     };
   },
-  methods: {
-    dismiss: function dismiss() {
-      this.dismissed = true;
-    },
-    toggleReleaseNotes: function toggleReleaseNotes(e) {
-      e.preventDefault();
-      this.releaseNotesExpanded = !this.releaseNotesExpanded;
-    }
-  },
-  computed: {
-    active: function active() {
-      return this.installed != "[[.Version]]" && // go template parsed?
-      this.installed != "0.0.1-alpha" && // make used?
-      this.available != this.installed && this.dismissed === false;
-    }
+  mounted: function mounted() {
+    (0, _jquery.default)(this.$refs.notes).on("show.bs.collapse", function () {
+      this.notesShown = true;
+    }.bind(this)).on("hide.bs.collapse", function () {
+      this.notesShown = false;
+    }.bind(this));
   },
   watch: {
     available: function available() {
-      this.dismissed = false;
-      this.releaseNotesExpanded = false;
+      if (this.installed != "[[.Version]]" && // go template parsed?
+      this.installed != "0.0.1-alpha" && // make used?
+      this.available != this.installed) {
+        (0, _jquery.default)(this.$refs.bar).collapse("show");
+      }
     }
   }
 };
@@ -35285,8 +35289,8 @@ exports.default = _default;
     
         /* template */
         Object.assign($971b0b, (function () {
-          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{staticClass:"row p-3 bg-warning"},[_c('div',{staticClass:"col-12"},[_vm._v("\n\t\tNeue Version verfügbar! Installiert: "+_vm._s(_vm.installed)+". Verfügbar: "+_vm._s(_vm.available)+".\n\t\t"),(_vm.releaseNotes)?_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":"#"},on:{"click":_vm.toggleReleaseNotes}},[_vm._v("\n\t\t\t\tRelease notes\n\t\t\t\t"),_c('fa-icon',{staticClass:"expand-icon",class:{ 'expand-icon-rotated': _vm.releaseNotesExpanded },attrs:{"icon":"chevron-down"}})],1)]):_vm._e(),_vm._v(" "),_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":'https://github.com/andig/evcc/releases/tag/' + _vm.available}},[_vm._v("\n\t\t\t\tDownload "),_c('fa-icon',{attrs:{"icon":"chevron-down"}})],1)]),_vm._v(" "),_c('button',{staticClass:"close float-right",staticStyle:{"margin-top":"-2px"},attrs:{"type":"button","aria-label":"Close"},on:{"click":_vm.dismiss}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])])])])}
-var staticRenderFns = []
+          var render = function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('div',{ref:"bar",staticClass:"collapse"},[_c('div',{staticClass:"row p-3 bg-warning"},[_c('div',{staticClass:"col-12"},[_vm._v("\n\t\t\tNeue Version verfügbar! Installiert: "+_vm._s(_vm.installed)+". Verfügbar: "+_vm._s(_vm.available)+".\n\t\t\t"),(_vm.releaseNotes)?_c('b',{staticClass:"px-3",attrs:{"data-toggle":"collapse","data-target":"#release-notes"}},[_c('a',{staticClass:"text-body",attrs:{"href":"#"}},[_vm._v("\n\t\t\t\t\tRelease notes\n\t\t\t\t\t"),(_vm.notesShown)?_c('fa-icon',{attrs:{"icon":"chevron-up"}}):_c('fa-icon',{attrs:{"icon":"chevron-down"}})],1)]):_vm._e(),_vm._v(" "),_c('b',{staticClass:"px-3"},[_c('a',{staticClass:"text-body",attrs:{"href":'https://github.com/andig/evcc/releases/tag/' + _vm.available}},[_vm._v("\n\t\t\t\t\tDownload "),_c('fa-icon',{attrs:{"icon":"chevron-down"}})],1)]),_vm._v(" "),_vm._m(0)])]),_vm._v(" "),_c('div',{ref:"notes",staticClass:"row p-3 bg-light collapse",attrs:{"id":"release-notes"}},[_c('div',{staticClass:"col-12",domProps:{"innerHTML":_vm._s(_vm.releaseNotes)}})])])}
+var staticRenderFns = [function () {var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;return _c('button',{staticClass:"close float-right",staticStyle:{"margin-top":"-2px"},attrs:{"type":"button","aria-label":"Close","data-toggle":"collapse","data-target":"#version-bar"}},[_c('span',{attrs:{"aria-hidden":"true"}},[_vm._v("×")])])}]
 
           return {
             render: render,
@@ -35297,7 +35301,7 @@ var staticRenderFns = []
           };
         })());
       
-},{"../icons":"jeVz"}],"M9LT":[function(require,module,exports) {
+},{"../icons":"jeVz","jquery":"juYr"}],"M9LT":[function(require,module,exports) {
 "use strict";
 
 var _vue = _interopRequireDefault(require("vue"));
