@@ -9,6 +9,7 @@ import (
 
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/hems"
+	"github.com/andig/evcc/provider/javascript"
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
@@ -54,6 +55,13 @@ func configureMQTT(conf mqttConfig) {
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
 	if err != nil {
 		log.FATAL.Fatalf("failed configuring mqtt: %v", err)
+	}
+}
+
+// setup javascript
+func configureJavascript(conf map[string]interface{}) {
+	if err := javascript.Configure(conf); err != nil {
+		log.FATAL.Fatalf("failed configuring javascript: %v", err)
 	}
 }
 

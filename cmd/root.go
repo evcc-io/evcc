@@ -158,6 +158,9 @@ func run(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	// start broadcasting values
 	tee := &Tee{}
 
