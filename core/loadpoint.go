@@ -459,7 +459,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	}
 
 	// set enabled
-	if enabled := chargeCurrent != 0; enabled != lp.enabled && err == nil {
+	if enabled := chargeCurrent >= float64(lp.MinCurrent); enabled != lp.enabled && err == nil {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enabled], remaining)
 			return nil
