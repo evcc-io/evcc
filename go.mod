@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.0
-	github.com/andig/evcc-config v0.0.0-20201219164310-ee176b2c66ef
+	github.com/andig/evcc-config v0.0.0-20210101104321-92872981c231
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
@@ -17,6 +17,7 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/golang/mock v1.4.4
+	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.5.1
@@ -28,7 +29,7 @@ require (
 	github.com/imdario/mergo v0.3.11
 	github.com/influxdata/influxdb-client-go/v2 v2.2.0
 	github.com/influxdata/line-protocol v0.0.0-20201012155213-5f565037cbc9 // indirect
-	github.com/itchyny/gojq v0.11.2
+	github.com/itchyny/gojq v0.12.0
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
 	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
@@ -39,11 +40,13 @@ require (
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mjibson/esc v0.2.0
-	github.com/muka/go-bluetooth v0.0.0-20200928120822-44d49b402aee
+	github.com/muka/go-bluetooth v0.0.0-20201211051136-07f31c601d33
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/prometheus/client_golang v1.8.0
+	github.com/prometheus/client_golang v1.6.0
+	github.com/prometheus/common v0.10.0 // indirect
+	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
