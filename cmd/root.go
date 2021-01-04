@@ -142,7 +142,12 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
-	conf := loadConfigFile(cfgFile)
+	conf, err := loadConfigFile(cfgFile)
+	if err != nil {
+		log.ERROR.Println("missing evcc config - switching into demo mode")
+		conf = demoConfig()
+	}
+
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	uri := viper.GetString("uri")

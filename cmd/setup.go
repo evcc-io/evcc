@@ -131,15 +131,15 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 	return loadPoints, nil
 }
 
-func loadConfigFile(cfgFile string) (conf config) {
+func loadConfigFile(cfgFile string) (conf config, err error) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
 			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 		}
 	} else {
-		log.FATAL.Fatal("missing evcc config")
+		err = errors.New("missing evcc config")
 	}
 
-	return conf
+	return conf, err
 }
