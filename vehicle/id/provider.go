@@ -10,7 +10,8 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG           func() (interface{}, error)
+	startChargeAction func() error
 }
 
 // NewProvider creates a new vehicle
@@ -19,6 +20,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
+		startChargeAction: func() error {
+			return api.Action(vin, ActionCharge, ActionChargeStart)
+		},
 	}
 	return impl
 }
@@ -93,4 +97,9 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	}
 
 	return active, outsideTemp, targetTemp, err
+}
+
+// StartCharge implements the VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.startChargeAction()
 }
