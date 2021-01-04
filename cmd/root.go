@@ -21,9 +21,11 @@ import (
 )
 
 var (
-	ignoreParams = []string{"warn", "error", "fatal"} // don't add to cache
-	log          = util.NewLogger("main")
-	cfgFile      string
+	log     = util.NewLogger("main")
+	cfgFile string
+
+	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
+	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -156,7 +158,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreParams...).Pipe(tee.Attach()))
+	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
 	// setup loadpoints
 	site, err := loadConfig(conf)
@@ -172,7 +174,7 @@ func run(cmd *cobra.Command, args []string) {
 	// setup mqtt publisher
 	if conf.Mqtt.Broker != "" {
 		publisher := server.NewMQTT(conf.Mqtt.Topic)
-		go publisher.Run(site, tee.Attach())
+		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
 	// create webserver
