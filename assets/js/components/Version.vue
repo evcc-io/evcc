@@ -72,6 +72,7 @@ export default {
 	computed: {
 		active: function () {
 			return (
+				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
 				this.available != this.installed &&
