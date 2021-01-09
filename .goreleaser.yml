@@ -37,6 +37,8 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
+  - evcc_*.image.gz
+  - evcc_*.rootfs.gz
 checksum:
   name_template: 'checksums.txt'
 snapshot:
