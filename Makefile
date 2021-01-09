@@ -9,8 +9,8 @@ VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
 # docker
-IMAGE := andig/evcc
-ALPINE := 3.12
+DOCKER_IMAGE := andig/evcc
+ALPINE_VERSION := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
 # image
@@ -59,18 +59,18 @@ release:
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "testing" --targets=arm.v6,amd64
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=arm.v6,amd64
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "latest" --targets=$(TARGETS)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
 
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer
