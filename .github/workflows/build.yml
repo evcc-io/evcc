@@ -142,7 +142,7 @@ jobs:
         go-version: ^1.14
       id: go
 
-    - run: ls
+    - run: cat Makefile
 
     - name: Build Image
       run: make image
