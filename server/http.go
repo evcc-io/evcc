@@ -319,7 +319,6 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
-	*mux.Router
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -394,9 +393,12 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
-		Router: router,
 	}
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
+}
+
+func (s *HTTPd) Router() *mux.Router {
+	return s.Handler.(*mux.Router)
 }

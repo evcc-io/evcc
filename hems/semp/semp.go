@@ -80,7 +80,7 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router)
+	s.handlers(httpd.Router())
 
 	return s, err
 }

@@ -36,6 +36,9 @@
 			:installed="installedVersion"
 			:available="store.state.availableVersion"
 			:releaseNotes="store.state.releaseNotes"
+			:hasUpdater="store.state.hasUpdater"
+			:uploadMessage="store.state.uploadMessage"
+			:uploadProgress="store.state.uploadProgress"
 		></Version>
 
 		<router-view></router-view>
