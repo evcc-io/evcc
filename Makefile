@@ -1,13 +1,22 @@
-.PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
+.PHONY: default clean install lint test assets build binaries test-release release
+.PHONY: publish-testing publish-latest publish-images
+.PHONY: image image-rootfs image-update
 
+# build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
+# docker
 IMAGE := andig/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
+
+# image
+IMAGE_FILE := evcc_$(TAG_NAME).image
+IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
+IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/breakglass github.com/andig/evcc
 
 default: clean install npm assets lint test build
 
@@ -65,18 +74,18 @@ publish-images:
 
 image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer
-	gokr-packer -overwrite=evcc_$(IMAGE_FILE) -target_storage_bytes=1153441792 -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
+	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1153441792 $(IMAGE_OPTIONS)
 
 	# create filesystem
-	loop=$$(sudo losetup --find --show -P evcc_0.39.rootfs)
+	loop=$$(sudo losetup --find --show -P 0.39.rootfs)
 	mkfs.ext4 $$loop
 	umount $$loop
 
-	gzip -f -k evcc_$(IMAGE_FILE)
+	gzip -f -k $(IMAGE_FILE)
 
 image-rootfs:
-	gokr-packer -overwrite_root=evcc_$(IMAGE_ROOTFS) -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
-	gzip -f -k evcc_$(IMAGE_ROOTFS)
+	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
+	gzip -f -k $(IMAGE_ROOTFS)
 
 image-update:
-	gokr-packer -update yes -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
+	gokr-packer -update yes $(IMAGE_OPTIONS)
