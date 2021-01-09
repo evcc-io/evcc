@@ -62,3 +62,21 @@ publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
 	   --image-name $(IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+
+image:
+	go get github.com/gokrazy/tools/cmd/gokr-packer
+	gokr-packer -overwrite=evcc_$(IMAGE_FILE) -target_storage_bytes=1153441792 -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
+
+	# create filesystem
+	loop=$$(sudo losetup --find --show -P evcc_0.39.rootfs)
+	mkfs.ext4 $$loop
+	umount $$loop
+
+	gzip -f -k evcc_$(IMAGE_FILE)
+
+image-rootfs:
+	gokr-packer -overwrite_root=evcc_$(IMAGE_ROOTFS) -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
+	gzip -f -k evcc_$(IMAGE_ROOTFS)
+
+image-update:
+	gokr-packer -update yes -hostname $(HOST) $(IMAGE_OPT) $(IMAGE_MODULES)
