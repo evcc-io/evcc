@@ -124,7 +124,6 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        ref: refs/heads/master # force master
         fetch-depth: 0
 
     - uses: actions/cache@v2
@@ -141,8 +140,6 @@ jobs:
       with:
         go-version: ^1.14
       id: go
-
-    - run: cat Makefile
 
     - name: Build Image
       run: make image
