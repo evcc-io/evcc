@@ -77,9 +77,9 @@ image:
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1153441792 $(IMAGE_OPTIONS)
 
 	# create filesystem
-	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE))
-	echo $$loop
-	sudo mkfs.ext4 $${loop}p3
+	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); \
+	echo $$loop; \
+	sudo mkfs.ext4 $${loop}p3; \
 	sudo umount $$loop
 
 	gzip -f -k $(IMAGE_FILE)
