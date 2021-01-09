@@ -53,8 +53,8 @@ jobs:
       run: make test
 
 
-  publish:
-    name: Publish
+  dockerlatest:
+    name: Publish :latest
     if: |
       startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
@@ -80,8 +80,8 @@ jobs:
       run: make publish-latest
 
 
-  release:
-    name: Release
+  dockerrelease:
+    name: Publish :release
     if: "startsWith(github.ref, 'refs/tags')"
     needs: build
     runs-on: ubuntu-latest
@@ -105,19 +105,11 @@ jobs:
     - name: Publish
       run: make publish-images
 
-    - name: Release
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        version: latest
-        args: release --rm-dist
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-  diskimage:
-    name: Disk Image
-    # if: "startsWith(github.ref, 'refs/tags')"
-    # needs: build
+  release:
+    name: Release
+    if: "startsWith(github.ref, 'refs/tags')"
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
@@ -146,3 +138,11 @@ jobs:
 
     - name: Build Root Filesystem
       run: make image-rootfs
+
+    - name: Create Github Release
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -78,7 +78,6 @@ image:
 
 	# create filesystem
 	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p3
-
 	gzip -f -k $(IMAGE_FILE)
 
 image-rootfs:
