@@ -77,9 +77,10 @@ image:
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1153441792 $(IMAGE_OPTIONS)
 
 	# create filesystem
-	loop=$$(sudo losetup --find --show -P 0.39.rootfs)
-	mkfs.ext4 $$loop
-	umount $$loop
+	sudo losetup --find --show -P $(IMAGE_FILE)
+	ls /dev/loop*
+	mkfs.ext4 /dev/loop0p2
+	umount /dev/loop0
 
 	gzip -f -k $(IMAGE_FILE)
 
