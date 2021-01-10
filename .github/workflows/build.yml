@@ -134,7 +134,9 @@ jobs:
       id: go
 
     - name: Build Image
-      run: make image
+      run: |
+        make image
+        cat /home/runner/.config/gokrazy/http-password.txt
 
     - name: Build Root Filesystem
       run: make image-rootfs
