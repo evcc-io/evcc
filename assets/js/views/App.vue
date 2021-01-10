@@ -23,9 +23,9 @@
 					>
 					<a
 						class="nav-item nav-link pb-1"
-						href="https://github.com/andig/evcc/issues"
+						href="https://github.com/andig/evcc/discussions"
 						target="_blank"
-						>Support</a
+						>Community Support</a
 					>
 				</div>
 			</div>
