@@ -25,7 +25,7 @@
 							v-if="hasUpdater"
 							@click="toggleUpdater"
 						>
-							Update
+							Aktualisieren
 						</button>
 						<a
 							:href="'https://github.com/andig/evcc/releases/tag/' + available"
