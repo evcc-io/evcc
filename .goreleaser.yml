@@ -5,6 +5,9 @@ release:
 # before:
 #   hooks:
 #   - make npm assets
+  extra_files:
+  - glob: evcc_*.image.gz
+  - glob: evcc_*.rootfs.gz
 builds:
 - id: evcc
   main: main.go
@@ -37,8 +40,6 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
-  - evcc_*.image.gz
-  - evcc_*.rootfs.gz
 checksum:
   name_template: 'checksums.txt'
 snapshot:

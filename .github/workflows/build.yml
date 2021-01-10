@@ -139,6 +139,9 @@ jobs:
     - name: Build Root Filesystem
       run: make image-rootfs
 
+    - name: Clean git
+      run: git checkout go.*
+
     - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2
       with:
