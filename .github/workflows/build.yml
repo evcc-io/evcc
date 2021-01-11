@@ -135,8 +135,9 @@ jobs:
 
     - name: Build Image
       run: |
+        mkdir /home/runner/.config/gokrazy
+        echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
         make image
-        cat /home/runner/.config/gokrazy/http-password.txt
 
     - name: Build Root Filesystem
       run: make image-rootfs
