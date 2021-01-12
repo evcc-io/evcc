@@ -45,9 +45,11 @@ type wallbeConfig struct {
 	URI    string `validate:"required"`
 	Legacy bool   `ui:"1A-Steuerung"`
 	Meter  struct {
-		Power, Energy, Currents bool
-		Encoding                string
-	}
+		Power    bool   `ui:"Leistung (W)"`
+		Energy   bool   `ui:"Zählerstand (kWh)"`
+		Currents bool   `ui:"Strom (A)"`
+		Encoding string `structs:"-"`
+	} `ui:"Integrierten Zähler verwenden (optional)"`
 }
 
 func wallbeDefaults() wallbeConfig {

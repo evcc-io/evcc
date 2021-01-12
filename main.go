@@ -11,6 +11,7 @@ import (
 )
 
 func init() {
+	// expose all configuration types to ui
 	config.Add("charger", charger.Types())
 	config.Add("meter", meter.Types())
 	config.Add("vehicle", vehicle.Types())
