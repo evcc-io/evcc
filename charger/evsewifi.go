@@ -54,20 +54,25 @@ type EVSEWifi struct {
 	current      int64
 }
 
+type evseConfig = struct {
+	URI   string `validate:"required"`
+	Meter struct {
+		Power    bool `ui:"Leistung (W)"`
+		Energy   bool `ui:"Zählerstand (kWh)"`
+		Currents bool `ui:"Strom (A)"`
+	} `ui:"Integrierten Zähler verwenden (optional)"`
+}
+
 func init() {
-	registry.Add("evsewifi", "EVSE Wifi", NewEVSEWifiFromConfig, nil)
+	registry.Add("evsewifi", "EVSE Wifi", NewEVSEWifiFromConfig, evseConfig{})
+	registry.Add("smartWB", "smartWB", NewEVSEWifiFromConfig, evseConfig{})
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decorateEVSE -o evsewifi_decorators -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI   string `validate:"required"`
-		Meter struct {
-			Power, Energy, Currents bool
-		}
-	}{}
+	var cc evseConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

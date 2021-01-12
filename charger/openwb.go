@@ -21,8 +21,8 @@ type OpenWB struct {
 
 type openwbConfig struct {
 	mqtt.Config `mapstructure:",squash"`
-	ID          int `ui:"Ladepunkt"`
-	Topic       string
+	ID          int           `ui:"Ladepunkt"`
+	Topic       string        `structs:"-"`
 	Timeout     time.Duration `structs:"-"`
 }
 
