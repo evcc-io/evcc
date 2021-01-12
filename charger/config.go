@@ -27,6 +27,7 @@ func Types() (types []config.Type) {
 
 	return types
 }
+
 func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Charger, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))

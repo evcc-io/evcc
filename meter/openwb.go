@@ -13,21 +13,27 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+type openwbConfig struct {
+	mqtt.Config `mapstructure:",squash"`
+	Usage       string
+	Topic       string
+	Timeout     time.Duration `structs:"-"`
+}
+
+func openwbDefaults() openwbConfig {
+	return openwbConfig{
+		Topic:   openwb.RootTopic,
+		Timeout: openwb.Timeout,
+	}
+}
+
 func init() {
-	registry.Add("openwb", NewOpenWBFromConfig)
+	registry.Add("openwb", "openWB", NewOpenWBFromConfig, openwbDefaults())
 }
 
 // NewOpenWBFromConfig creates a new configurable meter
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
-		Usage       string
-	}{
-		Topic:   "openWB",
-		Timeout: 15 * time.Second,
-	}
+	cc := openwbDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

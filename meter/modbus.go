@@ -3,7 +3,6 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -23,22 +22,59 @@ type Modbus struct {
 	opSoC    modbus.Operation
 }
 
+type modbusConfig = struct {
+	Model           string `ui:"Zählertyp oder SunSpec Modell ID"`
+	modbus.Settings `mapstructure:",squash"`
+	Power           string `mapstructure:",required" ui:"Meßwert Leistung"`
+	Energy          string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
+	SoC             string `ui:"Meßwert Ladezustand (nur Batterien)"`
+}
+
+func modbusDefaults() modbusConfig {
+	return modbusConfig{
+		Power: "Power",
+	}
+}
+
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
+
+	// TCP
+	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
+		Model  string `ui:"Zählertyp oder SunSpec Modell ID"`
+		URI    string `mapstructure:",required"`
+		ID     uint8  `ui:"ModBus Slave ID"`
+		RTU    *bool  `ui:"ModBus RTU Gerät"`
+		Power  string `mapstructure:",required" ui:"Meßwert Leistung"`
+		Energy string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
+		SoC    string `ui:"Meßwert Ladezustand (nur Batterien)"`
+	}{
+		Power: "Power",
+	})
+
+	// Serial
+	isTrue := true
+	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
+		Model    string `ui:"Zählertyp"`
+		Device   string `mapstructure:",required" ui:"Serielle Schnittstelle"`
+		Comset   string `mapstructure:",required" ui:"Kummunikationseinstellungen"`
+		Baudrate int    `mapstructure:",required" ui:"Baudrate"`
+		ID       uint8  `ui:"ModBus Slave ID"`
+		RTU      *bool  `structs:"-"`
+		Power    string `mapstructure:",required" ui:"Meßwert Leistung"`
+		Energy   string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
+		SoC      string `ui:"Meßwert Ladezustand (nur Batterien)"`
+	}{
+		Power: "Power",
+		RTU:   &isTrue,
+	})
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p meter -f decorateModbus -b api.Meter -o modbus_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		Model              string
-		modbus.Settings    `mapstructure:",squash"`
-		Power, Energy, SoC string
-		Timeout            time.Duration
-	}{
-		Power: "Power",
-	}
+	cc := modbusDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
