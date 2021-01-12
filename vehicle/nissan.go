@@ -52,7 +52,7 @@ type Nissan struct {
 }
 
 func init() {
-	registry.Add("nissan", NewNissanFromConfig)
+	registry.Add("nissan", "Nissan", NewNissanFromConfig, configDefaults())
 }
 
 // NewNissanFromConfig creates a new vehicle

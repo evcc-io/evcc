@@ -66,7 +66,7 @@ type Porsche struct {
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig)
+	registry.Add("porsche", "Porsche", NewPorscheFromConfig, configDefaults())
 }
 
 // NewPorscheFromConfig creates a new vehicle
