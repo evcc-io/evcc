@@ -2,11 +2,13 @@ name: Validate Schema
 
 on:
   push:
-    # paths:
-    # - "*.yaml"
+    paths:
+    - "*.yaml"
+    - "*.json"
   pull_request:
-    # paths:
-    # - "*.yaml"
+    paths:
+    - "*.yaml"
+    - "*.json"
 
 jobs:
   build:
