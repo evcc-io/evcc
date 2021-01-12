@@ -1,9 +1,9 @@
 package config
 
 import (
-	"encoding/json"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/fatih/structs"
 )
@@ -11,42 +11,10 @@ import (
 type Descriptor struct {
 	Name     string       `json:"name"`
 	Kind     string       `json:"kind"`
-	Default  interface{}  `json:"default"`
 	Required bool         `json:"required"`
-	Children []Descriptor `json:"children"`
-}
-
-func (d Descriptor) MarshalJSON() ([]byte, error) {
-	if len(d.Children) == 0 {
-		m := struct {
-			Name     string      `json:"name"`
-			Kind     string      `json:"kind"`
-			Required bool        `json:"required"`
-			Default  interface{} `json:"default"`
-		}{
-			d.Name,
-			d.Kind,
-			d.Required,
-			d.Default,
-		}
-		return json.Marshal(m)
-	}
-
-	shadow := struct {
-		Name     string       `json:"name"`
-		Kind     string       `json:"kind"`
-		Required bool         `json:"required"`
-		Default  interface{}  `json:"default"`
-		Children []Descriptor `json:"children"`
-	}{
-		Name:     d.Name,
-		Kind:     d.Kind,
-		Required: d.Required,
-		Default:  d.Default,
-		Children: d.Children,
-	}
-
-	return json.Marshal(shadow)
+	Label    string       `json:"label"`
+	Default  *interface{} `json:"default,omitempty"`
+	Children []Descriptor `json:"children,omitempty"`
 }
 
 func hasTag(f *structs.Field, tag, key string) bool {
@@ -60,8 +28,35 @@ func hasTag(f *structs.Field, tag, key string) bool {
 
 	return false
 }
-func formatValue(f *structs.Field) interface{} {
-	switch f.Kind() {
+
+// label is the exported field label
+func label(f *structs.Field) string {
+	val := f.Tag("ui")
+	if val == "" {
+		val = translate(f.Name())
+	}
+	if val == "" {
+		val = f.Name()
+	}
+
+	return val
+}
+
+// kind is the exported data type
+func kind(f *structs.Field) string {
+	switch f.Value().(type) {
+	case time.Duration:
+		return "duration"
+	default:
+		return f.Kind().String()
+	}
+}
+
+// value kind is the exported default value
+func value(f *structs.Field) interface{} {
+	switch val := f.Value().(type) {
+	case time.Duration:
+		return val / time.Second
 	default:
 		return f.Value()
 	}
@@ -88,9 +83,14 @@ func Describe(s interface{}, opt ...bool) (ds []Descriptor) {
 		// normal fields including structs
 		d := Descriptor{
 			Name:     f.Name(),
-			Kind:     f.Kind().String(),
-			Default:  formatValue(f),
+			Kind:     kind(f),
 			Required: hasTag(f, "validate", "required"),
+			Label:    label(f),
+		}
+
+		if !f.IsZero() {
+			def := value(f)
+			d.Default = &def
 		}
 
 		if f.Kind() == reflect.Ptr {
@@ -109,7 +109,7 @@ func Describe(s interface{}, opt ...bool) (ds []Descriptor) {
 				continue
 			}
 
-			d.Default = "" // no default for structs
+			d.Default = nil // no default for structs
 			d.Children = Describe(f.Value())
 		}
 

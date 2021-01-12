@@ -57,8 +57,7 @@ func wallbeDefaults() wallbeConfig {
 }
 
 func init() {
-	registry.Add("wallbe", NewWallbeFromConfig)
-	registerConfig("wallbe", "Wallbe", wallbeDefaults())
+	registry.Add("wallbe", "Wallbe", NewWallbeFromConfig, wallbeDefaults())
 }
 
 // go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -o wallbe_decorators -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"

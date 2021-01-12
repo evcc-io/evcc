@@ -19,8 +19,7 @@ type Audi struct {
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig)
-	registerConfig("audi", "Audi", configDefaults())
+	registry.Add("audi", "Audi", NewAudiFromConfig, configDefaults())
 }
 
 // NewAudiFromConfig creates a new vehicle

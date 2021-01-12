@@ -12,7 +12,7 @@ import (
 )
 
 func init() {
-	registry.Add("openwb", NewOpenWBFromConfig)
+	registry.Add("openwb", "openWB", NewOpenWBFromConfig, nil)
 }
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint

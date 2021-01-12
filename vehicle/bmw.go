@@ -41,19 +41,12 @@ type BMW struct {
 }
 
 func init() {
-	registry.Add("bmw", NewBMWFromConfig)
+	registry.Add("bmw", "BMW", NewBMWFromConfig, configDefaults())
 }
 
 // NewBMWFromConfig creates a new vehicle
 func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title               string
-		Capacity            int64
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := configDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
