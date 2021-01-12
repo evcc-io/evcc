@@ -28,24 +28,30 @@ type PhoenixEMCP struct {
 	conn *modbus.Connection
 }
 
+type emcpConfig struct {
+	URI   string `validate:"required"`
+	ID    uint8  `validate:"required"`
+	Meter struct {
+		Power, Energy, Currents bool
+	}
+}
+
+func emcpDefaults() emcpConfig {
+	return emcpConfig{
+		URI: "192.168.0.8:502", // default
+		ID:  180,               // default
+	}
+}
+
 func init() {
-	registry.Add("phoenix-emcp", "Phoenix EM-CP", NewPhoenixEMCPFromConfig, nil)
+	registry.Add("phoenix-emcp", "Phoenix EM-CP", NewPhoenixEMCPFromConfig, emcpDefaults())
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMCP -o phoenix-em-cp_decorators -b *PhoenixEMCP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI   string
-		ID    uint8
-		Meter struct {
-			Power, Energy, Currents bool
-		}
-	}{
-		URI: "192.168.0.8:502", // default
-		ID:  180,               // default
-	}
+	cc := emcpDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
