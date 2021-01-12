@@ -24,7 +24,7 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // apiResponse helps to map an API Call to a test response
 type apiResponse struct {
-	apiCall     apiFunction
+	apiCall     string
 	apiResponse string
 }
 
