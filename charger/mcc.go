@@ -65,7 +65,7 @@ type MobileConnect struct {
 }
 
 func init() {
-	registry.Add("mcc", NewMobileConnectFromConfig)
+	registry.Add("mcc", "Mobile Charger Connect (Porsche)", NewMobileConnectFromConfig, nil)
 }
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config

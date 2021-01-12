@@ -22,7 +22,7 @@ type Tesla struct {
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.Add("tesla", "Tesla", NewTeslaFromConfig, configDefaults())
 }
 
 // NewTeslaFromConfig creates a new Tesla vehicle

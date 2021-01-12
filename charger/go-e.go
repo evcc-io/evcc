@@ -46,7 +46,7 @@ type GoE struct {
 }
 
 func init() {
-	registry.Add("go-e", NewGoEFromConfig)
+	registry.Add("go-e", "go-eCharger", NewGoEFromConfig, nil)
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config

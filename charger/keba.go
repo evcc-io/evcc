@@ -34,7 +34,7 @@ type Keba struct {
 }
 
 func init() {
-	registry.Add("keba", NewKebaFromConfig)
+	registry.Add("keba", "KEBA", NewKebaFromConfig, nil)
 }
 
 // NewKebaFromConfig creates a new configurable charger

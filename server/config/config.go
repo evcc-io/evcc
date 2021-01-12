@@ -7,7 +7,7 @@ import (
 
 type Type struct {
 	Type   string `json:"type"`
-	Name   string `json:"name"`
+	Label  string `json:"label"`
 	Config interface{}
 	Rank   int
 }
@@ -20,7 +20,7 @@ func Add(class string, types []Type) {
 
 type configType struct {
 	Type   string       `json:"type"`
-	Name   string       `json:"name"`
+	Label  string       `json:"label"`
 	Fields []Descriptor `json:"fields"`
 }
 
@@ -39,7 +39,7 @@ func Types(class string) []configType {
 	for _, typ := range types {
 		ct := configType{
 			Type:   typ.Type,
-			Name:   typ.Name,
+			Label:  typ.Label,
 			Fields: Describe(typ.Config),
 		}
 		res = append(res, ct)

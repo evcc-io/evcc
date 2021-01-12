@@ -50,8 +50,7 @@ func vehicleDefaults() vehicleConfig {
 }
 
 func init() {
-	registry.Add("default", NewConfigurableFromConfig)
-	registerConfig("default", "Generisch", vehicleDefaults(), ^-1)
+	registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle

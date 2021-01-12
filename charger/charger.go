@@ -17,7 +17,7 @@ type Charger struct {
 }
 
 func init() {
-	registry.Add("default", NewConfigurableFromConfig)
+	registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
 }
 
 // NewConfigurableFromConfig creates a new configurable charger

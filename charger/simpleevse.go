@@ -22,7 +22,7 @@ const (
 )
 
 func init() {
-	registry.Add("simpleevse", NewSimpleEVSEFromConfig)
+	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, nil)
 }
 
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf

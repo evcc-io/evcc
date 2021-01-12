@@ -10,8 +10,9 @@ import (
 )
 
 func init() {
-	config.Add("charger", charger.ConfigTypes())
-	config.Add("vehicle", vehicle.ConfigTypes())
+	config.Add("charger", charger.Types())
+	// config.Add("meter", meter.Types())
+	config.Add("vehicle", vehicle.Types())
 }
 
 func main() {
