@@ -9,24 +9,37 @@ import (
 )
 
 type Descriptor struct {
-	Name     string       `json:"name"`
-	Kind     string       `json:"kind"`
-	Required bool         `json:"required"`
-	Label    string       `json:"label"`
-	Default  *interface{} `json:"default,omitempty"`
-	Children []Descriptor `json:"children,omitempty"`
+	Name     string        `json:"name"`
+	Type     string        `json:"type"`
+	Required bool          `json:"required"`
+	Label    string        `json:"label"`
+	Enum     []interface{} `json:"enum,omitempty"`
+	Default  interface{}   `json:"default,omitempty"`
+	Children []Descriptor  `json:"children,omitempty"`
 }
 
-func hasTag(f *structs.Field, tag, key string) bool {
-	tags := strings.Split(f.Tag(tag), ",")
+// tagKey returns tag key's value or key name if value is empty
+func tagKey(f *structs.Field, tag, key string) string {
+	keyvals := strings.Split(f.Tag(tag), ",")
 
-	for _, v := range tags {
-		if v == key {
-			return true
+	for _, kv := range keyvals {
+		if splits := strings.SplitN(kv, "=", 2); splits[0] == key {
+			if len(splits) > 1 {
+				return splits[1]
+			}
+			return key
 		}
 	}
 
-	return false
+	return ""
+}
+
+// enum converts list of strings to enum values
+func enum(list []string) (enum []interface{}) {
+	for _, v := range list {
+		enum = append(enum, strings.TrimSpace(v))
+	}
+	return enum
 }
 
 // label is the exported field label
@@ -83,14 +96,18 @@ func Describe(s interface{}, opt ...bool) (ds []Descriptor) {
 		// normal fields including structs
 		d := Descriptor{
 			Name:     f.Name(),
-			Kind:     kind(f),
-			Required: hasTag(f, "validate", "required"),
+			Type:     kind(f),
+			Required: tagKey(f, "validate", "required") != "",
 			Label:    label(f),
 		}
 
+		// enums
+		if oneof := tagKey(f, "validate", "oneof"); oneof != "" {
+			d.Enum = enum(strings.Split(oneof, " "))
+		}
+
 		if !f.IsZero() {
-			def := value(f)
-			d.Default = &def
+			d.Default = value(f)
 		}
 
 		if f.Kind() == reflect.Ptr {

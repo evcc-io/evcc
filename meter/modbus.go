@@ -25,7 +25,7 @@ type Modbus struct {
 type modbusConfig = struct {
 	Model           string `ui:"Zählertyp oder SunSpec Modell ID"`
 	modbus.Settings `mapstructure:",squash"`
-	Power           string `mapstructure:",required" ui:"Meßwert Leistung"`
+	Power           string `validate:"required" ui:"Meßwert Leistung"`
 	Energy          string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
 	SoC             string `ui:"Meßwert Ladezustand (nur Batterien)"`
 }
@@ -41,11 +41,11 @@ func init() {
 
 	// TCP
 	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
-		Model  string `ui:"Zählertyp oder SunSpec Modell ID"`
-		URI    string `mapstructure:",required"`
+		Model  string `ui:"Zählertyp (oder SunSpec Modell ID)"`
+		URI    string `validate:"required"`
 		ID     uint8  `ui:"ModBus Slave ID"`
 		RTU    *bool  `ui:"ModBus RTU Gerät"`
-		Power  string `mapstructure:",required" ui:"Meßwert Leistung"`
+		Power  string `validate:"required" ui:"Meßwert Leistung"`
 		Energy string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
 		SoC    string `ui:"Meßwert Ladezustand (nur Batterien)"`
 	}{
@@ -56,12 +56,12 @@ func init() {
 	isTrue := true
 	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
 		Model    string `ui:"Zählertyp"`
-		Device   string `mapstructure:",required" ui:"Serielle Schnittstelle"`
-		Comset   string `mapstructure:",required" ui:"Kummunikationseinstellungen"`
-		Baudrate int    `mapstructure:",required" ui:"Baudrate"`
+		Device   string `validate:"required" ui:"Serielle Schnittstelle"`
+		Comset   string `validate:"required,oneof=8E1 8N1" ui:"Kommunikationseinstellungen"`
+		Baudrate int    `validate:"required" ui:"Baudrate"`
 		ID       uint8  `ui:"ModBus Slave ID"`
 		RTU      *bool  `structs:"-"`
-		Power    string `mapstructure:",required" ui:"Meßwert Leistung"`
+		Power    string `validate:"required" ui:"Meßwert Leistung"`
 		Energy   string `ui:"Meßwert Zählerstand (nur Netzzähler)"`
 		SoC      string `ui:"Meßwert Ladezustand (nur Batterien)"`
 	}{
