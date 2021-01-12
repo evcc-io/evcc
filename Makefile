@@ -7,6 +7,7 @@ TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+BUILD_ARGS := -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=$(VERSION)" -X "github.com/andig/evcc/server.Commit=$(SHA)"'
 
 # docker
 DOCKER_IMAGE := andig/evcc
@@ -49,7 +50,7 @@ assets:
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=${VERSION}" -X "github.com/andig/evcc/server.Commit=${SHA}"'
+	go build -v $(BUILD_ARGS)
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
@@ -74,6 +75,8 @@ publish-images:
 
 image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer
+	mkdir -p buildargs/github.com/andig/evcc
+	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
 
 	# create filesystem
@@ -81,8 +84,12 @@ image:
 	gzip -f -k $(IMAGE_FILE)
 
 image-rootfs:
+	mkdir -p buildargs/github.com/andig/evcc
+	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
 	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
 	gzip -f -k $(IMAGE_ROOTFS)
 
 image-update:
+	mkdir -p buildargs/github.com/andig/evcc
+	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
 	gokr-packer -update yes $(IMAGE_OPTIONS)
