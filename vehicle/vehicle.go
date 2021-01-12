@@ -34,22 +34,29 @@ type Vehicle struct {
 	rangeG  func() (int64, error)
 }
 
+type vehicleConfig struct {
+	Title    string
+	Capacity int64
+	Charge   provider.Config
+	Status   *provider.Config
+	Range    *provider.Config
+	Cache    time.Duration
+}
+
+func vehicleDefaults() vehicleConfig {
+	return vehicleConfig{
+		Cache: interval,
+	}
+}
+
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
+	registerConfig("default", "Generisch", vehicleDefaults(), ^-1)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title    string
-		Capacity int64
-		Charge   provider.Config
-		Status   *provider.Config
-		Range    *provider.Config
-		Cache    time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := vehicleDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

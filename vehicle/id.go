@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -22,18 +21,12 @@ type ID struct {
 
 func init() {
 	registry.Add("id", NewIDFromConfig)
+	registerConfig("id", "VW ID-Familie", configDefaults())
 }
 
 // NewIDFromConfig creates a new vehicle
 func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title               string
-		Capacity            int64
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := configDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
