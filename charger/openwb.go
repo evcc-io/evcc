@@ -11,10 +11,6 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-func init() {
-	registry.Add("openwb", "openWB", NewOpenWBFromConfig, nil)
-}
-
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
 	api.Charger
@@ -23,18 +19,28 @@ type OpenWB struct {
 	currentsG     []func() (float64, error)
 }
 
-// NewOpenWBFromConfig creates a new configurable charger
-func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		mqtt.Config `mapstructure:",squash"`
-		Topic       string
-		Timeout     time.Duration
-		ID          int
-	}{
+type openwbConfig struct {
+	mqtt.Config `mapstructure:",squash"`
+	ID          int `ui:"Ladepunkt"`
+	Topic       string
+	Timeout     time.Duration `structs:"-"`
+}
+
+func openwbDefaults() openwbConfig {
+	return openwbConfig{
+		ID:      1,
 		Topic:   openwb.RootTopic,
 		Timeout: openwb.Timeout,
-		ID:      1,
 	}
+}
+
+func init() {
+	registry.Add("openwb", "openWB", NewOpenWBFromConfig, openwbDefaults())
+}
+
+// NewOpenWBFromConfig creates a new configurable charger
+func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
+	cc := openwbDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -45,17 +45,20 @@ type GoE struct {
 	status     goeStatusResponse
 }
 
+type goeConfig struct {
+	URI   string `validate:"required"`
+	Token string
+	Cache time.Duration
+}
+
 func init() {
-	registry.Add("go-e", "go-eCharger", NewGoEFromConfig, nil)
+	registry.Add("go-e", "go-eCharger", NewGoEFromConfig, goeConfig{})
 }
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		Token string
-		URI   string
-		Cache time.Duration
-	}{}
+	var cc goeConfig
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
