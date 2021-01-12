@@ -43,7 +43,7 @@ type Wallbe struct {
 
 type wallbeConfig struct {
 	URI    string `validate:"required"`
-	Legacy bool
+	Legacy bool   `ui:"1A-Steuerung"`
 	Meter  struct {
 		Power, Energy, Currents bool
 		Encoding                string
