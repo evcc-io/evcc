@@ -41,24 +41,32 @@ type Wallbe struct {
 	encoding string
 }
 
+type wallbeConfig struct {
+	URI    string `validate:"required"`
+	Legacy bool
+	Meter  struct {
+		Power, Energy, Currents bool
+		Encoding                string
+	}
+}
+
+func wallbeDefaults() wallbeConfig {
+	return wallbeConfig{
+		URI: "192.168.0.8:502",
+	}
+}
+
 func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
+	registerConfig("wallbe", "Wallbe", wallbeDefaults())
 }
 
 // go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -o wallbe_decorators -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI    string
-		Legacy bool
-		Meter  struct {
-			Power, Energy, Currents bool
-			Encoding                string
-		}
-	}{
-		URI: "192.168.0.8:502",
-	}
+	cc := wallbeDefaults()
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
