@@ -29,7 +29,7 @@ type PhoenixEMCP struct {
 }
 
 func init() {
-	registry.Add("phoenix-emcp", NewPhoenixEMCPFromConfig)
+	registry.Add("phoenix-emcp", "Phoenix EM-CP", NewPhoenixEMCPFromConfig, nil)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMCP -o phoenix-em-cp_decorators -b *PhoenixEMCP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"

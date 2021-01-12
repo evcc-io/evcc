@@ -20,7 +20,7 @@ type VW struct {
 }
 
 func init() {
-	registry.Add("vw", NewVWFromConfig)
+	registry.Add("vw", "VW (WeConnect)", NewVWFromConfig, configDefaults())
 }
 
 // NewVWFromConfig creates a new vehicle
