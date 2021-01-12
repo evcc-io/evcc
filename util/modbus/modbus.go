@@ -22,7 +22,7 @@ type Settings struct {
 	ID        uint8  `ui:"ModBus Slave ID"`
 	SubDevice int    `structs:"-"`
 	Device    string `ui:"Serielle Schnittstelle"`
-	Comset    string `ui:"Serielle Schnittstelle: Kummunikationseinstellungen"`
+	Comset    string `validate:"oneof=8E1 8N1" ui:"Serielle Schnittstelle: Kommunikationseinstellungen"`
 	Baudrate  int    `ui:"Serielle Schnittstelle: Baudrate"`
 	RTU       *bool  `ui:"ModBus RTU Gerät"` // indicates RTU over TCP if true
 }
