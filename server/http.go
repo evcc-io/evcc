@@ -11,6 +11,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/test"
 	"github.com/gorilla/handlers"
@@ -128,6 +129,20 @@ func TemplatesHandler() http.HandlerFunc {
 		}
 
 		jsonResponse(w, r, res)
+	}
+}
+
+// TypesHandler returns current charge mode
+func TypesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		class, ok := vars["class"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		jsonResponse(w, r, config.Types(class))
 	}
 }
 
@@ -327,6 +342,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
 		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
 		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		"types":     {[]string{"GET"}, "/config/types/{class:[a-z]+}", TypesHandler()},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
