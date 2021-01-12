@@ -5,7 +5,28 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/server/config"
 )
+
+var configTypes []config.Type
+
+func registerConfig(typ, name string, defaults interface{}, rank ...int) {
+	typeConfig := config.Type{
+		Type:   typ,
+		Name:   name,
+		Config: defaults,
+	}
+
+	if len(rank) > 0 {
+		typeConfig.Rank = rank[0]
+	}
+
+	configTypes = append(configTypes, typeConfig)
+}
+
+func ConfigTypes() []config.Type {
+	return configTypes
+}
 
 type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
 
