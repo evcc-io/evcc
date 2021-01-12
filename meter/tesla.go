@@ -44,17 +44,19 @@ type Tesla struct {
 	uri, usage string
 }
 
+type teslaConfig struct {
+	URI, Usage string `validate:"required"`
+}
+
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig)
+	registry.Add("tesla", "Tesla Powerwall", NewTeslaFromConfig, teslaConfig{})
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		URI, Usage string
-	}{}
+	var cc teslaConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

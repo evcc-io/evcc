@@ -69,13 +69,20 @@ type NRGKickConnect struct {
 	password string
 }
 
+type nrgConfig struct {
+	URI      string `validate:"required"`
+	Mac      string `validate:"required,mac" ui:"MAC-Adresse"`
+	Password string `validate:"required"`
+}
+
 func init() {
-	registry.Add("nrgkick-connect", "NRGkick Connect", NewNRGKickConnectFromConfig, nil)
+	registry.Add("nrgkick-connect", "NRGkick Connect", NewNRGKickConnectFromConfig, nrgConfig{})
 }
 
 // NewNRGKickConnectFromConfig creates a NRGKickConnect charger from generic config
 func NewNRGKickConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI, Mac, Password string }{}
+	var cc nrgConfig
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
