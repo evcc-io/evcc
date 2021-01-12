@@ -55,7 +55,7 @@ type EVSEWifi struct {
 }
 
 func init() {
-	registry.Add("evsewifi", NewEVSEWifiFromConfig)
+	registry.Add("evsewifi", "EVSE Wifi", NewEVSEWifiFromConfig, nil)
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decorateEVSE -o evsewifi_decorators -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"

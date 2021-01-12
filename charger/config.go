@@ -8,44 +8,49 @@ import (
 	"github.com/andig/evcc/server/config"
 )
 
-var configTypes []config.Type
-
-func registerConfig(typ, name string, defaults interface{}, rank ...int) {
-	typeConfig := config.Type{
-		Type:   typ,
-		Name:   name,
-		Config: defaults,
-	}
-
-	if len(rank) > 0 {
-		typeConfig.Rank = rank[0]
-	}
-
-	configTypes = append(configTypes, typeConfig)
+type typeDesc struct {
+	factory func(map[string]interface{}) (api.Charger, error)
+	config  config.Type
 }
 
-func ConfigTypes() []config.Type {
-	return configTypes
+type typeRegistry map[string]typeDesc
+
+var registry = make(typeRegistry)
+
+// Types exports the public configuration types
+func Types() (types []config.Type) {
+	for _, typ := range registry {
+		if typ.config.Config != nil {
+			types = append(types, typ.config)
+		}
+	}
+
+	return types
 }
-
-type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
-
-func (r chargerRegistry) Add(name string, factory func(map[string]interface{}) (api.Charger, error)) {
+func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Charger, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))
 	}
-	r[name] = factory
+
+	typ := typeDesc{
+		factory: factory,
+		config: config.Type{
+			Type:   name,
+			Label:  label,
+			Config: defaults,
+		},
+	}
+
+	r[name] = typ
 }
 
-func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
-	factory, exists := r[name]
+func (r typeRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
+	typ, exists := r[name]
 	if !exists {
 		return nil, fmt.Errorf("charger type not registered: %s", name)
 	}
-	return factory, nil
+	return typ.factory, nil
 }
-
-var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
 
 // NewFromConfig creates charger from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {

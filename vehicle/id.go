@@ -19,8 +19,7 @@ type ID struct {
 }
 
 func init() {
-	registry.Add("id", NewIDFromConfig)
-	registerConfig("id", "VW ID-Familie", configDefaults())
+	registry.Add("id", "VW (WeConnect ID)", NewIDFromConfig, configDefaults())
 }
 
 // NewIDFromConfig creates a new vehicle
