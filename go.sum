@@ -12,6 +12,8 @@ github.com/alvaroloes/enumer v1.1.2/go.mod h1:FxrjvuXoDAx9isTJrv4c+T410zFi0DtXIT
 github.com/andig/evcc v0.0.0-20200727161511-d58eb15f2dc9/go.mod h1:8HONEC6cC2s4k0u3QL7GIjrYOZYTOKiiXybw0FIJL0A=
 github.com/andig/evcc-config v0.0.0-20210101104321-92872981c231 h1:mxMUYOa/czIMXGuCcIB+Ctt8DcfvLNJudhH+8gAJURY=
 github.com/andig/evcc-config v0.0.0-20210101104321-92872981c231/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
+github.com/andig/evcc-config v0.0.0-20210112213741-5c09f26e0c2a h1:DqETlWY92lX7Yb9dD4xaQsYziEbOqVsmLj8aewxNu0M=
+github.com/andig/evcc-config v0.0.0-20210112213741-5c09f26e0c2a/go.mod h1:N0hIjIy+5E2AR1fF7Tg2IzBlblBrnFvCCaDGAaHzbWk=
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c h1:AMtX56iHlNYVxMID7fe9efuVtaxgtdjyMeolg7q87IE=
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b h1:n3O7DTcqZzpl8/6zVCCkHYbc/zyTfXQCk4xaTAkQ5aE=
