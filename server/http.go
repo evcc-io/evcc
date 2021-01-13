@@ -13,7 +13,6 @@ import (
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -113,22 +112,7 @@ func TemplatesHandler() http.HandlerFunc {
 			return
 		}
 
-		type template = struct {
-			Name   string `json:"name"`
-			Sample string `json:"template"`
-		}
-
-		res := make([]template, 0)
-		for _, conf := range test.ConfigTemplates(class) {
-			typedSample := fmt.Sprintf("type: %s\n%s", conf.Type, conf.Sample)
-			t := template{
-				Name:   conf.Name,
-				Sample: typedSample,
-			}
-			res = append(res, t)
-		}
-
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, config.Templates(class))
 	}
 }
 

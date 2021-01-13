@@ -24,6 +24,18 @@ type configType struct {
 	Fields []Descriptor `json:"fields"`
 }
 
+func TypeDefinition(class, typ string) Type {
+	types := registry[class]
+
+	for _, v := range types {
+		if v.Type == typ {
+			return v
+		}
+	}
+
+	return Type{}
+}
+
 func Types(class string) []configType {
 	types := registry[class]
 

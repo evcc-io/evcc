@@ -28,12 +28,21 @@ func Types() (types []config.Type) {
 	return types
 }
 
+func GetConfig(name string) (config.Type, error) {
+	desc, err := registry.Get(name)
+	if err == nil {
+		return desc.config, err
+	}
+
+	return config.Type{}, err
+}
+
 func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Charger, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))
 	}
 
-	typ := typeDesc{
+	desc := typeDesc{
 		factory: factory,
 		config: config.Type{
 			Type:   name,
@@ -42,22 +51,22 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 		},
 	}
 
-	r[name] = typ
+	r[name] = desc
 }
 
-func (r typeRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
+func (r typeRegistry) Get(name string) (typeDesc, error) {
 	typ, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("charger type not registered: %s", name)
+		return typeDesc{}, fmt.Errorf("charger type not registered: %s", name)
 	}
-	return typ.factory, nil
+	return typ, nil
 }
 
 // NewFromConfig creates charger from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
-	factory, err := registry.Get(strings.ToLower(typ))
+	desc, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
-		if v, err = factory(other); err != nil {
+		if v, err = desc.factory(other); err != nil {
 			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
 		}
 	} else {
