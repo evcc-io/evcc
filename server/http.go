@@ -102,7 +102,7 @@ func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 	}
 }
 
-// TemplatesHandler returns current charge mode
+// TemplatesHandler returns a list of configuration templates per class
 func TemplatesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -116,7 +116,7 @@ func TemplatesHandler() http.HandlerFunc {
 	}
 }
 
-// TypesHandler returns current charge mode
+// TypesHandler returns a list of configuration types per class
 func TypesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -130,7 +130,7 @@ func TypesHandler() http.HandlerFunc {
 	}
 }
 
-// StateHandler returns current charge mode
+// StateHandler returns the current globally cached state
 func StateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
@@ -399,6 +399,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	return srv
 }
 
+// Router exports the servers router for attaching additional APIs
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
 }
