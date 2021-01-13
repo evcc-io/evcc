@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
@@ -131,6 +133,9 @@ func demoConfig() (conf config) {
 	for k, v := range demo {
 		viper.Set(k, v)
 	}
+
+	// demo port
+	viper.Set("uri", fmt.Sprintf("0.0.0.0:%d", defaultPort))
 
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.FATAL.Fatalf("failed loading demo config: %v", err)

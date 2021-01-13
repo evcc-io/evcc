@@ -13,8 +13,10 @@ import (
 // CarWings is an api.Vehicle implementation for CarWings cars
 type CarWings struct {
 	*embed
-	session      *carwings.Session
-	chargeStateG func() (float64, error)
+	user, password string
+	region         string
+	session        *carwings.Session
+	chargeStateG   func() (float64, error)
 }
 
 func init() {
@@ -37,17 +39,11 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	session := &carwings.Session{
-		Region: cc.Region,
-	}
-
-	if err := session.Connect(cc.User, cc.Password); err != nil {
-		return nil, err
-	}
-
 	v := &CarWings{
-		embed:   &embed{cc.Title, cc.Capacity},
-		session: session,
+		embed:    &embed{cc.Title, cc.Capacity},
+		user:     cc.User,
+		password: cc.Password,
+		region:   cc.Region,
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -57,6 +53,18 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // chargeState implements the Vehicle.ChargeState interface
 func (v *CarWings) chargeState() (float64, error) {
+	if v.session == nil {
+		session := &carwings.Session{
+			Region: v.region,
+		}
+
+		if err := session.Connect(v.user, v.password); err != nil {
+			return 0, err
+		}
+
+		v.session = session
+	}
+
 	bs, err := v.session.BatteryStatus()
 	return float64(bs.StateOfCharge), err
 }

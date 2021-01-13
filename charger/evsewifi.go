@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	evseGetParameters apiFunction = "getParameters"
-	evseSetStatus     apiFunction = "setStatus"
-	evseSetCurrent    apiFunction = "setCurrent"
+	evseGetParameters = "getParameters"
+	evseSetStatus     = "setStatus"
+	evseSetCurrent    = "setCurrent"
 
 	evseSuccess = "S0_"
 )
@@ -120,7 +120,7 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	return evse, nil
 }
 
-func (evse *EVSEWifi) apiURL(service apiFunction) string {
+func (evse *EVSEWifi) apiURL(service string) string {
 	return fmt.Sprintf("%s/%s", evse.uri, service)
 }
 

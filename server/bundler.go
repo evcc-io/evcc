@@ -1,4 +1,4 @@
-// +build !release,!gokrazy
+// +build !release
 
 package server
 
