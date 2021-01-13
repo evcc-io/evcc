@@ -5,11 +5,22 @@
 				<template #status><h5 class="text-success">5,42 kW</h5></template>
 				<template #summary>SMA</template>
 				<template #form>
-					<form v-if="edit === 'pv'" class="pb-2">
+					<form>
 						<div class="form-group">
 							<label for="wechselrichter">Hersteller</label>
-							<select class="custom-select" id="wechselrichter">
-								<option value="e3dc">E3DC</option>
+							<select
+								class="custom-select"
+								id="wechselrichter"
+								v-model="selectedMeter"
+							>
+								<option
+									:value="meter.type"
+									:key="meter.type"
+									v-for="meter in meters"
+								>
+									{{ meter.label }}
+								</option>
+								<!--<option value="e3dc">E3DC</option>
 								<option value="fronius">Fronius</option>
 								<option value="kostal">Kostal</option>
 								<option selected value="sma">SMA</option>
@@ -17,18 +28,49 @@
 								<option disabled>-----</option>
 								<option value="example">Beispielanlage (5 kWp)</option>
 								<option value="http">HTTP API (JSON)</option>
-								<option value="modbus-tcp">Modbus-TCP</option>
+								<option value="modbus-tcp">Modbus-TCP</option>-->
 							</select>
 						</div>
-						<div class="form-group">
-							<label for="uri">Adresse (Modbus-TCP)</label>
+						<div
+							class="form-group"
+							:key="formField.name"
+							v-for="formField in formFields"
+						>
+							<label :for="formField.name">
+								{{ formField.label }}
+								<small class="text-muted" v-if="!formField.required">
+									(optional)
+								</small>
+							</label>
 							<input
 								type="text"
+								v-if="formField.type === 'string' && !formField.enum"
 								class="form-control"
-								value="192.168.0.34:502"
-								placeholder="192.168.0.34:502"
-								id="uri"
+								:placeholder="formField.default"
+								value=""
+								:id="formField.name"
 							/>
+							<input
+								type="number"
+								v-if="formField.type === 'int' || formField.type === 'uint8'"
+								class="form-control"
+								style="width: 50%"
+								:placeholder="formField.default"
+								value=""
+								:id="formField.name"
+							/>
+							<select
+								v-if="formField.type === 'string' && formField.enum"
+								class="custom-select"
+								:id="formField.name"
+							>
+								<option v-if="!formField.required" value="">
+									- bitte wählen -
+								</option>
+								<option :key="value" :value="value" v-for="value in formField.enum">
+									{{ value }}
+								</option>
+							</select>
 						</div>
 						<p>
 							<a href="#" @click.prevent="extended = !extended">
@@ -138,12 +180,25 @@
 <script>
 import Card from "./Card";
 import CardEntry from "./CardEntry";
+import meters from "./meter.json";
 
 export default {
 	name: "Site",
 	components: { Card, CardEntry },
 	data: function () {
-		return { edit: "", extended: false, test: null };
+		return { edit: "", extended: false, selectedMeter: "sma", test: null };
+	},
+	props: {
+		meters: {
+			type: Object,
+			default: meters,
+		},
+	},
+	computed: {
+		formFields: function () {
+			const meter = this.meters.find((m) => m.type === this.selectedMeter);
+			return meter.fields;
+		},
 	},
 };
 </script>
