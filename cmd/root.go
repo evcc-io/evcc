@@ -188,6 +188,9 @@ func run(cmd *cobra.Command, args []string) {
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
 
+	// config
+	site.RegisterConfigHandler(httpd.API().PathPrefix("/config").Subrouter())
+
 	// metrics
 	if viper.GetBool("metrics") {
 		httpd.Router().Handle("/metrics", promhttp.Handler())

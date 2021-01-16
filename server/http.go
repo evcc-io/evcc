@@ -86,6 +86,7 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(content); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -318,6 +319,7 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
+	api *mux.Router
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -393,13 +395,19 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
+		api: api,
 	}
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
 }
 
-// Router exports the servers router for attaching additional APIs
+// Router exports the servers root router for attaching additional APIs
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
+}
+
+// API exports the servers API router for attaching additional APIs
+func (s *HTTPd) API() *mux.Router {
+	return s.api
 }
