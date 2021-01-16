@@ -87,6 +87,7 @@ image:
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
 	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
 	gzip -f $(IMAGE_FILE)
+	# tmpdir=$$(mktemp -d); sudo mount -t auto $${loop}p4 $${tmpdir}; cat
 
 image-rootfs:
 	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
