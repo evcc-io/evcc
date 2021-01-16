@@ -151,10 +151,12 @@ func TestUpdatePowerZero(t *testing.T) {
 			chargeMeter: &Null{}, // silence nil panics
 			chargeRater: &Null{}, // silence nil panics
 			chargeTimer: &Null{}, // silence nil panics
-			MinCurrent:  minA,
-			MaxCurrent:  maxA,
-			Phases:      1,
-			status:      tc.status, // no status change
+			LoadPointConfig: LoadPointConfig{
+				MinCurrent: minA,
+				MaxCurrent: maxA,
+				Phases:     1,
+			},
+			status: tc.status, // no status change
 		}
 
 		attachListeners(t, lp)
@@ -288,19 +290,21 @@ func TestPVHysteresis(t *testing.T) {
 
 			Voltage = 100
 			lp := &LoadPoint{
-				log:        util.NewLogger("foo"),
-				clock:      clck,
-				charger:    charger,
-				MinCurrent: minA,
-				MaxCurrent: maxA,
-				Phases:     10,
-				Enable: ThresholdConfig{
-					Threshold: tc.enable,
-					Delay:     dt,
-				},
-				Disable: ThresholdConfig{
-					Threshold: tc.disable,
-					Delay:     dt,
+				log:     util.NewLogger("foo"),
+				clock:   clck,
+				charger: charger,
+				LoadPointConfig: LoadPointConfig{
+					Phases:     10,
+					MinCurrent: minA,
+					MaxCurrent: maxA,
+					Enable: ThresholdConfig{
+						Threshold: tc.enable,
+						Delay:     dt,
+					},
+					Disable: ThresholdConfig{
+						Threshold: tc.disable,
+						Delay:     dt,
+					},
 				},
 			}
 
@@ -334,11 +338,13 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 
 	Voltage = 100
 	lp := &LoadPoint{
-		log:        util.NewLogger("foo"),
-		clock:      clck,
-		MinCurrent: minA,
-		MaxCurrent: maxA,
-		Phases:     10,
+		log:   util.NewLogger("foo"),
+		clock: clck,
+		LoadPointConfig: LoadPointConfig{
+			Phases:     10,
+			MinCurrent: minA,
+			MaxCurrent: maxA,
+		},
 	}
 
 	// not connected, test PV mode logic  short-circuited
@@ -372,19 +378,21 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		bus:          evbus.New(),
 		clock:        clock,
 		charger:      charger,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
-		MinCurrent:   minA,
-		MaxCurrent:   maxA,
+		chargeMeter:  &Null{},      // silence nil panics
+		chargeRater:  &Null{},      // silence nil panics
+		chargeTimer:  &Null{},      // silence nil panics
 		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
-		Mode:         api.ModeNow,
-		SoC: SoCConfig{
-			Target: 90,
-			Poll: PollConfig{
-				Mode:     pollConnected, // allow polling when connected
-				Interval: pollInterval,
+		LoadPointConfig: LoadPointConfig{
+			Mode:       api.ModeNow,
+			MinCurrent: minA,
+			MaxCurrent: maxA,
+			SoC: SoCConfig{
+				Target: 90,
+				Poll: PollConfig{
+					Mode:     pollConnected, // allow polling when connected
+					Interval: pollInterval,
+				},
 			},
 		},
 	}
@@ -446,16 +454,18 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: &Null{}, // silence nil panics
 		chargeTimer: &Null{}, // silence nil panics
-		MinCurrent:  minA,
-		MaxCurrent:  maxA,
-		status:      api.StatusC,
-		OnDisconnect: struct {
-			Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-			TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-		}{
-			Mode:      api.ModeOff,
-			TargetSoC: 70,
+		LoadPointConfig: LoadPointConfig{
+			MinCurrent: minA,
+			MaxCurrent: maxA,
+			OnDisconnect: struct {
+				Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
+				TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
+			}{
+				Mode:      api.ModeOff,
+				TargetSoC: 70,
+			},
 		},
+		status: api.StatusC,
 	}
 
 	attachListeners(t, lp)
@@ -518,9 +528,11 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 		chargeMeter: &Null{}, // silence nil panics
 		chargeRater: rater,
 		chargeTimer: &Null{}, // silence nil panics
-		MinCurrent:  minA,
-		MaxCurrent:  maxA,
-		status:      api.StatusC,
+		LoadPointConfig: LoadPointConfig{
+			MinCurrent: minA,
+			MaxCurrent: maxA,
+		},
+		status: api.StatusC,
 	}
 
 	attachListeners(t, lp)
@@ -608,8 +620,10 @@ func TestTargetSoC(t *testing.T) {
 
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
-			SoC: SoCConfig{
-				Target: tc.target,
+			LoadPointConfig: LoadPointConfig{
+				SoC: SoCConfig{
+					Target: tc.target,
+				},
 			},
 			socCharge: tc.soc,
 		}
@@ -627,9 +641,11 @@ func TestSoCPoll(t *testing.T) {
 	lp := &LoadPoint{
 		clock: clock,
 		log:   util.NewLogger("foo"),
-		SoC: SoCConfig{
-			Poll: PollConfig{
-				Interval: time.Hour,
+		LoadPointConfig: LoadPointConfig{
+			SoC: SoCConfig{
+				Poll: PollConfig{
+					Interval: time.Hour,
+				},
 			},
 		},
 	}
@@ -725,8 +741,10 @@ func TestMinSoC(t *testing.T) {
 
 		lp := &LoadPoint{
 			vehicle: tc.vehicle,
-			SoC: SoCConfig{
-				Min: tc.min,
+			LoadPointConfig: LoadPointConfig{
+				SoC: SoCConfig{
+					Min: tc.min,
+				},
 			},
 			socCharge: tc.soc,
 		}
