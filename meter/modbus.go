@@ -36,12 +36,13 @@ func modbusDefaults() modbusConfig {
 	}
 }
 
+// TODO clarify sunspec model id
 func init() {
 	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
 
 	// TCP
 	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
-		Model  string `ui:"Zählertyp (oder SunSpec Modell ID)"`
+		Model  string `validate:"oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"Zählertyp"`
 		URI    string `validate:"required"`
 		ID     uint8  `ui:"ModBus Slave ID"`
 		RTU    *bool  `ui:"ModBus RTU Gerät"`
@@ -55,7 +56,7 @@ func init() {
 	// Serial
 	isTrue := true
 	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
-		Model    string `ui:"Zählertyp"`
+		Model    string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"Zählertyp"`
 		Device   string `validate:"required" ui:"Serielle Schnittstelle"`
 		Comset   string `validate:"required,oneof=8E1 8N1" ui:"Kommunikationseinstellungen"`
 		Baudrate int    `validate:"required" ui:"Baudrate"`
