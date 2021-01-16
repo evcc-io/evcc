@@ -58,8 +58,8 @@ const (
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
-	Delay     time.Duration
-	Threshold float64
+	Delay     time.Duration `mapstructure:"delay"`
+	Threshold float64       `mapstructure:"threshold"`
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -73,27 +73,15 @@ type LoadPoint struct {
 	log      *util.Logger
 
 	// exposed public configuration
-	sync.Mutex                // guard status
-	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
+	sync.Mutex // guard status
 
-	Title       string   `mapstructure:"title"`    // UI title
-	Phases      int64    `mapstructure:"phases"`   // Phases- required for converting power and current
-	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
-	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
-	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
-	Meters      struct {
+	LoadPointConfig `mapstructure:",squash"`
+	ChargerRef      string   `mapstructure:"charger"`  // Charger reference
+	VehicleRef      string   `mapstructure:"vehicle"`  // Vehicle reference
+	VehiclesRef     []string `mapstructure:"vehicles"` // Vehicles reference
+	Meters          struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC          SoCConfig
-	OnDisconnect struct {
-		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-	}
-	Enable, Disable ThresholdConfig
-
-	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    int64         // Max allowed current. Physically ensured by the charger
-	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled       bool      // Charger enabled state
 	chargeCurrent float64   // Charger current limit
@@ -120,6 +108,24 @@ type LoadPoint struct {
 	socCharge      float64       // Vehicle SoC
 	chargedEnergy  float64       // Charged energy while connected in Wh
 	chargeDuration time.Duration // Charge duration
+}
+
+// LoadPointConfig contains the loadpoint's public configuration
+type LoadPointConfig struct {
+	Title      string         `mapstructure:"title"`      // UI title
+	Mode       api.ChargeMode `mapstructure:"mode"`       // Charge mode, guarded by mutex
+	Phases     int64          `mapstructure:"phases"`     // Phases- required for converting power and current
+	MinCurrent int64          `mapstructure:"minCurrent"` // PV mode: start current	Min+PV mode: min current
+	MaxCurrent int64          `mapstructure:"maxCurrent"` // Max allowed current. Physically ensured by the charger
+
+	SoC          SoCConfig `mapstructure:"soc"`
+	OnDisconnect struct {
+		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
+		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
+	} `mapstructure:"onDisconnect"`
+	Enable, Disable ThresholdConfig
+
+	GuardDuration time.Duration // charger enable/disable minimum holding time
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -208,15 +214,17 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	bus := evbus.New()
 
 	lp := &LoadPoint{
-		log:           log,   // logger
-		clock:         clock, // mockable time
-		bus:           bus,   // event bus
-		Mode:          api.ModeOff,
-		Phases:        1,
-		status:        api.StatusNone,
-		MinCurrent:    6,  // A
-		MaxCurrent:    16, // A
-		GuardDuration: 5 * time.Minute,
+		log:    log,   // logger
+		clock:  clock, // mockable time
+		bus:    bus,   // event bus
+		status: api.StatusNone,
+		LoadPointConfig: LoadPointConfig{
+			Mode:          api.ModeOff,
+			Phases:        1,
+			MinCurrent:    6,  // A
+			MaxCurrent:    16, // A
+			GuardDuration: 5 * time.Minute,
+		},
 	}
 
 	return lp
