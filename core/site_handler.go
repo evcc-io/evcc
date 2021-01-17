@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/fatih/structs"
@@ -11,6 +12,10 @@ import (
 // RegisterConfigHandler registers the configuration handler with the HTTP server
 func (s *Site) RegisterConfigHandler(router *mux.Router) {
 	router.PathPrefix("/site").HandlerFunc(s.configHandler)
+
+	for idx, lp := range s.loadpoints {
+		router.PathPrefix(fmt.Sprintf("/loadpoints/%d", idx)).HandlerFunc(lp.configHandler)
+	}
 }
 
 func (s *Site) configHandler(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +25,7 @@ func (s *Site) configHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.setConfig(w, r)
 	default:
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusBadRequest)
 	}
 }
 
