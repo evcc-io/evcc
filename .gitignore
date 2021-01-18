@@ -8,6 +8,7 @@ __debug_bin
 !package*.json
 !evcc.dist.yaml
 evcc
+evcc.exe
 evcc_*
 flags/*
 buildflags/*
