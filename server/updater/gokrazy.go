@@ -18,8 +18,10 @@ const (
 	MB         = 1024 * 1024
 	RootOffset = 8192*512 + 100*MB
 	RootSize   = 500 * MB
+	RootFS     = "evcc_%s.rootfs.gz"
+)
 
-	RootFS   = "evcc_%s.rootfs.gz"
+var (
 	Password = "FIat2WTD8i3tJikkvIJI"
 	Port     = 8080
 )

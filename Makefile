@@ -7,7 +7,9 @@ TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-BUILD_ARGS := -tags=release -ldflags '-X "github.com/andig/evcc/server.Version=$(VERSION)" -X "github.com/andig/evcc/server.Commit=$(SHA)"'
+BUILD_TAGS := -tags=release
+LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA)
+BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
@@ -17,7 +19,7 @@ TARGETS := arm.v6,arm.v8,amd64
 # image
 IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
-IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/andig/brokenglass github.com/andig/evcc
+IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/andig/evcc
 
 default: clean install npm assets lint test build
 
@@ -50,7 +52,7 @@ assets:
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v $(BUILD_ARGS)
+	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
@@ -73,23 +75,22 @@ publish-images:
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
-image:
-	go get github.com/gokrazy/tools/cmd/gokr-packer
-	mkdir -p buildargs/github.com/andig/evcc
-	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
-	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+image-prepare:
+	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
+	mkdir -p flags/github.com/gokrazy/breakglass
+	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
+	mkdir -p buildflags/github.com/andig/evcc
+	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/andig/evcc/buildflags.txt
+	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/andig/evcc/buildflags.txt
 
-	# create filesystem
+image:
+	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
 	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
-	gzip -f -k $(IMAGE_FILE)
+	gzip -f $(IMAGE_FILE)
 
 image-rootfs:
-	mkdir -p buildargs/github.com/andig/evcc
-	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
 	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
-	gzip -f -k $(IMAGE_ROOTFS)
+	gzip -f $(IMAGE_ROOTFS)
 
 image-update:
-	mkdir -p buildargs/github.com/andig/evcc
-	echo "$(BUILD_ARGS)" > buildargs/github.com/andig/evcc/buildargs.txt
 	gokr-packer -update yes $(IMAGE_OPTIONS)

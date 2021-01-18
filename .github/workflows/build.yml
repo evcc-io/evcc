@@ -133,11 +133,15 @@ jobs:
         go-version: ^1.14
       id: go
 
-    - name: Build Image
+    - name: Prepare Image
       run: |
+        make prepare-image
+        sed -e 's/-ld.*$/& -X github.com/andig/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}/' buildflags/github.com/andig/evcc/buildflags.txt > buildflags/github.com/andig/evcc/buildflags.txt
         mkdir /home/runner/.config/gokrazy
         echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
-        make image
+
+    - name: Build Image
+      run: make image
 
     - name: Build Root Filesystem
       run: make image-rootfs
