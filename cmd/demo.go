@@ -135,7 +135,7 @@ func demoConfig() (conf config) {
 	}
 
 	// demo port
-	viper.Set("uri", fmt.Sprintf("0.0.0.0:%d", defaultPort))
+	viper.Set("uri", fmt.Sprintf("localhost:%d", defaultPort))
 
 	if err := viper.UnmarshalExact(&conf); err != nil {
 		log.FATAL.Fatalf("failed loading demo config: %v", err)
