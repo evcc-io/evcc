@@ -10,7 +10,6 @@
 
 <script>
 import Card from "./Card";
-import meters from "./meter.json";
 import SiteGrid from "./SiteGrid";
 import SitePv from "./SitePv";
 import SiteBattery from "./SiteBattery";
@@ -21,7 +20,6 @@ export default {
 	props: {
 		meters: {
 			type: Array,
-			default: () => meters,
 		},
 	},
 	methods: {

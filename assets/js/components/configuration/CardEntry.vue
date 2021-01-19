@@ -8,8 +8,7 @@
 		</div>
 		<transition name="fade" mode="out-in">
 			<div class="form pb-3" v-if="editMode">
-				<slot name="form"></slot>
-				<p><a href="#" @click.prevent="editMode = false">abbrechen</a></p>
+				<slot name="form" @close="editMode = false"></slot>
 			</div>
 			<p v-else class="card-text pb-3">
 				<slot name="summary"></slot>
