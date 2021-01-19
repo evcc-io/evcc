@@ -45,9 +45,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		// Site     string
-		// Circuit  int
-		Cache time.Duration
+		Cache    time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
