@@ -18,12 +18,12 @@ const (
 	MB         = 1024 * 1024
 	RootOffset = 8192*512 + 100*MB
 	RootSize   = 500 * MB
-	RootFS     = "evcc_%s.rootfs.gz"
 )
 
 var (
-	Password = "SECRET"
+	Host     = "localhost"
 	Port     = 8080
+	Password = "SECRET"
 )
 
 // unzipReader transparently unpacks zip files
@@ -75,7 +75,7 @@ func (u *watch) execute(assetID int64, size int) error {
 		u.Send("uploadProgress", 100)
 	}()
 
-	uri := fmt.Sprintf("http://gokrazy:%s@localhost:%d/", Password, Port)
+	uri := fmt.Sprintf("http://gokrazy:%s@%s:%d/", Password, Host, Port)
 	target, err := updater.NewTarget(uri, http.DefaultClient)
 	if err != nil {
 		return err
