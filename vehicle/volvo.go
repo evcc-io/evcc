@@ -87,8 +87,6 @@ type Volvo struct {
 	*embed
 	*request.Helper
 	user, password, vin string
-	token               string
-	tokenValid          time.Time
 	statusG             func() (interface{}, error)
 }
 
