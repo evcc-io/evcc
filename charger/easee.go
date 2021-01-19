@@ -1,23 +1,25 @@
 package charger
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/charger/easee"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 )
 
 // https://api.easee.cloud/index.html
 
-const easyAPI = "https://easee.cloud/api"
+const easyAPI = "https://api.easee.cloud/api"
 
 // EaseeToken is the /api/accounts/token and /api/accounts/refresh_token response
 type EaseeToken struct {
 	AccessToken  string    `json:"accessToken"`
-	ExpiresIn    int       `json:"expiresIn"`
+	ExpiresIn    float32   `json:"expiresIn"`
 	TokenType    string    `json:"tokenType"`
 	RefreshToken string    `json:"refreshToken"`
 	Valid        time.Time // helper to store validity timestamp
@@ -26,7 +28,11 @@ type EaseeToken struct {
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	token EaseeToken
+	token   EaseeToken
+	charger string
+	status  easee.ChargerStatus
+	cache   time.Duration
+	updated time.Time
 }
 
 func init() {
@@ -38,23 +44,44 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User     string
 		Password string
-		Charger  string
-	}{}
+		ID       string
+		Cache    time.Duration
+	}{
+		Cache: 30 * time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger)
+	return NewEasee(cc.User, cc.Password, cc.ID, cc.Cache)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string) (*Easee, error) {
+func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
 	c := &Easee{
-		Helper: request.NewHelper(util.NewLogger("easee")),
+		Helper:  request.NewHelper(util.NewLogger("easee")),
+		charger: charger,
+		cache:   cache,
 	}
 
 	err := c.login(user, password)
+	if err != nil {
+		return c, err
+	}
+
+	if charger == "" {
+		chargers, err := c.chargers()
+		if err != nil {
+			return c, err
+		}
+
+		if len(chargers) != 1 {
+			return c, fmt.Errorf("cannot determine charger id, found: %v", chargers)
+		}
+
+		c.charger = chargers[0].ID
+	}
 
 	return c, err
 }
@@ -68,7 +95,7 @@ func (c *Easee) login(user, password string) error {
 		Password: password,
 	}
 
-	uri := fmt.Sprintf("%s/%s", easyAPI, "/accounts/token")
+	uri := fmt.Sprintf("%s%s", easyAPI, "/accounts/token")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	if err == nil {
@@ -88,7 +115,7 @@ func (c *Easee) refreshToken() error {
 		RefreshToken: c.token.RefreshToken,
 	}
 
-	uri := fmt.Sprintf("%s/%s", easyAPI, "/accounts/refresh_token")
+	uri := fmt.Sprintf("%s%s", easyAPI, "/accounts/refresh_token")
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 	var token EaseeToken
@@ -104,52 +131,78 @@ func (c *Easee) refreshToken() error {
 	return err
 }
 
+func (c *Easee) request(method, path string, body interface{}) (*http.Request, error) {
+	uri := fmt.Sprintf("%s%s", easyAPI, path)
+
+	req, err := request.New(method, uri, request.MarshalJSON(body), request.JSONEncoding)
+	if err == nil {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token.AccessToken))
+	}
+
+	return req, err
+}
+
+func (c *Easee) chargers() (res []easee.Charger, err error) {
+	req, err := c.request(http.MethodGet, "/chargers", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.DoJSON(req, &res)
+	return res, err
+}
+
+func (c *Easee) state() (easee.ChargerStatus, error) {
+	if time.Since(c.updated) < c.cache {
+		return c.status, nil
+	}
+
+	req, err := c.request(http.MethodGet, fmt.Sprintf("/chargers/%s/state", c.charger), nil)
+	if err == nil {
+		if err = c.DoJSON(req, &c.status); err == nil {
+			c.updated = time.Now()
+		}
+	}
+
+	return c.status, err
+}
+
 // Status implements the Charger.Status interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
-	status, err := c.apiStatus()
+	res, err := c.state()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch status.Car {
+	switch res.ChargerOpMode {
 	case 1:
 		return api.StatusA, nil
-	case 2:
-		return api.StatusC, nil
-	case 3, 4:
+	case 2, 4, 6:
 		return api.StatusB, nil
+	case 3:
+		return api.StatusC, nil
+	case 5:
+		return api.StatusF, nil
 	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", status.Car)
+		return api.StatusNone, fmt.Errorf("unknown opmode: %d", res.ChargerOpMode)
 	}
 }
 
 // Enabled implements the Charger.Enabled interface
 func (c *Easee) Enabled() (bool, error) {
-	status, err := c.apiStatus()
-	if err != nil {
-		return false, err
-	}
-
-	switch status.Alw {
-	case 0:
-		return false, nil
-	case 1:
-		return true, nil
-	default:
-		return false, fmt.Errorf("alw unknown result: %d", status.Alw)
-	}
+	res, err := c.state()
+	return res.IsOnline, err
 }
 
 // Enable implements the Charger.Enable interface
 func (c *Easee) Enable(enable bool) error {
-	var b int
-	if enable {
-		b = 1
+	data := easee.ChargerSettings{
+		Enabled: &enable,
 	}
 
-	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && isValid(status) && status.Alw != b {
-		return fmt.Errorf("alw update failed: %d", status.Amp)
+	req, err := c.request(http.MethodGet, fmt.Sprintf("/chargers/%s/settings", c.charger), data)
+	if err == nil {
+		_, err = c.Do(req)
 	}
 
 	return err
@@ -157,36 +210,26 @@ func (c *Easee) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *Easee) MaxCurrent(current int64) error {
-	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil && isValid(status) && int64(status.Amp) != current {
-		return fmt.Errorf("amp update failed: %d", status.Amp)
-	}
-
-	return err
+	return errors.New("not implemented")
 }
 
 // CurrentPower implements the Meter interface.
 func (c *Easee) CurrentPower() (float64, error) {
-	status, err := c.apiStatus()
-	var power float64
-	if len(status.Nrg) == 16 {
-		power = float64(status.Nrg[11]) * 10
-	}
-	return power, err
+	res, err := c.state()
+	return float64(res.TotalPower), err
 }
 
 // ChargedEnergy implements the ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
-	status, err := c.apiStatus()
-	energy := float64(status.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
-	return energy, err
+	res, err := c.state()
+	return float64(res.SessionEnergy), err
 }
 
 // Currents implements the MeterCurrent interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
-	status, err := c.apiStatus()
-	if len(status.Nrg) == 16 {
-		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
-	}
-	return 0, 0, 0, err
+	res, err := c.state()
+	return float64(res.CircuitTotalPhaseConductorCurrentL1),
+		float64(res.CircuitTotalPhaseConductorCurrentL2),
+		float64(res.CircuitTotalPhaseConductorCurrentL3),
+		err
 }
