@@ -65,9 +65,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		var timestamp time.Time
-		timestamp, err = time.Parse(time.RFC3339, rct.Timestamp)
-
+		timestamp, err := time.Parse(time.RFC3339, rct.Timestamp)
 		return timestamp.Add(time.Duration(rct.Content) * time.Minute), err
 	}
 

@@ -169,7 +169,7 @@ func (v *Volvo) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *Volvo) status() (volvoStatus, error) {
+func (v *Volvo) status() (interface{}, error) {
 	var res volvoStatus
 
 	req, err := v.request(fmt.Sprintf("%s/vehicles/%s/status", volvoAPI, v.vin))
@@ -199,3 +199,14 @@ func (v *Volvo) VehicleRange() (int64, error) {
 
 	return 0, err
 }
+
+// // FinishTime implements the ChargeFinishTimer interface
+// func (v *Volvo) FinishTime() (time.Time, error) {
+// 	res, err := v.statusG()
+// 	if res, ok := res.(volvoStatus); err == nil && ok {
+// 		timestamp, err := time.Parse(time.RFC3339, res.HvBattery.TimeToHVBatteryFullyChargedTimestamp)
+// 		return timestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute), err
+// 	}
+
+// 	return time.Time{}, err
+// }
