@@ -29,11 +29,8 @@ type Site struct {
 	log *util.Logger
 
 	// configuration
-	Title         string       `mapstructure:"title"`         // UI title
-	Voltage       float64      `mapstructure:"voltage"`       // Operating voltage. 230V for Germany.
-	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
-	Meters        MetersConfig // Meter references
-	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
+	SiteConfig `mapstructure:",squash"` // general
+	Meters     MetersConfig             // Meter references
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -46,6 +43,13 @@ type Site struct {
 	gridPower    float64 // Grid power
 	pvPower      float64 // PV power
 	batteryPower float64 // Battery charge power
+}
+
+// SiteConfig contains the site's public configuration
+type SiteConfig struct {
+	Title         string  `mapstructure:"title"`         // UI title
+	ResidualPower float64 `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
+	PrioritySoC   float64 `mapstructure:"prioritySoC"`   // prefer battery up to this SoC
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -73,7 +77,6 @@ func NewSiteFromConfig(
 		return nil, err
 	}
 
-	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 
 	// configure meter from references
@@ -99,9 +102,8 @@ func NewSiteFromConfig(
 // NewSite creates a Site with sane defaults
 func NewSite() *Site {
 	lp := &Site{
-		log:     util.NewLogger("site"),
-		Health:  NewHealth(60 * time.Second),
-		Voltage: 230, // V
+		log:    util.NewLogger("site"),
+		Health: NewHealth(60 * time.Second),
 	}
 
 	return lp

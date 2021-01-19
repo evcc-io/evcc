@@ -23,7 +23,7 @@ type RFID struct {
 	Tag string
 }
 
-// Keba is an api.Charger implementation with configurable getters and setters.
+// Keba is an api.Charger implementation
 type Keba struct {
 	log     *util.Logger
 	conn    string
@@ -33,20 +33,27 @@ type Keba struct {
 	sender  *keba.Sender
 }
 
+type kebaConfig struct {
+	URI     string        `validate:"required"`
+	Serial  string        `structs:"-"`
+	Timeout time.Duration `structs:"-"`
+	RFID    RFID
+}
+
+func kebaDefaults() kebaConfig {
+	return kebaConfig{
+		Timeout: udpTimeout,
+	}
+}
+
 func init() {
-	registry.Add("keba", NewKebaFromConfig)
+	registry.Add("keba", "KEBA", NewKebaFromConfig, kebaDefaults())
 }
 
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		URI     string
-		Serial  string
-		Timeout time.Duration
-		RFID    RFID
-	}{
-		Timeout: udpTimeout,
-	}
+	cc := kebaDefaults()
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

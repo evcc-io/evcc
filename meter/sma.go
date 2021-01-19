@@ -33,17 +33,22 @@ type SMA struct {
 	recv    chan sma.Telegram
 }
 
+type smaConfig struct {
+	URI    string `structs:"-"`
+	Serial string `validate:"required"`
+	Power  string `ui:"OBIS Kennziffer für Leistung"`
+	Energy string `ui:"OBIS Kennziffer für Zählerstand"`
+}
+
 func init() {
-	registry.Add("sma", NewSMAFromConfig)
+	registry.Add("sma", "SMA (Home Manager/Energy Meter)", NewSMAFromConfig, smaConfig{})
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p meter -f decorateSMA -b api.Meter -o sma_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		URI, Serial, Power, Energy string
-	}{}
+	var cc smaConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

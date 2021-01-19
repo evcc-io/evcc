@@ -72,12 +72,11 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 
 // DecodeJSON reads HTTP response and decodes JSON body if error is nil
 func DecodeJSON(resp *http.Response, res interface{}) error {
-	b, err := ReadBody(resp)
-	if err == nil {
-		err = json.Unmarshal(b, &res)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return StatusError{resp: resp}
 	}
 
-	return err
+	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
 // New builds and executes HTTP request and returns the response

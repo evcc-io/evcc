@@ -11,8 +11,8 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
+	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -86,6 +86,7 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(content); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -102,7 +103,7 @@ func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 	}
 }
 
-// TemplatesHandler returns current charge mode
+// TemplatesHandler returns a list of configuration templates per class
 func TemplatesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -112,26 +113,25 @@ func TemplatesHandler() http.HandlerFunc {
 			return
 		}
 
-		type template = struct {
-			Name   string `json:"name"`
-			Sample string `json:"template"`
-		}
-
-		res := make([]template, 0)
-		for _, conf := range test.ConfigTemplates(class) {
-			typedSample := fmt.Sprintf("type: %s\n%s", conf.Type, conf.Sample)
-			t := template{
-				Name:   conf.Name,
-				Sample: typedSample,
-			}
-			res = append(res, t)
-		}
-
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, config.Templates(class))
 	}
 }
 
-// StateHandler returns current charge mode
+// TypesHandler returns a list of configuration types per class
+func TypesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		class, ok := vars["class"]
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		jsonResponse(w, r, config.Types(class))
+	}
+}
+
+// StateHandler returns the current globally cached state
 func StateHandler(cache *util.Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := cache.State()
@@ -319,6 +319,7 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
+	api *mux.Router
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -327,6 +328,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
 		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
 		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		"types":     {[]string{"GET"}, "/config/types/{class:[a-z]+}", TypesHandler()},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -393,12 +395,19 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
+		api: api,
 	}
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
 }
 
+// Router exports the servers root router for attaching additional APIs
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
+}
+
+// API exports the servers API router for attaching additional APIs
+func (s *HTTPd) API() *mux.Router {
+	return s.api
 }

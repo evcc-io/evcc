@@ -5,32 +5,68 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/server/config"
 )
 
-type meterRegistry map[string]func(map[string]interface{}) (api.Meter, error)
+type typeDesc struct {
+	factory func(map[string]interface{}) (api.Meter, error)
+	config  config.Type
+}
 
-func (r meterRegistry) Add(name string, factory func(map[string]interface{}) (api.Meter, error)) {
+type typeRegistry map[string]typeDesc
+
+var registry = make(typeRegistry)
+
+// Types exports the public configuration types
+func Types() (types []config.Type) {
+	for _, typ := range registry {
+		if typ.config.Config != nil {
+			types = append(types, typ.config)
+		}
+	}
+
+	return types
+}
+
+func GetConfig(name string) (config.Type, error) {
+	desc, err := registry.Get(name)
+	if err == nil {
+		return desc.config, err
+	}
+
+	return config.Type{}, err
+}
+
+func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Meter, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate meter type: %s", name))
 	}
-	r[name] = factory
-}
 
-func (r meterRegistry) Get(name string) (func(map[string]interface{}) (api.Meter, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("meter type not registered: %s", name)
+	desc := typeDesc{
+		factory: factory,
+		config: config.Type{
+			Type:   name,
+			Label:  label,
+			Config: defaults,
+		},
 	}
-	return factory, nil
+
+	r[name] = desc
 }
 
-var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.Meter, error))
+func (r typeRegistry) Get(name string) (typeDesc, error) {
+	desc, exists := r[name]
+	if !exists {
+		return typeDesc{}, fmt.Errorf("meter type not registered: %s", name)
+	}
+	return desc, nil
+}
 
 // NewFromConfig creates meter from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {
-	factory, err := registry.Get(strings.ToLower(typ))
+	desc, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
-		if v, err = factory(other); err != nil {
+		if v, err = desc.factory(other); err != nil {
 			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
 		}
 	} else {

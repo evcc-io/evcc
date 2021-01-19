@@ -21,6 +21,7 @@
 					<router-link class="nav-item nav-link pb-1" to="/config"
 						>Konfiguration</router-link
 					>
+					<router-link class="nav-item nav-link pb-1" to="/testing">Testing</router-link>
 					<a
 						class="nav-item nav-link pb-1"
 						href="https://github.com/andig/evcc/discussions"

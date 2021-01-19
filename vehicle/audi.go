@@ -3,7 +3,6 @@ package vehicle
 import (
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -20,19 +19,12 @@ type Audi struct {
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig)
+	registry.Add("audi", "Audi", NewAudiFromConfig, configDefaults())
 }
 
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title               string
-		Capacity            int64
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := configDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
