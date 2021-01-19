@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -28,11 +27,12 @@ type EaseeToken struct {
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	token   EaseeToken
-	charger string
-	status  easee.ChargerStatus
-	cache   time.Duration
-	updated time.Time
+	token         EaseeToken
+	charger       string
+	site, circuit int
+	status        easee.ChargerStatus
+	updated       time.Time
+	cache         time.Duration
 }
 
 func init() {
@@ -44,8 +44,10 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		User     string
 		Password string
-		ID       string
-		Cache    time.Duration
+		Charger  string
+		// Site     string
+		// Circuit  int
+		Cache time.Duration
 	}{
 		Cache: 30 * time.Second,
 	}
@@ -54,7 +56,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.ID, cc.Cache)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
 }
 
 // NewEasee creates Easee charger
@@ -70,6 +72,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		return c, err
 	}
 
+	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
 		if err != nil {
@@ -82,6 +85,19 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 
 		c.charger = chargers[0].ID
 	}
+
+	// find site and circuit
+	site, err := c.chargerDetails()
+	if err != nil {
+		return c, err
+	}
+
+	if len(site.Circuits) != 1 {
+		return c, fmt.Errorf("cannot determine circuit id, found: %v", site.Circuits)
+	}
+
+	c.site = site.ID
+	c.circuit = site.Circuits[0].ID
 
 	return c, err
 }
@@ -131,7 +147,14 @@ func (c *Easee) refreshToken() error {
 	return err
 }
 
+// request creates JSON HTTP request with valid access token
 func (c *Easee) request(method, path string, body interface{}) (*http.Request, error) {
+	if c.token.Valid.After(time.Now()) {
+		if err := c.refreshToken(); err != nil {
+			return nil, err
+		}
+	}
+
 	uri := fmt.Sprintf("%s%s", easyAPI, path)
 
 	req, err := request.New(method, uri, request.MarshalJSON(body), request.JSONEncoding)
@@ -146,6 +169,16 @@ func (c *Easee) chargers() (res []easee.Charger, err error) {
 	req, err := c.request(http.MethodGet, "/chargers", nil)
 	if err != nil {
 		return nil, err
+	}
+
+	err = c.DoJSON(req, &res)
+	return res, err
+}
+
+func (c *Easee) chargerDetails() (res easee.Site, err error) {
+	req, err := c.request(http.MethodGet, fmt.Sprintf("/chargers/%s/site", c.charger), nil)
+	if err != nil {
+		return res, err
 	}
 
 	err = c.DoJSON(req, &res)
@@ -200,9 +233,10 @@ func (c *Easee) Enable(enable bool) error {
 		Enabled: &enable,
 	}
 
-	req, err := c.request(http.MethodGet, fmt.Sprintf("/chargers/%s/settings", c.charger), data)
+	req, err := c.request(http.MethodPost, fmt.Sprintf("/chargers/%s/settings", c.charger), data)
 	if err == nil {
 		_, err = c.Do(req)
+		c.updated = time.Time{} // clear cache
 	}
 
 	return err
@@ -210,13 +244,26 @@ func (c *Easee) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (c *Easee) MaxCurrent(current int64) error {
-	return errors.New("not implemented")
+	cur := int(current)
+	data := easee.CircuitSettings{
+		DynamicCircuitCurrentP1: &cur,
+		DynamicCircuitCurrentP2: &cur,
+		DynamicCircuitCurrentP3: &cur,
+	}
+
+	req, err := c.request(http.MethodPost, fmt.Sprintf("/sites/%d/circuits/%d/settings", c.site, c.circuit), data)
+	if err == nil {
+		_, err = c.Do(req)
+		c.updated = time.Time{} // clear cache
+	}
+
+	return err
 }
 
 // CurrentPower implements the Meter interface.
 func (c *Easee) CurrentPower() (float64, error) {
 	res, err := c.state()
-	return float64(res.TotalPower), err
+	return 1e3 * float64(res.TotalPower), err
 }
 
 // ChargedEnergy implements the ChargeRater interface

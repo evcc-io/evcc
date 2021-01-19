@@ -1,16 +1,49 @@
 package easee
 
-// Site is the site type
-type Site struct {
-	ID      int    `json:"id"`
-	SiteKey string `json:"siteKey"`
-	Name    string `json:"name"`
-}
-
 // Charger is the charger type
 type Charger struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+// Site is the site type
+type Site struct {
+	ID       int       `json:"id"`
+	SiteKey  string    `json:"siteKey"`
+	Name     string    `json:"name"`
+	Circuits []Circuit `json:"circuits"`
+}
+
+// Circuit is the circuit type
+type Circuit struct {
+	ID               int     `json:"id"`
+	SiteID           int     `json:"siteId"`
+	CircuitPanelID   int     `json:"circuitPanelId"`
+	PanelName        string  `json:"panelName"`
+	RatedCurrent     float32 `json:"ratedCurrent"`
+	UseDynamicMaster bool    `json:"useDynamicMaster"`
+	ParentCircuitID  int     `json:"parentCircuitId"`
+	// "chargers": [{
+	// 	"id": "string",
+	// 	"name": "string",
+	// 	"color": 1,
+	// 	"createdOn": "2021-01-19T12:39:10.359Z",
+	// 	"updatedOn": "2021-01-19T12:39:10.359Z",
+	// 	"backPlate": {
+	// 		"id": "string",
+	// 		"masterBackPlateId": "string",
+	// 		"name": "string"
+	// 	},
+	// 	"levelOfAccess": 1,
+	// 	"productCode": 1,
+	// 	"userRole": 1,
+	// 	"isTemporary": true
+	// }],
+	// "masterBackplate": {
+	// 	"id": "string",
+	// 	"masterBackPlateId": "string",
+	// 	"name": "string"
+	// },
 }
 
 // ChargerStatus is the charger status type
@@ -85,4 +118,18 @@ type ChargerSettings struct {
 	LedStripBrightness           *int  `json:"ledStripBrightness,omitempty"`
 	MaxChargerCurrent            *int  `json:"maxChargerCurrent,omitempty"`
 	DynamicChargerCurrent        *int  `json:"dynamicChargerCurrent,omitempty"`
+}
+
+// CircuitSettings is the circuit settings type
+type CircuitSettings struct {
+	DynamicCircuitCurrentP1    *int  `json:"dynamicCircuitCurrentP1,omitempty"`
+	DynamicCircuitCurrentP2    *int  `json:"dynamicCircuitCurrentP2,omitempty"`
+	DynamicCircuitCurrentP3    *int  `json:"dynamicCircuitCurrentP3,omitempty"`
+	MaxCircuitCurrentP1        *int  `json:"maxCircuitCurrentP1,omitempty"`
+	MaxCircuitCurrentP2        *int  `json:"maxCircuitCurrentP2,omitempty"`
+	MaxCircuitCurrentP3        *int  `json:"maxCircuitCurrentP3,omitempty"`
+	EnableIdleCurrent          *bool `json:"enableIdleCurrent,omitempty"`
+	OfflineMaxCircuitCurrentP1 *int  `json:"offlineMaxCircuitCurrentP1,omitempty"`
+	OfflineMaxCircuitCurrentP2 *int  `json:"offlineMaxCircuitCurrentP2,omitempty"`
+	OfflineMaxCircuitCurrentP3 *int  `json:"offlineMaxCircuitCurrentP3,omitempty"`
 }
