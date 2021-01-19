@@ -5,10 +5,15 @@ package updater
 import (
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
 	"github.com/google/go-github/v32/github"
+)
+
+const (
+	RootFS = "evcc_%s.rootfs.gz"
 )
 
 var (
@@ -23,6 +28,12 @@ func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<-
 		repo:    NewRepo(server.Owner, server.Repository),
 	}
 
+	// ssh handler
+	jar, _ := cookiejar.New(nil)
+	client = &http.Client{Jar: jar}
+	httpd.Router().PathPrefix("/api/ssh").HandlerFunc(u.sshHandler)
+
+	// update handler
 	httpd.Router().PathPrefix("/api/update").HandlerFunc(u.updateHandler)
 
 	c := make(chan *github.RepositoryRelease, 1)

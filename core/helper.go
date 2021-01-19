@@ -12,7 +12,7 @@ var (
 	retryOptions = []retry.Option{retry.Attempts(3), retry.LastErrorOnly(true)}
 
 	// Voltage global value
-	Voltage float64
+	Voltage float64 = 230
 )
 
 // powerToCurrent is a helper function to convert power to per-phase current
