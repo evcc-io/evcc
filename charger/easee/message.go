@@ -1,5 +1,8 @@
 package easee
 
+// API is the Easee API endpoint
+const API = "https://api.easee.cloud/api"
+
 // Charger is the charger type
 type Charger struct {
 	ID   string `json:"id"`

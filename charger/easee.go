@@ -11,23 +11,10 @@ import (
 	"github.com/andig/evcc/util/request"
 )
 
-// https://api.easee.cloud/index.html
-
-const easyAPI = "https://api.easee.cloud/api"
-
-// EaseeToken is the /api/accounts/token and /api/accounts/refresh_token response
-type EaseeToken struct {
-	AccessToken  string    `json:"accessToken"`
-	ExpiresIn    float32   `json:"expiresIn"`
-	TokenType    string    `json:"tokenType"`
-	RefreshToken string    `json:"refreshToken"`
-	Valid        time.Time // helper to store validity timestamp
-}
-
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	token         EaseeToken
+	*easee.Identity
 	charger       string
 	site, circuit int
 	status        easee.ChargerStatus
@@ -59,14 +46,15 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEasee creates Easee charger
 func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
+	log := util.NewLogger("easee")
 	c := &Easee{
-		Helper:  request.NewHelper(util.NewLogger("easee")),
+		Helper:  request.NewHelper(log),
 		charger: charger,
 		cache:   cache,
 	}
 
-	err := c.login(user, password)
-	if err != nil {
+	var err error
+	if c.Identity, err = easee.NewIdentity(log, user, password); err != nil {
 		return c, err
 	}
 
@@ -100,64 +88,15 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	return c, err
 }
 
-func (c *Easee) login(user, password string) error {
-	data := struct {
-		Username string `json:"userName"`
-		Password string `json:"password"`
-	}{
-		Username: user,
-		Password: password,
-	}
-
-	uri := fmt.Sprintf("%s%s", easyAPI, "/accounts/token")
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-	if err == nil {
-		err = c.DoJSON(req, &c.token)
-		c.token.Valid = time.Now().Add(time.Second * time.Duration(c.token.ExpiresIn))
-	}
-
-	return err
-}
-
-func (c *Easee) refreshToken() error {
-	data := struct {
-		AccessToken  string `json:"accessToken"`
-		RefreshToken string `json:"refreshToken"`
-	}{
-		AccessToken:  c.token.AccessToken,
-		RefreshToken: c.token.RefreshToken,
-	}
-
-	uri := fmt.Sprintf("%s%s", easyAPI, "/accounts/refresh_token")
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-	var token EaseeToken
-	if err == nil {
-		err = c.DoJSON(req, &token)
-		token.Valid = time.Now().Add(time.Second * time.Duration(token.ExpiresIn))
-	}
-
-	if err == nil {
-		c.token = token
-	}
-
-	return err
-}
-
 // request creates JSON HTTP request with valid access token
 func (c *Easee) request(method, path string, body interface{}) (*http.Request, error) {
-	if c.token.Valid.After(time.Now()) {
-		if err := c.refreshToken(); err != nil {
-			return nil, err
-		}
-	}
-
-	uri := fmt.Sprintf("%s%s", easyAPI, path)
+	uri := fmt.Sprintf("%s%s", easee.API, path)
 
 	req, err := request.New(method, uri, request.MarshalJSON(body), request.JSONEncoding)
 	if err == nil {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token.AccessToken))
+		var token string
+		token, err = c.Token()
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 	}
 
 	return req, err
