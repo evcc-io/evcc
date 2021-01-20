@@ -1805,13 +1805,13 @@ QZqgiKvkeNN4sJINhGjzj0JHVVP4xxZ1M/9nxs4/lHc3b6Zz/iHw5r8BAAD//9E1OSTUDAAA
 	"/dist/ico/site.webmanifest": {
 		name:    "site.webmanifest",
 		local:   "dist/ico/site.webmanifest",
-		size:    385,
+		size:    386,
 		modtime: 1566640112,
 		compressed: `
 H4sIAAAAAAAC/4SPQWrDMBBF16NTGHWbONiQRbINvUI3pZipNLVFZY0ZKZA05O5lhJch0U7/vf9hbgZs
 LihlOEu0x8a27c5uDNiEM+n//aM5TSgjNSdORThGkirkiaUML7Uy0UyD48ii3ttPfRV9o/sdhc/JP+Y+
 5CXiVeNcMHmMnKiS4Dhle2w+DcDNAIDN4tTD5IWD37pJeKZtd+gv3aFvlzRqT73wR9q0K1rjcl3qGWHG
-kXaqG4D75sX8vusv++7h/Iqezhv4Mvf/AAAA///9wXGygQEAAA==
+kXaqG4D75sX8vusv++7h/Iqezhv4MnfzHwAA///z+WnxggEAAA==
 `,
 	},
 
