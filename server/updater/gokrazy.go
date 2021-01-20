@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	Password = "FIat2WTD8i3tJikkvIJI"
+	Password = "SECRET"
 	Port     = 8080
 )
 
