@@ -23,7 +23,7 @@ type Circuit struct {
 	SiteID           int     `json:"siteId"`
 	CircuitPanelID   int     `json:"circuitPanelId"`
 	PanelName        string  `json:"panelName"`
-	RatedCurrent     float32 `json:"ratedCurrent"`
+	RatedCurrent     float64 `json:"ratedCurrent"`
 	UseDynamicMaster bool    `json:"useDynamicMaster"`
 	ParentCircuitID  int     `json:"parentCircuitId"`
 	// "chargers": [{
@@ -54,50 +54,50 @@ type ChargerStatus struct {
 	SmartCharging                                bool    `json:"smartCharging"`
 	CableLocked                                  bool    `json:"cableLocked"`
 	ChargerOpMode                                int     `json:"chargerOpMode"`
-	TotalPower                                   float32 `json:"totalPower"`
-	SessionEnergy                                float32 `json:"sessionEnergy"`
-	EnergyPerHour                                float32 `json:"energyPerHour"`
+	TotalPower                                   float64 `json:"totalPower"`
+	SessionEnergy                                float64 `json:"sessionEnergy"`
+	EnergyPerHour                                float64 `json:"energyPerHour"`
 	WiFiRSSI                                     int     `json:"wiFiRSSI"`
 	CellRSSI                                     int     `json:"cellRSSI"`
 	LocalRSSI                                    int     `json:"localRSSI"`
 	OutputPhase                                  int     `json:"outputPhase"`
-	DynamicCircuitCurrentP1                      float32 `json:"dynamicCircuitCurrentP1"`
-	DynamicCircuitCurrentP2                      float32 `json:"dynamicCircuitCurrentP2"`
-	DynamicCircuitCurrentP3                      float32 `json:"dynamicCircuitCurrentP3"`
+	DynamicCircuitCurrentP1                      float64 `json:"dynamicCircuitCurrentP1"`
+	DynamicCircuitCurrentP2                      float64 `json:"dynamicCircuitCurrentP2"`
+	DynamicCircuitCurrentP3                      float64 `json:"dynamicCircuitCurrentP3"`
 	LatestPulse                                  string  `json:"latestPulse"`
 	ChargerFirmware                              int     `json:"chargerFirmware"`
 	LatestFirmware                               int     `json:"latestFirmware"`
-	Voltage                                      float32 `json:"voltage"`
+	Voltage                                      float64 `json:"voltage"`
 	ChargerRAT                                   int     `json:"chargerRAT"`
 	LockCablePermanently                         bool    `json:"lockCablePermanently"`
-	InCurrentT2                                  float32 `json:"inCurrentT2"`
-	InCurrentT3                                  float32 `json:"inCurrentT3"`
-	InCurrentT4                                  float32 `json:"inCurrentT4"`
-	InCurrentT5                                  float32 `json:"inCurrentT5"`
-	OutputCurrent                                float32 `json:"outputCurrent"`
+	InCurrentT2                                  float64 `json:"inCurrentT2"`
+	InCurrentT3                                  float64 `json:"inCurrentT3"`
+	InCurrentT4                                  float64 `json:"inCurrentT4"`
+	InCurrentT5                                  float64 `json:"inCurrentT5"`
+	OutputCurrent                                float64 `json:"outputCurrent"`
 	IsOnline                                     bool    `json:"isOnline"`
-	InVoltageT1T2                                float32 `json:"inVoltageT1T2"`
-	InVoltageT1T3                                float32 `json:"inVoltageT1T3"`
-	InVoltageT1T4                                float32 `json:"inVoltageT1T4"`
-	InVoltageT1T5                                float32 `json:"inVoltageT1T5"`
-	InVoltageT2T3                                float32 `json:"inVoltageT2T3"`
-	InVoltageT2T4                                float32 `json:"inVoltageT2T4"`
-	InVoltageT2T5                                float32 `json:"inVoltageT2T5"`
-	InVoltageT3T4                                float32 `json:"inVoltageT3T4"`
-	InVoltageT3T5                                float32 `json:"inVoltageT3T5"`
-	InVoltageT4T5                                float32 `json:"inVoltageT4T5"`
+	InVoltageT1T2                                float64 `json:"inVoltageT1T2"`
+	InVoltageT1T3                                float64 `json:"inVoltageT1T3"`
+	InVoltageT1T4                                float64 `json:"inVoltageT1T4"`
+	InVoltageT1T5                                float64 `json:"inVoltageT1T5"`
+	InVoltageT2T3                                float64 `json:"inVoltageT2T3"`
+	InVoltageT2T4                                float64 `json:"inVoltageT2T4"`
+	InVoltageT2T5                                float64 `json:"inVoltageT2T5"`
+	InVoltageT3T4                                float64 `json:"inVoltageT3T4"`
+	InVoltageT3T5                                float64 `json:"inVoltageT3T5"`
+	InVoltageT4T5                                float64 `json:"inVoltageT4T5"`
 	LedMode                                      int     `json:"ledMode"`
-	CableRating                                  float32 `json:"cableRating"`
-	DynamicChargerCurrent                        float32 `json:"dynamicChargerCurrent"`
-	CircuitTotalAllocatedPhaseConductorCurrentL1 float32 `json:"circuitTotalAllocatedPhaseConductorCurrentL1"`
-	CircuitTotalAllocatedPhaseConductorCurrentL2 float32 `json:"circuitTotalAllocatedPhaseConductorCurrentL2"`
-	CircuitTotalAllocatedPhaseConductorCurrentL3 float32 `json:"circuitTotalAllocatedPhaseConductorCurrentL3"`
-	CircuitTotalPhaseConductorCurrentL1          float32 `json:"circuitTotalPhaseConductorCurrentL1"`
-	CircuitTotalPhaseConductorCurrentL2          float32 `json:"circuitTotalPhaseConductorCurrentL2"`
-	CircuitTotalPhaseConductorCurrentL3          float32 `json:"circuitTotalPhaseConductorCurrentL3"`
+	CableRating                                  float64 `json:"cableRating"`
+	DynamicChargerCurrent                        float64 `json:"dynamicChargerCurrent"`
+	CircuitTotalAllocatedPhaseConductorCurrentL1 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL1"`
+	CircuitTotalAllocatedPhaseConductorCurrentL2 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL2"`
+	CircuitTotalAllocatedPhaseConductorCurrentL3 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL3"`
+	CircuitTotalPhaseConductorCurrentL1          float64 `json:"circuitTotalPhaseConductorCurrentL1"`
+	CircuitTotalPhaseConductorCurrentL2          float64 `json:"circuitTotalPhaseConductorCurrentL2"`
+	CircuitTotalPhaseConductorCurrentL3          float64 `json:"circuitTotalPhaseConductorCurrentL3"`
 	ReasonForNoCurrent                           int     `json:"reasonForNoCurrent"`
 	WiFiAPEnabled                                bool    `json:"wiFiAPEnabled"`
-	LifetimeEnergy                               float32 `json:"lifetimeEnergy"`
+	LifetimeEnergy                               float64 `json:"lifetimeEnergy"`
 	OfflineMaxCircuitCurrentP1                   int     `json:"offlineMaxCircuitCurrentP1"`
 	OfflineMaxCircuitCurrentP2                   int     `json:"offlineMaxCircuitCurrentP2"`
 	OfflineMaxCircuitCurrentP3                   int     `json:"offlineMaxCircuitCurrentP3"`

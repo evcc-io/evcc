@@ -161,17 +161,39 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (c *Easee) Enabled() (bool, error) {
 	res, err := c.state()
-	return res.IsOnline, err
+	return res.DynamicChargerCurrent > 0, err
 }
 
 // Enable implements the Charger.Enable interface
 func (c *Easee) Enable(enable bool) error {
-	data := easee.ChargerSettings{
-		Enabled: &enable,
+	res, err := c.state()
+	if err != nil {
+		return err
 	}
 
-	req, err := c.request(http.MethodPost, fmt.Sprintf("/chargers/%s/settings", c.charger), data)
-	if err == nil {
+	// enable charger once
+	if enable && !res.IsOnline {
+		data := easee.ChargerSettings{
+			Enabled: &enable,
+		}
+
+		var req *http.Request
+		if req, err = c.request(http.MethodPost, fmt.Sprintf("/chargers/%s/settings", c.charger), data); err == nil {
+			_, err = c.Do(req)
+			c.updated = time.Time{} // clear cache
+		}
+
+		return err
+	}
+
+	// resume/stop charger
+	action := "pause_charging"
+	if enable {
+		action = "resume_charging"
+	}
+
+	var req *http.Request
+	if req, err = c.request(http.MethodPost, fmt.Sprintf("/chargers/%s/commands/%s", c.charger, action), nil); err == nil {
 		_, err = c.Do(req)
 		c.updated = time.Time{} // clear cache
 	}
@@ -200,20 +222,20 @@ func (c *Easee) MaxCurrent(current int64) error {
 // CurrentPower implements the Meter interface.
 func (c *Easee) CurrentPower() (float64, error) {
 	res, err := c.state()
-	return 1e3 * float64(res.TotalPower), err
+	return 1e3 * res.TotalPower, err
 }
 
 // ChargedEnergy implements the ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
 	res, err := c.state()
-	return float64(res.SessionEnergy), err
+	return res.SessionEnergy, err
 }
 
 // Currents implements the MeterCurrent interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	res, err := c.state()
-	return float64(res.CircuitTotalPhaseConductorCurrentL1),
-		float64(res.CircuitTotalPhaseConductorCurrentL2),
-		float64(res.CircuitTotalPhaseConductorCurrentL3),
+	return res.CircuitTotalPhaseConductorCurrentL1,
+		res.CircuitTotalPhaseConductorCurrentL2,
+		res.CircuitTotalPhaseConductorCurrentL3,
 		err
 }
