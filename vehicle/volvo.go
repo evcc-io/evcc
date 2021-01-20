@@ -70,7 +70,7 @@ type volvoStatus struct {
 	OdometerTimestamp                  string `json:"odometerTimestamp"`
 	PrivacyPolicyEnabled               bool   `json:"privacyPolicyEnabled"`
 	PrivacyPolicyEnabledTimestamp      string `json:"privacyPolicyEnabledTimestamp"`
-	RemoteClimatizationStatus          string `json:"remoteClimatizationStatus"`
+	RemoteClimatizationStatus          string `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
 	RemoteClimatizationStatusTimestamp string `json:"remoteClimatizationStatusTimestamp"`
 	ServiceWarningStatus               string `json:"serviceWarningStatus"`
 	ServiceWarningStatusTimestamp      string `json:"serviceWarningStatusTimestamp"`
@@ -200,13 +200,21 @@ func (v *Volvo) VehicleRange() (int64, error) {
 	return 0, err
 }
 
-// // FinishTime implements the ChargeFinishTimer interface
-// func (v *Volvo) FinishTime() (time.Time, error) {
-// 	res, err := v.statusG()
-// 	if res, ok := res.(volvoStatus); err == nil && ok {
-// 		timestamp, err := time.Parse(time.RFC3339, res.HvBattery.TimeToHVBatteryFullyChargedTimestamp)
-// 		return timestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute), err
-// 	}
+// FinishTime implements the ChargeFinishTimer interface
+func (v *Volvo) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	if res, ok := res.(volvoStatus); err == nil && ok {
+		timestamp, err := time.Parse("2006-01-02T15:04:05-0700", res.HvBattery.TimeToHVBatteryFullyChargedTimestamp)
 
-// 	return time.Time{}, err
-// }
+		if err == nil {
+			timestamp = timestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
+			if timestamp.Before(time.Now()) {
+				return time.Time{}, api.ErrNotAvailable
+			}
+		}
+
+		return timestamp, err
+	}
+
+	return time.Time{}, err
+}
