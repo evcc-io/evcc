@@ -3,11 +3,12 @@ package vehicle
 import "time"
 
 type defaultConfig struct {
-	Title          string
-	Capacity       int64
-	User, Password string `validate:"required"`
-	VIN            string
-	Cache          time.Duration
+	Title    string
+	Capacity int64
+	User     string `validate:"required"`
+	Password string `validate:"required" ui:",mask"`
+	VIN      string
+	Cache    time.Duration
 }
 
 func configDefaults() defaultConfig {
