@@ -12,9 +12,9 @@ import (
 
 func init() {
 	// expose all configuration types to ui
-	config.Add("charger", charger.Types())
-	config.Add("meter", meter.Types())
-	config.Add("vehicle", vehicle.Types())
+	config.SetTypes("charger", charger.Types())
+	config.SetTypes("meter", meter.Types())
+	config.SetTypes("vehicle", vehicle.Types())
 }
 
 func main() {

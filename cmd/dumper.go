@@ -74,6 +74,12 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// charger
 
 	if v, ok := v.(api.Charger); ok {
+		if status, err := v.Status(); err != nil {
+			fmt.Fprintf(w, "Status:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Status:\t%s\n", status)
+		}
+
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {

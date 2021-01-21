@@ -57,10 +57,10 @@ type EVSEWifi struct {
 type evseConfig = struct {
 	URI   string `validate:"required"`
 	Meter struct {
-		Power    bool `ui:"Leistung (W)"`
-		Energy   bool `ui:"Zählerstand (kWh)"`
-		Currents bool `ui:"Strom (A)"`
-	} `ui:"Integrierten Zähler verwenden (optional)"`
+		Power    bool `ui:"de=Leistung (W)"`
+		Energy   bool `ui:"de=Zählerstand (kWh)"`
+		Currents bool `ui:"de=Strom (A)"`
+	} `ui:"de=Integrierten Zähler verwenden (optional)"`
 }
 
 func init() {

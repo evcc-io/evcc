@@ -34,15 +34,26 @@ type NRGKickBLE struct {
 	current       int
 }
 
+type nrgBLEConfig struct {
+	Device string `validate:"required" ui:"de=Bluetooth Device`
+	Mac    string `validate:"required,mac" ui:"de=MAC-Adresse"`
+	PIN    string `validate:"required"`
+}
+
+func nrgBLEDefaults() nrgBLEConfig {
+	return nrgBLEConfig{
+		Device: "hci0",
+	}
+}
+
 func init() {
-	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig)
+	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig, nrgBLEDefaults())
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
 func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Device, MacAddress, PIN string }{
-		Device: "hci0",
-	}
+	cc := nrgBLEDefaults()
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
