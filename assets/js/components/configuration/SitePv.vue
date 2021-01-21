@@ -1,5 +1,5 @@
 <template>
-	<CardEntry name="PV Wechselrichter">
+	<CardEntry name="Erzeuger / Wechselrichter" is-configured>
 		<template #status><h5 class="text-success">5,42 kW</h5></template>
 		<template #summary>SMA</template>
 		<template #form><Form :meters="meters" /></template>

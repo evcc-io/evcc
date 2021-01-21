@@ -1,7 +1,7 @@
 <template>
-	<CardEntry name="Netzanschluss">
+	<CardEntry name="Netzanschluss" is-required>
 		<template #status><h5>0,00 kW</h5></template>
-		<template #summary>Discovergy Zähler</template>
+		<template #summary></template>
 		<template #form><Form :meters="meters" /></template>
 	</CardEntry>
 </template>

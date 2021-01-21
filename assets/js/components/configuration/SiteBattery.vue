@@ -1,5 +1,5 @@
 <template>
-	<CardEntry name="Hausbatterie">
+	<CardEntry name="Hausbatterie" is-configured>
 		<template #status>
 			<h5 class="text-success mb-0">4,20 kW</h5>
 			<small class="text-muted">76%</small>

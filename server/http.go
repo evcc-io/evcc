@@ -345,7 +345,8 @@ type HTTPd struct {
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
 	routes := map[string]route{
-		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
+		"health": {[]string{"GET"}, "/health", HealthHandler(site)},
+
 		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
 		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"types":     {[]string{"GET"}, "/config/types/{class:[a-z]+}", TypesHandler()},

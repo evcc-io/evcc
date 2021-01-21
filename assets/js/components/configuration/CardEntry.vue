@@ -1,7 +1,9 @@
 <template>
 	<div>
 		<div class="card-title">
-			<h5 class="mb-0" style="display: inline-block">{{ name }}</h5>
+			<h5 class="mb-0" style="display: inline-block">
+				{{ name }}
+			</h5>
 			&nbsp;
 			<a href="#" @click.prevent="editMode = true" v-show="!editMode">ändern</a>
 			<div class="float-right text-right"><slot name="status"></slot></div>
@@ -12,6 +14,8 @@
 			</div>
 			<p v-else class="card-text pb-3">
 				<slot name="summary"></slot>
+				<span class="text-success" v-if="isConfigured"> ✓</span>
+				<span class="text-danger" v-if="isRequired">(Konfiguration erforderlich)</span>
 			</p>
 		</transition>
 	</div>
@@ -22,6 +26,8 @@ export default {
 	name: "CardEntry",
 	props: {
 		name: String,
+		isRequired: Boolean,
+		isConfigured: Boolean,
 	},
 	data: function () {
 		return { editMode: false };

@@ -1,5 +1,5 @@
 <template>
-	<form @submit.prevent="testAndSave">
+	<form @submit.prevent="submit">
 		<div class="form-group">
 			<label for="wechselrichter">Messgerät</label>
 			<select class="custom-select" id="wechselrichter" v-model="selectedMeter">
@@ -36,12 +36,13 @@
 				abbrechen
 			</button>
 			&nbsp;
-			<button type="button" class="btn btn-outline-primary btn-sm" @click.prevent="test">
+			<button type="submit" name="btn-test" class="btn btn-outline-primary btn-sm">
 				testen
 			</button>
 			&nbsp;
 			<button
 				type="submit"
+				name="btn-save"
 				class="btn btn-sm"
 				:class="{
 					'btn-outline-primary': !tested,
@@ -84,14 +85,26 @@ export default {
 		},
 	},
 	methods: {
-		test: async function () {
-			this.tested = true;
+		formToJson: function (form) {
+			const formData = new FormData(form);
+			return formData; // todo: proper data structure
 		},
-		testAndSave: async function (e) {
-			const formData = new FormData(e.target);
-			console.log({ e, formData });
+		submit: function (e) {
+			console.log();
+			this.test(this.formToJson(e.target));
+		},
+		test: async function (data) {
 			try {
-				await axios.post("/api/config/meter/grid", formData);
+				await axios.post("/config/test/meter", data);
+				this.tested = false;
+			} catch (e) {
+				console.error(e);
+				this.tested = false;
+			}
+		},
+		testAndSave: async function (data) {
+			try {
+				await axios.post("/config/test/meter", data);
 				this.tested = false;
 			} catch (e) {
 				console.error(e);
