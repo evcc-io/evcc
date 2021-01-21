@@ -71,14 +71,7 @@ func init() {
 
 // NewPorscheFromConfig creates a new vehicle
 func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title               string
-		Capacity            int64
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := configDefaults()
 
 	log := util.NewLogger("porsche")
 
