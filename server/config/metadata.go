@@ -8,14 +8,23 @@ import (
 	"github.com/fatih/structs"
 )
 
-type Descriptor struct {
-	Name     string        `json:"name"`
-	Type     string        `json:"type"`
-	Required bool          `json:"required"`
-	Label    string        `json:"label"`
-	Enum     []interface{} `json:"enum,omitempty"`
-	Default  interface{}   `json:"default,omitempty"`
-	Children []Descriptor  `json:"children,omitempty"`
+// description is the Fieldmetadata container describing a single type
+type description struct {
+	Type   string          `json:"type"`
+	Label  string          `json:"label"`
+	Fields []FieldMetadata `json:"fields"`
+}
+
+// FieldMetadata is the meta data format for the type description
+type FieldMetadata struct {
+	Name     string          `json:"name"`
+	Type     string          `json:"type"`
+	Required bool            `json:"required"`
+	Hidden   bool            `json:"hidden"`
+	Label    string          `json:"label"`
+	Enum     []interface{}   `json:"enum,omitempty"`
+	Default  interface{}     `json:"default,omitempty"`
+	Children []FieldMetadata `json:"children,omitempty"`
 }
 
 // tagKey returns tag key's value or key name if value is empty
@@ -27,6 +36,7 @@ func tagKey(f *structs.Field, tag, key string) string {
 			if len(splits) > 1 {
 				return splits[1]
 			}
+
 			return key
 		}
 	}
@@ -44,7 +54,7 @@ func enum(list []string) (enum []interface{}) {
 
 // label is the exported field label
 func label(f *structs.Field) string {
-	val := f.Tag("ui")
+	val := tagKey(f, "ui", "de")
 	if val == "" {
 		val = translate(f.Name())
 	}
@@ -75,7 +85,18 @@ func value(f *structs.Field) interface{} {
 	}
 }
 
-func Describe(s interface{}, opt ...bool) (ds []Descriptor) {
+func prependType(typ string, conf []FieldMetadata) []FieldMetadata {
+	typeDef := struct {
+		Type string `validate:"required" ui:",hide"`
+	}{
+		Type: typ,
+	}
+
+	return append(annotate(typeDef), conf...)
+}
+
+// annotate adds meta data to given configuration structure
+func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 	var flat bool
 	if len(opt) == 1 && opt[0] {
 		flat = true
@@ -88,46 +109,44 @@ func Describe(s interface{}, opt ...bool) (ds []Descriptor) {
 
 		// embedded fields
 		if f.Kind() == reflect.Struct && f.IsEmbedded() {
-			dd := Describe(f.Value())
+			dd := annotate(f.Value())
 			ds = append(ds, dd...)
 			continue
 		}
 
 		// normal fields including structs
-		d := Descriptor{
+		d := FieldMetadata{
 			Name:     f.Name(),
 			Type:     kind(f),
 			Required: tagKey(f, "validate", "required") != "",
-			Label:    label(f),
+			Hidden:   tagKey(f, "ui", "hide") != "",
 		}
 
-		// enums
-		if oneof := tagKey(f, "validate", "oneof"); oneof != "" {
-			d.Enum = enum(strings.Split(oneof, " "))
+		if !d.Hidden {
+			// label
+			d.Label = label(f)
+
+			// enums
+			if oneof := tagKey(f, "validate", "oneof"); oneof != "" {
+				d.Enum = enum(strings.Split(oneof, " "))
+			}
 		}
 
 		if !f.IsZero() {
 			d.Default = value(f)
 		}
 
-		if f.Kind() == reflect.Ptr {
+		switch f.Kind() {
+		case reflect.Ptr, reflect.Interface, reflect.Func:
 			continue
-		}
-		if f.Kind() == reflect.Interface {
-			continue
-		}
-		if f.Kind() == reflect.Func {
-			continue
-		}
-
-		if f.Kind() == reflect.Struct {
+		case reflect.Struct:
 			if flat {
 				// don't describe the field
 				continue
 			}
 
 			d.Default = nil // no default for structs
-			d.Children = Describe(f.Value())
+			d.Children = annotate(f.Value())
 		}
 
 		ds = append(ds, d)

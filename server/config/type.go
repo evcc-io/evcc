@@ -1,11 +1,16 @@
 package config
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 )
 
+// Type is a registered type definition.
 type Type struct {
+	// Factory is duplicated here to allow creating devices by type without needing to import the device packages.
+	Factory func(map[string]interface{}) (interface{}, error) `json:"-"`
+
 	Type   string `json:"type"`
 	Label  string `json:"label"`
 	Config interface{}
@@ -14,29 +19,29 @@ type Type struct {
 
 var registry = make(map[string][]Type)
 
-func Add(class string, types []Type) {
+// SetTypes sets the type definitions for given class in the registry
+func SetTypes(class string, types []Type) {
 	registry[class] = types
 }
 
-type configType struct {
-	Type   string       `json:"type"`
-	Label  string       `json:"label"`
-	Fields []Descriptor `json:"fields"`
-}
-
-func TypeDefinition(class, typ string) Type {
-	types := registry[class]
+// typeDefinition retrieves type definitions by class and type
+func typeDefinition(class, typ string) (Type, error) {
+	types, ok := registry[class]
+	if !ok {
+		return Type{}, fmt.Errorf("invalid class: %s", class)
+	}
 
 	for _, v := range types {
 		if v.Type == typ {
-			return v
+			return v, nil
 		}
 	}
 
-	return Type{}
+	return Type{}, fmt.Errorf("invalid type: %s", typ)
 }
 
-func Types(class string) []configType {
+// Types returns configuration types for given class
+func Types(class string) []interface{} {
 	types := registry[class]
 
 	sort.Slice(types, func(i, j int) bool {
@@ -46,13 +51,13 @@ func Types(class string) []configType {
 		return strings.Compare(types[i].Type, types[j].Type) < 0
 	})
 
-	res := make([]configType, 0, len(types))
+	res := make([]interface{}, 0, len(types))
 
 	for _, typ := range types {
-		ct := configType{
+		ct := description{
 			Type:   typ.Type,
 			Label:  typ.Label,
-			Fields: Describe(typ.Config),
+			Fields: prependType(typ.Type, annotate(typ.Config)),
 		}
 		res = append(res, ct)
 	}

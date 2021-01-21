@@ -30,10 +30,12 @@ type PhoenixEMCP struct {
 
 type emcpConfig struct {
 	URI   string `validate:"required"`
-	ID    uint8  `validate:"required"`
+	ID    uint8  `validate:"required" ui:"de=ModBus Slave ID"`
 	Meter struct {
-		Power, Energy, Currents bool
-	}
+		Power    bool `ui:"de=Leistung (W)"`
+		Energy   bool `ui:"de=Zählerstand (kWh)"`
+		Currents bool `ui:"de=Strom (A)"`
+	} `ui:"de=Integrierten Zähler verwenden (optional)"`
 }
 
 func emcpDefaults() emcpConfig {

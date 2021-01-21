@@ -20,19 +20,19 @@ type PhoenixEVCC struct {
 	conn *modbus.Connection
 }
 
+func evccDefaults() modbus.Settings {
+	return modbus.Settings{
+		ID: 255,
+	}
+}
+
 func init() {
-	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, nil)
+	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, evccDefaults)
 }
 
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVCCFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 255,
-		},
-	}
+	cc := evccDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
