@@ -31,15 +31,7 @@ func Types() (types []config.Type) {
 	return types
 }
 
-func GetConfig(name string) (config.Type, error) {
-	desc, err := registry.Get(name)
-	if err == nil {
-		return desc.config, err
-	}
-
-	return config.Type{}, err
-}
-
+// Add adds a vehicle description to the registry
 func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Vehicle, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
@@ -57,6 +49,7 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 	r[name] = desc
 }
 
+// Get retrieves a vehicle description from the registry
 func (r typeRegistry) Get(name string) (typeDesc, error) {
 	desc, exists := r[name]
 	if !exists {

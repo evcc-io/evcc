@@ -21,19 +21,24 @@ const (
 	evseRegVehicleStatus = 1002
 )
 
+func simpleevseDefaults() modbus.Settings {
+	return modbus.Settings{
+		Baudrate: 9600,
+		Comset:   "8N1",
+		ID:       1,
+	}
+}
+
 func init() {
-	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, nil)
+	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, simpleevseDefaults())
 }
 
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf
 
 // NewSimpleEVSEFromConfig creates a SimpleEVSE charger from generic config
 func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := modbus.Settings{
-		Baudrate: 9600,
-		Comset:   "8N1",
-		ID:       1,
-	}
+	cc := simpleevseDefaults()
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

@@ -19,12 +19,12 @@ const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
 // Settings contains the ModBus settings
 type Settings struct {
 	URI       string
-	ID        uint8  `ui:"ModBus Slave ID"`
+	ID        uint8  `ui:"de=ModBus Slave ID"`
 	SubDevice int    `structs:"-"`
-	Device    string `ui:"Serielle Schnittstelle"`
-	Comset    string `validate:"oneof=8E1 8N1" ui:"Serielle Schnittstelle: Kommunikationseinstellungen"`
-	Baudrate  int    `ui:"Serielle Schnittstelle: Baudrate"`
-	RTU       *bool  `ui:"ModBus RTU Gerät"` // indicates RTU over TCP if true
+	Device    string `ui:"de=Serielle Schnittstelle"`
+	Comset    string `validate:"oneof=8E1 8N1" ui:"de=Serielle Schnittstelle: Kommunikationseinstellungen"`
+	Baudrate  int    `ui:"de=Serielle Schnittstelle: Baudrate"`
+	RTU       *bool  `ui:"de=ModBus RTU Gerät"` // indicates RTU over TCP if true
 }
 
 // Connection decorates a meters.Connection with transparent slave id and error handling

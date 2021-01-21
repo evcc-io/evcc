@@ -359,10 +359,7 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
-		var timestamp time.Time
-		if err == nil {
-			timestamp, err = time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-		}
+		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable

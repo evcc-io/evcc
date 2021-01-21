@@ -12,8 +12,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func configFromTemplate(tmpl templates.Template) (configType, error) {
-	res := configType{
+// configFromTemplate converts configuration template to annotated configuration type
+func configFromTemplate(tmpl templates.Template) (description, error) {
+	res := description{
 		Type:  tmpl.Type,
 		Label: tmpl.Name,
 	}
@@ -26,7 +27,10 @@ func configFromTemplate(tmpl templates.Template) (configType, error) {
 	}
 
 	// get matching config type description for template type
-	desc := TypeDefinition(tmpl.Class, tmpl.Type)
+	desc, err := typeDefinition(tmpl.Class, tmpl.Type)
+	if err != nil {
+		return res, err
+	}
 
 	// unexported or not found
 	if desc.Type == "" || desc.Config == nil {
@@ -38,13 +42,13 @@ func configFromTemplate(tmpl templates.Template) (configType, error) {
 		return res, err
 	}
 
-	res.Fields = Describe(desc.Config)
+	res.Fields = prependType(tmpl.Type, annotate(desc.Config))
 
 	return res, nil
 }
 
 // Templates returns configuration templates for giving class
-func Templates(class string) []configType {
+func Templates(class string) []interface{} {
 	types := templates.TemplatesByClass(class)
 
 	// name -> type
@@ -55,7 +59,7 @@ func Templates(class string) []configType {
 		return strings.Compare(types[i].Type, types[j].Type) < 0
 	})
 
-	res := make([]configType, 0, len(types))
+	res := make([]interface{}, 0, len(types))
 
 	for _, tmpl := range types {
 		ct, err := configFromTemplate(tmpl)
