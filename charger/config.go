@@ -51,11 +51,11 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 
 // Get retrieves a charger description from the registry
 func (r typeRegistry) Get(name string) (typeDesc, error) {
-	typ, exists := r[name]
+	desc, exists := r[name]
 	if !exists {
 		return typeDesc{}, fmt.Errorf("charger type not registered: %s", name)
 	}
-	return typ, nil
+	return desc, nil
 }
 
 // NewFromConfig creates charger from configuration
