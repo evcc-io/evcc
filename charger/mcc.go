@@ -64,13 +64,17 @@ type MobileConnect struct {
 	cableInformation MCCCurrentCableInformation
 }
 
+type mccConfig struct {
+	URI, Password string `validate:"required"`
+}
+
 func init() {
-	registry.Add("mcc", "Mobile Charger Connect (Porsche)", NewMobileConnectFromConfig, nil)
+	registry.Add("mcc", "Mobile Charger Connect (Porsche)", NewMobileConnectFromConfig, mccConfig{})
 }
 
 // NewMobileConnectFromConfig creates a MCC charger from generic config
 func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ URI, Password string }{}
+	var cc mccConfig
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

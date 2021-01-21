@@ -73,7 +73,7 @@ type NRGKickConnect struct {
 
 type nrgConfig struct {
 	URI      string `validate:"required"`
-	Mac      string `validate:"required,mac" ui:"MAC-Adresse"`
+	Mac      string `validate:"required,mac" ui:"de=MAC-Adresse"`
 	Password string `validate:"required"`
 }
 

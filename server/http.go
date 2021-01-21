@@ -109,7 +109,7 @@ func TemplatesHandler() http.HandlerFunc {
 		vars := mux.Vars(r)
 		class, ok := vars["class"]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "class required", http.StatusBadRequest)
 			return
 		}
 
@@ -123,11 +123,31 @@ func TypesHandler() http.HandlerFunc {
 		vars := mux.Vars(r)
 		class, ok := vars["class"]
 		if !ok {
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, "class required", http.StatusBadRequest)
 			return
 		}
 
 		jsonResponse(w, r, config.Types(class))
+	}
+}
+
+// TestHandler rests the given configuration
+func TestHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		class, ok := vars["class"]
+		if !ok {
+			http.Error(w, "class required", http.StatusBadRequest)
+			return
+		}
+
+		res, err := config.Test(class, r.Body)
+		if err != nil {
+			http.Error(w, fmt.Errorf("test failed: %w", err).Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonResponse(w, r, res)
 	}
 }
 
@@ -329,6 +349,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
 		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
 		"types":     {[]string{"GET"}, "/config/types/{class:[a-z]+}", TypesHandler()},
+		"test":      {[]string{"POST"}, "/config/test/{class:[a-z]+}", TestHandler()},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
