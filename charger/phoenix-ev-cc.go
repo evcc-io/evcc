@@ -27,7 +27,7 @@ func evccDefaults() modbus.Settings {
 }
 
 func init() {
-	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, evccDefaults)
+	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, evccDefaults())
 }
 
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config
