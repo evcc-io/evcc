@@ -147,7 +147,7 @@ func TestHandler() http.HandlerFunc {
 			return
 		}
 
-		jsonResponse(w, r, config.Types(class))
+		jsonResponse(w, r, res)
 	}
 }
 
