@@ -37,7 +37,7 @@ type NRGKickBLE struct {
 type nrgBLEConfig struct {
 	Device string `validate:"required" ui:"de=Bluetooth Device`
 	Mac    string `validate:"required,mac" ui:"de=MAC-Adresse"`
-	PIN    string `validate:"required"`
+	PIN    string `validate:"required" ui:",mask"`
 }
 
 func nrgBLEDefaults() nrgBLEConfig {

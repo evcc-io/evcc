@@ -28,7 +28,7 @@ func ClientID() string {
 type Config struct {
 	Broker   string `validate:"required"`
 	User     string
-	Password string
+	Password string `ui:"mask"`
 }
 
 // Client encapsulates mqtt publish/subscribe functions

@@ -1,8 +1,6 @@
 package vehicle
 
 import (
-	"time"
-
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/vehicle/bluelink"
@@ -20,14 +18,7 @@ func init() {
 
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		Title          string
-		Capacity       int64
-		User, Password string
-		Cache          time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := configDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

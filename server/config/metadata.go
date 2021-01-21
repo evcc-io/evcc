@@ -21,6 +21,7 @@ type FieldMetadata struct {
 	Type     string          `json:"type"`
 	Required bool            `json:"required"`
 	Hidden   bool            `json:"hidden"`
+	Masked   bool            `json:"masked"`
 	Label    string          `json:"label"`
 	Enum     []interface{}   `json:"enum,omitempty"`
 	Default  interface{}     `json:"default,omitempty"`
@@ -42,6 +43,12 @@ func tagKey(f *structs.Field, tag, key string) string {
 	}
 
 	return ""
+}
+
+// hasTagKey returns true if tag key exists; the key's value is not checked
+func hasTagKey(f *structs.Field, tag, key string) bool {
+	val := tagKey(f, tag, key)
+	return val != ""
 }
 
 // enum converts list of strings to enum values
@@ -118,8 +125,9 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 		d := FieldMetadata{
 			Name:     f.Name(),
 			Type:     kind(f),
-			Required: tagKey(f, "validate", "required") != "",
-			Hidden:   tagKey(f, "ui", "hide") != "",
+			Required: hasTagKey(f, "validate", "required"),
+			Hidden:   hasTagKey(f, "ui", "hide"),
+			Masked:   hasTagKey(f, "ui", "mask"),
 		}
 
 		if !d.Hidden {
@@ -132,7 +140,8 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 			}
 		}
 
-		if !f.IsZero() {
+		// add default values if not masked
+		if !f.IsZero() && !d.Masked {
 			d.Default = value(f)
 		}
 
