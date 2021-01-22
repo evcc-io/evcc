@@ -42,7 +42,7 @@ type volvoStatus struct {
 	BrakeFluidTimestamp             string  `json:"brakeFluidTimestamp"`
 	CarLocked                       bool    `json:"carLocked"`
 	CarLockedTimestamp              string  `json:"carLockedTimestamp"`
-	ConnectionStatus                string  `json:"connectionStatus"`
+	ConnectionStatus                string  `json:"connectionStatus"` // Disconnected
 	ConnectionStatusTimestamp       string  `json:"connectionStatusTimestamp"`
 	DistanceToEmpty                 int     `json:"distanceToEmpty"`
 	DistanceToEmptyTimestamp        string  `json:"distanceToEmptyTimestamp"`
@@ -53,18 +53,18 @@ type volvoStatus struct {
 	FuelAmountLevelTimestamp        string  `json:"fuelAmountLevelTimestamp"`
 	FuelAmountTimestamp             string  `json:"fuelAmountTimestamp"`
 	HvBattery                       struct {
-		HvBatteryChargeStatusDerived          string `json:"hvBatteryChargeStatusDerived"`          // "CablePluggedInCar_Charging",
-		HvBatteryChargeStatusDerivedTimestamp string `json:"hvBatteryChargeStatusDerivedTimestamp"` // "2021-01-19T14:44:02+0000",
-		HvBatteryChargeModeStatus             string `json:"hvBatteryChargeModeStatus"`             // null,
-		HvBatteryChargeModeStatusTimestamp    string `json:"hvBatteryChargeModeStatusTimestamp"`    // null,
-		HvBatteryChargeStatus                 string `json:"hvBatteryChargeStatus"`                 // "ChargeProgress",
-		HvBatteryChargeStatusTimestamp        string `json:"hvBatteryChargeStatusTimestamp"`        // "2021-01-19T14:44:02+0000",
-		HvBatteryLevel                        int    `json:"hvBatteryLevel"`                        // 72,
-		HvBatteryLevelTimestamp               string `json:"hvBatteryLevelTimestamp"`               // "2021-01-19T14:44:02+0000",
-		DistanceToHVBatteryEmpty              int    `json:"distanceToHVBatteryEmpty"`              // 28,
-		DistanceToHVBatteryEmptyTimestamp     string `json:"distanceToHVBatteryEmptyTimestamp"`     // "2021-01-19T14:44:02+0000",
-		TimeToHVBatteryFullyCharged           int    `json:"timeToHVBatteryFullyCharged"`           // 60,
-		TimeToHVBatteryFullyChargedTimestamp  string `json:"timeToHVBatteryFullyChargedTimestamp"`  // "2021-01-19T14:44:02+0000"
+		HvBatteryChargeStatusDerived          string `json:"hvBatteryChargeStatusDerived"` // CableNotPluggedInCar, CablePluggedInCar, Charging
+		HvBatteryChargeStatusDerivedTimestamp string `json:"hvBatteryChargeStatusDerivedTimestamp"`
+		HvBatteryChargeModeStatus             string `json:"hvBatteryChargeModeStatus"`
+		HvBatteryChargeModeStatusTimestamp    string `json:"hvBatteryChargeModeStatusTimestamp"`
+		HvBatteryChargeStatus                 string `json:"hvBatteryChargeStatus"` // Started, ChargeProgress, ChargeEnd, Interrupted
+		HvBatteryChargeStatusTimestamp        string `json:"hvBatteryChargeStatusTimestamp"`
+		HvBatteryLevel                        int    `json:"hvBatteryLevel"`
+		HvBatteryLevelTimestamp               string `json:"hvBatteryLevelTimestamp"`
+		DistanceToHVBatteryEmpty              int    `json:"distanceToHVBatteryEmpty"`
+		DistanceToHVBatteryEmptyTimestamp     string `json:"distanceToHVBatteryEmptyTimestamp"`
+		TimeToHVBatteryFullyCharged           int    `json:"timeToHVBatteryFullyCharged"`
+		TimeToHVBatteryFullyChargedTimestamp  string `json:"timeToHVBatteryFullyChargedTimestamp"`
 	} `json:"hvBattery"`
 	Odometer                           int    `json:"odometer"`
 	OdometerTimestamp                  string `json:"odometerTimestamp"`
@@ -188,6 +188,23 @@ func (v *Volvo) ChargeState() (float64, error) {
 	}
 
 	return 0, err
+}
+
+// Status implements the VehicleStatus interface
+func (v *Volvo) Status() (api.ChargeStatus, error) {
+	res, err := v.statusG()
+	if res, ok := res.(volvoStatus); err == nil && ok {
+		switch res.HvBattery.HvBatteryChargeStatusDerived {
+		case "CableNotPluggedInCar":
+			return api.StatusA, nil
+		case "CablePluggedInCar":
+			return api.StatusB, nil
+		case "Charging":
+			return api.StatusC, nil
+		}
+	}
+
+	return api.StatusNone, err
 }
 
 // VehicleRange implements the VehicleRange interface
