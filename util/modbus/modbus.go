@@ -56,6 +56,11 @@ func (mb *Connection) Logger(logger meters.Logger) {
 	mb.conn.Logger(logger)
 }
 
+// Timeout sets the connection timeout (not idle timeout)
+func (mb *Connection) Timeout(timeout time.Duration) {
+	mb.conn.Timeout(timeout)
+}
+
 // ReadCoils wraps the underlying implementation
 func (mb *Connection) ReadCoils(address, quantity uint16) ([]byte, error) {
 	mb.prepare()
