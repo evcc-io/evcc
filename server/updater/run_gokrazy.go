@@ -28,11 +28,16 @@ func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<-
 	c := make(chan *github.RepositoryRelease, 1)
 	go u.watchReleases(server.Version, c) // endless
 
+	// signal update support
+	u.Send("hasUpdater", true)
+
 	for rel := range c {
-		u.Send("availableVersion", rel)
 		latest = rel
+		u.Send("availableVersion", *latest.TagName)
 	}
 }
+
+const rootFSAsset = "evcc_%s.rootfs.gz"
 
 func (u *watch) updateHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost || latest == nil {
@@ -40,7 +45,7 @@ func (u *watch) updateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := fmt.Sprintf(RootFS, *latest.TagName)
+	name := fmt.Sprintf(rootFSAsset, *latest.TagName)
 	assetID, size, err := u.repo.FindReleaseAsset(name)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -399,6 +399,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	return srv
 }
 
+// Router returns the main router
 func (s *HTTPd) Router() *mux.Router {
 	return s.Handler.(*mux.Router)
 }
