@@ -56,7 +56,7 @@ func Templates(class string) []interface{} {
 		if types[i].Name < types[j].Name {
 			return true
 		}
-		return strings.Compare(types[i].Type, types[j].Type) < 0
+		return strings.ToLower(types[i].Type) < strings.ToLower(types[j].Type)
 	})
 
 	res := make([]interface{}, 0, len(types))
