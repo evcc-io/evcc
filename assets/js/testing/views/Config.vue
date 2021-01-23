@@ -1,24 +1,46 @@
 <template>
 	<div class="container">
-		<div>
-			<Ssh></Ssh>
+		<h3 class="my-4">Class: meters</h3>
+
+		<div class="row">
+			<div class="col">
+				<select class="form-control" v-model="meter">
+					<option
+						v-for="(cfg, idx) in meters"
+						:key="idx"
+						:value="idx"
+						:selected="idx == meter"
+					>
+						{{ cfg.label }}
+					</option>
+				</select>
+			</div>
 		</div>
 
-		<h3>Class: meters</h3>
-		<Element
-			v-for="(cfg, idx) in meters"
-			v-bind="cfg"
-			:key="idx"
-			:configclass="'meters'"
-		></Element>
+		<Element v-bind="meters[meter]" :configclass="'meters'"></Element>
 
-		<h3>Class: chargers</h3>
-		<Element
-			v-for="(cfg, idx) in chargers"
-			v-bind="cfg"
-			:key="idx"
-			:configclass="'chargers'"
-		></Element>
+		<h3 class="my-4">Class: chargers</h3>
+
+		<div class="row">
+			<div class="col">
+				<select class="form-control" v-model="charger">
+					<option
+						v-for="(cfg, idx) in chargers"
+						:key="idx"
+						:value="idx"
+						:selected="idx == charger"
+					>
+						{{ cfg.label }}
+					</option>
+				</select>
+			</div>
+		</div>
+
+		<Element v-bind="chargers[charger]" :configclass="'chargers'"></Element>
+
+		<!-- <div>
+			<Ssh></Ssh>
+		</div> -->
 	</div>
 </template>
 
@@ -34,6 +56,8 @@ export default {
 		return {
 			meters: {},
 			chargers: {},
+			meter: 0,
+			charger: 0,
 		};
 	},
 	mounted: function () {

@@ -146,16 +146,14 @@ export default {
 				this.updaterShown = !this.updaterShown;
 			}
 		},
-		update: function () {
-			axios
-				.post("update")
-				.then(() => {
-					this.updateStatus = "Aktualisierung gestartet: ";
-					this.updateStarted = true;
-				})
-				.catch((res) => {
-					this.updateStatus = "Aktualisierung nicht möglich: " + res;
-				});
+		update: async function () {
+			try {
+				await axios.post("update");
+				this.updateStatus = "Aktualisierung gestartet: ";
+				this.updateStarted = true;
+			} catch (e) {
+				this.updateStatus = "Aktualisierung nicht möglich: " + e;
+			}
 		},
 	},
 	computed: {

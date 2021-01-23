@@ -54,9 +54,12 @@ type goeConfig struct {
 func init() {
 	registry.Add("go-e", "go-eCharger", NewGoEFromConfig, nil)
 
+	// lokal
 	registry.Add("go-e-local", "go-eCharger (Lokal)", NewGoEFromConfig, struct {
 		URI string `validate:"required"`
 	}{})
+
+	// cloud
 	registry.Add("go-e-cloud", "go-eCharger (Cloud)", NewGoEFromConfig, struct {
 		Token string `validate:"required"`
 		Cache time.Duration

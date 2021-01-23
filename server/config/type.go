@@ -48,7 +48,7 @@ func Types(class string) []interface{} {
 		if types[i].Rank < types[j].Rank {
 			return true
 		}
-		return strings.Compare(types[i].Type, types[j].Type) < 0
+		return strings.ToLower(types[i].Type) < strings.ToLower(types[j].Type)
 	})
 
 	res := make([]interface{}, 0, len(types))
