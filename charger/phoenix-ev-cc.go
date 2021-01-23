@@ -22,12 +22,35 @@ type PhoenixEVCC struct {
 
 func evccDefaults() modbus.Settings {
 	return modbus.Settings{
-		ID: 255,
+		URI: "192.168.0.8:502", // default
+		ID:  255,               // default
 	}
 }
 
 func init() {
-	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, evccDefaults())
+	registry.Add("phoenix-evcc", "Phoenix EV-CC", NewPhoenixEVCCFromConfig, nil)
+
+	// TCP
+	registry.Add("phoenix-evcc-tcp", "Phoenix EV-CC (TCP)", NewPhoenixEVCCFromConfig, struct {
+		URI string `validate:"required"`
+		ID  uint8  `ui:"de=ModBus Slave ID"`
+	}{
+		URI: "192.168.0.8:502", // default
+		ID:  255,
+	})
+
+	// Serial
+	registry.Add("phoenix-evcc-serial", "Phoenix EV-CC (Seriell)", NewPhoenixEVCCFromConfig, struct {
+		Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
+		Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
+		Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
+		ID       uint8  `ui:"de=ModBus Slave ID"`
+	}{
+		Device:   "/dev/usb0",
+		Comset:   "8N1",
+		Baudrate: 9600,
+		ID:       255,
+	})
 }
 
 // NewPhoenixEVCCFromConfig creates a Phoenix charger from generic config

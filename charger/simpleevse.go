@@ -31,6 +31,28 @@ func simpleevseDefaults() modbus.Settings {
 
 func init() {
 	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, simpleevseDefaults())
+
+	// TCP
+	registry.Add("simpleevse-tcp", "Simple EVSE (TCP)", NewSimpleEVSEFromConfig, struct {
+		URI string `validate:"required"`
+		ID  uint8  `ui:"de=ModBus Slave ID"`
+	}{
+		URI: "192.168.0.8:502", // default
+		ID:  1,
+	})
+
+	// Serial
+	registry.Add("simpleevse-serial", "Simple EVSE (Seriell)", NewSimpleEVSEFromConfig, struct {
+		Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
+		Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
+		Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
+		ID       uint8  `ui:"de=ModBus Slave ID"`
+	}{
+		Device:   "/dev/usb0",
+		Comset:   "8N1",
+		Baudrate: 9600,
+		ID:       1,
+	})
 }
 
 // https://files.ev-power.eu/inc/_doc/attach/StoItem/4418/evse-wb-din_Manual.pdf

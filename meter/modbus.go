@@ -23,10 +23,10 @@ type Modbus struct {
 }
 
 type modbusConfig = struct {
-	Model           string `ui:"de=Zählertyp oder SunSpec Modell ID"`
+	Model           string `ui:"de=Zählertyp"`
 	modbus.Settings `mapstructure:",squash"`
 	Power           string `validate:"required" ui:"de=Meßwert Leistung"`
-	Energy          string `ui:"de=Meßwert Zählerstand (nur Netzzähler)"`
+	Energy          string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
 	SoC             string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
 }
 
@@ -47,10 +47,11 @@ func init() {
 		ID     uint8  `ui:"de=ModBus Slave ID"`
 		RTU    *bool  `ui:"de=ModBus RTU Gerät"`
 		Power  string `validate:"required" ui:"de=Meßwert Leistung"`
-		Energy string `ui:"de=Meßwert Zählerstand (nur Netzzähler)"`
+		Energy string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
 		SoC    string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
 	}{
 		Power: "Power",
+		ID:    1,
 	})
 
 	// Serial
@@ -59,15 +60,19 @@ func init() {
 		Model    string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
 		Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
 		Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
-		Baudrate int    `validate:"required" ui:"de=Baudrate"`
+		Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
 		ID       uint8  `ui:"de=ModBus Slave ID"`
 		RTU      *bool  `ui:",hide"`
 		Power    string `validate:"required" ui:"de=Meßwert Leistung"`
-		Energy   string `ui:"de=Meßwert Zählerstand (nur Netzzähler)"`
+		Energy   string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
 		SoC      string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
 	}{
-		Power: "Power",
-		RTU:   &isTrue,
+		Device:   "/dev/usb0",
+		Comset:   "8E1",
+		Baudrate: 9600,
+		Power:    "Power",
+		ID:       1,
+		RTU:      &isTrue,
 	})
 }
 
