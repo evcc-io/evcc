@@ -143,7 +143,7 @@ func TestHandler() http.HandlerFunc {
 
 		res, err := config.Test(class, r.Body)
 		if err != nil {
-			http.Error(w, fmt.Errorf("test failed: %w", err).Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 

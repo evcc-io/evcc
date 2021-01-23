@@ -22,20 +22,26 @@ type Easee struct {
 	cache         time.Duration
 }
 
+type easeeConfig struct {
+	User     string
+	Password string
+	Charger  string        `ui:"de=Charger ID"`
+	Cache    time.Duration `structs:"-"`
+}
+
+func easeeDefault() easeeConfig {
+	return easeeConfig{
+		Cache: 30 * time.Second,
+	}
+}
+
 func init() {
-	registry.Add("easee", NewEaseeFromConfig)
+	registry.Add("easee", "Easee", NewEaseeFromConfig, easeeDefault)
 }
 
 // NewEaseeFromConfig creates a go-e charger from generic config
 func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		User     string
-		Password string
-		Charger  string
-		Cache    time.Duration
-	}{
-		Cache: 30 * time.Second,
-	}
+	cc := easeeDefault()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
