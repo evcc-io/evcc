@@ -30,14 +30,14 @@ func simpleevseDefaults() modbus.Settings {
 }
 
 func init() {
-	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, simpleevseDefaults())
+	registry.Add("simpleevse", "Simple EVSE", NewSimpleEVSEFromConfig, nil)
 
 	// TCP
 	registry.Add("simpleevse-tcp", "Simple EVSE (TCP)", NewSimpleEVSEFromConfig, struct {
 		URI string `validate:"required"`
 		ID  uint8  `ui:"de=ModBus Slave ID"`
 	}{
-		URI: "192.168.0.8:502", // default
+		URI: "192.168.0.8:502",
 		ID:  1,
 	})
 
