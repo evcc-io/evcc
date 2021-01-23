@@ -3,8 +3,15 @@
 		<div class="col">
 			<!-- <h4 class="my-4">{{ label }} ({{ type }})</h4> -->
 			<form>
-				<Field v-for="(field, idx) in fields" v-bind="field" :key="idx"></Field>
-				<button type="submit" class="btn btn-primary btn-small">Test</button>
+				<Field
+					v-for="(field, idx) in fields"
+					v-bind="field"
+					:key="type + idx"
+					:ref="idx"
+				></Field>
+				<button type="submit" class="btn btn-primary btn-small" @click="values">
+					Test
+				</button>
 			</form>
 		</div>
 	</div>
@@ -24,6 +31,26 @@ export default {
 	},
 	data: function () {
 		return {};
+	},
+	methods: {
+		values: function (e) {
+			e.preventDefault();
+
+			let json = {
+				Type: this.type,
+			};
+
+			for (var idx in this.$refs) {
+				let field = this.$refs[idx][0];
+				let val = field.values();
+				if (val !== undefined) {
+					json[field.name] = val;
+				}
+			}
+
+			console.log(json);
+			return json;
+		},
 	},
 };
 </script>
