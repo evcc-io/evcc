@@ -5,12 +5,12 @@
 				{{ name }}
 			</h5>
 			&nbsp;
-			<a href="#" @click.prevent="editMode = true" v-show="!editMode">ändern</a>
+			<a href="#" @click.prevent="$emit('open')" v-show="!editMode">ändern</a>
 			<div class="float-right text-right"><slot name="status"></slot></div>
 		</div>
 		<transition name="fade" mode="out-in">
 			<div class="form pb-3" v-if="editMode">
-				<slot name="form" @close="editMode = false"></slot>
+				<slot name="form"></slot>
 			</div>
 			<p v-else class="card-text pb-3">
 				<slot name="summary"></slot>
@@ -28,9 +28,7 @@ export default {
 		name: String,
 		isRequired: Boolean,
 		isConfigured: Boolean,
-	},
-	data: function () {
-		return { editMode: false };
+		editMode: Boolean,
 	},
 };
 </script>
@@ -39,7 +37,7 @@ export default {
 	opacity: 1;
 }
 .fade-leave-active {
-	transition: opacity 0.2s;
+	transition: opacity 0.1s;
 }
 .fade-leave-to {
 	opacity: 0;
@@ -48,7 +46,7 @@ export default {
 	opacity: 0;
 }
 .fade-enter-active {
-	transition: opacity 0.2s;
+	transition: opacity 0.1s;
 }
 .fade-enter-to {
 	opacity: 1;

@@ -1,5 +1,5 @@
 <template>
-	<input type="hidden" v-if="inputType === 'hidden'" :name="name" value="" />
+	<input type="hidden" v-if="inputType === 'hidden'" :name="name" :value="this.default" />
 	<div class="form-group" v-else>
 		<label :for="name">
 			{{ label }}

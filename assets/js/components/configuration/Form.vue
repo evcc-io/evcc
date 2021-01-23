@@ -20,7 +20,7 @@
 				<span v-else>ausblenden</span>
 			</a>
 		</p>
-		<div v-if="extended">
+		<div v-show="extended">
 			<FormField
 				v-bind="formField"
 				:key="formField.name"
@@ -31,29 +31,36 @@
 			<button
 				type="button"
 				class="btn btn-outline-secondary btn-sm"
-				@click="() => $emit('close')"
+				@click="$parent.$emit('close')"
 			>
 				abbrechen
 			</button>
 			&nbsp;
 			<button type="submit" name="btn-test" class="btn btn-outline-primary btn-sm">
 				testen
+				<span
+					class="spinner-border spinner-border-sm"
+					role="status"
+					aria-hidden="true"
+					v-if="testPending"
+				></span>
 			</button>
 			&nbsp;
 			<button
 				type="submit"
 				name="btn-save"
 				class="btn btn-sm"
+				:disabled="!testSuccess"
 				:class="{
-					'btn-outline-primary': !tested,
-					'btn-success': tested,
+					'btn-outline-primary': !testSuccess,
+					'btn-success': testSuccess,
 				}"
-				@click="edit = ''"
 			>
-				testen &amp; speichern
+				speichern
 			</button>
 		</p>
-		<p class="text-success" v-if="tested">✓ Verbindung erfolgreich hergestellt</p>
+		<p class="text-success" v-if="testMessage && testSuccess">✔ {{ testMessage }}</p>
+		<p class="text-danger" v-if="testMessage && !testSuccess">⚠️ {{ testMessage }}</p>
 	</form>
 </template>
 
@@ -65,11 +72,23 @@ export default {
 	name: "Form",
 	components: { FormField },
 	data: function () {
-		return { edit: "", extended: false, selectedMeter: "sma", tested: false };
+		return {
+			edit: "",
+			extended: false,
+			selectedMeter: "sma",
+			testMessage: null,
+			testSuccess: false,
+			testPending: false,
+			savePending: false,
+			testRequestCancelToken: null,
+		};
 	},
 	props: {
 		meters: {
 			type: Array,
+		},
+		usage: {
+			type: String,
 		},
 	},
 	computed: {
@@ -77,37 +96,60 @@ export default {
 			const meter = this.meters.find((m) => m.type === this.selectedMeter);
 			return meter ? meter.fields : [];
 		},
-		optionalFormFields: function () {
-			return this.formFields.filter((f) => !f.required);
-		},
 		requiredFormFields: function () {
-			return this.formFields.filter((f) => f.required);
+			return this.formFields.filter((f) => f.required || f.hidden);
+		},
+		optionalFormFields: function () {
+			return this.formFields.filter((field) => !this.requiredFormFields.includes(field));
 		},
 	},
 	methods: {
 		formToJson: function (form) {
 			const formData = new FormData(form);
-			return formData; // todo: proper data structure
+			var result = {};
+			formData.forEach((value, key) => (result[key] = value));
+			return result;
 		},
 		submit: function (e) {
-			console.log();
-			this.test(this.formToJson(e.target));
-		},
-		test: async function (data) {
-			try {
-				await axios.post("/config/test/meter", data);
-				this.tested = false;
-			} catch (e) {
-				console.error(e);
-				this.tested = false;
+			const { submitter: button, target: form } = e;
+			const data = this.formToJson(form);
+			if (button.name === "btn-test") {
+				this.test(data);
+			} else {
+				this.save(data);
 			}
 		},
-		testAndSave: async function (data) {
+		test: async function (data) {
+			if (this.testRequestCancelToken) {
+				this.testRequestCancelToken.cancel();
+				return;
+			}
+
+			this.testMessage = null;
+			this.testPending = true;
+			this.testRequestCancelToken = axios.CancelToken.source();
 			try {
-				await axios.post("/config/test/meter", data);
+				const response = await axios.post("/config/test/meter", data, {
+					validateStatus: undefined,
+					cancelToken: this.testRequestCancelToken.token,
+				});
+				this.testMessage = response.data;
+				this.testSuccess = response.status < 400;
+			} catch (e) {
+				console.log("test call canceled");
+				this.testMessage = null;
+				this.testSuccess = false;
+			}
+			this.testPending = false;
+			this.testRequestCancelToken = null;
+		},
+		save: async function (data) {
+			try {
+				await axios.post(`/config/meter/${this.usage}`, data);
 				this.tested = false;
 			} catch (e) {
 				console.error(e);
+				this.tested = false;
 			}
 		},
 	},
