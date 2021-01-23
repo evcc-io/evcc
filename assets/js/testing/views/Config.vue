@@ -17,7 +17,7 @@
 			</div>
 		</div>
 
-		<Element v-bind="meters[meter]" :configclass="'meters'"></Element>
+		<Element v-bind="meters[meter]" :configclass="'meter'"></Element>
 
 		<h3 class="my-4">Class: chargers</h3>
 
@@ -36,7 +36,7 @@
 			</div>
 		</div>
 
-		<Element v-bind="chargers[charger]" :configclass="'chargers'"></Element>
+		<Element v-bind="chargers[charger]" :configclass="'charger'"></Element>
 
 		<!-- <div>
 			<Ssh></Ssh>

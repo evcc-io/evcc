@@ -22,6 +22,7 @@
 					v-model="value"
 					v-if="isEnum"
 				>
+					<option v-if="!required" value="">- bitte wählen -</option>
 					<option v-for="(e, idx) in enums" :key="type + idx" :value="e">{{ e }}</option>
 				</select>
 				<input
@@ -44,6 +45,7 @@ export default {
 		name: String,
 		label: String,
 		type: String,
+		required: Boolean,
 		default: [String, Number],
 		enum: Array,
 		children: Array,

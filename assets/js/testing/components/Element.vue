@@ -9,15 +9,15 @@
 					:key="type + idx"
 					:ref="type + idx"
 				></Field>
-				<button type="submit" class="btn btn-primary btn-small" @click="this.values">
-					Test
-				</button>
+				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button
+				>{{ this.error }}
 			</form>
 		</div>
 	</div>
 </template>
 
 <script>
+import axios from "axios";
 import Field from "./Field";
 
 export default {
@@ -30,12 +30,12 @@ export default {
 		fields: Array,
 	},
 	data: function () {
-		return {};
+		return {
+			error: null,
+		};
 	},
 	methods: {
-		values: function (e) {
-			e.preventDefault();
-
+		values: function () {
 			let json = {
 				Type: this.type,
 			};
@@ -55,6 +55,19 @@ export default {
 
 			console.log(json);
 			return json;
+		},
+		test: async function (e) {
+			e.preventDefault();
+
+			const json = this.values();
+			try {
+				await axios.post("config/test/" + this.configclass, json);
+			} catch (e) {
+				console.log(e);
+				if (e.response) {
+					this.error = e.response.data;
+				}
+			}
 		},
 	},
 };

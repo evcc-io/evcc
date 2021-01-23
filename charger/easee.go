@@ -36,7 +36,7 @@ func easeeDefault() easeeConfig {
 }
 
 func init() {
-	registry.Add("easee", "Easee", NewEaseeFromConfig, easeeDefault)
+	registry.Add("easee", "Easee", NewEaseeFromConfig, easeeDefault())
 }
 
 // NewEaseeFromConfig creates a go-e charger from generic config
@@ -61,7 +61,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 
 	var err error
 	if c.Identity, err = easee.NewIdentity(log, user, password); err != nil {
-		return c, err
+		return c, fmt.Errorf("login failed: %w", err)
 	}
 
 	// find charger
