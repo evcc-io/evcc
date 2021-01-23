@@ -36,8 +36,8 @@ type SMA struct {
 type smaConfig struct {
 	URI    string `structs:"-"`
 	Serial string `validate:"required"`
-	Power  string `ui:"de=OBIS Kennziffer für Leistung"`
-	Energy string `ui:"de=OBIS Kennziffer für Zählerstand"`
+	Power  string `ui:"de=OBIS Kennziffer für Leistung,hide"`
+	Energy string `ui:"de=OBIS Kennziffer für Zählerstand,hide"`
 }
 
 func init() {

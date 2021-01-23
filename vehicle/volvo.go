@@ -91,7 +91,7 @@ type Volvo struct {
 }
 
 func init() {
-	registry.Add("volvo", NewVolvoFromConfig)
+	registry.Add("volvo", "Volvo", NewVolvoFromConfig, configDefaults())
 }
 
 // NewVolvoFromConfig creates a new vehicle
