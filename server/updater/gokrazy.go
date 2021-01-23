@@ -15,15 +15,15 @@ import (
 
 // update constants
 const (
-	MB         = 1024 * 1024
-	RootOffset = 8192*512 + 100*MB
-	RootSize   = 500 * MB
-	RootFS     = "evcc_%s.rootfs.gz"
+	mb         = 1024 * 1024
+	rootOffset = 8192*512 + 100*mb
+	rootSize   = 500 * mb
 )
 
 var (
-	Password = "SECRET"
+	Host     = "localhost"
 	Port     = 8080
+	Password = "SECRET"
 )
 
 // unzipReader transparently unpacks zip files
@@ -53,7 +53,6 @@ func (u *watch) execute(assetID int64, size int) error {
 	if !atomic.CompareAndSwapInt32(&mutex, 0, 1) {
 		return errors.New("upgrade already running")
 	}
-	defer atomic.StoreInt32(&mutex, 0)
 
 	rootFS, err := u.repo.StreamAsset(assetID)
 	if err != nil {
@@ -64,7 +63,24 @@ func (u *watch) execute(assetID int64, size int) error {
 		rootFS.Close()
 		return err
 	}
-	defer rootFS.Close()
+
+	uri := fmt.Sprintf("http://gokrazy:%s@%s:%d/", Password, Host, Port)
+	target, err := updater.NewTarget(uri, http.DefaultClient)
+	if err != nil {
+		return err
+	}
+
+	// stream async to device
+	go u.executeAsync(target, rootFS, size)
+
+	return nil
+}
+
+func (u *watch) executeAsync(target *updater.Target, rootFS io.ReadCloser, size int) error {
+	defer func() {
+		atomic.StoreInt32(&mutex, 0)
+		rootFS.Close()
+	}()
 
 	cw := &countingWriter{C: make(chan int)}
 
@@ -74,12 +90,6 @@ func (u *watch) execute(assetID int64, size int) error {
 		}
 		u.Send("uploadProgress", 100)
 	}()
-
-	uri := fmt.Sprintf("http://gokrazy:%s@localhost:%d/", Password, Port)
-	target, err := updater.NewTarget(uri, http.DefaultClient)
-	if err != nil {
-		return err
-	}
 
 	u.Send("uploadMessage", "uploading")
 	if err := target.StreamTo("root", io.TeeReader(rootFS, cw)); err != nil {
