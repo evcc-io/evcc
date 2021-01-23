@@ -7,9 +7,9 @@
 					v-for="(field, idx) in fields"
 					v-bind="field"
 					:key="type + idx"
-					:ref="idx"
+					:ref="type + idx"
 				></Field>
-				<button type="submit" class="btn btn-primary btn-small" @click="values">
+				<button type="submit" class="btn btn-primary btn-small" @click="this.values">
 					Test
 				</button>
 			</form>
@@ -40,8 +40,13 @@ export default {
 				Type: this.type,
 			};
 
+			console.log("element");
+			console.log(this);
+			console.log(this.$refs);
+
 			for (var idx in this.$refs) {
 				let field = this.$refs[idx][0];
+				console.log(field);
 				let val = field.values();
 				if (val !== undefined) {
 					json[field.name] = val;

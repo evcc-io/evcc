@@ -7,7 +7,7 @@
 					v-for="(f, idx) in this.children"
 					v-bind="f"
 					:key="type + idx"
-					:ref="idx"
+					:ref="type + idx"
 				></Field>
 			</div>
 		</div>
@@ -77,9 +77,12 @@ export default {
 				return this.value;
 			}
 
+			console.log("field");
+			console.log(this.$refs);
 			let json = {};
 			for (var idx in this.$refs) {
 				let field = this.$refs[idx][0];
+				console.log(field);
 				let val = field.values();
 				if (val !== undefined) {
 					json[field.name] = val;
