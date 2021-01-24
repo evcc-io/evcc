@@ -28,16 +28,17 @@ type NRGKickBLE struct {
 	agent         *agent.SimpleAgent
 	dev           *device.Device1
 	device        string
-	macaddress    string
+	mac           string
 	pin           int
 	pauseCharging bool
 	current       int
 }
 
 type nrgBLEConfig struct {
-	Device string `validate:"required" ui:"de=Bluetooth Device`
-	Mac    string `validate:"required,mac" ui:"de=MAC-Adresse"`
-	PIN    string `validate:"required" ui:",mask"`
+	Device     string `validate:"required" ui:"de=Bluetooth Device`
+	Mac        string `validate:"required,mac" ui:"de=MAC-Adresse"`
+	MacAddress string `structs:"-"`
+	PIN        string `validate:"required" ui:",mask"`
 }
 
 func nrgBLEDefaults() nrgBLEConfig {
@@ -47,7 +48,7 @@ func nrgBLEDefaults() nrgBLEConfig {
 }
 
 func init() {
-	registry.Add("nrgkick-bluetooth", NewNRGKickBLEFromConfig, nrgBLEDefaults())
+	registry.Add("nrgkick-bluetooth", "NRGkick Bluetooth", NewNRGKickBLEFromConfig, nrgBLEDefaults())
 }
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
@@ -58,17 +59,22 @@ func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
+	// migration
+	if cc.Mac == "" {
+		cc.Mac = cc.MacAddress
+	}
+
 	// decode PIN with leading zero
 	pin, err := strconv.Atoi(cc.PIN)
 	if err != nil {
 		return nil, fmt.Errorf("invalid pin: %s", cc.PIN)
 	}
 
-	return NewNRGKickBLE(cc.Device, cc.MacAddress, pin)
+	return NewNRGKickBLE(cc.Device, cc.Mac, pin)
 }
 
 // NewNRGKickBLE creates NRGKickBLE charger
-func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
+func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	logger := util.NewLogger("nrg-bt")
 
 	// set LE mode
@@ -114,20 +120,20 @@ func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
 	}
 
 	nrg := &NRGKickBLE{
-		log:        logger,
-		timer:      time.NewTimer(1),
-		device:     device,
-		macaddress: macaddress,
-		pin:        pin,
-		adapter:    adapt,
-		agent:      ag,
+		log:     logger,
+		timer:   time.NewTimer(1),
+		device:  device,
+		mac:     mac,
+		pin:     pin,
+		adapter: adapt,
+		agent:   ag,
 	}
 
 	return nrg, nil
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress, nrgTimeout)
+	dev, err := nrgble.FindDevice(nrg.adapter, nrg.mac, nrgTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
