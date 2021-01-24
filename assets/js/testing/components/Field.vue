@@ -4,18 +4,24 @@
 			<div class="col-4">{{ label }}</div>
 
 			<div class="col-8">
-				<Field v-for="(f, idx) in children" v-bind="f" :key="idx" :ref="idx"></Field>
+				<Field
+					v-for="(f, idx) in children"
+					v-bind="f"
+					:key="name + idx"
+					:ref="name + idx"
+				></Field>
 			</div>
 		</div>
 		<div class="form-row" v-else-if="type == 'plugin'">
 			<div class="col-4 font-weight-bold">{{ label }}</div>
 			<div class="col-8">
 				<select class="form-control" v-model="plugin">
+					<option value="">- bitte wählen -</option>
 					<option
 						v-for="(cfg, idx) in plugins"
 						:key="idx"
 						:value="idx"
-						:selected="cfg.type == plugin"
+						:selected="idx == plugin"
 					>
 						{{ cfg.label }}
 					</option>
@@ -77,6 +83,7 @@ export default {
 		name: String,
 		label: String,
 		type: String,
+		masked: Boolean,
 		required: Boolean,
 		default: [String, Number],
 		enum: Array,
@@ -108,6 +115,9 @@ export default {
 		inputType: function () {
 			switch (this.type) {
 				case "string":
+					if (this.masked) {
+						return "password";
+					}
 					return "text";
 				case "bool":
 					return "checkbox";

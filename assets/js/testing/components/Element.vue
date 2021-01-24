@@ -6,14 +6,15 @@
 				<Field
 					v-for="(field, idx) in fields"
 					v-bind="field"
-					:key="type + idx"
-					:ref="type + idx"
+					:key="label + idx"
+					:ref="label + idx"
 					:plugins="plugins"
 					v-on:updated="clearStatus"
 				></Field>
 
-				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button
-				>{{ this.error }}
+				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button>
+
+				{{ this.error }}
 
 				<ul v-if="Object.keys(result).length">
 					<li v-for="(val, idx) in result" :key="idx">

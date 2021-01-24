@@ -6,6 +6,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
 )
 
@@ -36,11 +37,11 @@ type Vehicle struct {
 
 type vehicleConfig struct {
 	Title    string
-	Capacity int64
-	Charge   provider.Config
-	Status   *provider.Config
-	Range    *provider.Config
-	Cache    time.Duration
+	Capacity int64            `validate:"required" ui:"de=Batteriekapazität (kWh)"`
+	Charge   provider.Config  `validate:"required" ui:"de=Ladezustand (%)"`
+	Status   *provider.Config `ui:"Ladestatus ('A'..'C')"`
+	Range    *provider.Config `ui:"Reichweite (km)"`
+	Cache    time.Duration    `structs:"-"`
 }
 
 func vehicleDefaults() vehicleConfig {
@@ -50,7 +51,8 @@ func vehicleDefaults() vehicleConfig {
 }
 
 func init() {
-	registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
+	// registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
+	registry.Add("default", "Fahrzeug (frei konfigurierbar)", NewConfigurableFromConfig, vehicleConfig{}, config.LastRank)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle

@@ -50,7 +50,7 @@
 						<select class="form-control" v-model="meter">
 							<option
 								v-for="(cfg, idx) in meters"
-								:key="idx"
+								:key="'meter' + idx"
 								:value="idx"
 								:selected="idx == meter"
 							>
@@ -68,7 +68,7 @@
 						<select class="form-control" v-model="charger">
 							<option
 								v-for="(cfg, idx) in chargers"
-								:key="idx"
+								:key="'charger' + idx"
 								:value="idx"
 								:selected="idx == charger"
 							>
@@ -90,7 +90,7 @@
 						<select class="form-control" v-model="vehicle">
 							<option
 								v-for="(cfg, idx) in vehicles"
-								:key="idx"
+								:key="'vehicle' + idx"
 								:value="idx"
 								:selected="idx == vehicle"
 							>

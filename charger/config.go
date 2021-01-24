@@ -29,7 +29,7 @@ func Types() (types []config.Type) {
 }
 
 // Add adds a charger description to the registry
-func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Charger, error), defaults interface{}) {
+func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (api.Charger, error), defaults interface{}, rank ...int) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))
 	}
@@ -44,6 +44,10 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 			Label:  label,
 			Config: defaults,
 		},
+	}
+
+	if len(rank) == 1 {
+		desc.config.Rank = rank[0]
 	}
 
 	r[name] = desc

@@ -5,24 +5,25 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/server/config"
 	"github.com/andig/evcc/util"
 )
 
-// Charger is an api.Charger implementation with configurable getters and setters.
-type Charger struct {
-	statusG     func() (string, error)
-	enabledG    func() (bool, error)
-	enableS     func(bool) error
-	maxCurrentS func(int64) error
+type genericConfig struct {
+	Status     provider.Config `validate:"required" ui:"de=Ladestatus ('A'..'C')"`
+	Enabled    provider.Config `validate:"required" ui:"de=Aktiviert (bool)"`
+	Enable     provider.Config `validate:"required" ui:"de=Aktivieren (bool)"`
+	MaxCurrent provider.Config `validate:"required" ui:"de=Ladestrom (A)"`
 }
 
 func init() {
-	registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
+	registry.Add("default", "Charger (frei konfigurierbar)", NewConfigurableFromConfig, genericConfig{}, config.LastRank)
 }
 
 // NewConfigurableFromConfig creates a new configurable charger
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
+	cc := genericConfig{}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -76,6 +77,14 @@ func NewConfigurable(
 	}
 
 	return c, nil
+}
+
+// Charger is an api.Charger implementation with configurable getters and setters.
+type Charger struct {
+	statusG     func() (string, error)
+	enabledG    func() (bool, error)
+	enableS     func(bool) error
+	maxCurrentS func(int64) error
 }
 
 // Status implements the Charger.Status interface

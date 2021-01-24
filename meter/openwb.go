@@ -15,7 +15,7 @@ import (
 
 type openwbConfig struct {
 	mqtt.Config `mapstructure:",squash"`
-	Usage       string        `validate:"required,oneof=grid pv battery" ui:"de=Zählerverwendung,hide"`
+	Usage       string        `validate:"required,oneof=grid pv battery" ui:"de=Zählerverwendung"` // TODO hide
 	Topic       string        `structs:"-"`
 	Timeout     time.Duration `structs:"-"`
 }
