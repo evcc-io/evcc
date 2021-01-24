@@ -22,8 +22,7 @@ type PhoenixEVCC struct {
 
 func evccDefaults() modbus.Settings {
 	return modbus.Settings{
-		URI: "192.168.0.8:502", // default
-		ID:  255,               // default
+		ID: 255, // default
 	}
 }
 

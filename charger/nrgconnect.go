@@ -141,8 +141,8 @@ func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	err := nrg.GetJSON(nrg.apiURL(nrgSettings), &res)
 	if err != nil {
 		if res.Message != "" {
-		err = errors.New(res.Message)
-	}
+			err = errors.New(res.Message)
+		}
 
 		return false, err
 	}

@@ -15,6 +15,22 @@ type Result struct {
 	Error error       `json:"error,omitempty"`
 }
 
+// MarshalJSON implements the json marshaler for the result type
+func (r Result) MarshalJSON() ([]byte, error) {
+	var err string
+	if r.Error != nil {
+		err = r.Error.Error()
+	}
+
+	return json.Marshal(&struct {
+		Value interface{} `json:"value,omitempty"`
+		Error string      `json:"error,omitempty"`
+	}{
+		Value: r.Value,
+		Error: err,
+	})
+}
+
 func testDevice(v interface{}) map[string]Result {
 	res := make(map[string]Result)
 

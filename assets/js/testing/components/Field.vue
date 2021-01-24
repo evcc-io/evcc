@@ -31,7 +31,7 @@
 					:name="this.name"
 					:value="this.default"
 					v-model="checked"
-					v-if="isBool"
+					v-else-if="isBool"
 				/>
 				<input
 					class="form-control"
@@ -93,7 +93,7 @@ export default {
 	},
 	methods: {
 		values: function () {
-			if (this.type != "struct") {
+			if (this.type !== "struct") {
 				if (this.isBool) {
 					return this.checked;
 				}

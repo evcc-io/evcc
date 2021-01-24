@@ -38,8 +38,8 @@ export default {
 	},
 	data: function () {
 		return {
-			error: null,
-			result: Object,
+			error: "",
+			result: {},
 		};
 	},
 	methods: {
@@ -48,14 +48,9 @@ export default {
 				Type: this.type,
 			};
 
-			console.log("element");
-			console.log(this);
-			console.log(this.$refs);
-
 			for (var idx in this.$refs) {
 				if (this.$refs[idx].length) {
 					let field = this.$refs[idx][0];
-					console.log(field);
 					let val = field.values();
 					if (val !== undefined) {
 						json[field.name] = val;
@@ -63,28 +58,25 @@ export default {
 				}
 			}
 
-			console.log(json);
 			return json;
 		},
 		test: async function (e) {
 			e.preventDefault();
+			this.clearStatus();
 
 			const json = this.values();
 			try {
 				let res = await axios.post("config/test/" + this.configclass, json);
 				this.result = res.data;
-				this.error = null;
 			} catch (e) {
-				console.log(e);
 				if (e.response) {
 					this.error = e.response.data;
 				}
 			}
 		},
 		clearStatus: function () {
-			console.log("clearStatus");
-			this.result = null;
-			this.error = null;
+			this.result = {};
+			this.error = "";
 		},
 	},
 };
