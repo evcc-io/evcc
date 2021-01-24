@@ -29,13 +29,9 @@ type PhoenixEMCP struct {
 }
 
 type emcpConfig struct {
-	URI   string `validate:"required"`
-	ID    uint8  `validate:"required" ui:"de=ModBus Slave ID"`
-	Meter struct {
-		Power    bool `ui:"de=Leistung (W)"`
-		Energy   bool `ui:"de=Zählerstand (kWh)"`
-		Currents bool `ui:"de=Strom (A)"`
-	} `ui:"de=Integrierten Zähler verwenden (optional)"`
+	URI   string            `validate:"required"`
+	ID    uint8             `validate:"required" ui:"de=ModBus Slave ID"`
+	Meter SupportedReadings `ui:"de=Integrierten Zähler verwenden"`
 }
 
 func emcpDefaults() emcpConfig {

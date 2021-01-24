@@ -60,7 +60,11 @@
 					</div>
 				</div>
 
-				<Element v-bind="meters[meter]" :configclass="'meter'" :plugins="plugins"></Element>
+				<Configurable
+					v-bind="meters[meter]"
+					:configclass="'meter'"
+					:plugins="plugins"
+				></Configurable>
 			</div>
 			<div class="tab-pane fade" id="charger" role="tabpanel" aria-labelledby="charger-tab">
 				<div class="row my-3">
@@ -78,11 +82,11 @@
 					</div>
 				</div>
 
-				<Element
+				<Configurable
 					v-bind="chargers[charger]"
 					:configclass="'charger'"
 					:plugins="plugins"
-				></Element>
+				></Configurable>
 			</div>
 			<div class="tab-pane fade" id="vehicle" role="tabpanel" aria-labelledby="vehicle-tab">
 				<div class="row my-3">
@@ -100,11 +104,11 @@
 					</div>
 				</div>
 
-				<Element
+				<Configurable
 					v-bind="vehicles[vehicle]"
 					:configclass="'vehicle'"
 					:plugins="plugins"
-				></Element>
+				></Configurable>
 			</div>
 		</div>
 
@@ -116,12 +120,12 @@
 
 <script>
 import axios from "axios";
-import Element from "../components/Element";
+import Configurable from "../components/Configurable";
 // import Ssh from "../components/Ssh";
 
 export default {
 	name: "Config",
-	components: { Element },
+	components: { Configurable },
 	data: function () {
 		return {
 			meters: [],

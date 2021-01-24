@@ -30,12 +30,12 @@
 
 			<div class="col-4"></div>
 			<div class="col-8">
-				<Element
+				<Configurable
 					v-bind="plugins[plugin]"
 					:configclass="'plugin'"
 					:plugins="plugins"
 					:ref="name"
-				></Element>
+				></Configurable>
 			</div>
 		</div>
 		<div class="form-row" v-else>
@@ -74,11 +74,9 @@
 </template>
 
 <script>
-import Element from "./Element";
-
 export default {
 	name: "Field",
-	components: { Element },
+	components: { Configurable: () => import("./Configurable") },
 	props: {
 		name: String,
 		label: String,

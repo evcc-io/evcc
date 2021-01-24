@@ -29,11 +29,11 @@
 
 <script>
 import axios from "axios";
-// import Field from "./Field";
+import Field from "./Field";
 
 export default {
-	name: "Element",
-	components: { Field: () => import("./Field") },
+	name: "Configurable",
+	components: { Field },
 	props: {
 		configclass: String,
 		type: String,

@@ -2,4 +2,4 @@
 
 package cmd
 
-const defaultPort = 7070
+const defaultPort = 80
