@@ -30,6 +30,14 @@
 					:type="this.inputType"
 					:name="this.name"
 					:value="this.default"
+					v-model="checked"
+					v-if="isBool"
+				/>
+				<input
+					class="form-control"
+					:type="this.inputType"
+					:name="this.name"
+					:value="this.default"
 					v-model="value"
 					v-else
 				/>
@@ -53,7 +61,14 @@ export default {
 	data: function () {
 		return {
 			value: this.default,
+			checked: false,
 		};
+	},
+	watch: {
+		value: function () {
+			console.log("watch value");
+			this.$emit("updated");
+		},
 	},
 	computed: {
 		enums: function () {
@@ -61,6 +76,9 @@ export default {
 		},
 		isEnum: function () {
 			return typeof this.enum !== "undefined" && typeof this.enum.length;
+		},
+		isBool: function () {
+			return this.type == "bool";
 		},
 		inputType: function () {
 			switch (this.type) {
@@ -76,15 +94,15 @@ export default {
 	methods: {
 		values: function () {
 			if (this.type != "struct") {
+				if (this.isBool) {
+					return this.checked;
+				}
 				return this.value;
 			}
 
-			console.log("field");
-			console.log(this.$refs);
 			let json = {};
 			for (var idx in this.$refs) {
 				let field = this.$refs[idx][0];
-				console.log(field);
 				let val = field.values();
 				if (val !== undefined) {
 					json[field.name] = val;

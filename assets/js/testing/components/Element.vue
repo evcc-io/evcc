@@ -8,9 +8,16 @@
 					v-bind="field"
 					:key="type + idx"
 					:ref="type + idx"
+					v-on:updated="clearStatus"
 				></Field>
 				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button
 				>{{ this.error }}
+				<ul v-if="Object.keys(result).length">
+					<li v-for="(val, idx) in result" :key="idx">
+						{{ idx }}: <span v-if="val.error">{{ val.error }}</span
+						><span v-else>{{ val.value }}</span>
+					</li>
+				</ul>
 			</form>
 		</div>
 	</div>
@@ -32,6 +39,7 @@ export default {
 	data: function () {
 		return {
 			error: null,
+			result: Object,
 		};
 	},
 	methods: {
@@ -45,11 +53,13 @@ export default {
 			console.log(this.$refs);
 
 			for (var idx in this.$refs) {
-				let field = this.$refs[idx][0];
-				console.log(field);
-				let val = field.values();
-				if (val !== undefined) {
-					json[field.name] = val;
+				if (this.$refs[idx].length) {
+					let field = this.$refs[idx][0];
+					console.log(field);
+					let val = field.values();
+					if (val !== undefined) {
+						json[field.name] = val;
+					}
 				}
 			}
 
@@ -61,13 +71,20 @@ export default {
 
 			const json = this.values();
 			try {
-				await axios.post("config/test/" + this.configclass, json);
+				let res = await axios.post("config/test/" + this.configclass, json);
+				this.result = res.data;
+				this.error = null;
 			} catch (e) {
 				console.log(e);
 				if (e.response) {
 					this.error = e.response.data;
 				}
 			}
+		},
+		clearStatus: function () {
+			console.log("clearStatus");
+			this.result = null;
+			this.error = null;
 		},
 	},
 };
