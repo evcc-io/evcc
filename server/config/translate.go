@@ -9,6 +9,10 @@ var translations = map[string]string{
 	"User":     "Username",
 	"Serial":   "Seriennummer",
 	"Title":    "Titel",
+	"Power":    "Leistung",
+	"Energy":   "Energie (Zählerstand)",
+	"SoC":      "Ladezustand",
+	"Currents": "Ströme",
 }
 
 func translate(v string) string {

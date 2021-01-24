@@ -24,7 +24,53 @@ type Modbus struct {
 }
 
 func init() {
-	registry.Add("modbus", NewModbusFromConfig)
+	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
+
+	// TCP
+	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
+		modbus.SettingsTCPModel
+		SubDevice int             `ui:"de=SunSpec Subdevice"`
+		Value     string          `ui:"de=Messwert"`
+		Register  modbus.Register `ui:"Register"`
+	}{
+		SettingsTCPModel: modbus.SettingsTCPModel{
+			SettingsTCP: modbus.SettingsTCP{
+				URI: "192.0.2.2:502",
+				ID:  1,
+			},
+		},
+	})
+
+	// RTU over TCP
+	registry.Add("modbus-rtu-tcp", "ModBus (Seriell<->TCP)", NewModbusFromConfig, struct {
+		modbus.SettingsRTUTCPModel
+		Value    string          `ui:"de=Messwert"`
+		Register modbus.Register `ui:"Register"`
+	}{
+		SettingsRTUTCPModel: modbus.SettingsRTUTCPModel{
+			SettingsRTUTCP: modbus.SettingsRTUTCP{
+				URI: "192.0.2.2:502",
+				ID:  1,
+				RTU: true,
+			},
+		},
+	})
+
+	// Serial
+	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
+		modbus.SettingsRTUModel
+		Value    string          `ui:"de=Messwert"`
+		Register modbus.Register `ui:"Register"`
+	}{
+		SettingsRTUModel: modbus.SettingsRTUModel{
+			SettingsRTU: modbus.SettingsRTU{
+				Device:   "/dev/usb0",
+				Comset:   "8E1",
+				Baudrate: 9600,
+				ID:       1,
+			},
+		},
+	})
 }
 
 // NewModbusFromConfig creates Modbus plugin

@@ -16,7 +16,7 @@ type Javascript struct {
 }
 
 func init() {
-	registry.Add("js", NewJavascriptProviderFromConfig)
+	registry.Add("js", "Javascript", NewJavascriptProviderFromConfig, nil)
 }
 
 // NewJavascriptProviderFromConfig creates a HTTP provider

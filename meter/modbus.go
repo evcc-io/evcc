@@ -25,9 +25,9 @@ type Modbus struct {
 type modbusConfig = struct {
 	Model           string `ui:"de=Zählertyp"`
 	modbus.Settings `mapstructure:",squash"`
-	Power           string `validate:"required" ui:"de=Meßwert Leistung"`
-	Energy          string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
-	SoC             string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
+	Power           string `validate:"required" ui:"de=Messwert Leistung"`
+	Energy          string `ui:"de=Messwert Zählerstand (nur Ladezähler)"`
+	SoC             string `ui:"de=Messwert Ladezustand (nur Batterien)"`
 }
 
 func modbusDefaults() modbusConfig {
@@ -40,39 +40,69 @@ func modbusDefaults() modbusConfig {
 func init() {
 	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
 
-	// TCP
-	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
-		Model  string `validate:"oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"de=Zählertyp"`
-		URI    string `validate:"required"`
-		ID     uint8  `ui:"de=ModBus Slave ID"`
-		RTU    *bool  `ui:"de=ModBus RTU Gerät"`
-		Power  string `validate:"required" ui:"de=Meßwert Leistung"`
-		Energy string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
-		SoC    string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
+	// TCP - Wechselrichter
+	registry.Add("modbus-tcp", "ModBus Wechselrichter (TCP)", NewModbusFromConfig, struct {
+		// Model  string `validate:"oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"de=Zählertyp"`
+		// URI    string `validate:"required"`
+		// ID     uint8  `ui:"de=ModBus Slave ID"`
+		modbus.SettingsTCPModel
+		Power  string `validate:"required" ui:"de=Messwert Leistung"`
+		Energy string `ui:"de=Messwert Zählerstand (nur Ladezähler)"`
+		SoC    string `ui:"de=Messwert Ladezustand (nur Batterien)"`
 	}{
+		SettingsTCPModel: modbus.SettingsTCPModel{
+			SettingsTCP: modbus.SettingsTCP{
+				ID: 1,
+			},
+		},
 		Power: "Power",
-		ID:    1,
+		// ID:    1,
+	})
+
+	// TCP - Zähler
+	registry.Add("modbus-rtu-tcp", "ModBus Zähler (Seriell<->TCP)", NewModbusFromConfig, struct {
+		// Model  string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+		// URI    string `validate:"required"`
+		// ID     uint8  `ui:"de=ModBus Slave ID"`
+		// RTU    *bool  `ui:",hide"`
+		modbus.SettingsRTUTCPModel
+		Power  string `validate:"required" ui:"de=Messwert Leistung"`
+		Energy string `ui:"de=Messwert Zählerstand (nur Ladezähler)"`
+		SoC    string `ui:"de=Messwert Ladezustand (nur Batterien)"`
+	}{
+		SettingsRTUTCPModel: modbus.SettingsRTUTCPModel{
+			SettingsRTUTCP: modbus.SettingsRTUTCP{
+				ID:  1,
+				RTU: true,
+			},
+		},
+		Power: "Power",
+		// ID:    1,
+		// RTU:   &isTrue,
 	})
 
 	// Serial
-	isTrue := true
-	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
-		Model    string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
-		Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
-		Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
-		Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
-		ID       uint8  `ui:"de=ModBus Slave ID"`
-		RTU      *bool  `ui:",hide"`
-		Power    string `validate:"required" ui:"de=Meßwert Leistung"`
-		Energy   string `ui:"de=Meßwert Zählerstand (nur Ladezähler)"`
-		SoC      string `ui:"de=Meßwert Ladezustand (nur Batterien)"`
+	registry.Add("modbus-serial", "ModBus Zähler (Seriell)", NewModbusFromConfig, struct {
+		// Model    string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+		// Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
+		// Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
+		// Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
+		// ID       uint8  `ui:"de=ModBus Slave ID"`
+		// RTU      *bool  `ui:",hide"`
+		modbus.SettingsRTUModel
+		Power  string `validate:"required" ui:"de=Messwert Leistung"`
+		Energy string `ui:"de=Messwert Zählerstand (nur Ladezähler)"`
+		SoC    string `ui:"de=Messwert Ladezustand (nur Batterien)"`
 	}{
-		Device:   "/dev/usb0",
-		Comset:   "8E1",
-		Baudrate: 9600,
-		Power:    "Power",
-		ID:       1,
-		RTU:      &isTrue,
+		SettingsRTUModel: modbus.SettingsRTUModel{
+			SettingsRTU: modbus.SettingsRTU{
+				Device:   "/dev/usb0",
+				Comset:   "8E1",
+				Baudrate: 9600,
+				ID:       1,
+			},
+		},
+		Power: "Power",
 	})
 }
 

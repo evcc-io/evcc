@@ -21,7 +21,7 @@ type Mqtt struct {
 }
 
 func init() {
-	registry.Add("mqtt", NewMqttFromConfig)
+	registry.Add("mqtt", "MQTT", NewMqttFromConfig, nil)
 }
 
 // NewMqttFromConfig creates Mqtt provider

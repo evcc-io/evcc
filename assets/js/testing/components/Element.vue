@@ -6,8 +6,9 @@
 				<Field
 					v-for="(field, idx) in fields"
 					v-bind="field"
-					:key="type + idx"
-					:ref="type + idx"
+					:key="idx"
+					:ref="idx"
+					:plugins="plugins"
 					v-on:updated="clearStatus"
 				></Field>
 				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button
@@ -35,6 +36,7 @@ export default {
 		type: String,
 		label: String,
 		fields: Array,
+		plugins: Array,
 	},
 	data: function () {
 		return {

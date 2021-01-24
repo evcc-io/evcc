@@ -17,7 +17,7 @@
 			</div>
 		</div>
 
-		<Element v-bind="meters[meter]" :configclass="'meter'"></Element>
+		<Element v-bind="meters[meter]" :configclass="'meter'" :plugins="plugins"></Element>
 
 		<h3 class="my-4">Class: chargers</h3>
 
@@ -36,7 +36,7 @@
 			</div>
 		</div>
 
-		<Element v-bind="chargers[charger]" :configclass="'charger'"></Element>
+		<Element v-bind="chargers[charger]" :configclass="'charger'" :plugins="plugins"></Element>
 
 		<!-- <div>
 			<Ssh></Ssh>
@@ -54,25 +54,23 @@ export default {
 	components: { Element, Ssh },
 	data: function () {
 		return {
-			meters: {},
-			chargers: {},
+			meters: [],
+			chargers: [],
+			plugins: [],
 			meter: 0,
 			charger: 0,
 		};
 	},
-	mounted: function () {
-		axios
-			.get("/config/types/meter")
-			.then((resp) => {
-				this.meters = resp.data;
-			})
-			.catch(window.toasts.error);
-		axios
-			.get("/config/types/charger")
-			.then((resp) => {
-				this.chargers = resp.data;
-			})
-			.catch(window.toasts.error);
+	mounted: async function () {
+		try {
+			this.meters = (await axios.get("/config/types/meter")).data;
+			this.chargers = (await axios.get("/config/types/charger")).data;
+			this.plugins = (await axios.get("/config/types/plugin")).data;
+			console.log(this.meters);
+			console.log(this.plugins);
+		} catch (e) {
+			window.toasts.error(e);
+		}
 	},
 };
 </script>

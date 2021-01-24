@@ -30,8 +30,8 @@ type Socket struct {
 }
 
 func init() {
-	registry.Add("ws", NewSocketProviderFromConfig)
-	registry.Add("websocket", NewSocketProviderFromConfig)
+	registry.Add("ws", "WebSocket", NewSocketProviderFromConfig, nil)
+	registry.Add("websocket", "WebSocket", NewSocketProviderFromConfig, nil)
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider

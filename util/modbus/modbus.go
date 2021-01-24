@@ -27,6 +27,45 @@ type Settings struct {
 	RTU       *bool  `ui:"de=ModBus RTU Gerät"` // indicates RTU over TCP if true
 }
 
+// SettingsTCP TCP sub type
+type SettingsTCP struct {
+	URI string `validate:"required"`
+	ID  uint8  `ui:"de=ModBus Slave ID"`
+}
+
+// SettingsTCPModel TCP sub type with model
+type SettingsTCPModel struct {
+	Model string `validate:"oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"de=Zählertyp"`
+	SettingsTCP
+}
+
+// SettingsRTUTCP RTU over TCP sub type
+type SettingsRTUTCP struct {
+	URI string `validate:"required"`
+	ID  uint8  `ui:"de=ModBus Slave ID"`
+	RTU bool   `ui:",hide"`
+}
+
+// SettingsRTUTCPModel RTU over TCP sub type with model
+type SettingsRTUTCPModel struct {
+	Model string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+	SettingsRTUTCP
+}
+
+// SettingsRTU RTU/serial sub type
+type SettingsRTU struct {
+	Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
+	Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
+	Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
+	ID       uint8  `ui:"de=ModBus Slave ID"`
+}
+
+// SettingsRTUModel RTU/serial sub type with model
+type SettingsRTUModel struct {
+	Model string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+	SettingsRTU
+}
+
 // Connection decorates a meters.Connection with transparent slave id and error handling
 type Connection struct {
 	slaveID uint8
@@ -218,9 +257,9 @@ func RS485FindDeviceOp(device *rs485.RS485, measurement meters.Measurement) (op 
 
 // Register contains the ModBus register configuration
 type Register struct {
-	Address uint16 // Length  uint16
-	Type    string
-	Decode  string
+	Address uint16 `validate:"required" ui:"de=Adresse"`
+	Type    string `validate:"required,oneof=Input Holding" ui:"de=Typ"`
+	Decode  string `validate:"required,oneof=float32 float32s float64 uint16 uint32 uint32s uint64 int16 int32 int32s" ui:"de=Kodierung"`
 }
 
 // RegisterOperation creates a read operation from a register definition

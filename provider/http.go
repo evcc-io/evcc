@@ -26,7 +26,7 @@ type HTTP struct {
 }
 
 func init() {
-	registry.Add("http", NewHTTPProviderFromConfig)
+	registry.Add("http", "HTTP", NewHTTPProviderFromConfig, nil)
 }
 
 // Auth is the authorization config

@@ -9,20 +9,23 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+type genericConfig struct {
+	Power    provider.Config   `validate:"required"`
+	Energy   *provider.Config  // optional
+	SoC      *provider.Config  // optional
+	Currents []provider.Config // optional
+}
+
 func init() {
-	registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
+	// registry.Add("default", "Generisch", NewConfigurableFromConfig, nil)
+	registry.Add("default", "Generisch", NewConfigurableFromConfig, genericConfig{})
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p meter -f decorateMeter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewConfigurableFromConfig creates api.Meter from config
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) {
-	cc := struct {
-		Power    provider.Config
-		Energy   *provider.Config  // optional
-		SoC      *provider.Config  // optional
-		Currents []provider.Config // optional
-	}{}
+	cc := genericConfig{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

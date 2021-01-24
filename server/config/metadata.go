@@ -8,6 +8,10 @@ import (
 	"github.com/fatih/structs"
 )
 
+const (
+	pluginType = "plugin"
+)
+
 // description is the Fieldmetadata container describing a single type
 type description struct {
 	Type   string          `json:"type"`
@@ -74,10 +78,15 @@ func label(f *structs.Field) string {
 
 // kind is the exported data type
 func kind(f *structs.Field) string {
-	switch f.Value().(type) {
+	switch val := f.Value().(type) {
 	case time.Duration:
 		return "duration"
 	default:
+		// plugin config
+		if strings.HasSuffix(reflect.TypeOf(val).String(), "provider.Config") {
+			return pluginType
+		}
+
 		return f.Kind().String()
 	}
 }
@@ -146,10 +155,12 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 		}
 
 		switch f.Kind() {
-		case reflect.Ptr, reflect.Interface, reflect.Func:
+		case reflect.Ptr:
+			// ignore children
+		case reflect.Interface, reflect.Func:
 			continue
 		case reflect.Struct:
-			if flat {
+			if flat || d.Type == pluginType {
 				// don't describe the field
 				continue
 			}

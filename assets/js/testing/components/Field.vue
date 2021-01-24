@@ -1,15 +1,27 @@
 <template>
 	<div>
-		<div v-if="this.type == 'struct'">
+		<div class="mb-3 row" v-if="type == 'struct'">
 			<h5>{{ label }}</h5>
-			<div class="ml-3" v-if="this.type == 'struct'">
-				<Field
-					v-for="(f, idx) in this.children"
-					v-bind="f"
-					:key="type + idx"
-					:ref="type + idx"
-				></Field>
+			<div class="ml-3" v-if="type == 'struct'">
+				<Field v-for="(f, idx) in children" v-bind="f" :key="idx" :ref="idx"></Field>
 			</div>
+		</div>
+		<div class="mb-3 row" v-else-if="type == 'plugin'">
+			<div class="col">
+				<h5>{{ label }}</h5>
+				<select class="form-control" v-model="plugin">
+					<option
+						v-for="(cfg, idx) in plugins"
+						:key="idx"
+						:value="idx"
+						:selected="cfg.type == plugin"
+					>
+						{{ cfg.label }}
+					</option>
+				</select>
+			</div>
+
+			<Element v-bind="plugins[plugin]" :configclass="'plugin'" :plugins="plugins"></Element>
 		</div>
 		<div class="mb-3 row" v-else>
 			<label :for="this.name" class="col-sm-4 col-form-label">{{ label }}</label>
@@ -23,7 +35,7 @@
 					v-if="isEnum"
 				>
 					<option v-if="!required" value="">- bitte wählen -</option>
-					<option v-for="(e, idx) in enums" :key="type + idx" :value="e">{{ e }}</option>
+					<option v-for="(e, idx) in enums" :key="idx" :value="e">{{ e }}</option>
 				</select>
 				<input
 					class="form-control"
@@ -47,26 +59,30 @@
 </template>
 
 <script>
+import Element from "./Element";
+
 export default {
 	name: "Field",
+	components: { Element },
 	props: {
 		name: String,
 		label: String,
 		type: String,
 		required: Boolean,
-		default: [String, Number],
+		default: [String, Number, Boolean],
 		enum: Array,
 		children: Array,
+		plugins: Array,
 	},
 	data: function () {
 		return {
 			value: this.default,
 			checked: false,
+			plugin: 0,
 		};
 	},
 	watch: {
 		value: function () {
-			console.log("watch value");
 			this.$emit("updated");
 		},
 	},

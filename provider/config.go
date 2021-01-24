@@ -3,48 +3,59 @@ package provider
 import (
 	"fmt"
 	"strings"
+
+	"github.com/andig/evcc/server/config"
 )
 
-// provider types
-type (
-	IntProvider interface {
-		IntGetter() func() (int64, error)
-	}
-	StringProvider interface {
-		StringGetter() func() (string, error)
-	}
-	FloatProvider interface {
-		FloatGetter() func() (float64, error)
-	}
-	BoolProvider interface {
-		BoolGetter() func() (bool, error)
-	}
-	SetIntProvider interface {
-		IntSetter(param string) func(int64) error
-	}
-	SetBoolProvider interface {
-		BoolSetter(param string) func(bool) error
-	}
-)
+type typeDesc struct {
+	factory func(map[string]interface{}) (IntProvider, error)
+	config  config.Type
+}
 
-type providerRegistry map[string]func(map[string]interface{}) (IntProvider, error)
+type typeRegistry map[string]typeDesc
 
-func (r providerRegistry) Add(name string, factory func(map[string]interface{}) (IntProvider, error)) {
+var registry = make(typeRegistry)
+
+// Types exports the public configuration types
+func Types() (types []config.Type) {
+	for _, typ := range registry {
+		if typ.config.Config != nil {
+			types = append(types, typ.config)
+		}
+	}
+
+	return types
+}
+
+// Add adds a meter description to the registry
+func (r typeRegistry) Add(name, label string, factory func(map[string]interface{}) (IntProvider, error), defaults interface{}) {
 	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate plugin type: %s", name))
+		panic(fmt.Sprintf("cannot register duplicate meter type: %s", name))
 	}
-	r[name] = factory
+
+	desc := typeDesc{
+		factory: factory,
+		config: config.Type{
+			Factory: func(cfg map[string]interface{}) (interface{}, error) {
+				return factory(cfg)
+			},
+			Type:   name,
+			Label:  label,
+			Config: defaults,
+		},
+	}
+
+	r[name] = desc
 }
 
-func (r providerRegistry) Get(name string) (func(map[string]interface{}) (IntProvider, error), error) {
-	factory, exists := r[name]
+// Get retrieves a meter description from the registry
+func (r typeRegistry) Get(name string) (typeDesc, error) {
+	desc, exists := r[name]
 	if !exists {
-		return nil, fmt.Errorf("invalid plugin type: %s", name)
+		return typeDesc{}, fmt.Errorf("meter type not registered: %s", name)
 	}
-	return factory, nil
+	return desc, nil
 }
-
-var registry providerRegistry = make(map[string]func(map[string]interface{}) (IntProvider, error))
 
 // Config is the general provider config
 type Config struct {
@@ -54,10 +65,10 @@ type Config struct {
 
 // NewIntGetterFromConfig creates a IntGetter from config
 func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error) {
-	factory, err := registry.Get(strings.ToLower(config.Type))
+	desc, err := registry.Get(strings.ToLower(config.Type))
 	if err == nil {
 		var provider IntProvider
-		provider, err = factory(config.Other)
+		provider, err = desc.factory(config.Other)
 
 		if err == nil {
 			res = provider.IntGetter()
@@ -78,11 +89,11 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 		res, err = NewCalcFromConfig(config.Other)
 
 	default:
-		var factory func(map[string]interface{}) (IntProvider, error)
-		factory, err = registry.Get(typ)
+		var desc typeDesc
+		desc, err = registry.Get(typ)
 		if err == nil {
 			var provider IntProvider
-			provider, err = factory(config.Other)
+			provider, err = desc.factory(config.Other)
 
 			if prov, ok := provider.(FloatProvider); ok {
 				res = prov.FloatGetter()
@@ -104,11 +115,11 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
 
 	default:
-		var factory func(map[string]interface{}) (IntProvider, error)
-		factory, err = registry.Get(typ)
+		var desc typeDesc
+		desc, err = registry.Get(typ)
 		if err == nil {
 			var provider IntProvider
-			provider, err = factory(config.Other)
+			provider, err = desc.factory(config.Other)
 
 			if prov, ok := provider.(StringProvider); ok {
 				res = prov.StringGetter()
@@ -125,10 +136,10 @@ func NewStringGetterFromConfig(config Config) (res func() (string, error), err e
 
 // NewBoolGetterFromConfig creates a BoolGetter from config
 func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error) {
-	factory, err := registry.Get(strings.ToLower(config.Type))
+	desc, err := registry.Get(strings.ToLower(config.Type))
 	if err == nil {
 		var provider IntProvider
-		provider, err = factory(config.Other)
+		provider, err = desc.factory(config.Other)
 
 		if prov, ok := provider.(BoolProvider); ok {
 			res = prov.BoolGetter()
@@ -144,10 +155,10 @@ func NewBoolGetterFromConfig(config Config) (res func() (bool, error), err error
 
 // NewIntSetterFromConfig creates a IntSetter from config
 func NewIntSetterFromConfig(param string, config Config) (res func(int64) error, err error) {
-	factory, err := registry.Get(strings.ToLower(config.Type))
+	desc, err := registry.Get(strings.ToLower(config.Type))
 	if err == nil {
 		var provider IntProvider
-		provider, err = factory(config.Other)
+		provider, err = desc.factory(config.Other)
 
 		if prov, ok := provider.(SetIntProvider); ok {
 			res = prov.IntSetter(param)
@@ -163,10 +174,10 @@ func NewIntSetterFromConfig(param string, config Config) (res func(int64) error,
 
 // NewBoolSetterFromConfig creates a BoolSetter from config
 func NewBoolSetterFromConfig(param string, config Config) (res func(bool) error, err error) {
-	factory, err := registry.Get(strings.ToLower(config.Type))
+	desc, err := registry.Get(strings.ToLower(config.Type))
 	if err == nil {
 		var provider IntProvider
-		provider, err = factory(config.Other)
+		provider, err = desc.factory(config.Other)
 
 		if prov, ok := provider.(SetBoolProvider); ok {
 			res = prov.BoolSetter(param)
