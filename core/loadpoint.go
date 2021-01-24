@@ -308,7 +308,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// duration
 	lp.connectedTime = lp.clock.Now()
-	lp.publish("connectedDuration", 0)
+	lp.publish("connectedDuration", time.Duration(0))
 
 	// soc estimation reset
 	lp.socUpdated = time.Time{}
@@ -615,6 +615,12 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 	if prevStatus := lp.status; status != prevStatus {
 		lp.status = status
+
+		// changed from empty (initial startup) - set connected without sending message
+		if prevStatus == api.StatusNone {
+			lp.connectedTime = lp.clock.Now()
+			lp.publish("connectedDuration", time.Duration(0))
+		}
 
 		// changed from A - connected
 		if prevStatus == api.StatusA {
