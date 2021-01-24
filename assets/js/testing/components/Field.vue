@@ -1,14 +1,15 @@
 <template>
 	<div>
-		<div class="mb-3 row" v-if="type == 'struct'">
-			<h5>{{ label }}</h5>
-			<div class="ml-3" v-if="type == 'struct'">
+		<div class="form-row" v-if="type == 'struct'">
+			<div class="col-4">{{ label }}</div>
+
+			<div class="col-8">
 				<Field v-for="(f, idx) in children" v-bind="f" :key="idx" :ref="idx"></Field>
 			</div>
 		</div>
-		<div class="mb-3 row" v-else-if="type == 'plugin'">
-			<div class="col">
-				<h5>{{ label }}</h5>
+		<div class="form-row" v-else-if="type == 'plugin'">
+			<div class="col-4 font-weight-bold">{{ label }}</div>
+			<div class="col-8">
 				<select class="form-control" v-model="plugin">
 					<option
 						v-for="(cfg, idx) in plugins"
@@ -21,9 +22,17 @@
 				</select>
 			</div>
 
-			<Element v-bind="plugins[plugin]" :configclass="'plugin'" :plugins="plugins"></Element>
+			<div class="col-4"></div>
+			<div class="col-8">
+				<Element
+					v-bind="plugins[plugin]"
+					:configclass="'plugin'"
+					:plugins="plugins"
+					:ref="name"
+				></Element>
+			</div>
 		</div>
-		<div class="mb-3 row" v-else>
+		<div class="form-row" v-else>
 			<label :for="this.name" class="col-sm-4 col-form-label">{{ label }}</label>
 
 			<div class="col-sm-8">
@@ -69,7 +78,7 @@ export default {
 		label: String,
 		type: String,
 		required: Boolean,
-		default: [String, Number, Boolean],
+		default: [String, Number],
 		enum: Array,
 		children: Array,
 		plugins: Array,

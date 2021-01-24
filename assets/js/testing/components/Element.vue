@@ -1,18 +1,20 @@
 <template>
-	<div class="row">
+	<div class="form-row">
 		<div class="col">
 			<!-- <h4 class="my-4">{{ label }} ({{ type }})</h4> -->
 			<form>
 				<Field
 					v-for="(field, idx) in fields"
 					v-bind="field"
-					:key="idx"
-					:ref="idx"
+					:key="type + idx"
+					:ref="type + idx"
 					:plugins="plugins"
 					v-on:updated="clearStatus"
 				></Field>
+
 				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button
 				>{{ this.error }}
+
 				<ul v-if="Object.keys(result).length">
 					<li v-for="(val, idx) in result" :key="idx">
 						{{ idx }}: <span v-if="val.error">{{ val.error }}</span
@@ -26,11 +28,11 @@
 
 <script>
 import axios from "axios";
-import Field from "./Field";
+// import Field from "./Field";
 
 export default {
 	name: "Element",
-	components: { Field },
+	components: { Field: () => import("./Field") },
 	props: {
 		configclass: String,
 		type: String,

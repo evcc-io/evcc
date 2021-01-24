@@ -52,7 +52,7 @@ func Templates(class string) []interface{} {
 	types := templates.TemplatesByClass(class)
 
 	// name -> type
-	sort.Slice(types, func(i, j int) bool {
+	sort.SliceStable(types, func(i, j int) bool {
 		if types[i].Name < types[j].Name {
 			return true
 		}

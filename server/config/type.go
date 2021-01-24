@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// LastRank is the lowest rank for ordering types
+const LastRank = 9999
+
 // Type is a registered type definition.
 type Type struct {
 	// Factory is duplicated here to allow creating devices by type without needing to import the device packages.
@@ -44,11 +47,11 @@ func typeDefinition(class, typ string) (Type, error) {
 func Types(class string) []interface{} {
 	types := registry[class]
 
-	sort.Slice(types, func(i, j int) bool {
+	sort.SliceStable(types, func(i, j int) bool {
 		if types[i].Rank < types[j].Rank {
 			return true
 		}
-		return strings.ToLower(types[i].Type) < strings.ToLower(types[j].Type)
+		return strings.ToLower(types[i].Label) < strings.ToLower(types[j].Label)
 	})
 
 	res := make([]interface{}, 0, len(types))
