@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 const (
-	pluginType = "plugin"
+	typePlugin = "plugin"
 )
 
 // description is the Fieldmetadata container describing a single type
@@ -21,15 +22,16 @@ type description struct {
 
 // FieldMetadata is the meta data format for the type description
 type FieldMetadata struct {
-	Name     string          `json:"name"`
-	Type     string          `json:"type"`
-	Required bool            `json:"required"`
-	Hidden   bool            `json:"hidden"`
-	Masked   bool            `json:"masked"`
-	Label    string          `json:"label"`
-	Enum     []interface{}   `json:"enum,omitempty"`
-	Default  interface{}     `json:"default,omitempty"`
-	Children []FieldMetadata `json:"children,omitempty"`
+	Name      string          `json:"name"`
+	Type      string          `json:"type"`
+	SliceType string          `json:"slicetype,omitempty"`
+	Required  bool            `json:"required,omitempty"`
+	Hidden    bool            `json:"hidden,omitempty"`
+	Masked    bool            `json:"masked,omitempty"`
+	Label     string          `json:"label,omitempty"`
+	Enum      []interface{}   `json:"enum,omitempty"`
+	Default   interface{}     `json:"default,omitempty"`
+	Children  []FieldMetadata `json:"children,omitempty"`
 }
 
 // tagKey returns tag key's value or key name if value is empty
@@ -78,21 +80,21 @@ func label(f *structs.Field) string {
 
 // kind is the exported data type
 func kind(f *structs.Field) string {
-	switch val := f.Value().(type) {
-	case time.Duration:
+	val := f.Value()
+
+	if reflect.TypeOf(val) == reflect.TypeOf(time.Duration(0)) {
 		return "duration"
-	default:
-		// plugin config
-		if strings.HasSuffix(reflect.TypeOf(val).String(), "provider.Config") {
-			return pluginType
-		}
-
-		if hasTagKey(f, "ui", "text") {
-			return "text"
-		}
-
-		return f.Kind().String()
 	}
+
+	if f.Kind() == reflect.Struct && reflect.TypeOf(val).String() == "provider.Config" {
+		return typePlugin
+	}
+
+	if hasTagKey(f, "ui", "text") {
+		return "text"
+	}
+
+	return f.Kind().String()
 }
 
 // value kind is the exported default value
@@ -163,14 +165,23 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 			// ignore children
 		case reflect.Interface, reflect.Func:
 			continue
+		case reflect.Slice:
+			t := reflect.TypeOf(f.Value()).Elem()
+			fmt.Println(t.String())
+			if t.String() != "provider.Config" {
+				continue
+			}
+			d.SliceType = typePlugin
 		case reflect.Struct:
-			if flat || d.Type == pluginType {
+			if flat {
 				// don't describe the field
 				continue
 			}
 
-			d.Default = nil // no default for structs
-			d.Children = annotate(f.Value())
+			if d.Type != typePlugin {
+				d.Default = nil // no default for structs
+				d.Children = annotate(f.Value())
+			}
 		}
 
 		ds = append(ds, d)

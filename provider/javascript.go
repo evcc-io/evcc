@@ -17,7 +17,7 @@ type Javascript struct {
 
 type javascriptConfig struct {
 	VM     string `structs:"-"`
-	Script string `validate:"required"`
+	Script string `validate:"required" ui:",text"`
 }
 
 func init() {

@@ -2,25 +2,30 @@
 	<div class="form-row">
 		<div class="col">
 			<form>
+				{{ fields }}
 				<Field
-					v-for="(field, idx) in fields"
+					v-for="field in fields"
 					v-bind="field"
-					:key="label + idx"
-					:ref="label + idx"
+					:key="field.name"
+					:ref="field.name"
 					:plugins="plugins"
 					v-on:updated="clearStatus"
 				></Field>
 
-				<button type="submit" class="btn btn-primary btn-small" @click="test">Test</button>
+				<template v-if="klass">
+					<button type="submit" class="btn btn-primary btn-small" @click="test">
+						Test
+					</button>
 
-				{{ this.error }}
+					{{ this.error }}
 
-				<ul v-if="Object.keys(result).length">
-					<li v-for="(val, idx) in result" :key="idx">
-						{{ idx }}: <span v-if="val.error">{{ val.error }}</span
-						><span v-else>{{ val.value }}</span>
-					</li>
-				</ul>
+					<ul v-if="Object.keys(result).length">
+						<li v-for="(val, idx) in result" :key="idx">
+							{{ idx }}: <span v-if="val.error">{{ val.error }}</span
+							><span v-else>{{ val.value }}</span>
+						</li>
+					</ul>
+				</template>
 			</form>
 		</div>
 	</div>
@@ -31,12 +36,10 @@ import axios from "axios";
 import Field from "./Field";
 
 export default {
-	name: "Configurable",
+	name: "FieldSet",
 	components: { Field },
 	props: {
 		klass: String,
-		type: String,
-		label: String,
 		fields: Array,
 		plugins: Array,
 	},
@@ -48,13 +51,13 @@ export default {
 	},
 	methods: {
 		values: function () {
-			let json = {
-				Type: this.type,
-			};
+			let json = {};
 
 			for (var idx in this.$refs) {
 				if (this.$refs[idx].length) {
 					let field = this.$refs[idx][0];
+
+					console.log("fieldset: " + field.name);
 					let val = field.values();
 					if (val !== undefined) {
 						json[field.name] = val;

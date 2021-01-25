@@ -28,9 +28,9 @@ type HTTP struct {
 
 type httpConfig = struct {
 	URI      string
-	Method   string            `validate:"required,oneof=GET POST PUT DELETE" ui:"de=HTTP Verb"`
+	Method   string            `validate:"required,oneof=GET POST PUT DELETE" ui:"de=Methode"`
 	Headers  map[string]string `structs:"-"`
-	Body     string            `ui:"de=Request Body (nur POST und PUT),text"`
+	Body     string            `ui:"de=Request (nur POST und PUT),text"`
 	Jq       string            `ui:"de=JSON Query"`
 	Insecure bool              `ui:"de=Unsichere Zertifikate akzeptieren"`
 	Auth     Auth              `ui:"de=Authentifizierung"`

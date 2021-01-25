@@ -30,7 +30,7 @@ type PhoenixEMCP struct {
 
 type emcpConfig struct {
 	URI   string            `validate:"required"`
-	ID    uint8             `validate:"required" ui:"de=ModBus Slave ID"`
+	ID    uint8             `validate:"required" ui:"de=Slave ID"`
 	Meter SupportedReadings `ui:"de=Integrierten Zähler verwenden"`
 }
 

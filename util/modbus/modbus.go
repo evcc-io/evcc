@@ -19,18 +19,18 @@ const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
 // Settings contains the ModBus settings
 type Settings struct {
 	URI       string
-	ID        uint8  `validate:"required" ui:"de=ModBus Slave ID"`
+	ID        uint8  `validate:"required" ui:"de=Slave ID"`
 	SubDevice int    `structs:"-"`
 	Device    string `ui:"de=Serielle Schnittstelle"`
 	Comset    string `validate:"oneof=8E1 8N1" ui:"de=Serielle Schnittstelle: Kommunikationseinstellungen"`
 	Baudrate  int    `ui:"de=Serielle Schnittstelle: Baudrate"`
-	RTU       *bool  `ui:"de=ModBus RTU Gerät"` // indicates RTU over TCP if true
+	RTU       *bool  `ui:"de=RTU Gerät"` // indicates RTU over TCP if true
 }
 
 // SettingsTCP TCP sub type
 type SettingsTCP struct {
 	URI string `validate:"required"`
-	ID  uint8  `validate:"required" ui:"de=ModBus Slave ID"`
+	ID  uint8  `validate:"required" ui:"de=Slave ID"`
 }
 
 // SettingsTCPModel TCP sub type with model
@@ -42,7 +42,7 @@ type SettingsTCPModel struct {
 // SettingsRTUTCP RTU over TCP sub type
 type SettingsRTUTCP struct {
 	URI string `validate:"required"`
-	ID  uint8  `validate:"required" ui:"de=ModBus Slave ID"`
+	ID  uint8  `validate:"required" ui:"de=Slave ID"`
 	RTU bool   `ui:",hide"`
 }
 
@@ -57,7 +57,7 @@ type SettingsRTU struct {
 	Device   string `validate:"required" ui:"de=Serielle Schnittstelle"`
 	Comset   string `validate:"required,oneof=8E1 8N1" ui:"de=Kommunikationseinstellungen"`
 	Baudrate int    `validate:"required,oneof=2400 9600 19200" ui:"de=Baudrate"`
-	ID       uint8  `validate:"required" ui:"de=ModBus Slave ID"`
+	ID       uint8  `validate:"required" ui:"de=Slave ID"`
 }
 
 // SettingsRTUModel RTU/serial sub type with model

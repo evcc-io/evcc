@@ -23,7 +23,7 @@
 				:id="key"
 				:key="key"
 			>
-				<ConfigClass :klass="key" :plugins="plugins"></ConfigClass>
+				<TypeSelector :klass="key" :plugins="plugins"></TypeSelector>
 			</div>
 		</div>
 
@@ -35,11 +35,11 @@
 
 <script>
 import axios from "axios";
-import ConfigClass from "../components/ConfigClass";
+import TypeSelector from "../components/TypeSelector";
 
 export default {
 	name: "Config",
-	components: { ConfigClass },
+	components: { TypeSelector },
 	data: function () {
 		return {
 			plugins: [],

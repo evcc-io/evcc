@@ -16,17 +16,17 @@
 			</div>
 		</div>
 
-		<Configurable v-bind="types[type]" :klass="klass" :plugins="plugins"></Configurable>
+		<FieldSet v-bind="types[type]" :klass="klass" :plugins="plugins"></FieldSet>
 	</div>
 </template>
 
 <script>
 import axios from "axios";
-import Configurable from "./Configurable";
+import FieldSet from "./FieldSet";
 
 export default {
-	name: "ConfigClass",
-	components: { Configurable },
+	name: "TypeSelector",
+	components: { FieldSet },
 	props: {
 		klass: String,
 		plugins: Array,

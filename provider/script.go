@@ -36,7 +36,7 @@ func scriptDefaults() scriptConfig {
 }
 
 func init() {
-	registry.Add("script", "Shellscript", NewScriptProviderFromConfig, scriptDefaults())
+	registry.Add("script", "Shell", NewScriptProviderFromConfig, scriptDefaults())
 }
 
 // NewScriptProviderFromConfig creates a script provider.
