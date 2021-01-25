@@ -52,7 +52,7 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 func (r typeRegistry) Get(name string) (typeDesc, error) {
 	desc, exists := r[name]
 	if !exists {
-		return typeDesc{}, fmt.Errorf("plugin type not registered: %s", name)
+		return typeDesc{}, fmt.Errorf("invalid plugin type: %s", name)
 	}
 	return desc, nil
 }
