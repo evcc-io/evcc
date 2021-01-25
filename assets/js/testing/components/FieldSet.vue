@@ -2,11 +2,10 @@
 	<div class="form-row">
 		<div class="col">
 			<form>
-				{{ fields }}
 				<Field
 					v-for="field in fields"
 					v-bind="field"
-					:key="field.name"
+					:key="fields[0].default + field.name"
 					:ref="field.name"
 					:plugins="plugins"
 					v-on:updated="clearStatus"

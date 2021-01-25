@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 	"time"
@@ -167,7 +166,6 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 			continue
 		case reflect.Slice:
 			t := reflect.TypeOf(f.Value()).Elem()
-			fmt.Println(t.String())
 			if t.String() != "provider.Config" {
 				continue
 			}

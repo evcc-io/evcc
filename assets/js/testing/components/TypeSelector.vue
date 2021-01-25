@@ -2,7 +2,6 @@
 	<div>
 		<div class="row my-3">
 			<div class="col">
-				{{ list }}
 				<select class="form-control" v-model="type">
 					<option
 						v-for="(cfg, idx) in types"

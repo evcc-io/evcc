@@ -40,7 +40,6 @@
 			<label :for="this.name" class="col-sm-4 col-form-label">{{ label }}</label>
 
 			<div class="col-sm-8">
-				value:{{ value }}
 				<select
 					class="form-control"
 					:id="this.name"
@@ -63,7 +62,6 @@
 					class="form-control"
 					:type="this.inputType"
 					:name="this.name"
-					:value="this.default"
 					v-model="checked"
 					v-else-if="isBool"
 				/>
@@ -71,7 +69,6 @@
 					class="form-control"
 					:type="this.inputType"
 					:name="this.name"
-					:value="this.default"
 					v-model="value"
 					v-else
 				/>
@@ -96,7 +93,6 @@ export default {
 		plugins: Array,
 	},
 	data: function () {
-		console.log(this.default);
 		return {
 			value: this.default,
 			checked: false,
