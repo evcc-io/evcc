@@ -3,6 +3,7 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -34,6 +35,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Model              string
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, SoC string
+		Timeout            time.Duration
 	}{
 		Power: "Power",
 	}
@@ -53,6 +55,11 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// set non-default timeout
+	if cc.Timeout > 0 {
+		conn.Timeout(cc.Timeout)
 	}
 
 	conn.Logger(log.TRACE)
