@@ -13,7 +13,7 @@ import (
 type genericConfig struct {
 	Power    provider.Config   `validate:"required"`
 	Energy   *provider.Config  // optional
-	Currents []provider.Config // optional
+	Currents []provider.Config `validate:"length=3"` // optional
 	SoC      *provider.Config  // optional
 }
 

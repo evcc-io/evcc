@@ -9,6 +9,7 @@ var translations = map[string]string{
 	"Scale":    "Multiplikator",
 	"Serial":   "Seriennummer",
 	"Title":    "Titel",
+	"VIN":      "Fahrgestellnummer",
 	"Power":    "Leistung (W)",
 	"Energy":   "Energie (kWh)",
 	"SoC":      "Ladezustand (%)",

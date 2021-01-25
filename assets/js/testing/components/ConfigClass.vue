@@ -2,6 +2,7 @@
 	<div>
 		<div class="row my-3">
 			<div class="col">
+				{{ list }}
 				<select class="form-control" v-model="type">
 					<option
 						v-for="(cfg, idx) in types"
@@ -42,6 +43,13 @@ export default {
 				this.types = this.plugins;
 				return;
 			}
+		},
+	},
+	computed: {
+		list: function () {
+			return this.types.map((v) => {
+				return v.type;
+			});
 		},
 	},
 	mounted: async function () {

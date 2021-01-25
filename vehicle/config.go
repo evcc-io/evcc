@@ -40,6 +40,9 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 	desc := typeDesc{
 		factory: factory,
 		config: config.Type{
+			Factory: func(cfg map[string]interface{}) (interface{}, error) {
+				return factory(cfg)
+			},
 			Type:   name,
 			Label:  label,
 			Config: defaults,

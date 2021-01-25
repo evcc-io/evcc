@@ -24,6 +24,13 @@ var registry = make(map[string][]Type)
 
 // SetTypes sets the type definitions for given class in the registry
 func SetTypes(class string, types []Type) {
+	sort.SliceStable(types, func(i, j int) bool {
+		if types[i].Rank < types[j].Rank {
+			return true
+		}
+		return strings.ToLower(types[i].Label) < strings.ToLower(types[j].Label)
+	})
+
 	registry[class] = types
 }
 
@@ -47,12 +54,9 @@ func typeDefinition(class, typ string) (Type, error) {
 func Types(class string) []interface{} {
 	types := registry[class]
 
-	sort.SliceStable(types, func(i, j int) bool {
-		if types[i].Rank < types[j].Rank {
-			return true
-		}
-		return strings.ToLower(types[i].Label) < strings.ToLower(types[j].Label)
-	})
+	if types[0].Type == "default" {
+		println("foo")
+	}
 
 	res := make([]interface{}, 0, len(types))
 
