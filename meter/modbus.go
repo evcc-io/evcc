@@ -45,7 +45,6 @@ func modbusDefaults() modbusConfig {
 	}
 }
 
-// TODO clarify sunspec model id
 func init() {
 	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
 

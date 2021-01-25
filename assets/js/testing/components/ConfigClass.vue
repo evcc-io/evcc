@@ -21,11 +21,11 @@
 
 <script>
 import axios from "axios";
-// import Configurable from "./Configurable";
+import Configurable from "./Configurable";
 
 export default {
 	name: "ConfigClass",
-	components: { Configurable: () => import("./Configurable") },
+	components: { Configurable },
 	props: {
 		klass: String,
 		plugins: Array,
@@ -36,9 +36,19 @@ export default {
 			type: 0,
 		};
 	},
+	watch: {
+		plugins: function () {
+			if (this.klass == "plugin") {
+				this.types = this.plugins;
+				return;
+			}
+		},
+	},
 	mounted: async function () {
 		try {
-			this.types = (await axios.get("/config/types/" + this.klass)).data;
+			if (this.klass != "plugin") {
+				this.types = (await axios.get("/config/types/" + this.klass)).data;
+			}
 		} catch (e) {
 			window.toasts.error(e);
 		}

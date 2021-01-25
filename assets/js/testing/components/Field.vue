@@ -75,8 +75,11 @@
 </template>
 
 <script>
+// import Configurable from "./Configurable";
+
 export default {
 	name: "Field",
+	// components: { Configurable },
 	components: { Configurable: () => import("./Configurable") },
 	props: {
 		name: String,
@@ -138,10 +141,7 @@ export default {
 	methods: {
 		values: function () {
 			if (this.type !== "struct") {
-				if (this.isBool) {
-					return this.checked;
-				}
-				return this.value;
+				return this.isBool ? this.checked : this.value;
 			}
 
 			let json = {};
