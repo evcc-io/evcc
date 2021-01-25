@@ -1,7 +1,6 @@
 <template>
 	<div class="form-row">
 		<div class="col">
-			<!-- <h4 class="my-4">{{ label }} ({{ type }})</h4> -->
 			<form>
 				<Field
 					v-for="(field, idx) in fields"
@@ -35,7 +34,7 @@ export default {
 	name: "Configurable",
 	components: { Field },
 	props: {
-		configclass: String,
+		klass: String,
 		type: String,
 		label: String,
 		fields: Array,
@@ -71,7 +70,7 @@ export default {
 
 			const json = this.values();
 			try {
-				let res = await axios.post("config/test/" + this.configclass, json);
+				let res = await axios.post("config/test/" + this.klass, json);
 				this.result = res.data;
 			} catch (e) {
 				if (e.response) {

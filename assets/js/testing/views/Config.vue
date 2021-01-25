@@ -23,10 +23,11 @@
 				:id="key"
 				:key="key"
 			>
-				<ConfigClass :klass="key" :plugins="plugins"></ConfigClass>
+				<!-- <ConfigClass :klass="key" :plugins="plugins"></ConfigClass> -->
 			</div>
 		</div>
 
+		<Field type="plugin" :plugins="plugins"></Field>
 		<!-- <div>
 			<Ssh></Ssh>
 		</div> -->
@@ -36,12 +37,11 @@
 <script>
 import axios from "axios";
 import ConfigClass from "../components/ConfigClass";
-// import Configurable from "../components/Configurable";
-// import Ssh from "../components/Ssh";
+import Field from "../components/Field";
 
 export default {
 	name: "Config",
-	components: { ConfigClass },
+	components: { ConfigClass, Field },
 	data: function () {
 		return {
 			plugins: [],

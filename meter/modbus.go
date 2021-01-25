@@ -31,8 +31,8 @@ type modbusConfig = struct {
 // Readings is the set of supported meter readings
 type Readings = struct {
 	Power  string `validate:"required" ui:"de=Messwert Leistung (W)"`
-	Energy string `ui:"de=Messwert Zählerstand (kWh, nur Ladezähler)"`
-	SoC    string `ui:"de=Messwert Ladezustand (%, nur Batterien)"`
+	Energy string `ui:"de=Messwert Zählerstand (kWh) (nur Ladezähler)"`
+	SoC    string `ui:"de=Messwert Ladezustand (%) (nur Batterien)"`
 }
 
 func modbusDefaults() modbusConfig {

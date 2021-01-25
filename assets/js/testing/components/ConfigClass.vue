@@ -15,17 +15,17 @@
 			</div>
 		</div>
 
-		<Configurable v-bind="types[type]" :configclass="klass" :plugins="plugins"></Configurable>
+		<Configurable v-bind="types[type]" :klass="klass" :plugins="plugins"></Configurable>
 	</div>
 </template>
 
 <script>
 import axios from "axios";
-import Configurable from "../components/Configurable";
+// import Configurable from "./Configurable";
 
 export default {
 	name: "ConfigClass",
-	components: { Configurable },
+	components: { Configurable: () => import("./Configurable") },
 	props: {
 		klass: String,
 		plugins: Array,
