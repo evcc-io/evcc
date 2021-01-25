@@ -3,6 +3,7 @@ package meter
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -26,6 +27,7 @@ type modbusConfig = struct {
 	Model           string `ui:"de=Zählertyp"`
 	modbus.Settings `mapstructure:",squash"`
 	Readings        `mapstructure:",squash"`
+	Timeout         time.Duration
 }
 
 // Readings is the set of supported meter readings
@@ -51,6 +53,7 @@ func init() {
 	registry.Add("modbus-tcp", "ModBus Wechselrichter (TCP)", NewModbusFromConfig, struct {
 		modbus.SettingsTCPModel
 		Readings
+		Timeout time.Duration
 	}{
 		SettingsTCPModel: modbus.SettingsTCPModel{
 			SettingsTCP: modbus.SettingsTCP{
@@ -66,6 +69,7 @@ func init() {
 	registry.Add("modbus-rtu-tcp", "ModBus Zähler (Seriell<->TCP)", NewModbusFromConfig, struct {
 		modbus.SettingsRTUTCPModel
 		Readings
+		Timeout time.Duration
 	}{
 		SettingsRTUTCPModel: modbus.SettingsRTUTCPModel{
 			SettingsRTUTCP: modbus.SettingsRTUTCP{
