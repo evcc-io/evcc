@@ -52,7 +52,7 @@ func (r typeRegistry) Add(name, label string, factory func(map[string]interface{
 func (r typeRegistry) Get(name string) (typeDesc, error) {
 	desc, exists := r[name]
 	if !exists {
-		return typeDesc{}, fmt.Errorf("meter type not registered: %s", name)
+		return typeDesc{}, fmt.Errorf("plugin type not registered: %s", name)
 	}
 	return desc, nil
 }
@@ -84,25 +84,18 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
-	switch typ := strings.ToLower(config.Type); typ {
-	case "calc":
-		res, err = NewCalcFromConfig(config.Other)
+	desc, err := registry.Get(strings.ToLower(config.Type))
+	if err == nil {
+		var provider IntProvider
+		provider, err = desc.factory(config.Other)
 
-	default:
-		var desc typeDesc
-		desc, err = registry.Get(typ)
-		if err == nil {
-			var provider IntProvider
-			provider, err = desc.factory(config.Other)
-
-			if prov, ok := provider.(FloatProvider); ok {
-				res = prov.FloatGetter()
-			}
+		if prov, ok := provider.(FloatProvider); ok {
+			res = prov.FloatGetter()
 		}
+	}
 
-		if err == nil && res == nil {
-			err = fmt.Errorf("invalid plugin type: %s", config.Type)
-		}
+	if err == nil && res == nil {
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return
@@ -110,25 +103,18 @@ func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err e
 
 // NewStringGetterFromConfig creates a StringGetter from config
 func NewStringGetterFromConfig(config Config) (res func() (string, error), err error) {
-	switch typ := strings.ToLower(config.Type); typ {
-	case "combined", "openwb":
-		res, err = NewOpenWBStatusProviderFromConfig(config.Other)
+	desc, err := registry.Get(strings.ToLower(config.Type))
+	if err == nil {
+		var provider IntProvider
+		provider, err = desc.factory(config.Other)
 
-	default:
-		var desc typeDesc
-		desc, err = registry.Get(typ)
-		if err == nil {
-			var provider IntProvider
-			provider, err = desc.factory(config.Other)
-
-			if prov, ok := provider.(StringProvider); ok {
-				res = prov.StringGetter()
-			}
+		if prov, ok := provider.(StringProvider); ok {
+			res = prov.StringGetter()
 		}
+	}
 
-		if err == nil && res == nil {
-			err = fmt.Errorf("invalid plugin type: %s", config.Type)
-		}
+	if err == nil && res == nil {
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return

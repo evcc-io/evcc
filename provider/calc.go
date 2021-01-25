@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/util"
@@ -10,11 +11,17 @@ type calcProvider struct {
 	add []func() (float64, error)
 }
 
+type calcConfig struct {
+	Add []Config `validate:"required" ui:"de=Addieren"`
+}
+
+func init() {
+	registry.Add("calc", "Aggregation", NewCalcFromConfig, calcConfig{})
+}
+
 // NewCalcFromConfig creates calc provider
-func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), error) {
-	cc := struct {
-		Add []Config
-	}{}
+func NewCalcFromConfig(other map[string]interface{}) (IntProvider, error) {
+	var cc calcConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -30,18 +37,29 @@ func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), e
 		o.add = append(o.add, f)
 	}
 
-	return o.floatGetter, nil
+	return o, nil
 }
 
-func (o *calcProvider) floatGetter() (float64, error) {
-	var sum float64
-	for idx, p := range o.add {
-		v, err := p()
-		if err != nil {
-			return 0, fmt.Errorf("add[%d]: %w", idx, err)
-		}
-		sum += v
+// IntGetter fullfills the required IntProvider interface
+// TODO replace with Go sum types
+func (o *calcProvider) IntGetter() func() (int64, error) {
+	return func() (int64, error) {
+		return 0, errors.New("calc: int provider not supported")
 	}
+}
 
-	return sum, nil
+// FloatGetter returns the aggregation of the individual getters
+func (o *calcProvider) FloatGetter() func() (float64, error) {
+	return func() (float64, error) {
+		var sum float64
+		for idx, p := range o.add {
+			v, err := p()
+			if err != nil {
+				return 0, fmt.Errorf("add[%d]: %w", idx, err)
+			}
+			sum += v
+		}
+
+		return sum, nil
+	}
 }

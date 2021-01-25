@@ -93,7 +93,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, tim
 	// adapt plugged/charging to status
 	plugged := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.PluggedTopic))
 	charging := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
-	status := provider.NewOpenWBStatusProvider(plugged, charging).StringGetter
+	status := provider.NewOpenWBStatusProvider(plugged, charging).StringGetter()
 
 	// remaining getters
 	enabled := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.EnabledTopic))
