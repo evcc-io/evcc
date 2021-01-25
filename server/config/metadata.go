@@ -87,6 +87,10 @@ func kind(f *structs.Field) string {
 			return pluginType
 		}
 
+		if hasTagKey(f, "ui", "text") {
+			return "text"
+		}
+
 		return f.Kind().String()
 	}
 }

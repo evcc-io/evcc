@@ -29,24 +29,31 @@ type Socket struct {
 	val     interface{}
 }
 
+type socketConfig = struct {
+	URI      string
+	Headers  map[string]string `structs:"-"`
+	Jq       string            `ui:"de=JSON Query"`
+	Insecure bool              `ui:"de=Unsichere Zertifikate akzeptieren"`
+	Auth     Auth              `ui:"de=Authentifizierung"`
+	Scale    float64
+	Timeout  time.Duration `structs:"-"`
+}
+
+func socketDefaults() socketConfig {
+	return socketConfig{
+		Headers: make(map[string]string),
+		Scale:   1,
+	}
+}
+
 func init() {
 	registry.Add("ws", "WebSocket", NewSocketProviderFromConfig, nil)
-	registry.Add("websocket", "WebSocket", NewSocketProviderFromConfig, nil)
+	registry.Add("websocket", "WebSocket", NewSocketProviderFromConfig, socketDefaults())
 }
 
 // NewSocketProviderFromConfig creates a HTTP provider
 func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
-		URI      string
-		Headers  map[string]string
-		Jq       string
-		Scale    float64
-		Insecure bool
-		Auth     Auth
-		Timeout  time.Duration
-	}{
-		Headers: make(map[string]string),
-	}
+	cc := socketDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

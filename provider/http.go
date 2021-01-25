@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -25,13 +26,34 @@ type HTTP struct {
 	jq          *gojq.Query
 }
 
+type httpConfig = struct {
+	URI      string
+	Method   string            `validate:"required,oneof=GET POST PUT DELETE" ui:"de=HTTP Verb"`
+	Headers  map[string]string `structs:"-"`
+	Body     string            `ui:"de=Request Body (nur POST und PUT),text"`
+	Jq       string            `ui:"de=JSON Query"`
+	Insecure bool              `ui:"de=Unsichere Zertifikate akzeptieren"`
+	Auth     Auth              `ui:"de=Authentifizierung"`
+	Scale    float64
+}
+
+func httpDefaults() httpConfig {
+	return httpConfig{
+		Method:  http.MethodGet,
+		Headers: make(map[string]string),
+		Scale:   1,
+	}
+}
+
 func init() {
-	registry.Add("http", "HTTP", NewHTTPProviderFromConfig, nil)
+	registry.Add("http", "HTTP", NewHTTPProviderFromConfig, httpDefaults())
 }
 
 // Auth is the authorization config
 type Auth struct {
-	Type, User, Password string
+	Type     string `validate:"oneof=Basic" ui:"de=Typ"`
+	User     string
+	Password string `ui:",mask"`
 }
 
 // NewAuth creates authorization headers from config
@@ -47,17 +69,7 @@ func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
 
 // NewHTTPProviderFromConfig creates a HTTP provider
 func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
-		URI, Method string
-		Headers     map[string]string
-		Body        string
-		Jq          string
-		Scale       float64
-		Insecure    bool
-		Auth        Auth
-	}{
-		Headers: make(map[string]string),
-	}
+	cc := httpDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

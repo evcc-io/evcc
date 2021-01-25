@@ -65,7 +65,8 @@ type MobileConnect struct {
 }
 
 type mccConfig struct {
-	URI, Password string `validate:"required"`
+	URI      string `validate:"required"`
+	Password string `validate:"required" ui:",mask"`
 }
 
 func init() {
@@ -75,6 +76,7 @@ func init() {
 // NewMobileConnectFromConfig creates a MCC charger from generic config
 func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var cc mccConfig
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}

@@ -15,16 +15,18 @@ type Javascript struct {
 	script string
 }
 
+type javascriptConfig struct {
+	VM     string `structs:"-"`
+	Script string `validate:"required"`
+}
+
 func init() {
-	registry.Add("js", "Javascript", NewJavascriptProviderFromConfig, nil)
+	registry.Add("js", "Javascript", NewJavascriptProviderFromConfig, javascriptConfig{})
 }
 
 // NewJavascriptProviderFromConfig creates a HTTP provider
 func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
-		VM     string
-		Script string
-	}{}
+	var cc javascriptConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -52,6 +52,7 @@
 					<option v-if="!required" value="">- bitte wählen -</option>
 					<option v-for="(e, idx) in enums" :key="idx" :value="e">{{ e }}</option>
 				</select>
+				<textarea class="form-control" rows="5" v-else-if="this.type == 'text'"></textarea>
 				<input
 					class="form-control"
 					:type="this.inputType"

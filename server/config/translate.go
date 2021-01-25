@@ -1,12 +1,12 @@
 package config
 
 var translations = map[string]string{
-	"Broker":   "MQTT Broker Adresse",
-	"Topic":    "MQTT Topic",
+	"Broker":   "Broker Adresse",
 	"Cache":    "Aktualisierungsintervall",
 	"Capacity": "Batteriekapazität (kWh)",
 	"Password": "Passwort",
 	"User":     "Username",
+	"Scale":    "Multiplikator",
 	"Serial":   "Seriennummer",
 	"Title":    "Titel",
 	"Power":    "Leistung (W)",

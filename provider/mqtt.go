@@ -20,20 +20,27 @@ type Mqtt struct {
 	timeout time.Duration
 }
 
+type mqttConfig = struct {
+	mqtt.Config `mapstructure:",squash"`
+	Topic       string `validate:"required"`
+	Payload     string // Payload only applies to setters
+	Scale       float64
+	Timeout     time.Duration `structs:"-"`
+}
+
+func mqttDefaults() mqttConfig {
+	return mqttConfig{
+		Scale: 1,
+	}
+}
+
 func init() {
-	registry.Add("mqtt", "MQTT", NewMqttFromConfig, nil)
+	registry.Add("mqtt", "MQTT", NewMqttFromConfig, mqttDefaults())
 }
 
 // NewMqttFromConfig creates Mqtt provider
 func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
-		mqtt.Config    `mapstructure:",squash"`
-		Topic, Payload string // Payload only applies to setters
-		Scale          float64
-		Timeout        time.Duration
-	}{
-		Scale: 1,
-	}
+	cc := mqttDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

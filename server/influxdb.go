@@ -18,7 +18,7 @@ type InfluxConfig struct {
 	Token    string
 	Org      string
 	User     string
-	Password string
+	Password string `ui:",mask"`
 	Interval time.Duration
 }
 

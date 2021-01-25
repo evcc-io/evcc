@@ -23,19 +23,25 @@ type Script struct {
 	err     error
 }
 
+type scriptConfig = struct {
+	Cmd     string        `validate:"required" ui:"Script,text"`
+	Timeout time.Duration `structs:"-"`
+	Cache   time.Duration `structs:"-"`
+}
+
+func scriptDefaults() scriptConfig {
+	return scriptConfig{
+		Timeout: 5 * time.Second,
+	}
+}
+
 func init() {
-	registry.Add("script", "Shellscript", NewScriptProviderFromConfig, nil)
+	registry.Add("script", "Shellscript", NewScriptProviderFromConfig, scriptDefaults())
 }
 
 // NewScriptProviderFromConfig creates a script provider.
 func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
-	cc := struct {
-		Cmd     string
-		Timeout time.Duration
-		Cache   time.Duration
-	}{
-		Timeout: 5 * time.Second,
-	}
+	cc := scriptDefaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

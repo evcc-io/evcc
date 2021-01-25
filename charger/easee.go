@@ -24,7 +24,7 @@ type Easee struct {
 
 type easeeConfig struct {
 	User     string
-	Password string
+	Password string        `ui:",mask"`
 	Charger  string        `ui:"de=Charger ID"`
 	Cache    time.Duration `structs:"-"`
 }
