@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -64,16 +63,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage setting")
 	}
 
-	url, err := url.ParseRequestURI(cc.URI)
-	if err != nil {
-		return nil, fmt.Errorf("invalid uri %s", cc.URI)
-	}
-
-	uri := "https://" + url.Hostname()
-	if url.Port() != "" {
-		uri += ":" + url.Port()
-	}
-
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -82,14 +71,16 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewTesla(uri, cc.Usage)
+	return NewTesla(cc.URI, cc.Usage)
 }
 
 // NewTesla creates a Tesla Meter
 func NewTesla(uri, usage string) (api.Meter, error) {
+	log := util.NewLogger("tesla")
+
 	m := &Tesla{
-		Helper: request.NewHelper(util.NewLogger("tesla")),
-		uri:    uri,
+		Helper: request.NewHelper(log),
+		uri:    util.DefaultScheme(uri, "https"),
 		usage:  strings.ToLower(usage),
 	}
 
@@ -114,12 +105,12 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Tesla) CurrentPower() (float64, error) {
 	var res teslaMeterResponse
-	err := m.GetJSON(m.uri+teslaMeterURI, &res)
+	if err := m.GetJSON(m.uri+teslaMeterURI, &res); err != nil {
+		return 0, err
+	}
 
-	if err == nil {
-		if o, ok := res[m.usage]; ok {
-			return o.InstantPower, nil
-		}
+	if o, ok := res[m.usage]; ok {
+		return o.InstantPower, nil
 	}
 
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
@@ -128,16 +119,16 @@ func (m *Tesla) CurrentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
 	var res teslaMeterResponse
-	err := m.GetJSON(m.uri+teslaMeterURI, &res)
+	if err := m.GetJSON(m.uri+teslaMeterURI, &res); err != nil {
+		return 0, err
+	}
 
-	if err == nil {
-		if o, ok := res[m.usage]; ok {
-			if m.usage == "load" {
-				return o.EnergyImported, nil
-			}
-			if m.usage == "solar" {
-				return o.EnergyExported, nil
-			}
+	if o, ok := res[m.usage]; ok {
+		if m.usage == "load" {
+			return o.EnergyImported, nil
+		}
+		if m.usage == "solar" {
+			return o.EnergyExported, nil
 		}
 	}
 
