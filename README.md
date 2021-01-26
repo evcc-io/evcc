@@ -503,6 +503,7 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
+- `evcc/loadpoints/<id>/minSoC`: loadpoint minimum SoC (writable)
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.
