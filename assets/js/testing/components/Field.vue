@@ -1,73 +1,65 @@
 <template>
-	<div>
-		<div class="form-row" v-if="type == 'plugin'">
-			<div class="col-4 font-weight-bold">{{ label }}</div>
-			<div class="col-8">
-				<select class="form-control" v-model="plugin">
-					<option v-if="!required" value="">- bitte wählen -</option>
-					<option v-for="(cfg, idx) in plugins" :key="idx" :value="idx">
-						{{ cfg.label }}
-					</option>
-				</select>
-			</div>
+	<div class="form-row">
+		<label :for="name" class="col-4 col-form-label">{{ label }}</label>
 
-			<div class="col-4"></div>
-			<div class="col-8">
-				<FieldSet
-					v-bind="plugins[plugin]"
-					:plugins="plugins"
-					klass="plugin"
-					ref="sub"
-					v-if="plugins[plugin]"
-				></FieldSet>
-			</div>
+		<div class="col-8" v-if="type == 'plugin'">
+			<select class="form-control" v-model="plugin">
+				<option v-if="!required" value="">- bitte wählen -</option>
+				<option v-for="(cfg, idx) in plugins" :key="idx" :value="idx">
+					{{ cfg.label }}
+				</option>
+			</select>
+
+			<FieldSet
+				v-bind="plugins[plugin]"
+				:plugins="plugins"
+				klass="plugin"
+				ref="sub"
+				v-if="plugins[plugin]"
+			></FieldSet>
 		</div>
 
-		<div class="form-row" v-else-if="type == 'struct'">
-			<div class="col-4">{{ label }}</div>
-
-			<div class="col-8">
-				<FieldSet :fields="children" :plugins="plugins" ref="sub"></FieldSet>
-			</div>
+		<div class="col-8" v-else-if="type == 'slice'">
+			<FieldSet :fields="sliceFields" :plugins="plugins" klass="plugin" ref="sub"></FieldSet>
 		</div>
 
-		<div class="form-row" v-else>
-			<label :for="name" class="col-sm-4 col-form-label">{{ label }}</label>
+		<div class="col-8" v-else-if="type == 'struct'">
+			<FieldSet :fields="children" :plugins="plugins" ref="sub"></FieldSet>
+		</div>
 
-			<div class="col-sm-8">
-				<select class="form-control" :id="name" :name="name" v-model="value" v-if="isEnum">
-					<option v-if="!required" value="">- bitte wählen -</option>
-					<option v-for="(e, idx) in enums" :key="idx" :value="e">
-						{{ e }}
-					</option>
-				</select>
+		<div class="col-8" v-else>
+			<select class="form-control" :id="name" :name="name" v-model="value" v-if="isEnum">
+				<option v-if="!required" value="">- bitte wählen -</option>
+				<option v-for="(e, idx) in enums" :key="idx" :value="e">
+					{{ e }}
+				</option>
+			</select>
 
-				<textarea
-					class="form-control"
-					rows="5"
-					v-model="value"
-					v-else-if="type == 'text'"
-				></textarea>
+			<textarea
+				class="form-control"
+				rows="5"
+				v-model="value"
+				v-else-if="type == 'text'"
+			></textarea>
 
-				<input
-					class="form-control"
-					:type="inputType"
-					:name="name"
-					autocomplete="current-password"
-					v-model="value"
-					v-else-if="type == 'password'"
-				/>
+			<input
+				class="form-control"
+				:type="inputType"
+				:name="name"
+				autocomplete="current-password"
+				v-model="value"
+				v-else-if="type == 'password'"
+			/>
 
-				<input
-					class="form-control"
-					:type="inputType"
-					:name="name"
-					v-model="checked"
-					v-else-if="isBool"
-				/>
+			<input
+				class="form-control"
+				:type="inputType"
+				:name="name"
+				v-model="checked"
+				v-else-if="isBool"
+			/>
 
-				<input class="form-control" :type="inputType" :name="name" v-model="value" v-else />
-			</div>
+			<input class="form-control" :type="inputType" :name="name" v-model="value" v-else />
 		</div>
 	</div>
 </template>
@@ -77,12 +69,13 @@ export default {
 	name: "Field",
 	components: { FieldSet: () => import("./FieldSet") },
 	props: {
+		type: String,
 		name: String,
 		label: String,
-		type: String,
+		length: Number,
 		required: Boolean,
-		default: [String, Number, Boolean],
 		enum: Array,
+		default: [String, Number, Boolean],
 		children: Array,
 		plugins: Array,
 	},
@@ -128,6 +121,19 @@ export default {
 				default:
 					return this.type;
 			}
+		},
+		sliceFields: function () {
+			let res = [];
+			var max = this.length ? this.length : 1;
+
+			for (let i = 0; i < max; i++) {
+				res.push({
+					type: "plugin",
+					label: "" + (res.length + 1),
+					name: "" + res.length,
+				});
+			}
+			return res;
 		},
 	},
 	methods: {

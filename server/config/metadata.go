@@ -2,6 +2,7 @@ package config
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,15 +25,16 @@ type description struct {
 
 // FieldMetadata is the meta data format for the type description
 type FieldMetadata struct {
-	Name      string          `json:"name"`
-	Type      string          `json:"type"`
-	SliceType string          `json:"slicetype,omitempty"`
-	Required  bool            `json:"required,omitempty"`
-	Hidden    bool            `json:"hidden,omitempty"`
-	Label     string          `json:"label,omitempty"`
-	Enum      []interface{}   `json:"enum,omitempty"`
-	Default   interface{}     `json:"default,omitempty"`
-	Children  []FieldMetadata `json:"children,omitempty"`
+	Name     string          `json:"name"`
+	Type     string          `json:"type"`
+	Length   int             `json:"length,omitempty"`
+	SubType  string          `json:"subtype,omitempty"`
+	Required bool            `json:"required,omitempty"`
+	Hidden   bool            `json:"hidden,omitempty"`
+	Label    string          `json:"label,omitempty"`
+	Enum     []interface{}   `json:"enum,omitempty"`
+	Default  interface{}     `json:"default,omitempty"`
+	Children []FieldMetadata `json:"children,omitempty"`
 }
 
 // tagKey returns tag key's value or key name if value is empty
@@ -122,12 +124,7 @@ func prependType(typ string, conf []FieldMetadata) []FieldMetadata {
 }
 
 // annotate adds meta data to given configuration structure
-func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
-	var flat bool
-	if len(opt) == 1 && opt[0] {
-		flat = true
-	}
-
+func annotate(s interface{}) (ds []FieldMetadata) {
 	for _, f := range structs.Fields(s) {
 		if !f.IsExported() {
 			continue
@@ -164,22 +161,30 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 		}
 
 		switch f.Kind() {
-		case reflect.Ptr:
-			// ignore children
 		case reflect.Interface, reflect.Func:
 			continue
+
+		case reflect.Ptr:
+			t := reflect.PtrTo(reflect.TypeOf(f.Value()))
+			if t.String() != "provider.Config" {
+				continue
+			}
+			d.Type = typePlugin
+
 		case reflect.Slice:
 			t := reflect.TypeOf(f.Value()).Elem()
 			if t.String() != "provider.Config" {
 				continue
 			}
-			d.SliceType = typePlugin
-		case reflect.Struct:
-			if flat {
-				// don't describe the field
-				continue
+			d.SubType = typePlugin
+			if hasTagKey(f, "validate", "length") {
+				var err error
+				if d.Length, err = strconv.Atoi(tagKey(f, "validate", "length")); err != nil {
+					panic(err)
+				}
 			}
 
+		case reflect.Struct:
 			if d.Type != typePlugin {
 				d.Default = nil // no default for structs
 				d.Children = annotate(f.Value())
