@@ -14,7 +14,10 @@ var (
 	URLEncoding = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
 
 	// JSONEncoding specifies application/json
-	JSONEncoding = map[string]string{"Content-Type": "application/json"}
+	JSONEncoding = map[string]string{
+		"Content-Type": "application/json",
+		"Accept":       "application/json",
+	}
 )
 
 // StatusError indicates unsuccessful http response

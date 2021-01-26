@@ -55,7 +55,10 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	err := identity.Login(query, cc.User, cc.Password)
-	if err == nil {
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
+
 		api := vw.NewAPI(log, identity, "Audi", "DE")
 
 		if cc.VIN == "" {
@@ -66,7 +69,6 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 
 		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
-	}
 
 	return v, err
 }

@@ -130,14 +130,3 @@ func (v *Tesla) chargedEnergy() (float64, error) {
 func (v *Tesla) ChargedEnergy() (float64, error) {
 	return v.chargedEnergyG()
 }
-
-// depends on https://github.com/jsgoecke/tesla/issues/28
-//
-// CurrentPower implements the ChargeRater.CurrentPower interface
-// func (v *Tesla) CurrentPower() (float64, error) {
-// 	state, err := v.vehicle.ChargeState()
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	return state.ChargerPower, err
-// }

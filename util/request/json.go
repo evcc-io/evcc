@@ -17,6 +17,10 @@ func (r *errorReader) Read(p []byte) (int, error) {
 
 // MarshalJSON marshals JSON into an io.Reader
 func MarshalJSON(data interface{}) io.Reader {
+	if data == nil {
+		return nil
+	}
+
 	body, err := json.Marshal(data)
 	if err != nil {
 		return &errorReader{err: err}
