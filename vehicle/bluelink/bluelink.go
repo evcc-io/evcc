@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -56,7 +57,7 @@ type API struct {
 	log      *util.Logger
 	user     string
 	password string
-	chargeG  func() (float64, error)
+	apiG     func() (interface{}, error)
 	config   Config
 	auth     Auth
 }
@@ -69,8 +70,9 @@ type Auth struct {
 }
 
 type response struct {
-	RetCode string
-	ResMsg  struct {
+	timestamp time.Time // add missing timestamp
+	RetCode   string
+	ResMsg    struct {
 		DeviceID string
 		EvStatus struct {
 			BatteryStatus float64
@@ -103,7 +105,7 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	// api is unbelievably slow when retrieving status
 	v.Helper.Client.Timeout = 120 * time.Second
 
-	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
+	v.apiG = provider.NewCached(v.statusAPI, cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -280,9 +282,11 @@ func (v *API) authFlow() (err error) {
 	return err
 }
 
-func (v *API) getStatus() (float64, error) {
+func (v *API) getStatus() (response, error) {
+	var resp response
+
 	if v.auth.accToken == "" {
-		return 0, errAuthFail
+		return resp, errAuthFail
 	}
 
 	headers := map[string]string{
@@ -293,7 +297,6 @@ func (v *API) getStatus() (float64, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
@@ -314,23 +317,49 @@ func (v *API) getStatus() (float64, error) {
 		}
 	}
 
-	return resp.ResMsg.EvStatus.BatteryStatus, err
+	return resp, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
-func (v *API) chargeState() (float64, error) {
-	soc, err := v.getStatus()
+// status retrieves the bluelink status response
+func (v *API) statusAPI() (interface{}, error) {
+	res, err := v.getStatus()
 
 	if err != nil && errors.Is(err, errAuthFail) {
 		if err = v.authFlow(); err == nil {
-			soc, err = v.getStatus()
+			res, err = v.getStatus()
 		}
 	}
 
-	return soc, err
+	// add local timestamp for FinishTime
+	res.timestamp = time.Now()
+
+	return res, err
 }
 
 // ChargeState implements the Vehicle.ChargeState interface
 func (v *API) ChargeState() (float64, error) {
-	return v.chargeG()
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		return float64(res.ResMsg.EvStatus.BatteryStatus), nil
+	}
+
+	return 0, err
+}
+
+// FinishTime implements the Vehicle.ChargeFinishTimer interface
+func (v *API) FinishTime() (time.Time, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		remaining := res.ResMsg.EvStatus.RemainTime2.Atc.Value
+
+		if remaining == 0 {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
+		return res.timestamp.Add(time.Duration(remaining) * time.Minute), nil
+	}
+
+	return time.Time{}, err
 }

@@ -11,19 +11,18 @@
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 
-EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2).
+EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ## Features
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen and any other vehicle using scripting
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen, Volvo and any other vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
-- electric contactor protection
+- granular charge power control down to 25W with supported chargers
 - REST API
 
 ![Screenshot](docs/screenshot.png)
@@ -62,12 +61,14 @@ We recommend to use an editor like [VS Code](https://code.visualstudio.com) with
     - add a `name` attribute than can later be referred to
     - add configuration details depending on `type`
   See `evcc.dist.yaml` for examples.
-5. Test your meter, charger and optional vehicle configuration by running
+5. Configure an optional vehicle by choosing the appropriate `type` and adding a `name` attribute than can later be referred to.
+6. Test your meter, charger and optional vehicle configuration by running
 
         evcc meter|charger|vehicle
 
-6. Configure a loadpoint and refer to the meter, charger and vehicle using the defined `name` attributes.
-7. Provide optional configuration for MQTT, push messaging, database logging and custom menus.
+7. Configure the `site` and assign the grid- or PV meter using the defined `name` attributes.
+8. Configure a `loadpoint` and assign the charge meter, charger and vehicle using the defined `name` attributes.
+9. Provide optional configuration for MQTT, push messaging, database logging and more.
 
 ## Installation
 
@@ -231,6 +232,7 @@ Available vehicle remote interface implementations are:
 - `porsche`: Porsche (Taycan)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
+- `volvo`: Volvo
 - `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -502,6 +504,7 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
+- `evcc/loadpoints/<id>/minSoC`: loadpoint minimum SoC (writable)
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.

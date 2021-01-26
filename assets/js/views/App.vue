@@ -23,9 +23,9 @@
 					>
 					<a
 						class="nav-item nav-link pb-1"
-						href="https://github.com/andig/evcc/issues"
+						href="https://github.com/andig/evcc/discussions"
 						target="_blank"
-						>Support</a
+						>Community Support</a
 					>
 				</div>
 			</div>
@@ -35,6 +35,9 @@
 			:installed="installedVersion"
 			:available="store.state.availableVersion"
 			:releaseNotes="store.state.releaseNotes"
+			:hasUpdater="store.state.hasUpdater"
+			:uploadMessage="store.state.uploadMessage"
+			:uploadProgress="store.state.uploadProgress"
 		></Version>
 
 		<router-view></router-view>

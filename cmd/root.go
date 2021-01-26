@@ -13,7 +13,6 @@ import (
 	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/pipe"
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -162,7 +161,7 @@ func run(cmd *cobra.Command, args []string) {
 	configureJavascript(conf.Javascript)
 
 	// start broadcasting values
-	tee := &Tee{}
+	tee := &util.Tee{}
 
 	// value cache
 	cache := util.NewCache()
@@ -191,13 +190,12 @@ func run(cmd *cobra.Command, args []string) {
 
 	// metrics
 	if viper.GetBool("metrics") {
-		httpd.Handle("/metrics", promhttp.Handler())
+		httpd.Router().Handle("/metrics", promhttp.Handler())
 	}
 
 	// pprof
 	if viper.GetBool("profile") {
-		router := httpd.Handler.(*mux.Router)
-		router.PathPrefix("/debug/").Handler(http.DefaultServeMux)
+		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
 	}
 
 	// start HEMS server
@@ -214,7 +212,7 @@ func run(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// version check
-	go updater.Run(log, valueChan)
+	go updater.Run(log, httpd, tee, valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)

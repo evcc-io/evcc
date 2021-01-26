@@ -10,7 +10,7 @@ import (
 func TestSMAUpdateMeterValues(t *testing.T) {
 	tests := []struct {
 		name          string
-		messsage      sma.Telegram
+		message       sma.Telegram
 		wantPower     float64
 		wantCurrentL1 float64
 		wantCurrentL2 float64
@@ -56,7 +56,7 @@ func TestSMAUpdateMeterValues(t *testing.T) {
 				mux: util.NewWaiter(udpTimeout, func() {}),
 			}
 
-			sm.updateMeterValues(tt.messsage)
+			sm.updateMeterValues(tt.message)
 			if sm.values.power != tt.wantPower {
 				t.Errorf("Listener.processMessage() got Power %v, want %v", sm.values.power, tt.wantPower)
 			}

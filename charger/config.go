@@ -7,8 +7,6 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-type apiFunction string
-
 type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
 
 func (r chargerRegistry) Add(name string, factory func(map[string]interface{}) (api.Charger, error)) {
