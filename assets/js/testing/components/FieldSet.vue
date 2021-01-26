@@ -4,9 +4,9 @@
 			<form>
 				<Field
 					v-for="field in fields"
-					v-bind="field"
 					:key="fields[0].default + field.name"
 					:ref="field.name"
+					v-bind="field"
 					:plugins="plugins"
 					v-on:updated="clearStatus"
 				></Field>

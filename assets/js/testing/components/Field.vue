@@ -5,12 +5,7 @@
 			<div class="col-8">
 				<select class="form-control" v-model="plugin">
 					<option v-if="!required" value="">- bitte wählen -</option>
-					<option
-						v-for="(cfg, idx) in plugins"
-						:key="idx"
-						:value="idx"
-						:selected="idx == plugin"
-					>
+					<option v-for="(cfg, idx) in plugins" :key="idx" :value="idx">
 						{{ cfg.label }}
 					</option>
 				</select>
@@ -20,8 +15,8 @@
 			<div class="col-8">
 				<FieldSet
 					v-bind="plugins[plugin]"
-					:klass="'plugin'"
 					:plugins="plugins"
+					klass="plugin"
 					ref="sub"
 					v-if="plugins[plugin]"
 				></FieldSet>
@@ -37,41 +32,41 @@
 		</div>
 
 		<div class="form-row" v-else>
-			<label :for="this.name" class="col-sm-4 col-form-label">{{ label }}</label>
+			<label :for="name" class="col-sm-4 col-form-label">{{ label }}</label>
 
 			<div class="col-sm-8">
-				<select
-					class="form-control"
-					:id="this.name"
-					:name="this.name"
-					v-model="value"
-					v-if="isEnum"
-				>
+				<select class="form-control" :id="name" :name="name" v-model="value" v-if="isEnum">
 					<option v-if="!required" value="">- bitte wählen -</option>
-					<option
-						v-for="(e, idx) in enums"
-						:key="idx"
-						:selected="idx == value"
-						:value="e"
-					>
+					<option v-for="(e, idx) in enums" :key="idx" :value="e">
 						{{ e }}
 					</option>
 				</select>
-				<textarea class="form-control" rows="5" v-else-if="this.type == 'text'"></textarea>
+
+				<textarea
+					class="form-control"
+					rows="5"
+					v-model="value"
+					v-else-if="type == 'text'"
+				></textarea>
+
 				<input
 					class="form-control"
-					:type="this.inputType"
-					:name="this.name"
+					:type="inputType"
+					:name="name"
+					autocomplete="current-password"
+					v-model="value"
+					v-else-if="type == 'password'"
+				/>
+
+				<input
+					class="form-control"
+					:type="inputType"
+					:name="name"
 					v-model="checked"
 					v-else-if="isBool"
 				/>
-				<input
-					class="form-control"
-					:type="this.inputType"
-					:name="this.name"
-					v-model="value"
-					v-else
-				/>
+
+				<input class="form-control" :type="inputType" :name="name" v-model="value" v-else />
 			</div>
 		</div>
 	</div>
@@ -85,25 +80,24 @@ export default {
 		name: String,
 		label: String,
 		type: String,
-		masked: Boolean,
 		required: Boolean,
-		default: [String, Number],
+		default: [String, Number, Boolean],
 		enum: Array,
 		children: Array,
 		plugins: Array,
 	},
 	data: function () {
 		return {
-			value: this.default,
-			checked: false,
-			plugin: 0,
+			plugin: "",
+			value: this.default !== false ? this.default : "",
+			checked: this.isBool ? this.default : false,
 		};
 	},
-	// watch: {
-	// 	value: function () {
-	// 		this.$emit("updated");
-	// 	},
-	// },
+	watch: {
+		value: function () {
+			this.$emit("updated");
+		},
+	},
 	computed: {
 		enums: function () {
 			return this.enum;
@@ -120,14 +114,13 @@ export default {
 		inputType: function () {
 			switch (this.type) {
 				case "string":
-					if (this.masked) {
-						return "password";
-					}
 					return "text";
 				case "bool":
 					return "checkbox";
+				case /int|float/.test(this.type):
+					return "number";
 				default:
-					return /int|float/.test(this.type) ? "number" : this.type;
+					return this.type;
 			}
 		},
 	},
@@ -136,7 +129,6 @@ export default {
 			if (this.isSimple) {
 				return this.isBool ? this.checked : this.value;
 			}
-
 			return this.$refs.sub.values();
 		},
 	},

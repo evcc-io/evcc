@@ -9,7 +9,10 @@ import (
 )
 
 const (
-	typePlugin = "plugin"
+	typeDuration = "duration"
+	typePlugin   = "plugin"
+	typePassword = "password"
+	typeText     = "text"
 )
 
 // description is the Fieldmetadata container describing a single type
@@ -26,7 +29,6 @@ type FieldMetadata struct {
 	SliceType string          `json:"slicetype,omitempty"`
 	Required  bool            `json:"required,omitempty"`
 	Hidden    bool            `json:"hidden,omitempty"`
-	Masked    bool            `json:"masked,omitempty"`
 	Label     string          `json:"label,omitempty"`
 	Enum      []interface{}   `json:"enum,omitempty"`
 	Default   interface{}     `json:"default,omitempty"`
@@ -81,19 +83,22 @@ func label(f *structs.Field) string {
 func kind(f *structs.Field) string {
 	val := f.Value()
 
-	if reflect.TypeOf(val) == reflect.TypeOf(time.Duration(0)) {
-		return "duration"
-	}
+	switch {
+	case reflect.TypeOf(val) == reflect.TypeOf(time.Duration(0)):
+		return typeDuration
 
-	if f.Kind() == reflect.Struct && reflect.TypeOf(val).String() == "provider.Config" {
+	case f.Kind() == reflect.Struct && reflect.TypeOf(val).String() == "provider.Config":
 		return typePlugin
-	}
 
-	if hasTagKey(f, "ui", "text") {
-		return "text"
-	}
+	case hasTagKey(f, "ui", "mask"):
+		return typePassword
 
-	return f.Kind().String()
+	case hasTagKey(f, "ui", "text"):
+		return typeText
+
+	default:
+		return f.Kind().String()
+	}
 }
 
 // value kind is the exported default value
@@ -141,7 +146,6 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 			Type:     kind(f),
 			Required: hasTagKey(f, "validate", "required"),
 			Hidden:   hasTagKey(f, "ui", "hide"),
-			Masked:   hasTagKey(f, "ui", "mask"),
 		}
 
 		if !d.Hidden {
@@ -155,7 +159,7 @@ func annotate(s interface{}, opt ...bool) (ds []FieldMetadata) {
 		}
 
 		// add default values if not masked
-		if !f.IsZero() && !d.Masked {
+		if !f.IsZero() && d.Type != typePassword {
 			d.Default = value(f)
 		}
 
