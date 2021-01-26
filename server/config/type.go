@@ -54,10 +54,6 @@ func typeDefinition(class, typ string) (Type, error) {
 func Types(class string) []interface{} {
 	types := registry[class]
 
-	if types[0].Type == "default" {
-		println("foo")
-	}
-
 	res := make([]interface{}, 0, len(types))
 
 	for _, typ := range types {

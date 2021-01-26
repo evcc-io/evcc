@@ -35,7 +35,7 @@ type NRGKickBLE struct {
 }
 
 type nrgBLEConfig struct {
-	Device     string `validate:"required" ui:"de=Bluetooth Device`
+	Device     string `validate:"required" ui:"de=Bluetooth Device"`
 	Mac        string `validate:"required,mac" ui:"de=MAC-Adresse"`
 	MacAddress string `structs:"-"`
 	PIN        string `validate:"required" ui:",mask"`
