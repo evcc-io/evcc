@@ -1,112 +1,83 @@
 <template>
-	<transition name="fade">
-		<div v-if="active">
-			<div class="row p-3 bg-warning">
-				<div class="col-12">
-					Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
-					{{ available }}.
-					<b class="px-3" v-if="releaseNotes">
-						<a href="#" class="text-body" @click="toggleReleaseNotes">
-							Release notes
-							<fa-icon
-								icon="chevron-down"
-								class="expand-icon"
-								:class="{ 'expand-icon-rotated': releaseNotesShown }"
+	<div>
+		<small class="text-muted">
+			<a href="#" @click.prevent="toggleUpdater" v-if="active" class="update">
+				<fa-icon icon="gift"></fa-icon> Update verfügbar: {{ available }}
+			</a>
+			<a
+				:href="`https://github.com/andig/evcc/releases/tag/${installed}`"
+				target="_blank"
+				v-else
+			>
+				<fa-icon icon="box"></fa-icon> Version: {{ installed }}
+			</a>
+		</small>
+
+		<transition name="display">
+			<div id="updateModal" class="dialog" tabindex="-1" role="dialog" v-if="updaterShown">
+				<div class="modal-dialog modal-dialog-centered" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title font-weight-bold">Aktualisierung durchführen</h4>
+							<button type="button" class="close" @click="toggleUpdater">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<p class="font-weight-bold">
+								Nach Aktualisierung wird evcc neu gestartet.
+							</p>
+							<p v-html="releaseNotes"></p>
+							<div
+								class="progress"
+								style="margin-top: 16px; margin-bottom: 16px"
+								v-if="updateStarted"
 							>
-							</fa-icon>
-						</a>
-					</b>
-					<b class="px-3">
-						<button
-							type="button"
-							class="btn btn-primary"
-							data-toggle="modal"
-							data-target="#updateModal"
-							v-if="hasUpdater"
-							@click="toggleUpdater"
-						>
-							Aktualisieren
-						</button>
-						<a
-							:href="'https://github.com/andig/evcc/releases/tag/' + available"
-							class="text-body"
-							v-else
-						>
-							Download <fa-icon icon="chevron-down"></fa-icon>
-						</a>
-					</b>
-					<button
-						type="button"
-						class="close float-right"
-						style="margin-top: -2px"
-						aria-label="Close"
-						@click="dismiss"
-					>
-						<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-			</div>
-
-			<transition name="fade">
-				<div class="row p-3 bg-light" v-if="releaseNotesShown">
-					<div class="col-12" v-html="releaseNotes"></div>
-				</div>
-			</transition>
-
-			<transition name="display">
-				<div
-					id="updateModal"
-					class="dialog"
-					tabindex="-1"
-					role="dialog"
-					v-if="updaterShown"
-				>
-					<div class="modal-dialog modal-dialog-centered" role="document">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h4 class="modal-title font-weight-bold">
-									Aktualisierung durchführen
-								</h4>
-								<button type="button" class="close" @click="toggleUpdater">
-									<span aria-hidden="true">&times;</span>
-								</button>
-							</div>
-							<div class="modal-body">
-								<p class="font-weight-bold">
-									Nach Aktualisierung wird evcc neu gestartet.
-								</p>
 								<div
-									class="progress"
-									style="margin-top: 16px; margin-bottom: 16px"
-									v-if="updateStarted"
-								>
-									<div
-										class="progress-bar"
-										role="progressbar"
-										:style="{ width: uploadProgress + '%' }"
-									></div>
-								</div>
-								<p>{{ updateStatus }}{{ uploadMessage }}</p>
+									class="progress-bar"
+									role="progressbar"
+									:style="{ width: uploadProgress + '%' }"
+								></div>
 							</div>
-							<div class="modal-footer">
-								<button
-									type="button"
-									class="btn btn-secondary"
-									:class="{ disabled: updateStarted }"
-									@click="toggleUpdater"
-								>
-									Abbrechen
-								</button>
-								<button type="button" class="btn btn-danger" @click="update">
-									Installieren
-								</button>
-							</div>
+							<p>{{ updateStatus }}{{ uploadMessage }}</p>
+						</div>
+						<div class="modal-footer">
+							<button
+								type="button"
+								class="btn btn-secondary"
+								:class="{ disabled: updateStarted }"
+								@click="toggleUpdater"
+							>
+								Abbrechen
+							</button>
+
+							<button
+								type="button"
+								class="btn btn-primary"
+								data-toggle="modal"
+								data-target="#updateModal"
+								v-if="hasUpdater"
+								@click="toggleUpdater"
+							>
+								Aktualisieren
+							</button>
+							<a
+								:href="'https://github.com/andig/evcc/releases/tag/' + available"
+								class="text-body"
+								v-else
+							>
+								Download <fa-icon icon="chevron-down"></fa-icon>
+							</a>
+
+							<button type="button" class="btn btn-danger" @click="update">
+								Installieren
+							</button>
 						</div>
 					</div>
 				</div>
-			</transition>
-		</div>
-	</transition>
+			</div>
+		</transition>
+	</div>
 </template>
 
 <script>
@@ -126,7 +97,6 @@ export default {
 	data: function () {
 		return {
 			dismissed: false,
-			releaseNotesShown: false,
 			updaterShown: false,
 			updateStarted: false,
 			updateStatus: "",
@@ -135,10 +105,6 @@ export default {
 	methods: {
 		dismiss: function () {
 			this.dismissed = true;
-		},
-		toggleReleaseNotes: function (e) {
-			e.preventDefault();
-			this.releaseNotesShown = !this.releaseNotesShown;
 		},
 		toggleUpdater: function (e) {
 			e.preventDefault();
@@ -170,7 +136,6 @@ export default {
 	watch: {
 		available: function () {
 			this.dismissed = false;
-			this.releaseNotesShown = false;
 		},
 	},
 };

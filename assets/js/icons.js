@@ -13,6 +13,9 @@ import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
 import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
 import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
 import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermometerHalf";
+import { faHeart } from "@fortawesome/free-solid-svg-icons/faHeart";
+import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
+import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
 
 library.add(
   faArrowDown,
@@ -26,7 +29,10 @@ library.add(
   faSun,
   faTemperatureLow,
   faTemperatureHigh,
-  faThermometerHalf
+  faThermometerHalf,
+  faHeart,
+  faGift,
+  faBox
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

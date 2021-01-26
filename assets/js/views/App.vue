@@ -31,27 +31,19 @@
 			</div>
 		</nav>
 
-		<Version
-			:installed="installedVersion"
-			:available="store.state.availableVersion"
-			:releaseNotes="store.state.releaseNotes"
-			:hasUpdater="store.state.hasUpdater"
-			:uploadMessage="store.state.uploadMessage"
-			:uploadProgress="store.state.uploadProgress"
-		></Version>
-
 		<router-view></router-view>
+		<Footer :version="version" />
 	</div>
 </template>
 
 <script>
 import "../icons";
-import Version from "../components/Version";
+import Footer from "../components/Footer";
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Version },
+	components: { Footer },
 	data: function () {
 		return {
 			compact: false,
@@ -85,6 +77,18 @@ export default {
 				} catch (e) {
 					window.toasts.error(e, evt.data);
 				}
+			};
+		},
+	},
+	computed: {
+		version: function () {
+			return {
+				installed: this.installedVersion,
+				available: this.store.state.availableVersion,
+				releaseNotes: this.store.state.releaseNotes,
+				hasUpdater: this.store.state.hasUpdater,
+				uploadMessage: this.store.state.uploadMessage,
+				uploadProgress: this.store.state.uploadProgress,
 			};
 		},
 	},
