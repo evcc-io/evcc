@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -110,9 +109,9 @@ func (m *Tesla) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-		if o, ok := res[m.usage]; ok {
-			return o.InstantPower, nil
-		}
+	if o, ok := res[m.usage]; ok {
+		return o.InstantPower, nil
+	}
 
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
@@ -124,14 +123,14 @@ func (m *Tesla) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-		if o, ok := res[m.usage]; ok {
-			if m.usage == "load" {
-				return o.EnergyImported, nil
-			}
-			if m.usage == "solar" {
-				return o.EnergyExported, nil
-			}
+	if o, ok := res[m.usage]; ok {
+		if m.usage == "load" {
+			return o.EnergyImported, nil
 		}
+		if m.usage == "solar" {
+			return o.EnergyExported, nil
+		}
+	}
 
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }

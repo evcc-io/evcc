@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -59,16 +60,16 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-		api := vw.NewAPI(log, identity, "Audi", "DE")
+	api := vw.NewAPI(log, identity, "Audi", "DE")
 
-		if cc.VIN == "" {
-			cc.VIN, err = findVehicle(api.Vehicles())
-			if err == nil {
-				log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-			}
+	if cc.VIN == "" {
+		cc.VIN, err = findVehicle(api.Vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 		}
+	}
 
-		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 
 	return v, err
 }
