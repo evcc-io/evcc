@@ -87,9 +87,13 @@ export default {
 		plugins: Array,
 	},
 	data: function () {
+		let defVal = this.default !== false ? this.default : "";
+		if (this.enum && this.enum.length && this.required && defVal === "") {
+			defVal = this.enum[0];
+		}
 		return {
 			plugin: "",
-			value: this.default !== false ? this.default : "",
+			value: defVal,
 			checked: this.isBool ? this.default : false,
 		};
 	},
@@ -117,6 +121,8 @@ export default {
 					return "text";
 				case "bool":
 					return "checkbox";
+				case "duration":
+					return "number";
 				case /int|float/.test(this.type):
 					return "number";
 				default:
@@ -126,6 +132,9 @@ export default {
 	},
 	methods: {
 		values: function () {
+			if (this.type == "duration") {
+				return this.value ? this.value : 0;
+			}
 			if (this.isSimple) {
 				return this.isBool ? this.checked : this.value;
 			}
