@@ -22,8 +22,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- soft ramp-up/ramp-down of charge current ensures contactor only switched at minimum current
-- electric contactor protection
+- granular charge power control down to 25W with supported chargers
 - REST API
 
 ![Screenshot](docs/screenshot.png)
@@ -62,12 +61,14 @@ We recommend to use an editor like [VS Code](https://code.visualstudio.com) with
     - add a `name` attribute than can later be referred to
     - add configuration details depending on `type`
   See `evcc.dist.yaml` for examples.
-5. Test your meter, charger and optional vehicle configuration by running
+5. Configure an optional vehicle by choosing the appropriate `type` and adding a `name` attribute than can later be referred to.
+6. Test your meter, charger and optional vehicle configuration by running
 
         evcc meter|charger|vehicle
 
-6. Configure a loadpoint and refer to the meter, charger and vehicle using the defined `name` attributes.
-7. Provide optional configuration for MQTT, push messaging, database logging and custom menus.
+7. Configure the `site` and assign the grid- or PV meter using the defined `name` attributes.
+8. Configure a `loadpoint` and assign the charge meter, charger and vehicle using the defined `name` attributes.
+9. Provide optional configuration for MQTT, push messaging, database logging and more.
 
 ## Installation
 
