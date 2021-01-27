@@ -177,9 +177,9 @@ func annotate(s interface{}) (ds []FieldMetadata) {
 				continue
 			}
 			d.SubType = typePlugin
-			if hasTagKey(f, "validate", "length") {
+			if hasTagKey(f, "validate", "lte") {
 				var err error
-				if d.Length, err = strconv.Atoi(tagKey(f, "validate", "length")); err != nil {
+				if d.Length, err = strconv.Atoi(tagKey(f, "validate", "lte")); err != nil {
 					panic(err)
 				}
 			}

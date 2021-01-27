@@ -24,9 +24,9 @@ var registry = make(map[string][]Type)
 
 // SetTypes sets the type definitions for given class in the registry
 func SetTypes(class string, types []Type) {
-	sort.SliceStable(types, func(i, j int) bool {
-		if types[i].Rank < types[j].Rank {
-			return true
+	sort.Slice(types, func(i, j int) bool {
+		if types[i].Rank != types[j].Rank {
+			return types[i].Rank < types[j].Rank
 		}
 		return strings.ToLower(types[i].Label) < strings.ToLower(types[j].Label)
 	})

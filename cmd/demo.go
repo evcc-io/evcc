@@ -96,8 +96,9 @@ chargers:
 
 vehicles:
 - name: demo
-  title: e-Golf
   type: default
+  title: e-Golf
+  capacity: 50
   charge:
     type: js
     vm: shared

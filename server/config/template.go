@@ -53,8 +53,8 @@ func Templates(class string) []interface{} {
 
 	// name -> type
 	sort.SliceStable(types, func(i, j int) bool {
-		if types[i].Name < types[j].Name {
-			return true
+		if types[i].Name != types[j].Name {
+			return types[i].Name < types[j].Name
 		}
 		return strings.ToLower(types[i].Type) < strings.ToLower(types[j].Type)
 	})
