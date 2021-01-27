@@ -34,8 +34,8 @@ type Auth struct {
 	Type, User, Password string
 }
 
-// NewAuth creates authorization headers from config
-func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
+// AuthHeaders creates authorization headers from config
+func AuthHeaders(log *util.Logger, auth Auth, headers map[string]string) error {
 	if strings.ToLower(auth.Type) != "basic" {
 		return fmt.Errorf("unsupported auth type: %s", auth.Type)
 	}
@@ -65,34 +65,47 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	log := util.NewLogger("http")
 
-	url := util.DefaultScheme(cc.URI, "http")
-	if url != cc.URI {
-		log.WARN.Printf("missing scheme for %s, assuming http", cc.URI)
+	// handle basic auth
+	if cc.Auth.Type != "" {
+		if err := AuthHeaders(log, cc.Auth, cc.Headers); err != nil {
+			return nil, fmt.Errorf("http auth: %w", err)
+		}
+	}
+
+	return NewHTTP(log,
+		cc.Method,
+		cc.URI,
+		cc.Headers,
+		cc.Body,
+		cc.Insecure,
+		cc.Jq,
+		cc.Scale,
+	)
+}
+
+// NewHTTP create HTTP provider
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+	url := util.DefaultScheme(uri, "http")
+	if url != uri {
+		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
 	p := &HTTP{
 		Helper:  request.NewHelper(log),
 		url:     url,
-		method:  cc.Method,
-		headers: cc.Headers,
-		body:    cc.Body,
-		scale:   cc.Scale,
-	}
-
-	// handle basic auth
-	if cc.Auth.Type != "" {
-		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
-			return nil, fmt.Errorf("http auth: %w", err)
-		}
+		method:  method,
+		headers: headers,
+		body:    body,
+		scale:   scale,
 	}
 
 	// ignore the self signed certificate
-	if cc.Insecure {
+	if insecure {
 		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
 	}
 
-	if cc.Jq != "" {
-		op, err := gojq.Parse(cc.Jq)
+	if jq != "" {
+		op, err := gojq.Parse(jq)
 		if err != nil {
 			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
 		}

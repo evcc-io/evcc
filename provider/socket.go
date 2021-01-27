@@ -70,7 +70,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
+		if err := AuthHeaders(log, cc.Auth, p.headers); err != nil {
 			return nil, fmt.Errorf("socket auth: %w", err)
 		}
 	}
