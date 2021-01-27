@@ -35,8 +35,8 @@ type SettingsTCP struct {
 
 // SettingsTCPModel TCP sub type with model
 type SettingsTCPModel struct {
-	Model string `validate:"oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"de=Zählertyp"`
-	SettingsTCP
+	Model       string `validate:"required,oneof=SMA Kostal Fronius SolarEdge Sunspec" ui:"de=Zählertyp"`
+	SettingsTCP `mapstructure:",squash"`
 }
 
 // SettingsRTUTCP RTU over TCP sub type
@@ -48,8 +48,8 @@ type SettingsRTUTCP struct {
 
 // SettingsRTUTCPModel RTU over TCP sub type with model
 type SettingsRTUTCPModel struct {
-	Model string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
-	SettingsRTUTCP
+	Model          string `validate:"required,oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+	SettingsRTUTCP `mapstructure:",squash"`
 }
 
 // SettingsRTU RTU/serial sub type
@@ -62,8 +62,8 @@ type SettingsRTU struct {
 
 // SettingsRTUModel RTU/serial sub type with model
 type SettingsRTUModel struct {
-	Model string `validate:"oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
-	SettingsRTU
+	Model       string `validate:"required,oneof=ABB DZG IEM3000 INEPRO JANITZA MPM ORNO1P ORNO1P504 ORNO3P SBC SDM SDM220 SDM230 SDM72" ui:"de=Zählertyp"`
+	SettingsRTU `mapstructure:",squash"`
 }
 
 // Connection decorates a meters.Connection with transparent slave id and error handling

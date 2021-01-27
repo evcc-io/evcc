@@ -23,8 +23,8 @@ type Easee struct {
 }
 
 type easeeConfig struct {
-	User     string
-	Password string        `ui:",mask"`
+	User     string        `validate:"required"`
+	Password string        `validate:"required" ui:",mask"`
 	Charger  string        `ui:"de=Charger ID"`
 	Cache    time.Duration `structs:"-"`
 }

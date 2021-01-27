@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
@@ -135,6 +136,16 @@ func Test(class string, body io.Reader) (interface{}, error) {
 	// find the type definition
 	typeDef, err := typeDefinition(class, config.Type)
 	if err != nil {
+		return nil, err
+	}
+
+	// validate the configuration
+	configStruct := reflect.New(reflect.TypeOf(typeDef.Config)).Elem().Interface()
+	if err := util.DecodeOther(config.Other, &configStruct); err != nil {
+		return nil, err
+	}
+	if err := util.Validate(configStruct); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 

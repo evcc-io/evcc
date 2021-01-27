@@ -115,16 +115,17 @@ export default {
 				case "bool":
 					return "checkbox";
 				case "duration":
-					return "number";
-				case /int|float/.test(this.type):
-					return "number";
+					return "text"; // number?
 				default:
+					if (/int|float/.test(this.type)) {
+						return "number";
+					}
 					return this.type;
 			}
 		},
 		sliceFields: function () {
 			let res = [];
-			var max = this.length ? this.length : 1;
+			let max = this.length ? this.length : 1;
 
 			for (let i = 0; i < max; i++) {
 				res.push({

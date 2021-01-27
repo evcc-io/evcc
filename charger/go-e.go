@@ -88,7 +88,7 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
 	c := &GoE{
 		Helper: request.NewHelper(util.NewLogger("go-e")),
-		uri:    strings.TrimRight(uri, "/"),
+		uri:    strings.TrimRight(util.DefaultScheme(uri, "http"), "/"),
 		token:  strings.TrimSpace(token),
 	}
 

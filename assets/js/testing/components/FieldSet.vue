@@ -12,11 +12,15 @@
 				></Field>
 
 				<template v-if="klass">
+					<div class="row my-3" v-if="error">
+						<div class="col-4 text-danger">Fehler:</div>
+						<div class="col-8 text-danger">
+							{{ error }}
+						</div>
+					</div>
 					<button type="submit" class="btn btn-primary btn-small" @click="test">
 						Test
 					</button>
-
-					{{ this.error }}
 
 					<ul v-if="Object.keys(result).length">
 						<li v-for="(val, idx) in result" :key="idx">

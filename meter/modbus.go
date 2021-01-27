@@ -50,9 +50,9 @@ func init() {
 
 	// TCP - Wechselrichter
 	registry.Add("modbus-tcp", "ModBus Wechselrichter (TCP)", NewModbusFromConfig, struct {
-		modbus.SettingsTCPModel
-		Readings
-		Timeout time.Duration
+		modbus.SettingsTCPModel `mapstructure:",squash"`
+		Readings                `mapstructure:",squash"`
+		Timeout                 time.Duration
 	}{
 		SettingsTCPModel: modbus.SettingsTCPModel{
 			SettingsTCP: modbus.SettingsTCP{
@@ -66,9 +66,9 @@ func init() {
 
 	// TCP - Zähler
 	registry.Add("modbus-rtu-tcp", "ModBus Zähler (Seriell<->TCP)", NewModbusFromConfig, struct {
-		modbus.SettingsRTUTCPModel
-		Readings
-		Timeout time.Duration
+		modbus.SettingsRTUTCPModel `mapstructure:",squash"`
+		Readings                   `mapstructure:",squash"`
+		Timeout                    time.Duration
 	}{
 		SettingsRTUTCPModel: modbus.SettingsRTUTCPModel{
 			SettingsRTUTCP: modbus.SettingsRTUTCP{
@@ -83,8 +83,8 @@ func init() {
 
 	// Serial
 	registry.Add("modbus-serial", "ModBus Zähler (Seriell)", NewModbusFromConfig, struct {
-		modbus.SettingsRTUModel
-		Readings
+		modbus.SettingsRTUModel `mapstructure:",squash"`
+		Readings                `mapstructure:",squash"`
 	}{
 		SettingsRTUModel: modbus.SettingsRTUModel{
 			SettingsRTU: modbus.SettingsRTU{

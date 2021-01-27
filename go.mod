@@ -13,6 +13,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20201022122018-3977ed72668a
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/gokrazy/updater v0.0.0-20210106211705-4d92b338dd24
