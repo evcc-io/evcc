@@ -12,17 +12,19 @@ import (
 
 const discovergyAPI = "https://api.discovergy.com/public/v1"
 
+type discovergyConfig struct {
+	User     string `validate:"required"`
+	Password string `validate:"required" ui:",mask"`
+	Meter    string `ui:"de=Zählernummer"`
+}
+
 func init() {
-	registry.Add("discovergy", NewDiscovergyFromConfig)
+	registry.Add("discovergy", "Discovergy", NewDiscovergyFromConfig, discovergyConfig{})
 }
 
 // NewDiscovergyFromConfig creates a new configurable meter
 func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
-		User     string
-		Password string
-		Meter    string
-	}
+	var cc discovergyConfig
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
