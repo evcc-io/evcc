@@ -145,7 +145,6 @@ func Test(class string, body io.Reader) (interface{}, error) {
 		return nil, err
 	}
 	if err := util.Validate(configStruct); err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

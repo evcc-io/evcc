@@ -15,7 +15,7 @@
 			</div>
 		</div>
 
-		<FieldSet v-bind="types[type]" :klass="klass" :plugins="plugins"></FieldSet>
+		<FieldSet v-bind="types[type]" :klass="klass" :plugins="plugins" ref="fields"></FieldSet>
 	</div>
 </template>
 
@@ -35,6 +35,11 @@ export default {
 			types: [],
 			type: 0,
 		};
+	},
+	watch: {
+		type: function () {
+			this.$refs.fields.clearStatus();
+		},
 	},
 	mounted: async function () {
 		try {

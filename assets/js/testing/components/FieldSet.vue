@@ -56,11 +56,10 @@ export default {
 		values: function () {
 			let json = {};
 
-			for (var idx in this.$refs) {
+			for (let idx in this.$refs) {
 				if (this.$refs[idx].length) {
 					let field = this.$refs[idx][0];
 
-					console.log("fieldset: " + field.name);
 					let val = field.values();
 					if (val !== undefined) {
 						json[field.name] = val;

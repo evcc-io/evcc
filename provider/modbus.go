@@ -28,10 +28,10 @@ func init() {
 
 	// TCP
 	registry.Add("modbus-tcp", "ModBus (TCP)", NewModbusFromConfig, struct {
-		modbus.SettingsTCPModel
-		SubDevice int             `ui:"de=SunSpec Subdevice"`
-		Value     string          `ui:"de=Messwert"`
-		Register  modbus.Register `ui:"Register"`
+		modbus.SettingsTCPModel `mapstructure:",squash"`
+		SubDevice               int             `ui:"de=SunSpec Subdevice"`
+		Value                   string          `ui:"de=Messwert"`
+		Register                modbus.Register `ui:"Register"`
 	}{
 		SettingsTCPModel: modbus.SettingsTCPModel{
 			SettingsTCP: modbus.SettingsTCP{
@@ -43,9 +43,9 @@ func init() {
 
 	// RTU over TCP
 	registry.Add("modbus-rtu-tcp", "ModBus (Seriell<->TCP)", NewModbusFromConfig, struct {
-		modbus.SettingsRTUTCPModel
-		Value    string          `ui:"de=Messwert"`
-		Register modbus.Register `ui:"Register"`
+		modbus.SettingsRTUTCPModel `mapstructure:",squash"`
+		Value                      string          `ui:"de=Messwert"`
+		Register                   modbus.Register `ui:"Register"`
 	}{
 		SettingsRTUTCPModel: modbus.SettingsRTUTCPModel{
 			SettingsRTUTCP: modbus.SettingsRTUTCP{
@@ -58,9 +58,9 @@ func init() {
 
 	// Serial
 	registry.Add("modbus-serial", "ModBus (Seriell)", NewModbusFromConfig, struct {
-		modbus.SettingsRTUModel
-		Value    string          `ui:"de=Messwert"`
-		Register modbus.Register `ui:"Register"`
+		modbus.SettingsRTUModel `mapstructure:",squash"`
+		Value                   string          `ui:"de=Messwert"`
+		Register                modbus.Register `ui:"Register"`
 	}{
 		SettingsRTUModel: modbus.SettingsRTUModel{
 			SettingsRTU: modbus.SettingsRTU{
@@ -76,10 +76,10 @@ func init() {
 // NewModbusFromConfig creates Modbus plugin
 func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
-		Model           string
 		modbus.Settings `mapstructure:",squash"`
-		Register        modbus.Register
+		Model           string
 		Value           string
+		Register        modbus.Register
 		Scale           float64
 	}{
 		Scale: 1,

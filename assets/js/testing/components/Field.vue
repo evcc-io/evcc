@@ -106,7 +106,7 @@ export default {
 			return this.type == "bool";
 		},
 		isSimple: function () {
-			return !(this.type == "struct" || this.type == "plugin");
+			return !(this.type == "struct" || this.type == "slice" || this.type == "plugin");
 		},
 		inputType: function () {
 			switch (this.type) {
@@ -145,7 +145,32 @@ export default {
 			if (this.isSimple) {
 				return this.isBool ? this.checked : this.value;
 			}
-			return this.$refs.sub.values();
+
+			if (this.type == "slice") {
+				let res = [];
+				let values = this.$refs.sub.values();
+				for (let val in values) {
+					res.push(values[val]);
+				}
+
+				let populated = res.reduce((acc, val) => {
+					return acc || val !== null;
+				});
+				if (this.required || populated) {
+					return res;
+				}
+
+				// not required and empty
+				return null;
+			}
+
+			// struct
+			let sub = this.$refs.sub;
+			if (sub === undefined) {
+				return null;
+			}
+
+			return sub.values();
 		},
 	},
 };

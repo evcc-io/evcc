@@ -27,7 +27,7 @@ type HTTP struct {
 }
 
 type httpConfig = struct {
-	URI      string
+	URI      string            `validate:"required"`
 	Method   string            `validate:"required,oneof=GET POST PUT DELETE" ui:"de=Methode"`
 	Headers  map[string]string `structs:"-"`
 	Body     string            `ui:"de=Request (nur POST und PUT),text"`
