@@ -59,7 +59,14 @@
 				v-else-if="isBool"
 			/>
 
-			<input class="form-control" :type="inputType" :name="name" v-model="value" v-else />
+			<input
+				class="form-control"
+				:type="inputType"
+				:step="inputStep"
+				:name="name"
+				v-model="value"
+				v-else
+			/>
 		</div>
 	</div>
 </template>
@@ -122,6 +129,9 @@ export default {
 					}
 					return this.type;
 			}
+		},
+		inputStep: function () {
+			return this.inputType == "number" ? "any" : "";
 		},
 		sliceFields: function () {
 			let res = [];
