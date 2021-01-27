@@ -147,7 +147,9 @@ jobs:
       run: make image-rootfs
 
     - name: Clean git
-      run: git checkout go.*
+      run: |
+         git checkout go.*
+         rmdir flags buildflags
 
     - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2
