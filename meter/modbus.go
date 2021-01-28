@@ -49,7 +49,7 @@ func init() {
 	registry.Add("modbus", "ModBus", NewModbusFromConfig, nil)
 
 	// TCP - Wechselrichter
-	registry.Add("modbus-tcp", "ModBus Wechselrichter (TCP)", NewModbusFromConfig, struct {
+	registry.Add("modbus-tcp", "ModBus Zähler & Wechselrichter (TCP)", NewModbusFromConfig, struct {
 		modbus.SettingsTCPModel `mapstructure:",squash"`
 		Readings                `mapstructure:",squash"`
 		Timeout                 time.Duration
