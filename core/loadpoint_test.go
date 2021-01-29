@@ -644,7 +644,7 @@ func TestSoCPoll(t *testing.T) {
 		{pollCharging, api.StatusA, -1, false},
 		{pollCharging, api.StatusA, 0, false},
 		{pollCharging, api.StatusA, tRefresh, false},
-		{pollCharging, api.StatusB, -1, false},
+		{pollCharging, api.StatusB, -1, true}, // poll once when car connected
 		{pollCharging, api.StatusB, 0, false},
 		{pollCharging, api.StatusB, tRefresh, false},
 		{pollCharging, api.StatusC, -1, true},
