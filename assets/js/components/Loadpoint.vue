@@ -106,7 +106,7 @@
 					:charging="charging"
 					:connected="connected"
 					:minSoC="minSoC"
-					:soc="soc"
+					:hasVehicle="hasVehicle"
 					:socCharge="socCharge"
 					:socTitle="socTitle"
 				></Vehicle>
@@ -180,7 +180,7 @@ export default {
 		chargePower: Number,
 		chargedEnergy: Number,
 		// chargeDuration: Number,
-		soc: Boolean,
+		hasVehicle: Boolean,
 		climater: String,
 		range: Number,
 		chargeEstimate: Number,
@@ -198,6 +198,7 @@ export default {
 			return {
 				connected: this.connected,
 				minSoC: this.minSoC,
+				hasVehicle: this.hasVehicle,
 				socCharge: this.socCharge,
 				climater: this.climater,
 				chargePower: this.chargePower,

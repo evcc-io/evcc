@@ -400,7 +400,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("maxCurrent", lp.MaxCurrent)
 	lp.publish("phases", lp.Phases)
 	lp.publish("activePhases", lp.Phases)
-	lp.publish("soc", len(lp.vehicles) > 0)
+	lp.publish("hasVehicle", len(lp.vehicles) > 0)
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
