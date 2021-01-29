@@ -47,7 +47,7 @@
 import "../icons";
 import formatter from "../mixins/formatter";
 
-const limit = 100;
+const limit = 20;
 const icons = [
 	"battery-empty",
 	"battery-quarter",
