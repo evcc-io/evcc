@@ -51,7 +51,7 @@
 			</h2>
 		</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="soc">
+		<div class="col-6 col-md-3 mt-3" v-if="hasVehicle">
 			<div class="mb-2 value">Restzeit</div>
 			<h2 class="value">
 				{{ fmtShortDuration(chargeEstimate) }}
@@ -71,7 +71,7 @@ export default {
 		chargePower: Number,
 		chargedEnergy: Number,
 		chargeDuration: Number,
-		soc: Boolean,
+		hasVehicle: Boolean,
 		socTimerActive: Boolean,
 		socTimerSet: Boolean,
 		climater: String,
