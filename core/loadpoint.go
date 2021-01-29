@@ -285,7 +285,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
 	lp.triggerEvent(evChargeStart)
 
-	// soc estimation reset
+	// soc update reset
 	lp.socUpdated = time.Time{}
 }
 
@@ -294,7 +294,7 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
 	lp.triggerEvent(evChargeStop)
 
-	// soc estimation reset
+	// soc update reset
 	lp.socUpdated = time.Time{}
 }
 
@@ -310,10 +310,10 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.connectedTime = lp.clock.Now()
 	lp.publish("connectedDuration", time.Duration(0))
 
-	// soc estimation reset
+	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// soc estimation reset on car change
+	// soc update reset on car change
 	if lp.socEstimator != nil {
 		lp.socEstimator.Reset()
 	}
@@ -339,7 +339,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
 	}
 
-	// soc estimation reset
+	// soc update reset
 	lp.socUpdated = time.Time{}
 }
 
@@ -817,7 +817,7 @@ func (lp *LoadPoint) socPollAllowed() bool {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 	}
 
-	res := lp.charging() || honourUpdateInterval && (lp.socUpdated.IsZero() || remaining <= 0)
+	res := lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
 	if res {
 		lp.socUpdated = lp.clock.Now()
 	}
