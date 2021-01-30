@@ -149,7 +149,7 @@ jobs:
     - name: Clean git
       run: |
          git checkout go.*
-         rmdir flags buildflags
+         rm -rf flags buildflags
 
     - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2
