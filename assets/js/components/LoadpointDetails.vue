@@ -68,15 +68,15 @@ import formatter from "../mixins/formatter";
 export default {
 	name: "LoadpointDetails",
 	props: {
-		chargePower: Number,
 		chargedEnergy: Number,
 		chargeDuration: Number,
+		chargeEstimate: Number,
+		chargePower: Number,
+		climater: String,
 		hasVehicle: Boolean,
+		range: Number,
 		socTimerActive: Boolean,
 		socTimerSet: Boolean,
-		climater: String,
-		range: Number,
-		chargeEstimate: Number,
 	},
 	mixins: [formatter],
 };

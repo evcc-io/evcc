@@ -102,14 +102,7 @@
 
 		<div class="row">
 			<div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
-				<Vehicle
-					:charging="charging"
-					:connected="connected"
-					:minSoC="minSoC"
-					:hasVehicle="hasVehicle"
-					:socCharge="socCharge"
-					:socTitle="socTitle"
-				></Vehicle>
+				<Vehicle v-bind="vehicle"></Vehicle>
 			</div>
 
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
@@ -149,6 +142,7 @@ import Mode from "./Mode";
 import Vehicle from "./Vehicle";
 import LoadpointDetails from "./LoadpointDetails";
 import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 
 export default {
 	name: "Loadpoint",
@@ -186,7 +180,7 @@ export default {
 		chargeEstimate: Number,
 	},
 	components: { LoadpointDetails, Soc, Mode, Vehicle },
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	data: function () {
 		return {
 			tickerHandle: null,
@@ -195,18 +189,10 @@ export default {
 	},
 	computed: {
 		details: function () {
-			return {
-				connected: this.connected,
-				minSoC: this.minSoC,
-				hasVehicle: this.hasVehicle,
-				socCharge: this.socCharge,
-				climater: this.climater,
-				chargePower: this.chargePower,
-				chargedEnergy: this.chargedEnergy,
-				range: this.range,
-				chargeDuration: this.chargeDurationDisplayed,
-				chargeEstimate: this.chargeEstimate,
-			};
+			return this.collectProps(LoadpointDetails);
+		},
+		vehicle: function () {
+			return this.collectProps(Vehicle);
 		},
 		hasTargetSoC: function () {
 			return this.socLevels != null && this.socLevels.length > 0;
