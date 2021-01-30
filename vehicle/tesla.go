@@ -32,6 +32,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity               int64
 		ClientID, ClientSecret string
 		User, Password         string
+		Token                  string
 		VIN                    string
 		Cache                  time.Duration
 	}{
@@ -51,12 +52,26 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		cc.ClientID, cc.ClientSecret = v.downloadClientID("https://pastebin.com/raw/pS7Z6yyP")
 	}
 
-	client, err := tesla.NewClient(&tesla.Auth{
+	auth := &tesla.Auth{
 		ClientID:     cc.ClientID,
 		ClientSecret: cc.ClientSecret,
 		Email:        cc.User,
 		Password:     cc.Password,
-	})
+	}
+
+	var client *tesla.Client
+	var err error
+
+	if cc.Token != "" {
+		client, err = tesla.NewClientWithToken(auth, &tesla.Token{
+			AccessToken: cc.Token,
+			TokenType:   "Bearer",
+			Expires:     time.Now().Add(45 * 24 * time.Hour).Unix(),
+		})
+	} else {
+		client, err = tesla.NewClient(auth)
+	}
+
 	if err != nil {
 		return nil, err
 	}
