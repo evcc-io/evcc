@@ -41,17 +41,20 @@ func generateToken(user, pass string) {
 		ctx := context.Background()
 		token, err := client.Login(ctx, user, pass, passcodeC)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
+		} else {
+			fmt.Println(token)
 		}
 
-		fmt.Println(token)
 		wg.Done()
 	}()
 
-	fmt.Print("Please enter passcode: ")
-	reader := bufio.NewReader(os.Stdin)
-	code, _ := reader.ReadString('\n')
-	passcodeC <- strings.TrimSpace(code)
+	go func() {
+		fmt.Print("Please enter passcode: ")
+		reader := bufio.NewReader(os.Stdin)
+		code, _ := reader.ReadString('\n')
+		passcodeC <- strings.TrimSpace(code)
+	}()
 
 	wg.Wait()
 }
