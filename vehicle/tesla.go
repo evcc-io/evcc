@@ -103,7 +103,7 @@ func (v *Tesla) downloadClientID(uri string) (string, string) {
 	return "", ""
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *Tesla) chargeState() (float64, error) {
 	state, err := v.vehicle.ChargeState()
 	if err != nil {
@@ -112,8 +112,8 @@ func (v *Tesla) chargeState() (float64, error) {
 	return float64(state.BatteryLevel), nil
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Tesla) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Tesla) SoC() (float64, error) {
 	return v.chargeStateG()
 }
 

@@ -100,12 +100,12 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	return res, nil
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (m *Vehicle) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (m *Vehicle) SoC() (float64, error) {
 	return m.chargeG()
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// SoC implements the api.Vehicle interface
 func (m *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
@@ -117,7 +117,7 @@ func (m *Vehicle) status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// rng implements the Vehicle.Range interface
+// rng implements the api.VehicleRange interface
 func (m *Vehicle) rng() (int64, error) {
 	return m.rangeG()
 }

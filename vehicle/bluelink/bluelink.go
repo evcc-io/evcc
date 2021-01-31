@@ -345,8 +345,8 @@ func (v *API) statusAPI() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the api.ChargeState interface
-func (v *API) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(response); err == nil && ok {
@@ -356,7 +356,7 @@ func (v *API) ChargeState() (float64, error) {
 	return 0, err
 }
 
-// FinishTime implements the api.ChargeFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *API) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 

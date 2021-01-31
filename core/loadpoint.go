@@ -516,7 +516,7 @@ func (lp *LoadPoint) minSocNotReached() bool {
 
 // climateActive checks if vehicle has active climate request
 func (lp *LoadPoint) climateActive() bool {
-	if cl, ok := lp.vehicle.(api.Climater); ok {
+	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
 		active, outsideTemp, targetTemp, err := cl.Climater()
 		if err == nil {
 			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)

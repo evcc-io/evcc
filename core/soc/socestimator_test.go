@@ -72,7 +72,7 @@ func TestSoCEstimation(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
-		vehicle.EXPECT().ChargeState().Return(tc.vehicleSoC, nil)
+		vehicle.EXPECT().SoC().Return(tc.vehicleSoC, nil)
 
 		soc, err := ce.SoC(tc.chargedEnergy)
 		if err != nil {
