@@ -217,7 +217,7 @@ func (v *Volvo) VehicleRange() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the ChargeFinishTimer interface
+// FinishTime implements the VehicleFinishTimer interface
 func (v *Volvo) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {

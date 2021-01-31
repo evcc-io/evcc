@@ -131,7 +131,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.ChargeFinishTimer); ok {
+	if v, ok := v.(api.VehicleFinishTimer); ok {
 		if ft, err := v.FinishTime(); err != nil {
 			fmt.Fprintf(w, "Finish time:\t%v\n", err)
 		} else {
@@ -139,7 +139,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.Climater); ok {
+	if v, ok := v.(api.VehicleClimater); ok {
 		if active, ot, tt, err := v.Climater(); err != nil {
 			fmt.Fprintf(w, "Climater:\t%v\n", err)
 		} else {

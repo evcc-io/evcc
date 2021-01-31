@@ -79,7 +79,7 @@ func (v *API) Range() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
+// FinishTime implements the Vehicle.VehicleFinishTimer interface
 func (v *API) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 

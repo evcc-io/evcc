@@ -57,7 +57,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 		}
 
 		// use vehicle api if available
-		if vr, ok := s.vehicle.(api.ChargeFinishTimer); ok {
+		if vr, ok := s.vehicle.(api.VehicleFinishTimer); ok {
 			finishTime, err := vr.FinishTime()
 			if err == nil {
 				timeRemaining := time.Until(finishTime)
