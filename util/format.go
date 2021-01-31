@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var re = regexp.MustCompile(`\${(\w+)(:([a-zA-Z0-9%.]+))?}`)
@@ -32,6 +33,8 @@ func FormatValue(format string, val interface{}) string {
 			format = format[:len(format)-1]
 			val = typed / 1e3
 		}
+	case time.Duration:
+		val = typed.Round(time.Second)
 	}
 
 	if format == "" {
