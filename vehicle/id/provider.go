@@ -54,7 +54,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// FinishTime implements the Vehicle.VehicleFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
