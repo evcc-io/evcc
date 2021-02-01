@@ -3,10 +3,11 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
@@ -27,27 +28,8 @@ func init() {
 	rootCmd.AddCommand(teslaCmd)
 }
 
-func generateToken(user, pass string) {
-	client, err := mfa.NewClient()
-	if err != nil {
-		panic(err)
-	}
-
-	passcodeC := make(chan string, 1)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		ctx := context.Background()
-		token, err := client.Login(ctx, user, pass, passcodeC)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			fmt.Println(token)
-		}
-
-		wg.Done()
-	}()
+func codeprompt() (string, error) {
+	passcodeC := make(chan string)
 
 	go func() {
 		fmt.Print("Please enter passcode: ")
@@ -56,7 +38,27 @@ func generateToken(user, pass string) {
 		passcodeC <- strings.TrimSpace(code)
 	}()
 
-	wg.Wait()
+	select {
+	case <-time.NewTimer(30 * time.Second).C:
+		return "", errors.New("code request expired")
+	case code := <-passcodeC:
+		return code, nil
+	}
+}
+
+func generateToken(user, pass string) {
+	client, err := mfa.NewClient(log)
+	if err != nil {
+		log.FATAL.Fatalln(err)
+	}
+
+	ctx := context.Background()
+	token, err := client.Login(ctx, user, pass, codeprompt)
+	if err != nil {
+		log.FATAL.Fatalln(err)
+	}
+
+	fmt.Println(token)
 }
 
 func runTeslaToken(cmd *cobra.Command, args []string) {

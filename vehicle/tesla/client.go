@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/andig/evcc/util"
 )
 
 type Client struct {
@@ -31,24 +32,22 @@ type Client struct {
 }
 
 type roundTripper struct {
-	roundTripper http.RoundTripper
+	log       *util.Logger
+	transport http.RoundTripper
 }
 
 const max = 1024
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	fmt.Println("\n\n\n\n\n----------------------------------------------")
-	// fmt.Printf("%s %s\n", req.Method, req.URL)
 	if body, err := httputil.DumpRequest(req, true); err == nil {
 		s := strings.TrimSpace(string(body))
 		if len(s) > max {
 			s = s[:max]
 		}
-		fmt.Println(s)
-		fmt.Println()
+		r.log.TRACE.Println(s)
 	}
 
-	resp, err := r.roundTripper.RoundTrip(req)
+	resp, err := r.transport.RoundTrip(req)
 
 	if resp != nil {
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
@@ -56,15 +55,14 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			if len(s) > max {
 				s = s[:max]
 			}
-			fmt.Println(s)
-			fmt.Println()
+			r.log.TRACE.Println(s)
 		}
 	}
 
 	return resp, err
 }
 
-func NewClient() (*Client, error) {
+func NewClient(log *util.Logger) (*Client, error) {
 	// this doesn't have to be 9 bytes, or base64. Just preference.
 	var b [9]byte
 	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
@@ -84,15 +82,17 @@ func NewClient() (*Client, error) {
 		return nil, fmt.Errorf("new cookie jar: %w", err)
 	}
 
-	// &roundTripper{}
-	roundTrip := &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ResponseHeaderTimeout: 10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	roundTrip := &roundTripper{
+		log: log,
+		transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
 	}
 
 	return &Client{
@@ -106,33 +106,38 @@ func NewClient() (*Client, error) {
 	}, nil
 }
 
-func (c *Client) Login(ctx context.Context, username, password string, passcodeC <-chan string) (token string, err error) {
-	transactionID, err := c.authenticate(ctx, username, password)
+func (c *Client) Login(ctx context.Context, username, password string, callback func() (string, error)) (token string, err error) {
+	transactionID, code, err := c.authenticate(ctx, username, password)
 	if err != nil {
 		return "", fmt.Errorf("authenticate: %w", err)
 	}
 
-	devices, err := c.listDevices(ctx, transactionID)
-	if err != nil {
-		return "", fmt.Errorf("list devices: %w", err)
-	}
-
-	if len(devices) == 0 {
-		return "", errors.New("no devices")
-	}
-
-	passcode := <-passcodeC
-
-	for _, d := range devices {
-		fmt.Printf("verifying device: %s\n", d.Name)
-		if err := c.verify(ctx, transactionID, d.ID, passcode); err != nil {
-			return "", fmt.Errorf("verify: %w", err)
+	if code == "" {
+		devices, err := c.listDevices(ctx, transactionID)
+		if err != nil {
+			return "", fmt.Errorf("list devices: %w", err)
 		}
-	}
 
-	code, err := c.authorize(ctx, transactionID)
-	if err != nil {
-		return "", fmt.Errorf("authorize: %w", err)
+		if len(devices) == 0 {
+			return "", errors.New("no devices")
+		}
+
+		passcode, err := callback()
+		if err != nil {
+			return "", err
+		}
+
+		for _, d := range devices {
+			fmt.Printf("verifying device: %s\n", d.Name)
+			if err := c.verify(ctx, transactionID, d.ID, passcode); err != nil {
+				return "", fmt.Errorf("verify: %w", err)
+			}
+		}
+
+		code, err = c.authorize(ctx, transactionID)
+		if err != nil {
+			return "", fmt.Errorf("authorize: %w", err)
+		}
 	}
 
 	token, err = c.accessToken(ctx, code)
@@ -160,26 +165,26 @@ func (c *Client) authURL() *url.URL {
 	}
 }
 
-func (c *Client) authenticate(ctx context.Context, username, password string) (transactionID string, err error) {
+func (c *Client) authenticate(ctx context.Context, username, password string) (transactionID, code string, err error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.authURL().String(), nil)
 	if err != nil {
-		return "", fmt.Errorf("new request: %w", err)
+		return "", "", fmt.Errorf("new request: %w", err)
 	}
 	req.Header.Set("User-Agent", "tesla_exporter")
 
 	res, err := c.c.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("do: %w", err)
+		return "", "", fmt.Errorf("do: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status code %d", res.StatusCode)
+		return "", "", fmt.Errorf("unexpected status code %d", res.StatusCode)
 	}
 
-	d, err := goquery.NewDocumentFromResponse(res)
+	d, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		return "", fmt.Errorf("new document: %w", err)
+		return "", "", fmt.Errorf("new document: %w", err)
 	}
 
 	v := url.Values{
@@ -199,24 +204,39 @@ func (c *Client) authenticate(ctx context.Context, username, password string) (t
 		v.Set(name, value)
 	})
 
+	cr := c.c.CheckRedirect
+	c.c.CheckRedirect = func(*http.Request, []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	defer func() { c.c.CheckRedirect = cr }()
+
 	req, err = http.NewRequestWithContext(ctx, http.MethodPost, c.authURL().String(), strings.NewReader(v.Encode()))
 	if err != nil {
-		return "", fmt.Errorf("new request: %w", err)
+		return "", "", fmt.Errorf("new request: %w", err)
 	}
 	req.Header.Set("User-Agent", "tesla_exporter")
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err = c.c.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("do: %w", err)
+		return "", "", fmt.Errorf("do: %w", err)
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status code %d", res.StatusCode)
+	if res.StatusCode == http.StatusFound {
+		u, err := url.Parse(res.Header.Get("Location"))
+		if err != nil {
+			return "", "", fmt.Errorf("do: %w", err)
+		}
+
+		return "", u.Query().Get("code"), nil
 	}
 
-	return v.Get("transaction_id"), nil
+	if res.StatusCode != http.StatusOK {
+		return "", "", fmt.Errorf("unexpected status code %d", res.StatusCode)
+	}
+
+	return v.Get("transaction_id"), "", nil
 }
 
 type Device struct {
@@ -287,7 +307,7 @@ func (c *Client) verify(ctx context.Context, transactionID, deviceID, passcode s
 	var out struct {
 		Data struct {
 			Approved bool `json:"approved"`
-		} `json:"data`
+		} `json:"data"`
 	}
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		return fmt.Errorf("json decode: %w", err)
@@ -370,8 +390,6 @@ func (c *Client) accessToken(ctx context.Context, code string) (token string, er
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		return "", fmt.Errorf("json decode: %w", err)
 	}
-
-	fmt.Printf("%+v\n", out)
 
 	return out.AccessToken, nil
 }
