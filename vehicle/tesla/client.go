@@ -16,7 +16,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
-	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -29,37 +28,6 @@ type Client struct {
 	c                       *http.Client
 	state                   string
 	challenge, challengeSum string
-}
-
-type roundTripper struct {
-	log       *util.Logger
-	transport http.RoundTripper
-}
-
-const max = 1024
-
-func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if body, err := httputil.DumpRequest(req, true); err == nil {
-		s := strings.TrimSpace(string(body))
-		if len(s) > max {
-			s = s[:max]
-		}
-		r.log.TRACE.Println(s)
-	}
-
-	resp, err := r.transport.RoundTrip(req)
-
-	if resp != nil {
-		if body, err := httputil.DumpResponse(resp, true); err == nil {
-			s := strings.TrimSpace(string(body))
-			if len(s) > max {
-				s = s[:max]
-			}
-			r.log.TRACE.Println(s)
-		}
-	}
-
-	return resp, err
 }
 
 func NewClient(log *util.Logger) (*Client, error) {
