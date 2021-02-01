@@ -34,8 +34,9 @@ func codeprompt() (string, error) {
 	go func() {
 		fmt.Print("Please enter passcode: ")
 		reader := bufio.NewReader(os.Stdin)
-		code, _ := reader.ReadString('\n')
-		passcodeC <- strings.TrimSpace(code)
+		if code, err := reader.ReadString('\n'); err == nil {
+			passcodeC <- strings.TrimSpace(code)
+		}
 	}()
 
 	select {
