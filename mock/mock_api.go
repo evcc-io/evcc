@@ -204,19 +204,19 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
-// ChargeState mocks base method
-func (m *MockVehicle) ChargeState() (float64, error) {
+// SoC mocks base method
+func (m *MockVehicle) SoC() (float64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ChargeState")
+	ret := m.ctrl.Call(m, "SoC")
 	ret0, _ := ret[0].(float64)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ChargeState indicates an expected call of ChargeState
-func (mr *MockVehicleMockRecorder) ChargeState() *gomock.Call {
+// SoC indicates an expected call of SoC
+func (mr *MockVehicleMockRecorder) SoC() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChargeState", reflect.TypeOf((*MockVehicle)(nil).ChargeState))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SoC", reflect.TypeOf((*MockVehicle)(nil).SoC))
 }
 
 // Title mocks base method

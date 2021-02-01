@@ -51,7 +51,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *CarWings) chargeState() (float64, error) {
 	if v.session == nil {
 		session := &carwings.Session{
@@ -69,7 +69,7 @@ func (v *CarWings) chargeState() (float64, error) {
 	return float64(bs.StateOfCharge), err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *CarWings) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *CarWings) SoC() (float64, error) {
 	return v.chargeStateG()
 }

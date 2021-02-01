@@ -315,8 +315,8 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Renault) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Renault) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
@@ -343,7 +343,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
 	res, err := v.apiG()
 
@@ -354,7 +354,7 @@ func (v *Renault) Range() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 

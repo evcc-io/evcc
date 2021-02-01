@@ -263,7 +263,7 @@ func (v *Porsche) vehicles() (res []string, err error) {
 	return res, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *Porsche) chargeState() (interface{}, error) {
 	uri := fmt.Sprintf("%s/vehicles/%s", porscheAPI, v.vin)
 	req, err := v.request(uri)
@@ -277,8 +277,8 @@ func (v *Porsche) chargeState() (interface{}, error) {
 	return pr, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Porsche) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Porsche) SoC() (float64, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
 		return res.CarControlData.BatteryLevel.Value, nil
@@ -287,7 +287,7 @@ func (v *Porsche) ChargeState() (float64, error) {
 	return 0, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *Porsche) Range() (int64, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
