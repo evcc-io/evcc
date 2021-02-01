@@ -1,16 +1,16 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	mfa "github.com/andig/evcc/vehicle/tesla"
 	"github.com/jsgoecke/tesla"
-	"gopkg.in/ini.v1"
 )
 
 // Tesla is an api.Vehicle implementation for Tesla cars
@@ -47,29 +47,23 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	if cc.ClientID == "" {
-		// https://tesla-api.timdorr.com/api-basics/authentication
-		cc.ClientID, cc.ClientSecret = v.downloadClientID("https://pastebin.com/raw/pS7Z6yyP")
+	auth := &tesla.Auth{
+		Email:    cc.User,
+		Password: cc.Password,
 	}
 
-	auth := &tesla.Auth{
-		ClientID:     cc.ClientID,
-		ClientSecret: cc.ClientSecret,
-		Email:        cc.User,
-		Password:     cc.Password,
+	var err error
+	if cc.Token != "" {
+		cc.Token, err = v.token(auth)
 	}
 
 	var client *tesla.Client
-	var err error
-
-	if cc.Token != "" {
+	if err == nil {
 		client, err = tesla.NewClientWithToken(auth, &tesla.Token{
 			AccessToken: cc.Token,
 			TokenType:   "Bearer",
 			Expires:     time.Now().Add(45 * 24 * time.Hour).Unix(),
 		})
-	} else {
-		client, err = tesla.NewClient(auth)
 	}
 
 	if err != nil {
@@ -101,21 +95,19 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-// download client id and secret
-func (v *Tesla) downloadClientID(uri string) (string, string) {
-	resp, err := http.Get(uri)
-	if err == nil {
-		defer resp.Body.Close()
-
-		cfg, err := ini.Load(resp.Body)
-		if err == nil {
-			id := cfg.Section("").Key("TESLA_CLIENT_ID").String()
-			secret := cfg.Section("").Key("TESLA_CLIENT_SECRET").String()
-			return id, secret
-		}
+// token creates the Tesla access token
+func (v *Tesla) token(auth *tesla.Auth) (string, error) {
+	ctx := context.Background()
+	client, err := mfa.NewClient(util.NewLogger("tesla"))
+	if err != nil {
+		return "", err
 	}
 
-	return "", ""
+	cb := func() (string, error) {
+		return "", errors.New("multi-factor authentication not implemented, use `evcc tesla-token` to create an access token and add `token` to vehicle config")
+	}
+
+	return client.Login(ctx, auth.Email, auth.Password, cb)
 }
 
 // chargeState implements the api.Vehicle interface
