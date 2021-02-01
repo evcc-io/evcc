@@ -27,7 +27,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// ChargeState implements the api.Vehicle interface
 func (v *Provider) ChargeState() (float64, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {

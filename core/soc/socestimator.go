@@ -89,7 +89,7 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 	return whRemaining / 1e3
 }
 
-// SoC implements Vehicle.ChargeState with addition of given charged energy
+// SoC replaces the api.Vehicle.ChargeState interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	f, err := s.vehicle.ChargeState()
 	if err != nil {

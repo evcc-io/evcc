@@ -27,7 +27,7 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// ChargeState implements the api.Vehicle interface
 func (v *Provider) ChargeState() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
@@ -66,7 +66,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {

@@ -40,7 +40,7 @@ func New(apiG func() (interface{}, error)) *API {
 	return &API{apiG: apiG}
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// ChargeState implements the api.Vehicle interface
 func (v *API) ChargeState() (float64, error) {
 	res, err := v.apiG()
 
@@ -68,7 +68,7 @@ func (v *API) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *API) Range() (int64, error) {
 	res, err := v.apiG()
 

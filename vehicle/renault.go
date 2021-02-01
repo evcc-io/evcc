@@ -315,7 +315,7 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// ChargeState implements the api.Vehicle interface
 func (v *Renault) ChargeState() (float64, error) {
 	res, err := v.apiG()
 
@@ -343,7 +343,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
 	res, err := v.apiG()
 

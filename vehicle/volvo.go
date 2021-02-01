@@ -180,7 +180,7 @@ func (v *Volvo) status() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
+// ChargeState implements the api.Vehicle interface
 func (v *Volvo) ChargeState() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
