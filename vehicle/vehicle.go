@@ -101,7 +101,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 }
 
 // ChargeState implements the api.Vehicle interface
-func (m *Vehicle) ChargeState() (float64, error) {
+func (m *Vehicle) SoC() (float64, error) {
 	return m.chargeG()
 }
 

@@ -165,6 +165,6 @@ func (v *Ford) chargeState() (float64, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *Ford) ChargeState() (float64, error) {
+func (v *Ford) SoC() (float64, error) {
 	return v.chargeStateG()
 }

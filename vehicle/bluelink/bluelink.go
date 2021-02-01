@@ -346,7 +346,7 @@ func (v *API) statusAPI() (interface{}, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *API) ChargeState() (float64, error) {
+func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(response); err == nil && ok {

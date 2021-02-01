@@ -316,7 +316,7 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *Renault) ChargeState() (float64, error) {
+func (v *Renault) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {

@@ -108,7 +108,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 
-		if soc, err := v.ChargeState(); err != nil {
+		if soc, err := v.SoC(); err != nil {
 			fmt.Fprintf(w, "State:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "State:\t%.0f%%\n", soc)

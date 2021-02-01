@@ -178,6 +178,6 @@ func (v *BMW) chargeState() (float64, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *BMW) ChargeState() (float64, error) {
+func (v *BMW) SoC() (float64, error) {
 	return v.chargeStateG()
 }

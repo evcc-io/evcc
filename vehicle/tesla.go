@@ -113,7 +113,7 @@ func (v *Tesla) chargeState() (float64, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *Tesla) ChargeState() (float64, error) {
+func (v *Tesla) SoC() (float64, error) {
 	return v.chargeStateG()
 }
 

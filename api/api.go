@@ -89,7 +89,7 @@ type ChargeRater interface {
 type Vehicle interface {
 	Title() string
 	Capacity() int64
-	ChargeState() (float64, error)
+	SoC() (float64, error)
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time

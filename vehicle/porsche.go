@@ -278,7 +278,7 @@ func (v *Porsche) chargeState() (interface{}, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *Porsche) ChargeState() (float64, error) {
+func (v *Porsche) SoC() (float64, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
 		return res.CarControlData.BatteryLevel.Value, nil

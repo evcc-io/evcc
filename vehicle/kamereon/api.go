@@ -41,7 +41,7 @@ func New(apiG func() (interface{}, error)) *API {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *API) ChargeState() (float64, error) {
+func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {

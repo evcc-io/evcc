@@ -181,7 +181,7 @@ func (v *Volvo) status() (interface{}, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *Volvo) ChargeState() (float64, error) {
+func (v *Volvo) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
 		return float64(res.HvBattery.HvBatteryLevel), nil

@@ -70,6 +70,6 @@ func (v *CarWings) chargeState() (float64, error) {
 }
 
 // ChargeState implements the api.Vehicle interface
-func (v *CarWings) ChargeState() (float64, error) {
+func (v *CarWings) SoC() (float64, error) {
 	return v.chargeStateG()
 }
