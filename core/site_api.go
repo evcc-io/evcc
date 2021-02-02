@@ -30,6 +30,7 @@ func (site *Site) SetPrioritySoC(soc float64) error {
 	}
 
 	site.PrioritySoC = soc
+	site.publish("prioritySoC", site.PrioritySoC)
 
 	return nil
 }
