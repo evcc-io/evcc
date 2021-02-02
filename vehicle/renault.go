@@ -336,7 +336,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
-		if res.Data.Attributes.ChargingStatus > 1.0 {
+		if res.Data.Attributes.ChargingStatus >= 1.0 {
 			status = api.StatusC
 		}
 	}
