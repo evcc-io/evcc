@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -58,7 +59,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Password:     cc.Password,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	vehicles, err := client.Vehicles()
