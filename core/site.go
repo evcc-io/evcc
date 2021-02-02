@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -26,6 +27,7 @@ type Site struct {
 
 	*Health
 
+	sync.Mutex
 	log *util.Logger
 
 	// configuration
@@ -53,12 +55,6 @@ type MetersConfig struct {
 	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
 	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
 	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
-}
-
-// SiteAPI is the external site API
-type SiteAPI interface {
-	Healthy() bool
-	LoadPoints() []LoadPointAPI
 }
 
 // NewSiteFromConfig creates a new site
@@ -158,6 +154,10 @@ func (site *Site) DumpConfig() {
 			meterCapabilities("battery", site.batteryMeter),
 			fmt.Sprintf("soc %s", presence[ok]),
 		)
+
+		if ok {
+			site.publish("prioritySoC", site.PrioritySoC)
+		}
 	}
 
 	for i, lp := range site.loadpoints {
@@ -286,6 +286,9 @@ func (site *Site) sitePower() (float64, error) {
 		} else {
 			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", math.Trunc(soc))
+
+			site.Lock()
+			defer site.Unlock()
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
