@@ -29,7 +29,7 @@ type teslaTokens struct {
 	Refresh string `validate:"required_with=Access" ui:"de=Refresh Token"`
 }
 
-type defaultConfig struct {
+type teslaConfig struct {
 	Title    string
 	Capacity int64
 	User     string      `validate:"required"`
@@ -39,8 +39,8 @@ type defaultConfig struct {
 	Cache    time.Duration
 }
 
-func teslaDefaults() defaultConfig {
-	return defaultConfig{
+func teslaDefaults() teslaConfig {
+	return teslaConfig{
 		Cache: interval,
 	}
 }
