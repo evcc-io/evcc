@@ -3,7 +3,7 @@ module github.com/andig/evcc
 go 1.13
 
 require (
-	github.com/PuerkitoBio/goquery v1.6.0
+	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/andig/evcc-config v0.0.0-20210112213741-5c09f26e0c2a
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -53,11 +53,14 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/thoas/go-funk v0.7.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
+	github.com/uhthomas/tesla v0.0.0-20210202211959-8f97ef33b7b3
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
-	gopkg.in/ini.v1 v1.62.0
+	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
+
+replace github.com/jsgoecke/tesla => github.com/andig/tesla v0.0.0-20210203084021-0d6f2d3bb496
