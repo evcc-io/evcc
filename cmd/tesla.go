@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
-	mfa "github.com/andig/evcc/vehicle/tesla"
+	auth "github.com/andig/evcc/vehicle/tesla"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
+	"github.com/uhthomas/tesla"
 )
 
 // teslaCmd represents the vehicle command
@@ -28,38 +28,43 @@ func init() {
 	rootCmd.AddCommand(teslaCmd)
 }
 
-func codeprompt() (string, error) {
-	passcodeC := make(chan string)
-
-	go func() {
-		fmt.Print("Please enter passcode: ")
-		reader := bufio.NewReader(os.Stdin)
-		if code, err := reader.ReadString('\n'); err == nil {
-			passcodeC <- strings.TrimSpace(code)
-		}
-	}()
-
-	select {
-	case <-time.NewTimer(30 * time.Second).C:
-		return "", errors.New("code request expired")
-	case code := <-passcodeC:
-		return code, nil
+func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, string, error) {
+	fmt.Println("Authentication devices:", devices)
+	if len(devices) > 1 {
+		return tesla.Device{}, "", errors.New("multiple devices found, only single device supported")
 	}
+
+	fmt.Print("Please enter passcode: ")
+	reader := bufio.NewReader(os.Stdin)
+	code, err := reader.ReadString('\n')
+
+	return devices[0], code, err
 }
 
 func generateToken(user, pass string) {
-	client, err := mfa.NewClient(log)
+	client, err := auth.NewClient(log)
 	if err != nil {
 		log.FATAL.Fatalln(err)
 	}
 
-	ctx := context.Background()
-	token, err := client.Login(ctx, user, pass, codeprompt)
+	client.DeviceHandler(codePrompt)
+
+	ts, err := client.Login(user, pass)
 	if err != nil {
 		log.FATAL.Fatalln(err)
 	}
 
-	fmt.Println(token)
+	token, err := ts.Token()
+	if err != nil {
+		log.FATAL.Fatalln(err)
+	}
+
+	fmt.Println()
+	fmt.Println("Add the following tokens to the tesla vehicle config:")
+	fmt.Println()
+	fmt.Println("  tokens:")
+	fmt.Println("    access:", token.AccessToken)
+	fmt.Println("    refresh:", token.RefreshToken)
 }
 
 func runTeslaToken(cmd *cobra.Command, args []string) {

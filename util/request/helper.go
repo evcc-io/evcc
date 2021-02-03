@@ -22,11 +22,7 @@ type Helper struct {
 func NewHelper(log *util.Logger) *Helper {
 	r := &Helper{
 		Client: &http.Client{Timeout: 10 * time.Second},
-	}
-
-	// add logger
-	if log != nil {
-		r.log = log.TRACE
+		log:    log.TRACE,
 	}
 
 	// intercept for logging
