@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -26,6 +27,7 @@ type Site struct {
 
 	*Health
 
+	sync.Mutex
 	log *util.Logger
 
 	// configuration
@@ -57,12 +59,6 @@ type MetersConfig struct {
 	GridMeterRef    string `mapstructure:"grid"`    // Grid usage meter reference
 	PVMeterRef      string `mapstructure:"pv"`      // PV generation meter reference
 	BatteryMeterRef string `mapstructure:"battery"` // Battery charging meter reference
-}
-
-// SiteAPI is the external site API
-type SiteAPI interface {
-	Healthy() bool
-	LoadPoints() []LoadPointAPI
 }
 
 // NewSiteFromConfig creates a new site
@@ -160,6 +156,10 @@ func (site *Site) DumpConfig() {
 			meterCapabilities("battery", site.batteryMeter),
 			fmt.Sprintf("soc %s", presence[ok]),
 		)
+
+		if ok {
+			site.publish("prioritySoC", site.PrioritySoC)
+		}
 	}
 
 	for i, lp := range site.loadpoints {
@@ -189,11 +189,12 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
-			_, finish := v.(api.ChargeFinishTimer)
+			_, rng := v.(api.VehicleRange)
+			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.VehicleStatus)
-			_, climate := v.(api.Climater)
-			lp.log.INFO.Printf("    car %d:   finish %s status %s climate %s",
-				i, presence[finish], presence[status], presence[climate],
+			_, climate := v.(api.VehicleClimater)
+			lp.log.INFO.Printf("    car %d:   range %s finish %s status %s climate %s",
+				i, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
 	}
@@ -287,6 +288,9 @@ func (site *Site) sitePower() (float64, error) {
 		} else {
 			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", math.Trunc(soc))
+
+			site.Lock()
+			defer site.Unlock()
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {

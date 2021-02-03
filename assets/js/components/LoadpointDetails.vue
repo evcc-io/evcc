@@ -51,7 +51,7 @@
 			</h2>
 		</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="soc">
+		<div class="col-6 col-md-3 mt-3" v-if="hasVehicle">
 			<div class="mb-2 value">Restzeit</div>
 			<h2 class="value">
 				{{ fmtShortDuration(chargeEstimate) }}
@@ -68,15 +68,15 @@ import formatter from "../mixins/formatter";
 export default {
 	name: "LoadpointDetails",
 	props: {
-		chargePower: Number,
 		chargedEnergy: Number,
 		chargeDuration: Number,
-		soc: Boolean,
+		chargeEstimate: Number,
+		chargePower: Number,
+		climater: String,
+		hasVehicle: Boolean,
+		range: Number,
 		socTimerActive: Boolean,
 		socTimerSet: Boolean,
-		climater: String,
-		range: Number,
-		chargeEstimate: Number,
 	},
 	mixins: [formatter],
 };

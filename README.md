@@ -501,6 +501,7 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc`: root topic
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
+- `evcc/site/prioritySoC`: battery priority SoC (writable)
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)

@@ -156,7 +156,7 @@ func (v *BMW) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *BMW) chargeState() (float64, error) {
 	var resp bmwDynamicResponse
 	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
@@ -170,7 +170,7 @@ func (v *BMW) chargeState() (float64, error) {
 	return resp.AttributesMap.ChargingLevelHv, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *BMW) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *BMW) SoC() (float64, error) {
 	return v.chargeStateG()
 }

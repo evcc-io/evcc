@@ -82,7 +82,7 @@ func testDevice(v interface{}) map[string]Result {
 	if v, ok := v.(api.Vehicle); ok {
 		res["capacity"] = Result{v.Capacity(), nil}
 
-		soc, err := v.ChargeState()
+		soc, err := v.VehicleSoC()
 		res["soc"] = Result{soc, err}
 	}
 
@@ -96,7 +96,7 @@ func testDevice(v interface{}) map[string]Result {
 		res["status"] = Result{status, err}
 	}
 
-	if v, ok := v.(api.ChargeFinishTimer); ok {
+	if v, ok := v.(api.VehicleFinishTimer); ok {
 		ft, err := v.FinishTime()
 		res["ft"] = Result{ft, err}
 	}
