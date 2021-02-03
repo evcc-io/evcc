@@ -39,20 +39,20 @@ export default {
 		socTitle: String,
 		connected: Boolean,
 		charging: Boolean,
-		soc: Boolean,
+		hasVehicle: Boolean,
 		socCharge: Number,
 		minSoC: Number,
 	},
 	computed: {
 		socChargeDisplayWidth: function () {
-			if (this.soc && this.socCharge >= 0) {
+			if (this.hasVehicle && this.socCharge >= 0) {
 				return this.socCharge;
 			}
 			return 100;
 		},
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.soc || this.socCharge < 0) {
+			if (!this.hasVehicle || this.socCharge < 0) {
 				let chargeStatus = "getrennt";
 				if (this.charging) {
 					chargeStatus = "laden";

@@ -57,7 +57,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 		}
 
 		// use vehicle api if available
-		if vr, ok := s.vehicle.(api.ChargeFinishTimer); ok {
+		if vr, ok := s.vehicle.(api.VehicleFinishTimer); ok {
 			finishTime, err := vr.FinishTime()
 			if err == nil {
 				timeRemaining := time.Until(finishTime)
@@ -89,9 +89,9 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 	return whRemaining / 1e3
 }
 
-// SoC implements Vehicle.ChargeState with addition of given charged energy
+// SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	f, err := s.vehicle.ChargeState()
+	f, err := s.vehicle.SoC()
 	if err != nil {
 		s.log.WARN.Printf("updating soc failed: %v", err)
 
