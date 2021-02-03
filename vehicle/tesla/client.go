@@ -72,7 +72,6 @@ func NewClient(log *util.Logger) (*Client, error) {
 			oauth2.SetAuthURLParam("code_challenge", challenge),
 			oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 		),
-		SelectDevice: selectDevice,
 	}
 
 	client := &Client{
@@ -80,6 +79,7 @@ func NewClient(log *util.Logger) (*Client, error) {
 		auth:     auth,
 		verifier: verifier,
 	}
+	client.DeviceHandler(client.mfaUnsupported)
 
 	return client, nil
 }
@@ -113,6 +113,6 @@ func (c *Client) DeviceHandler(handler func(context.Context, []tesla.Device) (te
 	c.auth.SelectDevice = handler
 }
 
-func selectDevice(ctx context.Context, devices []tesla.Device) (d tesla.Device, passcode string, err error) {
+func (c *Client) mfaUnsupported(_ context.Context, _ []tesla.Device) (tesla.Device, string, error) {
 	return tesla.Device{}, "", errors.New("MFA device handler not installed")
 }
