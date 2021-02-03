@@ -114,5 +114,5 @@ func (c *Client) DeviceHandler(handler func(context.Context, []tesla.Device) (te
 }
 
 func (c *Client) mfaUnsupported(_ context.Context, _ []tesla.Device) (tesla.Device, string, error) {
-	return tesla.Device{}, "", errors.New("MFA device handler not installed")
+	return tesla.Device{}, "", errors.New("multi factor authentication is not supported")
 }
