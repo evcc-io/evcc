@@ -261,8 +261,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	data := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-	//	"apikey":           v.kamereon.APIKey,					// wrong key since 2021-02-01
-		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2",	// temporary workaround
+		"apikey":           v.kamereon.APIKey,
 	}
 
 	var res kamereonResponse
