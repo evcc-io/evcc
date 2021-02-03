@@ -82,7 +82,7 @@ func testDevice(v interface{}) map[string]Result {
 	if v, ok := v.(api.Vehicle); ok {
 		res["capacity"] = Result{v.Capacity(), nil}
 
-		soc, err := v.VehicleSoC()
+		soc, err := v.SoC()
 		res["soc"] = Result{soc, err}
 	}
 
