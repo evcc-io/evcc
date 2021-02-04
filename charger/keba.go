@@ -245,6 +245,21 @@ func (c *Keba) MaxCurrent(current int64) error {
 	return nil
 }
 
+// maxCurrentMillis implements the ChargerEx interface
+func (c *Keba) maxCurrentMillis(current float64) error {
+	d := int(1000 * current)
+
+	var resp string
+	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
+		return err
+	}
+	if resp != keba.OK {
+		return fmt.Errorf("curr %d unexpected response: %s", d, resp)
+	}
+
+	return nil
+}
+
 // CurrentPower implements the Meter interface
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
