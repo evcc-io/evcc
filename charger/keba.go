@@ -124,32 +124,43 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 
 	go c.receive(report, resC, errC, closeC)
 
+	// add report number to message and send
+	if report > 0 {
+		msg = fmt.Sprintf("%s %d", msg, report)
+	}
 	if err := c.sender.Send(msg); err != nil {
 		return err
 	}
 
-	select {
-	case resp := <-resC:
-		if report == 0 {
-			// use reflection to write to simple string
-			rv := reflect.ValueOf(res)
-			if rv.Kind() != reflect.Ptr || rv.IsNil() || rv.Elem().Kind() != reflect.String {
-				return fmt.Errorf("invalid type: %s", reflect.TypeOf(res))
-			}
+	for {
+		select {
+		case resp := <-resC:
+			if report == 0 {
+				// use reflection to write to simple string
+				rv := reflect.ValueOf(res)
+				if rv.Kind() != reflect.Ptr || rv.IsNil() || rv.Elem().Kind() != reflect.String {
+					return fmt.Errorf("invalid type: %s", reflect.TypeOf(res))
+				}
 
-			rv.Elem().SetString(string(resp.Message))
-			return nil
+				res := string(resp.Message)
+				if res != keba.OK {
+					continue
+				}
+
+				rv.Elem().SetString(res)
+				return nil
+			}
+			return json.Unmarshal(resp.Message, &res)
+		case err := <-errC:
+			return err
 		}
-		return json.Unmarshal(resp.Message, &res)
-	case err := <-errC:
-		return err
 	}
 }
 
 // Status implements the Charger.Status interface
 func (c *Keba) Status() (api.ChargeStatus, error) {
 	var kr keba.Report2
-	err := c.roundtrip("report 2", 2, &kr)
+	err := c.roundtrip("report", 2, &kr)
 	if err != nil {
 		return api.StatusA, err
 	}
@@ -174,7 +185,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (c *Keba) Enabled() (bool, error) {
 	var kr keba.Report2
-	err := c.roundtrip("report 2", 2, &kr)
+	err := c.roundtrip("report", 2, &kr)
 	if err != nil {
 		return false, err
 	}
@@ -186,7 +197,7 @@ func (c *Keba) Enabled() (bool, error) {
 func (c *Keba) enableRFID() error {
 	// check if authorization required
 	var kr keba.Report2
-	if err := c.roundtrip("report 2", 2, &kr); err != nil {
+	if err := c.roundtrip("report", 2, &kr); err != nil {
 		return err
 	}
 	if kr.AuthReq == 0 {
@@ -197,9 +208,6 @@ func (c *Keba) enableRFID() error {
 	var resp string
 	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
 		return err
-	}
-	if resp != keba.OK {
-		return fmt.Errorf("start %s unexpected response: %s", c.rfid.Tag, resp)
 	}
 
 	return nil
@@ -223,9 +231,6 @@ func (c *Keba) Enable(enable bool) error {
 	if err := c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp); err != nil {
 		return err
 	}
-	if resp != keba.OK {
-		return fmt.Errorf("ena %d unexpected response: %s", d, resp)
-	}
 
 	return nil
 }
@@ -238,9 +243,6 @@ func (c *Keba) MaxCurrent(current int64) error {
 	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
 		return err
 	}
-	if resp != keba.OK {
-		return fmt.Errorf("curr %d unexpected response: %s", d, resp)
-	}
 
 	return nil
 }
@@ -248,7 +250,7 @@ func (c *Keba) MaxCurrent(current int64) error {
 // CurrentPower implements the Meter interface
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
-	err := c.roundtrip("report 3", 3, &kr)
+	err := c.roundtrip("report", 3, &kr)
 
 	// mW to W
 	return float64(kr.P) / 1e3, err
@@ -257,7 +259,7 @@ func (c *Keba) CurrentPower() (float64, error) {
 // TotalEnergy implements the MeterEnergy interface
 func (c *Keba) TotalEnergy() (float64, error) {
 	var kr keba.Report3
-	err := c.roundtrip("report 3", 3, &kr)
+	err := c.roundtrip("report", 3, &kr)
 
 	// mW to W
 	return float64(kr.ETotal) / 1e4, err
@@ -266,7 +268,7 @@ func (c *Keba) TotalEnergy() (float64, error) {
 // ChargedEnergy implements the ChargeRater interface
 func (c *Keba) ChargedEnergy() (float64, error) {
 	var kr keba.Report3
-	err := c.roundtrip("report 3", 3, &kr)
+	err := c.roundtrip("report", 3, &kr)
 
 	// 0,1Wh to kWh
 	return float64(kr.EPres) / 1e4, err
@@ -275,7 +277,7 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 // Currents implements the MeterCurrents interface
 func (c *Keba) Currents() (float64, float64, float64, error) {
 	var kr keba.Report3
-	err := c.roundtrip("report 3", 3, &kr)
+	err := c.roundtrip("report", 3, &kr)
 
 	// 1mA to A
 	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
@@ -284,7 +286,7 @@ func (c *Keba) Currents() (float64, float64, float64, error) {
 // Diagnose implements the Diagnosis interface
 func (c *Keba) Diagnose() {
 	var kr keba.Report100
-	if err := c.roundtrip("report 100", 100, &kr); err == nil {
+	if err := c.roundtrip("report", 100, &kr); err == nil {
 		fmt.Printf("%+v\n", kr)
 	}
 }
