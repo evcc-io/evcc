@@ -209,9 +209,6 @@ func (c *Keba) enableRFID() error {
 	if err := c.roundtrip(fmt.Sprintf("start %s", c.rfid.Tag), 0, &resp); err != nil {
 		return err
 	}
-	if resp != keba.OK {
-		return fmt.Errorf("start %s unexpected response: %s", c.rfid.Tag, resp)
-	}
 
 	return nil
 }
@@ -234,9 +231,6 @@ func (c *Keba) Enable(enable bool) error {
 	if err := c.roundtrip(fmt.Sprintf("ena %d", d), 0, &resp); err != nil {
 		return err
 	}
-	if resp != keba.OK {
-		return fmt.Errorf("ena %d unexpected response: %s", d, resp)
-	}
 
 	return nil
 }
@@ -248,9 +242,6 @@ func (c *Keba) MaxCurrent(current int64) error {
 	var resp string
 	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
 		return err
-	}
-	if resp != keba.OK {
-		return fmt.Errorf("curr %d unexpected response: %s", d, resp)
 	}
 
 	return nil
