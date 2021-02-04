@@ -84,7 +84,7 @@ func runTeslaToken(cmd *cobra.Command, args []string) {
 		vehicleConf = conf.Vehicles[0]
 	} else if len(args) == 1 {
 		vehicleConf = funk.Find(conf.Vehicles, func(v qualifiedConfig) bool {
-			return strings.ToLower(v.Name) == strings.ToLower(args[0])
+			return strings.EqualFold(v.Name, args[0])
 		}).(qualifiedConfig)
 	}
 
