@@ -246,7 +246,7 @@ func (c *Keba) MaxCurrent(current int64) error {
 }
 
 // maxCurrentMillis implements the ChargerEx interface
-func (c *Keba) maxCurrentMillis(current float64) error {
+func (c *Keba) MaxCurrentMillis(current float64) error {
 	d := int(1000 * current)
 
 	var resp string
