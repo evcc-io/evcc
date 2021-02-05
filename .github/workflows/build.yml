@@ -14,6 +14,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         # go-version: ^1.16
+        stable: false
         go-version: '1.16.0-rc1'
       id: go
 
