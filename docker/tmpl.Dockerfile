@@ -23,7 +23,7 @@ RUN make install
 # build ui
 COPY assets assets
 COPY vue.config.js vue.config.js
-RUN make clean npm
+RUN make clean ui
 
 COPY . .
 RUN make assets

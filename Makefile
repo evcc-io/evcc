@@ -1,6 +1,6 @@
-.PHONY: default clean install lint test assets build binaries test-release release
+.PHONY: default all clean install ui assets lint test build test-release release
 .PHONY: publish-testing publish-latest publish-images
-.PHONY: image image-rootfs image-update
+.PHONY: prepare-image image-rootfs image-update
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -21,15 +21,22 @@ IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/andig/evcc
 
-default: clean install npm assets lint test build
+default: build
+
+all: clean install ui assets lint test build
 
 clean:
 	rm -rf dist/
 
 install:
-	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
 	npm ci
+
+ui:
+	npm run build
+
+assets:
+	go generate ./...
 
 lint:
 	golangci-lint run
@@ -38,15 +45,6 @@ lint:
 test:
 	@echo "Running testsuite"
 	go test ./...
-
-npm:
-	npm run build
-
-ui:
-	npm run build
-
-assets:
-	go generate ./...
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
