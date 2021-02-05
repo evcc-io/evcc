@@ -50,6 +50,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" && cc.Tokens.Access == "" {
+		return nil, errors.New("missing credentials")
+	}
+
 	v := &Tesla{
 		embed: &embed{cc.Title, cc.Capacity},
 	}
