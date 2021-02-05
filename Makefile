@@ -1,5 +1,5 @@
-.PHONY: default all clean install ui assets lint test build test-release release
-.PHONY: publish-testing publish-latest publish-images
+.PHONY: default all clean install install-ui ui assets lint test build test-release release
+.PHONY: docker publish-testing publish-latest publish-images
 .PHONY: prepare-image image-rootfs image-update
 
 # build vars
@@ -13,7 +13,7 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
-ALPINE_VERSION := 3.12
+ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
 # image
@@ -23,13 +23,15 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 
 default: build
 
-all: clean install ui assets lint test build
+all: clean install install-ui ui assets lint test build
 
 clean:
 	rm -rf dist/
 
 install:
 	go install github.com/golang/mock/mockgen
+
+install-ui:
 	npm ci
 
 ui:
@@ -55,6 +57,10 @@ release-test:
 
 release:
 	goreleaser --rm-dist
+
+docker:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	docker build --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
