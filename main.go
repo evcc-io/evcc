@@ -11,10 +11,13 @@ import (
 //go:embed dist
 var assets embed.FS
 
+// init loads embedded assets unless live assets are already loaded
 func init() {
-	// use embedded assets unless live assets are already loaded
 	if server.Assets == nil {
-		fsys, _ := fs.Sub(assets, "dist")
+		fsys, err := fs.Sub(assets, "dist")
+		if err != nil {
+			panic(err)
+		}
 		server.Assets = fsys
 	}
 }

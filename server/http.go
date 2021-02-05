@@ -342,7 +342,9 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	static.Use(handlers.CompressHandler)
 
 	static.HandleFunc("/", indexHandler(site))
-	static.PathPrefix("/dist/").Handler(http.StripPrefix("/dist/", http.FileServer(http.FS(Assets))))
+	for _, dir := range []string{"css", "js", "ico"} {
+		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
+	}
 
 	// api
 	api := router.PathPrefix("/api").Subrouter()
