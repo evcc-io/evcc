@@ -18,8 +18,8 @@ func TestVehicles(t *testing.T) {
 		"Missing required parameter", // Renault
 		"error connecting: Network Error",
 		"unexpected status: 401",
-		"could not obtain token",        // Porsche
-		"login failed: 400 Bad Request", // Tesla
+		"could not obtain token", // Porsche
+		"missing credentials",    // Tesla
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {
