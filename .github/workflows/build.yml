@@ -33,10 +33,10 @@ jobs:
         fetch-depth: 0
 
     - name: Install tools
-      run: make install
+      run: make install install-ui
 
     - name: Assets & UI
-      run: make npm assets
+      run: make ui assets
 
     - name: Porcelain
       run: |
