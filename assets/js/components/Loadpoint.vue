@@ -47,6 +47,19 @@
 					:caption="true"
 					v-on:updated="setTargetSoC"
 				></Soc>
+				<!-- <div class="btn-group btn-group-toggle bg-white shadow-none">
+					<label class="btn btn-outline-primary">
+						<input
+							type="checkbox"
+							class="disabled"
+							v-on:click="alert('not implemented - use api')"
+						/>
+						<fa-icon
+							icon="clock"
+							v-bind:class="{ fas: socTimerActive, far: !socTimerActive }"
+						></fa-icon>
+					</label>
+				</div> -->
 			</div>
 		</div>
 
@@ -89,14 +102,7 @@
 
 		<div class="row">
 			<div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
-				<Vehicle
-					:charging="charging"
-					:connected="connected"
-					:minSoC="minSoC"
-					:soc="soc"
-					:socCharge="socCharge"
-					:socTitle="socTitle"
-				></Vehicle>
+				<Vehicle v-bind="vehicle"></Vehicle>
 			</div>
 
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
@@ -136,6 +142,7 @@ import Mode from "./Mode";
 import Vehicle from "./Vehicle";
 import LoadpointDetails from "./LoadpointDetails";
 import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 
 export default {
 	name: "Loadpoint",
@@ -160,18 +167,20 @@ export default {
 		socTitle: String,
 		socCharge: Number,
 		minSoC: Number,
+		socTimerSet: Boolean,
+		socTimerActive: Boolean,
 
 		// details
 		chargePower: Number,
 		chargedEnergy: Number,
 		// chargeDuration: Number,
-		soc: Boolean,
+		hasVehicle: Boolean,
 		climater: String,
 		range: Number,
 		chargeEstimate: Number,
 	},
 	components: { LoadpointDetails, Soc, Mode, Vehicle },
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	data: function () {
 		return {
 			tickerHandle: null,
@@ -180,17 +189,10 @@ export default {
 	},
 	computed: {
 		details: function () {
-			return {
-				connected: this.connected,
-				minSoC: this.minSoC,
-				socCharge: this.socCharge,
-				climater: this.climater,
-				chargePower: this.chargePower,
-				chargedEnergy: this.chargedEnergy,
-				range: this.range,
-				chargeDuration: this.chargeDurationDisplayed,
-				chargeEstimate: this.chargeEstimate,
-			};
+			return this.collectProps(LoadpointDetails);
+		},
+		vehicle: function () {
+			return this.collectProps(Vehicle);
 		},
 		hasTargetSoC: function () {
 			return this.socLevels != null && this.socLevels.length > 0;

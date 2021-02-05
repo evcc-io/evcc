@@ -19,7 +19,7 @@ func TestListenerProcessMessage(t *testing.T) {
 	}{
 		{
 			"SMA Home Manager - success",
-			[]byte{192, 168, 1, 4},
+			net.ParseIP("192.0.2.2"),
 			33168,
 			[]byte{
 				0x53, 0x4d, 0x41, 0x00, 0x00, 0x04, 0x02, 0xa0, 0x00, 0x00, 0x00, 0x01, 0x02, 0x4c, 0x00, 0x10,
@@ -63,7 +63,7 @@ func TestListenerProcessMessage(t *testing.T) {
 			},
 			false,
 			Telegram{
-				Addr:   "192.168.1.4",
+				Addr:   "192.0.2.2",
 				Serial: "0",
 				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 6.89131908e+09,
@@ -103,7 +103,7 @@ func TestListenerProcessMessage(t *testing.T) {
 		},
 		{
 			"SMA Energy Manager - success",
-			[]byte{192, 168, 1, 4},
+			net.ParseIP("192.0.2.2"),
 			33168,
 			[]byte{
 				0x53, 0x4d, 0x41, 0x00, 0x00, 0x04, 0x02, 0xa0, 0x00, 0x00, 0x00, 0x01, 0x02, 0x44, 0x00, 0x10,
@@ -147,7 +147,7 @@ func TestListenerProcessMessage(t *testing.T) {
 			},
 			false,
 			Telegram{
-				Addr:   "192.168.1.4",
+				Addr:   "192.0.2.2",
 				Serial: "0",
 				Values: map[string]float64{
 					"1:1.4.0": 0, "1:1.8.0": 1.2385008e+08,

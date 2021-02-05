@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/fs"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -16,6 +17,9 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+// Assets is the embedded assets file system
+var Assets fs.FS
 
 type chargeModeJSON struct {
 	Mode api.ChargeMode `json:"mode"`
@@ -257,6 +261,53 @@ func RemoteDemandHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 			Source: source,
 			Demand: demand,
 		}
+
+		jsonResponse(w, r, res)
+	}
+}
+
+func timezone() *time.Location {
+	tz := os.Getenv("TZ")
+	if tz == "" {
+		tz = "Local"
+	}
+
+	loc, _ := time.LoadLocation(tz)
+	return loc
+}
+
+// TargetChargeHandler updates target soc
+func TargetChargeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		socS, ok := vars["soc"]
+		socV, err := strconv.ParseInt(socS, 10, 32)
+
+		if !ok || err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		timeS, ok := vars["time"]
+		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
+
+		if !ok || err != nil || timeV.Before(time.Now()) {
+			log.DEBUG.Printf("parse time: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		loadpoint.SetTargetCharge(timeV, int(socV))
+
+		res := struct {
+			SoC  int64     `json:"soc"`
+			Time time.Time `json:"time"`
+		}{
+			SoC:  socV,
+			Time: timeV,
+		}
+
 		jsonResponse(w, r, res)
 	}
 }
@@ -271,7 +322,6 @@ func SocketHandler(hub *SocketHub) http.HandlerFunc {
 // HTTPd wraps an http.Server and adds the root router
 type HTTPd struct {
 	*http.Server
-	*mux.Router
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
@@ -314,13 +364,14 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
 
 		routes := map[string]route{
-			"getmode":      {[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp)},
-			"setmode":      {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp)},
-			"gettargetsoc": {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(lp)},
-			"settargetsoc": {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
-			"getminsoc":    {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
-			"setminsoc":    {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
-			"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
+			"getmode":         {[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp)},
+			"setmode":         {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp)},
+			"gettargetsoc":    {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(lp)},
+			"settargetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
+			"getminsoc":       {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
+			"setminsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
+			"settargetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
+			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {
@@ -337,9 +388,13 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			IdleTimeout:  120 * time.Second,
 			ErrorLog:     log.ERROR,
 		},
-		Router: router,
 	}
 	srv.SetKeepAlivesEnabled(true)
 
 	return srv
+}
+
+// Router returns the main router
+func (s *HTTPd) Router() *mux.Router {
+	return s.Handler.(*mux.Router)
 }

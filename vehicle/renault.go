@@ -315,8 +315,8 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Renault) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Renault) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
@@ -335,7 +335,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
-		if res.Data.Attributes.ChargingStatus > 1.0 {
+		if res.Data.Attributes.ChargingStatus >= 1.0 {
 			status = api.StatusC
 		}
 	}
@@ -343,7 +343,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
 	res, err := v.apiG()
 
@@ -354,15 +354,12 @@ func (v *Renault) Range() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
-		var timestamp time.Time
-		if err == nil {
-			timestamp, err = time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-		}
+		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable

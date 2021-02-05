@@ -1,4 +1,4 @@
-package wrapper
+package soc
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestRemainingChargeDuration(t *testing.T) {
 	//9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, false)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, false)
 	ce.socCharge = 20.0
 
 	chargePower := 1000.0
@@ -34,7 +34,7 @@ func TestSoCEstimation(t *testing.T) {
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewSocEstimator(util.NewLogger("foo"), vehicle, true)
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, true)
 	ce.socCharge = 20.0
 
 	tc := []struct {
@@ -58,7 +58,7 @@ func TestSoCEstimation(t *testing.T) {
 		{7100, 71.0, 71.0, 10000},
 		{7300, 72.0, 72.0, 10000},
 		{7400, 73.0, 73.0, 10000},
-		{7700, 75.0, 75.0, 15000}, // 0.3kWh add 2% -> 15kWh battery
+		{7700, 75.0, 75.0, 10000},
 		{8200, 80.0, 80.0, 10000},
 		{0, 25.0, 25.0, 10000},
 		{2500, 25.0, 50.0, 10000},
@@ -72,7 +72,7 @@ func TestSoCEstimation(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
-		vehicle.EXPECT().ChargeState().Return(tc.vehicleSoC, nil)
+		vehicle.EXPECT().SoC().Return(tc.vehicleSoC, nil)
 
 		soc, err := ce.SoC(tc.chargedEnergy)
 		if err != nil {

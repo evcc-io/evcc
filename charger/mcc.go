@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	mccAPILogin                   apiFunction = "jwt/login"
-	mccAPIRefresh                 apiFunction = "jwt/refresh"
-	mccAPIChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
-	mccAPICurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
-	mccAPIEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
-	mccAPISetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
-	mccAPICurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
+	mccAPILogin                   = "jwt/login"
+	mccAPIRefresh                 = "jwt/refresh"
+	mccAPIChargeState             = "v1/api/WebServer/properties/chargeState"
+	mccAPICurrentSession          = "v1/api/WebServer/properties/swaggerCurrentSession"
+	mccAPIEnergy                  = "v1/api/iCAN/properties/propjIcanEnergy"
+	mccAPISetCurrentLimit         = "v1/api/SCC/properties/propHMICurrentLimit?value="
+	mccAPICurrentCableInformation = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
 // MCCTokenResponse is the apiLogin response
@@ -92,8 +92,8 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	return mcc, nil
 }
 
-// construct the URL for a given apiFunction
-func (mcc *MobileConnect) apiURL(api apiFunction) string {
+// construct the URL for a given api
+func (mcc *MobileConnect) apiURL(api string) string {
 	return fmt.Sprintf("%s/%s", mcc.uri, api)
 }
 

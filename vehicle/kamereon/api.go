@@ -40,8 +40,8 @@ func New(apiG func() (interface{}, error)) *API {
 	return &API{apiG: apiG}
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *API) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {
@@ -68,7 +68,7 @@ func (v *API) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the Vehicle.Range interface
+// Range implements the api.VehicleRange interface
 func (v *API) Range() (int64, error) {
 	res, err := v.apiG()
 
@@ -79,15 +79,12 @@ func (v *API) Range() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *API) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {
-		var timestamp time.Time
-		if err == nil {
-			timestamp, err = time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-		}
+		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable

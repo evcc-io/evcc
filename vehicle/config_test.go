@@ -19,6 +19,7 @@ func TestVehicles(t *testing.T) {
 		"error connecting: Network Error",
 		"unexpected status: 401",
 		"could not obtain token", // Porsche
+		"missing credentials",    // Tesla
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {

@@ -16,7 +16,25 @@ export const Base = Template.bind({});
 Base.args = {
   installed: "0.36",
   available: "0.40",
-  // soc: false,
-  // socTitle: "Mein Auto",
-  // connected: true,
+};
+export const ReleaseNotes = Template.bind({});
+ReleaseNotes.args = {
+  installed: "0.36",
+  available: "0.40",
+  releaseNotes: "Lorem ipsum dolor sit amet consectetur",
+};
+
+export const Updater = Template.bind({});
+Updater.args = {
+  installed: "0.36",
+  available: "0.40",
+  releaseNotes: "Lorem ipsum dolor sit amet consectetur",
+  hasUpdater: true,
+};
+
+export const Upgrade = Template.bind({});
+Upgrade.args = {
+  installed: "0.36",
+  available: "0.40",
+  hasUpdater: true,
 };

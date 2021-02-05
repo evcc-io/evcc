@@ -21,6 +21,7 @@ type config struct {
 	Levels     map[string]string
 	Interval   time.Duration
 	Mqtt       mqttConfig
+	Javascript map[string]interface{}
 	Influx     server.InfluxConfig
 	HEMS       typedConfig
 	Messaging  messagingConfig
@@ -151,13 +152,4 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	}
 
 	return nil
-}
-
-// Close performs cleanup activities on all entities maintained by the config provider
-func (cp *ConfigProvider) Close() {
-	for _, o := range cp.vehicles {
-		if c, ok := o.(api.Closer); ok {
-			c.Close()
-		}
-	}
 }

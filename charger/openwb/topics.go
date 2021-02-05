@@ -1,7 +1,14 @@
 package openwb
 
+import "time"
+
 // predefined openWB topic names
 const (
+	Timeout = 15 * time.Second
+
+	// root topic
+	RootTopic = "openWB"
+
 	// alive
 	TimestampTopic = "Timestamp"
 

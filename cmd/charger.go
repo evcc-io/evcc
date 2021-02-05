@@ -24,7 +24,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
-	conf := loadConfigFile(cfgFile)
+	conf, err := loadConfigFile(cfgFile)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// setup mqtt
 	if conf.Mqtt.Broker != "" {
@@ -32,11 +35,8 @@ func runCharger(cmd *cobra.Command, args []string) {
 	}
 
 	if err := cp.configureChargers(conf); err != nil {
-		cp.Close() // cleanup any open sessions
 		log.FATAL.Fatal(err)
 	}
-
-	defer cp.Close() // cleanup on exit
 
 	chargers := cp.chargers
 	if len(args) == 1 {

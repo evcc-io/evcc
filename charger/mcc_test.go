@@ -24,7 +24,7 @@ func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // apiResponse helps to map an API Call to a test response
 type apiResponse struct {
-	apiCall     apiFunction
+	apiCall     string
 	apiResponse string
 }
 
@@ -39,7 +39,7 @@ func NewTestClient(fn roundTripFunc) *http.Client {
 func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect {
 	mcc := &MobileConnect{
 		Helper:       request.NewHelper(util.NewLogger("foo")),
-		uri:          "http://192.168.1.1",
+		uri:          "http://192.0.2.2:502",
 		password:     "none",
 		token:        "token",
 		tokenValid:   time.Now().Add(10 * time.Minute),

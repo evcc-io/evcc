@@ -26,7 +26,8 @@ var (
 	LogThreshold = jww.LevelWarn
 )
 
-const padding = 6 // padding of log areas
+// LogAreaPadding of log areas
+var LogAreaPadding = 6
 
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
@@ -37,7 +38,7 @@ type Logger struct {
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
 	padded := area
-	for len(padded) < padding {
+	for len(padded) < LogAreaPadding {
 		padded = padded + " "
 	}
 

@@ -53,8 +53,8 @@ jobs:
       run: make test
 
 
-  publish:
-    name: Publish
+  dockerlatest:
+    name: Publish :latest
     if: |
       startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
@@ -80,8 +80,8 @@ jobs:
       run: make publish-latest
 
 
-  release:
-    name: Release
+  dockerrelease:
+    name: Publish :release
     if: "startsWith(github.ref, 'refs/tags')"
     needs: build
     runs-on: ubuntu-latest
@@ -105,7 +105,53 @@ jobs:
     - name: Publish
       run: make publish-images
 
-    - name: Release
+
+  release:
+    name: Release
+    if: "startsWith(github.ref, 'refs/tags')"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          **/node_modules
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.14
+      id: go
+
+    - name: Prepare Image
+      run: |
+        make prepare-image
+        sed -i -e 's#-ld.*$#& -X github.com/andig/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/andig/evcc/buildflags.txt
+        mkdir /home/runner/.config/gokrazy
+        echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
+
+    - name: Build Image
+      run: make image
+
+    - name: Build Root Filesystem
+      run: make image-rootfs
+
+    - name: Clean git
+      run: |
+         git checkout go.*
+         rm -rf flags buildflags
+
+    - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2
       with:
         version: latest

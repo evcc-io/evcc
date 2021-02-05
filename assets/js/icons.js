@@ -1,30 +1,41 @@
 import Vue from "vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
-import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
-import { faArrowUp } from "@fortawesome/free-solid-svg-icons/faArrowUp";
+
 import { faArrowDown } from "@fortawesome/free-solid-svg-icons/faArrowDown";
+import { faArrowUp } from "@fortawesome/free-solid-svg-icons/faArrowUp";
+import { faBatteryEmpty } from "@fortawesome/free-solid-svg-icons/faBatteryEmpty";
+import { faBatteryFull } from "@fortawesome/free-solid-svg-icons/faBatteryFull";
+import { faBatteryHalf } from "@fortawesome/free-solid-svg-icons/faBatteryHalf";
+import { faBatteryQuarter } from "@fortawesome/free-solid-svg-icons/faBatteryQuarter";
 import { faBatteryThreeQuarters } from "@fortawesome/free-solid-svg-icons/faBatteryThreeQuarters";
-import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
-import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
-import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermometerHalf";
-import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
-import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
+import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
+import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
+import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
+import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
+import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermometerHalf";
 
 library.add(
-  faSun,
-  faArrowUp,
   faArrowDown,
+  faArrowUp,
+  faBatteryEmpty,
+  faBatteryFull,
+  faBatteryHalf,
+  faBatteryQuarter,
   faBatteryThreeQuarters,
-  faTemperatureLow,
-  faTemperatureHigh,
-  faThermometerHalf,
-  faLeaf,
-  faChevronUp,
   faChevronDown,
-  faExclamationTriangle
+  faChevronUp,
+  faClock,
+  faExclamationTriangle,
+  faLeaf,
+  faSun,
+  faTemperatureHigh,
+  faTemperatureLow,
+  faThermometerHalf
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

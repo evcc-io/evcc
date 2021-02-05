@@ -12,3 +12,4 @@ node_modules
 !entrypoint.sh
 !evcc.dist.yaml
 !package*.json
+!vue.config.js

@@ -3,7 +3,6 @@ package semp
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -80,7 +79,7 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router)
+	s.handlers(httpd.Router())
 
 	return s, err
 }
@@ -452,12 +451,7 @@ func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err == nil {
-		defer r.Body.Close()
-		err = xml.Unmarshal(body, &msg)
-	}
-
+	err := xml.NewDecoder(r.Body).Decode(&msg)
 	s.log.TRACE.Printf("recv: %+v", msg)
 
 	if err != nil {

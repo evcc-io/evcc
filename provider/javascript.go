@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"strings"
+
+	"github.com/andig/evcc/provider/javascript"
 	"github.com/andig/evcc/util"
 	"github.com/robertkrimen/otto"
 )
@@ -19,6 +22,7 @@ func init() {
 // NewJavascriptProviderFromConfig creates a HTTP provider
 func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
+		VM     string
 		Script string
 	}{}
 
@@ -28,9 +32,11 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 
 	log := util.NewLogger("js")
 
+	vm := javascript.RegisteredVM(strings.ToLower(cc.VM))
+
 	p := &Javascript{
 		log:    log,
-		vm:     otto.New(),
+		vm:     vm,
 		script: cc.Script,
 	}
 
@@ -85,10 +91,21 @@ func (p *Javascript) BoolGetter() func() (bool, error) {
 	}
 }
 
+func (p *Javascript) setParam(param string, val interface{}) error {
+	err := p.vm.Set(param, val)
+	if err == nil {
+		err = p.vm.Set("param", param)
+	}
+	if err == nil {
+		err = p.vm.Set("val", val)
+	}
+	return err
+}
+
 // IntSetter sends int request
 func (p *Javascript) IntSetter(param string) func(int64) error {
 	return func(val int64) error {
-		err := p.vm.Set(param, val)
+		err := p.setParam(param, val)
 		if err == nil {
 			_, err = p.vm.Eval(p.script)
 		}
@@ -99,7 +116,7 @@ func (p *Javascript) IntSetter(param string) func(int64) error {
 // StringSetter sends string request
 func (p *Javascript) StringSetter(param string) func(string) error {
 	return func(val string) error {
-		err := p.vm.Set(param, val)
+		err := p.setParam(param, val)
 		if err == nil {
 			_, err = p.vm.Eval(p.script)
 		}
@@ -110,7 +127,7 @@ func (p *Javascript) StringSetter(param string) func(string) error {
 // BoolSetter sends bool request
 func (p *Javascript) BoolSetter(param string) func(bool) error {
 	return func(val bool) error {
-		err := p.vm.Set(param, val)
+		err := p.setParam(param, val)
 		if err == nil {
 			_, err = p.vm.Eval(p.script)
 		}

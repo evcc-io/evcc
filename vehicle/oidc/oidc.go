@@ -5,7 +5,7 @@ import "time"
 // Tokens is an OAuth tokens response
 type Tokens struct {
 	TokenType    string    `json:"token_type"`
-	ExpiresIn    int       `json:"expires_in"`
+	ExpiresIn    int       `json:"expires_in"` // expiration time in seconds
 	IDToken      string    `json:"id_token"`
 	AccessToken  string    `json:"access_token"`
 	RefreshToken string    `json:"refresh_token"`
