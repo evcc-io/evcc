@@ -16,12 +16,12 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 -   simple and clean user interface
 -   multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
--   multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
--   wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen, Volvo and any other vehicle using scripting
+-   multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
+-   wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen, Volvo and any other connected vehicle using scripting
 -   [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 -   status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 -   logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
--   granular charge power control down to 25W with supported chargers
+-   granular charge power control down to 25W steps with supported chargers
 -   REST API
 
 ![Screenshot](docs/screenshot.png)
@@ -150,9 +150,9 @@ The default _charge mode_ upon start of EVCC is configured on the loadpoint. Mul
 -   **Off**: disable the charger, even if car gets connected.
 -   **Now** (**Sofortladen**): charge immediately with maximum allowed current.
 -   **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
--   **PV**: use PV as available. May not charge the car if PV remains dark.
+-   **PV**: use PV as available. May not charge at all or may interrupt charging if PV production is too low or other consuption is too high.
 
-In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again. **Min + PV** mode may behave different, when used with [HEMS (SHM)](#home-energy-management-system).
+In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again. **Min + PV** mode may behave different, when used with [HEMS (SHM)](#home-energy-management-system). Please note that not all vehicles support charging with very low current limits at all or only under special circumstances. For these type of vehicles the minimum allowed charge current needs to be raised.
 
 ### Charger
 
@@ -203,9 +203,9 @@ Compare the value to what you see as _Actual Charge Current Setting_ in the Wall
 
 ### Meter
 
-Meters provide data about power and energy consumption, PV production or battery utilization. A meter defines a point of power delivery and can be an actual physical meter (e.g. a grid meter), a PV inverter (AC or even DC power incase of hybrid inverters), or a home battery.
+Meters provide data about power and energy consumption, PV production or battery utilization. A meter defines a point of power delivery and can be an actual physical meter (e.g. a grid meter), a PV inverter (AC or even DC power in case of hybrid inverters), or a home battery.
 
-Chargers may also contain internal or attached meters. If the charger contains an internal meter, there's no need to configure the charge meter separately. If no charge meter is configured, EVCC will user the charger-attached meter (if exists) or assume the configured charger power as meter value.
+Chargers may also contain internal or attached meters. If the charger contains an internal meter, there's no need to configure the charge meter separately. If no charge meter is configured, EVCC will use the charger-attached meter (if exists) or assume the configured charger power as meter value.
 
 EVCC uses positiv (+) sign for power feed-in (grid consumption, pv inverter production or home battery discharge) and negative (-) sign for energy exported (grid export, pv inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive sign.
 
@@ -232,7 +232,7 @@ Available vehicle remote interface implementations are:
 -   `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 -   `nissan`: Nissan (Leaf)
 -   `tesla`: Tesla (any model)
--   `renault`: Renault (Zoe, Kangoo ZE)
+-   `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 -   `porsche`: Porsche (Taycan)
 -   `vw`: Volkswagen (eGolf, eUp)
 -   `id`: Volkswagen (ID.3, ID.4)
