@@ -20,7 +20,6 @@ type discovergyConfig struct {
 }
 
 func init() {
-	fmt.Println("-- Discovergy --")
 	registry.Add("discovergy", "Discovergy", NewDiscovergyFromConfig, discovergyConfig{})
 }
 

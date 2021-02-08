@@ -117,6 +117,13 @@ func TemplatesHandler() http.HandlerFunc {
 	}
 }
 
+// MeterTemplatesHandler returns a list of meter configuration templates
+func MeterTemplatesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jsonResponse(w, r, config.Templates("meter"))
+	}
+}
+
 // TypesHandler returns a list of configuration types per class
 func TypesHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -131,7 +138,14 @@ func TypesHandler() http.HandlerFunc {
 	}
 }
 
-// TestHandler rests the given configuration
+// MeterTypesHandler returns a list of meter configuration types
+func MeterTypesHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		jsonResponse(w, r, config.Types("meter"))
+	}
+}
+
+// TestHandler tests the given configuration
 func TestHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -142,6 +156,19 @@ func TestHandler() http.HandlerFunc {
 		}
 
 		res, err := config.Test(class, r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		jsonResponse(w, r, res)
+	}
+}
+
+// MeterTestHandler tests the given configuration
+func MeterTestHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := config.Test("meter", r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -344,12 +371,19 @@ type HTTPd struct {
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
 func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
-	routes := map[string]route{
-		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
-		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
-		"templates": {[]string{"GET"}, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
-		"types":     {[]string{"GET"}, "/config/types/{class:[a-z]+}", TypesHandler()},
-		"test":      {[]string{"POST"}, "/config/test/{class:[a-z]+}", TestHandler()},
+	get := []string{"GET"}
+	post := []string{"POST", "OPTIONS"}
+	// delete := []string{"DELETE", "OPTIONS"}
+
+	routes := []route{
+		{get, "/health", HealthHandler(site)},
+		{get, "/state", StateHandler(cache)},
+		{get, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
+		{get, "/config/templates/meter/{type:[a-z]+}", MeterTemplatesHandler()},
+		{get, "/config/types/{class:[a-z]+}", TypesHandler()},
+		{get, "/config/types/meter/{type:[a-z]+}", MeterTypesHandler()},
+		{post, "/config/test/{class:[a-z]+}", TestHandler()},
+		{post, "/config/test/meter/{type:[a-z]+}", MeterTestHandler()},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
@@ -391,15 +425,15 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	for id, lp := range site.LoadPoints() {
 		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
 
-		routes := map[string]route{
-			"getmode":         {[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp)},
-			"setmode":         {[]string{"POST", "OPTIONS"}, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp)},
-			"gettargetsoc":    {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(lp)},
-			"settargetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
-			"getminsoc":       {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
-			"setminsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
-			"settargetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
-			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
+		routes := []route{
+			{get, "/mode", CurrentChargeModeHandler(lp)},
+			{post, "/mode/{mode:[a-z]+}", ChargeModeHandler(lp)},
+			{get, "/targetsoc", CurrentTargetSoCHandler(lp)},
+			{post, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
+			{get, "/minsoc", CurrentMinSoCHandler(lp)},
+			{post, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
+			{post, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
+			{post, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {
