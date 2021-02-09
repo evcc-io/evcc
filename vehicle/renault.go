@@ -57,7 +57,7 @@ type kamereonResponse struct {
 	Accounts     []kamereonAccount `json:"accounts"`     // /commerce/v1/persons/%s
 	AccessToken  string            `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
 	VehicleLinks []kamereonVehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
-	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status
+	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status
 }
 
 type kamereonAccount struct {
@@ -96,7 +96,8 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	apiG                func() (interface{}, error)
+	batteryG            func() (interface{}, error)
+	hvacG               func() (interface{}, error)
 }
 
 func init() {
@@ -141,7 +142,8 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
 
 	return v, err
 }
@@ -301,7 +303,7 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	return vehicles, err
 }
 
-// batteryAPI provides battery api response
+// batteryAPI provides battery-status api response
 func (v *Renault) batteryAPI() (interface{}, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
@@ -316,9 +318,24 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 	return res, err
 }
 
+// hvacAPI provides hvac-status api response
+func (v *Renault) hvacAPI() (interface{}, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
+	res, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			res, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return res, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Renault) SoC() (float64, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		return float64(res.Data.Attributes.BatteryLevel), nil
@@ -331,7 +348,7 @@ func (v *Renault) SoC() (float64, error) {
 func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.apiG()
+	res, err := v.batteryG()
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
@@ -346,7 +363,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 
 // Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		return int64(res.Data.Attributes.BatteryAutonomy), nil
@@ -357,7 +374,7 @@ func (v *Renault) Range() (int64, error) {
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
@@ -370,4 +387,27 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// Climater implements the api.Vehicle.Climater interface
+func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.hvacG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		state := strings.ToLower(res.Data.Attributes.hvacStatus)
+
+		if state == "" {
+			return false, 0, 0, api.ErrNotAvailable
+		}
+
+		active := state != "off" && state != "false" && state != "invalid" && state != "error"
+
+		targetTemp = 20 // fixed value
+
+		outsideTemp = res.Data.Attributes.externalTemperature
+
+		return active, outsideTemp, targetTemp, nil
+	}
+
+	return active, outsideTemp, targetTemp, err
 }
