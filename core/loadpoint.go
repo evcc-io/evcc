@@ -61,8 +61,8 @@ type SoCConfig struct {
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
-	Delay     time.Duration `mapstructure:"delay"`
-	Threshold float64       `mapstructure:"threshold"`
+	Delay     time.Duration `mapstructure:"delay" ui:"de=Verzögerung"`
+	Threshold float64       `mapstructure:"threshold" ui:"de=Schwellwert (W)"`
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -123,10 +123,11 @@ type LoadPointConfig struct {
 
 	SoC          SoCConfig `mapstructure:"soc"`
 	OnDisconnect struct {
-		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-	} `mapstructure:"onDisconnect"`
-	Enable, Disable ThresholdConfig
+		Mode      api.ChargeMode `mapstructure:"mode" de:"Lademodus"`           // Charge mode to apply when car disconnected
+		TargetSoC int            `mapstructure:"targetSoC" de:"Ladestatus (%)"` // Target SoC to apply when car disconnected
+	} `mapstructure:"onDisconnect" ui:"Aktion bei Fahrzeugtrennung..."`
+	Enable  ThresholdConfig `de:"Einschaltverhalten"`
+	Disable ThresholdConfig `de:"Ausschaltverhalten"`
 
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 }
