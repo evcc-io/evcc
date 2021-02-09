@@ -15,9 +15,10 @@ import (
 )
 
 // Credits to
-// 	https://github.com/edent/Renault-Zoe-API/issues/18
-// 	https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
+//  https://github.com/edent/Renault-Zoe-API/issues/18
+//  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
+//  https://github.com/hacf-fr/renault-api
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -57,7 +58,7 @@ type kamereonResponse struct {
 	Accounts     []kamereonAccount `json:"accounts"`     // /commerce/v1/persons/%s
 	AccessToken  string            `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
 	VehicleLinks []kamereonVehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
-	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status
+	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/vX/cars/%s/...
 }
 
 type kamereonAccount struct {
@@ -75,17 +76,21 @@ type kamereonData struct {
 }
 
 type attributes struct {
-	Timestamp          string  `json:"timestamp"`
-	ChargingStatus     float32 `json:"chargingStatus"`
-	InstantaneousPower int     `json:"instantaneousPower"`
-	RangeHvacOff       int     `json:"rangeHvacOff"`
-	BatteryAutonomy    int     `json:"batteryAutonomy"`
-	BatteryLevel       int     `json:"batteryLevel"`
-	BatteryTemperature int     `json:"batteryTemperature"`
-	PlugStatus         int     `json:"plugStatus"`
-	LastUpdateTime     string  `json:"lastUpdateTime"`
-	ChargePower        int     `json:"chargePower"`
-	RemainingTime      *int    `json:"chargingRemainingTime"`
+	// battery-status:
+	Timestamp           string  `json:"timestamp"`
+	ChargingStatus      float32 `json:"chargingStatus"`
+	InstantaneousPower  int     `json:"instantaneousPower"`
+	RangeHvacOff        int     `json:"rangeHvacOff"`
+	BatteryAutonomy     int     `json:"batteryAutonomy"`
+	BatteryLevel        int     `json:"batteryLevel"`
+	BatteryTemperature  int     `json:"batteryTemperature"`
+	PlugStatus          int     `json:"plugStatus"`
+	LastUpdateTime      string  `json:"lastUpdateTime"`
+	ChargePower         int     `json:"chargePower"`
+	RemainingTime       *int    `json:"chargingRemainingTime"`
+	// hvac-status:
+	externalTemperature float32 `json:"externalTemperature"`
+	hvacStatus          string  `json:"hvacStatus"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
