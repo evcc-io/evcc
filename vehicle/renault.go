@@ -89,8 +89,8 @@ type attributes struct {
 	ChargePower         int     `json:"chargePower"`
 	RemainingTime       *int    `json:"chargingRemainingTime"`
 	// hvac-status:
-	externalTemperature float64 `json:"externalTemperature"`
-	hvacStatus          string  `json:"hvacStatus"`
+	ExternalTemperature float64 `json:"externalTemperature"`
+	HvacStatus          string  `json:"hvacStatus"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -399,7 +399,7 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 	res, err := v.hvacG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
-		state := strings.ToLower(res.Data.Attributes.hvacStatus)
+		state := strings.ToLower(res.Data.Attributes.HvacStatus)
 
 		if state == "" {
 			return false, 0, 0, api.ErrNotAvailable
@@ -409,7 +409,7 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 
 		targetTemp = 20 // fixed value
 
-		outsideTemp = res.Data.Attributes.externalTemperature
+		outsideTemp = res.Data.Attributes.ExternalTemperature
 
 		return active, outsideTemp, targetTemp, nil
 	}
