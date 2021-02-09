@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/thoas/go-funk"
 )
 
 // Credits to
@@ -76,19 +77,19 @@ type kamereonData struct {
 }
 
 type attributes struct {
-	// battery-status:
-	Timestamp           string  `json:"timestamp"`
-	ChargingStatus      float32 `json:"chargingStatus"`
-	InstantaneousPower  int     `json:"instantaneousPower"`
-	RangeHvacOff        int     `json:"rangeHvacOff"`
-	BatteryAutonomy     int     `json:"batteryAutonomy"`
-	BatteryLevel        int     `json:"batteryLevel"`
-	BatteryTemperature  int     `json:"batteryTemperature"`
-	PlugStatus          int     `json:"plugStatus"`
-	LastUpdateTime      string  `json:"lastUpdateTime"`
-	ChargePower         int     `json:"chargePower"`
-	RemainingTime       *int    `json:"chargingRemainingTime"`
-	// hvac-status:
+	// battery-status
+	Timestamp          string  `json:"timestamp"`
+	ChargingStatus     float32 `json:"chargingStatus"`
+	InstantaneousPower int     `json:"instantaneousPower"`
+	RangeHvacOff       int     `json:"rangeHvacOff"`
+	BatteryAutonomy    int     `json:"batteryAutonomy"`
+	BatteryLevel       int     `json:"batteryLevel"`
+	BatteryTemperature int     `json:"batteryTemperature"`
+	PlugStatus         int     `json:"plugStatus"`
+	LastUpdateTime     string  `json:"lastUpdateTime"`
+	ChargePower        int     `json:"chargePower"`
+	RemainingTime      *int    `json:"chargingRemainingTime"`
+	// hvac-status
 	ExternalTemperature float64 `json:"externalTemperature"`
 	HvacStatus          string  `json:"hvacStatus"`
 }
@@ -268,8 +269,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	data := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-	//	"apikey":           v.kamereon.APIKey,					// wrong key since 2021-02-01
-		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2",	// temporary workaround
+		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2", // v.kamereon.APIKey
 	}
 
 	var res kamereonResponse
@@ -405,13 +405,9 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 			return false, 0, 0, api.ErrNotAvailable
 		}
 
-		active := state != "off" && state != "false" && state != "invalid" && state != "error"
+		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
 
-		targetTemp = 20 // fixed value
-
-		outsideTemp = res.Data.Attributes.ExternalTemperature
-
-		return active, outsideTemp, targetTemp, nil
+		return active, res.Data.Attributes.ExternalTemperature, 20, nil
 	}
 
 	return active, outsideTemp, targetTemp, err
