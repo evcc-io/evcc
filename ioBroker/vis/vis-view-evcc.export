@@ -2511,13 +2511,13 @@
     "e00032": {
       "tpl": "tplJquiButtonState",
       "data": {
-        "oid": "mqtt.0.evcc.loadpoints.1.minsoc.set",
+        "oid": "mqtt.0.evcc.loadpoints.1.targetsoc.set",
         "g_fixed": false,
         "g_visibility": false,
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -2572,25 +2572,29 @@
       "style": {
         "left": "634px",
         "top": "252px",
-        "width": "60px",
+        "width": "70px",
         "height": "31px",
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-color": "{c:mqtt.0.evcc.loadpoints.1.targetSoC; c == 100 ? '#d41911' :  '#676767'}",
+        "border-radius": "6px",
+        "border-style": "solid",
+        "border-width": "2px"
       },
       "widgetSet": "jqui"
     },
     "e00033": {
       "tpl": "tplJquiButtonState",
       "data": {
-        "oid": "mqtt.0.evcc.loadpoints.1.minsoc.set",
+        "oid": "mqtt.0.evcc.loadpoints.1.targetsoc.set",
         "g_fixed": false,
         "g_visibility": false,
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -2647,25 +2651,29 @@
       "style": {
         "left": "634px",
         "top": "208px",
-        "width": "60px",
+        "width": "70px",
         "height": "31px",
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-radius": "6px",
+        "border-color": "{c:mqtt.0.evcc.loadpoints.1.targetSoC; c == 80 ? '#d41911' :  '#676767'}"
       },
       "widgetSet": "jqui"
     },
     "e00034": {
       "tpl": "tplJquiButtonState",
       "data": {
-        "oid": "mqtt.0.evcc.loadpoints.1.minsoc.set",
+        "oid": "mqtt.0.evcc.loadpoints.1.targetsoc.set",
         "g_fixed": false,
         "g_visibility": false,
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -2720,24 +2728,28 @@
       "style": {
         "left": "635px",
         "top": "166px",
-        "width": "60px",
+        "width": "70px",
         "height": "31px",
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-color": "{c:mqtt.0.evcc.loadpoints.1.targetSoC; c == 50 ? '#d41911' :  '#676767'}",
+        "border-radius": "6px"
       },
       "widgetSet": "jqui"
     },
     "e00035": {
       "tpl": "tplJquiButtonState",
       "data": {
-        "oid": "mqtt.0.evcc.loadpoints.1.minsoc.set",
+        "oid": "mqtt.0.evcc.loadpoints.1.targetsoc.set",
         "g_fixed": false,
         "g_visibility": false,
         "g_css_font_text": true,
-        "g_css_background": true,
-        "g_css_shadow_padding": true,
+        "g_css_background": false,
+        "g_css_shadow_padding": false,
         "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
@@ -2793,16 +2805,17 @@
       "style": {
         "left": "634px",
         "top": "122px",
-        "width": "60px",
+        "width": "70px",
         "height": "31px",
         "z-index": "5",
         "text-align": "left",
         "font-family": "Verdana, Geneva, sans-serif",
-        "margin-left": "",
-        "padding-right": "",
-        "padding-left": "",
         "font-size": "smaller",
-        "position": ""
+        "position": "",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-color": "{c:mqtt.0.evcc.loadpoints.1.targetSoC; c == 30 ? '#d41911' :  '#676767'}",
+        "border-radius": "6px"
       },
       "widgetSet": "jqui"
     },
@@ -2867,7 +2880,7 @@
         "name": "EV"
       },
       "style": {
-        "left": "624px",
+        "left": "626px",
         "top": "86px",
         "color": "#c4c4c4",
         "text-align": "center",
@@ -2919,7 +2932,7 @@
         "signals-horz-2": 0,
         "signals-vert-2": 0,
         "signals-hide-edit-2": false,
-        "html": "Modus:",
+        "html": "Lademodus:",
         "lc-type": "last-change",
         "lc-is-interval": true,
         "lc-is-moment": false,
@@ -2941,15 +2954,15 @@
         "name": "EV"
       },
       "style": {
-        "left": "802px",
-        "top": "86px",
+        "left": "800px",
+        "top": "85px",
         "color": "#c4c4c4",
         "text-align": "right",
         "font-family": "Verdana, Geneva, sans-serif",
         "font-size": "medium",
         "z-index": 3,
-        "width": "60px",
-        "height": "20px",
+        "width": "94px",
+        "height": "18px",
         "font-weight": "normal"
       },
       "widgetSet": "basic"
@@ -2963,7 +2976,7 @@
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -3023,7 +3036,11 @@
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-color": "{m:mqtt.0.evcc.loadpoints.1.mode; m == 'now' ? '#d41911' :  '#676767'}",
+        "border-radius": "6px"
       },
       "widgetSet": "jqui"
     },
@@ -3036,7 +3053,7 @@
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -3096,7 +3113,11 @@
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-color": "{m:mqtt.0.evcc.loadpoints.1.mode; m == 'minpv' ? '#d41911' :  '#676767'}",
+        "border-radius": "6px"
       },
       "widgetSet": "jqui"
     },
@@ -3109,7 +3130,7 @@
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -3169,7 +3190,11 @@
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-color": "{m:mqtt.0.evcc.loadpoints.1.mode; m == 'pv' ? '#d41911' :  '#676767'}",
+        "border-radius": "6px"
       },
       "widgetSet": "jqui"
     },
@@ -3182,7 +3207,7 @@
         "g_css_font_text": true,
         "g_css_background": false,
         "g_css_shadow_padding": false,
-        "g_css_border": false,
+        "g_css_border": true,
         "g_gestures": false,
         "g_signals": false,
         "g_last_change": false,
@@ -3242,7 +3267,11 @@
         "z-index": "5",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "smaller"
+        "font-size": "smaller",
+        "border-width": "2px",
+        "border-style": "solid",
+        "border-radius": "6px",
+        "border-color": "{m:mqtt.0.evcc.loadpoints.1.mode; m == 'off' ? '#d41911' :  '#676767'}"
       },
       "widgetSet": "jqui"
     },
@@ -3312,7 +3341,7 @@
         "name": "Leitung_Netz"
       },
       "style": {
-        "left": "329px",
+        "left": "328px",
         "top": "227px",
         "z-index": "1",
         "border-style": "solid",
@@ -3341,18 +3370,22 @@
         "visibility-val": 1,
         "visibility-groups-action": "hide",
         "iMinVal": "0",
-        "iMaxVal": "99",
+        "iMaxVal": "100",
         "iStepVal": "1",
         "iSliderRotation": "0",
-        "iSliderHeight": "30",
-        "iSliderColor": "linear-gradient(90deg, #00ff00 0%, #00ff00 {value:mqtt.0.evcc.loadpoints.1.targetSoC.set;parseFloat(value)/100*100}%, #333333 {value:mqtt.0.evcc.loadpoints.1.targetSoC.set;parseFloat(value)/100*100}%, #333333 100%)",
+        "iSliderHeight": "2",
+        "iSliderColor": "#787878",
         "iSliderCorners": "100",
-        "iSliderKnobSize": "29",
-        "iSliderKnobColor": "#34a207",
+        "iSliderKnobSize": "20",
+        "iSliderKnobColor": "#cc0505",
         "iSliderKnobCorners": "100",
         "iSliderTextColor": "#ffffff",
-        "iValueTextColor": "",
-        "iTextSize": "12",
+        "iValueTextColor": "#c4c4c4",
+        "iTextSize": "9",
+        "iShowMinMax": false,
+        "oid": "mqtt.0.evcc.loadpoints.1.minSoC",
+        "iChangeOnRelease": false,
+        "iInvertMinMax": false,
         "signals-cond-0": "==",
         "signals-val-0": true,
         "signals-icon-0": "/vis/signals/lowbattery.png",
@@ -3395,16 +3428,15 @@
         "lc-border-color": "",
         "lc-border-radius": 10,
         "lc-zindex": 0,
-        "iShowMinMax": false,
-        "oid": "mqtt.0.evcc.loadpoints.1.targetsoc.set",
-        "iChangeOnRelease": false,
-        "iInvertMinMax": false
+        "iShowValue": false,
+        "iValueAfterText": "%",
+        "iSliderLabel": ""
       },
       "style": {
-        "left": "551px",
-        "top": "395px",
-        "width": "435px",
-        "height": "28px",
+        "left": "592px",
+        "top": "394px",
+        "width": "376px",
+        "height": "20px",
         "z-index": "0"
       },
       "widgetSet": "vis-inventwo"
@@ -3448,7 +3480,7 @@
         "signals-horz-2": 0,
         "signals-vert-2": 0,
         "signals-hide-edit-2": false,
-        "html": "Akku Fahrzeug",
+        "html": "Bei Anschluss erstmal Sofort-Laden bis:",
         "lc-type": "last-change",
         "lc-is-interval": true,
         "lc-is-moment": false,
@@ -3470,15 +3502,15 @@
         "name": "EV"
       },
       "style": {
-        "left": "669px",
-        "top": "362px",
+        "left": "582px",
+        "top": "364px",
         "color": "#c4c4c4",
         "text-align": "center",
         "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "x-large",
+        "font-size": "medium",
         "z-index": "2",
-        "width": "190px",
-        "height": "30px",
+        "width": "301px",
+        "height": "17px",
         "font-weight": "normal"
       },
       "widgetSet": "basic"
@@ -3797,82 +3829,6 @@
     "e00049": {
       "tpl": "tplValueStringRaw",
       "data": {
-        "oid": "",
-        "html_prepend": "{mode:mqtt.0.evcc.loadpoints.1.mode;mode == 'now' ? 'Sofort' : (mode == 'off' ? 'Stop' : (mode == 'minpv' ? 'Min+PV' : (mode == 'pv' ? 'Nur PV' : mode)))}",
-        "html_append": "",
-        "gestures-offsetX": 0,
-        "gestures-offsetY": 0,
-        "signals-cond-0": "==",
-        "signals-val-0": true,
-        "signals-icon-0": "/vis.0/main/lowbattery.png",
-        "signals-icon-size-0": 0,
-        "signals-blink-0": false,
-        "signals-horz-0": 0,
-        "signals-vert-0": 0,
-        "signals-hide-edit-0": false,
-        "signals-cond-1": "==",
-        "signals-val-1": true,
-        "signals-icon-1": "/vis.0/main/lowbattery.png",
-        "signals-icon-size-1": 0,
-        "signals-blink-1": false,
-        "signals-horz-1": 0,
-        "signals-vert-1": 0,
-        "signals-hide-edit-1": false,
-        "signals-cond-2": "==",
-        "signals-val-2": true,
-        "signals-icon-2": "/vis.0/main/lowbattery.png",
-        "signals-icon-size-2": 0,
-        "signals-blink-2": false,
-        "signals-horz-2": 0,
-        "signals-vert-2": 0,
-        "signals-hide-edit-2": false,
-        "lc-type": "last-change",
-        "lc-is-interval": true,
-        "lc-is-moment": false,
-        "lc-format": "",
-        "lc-position-vert": "top",
-        "lc-position-horz": "right",
-        "lc-offset-vert": 0,
-        "lc-offset-horz": 0,
-        "lc-font-size": "12px",
-        "lc-font-family": "",
-        "lc-font-style": "",
-        "lc-bkg-color": "",
-        "lc-color": "",
-        "lc-border-width": "0",
-        "lc-border-style": "",
-        "lc-border-color": "",
-        "lc-border-radius": 10,
-        "lc-zindex": 0,
-        "g_visibility": false,
-        "visibility-cond": "==",
-        "visibility-val": 1,
-        "visibility-groups-action": "hide",
-        "g_fixed": false,
-        "test_html": ""
-      },
-      "style": {
-        "left": "868px",
-        "top": "86px",
-        "background": "",
-        "width": "93px",
-        "height": "21px",
-        "padding": "",
-        "padding-left": "",
-        "padding-top": "",
-        "font-family": "Verdana, Geneva, sans-serif",
-        "font-size": "medium",
-        "font-weight": "",
-        "background-color": "",
-        "color": "#ff0000",
-        "z-index": "11",
-        "text-align": "left"
-      },
-      "widgetSet": "basic"
-    },
-    "e00050": {
-      "tpl": "tplValueStringRaw",
-      "data": {
         "oid": "mqtt.0.evcc.loadpoints.1.targetSoC",
         "html_prepend": "",
         "html_append": "%",
@@ -3927,7 +3883,7 @@
         "g_fixed": false
       },
       "style": {
-        "left": "704px",
+        "left": "706px",
         "top": "87px",
         "background": "",
         "width": "50px",
@@ -3945,7 +3901,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00051": {
+    "e00050": {
       "tpl": "tplValueStringRaw",
       "data": {
         "oid": "",
@@ -4019,7 +3975,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00052": {
+    "e00051": {
       "tpl": "tplLink",
       "data": {
         "g_fixed": false,
@@ -4099,7 +4055,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00053": {
+    "e00052": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4173,7 +4129,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00054": {
+    "e00053": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4248,7 +4204,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00055": {
+    "e00054": {
       "tpl": "tplLink",
       "data": {
         "g_fixed": false,
@@ -4317,7 +4273,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00056": {
+    "e00055": {
       "tpl": "tplValueString",
       "data": {
         "oid": "nothing_selected",
@@ -4393,7 +4349,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00057": {
+    "e00056": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4406,7 +4362,7 @@
         "g_signals": false,
         "g_last_change": false,
         "visibility-cond": "==",
-        "visibility-val": "{pwr:mqtt.0.evcc.loadpoints.1.chargePower;pv:mqtt.0.sunny5.pv_energy; pwr > 0 && pv == 0? pwr : '-1'}",
+        "visibility-val": "true",
         "visibility-groups-action": "hide",
         "refreshInterval": "0",
         "signals-cond-0": "==",
@@ -4453,7 +4409,7 @@
         "lc-zindex": 0,
         "html": "<div id=\"arrowAnim\">\n  <div class=\"arrowSlidingRight\">\n    <div class=\"arrowRight arrowRed\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay1\">\n    <div class=\"arrowRight arrowRed\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay2\">\n    <div class=\"arrowRight arrowRed\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay3\">\n    <div class=\"arrowRight arrowRed\"></div>\n  </div>\n</div>\n",
         "name": "anim_arrows_right",
-        "visibility-oid": "mqtt.0.evcc.loadpoints.1.chargePower"
+        "visibility-oid": "javascript.0.sunny5.energy.ev_charging_with_grid"
       },
       "style": {
         "left": "645px",
@@ -4463,7 +4419,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00058": {
+    "e00057": {
       "tpl": "tplValueStringRaw",
       "data": {
         "oid": "nothing_selected",
@@ -4528,7 +4484,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00059": {
+    "e00058": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4598,7 +4554,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00060": {
+    "e00059": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4668,7 +4624,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00061": {
+    "e00060": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4738,7 +4694,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00062": {
+    "e00061": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4809,7 +4765,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00063": {
+    "e00062": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4872,14 +4828,14 @@
         "visibility-oid": "mqtt.0.sunny5.grid"
       },
       "style": {
-        "left": "336px",
+        "left": "344px",
         "top": "316px",
         "width": "175px",
         "height": "62px"
       },
       "widgetSet": "basic"
     },
-    "e00064": {
+    "e00063": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -4950,7 +4906,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00065": {
+    "e00064": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -5021,7 +4977,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00066": {
+    "e00065": {
       "tpl": "tplValueString",
       "data": {
         "oid": "nothing_selected",
@@ -5096,7 +5052,7 @@
       },
       "widgetSet": "basic"
     },
-    "e00067": {
+    "e00066": {
       "tpl": "tplHtml",
       "data": {
         "g_fixed": true,
@@ -5109,7 +5065,7 @@
         "g_signals": false,
         "g_last_change": false,
         "visibility-cond": "==",
-        "visibility-val": "{pwr:mqtt.0.evcc.loadpoints.1.chargePower;pv:mqtt.0.sunny5.pv_energy; pwr > 0 && pv > 0? pwr : '-1'}",
+        "visibility-val": "true",
         "visibility-groups-action": "hide",
         "refreshInterval": "0",
         "signals-cond-0": "==",
@@ -5156,13 +5112,88 @@
         "lc-zindex": 0,
         "html": "<div id=\"arrowAnim\">\n  <div class=\"arrowSlidingRight\">\n    <div class=\"arrowRight arrowYellow\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay1\">\n    <div class=\"arrowRight arrowYellow\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay2\">\n    <div class=\"arrowRight arrowYellow\"></div>\n  </div>\n  <div class=\"arrowSlidingRight delay3\">\n    <div class=\"arrowRight arrowYellow\"></div>\n  </div>\n</div>\n",
         "name": "anim_arrows_right",
-        "visibility-oid": "mqtt.0.evcc.loadpoints.1.chargePower"
+        "visibility-oid": "javascript.0.sunny5.energy.ev_charging_without_grid"
       },
       "style": {
         "left": "643px",
-        "top": "289px",
+        "top": "290px",
         "width": "175px",
-        "height": "62px"
+        "height": "44px"
+      },
+      "widgetSet": "basic"
+    },
+    "e00067": {
+      "tpl": "tplValueStringRaw",
+      "data": {
+        "oid": "mqtt.0.evcc.loadpoints.1.minSoC",
+        "html_prepend": "",
+        "html_append": "%",
+        "gestures-offsetX": 0,
+        "gestures-offsetY": 0,
+        "signals-cond-0": "==",
+        "signals-val-0": true,
+        "signals-icon-0": "/vis.0/main/lowbattery.png",
+        "signals-icon-size-0": 0,
+        "signals-blink-0": false,
+        "signals-horz-0": 0,
+        "signals-vert-0": 0,
+        "signals-hide-edit-0": false,
+        "signals-cond-1": "==",
+        "signals-val-1": true,
+        "signals-icon-1": "/vis.0/main/lowbattery.png",
+        "signals-icon-size-1": 0,
+        "signals-blink-1": false,
+        "signals-horz-1": 0,
+        "signals-vert-1": 0,
+        "signals-hide-edit-1": false,
+        "signals-cond-2": "==",
+        "signals-val-2": true,
+        "signals-icon-2": "/vis.0/main/lowbattery.png",
+        "signals-icon-size-2": 0,
+        "signals-blink-2": false,
+        "signals-horz-2": 0,
+        "signals-vert-2": 0,
+        "signals-hide-edit-2": false,
+        "lc-type": "last-change",
+        "lc-is-interval": true,
+        "lc-is-moment": false,
+        "lc-format": "",
+        "lc-position-vert": "top",
+        "lc-position-horz": "right",
+        "lc-offset-vert": 0,
+        "lc-offset-horz": 0,
+        "lc-font-size": "12px",
+        "lc-font-family": "",
+        "lc-font-style": "",
+        "lc-bkg-color": "",
+        "lc-color": "",
+        "lc-border-width": "0",
+        "lc-border-style": "",
+        "lc-border-color": "",
+        "lc-border-radius": 10,
+        "lc-zindex": 0,
+        "g_visibility": false,
+        "visibility-cond": "==",
+        "visibility-val": 1,
+        "visibility-groups-action": "hide",
+        "g_fixed": false
+      },
+      "style": {
+        "left": "883px",
+        "top": "365px",
+        "background": "",
+        "width": "50px",
+        "height": "20px",
+        "padding": "",
+        "padding-left": "",
+        "padding-top": "",
+        "font-family": "Verdana, Geneva, sans-serif",
+        "font-size": "medium",
+        "font-weight": "",
+        "background-color": "",
+        "color": "#ff0000",
+        "z-index": "12",
+        "text-align": "left"
       },
       "widgetSet": "basic"
     }
