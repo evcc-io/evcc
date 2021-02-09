@@ -60,7 +60,7 @@ func Types(class string) []interface{} {
 		ct := description{
 			Type:   typ.Type,
 			Label:  typ.Label,
-			Fields: prependType(typ.Type, annotate(typ.Config)),
+			Fields: prependType(typ.Type, Annotate(typ.Config)),
 		}
 		res = append(res, ct)
 	}

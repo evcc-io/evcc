@@ -651,7 +651,7 @@ func TestSoCPoll(t *testing.T) {
 	}
 
 	tc := []struct {
-		mode   string
+		mode   PollMode
 		status api.ChargeStatus
 		dt     time.Duration
 		res    bool

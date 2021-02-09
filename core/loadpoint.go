@@ -31,30 +31,33 @@ const (
 	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
 )
 
+// PollMode defines the vehicle polling modes
+type PollMode string
+
+// Poll modes
+const (
+	pollCharging  PollMode = "charging"
+	pollConnected PollMode = "connected"
+	pollAlways    PollMode = "always"
+
+	pollInterval time.Duration = 60 * time.Minute
+)
+
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
-	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
-	Interval time.Duration `mapstructure:"interval"` // interval when not charging
+	Mode     PollMode      `mapstructure:"mode" validate:"oneof=charging connected always" ui:"de=Modus"` // polling mode charging (default), connected, always
+	Interval time.Duration `mapstructure:"interval"`                                                      // interval when not charging
 }
 
 // SoCConfig defines soc settings, estimation and update behaviour
 type SoCConfig struct {
-	Poll         PollConfig `mapstructure:"poll"`
-	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
-	Levels       []int      `mapstructure:"levels"`
-	Estimate     bool       `mapstructure:"estimate"`
-	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Poll         PollConfig `mapstructure:"poll" ui:"de=Fahrzeugaktualisierung"`
+	AlwaysUpdate bool       `mapstructure:"alwaysUpdate" structs:"-"`
+	Estimate     bool       `mapstructure:"estimate" ui:"de=Battiereschätzung"`
+	Min          int        `mapstructure:"min" ui:"de=Minimale Batterieladung"`    // Default minimum SoC, guarded by mutex
+	Target       int        `mapstructure:"target" ui:"de=Maximale Batterieladung"` // Default target SoC, guarded by mutex
+	Levels       []int      `mapstructure:"levels" ui:"de=Ladestufen"`
 }
-
-// Poll modes
-const (
-	pollCharging  = "charging"
-	pollConnected = "connected"
-	pollAlways    = "always"
-
-	pollInterval = 60 * time.Minute
-)
 
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
@@ -112,11 +115,11 @@ type LoadPoint struct {
 
 // LoadPointConfig contains the loadpoint's public configuration
 type LoadPointConfig struct {
-	Title      string         `mapstructure:"title"`      // UI title
-	Mode       api.ChargeMode `mapstructure:"mode"`       // Charge mode, guarded by mutex
-	Phases     int64          `mapstructure:"phases"`     // Phases- required for converting power and current
-	MinCurrent int64          `mapstructure:"minCurrent"` // PV mode: start current	Min+PV mode: min current
-	MaxCurrent int64          `mapstructure:"maxCurrent"` // Max allowed current. Physically ensured by the charger
+	Title      string         `mapstructure:"title"`                                                    // UI title
+	Mode       api.ChargeMode `mapstructure:"mode" validate:"oneof=off now minpv pv" ui:"de=Lademodus"` // Charge mode, guarded by mutex
+	Phases     int64          `mapstructure:"phases" validate:"oneof=1 2 3"`                            // Phases- required for converting power and current
+	MinCurrent int64          `mapstructure:"minCurrent"`                                               // PV mode: start current	Min+PV mode: min current
+	MaxCurrent int64          `mapstructure:"maxCurrent"`                                               // Max allowed current. Physically ensured by the charger
 
 	SoC          SoCConfig `mapstructure:"soc"`
 	OnDisconnect struct {
@@ -142,7 +145,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	sort.Ints(lp.SoC.Levels)
 
 	// set vehicle polling mode
-	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
+	switch lp.SoC.Poll.Mode = PollMode(strings.ToLower(string(lp.SoC.Poll.Mode))); lp.SoC.Poll.Mode {
 	case pollCharging:
 	case pollConnected, pollAlways:
 		log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)

@@ -120,11 +120,11 @@ func prependType(typ string, conf []FieldMetadata) []FieldMetadata {
 		Type: typ,
 	}
 
-	return append(annotate(typeDef), conf...)
+	return append(Annotate(typeDef), conf...)
 }
 
-// annotate adds meta data to given configuration structure
-func annotate(s interface{}) (ds []FieldMetadata) {
+// Annotate adds meta data to given configuration structure
+func Annotate(s interface{}) (ds []FieldMetadata) {
 	for _, f := range structs.Fields(s) {
 		if !f.IsExported() {
 			continue
@@ -132,7 +132,7 @@ func annotate(s interface{}) (ds []FieldMetadata) {
 
 		// embedded fields
 		if f.Kind() == reflect.Struct && f.IsEmbedded() {
-			dd := annotate(f.Value())
+			dd := Annotate(f.Value())
 			ds = append(ds, dd...)
 			continue
 		}
@@ -187,7 +187,7 @@ func annotate(s interface{}) (ds []FieldMetadata) {
 		case reflect.Struct:
 			if d.Type != typePlugin {
 				d.Default = nil // no default for structs
-				d.Children = annotate(f.Value())
+				d.Children = Annotate(f.Value())
 			}
 		}
 

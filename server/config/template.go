@@ -42,7 +42,7 @@ func configFromTemplate(tmpl templates.Template) (description, error) {
 		return res, err
 	}
 
-	res.Fields = prependType(tmpl.Type, annotate(desc.Config))
+	res.Fields = prependType(tmpl.Type, Annotate(desc.Config))
 
 	return res, nil
 }

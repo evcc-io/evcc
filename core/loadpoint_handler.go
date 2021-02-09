@@ -4,35 +4,38 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/andig/evcc/server/config"
 	"github.com/fatih/structs"
 )
 
-func (s *LoadPoint) configHandler(w http.ResponseWriter, r *http.Request) {
+func (lp *LoadPoint) configHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		s.getConfig(w, r)
+		lp.getConfig(w, r)
 	case http.MethodPost:
-		s.setConfig(w, r)
+		lp.setConfig(w, r)
 	default:
-		http.Error(w, "method not allowed", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-func (s *LoadPoint) getConfig(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode(s.LoadPointConfig); err != nil {
+func (lp *LoadPoint) getConfig(w http.ResponseWriter, r *http.Request) {
+	meta := config.Annotate(lp.LoadPointConfig)
+
+	if err := json.NewEncoder(w).Encode(meta); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func (s *LoadPoint) setConfig(w http.ResponseWriter, r *http.Request) {
+func (lp *LoadPoint) setConfig(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
 
-	err := dec.Decode(&s.LoadPointConfig)
+	err := dec.Decode(&lp.LoadPointConfig)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	s.log.FATAL.Println(structs.Map(s.LoadPointConfig))
+	lp.log.FATAL.Println(structs.Map(lp.LoadPointConfig))
 }

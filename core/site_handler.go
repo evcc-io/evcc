@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/andig/evcc/server/config"
 	"github.com/fatih/structs"
 	"github.com/gorilla/mux"
 )
@@ -25,12 +26,14 @@ func (s *Site) configHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		s.setConfig(w, r)
 	default:
-		http.Error(w, "method not allowed", http.StatusBadRequest)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 func (s *Site) getConfig(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode(s.SiteConfig); err != nil {
+	meta := config.Annotate(s.SiteConfig)
+
+	if err := json.NewEncoder(w).Encode(meta); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -45,5 +48,5 @@ func (s *Site) setConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.log.FATAL.Println(structs.Map(s.SiteConfig))
+	s.log.ERROR.Println("received:", structs.Map(s.SiteConfig))
 }
