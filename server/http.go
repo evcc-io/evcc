@@ -104,44 +104,16 @@ func HealthHandler(site core.SiteAPI) http.HandlerFunc {
 }
 
 // TemplatesHandler returns a list of configuration templates per class
-func TemplatesHandler() http.HandlerFunc {
+func TemplatesHandler(class string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		class, ok := vars["class"]
-		if !ok {
-			http.Error(w, "class required", http.StatusBadRequest)
-			return
-		}
-
 		jsonResponse(w, r, config.Templates(class))
 	}
 }
 
-// MeterTemplatesHandler returns a list of meter configuration templates
-func MeterTemplatesHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		jsonResponse(w, r, config.Templates("meter"))
-	}
-}
-
 // TypesHandler returns a list of configuration types per class
-func TypesHandler() http.HandlerFunc {
+func TypesHandler(class string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		class, ok := vars["class"]
-		if !ok {
-			http.Error(w, "class required", http.StatusBadRequest)
-			return
-		}
-
 		jsonResponse(w, r, config.Types(class))
-	}
-}
-
-// MeterTypesHandler returns a list of meter configuration types
-func MeterTypesHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		jsonResponse(w, r, config.Types("meter"))
 	}
 }
 
@@ -378,10 +350,14 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	routes := []route{
 		{get, "/health", HealthHandler(site)},
 		{get, "/state", StateHandler(cache)},
-		{get, "/config/templates/{class:[a-z]+}", TemplatesHandler()},
-		{get, "/config/templates/meter/{type:[a-z]+}", MeterTemplatesHandler()},
-		{get, "/config/types/{class:[a-z]+}", TypesHandler()},
-		{get, "/config/types/meter/{type:[a-z]+}", MeterTypesHandler()},
+		{get, "/config/templates/charger", TemplatesHandler("charger")},
+		{get, "/config/templates/vehicle", TemplatesHandler("vehicle")},
+		{get, "/config/templates/meter", TemplatesHandler("meter")},
+		{get, "/config/templates/meter/{type:[a-z]+}", TemplatesHandler("meter")},
+		{get, "/config/types/charger", TypesHandler("charger")},
+		{get, "/config/types/vehicle", TypesHandler("vehicle")},
+		{get, "/config/types/meter", TypesHandler("meter")},
+		{get, "/config/types/meter/{type:[a-z]+}", TypesHandler("meter")},
 		{post, "/config/test/{class:[a-z]+}", TestHandler()},
 		{post, "/config/test/meter/{type:[a-z]+}", MeterTestHandler()},
 	}
