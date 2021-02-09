@@ -12,12 +12,14 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/thoas/go-funk"
 )
 
 // Credits to
-// 	https://github.com/edent/Renault-Zoe-API/issues/18
-// 	https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
+//  https://github.com/edent/Renault-Zoe-API/issues/18
+//  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
+//  https://github.com/hacf-fr/renault-api
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -57,7 +59,7 @@ type kamereonResponse struct {
 	Accounts     []kamereonAccount `json:"accounts"`     // /commerce/v1/persons/%s
 	AccessToken  string            `json:"accessToken"`  // /commerce/v1/accounts/%s/kamereon/token
 	VehicleLinks []kamereonVehicle `json:"vehicleLinks"` // /commerce/v1/accounts/%s/vehicles
-	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/battery-status
+	Data         kamereonData      `json:"data"`         // /commerce/v1/accounts/%s/kamereon/kca/car-adapter/vX/cars/%s/...
 }
 
 type kamereonAccount struct {
@@ -75,6 +77,7 @@ type kamereonData struct {
 }
 
 type attributes struct {
+	// battery-status
 	Timestamp          string  `json:"timestamp"`
 	ChargingStatus     float32 `json:"chargingStatus"`
 	InstantaneousPower int     `json:"instantaneousPower"`
@@ -86,6 +89,9 @@ type attributes struct {
 	LastUpdateTime     string  `json:"lastUpdateTime"`
 	ChargePower        int     `json:"chargePower"`
 	RemainingTime      *int    `json:"chargingRemainingTime"`
+	// hvac-status
+	ExternalTemperature float64 `json:"externalTemperature"`
+	HvacStatus          string  `json:"hvacStatus"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -96,7 +102,8 @@ type Renault struct {
 	gigya, kamereon     configServer
 	gigyaJwtToken       string
 	accountID           string
-	apiG                func() (interface{}, error)
+	batteryG            func() (interface{}, error)
+	hvacG               func() (interface{}, error)
 }
 
 func init() {
@@ -141,7 +148,8 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
 
 	return v, err
 }
@@ -261,8 +269,7 @@ func (v *Renault) kamereonRequest(uri string) (kamereonResponse, error) {
 	data := url.Values{"country": []string{"DE"}}
 	headers := map[string]string{
 		"x-gigya-id_token": v.gigyaJwtToken,
-	//	"apikey":           v.kamereon.APIKey,					// wrong key since 2021-02-01
-		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2",	// temporary workaround
+		"apikey":           "Ae9FDWugRxZQAGm3Sxgk7uJn6Q4CGEA2", // v.kamereon.APIKey
 	}
 
 	var res kamereonResponse
@@ -301,7 +308,7 @@ func (v *Renault) kamereonVehicles(accountID string) ([]string, error) {
 	return vehicles, err
 }
 
-// batteryAPI provides battery api response
+// batteryAPI provides battery-status api response
 func (v *Renault) batteryAPI() (interface{}, error) {
 	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/battery-status", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
@@ -316,9 +323,24 @@ func (v *Renault) batteryAPI() (interface{}, error) {
 	return res, err
 }
 
+// hvacAPI provides hvac-status api response
+func (v *Renault) hvacAPI() (interface{}, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/hvac-status", v.kamereon.Target, v.accountID, v.vin)
+	res, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			res, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return res, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Renault) SoC() (float64, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		return float64(res.Data.Attributes.BatteryLevel), nil
@@ -331,7 +353,7 @@ func (v *Renault) SoC() (float64, error) {
 func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.apiG()
+	res, err := v.batteryG()
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
@@ -346,7 +368,7 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 
 // Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		return int64(res.Data.Attributes.BatteryAutonomy), nil
@@ -357,7 +379,7 @@ func (v *Renault) Range() (int64, error) {
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
+	res, err := v.batteryG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
@@ -370,4 +392,23 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// Climater implements the api.Vehicle.Climater interface
+func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.hvacG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		state := strings.ToLower(res.Data.Attributes.HvacStatus)
+
+		if state == "" {
+			return false, 0, 0, api.ErrNotAvailable
+		}
+
+		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
+
+		return active, res.Data.Attributes.ExternalTemperature, 20, nil
+	}
+
+	return false, 0, 0, err
 }
