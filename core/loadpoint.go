@@ -65,6 +65,12 @@ type ThresholdConfig struct {
 	Threshold float64       `mapstructure:"threshold" ui:"de=Schwellwert (W)"`
 }
 
+// DisconnectConfig defines the behaviour when vehicle disconnects
+type DisconnectConfig struct {
+	Mode      api.ChargeMode `mapstructure:"mode" de:"Lademodus"`           // Charge mode to apply when car disconnected
+	TargetSoC int            `mapstructure:"targetSoC" de:"Ladestatus (%)"` // Target SoC to apply when car disconnected
+}
+
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -121,13 +127,10 @@ type LoadPointConfig struct {
 	MinCurrent int64          `mapstructure:"minCurrent"`                                               // PV mode: start current	Min+PV mode: min current
 	MaxCurrent int64          `mapstructure:"maxCurrent"`                                               // Max allowed current. Physically ensured by the charger
 
-	SoC          SoCConfig `mapstructure:"soc"`
-	OnDisconnect struct {
-		Mode      api.ChargeMode `mapstructure:"mode" de:"Lademodus"`           // Charge mode to apply when car disconnected
-		TargetSoC int            `mapstructure:"targetSoC" de:"Ladestatus (%)"` // Target SoC to apply when car disconnected
-	} `mapstructure:"onDisconnect" ui:"Aktion bei Fahrzeugtrennung..."`
-	Enable  ThresholdConfig `de:"Einschaltverhalten"`
-	Disable ThresholdConfig `de:"Ausschaltverhalten"`
+	SoC          SoCConfig        `mapstructure:"soc"`
+	OnDisconnect DisconnectConfig `mapstructure:"onDisconnect" ui:"Aktion bei Fahrzeugtrennung..."`
+	Enable       ThresholdConfig  `de:"Einschaltverhalten"`
+	Disable      ThresholdConfig  `de:"Ausschaltverhalten"`
 
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 }
