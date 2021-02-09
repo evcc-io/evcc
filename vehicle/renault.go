@@ -410,5 +410,5 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 		return active, res.Data.Attributes.ExternalTemperature, 20, nil
 	}
 
-	return active, outsideTemp, targetTemp, err
+	return false, 0, 0, err
 }
