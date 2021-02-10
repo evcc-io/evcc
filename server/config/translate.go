@@ -1,21 +1,35 @@
 package config
 
-var translations = map[string]string{
-	"Broker":   "Broker Adresse",
-	"Cache":    "Aktualisierungsintervall",
-	"Capacity": "Batteriekapazität (kWh)",
-	"Password": "Passwort",
-	"User":     "Username",
-	"Scale":    "Multiplikator",
-	"Serial":   "Seriennummer",
-	"Title":    "Titel",
-	"VIN":      "Fahrgestellnummer",
-	"Power":    "Leistung (W)",
-	"Energy":   "Energie (kWh)",
-	"SoC":      "Ladezustand (%)",
-	"Currents": "Phasenstrom (A)",
+type labelAndUnit struct{ label, unit string }
+
+var translations = map[string]labelAndUnit{
+	"Broker":   {label: "Broker Adresse"},
+	"Cache":    {label: "Aktualisierungsintervall"},
+	"Capacity": {label: "Batteriekapazität", unit: "kWh"},
+	"Password": {label: "Passwort"},
+	"User":     {label: "Username"},
+	"Scale":    {label: "Multiplikator"},
+	"Serial":   {label: "Seriennummer"},
+	"Title":    {label: "Titel"},
+	"VIN":      {label: "Fahrgestellnummer"},
+	"Power":    {label: "Leistung", unit: "W"},
+	"Energy":   {label: "Energie", unit: "kWh"},
+	"SoC":      {label: "Ladezustand", unit: "%"},
+	"Currents": {label: "Phasenstrom", unit: "A"},
 }
 
 func translate(v string) string {
-	return translations[v]
+	val, ok := translations[v]
+	if ok {
+		return val.label
+	}
+	return ""
+}
+
+func translateUnit(v string) string {
+	val, ok := translations[v]
+	if ok {
+		return val.unit
+	}
+	return ""
 }

@@ -82,6 +82,16 @@ func label(f *structs.Field) string {
 	return val
 }
 
+// unit is the exported field unit
+func unit(f *structs.Field) string {
+	val := tagKey(f, "ui", "unit")
+	if val == "" {
+		val = translateUnit(f.Name())
+	}
+
+	return val
+}
+
 // kind is the exported data type
 func kind(f *structs.Field) string {
 	val := f.Value()
@@ -146,14 +156,10 @@ func Annotate(s interface{}) (ds []FieldMetadata) {
 			Hidden:   hasTagKey(f, "ui", "hide"),
 		}
 
-		// unit
-		if unit := tagKey(f, "ui", "unit"); unit != "" {
-			d.Unit = unit
-		}
-
 		if !d.Hidden {
 			// label
 			d.Label = label(f)
+			d.Unit = unit(f)
 
 			// enums
 			if oneof := tagKey(f, "validate", "oneof"); oneof != "" {
