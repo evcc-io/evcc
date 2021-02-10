@@ -29,7 +29,9 @@ func init() {
 }
 
 func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, string, error) {
-	fmt.Println("Authentication devices:", devices)
+	fmt.Println("Authentication devices:", funk.Map(devices, func(d tesla.Device) string {
+		return d.Name
+	}))
 	if len(devices) > 1 {
 		return tesla.Device{}, "", errors.New("multiple devices found, only single device supported")
 	}
@@ -38,7 +40,7 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 	reader := bufio.NewReader(os.Stdin)
 	code, err := reader.ReadString('\n')
 
-	return devices[0], code, err
+	return devices[0], strings.TrimSpace(code), err
 }
 
 func generateToken(user, pass string) {
@@ -77,12 +79,16 @@ func runTeslaToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	teslas := funk.Filter(conf.Vehicles, func(v qualifiedConfig) bool {
+		return strings.ToLower(v.Type) == "tesla"
+	}).([]qualifiedConfig)
+
 	var vehicleConf qualifiedConfig
-	if len(conf.Vehicles) == 1 {
-		vehicleConf = conf.Vehicles[0]
+	if len(teslas) == 1 {
+		vehicleConf = teslas[0]
 	} else if len(args) == 1 {
-		vehicleConf = funk.Find(conf.Vehicles, func(v qualifiedConfig) bool {
-			return strings.ToLower(v.Name) == strings.ToLower(args[0])
+		vehicleConf = funk.Find(teslas, func(v qualifiedConfig) bool {
+			return strings.EqualFold(v.Name, args[0])
 		}).(qualifiedConfig)
 	}
 
