@@ -14,6 +14,7 @@ import (
 func (s *Site) RegisterConfigHandler(router *mux.Router) {
 	router.PathPrefix("/site").HandlerFunc(s.configHandler)
 
+	router.PathPrefix("/loadpoints").HandlerFunc(s.loadpointsConfigHandler)
 	for idx, lp := range s.loadpoints {
 		router.PathPrefix(fmt.Sprintf("/loadpoints/%d", idx)).HandlerFunc(lp.configHandler)
 	}
@@ -27,6 +28,22 @@ func (s *Site) configHandler(w http.ResponseWriter, r *http.Request) {
 		s.setConfig(w, r)
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *Site) loadpointsConfigHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	meta := make([]interface{}, 0, len(s.loadpoints))
+	for _, lp := range s.loadpoints {
+		meta = append(meta, config.Annotate(lp.LoadPointConfig))
+	}
+
+	if err := json.NewEncoder(w).Encode(meta); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
