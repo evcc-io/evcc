@@ -49,9 +49,9 @@ type Site struct {
 
 // SiteConfig contains the site's public configuration
 type SiteConfig struct {
-	Title         string  `mapstructure:"title"`                                           // UI title
-	ResidualPower float64 `mapstructure:"residualPower" structs:"-" ui:"de=Grundlast (W)"` // PV meter only: household usage. Grid meter: household safety margin
-	PrioritySoC   float64 `mapstructure:"prioritySoC" ui:"de=Batteriepriorität (%)"`       // prefer battery up to this SoC
+	Title         string  `mapstructure:"title"`                                              // UI title
+	ResidualPower float64 `mapstructure:"residualPower" structs:"-" ui:"de=Grundlast,unit=W"` // PV meter only: household usage. Grid meter: household safety margin
+	PrioritySoC   float64 `mapstructure:"prioritySoC" ui:"de=Batteriepriorität,unit=%"`       // prefer battery up to this SoC
 }
 
 // MetersConfig contains the loadpoint's meter configuration

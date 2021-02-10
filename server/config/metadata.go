@@ -32,6 +32,7 @@ type FieldMetadata struct {
 	Required bool            `json:"required,omitempty"`
 	Hidden   bool            `json:"hidden,omitempty"`
 	Label    string          `json:"label,omitempty"`
+	Unit     string          `json:"unit,omitempty"`
 	Enum     []interface{}   `json:"enum,omitempty"`
 	Default  interface{}     `json:"default,omitempty"`
 	Children []FieldMetadata `json:"children,omitempty"`
@@ -143,6 +144,11 @@ func Annotate(s interface{}) (ds []FieldMetadata) {
 			Type:     kind(f),
 			Required: hasTagKey(f, "validate", "required"),
 			Hidden:   hasTagKey(f, "ui", "hide"),
+		}
+
+		// unit
+		if unit := tagKey(f, "ui", "unit"); unit != "" {
+			d.Unit = unit
 		}
 
 		if !d.Hidden {

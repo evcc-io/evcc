@@ -62,13 +62,13 @@ type SoCConfig struct {
 // ThresholdConfig defines enable/disable hysteresis parameters
 type ThresholdConfig struct {
 	Delay     time.Duration `mapstructure:"delay" ui:"de=Verzögerung"`
-	Threshold float64       `mapstructure:"threshold" ui:"de=Schwellwert (W)"`
+	Threshold float64       `mapstructure:"threshold" ui:"de=Schwellwert,unit=W"`
 }
 
 // DisconnectConfig defines the behaviour when vehicle disconnects
 type DisconnectConfig struct {
-	Mode      api.ChargeMode `mapstructure:"mode" de:"Lademodus"`           // Charge mode to apply when car disconnected
-	TargetSoC int            `mapstructure:"targetSoC" de:"Ladestatus (%)"` // Target SoC to apply when car disconnected
+	Mode      api.ChargeMode `mapstructure:"mode" ui:"de=Lademodus"`              // Charge mode to apply when car disconnected
+	TargetSoC int            `mapstructure:"targetSoC" ui:"de=Ladestatus,unit=%"` // Target SoC to apply when car disconnected
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -123,9 +123,9 @@ type LoadPoint struct {
 type LoadPointConfig struct {
 	Title      string         `mapstructure:"title"`                                                    // UI title
 	Mode       api.ChargeMode `mapstructure:"mode" validate:"oneof=off now minpv pv" ui:"de=Lademodus"` // Charge mode, guarded by mutex
-	Phases     int64          `mapstructure:"phases" validate:"oneof=1 2 3"`                            // Phases- required for converting power and current
-	MinCurrent int64          `mapstructure:"minCurrent"`                                               // PV mode: start current	Min+PV mode: min current
-	MaxCurrent int64          `mapstructure:"maxCurrent"`                                               // Max allowed current. Physically ensured by the charger
+	Phases     int64          `mapstructure:"phases" validate:"oneof=1 2 3" ui:"de=Phasen"`             // Phases- required for converting power and current
+	MinCurrent int64          `mapstructure:"minCurrent" ui:"de=Minimaler Ladestrom,unit=A"`            // PV mode: start current	Min+PV mode: min current
+	MaxCurrent int64          `mapstructure:"maxCurrent" ui:"de=Maximaler Ladestrom,unit=A"`            // Max allowed current. Physically ensured by the charger
 
 	SoC          SoCConfig        `mapstructure:"soc"`
 	OnDisconnect DisconnectConfig `mapstructure:"onDisconnect" ui:"Aktion bei Fahrzeugtrennung..."`

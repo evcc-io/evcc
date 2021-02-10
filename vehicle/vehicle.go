@@ -37,8 +37,8 @@ type Vehicle struct {
 
 type vehicleConfig struct {
 	Title    string
-	Capacity int64            `validate:"required" ui:"de=Batteriekapazität (kWh)"`
-	Charge   provider.Config  `validate:"required" ui:"de=Ladezustand (%)"`
+	Capacity int64            `validate:"required" ui:"de=Batteriekapazität,unit=kWh"`
+	Charge   provider.Config  `validate:"required" ui:"de=Ladezustand,unit=%"`
 	Status   *provider.Config `ui:"Ladestatus ('A'..'C')"`
 	Range    *provider.Config `ui:"Reichweite (km)"`
 	Cache    time.Duration    `structs:"-"`
