@@ -118,29 +118,9 @@ func TypesHandler(class string) http.HandlerFunc {
 }
 
 // TestHandler tests the given configuration
-func TestHandler() http.HandlerFunc {
+func TestHandler(class string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		class, ok := vars["class"]
-		if !ok {
-			http.Error(w, "class required", http.StatusBadRequest)
-			return
-		}
-
 		res, err := config.Test(class, r.Body)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		jsonResponse(w, r, res)
-	}
-}
-
-// MeterTestHandler tests the given configuration
-func MeterTestHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := config.Test("meter", r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -358,8 +338,12 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 		{get, "/config/types/vehicle", TypesHandler("vehicle")},
 		{get, "/config/types/meter", TypesHandler("meter")},
 		{get, "/config/types/meter/{type:[a-z]+}", TypesHandler("meter")},
-		{post, "/config/test/{class:[a-z]+}", TestHandler()},
-		{post, "/config/test/meter/{type:[a-z]+}", MeterTestHandler()},
+		{get, "/config/types/plugin", TypesHandler("plugin")},
+		{post, "/config/test/charger", TestHandler("charger")},
+		{post, "/config/test/vehicle", TestHandler("vehicle")},
+		{post, "/config/test/meter", TestHandler("meter")},
+		{post, "/config/test/meter/{type:[a-z]+}", TestHandler("meter")},
+		{post, "/config/test/plugin", TestHandler("plugin")},
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
