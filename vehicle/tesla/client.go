@@ -11,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/uhthomas/tesla"
 	"golang.org/x/oauth2"
 )
@@ -45,10 +46,10 @@ func pkce() (verifier, challenge string, err error) {
 
 // NewClient creates a tesla authentication client
 func NewClient(log *util.Logger) (*Client, error) {
-	httpClient := &http.Client{Transport: &roundTripper{
-		log:       log,
-		transport: http.DefaultTransport,
-	}}
+	httpClient := &http.Client{
+		Timeout:   request.Timeout,
+		Transport: request.NewTripper(log, http.DefaultTransport),
+	}
 
 	config := &oauth2.Config{
 		ClientID:     "ownerapi",
