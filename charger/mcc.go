@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -80,14 +79,16 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
+	log := util.NewLogger("mcc")
+
 	mcc := &MobileConnect{
-		Helper:   request.NewHelper(util.NewLogger("mcc")),
+		Helper:   request.NewHelper(log),
 		uri:      strings.TrimRight(uri, "/"),
 		password: password,
 	}
 
 	// ignore the self signed certificate
-	mcc.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	mcc.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
 	return mcc, nil
 }
