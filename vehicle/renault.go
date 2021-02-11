@@ -398,6 +398,11 @@ func (v *Renault) FinishTime() (time.Time, error) {
 func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
+	// Zoe Ph2
+	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden) {
+		return false, 0, 0, api.ErrNotAvailable
+	}
+
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		state := strings.ToLower(res.Data.Attributes.HvacStatus)
 
