@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -101,7 +100,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 
 	// ignore the self signed certificate
 	if insecure {
-		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	}
 
 	if jq != "" {
