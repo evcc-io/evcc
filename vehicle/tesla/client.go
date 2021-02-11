@@ -18,7 +18,7 @@ import (
 
 // Client is the tesla authentication client
 type Client struct {
-	config   *oauth2.Config
+	Config   *oauth2.Config
 	auth     *tesla.Auth
 	verifier string
 }
@@ -76,7 +76,7 @@ func NewClient(log *util.Logger) (*Client, error) {
 	}
 
 	client := &Client{
-		config:   config,
+		Config:   config,
 		auth:     auth,
 		verifier: verifier,
 	}
@@ -86,27 +86,18 @@ func NewClient(log *util.Logger) (*Client, error) {
 }
 
 // Login executes the MFA or non-MFA login
-func (c *Client) Login(username, password string) (oauth2.TokenSource, error) {
+func (c *Client) Login(username, password string) (*oauth2.Token, error) {
 	ctx := context.Background()
 	code, err := c.auth.Do(ctx, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := c.config.Exchange(ctx, code,
+	token, err := c.Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("code_verifier", c.verifier),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("exchange: %w", err)
-	}
 
-	return c.TokenSource(token), nil
-}
-
-// TokenSource creates an oauth tokensource from given token
-func (c *Client) TokenSource(token *oauth2.Token) oauth2.TokenSource {
-	ctx := context.Background()
-	return c.config.TokenSource(ctx, token)
+	return token, err
 }
 
 // DeviceHandler sets an alternative authentication device handler

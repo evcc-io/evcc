@@ -47,8 +47,6 @@ github.com/andig/evcc-config v0.0.0-20210210171605-531c04a6bb59/go.mod h1:N0hIjI
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde h1:QgUO3swXFjTXjqT+EA1k7XZbTxtl8AenEckO0UF3Dfw=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
-github.com/andig/tesla v0.0.0-20210203084021-0d6f2d3bb496 h1:+rbLd40c9NzFQKJNd4QxF7Wz/ZotfrBTTp9mwugFvXA=
-github.com/andig/tesla v0.0.0-20210203084021-0d6f2d3bb496/go.mod h1:Iu7IX0ScvW2BhZeJhH9lEyUMKRst4LnvPhrwa+dpdjM=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b h1:n3O7DTcqZzpl8/6zVCCkHYbc/zyTfXQCk4xaTAkQ5aE=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b/go.mod h1:6ISKOGKh+gHA6RIFKvIhSS7V8qY41Gi2LG6QyIJVuCs=
 github.com/andybalholm/cascadia v1.1.0 h1:BuuO6sSfQNFRu1LppgbD25Hr2vLYW25JvxHs5zzsLTo=
@@ -65,6 +63,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
+github.com/bogosj/tesla v0.0.0-20210211144207-92a50058e036 h1:bkSWyrNev6+gvKxa1ZlH5i8MfNHsEVn3go1S9aCi6Y0=
+github.com/bogosj/tesla v0.0.0-20210211144207-92a50058e036/go.mod h1:KT8NxKXUX5A0v1wX4PXGJqK1+J1BywYDgGhVruqzlmI=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
@@ -285,6 +285,7 @@ github.com/jeremywohl/flatten v1.0.1/go.mod h1:4AmD/VxjWcI5SRB0n6szE2A6s2fsNHDLO
 github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a h1:wOlcxK/k5rPhtMyEFVayqVh0x3lWvnyEaK8Aw96zx4M=
 github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
+github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a/go.mod h1:GlLJU/C6KA3FEAIZTFDvIDlNGE1+YlKGHHXdNVkt5ow=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
