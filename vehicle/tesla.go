@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	auth "github.com/andig/evcc/vehicle/tesla"
-	"github.com/jsgoecke/tesla"
+	"github.com/bogosj/tesla"
 	"golang.org/x/oauth2"
 )
 
@@ -64,18 +65,19 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ts, err := tokenSource(authClient, cc.User, cc.Password, cc.Tokens)
+	token, err := teslaToken(authClient, cc.User, cc.Password, cc.Tokens)
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	client, err := tesla.NewClient(&tesla.Auth{
-		TokenSource: ts,
-		HTTPClient:  request.NewHelper(log),
-	})
-	if err != nil {
-		return nil, err
-	}
+	// authenticated http client with logging
+	ctx := context.Background()
+	http := authClient.Config.Client(ctx, token)
+	http.Transport = request.NewTripper(log, http.Transport)
+
+	// injected to the Tesla client
+	client := &tesla.Client{HTTP: http}
+	tesla.ActiveClient = client
 
 	vehicles, err := client.Vehicles()
 	if err != nil {
@@ -103,30 +105,31 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // token creates the Tesla access token
-func tokenSource(auth *auth.Client, user, password string, tokens teslaTokens) (oauth2.TokenSource, error) {
+func teslaToken(auth *auth.Client, user, password string, tokens teslaTokens) (*oauth2.Token, error) {
 	// without tokens try to login - will fail if MFA enabled
 	if tokens.Access == "" {
-		ts, err := auth.Login(user, password)
+		token, err := auth.Login(user, password)
 		if err != nil {
 			err = fmt.Errorf("%w: if using multi-factor authentication, create tokens using `evcc tesla-token`", err)
 		}
 
-		return ts, err
+		return token, err
 	}
 
 	// create tokensource with given tokens
-	ts := auth.TokenSource(&oauth2.Token{
+	ctx := context.Background()
+	ts := auth.Config.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  tokens.Access,
 		RefreshToken: tokens.Refresh,
 	})
 
 	// test the token source
-	_, err := ts.Token()
+	token, err := ts.Token()
 	if err != nil {
 		err = fmt.Errorf("%w: token refresh failed, check access and refresh tokens are valid", err)
 	}
 
-	return ts, err
+	return token, err
 }
 
 // chargeState implements the api.Vehicle interface

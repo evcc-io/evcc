@@ -8,6 +8,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
+	github.com/bogosj/tesla v0.0.0-20210211144207-92a50058e036
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.3.1
@@ -31,7 +32,6 @@ require (
 	github.com/itchyny/gojq v0.12.1
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
-	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
 	github.com/korylprince/ipnetgen v1.0.0
@@ -62,5 +62,3 @@ require (
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
-
-replace github.com/jsgoecke/tesla => github.com/andig/tesla v0.0.0-20210203084021-0d6f2d3bb496
