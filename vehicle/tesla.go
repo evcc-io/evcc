@@ -10,6 +10,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	auth "github.com/andig/evcc/vehicle/tesla"
 	"github.com/bogosj/tesla"
 	"golang.org/x/oauth2"
