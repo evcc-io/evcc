@@ -70,11 +70,12 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	// authenticated http client
+	// authenticated http client with logging
 	ctx := context.Background()
 	http := authClient.Config.Client(ctx, token)
 	http.Transport = request.NewTripper(log, http.Transport)
 
+	// injected to the Tesla client
 	client := &tesla.Client{HTTP: http}
 	tesla.ActiveClient = client
 
