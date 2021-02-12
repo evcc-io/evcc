@@ -282,8 +282,9 @@ github.com/jarcoal/httpmock v1.0.4/go.mod h1:ATjnClrvW/3tijVmpL/va5Z3aAyGvqU3gCT
 github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869/go.mod h1:cJ6Cj7dQo+O6GJNiMx+Pa94qKj+TG8ONdKHgMNIyyag=
 github.com/jeremywohl/flatten v1.0.1 h1:LrsxmB3hfwJuE+ptGOijix1PIfOoKLJ3Uee/mzbgtrs=
 github.com/jeremywohl/flatten v1.0.1/go.mod h1:4AmD/VxjWcI5SRB0n6szE2A6s2fsNHDLO0nAlMHgfLQ=
-github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a h1:wOlcxK/k5rPhtMyEFVayqVh0x3lWvnyEaK8Aw96zx4M=
 github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
+github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc h1:lvs05O5riVMhA70SOK53fthEZ5lMDHHy51ZKDldr0aE=
+github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
 github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a/go.mod h1:GlLJU/C6KA3FEAIZTFDvIDlNGE1+YlKGHHXdNVkt5ow=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
