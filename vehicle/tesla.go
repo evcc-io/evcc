@@ -71,9 +71,8 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging
-	ctx := context.Background()
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 	http := authClient.Config.Client(ctx, token)
-	http.Transport = request.NewTripper(log, http.Transport)
 
 	// injected to the Tesla client
 	client := &tesla.Client{HTTP: http}
@@ -104,7 +103,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-// token creates the Tesla access token
+// teslaToken creates the Tesla OAuth token from given credentials
 func teslaToken(auth *auth.Client, user, password string, tokens teslaTokens) (*oauth2.Token, error) {
 	// without tokens try to login - will fail if MFA enabled
 	if tokens.Access == "" {
@@ -121,6 +120,7 @@ func teslaToken(auth *auth.Client, user, password string, tokens teslaTokens) (*
 	ts := auth.Config.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  tokens.Access,
 		RefreshToken: tokens.Refresh,
+		Expiry:       time.Now(),
 	})
 
 	// test the token source
