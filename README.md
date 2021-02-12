@@ -207,7 +207,7 @@ Meters provide data about power and energy consumption, PV production or battery
 
 Chargers may also contain internal or attached meters. If the charger contains an internal meter, there's no need to configure the charge meter separately. If no charge meter is configured, EVCC will use the charger-attached meter (if exists) or assume the configured charger power as meter value.
 
-EVCC uses positiv (+) sign for power feed-in (grid consumption, pv inverter production or home battery discharge) and negative (-) sign for energy exported (grid export, pv inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive sign.
+EVCC uses positive (+) sign for incoming energy (grid consumption, PV inverter production or home battery discharge) and negative (-) sign for outgoing energy (grid feed-in, PV inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive (+) sign.
 
 Available meter implementations are:
 
@@ -523,7 +523,6 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 -   structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 -   avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
 -   containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
--   support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org

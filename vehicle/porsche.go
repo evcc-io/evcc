@@ -77,7 +77,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	var err error
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err := util.DecodeOther(other, &cc, true); err != nil {
 		return nil, err
 	}
 

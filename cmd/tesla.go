@@ -51,12 +51,7 @@ func generateToken(user, pass string) {
 
 	client.DeviceHandler(codePrompt)
 
-	ts, err := client.Login(user, pass)
-	if err != nil {
-		log.FATAL.Fatalln(err)
-	}
-
-	token, err := ts.Token()
+	token, err := client.Login(user, pass)
 	if err != nil {
 		log.FATAL.Fatalln(err)
 	}

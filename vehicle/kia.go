@@ -20,7 +20,7 @@ func init() {
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := configDefaults()
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err := util.DecodeOther(other, &cc, true); err != nil {
 		return nil, err
 	}
 

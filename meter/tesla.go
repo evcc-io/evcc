@@ -1,7 +1,6 @@
 package meter
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"strings"
@@ -88,7 +87,7 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 	}
 
 	// ignore the self signed certificate
-	m.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	m.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)

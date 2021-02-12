@@ -12,7 +12,7 @@ import (
 var validate = validator.New()
 
 // DecodeOther uses mapstructure to decode into target structure. Unused keys cause errors.
-func DecodeOther(other interface{}, cc interface{}) error {
+func DecodeOther(other interface{}, cc interface{}, validate ...bool) error {
 	decoderConfig := &mapstructure.DecoderConfig{
 		Result:           cc,
 		ErrorUnused:      true,
@@ -23,6 +23,10 @@ func DecodeOther(other interface{}, cc interface{}) error {
 	decoder, err := mapstructure.NewDecoder(decoderConfig)
 	if err == nil {
 		err = decoder.Decode(other)
+	}
+
+	if err == nil && len(validate) == 1 && validate[0] {
+		err = Validate(cc)
 	}
 
 	return err

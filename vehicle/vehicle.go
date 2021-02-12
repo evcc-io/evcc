@@ -59,7 +59,7 @@ func init() {
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := vehicleDefaults()
 
-	if err := util.DecodeOther(other, &cc); err != nil {
+	if err := util.DecodeOther(other, &cc, true); err != nil {
 		return nil, err
 	}
 
