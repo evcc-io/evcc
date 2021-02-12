@@ -523,7 +523,6 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 -   structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 -   avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
 -   containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
--   support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
