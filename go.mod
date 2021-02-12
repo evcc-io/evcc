@@ -31,7 +31,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.2.1
 	github.com/itchyny/gojq v0.12.1
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
+	github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
 	github.com/korylprince/ipnetgen v1.0.0
