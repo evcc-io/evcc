@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -46,11 +45,6 @@ func pkce() (verifier, challenge string, err error) {
 
 // NewClient creates a tesla authentication client
 func NewClient(log *util.Logger) (*Client, error) {
-	httpClient := &http.Client{
-		Timeout:   request.Timeout,
-		Transport: request.NewTripper(log, http.DefaultTransport),
-	}
-
 	config := &oauth2.Config{
 		ClientID:     "ownerapi",
 		ClientSecret: "",
@@ -68,7 +62,7 @@ func NewClient(log *util.Logger) (*Client, error) {
 	}
 
 	auth := &tesla.Auth{
-		Client: httpClient,
+		Client: request.NewHelper(log).Client,
 		AuthURL: config.AuthCodeURL(state(), oauth2.AccessTypeOffline,
 			oauth2.SetAuthURLParam("code_challenge", challenge),
 			oauth2.SetAuthURLParam("code_challenge_method", "S256"),

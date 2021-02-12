@@ -552,7 +552,9 @@ func (lp *LoadPoint) climateActive() bool {
 			return active
 		}
 
-		lp.log.ERROR.Printf("climater: %v", err)
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("climater: %v", err)
+		}
 	}
 
 	return false
