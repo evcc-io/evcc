@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"crypto/tls"
 	"fmt"
 	"math"
 	"net/http"
@@ -77,7 +76,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	}
 
 	if cc.Jq != "" {

@@ -4,10 +4,11 @@ go 1.13
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
-	github.com/andig/evcc-config v0.0.0-20210112213741-5c09f26e0c2a
+	github.com/andig/evcc-config v0.0.0-20210210171605-531c04a6bb59
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
+	github.com/bogosj/tesla v0.0.0-20210211144207-92a50058e036
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.3.1
@@ -30,8 +31,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.2.1
 	github.com/itchyny/gojq v0.12.1
 	github.com/jeremywohl/flatten v1.0.1
-	github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a
-	github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a
+	github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
 	github.com/korylprince/ipnetgen v1.0.0
@@ -53,7 +53,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/thoas/go-funk v0.7.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/uhthomas/tesla v0.0.0-20210202211959-8f97ef33b7b3
+	github.com/uhthomas/tesla v0.0.0-20210210215721-a076a03e9349
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
@@ -62,5 +62,3 @@ require (
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
-
-replace github.com/jsgoecke/tesla => github.com/andig/tesla v0.0.0-20210203084021-0d6f2d3bb496

@@ -18,8 +18,8 @@
 				<fa-icon
 					icon="sun"
 					:class="{
-						'text-primary': pvPower < 0,
-						'text-muted': pvPower >= 0,
+						'text-primary': pvPower > 0,
+						'text-muted': pvPower <= 0,
 					}"
 				></fa-icon>
 			</div>
