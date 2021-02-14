@@ -19,7 +19,7 @@ type NonAPI struct {
 }
 
 func init() {
-	registry.Add("nonapi", NewFordFromConfig)
+	registry.Add("nonapi", NewNonAPIFromConfig)
 }
 
 // NewNonAPIFromConfig creates a new vehicle
