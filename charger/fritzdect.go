@@ -59,11 +59,9 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-
 	if cc.URI == "" || cc.AIN == "" {
 		return nil, errors.New("fritzdect config: must have uri and ain of AVM FritzDECT switch")
 	}
-
 	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Cache)
 }
 
@@ -78,7 +76,6 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, ca
 		standbypower: standbypower,
 		sid:          sid,
 	}
-
 	return c, nil
 }
 
@@ -94,15 +91,12 @@ func (c *FritzDECT) getFritzBoxResponse(function string) string {
 		// Update session timestamp
 		c.updated = time.Now()
 	}
-
 	parameters["sid"] = c.sid
 	if c.ain != "" {
 		parameters["ain"] = c.ain
 	}
 	parameters["switchcmd"] = function
-
 	response, _ := sendFritzBoxRequest(uri, parameters)
-
 	return strings.TrimSpace(string(response))
 }
 
@@ -129,7 +123,6 @@ func (c *FritzDECT) apiStatus() (status fritzdectStatusResponse, err error) {
 		return status, err
 	}
 	status.Energy = status.Energy / 1000 // Wh ==> kWh
-
 	return status, err
 }
 
@@ -141,7 +134,6 @@ func (c *FritzDECT) apiUpdate(function string) (status fritzdectStatusResponse, 
 	if function == "SetSwitchOff" {
 		status.State, err = strconv.ParseInt(c.getFritzBoxResponse("setswitchoff"), 10, 32)
 	}
-
 	return status, err
 }
 
@@ -177,7 +169,6 @@ func (c *FritzDECT) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-
 	switch status.State {
 	case 0:
 		return false, nil
@@ -191,7 +182,6 @@ func (c *FritzDECT) Enabled() (bool, error) {
 // Enable implements the Charger.Enable interface
 func (c *FritzDECT) Enable(enable bool) (err error) {
 	var status fritzdectStatusResponse
-
 	if enable {
 		status, err = c.apiUpdate("SetSwitchOn")
 	} else {
@@ -200,15 +190,12 @@ func (c *FritzDECT) Enable(enable bool) (err error) {
 	if err != nil {
 		return err
 	}
-
 	if enable && validFritzBoxResponse(status) && status.State == 0 {
 		return fmt.Errorf("wasn't able to switchOn: %d", status.State)
 	}
-
 	if !enable && validFritzBoxResponse(status) && status.State == 1 {
 		return fmt.Errorf("wasn't able to switchOff: %d", status.State)
 	}
-
 	return nil
 }
 
@@ -230,13 +217,11 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 // ChargedEnergy implements the ChargeRater interface
 func (c *FritzDECT) ChargedEnergy() (float64, error) {
 	status, err := c.apiStatus()
-
 	energy := status.Energy / 1000
-
 	return energy, err
 }
 
-// Fritzbox helpers (thx to ahago)
+// Fritzbox helpers (based on ideas of https://github.com/rsdk/ahago)
 
 //getFritzBoxSessionID fetches a session-id based on the username and password in the connection struct
 func (c *FritzDECT) getFritzBoxSessionID() error {
@@ -247,18 +232,15 @@ func (c *FritzDECT) getFritzBoxSessionID() error {
 		Challenge string
 		BlockTime string
 	}
-
 	body, err := sendFritzBoxRequest(uri, parameters)
 	if err != nil {
 		return err
 	}
-
 	v := Result{SID: "none", Challenge: "none", BlockTime: "none"}
 	err = xml.Unmarshal(body, &v)
 	if err != nil {
 		return err
 	}
-
 	if v.SID == "0000000000000000" {
 		parameters["username"] = c.user
 		parameters["response"] = createFbChallengeResponse(v.Challenge, c.password)
@@ -287,7 +269,6 @@ func sendFritzBoxRequest(uri string, parametersIn map[string]string) ([]byte, er
 		parameters.Add(key, value)
 	}
 	URL.RawQuery = parameters.Encode()
-
 	resp, err := http.Get(URL.String())
 	if err != nil {
 		return nil, err
@@ -300,7 +281,6 @@ func sendFritzBoxRequest(uri string, parametersIn map[string]string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-
 	return body, nil
 }
 
