@@ -37,7 +37,7 @@
       <div class="navbar-nav">
         <router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
         <router-link class="nav-item nav-link pb-1" to="/config">Konfiguration</router-link>
-        <a class="nav-item nav-link pb-1" href="https://www.sunny5.de" target="_blank">Homepage</a>
+        <script>document.write('<a class="nav-item nav-link pb-1" href="' + document.location.origin + '/broker/login">Login</a>')</script>
       </div>
     </div>
   </nav>
@@ -183,7 +183,7 @@ loadpoints:
 <script type="text/x-template" id="site-details-template">
 <div class="row">
   <div class="col-6 col-md-3 mt-3" v-if="state.gridConfigured">
-    <div class="mb-2 value" v-if="state.gridPower > 0">
+    <div class="mb-2 value" v-if="state.gridPower < 0">
       Bezug <fa-icon icon="arrow-down" class="text-primary"></fa-icon>
     </div>
     <div class="mb-2 value" v-else>
@@ -495,7 +495,7 @@ loadpoints:
         </small>
       </div>
       <div class="col-6 text-right">
-        <small class="text-muted"></small>
+        <small class="text-muted"><a href= "https://github.com/mark-sch/evcc" target="_blank">&copy; 2020 andig/evcc, Think5 GmbH and others</a></small>
       </div>
     </div>
   </div>
