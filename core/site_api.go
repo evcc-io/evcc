@@ -7,6 +7,10 @@ type SiteAPI interface {
 	Healthy() bool
 	LoadPoints() []LoadPointAPI
 	LoadPointSettingsAPI
+	GetPrioritySoC() int
+	SetPrioritySoC(int)
+	GetResidualPower() int
+	SetResidualPower(int)
 }
 
 // LoadPoints returns the array of associated loadpoints
@@ -46,6 +50,33 @@ func (site *Site) SetTargetSoC(soc int) error {
 	}
 	return nil
 }
+
+// GetPrioritySoC gets loadpoint home battery priority soc
+func (site *Site) GetPrioritySoC() int {
+	return int(site.PrioritySoC)
+}
+
+// SetPrioritySoC sets loadpoint home battery priority soc
+func (site *Site) SetPrioritySoC(soc int) {
+	site.log.INFO.Println("set global priority soc:", soc)
+	prioritysoc := float64(soc)
+	site.PrioritySoC = prioritysoc
+	site.publish("prioritySoC", soc)
+}
+
+// GetResidualPower
+func (site *Site) GetResidualPower() int {
+	return int(site.ResidualPower)
+}
+
+// SetResidualPower
+func (site *Site) SetResidualPower(power int) {
+	site.log.INFO.Println("set residual power:", power)
+	residualpower := float64(power)
+	site.ResidualPower = residualpower
+	site.publish("residualPower", power)
+}
+
 
 // GetMinSoC gets loadpoint charge minimum soc
 func (site *Site) GetMinSoC() int {

@@ -135,6 +135,8 @@ func (site *Site) DumpConfig() {
 		presence[site.consumptionMeter != nil],
 	)
 
+	site.publish("prioritySoC", math.Trunc(site.PrioritySoC))
+
 	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
 		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
@@ -288,7 +290,7 @@ func (site *Site) sitePower() (float64, error) {
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
-				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
+				site.log.DEBUG.Printf("giving priority to home-battery at soc: %.0f", soc)
 				batteryPower = 0
 			}
 		}
@@ -296,6 +298,7 @@ func (site *Site) sitePower() (float64, error) {
 
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
+	site.publish("sitePower", math.Trunc(sitePower))
 
 	return sitePower, nil
 }
@@ -303,7 +306,7 @@ func (site *Site) sitePower() (float64, error) {
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
-	if sitePower, err := site.sitePower(); err == nil && site.count > 5 {
+	if sitePower, err := site.sitePower(); err == nil && site.count >= 30 {
 		lp.Update(sitePower)
 		site.Health.Update()
 		site.count=0

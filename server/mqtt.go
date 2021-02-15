@@ -68,6 +68,32 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
+func (m *MQTT) listenSiteOnlySetters(topic string, apiHandler core.SiteAPI) {
+	m.publishSingleValue(topic+"/prioritySoC/set", false, "ok")
+	m.Handler.Listen(topic+"/prioritySoC/set", func(payload string) {
+		if payload != "ok" { 
+			prioritysoc, err := strconv.Atoi(payload)
+			if err == nil {
+				apiHandler.SetPrioritySoC(prioritysoc)
+				//confirm /set change
+				m.publishSingleValue(topic+"/prioritySoC/set", true, "ok") 
+			}
+		}
+	})
+
+	m.publishSingleValue(topic+"/residualPower/set", false, "ok")
+	m.Handler.Listen(topic+"/residualPower/set", func(payload string) {
+		if payload != "ok" { 
+			residualpower, err := strconv.Atoi(payload)
+			if err == nil {
+				apiHandler.SetResidualPower(residualpower)
+				//confirm /set change
+				m.publishSingleValue(topic+"/residualPower/set", true, "ok") 
+			}
+		}
+	})
+}
+
 func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI) {
 	m.publishSingleValue(topic+"/mode/set", false, "ok")
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
@@ -78,26 +104,26 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 		}
 	})
 	
-	m.publishSingleValue(topic+"/minsoc/set", false, "ok")
-	m.Handler.Listen(topic+"/minsoc/set", func(payload string) {
+	m.publishSingleValue(topic+"/minSoC/set", false, "ok")
+	m.Handler.Listen(topic+"/minSoC/set", func(payload string) {
 		if payload != "ok" { 
 			soc, err := strconv.Atoi(payload)
 			if err == nil {
 				_ = apiHandler.SetMinSoC(soc)
 				//confirm /set change
-				m.publishSingleValue(topic+"/minsoc/set", true, "ok") 
+				m.publishSingleValue(topic+"/minSoC/set", true, "ok") 
 			}
 		}
 	})
 	
-	m.publishSingleValue(topic+"/targetsoc/set", false, "ok")
-	m.Handler.Listen(topic+"/targetsoc/set", func(payload string) {
+	m.publishSingleValue(topic+"/targetSoC/set", false, "ok")
+	m.Handler.Listen(topic+"/targetSoC/set", func(payload string) {
 		if payload != "ok" { 
 			soc, err := strconv.Atoi(payload)
 			if err == nil {
 				_ = apiHandler.SetTargetSoC(soc)
 				//confirm /set change
-				m.publishSingleValue(topic+"/targetsoc/set", true, "ok") 
+				m.publishSingleValue(topic+"/targetSoC/set", true, "ok") 
 			}
 		}
 	})
@@ -107,6 +133,7 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	topic := fmt.Sprintf("%s/site", m.root)
 	m.listenSetters(topic, site)
+	m.listenSiteOnlySetters(topic, site)
 
 	// number of loadpoints
 	topic = fmt.Sprintf("%s/loadpoints", m.root)
