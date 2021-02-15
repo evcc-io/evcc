@@ -2,7 +2,6 @@ package charger
 
 import (
 	"crypto/md5"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/xml"
 	"errors"
@@ -14,12 +13,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/text/encoding/unicode"
 )
 
 // AVM FritzBox AHA interface and authentification specifications:
@@ -91,7 +89,7 @@ func (c *FritzDECT) getFritzBoxResponse(function string) string {
 	if time.Since(c.updated).Minutes() >= 10 {
 		err := c.getFritzBoxSessionID()
 		if err != nil {
-			log.Fatalf("error in getFritzBoxSessionID: %v", err)
+			log.Printf("error in getFritzBoxSessionID: %v", err)
 		}
 		// Update session timestamp
 		c.updated = time.Now()
@@ -278,9 +276,9 @@ func (c *FritzDECT) getFritzBoxSessionID() error {
 }
 
 // sendFritzBoxRequest sends a HTTP Request to the FritzBox based on the given URL and returns the answer as a bytearray
-func sendFritzBoxRequest(baseURL string, parametersIn map[string]string) ([]byte, error) {
+func sendFritzBoxRequest(uri string, parametersIn map[string]string) ([]byte, error) {
 	var URL *url.URL
-	URL, err := url.Parse(baseURL)
+	URL, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
 	}
@@ -308,33 +306,16 @@ func sendFritzBoxRequest(baseURL string, parametersIn map[string]string) ([]byte
 
 // createFbChallengeResponse creates the Fritzbox challenge response string
 func createFbChallengeResponse(challenge string, pass string) string {
-	// Create Response string to be crypted
-	utf8 := []byte(challenge + "-" + pass)
-	utf16le := encFbUTF8ToUTF16le(utf8)
-	hash := md5.New()
-	n, err := hash.Write(utf16le)
+	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
+	utf16le, err := encoder.String(challenge + "-" + pass)
 	if err != nil {
-		log.Fatalf("error in createFbChallengeResponse: %b - %v", n, err)
+		log.Printf("error in unicode.UTF16 encoder: %v", err)
+	}
+	hash := md5.New()
+	n, err := hash.Write([]byte(utf16le))
+	if err != nil {
+		log.Printf("error in createFbChallengeResponse md5 hash creation: %b - %v", n, err)
 	}
 	md5hash := hex.EncodeToString(hash.Sum(nil))
 	return challenge + "-" + md5hash
-}
-
-// encFbUTF8ToUTF16le encodes an UTF8 byte array to an UTF16LE byte array
-func encFbUTF8ToUTF16le(in []byte) []byte {
-	var ucps []rune
-	var utf16uint []uint16
-	var utf16le []byte
-	for len(in) > 0 {
-		r, size := utf8.DecodeRune(in)
-		ucps = append(ucps, r)
-		in = in[size:]
-	}
-	utf16uint = utf16.Encode(ucps)
-	b := make([]byte, 2)
-	for val := range utf16uint {
-		binary.LittleEndian.PutUint16(b, utf16uint[val])
-		utf16le = append(utf16le, b[0], b[1])
-	}
-	return utf16le
 }
