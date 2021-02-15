@@ -152,7 +152,7 @@ window.setInterval(function() {
     res.message = "Server unavailable";
     toasts.error(res)
   });
-}, 5000);
+}, 10000);
 
 //
 // App & Routing
@@ -259,6 +259,9 @@ const toasts = new Vue({
     },
     error: function (msg) {
       msg.type = "error";
+      if (msg.message == "Request failed with status code 403") {
+        msg.message = "Keine Berechtigung! Bitte einloggen.";
+      }
       this.raise(msg)
     },
     warn: function (msg) {

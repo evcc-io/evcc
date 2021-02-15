@@ -1,6 +1,6 @@
 .PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
 
-TAG_NAME := 2020.0.34
+TAG_NAME := 2021.1.53
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
@@ -9,7 +9,7 @@ IMAGE := mark-sch/evcc
 ALPINE := 3.12
 TARGETS := arm.v6,arm.v8,amd64
 
-default: clean install npm assets lint test build
+default: clean install npm assets lint build
 
 clean:
 	rm -rf dist/
