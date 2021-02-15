@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -88,7 +89,10 @@ func (c *FritzDECT) getFritzBoxResponse(function string) string {
 	parameters := make(map[string]string)
 	// Refresh Fritzbox session id
 	if time.Since(c.updated).Minutes() >= 10 {
-		c.getFritzBoxSessionID()
+		err := c.getFritzBoxSessionID()
+		if err != nil {
+			log.Fatalf("error in getFritzBoxSessionID: %v", err)
+		}
 		// Update session timestamp
 		c.updated = time.Now()
 	}
@@ -308,7 +312,10 @@ func createFbChallengeResponse(challenge string, pass string) string {
 	utf8 := []byte(challenge + "-" + pass)
 	utf16le := encFbUTF8ToUTF16le(utf8)
 	hash := md5.New()
-	hash.Write(utf16le)
+	n, err := hash.Write(utf16le)
+	if err != nil {
+		log.Fatalf("error in createFbChallengeResponse: %b - %v", n, err)
+	}
 	md5hash := hex.EncodeToString(hash.Sum(nil))
 	return challenge + "-" + md5hash
 }
