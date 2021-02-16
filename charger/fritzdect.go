@@ -24,15 +24,6 @@ import (
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
-// fritzdect AHA-HTTP StatusResponse is the API response if status not OK
-type fritzdectStatusResponse struct {
-	Name    string  // DECT Switch name
-	Present int64   // 0/1 - DECT Switch connected to fritzbox (no/yes)
-	State   int64   // 0/1 - DECT Switch state off/on (empty if unkown or error)
-	Power   float64 // Wert in 0,001 W (aktuelle Leistung, wird etwa alle 2 Minuten aktualisiert)
-	Energy  float64 // Wert in 1.0 Wh (absoluter Verbrauch seit Inbetriebnahme)
-}
-
 // FritzDECT charger implementation
 type FritzDECT struct {
 	*request.Helper
@@ -79,9 +70,7 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, ca
 	return c, nil
 }
 
-func (c *FritzDECT) getFritzBoxResponse(function string) string {
-	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", c.uri)
-	parameters := make(map[string]string)
+func (c *FritzDECT) execFritzDectCmd(function string) string {
 	// Refresh Fritzbox session id
 	if time.Since(c.updated).Minutes() >= 10 {
 		err := c.getFritzBoxSessionID()
@@ -91,72 +80,40 @@ func (c *FritzDECT) getFritzBoxResponse(function string) string {
 		// Update session timestamp
 		c.updated = time.Now()
 	}
-	parameters["sid"] = c.sid
-	if c.ain != "" {
-		parameters["ain"] = c.ain
+	parameters := url.Values{
+		"sid":       []string{c.sid},
+		"ain":       []string{c.ain},
+		"switchcmd": []string{function},
 	}
-	parameters["switchcmd"] = function
+	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", c.uri)
 	response, _ := sendFritzBoxRequest(uri, parameters)
 	return strings.TrimSpace(string(response))
 }
 
-func (c *FritzDECT) apiStatus() (status fritzdectStatusResponse, err error) {
-	status.Name = c.getFritzBoxResponse("getswitchname")
-	status.Present, err = strconv.ParseInt(c.getFritzBoxResponse("getswitchpresent"), 10, 64)
-	if err != nil {
-		return status, err
-	}
-	status.State, err = strconv.ParseInt(c.getFritzBoxResponse("getswitchstate"), 10, 32)
-	if err != nil {
-		return status, err
-	}
-	if err != nil {
-		return status, err
-	}
-	status.Power, err = strconv.ParseFloat(c.getFritzBoxResponse("getswitchpower"), 64)
-	if err != nil {
-		return status, err
-	}
-	status.Power = status.Power / 1000 // mW ==> W
-	status.Energy, err = strconv.ParseFloat(c.getFritzBoxResponse("getswitchenergy"), 64)
-	if err != nil {
-		return status, err
-	}
-	status.Energy = status.Energy / 1000 // Wh ==> kWh
-	return status, err
-}
-
-// apiUpdate invokes fritzdect api
-func (c *FritzDECT) apiUpdate(function string) (status fritzdectStatusResponse, err error) {
-	if function == "SetSwitchOn" {
-		status.State, err = strconv.ParseInt(c.getFritzBoxResponse("setswitchon"), 10, 32)
-	}
-	if function == "SetSwitchOff" {
-		status.State, err = strconv.ParseInt(c.getFritzBoxResponse("setswitchoff"), 10, 32)
-	}
-	return status, err
-}
-
-// validFritzBoxResponse checks is fritz DECT status response is local
-func validFritzBoxResponse(status fritzdectStatusResponse) bool {
-	return status.Present != 0
-}
-
 // Status implements the Charger.Status interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-	status, err := c.apiStatus()
+	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
+	var present int64
+	// power value in 0,001 W (current switch power, refresh aproximately every 2 minutes)
+	var power float64
+	var err error
+	present, err = strconv.ParseInt(c.execFritzDectCmd("getswitchpresent"), 10, 64)
 	if err != nil {
 		return api.StatusNone, err
 	}
-	switch status.Present {
+	power, err = strconv.ParseFloat(c.execFritzDectCmd("getswitchpower"), 64)
+	if err != nil {
+		return api.StatusNone, err
+	}
+	power = power / 1000 // mW ==> W
+	switch present {
 	case 1:
-		if status.Power == 0 {
+		switch {
+		case power == 0:
 			return api.StatusA, nil
-		}
-		if status.Power > 0 && status.Power <= c.standbypower {
+		case power > 0 && power <= c.standbypower:
 			return api.StatusB, nil
-		}
-		if status.Power > c.standbypower {
+		case power > c.standbypower:
 			return api.StatusC, nil
 		}
 	}
@@ -165,38 +122,34 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *FritzDECT) Enabled() (bool, error) {
-	status, err := c.apiStatus()
+	// state 0/1 - DECT Switch state off/on (empty if unkown or error)
+	state, err := strconv.ParseInt(c.execFritzDectCmd("getswitchstate"), 10, 32)
 	if err != nil {
 		return false, err
 	}
-	switch status.State {
-	case 0:
-		return false, nil
-	case 1:
-		return true, nil
-	default:
-		return false, fmt.Errorf("state unknown result: %d", status.State)
-	}
+	return state == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
-func (c *FritzDECT) Enable(enable bool) (err error) {
-	var status fritzdectStatusResponse
+func (c *FritzDECT) Enable(enable bool) error {
+	// state 0/1 - DECT Switch state off/on (empty if unkown or error)
+	var state int64
+	var err error
 	if enable {
-		status, err = c.apiUpdate("SetSwitchOn")
+		state, err = strconv.ParseInt(c.execFritzDectCmd("setswitchon"), 10, 32)
 	} else {
-		status, err = c.apiUpdate("SetSwitchOff")
+		state, err = strconv.ParseInt(c.execFritzDectCmd("setswitchoff"), 10, 32)
 	}
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
+	case enable && state == 0:
+		return fmt.Errorf("wasn't able to switchOn: %d", state)
+	case !enable && state == 1:
+		return fmt.Errorf("wasn't able to switchOff: %d", state)
+	default:
+		return nil
 	}
-	if enable && validFritzBoxResponse(status) && status.State == 0 {
-		return fmt.Errorf("wasn't able to switchOn: %d", status.State)
-	}
-	if !enable && validFritzBoxResponse(status) && status.State == 1 {
-		return fmt.Errorf("wasn't able to switchOff: %d", status.State)
-	}
-	return nil
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface (Dummy function)
@@ -207,17 +160,26 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 
 // CurrentPower implements the Meter interface.
 func (c *FritzDECT) CurrentPower() (float64, error) {
-	status, err := c.apiStatus()
-	if status.Power < c.standbypower {
+	// power value in 0,001 W (current switch power, refresh aproximately every 2 minutes)
+	power, err := strconv.ParseFloat(c.execFritzDectCmd("getswitchpower"), 64)
+	if err != nil {
 		return 0, err
 	}
-	return status.Power, err
+	power = power / 1000 // mW ==> W
+	if power < c.standbypower {
+		return 0, err
+	}
+	return power, err
 }
 
 // ChargedEnergy implements the ChargeRater interface
 func (c *FritzDECT) ChargedEnergy() (float64, error) {
-	status, err := c.apiStatus()
-	energy := status.Energy / 1000
+	// energy in 1.0 Wh (total energy since first activation or last manual reset)
+	energy, err := strconv.ParseFloat(c.execFritzDectCmd("getswitchenergy"), 64)
+	if err != nil {
+		return 0, err
+	}
+	energy = energy / 1000 // Wh ==> kWh
 	return energy, err
 }
 
@@ -226,8 +188,8 @@ func (c *FritzDECT) ChargedEnergy() (float64, error) {
 //getFritzBoxSessionID fetches a session-id based on the username and password in the connection struct
 func (c *FritzDECT) getFritzBoxSessionID() error {
 	uri := fmt.Sprintf("%s/login_sid.lua", c.uri)
-	parameters := make(map[string]string)
-	type Result struct {
+	var parameters url.Values
+	type result struct {
 		SID       string
 		Challenge string
 		BlockTime string
@@ -236,14 +198,21 @@ func (c *FritzDECT) getFritzBoxSessionID() error {
 	if err != nil {
 		return err
 	}
-	v := Result{SID: "none", Challenge: "none", BlockTime: "none"}
+	v := result{SID: "none", Challenge: "none", BlockTime: "none"}
 	err = xml.Unmarshal(body, &v)
 	if err != nil {
 		return err
 	}
 	if v.SID == "0000000000000000" {
-		parameters["username"] = c.user
-		parameters["response"] = createFbChallengeResponse(v.Challenge, c.password)
+		var challresp string
+		challresp, err = createFbChallengeResponse(v.Challenge, c.password)
+		if err != nil {
+			return err
+		}
+		parameters = url.Values{
+			"username": []string{c.user},
+			"response": []string{challresp},
+		}
 		body, err = sendFritzBoxRequest(uri, parameters)
 		if err != nil {
 			return err
@@ -258,15 +227,11 @@ func (c *FritzDECT) getFritzBoxSessionID() error {
 }
 
 // sendFritzBoxRequest sends a HTTP Request to the FritzBox based on the given URL and returns the answer as a bytearray
-func sendFritzBoxRequest(uri string, parametersIn map[string]string) ([]byte, error) {
+func sendFritzBoxRequest(uri string, parameters url.Values) ([]byte, error) {
 	var URL *url.URL
 	URL, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
-	}
-	parameters := url.Values{}
-	for key, value := range parametersIn {
-		parameters.Add(key, value)
 	}
 	URL.RawQuery = parameters.Encode()
 	resp, err := http.Get(URL.String())
@@ -277,25 +242,23 @@ func sendFritzBoxRequest(uri string, parametersIn map[string]string) ([]byte, er
 		return nil, errors.New("sendFritzBoxRequest status code != 200")
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
+	return ioutil.ReadAll(resp.Body)
 }
 
 // createFbChallengeResponse creates the Fritzbox challenge response string
-func createFbChallengeResponse(challenge string, pass string) string {
+func createFbChallengeResponse(challenge string, pass string) (string, error) {
 	encoder := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
 	utf16le, err := encoder.String(challenge + "-" + pass)
 	if err != nil {
 		log.Printf("error in unicode.UTF16 encoder: %v", err)
+		return "", err
 	}
 	hash := md5.New()
 	n, err := hash.Write([]byte(utf16le))
 	if err != nil {
 		log.Printf("error in createFbChallengeResponse md5 hash creation: %b - %v", n, err)
+		return "", err
 	}
 	md5hash := hex.EncodeToString(hash.Sum(nil))
-	return challenge + "-" + md5hash
+	return challenge + "-" + md5hash, nil
 }
