@@ -232,10 +232,7 @@ Available vehicle remote interface implementations are:
 -   `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 -   `nissan`: Nissan (Leaf)
 -   `tesla`: Tesla (any model)
-    <<<<<<< HEAD
--   # `renault`: Renault (Zoe, Kangoo ZE)
 -   `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
-    > > > > > > > master
 -   `porsche`: Porsche (Taycan)
 -   `vw`: Volkswagen (eGolf, eUp)
 -   `id`: Volkswagen (ID.3, ID.4)
@@ -526,9 +523,6 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 -   structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 -   avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
 -   containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
-    <<<<<<< HEAD
--   # support for multiple load points - tbd
-    > > > > > > > master
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
