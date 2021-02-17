@@ -1,4 +1,4 @@
-package tesla
+package request
 
 import (
 	"net/http"
@@ -14,6 +14,16 @@ type roundTripper struct {
 }
 
 const max = 2048
+
+// NewTripper creates a logging roundtrip handler
+func NewTripper(log *util.Logger, transport http.RoundTripper) http.RoundTripper {
+	tripper := &roundTripper{
+		log:       log,
+		transport: transport,
+	}
+
+	return tripper
+}
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if body, err := httputil.DumpRequest(req, true); err == nil {

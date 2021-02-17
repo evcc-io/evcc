@@ -8,16 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/uhthomas/tesla"
 	"golang.org/x/oauth2"
 )
 
 // Client is the tesla authentication client
 type Client struct {
-	config   *oauth2.Config
+	Config   *oauth2.Config
 	auth     *tesla.Auth
 	verifier string
 }
@@ -45,11 +45,6 @@ func pkce() (verifier, challenge string, err error) {
 
 // NewClient creates a tesla authentication client
 func NewClient(log *util.Logger) (*Client, error) {
-	httpClient := &http.Client{Transport: &roundTripper{
-		log:       log,
-		transport: http.DefaultTransport,
-	}}
-
 	config := &oauth2.Config{
 		ClientID:     "ownerapi",
 		ClientSecret: "",
@@ -67,7 +62,7 @@ func NewClient(log *util.Logger) (*Client, error) {
 	}
 
 	auth := &tesla.Auth{
-		Client: httpClient,
+		Client: request.NewHelper(log).Client,
 		AuthURL: config.AuthCodeURL(state(), oauth2.AccessTypeOffline,
 			oauth2.SetAuthURLParam("code_challenge", challenge),
 			oauth2.SetAuthURLParam("code_challenge_method", "S256"),
@@ -75,7 +70,7 @@ func NewClient(log *util.Logger) (*Client, error) {
 	}
 
 	client := &Client{
-		config:   config,
+		Config:   config,
 		auth:     auth,
 		verifier: verifier,
 	}
@@ -85,27 +80,18 @@ func NewClient(log *util.Logger) (*Client, error) {
 }
 
 // Login executes the MFA or non-MFA login
-func (c *Client) Login(username, password string) (oauth2.TokenSource, error) {
+func (c *Client) Login(username, password string) (*oauth2.Token, error) {
 	ctx := context.Background()
 	code, err := c.auth.Do(ctx, username, password)
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := c.config.Exchange(ctx, code,
+	token, err := c.Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("code_verifier", c.verifier),
 	)
-	if err != nil {
-		return nil, fmt.Errorf("exchange: %w", err)
-	}
 
-	return c.TokenSource(token), nil
-}
-
-// TokenSource creates an oauth tokensource from given token
-func (c *Client) TokenSource(token *oauth2.Token) oauth2.TokenSource {
-	ctx := context.Background()
-	return c.config.TokenSource(ctx, token)
+	return token, err
 }
 
 // DeviceHandler sets an alternative authentication device handler

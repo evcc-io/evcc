@@ -126,22 +126,18 @@ func (evse *EVSEWifi) apiURL(service string) string {
 
 // query evse parameters
 func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
-	var pr EVSEParameterResponse
+	var res EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
-	err := evse.GetJSON(url, &pr)
+	err := evse.GetJSON(url, &res)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
 
-	if len(pr.List) != 1 {
-		var body []byte
-		if resp := evse.LastResponse(); resp != nil {
-			body, _ = request.ReadBody(resp)
-		}
-		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
+	if len(res.List) != 1 {
+		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", res.Type)
 	}
 
-	params := pr.List[0]
+	params := res.List[0]
 	if !params.AlwaysActive {
 		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
