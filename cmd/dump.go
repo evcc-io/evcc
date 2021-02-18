@@ -36,6 +36,9 @@ func runDump(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	site, err := loadConfig(conf)
 	if err != nil {
 		log.FATAL.Fatal(err)
