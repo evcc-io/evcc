@@ -106,18 +106,16 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 	power = power / 1000 // mW ==> W
-	switch present {
-	case 1:
-		switch {
-		case power == 0:
-			return api.StatusA, nil
-		case power > 0 && power <= c.standbypower:
-			return api.StatusB, nil
-		case power > c.standbypower:
-			return api.StatusC, nil
-		}
+	switch {
+	case present == 1 && power == 0:
+		return api.StatusA, nil
+	case present == 1 && power > 0 && power <= c.standbypower:
+		return api.StatusB, nil
+	case present == 1 && power > c.standbypower:
+		return api.StatusC, nil
+	default:
+		return api.StatusNone, fmt.Errorf("DECT switch not present")
 	}
-	return api.StatusNone, fmt.Errorf("DECT switch not present")
 }
 
 // Enabled implements the Charger.Enabled interface
