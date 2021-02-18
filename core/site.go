@@ -136,6 +136,7 @@ func (site *Site) DumpConfig() {
 	)
 
 	site.publish("prioritySoC", math.Trunc(site.PrioritySoC))
+	site.publish("residualPower", math.Trunc(site.ResidualPower))
 
 	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
@@ -239,7 +240,7 @@ func (site *Site) updateMeters() error {
 
 		if err != nil {
 			err = fmt.Errorf("updating %s meter: %v", s, err)
-			site.log.ERROR.Println(err)
+			site.log.DEBUG.Println(err)
 		}
 
 		return err
@@ -283,7 +284,7 @@ func (site *Site) sitePower() (float64, error) {
 	if battery, ok := site.batteryMeter.(api.Battery); ok {
 		soc, err := battery.SoC()
 		if err != nil {
-			site.log.ERROR.Printf("updating battery soc: %v", err)
+			site.log.ERROR.Printf("error updating battery soc: %v", err)
 		} else {
 			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", math.Trunc(soc))
