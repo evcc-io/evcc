@@ -45,7 +45,7 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Password     string
 		SID          string
 		StandbyPower float64
-		Cache        time.Duration
+		Updated      time.Time
 	}{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -53,11 +53,11 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	if cc.URI == "" || cc.AIN == "" {
 		return nil, errors.New("fritzdect config: must have uri and ain of AVM FritzDECT switch")
 	}
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Cache)
+	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Updated)
 }
 
 // NewFritzDECT creates FritzDECT charger
-func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, cache time.Duration) (*FritzDECT, error) {
+func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, updated time.Time) (*FritzDECT, error) {
 	c := &FritzDECT{
 		Helper:       request.NewHelper(util.NewLogger("fritzdect")),
 		uri:          strings.TrimRight(uri, "/"),
