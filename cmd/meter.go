@@ -34,6 +34,9 @@ func runMeter(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	if err := cp.configureMeters(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}

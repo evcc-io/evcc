@@ -34,6 +34,9 @@ func runVehicle(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	if err := cp.configureVehicles(conf); err != nil {
 		log.FATAL.Fatal(err)
 	}
