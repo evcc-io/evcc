@@ -33,6 +33,8 @@ func (site *Site) SetMode(mode api.ChargeMode) {
 	for _, lp := range site.loadpoints {
 		lp.SetMode(mode)
 	}
+	//force immediate reaction to mode change
+	site.count = 30;
 }
 
 // GetTargetSoC gets loadpoint charge target soc
