@@ -397,6 +397,10 @@ func (lp *LoadPoint) setLimit(maxCurrent int64, force bool) (err error) {
 			lp.bus.Publish(evChargeCurrent, maxCurrent)
 		}
 	}
+	if maxCurrent < lp.MinCurrent {
+		lp.maxCurrent = int64(0)
+		lp.bus.Publish(evChargeCurrent, lp.maxCurrent)
+	}	
 
 	// set enabled
 	if enabled := maxCurrent != 0; enabled != lp.enabled && err == nil {
