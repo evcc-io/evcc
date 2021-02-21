@@ -1,3 +1,4 @@
+dist: release
 release:
   github:
     owner: andig
@@ -28,8 +29,6 @@ archives:
 - builds:
   - evcc
   replacements:
-    amd64: 64-bit
-    386: 32-bit
     darwin: macOS
   format: tar.gz
   format_overrides:

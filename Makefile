@@ -1,4 +1,4 @@
-.PHONY: default all clean install install-ui ui assets lint test build test-release release
+.PHONY: default all clean install install-ui ui assets lint lint-ui test build test-release release
 .PHONY: docker publish-testing publish-latest publish-images
 .PHONY: prepare-image image-rootfs image-update
 
@@ -23,7 +23,7 @@ IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybo
 
 default: build
 
-all: clean install install-ui ui assets lint test build
+all: clean install install-ui ui assets lint lint-ui test build
 
 clean:
 	rm -rf dist/
@@ -42,6 +42,8 @@ assets:
 
 lint:
 	golangci-lint run
+
+lint-ui:
 	npm run lint
 
 test:
@@ -79,6 +81,7 @@ publish-images:
 
 prepare-image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
+	go get github.com/gokrazy/rpi-eeprom@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
 	mkdir -p buildflags/github.com/andig/evcc
