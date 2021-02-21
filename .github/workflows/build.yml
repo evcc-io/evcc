@@ -13,15 +13,14 @@ jobs:
     - name: Setup
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.16
       id: go
 
     - uses: actions/cache@v2
       with:
         path: |
           ~/go/pkg/mod
-          **/node_modules
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
@@ -34,7 +33,7 @@ jobs:
       run: make install
 
     - name: Assets & UI
-      run: make npm assets
+      run: make assets
 
     - name: Porcelain
       run: |
@@ -52,13 +51,40 @@ jobs:
     - name: Test
       run: make test
 
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install tools
+      run: make install-ui
+
+    - name: Assets & UI
+      run: make ui
+
+    - name: Porcelain
+      run: |
+        test -z "$(git status --porcelain)" || (git status; git diff; false)
 
   dockerlatest:
     name: Publish :latest
     if: |
       startsWith(github.ref, 'refs/heads/master')
       && ! contains(github.head_ref, 'refs/heads/chore/')
-    needs: build
+    needs:
+    - build
+    - build-ui
     runs-on: ubuntu-latest
 
     steps:
@@ -83,7 +109,9 @@ jobs:
   dockerrelease:
     name: Publish :release
     if: "startsWith(github.ref, 'refs/tags')"
-    needs: build
+    needs:
+    - build
+    - build-ui
     runs-on: ubuntu-latest
 
     steps:
@@ -109,7 +137,9 @@ jobs:
   release:
     name: Release
     if: "startsWith(github.ref, 'refs/tags')"
-    needs: build
+    needs:
+    - build
+    - build-ui
     runs-on: ubuntu-latest
 
     steps:
