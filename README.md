@@ -104,7 +104,7 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 docker run --network host andig/evcc ...
 ```
 
-To build EVCC from source, [Go](2) 1.13 and [Node](3) 14 are required:
+To build EVCC from source, [Go](2) 1.16 and [Node](3) 14 are required:
 
     make
 

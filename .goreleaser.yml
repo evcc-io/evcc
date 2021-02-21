@@ -2,9 +2,6 @@ release:
   github:
     owner: andig
     name: evcc
-# before:
-#   hooks:
-#   - make npm assets
   extra_files:
   - glob: evcc_*.image.gz
   - glob: evcc_*.rootfs.gz

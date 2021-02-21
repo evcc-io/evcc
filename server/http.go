@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,6 +17,9 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
+
+// Assets is the embedded assets file system
+var Assets fs.FS
 
 type chargeModeJSON struct {
 	Mode api.ChargeMode `json:"mode"`
@@ -49,17 +53,17 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(site core.SiteAPI, useLocal bool) http.HandlerFunc {
+func indexHandler(site core.SiteAPI) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
-		indexTemplate, err := FSString(useLocal, "/dist/index.html")
+		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
 			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
 			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
 		}
 
-		t, err := template.New("evcc").Delims("[[", "]]").Parse(indexTemplate)
+		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))
 		if err != nil {
 			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
 		}
@@ -220,7 +224,6 @@ func MinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 		}
 
 		if !ok || err != nil {
-			log.DEBUG.Printf("parse soc: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -338,15 +341,9 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 	static := router.PathPrefix("/").Subrouter()
 	static.Use(handlers.CompressHandler)
 
-	static.HandleFunc("/", indexHandler(site, useLocalAssets))
-	var distDir = Dir(false, "/dist/")
-	if useLocalAssets {
-		distDir = http.Dir("./dist")
-	}
-	for _, public := range []string{"css", "js", "ico"} {
-		static.PathPrefix(fmt.Sprintf("/%s/", public)).Handler(
-			http.Handler(http.FileServer(distDir)),
-		)
+	static.HandleFunc("/", indexHandler(site))
+	for _, dir := range []string{"css", "js", "ico"} {
+		static.PathPrefix("/" + dir).Handler(http.FileServer(http.FS(Assets)))
 	}
 
 	// api

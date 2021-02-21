@@ -13,5 +13,4 @@ evcc_*
 flags/*
 buildflags/*
 linux-*.Dockerfile
-dist
 node_modules

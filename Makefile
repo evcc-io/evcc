@@ -1,6 +1,6 @@
-.PHONY: default clean install lint test assets build binaries test-release release
-.PHONY: publish-testing publish-latest publish-images
-.PHONY: image image-rootfs image-update
+.PHONY: default all clean install install-ui ui assets lint test build test-release release
+.PHONY: docker publish-testing publish-latest publish-images
+.PHONY: prepare-image image-rootfs image-update
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -13,7 +13,7 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
-ALPINE_VERSION := 3.12
+ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
 # image
@@ -21,15 +21,24 @@ IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/andig/evcc
 
-default: clean install npm assets lint test build
+default: build
+
+all: clean install install-ui ui assets lint test build
 
 clean:
 	rm -rf dist/
 
 install:
-	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
+
+install-ui:
 	npm ci
+
+ui:
+	npm run build
+
+assets:
+	go generate ./...
 
 lint:
 	golangci-lint run
@@ -38,17 +47,6 @@ lint:
 test:
 	@echo "Running testsuite"
 	go test ./...
-
-npm:
-	npm run build
-
-ui:
-	npm run build
-	go generate main.go
-
-assets:
-	@echo "Generating embedded assets"
-	go generate ./...
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
@@ -59,6 +57,10 @@ release-test:
 
 release:
 	goreleaser --rm-dist
+
+docker:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	docker build --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
