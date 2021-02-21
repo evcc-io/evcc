@@ -32,7 +32,7 @@ jobs:
     - name: Install tools
       run: make install
 
-    - name: Assets & UI
+    - name: Assets
       run: make assets
 
     - name: Porcelain
@@ -46,7 +46,7 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.33
+        version: v1.37
 
     - name: Test
       run: make test
@@ -70,8 +70,11 @@ jobs:
     - name: Install tools
       run: make install-ui
 
-    - name: Assets & UI
+    - name: Build
       run: make ui
+
+    - name: Lint
+      run: make lint-ui
 
     - name: Porcelain
       run: |
@@ -160,7 +163,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.16
       id: go
 
     - name: Prepare Image
