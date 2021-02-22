@@ -28,7 +28,7 @@ const (
 	taskSonnen     = "sonnen"
 	taskPowerwall  = "powerwall"
 	taskWallbe     = "wallbe"
-	taskPhoenixETH = "eth"
+	taskPhoenixEth = "eth"
 	taskEVSEWifi   = "evsewifi"
 	taskGoE        = "go-e"
 	taskInverter   = "inverter"
@@ -134,11 +134,11 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      taskPhoenixETH,
+		ID:      taskPhoenixEth,
 		Type:    "modbus",
 		Depends: TaskTCP502,
 		Config: map[string]interface{}{
-			"ids":     []int{180},
+			"ids":     []int{180, 255},
 			"address": 100,
 			"type":    "input",
 			"decode":  "uint16",

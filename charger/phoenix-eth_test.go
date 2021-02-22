@@ -6,8 +6,8 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func TestPhoenixETHDecorators(t *testing.T) {
-	wb, err := NewPhoenixETHFromConfig(map[string]interface{}{
+func TestPhoenixEthDecorators(t *testing.T) {
+	wb, err := NewPhoenixEthFromConfig(map[string]interface{}{
 		"meter": map[string]interface{}{
 			"power":    true,
 			"energy":   true,

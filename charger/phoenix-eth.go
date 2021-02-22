@@ -11,31 +11,31 @@ import (
 )
 
 const (
-	phETHRegStatus     = 100 // Input
-	phETHRegChargeTime = 102 // Input
-	phETHRegMaxCurrent = 300 // Holding
-	phETHRegEnable     = 400 // Coil
+	phxETHRegStatus     = 100 // Input
+	phxETHRegChargeTime = 102 // Input
+	phxETHRegMaxCurrent = 300 // Holding
+	phxETHRegEnable     = 400 // Coil
 
-	phETHRegPower  = 120 // power reading
-	phETHRegEnergy = 128 // energy reading
+	phxETHRegPower  = 120 // power reading
+	phxETHRegEnergy = 128 // energy reading
 )
 
-var phETHRegCurrents = []uint16{114, 116, 118} // current readings
+var phxETHRegCurrents = []uint16{114, 116, 118} // current readings
 
-// PhoenixETH is an api.ChargeController implementation for Phoenix Contact ETH (Ethernet) controllers.
+// PhoenixEth is an api.ChargeController implementation for Phoenix Contact ETH (Ethernet) controllers.
 // It uses Modbus/TCP to communicate with the controller at modbus client id 180 or 255 (default).
-type PhoenixETH struct {
+type PhoenixEth struct {
 	conn *modbus.Connection
 }
 
 func init() {
-	registry.Add("phoenix-eth", NewPhoenixETHFromConfig)
+	registry.Add("phoenix-eth", NewPhoenixEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixETH -o phoenix-eth_decorators -b *PhoenixETH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEth -o phoenix-eth_decorators -b *PhoenixEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
-// NewPhoenixETHFromConfig creates a Phoenix charger from generic config
-func NewPhoenixETHFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewPhoenixEthFromConfig creates a Phoenix charger from generic config
+func NewPhoenixEthFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		ID    uint8
@@ -51,7 +51,7 @@ func NewPhoenixETHFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	wb, err := NewPhoenixETH(cc.URI, cc.ID)
+	wb, err := NewPhoenixEth(cc.URI, cc.ID)
 
 	var currentPower func() (float64, error)
 	if cc.Meter.Power {
@@ -68,11 +68,11 @@ func NewPhoenixETHFromConfig(other map[string]interface{}) (api.Charger, error) 
 		currents = wb.currents
 	}
 
-	return decoratePhoenixETH(wb, currentPower, totalEnergy, currents), err
+	return decoratePhoenixEth(wb, currentPower, totalEnergy, currents), err
 }
 
-// NewPhoenixETH creates a Phoenix charger
-func NewPhoenixETH(uri string, id uint8) (*PhoenixETH, error) {
+// NewPhoenixEth creates a Phoenix charger
+func NewPhoenixEth(uri string, id uint8) (*PhoenixEth, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func NewPhoenixETH(uri string, id uint8) (*PhoenixETH, error) {
 	log := util.NewLogger("phoenix-eth")
 	conn.Logger(log.TRACE)
 
-	wb := &PhoenixETH{
+	wb := &PhoenixEth{
 		conn: conn,
 	}
 
@@ -89,8 +89,8 @@ func NewPhoenixETH(uri string, id uint8) (*PhoenixETH, error) {
 }
 
 // Status implements the Charger.Status interface
-func (wb *PhoenixETH) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(phETHRegStatus, 1)
+func (wb *PhoenixEth) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(phxETHRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -99,8 +99,8 @@ func (wb *PhoenixETH) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (wb *PhoenixETH) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(phETHRegEnable, 1)
+func (wb *PhoenixEth) Enabled() (bool, error) {
+	b, err := wb.conn.ReadCoils(phxETHRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -109,31 +109,31 @@ func (wb *PhoenixETH) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (wb *PhoenixETH) Enable(enable bool) error {
+func (wb *PhoenixEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = 0xFF00
 	}
 
-	_, err := wb.conn.WriteSingleCoil(phETHRegEnable, u)
+	_, err := wb.conn.WriteSingleCoil(phxETHRegEnable, u)
 
 	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (wb *PhoenixETH) MaxCurrent(current int64) error {
+func (wb *PhoenixEth) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(phETHRegMaxCurrent, uint16(current))
+	_, err := wb.conn.WriteSingleRegister(phxETHRegMaxCurrent, uint16(current))
 
 	return err
 }
 
 // ChargingTime yields current charge run duration
-func (wb *PhoenixETH) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(phETHRegChargeTime, 2)
+func (wb *PhoenixEth) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadInputRegisters(phxETHRegChargeTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -143,14 +143,14 @@ func (wb *PhoenixETH) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-func (wb *PhoenixETH) decodeReading(b []byte) float64 {
+func (wb *PhoenixEth) decodeReading(b []byte) float64 {
 	v := binary.BigEndian.Uint32(b)
 	return float64(v)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
-func (wb *PhoenixETH) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phETHRegPower, 2)
+func (wb *PhoenixEth) currentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(phxETHRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -159,8 +159,8 @@ func (wb *PhoenixETH) currentPower() (float64, error) {
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
-func (wb *PhoenixETH) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phETHRegEnergy, 2)
+func (wb *PhoenixEth) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(phxETHRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -169,9 +169,9 @@ func (wb *PhoenixETH) totalEnergy() (float64, error) {
 }
 
 // currents implements the Meter.Currents interface
-func (wb *PhoenixETH) currents() (float64, float64, float64, error) {
+func (wb *PhoenixEth) currents() (float64, float64, float64, error) {
 	var currents []float64
-	for _, regCurrent := range phETHRegCurrents {
+	for _, regCurrent := range phxETHRegCurrents {
 		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
 		if err != nil {
 			return 0, 0, 0, err

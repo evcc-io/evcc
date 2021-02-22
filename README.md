@@ -163,8 +163,8 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 -   `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 -   `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 -   `openWB`: openWB chargers using openWB's MQTT interface
--   `phoenix-eth`: chargers with Phoenix ETH controllers like the ESL Walli (Ethernet connection, see [Preparation](#phoenix-eth-preparation)).
--   `phoenix-ser`: chargers with Phoenix SER controllers (ModBus RTU connection)
+-   `phoenix-eth`: chargers with Phoenix ETH (EM-CP-PP-*ETH*, EV-CC-AC1-M3-RCM-*ETH*-XP, ...) controllers like the ESL Walli (Ethernet connection, see [Preparation](#phoenix-eth-preparation)).
+-   `phoenix-ser`: chargers with Phoenix SER (EV-CC-AC1-M3-CC-*SER*-HS, ...) controllers (ModBus RTU connection)
 -   `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 -   `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 -   `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)

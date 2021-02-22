@@ -9,23 +9,23 @@ import (
 )
 
 const (
-	phSERRegEnable     = 20000 // Coil
-	phSERRegMaxCurrent = 22000 // Holding
-	phSERRegStatus     = 24000 // Input
+	phxSERRegEnable     = 20000 // Coil
+	phxSERRegMaxCurrent = 22000 // Holding
+	phxSERRegStatus     = 24000 // Input
 )
 
-// PhoenixSER is an api.ChargeController implementation for Phoenix Contact EV Charge Control Basic controllers.
+// PhoenixSer is an api.ChargeController implementation for Phoenix Contact EV Charge Control controllers.
 // It uses serial Modbus RTU (RS485) to communicate with the controller at a configurable modbus client id.
-type PhoenixSER struct {
+type PhoenixSer struct {
 	conn *modbus.Connection
 }
 
 func init() {
-	registry.Add("phoenix-ser", NewPhoenixSERFromConfig)
+	registry.Add("phoenix-ser", NewPhoenixSerFromConfig)
 }
 
-// NewPhoenixSERFromConfig creates a Phoenix charger from generic config
-func NewPhoenixSERFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewPhoenixSerFromConfig creates a Phoenix charger from generic config
+func NewPhoenixSerFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 	}{
@@ -38,11 +38,11 @@ func NewPhoenixSERFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, err
 	}
 
-	return NewPhoenixSER(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewPhoenixSer(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-// NewPhoenixSER creates a Phoenix charger
-func NewPhoenixSER(uri, device, comset string, baudrate int, id uint8) (*PhoenixSER, error) {
+// NewPhoenixSer creates a Phoenix charger
+func NewPhoenixSer(uri, device, comset string, baudrate int, id uint8) (*PhoenixSer, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, true, id)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func NewPhoenixSER(uri, device, comset string, baudrate int, id uint8) (*Phoenix
 	log := util.NewLogger("phoenix-ser")
 	conn.Logger(log.TRACE)
 
-	wb := &PhoenixSER{
+	wb := &PhoenixSer{
 		conn: conn,
 	}
 
@@ -59,8 +59,8 @@ func NewPhoenixSER(uri, device, comset string, baudrate int, id uint8) (*Phoenix
 }
 
 // Status implements the Charger.Status interface
-func (wb *PhoenixSER) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(phSERRegStatus, 1)
+func (wb *PhoenixSer) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(phxSERRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -69,8 +69,8 @@ func (wb *PhoenixSER) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (wb *PhoenixSER) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(phSERRegEnable, 1)
+func (wb *PhoenixSer) Enabled() (bool, error) {
+	b, err := wb.conn.ReadCoils(phxSERRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -79,24 +79,24 @@ func (wb *PhoenixSER) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (wb *PhoenixSER) Enable(enable bool) error {
+func (wb *PhoenixSer) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = 0xFF00
 	}
 
-	_, err := wb.conn.WriteSingleCoil(phSERRegEnable, u)
+	_, err := wb.conn.WriteSingleCoil(phxSERRegEnable, u)
 
 	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (wb *PhoenixSER) MaxCurrent(current int64) error {
+func (wb *PhoenixSer) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(phSERRegMaxCurrent, uint16(current))
+	_, err := wb.conn.WriteSingleRegister(phxSERRegMaxCurrent, uint16(current))
 
 	return err
 }
