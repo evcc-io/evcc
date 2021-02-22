@@ -21,19 +21,19 @@ const (
 
 // private task ids
 const (
-	taskOpenwb      = "openwb"
-	taskSMA         = "sma"
-	taskKEBA        = "KEBA"
-	taskE3DC        = "e3dc_simple"
-	taskSonnen      = "sonnen"
-	taskPowerwall   = "powerwall"
-	taskWallbe      = "wallbe"
-	taskPhoenixEMCP = "em-cp"
-	taskEVSEWifi    = "evsewifi"
-	taskGoE         = "go-e"
-	taskInverter    = "inverter"
-	taskBattery     = "battery"
-	taskMeter       = "meter"
+	taskOpenwb     = "openwb"
+	taskSMA        = "sma"
+	taskKEBA       = "KEBA"
+	taskE3DC       = "e3dc_simple"
+	taskSonnen     = "sonnen"
+	taskPowerwall  = "powerwall"
+	taskWallbe     = "wallbe"
+	taskPhoenixETH = "eth"
+	taskEVSEWifi   = "evsewifi"
+	taskGoE        = "go-e"
+	taskInverter   = "inverter"
+	taskBattery    = "battery"
+	taskMeter      = "meter"
 )
 
 func init() {
@@ -134,7 +134,7 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      taskPhoenixEMCP,
+		ID:      taskPhoenixETH,
 		Type:    "modbus",
 		Depends: TaskTCP502,
 		Config: map[string]interface{}{
