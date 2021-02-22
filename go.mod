@@ -17,7 +17,7 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/gokrazy/updater v0.0.0-20210106211705-4d92b338dd24
-	github.com/golang/mock v1.4.4
+	github.com/golang/mock v1.5.0
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.5
