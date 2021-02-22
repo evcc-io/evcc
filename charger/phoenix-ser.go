@@ -30,7 +30,7 @@ func NewPhoenixSERFromConfig(other map[string]interface{}) (api.Charger, error) 
 		modbus.Settings `mapstructure:",squash"`
 	}{
 		Settings: modbus.Settings{
-			ID: 255,
+			ID: 1,
 		},
 	}
 
