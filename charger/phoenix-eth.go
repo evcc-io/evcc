@@ -23,7 +23,7 @@ const (
 var phETHRegCurrents = []uint16{114, 116, 118} // current readings
 
 // PhoenixETH is an api.ChargeController implementation for Phoenix Contact ETH (Ethernet) controllers.
-// It uses Modbus/TCP to communicate with the controller at modbus client id 180 or 255.
+// It uses Modbus/TCP to communicate with the controller at modbus client id 180 or 255 (default).
 type PhoenixETH struct {
 	conn *modbus.Connection
 }
@@ -44,7 +44,7 @@ func NewPhoenixETHFromConfig(other map[string]interface{}) (api.Charger, error) 
 		}
 	}{
 		URI: "192.168.0.8:502", // default
-		ID:  180,               // default
+		ID:  255,               // default
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
