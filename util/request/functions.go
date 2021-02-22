@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -58,13 +57,13 @@ func (e StatusError) HasStatus(codes ...int) bool {
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 
 	// maintain body after reading
-	resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+	resp.Body = io.NopCloser(bytes.NewBuffer(b))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return b, StatusError{resp: resp}
