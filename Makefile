@@ -81,7 +81,6 @@ publish-images:
 
 prepare-image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
-	go get github.com/gokrazy/rpi-eeprom@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
 	mkdir -p buildflags/github.com/andig/evcc
