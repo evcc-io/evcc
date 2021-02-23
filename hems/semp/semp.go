@@ -393,6 +393,11 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		mode = modeP.Val.(api.ChargeMode)
 	}
 
+	var connected bool
+	if connectedP, err := s.cache.GetChecked(id, "connected"); err == nil {
+		connected = connectedP.Val.(bool)
+	}
+
 	var charging bool
 	if chargingP, err := s.cache.GetChecked(id, "charging"); err == nil {
 		charging = chargingP.Val.(bool)
@@ -423,7 +428,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
-	if maxEnergy > 0 {
+	if connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
