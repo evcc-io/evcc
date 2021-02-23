@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -8,13 +9,13 @@ import (
 	"github.com/andig/evcc/vehicle/psa"
 )
 
-// https://github.com/trocotronic/weconnect
-// https://github.com/TA2k/ioBroker.vw-connect
+// https://github.com/flobz/psa_car_controller
+// https://github.com/snaptec/openWB/blob/master/modules/soc_psa/psasoc.py
 
 // Peugeot is an api.Vehicle implementation for Peugeot cars
 type Peugeot struct {
 	*embed
-	*psa.API // provides the api implementations
+	*psa.Provider // provides the api implementations
 }
 
 func init() {
@@ -69,6 +70,8 @@ func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			}
 		}
 	}
+
+	v.Provider = psa.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 
 	return v, err
 }
