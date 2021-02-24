@@ -10,21 +10,39 @@ import (
 )
 
 // https://github.com/flobz/psa_car_controller
-// https://github.com/snaptec/openWB/blob/master/modules/soc_psa/psasoc.py
-
-// Peugeot is an api.Vehicle implementation for Peugeot cars
-type Peugeot struct {
-	*embed
-	*psa.Provider // provides the api implementations
-}
 
 func init() {
+	registry.Add("citroen", NewCitroenFromConfig)
+	registry.Add("opel", NewOpelFromConfig)
 	registry.Add("peugeot", NewPeugeotFromConfig)
-	registry.Add("opel", NewPeugeotFromConfig)
+}
+
+// NewCitroenFromConfig creates a new vehicle
+func NewCitroenFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	log := util.NewLogger("citroen")
+	return newPSA(log, "citroen.com", "clientsB2CCitroen", other)
+}
+
+// NewOpelFromConfig creates a new vehicle
+func NewOpelFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	log := util.NewLogger("opel")
+	return newPSA(log, "opel.com", "clientsB2COpel", other)
 }
 
 // NewPeugeotFromConfig creates a new vehicle
 func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	log := util.NewLogger("peugeot")
+	return newPSA(log, "peugeot.com", "clientsB2CPeugeot", other)
+}
+
+// PSA is an api.Vehicle implementation for PSA cars
+type PSA struct {
+	*embed
+	*psa.Provider // provides the api implementations
+}
+
+// newPSA creates a new vehicle
+func newPSA(log *util.Logger, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title                  string
 		Capacity               int64
@@ -39,29 +57,11 @@ func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &Peugeot{
+	v := &PSA{
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	// if (manufacturer == "Peugeot"):
-	//     brand = 'peugeot.com'
-	//     realm = 'clientsB2CPeugeot'
-	// elif (manufacturer == "Citroen"):
-	//     brand = 'citroen.com'
-	//     realm = 'clientsB2CCitroen'
-	// elif (manufacturer == "DS"):
-	//     brand = 'driveds.com'
-	//     realm = 'clientsB2CDS'
-	// elif (manufacturer == "Opel"):
-	//     brand = 'opel.com'
-	//     realm = 'clientsB2COpel'
-	// elif (manufacturer == "Vauxhall"):
-	//     brand = 'vauxhall.co.uk'
-	//     realm = 'clientsB2CVauxhall'
-
-	log := util.NewLogger("peugeot")
-	// api := psa.NewAPI(log, "peugeot.com", "clientsB2CPeugeot", cc.ClientID, cc.ClientSecret)
-	api := psa.NewAPI(log, "opel.com", "clientsB2COpel", cc.ClientID, cc.ClientSecret)
+	api := psa.NewAPI(log, brand, realm, cc.ClientID, cc.ClientSecret)
 
 	err := api.Login(cc.User, cc.Password)
 	if err == nil {

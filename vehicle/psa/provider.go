@@ -23,10 +23,12 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
-	// res, err := v.statusG()
+	res, err := v.statusG()
 	// if res, ok := res.(Status); err == nil && ok {
 	// 	return float64(res.Data.BatteryStatus.CurrentSOCPercent), nil
 	// }
+	_ = res
+	_ = err
 
 	return 0, nil
 }
