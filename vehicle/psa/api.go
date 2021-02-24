@@ -9,37 +9,32 @@ import (
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
 // https://github.com/flobz/psa_car_controller
-// https://github.com/snaptec/openWB/blob/master/modules/soc_psa/psasoc.py
+// https://developer.groupe-psa.io/webapi/b2c/api-reference/specification
 
 // BaseURL is the API base url
 const BaseURL = "https://api.groupe-psa.com/connectedcar"
 
-// type oauth2Token struct {
-// 	oauth2.Token
-// 	IDToken string `json:"id_token"`
-// }
-
 // API is an api.Vehicle implementation for PSA cars
 type API struct {
 	*request.Helper
-	brand, realm     string
-	clientID, secret string
-	token            oauth2.Token
-	// token oauth2Token
+	brand, realm string
+	id, secret   string // client
+	token        oauth2.Token
 }
 
 // NewAPI creates a new vehicle
 func NewAPI(log *util.Logger, brand, realm, id, secret string) *API {
 	v := &API{
-		Helper:   request.NewHelper(log),
-		brand:    brand,
-		realm:    realm,
-		clientID: id,
-		secret:   secret,
+		Helper: request.NewHelper(log),
+		brand:  brand,
+		realm:  realm,
+		id:     id,
+		secret: secret,
 	}
 	return v
 }
@@ -54,7 +49,7 @@ func (v *API) Login(user, password string) error {
 		"password":   []string{password},
 	}
 
-	auth := fmt.Sprintf("%s:%s", v.clientID, v.secret)
+	auth := fmt.Sprintf("%s:%s", v.id, v.secret)
 
 	uri := fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
@@ -71,10 +66,18 @@ func (v *API) Login(user, password string) error {
 	return err
 }
 
+// Vehicle is a single vehicle
+type Vehicle struct {
+	ID       string   `json:"id"`
+	Label    string   `json:"label"`
+	Pictures []string `json:"pictures"`
+	VIN      string   `json:"vin"`
+}
+
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles() (res []string, err error) {
+func (v *API) Vehicles() ([]string, error) {
 	data := url.Values{
-		"client_id": []string{v.clientID},
+		"client_id": []string{v.id},
 	}
 
 	// BaseURL is the API base url
@@ -86,25 +89,47 @@ func (v *API) Vehicles() (res []string, err error) {
 		"X-Introspect-Realm": v.realm,
 	})
 
-	var vehicles map[string]interface{}
+	var res []string
 	if err == nil {
-		err = v.DoJSON(req, &vehicles)
+		var vehicles struct {
+			Embedded struct {
+				Vehicles []Vehicle
+			} `json:"_embedded"`
+		}
 
-		// for _, v := range vehicles.Data {
-		// 	res = append(res, v.VIN)
-		// }
+		if err = v.DoJSON(req, &vehicles); err == nil {
+			res = funk.Map(vehicles.Embedded.Vehicles, func(v Vehicle) string {
+				return v.VIN
+			}).([]string)
+		}
 	}
 
 	return res, err
 }
 
-// Status is the /vehicles/<vin>/status response
-type Status struct{}
+// Energy struct
+type Energy struct {
+	Battery struct {
+		Capacity int64
+		Health   struct {
+			Capacity   int64
+			Resistance int64
+		}
+	}
+	Charging struct {
+		ChargingMode    string
+		ChargingRate    int64
+		NextDelayedTime string
+		Plugged         bool
+		RemainingTime   string
+		Status          string
+	}
+}
 
 // Status implements the /vehicles/<vin>/status response
-func (v *API) Status(vin string) (Status, error) {
+func (v *API) Status(vin string) (Energy, error) {
 	data := url.Values{
-		"client_id": []string{v.clientID},
+		"client_id": []string{v.id},
 	}
 
 	// BaseURL is the API base url
@@ -116,14 +141,19 @@ func (v *API) Status(vin string) (Status, error) {
 		"X-Introspect-Realm": v.realm,
 	})
 
-	var vehicles map[string]interface{}
-	if err == nil {
-		err = v.DoJSON(req, &vehicles)
-
-		// for _, v := range vehicles.Data {
-		// 	res = append(res, v.VIN)
-		// }
+	var status struct {
+		Energy [][]Energy
 	}
 
-	return Status{}, err
+	if err == nil {
+		if err = v.DoJSON(req, &status); err == nil {
+			for _, e := range status.Energy {
+				for _, energy := range e {
+					return energy, nil
+				}
+			}
+		}
+	}
+
+	return Energy{}, err
 }
