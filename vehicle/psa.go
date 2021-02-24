@@ -20,6 +20,7 @@ type Peugeot struct {
 
 func init() {
 	registry.Add("peugeot", NewPeugeotFromConfig)
+	registry.Add("opel", NewPeugeotFromConfig)
 }
 
 // NewPeugeotFromConfig creates a new vehicle
@@ -59,7 +60,8 @@ func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	//     realm = 'clientsB2CVauxhall'
 
 	log := util.NewLogger("peugeot")
-	api := psa.NewAPI(log, "peugeot.com", "clientsB2CPeugeot", cc.ClientID, cc.ClientSecret)
+	// api := psa.NewAPI(log, "peugeot.com", "clientsB2CPeugeot", cc.ClientID, cc.ClientSecret)
+	api := psa.NewAPI(log, "opel.com", "clientsB2COpel", cc.ClientID, cc.ClientSecret)
 
 	err := api.Login(cc.User, cc.Password)
 	if err == nil {

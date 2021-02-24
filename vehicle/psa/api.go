@@ -1,6 +1,7 @@
 package psa
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,12 +18,18 @@ import (
 // BaseURL is the API base url
 const BaseURL = "https://api.groupe-psa.com/connectedcar"
 
+// type oauth2Token struct {
+// 	oauth2.Token
+// 	IDToken string `json:"id_token"`
+// }
+
 // API is an api.Vehicle implementation for PSA cars
 type API struct {
 	*request.Helper
 	brand, realm     string
 	clientID, secret string
 	token            oauth2.Token
+	// token oauth2Token
 }
 
 // NewAPI creates a new vehicle
@@ -47,15 +54,19 @@ func (v *API) Login(user, password string) error {
 		"password":   []string{password},
 	}
 
+	auth := fmt.Sprintf("%s:%s", v.clientID, v.secret)
+
 	uri := fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type":  "application/x-www-form-urlencoded",
-		"Authorization": "Basic %s",
+		"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)),
 	})
 
 	if err == nil {
 		err = v.DoJSON(req, &v.token)
 	}
+
+	fmt.Printf("\n%+v\n", v.token)
 
 	return err
 }
@@ -70,9 +81,9 @@ func (v *API) Vehicles() (res []string, err error) {
 	uri := fmt.Sprintf("%s/v4/user/vehicles?%s", BaseURL, data.Encode())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"x-introspect-realm": v.realm,
 		"Accept":             "application/hal+json",
 		"Authorization":      "Bearer " + v.token.AccessToken,
+		"X-Introspect-Realm": v.realm,
 	})
 
 	var vehicles map[string]interface{}
@@ -100,9 +111,9 @@ func (v *API) Status(vin string) (Status, error) {
 	uri := fmt.Sprintf("%s/v4/user/vehicles/%s/status?%s", BaseURL, vin, data.Encode())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"x-introspect-realm": v.realm,
 		"Accept":             "application/hal+json",
 		"Authorization":      "Bearer " + v.token.AccessToken,
+		"X-Introspect-Realm": v.realm,
 	})
 
 	var vehicles map[string]interface{}
