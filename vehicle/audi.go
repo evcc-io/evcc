@@ -69,7 +69,9 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	}
 
 	return v, err
 }
