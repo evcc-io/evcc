@@ -17,7 +17,7 @@ import (
 // https://developer.groupe-psa.io/webapi/b2c/api-reference/specification
 
 // BaseURL is the API base url
-const BaseURL = "https://api.groupe-psa.com/connectedcar"
+const BaseURL = "https://api.groupe-psa.com/connectedcar/v4"
 
 // API is an api.Vehicle implementation for PSA cars
 type API struct {
@@ -49,9 +49,9 @@ func (v *API) Login(user, password string) error {
 		"password":   []string{password},
 	}
 
+	uri := fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand)
 	auth := fmt.Sprintf("%s:%s", v.id, v.secret)
 
-	uri := fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type":  "application/x-www-form-urlencoded",
 		"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)),
@@ -81,7 +81,7 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	// BaseURL is the API base url
-	uri := fmt.Sprintf("%s/v4/user/vehicles?%s", BaseURL, data.Encode())
+	uri := fmt.Sprintf("%s/user/vehicles?%s", BaseURL, data.Encode())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":             "application/hal+json",
@@ -133,7 +133,7 @@ func (v *API) Status(vin string) (Energy, error) {
 	}
 
 	// BaseURL is the API base url
-	uri := fmt.Sprintf("%s/v4/user/vehicles/%s/status?%s", BaseURL, vin, data.Encode())
+	uri := fmt.Sprintf("%s/user/vehicles/%s/status?%s", BaseURL, vin, data.Encode())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":             "application/hal+json",
