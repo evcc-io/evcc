@@ -74,7 +74,7 @@ func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		// Update session timesstamp
+		// Update session timestamp
 		c.updated = time.Now()
 	}
 	parameters := url.Values{
@@ -197,14 +197,6 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 	}
 	return power, err
 }
-
-// ChargedEnergy implements the ChargeRater interface
-// func (c *FritzDECT) ChargedEnergy() (float64, error) {
-// 	// energy in 1.0 Wh (total energy since first activation or last manual reset)
-// 	energy, err := strconv.ParseFloat(c.execFritzDectCmd("getswitchenergy"), 64)
-// 	energy = energy / 1000 // Wh ==> kWh
-// 	return energy, err
-// }
 
 // Fritzbox helpers (based on ideas of https://github.com/rsdk/ahago)
 
