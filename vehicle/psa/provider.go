@@ -6,7 +6,7 @@ import (
 	"github.com/andig/evcc/provider"
 )
 
-// Provider is an api.Vehicle implementation for VW ID cars
+// Provider is an api.Vehicle implementation for PSA cars
 type Provider struct {
 	statusG func() (interface{}, error)
 }
