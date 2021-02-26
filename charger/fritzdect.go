@@ -188,7 +188,7 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 
 // Fritzbox helpers (based on ideas of https://github.com/rsdk/ahago)
 
-//getSessionID fetches a session-id based on the username and password in the connection struct
+// getSessionID fetches a session-id based on the username and password in the connection struct
 func (c *FritzDECT) getSessionID() error {
 	uri := fmt.Sprintf("%s/login_sid.lua", c.uri)
 	body, err := c.GetBody(uri)
@@ -200,11 +200,7 @@ func (c *FritzDECT) getSessionID() error {
 		SID       string
 		Challenge string
 		BlockTime string
-	}{
-		SID:       "none",
-		Challenge: "none",
-		BlockTime: "none",
-	}
+	}{}
 
 	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 		var challresp string
@@ -216,6 +212,9 @@ func (c *FritzDECT) getSessionID() error {
 
 			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
 				err = xml.Unmarshal(body, &v)
+				if v.SID == "0000000000000000" {
+					return errors.New("invalid username: " + c.user)
+				}
 				c.sid = v.SID
 			}
 		}
