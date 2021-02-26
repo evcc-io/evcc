@@ -53,18 +53,26 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
+// Init new carwings session
+func (v *CarWings) initSession() error {
+	v.session = &carwings.Session{
+		Region: v.region,
+	}
+
+	if err := v.session.Connect(v.user, v.password); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // chargeState implements the api.Vehicle interface
 func (v *CarWings) chargeState() (float64, error) {
 	if v.session == nil {
-		session := &carwings.Session{
-			Region: v.region,
+		err := v.initSession()
+		if err != nil {
+			return 0, api.ErrNotAvailable
 		}
-
-		if err := session.Connect(v.user, v.password); err != nil {
-			return 0, err
-		}
-
-		v.session = session
 	}
 
 	bs, err := v.session.BatteryStatus()
@@ -74,15 +82,10 @@ func (v *CarWings) chargeState() (float64, error) {
 // hvacAPI provides hvac-status api response
 func (v *CarWings) hvacAPI() (interface{}, error) {
 	if v.session == nil {
-		session := &carwings.Session{
-			Region: v.region,
+		err := v.initSession()
+		if err != nil {
+			return 0, api.ErrNotAvailable
 		}
-
-		if err := session.Connect(v.user, v.password); err != nil {
-			return 0, err
-		}
-
-		v.session = session
 	}
 
 	cs, err := v.session.ClimateControlStatus()
@@ -98,9 +101,7 @@ func (v *CarWings) SoC() (float64, error) {
 // Climater implements the api.Vehicle.Climater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
-
 	if res, ok := res.(carwings.ClimateStatus); err == nil && ok {
-
 		active = res.Running
 
 		targetTemp = float64(res.Temperature)
@@ -109,5 +110,6 @@ func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp floa
 
 		return active, outsideTemp, targetTemp, nil
 	}
+
 	return false, 0, 0, api.ErrNotAvailable
 }
