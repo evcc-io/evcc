@@ -241,8 +241,8 @@ Available vehicle remote interface implementations are:
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019)
-- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
+- `kia`: Kia (Bluelink vehicles like Soul 2019) **temporarily removed due to incompatible api changes**
+- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq) **temporarily removed due to incompatible api changes**
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
