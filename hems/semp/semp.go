@@ -436,6 +436,8 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 				LatestEnd:     latestEnd,
 				MinEnergy:     &minEnergy,
 				MaxEnergy:     &maxEnergy,
+				MinPowerConsumption: int(lp.GetMinPower()),
+				MaxPowerConsumption: int(lp.GetMaxPower()),
 			}},
 		}
 	}
