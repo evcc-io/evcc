@@ -20,6 +20,8 @@ func TestVehicles(t *testing.T) {
 		"unexpected status: 401",
 		"could not obtain token", // Porsche
 		"missing credentials",    // Tesla
+		"invalid vehicle type: hyundai",
+		"invalid vehicle type: kia",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {

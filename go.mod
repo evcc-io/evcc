@@ -1,6 +1,6 @@
 module github.com/andig/evcc
 
-go 1.13
+go 1.16
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
-	github.com/bogosj/tesla v0.0.0-20210211144207-92a50058e036
+	github.com/bogosj/tesla v0.0.0-20210226163712-3a995277d27d
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/eclipse/paho.mqtt.golang v1.3.1
@@ -38,7 +38,6 @@ require (
 	github.com/lorenzodonini/ocpp-go v0.12.1-0.20201122163044-c8e61b6f96d2
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/mjibson/esc v0.2.0
 	github.com/muka/go-bluetooth v0.0.0-20201211051136-07f31c601d33
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
@@ -53,10 +52,10 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/thoas/go-funk v0.7.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/uhthomas/tesla v0.0.0-20210210215721-a076a03e9349
+	github.com/uhthomas/tesla v0.1.1
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
-	golang.org/x/oauth2 v0.0.0-20210126194326-f9ce19ea3013
+	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

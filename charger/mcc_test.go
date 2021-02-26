@@ -2,7 +2,7 @@ package charger
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
@@ -59,7 +59,7 @@ func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect 
 		return &http.Response{
 			StatusCode: 200,
 			// Send response to be tested
-			Body: ioutil.NopCloser(bytes.NewBufferString(responseString)),
+			Body: io.NopCloser(bytes.NewBufferString(responseString)),
 			// Must be set to non-nil value or it panics
 			Header: make(http.Header),
 		}

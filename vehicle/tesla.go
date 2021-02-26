@@ -70,13 +70,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	// authenticated http client with logging
+	// authenticated http client with logging injected to the Tesla client
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
-	http := authClient.Config.Client(ctx, token)
-
-	// injected to the Tesla client
-	client := &tesla.Client{HTTP: http}
-	tesla.ActiveClient = client
+	client, _ := tesla.NewClient(ctx, token)
 
 	vehicles, err := client.Vehicles()
 	if err != nil {
@@ -84,11 +80,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.VIN == "" && len(vehicles) == 1 {
-		v.vehicle = vehicles[0].Vehicle
+		v.vehicle = vehicles[0]
 	} else {
 		for _, vehicle := range vehicles {
 			if vehicle.Vin == strings.ToUpper(cc.VIN) {
-				v.vehicle = vehicle.Vehicle
+				v.vehicle = vehicle
 			}
 		}
 	}

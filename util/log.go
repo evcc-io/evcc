@@ -2,7 +2,6 @@ package util
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -43,7 +42,7 @@ func NewLogger(area string) *Logger {
 	}
 
 	level := LogLevelForArea(area)
-	notepad := jww.NewNotepad(level, level, os.Stdout, ioutil.Discard, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, level, os.Stdout, io.Discard, padded, log.Ldate|log.Ltime)
 
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
