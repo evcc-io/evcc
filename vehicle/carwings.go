@@ -59,18 +59,13 @@ func (v *CarWings) initSession() error {
 		Region: v.region,
 	}
 
-	if err := v.session.Connect(v.user, v.password); err != nil {
-		return err
-	}
-
-	return nil
+	return v.session.Connect(v.user, v.password)
 }
 
 // chargeState implements the api.Vehicle interface
 func (v *CarWings) chargeState() (float64, error) {
 	if v.session == nil {
-		err := v.initSession()
-		if err != nil {
+		if err := v.initSession(); err != nil {
 			return 0, api.ErrNotAvailable
 		}
 	}
@@ -82,15 +77,12 @@ func (v *CarWings) chargeState() (float64, error) {
 // hvacAPI provides hvac-status api response
 func (v *CarWings) hvacAPI() (interface{}, error) {
 	if v.session == nil {
-		err := v.initSession()
-		if err != nil {
+		if err := v.initSession(); err != nil {
 			return 0, api.ErrNotAvailable
 		}
 	}
 
-	cs, err := v.session.ClimateControlStatus()
-
-	return cs, err
+	return v.session.ClimateControlStatus()
 }
 
 // SoC implements the api.Vehicle interface
