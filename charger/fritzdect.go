@@ -94,9 +94,17 @@ func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
 
 // Status implements the Charger.Status interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
+	// state 0/1 - DECT Switch state off/on (empty if unkown or error)
+	var state int64
+	resp, err := c.execFritzDectCmd("getswitchstate")
+
+	if err == nil {
+		state, err = strconv.ParseInt(resp, 10, 32)
+	}
+
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
-	resp, err := c.execFritzDectCmd("getswitchpresent")
+	resp, err = c.execFritzDectCmd("getswitchpresent")
 	if err == nil {
 		present, err = strconv.ParseInt(resp, 10, 64)
 	}
@@ -111,9 +119,9 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 	power = power / 1000 // mW ==> W
 	switch {
-	case present == 1 && power == 0:
+	case present == 1 && state == 1 && power == 0:
 		return api.StatusA, err
-	case present == 1 && power <= c.standbypower:
+	case present == 1 && (state == 0 || (power > 0 && power <= c.standbypower)):
 		return api.StatusB, err
 	case present == 1 && power > c.standbypower:
 		return api.StatusC, err
