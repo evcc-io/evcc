@@ -213,7 +213,7 @@ func (c *FritzDECT) getSessionID() error {
 			if body, err = c.GetBody(uri + "?" + params.Encode()); err == nil {
 				err = xml.Unmarshal(body, &v)
 				if v.SID == "0000000000000000" {
-					return errors.New("invalid username: " + c.user)
+					return errors.New("invalid username (" + c.user + ") or password")
 				}
 				c.sid = v.SID
 			}
