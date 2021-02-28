@@ -1,8 +1,13 @@
 <template>
 	<div>
-		<small class="text-muted">
-			<a href="#" @click.prevent="showModal" v-if="newVersionAvailable" class="update">
-				<fa-icon icon="gift"></fa-icon> Update verfügbar: {{ available }}
+		<small class="text-black">
+			<a href="#" @click.prevent="showModal" v-if="newVersionAvailable">
+				<fa-icon icon="gift" class="icon mr-1"></fa-icon>Update<span
+					class="d-none d-sm-inline"
+				>
+					verfügbar</span
+				>:
+				{{ available }}
 			</a>
 			<a :href="releaseNotesUrl(installed)" target="_blank" v-else>
 				Version {{ installed }}
@@ -40,6 +45,9 @@
 								<p>{{ updateStatus }}{{ uploadMessage }}</p>
 							</div>
 							<div v-else>
+								<p>
+									<small>Aktuell installierte Version: {{ installed }}</small>
+								</p>
 								<div v-if="releaseNotes" v-html="releaseNotes"></div>
 								<p v-else>
 									Keine Releasenotes verfügbar. Mehr Informationen zur neuen
@@ -164,5 +172,11 @@ export default {
 	height: 100%;
 	overflow: hidden;
 	outline: 0;
+}
+.icon {
+	color: #0fdd42;
+}
+.text-black a {
+	color: #18191a;
 }
 </style>

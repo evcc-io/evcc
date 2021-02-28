@@ -6,10 +6,10 @@
 					<Version v-bind="version" />
 				</div>
 				<div class="col-6 text-right">
-					<small class="text-muted">
-						<a href="https://github.com/sponsors/andig" target="_blank">
-							<fa-icon icon="heart"></fa-icon>
-							Projekt unterstützen
+					<small class="text-black">
+						<a href="https://github.com/sponsors/andig" target="_blank" class="link">
+							<fa-icon icon="heart" class="icon mr-1"></fa-icon
+							><span class="d-none d-sm-inline">Projekt</span> unterstützen
 						</a>
 					</small>
 				</div>
@@ -29,3 +29,12 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.icon {
+	color: #0fdd42;
+}
+.text-black a {
+	color: #18191a;
+}
+</style>
