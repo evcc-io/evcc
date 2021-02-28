@@ -54,7 +54,7 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if cc.AIN == "" {
-		return nil, errors.New("fritzdect config: ain missing")
+		return nil, errors.New("missing ain")
 	}
 
 	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Updated)
