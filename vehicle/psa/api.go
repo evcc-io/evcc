@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -75,7 +75,7 @@ type Vehicle struct {
 }
 
 // Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
 	data := url.Values{
 		"client_id": []string{v.id},
 	}
@@ -89,26 +89,20 @@ func (v *API) Vehicles() ([]string, error) {
 		"X-Introspect-Realm": v.realm,
 	})
 
-	var res []string
+	var res struct {
+		Embedded struct {
+			Vehicles []Vehicle
+		} `json:"_embedded"`
+	}
 	if err == nil {
-		var vehicles struct {
-			Embedded struct {
-				Vehicles []Vehicle
-			} `json:"_embedded"`
-		}
-
-		if err = v.DoJSON(req, &vehicles); err == nil {
-			res = funk.Map(vehicles.Embedded.Vehicles, func(v Vehicle) string {
-				return v.VIN
-			}).([]string)
-		}
+		err = v.DoJSON(req, &res)
 	}
 
-	return res, err
+	return res.Embedded.Vehicles, err
 }
 
-// Energy struct
-type Energy struct {
+// Status is the /status response
+type Status struct {
 	Battery struct {
 		Capacity int64
 		Health   struct {
@@ -124,16 +118,39 @@ type Energy struct {
 		RemainingTime   string
 		Status          string
 	}
+	Preconditionning struct {
+		AirConditioning struct {
+			UpdatedAt time.Time
+			Status    string // Disabled
+		}
+	}
+	Energy []Energy
 }
 
-// Status implements the /vehicles/<vin>/status response
-func (v *API) Status(vin string) (Energy, error) {
+// Energy is the /status partial energy response
+type Energy struct {
+	UpdatedAt time.Time
+	Type      string // Electric
+	Level     int
+	Autonomy  int
+	Charging  struct {
+		Plugged         bool
+		Status          string // InProgress
+		RemainingTime   Duration
+		ChargingRate    int
+		ChargingMode    string // "Slow"
+		NextDelayedTime Duration
+	}
+}
+
+// Status implements the /vehicles/<vid>/status response
+func (v *API) Status(vid string) (Status, error) {
 	data := url.Values{
 		"client_id": []string{v.id},
 	}
 
 	// BaseURL is the API base url
-	uri := fmt.Sprintf("%s/user/vehicles/%s/status?%s", BaseURL, vin, data.Encode())
+	uri := fmt.Sprintf("%s/user/vehicles/%s/status?%s", BaseURL, vid, data.Encode())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":             "application/hal+json",
@@ -141,19 +158,10 @@ func (v *API) Status(vin string) (Energy, error) {
 		"X-Introspect-Realm": v.realm,
 	})
 
-	var status struct {
-		Energy [][]Energy
-	}
-
+	var status Status
 	if err == nil {
-		if err = v.DoJSON(req, &status); err == nil {
-			for _, e := range status.Energy {
-				for _, energy := range e {
-					return energy, nil
-				}
-			}
-		}
+		err = v.DoJSON(req, &status)
 	}
 
-	return Energy{}, err
+	return status, err
 }

@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -62,18 +63,31 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 	}
 
 	api := psa.NewAPI(log, brand, realm, cc.ClientID, cc.ClientSecret)
-
 	err := api.Login(cc.User, cc.Password)
+
+	var vehicles []psa.Vehicle
 	if err == nil {
-		if cc.VIN == "" {
-			cc.VIN, err = findVehicle(api.Vehicles())
-			if err == nil {
-				log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+		vehicles, err = api.Vehicles()
+	}
+
+	var vid string
+	if err == nil {
+		if cc.VIN == "" && len(vehicles) == 1 {
+			vid = vehicles[0].ID
+		} else {
+			for _, vehicle := range vehicles {
+				if vehicle.VIN == strings.ToUpper(cc.VIN) {
+					vid = vehicle.ID
+				}
 			}
 		}
 	}
 
-	v.Provider = psa.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if vid == "" {
+		return nil, errors.New("vin not found")
+	}
+
+	v.Provider = psa.NewProvider(api, vid, cc.Cache)
 
 	return v, err
 }

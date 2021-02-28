@@ -1,8 +1,10 @@
 package psa
 
 import (
+	"strings"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 )
 
@@ -12,10 +14,10 @@ type Provider struct {
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
-			return api.Status(vin)
+			return api.Status(vid)
 		}, cache).InterfaceGetter(),
 	}
 	return impl
@@ -24,9 +26,74 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(Energy); err == nil && ok {
-		return float64(res.Battery.Capacity), nil
+	if res, ok := res.(Status); err == nil && ok {
+		for _, e := range res.Energy {
+			return float64(e.Level), nil
+		}
+
+		err = api.ErrNotAvailable
 	}
 
 	return 0, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *Provider) Range() (int64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		for _, e := range res.Energy {
+			return int64(e.Autonomy), nil
+		}
+
+		err = api.ErrNotAvailable
+	}
+
+	return 0, err
+}
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Provider) FinishTime() (time.Time, error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		for _, e := range res.Energy {
+			return e.UpdatedAt.Add(e.Charging.RemainingTime.Duration), nil
+		}
+
+		err = api.ErrNotAvailable
+	}
+
+	return time.Time{}, err
+}
+
+// Status implements the api.VehicleStatus interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		for _, e := range res.Energy {
+			status := api.StatusA
+			if e.Charging.Plugged {
+				status = api.StatusB
+				if strings.ToLower(e.Charging.Status) == "inprogress" {
+					status = api.StatusC
+				}
+			}
+
+			return status, nil
+		}
+
+		err = api.ErrNotAvailable
+	}
+
+	return api.StatusNone, err
+}
+
+// Climater implements the api.VehicleClimater interface
+func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
+		return active, 20, 20, nil
+	}
+
+	return active, outsideTemp, targetTemp, err
 }
