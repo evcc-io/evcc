@@ -11,6 +11,7 @@ require (
 	github.com/bogosj/tesla v0.0.0-20210226163712-3a995277d27d
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20201022122018-3977ed72668a
