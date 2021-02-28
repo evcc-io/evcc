@@ -49,8 +49,12 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	if cc.URI == "" || cc.AIN == "" {
-		return nil, errors.New("fritzdect: must have uri and ain of AVM FritzDECT switch")
+	if cc.URI == "" {
+		cc.URI = "http://fritz.box"
+	}
+
+	if cc.AIN == "" {
+		return nil, errors.New("fritzdect config: ain missing")
 	}
 
 	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Updated)
