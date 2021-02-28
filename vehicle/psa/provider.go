@@ -55,7 +55,8 @@ func (v *Provider) Range() (int64, error) {
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		for _, e := range res.Energy {
+		if len(res.Energy) == 1 {
+			e := res.Energy[0]
 			return e.UpdatedAt.Add(e.Charging.RemainingTime.Duration), nil
 		}
 
@@ -69,10 +70,13 @@ func (v *Provider) FinishTime() (time.Time, error) {
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		for _, e := range res.Energy {
+		if len(res.Energy) == 1 {
 			status := api.StatusA
+
+			e := res.Energy[0]
 			if e.Charging.Plugged {
 				status = api.StatusB
+
 				if strings.ToLower(e.Charging.Status) == "inprogress" {
 					status = api.StatusC
 				}
