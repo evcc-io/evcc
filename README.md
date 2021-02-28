@@ -51,6 +51,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT API](#mqtt-api)
 - [Background](#background)
 
+
 ## Getting started
 
 1. Install EVCC. For details see [installation](#installation).
@@ -240,6 +241,7 @@ Available vehicle remote interface implementations are:
 
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
+- `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Bluelink vehicles like Soul 2019) **temporarily removed due to incompatible api changes**
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq) **temporarily removed due to incompatible api changes**

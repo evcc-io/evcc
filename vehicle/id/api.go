@@ -13,6 +13,9 @@ import (
 // https://identity-userinfo.vwgroup.io/oidc/userinfo
 // https://customer-profile.apps.emea.vwapps.io/v1/customers/<userId>/realCarData
 
+// BaseURL is the API base url
+const BaseURL = "https://mobileapi.apps.emea.vwapps.io"
+
 // API is an api.Vehicle implementation for VW ID cars
 type API struct {
 	*request.Helper
@@ -42,7 +45,7 @@ func NewAPI(log *util.Logger, identity *vw.Identity) *API {
 
 // Vehicles implements the /vehicles response
 func (v *API) Vehicles() (res []string, err error) {
-	uri := "https://mobileapi.apps.emea.vwapps.io/vehicles"
+	uri := fmt.Sprintf("%s/vehicles", BaseURL)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
@@ -146,7 +149,7 @@ type RangeStatus struct {
 
 // Status implements the /status response
 func (v *API) Status(vin string) (res Status, err error) {
-	uri := fmt.Sprintf("https://mobileapi.apps.emea.vwapps.io/vehicles/%s/status", vin)
+	uri := fmt.Sprintf("%s/vehicles/%s/status", BaseURL, vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
@@ -162,7 +165,7 @@ func (v *API) Status(vin string) (res Status, err error) {
 
 // Action implements vehicle actions
 func (v *API) Action(vin, action, value string) error {
-	uri := fmt.Sprintf("https://mobileapi.apps.emea.vwapps.io/vehicles/%s/%s/%s", vin, action, value)
+	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)
 
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept":        "application/json",
