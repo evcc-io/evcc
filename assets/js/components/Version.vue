@@ -1,77 +1,89 @@
 <template>
 	<div>
 		<small class="text-muted">
-			<a href="#" @click.prevent="toggleUpdater" v-if="active" class="update">
+			<a href="#" @click.prevent="showModal" v-if="newVersionAvailable" class="update">
 				<fa-icon icon="gift"></fa-icon> Update verfügbar: {{ available }}
 			</a>
-			<a
-				:href="`https://github.com/andig/evcc/releases/tag/${installed}`"
-				target="_blank"
-				v-else
-			>
-				<fa-icon icon="box"></fa-icon> Version: {{ installed }}
+			<a :href="releaseNotesUrl(installed)" target="_blank" v-else>
+				Version {{ installed }}
 			</a>
 		</small>
 
-		<transition name="display">
-			<div id="updateModal" class="dialog" tabindex="-1" role="dialog" v-if="updaterShown">
-				<div class="modal-dialog modal-dialog-centered" role="document">
+		<transition name="fade">
+			<div id="updateModal" class="dialog" tabindex="-1" role="dialog" v-if="modalActive">
+				<div
+					class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+					role="document"
+				>
 					<div class="modal-content">
 						<div class="modal-header">
-							<h4 class="modal-title font-weight-bold">Aktualisierung durchführen</h4>
-							<button type="button" class="close" @click="toggleUpdater">
+							<h4 class="modal-title font-weight-bold">Update verfügbar</h4>
+							<button
+								type="button"
+								class="close"
+								:disabled="updateStarted"
+								@click="closeModal"
+							>
 								<span aria-hidden="true">&times;</span>
 							</button>
 						</div>
 						<div class="modal-body">
-							<p class="font-weight-bold">
-								Nach Aktualisierung wird evcc neu gestartet.
-							</p>
-							<p v-html="releaseNotes"></p>
-							<div
-								class="progress"
-								style="margin-top: 16px; margin-bottom: 16px"
-								v-if="updateStarted"
-							>
-								<div
-									class="progress-bar"
-									role="progressbar"
-									:style="{ width: uploadProgress + '%' }"
-								></div>
+							<div v-if="updateStarted">
+								<p>Nach der Aktualisierung wird evcc neu gestartet.</p>
+								<div class="progress my-3">
+									<div
+										class="progress-bar progress-bar-striped progress-bar-animated"
+										role="progressbar"
+										:style="{ width: uploadProgress + '%' }"
+									></div>
+								</div>
+								<p>{{ updateStatus }}{{ uploadMessage }}</p>
 							</div>
-							<p>{{ updateStatus }}{{ uploadMessage }}</p>
+							<div v-else>
+								<div v-if="releaseNotes" v-html="releaseNotes"></div>
+								<p v-else>
+									Keine Releasenotes verfügbar. Mehr Informationen zur neuen
+									Version findest du
+									<a :href="releaseNotesUrl(available)">hier</a>.
+								</p>
+							</div>
 						</div>
-						<div class="modal-footer">
+						<div class="modal-footer d-flex justify-content-between">
 							<button
 								type="button"
-								class="btn btn-secondary"
-								:class="{ disabled: updateStarted }"
-								@click="toggleUpdater"
+								class="btn btn-outline-secondary"
+								:disabled="updateStarted"
+								@click="closeModal"
 							>
 								Abbrechen
 							</button>
-
-							<button
-								type="button"
-								class="btn btn-primary"
-								data-toggle="modal"
-								data-target="#updateModal"
-								v-if="hasUpdater"
-								@click="toggleUpdater"
-							>
-								Aktualisieren
-							</button>
-							<a
-								:href="'https://github.com/andig/evcc/releases/tag/' + available"
-								class="text-body"
-								v-else
-							>
-								Download <fa-icon icon="chevron-down"></fa-icon>
-							</a>
-
-							<button type="button" class="btn btn-danger" @click="update">
-								Installieren
-							</button>
+							<div>
+								<button
+									type="button"
+									class="btn btn-primary"
+									v-if="hasUpdater"
+									:disabled="updateStarted"
+									@click="update"
+								>
+									<span v-if="updateStarted">
+										<span
+											class="spinner-border spinner-border-sm"
+											role="status"
+											aria-hidden="true"
+										>
+										</span>
+										Akualisieren
+									</span>
+									<span v-else>Jetzt aktualisieren</span>
+								</button>
+								<a
+									:href="releaseNotesUrl(available)"
+									class="btn btn-primary"
+									v-else
+								>
+									Download
+								</a>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -96,21 +108,17 @@ export default {
 	},
 	data: function () {
 		return {
-			dismissed: false,
-			updaterShown: false,
+			modalActive: false,
 			updateStarted: false,
 			updateStatus: "",
 		};
 	},
 	methods: {
-		dismiss: function () {
-			this.dismissed = true;
+		showModal: function () {
+			this.modalActive = true;
 		},
-		toggleUpdater: function (e) {
-			e.preventDefault();
-			if (!this.updateStarted) {
-				this.updaterShown = !this.updaterShown;
-			}
+		closeModal: function () {
+			this.modalActive = false;
 		},
 		update: async function () {
 			try {
@@ -121,21 +129,18 @@ export default {
 				this.updateStatus = "Aktualisierung nicht möglich: " + e;
 			}
 		},
+		releaseNotesUrl: function (version) {
+			return `https://github.com/andig/evcc/releases/tag/${version}`;
+		},
 	},
 	computed: {
-		active: function () {
+		newVersionAvailable: function () {
 			return (
 				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
-				this.available != this.installed &&
-				this.dismissed === false
+				this.available != this.installed
 			);
-		},
-	},
-	watch: {
-		available: function () {
-			this.dismissed = false;
 		},
 	},
 };
@@ -150,7 +155,6 @@ export default {
 .fade-leave-to {
 	opacity: 0;
 }
-
 .dialog {
 	position: fixed;
 	top: 0;
@@ -160,16 +164,5 @@ export default {
 	height: 100%;
 	overflow: hidden;
 	outline: 0;
-}
-.display-enter-active {
-	display: block !important;
-}
-
-.expand-icon {
-	transition: transform 0.25s ease-in;
-	transform: rotate(0);
-}
-.expand-icon-rotated {
-	transform: rotate(-180deg);
 }
 </style>

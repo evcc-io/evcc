@@ -1,37 +1,41 @@
 <template>
-	<div>
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<a class="navbar-brand" href="https://github.com/andig/evcc"
-				><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
-			>
-			<button
-				class="navbar-toggler"
-				type="button"
-				data-toggle="collapse"
-				data-target="#navbarNavAltMarkup"
-				aria-controls="navbarNavAltMarkup"
-				aria-expanded="false"
-				aria-label="Toggle navigation"
-			>
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-				<div class="navbar-nav">
-					<router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
-					<router-link class="nav-item nav-link pb-1" to="/config"
-						>Konfiguration</router-link
+	<div class="app d-flex flex-column justify-content-between">
+		<div>
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<div class="container">
+					<a class="navbar-brand" href="https://github.com/andig/evcc"
+						><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
 					>
-					<a
-						class="nav-item nav-link pb-1"
-						href="https://github.com/andig/evcc/discussions"
-						target="_blank"
-						>Community Support</a
+					<button
+						class="navbar-toggler"
+						type="button"
+						data-toggle="collapse"
+						data-target="#navbarNavAltMarkup"
+						aria-controls="navbarNavAltMarkup"
+						aria-expanded="false"
+						aria-label="Toggle navigation"
 					>
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+						<div class="navbar-nav">
+							<router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
+							<router-link class="nav-item nav-link pb-1" to="/config"
+								>Konfiguration</router-link
+							>
+							<a
+								class="nav-item nav-link pb-1"
+								href="https://github.com/andig/evcc/discussions"
+								target="_blank"
+								>Community Support</a
+							>
+						</div>
+					</div>
 				</div>
-			</div>
-		</nav>
+			</nav>
 
-		<router-view></router-view>
+			<router-view></router-view>
+		</div>
 		<Footer :version="version" />
 	</div>
 </template>
@@ -99,3 +103,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.app {
+	min-height: 100vh;
+}
+</style>
