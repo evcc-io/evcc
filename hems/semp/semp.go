@@ -368,7 +368,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: isPV,
+		EMSignalsAccepted: s.controllable && isPV,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -391,6 +391,11 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	mode := api.ModeOff
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
 		mode = modeP.Val.(api.ChargeMode)
+	}
+
+	var connected bool
+	if connectedP, err := s.cache.GetChecked(id, "connected"); err == nil {
+		connected = connectedP.Val.(bool)
 	}
 
 	var charging bool
@@ -423,7 +428,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
-	if maxEnergy > 0 {
+	if connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),

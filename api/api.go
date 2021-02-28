@@ -89,11 +89,11 @@ type ChargeRater interface {
 type Vehicle interface {
 	Title() string
 	Capacity() int64
-	ChargeState() (float64, error)
+	SoC() (float64, error)
 }
 
-// ChargeFinishTimer provides estimated charge cycle finish time
-type ChargeFinishTimer interface {
+// VehicleFinishTimer provides estimated charge cycle finish time
+type VehicleFinishTimer interface {
 	FinishTime() (time.Time, error)
 }
 
@@ -107,12 +107,12 @@ type VehicleRange interface {
 	Range() (int64, error)
 }
 
+// VehicleClimater provides climatisation data
+type VehicleClimater interface {
+	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
-}
-
-// Climater provides climatisation data
-type Climater interface {
-	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }

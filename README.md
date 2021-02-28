@@ -2,7 +2,7 @@
 <img src="docs/logo.png" width="400" />
 </div>
 
-# evcc
+# evcc <!-- omit in toc -->
 
 [![Build Status](https://github.com/andig/evcc/workflows/Build/badge.svg)](https://github.com/andig/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
@@ -10,24 +10,23 @@
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
-
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
-## Features
+## Features <!-- omit in toc -->
 
 - simple and clean user interface
 - multiple [chargers](#charger): Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect, and any other charger using scripting
-- multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Home Manager 2.0 and SMA Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Tesla, Nissan, Renault, Porsche, Volkswagen, Volvo and any other vehicle using scripting
+- multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- granular charge power control down to 25W with supported chargers
+- granular charge power control down to 25W steps with supported chargers
 - REST API
 
 ![Screenshot](docs/screenshot.png)
 
-## Index
+## Index <!-- omit in toc -->
 
 - [Getting started](#getting-started)
 - [Installation](#installation)
@@ -39,53 +38,65 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
 - [Plugins](#plugins)
-  - [Modbus](#modbus-readwrite)
-  - [MQTT](#mqtt-readwrite)
-  - [HTTP](#http-readwrite)
-  - [Websocket](#websocket-read-only)
-  - [Javascript](#javascript-readwrite)
-  - [Shell Script](#shell-script-readwrite)
-  - [Calc (meter aggregation)](#calc-read-only)
-  - [Combined status](#combined-status-read-only)
+  - [Modbus (read/write)](#modbus-readwrite)
+  - [MQTT (read/write)](#mqtt-readwrite)
+  - [HTTP (read/write)](#http-readwrite)
+  - [Websocket (read only)](#websocket-read-only)
+  - [Javascript (read/write)](#javascript-readwrite)
+  - [Shell Script (read/write)](#shell-script-readwrite)
+  - [Calc (read only)](#calc-read-only)
+  - [Combined status (read only)](#combined-status-read-only)
 - [API](#api)
+  - [REST API](#rest-api)
+  - [MQTT API](#mqtt-api)
 - [Background](#background)
+
 
 ## Getting started
 
 1. Install EVCC. For details see [installation](#installation).
 2. Copy the default configuration file `evcc.dist.yaml` to `evcc.yaml` and open for editing.
-We recommend to use an editor like [VS Code](https://code.visualstudio.com) with the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) for syntax highlighting.
+    We recommend to use an editor like [VS Code](https://code.visualstudio.com) with the [YAML extension](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-yaml) for syntax highlighting.
 3. To create a minimal setup you need a [meter](#meter) (either grid meter or pv generation meter) and a supported [charger](#charger). Many PV inverters contain meters that can be used here.
 4. Configure both meter(s) and charger by:
+
     - choosing the appropriate `type`
     - add a `name` attribute than can later be referred to
     - add configuration details depending on `type`
-  See `evcc.dist.yaml` for examples.
+
+    See `evcc.dist.yaml` for examples.
+
 5. Configure an optional vehicle by choosing the appropriate `type` and adding a `name` attribute than can later be referred to.
 6. Test your meter, charger and optional vehicle configuration by running
 
-        evcc meter|charger|vehicle
+    ```sh
+    evcc meter|charger|vehicle
+    ```
 
 7. Configure the `site` and assign the grid- or PV meter using the defined `name` attributes.
-8. Configure a `loadpoint` and assign the charge meter, charger and vehicle using the defined `name` attributes.
+8. Configure a `loadpoint` and assign the _charge meter_, charger and vehicle using the defined `name` attributes.
 9. Provide optional configuration for MQTT, push messaging, database logging and more.
 
 ## Installation
 
 EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
 
-    evcc -h
+```sh
+evcc -h
+```
 
 Use the following `systemd` unit description to configure EVCC as service (put into `/etc/systemd/system/evcc.service`):
 
-    [Unit]
-    Description=evcc
-    After=syslog.target network.target
-    [Service]
-    ExecStart=/usr/local/bin/evcc --log error
-    Restart=always
-    [Install]
-    WantedBy=multi-user.target
+```none
+[Unit]
+Description=evcc
+After=syslog.target network.target
+[Service]
+ExecStart=/usr/local/bin/evcc --log error
+Restart=always
+[Install]
+WantedBy=multi-user.target
+```
 
 EVCC can also be run using Docker. Here's and example with given config file and UI on port 7070:
 
@@ -105,9 +116,11 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 docker run --network host andig/evcc ...
 ```
 
-To build EVCC from source, [Go](2) 1.13 and [Node](3) 14 are required:
+To build EVCC from source, [Go](2) 1.16 and [Node](3) 14 are required:
 
-    make
+```sh
+make
+```
 
 **Note**: EVCC comes without any guarantee. You are using this software **entirely** at your own risk. It is your responsibility to verify it is working as intended.
 EVCC requires a supported charger and a combination of grid, PV and charge meter.
@@ -115,7 +128,7 @@ All components **must** be installed by a certified professional.
 
 ## Configuration
 
-The EVCC consists of five basic elements: *Site* and *Loadpoints* describe the infrastructure and combine *Charger*s, *Meter*s and *Vehicle*s.
+The EVCC consists of five basic elements: _Site_ and _Loadpoints_ describe the infrastructure and combine *Charger*s, *Meter*s and *Vehicle*s.
 
 ### Site
 
@@ -144,16 +157,16 @@ loadpoints:
 
 More options are documented in the `evcc.dist.yaml` sample configuration.
 
-#### Charge modes
+#### Charge modes <!-- omit in toc -->
 
-The default *charge mode* upon start of EVCC is configured on the loadpoint. Multiple charge modes are supported:
+The default _charge mode_ upon start of EVCC is configured on the loadpoint. Multiple charge modes are supported:
 
 - **Off**: disable the charger, even if car gets connected.
 - **Now** (**Sofortladen**): charge immediately with maximum allowed current.
 - **Min + PV**: charge immediately with minimum configured current. Additionally use PV if available.
-- **PV**: use PV as available. May not charge the car if PV remains dark.
+- **PV**: use PV as available. May not charge at all or may interrupt charging if PV production is too low or other consuption is too high.
 
-In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again. **Min + PV** mode may behave different, when used with [HEMS (SHM)](#home-energy-management-system).
+In general, due to the minimum value of 5% for signalling the EV duty cycle, the charger cannot limit the current to below 6A. If the available power calculation demands a limit less than 6A, handling depends on the charge mode. In **PV** mode, the charger will be disabled until available PV power supports charging with at least 6A. In **Min + PV** mode, charging will continue at minimum current of 6A and charge current will be raised as PV power becomes available again. **Min + PV** mode may behave different, when used with [HEMS (SHM)](#home-energy-management-system). Please note that not all vehicles support charging with very low current limits at all or only under special circumstances. For these type of vehicles the minimum allowed charge current needs to be raised.
 
 ### Charger
 
@@ -174,15 +187,15 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 
 Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
 
-#### KEBA preparation
+#### KEBA preparation <!-- omit in toc -->
 
 KEBA chargers require UDP function to be enabled with DIP 1.3 = `ON`, see KEBA installation manual.
 
-#### Phoenix EM-CP preparation
+#### Phoenix EM-CP preparation <!-- omit in toc -->
 
 The EM-CP controller requires DIP 10 = `ON` be controlled by ModBus, see controller manual.
 
-#### Wallbe preparation
+#### Wallbe preparation <!-- omit in toc -->
 
 Wallbe chargers are supported out of the box. The Wallbe must be connected using Ethernet. If not configured, the default address `192.168.0.8:502` is used.
 
@@ -198,14 +211,19 @@ More information on interacting with Wallbe chargers can be found at [GoingElect
 mbmd read -a 192.168.0.8:502 -d 255 -t holding -e int 300 1
 ```
 
-Compare the value to what you see as *Actual Charge Current Setting* in the Wallbe web UI. If the numbers match, it's a Phoenix controller, if the reading is factor 10x the UI value then it's a Wallbe controller.
+Compare the value to what you see as _Actual Charge Current Setting_ in the Wallbe web UI. If the numbers match, it's a Phoenix controller, if the reading is factor 10x the UI value then it's a Wallbe controller.
 
 **NOTE:** Opening the wall box **must** only be done by certified professionals. The box **must** be disconnected from mains before opening.
 
-
 ### Meter
 
-Meters provide data about power and energy consumption or PV production. Available meter implementations are:
+Meters provide data about power and energy consumption, PV production or battery utilization. A meter defines a point of power delivery and can be an actual physical meter (e.g. a grid meter), a PV inverter (AC or even DC power in case of hybrid inverters), or a home battery.
+
+Chargers may also contain internal or attached meters. If the charger contains an internal meter, there's no need to configure the charge meter separately. If no charge meter is configured, EVCC will use the charger-attached meter (if exists) or assume the configured charger power as meter value.
+
+EVCC uses positive (+) sign for incoming energy (grid consumption, PV inverter production or home battery discharge) and negative (-) sign for outgoing energy (grid feed-in, PV inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive (+) sign.
+
+Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-read-only) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
@@ -223,13 +241,16 @@ Available vehicle remote interface implementations are:
 
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
+- `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019)
-- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
+- `kia`: Kia (Bluelink vehicles like Soul 2019) **temporarily removed due to incompatible api changes**
+- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq) **temporarily removed due to incompatible api changes**
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
-- `renault`: Renault (Zoe, Kangoo ZE)
+- `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `porsche`: Porsche (Taycan)
+- `seat`: Seat (Cupra, Mii)
+- `skoda`: Skoda (Citygo, Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
@@ -255,7 +276,7 @@ to the left makes **Min+PV** behave as described above. Pushing completely to th
 
 Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `default` type meter, charger or vehicle.
 
-Plugins support both *read* and *write* access. When using plugins for *write* access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
+Plugins support both _read_ and _write_ access. When using plugins for _write_ access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
 ### Modbus (read/write)
 
@@ -263,7 +284,7 @@ The `modbus` plugin is able to read data from any Modbus meter or SunSpec-compat
 
 The meter configuration consists of the actual physical connection and the value to be read.
 
-#### Physical connection
+#### Physical connection <!-- omit in toc -->
 
 If the device is physically connected using an RS485 adapter, `device` and serial configuration `baudrate`, `comset` must be specified:
 
@@ -291,7 +312,7 @@ id: 3 # modbus slave id
 rtu: true
 ```
 
-#### Logical connection
+#### Logical connection <!-- omit in toc -->
 
 The meter device type `meter` and the device's slave id `id` are always required:
 
@@ -307,10 +328,10 @@ Supported meter models are the same as supported by [MBMD](https://github.com/vo
 
 - RTU:
   - `ABB` ABB A/B-Series meters
-  - `MPM`  Bernecker Engineering MPM3PM meters
+  - `MPM` Bernecker Engineering MPM3PM meters
   - `DZG` DZG Metering GmbH DVH4013 meters
   - `INEPRO` Inepro Metering Pro 380
-  - `JANITZA`  Janitza B-Series meters
+  - `JANITZA` Janitza B-Series meters
   - `SBC` Saia Burgess Controls ALD1 and ALE3 meters
   - `SDM` Eastron SDM630
   - `SDM220` Eastron SDM220
@@ -324,7 +345,7 @@ Use `value` to define the value to read from the device. All values that are sup
 
 In case of SunSpec-compatible inverters, values can also be configured in the form of `model:[block:]point` according to SunSpec definition. For example, a 3-phase inverter's DC power of the 2nd string would be configurable as `103:2:W`.
 
-#### Manual configuration
+#### Manual configuration <!-- omit in toc -->
 
 If the Modbus device is not supported by MBMD, the Modbus register can also be manually configured:
 
@@ -389,7 +410,6 @@ scale: 0.001 # floating point factor applied to result, e.g. for kW to W convers
 Sample write configuration:
 
 ```yaml
-...
 body: %v # only applicable for PUT or POST requests
 ```
 
@@ -487,8 +507,6 @@ EVCC provides a REST and MQTT APIs.
 ### REST API
 
 - `/api/state`: EVCC state (static configuration and dynamic state)
-- `/api/mode`: global charge mode (writable)
-- `/api/targetsoc`: global target SoC (writable)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
 
@@ -501,6 +519,7 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc`: root topic
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
+- `evcc/site/prioritySoC`: battery priority SoC (writable)
 - `evcc/loadpoints`: number of available loadpoints
 - `evcc/loadpoints/<id>`: loadpoint dynamic state
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
@@ -519,7 +538,6 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 - structured configuration - supports YAML-based [config file](evcc.dist.yaml)
 - avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
 - containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
-- support for multiple load points - tbd
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org

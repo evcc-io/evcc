@@ -180,8 +180,8 @@ func (v *Volvo) status() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Volvo) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Volvo) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
 		return float64(res.HvBattery.HvBatteryLevel), nil
@@ -217,7 +217,7 @@ func (v *Volvo) VehicleRange() (int64, error) {
 	return 0, err
 }
 
-// FinishTime implements the ChargeFinishTimer interface
+// FinishTime implements the VehicleFinishTimer interface
 func (v *Volvo) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {

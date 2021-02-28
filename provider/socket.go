@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"crypto/tls"
 	"fmt"
 	"math"
 	"net/http"
@@ -70,14 +69,14 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
+		if err := AuthHeaders(log, cc.Auth, p.headers); err != nil {
 			return nil, fmt.Errorf("socket auth: %w", err)
 		}
 	}
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	}
 
 	if cc.Jq != "" {

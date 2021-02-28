@@ -5,15 +5,7 @@
 				<p class="h1">{{ title || "Home" }}</p>
 			</div>
 			<div class="col-12 col-md-8 mt-md-4" v-if="multi">
-				<SiteDetails
-					:gridConfigured="gridConfigured"
-					:gridPower="gridPower"
-					:pvConfigured="pvConfigured"
-					:pvPower="pvPower"
-					:batteryConfigured="batteryConfigured"
-					:batteryPower="batteryPower"
-					:batterySoC="batterySoC"
-				></SiteDetails>
+				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
 
@@ -22,15 +14,7 @@
 		<div class="row" v-if="!multi">
 			<div class="d-none d-md-block col-md-4"></div>
 			<div class="col-12 col-md-8">
-				<SiteDetails
-					:gridConfigured="gridConfigured"
-					:gridPower="gridPower"
-					:pvConfigured="pvConfigured"
-					:pvPower="pvPower"
-					:batteryConfigured="batteryConfigured"
-					:batteryPower="batteryPower"
-					:batterySoC="batterySoC"
-				></SiteDetails>
+				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
 
@@ -50,6 +34,7 @@
 import SiteDetails from "./SiteDetails";
 import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
@@ -67,8 +52,11 @@ export default {
 		batterySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },
-	mixins: [formatter],
+	mixins: [formatter, collector],
 	computed: {
+		details: function () {
+			return this.collectProps(SiteDetails);
+		},
 		multi: function () {
 			// TODO fix compact
 			return this.loadpoints.length > 1 /* || app.compact*/;

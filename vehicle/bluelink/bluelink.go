@@ -81,9 +81,18 @@ type response struct {
 					Value, Unit int
 				}
 			}
+			DrvDistance []drvDistance
 		}
 		Vehicles []struct {
 			VehicleID string
+		}
+	}
+}
+
+type drvDistance struct {
+	RangeByFuel struct {
+		EvModeRange struct {
+			Value int
 		}
 	}
 }
@@ -336,8 +345,8 @@ func (v *API) statusAPI() (interface{}, error) {
 	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *API) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(response); err == nil && ok {
@@ -347,7 +356,7 @@ func (v *API) ChargeState() (float64, error) {
 	return 0, err
 }
 
-// FinishTime implements the Vehicle.ChargeFinishTimer interface
+// FinishTime implements the api.VehicleFinishTimer interface
 func (v *API) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
@@ -362,4 +371,19 @@ func (v *API) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *API) Range() (int64, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		if dist := res.ResMsg.EvStatus.DrvDistance; len(dist) == 1 {
+			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
+		}
+
+		return 0, api.ErrNotAvailable
+	}
+
+	return 0, err
 }
