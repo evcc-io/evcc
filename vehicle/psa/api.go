@@ -57,9 +57,9 @@ func (v *API) Login(user, password string) error {
 		v.Client,
 	)
 
+	// replace client with authenticated oauth client
 	token, err := config.PasswordCredentialsToken(ctx, user, password)
 	if err == nil {
-		// replace client authenticated oauth client
 		v.Client = config.Client(ctx, token)
 	}
 
