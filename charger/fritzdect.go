@@ -108,9 +108,10 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
-	resp, err = c.execFritzDectCmd("getswitchpresent")
 	if err == nil {
-		present, err = strconv.ParseInt(resp, 10, 64)
+		if resp, err = c.execFritzDectCmd("getswitchpresent"); err == nil {
+			present, err = strconv.ParseInt(resp, 10, 64)
+		}
 	}
 
 	// power value in 0,001 W (current switch power, refresh aproximately every 2 minutes)
