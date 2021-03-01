@@ -18,6 +18,9 @@ const (
 
 	phEMCPRegPower  = 120 // power reading
 	phEMCPRegEnergy = 128 // energy reading
+
+	phEMCPRegPowerMul  = 337 // power reading multiplier
+	phEMCPRegEnergyMul = 341 // energy reading multiplier
 )
 
 var phEMCPRegCurrents = []uint16{114, 116, 118} // current readings
@@ -155,7 +158,15 @@ func (wb *PhoenixEMCP) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	f, err := wb.conn.ReadHoldingRegisters(phEMCPRegPowerMul, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	ff := binary.BigEndian.Uint16(f)
+	fmt.Printf("currentPower %0x %d\n", f, ff)
+
+	return float64(ff) * wb.decodeReading(b), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -165,7 +176,15 @@ func (wb *PhoenixEMCP) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	f, err := wb.conn.ReadHoldingRegisters(phEMCPRegEnergyMul, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	ff := binary.BigEndian.Uint16(f)
+	fmt.Printf("totalEnergy %0x %d\n", f, ff)
+
+	return float64(ff) * wb.decodeReading(b), err
 }
 
 // currents implements the Meter.Currents interface
