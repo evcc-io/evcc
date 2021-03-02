@@ -140,6 +140,19 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 	}
 }
 
+// StringSetter invokes script with parameter replaced by string value
+func (m *Mqtt) StringSetter(param string) func(string) error {
+	return func(v string) error {
+		payload, err := setFormattedValue(m.payload, param, v)
+		if err != nil {
+			return err
+		}
+
+		m.log.TRACE.Printf("send %s: '%s'", m.topic, payload)
+		return m.client.Publish(m.topic, false, payload)
+	}
+}
+
 type msgHandler struct {
 	log     *util.Logger
 	mux     *util.Waiter
