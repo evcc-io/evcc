@@ -3,7 +3,6 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	auth "github.com/andig/evcc/vehicle/tesla"
 	"github.com/bogosj/tesla"
 	"golang.org/x/oauth2"
 )
@@ -59,20 +57,25 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
+	// authenticated http client with logging injected to the Tesla client
 	log := util.NewLogger("tesla")
-	authClient, err := auth.NewClient(log)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+
+	var options []tesla.ClientOption
+	if cc.Tokens.Access != "" {
+		options = append(options, tesla.WithToken(&oauth2.Token{
+			AccessToken:  cc.Tokens.Access,
+			RefreshToken: cc.Tokens.Refresh,
+			Expiry:       time.Now(),
+		}))
+	} else {
+		options = append(options, tesla.WithCredentials(cc.User, cc.Password))
+	}
+
+	client, err := tesla.NewClient(ctx, options...)
 	if err != nil {
 		return nil, err
 	}
-
-	token, err := teslaToken(authClient, cc.User, cc.Password, cc.Tokens)
-	if err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
-	}
-
-	// authenticated http client with logging injected to the Tesla client
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
-	client, _ := tesla.NewClient(ctx, token)
 
 	vehicles, err := client.Vehicles()
 	if err != nil {
@@ -97,35 +100,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
 
 	return v, nil
-}
-
-// teslaToken creates the Tesla OAuth token from given credentials
-func teslaToken(auth *auth.Client, user, password string, tokens teslaTokens) (*oauth2.Token, error) {
-	// without tokens try to login - will fail if MFA enabled
-	if tokens.Access == "" {
-		token, err := auth.Login(user, password)
-		if err != nil {
-			err = fmt.Errorf("%w: if using multi-factor authentication, create tokens using `evcc tesla-token`", err)
-		}
-
-		return token, err
-	}
-
-	// create tokensource with given tokens
-	ctx := context.Background()
-	ts := auth.Config.TokenSource(ctx, &oauth2.Token{
-		AccessToken:  tokens.Access,
-		RefreshToken: tokens.Refresh,
-		Expiry:       time.Now(),
-	})
-
-	// test the token source
-	token, err := ts.Token()
-	if err != nil {
-		err = fmt.Errorf("%w: token refresh failed, check access and refresh tokens are valid", err)
-	}
-
-	return token, err
 }
 
 // chargeState implements the api.Vehicle interface

@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
-	github.com/bogosj/tesla v0.0.0-20210226163712-3a995277d27d
+	github.com/bogosj/tesla v0.0.0-20210301204612-577c8a183e4c
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
@@ -63,3 +63,5 @@ require (
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
+
+replace github.com/bogosj/tesla => github.com/andig/tesla v0.0.0-20210302081706-8eb39050ad30
