@@ -39,7 +39,9 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -133,7 +135,7 @@ func (v *Ford) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *Ford) chargeState() (float64, error) {
 	var resp struct {
 		VehicleStatus struct {
@@ -162,7 +164,7 @@ func (v *Ford) chargeState() (float64, error) {
 	return resp.VehicleStatus.BatteryFillLevel.Value, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Ford) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *Ford) SoC() (float64, error) {
 	return v.chargeStateG()
 }

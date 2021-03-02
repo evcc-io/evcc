@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/provider"
 	"github.com/mark-sch/evcc/util"
 	"github.com/mark-sch/evcc/util/request"
@@ -56,7 +57,7 @@ type API struct {
 	log      *util.Logger
 	user     string
 	password string
-	chargeG  func() (float64, error)
+	apiG     func() (interface{}, error)
 	config   Config
 	auth     Auth
 }
@@ -69,8 +70,9 @@ type Auth struct {
 }
 
 type response struct {
-	RetCode string
-	ResMsg  struct {
+	timestamp time.Time // add missing timestamp
+	RetCode   string
+	ResMsg    struct {
 		DeviceID string
 		EvStatus struct {
 			BatteryStatus float64
@@ -79,9 +81,18 @@ type response struct {
 					Value, Unit int
 				}
 			}
+			DrvDistance []drvDistance
 		}
 		Vehicles []struct {
 			VehicleID string
+		}
+	}
+}
+
+type drvDistance struct {
+	RangeByFuel struct {
+		EvModeRange struct {
+			Value int
 		}
 	}
 }
@@ -103,7 +114,7 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 	// api is unbelievably slow when retrieving status
 	v.Helper.Client.Timeout = 120 * time.Second
 
-	v.chargeG = provider.NewCached(v.chargeState, cache).FloatGetter()
+	v.apiG = provider.NewCached(v.statusAPI, cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -146,7 +157,11 @@ func (v *API) getCookies() (cookieClient *request.Helper, err error) {
 			v.config.CCSPServiceID,
 			v.config.URI,
 		)
-		_, err = cookieClient.Get(uri)
+
+		var resp *http.Response
+		if resp, err = cookieClient.Get(uri); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return cookieClient, err
@@ -159,7 +174,10 @@ func (v *API) setLanguage(cookieClient *request.Helper) error {
 
 	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
-		_, err = cookieClient.Do(req)
+		var resp *http.Response
+		if resp, err = cookieClient.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return err
@@ -273,9 +291,11 @@ func (v *API) authFlow() (err error) {
 	return err
 }
 
-func (v *API) getStatus() (float64, error) {
+func (v *API) getStatus() (response, error) {
+	var resp response
+
 	if v.auth.accToken == "" {
-		return 0, errAuthFail
+		return resp, errAuthFail
 	}
 
 	headers := map[string]string{
@@ -286,7 +306,6 @@ func (v *API) getStatus() (float64, error) {
 		"User-Agent":          "okhttp/3.10.0",
 	}
 
-	var resp response
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
@@ -307,23 +326,64 @@ func (v *API) getStatus() (float64, error) {
 		}
 	}
 
-	return resp.ResMsg.EvStatus.BatteryStatus, err
+	return resp, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
-func (v *API) chargeState() (float64, error) {
-	soc, err := v.getStatus()
+// status retrieves the bluelink status response
+func (v *API) statusAPI() (interface{}, error) {
+	res, err := v.getStatus()
 
 	if err != nil && errors.Is(err, errAuthFail) {
 		if err = v.authFlow(); err == nil {
-			soc, err = v.getStatus()
+			res, err = v.getStatus()
 		}
 	}
 
-	return soc, err
+	// add local timestamp for FinishTime
+	res.timestamp = time.Now()
+
+	return res, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *API) ChargeState() (float64, error) {
-	return v.chargeG()
+// SoC implements the api.Vehicle interface
+func (v *API) SoC() (float64, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		return float64(res.ResMsg.EvStatus.BatteryStatus), nil
+	}
+
+	return 0, err
+}
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *API) FinishTime() (time.Time, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		remaining := res.ResMsg.EvStatus.RemainTime2.Atc.Value
+
+		if remaining == 0 {
+			return time.Time{}, api.ErrNotAvailable
+		}
+
+		return res.timestamp.Add(time.Duration(remaining) * time.Minute), nil
+	}
+
+	return time.Time{}, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *API) Range() (int64, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(response); err == nil && ok {
+		if dist := res.ResMsg.EvStatus.DrvDistance; len(dist) == 1 {
+			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
+		}
+
+		return 0, api.ErrNotAvailable
+	}
+
+	return 0, err
 }

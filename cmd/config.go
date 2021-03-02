@@ -7,7 +7,7 @@ import (
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/charger"
 	"github.com/mark-sch/evcc/meter"
-	"github.com/mark-sch/evcc/provider"
+	"github.com/mark-sch/evcc/provider/mqtt"
 	"github.com/mark-sch/evcc/push"
 	"github.com/mark-sch/evcc/server"
 	"github.com/mark-sch/evcc/vehicle"
@@ -16,9 +16,12 @@ import (
 type config struct {
 	URI        string
 	Log        string
+	Metrics    bool
+	Profile    bool
 	Levels     map[string]string
 	Interval   time.Duration
-	Mqtt       provider.MqttConfig
+	Mqtt       mqttConfig
+	Javascript map[string]interface{}
 	Influx     server.InfluxConfig
 	HEMS       typedConfig
 	Messaging  messagingConfig
@@ -27,6 +30,11 @@ type config struct {
 	Vehicles   []qualifiedConfig
 	Site       map[string]interface{}
 	LoadPoints []map[string]interface{}
+}
+
+type mqttConfig struct {
+	mqtt.Config `mapstructure:",squash"`
+	Topic       string
 }
 
 type qualifiedConfig struct {
@@ -145,13 +153,4 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	}
 
 	return nil
-}
-
-// Close performs cleanup activities on all entities maintained by the config provider
-func (cp *ConfigProvider) Close() {
-	for _, o := range cp.vehicles {
-		if c, ok := o.(api.Closer); ok {
-			c.Close()
-		}
-	}
 }

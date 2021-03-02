@@ -1,10 +1,11 @@
+dist: release
 release:
   github:
     owner: mark-sch
     name: evcc
-before:
-  hooks:
-  - make assets
+  extra_files:
+  - glob: evcc_*.image.gz
+  - glob: evcc_*.rootfs.gz
 builds:
 - id: evcc
   main: main.go
@@ -17,6 +18,7 @@ builds:
   goos:
   - linux
   - darwin
+  - windows
   goarch:
   - amd64
   - arm
@@ -27,8 +29,6 @@ archives:
 - builds:
   - evcc
   replacements:
-    amd64: 64-bit
-    386: 32-bit
     darwin: macOS
   format: tar.gz
   format_overrides:

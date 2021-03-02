@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
+	_ "net/http/pprof" // pprof handler
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,15 +13,18 @@ import (
 	"github.com/mark-sch/evcc/server/updater"
 	"github.com/mark-sch/evcc/util"
 	"github.com/mark-sch/evcc/util/pipe"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
-	ignoreParams = []string{"warn", "error", "fatal"} // don't add to cache
-	log          = util.NewLogger("main")
-	cfgFile      string
+	log     = util.NewLogger("main")
+	cfgFile string
+
+	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
+	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -73,6 +78,20 @@ func init() {
 		"Update interval",
 	)
 	bind(rootCmd, "interval")
+
+	rootCmd.PersistentFlags().Bool(
+		"metrics",
+		false,
+		"Expose metrics",
+	)
+	bind(rootCmd, "metrics")
+
+	rootCmd.PersistentFlags().Bool(
+		"profile",
+		false,
+		"Expose pprof profiles",
+	)
+	bind(rootCmd, "profile")
 }
 
 // initConfig reads in config file and ENV variables if set
@@ -122,7 +141,12 @@ func run(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config and re-configure logging after reading config file
-	conf := loadConfigFile(cfgFile)
+	conf, err := loadConfigFile(cfgFile)
+	if err != nil {
+		log.ERROR.Println("missing evcc config - switching into demo mode")
+		conf = demoConfig()
+	}
+
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 
 	uri := viper.GetString("uri")
@@ -133,17 +157,19 @@ func run(cmd *cobra.Command, args []string) {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	// start broadcasting values
-	tee := &Tee{}
+	tee := &util.Tee{}
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreParams...).Pipe(tee.Attach()))
+	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
 	// setup loadpoints
 	site, err := loadConfig(conf)
 	if err != nil {
-		cp.Close()
 		log.FATAL.Fatal(err)
 	}
 
@@ -155,12 +181,22 @@ func run(cmd *cobra.Command, args []string) {
 	// setup mqtt publisher
 	if conf.Mqtt.Broker != "" {
 		publisher := server.NewMQTT(conf.Mqtt.Topic)
-		go publisher.Run(site, tee.Attach())
+		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
 	// create webserver
 	socketHub := server.NewSocketHub()
 	httpd := server.NewHTTPd(uri, site, socketHub, cache)
+
+	// metrics
+	if viper.GetBool("metrics") {
+		httpd.Router().Handle("/metrics", promhttp.Handler())
+	}
+
+	// pprof
+	if viper.GetBool("profile") {
+		httpd.Router().PathPrefix("/debug/").Handler(http.DefaultServeMux)
+	}
 
 	// start HEMS server
 	if conf.HEMS.Type != "" {
@@ -176,7 +212,7 @@ func run(cmd *cobra.Command, args []string) {
 	go tee.Run(valueChan)
 
 	// version check
-	go updater.Run(log, valueChan)
+	go updater.Run(log, httpd, tee, valueChan)
 
 	// capture log messages for UI
 	util.CaptureLogs(valueChan)
@@ -207,7 +243,6 @@ func run(cmd *cobra.Command, args []string) {
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
 		<-exitC      // wait for loop to end
-		cp.Close()   // cleanup
 
 		os.Exit(1)
 	}()

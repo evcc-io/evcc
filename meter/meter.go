@@ -36,7 +36,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 	power, err := provider.NewFloatGetterFromConfig(cc.Power)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("power: %w", err)
 	}
 
 	m, _ := NewConfigurable(power)
@@ -45,7 +45,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	if cc.Energy != nil {
 		m.totalEnergyG, err = provider.NewFloatGetterFromConfig(*cc.Energy)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("energy: %w", err)
 		}
 	}
 
@@ -55,10 +55,10 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 			return nil, errors.New("need 3 currents")
 		}
 
-		for _, cc := range cc.Currents {
+		for idx, cc := range cc.Currents {
 			c, err := provider.NewFloatGetterFromConfig(cc)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("currents[%d]: %w", idx, err)
 			}
 
 			m.currentsG = append(m.currentsG, c)
@@ -69,7 +69,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 	if cc.SoC != nil {
 		m.batterySoCG, err = provider.NewFloatGetterFromConfig(*cc.SoC)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("battery: %w", err)
 		}
 	}
 

@@ -1,82 +1,68 @@
 package core
 
-import "github.com/mark-sch/evcc/api"
+import (
+	"errors"
+
+	"github.com/mark-sch/evcc/api"
+)
 
 // SiteAPI is the external site API
 type SiteAPI interface {
 	Healthy() bool
 	LoadPoints() []LoadPointAPI
-	LoadPointSettingsAPI
-	GetPrioritySoC() int
-	SetPrioritySoC(int)
-	GetResidualPower() int
-	SetResidualPower(int)
+	GetResidualPower() float64
+	SetResidualPower(float64) error
+	GetPrioritySoC() float64
+	SetPrioritySoC(float64) error
 }
 
-// LoadPoints returns the array of associated loadpoints
-func (site *Site) LoadPoints() []LoadPointAPI {
-	res := make([]LoadPointAPI, len(site.loadpoints))
-	for id, lp := range site.loadpoints {
-		res[id] = lp
+
+// GetPrioritySoC returns the PrioritySoC
+func (site *Site) GetPrioritySoC() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.PrioritySoC
+}
+
+
+// SetPrioritySoC sets the PrioritySoC
+func (site *Site) SetPrioritySoC(soc float64) error {
+	site.Lock()
+	defer site.Unlock()
+
+	if _, ok := site.batteryMeter.(api.Battery); !ok {
+		return errors.New("battery not configured")
 	}
-	return res
-}
 
-// GetMode gets loadpoint charge mode
-func (site *Site) GetMode() api.ChargeMode {
-	return site.loadpoints[0].GetMode()
-}
-
-// SetMode sets loadpoint charge mode
-func (site *Site) SetMode(mode api.ChargeMode) {
-	site.log.INFO.Printf("set global charge mode: %s", string(mode))
-	for _, lp := range site.loadpoints {
-		lp.SetMode(mode)
-	}
 	//force immediate reaction to mode change
 	site.count = 30;
-}
 
-// GetTargetSoC gets loadpoint charge target soc
-func (site *Site) GetTargetSoC() int {
-	return site.loadpoints[0].GetTargetSoC()
-}
+	site.log.INFO.Println("set global priority soc:", soc)
+	site.PrioritySoC = soc
+	site.publish("prioritySoC", site.PrioritySoC)
 
-// SetTargetSoC sets loadpoint charge target soc
-func (site *Site) SetTargetSoC(soc int) error {
-	site.log.INFO.Println("set global target soc:", soc)
-	for _, lp := range site.loadpoints {
-		if err := lp.SetTargetSoC(soc); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
-// GetPrioritySoC gets loadpoint home battery priority soc
-func (site *Site) GetPrioritySoC() int {
-	return int(site.PrioritySoC)
-}
-
-// SetPrioritySoC sets loadpoint home battery priority soc
-func (site *Site) SetPrioritySoC(soc int) {
-	site.log.INFO.Println("set global priority soc:", soc)
-	prioritysoc := float64(soc)
-	site.PrioritySoC = prioritysoc
-	site.publish("prioritySoC", soc)
-}
 
 // GetResidualPower
-func (site *Site) GetResidualPower() int {
-	return int(site.ResidualPower)
+func (site *Site) GetResidualPower() float64 {
+	site.Lock()
+	defer site.Unlock()
+	return site.ResidualPower
 }
 
+
 // SetResidualPower
-func (site *Site) SetResidualPower(power int) {
+func (site *Site) SetResidualPower(power float64) error {
+	site.Lock()
+	defer site.Unlock()
+	
 	site.log.INFO.Println("set residual power:", power)
-	residualpower := float64(power)
-	site.ResidualPower = residualpower
+	site.ResidualPower = power
 	site.publish("residualPower", power)
+
+	return nil
 }
 
 
@@ -94,12 +80,4 @@ func (site *Site) SetMinSoC(soc int) error {
 		}
 	}
 	return nil
-}
-
-// RemoteControl sets remote status demand
-func (site *Site) RemoteControl(source string, demand RemoteDemand) {
-	site.log.INFO.Println("remote demand:", demand)
-	for _, lp := range site.loadpoints {
-		lp.RemoteControl(source, demand)
-	}
 }

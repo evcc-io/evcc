@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	evseGetParameters apiFunction = "getParameters"
-	evseSetStatus     apiFunction = "setStatus"
-	evseSetCurrent    apiFunction = "setCurrent"
+	evseGetParameters = "getParameters"
+	evseSetStatus     = "setStatus"
+	evseSetCurrent    = "setCurrent"
 
 	evseSuccess = "S0_"
 )
@@ -34,7 +34,7 @@ type EVSEListEntry struct {
 	ActualPower    float64 `json:"actualPower"`
 	Duration       int64   `json:"duration"`
 	AlwaysActive   bool    `json:"alwaysActive"`
-	HasMeter       bool    `json:"hasMeter"`
+	UseMeter       bool    `json:"useMeter"`
 	LastActionUser string  `json:"lastActionUser"`
 	LastActionUID  string  `json:"lastActionUID"`
 	Energy         float64 `json:"energy"`
@@ -51,13 +51,14 @@ type EVSEWifi struct {
 	log          *util.Logger
 	uri          string
 	alwaysActive bool
+	current      int64
 }
 
 func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateEVSE -b api.Charger -o evsewifi_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateEVSE -o evsewifi_decorators -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -67,11 +68,12 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 			Power, Energy, Currents bool
 		}
 	}{}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(cc.URI)
+	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
 	if err != nil {
 		return evse, err
 	}
@@ -109,36 +111,33 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
-		log:    log,
-		Helper: request.NewHelper(log),
-		uri:    strings.TrimRight(uri, "/"),
+		log:     log,
+		Helper:  request.NewHelper(log),
+		uri:     strings.TrimRight(uri, "/"),
+		current: 6, // 6A defined value
 	}
 
 	return evse, nil
 }
 
-func (evse *EVSEWifi) apiURL(service apiFunction) string {
+func (evse *EVSEWifi) apiURL(service string) string {
 	return fmt.Sprintf("%s/%s", evse.uri, service)
 }
 
 // query evse parameters
 func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
-	var pr EVSEParameterResponse
+	var res EVSEParameterResponse
 	url := evse.apiURL(evseGetParameters)
-	err := evse.GetJSON(url, &pr)
+	err := evse.GetJSON(url, &res)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
 
-	if len(pr.List) != 1 {
-		var body []byte
-		if resp := evse.LastResponse(); resp != nil {
-			body, _ = request.ReadBody(resp)
-		}
-		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", string(body))
+	if len(res.List) != 1 {
+		return EVSEListEntry{}, fmt.Errorf("unexpected response: %s", res.Type)
 	}
 
-	params := pr.List[0]
+	params := res.List[0]
 	if !params.AlwaysActive {
 		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
@@ -150,7 +149,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 // HasMeter returns the useMeter api response
 func (evse *EVSEWifi) HasMeter() (bool, error) {
 	params, err := evse.getParameters()
-	return params.HasMeter, err
+	return params.UseMeter, err
 }
 
 // Status implements the Charger.Status interface
@@ -195,9 +194,9 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 
 	if evse.alwaysActive {
-		current := 0
+		var current int64
 		if enable {
-			current = 6
+			current = evse.current
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
@@ -206,6 +205,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
+	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.checkError(evse.GetBody(url))
 }

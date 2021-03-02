@@ -37,7 +37,7 @@ func (h *Hub) Add(sender Sender) {
 func (h *Hub) apply(ev Event, template string) (string, error) {
 	attr := make(map[string]interface{})
 
-	// let cache catch up, refs reverted https://github.com/andig/evcc/pull/445
+	// let cache catch up, refs reverted https://github.com/mark-sch/evcc/pull/445
 	time.Sleep(100 * time.Millisecond)
 
 	// get all values from cache

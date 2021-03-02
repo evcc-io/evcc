@@ -24,19 +24,22 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
-	conf := loadConfigFile(cfgFile)
+	conf, err := loadConfigFile(cfgFile)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// setup mqtt
 	if conf.Mqtt.Broker != "" {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	if err := cp.configureVehicles(conf); err != nil {
-		cp.Close() // cleanup any open sessions
 		log.FATAL.Fatal(err)
 	}
-
-	defer cp.Close() // cleanup on exit
 
 	vehicles := cp.vehicles
 	if len(args) == 1 {

@@ -26,20 +26,23 @@ func runDump(cmd *cobra.Command, args []string) {
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
-	conf := loadConfigFile(cfgFile)
+	conf, err := loadConfigFile(cfgFile)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// setup mqtt
 	if conf.Mqtt.Broker != "" {
 		configureMQTT(conf.Mqtt)
 	}
 
+	// setup javascript VMs
+	configureJavascript(conf.Javascript)
+
 	site, err := loadConfig(conf)
 	if err != nil {
-		cp.Close() // cleanup any open sessions
 		log.FATAL.Fatal(err)
 	}
-
-	defer cp.Close() // cleanup on exit
 
 	d := dumper{len: 2}
 

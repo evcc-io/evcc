@@ -39,24 +39,23 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	status, err := provider.NewStringGetterFromConfig(cc.Status)
-
-	var enabled func() (bool, error)
-	if err == nil {
-		enabled, err = provider.NewBoolGetterFromConfig(cc.Enabled)
-	}
-
-	var enable func(bool) error
-	if err == nil {
-		enable, err = provider.NewBoolSetterFromConfig("enable", cc.Enable)
-	}
-
-	var maxcurrent func(int64) error
-	if err == nil {
-		maxcurrent, err = provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent)
-	}
-
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("status: %w", err)
+	}
+
+	enabled, err := provider.NewBoolGetterFromConfig(cc.Enabled)
+	if err != nil {
+		return nil, fmt.Errorf("enabled: %w", err)
+	}
+
+	enable, err := provider.NewBoolSetterFromConfig("enable", cc.Enable)
+	if err != nil {
+		return nil, fmt.Errorf("enable: %w", err)
+	}
+
+	maxcurrent, err := provider.NewIntSetterFromConfig("maxcurrent", cc.MaxCurrent)
+	if err != nil {
+		return nil, fmt.Errorf("maxcurrent: %w", err)
 	}
 
 	return NewConfigurable(status, enabled, enable, maxcurrent)

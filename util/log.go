@@ -2,7 +2,6 @@ package util
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -26,29 +25,39 @@ var (
 	LogThreshold = jww.LevelWarn
 )
 
-const padding = 6 // padding of log areas
+// LogAreaPadding of log areas
+var LogAreaPadding = 6
 
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
 	*jww.Notepad
+	name string
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
 	padded := area
-	for len(padded) < padding {
+	for len(padded) < LogAreaPadding {
 		padded = padded + " "
 	}
 
 	level := LogLevelForArea(area)
-	notepad := jww.NewNotepad(level, level, os.Stdout, ioutil.Discard, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, level, os.Stdout, io.Discard, padded, log.Ldate|log.Ltime)
 
 	loggersMux.Lock()
 	defer loggersMux.Unlock()
 
-	logger := &Logger{notepad}
+	logger := &Logger{
+		Notepad: notepad,
+		name:    area,
+	}
 	loggers[area] = logger
 	return logger
+}
+
+// Name returns the loggers name
+func (l *Logger) Name() string {
+	return l.name
 }
 
 // Loggers invokes callback for each configured logger

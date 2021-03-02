@@ -20,7 +20,7 @@ type HEMS interface {
 func NewFromConfig(typ string, other map[string]interface{}, site *core.Site, cache *util.Cache, httpd *server.HTTPd) (HEMS, error) {
 	switch strings.ToLower(typ) {
 	case "sma", "shm", "semp":
-		return semp.New(site, cache, httpd)
+		return semp.New(other, site, cache, httpd)
 	case "ocpp":
 		return ocpp.New(other, site, cache)
 	default:

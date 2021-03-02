@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/mark-sch/evcc/api"
-	"github.com/mark-sch/evcc/core/wrapper"
+	"github.com/mark-sch/evcc/core/soc"
 	"github.com/mark-sch/evcc/mock"
 	"github.com/mark-sch/evcc/push"
 	"github.com/mark-sch/evcc/util"
@@ -83,8 +83,8 @@ func TestNew(t *testing.T) {
 	if lp.status != api.StatusNone {
 		t.Errorf("status %v", lp.status)
 	}
-	if lp.charging {
-		t.Errorf("charging %v", lp.charging)
+	if lp.charging() {
+		t.Errorf("charging %v", lp.charging())
 	}
 }
 
@@ -318,8 +318,8 @@ func TestPVHysteresis(t *testing.T) {
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site)
 
-				if current != se.current {
-					t.Errorf("step %d: wanted %d, got %d", step, se.current, current)
+				if current != float64(se.current) {
+					t.Errorf("step %d: wanted %d, got %.f", step, se.current, current)
 				}
 			}
 
@@ -351,7 +351,7 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	current := lp.pvMaxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {
-		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %d", current)
+		t.Errorf("PV mode could not disable charger as expected. Expected 0, got %.f", current)
 	}
 
 	ctrl.Finish()
@@ -365,7 +365,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
-	socEstimator := wrapper.NewSocEstimator(util.NewLogger("foo"), vehicle, false)
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle, false)
 
 	lp := &LoadPoint{
 		log:          util.NewLogger("foo"),
@@ -379,28 +379,31 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 		MaxCurrent:   maxA,
 		vehicle:      vehicle,      // needed for targetSoC check
 		socEstimator: socEstimator, // instead of vehicle: vehicle,
-		status:       api.StatusC,
 		Mode:         api.ModeNow,
 		SoC: SoCConfig{
 			Target: 90,
+			Poll: PollConfig{
+				Mode:     pollConnected, // allow polling when connected
+				Interval: pollInterval,
+			},
 		},
 	}
 
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = minA
+	lp.chargeCurrent = float64(minA)
 
-	t.Log("charging below target")
-	vehicle.EXPECT().ChargeState().Return(85.0, nil)
+	t.Log("charging below soc target")
+	vehicle.EXPECT().SoC().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(maxA).Return(nil)
 	lp.Update(500)
 
-	t.Log("charging above target deactivates charger")
+	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
-	vehicle.EXPECT().ChargeState().Return(90.0, nil)
+	vehicle.EXPECT().SoC().Return(90.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
@@ -408,14 +411,20 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
-	vehicle.EXPECT().ChargeState().Return(95.0, nil)
+	vehicle.EXPECT().SoC().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	lp.Update(-5000)
 
-	t.Log("soc has fallen below target")
+	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
-	vehicle.EXPECT().ChargeState().Return(85.0, nil)
+	charger.EXPECT().Status().Return(api.StatusB, nil)
+	charger.EXPECT().Enabled().Return(lp.enabled, nil)
+	lp.Update(-5000)
+
+	t.Log("soc has fallen below target - soc update timer expired")
+	clock.Add(pollInterval)
+	vehicle.EXPECT().SoC().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
@@ -452,7 +461,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = minA
+	lp.chargeCurrent = float64(minA)
 	lp.Mode = api.ModeNow
 
 	t.Log("charging at min")
@@ -517,7 +526,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	attachListeners(t, lp)
 
 	lp.enabled = true
-	lp.maxCurrent = maxA
+	lp.chargeCurrent = float64(maxA)
 	lp.Mode = api.ModeNow
 
 	// attach cache for verifying values
@@ -571,7 +580,6 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 
 	ctrl.Finish()
 }
-
 func TestTargetSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
@@ -607,6 +615,84 @@ func TestTargetSoC(t *testing.T) {
 		}
 
 		if res := lp.targetSocReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+func TestSoCPoll(t *testing.T) {
+	clock := clock.NewMock()
+	tRefresh := pollInterval
+	tNoRefresh := pollInterval / 2
+
+	lp := &LoadPoint{
+		clock: clock,
+		log:   util.NewLogger("foo"),
+		SoC: SoCConfig{
+			Poll: PollConfig{
+				Interval: time.Hour,
+			},
+		},
+	}
+
+	tc := []struct {
+		mode   string
+		status api.ChargeStatus
+		dt     time.Duration
+		res    bool
+	}{
+		// pollCharging
+		{pollCharging, api.StatusA, -1, false},
+		{pollCharging, api.StatusA, 0, false},
+		{pollCharging, api.StatusA, tRefresh, false},
+		{pollCharging, api.StatusB, -1, true}, // poll once when car connected
+		{pollCharging, api.StatusB, 0, false},
+		{pollCharging, api.StatusB, tRefresh, false},
+		{pollCharging, api.StatusC, -1, true},
+		{pollCharging, api.StatusC, 0, true},
+		{pollCharging, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollCharging, api.StatusC, tRefresh, true},
+
+		// pollConnected
+		{pollConnected, api.StatusA, -1, false},
+		{pollConnected, api.StatusA, 0, false},
+		{pollConnected, api.StatusA, tRefresh, false},
+		{pollConnected, api.StatusB, -1, true},
+		{pollConnected, api.StatusB, 0, false},
+		{pollConnected, api.StatusB, tNoRefresh, false},
+		{pollConnected, api.StatusB, tRefresh, true},
+		{pollConnected, api.StatusC, -1, true},
+		{pollConnected, api.StatusC, 0, true},
+		{pollConnected, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollConnected, api.StatusC, tRefresh, true},
+
+		// pollAlways
+		{pollAlways, api.StatusA, -1, true},
+		{pollAlways, api.StatusA, 0, false},
+		{pollAlways, api.StatusA, tNoRefresh, false},
+		{pollAlways, api.StatusA, tRefresh, true},
+		{pollAlways, api.StatusB, -1, true},
+		{pollAlways, api.StatusB, 0, false},
+		{pollAlways, api.StatusB, tNoRefresh, false},
+		{pollAlways, api.StatusB, tRefresh, true},
+		{pollAlways, api.StatusC, -1, true},
+		{pollAlways, api.StatusC, 0, true},
+		{pollAlways, api.StatusC, tNoRefresh, true}, // cached by vehicle
+		{pollAlways, api.StatusC, tRefresh, true},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		if tc.dt < 0 {
+			lp.socUpdated = time.Time{}
+		} else {
+			clock.Add(tc.dt)
+		}
+
+		lp.SoC.Poll.Mode = tc.mode
+		lp.status = tc.status
+
+		if res := lp.socPollAllowed(); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}

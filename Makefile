@@ -1,45 +1,57 @@
-.PHONY: default clean install lint test assets build binaries test-release release publish-testing publish-latest publish-images
+.PHONY: default all clean install install-ui ui assets lint lint-ui test build test-release release
+.PHONY: docker publish-testing publish-latest publish-images
+.PHONY: prepare-image image-rootfs image-update
 
-TAG_NAME := 2021.1.53
+TAG_NAME := 2021.1.55
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
+BUILD_TAGS := -tags=release
+LD_FLAGS := -X github.com/mark-sch/evcc/server.Version=$(VERSION) -X github.com/mark-sch/evcc/server.Commit=$(SHA)
+BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
-IMAGE := mark-sch/evcc
-ALPINE := 3.12
+# docker
+DOCKER_IMAGE := andig/evcc
+ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
-default: clean install npm assets lint build
+# image
+IMAGE_FILE := evcc_$(TAG_NAME).image
+IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
+IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/mark-sch/evcc
+
+default: build
+
+all: clean install install-ui ui assets lint lint-ui test build
 
 clean:
 	rm -rf dist/
 
 install:
-	go install github.com/mjibson/esc
 	go install github.com/golang/mock/mockgen
+
+install-ui:
 	npm ci
+
+ui:
+	npm run build
+
+assets:
+	go generate ./...
 
 lint:
 	golangci-lint run
+
+lint-ui:
+	npm run lint
 
 test:
 	@echo "Running testsuite"
 	go test ./...
 
-npm:
-	npm run build
-
-ui:
-	npm run build
-	go generate main.go
-
-assets:
-	@echo "Generating embedded assets"
-	go generate ./...
-
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -v -tags=release -ldflags '-X "github.com/mark-sch/evcc/server.Version=${VERSION}" -X "github.com/mark-sch/evcc/server.Commit=${SHA}"'
+	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
@@ -47,17 +59,41 @@ release-test:
 release:
 	goreleaser --rm-dist
 
+docker:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	docker build --tag $(DOCKER_IMAGE):testing .
+
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "testing" --targets=arm.v6,amd64
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=arm.v6,amd64
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "latest" --targets=$(TARGETS)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
 
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE) \
-	   --image-name $(IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
+
+prepare-image:
+	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
+	mkdir -p flags/github.com/gokrazy/breakglass
+	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
+	mkdir -p buildflags/github.com/mark-sch/evcc
+	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/mark-sch/evcc/buildflags.txt
+	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/mark-sch/evcc/buildflags.txt
+
+image:
+	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
+	gzip -f $(IMAGE_FILE)
+
+image-rootfs:
+	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
+	gzip -f $(IMAGE_ROOTFS)
+
+image-update:
+	gokr-packer -update yes $(IMAGE_OPTIONS)

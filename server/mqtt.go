@@ -7,13 +7,13 @@ import (
 
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/core"
-	"github.com/mark-sch/evcc/provider"
+	"github.com/mark-sch/evcc/provider/mqtt"
 	"github.com/mark-sch/evcc/util"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
 type MQTT struct {
-	Handler *provider.MqttClient
+	Handler *mqtt.Client
 	root    string
 }
 
@@ -24,7 +24,7 @@ func NewMQTT(root string) *MQTT {
 	}
 
 	return &MQTT{
-		Handler: provider.MQTT,
+		Handler: mqtt.Instance,
 		root:    root,
 	}
 }
@@ -74,7 +74,7 @@ func (m *MQTT) listenSiteOnlySetters(topic string, apiHandler core.SiteAPI) {
 		if payload != "ok" { 
 			prioritysoc, err := strconv.Atoi(payload)
 			if err == nil {
-				apiHandler.SetPrioritySoC(prioritysoc)
+				apiHandler.SetPrioritySoC(float64(prioritysoc))
 				//confirm /set change
 				m.publishSingleValue(topic+"/prioritySoC/set", true, "ok") 
 			}
@@ -86,7 +86,7 @@ func (m *MQTT) listenSiteOnlySetters(topic string, apiHandler core.SiteAPI) {
 		if payload != "ok" { 
 			residualpower, err := strconv.Atoi(payload)
 			if err == nil {
-				apiHandler.SetResidualPower(residualpower)
+				apiHandler.SetResidualPower(float64(residualpower))
 				//confirm /set change
 				m.publishSingleValue(topic+"/residualPower/set", true, "ok") 
 			}
@@ -94,7 +94,7 @@ func (m *MQTT) listenSiteOnlySetters(topic string, apiHandler core.SiteAPI) {
 	})
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI) {
+func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 	m.publishSingleValue(topic+"/mode/set", false, "ok")
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		if payload != "ok" { 
@@ -131,14 +131,16 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointSettingsAPI)
 
 // Run starts the MQTT publisher for the MQTT API
 func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
-	topic := fmt.Sprintf("%s/site", m.root)
-	m.listenSetters(topic, site)
-	m.listenSiteOnlySetters(topic, site)
+	// site setters
+	stopic := fmt.Sprintf("%s/site", m.root)
+	//m.listenSetters(topic, site)
+	m.listenSiteOnlySetters(stopic, site)
 
 	// number of loadpoints
-	topic = fmt.Sprintf("%s/loadpoints", m.root)
+	topic := fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
+	// loadpoint setters
 	for id, lp := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		m.listenSetters(topic, lp)
@@ -148,6 +150,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
 
+	// publish
 	for p := range in {
 		topic := fmt.Sprintf("%s/site", m.root)
 		if p.LoadPoint != nil {

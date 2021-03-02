@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/mark-sch/evcc/util"
 )
 
@@ -20,10 +22,10 @@ func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), e
 
 	o := &calcProvider{}
 
-	for _, cc := range cc.Add {
+	for idx, cc := range cc.Add {
 		f, err := NewFloatGetterFromConfig(cc)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("add[%d]: %w", idx, err)
 		}
 		o.add = append(o.add, f)
 	}
@@ -33,10 +35,10 @@ func NewCalcFromConfig(other map[string]interface{}) (func() (float64, error), e
 
 func (o *calcProvider) floatGetter() (float64, error) {
 	var sum float64
-	for _, p := range o.add {
+	for idx, p := range o.add {
 		v, err := p()
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("add[%d]: %w", idx, err)
 		}
 		sum += v
 	}

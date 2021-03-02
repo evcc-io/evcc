@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -25,13 +24,17 @@ type HTTP struct {
 	jq          *gojq.Query
 }
 
+func init() {
+	registry.Add("http", NewHTTPProviderFromConfig)
+}
+
 // Auth is the authorization config
 type Auth struct {
 	Type, User, Password string
 }
 
-// NewAuth creates authorization headers from config
-func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
+// AuthHeaders creates authorization headers from config
+func AuthHeaders(log *util.Logger, auth Auth, headers map[string]string) error {
 	if strings.ToLower(auth.Type) != "basic" {
 		return fmt.Errorf("unsupported auth type: %s", auth.Type)
 	}
@@ -42,7 +45,7 @@ func NewAuth(log *util.Logger, auth Auth, headers map[string]string) error {
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
-func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
+func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
 		URI, Method string
 		Headers     map[string]string
@@ -51,7 +54,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
-	}{Headers: make(map[string]string)}
+	}{
+		Headers: make(map[string]string),
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -59,31 +64,49 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (*HTTP, error) {
 
 	log := util.NewLogger("http")
 
-	p := &HTTP{
-		Helper:  request.NewHelper(log),
-		url:     cc.URI,
-		method:  cc.Method,
-		headers: cc.Headers,
-		body:    cc.Body,
-		scale:   cc.Scale,
-	}
-
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if err := NewAuth(log, cc.Auth, p.headers); err != nil {
-			return nil, err
+		if err := AuthHeaders(log, cc.Auth, cc.Headers); err != nil {
+			return nil, fmt.Errorf("http auth: %w", err)
 		}
 	}
 
-	// ignore the self signed certificate
-	if cc.Insecure {
-		p.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	return NewHTTP(log,
+		cc.Method,
+		cc.URI,
+		cc.Headers,
+		cc.Body,
+		cc.Insecure,
+		cc.Jq,
+		cc.Scale,
+	)
+}
+
+// NewHTTP create HTTP provider
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+	url := util.DefaultScheme(uri, "http")
+	if url != uri {
+		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
-	if cc.Jq != "" {
-		op, err := gojq.Parse(cc.Jq)
+	p := &HTTP{
+		Helper:  request.NewHelper(log),
+		url:     url,
+		method:  method,
+		headers: headers,
+		body:    body,
+		scale:   scale,
+	}
+
+	// ignore the self signed certificate
+	if insecure {
+		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	}
+
+	if jq != "" {
+		op, err := gojq.Parse(jq)
 		if err != nil {
-			return nil, fmt.Errorf("invalid jq query: %s", p.jq)
+			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
 		}
 
 		p.jq = op
@@ -109,64 +132,88 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 }
 
 // FloatGetter parses float from request
-func (p *HTTP) FloatGetter() (float64, error) {
-	s, err := p.StringGetter()
-	if err != nil {
-		return 0, err
-	}
+func (p *HTTP) FloatGetter() func() (float64, error) {
+	g := p.StringGetter()
 
-	f, err := strconv.ParseFloat(s, 64)
-	if err == nil && p.scale != 0 {
-		f *= p.scale
-	}
+	return func() (float64, error) {
+		s, err := g()
+		if err != nil {
+			return 0, err
+		}
 
-	return f, err
+		f, err := strconv.ParseFloat(s, 64)
+		if err == nil && p.scale != 0 {
+			f *= p.scale
+		}
+
+		return f, err
+	}
 }
 
 // IntGetter parses int64 from request
-func (p *HTTP) IntGetter() (int64, error) {
-	f, err := p.FloatGetter()
-	return int64(math.Round(f)), err
+func (p *HTTP) IntGetter() func() (int64, error) {
+	g := p.FloatGetter()
+
+	return func() (int64, error) {
+		f, err := g()
+		return int64(math.Round(f)), err
+	}
 }
 
 // StringGetter sends string request
-func (p *HTTP) StringGetter() (string, error) {
-	b, err := p.request()
-	if err != nil {
+func (p *HTTP) StringGetter() func() (string, error) {
+	return func() (string, error) {
+		b, err := p.request()
+		if err != nil {
+			return string(b), err
+		}
+
+		if p.jq != nil {
+			v, err := jq.Query(p.jq, b)
+			return fmt.Sprintf("%v", v), err
+		}
+
 		return string(b), err
 	}
-
-	if p.jq != nil {
-		v, err := jq.Query(p.jq, b)
-		return fmt.Sprintf("%v", v), err
-	}
-
-	return string(b), err
 }
 
 // BoolGetter parses bool from request
-func (p *HTTP) BoolGetter() (bool, error) {
-	s, err := p.StringGetter()
-	return util.Truish(s), err
+func (p *HTTP) BoolGetter() func() (bool, error) {
+	g := p.StringGetter()
+
+	return func() (bool, error) {
+		s, err := g()
+		return util.Truish(s), err
+	}
+}
+
+func (p *HTTP) set(param string, val interface{}) error {
+	body, err := setFormattedValue(p.body, param, val)
+
+	if err == nil {
+		_, err = p.request(body)
+	}
+
+	return err
 }
 
 // IntSetter sends int request
-func (p *HTTP) IntSetter(param int64) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
-	return err
+func (p *HTTP) IntSetter(param string) func(int64) error {
+	return func(val int64) error {
+		return p.set(param, val)
+	}
 }
 
 // StringSetter sends string request
-func (p *HTTP) StringSetter(param string) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
-	return err
+func (p *HTTP) StringSetter(param string) func(string) error {
+	return func(val string) error {
+		return p.set(param, val)
+	}
 }
 
 // BoolSetter sends bool request
-func (p *HTTP) BoolSetter(param bool) error {
-	body := util.FormatValue(p.body, param)
-	_, err := p.request(body)
-	return err
+func (p *HTTP) BoolSetter(param string) func(bool) error {
+	return func(val bool) error {
+		return p.set(param, val)
+	}
 }

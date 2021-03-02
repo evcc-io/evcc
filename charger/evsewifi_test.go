@@ -7,7 +7,7 @@ import (
 )
 
 func TestEvseWifi(t *testing.T) {
-	evse, err := NewEVSEWifiFromConfig(map[string]interface{}{
+	wb, err := NewEVSEWifiFromConfig(map[string]interface{}{
 		"meter": map[string]interface{}{
 			"power":    true,
 			"energy":   true,
@@ -19,11 +19,15 @@ func TestEvseWifi(t *testing.T) {
 		t.Error(err)
 	}
 
-	if _, ok := evse.(api.MeterEnergy); !ok {
+	if _, ok := wb.(api.MeterEnergy); !ok {
 		t.Error("missing api.MeterEnergy")
 	}
 
-	if _, ok := evse.(api.MeterCurrent); !ok {
+	if _, ok := wb.(api.MeterCurrent); !ok {
 		t.Error("missing api.MeterCurrent")
+	}
+
+	if _, ok := wb.(api.ChargeTimer); !ok {
+		t.Error("missing ChargeTimer api")
 	}
 }

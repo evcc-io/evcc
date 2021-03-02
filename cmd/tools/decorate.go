@@ -50,7 +50,7 @@ import (
 		}
 {{- end -}}
 
-func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.BaseType}} {
+func {{.Function}}(base {{.BaseType}}{{range ordered}}, {{.VarName}} func() {{slice .Signature 7}}{{end}}) {{.ReturnType}} {
 {{- $basetype := .BaseType}}
 {{- $shortbase := .ShortBase}}
 {{- $prefix := .Function}}
@@ -88,7 +88,7 @@ type typeStruct struct {
 	Type, ShortType, Signature, Function, VarName string
 }
 
-func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) {
+func generate(out io.Writer, packageName, functionName, baseType string, dynamicTypes ...dynamicType) error {
 	types := make(map[string]typeStruct, len(dynamicTypes))
 	combos := make([]string, 0)
 
@@ -127,8 +127,9 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 			return ordered
 		},
 	}).Parse(srcTmpl)
+
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, dt := range dynamicTypes {
@@ -145,11 +146,21 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		combos = append(combos, dt.typ)
 	}
 
-	baseTypeParts := strings.SplitN(baseType, ".", 2)
+	returnType := *ret
+	if returnType == "" {
+		returnType = baseType
+	}
+
+	shortBase := strings.TrimLeft(baseType, "*")
+	if baseTypeParts := strings.SplitN(baseType, ".", 2); len(baseTypeParts) > 1 {
+		shortBase = baseTypeParts[1]
+	}
+
 	vars := struct {
 		API                 string
 		Package, Function   string
 		BaseType, ShortBase string
+		ReturnType          string
 		Types               map[string]typeStruct
 		Combinations        [][]string
 	}{
@@ -157,15 +168,13 @@ func generate(out io.Writer, packageName, functionName, baseType string, dynamic
 		Package:      packageName,
 		Function:     functionName,
 		BaseType:     baseType,
-		ShortBase:    baseTypeParts[1],
+		ShortBase:    shortBase,
+		ReturnType:   returnType,
 		Types:        types,
 		Combinations: combinations.All(combos),
 	}
 
-	if err := tmpl.Execute(out, vars); err != nil {
-		println(err)
-		os.Exit(2)
-	}
+	return tmpl.Execute(out, vars)
 }
 
 var (
@@ -173,6 +182,7 @@ var (
 	pkg      = pflag.StringP("package", "p", "", "package name")
 	function = pflag.StringP("function", "f", "decorate", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
+	ret      = pflag.StringP("return", "r", "", "return type")
 	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 
@@ -201,7 +211,10 @@ func main() {
 	}
 
 	var buf bytes.Buffer
-	generate(&buf, *pkg, *function, *base, dynamicTypes...)
+	if err := generate(&buf, *pkg, *function, *base, dynamicTypes...); err != nil {
+		fmt.Println(err)
+		os.Exit(2)
+	}
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
@@ -213,7 +226,7 @@ func main() {
 
 		dst, err := os.Create(name)
 		if err != nil {
-			println(err)
+			fmt.Println(err)
 			os.Exit(2)
 		}
 
@@ -223,12 +236,13 @@ func main() {
 
 	formatted, err := format.Source([]byte(generated))
 	if err != nil {
-		println(err)
+		fmt.Println(err)
+		fmt.Println(generated)
 		os.Exit(2)
 	}
 
 	if _, err := out.Write(formatted); err != nil {
-		println(err)
+		fmt.Println(err)
 		os.Exit(2)
 	}
 }

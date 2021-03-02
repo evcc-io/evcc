@@ -1,25 +1,19 @@
 package vw
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strings"
 
+	"github.com/mark-sch/evcc/util"
 	"github.com/mark-sch/evcc/util/request"
-	"github.com/mark-sch/evcc/vehicle/oidc"
 )
 
-// BaseURI is the VW api base URI
-const BaseURI = "https://msg.volkswagen.de/fs-car"
+// DefaultBaseURI is the VW api base URI
+const DefaultBaseURI = "https://msg.volkswagen.de/fs-car"
 
-// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
-type VehiclesResponse struct {
-	UserVehicles struct {
-		Vehicle []string
-	}
-}
+// RegionAPI is the VW api used for determining the home region
+const RegionAPI = "https://mal-1a.prd.ece.vwg-connect.com/api"
 
 // TimedInt is an int value with timestamp
 type TimedInt struct {
@@ -31,6 +25,86 @@ type TimedInt struct {
 type TimedString struct {
 	Content   string
 	Timestamp string
+}
+
+// Temp2Float converts api temp to float value
+func Temp2Float(val int) float64 {
+	return float64(val)/10 - 273
+}
+
+// API is the VW api client
+type API struct {
+	*request.Helper
+	identity       *Identity
+	brand, country string
+	baseURI        string
+}
+
+// NewAPI creates a new api client
+func NewAPI(log *util.Logger, identity *Identity, brand, country string) *API {
+	v := &API{
+		Helper:   request.NewHelper(log),
+		identity: identity,
+		brand:    brand,
+		country:  country,
+		baseURI:  DefaultBaseURI,
+	}
+	return v
+}
+
+func (v *API) getJSON(uri string, res interface{}) error {
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Accept":        "application/json",
+		"Authorization": "Bearer " + v.identity.Token(),
+	})
+
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return err
+}
+
+// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
+type VehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+}
+
+// Vehicles implements the /vehicles response
+func (v *API) Vehicles() ([]string, error) {
+	var res VehiclesResponse
+	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", v.baseURI, v.brand, v.country)
+	err := v.getJSON(uri, &res)
+	return res.UserVehicles.Vehicle, err
+}
+
+// HomeRegion is the home region API response
+type HomeRegion struct {
+	HomeRegion struct {
+		BaseURI struct {
+			SystemID string
+			Content  string // api url
+		}
+	}
+}
+
+// HomeRegion updates the home region for the given vehicle
+func (v *API) HomeRegion(vin string) error {
+	var res HomeRegion
+	uri := fmt.Sprintf("%s/cs/vds/v1/vehicles/%s/homeRegion", RegionAPI, vin)
+
+	err := v.getJSON(uri, &res)
+	if err == nil {
+		if api := res.HomeRegion.BaseURI.Content; strings.HasPrefix(api, "https://mal-3a.prd.eu.dp.vwg-connect.com") {
+			api = "https://fal" + strings.TrimPrefix(api, "https://mal")
+			api = strings.TrimSuffix(api, "/api") + "/fs-car"
+			v.baseURI = api
+		}
+	}
+
+	return err
 }
 
 // ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
@@ -62,6 +136,14 @@ type ChargerResponse struct {
 	}
 }
 
+// Charger implements the /charger response
+func (v *API) Charger(vin string) (ChargerResponse, error) {
+	var res ChargerResponse
+	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
+	err := v.getJSON(uri, &res)
+	return res, err
+}
+
 // ClimaterResponse is the /bs/climatisation/v1/%s/%s/vehicles/%s/climater api
 type ClimaterResponse struct {
 	Climater struct {
@@ -85,126 +167,18 @@ type ClimaterResponse struct {
 	}
 }
 
-// Temp2Float converts api temp to float value
-func Temp2Float(val int) float64 {
-	return float64(val)/10 - 273
-}
-
-// API is the VW api client
-type API struct {
-	*request.Helper
-	tokens         *oidc.Tokens
-	authFlow       func() error
-	refreshHeaders func() map[string]string
-	brand, country string
-	VIN            string
-}
-
-// NewAPI creates a new api client
-func NewAPI(
-	helper *request.Helper, tokens *oidc.Tokens,
-	authFlow func() error, refreshHeaders func() map[string]string,
-	vin, brand, country string,
-) *API {
-	v := &API{
-		Helper:         helper,
-		tokens:         tokens,
-		authFlow:       authFlow,
-		refreshHeaders: refreshHeaders,
-		VIN:            vin,
-		brand:          brand,
-		country:        country,
-	}
-	return v
-}
-
-func (v *API) refreshToken() error {
-	if v.tokens.RefreshToken == "" {
-		return errors.New("missing refresh token")
-	}
-
-	data := url.Values(map[string][]string{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {v.tokens.RefreshToken},
-		"scope":         {"sc2:fal"},
-	})
-
-	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), v.refreshHeaders())
-
-	if err == nil {
-		var tokens oidc.Tokens
-
-		err = v.DoJSON(req, &tokens)
-		if err == nil {
-			v.tokens.AccessToken = tokens.AccessToken
-			if tokens.RefreshToken != "" {
-				v.tokens.RefreshToken = tokens.RefreshToken
-			}
-		}
-	}
-
-	return err
-}
-
-func (v *API) getJSON(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + v.tokens.AccessToken,
-	})
-
-	if err == nil {
-		err = v.DoJSON(req, &res)
-
-		// token expired?
-		if err != nil {
-			// handle http 401
-			if se, ok := err.(request.StatusError); ok && se.StatusCode() == http.StatusUnauthorized {
-				// use refresh token
-				if err = v.refreshToken(); err != nil {
-					// re-run full auth flow
-					err = v.authFlow()
-				}
-			}
-
-			// retry original requests
-			if err == nil {
-				req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-				err = v.DoJSON(req, &res)
-			}
-		}
-	}
-
-	return err
-}
-
-// Vehicles implements the /vehicles response
-func (v *API) Vehicles() ([]string, error) {
-	var res VehiclesResponse
-	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", BaseURI, v.brand, v.country)
-	err := v.getJSON(uri, &res)
-	return res.UserVehicles.Vehicle, err
-}
-
-// Charger implements the /charger response
-func (v *API) Charger() (ChargerResponse, error) {
-	var res ChargerResponse
-	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", BaseURI, v.brand, v.country, v.VIN)
-	err := v.getJSON(uri, &res)
-	return res, err
-}
-
 // Climater implements the /climater response
-func (v *API) Climater() (ClimaterResponse, error) {
+func (v *API) Climater(vin string) (ClimaterResponse, error) {
 	var res ClimaterResponse
-	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", BaseURI, v.brand, v.country, v.VIN)
+	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
 	err := v.getJSON(uri, &res)
 	return res, err
 }
 
 // Any implements any api response
-func (v *API) Any(base string) (interface{}, error) {
+func (v *API) Any(base, vin string) (interface{}, error) {
 	var res interface{}
-	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), BaseURI, v.brand, v.country, v.VIN)
+	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), v.baseURI, v.brand, v.country, vin)
 	err := v.getJSON(uri, &res)
 	return res, err
 }

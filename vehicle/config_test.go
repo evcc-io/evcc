@@ -9,6 +9,7 @@ import (
 func TestVehicles(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
+		"missing mqtt broker configuration",
 		"received status code 404 (INVALID PARAMS)", // Nissan
 		"missing personID",
 		"401 Unauthorized",
@@ -17,6 +18,10 @@ func TestVehicles(t *testing.T) {
 		"Missing required parameter", // Renault
 		"error connecting: Network Error",
 		"unexpected status: 401",
+		"could not obtain token", // Porsche
+		"missing credentials",    // Tesla
+		"invalid vehicle type: hyundai",
+		"invalid vehicle type: kia",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {

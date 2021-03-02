@@ -9,7 +9,8 @@ import (
 
 	"github.com/mark-sch/evcc/core"
 	"github.com/mark-sch/evcc/hems"
-	"github.com/mark-sch/evcc/provider"
+	"github.com/mark-sch/evcc/provider/javascript"
+	"github.com/mark-sch/evcc/provider/mqtt"
 	"github.com/mark-sch/evcc/push"
 	"github.com/mark-sch/evcc/server"
 	"github.com/mark-sch/evcc/util"
@@ -46,14 +47,21 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 }
 
 // setup mqtt
-func configureMQTT(conf provider.MqttConfig) {
+func configureMQTT(conf mqttConfig) {
 	log := util.NewLogger("mqtt")
-	clientID := provider.MqttClientID()
+	clientID := mqtt.ClientID()
 
 	var err error
-	provider.MQTT, err = provider.NewMqttClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		log.FATAL.Fatalf("failed configuring mqtt: %v", err)
+	}
+}
+
+// setup javascript
+func configureJavascript(conf map[string]interface{}) {
+	if err := javascript.Configure(conf); err != nil {
+		log.FATAL.Fatalf("failed configuring javascript: %v", err)
 	}
 }
 
@@ -131,15 +139,15 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 	return loadPoints, nil
 }
 
-func loadConfigFile(cfgFile string) (conf config) {
+func loadConfigFile(cfgFile string) (conf config, err error) {
 	if cfgFile != "" {
 		log.INFO.Println("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
 			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 		}
 	} else {
-		log.FATAL.Fatal("missing evcc config")
+		err = errors.New("missing evcc config")
 	}
 
-	return conf
+	return conf, err
 }

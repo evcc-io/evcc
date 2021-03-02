@@ -74,6 +74,12 @@ func (d *dumper) Dump(name string, v interface{}) {
 	// charger
 
 	if v, ok := v.(api.Charger); ok {
+		if status, err := v.Status(); err != nil {
+			fmt.Fprintf(w, "Status:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Status:\t%s\n", status)
+		}
+
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
@@ -102,7 +108,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 
-		if soc, err := v.ChargeState(); err != nil {
+		if soc, err := v.SoC(); err != nil {
 			fmt.Fprintf(w, "State:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "State:\t%.0f%%\n", soc)
@@ -125,7 +131,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.ChargeFinishTimer); ok {
+	if v, ok := v.(api.VehicleFinishTimer); ok {
 		if ft, err := v.FinishTime(); err != nil {
 			fmt.Fprintf(w, "Finish time:\t%v\n", err)
 		} else {
@@ -133,7 +139,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
-	if v, ok := v.(api.Climater); ok {
+	if v, ok := v.(api.VehicleClimater); ok {
 		if active, ot, tt, err := v.Climater(); err != nil {
 			fmt.Fprintf(w, "Climater:\t%v\n", err)
 		} else {
@@ -149,7 +155,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
-		v.Diagnosis()
+		v.Diagnose()
 	}
 
 	w.Flush()

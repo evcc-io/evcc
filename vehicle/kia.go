@@ -15,7 +15,7 @@ type Kia struct {
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
+	// registry.Add("kia", NewKiaFromConfig)
 }
 
 // NewKiaFromConfig creates a new Vehicle
@@ -25,7 +25,9 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity       int64
 		User, Password string
 		Cache          time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

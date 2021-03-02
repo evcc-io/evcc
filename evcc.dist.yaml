@@ -10,7 +10,7 @@ levels:
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
-# for examples see https://github.com/andig/evcc-config#meters
+# for examples see https://github.com/mark-sch/evcc-config#meters
 meters:
 - name: grid
   type: modbus
@@ -29,7 +29,7 @@ meters:
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
-# for examples see https://github.com/andig/evcc-config#chargers
+# for examples see https://github.com/mark-sch/evcc-config#chargers
 chargers:
 - name: wallbe
   type: wallbe # Wallbe charger
@@ -39,7 +39,7 @@ chargers:
 
 # vehicle definitions
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
-# for examples see https://github.com/andig/evcc-config#vehicles
+# for examples see https://github.com/mark-sch/evcc-config#vehicles
 vehicles:
 - name: renault
   type: renault
@@ -71,9 +71,19 @@ loadpoints:
   # - e-Up
   mode: pv
   soc:
+    # polling defines usage of the vehicle APIs
+    # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
+    # or lead to vehicle manufacturer banning you from API use. USE AT YOUR OWN RISK.
+    poll:
+      # poll mode defines under which condition the vehicle API is called:
+      #   charging: update vehicle ONLY when charging (this is the recommended default)
+      #   connected: update vehicle when connected (not only charging), interval defines how often
+      #   always: always update vehicle regardless of connection state, interval defines how often
+      mode: charging
+      # poll interval defines how often the vehicle API may be polled if NOT charging
+      interval: 60m
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
-    alwaysUpdate: false # set true to update vehicle soc even when disconnected
     estimate: false # set true to interpolate between api updates
     levels: # target soc levels for UI
     - 30

@@ -65,9 +65,14 @@ type Charger interface {
 	MaxCurrent(current int64) error
 }
 
+// ChargerEx provides milli-amp precision charger current control
+type ChargerEx interface {
+	MaxCurrentMillis(current float64) error
+}
+
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
 type Diagnosis interface {
-	Diagnosis()
+	Diagnose()
 }
 
 // ChargeTimer provides current charge cycle duration
@@ -84,11 +89,11 @@ type ChargeRater interface {
 type Vehicle interface {
 	Title() string
 	Capacity() int64
-	ChargeState() (float64, error)
+	SoC() (float64, error)
 }
 
-// ChargeFinishTimer provides estimated charge cycle finish time
-type ChargeFinishTimer interface {
+// VehicleFinishTimer provides estimated charge cycle finish time
+type VehicleFinishTimer interface {
 	FinishTime() (time.Time, error)
 }
 
@@ -102,12 +107,12 @@ type VehicleRange interface {
 	Range() (int64, error)
 }
 
-// Climater provides climatisation data
-type Climater interface {
+// VehicleClimater provides climatisation data
+type VehicleClimater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
 
-// Closer ends open sessions or connections
-type Closer interface {
-	Close() error
+// VehicleStartCharge starts the charging session on the vehicle side
+type VehicleStartCharge interface {
+	StartCharge() error
 }

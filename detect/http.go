@@ -2,7 +2,7 @@ package detect
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -94,7 +94,7 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 		}
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil
 	}

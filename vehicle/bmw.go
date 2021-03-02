@@ -51,7 +51,9 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -106,6 +108,7 @@ func (v *BMW) login(user, password string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Header.Get("Location"))
 	if err != nil {
@@ -160,7 +163,7 @@ func (v *BMW) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
+// chargeState implements the api.Vehicle interface
 func (v *BMW) chargeState() (float64, error) {
 	var resp bmwDynamicResponse
 	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
@@ -174,7 +177,7 @@ func (v *BMW) chargeState() (float64, error) {
 	return resp.AttributesMap.ChargingLevelHv, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *BMW) ChargeState() (float64, error) {
+// SoC implements the api.Vehicle interface
+func (v *BMW) SoC() (float64, error) {
 	return v.chargeStateG()
 }

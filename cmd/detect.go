@@ -98,7 +98,7 @@ func display(res []detect.Result) {
 	table.Render()
 
 	fmt.Println(`
-Please open https://github.com/andig/evcc/issues/new in your browser and copy the
+Please open https://github.com/mark-sch/evcc/issues/new in your browser and copy the
 results above into a new issue. Please tell us:
 
 	1. Is the scan result correct?
@@ -108,7 +108,6 @@ results above into a new issue. Please tell us:
 func runDetect(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), nil)
 
-	println(viper.GetString("log"))
 	fmt.Println(`
 Auto detection will now start to scan the network for available devices.
 Scanning focuses on devices that are commonly used that are detectable with reasonable efforts.

@@ -1,3 +1,5 @@
+.cache
+.storybook
 .vscode
 *.conf
 *.Dockerfile
@@ -5,9 +7,10 @@
 *.sh
 *.yaml
 Dockerfile
-.cache
 dist
 node_modules
+release
 !entrypoint.sh
 !evcc.dist.yaml
 !package*.json
+!vue.config.js

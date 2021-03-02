@@ -1,38 +1,51 @@
-#
-# STEP 1 build executable binary
-#
+# STEP 1 build ui
+FROM node:14-alpine as node
 
-FROM golang:1.14-alpine as builder
+RUN apk update && apk add --no-cache make
+
+WORKDIR /build
+
+# install node tools
+COPY Makefile .
+COPY package*.json ./
+RUN make install-ui
+
+# build ui
+COPY assets assets
+COPY vue.config.js vue.config.js
+COPY .eslintrc.js .eslintrc.js
+RUN make clean ui
+
+
+# STEP 2 build executable binary
+FROM golang:1.16-alpine as builder
 
 # Install git + SSL ca certificates.
 # Git is required for fetching the dependencies.
 # Ca-certificates is required to call HTTPS endpoints.
-RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk npm && update-ca-certificates
+RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && update-ca-certificates
 
 WORKDIR /build
 
-# cache modules
+# install go tools and cache modules
+COPY Makefile .
 COPY go.mod .
 COPY go.sum .
+RUN make install
 RUN go mod download
 
-# install go and node tools
-COPY Makefile .
-COPY package*.json ./
-RUN make install
-
-# build ui
-COPY assets assets
-RUN make clean npm
-
+# prepare
 COPY . .
 RUN make assets
+
+# copy ui
+COPY --from=node /build/dist /build/dist
+
+# build
 RUN make build
 
-#
-# STEP 2 build a small image including module support
-#
 
+# STEP 3 build a small image including module support
 FROM alpine:3.12
 
 WORKDIR /evcc

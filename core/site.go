@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/mark-sch/evcc/api"
@@ -26,6 +27,7 @@ type Site struct {
 
 	*Health
 
+	sync.Mutex
 	log *util.Logger
 
 	// configuration
@@ -109,6 +111,15 @@ func NewSite() *Site {
 	return lp
 }
 
+// LoadPoints returns the array of associated loadpoints
+func (site *Site) LoadPoints() []LoadPointAPI {
+	res := make([]LoadPointAPI, len(site.loadpoints))
+	for id, lp := range site.loadpoints {
+		res[id] = lp
+	}
+	return res
+}
+
 func meterCapabilities(name string, meter interface{}) string {
 	_, power := meter.(api.Meter)
 	_, energy := meter.(api.MeterEnergy)
@@ -155,6 +166,10 @@ func (site *Site) DumpConfig() {
 			meterCapabilities("battery", site.batteryMeter),
 			fmt.Sprintf("soc %s", presence[ok]),
 		)
+
+		if ok {
+			site.publish("prioritySoC", site.PrioritySoC)
+		}
 	}
 
 	site.publish("consumptionConfigured", site.consumptionMeter != nil)
@@ -189,11 +204,12 @@ func (site *Site) DumpConfig() {
 		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
-			_, estimate := v.(api.ChargeFinishTimer)
+			_, rng := v.(api.VehicleRange)
+			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.VehicleStatus)
-			_, climate := v.(api.Climater)
-			lp.log.INFO.Printf("    car %d:   estimate %s status %s climate %s",
-				i, presence[estimate], presence[status], presence[climate],
+			_, climate := v.(api.VehicleClimater)
+			lp.log.INFO.Printf("    car %d:   range %s finish %s status %s climate %s",
+				i, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
 	}
@@ -288,6 +304,9 @@ func (site *Site) sitePower() (float64, error) {
 		} else {
 			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", math.Trunc(soc))
+
+			site.Lock()
+			defer site.Unlock()
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {

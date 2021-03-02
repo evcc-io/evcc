@@ -1,6 +1,8 @@
 package core
 
 import (
+	"time"
+	
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/core/wrapper"
 )
@@ -9,23 +11,18 @@ import (
 type LoadPointAPI interface {
 	Name() string
 	HasChargeMeter() bool
-	LoadPointSettingsAPI
-	LoadPointEnergyAPI
-}
 
-// LoadPointSettingsAPI is the getter/setter part of the external loadpoint API
-type LoadPointSettingsAPI interface {
+	// settings
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
 	GetTargetSoC() int
 	SetTargetSoC(int) error
 	GetMinSoC() int
 	SetMinSoC(int) error
+	SetTargetCharge(time.Time, int)
 	RemoteControl(string, RemoteDemand)
-}
 
-// LoadPointEnergyAPI is the external loadpoint API
-type LoadPointEnergyAPI interface {
+	// energy
 	GetMinCurrent() int64
 	GetMaxCurrent() int64
 	GetMinPower() int64
@@ -108,6 +105,21 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	}
 
 	return nil
+}
+
+// SetTargetCharge sets loadpoint charge targetSoC
+func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, targetSoC int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Printf("set target charge: %d @ %v", targetSoC, finishAt)
+
+	// apply immediately
+	// TODO check reset of targetSoC
+	lp.publish("targetTime", finishAt)
+	lp.publish("targetSoC", targetSoC)
+
+	lp.requestUpdate()
 }
 
 // RemoteControl sets remote status demand

@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -16,13 +15,13 @@ import (
 )
 
 const (
-	mccAPILogin                   apiFunction = "jwt/login"
-	mccAPIRefresh                 apiFunction = "jwt/refresh"
-	mccAPIChargeState             apiFunction = "v1/api/WebServer/properties/chargeState"
-	mccAPICurrentSession          apiFunction = "v1/api/WebServer/properties/swaggerCurrentSession"
-	mccAPIEnergy                  apiFunction = "v1/api/iCAN/properties/propjIcanEnergy"
-	mccAPISetCurrentLimit         apiFunction = "v1/api/SCC/properties/propHMICurrentLimit?value="
-	mccAPICurrentCableInformation apiFunction = "v1/api/SCC/properties/json_CurrentCableInformation"
+	mccAPILogin                   = "jwt/login"
+	mccAPIRefresh                 = "jwt/refresh"
+	mccAPIChargeState             = "v1/api/WebServer/properties/chargeState"
+	mccAPICurrentSession          = "v1/api/WebServer/properties/swaggerCurrentSession"
+	mccAPIEnergy                  = "v1/api/iCAN/properties/propjIcanEnergy"
+	mccAPISetCurrentLimit         = "v1/api/SCC/properties/propHMICurrentLimit?value="
+	mccAPICurrentCableInformation = "v1/api/SCC/properties/json_CurrentCableInformation"
 )
 
 // MCCTokenResponse is the apiLogin response
@@ -75,25 +74,27 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 		return nil, err
 	}
 
-	return NewMobileConnect(cc.URI, cc.Password)
+	return NewMobileConnect(util.DefaultScheme(cc.URI, "https"), cc.Password)
 }
 
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
+	log := util.NewLogger("mcc")
+
 	mcc := &MobileConnect{
-		Helper:   request.NewHelper(util.NewLogger("mcc")),
+		Helper:   request.NewHelper(log),
 		uri:      strings.TrimRight(uri, "/"),
 		password: password,
 	}
 
 	// ignore the self signed certificate
-	mcc.Helper.Transport(request.NewTransport().WithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	mcc.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
 	return mcc, nil
 }
 
-// construct the URL for a given apiFunction
-func (mcc *MobileConnect) apiURL(api apiFunction) string {
+// construct the URL for a given api
+func (mcc *MobileConnect) apiURL(api string) string {
 	return fmt.Sprintf("%s/%s", mcc.uri, api)
 }
 
@@ -126,7 +127,10 @@ func (mcc *MobileConnect) login(password string) error {
 		"pass": []string{mcc.password},
 	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Referer":      fmt.Sprintf("%s/login", mcc.uri),
+		"Content-Type": "application/x-www-form-urlencoded",
+	})
 	if err != nil {
 		return err
 	}
@@ -171,6 +175,7 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
+	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", mcc.uri))
 
 	return req, nil
 }

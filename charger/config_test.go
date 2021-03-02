@@ -9,6 +9,7 @@ import (
 func TestChargers(t *testing.T) {
 	acceptable := []string{
 		"invalid plugin type: ...",
+		"missing mqtt broker configuration",
 		"mqtt not configured",
 		"invalid charger type: nrgkick-bluetooth",
 		"NRGKick bluetooth is only supported on linux",

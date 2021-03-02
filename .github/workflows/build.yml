@@ -1,4 +1,4 @@
-name: CI
+name: Build
 
 on:
   push:
@@ -13,15 +13,14 @@ jobs:
     - name: Setup
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.16
       id: go
 
     - uses: actions/cache@v2
       with:
         path: |
           ~/go/pkg/mod
-          **/node_modules
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
 
@@ -33,8 +32,8 @@ jobs:
     - name: Install tools
       run: make install
 
-    - name: Assets & UI
-      run: make npm assets
+    - name: Assets
+      run: make assets
 
     - name: Porcelain
       run: |
@@ -47,16 +46,48 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.33
+        version: v1.37
 
     - name: Test
       run: make test
 
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
 
-  publish:
-    name: Publish
-    if: "startsWith(github.ref, 'refs/heads/master')"
-    needs: build
+    steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install tools
+      run: make install-ui
+
+    - name: Build
+      run: make ui
+
+    - name: Lint
+      run: make lint-ui
+
+    - name: Porcelain
+      run: |
+        test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+  dockerlatest:
+    name: Publish :latest
+    if: |
+      startsWith(github.ref, 'refs/heads/master')
+      && ! contains(github.head_ref, 'refs/heads/chore/')
+    needs:
+    - build
+    - build-ui
     runs-on: ubuntu-latest
 
     steps:
@@ -69,16 +100,21 @@ jobs:
       run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
 
     - name: Login
-      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASS }}
 
     - name: Publish
       run: make publish-latest
 
 
-  release:
-    name: Release
+  dockerrelease:
+    name: Publish :release
     if: "startsWith(github.ref, 'refs/tags')"
-    needs: build
+    needs:
+    - build
+    - build-ui
     runs-on: ubuntu-latest
 
     steps:
@@ -92,12 +128,63 @@ jobs:
       run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
 
     - name: Login
-      run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASS }}
 
     - name: Publish
-      run: make publish-release
+      run: make publish-images
 
-    - name: Release
+
+  release:
+    name: Release
+    if: "startsWith(github.ref, 'refs/tags')"
+    needs:
+    - build
+    - build-ui
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          **/node_modules
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.16
+      id: go
+
+    - name: Prepare Image
+      run: |
+        make prepare-image
+        sed -i -e 's#-ld.*$#& -X github.com/mark-sch/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/mark-sch/evcc/buildflags.txt
+        mkdir /home/runner/.config/gokrazy
+        echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
+
+    - name: Build Image
+      run: make image
+
+    - name: Build Root Filesystem
+      run: make image-rootfs
+
+    - name: Clean git
+      run: |
+         git checkout go.*
+         rm -rf flags buildflags
+
+    - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2
       with:
         version: latest

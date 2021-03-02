@@ -3,7 +3,6 @@ package semp
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -37,29 +36,39 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log     *util.Logger
-	cache   *util.Cache
-	closeC  chan struct{}
-	doneC   chan struct{}
-	uid     string
-	hostURI string
-	port    int
-	site    core.SiteAPI
+	log          *util.Logger
+	cache        *util.Cache
+	closeC       chan struct{}
+	doneC        chan struct{}
+	controllable bool
+	uid          string
+	hostURI      string
+	port         int
+	site         core.SiteAPI
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+	cc := struct {
+		AllowControl bool
+	}{}
+
+	if err := util.DecodeOther(conf, &cc); err != nil {
+		return nil, err
+	}
+
 	uid, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
 	}
 
 	s := &SEMP{
-		doneC: make(chan struct{}),
-		log:   util.NewLogger("semp"),
-		cache: cache,
-		site:  site,
-		uid:   uid.String(),
+		doneC:        make(chan struct{}),
+		log:          util.NewLogger("semp"),
+		cache:        cache,
+		site:         site,
+		uid:          uid.String(),
+		controllable: cc.AllowControl,
 	}
 
 	// find external port
@@ -70,7 +79,7 @@ func New(site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, erro
 
 	s.hostURI = s.callbackURI()
 
-	s.handlers(httpd.Router)
+	s.handlers(httpd.Router())
 
 	return s, err
 }
@@ -359,7 +368,7 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: isPV,
+		EMSignalsAccepted: s.controllable && isPV,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -382,6 +391,11 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	mode := api.ModeOff
 	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
 		mode = modeP.Val.(api.ChargeMode)
+	}
+
+	var connected bool
+	if connectedP, err := s.cache.GetChecked(id, "connected"); err == nil {
+		connected = connectedP.Val.(bool)
 	}
 
 	var charging bool
@@ -414,7 +428,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
-	if maxEnergy > 0 {
+	if connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:      s.deviceID(id),
@@ -442,12 +456,7 @@ func (s *SEMP) allPlanningRequest() (res []PlanningRequest) {
 func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err == nil {
-		defer r.Body.Close()
-		err = xml.Unmarshal(body, &msg)
-	}
-
+	err := xml.NewDecoder(r.Body).Decode(&msg)
 	s.log.TRACE.Printf("recv: %+v", msg)
 
 	if err != nil {
@@ -464,6 +473,12 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if mode := lp.GetMode(); mode != api.ModeMinPV && mode != api.ModePV {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// ignore requests if not controllable
+			if !s.controllable {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}

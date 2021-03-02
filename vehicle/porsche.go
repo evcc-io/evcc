@@ -44,6 +44,14 @@ type porscheVehicleResponse struct {
 			Unit  string
 			Value float64
 		}
+		RemainingRanges struct {
+			ElectricalRange struct {
+				Distance struct {
+					Unit  string
+					Value float64
+				}
+			}
+		}
 	}
 }
 
@@ -54,7 +62,7 @@ type Porsche struct {
 	user, password, vin string
 	token               string
 	tokenValid          time.Time
-	chargeStateG        func() (float64, error)
+	chargerG            func() (interface{}, error)
 }
 
 func init() {
@@ -68,7 +76,14 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity            int64
 		User, Password, VIN string
 		Cache               time.Duration
-	}{}
+	}{
+		Cache: interval,
+	}
+
+	log := util.NewLogger("porsche")
+
+	var err error
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -81,14 +96,25 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	if err == nil {
+		err = v.authFlow()
+	}
 
-	return v, nil
+	if err == nil && cc.VIN == "" {
+		v.vin, err = findVehicle(v.vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", v.vin)
+		}
+	}
+
+	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
+
+	return v, err
 }
 
 // login with a my Porsche account
 // looks like the backend is using a PingFederate Server with OAuth2
-func (v *Porsche) login(user, password string) error {
+func (v *Porsche) authFlow() error {
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
@@ -108,6 +134,7 @@ func (v *Porsche) login(user, password string) error {
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
@@ -124,8 +151,8 @@ func (v *Porsche) login(user, password string) error {
 		"resume":       []string{resume},
 		"thirdPartyId": []string{thirdPartyID},
 		"state":        []string{state},
-		"username":     []string{user},
-		"password":     []string{password},
+		"username":     []string{v.user},
+		"password":     []string{v.password},
 		"keeploggedin": []string{"false"},
 	}
 
@@ -135,9 +162,10 @@ func (v *Porsche) login(user, password string) error {
 	}
 
 	// process the auth so the session is authenticated
-	if _, err = client.Do(req); err != nil {
+	if resp, err = client.Do(req); err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	var CodeVerifier, _ = cv.CreateCodeVerifier()
 	codeChallenge := CodeVerifier.CodeChallengeS256()
@@ -162,6 +190,7 @@ func (v *Porsche) login(user, password string) error {
 	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 
 	query, err = url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
@@ -203,7 +232,7 @@ func (v *Porsche) login(user, password string) error {
 
 func (v *Porsche) request(uri string) (*http.Request, error) {
 	if v.token == "" || time.Since(v.tokenValid) > 0 {
-		if err := v.login(v.user, v.password); err != nil {
+		if err := v.authFlow(); err != nil {
 			return nil, err
 		}
 	}
@@ -215,8 +244,27 @@ func (v *Porsche) request(uri string) (*http.Request, error) {
 	return req, err
 }
 
-// chargeState implements the Vehicle.ChargeState interface
-func (v *Porsche) chargeState() (float64, error) {
+func (v *Porsche) vehicles() (res []string, err error) {
+	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
+	req, err := v.request(uri)
+
+	var vehicles []struct {
+		VIN string
+	}
+
+	if err == nil {
+		err = v.DoJSON(req, &vehicles)
+
+		for _, v := range vehicles {
+			res = append(res, v.VIN)
+		}
+	}
+
+	return res, err
+}
+
+// chargeState implements the api.Vehicle interface
+func (v *Porsche) chargeState() (interface{}, error) {
 	uri := fmt.Sprintf("%s/vehicles/%s", porscheAPI, v.vin)
 	req, err := v.request(uri)
 	if err != nil {
@@ -226,10 +274,25 @@ func (v *Porsche) chargeState() (float64, error) {
 	var pr porscheVehicleResponse
 	err = v.DoJSON(req, &pr)
 
-	return pr.CarControlData.BatteryLevel.Value, err
+	return pr, err
 }
 
-// ChargeState implements the Vehicle.ChargeState interface
-func (v *Porsche) ChargeState() (float64, error) {
-	return v.chargeStateG()
+// SoC implements the api.Vehicle interface
+func (v *Porsche) SoC() (float64, error) {
+	res, err := v.chargerG()
+	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+		return res.CarControlData.BatteryLevel.Value, nil
+	}
+
+	return 0, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *Porsche) Range() (int64, error) {
+	res, err := v.chargerG()
+	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
+	}
+
+	return 0, err
 }

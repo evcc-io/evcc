@@ -10,6 +10,7 @@ import (
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/util"
 	"github.com/mark-sch/evcc/util/modbus"
+	"github.com/volkszaehler/mbmd/encoding"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 	wbRegActualCurrent = 300 // Holding
 	wbRegEnable        = 400 // Coil
 	wbRegMaxCurrent    = 528 // Holding
+	wbRegFirmware      = 149 // Firmware
 
 	wbRegPower  = 120 // power reading
 	wbRegEnergy = 128 // energy reading
@@ -43,7 +45,7 @@ func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -b api.Charger -o wallbe_decorators -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -o wallbe_decorators -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -85,12 +87,17 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currents = wb.currents
 	}
 
+	var maxCurrentMillis func(float64) error
+	if !cc.Legacy {
+		maxCurrentMillis = wb.maxCurrentMillis
+	}
+
 	// special case for SDM meters
 	if encoding := strings.ToLower(cc.Meter.Encoding); strings.HasPrefix(encoding, encodingSDM) {
 		wb.encoding = encodingSDM
 	}
 
-	return decorateWallbe(wb, currentPower, totalEnergy, currents), nil
+	return decorateWallbe(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
 }
 
 // NewWallbe creates a Wallbe charger
@@ -155,6 +162,18 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 	return err
 }
 
+// maxCurrentMillis implements the ChargerEx interface
+func (wb *Wallbe) maxCurrentMillis(current float64) error {
+	if current < 6 {
+		return fmt.Errorf("invalid current %.5g", current)
+	}
+
+	u := uint16(current * float64(wb.factor))
+	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+
+	return err
+}
+
 // ChargingTime yields current charge run duration
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
@@ -213,4 +232,11 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
+}
+
+// Diagnose implements the Diagnosis interface
+func (wb *Wallbe) Diagnose() {
+	if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 6); err == nil {
+		fmt.Printf("Firmware:\t%s\n", encoding.StringSwapped(b))
+	}
 }
