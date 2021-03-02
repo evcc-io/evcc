@@ -159,8 +159,8 @@ func (wb *PhoenixEMCP) scaler(val *float64, reg uint16) {
 	}
 }
 
-func (wb *PhoenixEMCP) decodeReading(b []byte) float64 {
-	return rs485.RTUUint32ToFloat64(b)
+func (wb *PhoenixEMCP) decodeReading(scale float64, b []byte) float64 {
+	return scale * rs485.RTUUint32ToFloat64(b)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -170,7 +170,7 @@ func (wb *PhoenixEMCP) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.powerScale * wb.decodeReading(b), err
+	return wb.decodeReading(wb.powerScale, b), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -180,7 +180,7 @@ func (wb *PhoenixEMCP) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.energyScale * wb.decodeReading(b) / 1e3, err
+	return wb.decodeReading(wb.energyScale, b) / 1e3, err
 }
 
 // currents implements the Meter.Currents interface
@@ -192,11 +192,8 @@ func (wb *PhoenixEMCP) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(b))
+		currents = append(currents, wb.decodeReading(wb.currentScale, b))
 	}
 
-	return wb.currentScale * currents[0],
-		wb.currentScale * currents[1],
-		wb.currentScale * currents[2],
-		nil
+	return currents[0], currents[1], currents[2], nil
 }
