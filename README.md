@@ -177,8 +177,9 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `openWB`: openWB chargers using openWB's MQTT interface
-- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers like the ESL Walli (Ethernet connection, see [Preparation](#phoenix-em-cp-preparation)).
-- `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
+- `phoenix-em-eth`: chargers with Phoenix EM-CP ethernet controllers (e.g. ESL Walli, , see [Preparation](#phoenix-em-ev-ethernet-controller-preparation).
+- `phoenix-ev-eth`: chargers with Phoenix EV-CC ethernet controllers (see [Preparation](#phoenix-em-ev-ethernet-controller-preparation))
+- `phoenix-ev-ser`: chargers with Phoenix EV-CC serial controllers
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
@@ -191,9 +192,9 @@ Configuration examples are documented at [andig/evcc-config#chargers](https://gi
 
 KEBA chargers require UDP function to be enabled with DIP 1.3 = `ON`, see KEBA installation manual.
 
-#### Phoenix EM-CP preparation <!-- omit in toc -->
+#### Phoenix EM/EV ethernet controller preparation <!-- omit in toc -->
 
-The EM-CP controller requires DIP 10 = `ON` be controlled by ModBus, see controller manual.
+The EM/EV ethernet controllers requires DIP 10 = `ON` be controlled by ModBus, see controller manual.
 
 #### Wallbe preparation <!-- omit in toc -->
 
