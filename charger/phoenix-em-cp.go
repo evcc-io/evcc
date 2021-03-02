@@ -1,13 +1,13 @@
 package charger
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 const (
@@ -19,8 +19,9 @@ const (
 	phEMCPRegPower  = 120 // power reading
 	phEMCPRegEnergy = 128 // energy reading
 
-	phEMCPRegPowerMul  = 337 // power reading multiplier
-	phEMCPRegEnergyMul = 341 // energy reading multiplier
+	phEMCPRegPowerScaler   = 364 // power reading scaler
+	phEMCPRegEnergyScaler  = 372 // energy reading scaler
+	phEMCPRegCurrentScaler = 358 // current reading scaler
 )
 
 var phEMCPRegCurrents = []uint16{114, 116, 118} // current readings
@@ -28,7 +29,8 @@ var phEMCPRegCurrents = []uint16{114, 116, 118} // current readings
 // PhoenixEMCP is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMCP struct {
-	conn *modbus.Connection
+	conn                                  *modbus.Connection
+	powerScale, energyScale, currentScale float64
 }
 
 func init() {
@@ -59,16 +61,19 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 	var currentPower func() (float64, error)
 	if cc.Meter.Power {
 		currentPower = wb.currentPower
+		wb.scaler(&wb.powerScale, phEMCPRegPowerScaler)
 	}
 
 	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
 		totalEnergy = wb.totalEnergy
+		wb.scaler(&wb.energyScale, phEMCPRegEnergyScaler)
 	}
 
 	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
+		wb.scaler(&wb.currentScale, phEMCPRegCurrentScaler)
 	}
 
 	return decoratePhoenixEMCP(wb, currentPower, totalEnergy, currents), err
@@ -146,9 +151,16 @@ func (wb *PhoenixEMCP) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
+func (wb *PhoenixEMCP) scaler(val *float64, reg uint16) {
+	*val = 1
+
+	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil {
+		*val = rs485.RTUIeee754ToFloat64Swapped(b)
+	}
+}
+
 func (wb *PhoenixEMCP) decodeReading(b []byte) float64 {
-	v := binary.BigEndian.Uint32(b)
-	return float64(v)
+	return rs485.RTUUint32ToFloat64(b)
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -158,15 +170,7 @@ func (wb *PhoenixEMCP) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	f, err := wb.conn.ReadHoldingRegisters(phEMCPRegPowerMul, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	ff := binary.BigEndian.Uint16(f)
-	fmt.Printf("currentPower %0x %d\n", f, ff)
-
-	return float64(ff) * wb.decodeReading(b), err
+	return wb.powerScale * wb.decodeReading(b), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -176,15 +180,7 @@ func (wb *PhoenixEMCP) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	f, err := wb.conn.ReadHoldingRegisters(phEMCPRegEnergyMul, 1)
-	if err != nil {
-		return 0, err
-	}
-
-	ff := binary.BigEndian.Uint16(f)
-	fmt.Printf("totalEnergy %0x %d\n", f, ff)
-
-	return float64(ff) * wb.decodeReading(b), err
+	return wb.energyScale * wb.decodeReading(b) / 1e3, err
 }
 
 // currents implements the Meter.Currents interface
@@ -199,5 +195,8 @@ func (wb *PhoenixEMCP) currents() (float64, float64, float64, error) {
 		currents = append(currents, wb.decodeReading(b))
 	}
 
-	return currents[0], currents[1], currents[2], nil
+	return wb.currentScale * currents[0],
+		wb.currentScale * currents[1],
+		wb.currentScale * currents[2],
+		nil
 }
