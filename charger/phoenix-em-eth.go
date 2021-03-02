@@ -11,31 +11,31 @@ import (
 )
 
 const (
-	phEMCPRegStatus     = 100 // Input
-	phEMCPRegChargeTime = 102 // Input
-	phEMCPRegMaxCurrent = 300 // Holding
-	phEMCPRegEnable     = 400 // Coil
+	phxEMEthRegStatus     = 100 // Input
+	phxEMEthRegChargeTime = 102 // Input
+	phxEMEthRegMaxCurrent = 300 // Holding
+	phxEMEthRegEnable     = 400 // Coil
 
-	phEMCPRegPower  = 120 // power reading
-	phEMCPRegEnergy = 128 // energy reading
+	phxEMEthRegPower  = 120 // power reading
+	phxEMEthRegEnergy = 128 // energy reading
 )
 
-var phEMCPRegCurrents = []uint16{114, 116, 118} // current readings
+var phxEMEthRegCurrents = []uint16{114, 116, 118} // current readings
 
-// PhoenixEMCP is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
+// PhoenixEMEth is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
-type PhoenixEMCP struct {
+type PhoenixEMEth struct {
 	conn *modbus.Connection
 }
 
 func init() {
-	registry.Add("phoenix-emcp", NewPhoenixEMCPFromConfig)
+	registry.Add("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMCP -o phoenix-em-cp_decorators -b *PhoenixEMCP -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMEth -o phoenix-em-eth_decorators -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
-// NewPhoenixEMCPFromConfig creates a Phoenix charger from generic config
-func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
+func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		ID    uint8
@@ -51,7 +51,7 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 		return nil, err
 	}
 
-	wb, err := NewPhoenixEMCP(cc.URI, cc.ID)
+	wb, err := NewPhoenixEMEth(cc.URI, cc.ID)
 
 	var currentPower func() (float64, error)
 	if cc.Meter.Power {
@@ -68,20 +68,20 @@ func NewPhoenixEMCPFromConfig(other map[string]interface{}) (api.Charger, error)
 		currents = wb.currents
 	}
 
-	return decoratePhoenixEMCP(wb, currentPower, totalEnergy, currents), err
+	return decoratePhoenixEMEth(wb, currentPower, totalEnergy, currents), err
 }
 
-// NewPhoenixEMCP creates a Phoenix charger
-func NewPhoenixEMCP(uri string, id uint8) (*PhoenixEMCP, error) {
+// NewPhoenixEMEth creates a Phoenix charger
+func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
 	if err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("emcp")
+	log := util.NewLogger("em-eth")
 	conn.Logger(log.TRACE)
 
-	wb := &PhoenixEMCP{
+	wb := &PhoenixEMEth{
 		conn: conn,
 	}
 
@@ -89,8 +89,8 @@ func NewPhoenixEMCP(uri string, id uint8) (*PhoenixEMCP, error) {
 }
 
 // Status implements the Charger.Status interface
-func (wb *PhoenixEMCP) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(phEMCPRegStatus, 1)
+func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
+	b, err := wb.conn.ReadInputRegisters(phxEMEthRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -99,8 +99,8 @@ func (wb *PhoenixEMCP) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (wb *PhoenixEMCP) Enabled() (bool, error) {
-	b, err := wb.conn.ReadCoils(phEMCPRegEnable, 1)
+func (wb *PhoenixEMEth) Enabled() (bool, error) {
+	b, err := wb.conn.ReadCoils(phxEMEthRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -109,31 +109,31 @@ func (wb *PhoenixEMCP) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (wb *PhoenixEMCP) Enable(enable bool) error {
+func (wb *PhoenixEMEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = 0xFF00
 	}
 
-	_, err := wb.conn.WriteSingleCoil(phEMCPRegEnable, u)
+	_, err := wb.conn.WriteSingleCoil(phxEMEthRegEnable, u)
 
 	return err
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (wb *PhoenixEMCP) MaxCurrent(current int64) error {
+func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteSingleRegister(phEMCPRegMaxCurrent, uint16(current))
+	_, err := wb.conn.WriteSingleRegister(phxEMEthRegMaxCurrent, uint16(current))
 
 	return err
 }
 
 // ChargingTime yields current charge run duration
-func (wb *PhoenixEMCP) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(phEMCPRegChargeTime, 2)
+func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
+	b, err := wb.conn.ReadInputRegisters(phxEMEthRegChargeTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -143,13 +143,13 @@ func (wb *PhoenixEMCP) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-func (wb *PhoenixEMCP) decodeReading(b []byte) float64 {
+func (wb *PhoenixEMEth) decodeReading(b []byte) float64 {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 100
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
-func (wb *PhoenixEMCP) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phEMCPRegPower, 2)
+func (wb *PhoenixEMEth) currentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(phxEMEthRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -158,8 +158,8 @@ func (wb *PhoenixEMCP) currentPower() (float64, error) {
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
-func (wb *PhoenixEMCP) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phEMCPRegEnergy, 2)
+func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -168,9 +168,9 @@ func (wb *PhoenixEMCP) totalEnergy() (float64, error) {
 }
 
 // currents implements the Meter.Currents interface
-func (wb *PhoenixEMCP) currents() (float64, float64, float64, error) {
+func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 	var currents []float64
-	for _, regCurrent := range phEMCPRegCurrents {
+	for _, regCurrent := range phxEMEthRegCurrents {
 		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
 		if err != nil {
 			return 0, 0, 0, err
