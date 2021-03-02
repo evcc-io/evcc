@@ -17,11 +17,11 @@ const (
 	phxEVEthRegEnable     = 400 // Coil
 
 	phxEVEthRegPower  = 120 // power reading
-	phxEVEthRegEnergy = 128 // energy reading
+	phxEVEthRegEnergy = 904 // energy reading, 128 for fw <= 1.11
 
 	phxEVEthRegPowerScale   = 364 // power scaler
 	phxEVEthRegEnergyScale  = 372 // energy scaler
-	phxEVEthRegCurrentScale = 358 // current scaler
+	phxEVEthRegCurrentScale = 902 // current scaler, 358 for fw <= 1.11
 )
 
 var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
@@ -155,9 +155,13 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 
 // scaler reads the decimal scaler value
 func (wb *PhoenixEVEth) scaler(val *float64, reg uint16) {
-	*val = 1
 	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil {
 		*val = rs485.RTUUint32ToFloat64Swapped(b)
+	}
+
+	// scaler 0 means no scaling
+	if *val == 0 {
+		*val = 1
 	}
 }
 
@@ -177,12 +181,12 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 
 // totalEnergy implements the Meter.TotalEnergy interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(phxEVEthRegEnergy, 2)
+	b, err := wb.conn.ReadHoldingRegisters(phxEVEthRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return wb.decodeReading(wb.energyScale, b), err
+	return wb.decodeReading(wb.energyScale, b) / 1e3, err
 }
 
 // currents implements the Meter.Currents interface
