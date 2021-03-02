@@ -1,13 +1,13 @@
 package charger
 
 import (
-	"encoding/binary"
 	"fmt"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 const (
@@ -144,8 +144,7 @@ func (wb *PhoenixEMCP) ChargingTime() (time.Duration, error) {
 }
 
 func (wb *PhoenixEMCP) decodeReading(b []byte) float64 {
-	v := binary.BigEndian.Uint32(b)
-	return float64(v)
+	return rs485.RTUUint32ToFloat64Swapped(b) / 100
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
