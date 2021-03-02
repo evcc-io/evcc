@@ -468,10 +468,10 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			lp.log.ERROR.Printf("max charge current %.2g: %v", chargeCurrent, err)
 		}
 	}
-	//if chargeCurrent < float64(lp.MinCurrent) {
-	//	lp.maxCurrent = int64(0)
-	//	lp.bus.Publish(evChargeCurrent, lp.maxCurrent)
-	//}	
+	if chargeCurrent < float64(lp.MinCurrent) {
+		lp.chargeCurrent = float64(0)
+		lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
+	}	
 
 	// set enabled
 	if enabled := chargeCurrent >= float64(lp.MinCurrent); enabled != lp.enabled && err == nil {

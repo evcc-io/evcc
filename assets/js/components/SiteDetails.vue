@@ -30,16 +30,25 @@
 		</div>
 		<div class="d-md-block col-6 col-md-3 mt-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
-				Batterie
+				Batterie ({{ batterySoC }}%)
 				<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
 			</div>
 			<h2 class="value">
 				{{ fmt(batteryPower) }}
 				<small class="text-muted">{{ fmtUnit(batteryPower) }}W</small>
-				<small class="text-muted">/</small>
-				{{ batterySoC }} <small class="text-muted">%</small>
 			</h2>
 		</div>
+
+		<div class="col-6 col-md-3 mt-3" v-if="pvConfigured">
+			<div class="mb-2 value">
+				Verbrauch <fa-icon icon="plug" class="text-primary" />
+			</div>
+			<h2 class="value">
+				{{ fmt(consumptionPower) }}
+				<small class="text-muted">{{ fmtUnit(consumptionPower) }}W</small>
+			</h2>
+		</div>
+
 	</div>
 </template>
 
@@ -65,6 +74,7 @@ export default {
 		pvPower: Number,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
+		consumptionPower: Number,
 		batterySoC: Number,
 	},
 	data: function () {

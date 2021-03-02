@@ -14,6 +14,8 @@ type SiteAPI interface {
 	SetResidualPower(float64) error
 	GetPrioritySoC() float64
 	SetPrioritySoC(float64) error
+	GetMinSoC() int
+	SetMinSoC(int) error
 }
 
 

@@ -20,6 +20,7 @@ Base.args = {
   pvPower: 100,
   batteryConfigured: true,
   batteryPower: 100,
+  consumptionPower: 100,
   batterySoC: 0,
   loadpoints: [],
 };
@@ -32,6 +33,7 @@ Single.args = {
   pvPower: 100,
   batteryConfigured: true,
   batteryPower: 100,
+  consumptionPower: 100,
   batterySoC: 0,
   loadpoints: [
     {
@@ -49,6 +51,7 @@ Multi.args = {
   pvPower: 100,
   batteryConfigured: true,
   batteryPower: 100,
+  consumptionPower: 100,
   batterySoC: 0,
   loadpoints: [
     {

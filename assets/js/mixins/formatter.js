@@ -1,7 +1,7 @@
 export default {
   data: function () {
     return {
-      fmtLimit: 100,
+      fmtLimit: 1000,
       fmtDigits: 1,
     };
   },

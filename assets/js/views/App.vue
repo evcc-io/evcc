@@ -3,9 +3,7 @@
 		<div>
 			<nav class="navbar navbar-expand-lg navbar-light bg-light">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/mark-sch/evcc"
-						><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
-					>
+					<a class="navbar-brand" href="https://www.sunny5.de" target="_new"><img src="ico/favicon-32x32.png" alt="Sunny5 Logo"></i></a>
 					<button
 						class="navbar-toggler"
 						type="button"
@@ -25,9 +23,8 @@
 							>
 							<a
 								class="nav-item nav-link pb-1"
-								href="https://github.com/mark-sch/evcc/discussions"
-								target="_blank"
-								>Community Support</a
+								href="./broker/login"
+								>Login</a
 							>
 						</div>
 					</div>

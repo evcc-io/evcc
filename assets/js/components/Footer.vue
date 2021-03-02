@@ -3,14 +3,13 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-6">
-					<Version v-bind="version" />
+					<p class="text-muted">
+						<Version v-bind="version" />
+					</p>
 				</div>
 				<div class="col-6 text-right">
-					<small class="text-black">
-						<a href="https://github.com/sponsors/andig" target="_blank" class="link">
-							<fa-icon icon="heart" class="icon mr-1"></fa-icon
-							><span class="d-none d-sm-inline">Projekt</span> unterstützen
-						</a>
+					<small class="text-muted">
+						<a href= "https://github.com/mark-sch/evcc" target="_blank">&copy; 2020 andig/evcc, Think5 GmbH et al.</a>
 					</small>
 				</div>
 			</div>

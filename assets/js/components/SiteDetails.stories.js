@@ -28,5 +28,6 @@ WithBattery.args = {
   gridPower: 100,
   pvPower: 100,
   batteryPower: 100,
+  consumptionPower: 100,
   batterySoC: 0,
 };

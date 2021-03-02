@@ -81,6 +81,18 @@ func (m *MQTT) listenSiteOnlySetters(topic string, apiHandler core.SiteAPI) {
 		}
 	})
 
+	m.publishSingleValue(topic+"/minSoC/set", false, "ok")
+	m.Handler.Listen(topic+"/minSoC/set", func(payload string) {
+		if payload != "ok" { 
+			soc, err := strconv.Atoi(payload)
+			if err == nil {
+				_ = apiHandler.SetMinSoC(soc)
+				//confirm /set change
+				m.publishSingleValue(topic+"/minSoC/set", true, "ok") 
+			}
+		}
+	})
+
 	m.publishSingleValue(topic+"/residualPower/set", false, "ok")
 	m.Handler.Listen(topic+"/residualPower/set", func(payload string) {
 		if payload != "ok" { 

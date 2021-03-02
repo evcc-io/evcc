@@ -49,6 +49,7 @@ export default {
 		pvPower: Number,
 		batteryConfigured: Boolean,
 		batteryPower: Number,
+		consumptionPower: Number,
 		batterySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },
