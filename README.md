@@ -174,15 +174,16 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
-- `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
+- `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `openWB`: openWB chargers using openWB's MQTT interface
-- `phoenix-emcp`: chargers with Phoenix EM-CP-PP-ETH controllers like the ESL Walli (Ethernet connection, see [Preparation](#phoenix-em-cp-preparation)).
-- `phoenix-evcc`: chargers with Phoenix EV-CC-AC1-M controllers (ModBus connection)
+- `phoenix-em-eth`: chargers with Phoenix **EM**-CP-PP-**ETH** controllers
+- `phoenix-ev-eth`: chargers with Phoenix **EV**-CC-\*\*\*-**ETH** controllers (see [Preparation](#phoenix-emev-ethernet-controller-preparation-))
+- `phoenix-ev-ser`: chargers with Phoenix **EV**-CC-\*\*\*-**SER** serial controllers (Modbus RTU)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
-- `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
+- `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
@@ -191,9 +192,9 @@ Configuration examples are documented at [andig/evcc-config#chargers](https://gi
 
 KEBA chargers require UDP function to be enabled with DIP 1.3 = `ON`, see KEBA installation manual.
 
-#### Phoenix EM-CP preparation <!-- omit in toc -->
+#### Phoenix EM/EV ethernet controller preparation <!-- omit in toc -->
 
-The EM-CP controller requires DIP 10 = `ON` be controlled by ModBus, see controller manual.
+The EM/EV ethernet controllers requires DIP 10 = `ON` be controlled by ModBus, see controller manual.
 
 #### Wallbe preparation <!-- omit in toc -->
 
