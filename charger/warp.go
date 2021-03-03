@@ -191,7 +191,7 @@ func (m *Warp) currentPower() (float64, error) {
 
 	s, err := m.meterG()
 	if err == nil {
-		json.Unmarshal([]byte(s), &res)
+		err = json.Unmarshal([]byte(s), &res)
 	}
 
 	return res.Power, err
@@ -203,7 +203,7 @@ func (m *Warp) totalEnergy() (float64, error) {
 
 	s, err := m.meterG()
 	if err == nil {
-		json.Unmarshal([]byte(s), &res)
+		err = json.Unmarshal([]byte(s), &res)
 	}
 
 	return res.EnergyAbs, err
