@@ -100,7 +100,7 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	m.enableS = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/auto_start_charging", topic),
 		`{ "auto_start_charging": ${enable} }`, 1, 0,
-	).BoolSetter("enabled")
+	).BoolSetter("enable")
 
 	m.maxcurrentS = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/current_limit", topic),
