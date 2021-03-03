@@ -177,7 +177,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `openWB`: openWB chargers using openWB's MQTT interface
-- `phoenix-em-eth`: chargers with Phoenix EM-CP ethernet controllers (e.g. ESL Walli, , see [Preparation](#phoenix-em-ev-ethernet-controller-preparation).
+- `phoenix-em-eth`: chargers with Phoenix **EM**-CP-PP-**ETH** controllers
 - `phoenix-ev-eth`: chargers with Phoenix EV-CC ethernet controllers (see [Preparation](#phoenix-em-ev-ethernet-controller-preparation))
 - `phoenix-ev-ser`: chargers with Phoenix EV-CC serial controllers
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
