@@ -110,10 +110,6 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	return m, nil
 }
 
-type warpAutoCharging struct {
-	AutoStartCharging bool `json:"auto_start_charging"`
-}
-
 // Enable implements the api.Charger interface
 func (m *Warp) Enable(enable bool) error {
 	action := "stop_charging"
@@ -128,7 +124,9 @@ func (m *Warp) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (m *Warp) Enabled() (bool, error) {
-	var res warpAutoCharging
+	var res struct {
+		AutoStartCharging bool `json:"auto_start_charging"`
+	}
 
 	s, err := m.enabledG()
 	if err == nil {
