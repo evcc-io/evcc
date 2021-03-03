@@ -26,8 +26,9 @@ const (
 
 var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
 
-// PhoenixEVEth is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
-// It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
+// PhoenixEVEth is an api.ChargeController implementation for Phoenix EV-***-ETH controller models
+// EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
+// It uses Modbus TCP to communicate with the controller at modbus client id 255.
 type PhoenixEVEth struct {
 	conn         *modbus.Connection
 	powerScale   float64
