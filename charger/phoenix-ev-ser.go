@@ -14,8 +14,8 @@ const (
 	phxEVSerRegStatus     = 24000 // Input
 )
 
-// PhoenixEVSer is an api.ChargeController implementation for Phoenix EV-CC-AC1-M wallboxes.
-// It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
+// PhoenixEVSer is an api.ChargeController implementation for Phoenix EV-***-SER controllers.
+// It uses Modbus RTU to communicate with the wallbox at a configurable modbus client id.
 type PhoenixEVSer struct {
 	conn *modbus.Connection
 }
