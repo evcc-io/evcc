@@ -55,11 +55,11 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 type Warp struct {
 	root        string
 	client      *mqtt.Client
-	enableS     func(bool) error
 	enabledG    func() (string, error)
 	statusG     func() (string, error)
-	maxcurrentS func(int64) error
 	meterG      func() (string, error)
+	enableS     func(bool) error
+	maxcurrentS func(int64) error
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWarp -o warp_decorators -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
@@ -78,29 +78,36 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 		client: client,
 	}
 
-	evse := fmt.Sprintf("%s/evse", topic)
+	// timeout handler
+	timer := provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/evse/state", topic), "", 1, timeout,
+	).StringGetter()
+
+	stringG := func(topic string) func() (string, error) {
+		g := provider.NewMqtt(log, client, topic, "", 1, 0).StringGetter()
+		return func() (val string, err error) {
+			if val, err = g(); err == nil {
+				_, err = timer()
+			}
+			return val, err
+		}
+	}
+
+	m.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
+	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
+	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
 	m.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/auto_start_charging", evse),
+		fmt.Sprintf("%s/evse/auto_start_charging", topic),
 		`{ "auto_start_charging": ${enable} }`, 1, 0,
 	).BoolSetter("enabled")
 
-	m.enabledG = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/auto_start_charging", evse), "", 1, 0).StringGetter()
-
-	m.statusG = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/state", evse), "", 1, 0).StringGetter()
-
 	m.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/current_limit", evse),
+		fmt.Sprintf("%s/evse/current_limit", topic),
 		`{ "current": ${maxcurrent} }`, 1, 0,
 	).IntSetter("maxcurrent")
 
-	m.meterG = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/meter/state", topic), "", 1, 0).StringGetter()
-
 	return m, nil
-
 }
 
 type warpAutoCharging struct {
