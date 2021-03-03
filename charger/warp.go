@@ -26,7 +26,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
 		Timeout     time.Duration
-		Meter       bool
+		UseMeter    bool
 	}{
 		Topic:   warpRootTopic,
 		Timeout: warpTimeout,
@@ -43,7 +43,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 	var currentPower func() (float64, error)
 	var totalEnergy func() (float64, error)
-	if cc.Meter {
+	if cc.UseMeter {
 		currentPower = m.currentPower
 		totalEnergy = m.totalEnergy
 	}
