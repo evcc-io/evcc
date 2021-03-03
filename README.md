@@ -179,7 +179,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `openWB`: openWB chargers using openWB's MQTT interface
 - `phoenix-em-eth`: chargers with Phoenix **EM**-CP-PP-**ETH** controllers
 - `phoenix-ev-eth`: chargers with Phoenix **EV**-CC-\*\*\*-**ETH** controllers (see [Preparation](#phoenix-em-ev-ethernet-controller-preparation))
-- `phoenix-ev-ser`: chargers with Phoenix EV-CC serial controllers
+- `phoenix-ev-ser`: chargers with Phoenix **EV**-CC-\*\*\*-**SER** serial controllers (Modbus RTU)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
