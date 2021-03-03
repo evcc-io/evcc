@@ -15,6 +15,7 @@ import { faClock } from "@fortawesome/free-solid-svg-icons";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
 import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
+import { faPlug } from "@fortawesome/free-solid-svg-icons/faPlug";
 import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
 import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
 import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermometerHalf";
@@ -36,6 +37,7 @@ library.add(
   faExclamationTriangle,
   faLeaf,
   faSun,
+  faPlug,
   faTemperatureHigh,
   faTemperatureLow,
   faThermometerHalf,
