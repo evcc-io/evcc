@@ -188,7 +188,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		vehicle := cp.Vehicle(lp.VehicleRef)
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}
-	lp.ForeignEV = false
+	lp.ForeignEV = true
 
 	if lp.ChargerRef == "" {
 		return nil, errors.New("missing charger")
@@ -322,7 +322,10 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	}
 
 	//on connect the vehicle and soc is unknown, so hide values from prev. ev
-	lp.publish("soc", -1)
+	lp.publish("socTitle", "Fahrzeug")
+	lp.publish("socCharge", -1)
+	lp.publish("range", -1)
+	lp.ForeignEV = true
 
 	lp.triggerEvent(evVehicleConnect)
 }
@@ -340,7 +343,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(lp.OnDisconnect.Mode)
-		lp.ForeignEV = false
+		//lp.ForeignEV = false
 	}
 	if lp.OnDisconnect.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
@@ -421,8 +424,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	if len(lp.vehicles) > 0 {
 		lp.setActiveVehicle(lp.vehicles[0])
 		lp.publish("socTitle", "Fahrzeug")
-		lp.publish("soc", false)
-		lp.publish("socCharge", 100)
+		lp.publish("socCharge", -1)
+		lp.publish("range", -1)
 		lp.ForeignEV = true
 	}
 
@@ -578,7 +581,11 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
-	lp.publish("soc", true)
+	//if vs, err := lp.vehicle.SoC(); err == nil {
+	//	lp.publish("socCharge", vs)
+	//}
+	//lp.publish("range", lp.vehicle.rng())
+	
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
@@ -597,11 +604,13 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 			if err == nil {
 				// found a vehicle which is plugged or charging, so it should be the right one
-				if status == api.StatusB || status == api.StatusC {
+				if lp.connected() && (status == api.StatusB || status == api.StatusC) {
 					if vehicle != lp.vehicle || lp.ForeignEV {
 						lp.setActiveVehicle(vehicle)
 						if lp.OnDisconnect.Mode != "" && lp.GetMode() == api.ModeOff { lp.SetMode(lp.OnDisconnect.Mode) }
 					}
+					lp.publish("socTitle", lp.vehicle.Title())
+					lp.publish("socCapacity", lp.vehicle.Capacity())
 					found = true
 					lp.ForeignEV = false
 				}
@@ -611,8 +620,8 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 	if lp.connected() && !found && !lp.ForeignEV {
 		lp.publish("socTitle", "Fahrzeug")
-		lp.publish("soc", false)
-		lp.publish("socCharge", 100)
+		lp.publish("socCharge", -1)
+		lp.publish("range", -1)
 		lp.ForeignEV = true
 		lp.SetMode(api.ModeOff)
 	}
@@ -841,7 +850,7 @@ func (lp *LoadPoint) socPollAllowed() bool {
 
 // publish state of charge, remaining charge duration and range
 func (lp *LoadPoint) publishSoCAndRange() {
-	if lp.socEstimator == nil {
+	if lp.socEstimator == nil || lp.ForeignEV == true {
 		return
 	}
 
