@@ -164,7 +164,7 @@ func (m *Warp) Status() (api.ChargeStatus, error) {
 	case 1:
 		res = api.StatusB
 	case 2:
-		res = api.StatusB
+		res = api.StatusC
 	default:
 		if err == nil {
 			err = fmt.Errorf("invalid status: %d", status.VehicleState)
