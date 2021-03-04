@@ -133,7 +133,24 @@ func (m *Warp) Enabled() (bool, error) {
 		err = json.Unmarshal([]byte(s), &res)
 	}
 
-	return res.AutoStartCharging, err
+	// auto_start_charging is off
+	if !res.AutoStartCharging {
+		return false, err
+	}
+
+	var status warpStatus
+	if err == nil {
+		if s, err = m.statusG(); err == nil {
+			err = json.Unmarshal([]byte(s), &status)
+		}
+	}
+
+	// auto_start_charging is on but button pressed or stop_charging called
+	if status.VehicleState == 1 && status.Iec61851State == 0 {
+		return false, err
+	}
+
+	return true, err
 }
 
 type warpStatus struct {
