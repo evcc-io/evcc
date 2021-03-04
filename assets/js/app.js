@@ -14,6 +14,43 @@ axios.defaults.baseURL =
   loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
+Function.prototype.throttle = function(minimumDistance) {
+  let timeout,
+      lastCalled = 0,
+      throttledFunction = this;
+
+  function throttleCore() {
+     let context = this;
+
+     function callThrottledFunction(args) {
+        lastCalled = Date.now();
+        throttledFunction.apply(context, args);
+     }
+     // Wartezeit bis zum nächsten Aufruf bestimmen
+     let timeToNextCall = minimumDistance - (Date.now() - lastCalled);
+     // Egal was kommt, einen noch offenen alten Call löschen
+     cancelTimer();
+     // Aufruf direkt durchführen oder um offene Wartezeit verzögern
+     if (timeToNextCall < 0) {
+        callThrottledFunction(arguments, 0);
+     } else {
+        timeout = setTimeout(callThrottledFunction, timeToNextCall, arguments);
+     }
+  }
+  function cancelTimer() {
+     if (timeout) {
+        clearTimeout(timeout);
+        timeout = undefined;
+     }
+  }
+  // Aufsperre aufheben und gepeicherte Rest-Aufrufe löschen
+  throttleCore.reset = function() {
+     cancelTimer();
+     lastCalled = 0;
+  }
+  return throttleCore;
+};
+
 window.toasts = new Vue({
   el: "#toasts",
   render: function (h) {
@@ -55,6 +92,8 @@ window.toasts = new Vue({
   },
 });
 
+window.throttledToasts = function() {};
+
 new Vue({
   el: "#app",
   router,
@@ -62,9 +101,15 @@ new Vue({
   render: (h) => h(App),
 });
 
-window.setInterval(function () {
-  axios.get("health").catch(function (res) {
-    res.message = "Server unavailable";
-    window.toasts.error(res);
+window.setInterval(async function () {
+  if (window.throttledToasts['health'] == undefined) window.throttledToasts['health'] = window.toasts.error.throttle(30000);
+
+  await axios.get("health")
+  .then(function (res) {
+    window.throttledToasts['health'].reset();
+  })
+  .catch(function (res) {
+    res.message = "EVCC nicht erreichbar";
+    window.throttledToasts['health'](res);
   });
 }, 5000);

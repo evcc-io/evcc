@@ -73,8 +73,17 @@ export default {
 			};
 			ws.onmessage = function (evt) {
 				try {
+					var hashCode = function(s) {
+						return 'Msg'+Math.abs(s.split('').reduce( (a, b) => {
+							a = (( a << 5 ) - a ) + b.charCodeAt(0);
+							return a & a;
+						}, 0));    
+					}
 					var msg = JSON.parse(evt.data);
-					store.update(msg);
+					
+					if (window.throttledToasts[hashCode(evt.data)] == undefined) window.throttledToasts[hashCode(evt.data)] = store.update.throttle(10000);
+					//store.update(msg);
+					window.throttledToasts[hashCode(evt.data)](msg);
 				} catch (e) {
 					window.toasts.error(e, evt.data);
 				}
