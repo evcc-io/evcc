@@ -122,7 +122,9 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
-			return err
+			log.ERROR.Printf("%s", err)
+			//return err
+			return nil
 		}
 
 		if _, exists := cp.chargers[cc.Name]; exists {
@@ -143,6 +145,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 			log.ERROR.Printf("%s", err)
 			//return err
+			return nil
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
