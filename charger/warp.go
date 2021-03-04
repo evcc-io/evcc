@@ -119,7 +119,7 @@ func (m *Warp) Enable(enable bool) error {
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
 
-	return m.client.Publish(topic, true, nil)
+	return m.client.Publish(topic, true, []byte{})
 }
 
 // Enabled implements the api.Charger interface
