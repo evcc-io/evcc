@@ -68,7 +68,8 @@ func Consolidate(res []Result) Summary {
 	charger := filter(res, []Criteria{
 		{tid: taskOpenwb},
 		{tid: taskWallbe},
-		{tid: taskPhoenixEMCP},
+		{tid: taskPhoenixEMEth},
+		{tid: taskPhoenixEVEth},
 		{tid: taskEVSEWifi},
 		{tid: taskGoE},
 		{tid: taskKEBA},
