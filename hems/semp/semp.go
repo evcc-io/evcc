@@ -428,11 +428,8 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
-	var maxPowerConsumption int
-	maxPowerConsumption = int(lp.GetMaxPower())
-
-	var minPowerConsumption int
-	minPowerConsumption = int(lp.GetMinPower())
+	maxPowerConsumption := int(lp.GetMaxPower())
+	minPowerConsumption := int(lp.GetMinPower())
 	if mode == api.ModeNow {
 		minPowerConsumption = maxPowerConsumption
 	}
