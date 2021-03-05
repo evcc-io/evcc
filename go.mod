@@ -4,13 +4,14 @@ go 1.16
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
-	github.com/andig/evcc-config v0.0.0-20210210171605-531c04a6bb59
+	github.com/andig/evcc-config v0.0.0-20210303114953-771766db76d1
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
-	github.com/bogosj/tesla v0.0.0-20210226163712-3a995277d27d
+	github.com/bogosj/tesla v0.0.0-20210301204612-577c8a183e4c
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20201022122018-3977ed72668a
@@ -52,12 +53,14 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/thoas/go-funk v0.7.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/uhthomas/tesla v0.1.1
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
 	golang.org/x/net v0.0.0-20201216054612-986b41b23924
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
+	golang.org/x/text v0.3.4
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
+
+replace github.com/bogosj/tesla => github.com/andig/tesla v0.0.0-20210302081706-8eb39050ad30

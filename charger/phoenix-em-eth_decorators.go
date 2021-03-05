@@ -6,104 +6,104 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decoratePhoenixEMCP(base *PhoenixEMCP, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixEMEth(base *PhoenixEMEth, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
 	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.Meter
 		}{
-			PhoenixEMCP: base,
-			Meter: &decoratePhoenixEMCPMeterImpl{
+			PhoenixEMEth: base,
+			Meter: &decoratePhoenixEMEthMeterImpl{
 				meter: meter,
 			},
 		}
 
 	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.MeterEnergy
 		}{
-			PhoenixEMCP: base,
-			MeterEnergy: &decoratePhoenixEMCPMeterEnergyImpl{
+			PhoenixEMEth: base,
+			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
 	case meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.Meter
 			api.MeterEnergy
 		}{
-			PhoenixEMCP: base,
-			Meter: &decoratePhoenixEMCPMeterImpl{
+			PhoenixEMEth: base,
+			Meter: &decoratePhoenixEMEthMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decoratePhoenixEMCPMeterEnergyImpl{
+			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
 	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.MeterCurrent
 		}{
-			PhoenixEMCP: base,
-			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
+			PhoenixEMEth: base,
+			MeterCurrent: &decoratePhoenixEMEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
 		}
 
 	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.Meter
 			api.MeterCurrent
 		}{
-			PhoenixEMCP: base,
-			Meter: &decoratePhoenixEMCPMeterImpl{
+			PhoenixEMEth: base,
+			Meter: &decoratePhoenixEMEthMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
+			MeterCurrent: &decoratePhoenixEMEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
 		}
 
 	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			PhoenixEMCP: base,
-			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
+			PhoenixEMEth: base,
+			MeterCurrent: &decoratePhoenixEMEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
-			MeterEnergy: &decoratePhoenixEMCPMeterEnergyImpl{
+			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
 	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
-			*PhoenixEMCP
+			*PhoenixEMEth
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			PhoenixEMCP: base,
-			Meter: &decoratePhoenixEMCPMeterImpl{
+			PhoenixEMEth: base,
+			Meter: &decoratePhoenixEMEthMeterImpl{
 				meter: meter,
 			},
-			MeterCurrent: &decoratePhoenixEMCPMeterCurrentImpl{
+			MeterCurrent: &decoratePhoenixEMEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
-			MeterEnergy: &decoratePhoenixEMCPMeterEnergyImpl{
+			MeterEnergy: &decoratePhoenixEMEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -112,26 +112,26 @@ func decoratePhoenixEMCP(base *PhoenixEMCP, meter func() (float64, error), meter
 	return nil
 }
 
-type decoratePhoenixEMCPMeterImpl struct {
+type decoratePhoenixEMEthMeterImpl struct {
 	meter func() (float64, error)
 }
 
-func (impl *decoratePhoenixEMCPMeterImpl) CurrentPower() (float64, error) {
+func (impl *decoratePhoenixEMEthMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratePhoenixEMCPMeterCurrentImpl struct {
+type decoratePhoenixEMEthMeterCurrentImpl struct {
 	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *decoratePhoenixEMCPMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+func (impl *decoratePhoenixEMEthMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
 }
 
-type decoratePhoenixEMCPMeterEnergyImpl struct {
+type decoratePhoenixEMEthMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decoratePhoenixEMCPMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decoratePhoenixEMEthMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
