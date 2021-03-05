@@ -133,8 +133,8 @@ type Timeframe struct {
 	MaxRunningTime      *int `xml:",omitempty"`
 	MinEnergy           *int `xml:",omitempty"` // AN EVCharger
 	MaxEnergy           *int `xml:",omitempty"` // AN EVCharger
-	MinPowerConsumption *int `xml:",omitempty"` // SMA EV CHARGER
-	MaxPowerConsumption *int `xml:",omitempty"` // SMA EV CHARGER
+	MaxPowerConsumption *int `xml:",omitempty"` // SMA EV CHARGER style
+	MinPowerConsumption *int `xml:",omitempty"` // SMA EV CHARGER style
 }
 
 // EM2Device is the EM to device message
