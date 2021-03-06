@@ -108,8 +108,8 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 		}
 
 		mcc.token = tr.Token
-		// According to the Web Interface, the token is valid for 10 minutes
-		mcc.tokenValid = time.Now().Add(10 * time.Minute)
+		// According to the Web Interface, the token is valid for 2 minutes
+		mcc.tokenValid = time.Now().Add(2 * time.Minute)
 
 		// the web interface updates the token every 2 minutes, so lets do the same here
 		mcc.tokenRefresh = time.Now().Add(2 * time.Minute)
