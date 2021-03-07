@@ -7,6 +7,7 @@ import "time"
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
 
+// Charge modes
 const (
 	ModeOff   ChargeMode = "off"
 	ModeNow   ChargeMode = "now"
@@ -22,6 +23,7 @@ func (c ChargeMode) String() string {
 // ChargeStatus is the EV's charging status from A to F
 type ChargeStatus string
 
+// Charging states
 const (
 	StatusNone ChargeStatus = ""
 	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    - Kabel nicht angeschlossen
