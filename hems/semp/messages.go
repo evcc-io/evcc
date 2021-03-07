@@ -147,7 +147,7 @@ type EM2Device struct {
 type DeviceControl struct {
 	DeviceID                    string `xml:"DeviceId"`
 	On                          bool
-	RecommendedPowerConsumption int // AN EVCharger
+	RecommendedPowerConsumption float64 // AN EVCharger
 	Timestamp                   int
 }
 
