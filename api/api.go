@@ -57,9 +57,14 @@ type Battery interface {
 	SoC() (float64, error)
 }
 
+// ChargeState provides current charging status
+type ChargeState interface {
+	Status() (ChargeStatus, error)
+}
+
 // Charger is able to provide current charging status and to enable/disabler charging
 type Charger interface {
-	Status() (ChargeStatus, error)
+	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
 	MaxCurrent(current int64) error
@@ -95,11 +100,6 @@ type Vehicle interface {
 // VehicleFinishTimer provides estimated charge cycle finish time
 type VehicleFinishTimer interface {
 	FinishTime() (time.Time, error)
-}
-
-// VehicleStatus provides the vehicles current charging status
-type VehicleStatus interface {
-	Status() (ChargeStatus, error)
 }
 
 // VehicleRange provides the vehicles remaining km range
