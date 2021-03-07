@@ -572,7 +572,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	if vs, ok := lp.vehicle.(api.VehicleStatus); ok {
+	if vs, ok := lp.vehicle.(api.ChargeState); ok {
 		status, err := vs.Status()
 
 		if err == nil {
@@ -588,7 +588,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 					continue
 				}
 
-				if vs, ok := vehicle.(api.VehicleStatus); ok {
+				if vs, ok := vehicle.(api.ChargeState); ok {
 					status, err := vs.Status()
 
 					if err == nil {
