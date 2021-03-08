@@ -2,6 +2,7 @@ package charger
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -110,11 +111,45 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	return m, nil
 }
 
+type warpStatus struct {
+	Iec61851State          int64 `json:"iec61851_state"`
+	VehicleState           int64 `json:"vehicle_state"`
+	ChargeRelease          int64 `json:"charge_release"`
+	ContactorState         int64 `json:"contactor_state"`
+	ContactorError         int64 `json:"contactor_error"`
+	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
+	ErrorState             int64 `json:"error_state"`
+	LockState              int64 `json:"lock_state"`
+	TimeSinceStateChange   int64 `json:"time_since_state_change"`
+	Uptime                 int64 `json:"uptime"`
+}
+
+func (m *Warp) status() (warpStatus, error) {
+	var res warpStatus
+
+	s, err := m.statusG()
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
+	}
+
+	return res, err
+}
+
 // Enable implements the api.Charger interface
 func (m *Warp) Enable(enable bool) error {
 	action := "stop_charging"
 	if enable {
 		action = "start_charging"
+
+		// ensure that charger can be enabled
+		res, err := m.status()
+		if err != nil {
+			return err
+		}
+
+		if res.ChargeRelease == 2 {
+			return errors.New("charger disabled by button or key")
+		}
 	}
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
@@ -124,45 +159,8 @@ func (m *Warp) Enable(enable bool) error {
 
 // Enabled implements the api.Charger interface
 func (m *Warp) Enabled() (bool, error) {
-	var res struct {
-		AutoStartCharging bool `json:"auto_start_charging"`
-	}
-
-	s, err := m.enabledG()
-	if err == nil {
-		err = json.Unmarshal([]byte(s), &res)
-	}
-
-	// auto_start_charging is off
-	if !res.AutoStartCharging {
-		return false, err
-	}
-
-	var status warpStatus
-	if err == nil {
-		if s, err = m.statusG(); err == nil {
-			err = json.Unmarshal([]byte(s), &status)
-		}
-	}
-
-	// auto_start_charging is on but button pressed or stop_charging called
-	if status.VehicleState == 1 && status.Iec61851State == 0 {
-		return false, err
-	}
-
-	return true, err
-}
-
-type warpStatus struct {
-	Iec61851State          int64 `json:"iec61851_state"`
-	VehicleState           int64 `json:"vehicle_state"`
-	ContactorState         int64 `json:"contactor_state"`
-	ContactorError         int64 `json:"contactor_error"`
-	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
-	ErrorState             int64 `json:"error_state"`
-	LockState              int64 `json:"lock_state"`
-	TimeSinceStateChange   int64 `json:"time_since_state_change"`
-	Uptime                 int64 `json:"uptime"`
+	res, err := m.status()
+	return res.ChargeRelease == 0, err
 }
 
 // Status implements the api.Charger interface
