@@ -143,8 +143,8 @@ func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-func (wb *PhoenixEMEth) decodeReading(b []byte) float64 {
-	return rs485.RTUUint32ToFloat64Swapped(b) / 100
+func (wb *PhoenixEMEth) decodeReading(b []byte, scale float64) float64 {
+	return rs485.RTUUint32ToFloat64Swapped(b) / scale
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -154,7 +154,7 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return wb.decodeReading(b, 1e4), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -164,7 +164,7 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return wb.decodeReading(b, 1e2), err
 }
 
 // currents implements the Meter.Currents interface
@@ -176,7 +176,7 @@ func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(b))
+		currents = append(currents, wb.decodeReading(b, 1e3))
 	}
 
 	return currents[0], currents[1], currents[2], nil
