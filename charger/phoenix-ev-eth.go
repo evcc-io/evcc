@@ -13,15 +13,11 @@ import (
 const (
 	phxEVEthRegStatus     = 100 // Input
 	phxEVEthRegChargeTime = 102 // Input
-	phxEVEthRegMaxCurrent = 528 // Holding
+	phxEVEthRegMaxCurrent = 300 // Holding
 	phxEVEthRegEnable     = 400 // Coil
 
 	phxEVEthRegPower  = 120 // power reading
 	phxEVEthRegEnergy = 904 // energy reading, 128 for fw <= 1.11
-
-	phxEVEthRegPowerScale   = 364 // power scaler
-	phxEVEthRegEnergyScale  = 372 // energy scaler
-	phxEVEthRegCurrentScale = 902 // current scaler, 358 for fw <= 1.11
 )
 
 var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
@@ -31,9 +27,6 @@ var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
 // It uses Modbus TCP to communicate with the controller at modbus client id 255.
 type PhoenixEVEth struct {
 	conn         *modbus.Connection
-	powerScale   float64
-	energyScale  float64
-	currentScale float64
 }
 
 func init() {
@@ -64,19 +57,16 @@ func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error
 	var currentPower func() (float64, error)
 	if cc.Meter.Power {
 		currentPower = wb.currentPower
-		wb.scaler(&wb.powerScale, phxEVEthRegPowerScale)
 	}
 
 	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
 		totalEnergy = wb.totalEnergy
-		wb.scaler(&wb.energyScale, phxEVEthRegEnergyScale)
 	}
 
 	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
 		currents = wb.currents
-		wb.scaler(&wb.currentScale, phxEVEthRegCurrentScale)
 	}
 
 	return decoratePhoenixEVEth(wb, currentPower, totalEnergy, currents), err
@@ -154,20 +144,8 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-// scaler reads the decimal scaler value
-func (wb *PhoenixEVEth) scaler(val *float64, reg uint16) {
-	if b, err := wb.conn.ReadHoldingRegisters(reg, 2); err == nil {
-		*val = rs485.RTUUint32ToFloat64Swapped(b)
-	}
-
-	// scaler 0 means no scaling
-	if *val == 0 {
-		*val = 1
-	}
-}
-
-func (wb *PhoenixEVEth) decodeReading(scaler float64, b []byte) float64 {
-	return scaler * rs485.RTUUint32ToFloat64Swapped(b)
+func (wb *PhoenixEVEth) decodeReading(b []byte, scale float64) float64 {
+	return rs485.RTUUint32ToFloat64Swapped(b) / scale
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
@@ -177,7 +155,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(wb.powerScale, b), err
+	return wb.decodeReading(b, 1e4), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -187,7 +165,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(wb.energyScale, b) / 1e3, err
+	return wb.decodeReading(b, 1e5), err
 }
 
 // currents implements the Meter.Currents interface
@@ -199,7 +177,7 @@ func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(wb.currentScale, b))
+		currents = append(currents, wb.decodeReading(b, 1e3))
 	}
 
 	return currents[0], currents[1], currents[2], nil
