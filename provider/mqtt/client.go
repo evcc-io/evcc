@@ -92,8 +92,9 @@ func (m *Client) ConnectionHandler(client mqtt.Client) {
 	}
 }
 
-// Publish synchronously pulishes payload using client qos
+// Publish synchronously publishes payload using client qos
 func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
+	m.log.TRACE.Printf("send %s: '%v'", topic, payload)
 	token := m.Client.Publish(topic, m.Qos, retained, payload)
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
