@@ -58,7 +58,6 @@ type Warp struct {
 	client      *mqtt.Client
 	statusG     func() (string, error)
 	meterG      func() (string, error)
-	enableS     func(bool) error
 	maxcurrentS func(int64) error
 }
 
@@ -95,11 +94,6 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 
 	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
-
-	m.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/auto_start_charging", topic),
-		`{ "auto_start_charging": ${enable} }`, 1, 0,
-	).BoolSetter("enable")
 
 	m.maxcurrentS = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/current_limit", topic),
