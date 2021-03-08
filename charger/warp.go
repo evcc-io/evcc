@@ -56,7 +56,6 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 type Warp struct {
 	root        string
 	client      *mqtt.Client
-	enabledG    func() (string, error)
 	statusG     func() (string, error)
 	meterG      func() (string, error)
 	enableS     func(bool) error
@@ -94,7 +93,6 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 		}
 	}
 
-	m.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
 	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
