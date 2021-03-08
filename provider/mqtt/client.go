@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -99,7 +100,7 @@ func (m *Client) Publish(topic string, retained bool, payload interface{}) error
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return nil
+	return api.ErrTimeout
 }
 
 // Listen validates uniqueness and registers and attaches listener
