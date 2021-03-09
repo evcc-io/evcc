@@ -181,7 +181,7 @@ func (m *Warp) Enabled() (bool, error) {
 		enabled = status.ChargeRelease != 2
 	} else {
 		// check that vehicle is really not charging
-		enabled = status.VehicleState != 2
+		enabled = status.VehicleState == 2
 	}
 
 	return enabled, err
