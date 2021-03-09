@@ -1,9 +1,7 @@
 <template>
 	<div>
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<a class="navbar-brand" href="https://github.com/andig/evcc"
-				><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
-			>
+		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+			<a class="navbar-brand" href="https://github.com/andig/evcc"><Logo class="logo" /></a>
 			<button
 				class="navbar-toggler"
 				type="button"
@@ -46,12 +44,13 @@
 
 <script>
 import "../icons";
+import Logo from "../components/Logo";
 import Version from "../components/Version";
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Version },
+	components: { Logo, Version },
 	data: function () {
 		return {
 			compact: false,
@@ -95,3 +94,8 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.logo {
+	width: 85px;
+}
+</style>
