@@ -54,8 +54,10 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Warp configures generic charger and charge meter for an Warp loadpoint
 type Warp struct {
+	log         *util.Logger
 	root        string
 	client      *mqtt.Client
+	enabledG    func() (string, error)
 	statusG     func() (string, error)
 	meterG      func() (string, error)
 	maxcurrentS func(int64) error
@@ -73,6 +75,7 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	}
 
 	m := &Warp{
+		log:    log,
 		root:   topic,
 		client: client,
 	}
@@ -92,6 +95,7 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 		}
 	}
 
+	m.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
 	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
@@ -141,6 +145,24 @@ func (m *Warp) Enable(enable bool) error {
 
 		if res.ChargeRelease == 2 {
 			return errors.New("charger disabled by button or key")
+		}
+	} else {
+		var autostart struct {
+			AutoStartCharging bool `json:"auto_start_charging"`
+		}
+
+		s, err := m.enabledG()
+		if err == nil {
+			err = json.Unmarshal([]byte(s), &autostart)
+		}
+
+		if err == nil && autostart.AutoStartCharging {
+			m.log.WARN.Println("auto_start_charging must be disabled")
+
+			topic := fmt.Sprintf("%s/evse/auto_start_charging", m.root)
+			if err := m.client.Publish(topic, true, `{ "auto_start_charging": false }`); err != nil {
+				return err
+			}
 		}
 	}
 
