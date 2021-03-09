@@ -159,7 +159,7 @@ func (m *Warp) Enable(enable bool) error {
 		if err == nil && autostart.AutoStartCharging {
 			m.log.WARN.Println("auto_start_charging must be disabled")
 
-			topic := fmt.Sprintf("%s/evse/auto_start_charging", m.root)
+			topic := fmt.Sprintf("%s/evse/auto_start_charging_update", m.root)
 			if err := m.client.Publish(topic, true, `{ "auto_start_charging": false }`); err != nil {
 				return err
 			}
