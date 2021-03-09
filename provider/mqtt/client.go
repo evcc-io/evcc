@@ -115,14 +115,15 @@ func (m *Client) Listen(topic string, callback func(string)) {
 // listen attaches listener to topic
 func (m *Client) listen(topic string) {
 	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
-		s := string(msg.Payload())
-		if len(s) > 0 {
+		payload := string(msg.Payload())
+		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
+		if len(payload) > 0 {
 			m.mux.Lock()
 			callbacks := m.listener[topic]
 			m.mux.Unlock()
 
 			for _, cb := range callbacks {
-				cb(s)
+				cb(payload)
 			}
 		}
 	})
