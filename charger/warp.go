@@ -2,7 +2,6 @@ package charger
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -60,6 +59,7 @@ type Warp struct {
 	enabledG    func() (string, error)
 	statusG     func() (string, error)
 	meterG      func() (string, error)
+	enableS     func(bool) error
 	maxcurrentS func(int64) error
 }
 
@@ -99,6 +99,11 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
+	m.enableS = provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/evse/auto_start_charging_update", topic),
+		`{ "auto_start_charging": ${enable} }`, 1, 0,
+	).BoolSetter("enable")
+
 	m.maxcurrentS = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/current_limit", topic),
 		`{ "current": ${maxcurrent} }`, 1, 0,
@@ -120,6 +125,24 @@ type warpStatus struct {
 	Uptime                 int64 `json:"uptime"`
 }
 
+// Enable implements the api.Charger interface
+func (m *Warp) Enable(enable bool) error {
+	// set auto_start_charging
+	if err := m.enableS(enable); err != nil {
+		return err
+	}
+
+	// trigger start/stop
+	action := "stop_charging"
+	if enable {
+		action = "start_charging"
+	}
+
+	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
+
+	return m.client.Publish(topic, true, "null")
+}
+
 func (m *Warp) status() (warpStatus, error) {
 	var res warpStatus
 
@@ -131,50 +154,37 @@ func (m *Warp) status() (warpStatus, error) {
 	return res, err
 }
 
-// Enable implements the api.Charger interface
-func (m *Warp) Enable(enable bool) error {
-	action := "stop_charging"
-	if enable {
-		action = "start_charging"
-
-		// ensure that charger can be enabled
-		res, err := m.status()
-		if err != nil {
-			return err
-		}
-
-		if res.ChargeRelease == 2 {
-			return errors.New("charger disabled by button or key")
-		}
-	} else {
-		var autostart struct {
-			AutoStartCharging bool `json:"auto_start_charging"`
-		}
-
-		s, err := m.enabledG()
-		if err == nil {
-			err = json.Unmarshal([]byte(s), &autostart)
-		}
-
-		if err == nil && autostart.AutoStartCharging {
-			m.log.WARN.Println("auto_start_charging must be disabled")
-
-			topic := fmt.Sprintf("%s/evse/auto_start_charging_update", m.root)
-			if err := m.client.Publish(topic, true, `{ "auto_start_charging": false }`); err != nil {
-				return err
-			}
-		}
+func (m *Warp) autostart() (bool, error) {
+	var res struct {
+		AutoStartCharging bool `json:"auto_start_charging"`
 	}
 
-	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
+	s, err := m.enabledG()
+	if err == nil {
+		err = json.Unmarshal([]byte(s), &res)
+	}
 
-	return m.client.Publish(topic, true, "null")
+	return res.AutoStartCharging, err
 }
 
 // Enabled implements the api.Charger interface
 func (m *Warp) Enabled() (bool, error) {
-	res, err := m.status()
-	return res.ChargeRelease == 0, err
+	enabled, err := m.autostart()
+
+	var status warpStatus
+	if err == nil {
+		status, err = m.status()
+	}
+
+	if enabled {
+		// check that charge_release is not blocked
+		enabled = status.ChargeRelease != 2
+	} else {
+		// check that vehicle is really not charging
+		enabled = status.VehicleState != 2
+	}
+
+	return enabled, err
 }
 
 // Status implements the api.Charger interface
