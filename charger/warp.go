@@ -113,14 +113,14 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 }
 
 type warpStatus struct {
-	Iec61851State          int64 `json:"iec61851_state"`
-	VehicleState           int64 `json:"vehicle_state"`
-	ChargeRelease          int64 `json:"charge_release"`
-	ContactorState         int64 `json:"contactor_state"`
-	ContactorError         int64 `json:"contactor_error"`
+	Iec61851State          int   `json:"iec61851_state"`
+	VehicleState           int   `json:"vehicle_state"`
+	ChargeRelease          int   `json:"charge_release"`
+	ContactorState         int   `json:"contactor_state"`
+	ContactorError         int   `json:"contactor_error"`
 	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
-	ErrorState             int64 `json:"error_state"`
-	LockState              int64 `json:"lock_state"`
+	ErrorState             int   `json:"error_state"`
+	LockState              int   `json:"lock_state"`
 	TimeSinceStateChange   int64 `json:"time_since_state_change"`
 	Uptime                 int64 `json:"uptime"`
 }
