@@ -1,11 +1,10 @@
 package psa
 
 import (
-	"encoding/base64"
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -24,7 +23,6 @@ type API struct {
 	*request.Helper
 	brand, realm string
 	id, secret   string // client
-	token        oauth2.Token
 }
 
 // NewAPI creates a new vehicle
@@ -36,32 +34,34 @@ func NewAPI(log *util.Logger, brand, realm, id, secret string) *API {
 		id:     id,
 		secret: secret,
 	}
+
 	return v
 }
 
 // Login performs the login
 func (v *API) Login(user, password string) error {
-	data := url.Values{
-		"realm":      []string{v.realm},
-		"scope":      []string{"openid profile"},
-		"grant_type": []string{"password"},
-		"username":   []string{user},
-		"password":   []string{password},
+	config := oauth2.Config{
+		ClientID:     v.id,
+		ClientSecret: v.secret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:   "https://api.mpsa.com/api/connectedcar/v2/oauth/authorize",
+			TokenURL:  fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand),
+			AuthStyle: oauth2.AuthStyleInHeader,
+		},
+		Scopes: []string{"openid profile"},
 	}
 
-	uri := fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand)
-	auth := fmt.Sprintf("%s:%s", v.id, v.secret)
+	ctx := context.WithValue(
+		context.Background(),
+		oauth2.HTTPClient,
+		v.Client,
+	)
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Content-Type":  "application/x-www-form-urlencoded",
-		"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)),
-	})
-
+	// replace client with authenticated oauth client
+	token, err := config.PasswordCredentialsToken(ctx, user, password)
 	if err == nil {
-		err = v.DoJSON(req, &v.token)
+		v.Client = config.Client(ctx, token)
 	}
-
-	fmt.Printf("\n%+v\n", v.token)
 
 	return err
 }
@@ -80,12 +80,9 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 		"client_id": []string{v.id},
 	}
 
-	// BaseURL is the API base url
 	uri := fmt.Sprintf("%s/user/vehicles?%s", BaseURL, data.Encode())
-
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":             "application/hal+json",
-		"Authorization":      "Bearer " + v.token.AccessToken,
 		"X-Introspect-Realm": v.realm,
 	})
 
@@ -151,10 +148,8 @@ func (v *API) Status(vid string) (Status, error) {
 
 	// BaseURL is the API base url
 	uri := fmt.Sprintf("%s/user/vehicles/%s/status?%s", BaseURL, vid, data.Encode())
-
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":             "application/hal+json",
-		"Authorization":      "Bearer " + v.token.AccessToken,
 		"X-Introspect-Realm": v.realm,
 	})
 

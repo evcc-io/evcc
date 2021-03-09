@@ -108,8 +108,8 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 		}
 
 		mcc.token = tr.Token
-		// According to the Web Interface, the token is valid for 10 minutes
-		mcc.tokenValid = time.Now().Add(10 * time.Minute)
+		// According to the Web Interface, the token is valid for 2 minutes
+		mcc.tokenValid = time.Now().Add(2 * time.Minute)
 
 		// the web interface updates the token every 2 minutes, so lets do the same here
 		mcc.tokenRefresh = time.Now().Add(2 * time.Minute)
@@ -127,7 +127,10 @@ func (mcc *MobileConnect) login(password string) error {
 		"pass": []string{mcc.password},
 	}
 
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
+		"Referer":      fmt.Sprintf("%s/login", mcc.uri),
+		"Content-Type": "application/x-www-form-urlencoded",
+	})
 	if err != nil {
 		return err
 	}
@@ -172,6 +175,7 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 	}
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
+	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", mcc.uri))
 
 	return req, nil
 }

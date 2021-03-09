@@ -6,23 +6,23 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, error), vehicleRange func() (int64, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error)) api.Vehicle {
 	switch {
-	case vehicleRange == nil && vehicleStatus == nil:
+	case chargeState == nil && vehicleRange == nil:
 		return base
 
-	case vehicleRange == nil && vehicleStatus != nil:
+	case chargeState != nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
-			api.VehicleStatus
+			api.ChargeState
 		}{
 			Vehicle: base,
-			VehicleStatus: &decorateVehicleVehicleStatusImpl{
-				vehicleStatus: vehicleStatus,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
 			},
 		}
 
-	case vehicleRange != nil && vehicleStatus == nil:
+	case chargeState == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleRange
@@ -33,23 +33,31 @@ func decorateVehicle(base api.Vehicle, vehicleStatus func() (api.ChargeStatus, e
 			},
 		}
 
-	case vehicleRange != nil && vehicleStatus != nil:
+	case chargeState != nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
+			api.ChargeState
 			api.VehicleRange
-			api.VehicleStatus
 		}{
 			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
-			},
-			VehicleStatus: &decorateVehicleVehicleStatusImpl{
-				vehicleStatus: vehicleStatus,
 			},
 		}
 	}
 
 	return nil
+}
+
+type decorateVehicleChargeStateImpl struct {
+	chargeState func() (api.ChargeStatus, error)
+}
+
+func (impl *decorateVehicleChargeStateImpl) Status() (api.ChargeStatus, error) {
+	return impl.chargeState()
 }
 
 type decorateVehicleVehicleRangeImpl struct {
@@ -58,12 +66,4 @@ type decorateVehicleVehicleRangeImpl struct {
 
 func (impl *decorateVehicleVehicleRangeImpl) Range() (int64, error) {
 	return impl.vehicleRange()
-}
-
-type decorateVehicleVehicleStatusImpl struct {
-	vehicleStatus func() (api.ChargeStatus, error)
-}
-
-func (impl *decorateVehicleVehicleStatusImpl) Status() (api.ChargeStatus, error) {
-	return impl.vehicleStatus()
 }

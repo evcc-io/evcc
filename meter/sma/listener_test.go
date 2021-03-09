@@ -18,7 +18,7 @@ func TestListenerProcessMessage(t *testing.T) {
 		want     Telegram
 	}{
 		{
-			"SMA Home Manager - success",
+			"SMA Sunny Home Manager - success",
 			net.ParseIP("192.0.2.2"),
 			33168,
 			[]byte{
@@ -73,6 +73,7 @@ func TestListenerProcessMessage(t *testing.T) {
 					"1:9.4.0": 0, "1:9.8.0": 1.80838656e+10,
 					"1:10.4.0": 694.6, "1:10.8.0": 3.357676692e+10,
 					"1:13.4.0": 0.055,
+					"1:14.4.0": 50.0,
 					"1:21.4.0": 0, "1:21.8.0": 6.1789644e+09,
 					"1:22.4.0": 28.6, "1:22.8.0": 2.31873426e+10,
 					"1:23.4.0": 0, "1:23.8.0": 1.93304484e+09,
