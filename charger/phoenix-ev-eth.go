@@ -155,7 +155,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b, 1e4), err
+	return wb.decodeReading(b, 1000), err
 }
 
 // totalEnergy implements the Meter.TotalEnergy interface
@@ -165,7 +165,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b, 1e5), err
+	return wb.decodeReading(b, 1000), err
 }
 
 // currents implements the Meter.Currents interface
@@ -177,7 +177,7 @@ func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(b, 1e3))
+		currents = append(currents, wb.decodeReading(b, 1000))
 	}
 
 	return currents[0], currents[1], currents[2], nil
