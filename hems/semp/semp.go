@@ -418,8 +418,13 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
 	}
 
+	var hasVehicle bool
+	if hasVehicleP, err := s.cache.GetChecked(id, "hasVehicle"); err == nil {
+		hasVehicle = hasVehicleP.Val.(bool)
+	}
+
 	// add 1kWh in case we're charging but battery claims full
-	if charging && maxEnergy == 0 {
+	if maxEnergy == 0 && (charging || !hasVehicle) {
 		maxEnergy = 1e3 // 1kWh
 	}
 
@@ -433,7 +438,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 	if mode == api.ModeNow {
 		minPowerConsumption = maxPowerConsumption
 	}
-	
+
 	if connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
