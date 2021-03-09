@@ -10,11 +10,12 @@ import (
 
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
-	auth "github.com/andig/evcc/vehicle/tesla"
+	"github.com/andig/evcc/util/request"
+	"github.com/bogosj/tesla"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
-	"github.com/uhthomas/tesla"
+	"golang.org/x/oauth2"
 )
 
 // teslaCmd represents the vehicle command
@@ -43,18 +44,18 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 	return devices[0], strings.TrimSpace(code), err
 }
 
-func generateToken(user, pass string) {
-	client, err := auth.NewClient(log)
+func generateToken(username, password string) {
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	client, err := tesla.NewClient(
+		ctx,
+		tesla.WithMFAHandler(codePrompt),
+		tesla.WithCredentials(username, password),
+	)
 	if err != nil {
 		log.FATAL.Fatalln(err)
 	}
 
-	client.DeviceHandler(codePrompt)
-
-	token, err := client.Login(user, pass)
-	if err != nil {
-		log.FATAL.Fatalln(err)
-	}
+	token := client.Token()
 
 	fmt.Println()
 	fmt.Println("Add the following tokens to the tesla vehicle config:")

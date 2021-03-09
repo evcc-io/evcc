@@ -1,112 +1,103 @@
 <template>
-	<transition name="fade">
-		<div v-if="active">
-			<div class="row p-3 bg-warning">
-				<div class="col-12">
-					Neue Version verfügbar! Installiert: {{ installed }}. Verfügbar:
-					{{ available }}.
-					<b class="px-3" v-if="releaseNotes">
-						<a href="#" class="text-body" @click="toggleReleaseNotes">
-							Release notes
-							<fa-icon
-								icon="chevron-down"
-								class="expand-icon"
-								:class="{ 'expand-icon-rotated': releaseNotesShown }"
-							>
-							</fa-icon>
-						</a>
-					</b>
-					<b class="px-3">
-						<button
-							type="button"
-							class="btn btn-primary"
-							data-toggle="modal"
-							data-target="#updateModal"
-							v-if="hasUpdater"
-							@click="toggleUpdater"
-						>
-							Aktualisieren
-						</button>
-						<a
-							:href="'https://github.com/andig/evcc/releases/tag/' + available"
-							class="text-body"
-							v-else
-						>
-							Download <fa-icon icon="chevron-down"></fa-icon>
-						</a>
-					</b>
-					<button
-						type="button"
-						class="close float-right"
-						style="margin-top: -2px"
-						aria-label="Close"
-						@click="dismiss"
-					>
-						<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-			</div>
-
-			<transition name="fade">
-				<div class="row p-3 bg-light" v-if="releaseNotesShown">
-					<div class="col-12" v-html="releaseNotes"></div>
-				</div>
-			</transition>
-
-			<transition name="display">
-				<div
-					id="updateModal"
-					class="dialog"
-					tabindex="-1"
-					role="dialog"
-					v-if="updaterShown"
+	<div>
+		<small class="text-black">
+			<a href="#" @click.prevent="showModal" v-if="newVersionAvailable">
+				<fa-icon icon="gift" class="icon mr-1"></fa-icon>Update<span
+					class="d-none d-sm-inline"
 				>
-					<div class="modal-dialog modal-dialog-centered" role="document">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h4 class="modal-title font-weight-bold">
-									Aktualisierung durchführen
-								</h4>
-								<button type="button" class="close" @click="toggleUpdater">
-									<span aria-hidden="true">&times;</span>
-								</button>
-							</div>
-							<div class="modal-body">
-								<p class="font-weight-bold">
-									Nach Aktualisierung wird evcc neu gestartet.
-								</p>
-								<div
-									class="progress"
-									style="margin-top: 16px; margin-bottom: 16px"
-									v-if="updateStarted"
-								>
+					verfügbar</span
+				>:
+				{{ available }}
+			</a>
+			<a :href="releaseNotesUrl(installed)" target="_blank" v-else>
+				Version {{ installed }}
+			</a>
+		</small>
+
+		<transition name="fade">
+			<div id="updateModal" class="dialog" tabindex="-1" role="dialog" v-if="modalActive">
+				<div
+					class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+					role="document"
+				>
+					<div class="modal-content">
+						<div class="modal-header">
+							<h4 class="modal-title font-weight-bold">Update verfügbar</h4>
+							<button
+								type="button"
+								class="close"
+								:disabled="updateStarted"
+								@click="closeModal"
+							>
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<div v-if="updateStarted">
+								<p>Nach der Aktualisierung wird evcc neu gestartet.</p>
+								<div class="progress my-3">
 									<div
-										class="progress-bar"
+										class="progress-bar progress-bar-striped progress-bar-animated"
 										role="progressbar"
 										:style="{ width: uploadProgress + '%' }"
 									></div>
 								</div>
 								<p>{{ updateStatus }}{{ uploadMessage }}</p>
 							</div>
-							<div class="modal-footer">
+							<div v-else>
+								<p>
+									<small>Aktuell installierte Version: {{ installed }}</small>
+								</p>
+								<div v-if="releaseNotes" v-html="releaseNotes"></div>
+								<p v-else>
+									Keine Releasenotes verfügbar. Mehr Informationen zur neuen
+									Version findest du
+									<a :href="releaseNotesUrl(available)">hier</a>.
+								</p>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button
+								type="button"
+								class="btn btn-outline-secondary"
+								:disabled="updateStarted"
+								@click="closeModal"
+							>
+								Abbrechen
+							</button>
+							<div>
 								<button
 									type="button"
-									class="btn btn-secondary"
-									:class="{ disabled: updateStarted }"
-									@click="toggleUpdater"
+									class="btn btn-primary"
+									v-if="hasUpdater"
+									:disabled="updateStarted"
+									@click="update"
 								>
-									Abbrechen
+									<span v-if="updateStarted">
+										<span
+											class="spinner-border spinner-border-sm"
+											role="status"
+											aria-hidden="true"
+										>
+										</span>
+										Akualisieren
+									</span>
+									<span v-else>Jetzt aktualisieren</span>
 								</button>
-								<button type="button" class="btn btn-danger" @click="update">
-									Installieren
-								</button>
+								<a
+									:href="releaseNotesUrl(available)"
+									class="btn btn-primary"
+									v-else
+								>
+									Download
+								</a>
 							</div>
 						</div>
 					</div>
 				</div>
-			</transition>
-		</div>
-	</transition>
+			</div>
+		</transition>
+	</div>
 </template>
 
 <script>
@@ -125,26 +116,17 @@ export default {
 	},
 	data: function () {
 		return {
-			dismissed: false,
-			releaseNotesShown: false,
-			updaterShown: false,
+			modalActive: false,
 			updateStarted: false,
 			updateStatus: "",
 		};
 	},
 	methods: {
-		dismiss: function () {
-			this.dismissed = true;
+		showModal: function () {
+			this.modalActive = true;
 		},
-		toggleReleaseNotes: function (e) {
-			e.preventDefault();
-			this.releaseNotesShown = !this.releaseNotesShown;
-		},
-		toggleUpdater: function (e) {
-			e.preventDefault();
-			if (!this.updateStarted) {
-				this.updaterShown = !this.updaterShown;
-			}
+		closeModal: function () {
+			this.modalActive = false;
 		},
 		update: async function () {
 			try {
@@ -155,22 +137,18 @@ export default {
 				this.updateStatus = "Aktualisierung nicht möglich: " + e;
 			}
 		},
+		releaseNotesUrl: function (version) {
+			return `https://github.com/andig/evcc/releases/tag/${version}`;
+		},
 	},
 	computed: {
-		active: function () {
+		newVersionAvailable: function () {
 			return (
 				this.available && // available version already computed?
 				this.installed != "[[.Version]]" && // go template parsed?
 				this.installed != "0.0.1-alpha" && // make used?
-				this.available != this.installed &&
-				this.dismissed === false
+				this.available != this.installed
 			);
-		},
-	},
-	watch: {
-		available: function () {
-			this.dismissed = false;
-			this.releaseNotesShown = false;
 		},
 	},
 };
@@ -185,7 +163,6 @@ export default {
 .fade-leave-to {
 	opacity: 0;
 }
-
 .dialog {
 	position: fixed;
 	top: 0;
@@ -196,15 +173,10 @@ export default {
 	overflow: hidden;
 	outline: 0;
 }
-.display-enter-active {
-	display: block !important;
+.icon {
+	color: #0fdd42;
 }
-
-.expand-icon {
-	transition: transform 0.25s ease-in;
-	transform: rotate(0);
-}
-.expand-icon-rotated {
-	transform: rotate(-180deg);
+.text-black a {
+	color: #18191a;
 }
 </style>
