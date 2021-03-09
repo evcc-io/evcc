@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
@@ -19,9 +17,9 @@ import (
 // credits to https://github.com/vloschiavo/powerwall2
 
 const (
-	teslaMeterURI   = "/meters/aggregates"
-	teslaBatteryURI = "/system_status/soe"
-	teslaLoginURI   = "/login/Basic"
+	teslaMeterURI   = "/api/meters/aggregates"
+	teslaBatteryURI = "/api/system_status/soe"
+	teslaLoginURI   = "/api/login/Basic"
 )
 
 type teslaMeterResponse map[string]struct {
@@ -46,9 +44,7 @@ type teslaBatteryResponse struct {
 // Tesla is the tesla powerwall meter
 type Tesla struct {
 	*request.Helper
-	uri      *url.URL
-	usage    string
-	password string
+	uri, usage, password string
 }
 
 func init() {
@@ -75,7 +71,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing password setting")
 	}
 
-	uri, err := url.Parse(cc.URI)
+	_, err := url.Parse(cc.URI)
 	if err != nil {
 		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
 	}
@@ -88,20 +84,16 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewTesla(uri, cc.Usage, cc.Password)
+	return NewTesla(cc.URI, cc.Usage, cc.Password)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri *url.URL, usage string, password string) (api.Meter, error) {
+func NewTesla(uri, usage, password string) (api.Meter, error) {
 	log := util.NewLogger("tesla")
-
-	uri.Scheme = "https"
-	// normalize path to '/api' so user input with a path won't cause any trouble
-	uri.Path = "/api"
 
 	m := &Tesla{
 		Helper:   request.NewHelper(log),
-		uri:      uri,
+		uri:      util.DefaultScheme(uri, "https"),
 		usage:    strings.ToLower(usage),
 		password: password,
 	}
@@ -140,19 +132,13 @@ func (m *Tesla) Login() error {
 	}
 
 	// returns cookie which is saved in the cookie jar
-	resp, err := m.Client.Post(m.uri.String()+teslaLoginURI, "application/json", bytes.NewReader(payloadBytes))
+	resp, err := m.Client.Post(m.uri+teslaLoginURI, "application/json", bytes.NewReader(payloadBytes))
 	if err != nil {
-		return fmt.Errorf("failed to post: %s", err)
+		return err
 	}
 
-	defer resp.Body.Close()
-	// failed to login
-	if resp.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read response body: %s", err)
-		}
-		return fmt.Errorf("couldn't login: %s", body)
+	if body, err := request.ReadBody(resp); err != nil {
+		return fmt.Errorf("couldn't login: %s: %s", err, string(body))
 	}
 
 	return nil
@@ -161,7 +147,7 @@ func (m *Tesla) Login() error {
 // CurrentPower implements the Meter.CurrentPower interface
 func (m *Tesla) CurrentPower() (float64, error) {
 	var res teslaMeterResponse
-	if err := m.GetJSON(m.uri.String()+teslaMeterURI, &res); err != nil {
+	if err := m.GetJSON(m.uri+teslaMeterURI, &res); err != nil {
 		return 0, err
 	}
 
@@ -175,7 +161,7 @@ func (m *Tesla) CurrentPower() (float64, error) {
 // totalEnergy implements the api.MeterEnergy interface
 func (m *Tesla) totalEnergy() (float64, error) {
 	var res teslaMeterResponse
-	if err := m.GetJSON(m.uri.String()+teslaMeterURI, &res); err != nil {
+	if err := m.GetJSON(m.uri+teslaMeterURI, &res); err != nil {
 		return 0, err
 	}
 
@@ -194,7 +180,7 @@ func (m *Tesla) totalEnergy() (float64, error) {
 // batterySoC implements the api.Battery interface
 func (m *Tesla) batterySoC() (float64, error) {
 	var res teslaBatteryResponse
-	err := m.GetJSON(m.uri.String()+teslaBatteryURI, &res)
+	err := m.GetJSON(m.uri+teslaBatteryURI, &res)
 
 	return res.Percentage, err
 }
