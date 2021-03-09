@@ -1,8 +1,12 @@
 package meter
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http/cookiejar"
+	"net/url"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -15,6 +19,7 @@ import (
 const (
 	teslaMeterURI   = "/api/meters/aggregates"
 	teslaBatteryURI = "/api/system_status/soe"
+	teslaLoginURI   = "/api/login/Basic"
 )
 
 type teslaMeterResponse map[string]struct {
@@ -39,7 +44,7 @@ type teslaBatteryResponse struct {
 // Tesla is the tesla powerwall meter
 type Tesla struct {
 	*request.Helper
-	uri, usage string
+	uri, usage, password string
 }
 
 func init() {
@@ -51,7 +56,7 @@ func init() {
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Usage string
+		URI, Usage, Password string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -62,6 +67,15 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, errors.New("missing usage setting")
 	}
 
+	if cc.Password == "" {
+		return nil, errors.New("missing password setting")
+	}
+
+	_, err := url.Parse(cc.URI)
+	if err != nil {
+		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
+	}
+
 	// support default meter names
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
@@ -70,21 +84,28 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.Usage = "solar"
 	}
 
-	return NewTesla(cc.URI, cc.Usage)
+	return NewTesla(cc.URI, cc.Usage, cc.Password)
 }
 
 // NewTesla creates a Tesla Meter
-func NewTesla(uri, usage string) (api.Meter, error) {
+func NewTesla(uri, usage, password string) (api.Meter, error) {
 	log := util.NewLogger("tesla")
 
 	m := &Tesla{
-		Helper: request.NewHelper(log),
-		uri:    util.DefaultScheme(uri, "https"),
-		usage:  strings.ToLower(usage),
+		Helper:   request.NewHelper(log),
+		uri:      util.DefaultScheme(uri, "https"),
+		usage:    strings.ToLower(usage),
+		password: password,
 	}
 
 	// ignore the self signed certificate
 	m.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	// create cookie jar to save login tokens
+	m.Client.Jar, _ = cookiejar.New(nil)
+
+	if err := m.Login(); err != nil {
+		return nil, err
+	}
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
@@ -99,6 +120,28 @@ func NewTesla(uri, usage string) (api.Meter, error) {
 	}
 
 	return decorateTesla(m, totalEnergy, batterySoC), nil
+}
+
+// Login calls login and saves the returned cookie
+func (m *Tesla) Login() error {
+	// username for the powerwall seems to always be customer; email is not required for authentication
+	payload := map[string]interface{}{"password": m.password, "username": "customer"}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	// returns cookie which is saved in the cookie jar
+	resp, err := m.Client.Post(m.uri+teslaLoginURI, "application/json", bytes.NewReader(payloadBytes))
+	if err != nil {
+		return err
+	}
+
+	if body, err := request.ReadBody(resp); err != nil {
+		return fmt.Errorf("couldn't login: %s: %s", err, string(body))
+	}
+
+	return nil
 }
 
 // CurrentPower implements the Meter.CurrentPower interface
