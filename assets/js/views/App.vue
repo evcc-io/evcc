@@ -1,7 +1,7 @@
 <template>
 	<div class="app d-flex flex-column justify-content-between">
 		<div>
-			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
 					<a class="navbar-brand" href="https://github.com/andig/evcc">
 						<Logo class="logo" />
