@@ -245,8 +245,8 @@ Available vehicle remote interface implementations are:
 - `bmw`: BMW (i3)
 - `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019) **temporarily removed due to incompatible api changes**
-- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq) **temporarily removed due to incompatible api changes**
+- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 - `nissan`: Nissan (Leaf)
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)

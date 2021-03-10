@@ -15,7 +15,7 @@ type Kia struct {
 }
 
 func init() {
-	// registry.Add("kia", NewKiaFromConfig)
+	registry.Add("kia", NewKiaFromConfig)
 }
 
 // NewKiaFromConfig creates a new Vehicle
