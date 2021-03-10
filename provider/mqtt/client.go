@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -92,13 +93,14 @@ func (m *Client) ConnectionHandler(client mqtt.Client) {
 	}
 }
 
-// Publish synchronously pulishes payload using client qos
+// Publish synchronously publishes payload using client qos
 func (m *Client) Publish(topic string, retained bool, payload interface{}) error {
+	m.log.TRACE.Printf("send %s: '%v'", topic, payload)
 	token := m.Client.Publish(topic, m.Qos, retained, payload)
 	if token.WaitTimeout(publishTimeout) {
 		return token.Error()
 	}
-	return nil
+	return api.ErrTimeout
 }
 
 // Listen validates uniqueness and registers and attaches listener
@@ -113,14 +115,15 @@ func (m *Client) Listen(topic string, callback func(string)) {
 // listen attaches listener to topic
 func (m *Client) listen(topic string) {
 	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
-		s := string(msg.Payload())
-		if len(s) > 0 {
+		payload := string(msg.Payload())
+		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
+		if len(payload) > 0 {
 			m.mux.Lock()
 			callbacks := m.listener[topic]
 			m.mux.Unlock()
 
 			for _, cb := range callbacks {
-				cb(s)
+				cb(payload)
 			}
 		}
 	})
