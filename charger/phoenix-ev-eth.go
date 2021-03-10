@@ -13,7 +13,7 @@ import (
 const (
 	phxEVEthRegStatus     = 100 // Input
 	phxEVEthRegChargeTime = 102 // Input
-	phxEVEthRegMaxCurrent = 300 // Holding
+	phxEVEthRegMaxCurrent = 528 // Holding
 	phxEVEthRegEnable     = 400 // Coil
 
 	phxEVEthRegPower  = 120 // power reading
