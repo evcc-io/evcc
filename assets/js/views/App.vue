@@ -1,11 +1,11 @@
 <template>
 	<div class="app d-flex flex-column justify-content-between">
 		<div>
-			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/andig/evcc"
-						><fa-icon icon="leaf" class="text-primary mr-2"></fa-icon>evcc</a
-					>
+					<a class="navbar-brand" href="https://github.com/andig/evcc">
+						<Logo class="logo" />
+					</a>
 					<button
 						class="navbar-toggler"
 						type="button"
@@ -20,15 +20,16 @@
 					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 						<div class="navbar-nav">
 							<router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
-							<router-link class="nav-item nav-link pb-1" to="/config"
-								>Konfiguration</router-link
-							>
+							<router-link class="nav-item nav-link pb-1" to="/config">
+								Konfiguration
+							</router-link>
 							<a
 								class="nav-item nav-link pb-1"
 								href="https://github.com/andig/evcc/discussions"
 								target="_blank"
-								>Community Support</a
 							>
+								Community Support
+							</a>
 						</div>
 					</div>
 				</div>
@@ -42,12 +43,13 @@
 
 <script>
 import "../icons";
+import Logo from "../components/Logo";
 import Footer from "../components/Footer";
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Footer },
+	components: { Logo, Footer },
 	data: function () {
 		return {
 			compact: false,
@@ -104,6 +106,9 @@ export default {
 };
 </script>
 <style scoped>
+.logo {
+	width: 85px;
+}
 .app {
 	min-height: 100vh;
 }
