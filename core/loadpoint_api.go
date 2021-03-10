@@ -107,6 +107,62 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	return nil
 }
 
+// GetMinSoCGeoLat returns loadpoint geo location for nighttime postpone of charging to minimum soc
+func (lp *LoadPoint) GetMinSoCGeoLat() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.SoC.MinGeoLat
+}
+
+// SetMinSoCGeoLat sets loadpoint geo location or nighttime postpone of charging to minimum soc
+func (lp *LoadPoint) SetMinSoCGeoLat(geoLat float64) error {
+	if lp.vehicle == nil {
+		return api.ErrNotAvailable
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Println("set geo latitude for min soc:", geoLat)
+
+	// apply immediately
+	if lp.SoC.MinGeoLat != geoLat {
+		lp.SoC.MinGeoLat = geoLat
+		lp.publish("minSoCGeoLat", geoLat)
+		lp.requestUpdate()
+	}
+
+	return nil
+}
+
+// GetMinSoCGeoLong returns loadpoint geo location for nighttime postpone of charging to minimum soc
+func (lp *LoadPoint) GetMinSoCGeoLong() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.SoC.MinGeoLong
+}
+
+// SetMinSoCGeoLong sets loadpoint geo location or nighttime postpone of charging to minimum soc
+func (lp *LoadPoint) SetMinSoCGeoLong(geoLong float64) error {
+	if lp.vehicle == nil {
+		return api.ErrNotAvailable
+	}
+
+	lp.Lock()
+	defer lp.Unlock()
+
+	lp.log.INFO.Println("set geo longitude for min soc:", geoLong)
+
+	// apply immediately
+	if lp.SoC.MinGeoLong != geoLong {
+		lp.SoC.MinGeoLong = geoLong
+		lp.publish("minSoCGeoLong", geoLong)
+		lp.requestUpdate()
+	}
+
+	return nil
+}
+
 // SetTargetCharge sets loadpoint charge targetSoC
 func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, targetSoC int) {
 	lp.Lock()
