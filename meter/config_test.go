@@ -12,6 +12,7 @@ func TestMeters(t *testing.T) {
 		"missing mqtt broker configuration",
 		"mqtt not configured",
 		"not a SunSpec device",
+		"missing password", // Powerwall
 		"connect: no route to host",
 		"connect: connection refused",
 	}

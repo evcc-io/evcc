@@ -39,11 +39,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	if cc.Usage == "" {
-		return nil, errors.New("missing usage setting")
+		return nil, errors.New("missing usage")
 	}
 
 	if cc.Password == "" {
-		return nil, errors.New("missing password setting")
+		return nil, errors.New("missing password")
 	}
 
 	_, err := url.Parse(cc.URI)
