@@ -18,6 +18,8 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go"
 	"github.com/benbjohnson/clock"
+
+	"github.com/keep94/sunrise"
 )
 
 const (
@@ -43,8 +45,10 @@ type SoCConfig struct {
 	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
 	Levels       []int      `mapstructure:"levels"`
 	Estimate     bool       `mapstructure:"estimate"`
-	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
-	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Min          int        `mapstructure:"min"`               // Default minimum SoC, guarded by mutex
+	MinNightLat  float64    `mapstructure:"minNightLatitude"`  // latitude to calculate nighttime to postpone min SoC, guarded by mutex
+	MinNightLong float64    `mapstructure:"minNightLongitude"` // longitude to calculate nighttime to postpone min SoC, guarded by mutex
+	Target       int        `mapstructure:"target"`            // Default target SoC, guarded by mutex
 }
 
 // Poll modes
@@ -406,6 +410,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
 	lp.publish("minSoC", lp.SoC.Min)
+	lp.publish("minSoCNightLat", lp.SoC.MinNightLat)
+	lp.publish("minSoCNightLong", lp.SoC.MinNightLong)
 	lp.publish("socLevels", lp.SoC.Levels)
 	lp.Unlock()
 
@@ -511,7 +517,18 @@ func (lp *LoadPoint) targetSocReached() bool {
 func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
 		lp.SoC.Min > 0 &&
-		lp.socCharge < float64(lp.SoC.Min)
+		lp.socCharge < float64(lp.SoC.Min) &&
+		lp.isNighttime()
+}
+
+// isNighttime checks at the given geo position if it is currently night or day.
+func (lp *LoadPoint) isNighttime() bool {
+	if lp.SoC.MinNightLat > float64(0) && lp.SoC.MinNightLong > float64(0) {
+		dayOrNight, _, _ := sunrise.DayOrNight(lp.SoC.MinNightLat, lp.SoC.MinNightLong, time.Now())
+		return dayOrNight == sunrise.Night
+	}
+
+	return true
 }
 
 // climateActive checks if vehicle has active climate request
