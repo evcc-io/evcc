@@ -9,7 +9,7 @@
 					<small class="text-black">
 						<a href="https://github.com/sponsors/andig" target="_blank" class="link">
 							<fa-icon icon="heart" class="icon mr-1"></fa-icon
-							><span class="d-none d-sm-inline">Projekt</span> unterstützen
+							><span class="d-none d-sm-inline">Projekt </span>unterstützen
 						</a>
 					</small>
 				</div>
