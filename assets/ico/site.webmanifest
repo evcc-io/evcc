@@ -1,9 +1,9 @@
 {
 	"start_url": "../",
-	"name": "EV Charge Controller",
-	"short_name": "EV Charge Controller",
-	"theme_color": "#ffffff",
-	"background_color": "#ffffff",
+	"name": "evcc",
+	"short_name": "evcc",
+	"theme_color": "#18191a",
+	"background_color": "#18191a",
 	"display": "standalone",
 	"icons": [
 		{
