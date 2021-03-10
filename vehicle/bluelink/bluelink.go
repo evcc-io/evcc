@@ -60,7 +60,6 @@ type API struct {
 	apiG     func() (interface{}, error)
 	config   Config
 	auth     Auth
-	stamps   *Stamps
 }
 
 // Auth bundles miscellaneous authorization data
@@ -110,11 +109,6 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 		config:   config,
 		user:     user,
 		password: password,
-		stamps:   stamps[config.CCSPApplicationID],
-	}
-
-	if v.stamps == nil {
-		return v, errors.New("missing stamps")
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -126,6 +120,10 @@ func New(log *util.Logger, user, password string, cache time.Duration, config Co
 }
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
+
+func (v *API) stamp() string {
+	return stamps.New(v.config.CCSPApplicationID)
+}
 
 func (v *API) getDeviceID() (string, error) {
 	uniID, _ := uuid.NewUUID()
@@ -139,7 +137,7 @@ func (v *API) getDeviceID() (string, error) {
 		"ccsp-service-id": v.config.CCSPServiceID,
 		"Content-type":    "application/json;charset=UTF-8",
 		"User-Agent":      "okhttp/3.10.0",
-		"Stamp":           v.stamps.Get(),
+		"Stamp":           v.stamp(),
 	}
 
 	var resp response
@@ -253,7 +251,7 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
-		"Stamp":               v.stamps.Get(),
+		"Stamp":               v.stamp(),
 	}
 
 	req, err := request.New(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
@@ -312,7 +310,7 @@ func (v *API) getStatus() (response, error) {
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
-		"Stamp":               v.stamps.Get(),
+		"Stamp":               v.stamp(),
 	}
 
 	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
