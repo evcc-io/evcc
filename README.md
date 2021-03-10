@@ -184,6 +184,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `phoenix-ev-ser`: chargers with Phoenix **EV**-CC-\*\*\*-**SER** serial controllers (Modbus RTU)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
+- `warp`: Tinkerforge Warp/ Warp Pro charger
 - `fritzdect`: pseudo charger using Fritz!DECT 200/210 outlets
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
