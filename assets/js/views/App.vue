@@ -3,7 +3,7 @@
 		<div>
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/andig/evcc">
+					<a class="navbar-brand" href="/">
 						<Logo class="logo" />
 					</a>
 					<button
@@ -18,17 +18,21 @@
 						<span class="navbar-toggler-icon"></span>
 					</button>
 					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+						<div class="navbar-nav mr-auto"></div>
 						<div class="navbar-nav">
-							<router-link class="nav-item nav-link pb-1" to="/">Laden</router-link>
-							<router-link class="nav-item nav-link pb-1" to="/config">
-								Konfiguration
-							</router-link>
 							<a
-								class="nav-item nav-link pb-1"
+								class="nav-item nav-link"
 								href="https://github.com/andig/evcc/discussions"
 								target="_blank"
 							>
 								Community Support
+							</a>
+							<a
+								class="nav-item nav-link"
+								href="https://github.com/sponsors/andig"
+								target="_blank"
+							>
+								Projekt unterstützen
 							</a>
 						</div>
 					</div>
