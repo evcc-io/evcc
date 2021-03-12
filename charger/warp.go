@@ -201,7 +201,7 @@ func (m *Warp) Enabled() (bool, error) {
 		start := time.Now()
 
 		// retry to avoid out of sync errors in case of slow warp updates
-		for time.Since(start) <= time.Second {
+		for time.Since(start) <= 2*time.Second {
 			if enabled, err = m.isEnabled(); err != nil {
 				break
 			}
