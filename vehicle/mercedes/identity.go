@@ -83,14 +83,13 @@ func (v *Identity) Login(log *util.Logger) error {
 		return err
 	}
 
-	done := make(chan struct{})
-
 	ctx, cancel := context.WithTimeout(
 		context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client),
 		60*time.Second,
 	)
 	defer cancel()
 
+	done := make(chan struct{})
 	srv := &http.Server{Handler: v.redirectHandler(ctx, state, done)}
 
 	defer srv.Close()
