@@ -22,11 +22,6 @@ type Tesla struct {
 	chargedEnergyG func() (float64, error)
 }
 
-// teslaTokens contains access and refresh tokens
-type teslaTokens struct {
-	Access, Refresh string
-}
-
 func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
@@ -38,7 +33,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Capacity               int64
 		ClientID, ClientSecret string
 		User, Password         string
-		Tokens                 teslaTokens
+		Tokens                 Tokens
 		VIN                    string
 		Cache                  time.Duration
 	}{
