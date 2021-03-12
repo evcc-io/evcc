@@ -61,6 +61,7 @@ type Warp struct {
 	meterG      func() (string, error)
 	enableS     func(bool) error
 	maxcurrentS func(int64) error
+	enabled     bool // cache
 }
 
 //go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWarp -o warp_decorators -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
@@ -140,7 +141,12 @@ func (m *Warp) Enable(enable bool) error {
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
 
-	return m.client.Publish(topic, true, "null")
+	err := m.client.Publish(topic, true, "null")
+	if err == nil {
+		m.enabled = enable
+	}
+
+	return err
 }
 
 func (m *Warp) status() (warpStatus, error) {
@@ -167,8 +173,8 @@ func (m *Warp) autostart() (bool, error) {
 	return res.AutoStartCharging, err
 }
 
-// Enabled implements the api.Charger interface
-func (m *Warp) Enabled() (bool, error) {
+// isEnabled reads enabled status from mqtt
+func (m *Warp) isEnabled() (bool, error) {
 	enabled, err := m.autostart()
 
 	var status warpStatus
@@ -182,6 +188,30 @@ func (m *Warp) Enabled() (bool, error) {
 	} else {
 		// check that vehicle is really not charging
 		enabled = status.VehicleState == 2
+	}
+
+	return enabled, err
+}
+
+// Enabled implements the api.Charger interface
+func (m *Warp) Enabled() (bool, error) {
+	enabled, err := m.isEnabled()
+
+	if err == nil && enabled != m.enabled {
+		start := time.Now()
+
+		// retry to avoid out of sync errors in case of slow warp updates
+		for time.Since(start) <= 2*time.Second {
+			if enabled, err = m.isEnabled(); err != nil {
+				break
+			}
+
+			if enabled == m.enabled {
+				break
+			}
+
+			time.Sleep(50 * time.Millisecond)
+		}
 	}
 
 	return enabled, err
