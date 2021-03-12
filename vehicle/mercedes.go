@@ -2,21 +2,14 @@ package vehicle
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	"os/exec"
-	"runtime"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/mercedes"
 	"golang.org/x/oauth2"
 )
 
@@ -29,32 +22,6 @@ type Mercedes struct {
 
 func init() {
 	registry.Add("mercedes", NewMercedesFromConfig)
-}
-
-func state() string {
-	var b [9]byte
-	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
-		panic(err)
-	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
-}
-
-// openURL opens the specified URL in the default browser of the user.
-func openURL(url string) error {
-	var cmd string
-	var args []string
-
-	switch runtime.GOOS {
-	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start"}
-	case "darwin":
-		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
-		cmd = "xdg-open"
-	}
-	args = append(args, url)
-	return exec.Command(cmd, args...).Start()
 }
 
 // NewMercedesFromConfig creates a new Mercedes vehicle
@@ -79,49 +46,23 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	config := &oauth2.Config{
-		ClientID:     cc.ClientID,
-		ClientSecret: cc.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
-			AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
-			AuthStyle: oauth2.AuthStyleInParams,
-		},
-		// Scopes: []string{"mb:vehicle:status:general", "mb:user:pool:reader", "offline_access"},
-		Scopes: []string{"offline_access"},
-	}
-
 	v := &Mercedes{
 		embed: &embed{cc.Title, cc.Capacity},
-		oc:    config,
 	}
 
-	log := util.NewLogger("mercds")
+	log := util.NewLogger("mercedes")
+
+	identity := mercedes.NewIdentity(cc.ClientID, cc.ClientSecret)
+	if err := identity.Login(log); err != nil {
+		return nil, err
+	}
+
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	client := identity.AuthConfig.Client(ctx, identity.Token())
 
-	state := state()
-	url := config.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "login consent"))
-	fmt.Println(url)
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	http.HandleFunc("/", v.redirectHandler(ctx, wg, state))
-	go func() {
-		wg.Done()
-		http.ListenAndServe(":34972", nil)
-	}()
-
-	wg.Add(1)
-	if err := openURL(url); err != nil {
-		return v, err
-	}
-
-	go func() {
-		time.Sleep(10 * time.Second)
-		wg.Done()
-	}()
-
-	wg.Wait()
+	client = request.NewHelper(log).Client
+	uri := fmt.Sprintf("https://api.mercedes-benz.com/vehicledata_tryout/v2/vehicles/%s/containers/electricvehicle", "WDB111111ZZZ22222")
+	client.Get(uri)
 	// authenticated http client with logging injected to the Mercedes client
 
 	// vehicles, err := client.Vehicles()
@@ -140,41 +81,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	// }
 
 	return v, nil
-}
-
-func (v *Mercedes) redirectHandler(ctx context.Context, wg *sync.WaitGroup, state string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer wg.Done()
-
-		data, err := url.ParseQuery(r.URL.RawQuery)
-		if error, ok := data["error"]; ok {
-			fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
-			return
-		}
-
-		states, ok := data["state"]
-		if !ok || len(states) != 1 || states[0] != state {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
-
-		codes, ok := data["code"]
-		if !ok || len(codes) != 1 {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
-
-		if v.token, err = v.oc.Exchange(ctx, codes[0]); err != nil {
-			fmt.Fprintln(w, "token error:", err)
-			return
-		}
-
-		fmt.Fprintln(w, "Folgende Fahrzeugkonfiguration kann in die evcc.yaml Konfigurationsdatei übernommen werden")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  tokens:")
-		fmt.Fprintln(w, "    access:", v.token.AccessToken)
-		fmt.Fprintln(w, "    refresh:", v.token.RefreshToken)
-	}
 }
 
 // chargeState implements the api.Vehicle interface
