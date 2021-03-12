@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -30,7 +31,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Title                  string
 		Capacity               int64
 		ClientID, ClientSecret string
-		User, Password         string
 		Tokens                 Tokens
 		VIN                    string
 		Cache                  time.Duration
@@ -50,19 +50,29 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
+	var options []mercedes.ClientOption
+	if cc.Tokens.Access != "" {
+		options = append(options, mercedes.WithToken(&oauth2.Token{
+			AccessToken:  cc.Tokens.Access,
+			RefreshToken: cc.Tokens.Refresh,
+			Expiry:       time.Now(),
+		}))
+	}
+
 	log := util.NewLogger("mercedes")
 
-	identity := mercedes.NewIdentity(cc.ClientID, cc.ClientSecret)
-	if err := identity.Login(log); err != nil {
+	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
+	if err != nil {
 		return nil, err
 	}
 
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 	client := identity.AuthConfig.Client(ctx, identity.Token())
 
-	client = request.NewHelper(log).Client
+	// client = request.NewHelper(log).Client
 	uri := fmt.Sprintf("https://api.mercedes-benz.com/vehicledata_tryout/v2/vehicles/%s/containers/electricvehicle", "WDB111111ZZZ22222")
-	client.Get(uri)
+	req, _ := request.New(http.MethodGet, uri, nil, request.JSONAccept)
+	client.Do(req)
 	// authenticated http client with logging injected to the Mercedes client
 
 	// vehicles, err := client.Vehicles()

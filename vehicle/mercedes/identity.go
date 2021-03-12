@@ -21,25 +21,50 @@ import (
 
 const redirectURI = "localhost:34972"
 
+type ClientOption func(c *Identity) error
+
+// WithToken provides an oauth2.Token to the client for auth.
+func WithToken(t *oauth2.Token) ClientOption {
+	return func(c *Identity) error {
+		c.token = t
+		return nil
+	}
+}
+
 type Identity struct {
+	log        *util.Logger
 	AuthConfig *oauth2.Config
 	token      *oauth2.Token
 }
 
-func NewIdentity(id, secret string) *Identity {
-	return &Identity{
+func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (*Identity, error) {
+	v := &Identity{
+		log: log,
 		AuthConfig: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
 			Endpoint: oauth2.Endpoint{
 				AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
 				TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
-				AuthStyle: oauth2.AuthStyleInParams,
+				AuthStyle: oauth2.AuthStyleInHeader,
 			},
 			// Scopes: []string{"scope=mb:vehicle:status:general","mb:user:pool:reader","offline_access"},
 			Scopes: []string{"offline_access"},
 		},
 	}
+
+	var err error
+	for _, o := range options {
+		if err == nil {
+			err = o(v)
+		}
+	}
+
+	if err == nil && v.token == nil {
+		err = v.Login()
+	}
+
+	return v, err
 }
 
 func state() string {
@@ -72,7 +97,7 @@ func (v *Identity) Token() *oauth2.Token {
 	return v.token
 }
 
-func (v *Identity) Login(log *util.Logger) error {
+func (v *Identity) Login() error {
 	state := state()
 	uri := v.AuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("prompt", "login consent"),
@@ -84,7 +109,7 @@ func (v *Identity) Login(log *util.Logger) error {
 	}
 
 	ctx, cancel := context.WithTimeout(
-		context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client),
+		context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(v.log).Client),
 		60*time.Second,
 	)
 	defer cancel()

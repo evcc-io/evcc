@@ -17,6 +17,10 @@ var (
 		"Content-Type": "application/json",
 		"Accept":       "application/json",
 	}
+
+	JSONAccept = map[string]string{
+		"Accept": "application/json",
+	}
 )
 
 // StatusError indicates unsuccessful http response
