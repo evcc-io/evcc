@@ -48,8 +48,7 @@ func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (
 				TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
 				AuthStyle: oauth2.AuthStyleInHeader,
 			},
-			// Scopes: []string{"scope=mb:vehicle:status:general","mb:user:pool:reader","offline_access"},
-			Scopes: []string{"offline_access"},
+			Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
 		},
 	}
 

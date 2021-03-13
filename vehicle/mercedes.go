@@ -3,8 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"fmt"
-	"net/http"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -17,8 +16,7 @@ import (
 // Mercedes is an api.Vehicle implementation for Mercedes cars
 type Mercedes struct {
 	*embed
-	oc    *oauth2.Config
-	token *oauth2.Token
+	*mercedes.Provider
 }
 
 func init() {
@@ -46,16 +44,12 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	v := &Mercedes{
-		embed: &embed{cc.Title, cc.Capacity},
-	}
-
 	var options []mercedes.ClientOption
 	if cc.Tokens.Access != "" {
 		options = append(options, mercedes.WithToken(&oauth2.Token{
 			AccessToken:  cc.Tokens.Access,
 			RefreshToken: cc.Tokens.Refresh,
-			Expiry:       time.Now(),
+			// Expiry:       time.Now(),
 		}))
 	}
 
@@ -66,45 +60,17 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
-	client := identity.AuthConfig.Client(ctx, identity.Token())
-
-	// client = request.NewHelper(log).Client
-	uri := fmt.Sprintf("https://api.mercedes-benz.com/vehicledata_tryout/v2/vehicles/%s/containers/electricvehicle", "WDB111111ZZZ22222")
-	req, _ := request.New(http.MethodGet, uri, nil, request.JSONAccept)
-	client.Do(req)
 	// authenticated http client with logging injected to the Mercedes client
+	client := request.NewHelper(log)
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	client.Transport = identity.AuthConfig.Client(ctx, identity.Token()).Transport
 
-	// vehicles, err := client.Vehicles()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	api := mercedes.NewAPI(log, identity)
 
-	// if cc.VIN == "" && len(vehicles) == 1 {
-	// 	v.vehicle = vehicles[0]
-	// } else {
-	// 	for _, vehicle := range vehicles {
-	// 		if vehicle.Vin == strings.ToUpper(cc.VIN) {
-	// 			v.vehicle = vehicle
-	// 		}
-	// 	}
-	// }
+	v := &Mercedes{
+		embed:    &embed{cc.Title, cc.Capacity},
+		Provider: mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
+	}
 
 	return v, nil
-}
-
-// chargeState implements the api.Vehicle interface
-func (v *Mercedes) chargeState() (float64, error) {
-	// state, err := v.vehicle.ChargeState()
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// return float64(state.BatteryLevel), nil
-	return 0, nil
-}
-
-// SoC implements the api.Vehicle interface
-func (v *Mercedes) SoC() (float64, error) {
-	// return v.chargeStateG()
-	return 0, nil
 }
