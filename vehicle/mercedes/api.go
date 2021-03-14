@@ -1,29 +1,35 @@
 package mercedes
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 // BaseURI is the VW api base URI
-const BaseURI = "https://api.mercedes-benz.com/vehicledata_tryout/v2"
+// const BaseURI = "https://api.mercedes-benz.com/vehicledata_tryout/v2"
+const BaseURI = "https://api.mercedes-benz.com/vehicledata/v2"
 
-// API is the VW api client
+// API is the Mercedes api client
 type API struct {
 	*request.Helper
-	identity *Identity
-	baseURI  string
+	baseURI string
 }
 
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, identity *Identity) *API {
 	v := &API{
-		Helper:   request.NewHelper(log),
-		identity: identity,
+		Helper: request.NewHelper(log),
 	}
+
+	// authenticated http client with logging injected to the Mercedes client
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
+	v.Client = identity.AuthConfig.Client(ctx, identity.Token())
+
 	return v
 }
 

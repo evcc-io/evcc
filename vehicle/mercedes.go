@@ -1,14 +1,12 @@
 package vehicle
 
 import (
-	"context"
 	"errors"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/mercedes"
 	"golang.org/x/oauth2"
 )
@@ -49,7 +47,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		options = append(options, mercedes.WithToken(&oauth2.Token{
 			AccessToken:  cc.Tokens.Access,
 			RefreshToken: cc.Tokens.Refresh,
-			// Expiry:       time.Now(),
+			Expiry:       time.Now(),
 		}))
 	}
 
@@ -59,11 +57,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	// authenticated http client with logging injected to the Mercedes client
-	client := request.NewHelper(log)
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
-	client.Transport = identity.AuthConfig.Client(ctx, identity.Token()).Transport
 
 	api := mercedes.NewAPI(log, identity)
 
