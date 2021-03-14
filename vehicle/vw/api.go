@@ -49,7 +49,7 @@ func NewAPI(log *util.Logger, identity *Identity, brand, country string) *API {
 	}
 
 	v := &API{
-		Helper:  request.NewHelper(log),
+		Helper:  helper,
 		brand:   brand,
 		country: country,
 		baseURI: DefaultBaseURI,

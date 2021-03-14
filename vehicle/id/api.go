@@ -7,7 +7,6 @@ import (
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/vw"
 	"golang.org/x/oauth2"
 )
 
@@ -20,7 +19,6 @@ const BaseURL = "https://mobileapi.apps.emea.vwapps.io"
 // API is an api.Vehicle implementation for VW ID cars
 type API struct {
 	*request.Helper
-	// identity *vw.Identity
 }
 
 // Actions and action values
@@ -36,7 +34,7 @@ const (
 )
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity *vw.Identity) *API {
+func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	helper := request.NewHelper(log)
 	helper.Client.Transport = &oauth2.Transport{
 		Source: identity,
@@ -44,9 +42,9 @@ func NewAPI(log *util.Logger, identity *vw.Identity) *API {
 	}
 
 	v := &API{
-		Helper: request.NewHelper(log),
-		// identity: identity,
+		Helper: helper,
 	}
+
 	return v
 }
 
@@ -56,7 +54,6 @@ func (v *API) Vehicles() (res []string, err error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "application/json",
-		// "Authorization": "Bearer " + v.identity.Token(),
 	})
 
 	var vehicles struct {
@@ -160,7 +157,6 @@ func (v *API) Status(vin string) (res Status, err error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "application/json",
-		// "Authorization": "Bearer " + v.identity.Token(),
 	})
 
 	if err == nil {
@@ -176,7 +172,6 @@ func (v *API) Action(vin, action, value string) error {
 
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept": "application/json",
-		// "Authorization": "Bearer " + v.identity.Token(),
 	})
 
 	if err == nil {
@@ -195,7 +190,6 @@ func (v *API) Any(uri, vin string) (interface{}, error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept": "application/json",
-		// "Authorization": "Bearer " + v.identity.Token(),
 	})
 
 	var res interface{}
