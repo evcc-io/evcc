@@ -3,14 +3,14 @@ interval: 1s # control cycle interval
 
 log: error
 levels:
-  core: debug
-  lp-1: debug
-  lp-2: debug
+  core: error #error
+  lp-1: error #info
+  lp-2: error #debug
 
 # mqtt message broker
 mqtt:
   broker: localhost:1883
-  topic: evcc
+  topic: /evcc
   # user:
   # password:
 
@@ -60,35 +60,35 @@ meters:
   power: # power reading
     type: mqtt # use mqtt plugin
     topic: sunny5/pv_energy # mqtt topic
-    timeout: 60s # don't use older values
+    timeout: 90s # don't use older values
 - name: sunny5grid
   type: default
   power: # power reading
     type: mqtt # use mqtt plugin
     topic: sunny5/grid # mqtt topic
-    timeout: 60s # don't use older values
+    timeout: 90s # don't use older values
 - name: sunny5battery
   type: default
   power: # power reading
     type: mqtt # use mqtt plugin
     topic: sunny5/battery # mqtt topic
-    timeout: 60s # don't use older values
+    timeout: 90s # don't use older values
     scale: -1
   soc: 
     type: mqtt # use mqtt plugin
     topic: sunny5/soc # mqtt topic
-    timeout: 60s # don't use older values
+    timeout: 90s # don't use older values
 - name: sunny5consumption
   type: default
   power: # power reading
     type: mqtt # use mqtt plugin
     topic: sunny5/consumption # mqtt topic
-    timeout: 60s # don't use older values
+    timeout: 90s # don't use older values
 
 chargers:
 - name: keba
   type: keba # KEBA charger
-  uri: 192.168.5.45:7090 # wallbox address
+  uri: 192.168.5.45:7090 # keba address
   rfid:
     tag: 12345678 # RFID tag, see on the backside of white rfid card
 
@@ -111,7 +111,8 @@ site:
     pv: sunny5pv # pv meter
     battery: sunny5battery # battery meter
     consumption: sunny5consumption # consumption meter
-  prioritySoC: 50 # give home battery priority up to this soc (0 to disable)
+  prioritySoC: 25 # give home battery priority up to this soc (0 to disable)
+  residualPower: 250 # household safety margin (still charge home battery while ev charging)
 
 loadpoints:
 - title: Ladepunkt # ui display name
@@ -119,9 +120,19 @@ loadpoints:
   mode: pv
   
   soc:
-    min: 25 # immediately charge to 25% regardless of mode unless "off" (disabled)
+    # polling defines usage of the vehicle APIs
+    # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
+    # or lead to vehicle manufacturer banning you from API use. USE AT YOUR OWN RISK.
+    poll:
+      # poll mode defines under which condition the vehicle API is called:
+      #   charging: update vehicle ONLY when charging (this is the recommended default)
+      #   connected: update vehicle when connected (not only charging), interval defines how often
+      #   always: always update vehicle regardless of connection state, interval defines how often
+      mode: always
+      # poll interval defines how often the vehicle API may be polled if NOT charging
+      interval: 5m
+    min: 35 # immediately charge to 20% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
-    alwaysUpdate: true # set true to update vehicle soc even when disconnected
     estimate: true # set true to interpolate between api updates
     levels: # target soc levels for UI
     - 30
@@ -132,15 +143,15 @@ loadpoints:
   onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
-  #phases: 1 # ev phases (default 3)
+  phases: 1 # ev phases (default 3)
   #meters:
   #  charge: charge # charge meter
   enable: # pv mode enable behavior
-    delay: 1m # threshold must be exceeded for this long
-    threshold: 150 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
+    delay: 3m # threshold must be exceeded for this long
+    threshold: 30 # minimum export power (W). If zero, export must exceeds minimum charge power to enable
   disable: # pv mode disable behavior
-    delay: 1m # threshold must be exceeded for this long
-    threshold: 20 # maximum import power (W)
-  guardduration: 3m # switch charger contactor not more often than this (default 10m)
+    delay: 3m # threshold must be exceeded for this long
+    threshold: 50 # maximum import power (W)
+  guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
