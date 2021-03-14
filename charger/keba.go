@@ -250,7 +250,7 @@ func (c *Keba) MaxCurrent(current int64) error {
 // MaxCurrentMillis implements the ChargerEx interface
 func (c *Keba) MaxCurrentMillis(current float64) error {
 	d := int(1000 * current)
-
+	c.log.INFO.Println("Keba: Set MaxCurrentMillis to %d", d)
 	var resp string
 	if err := c.roundtrip(fmt.Sprintf("curr %d", d), 0, &resp); err != nil {
 		return err

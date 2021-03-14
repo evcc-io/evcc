@@ -58,5 +58,10 @@ export default {
       }
       return "m";
     },
+    getVisLink: function () {
+      let url = document.location.origin.replace('2020',2021).replace('sunny5','vis.sunny5') + '/vis/#EVCCMOBILE';
+      let strLink = `<a class="nav-item nav-link pb-1" href="${url}">VIS-mobile</a>`;
+      return strLink;
+    },
   },
 };

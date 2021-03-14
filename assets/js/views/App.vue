@@ -21,6 +21,7 @@
 							<router-link class="nav-item nav-link pb-1" to="/config"
 								>Konfiguration</router-link
 							>
+							<span v-html="getVisLink()"></span>
 							<a
 								class="nav-item nav-link pb-1"
 								href="../broker/login"
@@ -39,6 +40,7 @@
 
 <script>
 import "../icons";
+import formatter from "../mixins/formatter";
 import Footer from "../components/Footer";
 import store from "../store";
 
@@ -107,6 +109,7 @@ export default {
 		this.compact = urlParams.get("compact");
 		this.connect(); // websocket listener
 	},
+	mixins: [formatter],
 };
 </script>
 <style scoped>
