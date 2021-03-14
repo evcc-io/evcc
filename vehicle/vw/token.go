@@ -1,7 +1,6 @@
 package vw
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,33 +8,12 @@ import (
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/oidc"
 	"golang.org/x/oauth2"
 )
 
 // Token is the VW token
-type Token struct {
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token,omitempty"`
-	Expiry       time.Time `json:"expiry,omitempty"`
-}
-
-func (t *Token) UnmarshalJSON(data []byte) error {
-	var s struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token,omitempty"`
-		Scope        string `json:"scope,omitempty"`
-		ExpiresIn    int64  `json:"expires_in,omitempty"`
-	}
-
-	err := json.Unmarshal(data, &s)
-	if err == nil {
-		t.AccessToken = s.AccessToken
-		t.RefreshToken = s.RefreshToken
-		t.Expiry = time.Now().Add(time.Second * time.Duration(s.ExpiresIn))
-	}
-
-	return err
-}
+type Token oidc.Token
 
 func (t *Token) TokenSource(log *util.Logger, clientID string) oauth2.TokenSource {
 	return &TokenSource{
@@ -57,13 +35,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		err = ts.refreshToken()
 	}
 
-	ot := &oauth2.Token{
-		AccessToken:  ts.token.AccessToken,
-		RefreshToken: ts.token.RefreshToken,
-		Expiry:       ts.token.Expiry,
-	}
-
-	return ot, err
+	return &ts.token.Token, err
 }
 
 func (ts *TokenSource) refreshToken() error {

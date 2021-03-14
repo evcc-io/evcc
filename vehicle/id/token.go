@@ -11,12 +11,7 @@ import (
 )
 
 // Token is the VW ID token
-type Token struct {
-	AccessToken  string
-	RefreshToken string
-	IDToken      string
-	Expiry       time.Time
-}
+type Token oauth2.Token
 
 func (t *Token) UnmarshalJSON(data []byte) error {
 	var s struct {
@@ -28,7 +23,6 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 	err := json.Unmarshal(data, &s)
 	if err == nil {
 		t.AccessToken = s.AccessToken
-		t.RefreshToken = s.RefreshToken
 		t.RefreshToken = s.RefreshToken
 		t.Expiry = time.Now().Add(time.Hour)
 	}
@@ -54,13 +48,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		err = ts.refreshToken()
 	}
 
-	ot := &oauth2.Token{
-		AccessToken:  ts.token.AccessToken,
-		RefreshToken: ts.token.RefreshToken,
-		Expiry:       ts.token.Expiry,
-	}
-
-	return ot, err
+	return (*oauth2.Token)(ts.token), err
 }
 
 func (ts *TokenSource) refreshToken() error {
