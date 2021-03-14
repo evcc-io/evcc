@@ -49,8 +49,8 @@ func NewIdentity(log *util.Logger, clientID string) *Identity {
 	v.Client.Jar = jar
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if req.URL.Scheme != "https" {
-		return http.ErrUseLastResponse
-	}
+			return http.ErrUseLastResponse
+		}
 		return nil
 	}
 
@@ -66,35 +66,22 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	query.Set("nonce", RandomString(43))
 	query.Set("state", RandomString(43))
 
-	// GET identity.vwgroup.io/oidc/v1/authorize?ui_locales=de&scope=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&response_type=code&state=gmiJOaB4&redirect_uri=https%3A%2F%2Fwww.portal.volkswagen-we.com%2Fportal%2Fweb%2Fguest%2Fcomplete-login&nonce=38042ee3-b7a7-43cf-a9c1-63d2f3f2d9f3&prompt=login&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com
 	uri := "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
+
+	// ID - get login url
+	if v.clientID == "" {
+		uri = "https://login.apps.emea.vwapps.io/authorize?nonce=NZ2Q3T6jak0E5pDh&redirect_uri=weconnect://authenticated"
+	}
+
 	resp, err := v.Get(uri)
 	if err == nil {
 		resp.Body.Close()
 	}
 
-	// ID - get login url (previous request is ignored)
-	if v.clientID == "" {
-		uri := "https://login.apps.emea.vwapps.io/authorize?nonce=NZ2Q3T6jak0E5pDh&redirect_uri=weconnect://authenticated"
-		if resp, err = v.Get(uri); err == nil {
-			resp.Body.Close()
-
-			uri = resp.Header.Get("Location")
-			if resp, err = v.Get(uri); err == nil {
-				resp.Body.Close()
-			}
-		}
-	}
-
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 	if err == nil {
-		uri = resp.Header.Get("Location")
-		resp, err = v.Get(uri)
-
-		if err == nil {
-			vars, err = FormValues(resp.Body, "form#emailPasswordForm")
-			resp.Body.Close()
-		}
+		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
+		resp.Body.Close()
 	}
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
@@ -114,17 +101,7 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 
 	// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
 	if err == nil {
-		uri = IdentityURI + resp.Header.Get("Location")
-		req, err = http.NewRequest(http.MethodGet, uri, nil)
-
-		if err == nil {
-			resp, err = v.Do(req)
-		}
-
-		if err == nil {
-			vars, err = FormValues(resp.Body, "form#credentialsForm")
-			resp.Body.Close()
-		}
+		vars, err = FormValues(resp.Body, "form#credentialsForm")
 	}
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
