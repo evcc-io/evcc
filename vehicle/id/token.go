@@ -1,6 +1,7 @@
 package id
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -9,7 +10,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Token is the non-OIDC compliant VW ID token structure
+// Token is the VW ID token
 type Token struct {
 	AccessToken  string
 	RefreshToken string
@@ -17,20 +18,34 @@ type Token struct {
 	Expiry       time.Time
 }
 
-func (t *Token) Expire(d time.Duration) {
-	t.Expiry = time.Now().Add(d)
+func (t *Token) UnmarshalJSON(data []byte) error {
+	var s struct {
+		AccessToken  string
+		RefreshToken string
+		IDToken      string
+	}
+
+	err := json.Unmarshal(data, &s)
+	if err == nil {
+		t.AccessToken = s.AccessToken
+		t.RefreshToken = s.RefreshToken
+		t.RefreshToken = s.RefreshToken
+		t.Expiry = time.Now().Add(time.Hour)
+	}
+
+	return err
 }
 
-func NewTokenSource(log *util.Logger, token Token) oauth2.TokenSource {
+func (t *Token) TokenSource(log *util.Logger) oauth2.TokenSource {
 	return &TokenSource{
-		token:  token,
 		Helper: request.NewHelper(log),
+		token:  t,
 	}
 }
 
 type TokenSource struct {
-	token Token
 	*request.Helper
+	token *Token
 }
 
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
@@ -60,8 +75,7 @@ func (ts *TokenSource) refreshToken() error {
 	if err == nil {
 		var token Token
 		if err = ts.DoJSON(req, &token); err == nil {
-			token.Expire(3600 * time.Second)
-			ts.token = token
+			ts.token = &token
 		}
 	}
 

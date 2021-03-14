@@ -1,14 +1,11 @@
 package vw
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -33,7 +30,7 @@ type Identity struct {
 	log *util.Logger
 	*request.Helper
 	clientID string
-	ts       oauth2.TokenSource
+	oauth2.TokenSource
 }
 
 // NewIdentity creates VW identity
@@ -151,28 +148,9 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		})
 
 		if err == nil {
-			var token oauth2.Token
+			var token Token
 			if err = v.DoJSON(req, &token); err == nil {
-				token.Expiry = time.Now()
-				fmt.Println("--------------- token")
-				v.log.ERROR.Printf("%+v", token)
-
-				oc := oauth2.Config{
-					ClientID: v.clientID,
-					Endpoint: oauth2.Endpoint{
-						TokenURL:  OauthTokenURI,
-						AuthStyle: oauth2.AuthStyleInHeader,
-					},
-					Scopes: []string{"sc2:fal"},
-				}
-
-				ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-				v.ts = oc.TokenSource(ctx, &token)
-
-				fmt.Println("--------------- re-auth")
-				v.log.ERROR.Println(v.ts.Token())
-
-				panic("fpp")
+				v.TokenSource = token.TokenSource(v.log, v.clientID)
 			}
 		}
 	}
@@ -196,15 +174,10 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		if err == nil {
 			var token id.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				token.Expire(time.Hour)
-				v.ts = id.NewTokenSource(v.log, token)
+				v.TokenSource = token.TokenSource(v.log)
 			}
 		}
 	}
 
 	return err
-}
-
-func (v *Identity) Token() (*oauth2.Token, error) {
-	return v.ts.Token()
 }
