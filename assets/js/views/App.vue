@@ -3,8 +3,8 @@
 		<div>
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="/">
-						<Logo class="logo" />
+					<a class="navbar-brand" href="https://github.com/andig/evcc">
+						<Logo class="logo"></Logo>
 					</a>
 					<button
 						class="navbar-toggler"
@@ -25,14 +25,7 @@
 								href="https://github.com/andig/evcc/discussions"
 								target="_blank"
 							>
-								Community Support
-							</a>
-							<a
-								class="nav-item nav-link"
-								href="https://github.com/sponsors/andig"
-								target="_blank"
-							>
-								Projekt unterstützen
+								Support
 							</a>
 						</div>
 					</div>
@@ -41,7 +34,7 @@
 
 			<router-view></router-view>
 		</div>
-		<Footer :version="version" />
+		<Footer :version="version"></Footer>
 	</div>
 </template>
 
