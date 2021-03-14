@@ -47,6 +47,14 @@ github.com/andig/evcc-config v0.0.0-20210303114953-771766db76d1/go.mod h1:N0hIjI
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde h1:QgUO3swXFjTXjqT+EA1k7XZbTxtl8AenEckO0UF3Dfw=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
+github.com/andig/tesla v0.0.0-20210314123242-5b9ccbf14441 h1:3sIy5BMw2jqFvdKVddsYMvAqCuk6JYRHFaX1Hc8mhY8=
+github.com/andig/tesla v0.0.0-20210314123242-5b9ccbf14441/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
+github.com/andig/tesla v0.0.0-20210314123507-d0b32caa256f h1:+0G+BuxjGeHIY67wJyIGtObjwWP2j88q/DZwzFRuweA=
+github.com/andig/tesla v0.0.0-20210314123507-d0b32caa256f/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
+github.com/andig/tesla v0.0.0-20210314123942-e66f09b1f2b3 h1:wj9ivYA4i+VnkMB2bysfDebhTMP70u3v5X1ROUsaQG0=
+github.com/andig/tesla v0.0.0-20210314123942-e66f09b1f2b3/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
+github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb h1:wOlvRPUYDAD88xr0LP/xCgTFYc2cn2f+n5wK/qxhUL4=
+github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b h1:n3O7DTcqZzpl8/6zVCCkHYbc/zyTfXQCk4xaTAkQ5aE=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b/go.mod h1:6ISKOGKh+gHA6RIFKvIhSS7V8qY41Gi2LG6QyIJVuCs=
 github.com/andybalholm/cascadia v1.1.0 h1:BuuO6sSfQNFRu1LppgbD25Hr2vLYW25JvxHs5zzsLTo=
