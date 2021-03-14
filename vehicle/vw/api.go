@@ -7,6 +7,7 @@ import (
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 // DefaultBaseURI is the VW api base URI
@@ -35,28 +36,30 @@ func Temp2Float(val int) float64 {
 // API is the VW api client
 type API struct {
 	*request.Helper
-	identity       *Identity
 	brand, country string
 	baseURI        string
 }
 
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, identity *Identity, brand, country string) *API {
-	v := &API{
-		Helper:   request.NewHelper(log),
-		identity: identity,
-		brand:    brand,
-		country:  country,
-		baseURI:  DefaultBaseURI,
+	helper := request.NewHelper(log)
+	helper.Client.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   helper.Transport,
 	}
+
+	v := &API{
+		Helper:  helper,
+		brand:   brand,
+		country: country,
+		baseURI: DefaultBaseURI,
+	}
+
 	return v
 }
 
 func (v *API) getJSON(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + v.identity.Token(),
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	if err == nil {
 		err = v.DoJSON(req, &res)

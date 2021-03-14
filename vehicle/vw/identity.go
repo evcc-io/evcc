@@ -6,12 +6,12 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/oidc"
+	"github.com/andig/evcc/vehicle/id"
 	"golang.org/x/net/publicsuffix"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -25,12 +25,12 @@ const (
 	OauthRevokeURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/revoke"
 )
 
-// Identity provides the identity.vwgroup.io login
+// Identity provides the identity.vwgroup.io login token source
 type Identity struct {
 	log *util.Logger
 	*request.Helper
 	clientID string
-	tokens   oidc.Tokens
+	oauth2.TokenSource
 }
 
 // NewIdentity creates VW identity
@@ -148,9 +148,9 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		})
 
 		if err == nil {
-			var tokens oidc.Tokens
-			if err = v.DoJSON(req, &tokens); err == nil {
-				err = v.validateTokens(tokens)
+			var token Token
+			if err = v.DoJSON(req, &token); err == nil {
+				v.TokenSource = token.TokenSource(v.log, v.clientID)
 			}
 		}
 	}
@@ -172,92 +172,10 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 		if err == nil {
-			var tokens idTokens
-			if err = v.DoJSON(req, &tokens); err == nil {
-				err = v.validateTokens(tokens.AsOIDC())
+			var token id.Token
+			if err = v.DoJSON(req, &token); err == nil {
+				v.TokenSource = token.TokenSource(v.log)
 			}
-		}
-	}
-
-	return err
-}
-
-// validateTokens checks if token is present and sets valid time
-func (v *Identity) validateTokens(tokens oidc.Tokens) error {
-	if tokens.AccessToken == "" {
-		return errors.New("missing access token")
-	}
-
-	v.tokens.AccessToken = tokens.AccessToken
-	v.tokens.Valid = time.Now().Add(time.Second * time.Duration(tokens.ExpiresIn))
-
-	// re-use refresh token
-	if tokens.RefreshToken != "" {
-		v.tokens.RefreshToken = tokens.RefreshToken
-	}
-
-	return nil
-}
-
-// Token returns the access token, refreshed if necessary
-func (v *Identity) Token() string {
-	// give some extra time of 1m to safely trigger new tokens before they expire
-	if time.Until(v.tokens.Valid) < time.Minute {
-		if err := v.RefreshToken(); err != nil {
-			v.log.ERROR.Printf("token refresh failed: %v", err)
-		}
-	}
-
-	return v.tokens.AccessToken
-}
-
-// RefreshToken uses the refresh token to obtain a new access token
-func (v *Identity) RefreshToken() error {
-	if v.tokens.RefreshToken == "" {
-		return errors.New("missing refresh token")
-	}
-
-	if v.clientID == "" {
-		return v.refreshIDToken()
-	}
-
-	data := url.Values(map[string][]string{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {v.tokens.RefreshToken},
-		"scope":         {"sc2:fal"},
-	})
-
-	headers := map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"X-Client-Id":  v.clientID,
-	}
-
-	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), headers)
-
-	if err == nil {
-		var tokens oidc.Tokens
-		if err = v.DoJSON(req, &tokens); err == nil {
-			err = v.validateTokens(tokens)
-		}
-	}
-
-	return err
-}
-
-func (v *Identity) refreshIDToken() error {
-	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
-
-	headers := map[string]string{
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + v.tokens.RefreshToken,
-	}
-
-	req, err := request.New(http.MethodGet, uri, nil, headers)
-
-	if err == nil {
-		var tokens idTokens
-		if err = v.DoJSON(req, &tokens); err == nil {
-			err = v.validateTokens(tokens.AsOIDC())
 		}
 	}
 

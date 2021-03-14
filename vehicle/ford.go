@@ -24,7 +24,7 @@ type Ford struct {
 	*embed
 	*request.Helper
 	user, password, vin string
-	tokens              oidc.Tokens
+	tokens              oidc.Token
 	chargeStateG        func() (float64, error)
 }
 
@@ -84,9 +84,8 @@ func (v *Ford) login(user, password string) error {
 		return err
 	}
 
-	var tokens oidc.Tokens
+	var tokens oidc.Token
 	if err = v.DoJSON(req, &tokens); err == nil {
-		tokens.Valid = time.Now().Add(time.Duration(tokens.ExpiresIn) * time.Second)
 		v.tokens = tokens
 	}
 
@@ -94,7 +93,7 @@ func (v *Ford) login(user, password string) error {
 }
 
 func (v *Ford) request(uri string) (*http.Request, error) {
-	if v.tokens.AccessToken == "" || time.Since(v.tokens.Valid) > 0 {
+	if v.tokens.AccessToken == "" || time.Until(v.tokens.Expiry) < time.Minute {
 		if err := v.login(v.user, v.password); err != nil {
 			return nil, err
 		}
