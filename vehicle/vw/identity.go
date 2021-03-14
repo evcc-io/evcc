@@ -241,7 +241,8 @@ func (v *Identity) validateTokens(tokens oidc.Tokens) error {
 
 // Token returns the access token, refreshed if necessary
 func (v *Identity) Token() string {
-	if time.Since(v.tokens.Valid) > 0 {
+	// give some extra time of 1m to safely trigger new tokens before they expire
+	if time.Until(v.tokens.Valid) < time.Minute {
 		if err := v.RefreshToken(); err != nil {
 			v.log.ERROR.Printf("token refresh failed: %v", err)
 		}
