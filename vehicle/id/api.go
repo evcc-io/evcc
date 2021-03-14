@@ -52,9 +52,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 func (v *API) Vehicles() (res []string, err error) {
 	uri := fmt.Sprintf("%s/vehicles", BaseURL)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/json",
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	var vehicles struct {
 		Data []struct {
@@ -155,9 +153,7 @@ type RangeStatus struct {
 func (v *API) Status(vin string) (res Status, err error) {
 	uri := fmt.Sprintf("%s/vehicles/%s/status", BaseURL, vin)
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/json",
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	if err == nil {
 		err = v.DoJSON(req, &res)
@@ -170,9 +166,7 @@ func (v *API) Status(vin string) (res Status, err error) {
 func (v *API) Action(vin, action, value string) error {
 	uri := fmt.Sprintf("%s/vehicles/%s/%s/%s", BaseURL, vin, action, value)
 
-	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
-		"Accept": "application/json",
-	})
+	req, err := request.New(http.MethodPost, uri, nil, request.AcceptJSON)
 
 	if err == nil {
 		var res interface{}
@@ -188,9 +182,7 @@ func (v *API) Any(uri, vin string) (interface{}, error) {
 		uri = fmt.Sprintf(uri, vin)
 	}
 
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/json",
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	var res interface{}
 	if err == nil {

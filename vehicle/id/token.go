@@ -66,12 +66,11 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 func (ts *TokenSource) refreshToken() error {
 	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
 
-	headers := map[string]string{
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",
 		"Authorization": "Bearer " + ts.token.RefreshToken,
-	}
+	})
 
-	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		var token Token
 		if err = ts.DoJSON(req, &token); err == nil {

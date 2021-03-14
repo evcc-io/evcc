@@ -59,9 +59,7 @@ func NewAPI(log *util.Logger, identity *Identity, brand, country string) *API {
 }
 
 func (v *API) getJSON(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Accept": "application/json",
-	})
+	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
 
 	if err == nil {
 		err = v.DoJSON(req, &res)

@@ -73,12 +73,10 @@ func (ts *TokenSource) refreshToken() error {
 		"scope":         {"sc2:fal"},
 	})
 
-	headers := map[string]string{
+	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"X-Client-Id":  ts.clientID,
-	}
-
-	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), headers)
+	})
 
 	if err == nil {
 		var token Token
