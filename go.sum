@@ -47,6 +47,8 @@ github.com/andig/evcc-config v0.0.0-20210303114953-771766db76d1/go.mod h1:N0hIjI
 github.com/andig/gosunspec v0.0.0-20200429133549-3cf6a82fed9c/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde h1:QgUO3swXFjTXjqT+EA1k7XZbTxtl8AenEckO0UF3Dfw=
 github.com/andig/gosunspec v0.0.0-20201103081418-ec9af6feefde/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
+github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb h1:wOlvRPUYDAD88xr0LP/xCgTFYc2cn2f+n5wK/qxhUL4=
+github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b h1:n3O7DTcqZzpl8/6zVCCkHYbc/zyTfXQCk4xaTAkQ5aE=
 github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b/go.mod h1:6ISKOGKh+gHA6RIFKvIhSS7V8qY41Gi2LG6QyIJVuCs=
 github.com/andybalholm/cascadia v1.1.0 h1:BuuO6sSfQNFRu1LppgbD25Hr2vLYW25JvxHs5zzsLTo=
@@ -63,8 +65,6 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/bogosj/tesla v0.0.0-20210307093855-fdfc947ef8b9 h1:XxrLYcflnWYIsQkUKhRlKvnLVT9UJyaaLHpmJ47mouY=
-github.com/bogosj/tesla v0.0.0-20210307093855-fdfc947ef8b9/go.mod h1:xmG/yUw+GhxVB2m5GQLV4Vo/byvOf0wwhYGQ6IWPl+k=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.1.1 h1:6MnRN8NT7+YBpUIWxHtefFZOKTAPgGjpQSxqLNn0+qY=
 github.com/cespare/xxhash/v2 v2.1.1/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
