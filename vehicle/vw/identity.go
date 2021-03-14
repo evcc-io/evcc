@@ -48,26 +48,13 @@ func NewIdentity(log *util.Logger, clientID string) *Identity {
 	// track cookies and don't follow redirects
 	v.Client.Jar = jar
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if req.URL.Scheme != "https" {
 		return http.ErrUseLastResponse
+	}
+		return nil
 	}
 
 	return v
-}
-
-// redirect follows HTTP redirect header if error is nil. Request body is closed.
-func (v *Identity) redirect(resp *http.Response, err error) (*http.Response, error) {
-	if err == nil {
-		uri := resp.Header.Get("Location")
-		if uri == "" {
-			return nil, errors.New("could not find expected HTTP redirect header\ngo to https://www.portal.volkswagen-we.com/ check account status")
-		}
-
-		if resp, err = v.Get(uri); err == nil {
-			resp.Body.Close()
-		}
-	}
-
-	return resp, err
 }
 
 // Login performs the identity.vwgroup.io login
@@ -159,12 +146,8 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	// GET identity.vwgroup.io/oidc/v1/oauth/sso?clientId=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&userId=bca09cc0-8eba-4110-af71-7242868e1bf1&HMAC=2b01ce6a351fad4dd97dc8110d0967b46c95889ab5010c660a616462e66a83ca
 	// GET identity.vwgroup.io/signin-service/v1/consent/users/bca09cc0-8eba-4110-af71-7242868e1bf1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&callback=https://identity.vwgroup.io/oidc/v1/oauth/client/callback&hmac=a590931ca3cd9dc3a27f1d1c0c162bf1e5c5c32c9f5b40fcb36d4c6edc631e03
 	// GET identity.vwgroup.io/oidc/v1/oauth/client/callback/success?user_id=bca09cc0-8eba-4110-af71-7242868e1bf1&client_id=b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com&scopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&consentedScopes=openid%20profile%20birthdate%20nickname%20address%20phone%20cars%20mbb&relayState=f89a0b750c93e278a7ace170ce374e9cb9eb0a74&hmac=2b728f463c3cfe80f3271fbb35680e5e5218ca70025a46e7fadf7c7982decc2b
-	for i := 6; i < 9; i++ {
-		resp, err = v.redirect(resp, err)
-	}
 
 	var location *url.URL
-
 	if err == nil {
 		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
 		location, err = url.Parse(loc)
