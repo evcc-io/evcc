@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/cookiejar"
@@ -10,8 +11,8 @@ import (
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/oidc"
 	"golang.org/x/net/publicsuffix"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -30,7 +31,8 @@ type Identity struct {
 	log *util.Logger
 	*request.Helper
 	clientID string
-	tokens   oidc.Tokens
+	// tokens   oidc.Tokens
+	ts oauth2.TokenSource
 }
 
 // NewIdentity creates VW identity
@@ -148,9 +150,20 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		})
 
 		if err == nil {
-			var tokens oidc.Tokens
-			if err = v.DoJSON(req, &tokens); err == nil {
-				err = v.validateTokens(tokens)
+			// var tokens oidc.Tokens
+			// if err = v.DoJSON(req, &tokens); err == nil {
+			// 	err = v.validateTokens(tokens)
+			// }
+			var token oauth2.Token
+			if err = v.DoJSON(req, &token); err == nil {
+				oc := oauth2.Config{
+					Endpoint: oauth2.Endpoint{
+						TokenURL: OauthTokenURI,
+					},
+				}
+
+				ctx := context.Background()
+				v.ts = oc.TokenSource(ctx, &token)
 			}
 		}
 	}
@@ -172,9 +185,11 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 		if err == nil {
-			var tokens idTokens
+			var tokens idToken
 			if err = v.DoJSON(req, &tokens); err == nil {
-				err = v.validateTokens(tokens.AsOIDC())
+				// err = v.validateTokens(tokens.AsOIDC())
+				tokens.Expiry = time.Now().Add(time.Hour)
+				v.ts = tokens.TokenSource(v.log)
 			}
 		}
 	}
@@ -182,84 +197,88 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	return err
 }
 
+func (v *Identity) Token() (*oauth2.Token, error) {
+	return v.ts.Token()
+}
+
 // validateTokens checks if token is present and sets valid time
-func (v *Identity) validateTokens(tokens oidc.Tokens) error {
-	if tokens.AccessToken == "" {
-		return errors.New("missing access token")
-	}
+// func (v *Identity) validateTokens(tokens oidc.Tokens) error {
+// 	if tokens.AccessToken == "" {
+// 		return errors.New("missing access token")
+// 	}
 
-	v.tokens.AccessToken = tokens.AccessToken
-	v.tokens.Valid = time.Now().Add(time.Second * time.Duration(tokens.ExpiresIn))
+// 	v.tokens.AccessToken = tokens.AccessToken
+// 	v.tokens.Valid = time.Now().Add(time.Second * time.Duration(tokens.ExpiresIn))
 
-	// re-use refresh token
-	if tokens.RefreshToken != "" {
-		v.tokens.RefreshToken = tokens.RefreshToken
-	}
+// 	// re-use refresh token
+// 	if tokens.RefreshToken != "" {
+// 		v.tokens.RefreshToken = tokens.RefreshToken
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// Token returns the access token, refreshed if necessary
-func (v *Identity) Token() string {
-	// give some extra time of 1m to safely trigger new tokens before they expire
-	if time.Until(v.tokens.Valid) < time.Minute {
-		if err := v.RefreshToken(); err != nil {
-			v.log.ERROR.Printf("token refresh failed: %v", err)
-		}
-	}
+// // Token returns the access token, refreshed if necessary
+// func (v *Identity) Token() string {
+// 	// give some extra time of 1m to safely trigger new tokens before they expire
+// 	if time.Until(v.tokens.Valid) < time.Minute {
+// 		if err := v.RefreshToken(); err != nil {
+// 			v.log.ERROR.Printf("token refresh failed: %v", err)
+// 		}
+// 	}
 
-	return v.tokens.AccessToken
-}
+// 	return v.tokens.AccessToken
+// }
 
-// RefreshToken uses the refresh token to obtain a new access token
-func (v *Identity) RefreshToken() error {
-	if v.tokens.RefreshToken == "" {
-		return errors.New("missing refresh token")
-	}
+// // RefreshToken uses the refresh token to obtain a new access token
+// func (v *Identity) RefreshToken() error {
+// 	if v.tokens.RefreshToken == "" {
+// 		return errors.New("missing refresh token")
+// 	}
 
-	if v.clientID == "" {
-		return v.refreshIDToken()
-	}
+// 	if v.clientID == "" {
+// 		return v.refreshIDToken()
+// 	}
 
-	data := url.Values(map[string][]string{
-		"grant_type":    {"refresh_token"},
-		"refresh_token": {v.tokens.RefreshToken},
-		"scope":         {"sc2:fal"},
-	})
+// 	data := url.Values(map[string][]string{
+// 		"grant_type":    {"refresh_token"},
+// 		"refresh_token": {v.tokens.RefreshToken},
+// 		"scope":         {"sc2:fal"},
+// 	})
 
-	headers := map[string]string{
-		"Content-Type": "application/x-www-form-urlencoded",
-		"X-Client-Id":  v.clientID,
-	}
+// 	headers := map[string]string{
+// 		"Content-Type": "application/x-www-form-urlencoded",
+// 		"X-Client-Id":  v.clientID,
+// 	}
 
-	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), headers)
+// 	req, err := request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), headers)
 
-	if err == nil {
-		var tokens oidc.Tokens
-		if err = v.DoJSON(req, &tokens); err == nil {
-			err = v.validateTokens(tokens)
-		}
-	}
+// 	if err == nil {
+// 		var tokens oidc.Tokens
+// 		if err = v.DoJSON(req, &tokens); err == nil {
+// 			err = v.validateTokens(tokens)
+// 		}
+// 	}
 
-	return err
-}
+// 	return err
+// }
 
-func (v *Identity) refreshIDToken() error {
-	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
+// func (v *Identity) refreshIDToken() error {
+// 	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
 
-	headers := map[string]string{
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + v.tokens.RefreshToken,
-	}
+// 	headers := map[string]string{
+// 		"Accept":        "application/json",
+// 		"Authorization": "Bearer " + v.tokens.RefreshToken,
+// 	}
 
-	req, err := request.New(http.MethodGet, uri, nil, headers)
+// 	req, err := request.New(http.MethodGet, uri, nil, headers)
 
-	if err == nil {
-		var tokens idTokens
-		if err = v.DoJSON(req, &tokens); err == nil {
-			err = v.validateTokens(tokens.AsOIDC())
-		}
-	}
+// 	if err == nil {
+// 		var tokens idTokens
+// 		if err = v.DoJSON(req, &tokens); err == nil {
+// 			err = v.validateTokens(tokens.AsOIDC())
+// 		}
+// 	}
 
-	return err
-}
+// 	return err
+// }
