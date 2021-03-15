@@ -58,8 +58,7 @@ type MobileConnect struct {
 	uri              string
 	password         string
 	token            string
-	tokenValid       time.Time
-	tokenRefresh     time.Time
+	tokenExpiry      time.Time
 	cableInformation MCCCurrentCableInformation
 }
 
@@ -109,10 +108,7 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 
 		mcc.token = tr.Token
 		// According to the Web Interface, the token is valid for 2 minutes
-		mcc.tokenValid = time.Now().Add(2 * time.Minute)
-
-		// the web interface updates the token every 2 minutes, so lets do the same here
-		mcc.tokenRefresh = time.Now().Add(2 * time.Minute)
+		mcc.tokenExpiry = time.Now().Add(2 * time.Minute)
 	}
 
 	return err
@@ -147,6 +143,7 @@ func (mcc *MobileConnect) refresh() error {
 		return err
 	}
 
+	req.Header.Set("Referer", fmt.Sprintf("%s/login", mcc.uri))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
 
 	return mcc.fetchToken(req)
@@ -155,14 +152,14 @@ func (mcc *MobileConnect) refresh() error {
 // creates a http request that contains the auth token
 func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 	// do we need to login?
-	if mcc.token == "" || time.Since(mcc.tokenValid) > 0 {
+	if mcc.token == "" {
 		if err := mcc.login(mcc.password); err != nil {
 			return nil, err
 		}
 	}
 
 	// is it time to refresh the token?
-	if time.Since(mcc.tokenRefresh) > 0 {
+	if time.Until(mcc.tokenExpiry) < 10*time.Second {
 		if err := mcc.refresh(); err != nil {
 			return nil, err
 		}

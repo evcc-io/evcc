@@ -38,12 +38,11 @@ func NewTestClient(fn roundTripFunc) *http.Client {
 // NewTestMobileConnect .
 func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect {
 	mcc := &MobileConnect{
-		Helper:       request.NewHelper(util.NewLogger("foo")),
-		uri:          "http://192.0.2.2:502",
-		password:     "none",
-		token:        "token",
-		tokenValid:   time.Now().Add(10 * time.Minute),
-		tokenRefresh: time.Now().Add(10 * time.Minute),
+		Helper:      request.NewHelper(util.NewLogger("foo")),
+		uri:         "http://192.0.2.2:502",
+		password:    "none",
+		token:       "token",
+		tokenExpiry: time.Now().Add(10 * time.Minute),
 	}
 
 	mcc.Client = NewTestClient(func(req *http.Request) *http.Response {
