@@ -116,8 +116,8 @@ func (v *Identity) Login() error {
 	done := make(chan struct{})
 	srv := &http.Server{Handler: v.redirectHandler(ctx, state, done)}
 
-	defer srv.Close()
-	go srv.Serve(ln)
+	defer func() { _ = srv.Close() }()
+	go func() { _ = srv.Serve(ln) }()
 
 	if err := urlOpen(uri); err != nil {
 		return err
@@ -140,6 +140,11 @@ func (v *Identity) redirectHandler(ctx context.Context, state string, done chan 
 		defer close(done)
 
 		data, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			fmt.Fprintln(w, "invalid response:", data)
+			return
+		}
+
 		if error, ok := data["error"]; ok {
 			fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
 			return

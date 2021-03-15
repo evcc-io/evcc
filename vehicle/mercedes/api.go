@@ -17,7 +17,6 @@ const BaseURI = "https://api.mercedes-benz.com/vehicledata/v2"
 // API is the Mercedes api client
 type API struct {
 	*request.Helper
-	baseURI string
 }
 
 // NewAPI creates a new api client
@@ -47,11 +46,11 @@ func (v *API) getJSON(uri string, res interface{}) error {
 
 type EVResponse struct {
 	SoC struct {
-		Value     int
+		Value     IntVal
 		Timestamp int64
 	}
 	RangeElectric struct {
-		Value     int
+		Value     IntVal
 		Timestamp int64
 	}
 }
