@@ -62,3 +62,5 @@ require (
 )
 
 replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
+
+replace github.com/bogosj/tesla => github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb
