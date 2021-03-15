@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -9,11 +10,23 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/oidc"
+	"github.com/imdario/mergo"
 	"golang.org/x/oauth2"
 )
 
 // Token is the VW token
-type Token oidc.Token
+type Token oauth2.Token
+
+func (t *Token) UnmarshalJSON(data []byte) error {
+	var o oidc.Token
+
+	err := json.Unmarshal(data, &o)
+	if err == nil {
+		*t = (Token)(o.Token)
+	}
+
+	return err
+}
 
 func (t *Token) TokenSource(log *util.Logger, clientID string) oauth2.TokenSource {
 	return &TokenSource{
@@ -35,7 +48,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		err = ts.refreshToken()
 	}
 
-	return &ts.token.Token, err
+	return (*oauth2.Token)(ts.token), err
 }
 
 func (ts *TokenSource) refreshToken() error {
@@ -53,9 +66,15 @@ func (ts *TokenSource) refreshToken() error {
 	if err == nil {
 		var token Token
 		if err = ts.DoJSON(req, &token); err == nil {
-			ts.token = &token
+			ts.mergeToken(token)
 		}
 	}
 
 	return err
+}
+
+func (ts *TokenSource) mergeToken(t Token) {
+	if err := mergo.Merge(ts.token, &t, mergo.WithOverride); err != nil {
+		panic(err)
+	}
 }
