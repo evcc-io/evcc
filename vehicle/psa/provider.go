@@ -66,7 +66,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-// Status implements the api.VehicleStatus interface
+// Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
