@@ -3,7 +3,6 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -99,37 +98,9 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	// if err := v.stream(cc.User); err != nil {
-	// 	log.WARN.Println("streaming failed:", err)
-	// }
-
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
-	println("sleep")
-	time.Sleep(10 * time.Second)
-
 	return v, nil
-}
-
-func (v *Tesla) stream(email string) error {
-	tesla.StreamParams = "soc,range"
-	evtC, errC, err := v.vehicle.Stream(email)
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case evt := <-evtC:
-				fmt.Println(evt)
-			case err := <-errC:
-				v.log.ERROR.Println("streaming failed:", err)
-			}
-		}
-	}()
-
-	return nil
 }
 
 // chargeState implements the charge state api
