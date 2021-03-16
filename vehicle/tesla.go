@@ -17,7 +17,6 @@ import (
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	log          *util.Logger
 	vehicle      *tesla.Vehicle
 	chargeStateG func() (interface{}, error)
 }
@@ -53,14 +52,12 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	log := util.NewLogger("tesla")
-
 	v := &Tesla{
 		embed: &embed{cc.Title, cc.Capacity},
-		log:   log,
 	}
 
 	// authenticated http client with logging injected to the Tesla client
+	log := util.NewLogger("tesla")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
 	var options []tesla.ClientOption
