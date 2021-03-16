@@ -25,10 +25,12 @@ func TestVehicles(t *testing.T) {
 	}
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {
-		_, err := NewFromConfig(tmpl.Type, tmpl.Config)
-		if err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("%s: %+v", tmpl.Name, tmpl.Config)
-			t.Error(err)
-		}
+		t.Run(tmpl.Name, func(t *testing.T) {
+			_, err := NewFromConfig(tmpl.Type, tmpl.Config)
+			if err != nil && !test.Acceptable(err, acceptable) {
+				t.Logf("%s: %+v", tmpl.Name, tmpl.Config)
+				t.Error(err)
+			}
+		})
 	}
 }

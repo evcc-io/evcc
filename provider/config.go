@@ -73,25 +73,18 @@ func NewIntGetterFromConfig(config Config) (res func() (int64, error), err error
 
 // NewFloatGetterFromConfig creates a FloatGetter from config
 func NewFloatGetterFromConfig(config Config) (res func() (float64, error), err error) {
-	switch typ := strings.ToLower(config.Type); typ {
-	case "calc":
-		res, err = NewCalcFromConfig(config.Other)
+	factory, err := registry.Get(config.Type)
+	if err == nil {
+		var provider IntProvider
+		provider, err = factory(config.Other)
 
-	default:
-		var factory func(map[string]interface{}) (IntProvider, error)
-		factory, err = registry.Get(typ)
-		if err == nil {
-			var provider IntProvider
-			provider, err = factory(config.Other)
-
-			if prov, ok := provider.(FloatProvider); ok {
-				res = prov.FloatGetter()
-			}
+		if prov, ok := provider.(FloatProvider); ok {
+			res = prov.FloatGetter()
 		}
+	}
 
-		if err == nil && res == nil {
-			err = fmt.Errorf("invalid plugin type: %s", config.Type)
-		}
+	if err == nil && res == nil {
+		err = fmt.Errorf("invalid plugin type: %s", config.Type)
 	}
 
 	return

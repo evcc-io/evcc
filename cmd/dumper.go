@@ -73,13 +73,15 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	// charger
 
-	if v, ok := v.(api.Charger); ok {
+	if v, ok := v.(api.ChargeState); ok {
 		if status, err := v.Status(); err != nil {
-			fmt.Fprintf(w, "Status:\t%v\n", err)
+			fmt.Fprintf(w, "Charge status:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Status:\t%s\n", status)
+			fmt.Fprintf(w, "Charge status:\t%v\n", status)
 		}
+	}
 
+	if v, ok := v.(api.Charger); ok {
 		if enabled, err := v.Enabled(); err != nil {
 			fmt.Fprintf(w, "Enabled:\t%v\n", err)
 		} else {
@@ -120,14 +122,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Vehicle range:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Vehicle range:\t%vkm\n", rng)
-		}
-	}
-
-	if v, ok := v.(api.VehicleStatus); ok {
-		if status, err := v.Status(); err != nil {
-			fmt.Fprintf(w, "Charge status:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Charge status:\t%v\n", status)
 		}
 	}
 

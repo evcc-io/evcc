@@ -47,12 +47,12 @@ func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
 	var err error
 	client := Instance
 
-	if client == nil && cc.Broker == "" {
-		return nil, errors.New("missing mqtt broker configuration")
+	if cc.Broker != "" {
+		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, ClientID(), 1)
 	}
 
 	if client == nil {
-		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, ClientID(), 1)
+		err = errors.New("missing mqtt broker configuration")
 	}
 
 	return client, err

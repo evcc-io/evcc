@@ -7,6 +7,7 @@ import "time"
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
 
+// Charge modes
 const (
 	ModeOff   ChargeMode = "off"
 	ModeNow   ChargeMode = "now"
@@ -22,6 +23,7 @@ func (c ChargeMode) String() string {
 // ChargeStatus is the EV's charging status from A to F
 type ChargeStatus string
 
+// Charging states
 const (
 	StatusNone ChargeStatus = ""
 	StatusA    ChargeStatus = "A" // Fzg. angeschlossen: nein    Laden aktiv: nein    - Kabel nicht angeschlossen
@@ -57,9 +59,14 @@ type Battery interface {
 	SoC() (float64, error)
 }
 
+// ChargeState provides current charging status
+type ChargeState interface {
+	Status() (ChargeStatus, error)
+}
+
 // Charger is able to provide current charging status and to enable/disabler charging
 type Charger interface {
-	Status() (ChargeStatus, error)
+	ChargeState
 	Enabled() (bool, error)
 	Enable(enable bool) error
 	MaxCurrent(current int64) error
@@ -95,11 +102,6 @@ type Vehicle interface {
 // VehicleFinishTimer provides estimated charge cycle finish time
 type VehicleFinishTimer interface {
 	FinishTime() (time.Time, error)
-}
-
-// VehicleStatus provides the vehicles current charging status
-type VehicleStatus interface {
-	Status() (ChargeStatus, error)
 }
 
 // VehicleRange provides the vehicles remaining km range

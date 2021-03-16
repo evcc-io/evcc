@@ -37,7 +37,7 @@ func (v *Provider) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the api.VehicleStatus interface
+// Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 

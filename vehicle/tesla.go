@@ -129,3 +129,44 @@ func (v *Tesla) chargedEnergy() (float64, error) {
 func (v *Tesla) ChargedEnergy() (float64, error) {
 	return v.chargedEnergyG()
 }
+
+// Status implements the api.ChargeState interface
+func (v *Tesla) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+	cs, err := v.vehicle.ChargeState()
+
+	if err == nil  {
+		if cs.ChargingState == "NoPower" || cs.ChargingState == "Complete" {
+			status = api.StatusB
+		}
+		if cs.ChargingState == "Charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *Tesla) Range() (rng int64, err error) {
+	//v.vehicle.SetSteeringWheelHeater(true)
+
+	cs, err := v.vehicle.ChargeState()
+	
+	if err == nil {
+		rng = int64(cs.BatteryRange)
+	}
+
+	return rng, err
+}
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Tesla) FinishTime() (time.Time, error) {
+	cs, err := v.vehicle.ChargeState()
+	if err == nil {
+		t := time.Now()
+		return t.Add(time.Duration(cs.MinutesToFullCharge) * time.Minute), err
+	}
+
+	return time.Time{}, err
+}

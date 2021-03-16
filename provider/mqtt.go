@@ -67,7 +67,6 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, payload string
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
 func (m *Mqtt) FloatGetter() func() (float64, error) {
 	h := &msgHandler{
-		log:   m.log,
 		topic: m.topic,
 		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
@@ -80,7 +79,6 @@ func (m *Mqtt) FloatGetter() func() (float64, error) {
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
 func (m *Mqtt) IntGetter() func() (int64, error) {
 	h := &msgHandler{
-		log:   m.log,
 		topic: m.topic,
 		scale: float64(m.scale),
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
@@ -93,7 +91,6 @@ func (m *Mqtt) IntGetter() func() (int64, error) {
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
-		log:   m.log,
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
@@ -105,7 +102,6 @@ func (m *Mqtt) StringGetter() func() (string, error) {
 // BoolGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
-		log:   m.log,
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
 	}
@@ -122,7 +118,6 @@ func (m *Mqtt) IntSetter(param string) func(int64) error {
 			return err
 		}
 
-		m.log.TRACE.Printf("send %s: '%s'", m.topic, payload)
 		return m.client.Publish(m.topic, false, payload)
 	}
 }
@@ -135,13 +130,23 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 			return err
 		}
 
-		m.log.TRACE.Printf("send %s: '%s'", m.topic, payload)
+		return m.client.Publish(m.topic, false, payload)
+	}
+}
+
+// StringSetter invokes script with parameter replaced by string value
+func (m *Mqtt) StringSetter(param string) func(string) error {
+	return func(v string) error {
+		payload, err := setFormattedValue(m.payload, param, v)
+		if err != nil {
+			return err
+		}
+
 		return m.client.Publish(m.topic, false, payload)
 	}
 }
 
 type msgHandler struct {
-	log     *util.Logger
 	mux     *util.Waiter
 	scale   float64
 	topic   string
@@ -149,8 +154,6 @@ type msgHandler struct {
 }
 
 func (h *msgHandler) receive(payload string) {
-	h.log.TRACE.Printf("recv %s: '%s'", h.topic, payload)
-
 	h.mux.Lock()
 	defer h.mux.Unlock()
 

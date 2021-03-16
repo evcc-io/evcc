@@ -1,24 +1,32 @@
 package oidc
 
-import "time"
+import (
+	"encoding/json"
+	"time"
 
-// Tokens is an OAuth tokens response
-type Tokens struct {
-	TokenType    string    `json:"token_type"`
-	ExpiresIn    int       `json:"expires_in"` // expiration time in seconds
-	IDToken      string    `json:"id_token"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
-	Valid        time.Time // helper to store validity timestamp
+	"golang.org/x/oauth2"
+)
+
+// Token is an OAuth2 token which includes decoding the expires_in attribute
+type Token struct {
+	oauth2.Token
+	ExpiresIn int `json:"expires_in"` // expiration time in seconds
 }
 
-// OIDCResponse is the well-known OIDC provider response
-// https://{oauth-provider-hostname}/.well-known/openid-configuration
-type OIDCResponse struct {
-	Issuer      string   `json:"issuer"`
-	AuthURL     string   `json:"authorization_endpoint"`
-	TokenURL    string   `json:"token_endpoint"`
-	JWKSURL     string   `json:"jwks_uri"`
-	UserInfoURL string   `json:"userinfo_endpoint"`
-	Algorithms  []string `json:"id_token_signing_alg_values_supported"`
+func (t *Token) UnmarshalJSON(data []byte) error {
+	var s struct {
+		oauth2.Token
+		ExpiresIn int64 `json:"expires_in,omitempty"`
+	}
+
+	err := json.Unmarshal(data, &s)
+	if err == nil {
+		t.Token = s.Token
+
+		if s.Expiry.IsZero() && s.ExpiresIn != 0 {
+			t.Expiry = time.Now().Add(time.Second * time.Duration(s.ExpiresIn))
+		}
+	}
+
+	return err
 }

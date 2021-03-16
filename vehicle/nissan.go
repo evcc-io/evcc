@@ -47,7 +47,7 @@ type Nissan struct {
 	log                 *util.Logger
 	user, password, vin string
 	userID              string
-	tokens              oidc.Tokens
+	tokens              oidc.Token
 	*kamereon.API
 }
 
@@ -253,7 +253,7 @@ func (v *Nissan) refreshToken() error {
 	uri += "?" + data.Encode()
 	req, err := request.New(http.MethodPost, uri, nil, request.URLEncoding)
 	if err == nil {
-		var tokens oidc.Tokens
+		var tokens oidc.Token
 		if err = v.DoJSON(req, &tokens); err == nil && v.tokens.AccessToken == "" {
 			err = errors.New("missing access token")
 		}

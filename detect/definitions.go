@@ -21,19 +21,20 @@ const (
 
 // private task ids
 const (
-	taskOpenwb      = "openwb"
-	taskSMA         = "sma"
-	taskKEBA        = "KEBA"
-	taskE3DC        = "e3dc_simple"
-	taskSonnen      = "sonnen"
-	taskPowerwall   = "powerwall"
-	taskWallbe      = "wallbe"
-	taskPhoenixEMCP = "em-cp"
-	taskEVSEWifi    = "evsewifi"
-	taskGoE         = "go-e"
-	taskInverter    = "inverter"
-	taskBattery     = "battery"
-	taskMeter       = "meter"
+	taskOpenwb       = "openwb"
+	taskSMA          = "sma"
+	taskKEBA         = "KEBA"
+	taskE3DC         = "e3dc_simple"
+	taskSonnen       = "sonnen"
+	taskPowerwall    = "powerwall"
+	taskWallbe       = "wallbe"
+	taskPhoenixEMEth = "phx-em-eth"
+	taskPhoenixEVEth = "phx-ev-eth"
+	taskEVSEWifi     = "evsewifi"
+	taskGoE          = "go-e"
+	taskInverter     = "inverter"
+	taskBattery      = "battery"
+	taskMeter        = "meter"
 )
 
 func init() {
@@ -134,7 +135,7 @@ func init() {
 	})
 
 	taskList.Add(Task{
-		ID:      taskPhoenixEMCP,
+		ID:      taskPhoenixEMEth,
 		Type:    "modbus",
 		Depends: TaskTCP502,
 		Config: map[string]interface{}{
@@ -146,6 +147,19 @@ func init() {
 		},
 	})
 
+	taskList.Add(Task{
+		ID:      taskPhoenixEVEth,
+		Type:    "modbus",
+		Depends: TaskTCP502,
+		Config: map[string]interface{}{
+			"ids":     []int{255},
+			"address": 100,
+			"type":    "input",
+			"decode":  "uint16",
+			"values":  chargeStatus,
+		},
+	})
+	
 	taskList.Add(Task{
 		ID:      taskOpenwb,
 		Type:    "mqtt",

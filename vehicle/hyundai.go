@@ -15,7 +15,7 @@ type Hyundai struct {
 }
 
 func init() {
-	// registry.Add("hyundai", NewHyundaiFromConfig)
+	registry.Add("hyundai", NewHyundaiFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new Vehicle

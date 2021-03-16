@@ -53,6 +53,7 @@ var knownObisCodes = map[Obis]obisDefinition{
 	"1:9.4.0": {4, 0.1}, "1:9.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) +
 	"1:10.4.0": {4, 0.1}, "1:10.8.0": {8, 1}, // Scheinleistung (W)/-arbeit (Ws) −
 	"1:13.4.0": {4, 0.001}, // Leistungsfaktor (Φ)
+	"1:14.4.0": {4, 0.001}, // Frequenz (Hz)
 	// Phase 1: {
 	"1:21.4.0": {4, 0.1}, "1:21.8.0": {8, 1}, // Wirkleistung (W)/-arbeit (Ws) +
 	"1:22.4.0": {4, 0.1}, "1:22.8.0": {8, 1}, // Wirkleistung (W)/-arbeit (Ws) −

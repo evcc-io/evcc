@@ -50,7 +50,7 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if cc.URI == "" {
-		cc.URI = "http://fritz.box"
+		cc.URI = "https://fritz.box"
 	}
 
 	if cc.AIN == "" {
@@ -62,8 +62,10 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewFritzDECT creates FritzDECT charger
 func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, updated time.Time) (*FritzDECT, error) {
+	log := util.NewLogger("fritzdect")
+
 	c := &FritzDECT{
-		Helper:       request.NewHelper(util.NewLogger("fritzdect")),
+		Helper:       request.NewHelper(log),
 		uri:          strings.TrimRight(uri, "/"),
 		ain:          ain,
 		user:         user,
@@ -71,6 +73,9 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, up
 		standbypower: standbypower,
 		sid:          sid,
 	}
+
+	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+
 	return c, nil
 }
 

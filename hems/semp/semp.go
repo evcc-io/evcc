@@ -366,9 +366,14 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 		}
 	}
 
+	var hasVehicle bool
+	if hasVehicleP, err := s.cache.GetChecked(id, "hasVehicle"); err == nil {
+		hasVehicle = hasVehicleP.Val.(bool)
+	}
+
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV,
+		EMSignalsAccepted: s.controllable && isPV && hasVehicle,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
@@ -428,14 +433,22 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minEnergy = 0
 	}
 
+	maxPowerConsumption := int(lp.GetMaxPower())
+	minPowerConsumption := int(lp.GetMinPower())
+	if mode == api.ModeNow {
+		minPowerConsumption = maxPowerConsumption
+	}
+
 	if connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
-				DeviceID:      s.deviceID(id),
-				EarliestStart: 0,
-				LatestEnd:     latestEnd,
-				MinEnergy:     &minEnergy,
-				MaxEnergy:     &maxEnergy,
+				DeviceID:            s.deviceID(id),
+				EarliestStart:       0,
+				LatestEnd:           latestEnd,
+				MinEnergy:           &minEnergy,
+				MaxEnergy:           &maxEnergy,
+				MaxPowerConsumption: &maxPowerConsumption,
+				MinPowerConsumption: &minPowerConsumption,
 			}},
 		}
 	}

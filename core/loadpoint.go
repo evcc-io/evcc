@@ -444,7 +444,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 func (lp *LoadPoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil && enabled != lp.enabled {
-		lp.log.WARN.Println("charger out of sync")
+		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 		err = lp.charger.Enable(lp.enabled)
 	}
 
@@ -479,7 +479,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	// set enabled
 	if enabled := chargeCurrent >= float64(lp.MinCurrent); enabled != lp.enabled && err == nil {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
-			lp.log.DEBUG.Printf("charger %s - contactor delay %v", status[enabled], remaining)
+			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
 			return nil
 		}
 
@@ -489,7 +489,6 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			lp.guardUpdated = lp.clock.Now()
 
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-			lp.log.DEBUG.Printf("charger %s", status[enabled])
 
 			// wake up vehicle
 			if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
@@ -597,7 +596,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 	found := false
 
 	for _, vehicle := range lp.vehicles {
-		if vs, ok := vehicle.(api.VehicleStatus); ok {
+		if vs, ok := lp.vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
 			lp.log.DEBUG.Printf("vehicle status: %s (%s / %dkWh)", status, vehicle.Title(), vehicle.Capacity())
 			if err != nil { lp.log.DEBUG.Printf("error: %+v", err) }
