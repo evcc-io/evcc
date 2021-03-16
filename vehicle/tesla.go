@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -17,9 +18,9 @@ import (
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	vehicle        *tesla.Vehicle
-	chargeStateG   func() (float64, error)
-	chargedEnergyG func() (float64, error)
+	log          *util.Logger
+	vehicle      *tesla.Vehicle
+	chargeStateG func() (interface{}, error)
 }
 
 // teslaTokens contains access and refresh tokens
@@ -53,12 +54,14 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
+	log := util.NewLogger("tesla")
+
 	v := &Tesla{
 		embed: &embed{cc.Title, cc.Capacity},
+		log:   log,
 	}
 
 	// authenticated http client with logging injected to the Tesla client
-	log := util.NewLogger("tesla")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
 	var options []tesla.ClientOption
@@ -96,36 +99,73 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
+	// if err := v.stream(cc.User); err != nil {
+	// 	log.WARN.Println("streaming failed:", err)
+	// }
+
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
+
+	println("sleep")
+	time.Sleep(10 * time.Second)
 
 	return v, nil
 }
 
-// chargeState implements the api.Vehicle interface
-func (v *Tesla) chargeState() (float64, error) {
-	state, err := v.vehicle.ChargeState()
+func (v *Tesla) stream(email string) error {
+	tesla.StreamParams = "soc,range"
+	evtC, errC, err := v.vehicle.Stream(email)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return float64(state.BatteryLevel), nil
+
+	go func() {
+		for {
+			select {
+			case evt := <-evtC:
+				fmt.Println(evt)
+			case err := <-errC:
+				v.log.ERROR.Println("streaming failed:", err)
+			}
+		}
+	}()
+
+	return nil
+}
+
+// chargeState implements the charge state api
+func (v *Tesla) chargeState() (interface{}, error) {
+	return v.vehicle.ChargeState()
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Tesla) SoC() (float64, error) {
-	return v.chargeStateG()
-}
+	res, err := v.chargeStateG()
 
-// chargedEnergy implements the ChargeRater.ChargedEnergy interface
-func (v *Tesla) chargedEnergy() (float64, error) {
-	state, err := v.vehicle.ChargeState()
-	if err != nil {
-		return 0, err
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.BatteryLevel), nil
 	}
-	return state.ChargeEnergyAdded, nil
+
+	return 0, err
 }
 
-// ChargedEnergy implements the ChargeRater.ChargedEnergy interface
+// ChargedEnergy implements the api.ChargeRater interface
 func (v *Tesla) ChargedEnergy() (float64, error) {
-	return v.chargedEnergyG()
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.ChargeEnergyAdded), nil
+	}
+
+	return 0, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *Tesla) Range() (int64, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return int64(res.EstBatteryRange), nil
+	}
+
+	return 0, err
 }
