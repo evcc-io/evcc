@@ -132,7 +132,8 @@ func (v *Tesla) Range() (int64, error) {
 	res, err := v.chargeStateG()
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		return int64(res.EstBatteryRange), nil
+		// miles to km
+		return int64(1.609344 * res.EstBatteryRange), nil
 	}
 
 	return 0, err
