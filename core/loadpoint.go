@@ -589,29 +589,49 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
-	if len(lp.vehicles) < 1 {
+	if len(lp.vehicles) <= 1 {
 		return
 	}
-
 	found := false
 
-	for _, vehicle := range lp.vehicles {
-		if vs, ok := lp.vehicle.(api.ChargeState); ok {
-			status, err := vs.Status()
-			lp.log.DEBUG.Printf("vehicle status: %s (%s / %dkWh)", status, vehicle.Title(), vehicle.Capacity())
-			if err != nil { lp.log.DEBUG.Printf("error: %+v", err) }
+	if vs, ok := lp.vehicle.(api.ChargeState); ok {
+		status, err := vs.Status()
 
-			if err == nil {
-				// found a vehicle which is plugged or charging, so it should be the right one
-				if lp.connected() && (status == api.StatusB || status == api.StatusC) {
-					if vehicle != lp.vehicle || lp.ForeignEV {
-						lp.setActiveVehicle(vehicle)
-						if lp.OnDisconnect.Mode != "" && lp.GetMode() == api.ModeOff { lp.SetMode(lp.OnDisconnect.Mode) }
-					}
+		if err == nil {
+			lp.log.DEBUG.Printf("vehicle status: %s (%s / %dkWh)", status, lp.vehicle.Title(), lp.vehicle.Capacity())
+
+			// vehicle is plugged or charging, so it should be the right one
+			if lp.connected() && (status == api.StatusB || status == api.StatusC) {
+				if lp.ForeignEV {
 					lp.publish("socTitle", lp.vehicle.Title())
 					lp.publish("socCapacity", lp.vehicle.Capacity())
-					found = true
 					lp.ForeignEV = false
+				}
+				return
+			}
+
+			for _, vehicle := range lp.vehicles {
+				if vehicle == lp.vehicle && !lp.ForeignEV {
+					continue
+				}
+
+				if vs, ok := vehicle.(api.ChargeState); ok {
+					status, err := vs.Status()
+
+					if err == nil {
+						lp.log.DEBUG.Printf("vehicle status: %s (%s / %dkWh)", status, vehicle.Title(), vehicle.Capacity())
+
+						// vehicle is plugged or charging, so it should be the right one
+						if status == api.StatusB || status == api.StatusC {
+							lp.setActiveVehicle(vehicle)
+							if lp.OnDisconnect.Mode != "" && lp.GetMode() == api.ModeOff { lp.SetMode(lp.OnDisconnect.Mode) }
+							lp.publish("socTitle", lp.vehicle.Title())
+							lp.publish("socCapacity", lp.vehicle.Capacity())
+							found = true
+							lp.ForeignEV = false
+							return
+						}
+					}
 				}
 			}
 		}
