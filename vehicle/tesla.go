@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/provider"
@@ -136,7 +137,7 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	cs, err := v.vehicle.ChargeState()
 
 	if err == nil  {
-		if cs.ChargingState == "NoPower" || cs.ChargingState == "Complete" {
+		if cs.ChargingState == "Stopped" || cs.ChargingState == "NoPower" || cs.ChargingState == "Complete" {
 			status = api.StatusB
 		}
 		if cs.ChargingState == "Charging" {
@@ -154,7 +155,9 @@ func (v *Tesla) Range() (rng int64, err error) {
 	cs, err := v.vehicle.ChargeState()
 	
 	if err == nil {
-		rng = int64(cs.BatteryRange)
+		fmt.Println("EstBatteryRange:", cs.EstBatteryRange*1.609344)
+		fmt.Println("")
+		rng = int64(cs.EstBatteryRange*1.609344)
 	}
 
 	return rng, err
