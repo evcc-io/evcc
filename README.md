@@ -1,7 +1,3 @@
-<div align="center">
-<img src="docs/logo.png" width="400" />
-</div>
-
 # evcc <!-- omit in toc -->
 
 [![Build Status](https://github.com/andig/evcc/workflows/Build/badge.svg)](https://github.com/andig/evcc/actions?query=workflow%3ABuild)
@@ -11,7 +7,7 @@
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
-
+  
 ## Features <!-- omit in toc -->
 
 - simple and clean user interface
@@ -532,6 +528,8 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 Note: to modify writable settings append `/set` to the topic for writing.
 
 ## Background
+
+<img src="docs/logo.png" align="right" width="150" />
 
 EVCC is heavily inspired by [OpenWB](1). However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
 
