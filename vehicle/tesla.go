@@ -138,3 +138,32 @@ func (v *Tesla) Range() (int64, error) {
 
 	return 0, err
 }
+
+// Status implements the api.ChargeState interface
+func (v *Tesla) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
+			status = api.StatusB
+		}
+		if res.ChargingState == "Charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Tesla) FinishTime() (time.Time, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		t := time.Now()
+		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
+	}
+
+	return time.Time{}, err
+}
