@@ -91,6 +91,20 @@ chargers:
   uri: 192.168.5.45:7090 # keba address
   rfid:
     tag: 12345678 # RFID tag, see on the backside of white rfid card
+- name: dummycharger
+    type: default
+    status:
+      type: script
+      cmd: /bin/sh -c 'echo A'
+    enabled:
+      type: script
+      cmd: /bin/sh -c 'echo 0'
+    enable:
+      type: script
+      cmd: /bin/sh -c 'echo 0'
+    maxcurrent:
+      type: script
+      cmd: /bin/sh -c 'echo 16'
 
 #vehicles:
 #- name: default
