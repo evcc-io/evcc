@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/vehicle/kamereon"
+	"github.com/andig/evcc/internal/vehicle/oidc"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/kamereon"
-	"github.com/andig/evcc/vehicle/oidc"
 )
 
 // Credits to

@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/internal/vehicle/oidc"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/oidc"
 	"github.com/imdario/mergo"
 	"golang.org/x/oauth2"
 )

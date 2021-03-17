@@ -32,7 +32,7 @@ func init() {
 	registry.Add("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMEth -o phoenix-em-eth_decorators -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../../cmd/tools/decorate.go -p charger -f decoratePhoenixEMEth -o phoenix-em-eth_decorators -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -172,7 +172,7 @@ func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b) / 1000)
+		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b)/1000)
 	}
 
 	return currents[0], currents[1], currents[2], nil
