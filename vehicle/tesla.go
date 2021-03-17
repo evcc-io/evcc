@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strings"
 	"time"
-	"fmt"
 
 	"github.com/mark-sch/evcc/api"
 	"github.com/mark-sch/evcc/provider"
@@ -143,13 +142,13 @@ func (v *Tesla) Range() (int64, error) {
 // Status implements the api.ChargeState interface
 func (v *Tesla) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
-	cs, err := v.vehicle.ChargeState()
+	res, err := v.chargeStateG()
 
-	if err == nil  {
-		if cs.ChargingState == "Stopped" || cs.ChargingState == "NoPower" || cs.ChargingState == "Complete" {
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
 			status = api.StatusB
 		}
-		if cs.ChargingState == "Charging" {
+		if res.ChargingState == "Charging" {
 			status = api.StatusC
 		}
 	}
@@ -157,27 +156,13 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-// Range implements the api.VehicleRange interface
-func (v *Tesla) Range() (rng int64, err error) {
-	//v.vehicle.SetSteeringWheelHeater(true)
-
-	cs, err := v.vehicle.ChargeState()
-	
-	if err == nil {
-		fmt.Println("EstBatteryRange:", cs.EstBatteryRange*1.609344)
-		fmt.Println("")
-		rng = int64(cs.EstBatteryRange*1.609344)
-	}
-
-	return rng, err
-}
-
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Tesla) FinishTime() (time.Time, error) {
-	cs, err := v.vehicle.ChargeState()
-	if err == nil {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
 		t := time.Now()
-		return t.Add(time.Duration(cs.MinutesToFullCharge) * time.Minute), err
+		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
 	}
 
 	return time.Time{}, err
