@@ -141,7 +141,7 @@ func (m *Warp) Enable(enable bool) error {
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
 
-	err := m.client.Publish(topic, true, "null")
+	err := m.client.Publish(topic, false, "null")
 	if err == nil {
 		m.enabled = enable
 	}
