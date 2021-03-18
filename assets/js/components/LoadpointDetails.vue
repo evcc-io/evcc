@@ -3,9 +3,6 @@
 		<div class="col-6 col-md-3 mt-3">
 			<div class="mb-2 value">
 				Leistung
-				<fa-icon class="text-primary ml-1" icon="clock" v-if="socTimerActive"></fa-icon>
-				<fa-icon class="text-secondary ml-1" icon="clock" v-else-if="socTimerSet"></fa-icon>
-
 				<fa-icon
 					class="text-primary ml-1"
 					icon="temperature-low"
@@ -75,8 +72,6 @@ export default {
 		climater: String,
 		hasVehicle: Boolean,
 		range: Number,
-		socTimerActive: Boolean,
-		socTimerSet: Boolean,
 	},
 	mixins: [formatter],
 };
