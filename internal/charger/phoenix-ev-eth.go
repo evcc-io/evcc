@@ -26,14 +26,14 @@ var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
 // EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
 // It uses Modbus TCP to communicate with the controller at modbus client id 255.
 type PhoenixEVEth struct {
-	conn         *modbus.Connection
+	conn *modbus.Connection
 }
 
 func init() {
 	registry.Add("phoenix-ev-eth", NewPhoenixEVEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEVEth -o phoenix-ev-eth_decorators -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../../cmd/tools/decorate.go -p charger -f decoratePhoenixEVEth -o phoenix-ev-eth_decorators -b *PhoenixEVEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEVEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEVEthFromConfig(other map[string]interface{}) (api.Charger, error) {

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/vehicle/psa"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/psa"
 )
 
 // https://github.com/flobz/psa_car_controller

@@ -6,25 +6,25 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/vehicle/vw"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect
 // https://github.com/TA2k/ioBroker.vw-connect
 
-// Seat is an api.Vehicle implementation for Seat cars
-type Seat struct {
+// Skoda is an api.Vehicle implementation for Skoda cars
+type Skoda struct {
 	*embed
 	*vw.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("Seat", NewSeatFromConfig)
+	registry.Add("skoda", NewSkodaFromConfig)
 }
 
-// NewSeatFromConfig creates a new vehicle
-func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+// NewSkodaFromConfig creates a new vehicle
+func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Title               string
 		Capacity            int64
@@ -38,23 +38,23 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	v := &Seat{
+	v := &Skoda{
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	log := util.NewLogger("seat")
-	identity := vw.NewIdentity(log, "9dcc70f0-8e79-423a-a3fa-4065d99088b4")
+	log := util.NewLogger("skoda")
+	identity := vw.NewIdentity(log, "28cd30c6-dee7-4529-a0e6-b1e07ff90b79")
 
 	query := url.Values(map[string][]string{
 		"response_type": {"code id_token"},
-		"client_id":     {"50f215ac-4444-4230-9fb1-fe15cd1a9bcc@apps_vw-dilab_com"},
-		"redirect_uri":  {"seatconnect://identity-kit/login"},
-		"scope":         {"openid profile mbb cars birthdate nickname address phone"},
+		"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
+		"redirect_uri":  {"skodaconnect://oidc.login/"},
+		"scope":         {"openid profile phone address cars email birthdate badge dealers driversLicense mbb"},
 	})
 
 	err := identity.Login(query, cc.User, cc.Password)
 	if err == nil {
-		api := vw.NewAPI(log, identity, "VW", "ES")
+		api := vw.NewAPI(log, identity, "VW", "CZ")
 
 		if cc.VIN == "" {
 			cc.VIN, err = findVehicle(api.Vehicles())

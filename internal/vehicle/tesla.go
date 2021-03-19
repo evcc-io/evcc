@@ -17,9 +17,8 @@ import (
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	vehicle        *tesla.Vehicle
-	chargeStateG   func() (float64, error)
-	chargedEnergyG func() (float64, error)
+	vehicle      *tesla.Vehicle
+	chargeStateG func() (interface{}, error)
 }
 
 // teslaTokens contains access and refresh tokens
@@ -96,36 +95,75 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
 
-// chargeState implements the api.Vehicle interface
-func (v *Tesla) chargeState() (float64, error) {
-	state, err := v.vehicle.ChargeState()
-	if err != nil {
-		return 0, err
-	}
-	return float64(state.BatteryLevel), nil
+// chargeState implements the charge state api
+func (v *Tesla) chargeState() (interface{}, error) {
+	return v.vehicle.ChargeState()
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Tesla) SoC() (float64, error) {
-	return v.chargeStateG()
-}
+	res, err := v.chargeStateG()
 
-// chargedEnergy implements the ChargeRater.ChargedEnergy interface
-func (v *Tesla) chargedEnergy() (float64, error) {
-	state, err := v.vehicle.ChargeState()
-	if err != nil {
-		return 0, err
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.BatteryLevel), nil
 	}
-	return state.ChargeEnergyAdded, nil
+
+	return 0, err
 }
 
-// ChargedEnergy implements the ChargeRater.ChargedEnergy interface
+// ChargedEnergy implements the api.ChargeRater interface
 func (v *Tesla) ChargedEnergy() (float64, error) {
-	return v.chargedEnergyG()
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.ChargeEnergyAdded), nil
+	}
+
+	return 0, err
+}
+
+// Range implements the api.VehicleRange interface
+func (v *Tesla) Range() (int64, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		// miles to km
+		return int64(1.609344 * res.EstBatteryRange), nil
+	}
+
+	return 0, err
+}
+
+// Status implements the api.ChargeState interface
+func (v *Tesla) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
+			status = api.StatusB
+		}
+		if res.ChargingState == "Charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Tesla) FinishTime() (time.Time, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		t := time.Now()
+		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
+	}
+
+	return time.Time{}, err
 }

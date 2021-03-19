@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/powerwall"
+	"github.com/andig/evcc/internal/meter/powerwall"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 )
@@ -26,7 +26,7 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {

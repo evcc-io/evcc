@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/nrgble"
+	"github.com/andig/evcc/internal/charger/nrgble"
 	"github.com/andig/evcc/util"
 	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"

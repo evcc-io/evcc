@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/vehicle/vw"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect

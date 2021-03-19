@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/vehicle/bluelink"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/bluelink"
 )
 
 // Kia is an api.Vehicle implementation

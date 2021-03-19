@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/andig/evcc/internal/vehicle/id"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/id"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )

@@ -64,7 +64,7 @@ type Warp struct {
 	enabled     bool // cache
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWarp -o warp_decorators -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../../cmd/tools/decorate.go -p charger -f decorateWarp -o warp_decorators -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {
@@ -141,7 +141,7 @@ func (m *Warp) Enable(enable bool) error {
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
 
-	err := m.client.Publish(topic, true, "null")
+	err := m.client.Publish(topic, false, "null")
 	if err == nil {
 		m.enabled = enable
 	}
