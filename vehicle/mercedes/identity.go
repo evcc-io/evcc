@@ -19,6 +19,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://id.mercedes-benz.com/.well-known/openid-configuration
+
 const redirectURI = "localhost:34972"
 
 type ClientOption func(c *Identity) error
