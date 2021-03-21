@@ -94,9 +94,9 @@ type ChargeRater interface {
 
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
+	Battery
 	Title() string
 	Capacity() int64
-	SoC() (float64, error)
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time

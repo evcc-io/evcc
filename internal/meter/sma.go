@@ -163,7 +163,7 @@ func (sm *SMA) hasValue() (values, error) {
 	return sm.values, nil
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.hasValue()
 	return values.power, err

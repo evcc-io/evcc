@@ -18,7 +18,7 @@ func (m *ChargeMeter) SetPower(power float64) {
 	m.power = power
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (m *ChargeMeter) CurrentPower() (float64, error) {
 	m.Lock()
 	defer m.Unlock()

@@ -115,7 +115,7 @@ func (m *Tesla) Login() error {
 	return err
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (m *Tesla) CurrentPower() (float64, error) {
 	var res powerwall.MeterResponse
 	if err := m.GetJSON(m.uri+powerwall.MeterURI, &res); err != nil {

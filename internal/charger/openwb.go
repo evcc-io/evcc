@@ -125,17 +125,23 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, tim
 	return res, nil
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+var _ api.Meter = (*OpenWB)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (m *OpenWB) CurrentPower() (float64, error) {
 	return m.currentPowerG()
 }
 
-// TotalEnergy implements the Meter.TotalEnergy interface
+var _ api.MeterEnergy = (*OpenWB)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
 func (m *OpenWB) TotalEnergy() (float64, error) {
 	return m.totalEnergyG()
 }
 
-// Currents implements the Meter.Currents interface
+var _ api.MeterCurrent = (*OpenWB)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (m *OpenWB) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, currentG := range m.currentsG {

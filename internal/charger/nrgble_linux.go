@@ -296,7 +296,9 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	return nrg.write(nrgble.SettingsService, &settings)
 }
 
-// CurrentPower implements the Meter interface.
+var _ api.Meter = (*NRGKickBLE)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 	res := nrgble.Power{}
 	if err := nrg.read(nrgble.PowerService, &res); err != nil {
@@ -308,7 +310,9 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 	return float64(res.TotalPower) * 10, nil
 }
 
-// TotalEnergy implements the MeterEnergy interface.
+var _ api.MeterEnergy = (*NRGKickBLE)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
 func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 	res := nrgble.Energy{}
 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
@@ -320,7 +324,9 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 	return float64(res.TotalEnergy) / 1000, nil
 }
 
-// Currents implements the MeterCurrent interface.
+var _ api.MeterCurrent = (*NRGKickBLE)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 	res := nrgble.VoltageCurrent{}
 	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {

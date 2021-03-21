@@ -162,7 +162,7 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 	return err
 }
 
-// maxCurrentMillis implements the ChargerEx interface
+// maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
@@ -174,7 +174,9 @@ func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	return err
 }
 
-// ChargingTime yields current charge run duration
+var _ api.ChargeTimer = (*Wallbe)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
 	if err != nil {
@@ -199,7 +201,7 @@ func (wb *Wallbe) decodeReading(b []byte) float64 {
 	return float64(v)
 }
 
-// currentPower implements the Meter.CurrentPower interface
+// currentPower implements the api.Meter interface
 func (wb *Wallbe) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
 	if err != nil {
@@ -209,7 +211,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 	return wb.decodeReading(b), err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (wb *Wallbe) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
 	if err != nil {
@@ -219,7 +221,7 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 	return wb.decodeReading(b), err
 }
 
-// currents implements the Meter.Currents interface
+// currents implements the api.MeterCurrent interface
 func (wb *Wallbe) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range wbRegCurrents {
