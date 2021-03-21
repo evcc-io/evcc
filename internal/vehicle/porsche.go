@@ -378,3 +378,15 @@ func (v *Porsche) Climater() (active bool, outsideTemp float64, targetTemp float
 
 	return active, outsideTemp, targetTemp, err
 }
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Porsche) FinishTime() (time.Time, error) {
+	res, err := v.chargerG()
+
+	if res, ok := res.(*porscheEmobilityResponse); err == nil && ok {
+		t := time.Now()
+		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+	}
+
+	return time.Time{}, err
+}
