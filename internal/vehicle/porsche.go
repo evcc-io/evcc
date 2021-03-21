@@ -60,7 +60,8 @@ type porscheEmobilityResponse struct {
 		IsActive bool
 	}
 	DirectClimatisation struct {
-		ClimatisationState string
+		ClimatisationState         string
+		RemainingClimatisationTime int64
 	}
 }
 
@@ -361,4 +362,19 @@ func (v *Porsche) Range() (int64, error) {
 	}
 
 	return 0, err
+}
+
+// Climater implements the api.VehicleClimater interface
+func (v *Porsche) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.chargerG()
+	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+		switch res.DirectClimatisation.ClimatisationState {
+		case "OFF":
+			return false, 0, 0, nil
+		case "ON":
+			return true, 0, 0, nil
+		}
+	}
+
+	return active, outsideTemp, targetTemp, err
 }
