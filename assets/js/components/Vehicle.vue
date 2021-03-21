@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="mb-2">
+		<div class="mb-3">
 			{{ socTitle || "Fahrzeug" }}
 		</div>
 		<div class="progress" style="height: 28px; font-size: 100%">
