@@ -333,6 +333,26 @@ func (v *Porsche) SoC() (float64, error) {
 	return 0, err
 }
 
+// Status implements the VehicleStatus interface
+func (v *Porsche) Status() (api.ChargeStatus, error) {
+	res, err := v.chargerG()
+	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+		switch res.BatteryChargeStatus.PlugState {
+		case "DISCONNECTED":
+			return api.StatusA, nil
+		case "CONNECTED":
+			switch res.BatteryChargeStatus.ChargingState {
+			case "OFF", "COMPLETED":
+				return api.StatusB, nil
+			case "ON":
+				return api.StatusC, nil
+			}
+		}
+	}
+
+	return api.StatusNone, err
+}
+
 // Range implements the api.VehicleRange interface
 func (v *Porsche) Range() (int64, error) {
 	res, err := v.chargerG()
