@@ -27,13 +27,6 @@
 							>
 								Support
 							</a>
-							<a
-								class="nav-item nav-link"
-								href="https://github.com/sponsors/andig"
-								target="_blank"
-							>
-								Projekt unterstützen
-							</a>
 						</div>
 					</div>
 				</div>
