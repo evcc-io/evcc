@@ -164,6 +164,7 @@ export default {
 		// vehicle
 		connected: Boolean,
 		// charging: Boolean,
+		enabled: Boolean,
 		socTitle: String,
 		socCharge: Number,
 		minSoC: Number,

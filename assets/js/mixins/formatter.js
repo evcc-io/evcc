@@ -58,6 +58,13 @@ export default {
       }
       return "m";
     },
+    fmtAbsoluteDate: function (date) {
+      return new Intl.DateTimeFormat("de-DE", {
+        weekday: "short",
+        hour: "numeric",
+        minute: "numeric",
+      }).format(date);
+    },
     fmtRelativeTime: function (date) {
       var units = {
         year: 24 * 60 * 60 * 1000 * 365,
@@ -71,7 +78,6 @@ export default {
       var rtf = new Intl.RelativeTimeFormat("de", { numeric: "auto", style: "narrow" });
 
       var getRelativeTime = (d1, d2 = new Date()) => {
-        console.log({ d1, d2 });
         var elapsed = d1 - d2;
 
         // "Math.abs" accounts for both "past" & "future" scenarios
