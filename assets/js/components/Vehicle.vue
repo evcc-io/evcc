@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="mb-3">
+		<div class="mb-2">
 			{{ socTitle || "Fahrzeug" }}
 		</div>
 		<div class="progress" style="height: 28px; font-size: 100%">
@@ -41,18 +41,11 @@
 				:style="{ width: targetSoCRemainingDisplayWidth + '%' }"
 			></div>
 		</div>
-		<small
-			v-if="connected && socMarker"
-			:style="{
-				paddingLeft: socMarker <= 50 ? `calc(${socMarker}% - 14px)` : null,
-				paddingRight: socMarker > 50 ? `calc(${100 - socMarker}% - 22px)` : null,
-			}"
-			class="subline py-1"
-			:class="{ 'subline--left': socMarker <= 50, 'subline--right': socMarker > 50 }"
-		>
-			<span class="subline__marker px-1">{{ socMarker }}%</span>
-			<span class="text-muted">{{ markerLabel() }}</span>
-			<fa-icon class="text-muted mx-1" :icon="minSoCActive ? 'first-aid' : 'clock'"></fa-icon>
+		<small v-if="hasVehicle && markerLabel()" class="subline py-2">
+			<fa-icon v-if="minSoCActive" class="text-muted mr-1" icon="first-aid"></fa-icon>
+			<fa-icon v-else-if="timerSet" class="text-muted mr-1" icon="clock"></fa-icon>
+			<fa-icon v-else class="text-muted mr-1" icon="bolt"></fa-icon>
+			{{ markerLabel() }}
 		</small>
 	</div>
 </template>
@@ -120,12 +113,12 @@ export default {
 				return "bg-danger";
 			}
 			if (this.enabled) {
-				return "bg-success";
+				return "bg-primary";
 			}
 			if (!this.connected) {
 				return "bg-light";
 			}
-			return "bg-disabled";
+			return "bg-secondary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
@@ -141,16 +134,25 @@ export default {
 		// not computed because it needs to update over time
 		markerLabel: function () {
 			if (this.minSoCActive) {
-				return "Notladung";
+				return `Notladung bis ${this.socMarker}%`;
 			}
 			if (this.timerActive) {
 				const date = Date.parse(this.targetTime);
-				return date ? this.fmtRelativeTime(date) + " geladen" : "";
+				return date ? `Lädt ${this.fmtRelativeTime(date)} bis ${this.socMarker}%` : null;
 			}
 			if (this.timerSet) {
 				const date = Date.parse(this.targetTime);
-				return date ? "bis " + this.fmtAbsoluteDate(date) : "";
+				return date
+					? `Geplant bis ${this.fmtAbsoluteDate(date)} bis ${this.socMarker}%`
+					: null;
 			}
+			if (this.enabled && !this.charging) {
+				return "Warte auf Fahrzeug";
+			}
+			if (!this.enabled) {
+				return "Ladung noch nicht freigegeben";
+			}
+			return null;
 		},
 	},
 	mixins: [formatter],
@@ -159,14 +161,7 @@ export default {
 <style scoped>
 .subline {
 	display: flex;
-	transition: padding 0.6s ease;
 	align-items: center;
-}
-.subline--left {
-	justify-content: flex-start;
-}
-.subline--right {
-	flex-direction: row-reverse;
 }
 .progress {
 	overflow: visible;
@@ -179,9 +174,9 @@ export default {
 .progress-bar.bg-muted::after {
 	position: absolute;
 	right: 0;
-	top: -3px;
-	height: calc(100% + 6px);
-	width: 1px;
+	top: -5px;
+	height: calc(100% + 10px);
+	width: 2px;
 	background: var(--dark);
 	content: "";
 }
