@@ -80,7 +80,7 @@ export default {
 			if (!this.hasVehicle || this.socCharge < 0) {
 				let chargeStatus = "getrennt";
 				if (this.charging) {
-					chargeStatus = "laden";
+					chargeStatus = "lädt";
 				} else if (this.enabled) {
 					chargeStatus = "bereit";
 				} else if (this.connected) {
@@ -136,21 +136,13 @@ export default {
 			if (this.minSoCActive) {
 				return `Notladung bis ${this.socMarker}%`;
 			}
-			if (this.timerActive) {
-				const date = Date.parse(this.targetTime);
-				return date ? `Lädt ${this.fmtRelativeTime(date)} bis ${this.socMarker}%` : null;
-			}
 			if (this.timerSet) {
-				const date = Date.parse(this.targetTime);
-				return date
-					? `Geplant bis ${this.fmtAbsoluteDate(date)} bis ${this.socMarker}%`
-					: null;
-			}
-			if (this.enabled && !this.charging) {
-				return "Warte auf Fahrzeug";
-			}
-			if (!this.enabled) {
-				return "Ladung noch nicht freigegeben";
+				const targetDate = Date.parse(this.targetTime);
+				if (this.timerActive) {
+					return `Lädt ${this.fmtRelativeTime(targetDate)} bis ${this.socMarker}%`;
+				} else {
+					return `Geplant bis ${this.fmtAbsoluteDate(targetDate)} bis ${this.socMarker}%`;
+				}
 			}
 			return null;
 		},
