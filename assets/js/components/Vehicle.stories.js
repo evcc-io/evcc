@@ -130,3 +130,12 @@ Disconnected.args = {
   connected: false,
   hasVehicle: false,
 };
+
+export const DisconnectedKnownSoc = Template.bind({});
+DisconnectedKnownSoc.args = {
+  socTitle: "Mein Auto",
+  connected: false,
+  enabled: false,
+  hasVehicle: true,
+  socCharge: 17,
+};

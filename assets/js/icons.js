@@ -12,7 +12,6 @@ import { faBatteryThreeQuarters } from "@fortawesome/free-solid-svg-icons/faBatt
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
-import { faFirstAid } from "@fortawesome/free-solid-svg-icons/faFirstAid";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
 import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
@@ -22,7 +21,6 @@ import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermomet
 import { faHeart } from "@fortawesome/free-solid-svg-icons/faHeart";
 import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
 import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
-import { faBolt } from "@fortawesome/free-solid-svg-icons/faBolt";
 
 library.add(
   faArrowDown,
@@ -35,7 +33,6 @@ library.add(
   faChevronDown,
   faChevronUp,
   faClock,
-  faFirstAid,
   faExclamationTriangle,
   faLeaf,
   faSun,
@@ -44,8 +41,7 @@ library.add(
   faThermometerHalf,
   faHeart,
   faGift,
-  faBox,
-  faBolt
+  faBox
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

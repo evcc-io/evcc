@@ -17,7 +17,7 @@
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
-				v-if="minSoCActive && socChargeDisplayWidth < 100"
+				v-if="remainingSoCWidth"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -26,25 +26,12 @@
 					[progressColor]: true,
 					'bg-muted': true,
 				}"
-				:style="{ width: minSoCRemainingDisplayWidth + '%' }"
-			></div>
-			<div
-				v-else-if="timerSet && socChargeDisplayWidth < 100"
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					[progressColor]: true,
-					'bg-muted': true,
-				}"
-				:style="{ width: targetSoCRemainingDisplayWidth + '%' }"
+				:style="{ width: remainingSoCWidth + '%' }"
 			></div>
 		</div>
-		<small v-if="hasVehicle && markerLabel()" class="subline py-2">
-			<fa-icon v-if="minSoCActive" class="text-muted mr-1" icon="first-aid"></fa-icon>
-			<fa-icon v-else-if="timerSet" class="text-muted mr-1" icon="clock"></fa-icon>
-			<fa-icon v-else class="text-muted mr-1" icon="bolt"></fa-icon>
+		<small v-if="markerLabel()" class="subline py-2">
+			<fa-icon v-if="minSoCActive" class="text-muted mr-1" icon="battery-quarter"></fa-icon>
+			<fa-icon v-else-if="targetChargeEnabled" class="text-muted mr-1" icon="clock"></fa-icon>
 			{{ markerLabel() }}
 		</small>
 	</div>
@@ -103,40 +90,52 @@ export default {
 			if (this.minSoCActive) {
 				return this.minSoC;
 			}
-			if (this.timerSet) {
+			if (this.targetChargeEnabled) {
 				return this.targetSoC;
 			}
 			return null;
 		},
 		progressColor: function () {
+			if (!this.connected) {
+				return "bg-light border";
+			}
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
 			if (this.enabled) {
 				return "bg-primary";
 			}
-			if (!this.connected) {
-				return "bg-light";
-			}
 			return "bg-secondary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
 		},
-		targetSoCRemainingDisplayWidth: function () {
-			return this.targetSoC - this.socCharge;
+		targetChargeEnabled: function () {
+			return this.targetTime && this.timerSet;
 		},
-		minSoCRemainingDisplayWidth: function () {
-			return this.minSoC - this.socCharge;
+		remainingSoCWidth: function () {
+			if (!this.connected || this.socCharge === 100) {
+				return null;
+			}
+			if (this.minSoCActive) {
+				return this.minSoC - this.socCharge;
+			}
+			if (this.targetChargeEnabled) {
+				return this.targetSoC - this.socCharge;
+			}
+			return null;
 		},
 	},
 	methods: {
 		// not computed because it needs to update over time
 		markerLabel: function () {
-			if (this.minSoCActive) {
-				return `Notladung bis ${this.socMarker}%`;
+			if (!this.connected) {
+				return null;
 			}
-			if (this.timerSet) {
+			if (this.minSoCActive) {
+				return `Mindestladung bis ${this.socMarker}%`;
+			}
+			if (this.targetChargeEnabled) {
 				const targetDate = Date.parse(this.targetTime);
 				if (this.timerActive) {
 					return `Lädt ${this.fmtRelativeTime(targetDate)} bis ${this.socMarker}%`;
@@ -176,6 +175,6 @@ export default {
 	background-color: var(--gray);
 }
 .bg-light {
-	color: var(--gray);
+	color: var(--dark);
 }
 </style>
