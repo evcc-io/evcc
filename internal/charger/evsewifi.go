@@ -210,6 +210,8 @@ func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	return evse.checkError(evse.GetBody(url))
 }
 
+var _ api.ChargeTimer = (*EVSEWifi)(nil)
+
 // ChargingTime yields current charge run duration
 func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	params, err := evse.getParameters()

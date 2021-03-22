@@ -352,6 +352,8 @@ func (v *API) statusAPI() (interface{}, error) {
 	return res, err
 }
 
+var _ api.Battery = (*API)(nil)
+
 // SoC implements the api.Vehicle interface
 func (v *API) SoC() (float64, error) {
 	res, err := v.apiG()
@@ -362,6 +364,8 @@ func (v *API) SoC() (float64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleFinishTimer = (*API)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *API) FinishTime() (time.Time, error) {
@@ -379,6 +383,8 @@ func (v *API) FinishTime() (time.Time, error) {
 
 	return time.Time{}, err
 }
+
+var _ api.VehicleRange = (*API)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *API) Range() (int64, error) {

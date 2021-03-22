@@ -23,6 +23,8 @@ func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 	return impl
 }
 
+var _ api.Battery = (*Provider)(nil)
+
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
@@ -36,6 +38,8 @@ func (v *Provider) SoC() (float64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
@@ -51,6 +55,8 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
@@ -65,6 +71,8 @@ func (v *Provider) FinishTime() (time.Time, error) {
 
 	return time.Time{}, err
 }
+
+var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
@@ -90,6 +98,8 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	return api.StatusNone, err
 }
+
+var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {

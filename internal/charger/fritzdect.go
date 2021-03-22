@@ -175,7 +175,9 @@ func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
-// CurrentPower implements the Meter interface.
+var _ api.Meter = (*FritzDECT)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (c *FritzDECT) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh aproximately every 2 minutes)
 	resp, err := c.execFritzDectCmd("getswitchpower")

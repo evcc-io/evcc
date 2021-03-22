@@ -116,28 +116,7 @@ func (v *Tesla) SoC() (float64, error) {
 	return 0, err
 }
 
-// ChargedEnergy implements the api.ChargeRater interface
-func (v *Tesla) ChargedEnergy() (float64, error) {
-	res, err := v.chargeStateG()
-
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		return float64(res.ChargeEnergyAdded), nil
-	}
-
-	return 0, err
-}
-
-// Range implements the api.VehicleRange interface
-func (v *Tesla) Range() (int64, error) {
-	res, err := v.chargeStateG()
-
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		// miles to km
-		return int64(1.609344 * res.EstBatteryRange), nil
-	}
-
-	return 0, err
-}
+var _ api.ChargeState = (*Tesla)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Tesla) Status() (api.ChargeStatus, error) {
@@ -155,6 +134,35 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 
 	return status, err
 }
+
+var _ api.ChargeRater = (*Tesla)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (v *Tesla) ChargedEnergy() (float64, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.ChargeEnergyAdded), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleRange = (*Tesla)(nil)
+
+// Range implements the api.VehicleRange interface
+func (v *Tesla) Range() (int64, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		// miles to km
+		return int64(1.609344 * res.EstBatteryRange), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleFinishTimer = (*Tesla)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Tesla) FinishTime() (time.Time, error) {
