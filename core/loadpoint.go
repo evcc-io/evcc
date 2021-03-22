@@ -709,71 +709,61 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 		return float64(lp.MinCurrent)
 	}
 
-	lp.log.DEBUG.Printf("loadpoint enabled: %t", lp.enabled)
-
 	// read only once to simplify testing
 	if mode == api.ModePV && lp.enabled && targetCurrent < float64(lp.MinCurrent) {
 		// kick off disable sequence
-		lp.log.DEBUG.Println("disable: start")
-
 		if sitePower >= lp.Disable.Threshold {
-			lp.log.DEBUG.Printf("disable: site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
 
 			if lp.pvTimer.IsZero() {
+				lp.log.DEBUG.Printf("start pv disable timer: %v", lp.Disable.Delay)
 				lp.pvTimer = lp.clock.Now()
-				lp.log.DEBUG.Printf("disable: pv timer init: %v", lp.pvTimer.Round(time.Second))
 			}
 
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Disable.Delay {
-				lp.log.DEBUG.Println("disable: end 0A - pv timer elapsed")
+				lp.log.DEBUG.Println("pv disable timer elapsed")
 				return 0
 			}
 
-			lp.log.DEBUG.Printf("disable: pv timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
+			lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
 			lp.pvTimer = lp.clock.Now()
-			lp.log.DEBUG.Printf("disable: pv timer reset: %v", lp.pvTimer.Round(time.Second))
 		}
 
-		lp.log.DEBUG.Printf("disable: end %.0fA", float64(lp.MinCurrent))
 		return float64(lp.MinCurrent)
 	}
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		lp.log.DEBUG.Println("enable: start")
-
-		lp.log.DEBUG.Printf("enable: check targetCurrent %.0fA >= MinCurrent %.0fA or (enable threshold %.0fW != 0W and site power %.0fW < enable threshold %.0fW)", targetCurrent, float64(lp.MinCurrent), lp.Enable.Threshold, sitePower, lp.Enable.Threshold)
 		if targetCurrent >= float64(lp.MinCurrent) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
-			lp.log.DEBUG.Printf("enable: site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
+			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
 			if lp.pvTimer.IsZero() {
+				lp.log.DEBUG.Printf("start pv enable timer: %v", lp.Enable.Delay)
 				lp.pvTimer = lp.clock.Now()
-				lp.log.DEBUG.Printf("enable: pv timer init: %v", lp.pvTimer.Round(time.Second))
 			}
 
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Enable.Delay {
-				lp.log.DEBUG.Printf("enable: end %.0fA - pv timer elapsed", float64(lp.MinCurrent))
+				lp.log.DEBUG.Println("pv enable timer elapsed")
 				return float64(lp.MinCurrent)
 			}
-			lp.log.DEBUG.Printf("enable: pv timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
+
+			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
 			lp.pvTimer = lp.clock.Now()
-			lp.log.DEBUG.Printf("enable: pv timer reset %v", lp.pvTimer.Round(time.Second))
 		}
 
-		lp.log.DEBUG.Println("enable: end 0A")
 		return 0
 	}
 
 	// reset timer to disabled state
+	lp.log.DEBUG.Printf("pv timer reset")
 	lp.pvTimer = time.Time{}
-	lp.log.DEBUG.Printf("pv timer reset %v", lp.pvTimer.Round(time.Second))
 
 	return targetCurrent
 }
