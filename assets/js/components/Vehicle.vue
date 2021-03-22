@@ -64,7 +64,7 @@ export default {
 		},
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.hasVehicle || this.socCharge < 0) {
+			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
 				let chargeStatus = "getrennt";
 				if (this.charging) {
 					chargeStatus = "lädt";
