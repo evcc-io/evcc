@@ -90,6 +90,8 @@ func (v *CarWings) SoC() (float64, error) {
 	return v.chargeStateG()
 }
 
+var _ api.VehicleClimater = (*CarWings)(nil)
+
 // Climater implements the api.Vehicle.Climater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()

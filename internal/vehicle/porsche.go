@@ -334,7 +334,9 @@ func (v *Porsche) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the VehicleStatus interface
+var _ api.ChargeState = (*Porsche)(nil)
+
+// Status implements the api.ChargeState interface
 func (v *Porsche) Status() (api.ChargeStatus, error) {
 	res, err := v.chargerG()
 	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
@@ -354,6 +356,8 @@ func (v *Porsche) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, err
 }
 
+var _ api.VehicleRange = (*Porsche)(nil)
+
 // Range implements the api.VehicleRange interface
 func (v *Porsche) Range() (int64, error) {
 	res, err := v.chargerG()
@@ -363,6 +367,22 @@ func (v *Porsche) Range() (int64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleFinishTimer = (*Porsche)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Porsche) FinishTime() (time.Time, error) {
+	res, err := v.chargerG()
+
+	if res, ok := res.(*porscheEmobilityResponse); err == nil && ok {
+		t := time.Now()
+		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+	}
+
+	return time.Time{}, err
+}
+
+var _ api.VehicleClimater = (*Porsche)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Porsche) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
@@ -377,16 +397,4 @@ func (v *Porsche) Climater() (active bool, outsideTemp float64, targetTemp float
 	}
 
 	return active, outsideTemp, targetTemp, err
-}
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Porsche) FinishTime() (time.Time, error) {
-	res, err := v.chargerG()
-
-	if res, ok := res.(*porscheEmobilityResponse); err == nil && ok {
-		t := time.Now()
-		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
-	}
-
-	return time.Time{}, err
 }
