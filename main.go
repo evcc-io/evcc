@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"io"
 	"io/fs"
+	"log"
 
 	"github.com/andig/evcc/cmd"
 	"github.com/andig/evcc/server"
@@ -23,5 +25,9 @@ func init() {
 }
 
 func main() {
+	// suppress deprecated: golang.org/x/oauth2: Transport.CancelRequest no longer does anything; use contexts
+	// see https://github.com/golang/oauth2/issues/487
+	log.SetOutput(io.Discard)
+
 	cmd.Execute()
 }
