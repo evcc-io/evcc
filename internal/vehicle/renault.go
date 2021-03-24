@@ -349,7 +349,9 @@ func (v *Renault) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the Vehicle.Status interface
+var _ api.ChargeState = (*Renault)(nil)
+
+// Status implements the api.ChargeState interface
 func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
@@ -366,6 +368,8 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+var _ api.VehicleRange = (*Renault)(nil)
+
 // Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
 	res, err := v.batteryG()
@@ -376,6 +380,8 @@ func (v *Renault) Range() (int64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleFinishTimer = (*Renault)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
@@ -394,7 +400,9 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-// Climater implements the api.Vehicle.Climater interface
+var _ api.VehicleClimater = (*Renault)(nil)
+
+// Climater implements the api.VehicleClimater interface
 func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 

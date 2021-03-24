@@ -209,7 +209,9 @@ func (c *GoE) MaxCurrent(current int64) error {
 	return err
 }
 
-// CurrentPower implements the Meter interface.
+var _ api.Meter = (*GoE)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (c *GoE) CurrentPower() (float64, error) {
 	status, err := c.apiStatus()
 	var power float64
@@ -219,14 +221,18 @@ func (c *GoE) CurrentPower() (float64, error) {
 	return power, err
 }
 
-// ChargedEnergy implements the ChargeRater interface
+var _ api.ChargeRater = (*GoE)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
 func (c *GoE) ChargedEnergy() (float64, error) {
 	status, err := c.apiStatus()
 	energy := float64(status.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
 	return energy, err
 }
 
-// Currents implements the MeterCurrent interface
+var _ api.MeterCurrent = (*GoE)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
 	status, err := c.apiStatus()
 	if len(status.Nrg) == 16 {

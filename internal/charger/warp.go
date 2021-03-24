@@ -248,6 +248,8 @@ func (m *Warp) MaxCurrent(current int64) error {
 	return m.maxcurrentS(1000 * current)
 }
 
+var _ api.ChargerEx = (*Warp)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (m *Warp) MaxCurrentMillis(current float64) error {
 	return m.maxcurrentS(int64(1000 * current))
@@ -259,7 +261,7 @@ type powerStatus struct {
 	EnergyAbs float64 `json:"energy_abs"`
 }
 
-// currentPower implements the Meter.CurrentPower interface
+// currentPower implements the api.Meter interface
 func (m *Warp) currentPower() (float64, error) {
 	var res powerStatus
 
@@ -271,7 +273,7 @@ func (m *Warp) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (m *Warp) totalEnergy() (float64, error) {
 	var res powerStatus
 

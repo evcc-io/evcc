@@ -247,7 +247,9 @@ func (c *Keba) MaxCurrent(current int64) error {
 	return nil
 }
 
-// MaxCurrentMillis implements the ChargerEx interface
+var _ api.ChargerEx = (*Keba)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Keba) MaxCurrentMillis(current float64) error {
 	d := int(1000 * current)
 
@@ -262,6 +264,8 @@ func (c *Keba) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
+var _ api.Meter = (*Keba)(nil)
+
 // CurrentPower implements the Meter interface
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
@@ -270,6 +274,8 @@ func (c *Keba) CurrentPower() (float64, error) {
 	// mW to W
 	return float64(kr.P) / 1e3, err
 }
+
+var _ api.MeterEnergy = (*Keba)(nil)
 
 // TotalEnergy implements the MeterEnergy interface
 func (c *Keba) TotalEnergy() (float64, error) {
@@ -280,6 +286,8 @@ func (c *Keba) TotalEnergy() (float64, error) {
 	return float64(kr.ETotal) / 1e4, err
 }
 
+var _ api.ChargeRater = (*Keba)(nil)
+
 // ChargedEnergy implements the ChargeRater interface
 func (c *Keba) ChargedEnergy() (float64, error) {
 	var kr keba.Report3
@@ -288,6 +296,8 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 	// 0,1Wh to kWh
 	return float64(kr.EPres) / 1e4, err
 }
+
+var _ api.MeterCurrent = (*Keba)(nil)
 
 // Currents implements the MeterCurrents interface
 func (c *Keba) Currents() (float64, float64, float64, error) {

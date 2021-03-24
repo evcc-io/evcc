@@ -306,6 +306,8 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	return nil
 }
 
+var _ api.Meter = (*MobileConnect)(nil)
+
 // CurrentPower implements the Meter interface.
 func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
@@ -313,6 +315,8 @@ func (mcc *MobileConnect) CurrentPower() (float64, error) {
 
 	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
 }
+
+var _ api.ChargeRater = (*MobileConnect)(nil)
 
 // ChargedEnergy implements the ChargeRater interface.
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
@@ -324,6 +328,8 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	return currentSession.EnergySumKwh, nil
 }
 
+var _ api.ChargeTimer = (*MobileConnect)(nil)
+
 // ChargingTime yields current charge run duration
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
@@ -333,6 +339,8 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 
 	return time.Duration(currentSession.Duration * time.Second), nil
 }
+
+var _ api.MeterCurrent = (*MobileConnect)(nil)
 
 // Currents implements the MeterCurrent interface
 func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {

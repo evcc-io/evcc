@@ -151,17 +151,17 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 	return res.Value, err
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (m *Modbus) CurrentPower() (float64, error) {
 	return m.floatGetter(m.opPower)
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (m *Modbus) totalEnergy() (float64, error) {
 	return m.floatGetter(m.opEnergy)
 }
 
-// soc implements the Battery.SoC interface
+// soc implements the api.Battery interface
 func (m *Modbus) soc() (float64, error) {
 	return m.floatGetter(m.opSoC)
 }

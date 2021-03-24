@@ -132,6 +132,8 @@ func (wb *PhoenixEVEth) MaxCurrent(current int64) error {
 	return err
 }
 
+var _ api.ChargeTimer = (*PhoenixEVEth)(nil)
+
 // ChargingTime yields current charge run duration
 func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEVEthRegChargeTime, 2)
@@ -144,7 +146,7 @@ func (wb *PhoenixEVEth) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (wb *PhoenixEVEth) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEVEthRegPower, 2)
 	if err != nil {
@@ -154,7 +156,7 @@ func (wb *PhoenixEVEth) currentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b), err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(phxEVEthRegEnergy, 2)
 	if err != nil {
@@ -164,7 +166,7 @@ func (wb *PhoenixEVEth) totalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 1000, err
 }
 
-// currents implements the Meter.Currents interface
+// currents implements the api.MeterCurrent interface
 func (wb *PhoenixEVEth) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range phxEVEthRegCurrents {

@@ -1,9 +1,9 @@
-package ocpp
+package profile
 
 import "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 
 // OnGetConfiguration handles the CS message
-func (s *OCPP) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
+func (s *Core) OnGetConfiguration(request *core.GetConfigurationRequest) (confirmation *core.GetConfigurationConfirmation, err error) {
 	s.log.TRACE.Printf("recv: %s %+v", request.GetFeatureName(), request)
 
 	var resultKeys []core.ConfigurationKey
@@ -34,7 +34,7 @@ func (s *OCPP) OnGetConfiguration(request *core.GetConfigurationRequest) (confir
 }
 
 // OnChangeConfiguration handles the CS message
-func (s *OCPP) OnChangeConfiguration(request *core.ChangeConfigurationRequest) (confirmation *core.ChangeConfigurationConfirmation, err error) {
+func (s *Core) OnChangeConfiguration(request *core.ChangeConfigurationRequest) (confirmation *core.ChangeConfigurationConfirmation, err error) {
 	s.log.TRACE.Printf("recv: %s %+v", request.GetFeatureName(), request)
 	return core.NewChangeConfigurationConfirmation(core.ConfigurationStatusAccepted), nil
 }

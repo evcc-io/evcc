@@ -27,6 +27,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
+var _ api.Battery = (*Provider)(nil)
+
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
@@ -37,7 +39,9 @@ func (v *Provider) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the Vehicle.Status interface
+var _ api.ChargeState = (*Provider)(nil)
+
+// Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
@@ -54,6 +58,8 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+var _ api.VehicleFinishTimer = (*Provider)(nil)
+
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
@@ -66,6 +72,8 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
+var _ api.VehicleRange = (*Provider)(nil)
+
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
@@ -76,7 +84,9 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-// Climater implements the Vehicle.Climater interface
+var _ api.VehicleClimater = (*Provider)(nil)
+
+// Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
@@ -99,7 +109,9 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	return active, outsideTemp, targetTemp, err
 }
 
-// StartCharge implements the VehicleStartCharge interface
+var _ api.VehicleStartCharge = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
 func (v *Provider) StartCharge() error {
 	return v.startChargeAction()
 }

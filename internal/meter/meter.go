@@ -121,17 +121,17 @@ func (m *Meter) Decorate(
 	return decorateMeter(m, totalEnergy, currents, batterySoC)
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (m *Meter) CurrentPower() (float64, error) {
 	return m.currentPowerG()
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (m *Meter) totalEnergy() (float64, error) {
 	return m.totalEnergyG()
 }
 
-// currents implements the Meter.Currents interface
+// currents implements the api.MeterCurrent interface
 func (m *Meter) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, currentG := range m.currentsG {
@@ -146,7 +146,7 @@ func (m *Meter) currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
-// batterySoC implements the Battery.SoC interface
+// batterySoC implements the api.Battery interface
 func (m *Meter) batterySoC() (float64, error) {
 	return m.batterySoCG()
 }
