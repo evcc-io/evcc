@@ -1,4 +1,4 @@
-package ocpp
+package profile
 
 import (
 	"strconv"
@@ -93,7 +93,7 @@ func (c ConfigMap) set(key string, readonly bool, value string) {
 	}
 }
 
-func getDefaultConfig() ConfigMap {
+func GetDefaultConfig() ConfigMap {
 	intBase := 10
 
 	var cfg ConfigMap = make(map[string]core.ConfigurationKey)
