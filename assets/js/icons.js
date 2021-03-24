@@ -21,6 +21,7 @@ import { faThermometerHalf } from "@fortawesome/free-solid-svg-icons/faThermomet
 import { faHeart } from "@fortawesome/free-solid-svg-icons/faHeart";
 import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
 import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
 
 library.add(
   faArrowDown,
@@ -41,7 +42,8 @@ library.add(
   faThermometerHalf,
   faHeart,
   faGift,
-  faBox
+  faBox,
+  faExclamationCircle
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

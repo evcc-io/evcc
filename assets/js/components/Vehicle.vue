@@ -29,8 +29,12 @@
 				:style="{ width: remainingSoCWidth + '%' }"
 			></div>
 		</div>
-		<small v-if="markerLabel()" class="subline py-2">
-			<fa-icon v-if="minSoCActive" class="text-muted mr-1" icon="battery-quarter"></fa-icon>
+		<small v-if="markerLabel()" class="subline my-2 text-secondary">
+			<fa-icon
+				v-if="minSoCActive"
+				class="text-muted mr-1"
+				icon="exclamation-circle"
+			></fa-icon>
 			<fa-icon v-else-if="targetChargeEnabled" class="text-muted mr-1" icon="clock"></fa-icon>
 			{{ markerLabel() }}
 		</small>
