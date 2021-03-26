@@ -630,6 +630,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 		// changed to C - start/stop charging cycle - handle before disconnect to update energy
 		if lp.charging() {
+			lp.findActiveVehicle()
 			lp.bus.Publish(evChargeStart)
 		} else if prevStatus == api.StatusC {
 			lp.bus.Publish(evChargeStop)
