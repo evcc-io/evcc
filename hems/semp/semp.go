@@ -1,6 +1,8 @@
 package semp
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"net"
@@ -8,12 +10,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
+	"github.com/denisbrodbeck/machineid"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -23,7 +27,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempLocalDevice  = "F-28081973-%s-%.02d"
+	sempDeviceId     = "F-28081973-%s-00"
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -301,13 +305,44 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	s.writeXML(w, msg)
 }
 
-func (s *SEMP) serialNumber() string {
+func (s *SEMP) serialNumber(id int) string {
 	uidParts := strings.SplitN(s.uid, "-", 5)
-	return uidParts[len(uidParts)-1]
+	ser := uidParts[len(uidParts)-1]
+
+	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
+var once sync.Once
+var seq []byte
+
+// deviceID creates a 6-bytes device id from machine id plus device number
 func (s *SEMP) deviceID(id int) string {
-	return fmt.Sprintf(sempLocalDevice, s.serialNumber(), id)
+	const bytes = 6
+	did := make([]byte, bytes)
+
+	once.Do(func() {
+		mid, err := machineid.ProtectedID("evcc-semp")
+		if err != nil {
+			panic(err)
+		}
+
+		b, err := hex.DecodeString(mid)
+		if err != nil {
+			panic(err)
+		}
+
+		for i, v := range b {
+			b[i%bytes] += v
+		}
+
+		seq = b[:bytes]
+	})
+
+	// numerically add device number
+	_ = copy(did, seq)
+	binary.BigEndian.PutUint32(did[2:], binary.BigEndian.Uint32(did[2:])+uint32(id))
+
+	return fmt.Sprintf(sempDeviceId, hex.EncodeToString(did))
 }
 
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
@@ -321,7 +356,7 @@ func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 			DeviceID:     s.deviceID(id),
 			DeviceName:   lp.Name(),
 			DeviceType:   sempCharger,
-			DeviceSerial: fmt.Sprintf(sempSerialNumber, s.serialNumber(), id),
+			DeviceSerial: s.serialNumber(id),
 			DeviceVendor: "github.com/andig/evcc",
 		},
 		Capabilities: Capabilities{
