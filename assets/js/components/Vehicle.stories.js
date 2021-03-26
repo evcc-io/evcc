@@ -19,6 +19,7 @@ Base.args = {
   connected: true,
   hasVehicle: true,
   socCharge: 42,
+  targetSoC: 90,
 };
 
 export const Connected = Template.bind({});
@@ -138,4 +139,5 @@ DisconnectedKnownSoc.args = {
   enabled: false,
   hasVehicle: true,
   socCharge: 17,
+  targetSoC: 60,
 };

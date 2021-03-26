@@ -106,7 +106,7 @@
 			</div>
 
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
-				<div class="mb-2">Modus</div>
+				<div class="mb-2 pb-1">Modus</div>
 				<Mode
 					class="btn-group-sm"
 					:mode="mode"
@@ -115,7 +115,7 @@
 				></Mode>
 			</div>
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi && hasTargetSoC">
-				<div class="mb-2">Ladeziel</div>
+				<div class="mb-2 pb-1">Ladeziel</div>
 				<Soc
 					class="btn-group-sm"
 					:soc="targetSoC"
