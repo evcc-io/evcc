@@ -2,7 +2,7 @@
 	<div>
 		<div class="row">
 			<div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
-				<p class="h1">{{ title || "Home" }}</p>
+				<p class="h1">{{ siteTitle || "Home" }}</p>
 			</div>
 			<div class="col-12 col-md-8 mt-md-4" v-if="multi">
 				<SiteDetails v-bind="details"></SiteDetails>
@@ -39,7 +39,7 @@ import collector from "../mixins/collector";
 export default {
 	name: "Site",
 	props: {
-		title: String,
+		siteTitle: String,
 		loadpoints: Array,
 
 		// details
