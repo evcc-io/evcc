@@ -55,7 +55,10 @@ func generateToken(username, password string) {
 		log.FATAL.Fatalln(err)
 	}
 
-	token := client.Token()
+	token, err := client.Token()
+	if err != nil {
+		log.FATAL.Fatalln(err)
+	}
 
 	fmt.Println()
 	fmt.Println("Add the following tokens to the tesla vehicle config:")

@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.0.3
-	github.com/bogosj/tesla v0.0.0-20210307093855-fdfc947ef8b9
+	github.com/bogosj/tesla v0.0.0-20210326132323-e3261e5d6c70
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dylanmei/iso8601 v0.1.0
@@ -60,7 +60,3 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
-
-replace github.com/spf13/viper => github.com/andig/viper v1.6.3-0.20201123175942-a5af09afab5b
-
-replace github.com/bogosj/tesla => github.com/andig/tesla v0.0.0-20210314124146-451f0ad993eb
