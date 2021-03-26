@@ -128,7 +128,7 @@ func meterCapabilities(name string, meter interface{}) string {
 
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
-	site.publish("title", site.Title)
+	site.publish("siteTitle", site.Title)
 
 	site.log.INFO.Println("site config:")
 	site.log.INFO.Printf("  meters:    grid %s pv %s battery %s",
