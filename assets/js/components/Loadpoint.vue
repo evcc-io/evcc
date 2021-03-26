@@ -56,7 +56,7 @@
 						/>
 						<fa-icon
 							icon="clock"
-							v-bind:class="{ fas: socTimerActive, far: !socTimerActive }"
+							v-bind:class="{ fas: timerActive, far: !timerActive }"
 						></fa-icon>
 					</label>
 				</div> -->
@@ -164,11 +164,13 @@ export default {
 		// vehicle
 		connected: Boolean,
 		// charging: Boolean,
+		enabled: Boolean,
 		socTitle: String,
 		socCharge: Number,
 		minSoC: Number,
-		socTimerSet: Boolean,
-		socTimerActive: Boolean,
+		timerSet: Boolean,
+		timerActive: Boolean,
+		targetTime: String,
 
 		// details
 		chargePower: Number,

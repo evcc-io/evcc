@@ -62,6 +62,6 @@ VehicleTimer.args = {
   hasVehicle: true,
   range: 240.123,
   chargeEstimate: 5 * 3600,
-  socTimerSet: true,
-  socTimerActive: true,
+  timerSet: true,
+  timerActive: true,
 };
