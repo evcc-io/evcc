@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "github.com/andig/evcc/internal/vehicle/cloud";
+
+service SoC {
+  rpc SoC (SoCRequest) returns (SoCReply) {}
+}
+
+message SoCRequest {
+  int64 vehicle = 1;
+}
+
+message SoCReply {
+  float soc = 1;
+}
