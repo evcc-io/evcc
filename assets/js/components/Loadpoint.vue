@@ -102,7 +102,7 @@
 
 		<div class="row">
 			<div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
-				<Vehicle v-bind="vehicle"></Vehicle>
+				<Vehicle v-bind="vehicle" @target-soc-updated="setTargetMode"></Vehicle>
 			</div>
 
 			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
