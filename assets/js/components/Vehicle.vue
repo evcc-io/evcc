@@ -270,7 +270,7 @@ export default {
 	padding: 0 15px;
 	box-sizing: content-box;
 	background-clip: content-box;
-	background-color: var(--primary);
+	background-color: var(--dark);
 	cursor: grab;
 	border: none;
 	transform: scaleY(1.2);
