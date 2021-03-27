@@ -1,33 +1,41 @@
 <template>
 	<div>
-		<div class="mb-3">
+		<div class="mb-2 pb-1">
 			{{ socTitle || "Fahrzeug" }}
 		</div>
-		<div class="progress" style="height: 28px; font-size: 100%">
-			<div
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					[progressColor]: true,
-				}"
-				:style="{ width: socChargeDisplayWidth + '%' }"
-			>
-				{{ socChargeDisplayValue }}
+		<div class="soc-bar">
+			<div class="progress small">
+				<div
+					class="progress-bar"
+					role="progressbar"
+					:class="{
+						'progress-bar-striped': charging,
+						'progress-bar-animated': charging,
+						[progressColor]: true,
+					}"
+					:style="{ width: `${socChargeDisplayWidth}%` }"
+				>
+					{{ socChargeDisplayValue }}
+				</div>
+				<div
+					v-if="remainingSoCWidth > 0"
+					class="progress-bar"
+					role="progressbar"
+					:class="{
+						'progress-bar-striped': charging,
+						'progress-bar-animated': charging,
+						[progressColor]: true,
+						'bg-muted': true,
+					}"
+					:style="{ width: `${remainingSoCWidth}%` }"
+				></div>
+				<div
+					v-if="socMarker"
+					class="soc-marker"
+					:class="{ [progressColor]: true }"
+					:style="{ left: `${socMarker}%` }"
+				></div>
 			</div>
-			<div
-				v-if="remainingSoCWidth"
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					[progressColor]: true,
-					'bg-muted': true,
-				}"
-				:style="{ width: remainingSoCWidth + '%' }"
-			></div>
 		</div>
 		<small v-if="markerLabel()" class="subline my-2 text-secondary">
 			<fa-icon
@@ -88,13 +96,10 @@ export default {
 			return socCharge;
 		},
 		socMarker: function () {
-			if (!this.connected || !this.hasVehicle) {
-				return null;
-			}
 			if (this.minSoCActive) {
 				return this.minSoC;
 			}
-			if (this.targetChargeEnabled) {
+			if (this.targetSoC > this.socCharge) {
 				return this.targetSoC;
 			}
 			return null;
@@ -118,13 +123,13 @@ export default {
 			return this.targetTime && this.timerSet;
 		},
 		remainingSoCWidth: function () {
-			if (!this.connected || this.socCharge === 100) {
+			if (this.socCharge === 100) {
 				return null;
 			}
 			if (this.minSoCActive) {
 				return this.minSoC - this.socCharge;
 			}
-			if (this.targetChargeEnabled) {
+			if (this.targetSoC > this.socCharge) {
 				return this.targetSoC - this.socCharge;
 			}
 			return null;
@@ -158,22 +163,22 @@ export default {
 	display: flex;
 	align-items: center;
 }
+.soc-bar {
+	position: relative;
+	height: 31px;
+}
 .progress {
-	overflow: visible;
+	height: 100%;
+	font-size: 0.875rem;
 }
 .progress-bar.bg-muted {
-	position: relative;
-	overflow: visible;
 	color: var(--white);
 }
-.progress-bar.bg-muted::after {
+.soc-marker {
 	position: absolute;
-	right: 0;
-	top: -5px;
-	height: calc(100% + 10px);
+	top: -2px;
+	bottom: -2px;
 	width: 2px;
-	background: var(--dark);
-	content: "";
 }
 .bg-disabled {
 	background-color: var(--gray);
