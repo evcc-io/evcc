@@ -30,3 +30,13 @@ func ChallengeVerifier() (string, string, error) {
 
 	return challenge, verifier, nil
 }
+
+// GetInterfaceInt returns an integer based on unknown or switching interface attribute types
+func GetInterfaceInt(i interface{}, defaultInt int) int {
+	switch i := i.(type) {
+	case float64:
+		return int(i)
+	default:
+		return defaultInt
+	}
+}

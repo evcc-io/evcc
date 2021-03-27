@@ -625,6 +625,7 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 		// changed from A - connected
 		if prevStatus == api.StatusA {
+			lp.findActiveVehicle()
 			lp.bus.Publish(evVehicleConnect)
 		}
 

@@ -28,6 +28,12 @@ type TimedString struct {
 	Timestamp string
 }
 
+// TimedInterface is a value having switching types with timestamp
+type TimedInterface struct {
+	Content   interface{} `json:"content"`
+	Timestamp string
+}
+
 // Temp2Float converts api temp to float value
 func Temp2Float(val int) float64 {
 	return float64(val)/10 - 273
@@ -161,7 +167,7 @@ type ClimaterResponse struct {
 				RemainingClimatisationTime TimedInt
 			}
 			TemperatureStatusData struct {
-				OutdoorTemperature TimedInt
+				OutdoorTemperature TimedInterface
 			}
 			VehicleParkingClockStatusData struct {
 				VehicleParkingClock TimedString
