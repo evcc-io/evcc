@@ -19,7 +19,6 @@ require (
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/gokrazy/updater v0.0.0-20210106211705-4d92b338dd24
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.5.1 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/handlers v1.5.1
@@ -59,8 +58,8 @@ require (
 	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
 	golang.org/x/text v0.3.5
 	google.golang.org/genproto v0.0.0-20210325224202-eed09b1b5210 // indirect
-	google.golang.org/grpc v1.36.1 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0 // indirect
+	google.golang.org/grpc v1.36.1
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
