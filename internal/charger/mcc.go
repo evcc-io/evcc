@@ -107,7 +107,8 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 		}
 
 		mcc.token = tr.Token
-		// According to the Web Interface, the token is valid for 2 minutes
+		// According to tests, the token is valid for 10 minutes
+		// but the web interface updates the token every 2 minutes, so let's enforce this
 		mcc.tokenExpiry = time.Now().Add(2 * time.Minute)
 	}
 
@@ -151,16 +152,23 @@ func (mcc *MobileConnect) refresh() error {
 
 // creates a http request that contains the auth token
 func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
-	// do we need to login?
-	if mcc.token == "" {
-		if err := mcc.login(mcc.password); err != nil {
-			return nil, err
+
+	// do we need a token refresh?
+	if mcc.token != "" {
+		// is it time to refresh the token?
+		if time.Until(mcc.tokenExpiry) < 10*time.Second {
+			if err := mcc.refresh(); err != nil {
+				// if refreshing the token fails it most likely is expired
+				// hence a new login is required, so let's enforce this
+				// and ignore this error
+				mcc.token = ""
+			}
 		}
 	}
 
-	// is it time to refresh the token?
-	if time.Until(mcc.tokenExpiry) < 10*time.Second {
-		if err := mcc.refresh(); err != nil {
+	// do we need to login?
+	if mcc.token == "" {
+		if err := mcc.login(mcc.password); err != nil {
 			return nil, err
 		}
 	}
