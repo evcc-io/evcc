@@ -45,7 +45,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("cloud")
-	client, err := cloud.Client(log, "localhost:8080")
+	client, err := cloud.Client(log, cloud.Host)
 
 	var vehicleID int64
 	if err == nil {

@@ -1,10 +1,14 @@
 package cloud
 
 import (
+	"os"
+
 	"github.com/andig/evcc/proto/pb"
 	"github.com/andig/evcc/util"
 	"google.golang.org/grpc"
 )
+
+var Host = os.Getenv("GRPC_URI")
 
 var (
 	conn   *grpc.ClientConn
