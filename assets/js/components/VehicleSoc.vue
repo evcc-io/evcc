@@ -18,16 +18,21 @@
 				class="progress-bar"
 				role="progressbar"
 				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
 					[progressColor]: true,
 					'bg-muted': true,
 				}"
 				:style="{ width: `${remainingSoCWidth}%`, transition: 'none' }"
 			></div>
 		</div>
-		<div class="target-soc" v-if="hasVehicle && visibleTargetSoC">
-			<div class="target-soc__label" :style="{ left: `${visibleTargetSoC}%` }">
+		<div
+			v-if="hasVehicle && visibleTargetSoC"
+			class="target"
+			:class="{ 'target--max': visibleTargetSoC === 100 }"
+		>
+			<div
+				class="target-label d-flex align-items-center justify-content-center"
+				:style="{ left: `${visibleTargetSoC}%` }"
+			>
 				{{ visibleTargetSoC }}%
 			</div>
 			<input
@@ -36,7 +41,7 @@
 				max="100"
 				step="5"
 				:value="visibleTargetSoC"
-				class="target-soc__range"
+				class="target-slider"
 				@input="movedTargetSoC"
 				@change="setTargetSoC"
 			/>
@@ -117,7 +122,7 @@ export default {
 			return null;
 		},
 		visibleTargetSoC: function () {
-			return this.selectedTargetSoC || this.targetSoC;
+			return Number(this.selectedTargetSoC || this.targetSoC);
 		},
 	},
 	methods: {
@@ -140,8 +145,13 @@ export default {
 </script>
 <style scoped>
 .vehicle-soc {
+	--height: 31px;
+	--thumb-overlap: 3px;
+	--thumb-width: 3px;
+	--thumb-horizontal-padding: 15px;
+	--label-height: 26px;
 	position: relative;
-	height: 31px;
+	height: var(--height);
 }
 .progress {
 	height: 100%;
@@ -150,63 +160,92 @@ export default {
 .progress-bar.bg-muted {
 	color: var(--white);
 }
-.target-soc__label {
+.bg-light {
+	color: var(--dark);
+}
+.target-label {
 	width: 3em;
 	margin-left: -1.5em;
+	height: var(--label-height);
 	position: absolute;
-	top: -90%;
+	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
 	text-align: center;
 	color: var(--dark);
 	font-size: 0.875rem;
+	opacity: 1;
+	transition: opacity 0.2s ease 1s;
 }
-.target-soc__range {
+.target-slider {
 	-webkit-appearance: none;
 	position: absolute;
-	top: 0;
-	left: -15px;
-	height: 100%;
-	width: calc(100% + 2 * 15px);
+	top: calc(var(--thumb-overlap) * -1);
+	left: calc(var(--thumb-horizontal-padding) * -1);
+	height: calc(100% + 2 * var(--thumb-overlap));
+	width: calc(100% + 2 * var(--thumb-horizontal-padding));
 	background: transparent;
 }
-.target-soc__range:focus {
+.target-slider:focus {
 	outline: none;
 }
-.target-soc__range::-webkit-slider-runnable-track {
+/* Note: Safari,Chrome,Blink and Firefox specific styles need to be in separate definitions to work */
+.target-slider::-webkit-slider-runnable-track {
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: pointer;
 }
-.target-soc__range::-moz-range-track {
+.target-slider::-moz-range-track {
 	background: transparent;
 	border: none;
 	height: 100%;
 	cursor: pointer;
 }
-.target-soc__range::-webkit-slider-thumb {
+.target-slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
+	position: relative;
+	top: calc(var(--label-height) * -1);
 	height: 100%;
-	width: 3px;
-	padding: 0 15px;
+	width: var(--thumb-width);
+	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
 	background-color: var(--dark);
 	cursor: grab;
 	border: none;
-	transform: scaleY(1.2);
+	opacity: 1;
+	transition: opacity 0.2s ease 1s;
 }
-.target-soc__range::-moz-range-thumb {
+.target-slider::-moz-range-thumb {
+	position: relative;
+	top: calc(var(--label-height) * -1);
 	height: 100%;
-	width: 3px;
-	padding: 0 15px;
+	width: var(--thumb-width);
+	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
 	background-color: var(--dark);
 	cursor: grab;
 	border: none;
-	transform: scaleY(1.2);
+	opacity: 1;
+	transition: opacity 0.2s ease 1s;
 }
-.bg-light {
-	color: var(--dark);
+/* auto-hide targetSoC marker at 100% */
+.target--max .target-slider::-webkit-slider-thumb,
+.target--max .target-label {
+	opacity: 0;
+}
+.target--max .target-slider::-moz-range-thumb,
+.target--max .target-label {
+	opacity: 0;
+}
+.target:hover .target-slider::-webkit-slider-thumb,
+.target:hover .target-label {
+	opacity: 1;
+	transition-delay: 0s;
+}
+.target:hover .target-slider::-moz-range-thumb,
+.target:hover .target-label {
+	opacity: 1;
+	transition-delay: 0s;
 }
 </style>
