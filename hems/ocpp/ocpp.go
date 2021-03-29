@@ -40,7 +40,7 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache) (*OC
 	log := util.NewLogger("ocpp")
 
 	if cc.StationID == "" {
-		id, err := machineid.ID()
+		id, err := machineid.ProtectedID("evcc-ocpp")
 		if err == nil {
 			cc.StationID = fmt.Sprintf("evcc-%s", strings.ToLower(id))
 		} else {
