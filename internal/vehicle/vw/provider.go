@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"math"
 	"strings"
 	"time"
 
@@ -104,8 +105,12 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 		active := state != "off" && state != "invalid" && state != "error"
 
-		outsideTemp = Temp2Float(res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content)
 		targetTemp = Temp2Float(res.Climater.Settings.TargetTemperature.Content)
+
+		outsideTemp = Temp2Float(res.Climater.Status.TemperatureStatusData.OutdoorTemperature.Content)
+		if math.IsNaN(outsideTemp) {
+			outsideTemp = targetTemp // to cover "invalid" json content and avoid wrong climater behaviour
+		}
 
 		return active, outsideTemp, targetTemp, nil
 	}
