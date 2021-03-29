@@ -2,6 +2,7 @@ package vw
 
 import (
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 
@@ -28,9 +29,20 @@ type TimedString struct {
 	Timestamp string
 }
 
+// TimedTemperature is a interface to handle api temp (float + string) values with timestamp
+type TimedTemperature struct {
+	Content   interface{} `json:"content"`
+	Timestamp string
+}
+
 // Temp2Float converts api temp to float value
-func Temp2Float(val int) float64 {
-	return float64(val)/10 - 273
+func Temp2Float(i interface{}) float64 {
+	switch i := i.(type) {
+	case float64:
+		return (i)/10 - 273
+	default:
+		return math.NaN()
+	}
 }
 
 // API is the VW api client
@@ -151,7 +163,7 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 type ClimaterResponse struct {
 	Climater struct {
 		Settings struct {
-			TargetTemperature TimedInt
+			TargetTemperature TimedTemperature
 			HeaterSource      TimedString
 		}
 		Status struct {
@@ -161,7 +173,7 @@ type ClimaterResponse struct {
 				RemainingClimatisationTime TimedInt
 			}
 			TemperatureStatusData struct {
-				OutdoorTemperature TimedInt
+				OutdoorTemperature TimedTemperature
 			}
 			VehicleParkingClockStatusData struct {
 				VehicleParkingClock TimedString
