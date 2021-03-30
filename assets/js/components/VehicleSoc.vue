@@ -145,7 +145,7 @@ export default {
 </script>
 <style scoped>
 .vehicle-soc {
-	--height: 31px;
+	--height: 25px;
 	--thumb-overlap: 3px;
 	--thumb-width: 3px;
 	--thumb-horizontal-padding: 15px;

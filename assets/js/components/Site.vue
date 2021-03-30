@@ -4,16 +4,7 @@
 			<div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
 				<p class="h1">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-8 mt-md-4" v-if="multi">
-				<SiteDetails v-bind="details"></SiteDetails>
-			</div>
-		</div>
-
-		<div class="row d-none d-md-flex border-bottom"></div>
-
-		<div class="row" v-if="!multi">
-			<div class="d-none d-md-block col-md-4"></div>
-			<div class="col-12 col-md-8">
+			<div class="col-12 col-md-8 mt-3" v-if="multi">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
@@ -25,8 +16,7 @@
 			:key="id"
 			:multi="multi"
 			:pvConfigured="pvConfigured"
-		>
-		</Loadpoint>
+		/>
 	</div>
 </template>
 

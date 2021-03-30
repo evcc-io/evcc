@@ -8,8 +8,8 @@
 		</div>
 		<button
 			v-if="targetSoC"
-			class="target-time-button btn btn-link btn-sm pr-0 text-secondary"
-			:class="{ 'text-dark': timerSet, 'text-muted': !timerSet }"
+			class="target-time-button btn btn-link btn-sm pr-0"
+			:class="{ 'text-dark': timerActive, 'text-secondary': !timerActive }"
 			@click="selectTargetTime"
 		>
 			{{ targetTimeLabel() }}<fa-icon class="ml-1" icon="clock"></fa-icon>
@@ -25,8 +25,8 @@
 								<span aria-hidden="true">&times;</span>
 							</button>
 						</div>
-						<div class="modal-body">
-							<form>
+						<form @submit.prevent="saveTargetTime">
+							<div class="modal-body">
 								<div class="form-group">
 									<label for="targetTimeLabel"
 										>Wann soll das Fahrzeug auf
@@ -56,29 +56,28 @@
 										/>
 									</div>
 								</div>
-							</form>
-							<p v-if="selectedTargetTimeValid"></p>
-							<p class="text-danger" v-if="!selectedTargetTimeValid">
-								Zeitpunkt liegt in der Vergangenheit.
-							</p>
-						</div>
-						<div class="modal-footer d-flex justify-content-between">
-							<button
-								type="button"
-								class="btn btn-outline-secondary"
-								@click="saveTargetTime"
-							>
-								Keine Zeilzeit
-							</button>
-							<button
-								type="button"
-								class="btn btn-primary"
-								@click="saveTargetTime"
-								:disabled="!selectedTargetTimeValid"
-							>
-								Zielzeit aktivieren
-							</button>
-						</div>
+								<p v-if="selectedTargetTimeValid"></p>
+								<p class="text-danger" v-if="!selectedTargetTimeValid">
+									Zeitpunkt liegt in der Vergangenheit.
+								</p>
+							</div>
+							<div class="modal-footer d-flex justify-content-between">
+								<button
+									type="button"
+									class="btn btn-outline-secondary"
+									@click="removeTargetTime"
+								>
+									Keine Zeilzeit
+								</button>
+								<button
+									type="submit"
+									class="btn btn-primary"
+									:disabled="!selectedTargetTimeValid"
+								>
+									Zielzeit aktivieren
+								</button>
+							</div>
+						</form>
 					</div>
 				</div>
 			</div>
@@ -130,16 +129,9 @@ export default {
 		targetTimeLabel: function () {
 			if (this.targetChargeEnabled) {
 				const targetDate = new Date(this.targetTime);
-				if (this.timerActive) {
-					return `Lädt ${this.fmtRelativeTime(targetDate)} bis ${this.targetSoC}%`;
-				} else {
-					return `Geplant bis ${this.fmtAbsoluteDate(targetDate)} bis ${this.targetSoC}%`;
-				}
+				return `bis ${this.fmtAbsoluteDate(targetDate)} Uhr`;
 			}
-			return "Zielzeit festlegen";
-		},
-		minDate: function () {
-			return new Date().toISOString().split("T")[0];
+			return "Zielzeit";
 		},
 		defaultDate: function () {
 			const now = new Date();
@@ -150,21 +142,21 @@ export default {
 			return now;
 		},
 		initInputFields: function () {
-			const date = this.targetTime ? new Date(this.targetTime) : this.defaultDate();
-
-			this.selectedDay = date.toISOString().split("T")[0];
-			this.selectedTime = date.toTimeString().slice(0, 5);
+			const date = this.targetChargeEnabled ? new Date(this.targetTime) : this.defaultDate();
+			this.selectedDay = this.fmtDayString(date);
+			this.selectedTime = this.fmtTimeString(date);
 		},
 		dayOptions: function () {
 			const options = [];
 			const date = new Date();
 			const labels = ["heute", "morgen"];
 			for (let i = 0; i < 7; i++) {
-				const dayNumber = date.toLocaleDateString("de-DE", {
+				const dayNumber = date.toLocaleDateString("default", {
 					month: "long",
 					day: "numeric",
 				});
-				const dayName = labels[i] || date.toLocaleDateString("de-DE", { weekday: "long" });
+				const dayName =
+					labels[i] || date.toLocaleDateString("default", { weekday: "long" });
 				options.push({
 					value: date.toISOString().split("T")[0],
 					name: `${dayNumber} (${dayName})`,
@@ -182,8 +174,12 @@ export default {
 		closeModal: function () {
 			this.targetTimeModalActive = false;
 		},
+		removeTargetTime: function () {
+			this.$emit("target-time-updated", new Date(null));
+			this.closeModal();
+		},
 		saveTargetTime: function () {
-			alert("gespeichert");
+			this.$emit("target-time-updated", this.selectedTargetTime);
 			this.closeModal();
 		},
 	},

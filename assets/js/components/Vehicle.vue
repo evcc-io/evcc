@@ -1,10 +1,12 @@
 <template>
-	<div>
-		<div class="mb-2 pb-1">
-			{{ socTitle || "Fahrzeug" }}
-		</div>
+	<div class="pt-3 pb-2">
+		<div class="mb-3">{{ socTitle }}</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
-		<VehicleSubline v-bind="vehicleSubline" class="my-1" />
+		<VehicleSubline
+			v-bind="vehicleSubline"
+			@target-time-updated="targetTimeUpdated"
+			class="my-1"
+		/>
 	</div>
 </template>
 
@@ -18,13 +20,13 @@ export default {
 	name: "Vehicle",
 	components: { VehicleSoc, VehicleSubline },
 	props: {
-		socTitle: String,
 		connected: Boolean,
 		hasVehicle: Boolean,
 		socCharge: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
+		socTitle: String,
 		timerActive: Boolean,
 		timerSet: Boolean,
 		targetTime: String,
@@ -44,8 +46,11 @@ export default {
 		},
 	},
 	methods: {
-		targetSocUpdated: function (value) {
-			this.$emit("target-soc-updated", value);
+		targetSocUpdated: function (targetSoC) {
+			this.$emit("target-soc-updated", targetSoC);
+		},
+		targetTimeUpdated: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
 		},
 	},
 	mixins: [collector],
