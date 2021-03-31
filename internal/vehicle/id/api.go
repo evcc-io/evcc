@@ -95,10 +95,10 @@ type BatteryStatus struct {
 // ChargingStatus is the /status.chargingStatus api
 type ChargingStatus struct {
 	CarCapturedTimestamp               string
-	ChargingState                      string // readyForCharging
-	RemainingChargingTimeToCompleteMin int    `json:"remainingChargingTimeToComplete_min"`
-	ChargePowerKW                      int    `json:"chargePower_kW"`
-	ChargeRateKmph                     int    `json:"chargeRate_kmph"`
+	ChargingState                      string  // readyForCharging
+	RemainingChargingTimeToCompleteMin int     `json:"remainingChargingTimeToComplete_min"`
+	ChargePowerKW                      float64 `json:"chargePower_kW"`
+	ChargeRateKmph                     int     `json:"chargeRate_kmph"`
 }
 
 // ChargingSettings is the /status.chargingSettings api
