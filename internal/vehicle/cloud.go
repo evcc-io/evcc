@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -42,6 +43,10 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if host := os.Getenv("GRPC_URI"); host != "" {
+		cloud.Host = host
 	}
 
 	log := util.NewLogger("cloud")
