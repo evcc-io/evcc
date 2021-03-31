@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-var Host = "sloppy.evcc.io:8080"
+var Host = "cloud.evcc.io:8080"
 
 var (
 	conn   *grpc.ClientConn
@@ -24,13 +24,13 @@ func loadTLSCredentials() (*tls.Config, error) {
 		return nil, fmt.Errorf("failed to add client CA's certificate")
 	}
 
-	// Load client's certificate and private key
+	// load client's certificate and private key
 	clientCert, err := clientCertificate()
 	if err != nil {
 		return nil, err
 	}
 
-	// Create the credentials and return it
+	// create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{clientCert},
 		RootCAs:      certPool,

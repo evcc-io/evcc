@@ -1,6 +1,7 @@
 .PHONY: default all clean install install-ui ui assets lint lint-ui test build test-release release
 .PHONY: docker publish-testing publish-latest publish-images
 .PHONY: prepare-image image-rootfs image-update
+.PHONY: soc
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -53,6 +54,10 @@ test:
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
+
+soc:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	GOOS=linux GOARCH=arm GOARM=6 go build -v $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/cmd/soc
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
