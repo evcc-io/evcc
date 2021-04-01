@@ -18,7 +18,7 @@ type TimedString struct {
 	Timestamp string
 }
 
-// TimedTemperature is a interface to handle api temp (float + string) values with timestamp
+// TimedTemperature is the api temperature with timestamp
 type TimedTemperature struct {
 	Content   float64
 	Timestamp string
@@ -26,7 +26,7 @@ type TimedTemperature struct {
 
 func (t *TimedTemperature) UnmarshalJSON(data []byte) error {
 	var temp struct {
-		Content   json.RawMessage
+		Content   json.RawMessage // handle "invalid"
 		Timestamp string
 	}
 
