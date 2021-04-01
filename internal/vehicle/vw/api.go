@@ -2,7 +2,6 @@ package vw
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"strings"
 
@@ -16,34 +15,6 @@ const DefaultBaseURI = "https://msg.volkswagen.de/fs-car"
 
 // RegionAPI is the VW api used for determining the home region
 const RegionAPI = "https://mal-1a.prd.ece.vwg-connect.com/api"
-
-// TimedInt is an int value with timestamp
-type TimedInt struct {
-	Content   int
-	Timestamp string
-}
-
-// TimedString is a string value with timestamp
-type TimedString struct {
-	Content   string
-	Timestamp string
-}
-
-// TimedTemperature is a interface to handle api temp (float + string) values with timestamp
-type TimedTemperature struct {
-	Content   interface{} `json:"content"`
-	Timestamp string
-}
-
-// Temp2Float converts api temp to float value
-func Temp2Float(i interface{}) float64 {
-	switch i := i.(type) {
-	case float64:
-		return (i)/10 - 273
-	default:
-		return math.NaN()
-	}
-}
 
 // API is the VW api client
 type API struct {
