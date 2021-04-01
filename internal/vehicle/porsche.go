@@ -29,6 +29,32 @@ type porscheTokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
+type porscheVehicles struct {
+	VIN              string
+	ModelDescription string
+}
+
+type porscheVehicleResponse struct {
+	CarControlData struct {
+		BatteryLevel struct {
+			Unit  string
+			Value float64
+		}
+		Mileage struct {
+			Unit  string
+			Value float64
+		}
+		RemainingRanges struct {
+			ElectricalRange struct {
+				Distance struct {
+					Unit  string
+					Value float64
+				}
+			}
+		}
+	}
+}
+
 type porscheEmobilityResponse struct {
 	BatteryChargeStatus struct {
 		ChargeRate struct {
@@ -69,12 +95,15 @@ type porscheEmobilityResponse struct {
 type Porsche struct {
 	*embed
 	*request.Helper
-	user, password, vin string
-	token               string
-	tokenValid          time.Time
-	emobiltyToken       string
-	emobilityTokenValid time.Time
-	chargerG            func() (interface{}, error)
+	user, password, vin     string
+	vehicleList             []porscheVehicles
+	token                   string
+	tokenValid              time.Time
+	emobilityVehicle        bool
+	emobilityTokenAvailable bool
+	emobiltyToken           string
+	emobilityTokenValid     time.Time
+	chargerG                func() (interface{}, error)
 }
 
 func init() {
@@ -117,6 +146,16 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
+
+		// check if the found vehicle is a Taycan, because that one supports the emobility API
+		if v.emobilityTokenAvailable {
+			for _, item := range v.vehicleList {
+				if v.vin == item.VIN && strings.Contains(item.ModelDescription, "Taycan") {
+					v.emobilityVehicle = true
+				}
+			}
+		}
+
 	}
 
 	v.chargerG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
@@ -262,24 +301,27 @@ func (v *Porsche) authFlow() error {
 	v.tokenValid = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
 
 	if pr, err = v.fetchToken(client, true); err != nil {
-		return err
+		// we don't need to return this error, because we simply won't use the emobility API in this case
+		return nil
 	}
 
+	v.emobilityTokenAvailable = true
 	v.emobiltyToken = pr.AccessToken
 	v.emobilityTokenValid = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
 
-	return err
+	return nil
 }
 
-func (v *Porsche) request(uri string, emobility bool) (*http.Request, error) {
-	if v.token == "" || time.Since(v.tokenValid) > 0 || v.emobiltyToken == "" || time.Since(v.emobilityTokenValid) > 0 {
+func (v *Porsche) request(uri string, emobilityRequest bool) (*http.Request, error) {
+	if v.token == "" || time.Since(v.tokenValid) > 0 ||
+		(v.emobilityVehicle && (v.emobiltyToken == "" || time.Since(v.emobilityTokenValid) > 0)) {
 		if err := v.authFlow(); err != nil {
 			return nil, err
 		}
 	}
 
 	token := v.token
-	if emobility {
+	if emobilityRequest {
 		token = v.emobiltyToken
 	}
 
@@ -294,14 +336,10 @@ func (v *Porsche) vehicles() (res []string, err error) {
 	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
 	req, err := v.request(uri, false)
 
-	var vehicles []struct {
-		VIN string
-	}
-
 	if err == nil {
-		err = v.DoJSON(req, &vehicles)
+		err = v.DoJSON(req, &v.vehicleList)
 
-		for _, v := range vehicles {
+		for _, v := range v.vehicleList {
 			res = append(res, v.VIN)
 		}
 	}
@@ -311,24 +349,43 @@ func (v *Porsche) vehicles() (res []string, err error) {
 
 // chargeState implements the api.Vehicle interface
 func (v *Porsche) chargeState() (interface{}, error) {
-	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/J1/%s?timezone=Europe/Berlin", v.vin)
-	req, err := v.request(uri, true)
-	if err != nil {
-		return 0, err
+	if v.emobilityVehicle {
+		uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/J1/%s?timezone=Europe/Berlin", v.vin)
+		req, err := v.request(uri, true)
+		if err != nil {
+			return 0, err
+		}
+
+		req.Header.Set("apikey", porscheEmobilityAPIClientID)
+		var pr porscheEmobilityResponse
+		err = v.DoJSON(req, &pr)
+
+		return pr, err
+	} else {
+		uri := fmt.Sprintf("https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles/%s", v.vin)
+		req, err := v.request(uri, false)
+		if err != nil {
+			return 0, err
+		}
+
+		var pr porscheVehicleResponse
+		err = v.DoJSON(req, &pr)
+
+		return pr, err
 	}
-
-	req.Header.Set("apikey", porscheEmobilityAPIClientID)
-	var pr porscheEmobilityResponse
-	err = v.DoJSON(req, &pr)
-
-	return pr, err
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Porsche) SoC() (float64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
-		return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
+	if v.emobilityVehicle {
+		if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+			return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
+		}
+	} else {
+		if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+			return res.CarControlData.BatteryLevel.Value, nil
+		}
 	}
 
 	return 0, err
@@ -339,18 +396,22 @@ var _ api.ChargeState = (*Porsche)(nil)
 // Status implements the api.ChargeState interface
 func (v *Porsche) Status() (api.ChargeStatus, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
-		switch res.BatteryChargeStatus.PlugState {
-		case "DISCONNECTED":
-			return api.StatusA, nil
-		case "CONNECTED":
-			switch res.BatteryChargeStatus.ChargingState {
-			case "OFF", "COMPLETED":
-				return api.StatusB, nil
-			case "ON":
-				return api.StatusC, nil
+	if v.emobilityVehicle {
+		if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+			switch res.BatteryChargeStatus.PlugState {
+			case "DISCONNECTED":
+				return api.StatusA, nil
+			case "CONNECTED":
+				switch res.BatteryChargeStatus.ChargingState {
+				case "OFF", "COMPLETED":
+					return api.StatusB, nil
+				case "ON":
+					return api.StatusC, nil
+				}
 			}
 		}
+	} else {
+		return api.StatusNone, err
 	}
 
 	return api.StatusNone, err
@@ -361,8 +422,14 @@ var _ api.VehicleRange = (*Porsche)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Porsche) Range() (int64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
-		return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
+	if v.emobilityVehicle {
+		if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+			return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
+		}
+	} else {
+		if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+			return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
+		}
 	}
 
 	return 0, err
@@ -374,9 +441,11 @@ var _ api.VehicleFinishTimer = (*Porsche)(nil)
 func (v *Porsche) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
 
-	if res, ok := res.(*porscheEmobilityResponse); err == nil && ok {
-		t := time.Now()
-		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+	if v.emobilityVehicle {
+		if res, ok := res.(*porscheEmobilityResponse); err == nil && ok {
+			t := time.Now()
+			return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+		}
 	}
 
 	return time.Time{}, err
@@ -387,12 +456,14 @@ var _ api.VehicleClimater = (*Porsche)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Porsche) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.chargerG()
-	if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
-		switch res.DirectClimatisation.ClimatisationState {
-		case "OFF":
-			return false, 0, 0, nil
-		case "ON":
-			return true, 0, 0, nil
+	if v.emobilityVehicle {
+		if res, ok := res.(porscheEmobilityResponse); err == nil && ok {
+			switch res.DirectClimatisation.ClimatisationState {
+			case "OFF":
+				return false, 0, 0, nil
+			case "ON":
+				return true, 0, 0, nil
+			}
 		}
 	}
 
