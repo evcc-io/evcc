@@ -56,7 +56,7 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 	}
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          fmt.Sprintf("%s/cm"+"?", strings.TrimRight(uri, "/")),
+		uri:          fmt.Sprintf("%s/cm?", strings.TrimRight(uri, "/")),
 		parameters:   parameters,
 		standbypower: standbypower,
 	}
