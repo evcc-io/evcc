@@ -4,32 +4,23 @@
 			<div class="col-12">
 				<h4>{{ title || "Ladepunkt" }}</h4>
 			</div>
-
-			<div class="col-12">
-				<div class="row my-3 pb-3 bg-light">
-					<div class="col-12 mt-3">
-						<Mode
-							:mode="mode"
-							:pvConfigured="pvConfigured"
-							v-on:updated="setTargetMode"
-						></Mode>
-					</div>
-				</div>
-			</div>
 		</div>
-
 		<div class="row">
-			<div class="col-12 col-lg-5 pr-lg-4">
+			<div class="col-12 col-md-8 col-lg-6 pr-4">
 				<Vehicle
+					class="mb-2"
 					v-bind="vehicle"
 					@target-soc-updated="setTargetSoC"
 					@target-time-updated="setTargetTime"
-				></Vehicle>
+				/>
+				<Mode
+					class="py-1 mb-4"
+					:mode="mode"
+					:pvConfigured="pvConfigured"
+					v-on:updated="setTargetMode"
+				/>
 			</div>
-
-			<div class="col-12 col-lg-7 pl-lg-4">
-				<LoadpointDetails v-bind="details"></LoadpointDetails>
-			</div>
+			<LoadpointDetails v-bind="details" class="col-12 col-md-4 offset-lg-1 col-lg-4" />
 		</div>
 	</div>
 </template>

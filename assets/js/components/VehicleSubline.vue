@@ -9,7 +9,7 @@
 		<button
 			v-if="targetSoC"
 			class="target-time-button btn btn-link btn-sm pr-0"
-			:class="{ 'text-dark': timerActive, 'text-secondary': !timerActive }"
+			:class="{ 'text-primary': timerActive, 'text-secondary': !timerActive }"
 			@click="selectTargetTime"
 		>
 			{{ targetTimeLabel() }}<fa-icon class="ml-1" icon="clock"></fa-icon>
