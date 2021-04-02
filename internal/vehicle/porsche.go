@@ -9,15 +9,10 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-const (
-	porscheAPIClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
-	porscheEmobilityAPIClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
-)
-
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
 	*embed
-	*porsche.Provider // provides the api implementations
+	api.Battery // provides the api implementations
 }
 
 func init() {
@@ -47,15 +42,25 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	api := porsche.NewAPI(log, porscheAPIClientID, porscheEmobilityAPIClientID, cc.User, cc.Password)
-	err = api.Login()
+	porscheAPI := porsche.NewAPI(log, cc.User, cc.Password)
+	err = porscheAPI.Login()
 	if err != nil {
-		return v, fmt.Errorf("login failed: %w", err)
+		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vin, err := api.FindVehicle(cc.VIN)
+	vehicle, err := porscheAPI.FindVehicle(cc.VIN)
+	if err != nil {
+		return nil, err
+	}
 
-	v.Provider = porsche.NewProvider(api, vin, cc.Cache)
+	var provider api.Battery
+	if vehicle.EmobilityVehicle {
+		provider = porsche.NewEMobilityProvider(porscheAPI, vehicle.VIN, cc.Cache)
+	} else {
+		provider = porsche.NewProvider(porscheAPI, vehicle.VIN, cc.Cache)
+	}
+
+	v.Battery = provider
 
 	return v, err
 }

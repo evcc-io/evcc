@@ -15,6 +15,11 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+const (
+	porscheAPIClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
+	porscheEmobilityAPIClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
+)
+
 type porscheTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	IDToken     string `json:"id_token"`
@@ -38,14 +43,14 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, clientID, emobilityClientID, user, password string) *API {
+func NewAPI(log *util.Logger, user, password string) *API {
 	v := &API{
 		log:               log,
 		Helper:            request.NewHelper(log),
 		user:              user,
 		password:          password,
-		clientID:          clientID,
-		emobilityClientID: emobilityClientID,
+		clientID:          porscheAPIClientID,
+		emobilityClientID: porscheEmobilityAPIClientID,
 	}
 
 	jar, _ := cookiejar.New(&cookiejar.Options{
@@ -216,20 +221,25 @@ func (v *API) request(uri string, emobilityRequest bool) (*http.Request, error) 
 
 type Vehicle struct {
 	VIN              string
+	EmobilityVehicle bool
+}
+
+type VehicleResponse struct {
+	VIN              string
 	ModelDescription string
 }
 
-func (v *API) FindVehicle(vin string) (string, error) {
+func (v *API) FindVehicle(vin string) (Vehicle, error) {
 	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
 	req, err := v.request(uri, false)
 
-	var vehicles []Vehicle
+	var vehicles []VehicleResponse
 
 	if err == nil {
 		err = v.DoJSON(req, &vehicles)
 	}
 
-	var foundVehicle Vehicle
+	var foundVehicle VehicleResponse
 
 	if err == nil && vin == "" {
 		if vin == "" && len(vehicles) == 1 {
@@ -242,105 +252,24 @@ func (v *API) FindVehicle(vin string) (string, error) {
 			}
 		}
 
-		if foundVehicle.VIN == "" {
-			return "", errors.New("vin not found")
-		} else {
+		if foundVehicle.VIN != "" {
 			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
-		}
 
-		// check if the found vehicle is a Taycan, because that one supports the emobility API
-		if v.emobilityTokenAvailable {
-			if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
-				v.emobilityVehicle = true
-			}
-		}
-
-	}
-
-	return foundVehicle.VIN, err
-}
-
-type porscheVehicleResponse struct {
-	CarControlData struct {
-		BatteryLevel struct {
-			Unit  string
-			Value float64
-		}
-		Mileage struct {
-			Unit  string
-			Value float64
-		}
-		RemainingRanges struct {
-			ElectricalRange struct {
-				Distance struct {
-					Unit  string
-					Value float64
+			// check if the found vehicle is a Taycan, because that one supports the emobility API
+			if v.emobilityTokenAvailable {
+				if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
+					v.emobilityVehicle = true
 				}
 			}
+		} else {
+			err = errors.New("vin not found")
 		}
 	}
-}
 
-type porscheEmobilityResponse struct {
-	BatteryChargeStatus struct {
-		ChargeRate struct {
-			Unit             string
-			Value            float64
-			ValueInKmPerHour int64
-		}
-		ChargingInDCMode                            bool
-		ChargingMode                                string
-		ChargingPower                               float64
-		ChargingReason                              string
-		ChargingState                               string
-		ChargingTargetDateTime                      string
-		ExternalPowerSupplyState                    string
-		PlugState                                   string
-		RemainingChargeTimeUntil100PercentInMinutes int64
-		StateOfChargeInPercentage                   int64
-		RemainingERange                             struct {
-			OriginalUnit      string
-			OriginalValue     int64
-			Unit              string
-			Value             int64
-			ValueInKilometers int64
-		}
+	vehicle := Vehicle{
+		VIN:              foundVehicle.VIN,
+		EmobilityVehicle: v.emobilityVehicle,
 	}
-	ChargingStatus string
-	DirectCharge   struct {
-		Disabled bool
-		IsActive bool
-	}
-	DirectClimatisation struct {
-		ClimatisationState         string
-		RemainingClimatisationTime int64
-	}
-}
 
-// Status implements the vehicle status repsonse
-func (v *API) Status(vin string) (interface{}, error) {
-	if v.emobilityVehicle {
-		uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/J1/%s?timezone=Europe/Berlin", vin)
-		req, err := v.request(uri, true)
-		if err != nil {
-			return 0, err
-		}
-
-		req.Header.Set("apikey", v.emobilityClientID)
-		var pr porscheEmobilityResponse
-		err = v.DoJSON(req, &pr)
-
-		return pr, err
-	} else {
-		uri := fmt.Sprintf("https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles/%s", vin)
-		req, err := v.request(uri, false)
-		if err != nil {
-			return 0, err
-		}
-
-		var pr porscheVehicleResponse
-		err = v.DoJSON(req, &pr)
-
-		return pr, err
-	}
+	return vehicle, err
 }
