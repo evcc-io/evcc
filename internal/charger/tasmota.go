@@ -55,7 +55,7 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          uri,
+		uri:          strings.TrimRight(uri, "/"),
 		user:         user,
 		password:     password,
 		standbypower: standbypower,
@@ -71,7 +71,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 	var tStatus tasmota.StatusResponse
 
 	// Execute Tasmota Status 0 command
-	err := c.GetJSON(createRequest(c.uri, c.user, c.password, "Status 0"), &tStatus)
+	err := c.GetJSON(c.cmdUri("Status 0"), &tStatus)
 
 	return int(1) == tStatus.Status.Power, err
 }
@@ -80,13 +80,13 @@ func (c *Tasmota) Enabled() (bool, error) {
 func (c *Tasmota) Enable(enable bool) error {
 	var tPower tasmota.PowerResponse
 
-	cmnd := "Power off"
+	cmd := "Power off"
 	if enable {
-		cmnd = "Power on"
+		cmd = "Power on"
 	}
 
 	// Execute Tasmota Power on/off command
-	err := c.GetJSON(createRequest(c.uri, c.user, c.password, cmnd), &tPower)
+	err := c.GetJSON(c.cmdUri(cmd), &tPower)
 
 	switch {
 	case err != nil:
@@ -124,7 +124,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	var tStatusSNS tasmota.StatusSNSResponse
 
 	// Execute Tasmota Status 8 command
-	err := c.GetJSON(createRequest(c.uri, c.user, c.password, "Status 8"), &tStatusSNS)
+	err := c.GetJSON(c.cmdUri("Status 8"), &tStatusSNS)
 
 	if err != nil {
 		return math.NaN(), err
@@ -139,14 +139,14 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	return power, err
 }
 
-// CreateRequest creates the Tasmota command web request
+// cmdUri creates the Tasmota command web request
 // https://tasmota.github.io/docs/Commands/#with-web-requests
-func createRequest(uri, user, password, cmnd string) string {
+func (c *Tasmota) cmdUri(cmd string) string {
 	parameters := url.Values{
-		"user":     []string{user},
-		"password": []string{password},
-		"cmnd":     []string{cmnd},
+		"user":     []string{c.user},
+		"password": []string{c.password},
+		"cmnd":     []string{cmd},
 	}
 
-	return fmt.Sprintf("%s/cm?%s", strings.TrimRight(uri, "/"), parameters.Encode())
+	return fmt.Sprintf("%s/cm?%s", c.uri, parameters.Encode())
 }
