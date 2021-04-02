@@ -71,7 +71,7 @@ func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 		return 0, err
 	}
 
-	req.Header.Set("apikey", v.api.emobilityClientID)
+	req.Header.Set("apikey", EmobilityClientID)
 	var pr emobilityResponse
 	err = v.api.DoJSON(req, &pr)
 

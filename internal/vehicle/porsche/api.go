@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	ClientID                    = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
-	porscheEmobilityAPIClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
+	ClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
+	EmobilityClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
 )
 
 type porscheTokenResponse struct {
@@ -31,26 +31,21 @@ type porscheTokenResponse struct {
 type API struct {
 	log *util.Logger
 	*request.Helper
-	user, password          string
-	clientID                string
-	emobilityClientID       string
-	token                   string
-	tokenValid              time.Time
-	emobilityTokenAvailable bool
-	emobiltyToken           string
-	emobilityTokenValid     time.Time
-	emobilityVehicle        bool
+	user, password      string
+	token               string
+	tokenValid          time.Time
+	emobilityToken      string
+	emobilityTokenValid time.Time
+	emobilityVehicle    bool
 }
 
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, user, password string) *API {
 	v := &API{
-		log:               log,
-		Helper:            request.NewHelper(log),
-		user:              user,
-		password:          password,
-		clientID:          ClientID,
-		emobilityClientID: porscheEmobilityAPIClientID,
+		log:      log,
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
 	jar, _ := cookiejar.New(&cookiejar.Options{
@@ -69,11 +64,11 @@ func NewAPI(log *util.Logger, user, password string) *API {
 func (v *API) fetchToken(emobility bool) (porscheTokenResponse, error) {
 	var pr porscheTokenResponse
 
-	actualClientID := v.clientID
+	actualClientID := ClientID
 	redirectURI := "https://my.porsche.com/core/de/de_DE/"
 
 	if emobility {
-		actualClientID = v.emobilityClientID
+		actualClientID = EmobilityClientID
 		redirectURI = "https://connect-portal.porsche.com/myservices/auth/auth.html"
 	}
 
@@ -192,8 +187,7 @@ func (v *API) Login() error {
 		return nil
 	}
 
-	v.emobilityTokenAvailable = true
-	v.emobiltyToken = pr.AccessToken
+	v.emobilityToken = pr.AccessToken
 	v.emobilityTokenValid = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
 
 	return nil
@@ -201,7 +195,7 @@ func (v *API) Login() error {
 
 func (v *API) request(uri string, emobilityRequest bool) (*http.Request, error) {
 	if v.token == "" || time.Since(v.tokenValid) > 0 ||
-		(v.emobilityVehicle && (v.emobiltyToken == "" || time.Since(v.emobilityTokenValid) > 0)) {
+		(v.emobilityVehicle && (v.emobilityToken == "" || time.Since(v.emobilityTokenValid) > 0)) {
 		if err := v.Login(); err != nil {
 			return nil, err
 		}
@@ -209,7 +203,7 @@ func (v *API) request(uri string, emobilityRequest bool) (*http.Request, error) 
 
 	token := v.token
 	if emobilityRequest {
-		token = v.emobiltyToken
+		token = v.emobilityToken
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
@@ -256,7 +250,7 @@ func (v *API) FindVehicle(vin string) (Vehicle, error) {
 			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
 
 			// check if the found vehicle is a Taycan, because that one supports the emobility API
-			if v.emobilityTokenAvailable {
+			if v.emobilityToken != "" {
 				if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
 					v.emobilityVehicle = true
 				}
