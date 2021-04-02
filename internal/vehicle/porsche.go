@@ -9,10 +9,15 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+type SoCAndRange interface {
+	api.Battery
+	api.VehicleRange
+}
+
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
 	*embed
-	api.Battery // provides the api implementations
+	SoCAndRange // provides the api implementations
 }
 
 func init() {
@@ -42,25 +47,25 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &embed{cc.Title, cc.Capacity},
 	}
 
-	porscheAPI := porsche.NewAPI(log, cc.User, cc.Password)
-	err = porscheAPI.Login()
+	api := porsche.NewAPI(log, cc.User, cc.Password)
+	err = api.Login()
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vehicle, err := porscheAPI.FindVehicle(cc.VIN)
+	vehicle, err := api.FindVehicle(cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	var provider api.Battery
+	var provider SoCAndRange
 	if vehicle.EmobilityVehicle {
-		provider = porsche.NewEMobilityProvider(porscheAPI, vehicle.VIN, cc.Cache)
+		provider = porsche.NewEMobilityProvider(api, vehicle.VIN, cc.Cache)
 	} else {
-		provider = porsche.NewProvider(porscheAPI, vehicle.VIN, cc.Cache)
+		provider = porsche.NewProvider(api, vehicle.VIN, cc.Cache)
 	}
 
-	v.Battery = provider
+	v.SoCAndRange = provider
 
 	return v, err
 }
