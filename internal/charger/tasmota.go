@@ -2,7 +2,10 @@ package charger
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"net/url"
+	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/charger/tasmota"
@@ -68,7 +71,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 	var tStatus tasmota.StatusResponse
 
 	// Execute Tasmota Status 0 command
-	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, "Status 0"), &tStatus)
+	err := c.GetJSON(createRequest(c.uri, c.user, c.password, "Status 0"), &tStatus)
 
 	return int(1) == tStatus.Status.Power, err
 }
@@ -83,7 +86,7 @@ func (c *Tasmota) Enable(enable bool) error {
 	}
 
 	// Execute Tasmota Power on/off command
-	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, cmnd), &tPower)
+	err := c.GetJSON(createRequest(c.uri, c.user, c.password, cmnd), &tPower)
 
 	switch {
 	case err != nil:
@@ -121,7 +124,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	var tStatusSNS tasmota.StatusSNSResponse
 
 	// Execute Tasmota Status 8 command
-	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, "Status 8"), &tStatusSNS)
+	err := c.GetJSON(createRequest(c.uri, c.user, c.password, "Status 8"), &tStatusSNS)
 
 	if err != nil {
 		return math.NaN(), err
@@ -134,4 +137,16 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	}
 
 	return power, err
+}
+
+// CreateRequest creates the Tasmota command web request
+// https://tasmota.github.io/docs/Commands/#with-web-requests
+func createRequest(uri, user, password, cmnd string) string {
+	parameters := url.Values{
+		"user":     []string{user},
+		"password": []string{password},
+		"cmnd":     []string{cmnd},
+	}
+
+	return fmt.Sprintf("%s/cm?%s", strings.TrimRight(uri, "/"), parameters.Encode())
 }
