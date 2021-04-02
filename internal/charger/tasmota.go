@@ -2,10 +2,7 @@ package charger
 
 import (
 	"errors"
-	"fmt"
 	"math"
-	"net/url"
-	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/charger/tasmota"
@@ -21,9 +18,8 @@ import (
 // Tasmota charger implementation
 type Tasmota struct {
 	*request.Helper
-	uri          string
-	parameters   url.Values
-	standbypower float64
+	uri, user, password string
+	standbypower        float64
 }
 
 func init() {
@@ -53,16 +49,12 @@ func NewTasmotaFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewTasmota creates Tasmota charger
 func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, error) {
 	log := util.NewLogger("tasmota")
-	parameters := url.Values{
-		"user":     []string{user},
-		"password": []string{password},
-		"cmnd":     []string{""},
-	}
 
 	c := &Tasmota{
 		Helper:       request.NewHelper(log),
-		uri:          fmt.Sprintf("%s/cm?", strings.TrimRight(uri, "/")),
-		parameters:   parameters,
+		uri:          uri,
+		user:         user,
+		password:     password,
 		standbypower: standbypower,
 	}
 
@@ -76,8 +68,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 	var tStatus tasmota.StatusResponse
 
 	// Execute Tasmota Status 0 command
-	c.parameters.Set("cmnd", "Status 0")
-	err := c.GetJSON(c.uri+c.parameters.Encode(), &tStatus)
+	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, "Status 0"), &tStatus)
 
 	return int(1) == tStatus.Status.Power, err
 }
@@ -92,8 +83,7 @@ func (c *Tasmota) Enable(enable bool) error {
 	}
 
 	// Execute Tasmota Power on/off command
-	c.parameters.Set("cmnd", cmnd)
-	err := c.GetJSON(c.uri+c.parameters.Encode(), &tPower)
+	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, cmnd), &tPower)
 
 	switch {
 	case err != nil:
@@ -131,8 +121,7 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	var tStatusSNS tasmota.StatusSNSResponse
 
 	// Execute Tasmota Status 8 command
-	c.parameters.Set("cmnd", "Status 8")
-	err := c.GetJSON(c.uri+c.parameters.Encode(), &tStatusSNS)
+	err := c.GetJSON(tasmota.CreateRequest(c.uri, c.user, c.password, "Status 8"), &tStatusSNS)
 
 	if err != nil {
 		return math.NaN(), err
