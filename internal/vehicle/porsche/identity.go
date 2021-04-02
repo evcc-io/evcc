@@ -28,17 +28,20 @@ type tokenResponse struct {
 	ExpiresIn   int    `json:"expires_in"`
 }
 
-// API is the Porsche api client
-type API struct {
-	log *util.Logger
-	*request.Helper
-	user, password        string
-	token, emobilityToken oauth2.Token
+type AccessTokens struct {
+	Token, EmobilityToken oauth2.Token
 }
 
-// NewAPI creates a new api client
-func NewAPI(log *util.Logger, user, password string) *API {
-	v := &API{
+// Identity is the Porsche Identity client
+type Identity struct {
+	log *util.Logger
+	*request.Helper
+	user, password string
+}
+
+// NewIdentity creates a new Identity client
+func NewIdentity(log *util.Logger, user, password string) *Identity {
+	v := &Identity{
 		log:      log,
 		Helper:   request.NewHelper(log),
 		user:     user,
@@ -58,7 +61,68 @@ func NewAPI(log *util.Logger, user, password string) *API {
 	return v
 }
 
-func (v *API) fetchToken(emobility bool) (tokenResponse, error) {
+func (v *Identity) Login() (AccessTokens, error) {
+	var accessTokens AccessTokens
+
+	// get the login page to get the cookies for the subsequent requests
+	resp, err := v.Client.Get("https://login.porsche.com/auth/de/de_DE")
+	if err != nil {
+		return accessTokens, err
+	}
+	resp.Body.Close()
+
+	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
+	if err != nil {
+		return accessTokens, err
+	}
+
+	sec := query.Get("sec")
+	resume := query.Get("resume")
+	state := query.Get("state")
+	thirdPartyID := query.Get("thirdPartyId")
+
+	dataLoginAuth := url.Values{
+		"sec":          []string{sec},
+		"resume":       []string{resume},
+		"thirdPartyId": []string{thirdPartyID},
+		"state":        []string{state},
+		"username":     []string{v.user},
+		"password":     []string{v.password},
+		"keeploggedin": []string{"false"},
+	}
+
+	req, err := request.New(http.MethodPost, "https://login.porsche.com/auth/api/v1/de/de_DE/public/login", strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
+	if err != nil {
+		return accessTokens, err
+	}
+
+	// process the auth so the session is authenticated
+	if resp, err = v.Client.Do(req); err != nil {
+		return accessTokens, err
+	}
+	resp.Body.Close()
+
+	// get the token for the generic API
+	var pr tokenResponse
+	if pr, err = v.fetchToken(false); err != nil {
+		return accessTokens, err
+	}
+
+	accessTokens.Token.AccessToken = pr.AccessToken
+	accessTokens.Token.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
+
+	if pr, err = v.fetchToken(true); err != nil {
+		// we don't need to return this error, because we simply won't use the emobility API in this case
+		return accessTokens, nil
+	}
+
+	accessTokens.EmobilityToken.AccessToken = pr.AccessToken
+	accessTokens.EmobilityToken.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
+
+	return accessTokens, nil
+}
+
+func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 	var pr tokenResponse
 
 	actualClientID := ClientID
@@ -131,85 +195,6 @@ func (v *API) fetchToken(emobility bool) (tokenResponse, error) {
 	return pr, err
 }
 
-func (v *API) Login() error {
-	// get the login page to get the cookies for the subsequent requests
-	resp, err := v.Client.Get("https://login.porsche.com/auth/de/de_DE")
-	if err != nil {
-		return err
-	}
-	resp.Body.Close()
-
-	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
-	if err != nil {
-		return err
-	}
-
-	sec := query.Get("sec")
-	resume := query.Get("resume")
-	state := query.Get("state")
-	thirdPartyID := query.Get("thirdPartyId")
-
-	dataLoginAuth := url.Values{
-		"sec":          []string{sec},
-		"resume":       []string{resume},
-		"thirdPartyId": []string{thirdPartyID},
-		"state":        []string{state},
-		"username":     []string{v.user},
-		"password":     []string{v.password},
-		"keeploggedin": []string{"false"},
-	}
-
-	req, err := request.New(http.MethodPost, "https://login.porsche.com/auth/api/v1/de/de_DE/public/login", strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
-	if err != nil {
-		return err
-	}
-
-	// process the auth so the session is authenticated
-	if resp, err = v.Client.Do(req); err != nil {
-		return err
-	}
-	resp.Body.Close()
-
-	// get the token for the generic API
-	var pr tokenResponse
-	if pr, err = v.fetchToken(false); err != nil {
-		return err
-	}
-
-	v.token.AccessToken = pr.AccessToken
-	v.token.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	if pr, err = v.fetchToken(true); err != nil {
-		// we don't need to return this error, because we simply won't use the emobility API in this case
-		return nil
-	}
-
-	v.emobilityToken.AccessToken = pr.AccessToken
-	v.emobilityToken.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	return nil
-}
-
-func (v *API) request(uri string, emobilityRequest bool) (*http.Request, error) {
-	if v.token.AccessToken == "" || time.Since(v.token.Expiry) > 0 ||
-		(emobilityRequest && (v.emobilityToken.AccessToken == "" || time.Since(v.emobilityToken.Expiry) > 0)) {
-		if err := v.Login(); err != nil {
-			return nil, err
-		}
-	}
-
-	token := v.token.AccessToken
-	if emobilityRequest {
-		token = v.emobilityToken.AccessToken
-	}
-
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", token),
-	})
-
-	return req, err
-}
-
 type Vehicle struct {
 	VIN              string
 	EmobilityVehicle bool
@@ -220,9 +205,11 @@ type VehicleResponse struct {
 	ModelDescription string
 }
 
-func (v *API) FindVehicle(vin string) (Vehicle, error) {
+func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
 	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
-	req, err := v.request(uri, false)
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+	})
 
 	var vehicles []VehicleResponse
 
@@ -248,7 +235,7 @@ func (v *API) FindVehicle(vin string) (Vehicle, error) {
 			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
 
 			// check if the found vehicle is a Taycan, because that one supports the emobility API
-			if v.emobilityToken.AccessToken != "" {
+			if accessTokens.EmobilityToken.AccessToken != "" {
 				if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
 					foundEmobilityVehicle = true
 				}

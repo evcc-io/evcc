@@ -9,7 +9,7 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-type SoCAndRange interface {
+type porscheProvider interface {
 	api.Battery
 	api.VehicleRange
 }
@@ -17,7 +17,7 @@ type SoCAndRange interface {
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
 	*embed
-	SoCAndRange // provides the api implementations
+	porscheProvider // provides the api implementations
 }
 
 func init() {
@@ -37,35 +37,33 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("porsche")
 
-	var err error
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	v := &Porsche{
-		embed: &embed{cc.Title, cc.Capacity},
-	}
+	identity := porsche.NewIdentity(log, cc.User, cc.Password)
 
-	api := porsche.NewAPI(log, cc.User, cc.Password)
-	err = api.Login()
+	accessTokens, err := identity.Login()
 	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vehicle, err := api.FindVehicle(cc.VIN)
+	vehicle, err := identity.FindVehicle(accessTokens, cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	var provider SoCAndRange
+	var provider porscheProvider
 	if vehicle.EmobilityVehicle {
-		provider = porsche.NewEMobilityProvider(api, vehicle.VIN, cc.Cache)
+		provider = porsche.NewEMobilityProvider(log, identity, accessTokens.EmobilityToken, vehicle.VIN, cc.Cache)
 	} else {
-		provider = porsche.NewProvider(api, vehicle.VIN, cc.Cache)
+		provider = porsche.NewProvider(log, identity, accessTokens.Token, vehicle.VIN, cc.Cache)
 	}
 
-	v.SoCAndRange = provider
+	v := &Porsche{
+		embed:           &embed{cc.Title, cc.Capacity},
+		porscheProvider: provider,
+	}
 
 	return v, err
 }

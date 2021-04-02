@@ -2,13 +2,17 @@ package porsche
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
-type vehicleResponse struct {
+type StatusResponse struct {
 	CarControlData struct {
 		BatteryLevel struct {
 			Unit  string
@@ -29,16 +33,22 @@ type vehicleResponse struct {
 	}
 }
 
-// Provider is an api.Vehicle implementation for PSA cars
+// Provider is an api.Vehicle implementation for Porsche PHEV cars
 type Provider struct {
-	api     *API
-	statusG func() (interface{}, error)
+	log *util.Logger
+	*request.Helper
+	token    oauth2.Token
+	identity *Identity
+	statusG  func() (interface{}, error)
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(api *API, vin string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, identity *Identity, token oauth2.Token, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		api: api,
+		log:      log,
+		Helper:   request.NewHelper(log),
+		token:    token,
+		identity: identity,
 	}
 
 	impl.statusG = provider.NewCached(func() (interface{}, error) {
@@ -48,16 +58,32 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	return impl
 }
 
+func (v *Provider) request(uri string) (*http.Request, error) {
+	if v.token.AccessToken == "" || time.Since(v.token.Expiry) > 0 {
+		accessTokens, err := v.identity.Login()
+		if err != nil {
+			return nil, err
+		}
+		v.token = accessTokens.Token
+	}
+
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", v.token.AccessToken),
+	})
+
+	return req, err
+}
+
 // Status implements the vehicle status repsonse
 func (v *Provider) status(vin string) (interface{}, error) {
 	uri := fmt.Sprintf("https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles/%s", vin)
-	req, err := v.api.request(uri, false)
+	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
 	}
 
-	var pr vehicleResponse
-	err = v.api.DoJSON(req, &pr)
+	var pr StatusResponse
+	err = v.DoJSON(req, &pr)
 
 	return pr, err
 }
@@ -67,7 +93,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(vehicleResponse); err == nil && ok {
+	if res, ok := res.(StatusResponse); err == nil && ok {
 		return res.CarControlData.BatteryLevel.Value, nil
 	}
 
@@ -79,7 +105,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(vehicleResponse); err == nil && ok {
+	if res, ok := res.(StatusResponse); err == nil && ok {
 		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
 
