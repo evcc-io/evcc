@@ -8,7 +8,7 @@ import (
 	"github.com/andig/evcc/provider"
 )
 
-type porscheVehicleResponse struct {
+type vehicleResponse struct {
 	CarControlData struct {
 		BatteryLevel struct {
 			Unit  string
@@ -56,7 +56,7 @@ func (v *Provider) status(vin string) (interface{}, error) {
 		return 0, err
 	}
 
-	var pr porscheVehicleResponse
+	var pr vehicleResponse
 	err = v.api.DoJSON(req, &pr)
 
 	return pr, err
@@ -67,7 +67,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+	if res, ok := res.(vehicleResponse); err == nil && ok {
 		return res.CarControlData.BatteryLevel.Value, nil
 	}
 
@@ -79,7 +79,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(porscheVehicleResponse); err == nil && ok {
+	if res, ok := res.(vehicleResponse); err == nil && ok {
 		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
 
