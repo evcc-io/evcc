@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	porscheAPIClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
+	ClientID                    = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
 	porscheEmobilityAPIClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
 )
 
@@ -49,7 +49,7 @@ func NewAPI(log *util.Logger, user, password string) *API {
 		Helper:            request.NewHelper(log),
 		user:              user,
 		password:          password,
-		clientID:          porscheAPIClientID,
+		clientID:          ClientID,
 		emobilityClientID: porscheEmobilityAPIClientID,
 	}
 
