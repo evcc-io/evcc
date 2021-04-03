@@ -7,9 +7,12 @@
 			</div>
 		</div>
 		<button
-			v-if="targetSoC"
 			class="target-time-button btn btn-link btn-sm pr-0"
-			:class="{ 'text-primary': timerActive, 'text-secondary': !timerActive }"
+			:class="{
+				invisible: !targetSoC,
+				'text-primary': timerActive,
+				'text-secondary': !timerActive,
+			}"
 			@click="selectTargetTime"
 		>
 			{{ targetTimeLabel() }}<fa-icon class="ml-1" icon="clock"></fa-icon>
@@ -32,11 +35,11 @@
 										>Wann soll das Fahrzeug auf
 										<strong>{{ targetSoC }}%</strong> geladen sein?</label
 									>
-									<div class="d-flex">
+									<div class="d-flex justify-content-between">
 										<select
-											class="form-control mr-3"
-											:style="{ 'flex-basis': '66%' }"
+											class="form-control mr-4"
 											v-model="selectedDay"
+											:style="{ 'flex-basis': '66%' }"
 										>
 											<option
 												v-for="opt in dayOptions()"
@@ -48,9 +51,9 @@
 										</select>
 										<input
 											type="time"
-											class="form-control"
-											v-model="selectedTime"
+											class="form-control ml-4"
 											:style="{ 'flex-basis': '33%' }"
+											v-model="selectedTime"
 											:step="60 * 5"
 											required
 										/>

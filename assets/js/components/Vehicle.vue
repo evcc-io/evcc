@@ -1,6 +1,9 @@
 <template>
 	<div class="pt-3 pb-2">
-		<div class="mb-3">{{ socTitle }}</div>
+		<div class="mb-3">
+			<span>{{ socTitle || "&nbsp;" }}</span>
+			<span v-if="range >= 0" class="text-muted">/ {{ range }} km</span>
+		</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline
 			v-bind="vehicleSubline"
@@ -26,6 +29,7 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
+		range: Number,
 		socTitle: String,
 		timerActive: Boolean,
 		timerSet: Boolean,

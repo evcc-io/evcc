@@ -1,6 +1,6 @@
 <template>
 	<div class="row">
-		<div class="col-6 col-md-3 mt-3" v-if="gridConfigured">
+		<div class="col-4 mt-3" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
 				Bezug <fa-icon icon="arrow-down" class="text-primary" />
 			</div>
@@ -12,7 +12,8 @@
 				<small class="text-muted">{{ fmtUnit(gridPower) }}W</small>
 			</h2>
 		</div>
-		<div class="col-6 col-md-3 mt-3" v-if="pvConfigured">
+
+		<div class="col-4 mt-3" v-if="pvConfigured">
 			<div class="mb-2 value">
 				Erzeugung
 				<fa-icon
@@ -28,16 +29,14 @@
 				<small class="text-muted">{{ fmtUnit(pvPower) }}W</small>
 			</h2>
 		</div>
-		<div class="d-md-block col-6 col-md-3 mt-3" v-if="batteryConfigured">
+		<div class="d-md-block col-4 mt-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
-				Batterie
+				Batterie <span class="text-muted">/</span> {{ batterySoC }} %
 				<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
 			</div>
 			<h2 class="value">
 				{{ fmt(batteryPower) }}
 				<small class="text-muted">{{ fmtUnit(batteryPower) }}W</small>
-				<small class="text-muted">/</small>
-				{{ batterySoC }} <small class="text-muted">%</small>
 			</h2>
 		</div>
 	</div>

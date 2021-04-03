@@ -1,12 +1,8 @@
 <template>
 	<div class="border-top mt-4 pt-4">
+		<h4 class="mb-2">{{ title || "Ladepunkt" }}</h4>
 		<div class="row">
-			<div class="col-12">
-				<h4>{{ title || "Ladepunkt" }}</h4>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-12 col-md-8 col-lg-6 pr-4">
+			<div class="col-12 col-md-8 col-lg-6 pr-4 pr-lg-5">
 				<Vehicle
 					class="mb-2"
 					v-bind="vehicle"
@@ -14,13 +10,13 @@
 					@target-time-updated="setTargetTime"
 				/>
 				<Mode
-					class="py-1 mb-4"
+					class="py-1 mb-4 mb-sm-3"
 					:mode="mode"
 					:pvConfigured="pvConfigured"
 					v-on:updated="setTargetMode"
 				/>
 			</div>
-			<LoadpointDetails v-bind="details" class="col-12 col-md-4 offset-lg-1 col-lg-4" />
+			<LoadpointDetails v-bind="details" class="col-12 col-md-4 col-lg-6" />
 		</div>
 	</div>
 </template>

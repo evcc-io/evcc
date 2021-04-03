@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<div class="row">
-			<div class="col-6 mt-3">
+			<div class="col-6 col-sm-3 col-md-6 mt-3">
 				<div class="mb-2 value">
 					Leistung
 					<fa-icon
@@ -25,7 +25,8 @@
 					<small class="text-muted">{{ fmtUnit(chargePower) }}W</small>
 				</h2>
 			</div>
-			<div class="col-6 mt-3">
+
+			<div class="col-6 col-sm-3 col-md-6 mt-3">
 				<div class="mb-2 value">Geladen</div>
 				<h2 class="value">
 					{{ fmt(chargedEnergy) }}
@@ -33,15 +34,7 @@
 				</h2>
 			</div>
 
-			<div class="col-6 mt-3" v-if="range >= 0">
-				<div class="mb-2 value">Reichweite</div>
-				<h2 class="value">
-					{{ Math.round(range) }}
-					<small class="text-muted">km</small>
-				</h2>
-			</div>
-
-			<div class="col-6 mt-3" v-else>
+			<div class="col-6 col-sm-3 col-md-6 mt-3">
 				<div class="mb-2 value">Dauer</div>
 				<h2 class="value">
 					{{ fmtShortDuration(chargeDuration) }}
@@ -49,7 +42,7 @@
 				</h2>
 			</div>
 
-			<div class="col-6 mt-3" v-if="hasVehicle">
+			<div class="col-6 col-sm-3 col-md-6 mt-3" v-if="hasVehicle">
 				<div class="mb-2 value">Restzeit</div>
 				<h2 class="value">
 					{{ fmtShortDuration(chargeEstimate) }}

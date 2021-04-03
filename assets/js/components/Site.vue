@@ -1,10 +1,10 @@
 <template>
 	<div>
 		<div class="row">
-			<div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
+			<div class="d-none d-md-flex col-12 col-md-4 col-lg-3 mt-md-4 align-items-end">
 				<p class="h1">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-8 mt-3" v-if="multi">
+			<div class="col-12 col-md-8 col-lg-9 mt-3" v-if="multi">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
