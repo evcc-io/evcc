@@ -46,9 +46,9 @@ RUN make build
 
 
 # STEP 3 build a small image including module support
-FROM alpine:3.12
+FROM alpine:3.13
 
-WORKDIR /evcc
+WORKDIR /app
 
 ENV TZ=Europe/Berlin
 
@@ -57,7 +57,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /evcc/
+COPY entrypoint.sh /app/
 
 # UI and /api
 EXPOSE 7070/tcp
@@ -68,5 +68,5 @@ EXPOSE 9522/udp
 
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
-ENTRYPOINT [ "/evcc/entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

@@ -16,23 +16,6 @@ const DefaultBaseURI = "https://msg.volkswagen.de/fs-car"
 // RegionAPI is the VW api used for determining the home region
 const RegionAPI = "https://mal-1a.prd.ece.vwg-connect.com/api"
 
-// TimedInt is an int value with timestamp
-type TimedInt struct {
-	Content   int
-	Timestamp string
-}
-
-// TimedString is a string value with timestamp
-type TimedString struct {
-	Content   string
-	Timestamp string
-}
-
-// Temp2Float converts api temp to float value
-func Temp2Float(val int) float64 {
-	return float64(val)/10 - 273
-}
-
 // API is the VW api client
 type API struct {
 	*request.Helper
@@ -151,7 +134,7 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 type ClimaterResponse struct {
 	Climater struct {
 		Settings struct {
-			TargetTemperature TimedInt
+			TargetTemperature TimedTemperature
 			HeaterSource      TimedString
 		}
 		Status struct {
@@ -161,7 +144,7 @@ type ClimaterResponse struct {
 				RemainingClimatisationTime TimedInt
 			}
 			TemperatureStatusData struct {
-				OutdoorTemperature TimedInt
+				OutdoorTemperature TimedTemperature
 			}
 			VehicleParkingClockStatusData struct {
 				VehicleParkingClock TimedString
