@@ -8,7 +8,7 @@ SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA)
+LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
@@ -67,7 +67,7 @@ docker:
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=arm.v6,amd64
+	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=$(TARGETS)
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
