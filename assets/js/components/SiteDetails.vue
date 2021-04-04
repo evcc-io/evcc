@@ -1,6 +1,6 @@
 <template>
-	<div class="row">
-		<div class="col-4 mt-3" v-if="gridConfigured">
+	<div class="row row-cols-3 justify-content-between justify-content-md-end">
+		<div class="mt-3 px-3" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
 				Bezug <fa-icon icon="arrow-down" class="text-primary" />
 			</div>
@@ -13,7 +13,7 @@
 			</h2>
 		</div>
 
-		<div class="col-4 mt-3" v-if="pvConfigured">
+		<div class="mt-3 px-3" v-if="pvConfigured">
 			<div class="mb-2 value">
 				Erzeugung
 				<fa-icon
@@ -29,7 +29,7 @@
 				<small class="text-muted">{{ fmtUnit(pvPower) }}W</small>
 			</h2>
 		</div>
-		<div class="d-md-block col-4 mt-3" v-if="batteryConfigured">
+		<div class="mt-3 px-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
 				Batterie <span class="text-muted">/</span> {{ batterySoC }} %
 				<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
@@ -73,6 +73,13 @@ export default {
 	},
 	mixins: [formatter],
 	computed: {
+		numberOfPanels: function () {
+			let count = 0;
+			if (this.gridConfigured) count++;
+			if (this.pvConfigured) count++;
+			if (this.batteryConfigured) count++;
+			return count;
+		},
 		batteryIcon: function () {
 			if (Math.abs(this.batteryPower) < limit) {
 				if (this.batterySoC < 30) return icons[0];
