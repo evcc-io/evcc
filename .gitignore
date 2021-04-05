@@ -15,3 +15,5 @@ buildflags/*
 linux-*.Dockerfile
 node_modules
 release
+*.inc
+soc-server

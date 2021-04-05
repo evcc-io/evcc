@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"github.com/andig/evcc/proto/pb"
+	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

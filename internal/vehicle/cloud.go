@@ -2,13 +2,14 @@ package vehicle
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle/cloud"
-	"github.com/andig/evcc/proto/pb"
 	"github.com/andig/evcc/provider"
+	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 )
@@ -43,6 +44,10 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
+	}
+
+	if cc.Token == "" {
+		return nil, errors.New("missing required token")
 	}
 
 	if host := os.Getenv("GRPC_URI"); host != "" {
