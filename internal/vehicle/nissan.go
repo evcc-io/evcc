@@ -12,9 +12,9 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle/kamereon"
-	"github.com/andig/evcc/internal/vehicle/oidc"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
 )
 
@@ -47,7 +47,7 @@ type Nissan struct {
 	log                 *util.Logger
 	user, password, vin string
 	userID              string
-	tokens              oidc.Token
+	tokens              oauth.Token
 	*kamereon.API
 }
 
