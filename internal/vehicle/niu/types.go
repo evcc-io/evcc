@@ -1,8 +1,8 @@
 package niu
 
 const (
-	Auth = "https://account-fk.niu.com"
-	API  = "https://app-api-fk.niu.com"
+	AuthURI = "https://account-fk.niu.com"
+	ApiURI  = "https://app-api-fk.niu.com"
 )
 
 // Token is the Niu oauth2 api response
