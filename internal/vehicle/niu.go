@@ -20,11 +20,10 @@ import (
 type Niu struct {
 	*embed
 	*request.Helper
-	user, password    string
-	serial            string
-	tokens            niu.Token
-	accessTokenExpiry time.Time
-	chargeStateG      func() (float64, error)
+	user, password string
+	serial         string
+	tokens         niu.Token
+	chargeStateG   func() (float64, error)
 }
 
 func init() {
@@ -89,7 +88,6 @@ func (v *Niu) login() error {
 		var tokens niu.Token
 		if err = v.DoJSON(req, &tokens); err == nil {
 			v.tokens = tokens
-			v.accessTokenExpiry = time.Unix(v.tokens.Data.Token.TokenExpiresIn, 0)
 		}
 	}
 
@@ -105,7 +103,7 @@ func md5Hash(text string) (string, error) {
 
 // request implements the Niu web request
 func (v *Niu) request(uri string) (*http.Request, error) {
-	if v.tokens.Data.Token.AccessToken == "" || v.accessTokenExpiry.Before(time.Now()) {
+	if v.tokens.Data.Token.AccessToken == "" || time.Until(v.tokens.Data.Token.Expiry) < time.Minute {
 		if err := v.login(); err != nil {
 			return nil, err
 		}
