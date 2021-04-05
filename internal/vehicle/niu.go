@@ -97,11 +97,7 @@ func (v *Niu) getAccessToken() error {
 
 	uri := niuAuth + "/v3/api/oauth2/token"
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"token":           "",
-		"Content-Type":    "application/x-www-form-urlencoded",
-		"Host":            "account-fk.niu.com",
-		"Connection":      "Keep-Alive",
-		"Accept-Encoding": "gzip",
+		"Content-Type": "application/x-www-form-urlencoded",
 	})
 	if err != nil {
 		return err
@@ -125,10 +121,7 @@ func (v *Niu) request(uri string) (*http.Request, error) {
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Content-Type":    "application/json",
-		"token":           v.tokens.Data.Token.AccessToken,
-		"Connection":      "Keep-Alive",
-		"Accept-Encoding": "gzip",
+		"token": v.tokens.Data.Token.AccessToken,
 	})
 
 	return req, err
