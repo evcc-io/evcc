@@ -16,11 +16,6 @@ import (
 	"github.com/andig/evcc/util/request"
 )
 
-const (
-	niuAuth = "https://account-fk.niu.com"
-	niuAPI  = "https://app-api-fk.niu.com"
-)
-
 // Niu is an api.Vehicle implementation for Niu vehicles
 type Niu struct {
 	*embed
@@ -38,10 +33,10 @@ func init() {
 // NewFordFromConfig creates a new vehicle
 func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title              string
-		Capacity           int64
-		User, Password, SN string
-		Cache              time.Duration
+		Title                  string
+		Capacity               int64
+		User, Password, Serial string
+		Cache                  time.Duration
 	}{
 		Cache: interval,
 	}
@@ -50,8 +45,8 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" || cc.SN == "" {
-		return nil, errors.New("missing user, password or sn")
+	if cc.User == "" || cc.Password == "" || cc.Serial == "" {
+		return nil, errors.New("missing user, password or serial")
 	}
 
 	log := util.NewLogger("niu")
@@ -61,7 +56,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
-		sn:       strings.ToUpper(cc.SN),
+		sn:       strings.ToUpper(cc.Serial),
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
@@ -76,18 +71,17 @@ func (v *Niu) SoC() (float64, error) {
 
 // chargeState implements the api.Vehicle interface
 func (v *Niu) chargeState() (float64, error) {
-	var socResp niu.SoC
+	var resp niu.SoC
 
-	socReq, err := v.request(niuAPI + "/v3/motor_data/index_info?sn=" + v.sn)
+	req, err := v.request(niu.API + "/v3/motor_data/index_info?sn=" + v.sn)
 	if err == nil {
-		err = v.DoJSON(socReq, &socResp)
+		err = v.DoJSON(req, &resp)
 	}
-	return float64(socResp.Data.Batteries.CompartmentA.BatteryCharging), err
+	return float64(resp.Data.Batteries.CompartmentA.BatteryCharging), err
 }
 
-// getAccessToken implements the Niu oauth2 api
-func (v *Niu) getAccessToken() error {
-
+// login implements the Niu oauth2 api
+func (v *Niu) login() error {
 	md5hash, err := getMD5Hash(v.password)
 	if err != nil {
 		return err
@@ -101,7 +95,7 @@ func (v *Niu) getAccessToken() error {
 		"app_id":     []string{"niu_8xt1afu6"},
 	}
 
-	uri := niuAuth + "/v3/api/oauth2/token"
+	uri := niu.Auth + "/v3/api/oauth2/token"
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 	})
@@ -121,7 +115,7 @@ func (v *Niu) getAccessToken() error {
 // request implements the Niu web request
 func (v *Niu) request(uri string) (*http.Request, error) {
 	if v.tokens.Data.Token.AccessToken == "" || v.accessTokenExpiry.Before(time.Now()) {
-		if err := v.getAccessToken(); err != nil {
+		if err := v.login(); err != nil {
 			return nil, err
 		}
 	}

@@ -1,5 +1,10 @@
 package niu
 
+const (
+	Auth = "https://account-fk.niu.com"
+	API  = "https://app-api-fk.niu.com"
+)
+
 // Token is the Niu oauth2 api response
 // https://account-fk.niu.com/v3/api/oauth2/token?account=<NiuUser>&app_id=niu_8xt1afu6&grant_type=password&password=<MD5PasswordHash>&scope=base
 type Token struct {
