@@ -78,7 +78,7 @@ func (v *Niu) SoC() (float64, error) {
 func (v *Niu) chargeState() (float64, error) {
 	var socResp niu.SoC
 
-	socReq, err := v.createRequest(niuAPI + "/v3/motor_data/index_info?sn=" + v.sn)
+	socReq, err := v.request(niuAPI + "/v3/motor_data/index_info?sn=" + v.sn)
 	if err == nil {
 		err = v.DoJSON(socReq, &socResp)
 	}
@@ -116,8 +116,8 @@ func (v *Niu) getAccessToken() error {
 	return err
 }
 
-// createRequest implements the Niu web request
-func (v *Niu) createRequest(uri string) (*http.Request, error) {
+// request implements the Niu web request
+func (v *Niu) request(uri string) (*http.Request, error) {
 	if v.tokens.Data.Token.AccessToken == "" || v.accessTokenExpiry.Before(time.Now()) {
 		if err := v.getAccessToken(); err != nil {
 			return nil, err
