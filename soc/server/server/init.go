@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	port      = util.Getenv("GRPC_PORT")
+	port      = util.Getenv("GRPC_PORT", "8080")
 	tlsConfig *tls.Config
 )
 
