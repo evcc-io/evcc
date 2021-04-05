@@ -175,7 +175,7 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		if err == nil {
 			var token id.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = token.TokenSource(v.log)
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), id.Refresher(v.log))
 			}
 		}
 	}
