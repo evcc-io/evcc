@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/internal/vehicle/oidc"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
 )
 
@@ -24,7 +24,7 @@ type Ford struct {
 	*embed
 	*request.Helper
 	user, password, vin string
-	tokens              oidc.Token
+	tokens              oauth.Token
 	chargeStateG        func() (float64, error)
 }
 
@@ -84,7 +84,7 @@ func (v *Ford) login(user, password string) error {
 		return err
 	}
 
-	var tokens oidc.Token
+	var tokens oauth.Token
 	if err = v.DoJSON(req, &tokens); err == nil {
 		v.tokens = tokens
 	}

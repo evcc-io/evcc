@@ -9,6 +9,7 @@ import (
 
 	"github.com/andig/evcc/internal/vehicle/id"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
@@ -148,9 +149,9 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		})
 
 		if err == nil {
-			var token Token
+			var token oauth.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = token.TokenSource(v.log, v.clientID)
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), refresher(v.log, v.clientID))
 			}
 		}
 	}
@@ -174,7 +175,7 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		if err == nil {
 			var token id.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = token.TokenSource(v.log)
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), id.Refresher(v.log))
 			}
 		}
 	}
