@@ -87,9 +87,15 @@ func (v *Niu) chargeState() (float64, error) {
 
 // getAccessToken implements the Niu oauth2 api
 func (v *Niu) getAccessToken() error {
+
+	md5hash, err := getMD5Hash(v.password)
+	if err != nil {
+		return err
+	}
+
 	data := url.Values{
 		"account":    []string{v.user},
-		"password":   []string{getMD5Hash(v.password)},
+		"password":   []string{md5hash},
 		"grant_type": []string{"password"},
 		"scope":      []string{"base"},
 		"app_id":     []string{"niu_8xt1afu6"},
@@ -128,8 +134,10 @@ func (v *Niu) request(uri string) (*http.Request, error) {
 }
 
 // getMD5Hash creates a MD5 hash based on a string
-func getMD5Hash(text string) string {
+func getMD5Hash(text string) (string, error) {
 	hasher := md5.New()
-	hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil))
+	if _, err := hasher.Write([]byte(text)); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }
