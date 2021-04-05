@@ -11,7 +11,7 @@ import (
 )
 
 func usage() {
-	fmt.Println(`
+	fmt.Print(`
 soc
 
 Usage:

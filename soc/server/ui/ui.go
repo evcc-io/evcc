@@ -85,7 +85,7 @@ func randomString() string {
 }
 
 func handleMain(w http.ResponseWriter, r *http.Request) {
-	indexTpl.Execute(w, map[string]interface{}{
+	_ = indexTpl.Execute(w, map[string]interface{}{
 		"Content": template.HTML(`
 <h1>Willkommen</h1>
 <p class="lead">
@@ -102,8 +102,7 @@ func handleMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func templateError(w http.ResponseWriter, r *http.Request, err string) {
-	log.Println(err)
-	indexTpl.Execute(w, map[string]interface{}{
+	_ = indexTpl.Execute(w, map[string]interface{}{
 		"Content": template.HTML(`
 <h1>Fehler</h1>
 <p class="lead">` + err + `</p>`),
@@ -138,7 +137,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	log.Println(user.Login+":", authMap[authorized])
 
 	if !authorized {
-		indexTpl.Execute(w, map[string]interface{}{
+		_ = indexTpl.Execute(w, map[string]interface{}{
 			"Content": template.HTML(`
 	<h1>Inaktiv</h1>
 	<p class="lead">Github Sponsorship für evcc ist inaktiv. Um evcc cloud zu nutzen, ist es notwendig, evcc zu unterstützen.</p>
@@ -153,7 +152,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	indexTpl.Execute(w, map[string]interface{}{
+	_ = indexTpl.Execute(w, map[string]interface{}{
 		"Content": template.HTML(fmt.Sprintf(`
 <h1>Aktiv</h1>
 <p class="lead">Github Sponsorship für evcc ist aktiv. Der folgende Token kann für den Zugriff auf evcc cloud genutzt werden.</p>
@@ -226,7 +225,7 @@ func Run() {
 			Cache:      autocert.DirCache(sslCertDir),
 		}
 
-		go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+		go log.Fatal(http.ListenAndServe(":http", certManager.HTTPHandler(nil)))
 
 		s.Addr = ":https"
 		s.TLSConfig = certManager.TLSConfig()
