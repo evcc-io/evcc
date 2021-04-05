@@ -1,6 +1,7 @@
 package oauth
 
 import (
+	"errors"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -24,9 +25,12 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	var err error
 	if time.Until(ts.token.Expiry) < time.Minute {
 		var token *oauth2.Token
-		token, err = ts.refresher.Refresh(ts.token)
-		if err == nil {
-			err = ts.mergeToken(token)
+		if token, err = ts.refresher.Refresh(ts.token); err == nil {
+			if token.AccessToken == "" {
+				err = errors.New("token refresh failed to obtain access token")
+			} else {
+				err = ts.mergeToken(token)
+			}
 		}
 	}
 
