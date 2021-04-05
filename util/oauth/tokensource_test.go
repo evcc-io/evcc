@@ -18,7 +18,9 @@ func TestMerge(t *testing.T) {
 		AccessToken: "new",
 	}
 
-	ts.mergeToken(r)
+	if err := ts.mergeToken(r); err != nil {
+		t.Error(err)
+	}
 
 	if ts.token.AccessToken != "new" {
 		t.Error("unexpected access token", ts.token)
