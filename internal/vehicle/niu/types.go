@@ -18,14 +18,19 @@ type Token struct {
 	}
 }
 
-// SoC is the Niu motor_data api response
+// Response is the Niu motor_data api response
 // https://app-api-fk.niu.com/v3/motor_data/index_info?sn=<ScooterSerialNumber>
-type SoC struct {
+type Response struct {
 	Data struct {
-		Batteries struct {
+		IsCharging  int64 `json:"isCharging,omitempty"`
+		IsConnected bool  `json:"isConnected,omitempty"`
+		Timestamp   int64 `json:"time,omitempty"`
+		Batteries   struct {
 			CompartmentA struct {
 				BatteryCharging int64 `json:"batteryCharging,omitempty"`
 			} `json:"compartmentA"`
 		}
+		LeftTime         string `json:"leftTime,omitempty"`
+		EstimatedMileage int64  `json:"estimatedMileage,omitempty"`
 	}
 }

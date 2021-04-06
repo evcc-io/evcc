@@ -24,7 +24,7 @@ type Niu struct {
 	serial            string
 	tokens            niu.Token
 	accessTokenExpiry time.Time
-	chargeStateG      func() (float64, error)
+	*niu.API
 }
 
 func init() {
@@ -60,7 +60,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.API = niu.New(provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter())
 
 	return v, nil
 }
@@ -118,19 +118,15 @@ func (v *Niu) request(uri string) (*http.Request, error) {
 	return req, err
 }
 
-// chargeState implements the api.Vehicle interface
-func (v *Niu) chargeState() (float64, error) {
-	var resp niu.SoC
+// batteryAPI provides battery api response
+func (v *Niu) batteryAPI() (interface{}, error) {
+	// refresh battery status
+	var res niu.Response
 
 	req, err := v.request(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	return float64(resp.Data.Batteries.CompartmentA.BatteryCharging), err
-}
-
-// SoC implements the api.Vehicle interface
-func (v *Niu) SoC() (float64, error) {
-	return v.chargeStateG()
+	return res, err
 }
