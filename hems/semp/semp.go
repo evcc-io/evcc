@@ -474,7 +474,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minPowerConsumption = maxPowerConsumption
 	}
 
-	if connected && maxEnergy > 0 {
+	if mode != api.ModeOff && connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:            s.deviceID(id),
