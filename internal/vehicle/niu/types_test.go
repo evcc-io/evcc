@@ -25,6 +25,10 @@ func TestUnmarshalNiuToken(t *testing.T) {
 		t.Error("TokenExpiresIn")
 	}
 
+	if tok.Data.Token.Expiry.IsZero() {
+		t.Error("Expiry")
+	}
+
 }
 
 func TestUnmarshalNiuResponse(t *testing.T) {

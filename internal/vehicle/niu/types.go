@@ -1,5 +1,12 @@
 package niu
 
+import (
+	"encoding/json"
+	"time"
+
+	"golang.org/x/oauth2"
+)
+
 const (
 	AuthURI = "https://account-fk.niu.com"
 	ApiURI  = "https://app-api-fk.niu.com"
@@ -10,12 +17,34 @@ const (
 type Token struct {
 	Data struct {
 		Token struct {
-			AccessToken           string `json:"access_token,omitempty"`
-			RefreshToken          string `json:"refresh_token,omitempty"`
-			RefreshTokenExpiresIn int64  `json:"refresh_token_expires_in,omitempty"`
-			TokenExpiresIn        int64  `json:"token_expires_in,omitempty"`
+			oauth2.Token
+			RefreshTokenExpiresIn int64 `json:"refresh_token_expires_in,omitempty"`
+			TokenExpiresIn        int64 `json:"token_expires_in,omitempty"`
 		}
 	}
+}
+
+func (t *Token) UnmarshalJSON(data []byte) error {
+	var s struct {
+		Data struct {
+			Token struct {
+				oauth2.Token
+				RefreshTokenExpiresIn int64 `json:"refresh_token_expires_in,omitempty"`
+				TokenExpiresIn        int64 `json:"token_expires_in,omitempty"`
+			}
+		}
+	}
+
+	err := json.Unmarshal(data, &s)
+	if err == nil {
+		t.Data.Token = s.Data.Token
+
+		if s.Data.Token.Expiry.IsZero() && s.Data.Token.TokenExpiresIn != 0 {
+			t.Data.Token.Expiry = time.Now().Add(time.Second * time.Duration(s.Data.Token.TokenExpiresIn))
+		}
+	}
+
+	return err
 }
 
 // Response is the Niu motor_data api response
