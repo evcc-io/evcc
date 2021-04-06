@@ -11,7 +11,6 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle/niu"
-	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 )
@@ -60,7 +59,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.API = niu.New(provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter())
+	v.API = niu.New(v.batteryAPI)
 
 	return v, nil
 }

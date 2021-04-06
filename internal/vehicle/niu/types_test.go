@@ -25,10 +25,6 @@ func TestUnmarshalNiuToken(t *testing.T) {
 		t.Error("TokenExpiresIn")
 	}
 
-	if tok.Data.Token.Expiry.IsZero() {
-		t.Error("Expiry")
-	}
-
 }
 
 func TestUnmarshalNiuResponse(t *testing.T) {
@@ -53,10 +49,6 @@ func TestUnmarshalNiuResponse(t *testing.T) {
 
 	if tok.Data.LeftTime != "10.2" {
 		t.Error("LeftTime")
-	}
-
-	if !tok.Data.IsConnected {
-		t.Error("IsConnected")
 	}
 
 }
