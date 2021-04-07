@@ -236,8 +236,8 @@ func init() {
 		Type:    "http",
 		Depends: TaskTCP80,
 		Config: map[string]interface{}{
-			"path": "//cm?cmnd=Power",
-			"jq":   ".POWER",
+			"path": "//cm?cmnd=Module",
+			"jq":   ".Module",
 		},
 	})
 
