@@ -3,14 +3,9 @@
 		<h4 class="mb-2">{{ title || "Ladepunkt" }}</h4>
 		<div class="row">
 			<div class="col-12 col-md-8 col-lg-6 pr-4 pr-lg-5">
-				<Vehicle
-					class="mb-2"
-					v-bind="vehicle"
-					@target-soc-updated="setTargetSoC"
-					@target-time-updated="setTargetTime"
-				/>
+				<Vehicle class="mb-2" v-bind="vehicle" @target-soc-updated="setTargetSoC" />
 				<Mode
-					class="py-1 mb-4 mb-sm-3"
+					class="py-1 mb-4"
 					:mode="mode"
 					:pvConfigured="pvConfigured"
 					v-on:updated="setTargetMode"
@@ -33,7 +28,6 @@ export default {
 	name: "Loadpoint",
 	props: {
 		id: Number,
-		multi: Boolean,
 		pvConfigured: Boolean,
 
 		// main
@@ -124,12 +118,6 @@ export default {
 						this.targetSoC = response.data.targetSoC;
 					}.bind(this)
 				)
-				.catch(window.toasts.error);
-		},
-		setTargetTime: function (date) {
-			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
-			axios
-				.post(this.api("targetcharge") + "/" + this.targetSoC + "/" + formattedDate)
 				.catch(window.toasts.error);
 		},
 	},

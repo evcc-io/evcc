@@ -1,15 +1,10 @@
 <template>
-	<div class="pt-3 pb-2">
+	<div class="py-3">
 		<div class="mb-3">
-			<span>{{ socTitle || "&nbsp;" }}</span>
-			<span v-if="range >= 0" class="text-muted">/ {{ range }} km</span>
+			{{ socTitle || "&nbsp;" }}
 		</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
-		<VehicleSubline
-			v-bind="vehicleSubline"
-			@target-time-updated="targetTimeUpdated"
-			class="my-1"
-		/>
+		<VehicleSubline v-bind="vehicleSubline" class="my-1" />
 	</div>
 </template>
 
@@ -29,17 +24,11 @@ export default {
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
-		range: Number,
 		socTitle: String,
 		timerActive: Boolean,
 		timerSet: Boolean,
 		targetTime: String,
 		targetSoC: Number,
-	},
-	data: function () {
-		return {
-			selectedTargetSoC: null,
-		};
 	},
 	computed: {
 		vehicleSoc: function () {
@@ -52,9 +41,6 @@ export default {
 	methods: {
 		targetSocUpdated: function (targetSoC) {
 			this.$emit("target-soc-updated", targetSoC);
-		},
-		targetTimeUpdated: function (targetTime) {
-			this.$emit("target-time-updated", targetTime);
 		},
 	},
 	mixins: [collector],

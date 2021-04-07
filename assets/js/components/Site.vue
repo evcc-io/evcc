@@ -14,7 +14,6 @@
 			v-bind="loadpoint"
 			:id="id"
 			:key="id"
-			:multi="multi"
 			:pvConfigured="pvConfigured"
 		/>
 	</div>
@@ -46,10 +45,6 @@ export default {
 	computed: {
 		details: function () {
 			return this.collectProps(SiteDetails);
-		},
-		multi: function () {
-			// TODO fix compact
-			return this.loadpoints.length > 1 /* || app.compact*/;
 		},
 	},
 };

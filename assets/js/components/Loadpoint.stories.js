@@ -20,10 +20,3 @@ Base.args = {
   id: 0,
   pvConfigured: true,
 };
-
-export const WithLevels = Template.bind({});
-WithLevels.args = {
-  id: 0,
-  pvConfigured: true,
-  socLevels: [20, 50, 80, 100],
-};

@@ -34,7 +34,15 @@
 				</h2>
 			</div>
 
-			<div class="col-6 col-sm-3 col-md-6 mt-3">
+			<div class="col-6 col-sm-3 col-md-6 mt-3" v-if="range >= 0">
+				<div class="mb-2 value">Reichweite</div>
+				<h2 class="value">
+					{{ Math.round(range) }}
+					<small class="text-muted">km</small>
+				</h2>
+			</div>
+
+			<div class="col-6 col-sm-3 col-md-6 mt-3" v-else>
 				<div class="mb-2 value">Dauer</div>
 				<h2 class="value">
 					{{ fmtShortDuration(chargeDuration) }}

@@ -145,7 +145,7 @@ export default {
 </script>
 <style scoped>
 .vehicle-soc {
-	--height: 25px;
+	--height: 29px;
 	--thumb-overlap: 3px;
 	--thumb-width: 3px;
 	--thumb-horizontal-padding: 15px;
@@ -155,7 +155,7 @@ export default {
 }
 .progress {
 	height: 100%;
-	font-size: 0.875rem;
+	font-size: 1rem;
 }
 .progress-bar.bg-muted {
 	color: var(--white);
@@ -171,7 +171,7 @@ export default {
 	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
 	text-align: center;
 	color: var(--dark);
-	font-size: 0.875rem;
+	font-size: 1rem;
 	opacity: 1;
 	transition: opacity 0.2s ease 1s;
 }
