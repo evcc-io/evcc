@@ -20,11 +20,10 @@ import (
 type Niu struct {
 	*embed
 	*request.Helper
-	user, password    string
-	serial            string
-	tokens            niu.Token
-	accessTokenExpiry time.Time
-	chargeStateG      func() (float64, error)
+	user, password string
+	serial         string
+	token          niu.Token
+	apiG           func() (interface{}, error)
 }
 
 func init() {
@@ -60,7 +59,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
+	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -86,10 +85,9 @@ func (v *Niu) login() error {
 	})
 
 	if err == nil {
-		var tokens niu.Token
-		if err = v.DoJSON(req, &tokens); err == nil {
-			v.tokens = tokens
-			v.accessTokenExpiry = time.Unix(v.tokens.Data.Token.TokenExpiresIn, 0)
+		var token niu.Token
+		if err = v.DoJSON(req, &token); err == nil {
+			v.token = token
 		}
 	}
 
@@ -105,32 +103,70 @@ func md5Hash(text string) (string, error) {
 
 // request implements the Niu web request
 func (v *Niu) request(uri string) (*http.Request, error) {
-	if v.tokens.Data.Token.AccessToken == "" || v.accessTokenExpiry.Before(time.Now()) {
+	if v.token.AccessToken == "" || time.Until(v.token.Expiry) < time.Minute {
 		if err := v.login(); err != nil {
 			return nil, err
 		}
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"token": v.tokens.Data.Token.AccessToken,
+		"token": v.token.AccessToken,
 	})
 
 	return req, err
 }
 
-// chargeState implements the api.Vehicle interface
-func (v *Niu) chargeState() (float64, error) {
-	var resp niu.SoC
+// batteryAPI provides battery api response
+func (v *Niu) batteryAPI() (interface{}, error) {
+	var res niu.Response
 
 	req, err := v.request(niu.ApiURI + "/v3/motor_data/index_info?sn=" + v.serial)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	return float64(resp.Data.Batteries.CompartmentA.BatteryCharging), err
+	return res, err
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Niu) SoC() (float64, error) {
-	return v.chargeStateG()
+	res, err := v.apiG()
+
+	if res, ok := res.(niu.Response); err == nil && ok {
+		return float64(res.Data.Batteries.CompartmentA.BatteryCharging), nil
+	}
+
+	return 0, err
+}
+
+var _ api.ChargeState = (*Niu)(nil)
+
+// Status implements the api.ChargeState interface
+func (v *Niu) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+
+	res, err := v.apiG()
+	if res, ok := res.(niu.Response); err == nil && ok {
+		if res.Data.IsConnected {
+			status = api.StatusB
+		}
+		if res.Data.IsCharging > 0 {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
+var _ api.VehicleRange = (*Niu)(nil)
+
+// Range implements the api.VehicleRange interface
+func (v *Niu) Range() (int64, error) {
+	res, err := v.apiG()
+
+	if res, ok := res.(niu.Response); err == nil && ok {
+		return int64(res.Data.EstimatedMileage), nil
+	}
+
+	return 0, err
 }
