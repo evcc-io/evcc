@@ -1,8 +1,10 @@
 <template>
 	<div class="subline d-flex justify-content-between align-items-center">
-		<small class="text-secondary" v-if="minSoCActive">
-			<fa-icon class="text-muted mr-1" icon="exclamation-circle"></fa-icon>
-			Mindestladung bis {{ minSoC }}%
+		<small class="text-secondary">
+			<span v-if="minSoCActive">
+				<fa-icon class="text-muted mr-1" icon="exclamation-circle"></fa-icon>
+				Mindestladung bis {{ minSoC }}%
+			</span>
 		</small>
 		<small
 			v-if="targetChargeEnabled"
