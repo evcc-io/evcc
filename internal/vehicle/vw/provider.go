@@ -11,8 +11,9 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (interface{}, error)
-	climateG func() (interface{}, error)
+	chargerG          func() (interface{}, error)
+	climateG          func() (interface{}, error)
+	startChargeAction func() error
 }
 
 // NewProvider provides the evcc vehicle api provider
@@ -24,6 +25,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		climateG: provider.NewCached(func() (interface{}, error) {
 			return api.Climater(vin)
 		}, cache).InterfaceGetter(),
+		startChargeAction: func() error {
+			return api.Action(vin, ActionCharge, ActionChargeStart)
+		},
 	}
 	return impl
 }
@@ -115,4 +119,11 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	}
 
 	return active, outsideTemp, targetTemp, err
+}
+
+var _ api.VehicleStartCharge = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.startChargeAction()
 }
