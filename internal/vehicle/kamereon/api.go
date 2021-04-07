@@ -55,7 +55,7 @@ func (v *API) SoC() (float64, error) {
 
 var _ api.ChargeState = (*API)(nil)
 
-// Status implements the Vehicle.Status interface
+// Status implements the api.ChargeState interface
 func (v *API) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
