@@ -35,6 +35,7 @@ const (
 	taskInverter     = "inverter"
 	taskBattery      = "battery"
 	taskMeter        = "meter"
+	taskFronius      = "fronius"
 )
 
 func init() {
@@ -159,7 +160,7 @@ func init() {
 			"values":  chargeStatus,
 		},
 	})
-	
+
 	taskList.Add(Task{
 		ID:      taskOpenwb,
 		Type:    "mqtt",
@@ -219,16 +220,15 @@ func init() {
 		},
 	})
 
-	// // see https://github.com/andig/evcc-config/pull/5/files
-	// taskList.Add(Task{
-	// 	ID:      "fronius",
-	// 	Type:    "http",
-	// 	Depends: TaskTCP80,
-	// 	Config: map[string]interface{}{
-	// 		"path": "/solar_api/v1/GetPowerFlowRealtimeData.fcgi",
-	// 		"jq":   ".Body.Data.Site.P_Grid",
-	// 	},
-	// })
+	taskList.Add(Task{
+		ID:      taskFronius,
+		Type:    "http",
+		Depends: TaskTCP80,
+		Config: map[string]interface{}{
+			"path": "/solar_api/GetAPIVersion.cgi",
+			"jq":   ".BaseURL",
+		},
+	})
 
 	// taskList.Add(Task{
 	// 	ID:      "volkszähler",
