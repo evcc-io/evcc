@@ -13,15 +13,15 @@ func TestUnmarshalNiuToken(t *testing.T) {
 		t.Error(err)
 	}
 
-	if tok.Data.Token.AccessToken != "access" {
+	if tok.AccessToken != "access" {
 		t.Error("AccessToken")
 	}
 
-	if tok.Data.Token.RefreshToken != "refresh" {
+	if tok.RefreshToken != "refresh" {
 		t.Error("RefreshToken")
 	}
 
-	if tok.Data.Token.TokenExpiresIn != 1620139071 {
+	if tok.Expiry.IsZero() {
 		t.Error("TokenExpiresIn")
 	}
 

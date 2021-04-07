@@ -12,20 +12,12 @@ const (
 	ApiURI  = "https://app-api-fk.niu.com"
 )
 
-// Token is the Niu oauth2 api response
 // https://account-fk.niu.com/v3/api/oauth2/token?account=<NiuUser>&app_id=niu_8xt1afu6&grant_type=password&password=<MD5PasswordHash>&scope=base
-type Token struct {
-	Data struct {
-		Token struct {
-			oauth2.Token
-			RefreshTokenExpiresIn int64 `json:"refresh_token_expires_in,omitempty"`
-			TokenExpiresIn        int64 `json:"token_expires_in,omitempty"`
-		}
-	}
-}
+type Token oauth2.Token
 
+// UnmarshalJSON decodes the token api response
 func (t *Token) UnmarshalJSON(data []byte) error {
-	var s struct {
+	var res struct {
 		Data struct {
 			Token struct {
 				oauth2.Token
@@ -35,12 +27,12 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	err := json.Unmarshal(data, &s)
+	err := json.Unmarshal(data, &res)
 	if err == nil {
-		t.Data.Token = s.Data.Token
+		(*t) = (Token)(res.Data.Token.Token)
 
-		if s.Data.Token.Expiry.IsZero() && s.Data.Token.TokenExpiresIn != 0 {
-			t.Data.Token.Expiry = time.Now().Add(time.Second * time.Duration(s.Data.Token.TokenExpiresIn))
+		if res.Data.Token.Expiry.IsZero() && res.Data.Token.TokenExpiresIn != 0 {
+			t.Expiry = time.Now().Add(time.Second * time.Duration(res.Data.Token.TokenExpiresIn))
 		}
 	}
 
@@ -51,7 +43,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 // https://app-api-fk.niu.com/v3/motor_data/index_info?sn=<ScooterSerialNumber>
 type Response struct {
 	Data struct {
-		IsCharging  int64 `json:"isCharging,omitempty"`
+		IsCharging  int   `json:"isCharging,omitempty"`
 		IsConnected bool  `json:"isConnected,omitempty"`
 		Timestamp   int64 `json:"time,omitempty"`
 		Batteries   struct {
