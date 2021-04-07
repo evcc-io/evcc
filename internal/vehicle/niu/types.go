@@ -32,7 +32,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 		(*t) = (Token)(res.Data.Token.Token)
 
 		if res.Data.Token.Expiry.IsZero() && res.Data.Token.TokenExpiresIn != 0 {
-			t.Expiry = time.Now().Add(time.Second * time.Duration(res.Data.Token.TokenExpiresIn))
+			t.Expiry = time.Unix(res.Data.Token.TokenExpiresIn, 0)
 		}
 	}
 
