@@ -36,6 +36,7 @@ const (
 	taskBattery      = "battery"
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
+	taskTasmota      = "tasmota"
 )
 
 func init() {
@@ -227,6 +228,16 @@ func init() {
 		Config: map[string]interface{}{
 			"path": "/solar_api/GetAPIVersion.cgi",
 			"jq":   ".BaseURL",
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      taskTasmota,
+		Type:    "http",
+		Depends: TaskTCP80,
+		Config: map[string]interface{}{
+			"path": "//cm?cmnd=Module",
+			"jq":   ".Module",
 		},
 	})
 
