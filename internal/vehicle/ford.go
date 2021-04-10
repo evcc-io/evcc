@@ -18,7 +18,8 @@ const (
 	fordAuth          = "https://fcis.ice.ibmcloud.com"
 	fordAPI           = "https://usapi.cv.ford.com"
 	fordVehicleList   = "https://api.mps.ford.com/api/users/vehicles"
-	outdatedAfterMins = 5 // if returned status value is older than x minutes, evcc will init refresh
+	outdatedAfterMins = 5  // if returned status value is older than x minutes, evcc will init refresh
+	maxTrials         = 20 // max trials to get refreshed status, poll interval is 1.5s, i.e. timeout = maxTrials * 1.5s
 )
 
 // Ford is an api.Vehicle implementation for Ford cars
@@ -28,7 +29,6 @@ type Ford struct {
 	log                 *util.Logger
 	user, password, vin string
 	tokens              oauth.Token
-	chargeStateG        func() (float64, error)
 	statusG             func() (interface{}, error)
 }
 
@@ -67,8 +67,6 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.statusG = provider.NewCached(func() (interface{}, error) {
 		return v.VehicleStatus()
 	}, cc.Cache).InterfaceGetter()
-
-	// v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
 	var err error
 	if cc.VIN == "" {
@@ -192,12 +190,10 @@ func (v *Ford) VehicleStatus() (res vehicleStatus, err error) {
 
 	var statusAge time.Duration
 	statusAge, err = v.CalculateAge(res.VehicleStatus.LastRefresh)
-	v.log.DEBUG.Printf("Vehicle Status Age: %v", statusAge)
-	// todo - Fehlerbehandlung, Timestamp-Format
 
-	if statusAge > outdatedAfterMins*time.Minute {
+	if err == nil && statusAge > outdatedAfterMins*time.Minute {
 		// received data is considered outdated, server is requested to poll updated data from vehicle
-		v.log.DEBUG.Print("Vehicle Status is considered as outdated, requesting refresh")
+		v.log.DEBUG.Printf("Vehicle Status is outdated (age %v > %dm), requesting refresh", statusAge, outdatedAfterMins)
 		var updatedRes vehicleStatus
 		updatedRes, err = v.VehicleStatusRefresh()
 		if err == nil {
@@ -210,7 +206,7 @@ func (v *Ford) VehicleStatus() (res vehicleStatus, err error) {
 	return res, err
 }
 
-// Status implements the /status response
+// Get updated vehicle status after requesting refresh
 func (v *Ford) VehicleStatusRefresh() (res vehicleStatus, err error) {
 	var commandId string
 	commandId, err = v.requestRefresh()
@@ -221,7 +217,6 @@ func (v *Ford) VehicleStatusRefresh() (res vehicleStatus, err error) {
 		var req *http.Request
 
 		counter := 0
-		const maxTrials = 20
 		for counter < maxTrials {
 			req, err = v.request(http.MethodGet, uri)
 			if err == nil {
@@ -230,18 +225,17 @@ func (v *Ford) VehicleStatusRefresh() (res vehicleStatus, err error) {
 				break
 			}
 
-			// if status = 200, the update is complete
+			// if status is 200, the update has been completed
+			// otherwise request needs to be resent
 			if res.Status == 200 {
 				break
 			}
-
-			v.log.TRACE.Printf("Status of data refresh: %v", res.Status)
 
 			time.Sleep(1500 * time.Millisecond)
 			counter++
 		}
 
-		if counter >= maxTrials && res.Status != 200 {
+		if err == nil && counter >= maxTrials && res.Status != 200 {
 			err = fmt.Errorf("update of SoC not completed after timeout")
 			v.log.DEBUG.Print("update of SoC not completed after timeout")
 		}
@@ -250,8 +244,8 @@ func (v *Ford) VehicleStatusRefresh() (res vehicleStatus, err error) {
 	return res, err
 }
 
-// Request API to poll vehicle for updated data
-// returns commandId to get the result after server received data from vehicle
+// Request server to poll vehicle for updated data
+// returns commandId to track the request/get the result after server received data from vehicle
 func (v *Ford) requestRefresh() (string, error) {
 	var resp struct {
 		CommandId string
@@ -299,10 +293,10 @@ func (v *Ford) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(vehicleStatus); err == nil && ok {
 		if res.VehicleStatus.PlugStatus.Value == 1 {
-			status = api.StatusB
+			status = api.StatusB // connected, not charging
 		}
 		if res.VehicleStatus.ChargingStatus.Value == "ChargingAC" {
-			status = api.StatusC
+			status = api.StatusC // charging
 		}
 	}
 
