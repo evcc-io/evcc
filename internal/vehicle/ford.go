@@ -170,11 +170,12 @@ func (v *Ford) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
+// Parses vehicle timestamp in format returned by Ford API and calculates age
 func (v *Ford) CalculateAge(timestamp string) (age time.Duration, err error) {
 	var timestampTime time.Time
 	const dateFormat = "01-02-2006 15:04:05"
 	timestampTime, err = time.Parse(dateFormat, timestamp)
-	age = time.Now().Sub(timestampTime)
+	age = time.Since(timestampTime)
 
 	return age, err
 }
@@ -183,13 +184,16 @@ func (v *Ford) CalculateAge(timestamp string) (age time.Duration, err error) {
 func (v *Ford) VehicleStatus() (res vehicleStatus, err error) {
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
 
-	req, err := v.request(http.MethodGet, uri)
+	var req *http.Request
+	req, err = v.request(http.MethodGet, uri)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
 	var statusAge time.Duration
-	statusAge, err = v.CalculateAge(res.VehicleStatus.LastRefresh)
+	if err == nil {
+		statusAge, err = v.CalculateAge(res.VehicleStatus.LastRefresh)
+	}
 
 	if err == nil && statusAge > outdatedAfterMins*time.Minute {
 		// received data is considered outdated, server is requested to poll updated data from vehicle
