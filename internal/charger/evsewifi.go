@@ -52,6 +52,8 @@ type EVSEWifi struct {
 	uri          string
 	alwaysActive bool
 	current      int64
+	useRfid      bool
+	unlocked     bool
 }
 
 func init() {
@@ -67,13 +69,14 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Meter struct {
 			Power, Energy, Currents bool
 		}
+		UseRfid bool
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
+	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.UseRfid)
 	if err != nil {
 		return evse, err
 	}
@@ -107,14 +110,16 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string) (*EVSEWifi, error) {
+func NewEVSEWifi(uri string, useRfid bool) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
-		log:     log,
-		Helper:  request.NewHelper(log),
-		uri:     strings.TrimRight(uri, "/"),
-		current: 6, // 6A defined value
+		log:      log,
+		Helper:   request.NewHelper(log),
+		uri:      strings.TrimRight(uri, "/"),
+		current:  6, // 6A defined value
+		useRfid:  useRfid,
+		unlocked: !useRfid,
 	}
 
 	return evse, nil
@@ -138,11 +143,29 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	}
 
 	params := res.List[0]
-	if !params.AlwaysActive {
+	if !params.AlwaysActive && !evse.useRfid {
 		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
-
+	if params.AlwaysActive && evse.useRfid {
+		evse.log.WARN.Println("evse should be configured to normal mode")
+	}
 	evse.alwaysActive = params.AlwaysActive
+
+	// if RFID us to be used
+	if evse.useRfid {
+		// we ignore evsestate switch to false in case the car got disconnected
+		if !params.EvseState && (params.VehicleState < 2) {
+			evse.unlocked = false
+		}
+		if params.EvseState {
+			// but we always take a switch to active as unlock
+			evse.unlocked = true
+		}
+
+	} else {
+		evse.unlocked = true
+	}
+
 	return params, nil
 }
 
@@ -191,15 +214,45 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 
 // Enable implements the Charger.Enable interface
 func (evse *EVSEWifi) Enable(enable bool) error {
-	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 
+	var url string
+
+	// if evse is in always on mode or useRfid mode is set - just set current
 	if evse.alwaysActive {
 		var current int64
 		if enable {
 			current = evse.current
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
+		return evse.checkError(evse.GetBody(url))
 	}
+
+	// if RFID mode - things depend more on the evse itsel - honor if it is / was locked
+	if evse.useRfid {
+
+		if enable && !evse.unlocked {
+			evse.log.WARN.Println("evse could start but is locked (use rfid or enable at evse gui) ")
+			return nil
+		}
+
+		if enable && evse.unlocked {
+			url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), evse.current)
+			err := evse.checkError(evse.GetBody(url))
+			if err == nil {
+				url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
+				return evse.checkError(evse.GetBody(url))
+			}
+		}
+
+		if !enable {
+			url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
+			return evse.checkError(evse.GetBody(url))
+		}
+
+	}
+
+    // most probably remote mode
+	url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 	return evse.checkError(evse.GetBody(url))
 }
 
