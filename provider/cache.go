@@ -38,7 +38,7 @@ func NewCached(getter interface{}, cache time.Duration) *Cached {
 		cache:  cache,
 	}
 
-	bus.Subscribe(reset, c.reset)
+	_ = bus.Subscribe(reset, c.reset)
 
 	return c
 }
