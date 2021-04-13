@@ -3,7 +3,6 @@ package vehicle
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,10 +11,11 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle/kamereon"
-	"github.com/andig/evcc/internal/vehicle/oidc"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 // Credits to
@@ -46,8 +46,6 @@ type Nissan struct {
 	*request.Helper
 	log                 *util.Logger
 	user, password, vin string
-	userID              string
-	tokens              oidc.Token
 	*kamereon.API
 }
 
@@ -82,10 +80,17 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	err := v.authFlow()
+	token, err := v.authFlow()
+	if err == nil {
+		// replace transport client with authenticated client
+		v.Helper.Client.Transport = &oauth2.Transport{
+			Source: oauth.RefreshTokenSource((*oauth2.Token)(&token), v),
+			Base:   v.Helper.Client.Transport,
+		}
+	}
 
 	if err == nil && cc.VIN == "" {
-		v.vin, err = findVehicle(v.vehicles(v.userID))
+		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
@@ -121,9 +126,10 @@ type nissanToken struct {
 	Realm      string `json:"realm"`
 }
 
-func (v *Nissan) authFlow() error {
-	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", nissanAuthBaseURL, nissanRealm)
+func (v *Nissan) authFlow() (oauth.Token, error) {
+	client := request.NewHelper(v.log) // no underlying oauth transport
 
+	uri := fmt.Sprintf("%s/json/realms/root/realms/%s/authenticate", nissanAuthBaseURL, nissanRealm)
 	req, err := request.New(http.MethodPost, uri, nil, map[string]string{
 		"Accept-Api-Version": nissanAPIVersion,
 		"X-Username":         "anonymous",
@@ -131,14 +137,15 @@ func (v *Nissan) authFlow() error {
 		"Accept":             "application/json",
 	})
 
-	var oauth nissanToken
+	var nToken nissanToken
+	var realm string
 	var resp *http.Response
 	var code string
 
 	if err == nil {
 		var res nissanAuth
-		if err = v.DoJSON(req, &res); err != nil {
-			return err
+		if err = client.DoJSON(req, &res); err != nil {
+			return oauth.Token{}, err
 		}
 
 		for id, cb := range res.Callbacks {
@@ -164,13 +171,12 @@ func (v *Nissan) authFlow() error {
 		}
 
 		if err == nil {
-			err = v.DoJSON(req, &oauth)
+			err = client.DoJSON(req, &nToken)
+			realm = strings.Trim(nToken.Realm, "/")
 		}
 	}
 
 	if err == nil {
-		uri := fmt.Sprintf("%s/oauth2/%s/authorize", nissanAuthBaseURL, strings.Trim(oauth.Realm, "/"))
-
 		data := url.Values{
 			"client_id":     []string{nissanClientID},
 			"redirect_uri":  []string{nissanRedirectURI},
@@ -179,15 +185,15 @@ func (v *Nissan) authFlow() error {
 			"nonce":         []string{"sdfdsfez"},
 		}
 
-		uri += "?" + data.Encode()
+		uri := fmt.Sprintf("%s/oauth2/%s/authorize?%s", nissanAuthBaseURL, realm, data.Encode())
 		req, err = request.New(http.MethodGet, uri, nil, map[string]string{
-			"Cookie": "i18next=en-UK; amlbcookie=05; kauthSession=" + oauth.TokenID,
+			"Cookie": "i18next=en-UK; amlbcookie=05; kauthSession=" + nToken.TokenID,
 		})
 
 		if err == nil {
-			v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
-			resp, err = v.Do(req)
-			v.Client.CheckRedirect = nil
+			client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
+			resp, err = client.Do(req)
+			client.CheckRedirect = nil
 
 			if err == nil {
 				resp.Body.Close()
@@ -202,9 +208,8 @@ func (v *Nissan) authFlow() error {
 		}
 	}
 
+	var res oauth.Token
 	if err == nil {
-		uri = fmt.Sprintf("%s/oauth2/%s/access_token", nissanAuthBaseURL, strings.Trim(oauth.Realm, "/"))
-
 		data := url.Values{
 			"code":          []string{code},
 			"client_id":     []string{nissanClientID},
@@ -213,71 +218,38 @@ func (v *Nissan) authFlow() error {
 			"grant_type":    []string{"authorization_code"},
 		}
 
-		uri += "?" + data.Encode()
+		uri = fmt.Sprintf("%s/oauth2/%s/access_token?%s", nissanAuthBaseURL, realm, data.Encode())
 		req, err = request.New(http.MethodPost, uri, nil, request.URLEncoding)
 		if err == nil {
-			if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
-				err = errors.New("missing access token")
-			}
+			err = client.DoJSON(req, &res)
 		}
 	}
 
-	if err == nil {
-		uri = fmt.Sprintf("%s/v1/users/current", nissanUserAdapterBaseURL)
-
-		var user struct{ UserID string }
-		if req, err = request.New(http.MethodGet, uri, nil, nil); err == nil {
-			if err = v.request(req, &user); err == nil {
-				v.userID = user.UserID
-			}
-		}
-
-		if v.userID == "" {
-			err = errors.New("missing user id")
-		}
-	}
-
-	return err
+	return res, err
 }
 
-func (v *Nissan) refreshToken() error {
-	uri := fmt.Sprintf("%s/oauth2/%s/access_token", nissanAuthBaseURL, nissanRealm)
-
+func (v *Nissan) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{nissanClientID},
 		"client_secret": []string{nissanClientSecret},
 		"grant_type":    {"refresh_token"},
-		"refresh_token": {v.tokens.RefreshToken},
+		"refresh_token": {token.RefreshToken},
 	}
 
-	uri += "?" + data.Encode()
+	uri := fmt.Sprintf("%s/oauth2/%s/access_token?%s", nissanAuthBaseURL, nissanRealm, data.Encode())
 	req, err := request.New(http.MethodPost, uri, nil, request.URLEncoding)
+
+	var res oauth.Token
 	if err == nil {
-		if err = v.DoJSON(req, &v.tokens); err == nil && v.tokens.AccessToken == "" {
-			err = errors.New("missing access token")
-		}
+		client := request.NewHelper(v.log)
+		err = client.DoJSON(req, &res)
 	}
 
-	return err
-}
-
-// request executes given request and handles token refresh
-func (v *Nissan) request(req *http.Request, res interface{}) error {
-	req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-	err := v.DoJSON(req, &res)
-
-	// repeat auth if error
 	if err != nil {
-		if err = v.refreshToken(); err != nil {
-			err = v.authFlow()
-		}
-		if err == nil {
-			req.Header.Set("Authorization", "Bearer "+v.tokens.AccessToken)
-			err = v.DoJSON(req, &res)
-		}
+		res, err = v.authFlow()
 	}
 
-	return err
+	return (*oauth2.Token)(&res), err
 }
 
 type nissanVehicles struct {
@@ -290,13 +262,15 @@ type nissanVehicle struct {
 	PictureURL string
 }
 
-func (v *Nissan) vehicles(userID string) ([]string, error) {
-	uri := fmt.Sprintf("%s/v2/users/%s/cars", nissanUserBaseURL, userID)
+func (v *Nissan) vehicles() ([]string, error) {
+	var user struct{ UserID string }
+	uri := fmt.Sprintf("%s/v1/users/current", nissanUserAdapterBaseURL)
+	err := v.GetJSON(uri, &user)
 
 	var res nissanVehicles
-	req, err := request.New(http.MethodGet, uri, nil, nil)
 	if err == nil {
-		err = v.request(req, &res)
+		uri := fmt.Sprintf("%s/v2/users/%s/cars", nissanUserBaseURL, user.UserID)
+		err = v.GetJSON(uri, &res)
 	}
 
 	var vehicles []string
@@ -321,16 +295,13 @@ func (v *Nissan) batteryAPI() (interface{}, error) {
 
 	var res kamereon.Response
 	if err == nil {
-		err = v.request(req, &res)
+		err = v.DoJSON(req, &res)
 	}
 
 	// request battery status
 	if err == nil {
 		uri = fmt.Sprintf("%s/v1/cars/%s/battery-status", nissanCarAdapterBaseURL, v.vin)
-
-		if req, err = request.New(http.MethodGet, uri, nil, nil); err == nil {
-			err = v.request(req, &res)
-		}
+		err = v.GetJSON(uri, &res)
 	}
 
 	return res, err

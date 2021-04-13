@@ -220,7 +220,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 	var foundVehicle VehicleResponse
 	var foundEmobilityVehicle bool
 
-	if err == nil && vin == "" {
+	if err == nil {
 		if vin == "" && len(vehicles) == 1 {
 			foundVehicle = vehicles[0]
 		} else {

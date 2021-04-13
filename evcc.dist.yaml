@@ -98,7 +98,7 @@ loadpoints:
     delay: 1m # threshold must be exceeded for this long
     threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
-    delay: 5m # threshold must be exceeded for this long
+    delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
   guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
