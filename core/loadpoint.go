@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core/soc"
 	"github.com/andig/evcc/core/wrapper"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
 
@@ -317,6 +318,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	if lp.socEstimator != nil {
 		lp.socEstimator.Reset()
 	}
+
+	// flush all vahicles before updating state
+	provider.ResetCached()
 
 	lp.triggerEvent(evVehicleConnect)
 }
