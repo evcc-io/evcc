@@ -287,7 +287,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	// in rfid mode, when evse is not active - never set less than 6 otherwise it would not be possible
 	// to iniate a charge by the evse again
-	if evse.useRfid && !evse.unlocked {
+	if evse.useRfid {
 		params, err := evse.getParameters()
 		if err != nil {
 			return err
