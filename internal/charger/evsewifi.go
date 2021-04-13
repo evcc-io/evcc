@@ -257,10 +257,23 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 			}
 		}
 
-		// disable evse by setting charge to 0
+		// disable evse
 		if !enable {
-			url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
-			return evse.checkError(evse.GetBody(url))
+			// if already unlocked we can set current to 0
+			if evse.unlocked {
+				url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
+				return evse.checkError(evse.GetBody(url))
+				// if not we can't because in that case it would not be possible to initiate ("unlock")
+				// a charge by the evse
+			} else {
+				url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 6)
+				err := evse.checkError(evse.GetBody(url))
+				if err != nil {
+					return err
+				}
+				url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), false)
+				return evse.checkError(evse.GetBody(url))
+			}
 		}
 
 	}
@@ -272,6 +285,20 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the Charger.MaxCurrent interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
+	// in rfid mode, when evse is not active - never set less than 6 otherwise it would not be possible
+	// to iniate a charge by the evse again
+	if evse.useRfid && !evse.unlocked {
+		params, err := evse.getParameters()
+		if err != nil {
+			return err
+		}
+		if !params.EvseState {
+			if current < 6 {
+				current = 6
+			}
+		}
+
+	}
 	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.checkError(evse.GetBody(url))
