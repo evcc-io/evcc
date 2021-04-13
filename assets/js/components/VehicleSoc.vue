@@ -110,7 +110,7 @@ export default {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.socCharge === 100) {
+			if (this.socChargeDisplayWidth === 100) {
 				return null;
 			}
 			if (this.minSoCActive) {
