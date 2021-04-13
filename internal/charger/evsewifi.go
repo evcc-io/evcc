@@ -153,12 +153,13 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 
 	// if RFID us to be used
 	if evse.useRfid {
-		// we ignore evsestate switch to false in case the car got disconnected
+		// we ignore evsestate switch to false unless the car got disconnected too
+		// this way EVCC can respect unlocking with rfid but still restart a paused charge
 		if !params.EvseState && (params.VehicleState < 2) {
 			evse.unlocked = false
 		}
 		if params.EvseState {
-			// but we always take a switch to active as unlock
+			// we always consider a switch to active as unlock
 			evse.unlocked = true
 		}
 
@@ -217,7 +218,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 	var url string
 
-	// if evse is in always on mode or useRfid mode is set - just set current
+	// if evse is in always on mode  - just set current
 	if evse.alwaysActive {
 		var current int64
 		if enable {
@@ -227,23 +228,36 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 		return evse.checkError(evse.GetBody(url))
 	}
 
-	// if RFID mode - things depend more on the evse itsel - honor if it is / was locked
+	// if RFID mode - things depend more on the evse itsel - honour if it is / was locked/unlocked
 	if evse.useRfid {
 
+		// we would like start a charge but since evse was not unlocked we will not start a charge...
 		if enable && !evse.unlocked {
 			evse.log.WARN.Println("evse could start but is locked (use rfid or enable at evse gui) ")
 			return nil
 		}
 
+		// we would like to start a charge and evse was unlocked -> start charge
 		if enable && evse.unlocked {
+			// set current
 			url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), evse.current)
 			err := evse.checkError(evse.GetBody(url))
 			if err == nil {
-				url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
-				return evse.checkError(evse.GetBody(url))
+				// check is evse is active now
+				params, err := evse.getParameters()
+				if err != nil {
+					return err
+				}
+				// if not activate it
+				if !params.EvseState {
+					url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
+					return evse.checkError(evse.GetBody(url))
+				}
+				return nil
 			}
 		}
 
+		// disable evse by setting charge to 0
 		if !enable {
 			url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), 0)
 			return evse.checkError(evse.GetBody(url))
@@ -251,7 +265,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 	}
 
-    // most probably remote mode
+	// most probably remote mode - just activate / deactivate
 	url = fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 	return evse.checkError(evse.GetBody(url))
 }
