@@ -183,7 +183,9 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-// Climater implements the api.Vehicle.Climater interface
+var _ api.VehicleClimater = (*Tesla)(nil)
+
+// Climater implements the api.VehicleClimater interface
 func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateStateG()
 
