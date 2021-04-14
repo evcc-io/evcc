@@ -191,10 +191,8 @@ func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64
 
 	if res, ok := res.(*tesla.ClimateState); err == nil && ok {
 		active = res.IsPreconditioning
-
-		targetTemp = res.PassengerTempSetting
-
 		outsideTemp = res.OutsideTemp
+		targetTemp = res.PassengerTempSetting
 
 		return active, outsideTemp, targetTemp, nil
 	}
