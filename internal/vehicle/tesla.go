@@ -107,7 +107,7 @@ func (v *Tesla) chargeState() (interface{}, error) {
 	return v.vehicle.ChargeState()
 }
 
-// chargeState implements the charge state api
+// climateState implements the climater api
 func (v *Tesla) climateState() (interface{}, error) {
 	return v.vehicle.ClimateState()
 }
