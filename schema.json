@@ -119,12 +119,6 @@
               "target": {
                 "type": "integer"
               },
-              "levels": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                }
-              },
               "estimate": {
                 "type": "boolean"
               }

@@ -42,7 +42,6 @@ export default {
 		title: String,
 		mode: String,
 		targetSoC: Number,
-		socLevels: Array,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -82,9 +81,6 @@ export default {
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
-		},
-		hasTargetSoC: function () {
-			return this.socLevels != null && this.socLevels.length > 0;
 		},
 	},
 	watch: {
