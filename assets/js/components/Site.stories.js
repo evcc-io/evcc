@@ -36,6 +36,19 @@ Single.args = {
   loadpoints: [
     {
       title: "Ladepunkt 1",
+      mode: "now",
+      socTitle: "Mein Auto",
+      enabled: true,
+      connected: true,
+      hasVehicle: true,
+      charging: true,
+      socCharge: 66,
+      targetSoC: 90,
+      range: 344,
+      chargeEstimate: 999,
+      chargePower: 11232,
+      chargeDuration: 123982,
+      chargedEnergy: 23213,
     },
   ],
 };

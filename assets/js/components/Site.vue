@@ -12,6 +12,7 @@
 		<Loadpoint
 			v-for="(loadpoint, id) in loadpoints"
 			v-bind="loadpoint"
+			:single="loadpoints.length === 1"
 			:id="id"
 			:key="id"
 			:pvConfigured="pvConfigured"

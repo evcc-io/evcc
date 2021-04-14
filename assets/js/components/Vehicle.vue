@@ -1,7 +1,7 @@
 <template>
 	<div class="py-3">
 		<div class="mb-3">
-			{{ socTitle || "&nbsp;" }}
+			{{ socTitle || "Fahrzeug" }}
 		</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline v-bind="vehicleSubline" class="my-1" />

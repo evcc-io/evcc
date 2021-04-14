@@ -1,6 +1,13 @@
 <template>
 	<div class="border-top mt-4 pt-4">
-		<h4 class="mb-2">{{ title || "Ladepunkt" }}</h4>
+		<h4 class="mb-2" v-if="!single">{{ title || "Ladepunkt" }}</h4>
+		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
+			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
+		</div>
+		<div class="alert alert-danger mt-4 mb-2" role="alert" v-if="remoteDisabled == 'hard'">
+			{{ remoteDisabledSource }}: Deaktiviert
+		</div>
+
 		<div class="row">
 			<div class="col-12 col-md-8 col-lg-6 pr-4 pr-lg-5">
 				<Vehicle class="mb-2" v-bind="vehicle" @target-soc-updated="setTargetSoC" />
@@ -29,6 +36,7 @@ export default {
 	props: {
 		id: Number,
 		pvConfigured: Boolean,
+		single: Boolean,
 
 		// main
 		title: String,
