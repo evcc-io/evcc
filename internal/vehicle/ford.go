@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -16,11 +15,12 @@ import (
 )
 
 const (
-	fordAuth              = "https://fcis.ice.ibmcloud.com"
-	fordAPI               = "https://usapi.cv.ford.com"
-	fordVehicleList       = "https://api.mps.ford.com/api/users/vehicles"
-	fordOutdatedAfterMins = 5  // if returned status value is older than x minutes, evcc will init refresh
-	fordMaxRefreshTrials  = 20 // max trials to get status after refresh, poll interval is 1.5s, i.e. timeout = maxTrials * 1.5s
+	fordAuth             = "https://fcis.ice.ibmcloud.com"
+	fordAPI              = "https://usapi.cv.ford.com"
+	fordVehicleList      = "https://api.mps.ford.com/api/users/vehicles"
+	fordOutdatedAfter    = 5 * time.Minute       // if returned status value is older, evcc will init refresh
+	fordMaxRefreshTrials = 20                    // max trials to get status after refresh, poll interval is 1.5s, i.e. timeout = maxTrials * 1.5s
+	fordTimeFormat       = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
 )
 
 // Ford is an api.Vehicle implementation for Ford cars
@@ -169,17 +169,7 @@ func (v *Ford) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// calculateAge parses Ford API timestamp and returns age
-func (v *Ford) calculateAge(timestamp string) (age time.Duration, err error) {
-	var timestampTime time.Time
-	const dateFormat = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
-	timestampTime, err = time.Parse(dateFormat, timestamp)
-	age = time.Since(timestampTime)
-
-	return age, err
-}
-
-// vehicleStatus performs a /status response to the Ford API and triggers a refresh if
+// vehicleStatus performs a /status request to the Ford API and triggers a refresh if
 // the received status is too old
 func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
@@ -192,23 +182,15 @@ func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
 
 	var statusAge time.Duration
 	if err == nil {
-		statusAge, err = v.calculateAge(res.VehicleStatus.LastRefresh)
+		var ts time.Time
+		ts, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
+		statusAge = time.Since(ts)
 	}
 
-	if err == nil && statusAge > fordOutdatedAfterMins*time.Minute {
+	if err == nil && statusAge > fordOutdatedAfter {
 		// received data is considered outdated, server is requested to poll updated status from vehicle
-		v.log.DEBUG.Printf("Vehicle Status is outdated (age %v > %dm), requesting refresh", statusAge, fordOutdatedAfterMins)
-		var refreshRes fordVehicleStatus
-		var refreshErr error
-		refreshRes, refreshErr = v.vehicleStatusRefresh()
-		if refreshErr == nil {
-			res = refreshRes
-			statusAge, err = v.calculateAge(res.VehicleStatus.LastRefresh)
-			v.log.DEBUG.Printf("Refreshed Status Age: %v", statusAge)
-		} else {
-			// error occured while trying to get updated data; log and continue with cached data
-			v.log.WARN.Print(refreshErr)
-		}
+		v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", statusAge, fordOutdatedAfter)
+		res, err = v.vehicleStatusRefresh()
 	}
 
 	return res, err
@@ -235,8 +217,8 @@ func (v *Ford) vehicleStatusRefresh() (res fordVehicleStatus, err error) {
 			time.Sleep(1500 * time.Millisecond)
 		}
 
-		if err == nil && res.Status != 200 {
-			err = errors.New("vehicle status refresh failed")
+		if err == nil && res.Status != http.StatusOK {
+			err = fmt.Errorf("refresh failed: status %d", res.Status)
 		}
 	}
 
