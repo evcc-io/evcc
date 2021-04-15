@@ -21,19 +21,12 @@ var (
 func loadTLSCredentials() (*tls.Config, error) {
 	certPool := x509.NewCertPool()
 	if !certPool.AppendCertsFromPEM(caPEM()) {
-		return nil, fmt.Errorf("failed to add client CA's certificate")
-	}
-
-	// load client's certificate and private key
-	clientCert, err := clientCertificate()
-	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to add CA certificate")
 	}
 
 	// create the credentials and return it
 	config := &tls.Config{
-		Certificates: []tls.Certificate{clientCert},
-		RootCAs:      certPool,
+		RootCAs: certPool,
 	}
 
 	return config, nil

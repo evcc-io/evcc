@@ -43,7 +43,7 @@ func loadTLSCredentials() (*tls.Config, error) {
 	// Create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientAuth:   tls.VerifyClientCertIfGiven,
 		ClientCAs:    certPool,
 	}
 
@@ -59,7 +59,7 @@ func Run() {
 	}
 
 	srv := &Server{
-		vehicles: make(map[int64]api.Vehicle),
+		vehicles: make(map[string]map[int64]api.Vehicle),
 	}
 
 	serverOptions := []grpc.ServerOption{}

@@ -17,3 +17,6 @@ node_modules
 release
 *.inc
 soc-server
+ca-cert.srl
+server-key.pem
+ca-key.pem

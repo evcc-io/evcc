@@ -17,9 +17,9 @@ import (
 // Cloud is an api.Vehicle implementation for Cloud cars
 type Cloud struct {
 	*embed
+	token        string
 	brand        string
 	config       map[string]string
-	token        string
 	client       pb.VehicleClient
 	vehicleID    int64
 	chargeStateG func() (float64, error)
@@ -57,35 +57,40 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("cloud")
 	client, err := cloud.Client(log, cloud.Host)
 
-	var vehicleID int64
-	if err == nil {
-		req := &pb.NewRequest{
-			Token:  cc.Token,
-			Type:   cc.Brand,
-			Config: cc.Other,
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		defer cancel()
-
-		var res *pb.NewReply
-		if res, err = client.New(ctx, req); err == nil {
-			vehicleID = res.VehicleId
-		}
+	v := &Cloud{
+		embed:  &embed{cc.Title, cc.Capacity},
+		token:  cc.Token,
+		brand:  cc.Brand,
+		config: cc.Other,
+		client: client,
 	}
 
-	v := &Cloud{
-		embed:     &embed{cc.Title, cc.Capacity},
-		brand:     cc.Brand,
-		config:    cc.Other,
-		token:     cc.Token,
-		client:    client,
-		vehicleID: vehicleID,
+	if err == nil {
+		err = v.prepareVehicle()
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
 	return v, err
+}
+
+// prepareVehicle obtains new vehicle handle from cloud server
+func (v *Cloud) prepareVehicle() error {
+	req := &pb.NewRequest{
+		Token:  v.token,
+		Type:   v.brand,
+		Config: v.config,
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*request.Timeout)
+	defer cancel()
+
+	res, err := v.client.New(ctx, req)
+	if err == nil {
+		v.vehicleID = res.VehicleId
+	}
+
+	return err
 }
 
 // chargeState implements the api.Vehicle interface
@@ -99,6 +104,11 @@ func (v *Cloud) chargeState() (float64, error) {
 	defer cancel()
 
 	res, err := v.client.SoC(ctx, req)
+	if errors.As(err, &cloud.ErrVehicleNotAvailable) && v.prepareVehicle() == nil {
+		req.VehicleId = v.vehicleID
+		res, err = v.client.SoC(ctx, req)
+	}
+
 	return res.GetSoc(), err
 }
 

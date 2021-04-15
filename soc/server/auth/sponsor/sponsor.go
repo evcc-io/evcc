@@ -28,7 +28,7 @@ type Sponsor struct {
 	AvatarURL string
 }
 
-// sponsorships query
+// sponsorships query: https://docs.github.com/en/graphql/reference/objects
 type sponsorships struct {
 	Viewer struct {
 		Login                    string
@@ -44,7 +44,7 @@ type sponsorships struct {
 				}
 				Cursor string
 			}
-		} `graphql:"sponsorshipsAsMaintainer(first: 100, after: $cursor)"`
+		} `graphql:"sponsorshipsAsMaintainer(first: 100, after: $cursor, includePrivate: true)"`
 	}
 }
 
