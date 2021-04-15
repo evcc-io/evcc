@@ -1,5 +1,3 @@
-// +build !lint
-
 package server
 
 import (

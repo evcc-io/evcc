@@ -1,6 +1,3 @@
-run:
-  build-tags:
-    - lint
 issues:
   exclude:
   - "func `..Wallbe..showIO` is unused"
