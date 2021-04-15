@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"sync/atomic"
 
 	"github.com/andig/evcc/api"
@@ -22,20 +23,20 @@ type tokenizer interface {
 	GetToken() string
 }
 
-func (s *Server) isAuthorized(r tokenizer) (string, error) {
+func (s *Server) isAuthorized(r tokenizer) (string, *auth.Claims, error) {
 	token := r.GetToken()
 
-	user, err := auth.ParseToken(token)
+	claims, err := auth.ParseToken(token)
 	if err != nil {
-		return token, err
+		return token, claims, err
 	}
 
-	authorized, err := auth.IsAuthorized(user)
+	authorized, err := auth.IsAuthorized(claims.Subject)
 	if err == nil && !authorized {
 		err = cloud.ErrNotAuthorized
 	}
 
-	return token, err
+	return token, claims, err
 }
 
 type vehicler interface {
@@ -70,13 +71,16 @@ func stringMapToInterface(in map[string]string) map[string]interface{} {
 }
 
 func (s *Server) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error) {
-	token, err := s.isAuthorized(r)
+	token, claims, err := s.isAuthorized(r)
 	if err != nil {
 		return nil, err
 	}
 
 	typ := r.GetType()
 	config := r.GetConfig()
+
+	// track vehicle create
+	fmt.Println(claims.Subject+":", typ)
 
 	v, err := vehicle.NewFromConfig(typ, stringMapToInterface(config))
 	if err != nil {

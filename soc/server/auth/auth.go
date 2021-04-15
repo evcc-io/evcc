@@ -47,22 +47,22 @@ func AuthorizedToken(name, login string) (string, error) {
 	return token.SignedString([]byte(tokenSecret))
 }
 
-func ParseToken(token string) (string, error) {
+func ParseToken(token string) (*Claims, error) {
 	jwt, err := jwt.ParseWithClaims(token, &Claims{}, keyFunc)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if !jwt.Valid {
-		return "", errors.New("token invalid")
+		return nil, errors.New("token invalid")
 	}
 
 	claims, ok := jwt.Claims.(*Claims)
 	if !ok {
-		return "", errors.New("token claims invalid")
+		return nil, errors.New("token claims invalid")
 	}
 
-	return claims.Subject, nil
+	return claims, nil
 }
 
 func IsAuthorized(login string) (bool, error) {
