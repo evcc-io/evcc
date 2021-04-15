@@ -171,53 +171,50 @@ func (v *Ford) vehicles() ([]string, error) {
 
 // vehicleStatus performs a /status request to the Ford API and triggers a refresh if
 // the received status is too old
-func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
+func (v *Ford) vehicleStatus() (fordVehicleStatus, error) {
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
 
-	var req *http.Request
-	req, err = v.request(http.MethodGet, uri)
+	req, err := v.request(http.MethodGet, uri)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	var statusAge time.Duration
+	var res fordVehicleStatus
 	if err == nil {
 		var ts time.Time
 		ts, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
-		statusAge = time.Since(ts)
-	}
+		statusAge := time.Since(ts)
 
-	if err == nil && statusAge > fordOutdatedAfter {
-		// received data is considered outdated, server is requested to poll updated status from vehicle
-		v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", statusAge, fordOutdatedAfter)
-		res, err = v.vehicleStatusRefresh()
+		if err == nil && statusAge > fordOutdatedAfter {
+			// received data is considered outdated, server is requested to poll updated status from vehicle
+			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", statusAge, fordOutdatedAfter)
+			res, err = v.vehicleStatusRefresh()
+		}
 	}
 
 	return res, err
 }
 
 // vehicleStatusRefresh triggers an update and waits until refreshed data is available or request times out
-func (v *Ford) vehicleStatusRefresh() (res fordVehicleStatus, err error) {
-	var commandId string
-	commandId, err = v.requestRefresh()
+func (v *Ford) vehicleStatusRefresh() (fordVehicleStatus, error) {
+	commandId, err := v.requestRefresh()
 
+	var res fordVehicleStatus
 	if err == nil {
 		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, commandId)
-
-		var req *http.Request
 
 		// if status attribute in JSON response is 200, update is complete, otherwise server is still
 		// waiting for vehicle and the request needs to be repeated
 		for counter := 0; counter < fordMaxRefreshTrials && res.Status != 200 && err == nil; counter++ {
-			req, err = v.request(http.MethodGet, uri)
-			if err == nil {
+			var req *http.Request
+			if req, err = v.request(http.MethodGet, uri); err == nil {
 				err = v.DoJSON(req, &res)
 			}
 
 			time.Sleep(1500 * time.Millisecond)
 		}
 
-		if err == nil && res.Status != http.StatusOK {
+		if err == nil && res.Status != 200 {
 			err = fmt.Errorf("refresh failed: status %d", res.Status)
 		}
 	}
