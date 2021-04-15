@@ -174,20 +174,18 @@ func (v *Ford) vehicles() ([]string, error) {
 func (v *Ford) vehicleStatus() (fordVehicleStatus, error) {
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
 
+	var res fordVehicleStatus
 	req, err := v.request(http.MethodGet, uri)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	var res fordVehicleStatus
 	if err == nil {
-		var ts time.Time
-		ts, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
-		statusAge := time.Since(ts)
+		var lastUpdate time.Time
+		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
-		if err == nil && statusAge > fordOutdatedAfter {
-			// received data is considered outdated, server is requested to poll updated status from vehicle
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", statusAge, fordOutdatedAfter)
+		if err == nil && time.Since(lastUpdate) > fordOutdatedAfter {
+			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", time.Since(lastUpdate), fordOutdatedAfter)
 			res, err = v.vehicleStatusRefresh()
 		}
 	}
