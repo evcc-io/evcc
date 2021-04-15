@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -29,7 +30,7 @@ type Ford struct {
 	*request.Helper
 	log                 *util.Logger
 	user, password, vin string
-	tokens              oauth.Token
+	tokenSource         oauth2.TokenSource
 	statusG             func() (interface{}, error)
 }
 
@@ -63,11 +64,16 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
+	token, err := v.login()
+	//	token.Expiry = time.Now()
+	if err == nil {
+		v.tokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+	}
+
 	v.statusG = provider.NewCached(func() (interface{}, error) {
 		return v.vehicleStatus()
 	}, cc.Cache).InterfaceGetter()
 
-	var err error
 	if cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
@@ -79,41 +85,74 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 // login authenticates with username/password to get new token
-func (v *Ford) login(user, password string) error {
+func (v *Ford) login() (oauth.Token, error) {
 	data := url.Values{
 		"client_id":  []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
 		"grant_type": []string{"password"},
-		"username":   []string{user},
-		"password":   []string{password},
+		"username":   []string{v.user},
+		"password":   []string{v.password},
+	}
+
+	v.log.DEBUG.Printf("Performing login.")
+
+	uri := fordAuth + "/v1.0/endpoint/default/token"
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+	var res oauth.Token
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	if err == nil {
+		v.log.DEBUG.Printf("Login successful. Got token %v", res)
+	}
+
+	return res, err
+}
+
+var _ oauth.TokenRefresher = (*Ford)(nil)
+
+// Refresh implements the oauth.TokenRefresher interface
+func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+	v.log.DEBUG.Printf("Old token: %v", token)
+	v.log.DEBUG.Printf("Start Token Refresh, RefreshToken %v", token.RefreshToken)
+
+	data := url.Values{
+		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
+		"grant_type":    []string{"refresh_token"},
+		"refresh_token": []string{token.RefreshToken},
 	}
 
 	uri := fordAuth + "/v1.0/endpoint/default/token"
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+	var res oauth.Token
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	v.log.DEBUG.Printf("New token: %v", res)
+
 	if err != nil {
-		return err
+		res, err = v.login()
+		v.log.DEBUG.Printf("Token after new login: %v", res)
 	}
 
-	var tokens oauth.Token
-	if err = v.DoJSON(req, &tokens); err == nil {
-		v.tokens = tokens
-	}
-
-	return err
+	return (*oauth2.Token)(&res), err
 }
 
 // request is a helper to send API requests, sets header the Ford API expects
 func (v *Ford) request(method, uri string) (*http.Request, error) {
-	if v.tokens.AccessToken == "" || time.Until(v.tokens.Expiry) < time.Minute {
-		if err := v.login(v.user, v.password); err != nil {
-			return nil, err
-		}
-	}
+	token, err := v.tokenSource.Token()
 
-	req, err := request.New(method, uri, nil, map[string]string{
-		"Content-type":   "application/json",
-		"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
-		"Auth-Token":     v.tokens.AccessToken,
-	})
+	var req *http.Request
+	if err == nil {
+		req, err = request.New(method, uri, nil, map[string]string{
+			"Content-type":   "application/json",
+			"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
+			"Auth-Token":     token.AccessToken,
+		})
+	}
 
 	return req, err
 }
