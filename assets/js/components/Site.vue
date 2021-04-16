@@ -1,10 +1,10 @@
 <template>
-	<div>
+	<div class="mt-2">
 		<div class="row">
-			<div class="d-none d-md-flex col-12 col-md-4 col-lg-3 mt-md-4 align-items-end">
-				<p class="h1">{{ siteTitle || "Home" }}</p>
+			<div class="d-none d-md-flex col-12 col-md-3 col-lg-6 align-items-end">
+				<p class="h2">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-8 col-lg-9 mt-3">
+			<div class="col-12 col-md-9 col-lg-6">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>

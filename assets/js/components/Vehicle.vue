@@ -1,5 +1,5 @@
 <template>
-	<div class="py-3">
+	<div>
 		<div class="mb-3">
 			{{ socTitle || "Fahrzeug" }}
 		</div>

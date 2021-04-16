@@ -1,5 +1,5 @@
 <template>
-	<div class="subline d-flex justify-content-between align-items-center">
+	<div class="d-flex justify-content-between align-items-center">
 		<small class="text-secondary">
 			<span v-if="minSoCActive">
 				<fa-icon class="text-muted mr-1" icon="exclamation-circle"></fa-icon>
@@ -51,8 +51,3 @@ export default {
 	mixins: [formatter],
 };
 </script>
-<style scoped>
-.subline {
-	min-height: 1rem;
-}
-</style>

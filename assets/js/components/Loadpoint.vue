@@ -1,6 +1,6 @@
 <template>
 	<div class="border-top mt-4 pt-4">
-		<h4 class="mb-2" v-if="!single">{{ title || "Ladepunkt" }}</h4>
+		<h4 class="mb-4" v-if="!single">{{ title || "Ladepunkt" }}</h4>
 		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
 			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
 		</div>
@@ -9,17 +9,19 @@
 		</div>
 
 		<div class="row">
-			<div class="col-12 col-md-8 col-lg-6 pr-4 pr-lg-5">
-				<Vehicle class="mb-2" v-bind="vehicle" @target-soc-updated="setTargetSoC" />
-				<Mode
-					class="py-1 mb-4"
-					:mode="mode"
-					:pvConfigured="pvConfigured"
-					v-on:updated="setTargetMode"
-				/>
-			</div>
-			<LoadpointDetails v-bind="details" class="col-12 col-md-4 col-lg-6" />
+			<Vehicle
+				class="col-12 col-md-6 col-lg-8 mb-4"
+				v-bind="vehicle"
+				@target-soc-updated="setTargetSoC"
+			/>
+			<Mode
+				class="col-12 col-md-6 col-lg-4 mb-4"
+				:mode="mode"
+				:pvConfigured="pvConfigured"
+				v-on:updated="setTargetMode"
+			/>
 		</div>
+		<LoadpointDetails v-bind="details" />
 	</div>
 </template>
 
