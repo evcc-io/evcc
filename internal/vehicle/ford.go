@@ -184,8 +184,8 @@ func (v *Ford) vehicleStatus() (fordVehicleStatus, error) {
 		var lastUpdate time.Time
 		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
-		if err == nil && time.Since(lastUpdate) > fordOutdatedAfter {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", time.Since(lastUpdate), fordOutdatedAfter)
+		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
+			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
 			res, err = v.vehicleStatusRefresh()
 		}
 	}
