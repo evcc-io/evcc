@@ -30,7 +30,7 @@ func (tr *tokenRefresher) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
 
 	var res Token
 	if err == nil {
-		err = tr.DoJSON(req, &token)
+		err = tr.DoJSON(req, &res)
 	}
 
 	return (*oauth2.Token)(&res), err

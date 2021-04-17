@@ -1,14 +1,25 @@
 package provider
 
 import (
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
+	"github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
 )
 
+var bus = EventBus.New()
+
+const reset = "reset"
+
+func ResetCached() {
+	bus.Publish(reset)
+}
+
 // Cached wraps a getter with a cache
 type Cached struct {
+	mux     sync.Mutex
 	log     *util.Logger
 	clock   clock.Clock
 	updated time.Time
@@ -20,12 +31,22 @@ type Cached struct {
 
 // NewCached wraps a getter with a cache
 func NewCached(getter interface{}, cache time.Duration) *Cached {
-	return &Cached{
+	c := &Cached{
 		log:    util.NewLogger("cache"),
 		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,
 	}
+
+	_ = bus.Subscribe(reset, c.reset)
+
+	return c
+}
+
+func (c *Cached) reset() {
+	c.mux.Lock()
+	c.updated = time.Time{}
+	c.mux.Unlock()
 }
 
 // FloatGetter gets float value
@@ -36,6 +57,9 @@ func (c *Cached) FloatGetter() func() (float64, error) {
 	}
 
 	return func() (float64, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -53,6 +77,9 @@ func (c *Cached) IntGetter() func() (int64, error) {
 	}
 
 	return func() (int64, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -70,6 +97,9 @@ func (c *Cached) StringGetter() func() (string, error) {
 	}
 
 	return func() (string, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -87,6 +117,9 @@ func (c *Cached) BoolGetter() func() (bool, error) {
 	}
 
 	return func() (bool, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -104,6 +137,9 @@ func (c *Cached) DurationGetter() func() (time.Duration, error) {
 	}
 
 	return func() (time.Duration, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -121,6 +157,9 @@ func (c *Cached) TimeGetter() func() (time.Time, error) {
 	}
 
 	return func() (time.Time, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
@@ -138,6 +177,9 @@ func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 	}
 
 	return func() (interface{}, error) {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		if c.clock.Since(c.updated) > c.cache {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()

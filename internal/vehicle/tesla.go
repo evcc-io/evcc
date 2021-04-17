@@ -17,8 +17,9 @@ import (
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	vehicle      *tesla.Vehicle
-	chargeStateG func() (interface{}, error)
+	vehicle       *tesla.Vehicle
+	chargeStateG  func() (interface{}, error)
+	climateStateG func() (interface{}, error)
 }
 
 // teslaTokens contains access and refresh tokens
@@ -96,6 +97,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
+	v.climateStateG = provider.NewCached(v.climateState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -103,6 +105,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 // chargeState implements the charge state api
 func (v *Tesla) chargeState() (interface{}, error) {
 	return v.vehicle.ChargeState()
+}
+
+// climateState implements the climater api
+func (v *Tesla) climateState() (interface{}, error) {
+	return v.vehicle.ClimateState()
 }
 
 // SoC implements the api.Vehicle interface
@@ -174,4 +181,21 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+var _ api.VehicleClimater = (*Tesla)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.climateStateG()
+
+	if res, ok := res.(*tesla.ClimateState); err == nil && ok {
+		active = res.IsPreconditioning
+		outsideTemp = res.OutsideTemp
+		targetTemp = res.PassengerTempSetting
+
+		return active, outsideTemp, targetTemp, nil
+	}
+
+	return false, 0, 0, api.ErrNotAvailable
 }

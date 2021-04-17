@@ -11,6 +11,7 @@ require (
 	github.com/bogosj/tesla v0.0.0-20210326132323-e3261e5d6c70
 	github.com/containrrr/shoutrrr v0.4.0
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/fatih/structs v1.1.0
@@ -19,7 +20,6 @@ require (
 	github.com/godbus/dbus/v5 v5.0.3
 	github.com/gokrazy/updater v0.0.0-20210106211705-4d92b338dd24
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-github/v32 v32.1.0
 	github.com/google/uuid v1.1.5
 	github.com/gorilla/handlers v1.5.1
@@ -47,6 +47,8 @@ require (
 	github.com/prometheus/common v0.10.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/robertkrimen/otto v0.0.0-20200922221731-ef014fd054ac
+	github.com/shurcooL/githubv4 v0.0.0-20201206200315-234843c633fa
+	github.com/shurcooL/graphql v0.0.0-20200928012149-18c5c3165e3a // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
@@ -54,9 +56,14 @@ require (
 	github.com/thoas/go-funk v0.7.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/net v0.0.0-20210326220855-61e056675ecf
 	golang.org/x/oauth2 v0.0.0-20210220000619-9bb904979d93
-	golang.org/x/text v0.3.4
+	golang.org/x/sys v0.0.0-20210326220804-49726bf1d181 // indirect
+	golang.org/x/text v0.3.5
+	google.golang.org/genproto v0.0.0-20210325224202-eed09b1b5210 // indirect
+	google.golang.org/grpc v1.36.1
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
