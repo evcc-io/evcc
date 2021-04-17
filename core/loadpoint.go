@@ -713,7 +713,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		if targetCurrent >= float64(lp.MinCurrent) ||
+		if (lp.Enable.Threshold == 0 && targetCurrent >= float64(lp.MinCurrent)) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
 			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
