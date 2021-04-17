@@ -65,7 +65,6 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	token, err := v.login()
-	//	token.Expiry = time.Now()
 	if err == nil {
 		v.tokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
 	}
@@ -93,8 +92,6 @@ func (v *Ford) login() (oauth.Token, error) {
 		"password":   []string{v.password},
 	}
 
-	v.log.DEBUG.Printf("Performing login.")
-
 	uri := fordAuth + "/v1.0/endpoint/default/token"
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
@@ -103,21 +100,13 @@ func (v *Ford) login() (oauth.Token, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	if err == nil {
-		v.log.DEBUG.Printf("Login successful. Got token %v", res)
-	}
-
 	return res, err
 }
 
 var _ oauth.TokenRefresher = (*Ford)(nil)
-var fordForDebugOnly = false
 
 // Refresh implements the oauth.TokenRefresher interface
 func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
-	v.log.DEBUG.Printf("Old token: %v", token)
-	v.log.DEBUG.Printf("Start Token Refresh, RefreshToken %v", token.RefreshToken)
-
 	data := url.Values{
 		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
 		"grant_type":    []string{"refresh_token"},
@@ -132,19 +121,9 @@ func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	v.log.DEBUG.Printf("New token: %v", res)
-
-	if !fordForDebugOnly {
-		v.log.DEBUG.Printf("Simulate failed token refresh to force relogin")
-		err = fmt.Errorf("Simulated failed token refresh to force relogin")
-	}
-
 	if err != nil {
 		res, err = v.login()
-		v.log.DEBUG.Printf("Token after new login: %v", res)
 	}
-
-	fordForDebugOnly = true
 
 	return (*oauth2.Token)(&res), err
 }
@@ -232,7 +211,7 @@ func (v *Ford) vehicleStatus() (fordVehicleStatus, error) {
 		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
 		if err == nil && time.Since(lastUpdate) > fordOutdatedAfter {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", time.Since(lastUpdate), fordOutdatedAfter)
+			v.log.DEBUG.Printf("API provided outdated status (age %v > %v), requesting refresh from vehicle", time.Since(lastUpdate), fordOutdatedAfter)
 			res, err = v.vehicleStatusRefresh()
 		}
 	}
