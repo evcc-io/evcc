@@ -111,6 +111,7 @@ func (v *Ford) login() (oauth.Token, error) {
 }
 
 var _ oauth.TokenRefresher = (*Ford)(nil)
+var fordForDebugOnly = false
 
 // Refresh implements the oauth.TokenRefresher interface
 func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
@@ -133,10 +134,17 @@ func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
 
 	v.log.DEBUG.Printf("New token: %v", res)
 
+	if !fordForDebugOnly {
+		v.log.DEBUG.Printf("Simulate failed token refresh to force relogin")
+		err = fmt.Errorf("Simulated failed token refresh to force relogin")
+	}
+
 	if err != nil {
 		res, err = v.login()
 		v.log.DEBUG.Printf("Token after new login: %v", res)
 	}
+
+	fordForDebugOnly = true
 
 	return (*oauth2.Token)(&res), err
 }
