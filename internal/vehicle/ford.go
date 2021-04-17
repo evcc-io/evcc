@@ -53,6 +53,10 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, fmt.Errorf("missing credentials")
+	}
+
 	log := util.NewLogger("ford")
 
 	v := &Ford{
