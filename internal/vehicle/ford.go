@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -54,7 +55,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, fmt.Errorf("missing credentials")
+		return nil, errors.New("missing credentials")
 	}
 
 	log := util.NewLogger("ford")
@@ -77,7 +78,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return v.vehicleStatus()
 	}, cc.Cache).InterfaceGetter()
 
-	if cc.VIN == "" {
+	if err == nil && cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
