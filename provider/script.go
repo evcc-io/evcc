@@ -3,12 +3,15 @@ package provider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/jq"
+	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
 )
 
@@ -21,6 +24,7 @@ type Script struct {
 	updated time.Time
 	val     string
 	err     error
+	jq      *gojq.Query
 }
 
 func init() {
@@ -33,6 +37,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		Cmd     string
 		Timeout time.Duration
 		Cache   time.Duration
+		Jq      string
 	}{
 		Timeout: 5 * time.Second,
 	}
@@ -41,17 +46,25 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		return nil, err
 	}
 
-	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Cache)
+	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Cache, cc.Jq)
 }
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, cache time.Duration) (*Script, error) {
+func NewScriptProvider(script string, timeout time.Duration, cache time.Duration, jq string) (*Script, error) {
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
 		cache:   cache,
+	}
+	if jq != "" {
+		op, err := gojq.Parse(jq)
+		if err != nil {
+			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
+		}
+
+		s.jq = op
 	}
 
 	return s, nil
@@ -83,6 +96,7 @@ func (e *Script) exec(script string) (string, error) {
 	}
 
 	e.log.TRACE.Printf("%s: %s", strings.Join(args, " "), s)
+
 	return s, nil
 }
 
@@ -92,6 +106,11 @@ func (e *Script) StringGetter() func() (string, error) {
 		if time.Since(e.updated) > e.cache {
 			e.val, e.err = e.exec(e.script)
 			e.updated = time.Now()
+
+			if e.jq != nil {
+				v, err := jq.Query(e.jq, []byte(e.val))
+				return fmt.Sprintf("%v", v), err
+			}
 		}
 
 		return e.val, e.err
