@@ -53,7 +53,7 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	sysResp, err := c.execCmd(`{ "system":{ "get_sysinfo":null } }`)
+	sysResp, err := c.execCmd(`{ "system":{ "get_sysinfo":null } }`, []byte{0x00, 0x00, 0x00, 0x1d})
 	if err != nil {
 		return false, err
 	}
@@ -82,7 +82,7 @@ func (c *TPLink) Enable(enable bool) error {
 	}
 
 	// Execute TP-Link set_relay_state command
-	sysResp, err := c.execCmd(cmd)
+	sysResp, err := c.execCmd(cmd, []byte{0x00, 0x00, 0x00, 0x00})
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	emeResp, err := c.execCmd(`{ "emeter":{ "get_realtime":null } }`)
+	emeResp, err := c.execCmd(`{ "emeter":{ "get_realtime":null } }`, []byte{0x00, 0x00, 0x00, 0x1e})
 	if err != nil {
 		return 0, err
 	}
@@ -145,13 +145,13 @@ func (c *TPLink) CurrentPower() (float64, error) {
 }
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
-func (c *TPLink) execCmd(cmd string) ([]byte, error) {
+func (c *TPLink) execCmd(cmd string, msgHeader []byte) ([]byte, error) {
 
 	// encode command message
 	// encResult provides the encrypted plug command
 	encCommand := bytes.Buffer{}
-	encCommand.Write([]byte{0, 0, 0, 0}) // BigEndian, unsigned integer msg header
-	var ekey byte = 171                  // Encryption initialization vector
+	encCommand.Write(msgHeader) // BigEndian, unsigned integer msg header
+	var ekey byte = 171         // Encryption initialization vector
 	for i := 0; i < len(cmd); i++ {
 		ekey = ekey ^ cmd[i]
 		encCommand.WriteByte(ekey)
