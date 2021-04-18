@@ -1,6 +1,6 @@
 <template>
-	<div class="border-top mt-4 pt-4">
-		<h4 class="mb-4" v-if="!single">{{ title || "Ladepunkt" }}</h4>
+	<div>
+		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">{{ title || "Ladepunkt" }}</p>
 		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
 			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
 		</div>
