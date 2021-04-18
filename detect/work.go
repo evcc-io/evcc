@@ -13,8 +13,15 @@ import (
 type Result struct {
 	Task
 	Host       string
-	Details    interface{}
+	Details    Details
 	Attributes map[string]interface{}
+}
+
+type Details struct {
+	IP         string
+	Port       int
+	Attributes map[string]interface{}
+	*ModbusResult
 }
 
 func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []Result) *sync.WaitGroup {
@@ -67,9 +74,9 @@ func Work(log *util.Logger, num int, hosts []string) []Result {
 
 func postProcess(res []Result) []Result {
 	for idx, hit := range res {
-		if sma, ok := hit.Details.(SmaResult); ok {
-			hit.Host = sma.Addr
-		}
+		// if sma, ok := hit.Details.(SmaResult); ok {
+		// 	hit.Host = sma.Addr
+		// }
 
 		hit.Attributes = make(map[string]interface{})
 		flat, _ := flatten.Flatten(structs.Map(hit), "", flatten.DotStyle)

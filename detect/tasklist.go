@@ -88,13 +88,16 @@ func (l *TaskList) createHandlers() {
 	}
 }
 
-func (l *TaskList) Test(log *util.Logger, ip string) (res []Result) {
+func (l *TaskList) Test(log *util.Logger, ip string) (all []Result) {
 	l.once.Do(func() {
 		l.sort()
 		l.createHandlers()
 	})
 
 	failed := make([]string, 0)
+
+	// start with ip
+	intermediate := []Details{{IP: ip}}
 
 HANDLERS:
 	for id, handler := range l.handlers {
@@ -104,22 +107,25 @@ HANDLERS:
 			continue HANDLERS
 		}
 
-		results := handler.Test(log, ip)
-		if len(results) > 0 {
-			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
+		for _, details := range intermediate {
+			results := handler.Test(log, details)
 
-			for _, detail := range results {
-				res = append(res, Result{
-					Task:    task,
-					Host:    ip,
-					Details: detail,
-				})
+			if len(results) > 0 {
+				log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
+
+				for _, detail := range results {
+					all = append(all, Result{
+						Task:    task,
+						Host:    ip,
+						Details: detail,
+					})
+				}
+			} else {
+				log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
+				failed = append(failed, task.ID)
 			}
-		} else {
-			// log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
-			failed = append(failed, task.ID)
 		}
 	}
 
-	return res
+	return all
 }

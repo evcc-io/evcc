@@ -28,8 +28,8 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, ip string) (res []interface{}) {
-	pinger, err := ping.NewPinger(ip)
+func (h *PingHandler) Test(log *util.Logger, in Details) []Details {
+	pinger, err := ping.NewPinger(in.IP)
 	if err != nil {
 		panic(err)
 	}
@@ -60,5 +60,5 @@ func (h *PingHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 		return nil
 	}
 
-	return []interface{}{nil}
+	return []Details{in}
 }

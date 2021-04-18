@@ -7,7 +7,7 @@ import (
 )
 
 type TaskHandler interface {
-	Test(log *util.Logger, ip string) []interface{}
+	Test(log *util.Logger, in Details) []Details
 }
 
 type TaskHandlerRegistry map[string]func(map[string]interface{}) (TaskHandler, error)

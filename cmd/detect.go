@@ -74,8 +74,8 @@ func display(res []detect.Result) {
 
 	for _, hit := range res {
 		switch hit.ID {
-		case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
-			continue
+		// case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
+		// 	continue
 
 		default:
 			host := ""
@@ -84,10 +84,12 @@ func display(res []detect.Result) {
 				host = strings.TrimSuffix(hosts[0], ".")
 			}
 
-			details := ""
-			if hit.Details != nil {
-				details = fmt.Sprintf("%+v", hit.Details)
-			}
+			// details := ""
+			// if hit.Details != nil {
+			// 	details = fmt.Sprintf("%+v", hit.Details)
+			// }
+
+			details := fmt.Sprintf("%+v", hit.Details)
 
 			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
 			table.Append([]string{hit.Host, host, hit.ID, details})

@@ -19,7 +19,7 @@ func TcpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	}
 	err := util.DecodeOther(conf, &handler)
 
-	if err == nil && handler.Port == 0 {
+	if err == nil && len(handler.Ports) == 0 {
 		err = errors.New("missing port")
 	}
 
@@ -28,21 +28,26 @@ func TcpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 }
 
 type TcpHandler struct {
-	Port    int
+	Ports   []int
 	Timeout time.Duration
 	dialer  net.Dialer
 }
 
-func (h *TcpHandler) Test(log *util.Logger, ip string) []interface{} {
-	addr := fmt.Sprintf("%s:%d", ip, h.Port)
-	conn, err := h.dialer.Dial("tcp", addr)
-	if err == nil {
-		defer conn.Close()
+func (h *TcpHandler) Test(log *util.Logger, in Details) (res []Details) {
+	for _, port := range h.Ports {
+		addr := fmt.Sprintf("%s:%d", in.IP, port)
+		conn, err := h.dialer.Dial("tcp", addr)
+		if err == nil {
+			defer conn.Close()
+		}
+
+		if err == nil {
+			out := in
+			out.Port = port
+			res = append(res, out)
+		}
 	}
 
-	if err == nil {
-		return []interface{}{nil}
-	}
-
-	return nil
+	fmt.Println("tcp", h.Ports, res)
+	return res
 }
