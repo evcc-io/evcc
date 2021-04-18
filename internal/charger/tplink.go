@@ -52,7 +52,6 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	// Execute TP-Link get_sysinfo command
 	sysResp, err := c.execCmd(`{ "system":{ "get_sysinfo":null } }`)
 	if err != nil {
 		return false, err
