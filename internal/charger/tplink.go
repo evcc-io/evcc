@@ -29,12 +29,15 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI          string
 		StandbyPower float64
 	}{}
+	
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+	
 	if cc.URI == "" {
 		return nil, errors.New("missing uri")
 	}
+	
 	return NewTPLink(cc.URI, cc.StandbyPower)
 }
 
@@ -49,28 +52,30 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-
 	// Execute TP-Link get_sysinfo command
 	sysResp, err := c.execCmd(`{ "system":{ "get_sysinfo":null } }`)
 	if err != nil {
 		return false, err
 	}
+	
 	var systemResponse tplink.SystemResponse
 	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
 		return false, err
 	}
-	if systemResponse.System.GetSysinfo.ErrCode != 0 {
-		return false, errors.New("System.GetSysinfo failed")
+	
+	if err := systemResponse.System.GetSysinfo.ErrCode; err != 0 {
+		return false, fmt.Errorf("get_sysinfo error %d", err)
 	}
+	
 	if !strings.Contains(systemResponse.System.GetSysinfo.Feature, "ENE") {
-		return false, errors.New(systemResponse.System.GetSysinfo.Model + " plug not supported. energy meter feature missing")
+		return false, errors.New(systemResponse.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
+	
 	return int(1) == systemResponse.System.GetSysinfo.RelayState, err
 }
 
 // Enable implements the Charger.Enable interface
 func (c *TPLink) Enable(enable bool) error {
-
 	cmd := `{"system":{"set_relay_state":{"state":0}}}`
 	if enable {
 		cmd = `{"system":{"set_relay_state":{"state":1}}}`
@@ -81,13 +86,16 @@ func (c *TPLink) Enable(enable bool) error {
 	if err != nil {
 		return err
 	}
+	
 	var systemResponse tplink.SystemResponse
 	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
 		return err
 	}
-	if systemResponse.System.SetRelayState.ErrCode != 0 {
-		return errors.New("System.SetRelayState failed")
+	
+	if err := systemResponse.System.SetRelayState.ErrCode; err != 0 {
+		return fmt.Errorf("set_relay_state error %d", err)
 	}
+	
 	return nil
 }
 
@@ -112,17 +120,18 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	// Execute TP-Link emeter command
 	emeResp, err := c.execCmd(`{ "emeter":{ "get_realtime":null } }`)
 	if err != nil {
-		return math.NaN(), err
+		return 0, err
 	}
+	
 	var emeterResponse tplink.EmeterResponse
 	if err := json.Unmarshal(emeResp, &emeterResponse); err != nil {
-		return math.NaN(), err
+		return 0, err
 	}
-	if emeterResponse.Emeter.GetRealtime.ErrCode != 0 {
-		return math.NaN(), errors.New("Emeter.GetRealtime failed")
+	
+	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
+		return 0, errors.New("get_realtime error %d", err)
 	}
 
 	power := emeterResponse.Emeter.GetRealtime.Power
@@ -139,7 +148,7 @@ func (c *TPLink) CurrentPower() (float64, error) {
 func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	hexHeader := []byte{0, 0, 0, 0} // BigEndian, unsigned integer
 
-	// Encode command message
+	// encode command message
 	// encResult provides the encrypted plug command
 	encCommand := hexHeader
 	var enc int
@@ -150,24 +159,26 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		encCommand = append(encCommand, byte(enc))
 	}
 
-	// Send command message on port 9999 to plug in local network
-	// encResponse receives the encrypted plug response
-	var encResponse []byte
-	// Open connection via TP-Link Smart Home Protocol port 9999
+	// send command message on port 9999 to plug in local network
+	// open connection via TP-Link Smart Home Protocol port 9999
 	conn, err := net.Dial("tcp", c.uri)
 	if err != nil {
 		return nil, err
 	}
+	
 	_, err = conn.Write(encCommand)
 	if err != nil {
 		return nil, err
 	}
+	
+	// encResponse receives the encrypted plug response
+	var encResponse []byte
 	encResponse, err = ioutil.ReadAll(conn)
 	if err != nil {
 		return nil, err
 	}
 
-	// Decode response message
+	// decode response message
 	// decResponse provides the decrypted smart plug response
 	var decResponse []byte
 	var dec int
