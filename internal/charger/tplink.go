@@ -149,12 +149,10 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	// encode command message
 	// encResult provides the encrypted plug command
 	encCommand := []byte{0, 0, 0, 0} // BigEndian, unsigned integer
-	var enc int
-	key := 171 // Encryption initialization vector
+	var ekey byte = 171              // Encryption initialization vector
 	for i := 0; i < len(cmd); i++ {
-		enc = key ^ int(cmd[i])
-		key = enc
-		encCommand = append(encCommand, byte(enc))
+		ekey = ekey ^ cmd[i]
+		encCommand = append(encCommand, ekey)
 	}
 
 	// send command message on port 9999 to plug in local network
