@@ -3,8 +3,8 @@ package charger
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
-	"math"
 	"net"
 	"strings"
 
@@ -29,15 +29,15 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI          string
 		StandbyPower float64
 	}{}
-	
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-	
+
 	if cc.URI == "" {
 		return nil, errors.New("missing uri")
 	}
-	
+
 	return NewTPLink(cc.URI, cc.StandbyPower)
 }
 
@@ -56,20 +56,20 @@ func (c *TPLink) Enabled() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	
+
 	var systemResponse tplink.SystemResponse
 	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
 		return false, err
 	}
-	
+
 	if err := systemResponse.System.GetSysinfo.ErrCode; err != 0 {
 		return false, fmt.Errorf("get_sysinfo error %d", err)
 	}
-	
+
 	if !strings.Contains(systemResponse.System.GetSysinfo.Feature, "ENE") {
 		return false, errors.New(systemResponse.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
-	
+
 	return int(1) == systemResponse.System.GetSysinfo.RelayState, err
 }
 
@@ -85,16 +85,16 @@ func (c *TPLink) Enable(enable bool) error {
 	if err != nil {
 		return err
 	}
-	
+
 	var systemResponse tplink.SystemResponse
 	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
 		return err
 	}
-	
+
 	if err := systemResponse.System.SetRelayState.ErrCode; err != 0 {
 		return fmt.Errorf("set_relay_state error %d", err)
 	}
-	
+
 	return nil
 }
 
@@ -123,14 +123,14 @@ func (c *TPLink) CurrentPower() (float64, error) {
 	if err != nil {
 		return 0, err
 	}
-	
+
 	var emeterResponse tplink.EmeterResponse
 	if err := json.Unmarshal(emeResp, &emeterResponse); err != nil {
 		return 0, err
 	}
-	
+
 	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
-		return 0, errors.New("get_realtime error %d", err)
+		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
 	power := emeterResponse.Emeter.GetRealtime.Power
@@ -145,11 +145,10 @@ func (c *TPLink) CurrentPower() (float64, error) {
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
 func (c *TPLink) execCmd(cmd string) ([]byte, error) {
-	hexHeader := []byte{0, 0, 0, 0} // BigEndian, unsigned integer
 
 	// encode command message
 	// encResult provides the encrypted plug command
-	encCommand := hexHeader
+	encCommand := []byte{0, 0, 0, 0} // BigEndian, unsigned integer
 	var enc int
 	key := 171 // Encryption initialization vector
 	for i := 0; i < len(cmd); i++ {
@@ -164,12 +163,12 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	_, err = conn.Write(encCommand)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// encResponse receives the encrypted plug response
 	var encResponse []byte
 	encResponse, err = ioutil.ReadAll(conn)
