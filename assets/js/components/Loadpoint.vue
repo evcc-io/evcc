@@ -68,6 +68,18 @@ export default {
 		climater: String,
 		range: Number,
 		chargeEstimate: Number,
+
+		// other information
+		phases: Number,
+		minCurrent: Number,
+		maxCurrent: Number,
+		activePhases: Number,
+		chargeCurrent: Number,
+		socCapacity: Number,
+		connectedDuration: Number,
+		chargeCurrents: Object,
+		chargeConfigured: Boolean,
+		chargeRemainingEnergy: Number,
 	},
 	components: { LoadpointDetails, Mode, Vehicle },
 	mixins: [formatter, collector],

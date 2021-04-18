@@ -1,5 +1,5 @@
 <template>
-	<div class="row row-cols-3 justify-content-between justify-content-md-end">
+	<div class="row row-cols-3 justify-content-between justify-content-md-end overflow-hidden">
 		<div class="mt-3 px-3" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
 				Bezug <fa-icon icon="arrow-down" class="text-primary" />
@@ -7,10 +7,10 @@
 			<div class="mb-2 value" v-else>
 				Einspeisung <fa-icon icon="arrow-up" class="text-primary"></fa-icon>
 			</div>
-			<h2 class="value">
+			<h3 class="value">
 				{{ fmt(gridPower) }}
 				<small class="text-muted">{{ fmtUnit(gridPower) }}W</small>
-			</h2>
+			</h3>
 		</div>
 
 		<div class="mt-3 px-3" v-if="pvConfigured">
@@ -24,20 +24,25 @@
 					}"
 				></fa-icon>
 			</div>
-			<h2 class="value">
+			<h3 class="value">
 				{{ fmt(pvPower) }}
 				<small class="text-muted">{{ fmtUnit(pvPower) }}W</small>
-			</h2>
+			</h3>
 		</div>
 		<div class="mt-3 px-3" v-if="batteryConfigured">
 			<div class="mb-2 value">
-				Batterie <span class="text-muted">/</span> {{ batterySoC }} %
-				<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
+				<div class="d-block d-sm-none">
+					Akku <span class="text-muted"> / {{ batterySoC }} %</span>
+				</div>
+				<div class="d-none d-sm-block">
+					Batterie <span class="text-muted"> / {{ batterySoC }}% </span>
+					<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
+				</div>
 			</div>
-			<h2 class="value">
+			<h3 class="value">
 				{{ fmt(batteryPower) }}
 				<small class="text-muted">{{ fmtUnit(batteryPower) }}W</small>
-			</h2>
+			</h3>
 		</div>
 	</div>
 </template>

@@ -1,6 +1,6 @@
 <template>
-	<div class="app d-flex flex-column justify-content-between">
-		<div>
+	<div class="app d-flex flex-column justify-content-between overflow-hidden">
+		<div class="flex-grow-1">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
 					<a class="navbar-brand" href="https://github.com/andig/evcc">

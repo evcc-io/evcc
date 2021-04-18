@@ -40,6 +40,8 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoC: Number,
+		gridCurrents: Object,
+		prioritySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },
 	mixins: [formatter, collector],
