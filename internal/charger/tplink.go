@@ -53,7 +53,7 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	sysResp, err := c.execCmd(`{ "system":{ "get_sysinfo":null } }`, []byte{0x00, 0x00, 0x00, 0x1d})
+	sysResp, err := c.execCmd(`{"system":{"get_sysinfo":null}}`, []byte{0x00, 0x00, 0x00, 0x1d})
 	if err != nil {
 		return false, err
 	}
@@ -120,7 +120,7 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	emeResp, err := c.execCmd(`{ "emeter":{ "get_realtime":null } }`, []byte{0x00, 0x00, 0x00, 0x1e})
+	emeResp, err := c.execCmd(`{"emeter":{"get_realtime":null}}`, []byte{0x00, 0x00, 0x00, 0x1e})
 	if err != nil {
 		return 0, err
 	}
