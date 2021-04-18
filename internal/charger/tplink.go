@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -148,11 +149,12 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 
 	// encode command message
 	// encResult provides the encrypted plug command
-	encCommand := []byte{0, 0, 0, 0} // BigEndian, unsigned integer
-	var ekey byte = 171              // Encryption initialization vector
+	encCommand := bytes.Buffer{}
+	encCommand.Write([]byte{0, 0, 0, 0}) // BigEndian, unsigned integer msg header
+	var ekey byte = 171                  // Encryption initialization vector
 	for i := 0; i < len(cmd); i++ {
 		ekey = ekey ^ cmd[i]
-		encCommand = append(encCommand, ekey)
+		encCommand.WriteByte(ekey)
 	}
 
 	// send command message on port 9999 to plug in local network
@@ -162,7 +164,7 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		return nil, err
 	}
 
-	_, err = conn.Write(encCommand)
+	_, err = conn.Write(encCommand.Bytes())
 	if err != nil {
 		return nil, err
 	}
@@ -176,13 +178,13 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 
 	// decode response message
 	// decResponse provides the decrypted smart plug response
-	var decResponse []byte
+	decResponse := bytes.Buffer{}
 	var dkey byte = 171 // Reset initialization vector
 	for i := 4; i < len(encResponse); i++ {
 		dec := dkey ^ encResponse[i]
 		dkey = encResponse[i]
-		decResponse = append(decResponse, dec)
+		decResponse.WriteByte(dec)
 	}
 
-	return decResponse, nil
+	return decResponse.Bytes(), nil
 }
