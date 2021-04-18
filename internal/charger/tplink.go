@@ -179,12 +179,11 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	// decode response message
 	// decResponse provides the decrypted smart plug response
 	var decResponse []byte
-	var dec int
-	key = 171 // Reset initialization vector
+	var dkey byte = 171 // Reset initialization vector
 	for i := 4; i < len(encResponse); i++ {
-		dec = key ^ int(encResponse[i])
-		key = int(encResponse[i])
-		decResponse = append(decResponse, byte(dec))
+		dec := dkey ^ encResponse[i]
+		dkey = encResponse[i]
+		decResponse = append(decResponse, dec)
 	}
 
 	return decResponse, nil
