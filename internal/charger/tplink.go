@@ -181,12 +181,10 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	var decResponse []byte
 	var dec int
 	key = 171 // Reset initialization vector
-	for i := 0; i < len(encResponse); i++ {
-		if i > 3 {
-			dec = key ^ int(encResponse[i])
-			key = int(encResponse[i])
-			decResponse = append(decResponse, byte(dec))
-		}
+	for i := 4; i < len(encResponse); i++ {
+		dec = key ^ int(encResponse[i])
+		key = int(encResponse[i])
+		decResponse = append(decResponse, byte(dec))
 	}
 
 	return decResponse, nil
