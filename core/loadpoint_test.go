@@ -208,7 +208,7 @@ func TestPVHysteresis(t *testing.T) {
 			{-400, dt + 1, 0},
 		}},
 		// keep disabled when threshold (lower minCurrent) not met
-		{false, -600, 0, []se{
+		{false, -500, 0, []se{
 			{-400, 0, 0},
 			{-400, 1, 0},
 			{-400, dt - 1, 0},
