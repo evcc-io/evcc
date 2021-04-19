@@ -24,7 +24,7 @@ func init() {
 	registry.Add("tplink", NewTPLinkFromConfig)
 }
 
-// NewTasmotaFromConfig creates a TP-Link charger from generic config
+// NewTPLinkFromConfig creates a TP-Link charger from generic config
 func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI          string
@@ -155,10 +155,10 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	}
 
 	// write 4 bytes to start of buffer
-	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()))
+	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
 
 	// open connection via TP-Link Smart Home Protocol port 9999
-	conn, err := net.Dial("tcp", c.uri)
+	conn, err := net.Dial("tcp", c.uri+":9999")
 	if err != nil {
 		return nil, err
 	}
