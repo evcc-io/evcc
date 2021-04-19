@@ -109,7 +109,11 @@ func (e *Script) StringGetter() func() (string, error) {
 
 			if e.jq != nil {
 				v, err := jq.Query(e.jq, []byte(e.val))
-				return fmt.Sprintf("%v", v), err
+				if err != nil {
+					e.err = err
+					return nil, e.err
+				}
+				return fmt.Sprintf("%v", v), e.err
 			}
 		}
 
