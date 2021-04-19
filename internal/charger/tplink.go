@@ -154,7 +154,7 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		_ = buf.WriteByte(ekey)
 	}
 
-	// write 4 bytes to start of buffer
+	// write 4 bytes to start of buffer with command length
 	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
 
 	// open connection via TP-Link Smart Home Protocol port 9999
