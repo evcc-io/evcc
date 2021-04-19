@@ -111,12 +111,13 @@ func (e *Script) StringGetter() func() (string, error) {
 				v, err := jq.Query(e.jq, []byte(e.val))
 				if err != nil {
 					e.err = err
-					return nil, e.err
+					e.val = ""
+					return e.val, e.err
+				} else {
+					e.val = fmt.Sprintf("%v", v)
 				}
-				return fmt.Sprintf("%v", v), e.err
 			}
 		}
-
 		return e.val, e.err
 	}
 }
