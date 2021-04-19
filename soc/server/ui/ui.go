@@ -225,7 +225,9 @@ func Run() {
 			Cache:      autocert.DirCache(sslCertDir),
 		}
 
-		go log.Fatal(http.ListenAndServe(":http", certManager.HTTPHandler(nil)))
+		go func() {
+			log.Fatal(http.ListenAndServe(":http", certManager.HTTPHandler(nil)))
+		}()
 
 		s.Addr = ":https"
 		s.TLSConfig = certManager.TLSConfig()
