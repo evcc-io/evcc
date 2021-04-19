@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	_ "embed"
+	"encoding/base64"
 
 	"github.com/andig/evcc/util"
 )
@@ -15,7 +16,11 @@ var cert []byte
 var key []byte
 
 func init() {
-	key = []byte(util.Getenv("SERVER_KEY"))
+	var err error
+	key, err = base64.StdEncoding.DecodeString(util.Getenv("SERVER_KEY"))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func PEM() []byte {

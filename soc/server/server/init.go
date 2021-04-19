@@ -51,7 +51,7 @@ func loadTLSCredentials() (*tls.Config, error) {
 }
 
 func Run() {
-	fmt.Println("grpc:", ":"+port)
+	log.Println("grpc:", ":"+port)
 
 	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
