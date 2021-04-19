@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"strings"
 
@@ -171,14 +170,15 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	}
 
 	// read response
-	resp, err := io.ReadAll(conn)
+	resp := make([]byte, 2048)
+	n, err := conn.Read(resp)
 	if err != nil {
 		return nil, err
 	}
 
 	// decode response message
 	var dkey byte = 171 // initialization vector
-	for i := 4; i < buf.Len(); i++ {
+	for i := 4; i < n; i++ {
 		dec := dkey ^ resp[i]
 		dkey = resp[i]
 		_ = buf.WriteByte(dec)
