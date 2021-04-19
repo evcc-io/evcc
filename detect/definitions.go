@@ -37,6 +37,7 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
+	taskTPLink       = "tplink"
 )
 
 func init() {
@@ -238,6 +239,15 @@ func init() {
 		Config: map[string]interface{}{
 			"path": "//cm?cmnd=Module",
 			"jq":   ".Module",
+		},
+	})
+
+	taskList.Add(Task{
+		ID:      taskTPLink,
+		Type:    "tcp",
+		Depends: TaskPing,
+		Config: map[string]interface{}{
+			"port": 9999, // 9999/tcp	TP-Link Smart Home Protocol
 		},
 	})
 
