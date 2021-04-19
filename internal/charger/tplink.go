@@ -2,17 +2,17 @@ package charger
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"strings"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/charger/tplink"
 	"github.com/andig/evcc/util"
-	"github.com/lunixbochs/struc"
 )
 
 // TPLink charger implementation
@@ -147,54 +147,42 @@ func (c *TPLink) CurrentPower() (float64, error) {
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
 func (c *TPLink) execCmd(cmd string) ([]byte, error) {
-
 	// encode command message
-	// encResult provides the encrypted plug command
-	encCommand := bytes.Buffer{}
-	var ekey byte = 171 // Encryption initialization vector
+	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
+	var ekey byte = 171 // initialization vector
 	for i := 0; i < len(cmd); i++ {
 		ekey = ekey ^ cmd[i]
-		encCommand.WriteByte(ekey)
-	}
-	// Pack command msg
-	pkgCommand := bytes.Buffer{}
-	type tpPkg struct {
-		Size int `struc:"int32,big,sizeof=Msg"`
-		Msg  []byte
-	}
-	m := &tpPkg{1, encCommand.Bytes()}
-	if err := struc.Pack(&pkgCommand, m); err != nil {
-		return nil, err
+		_ = buf.WriteByte(ekey)
 	}
 
-	// send command message on port 9999 to plug in local network
+	// write 4 bytes to start of buffer
+	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()))
+
 	// open connection via TP-Link Smart Home Protocol port 9999
 	conn, err := net.Dial("tcp", c.uri)
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
-	_, err = conn.Write(pkgCommand.Bytes())
-	if err != nil {
+	// send command
+	if _, err = buf.WriteTo(conn); err != nil {
 		return nil, err
 	}
 
-	// encResponse receives the encrypted plug response
-	var encResponse []byte
-	encResponse, err = ioutil.ReadAll(conn)
+	// read response
+	resp, err := io.ReadAll(conn)
 	if err != nil {
 		return nil, err
 	}
 
 	// decode response message
-	// decResponse provides the decrypted smart plug response
-	decResponse := bytes.Buffer{}
-	var dkey byte = 171 // Reset initialization vector
-	for i := 4; i < len(encResponse); i++ {
-		dec := dkey ^ encResponse[i]
-		dkey = encResponse[i]
-		decResponse.WriteByte(dec)
+	var dkey byte = 171 // initialization vector
+	for i := 4; i < buf.Len(); i++ {
+		dec := dkey ^ resp[i]
+		dkey = resp[i]
+		_ = buf.WriteByte(dec)
 	}
 
-	return decResponse.Bytes(), nil
+	return buf.Bytes(), nil
 }
