@@ -65,20 +65,20 @@ func TestUnmarshalTPLinkSystemResponses(t *testing.T) {
 
 	// Test 2nd emeter generation response
 	var emeresp2 EmeterResponse
-	jsonstr = `{"emeter":{"get_realtime":{"current_ma":0.033759,"voltage_mv":234.824322,"power_mw":3.121391,"total_wh":0.015000,"err_code":0}}}`
+	jsonstr = ` {"emeter":{"get_realtime":{"voltage_mv":237119,"current_ma":218,"power_mw":31259,"total_wh":107,"err_code":0}}}`
 	if err := json.Unmarshal([]byte(jsonstr), &emeresp2); err != nil {
 		t.Error(err)
 	}
-	if emeresp2.Emeter.GetRealtime.CurrentMa != 0.033759 {
+	if emeresp2.Emeter.GetRealtime.CurrentMa != 218 {
 		t.Error("GetRealtime.CurrentMa")
 	}
-	if emeresp2.Emeter.GetRealtime.VoltageMv != 234.824322 {
+	if emeresp2.Emeter.GetRealtime.VoltageMv != 237119 {
 		t.Error("GetRealtime.VoltageMv")
 	}
-	if emeresp2.Emeter.GetRealtime.PowerMw != 3.121391 {
+	if emeresp2.Emeter.GetRealtime.PowerMw != 31259 {
 		t.Error("GetRealtime.PowerMw")
 	}
-	if emeresp2.Emeter.GetRealtime.TotalWh != 0.015000 {
+	if emeresp2.Emeter.GetRealtime.TotalWh != 107 {
 		t.Error("GetRealtime.TotalWh")
 	}
 	if emeresp2.Emeter.GetRealtime.ErrCode != 0 {
