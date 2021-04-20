@@ -126,15 +126,19 @@ func (c *TPLink) CurrentPower() (float64, error) {
 	}
 
 	var emeterResponse tplink.EmeterResponse
+	emeterResponse.Emeter.GetRealtime.PowerMw = -1
+
 	if err := json.Unmarshal(emeResp, &emeterResponse); err != nil {
 		return 0, err
 	}
-
 	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
 		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	power := emeterResponse.Emeter.GetRealtime.Power
+	power := emeterResponse.Emeter.GetRealtime.PowerMw
+	if power == 0 {
+		power = emeterResponse.Emeter.GetRealtime.Power
+	}
 
 	// ignore standby power
 	if power < c.standbypower {
