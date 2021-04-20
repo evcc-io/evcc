@@ -25,11 +25,17 @@ type SystemResponse struct {
 type EmeterResponse struct {
 	Emeter struct {
 		GetRealtime struct {
+			// 1st plug generation E-Meter Response
 			Current float64 `json:"current,omitempty"`
 			Voltage float64 `json:"voltage,omitempty"`
 			Power   float64 `json:"power,omitempty"`
 			Total   float64 `json:"total,omitempty"`
-			ErrCode int     `json:"err_code,omitempty"`
+			// 2nd plug generation E-Meter Response
+			CurrentMa float64 `json:"current_ma,omitempty"`
+			VoltageMv float64 `json:"voltage_mv,omitempty"`
+			PowerMw   float64 `json:"power_mw,omitempty"`
+			TotalWh   float64 `json:"total_wh,omitempty"`
+			ErrCode   int     `json:"err_code,omitempty"`
 		} `json:"get_realtime"`
 	} `json:"emeter"`
 }
