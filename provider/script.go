@@ -112,7 +112,6 @@ func (e *Script) StringGetter() func() (string, error) {
 				if err != nil {
 					e.err = err
 					e.val = ""
-					return e.val, e.err
 				} else {
 					e.val = fmt.Sprintf("%v", v)
 				}
