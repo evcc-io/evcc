@@ -45,7 +45,7 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewTPLink creates TP-Link charger
 func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 	c := &TPLink{
-		uri:          strings.TrimRight(uri, "/"),
+		uri:          strings.TrimRight(uri, "/") + ":9999",
 		standbypower: standbypower,
 	}
 	return c, nil
@@ -160,7 +160,7 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
 
 	// open connection via TP-Link Smart Home Protocol port 9999
-	conn, err := net.Dial("tcp", c.uri+":9999")
+	conn, err := net.Dial("tcp", c.uri)
 	if err != nil {
 		return nil, err
 	}
