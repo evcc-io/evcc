@@ -30,6 +30,7 @@ var (
 	defaults = Config{
 		DeviceID:        "/api/v1/spa/notifications/register",
 		IntegrationInfo: "/api/v1/user/integrationinfo",
+		SilentSignin:    "/api/v1/user/silentsignin",
 		Lang:            "/api/v1/user/language",
 		Login:           "/api/v1/user/signin",
 		AccessToken:     "/api/v1/user/oauth2/token",
@@ -43,6 +44,7 @@ type Config struct {
 	URI               string
 	BrandAuthUrl      string // v2
 	IntegrationInfo   string // v2
+	SilentSignin      string // v2
 	TokenAuth         string
 	CCSPServiceID     string
 	CCSPApplicationID string
@@ -228,11 +230,9 @@ func (v *API) integration(cookieClient *request.Helper) error {
 		}
 	}
 
-	// fmt.Println(string(body))
-
 	if err == nil {
 		data := url.Values{
-			"email":        []string{v.user},
+			"username":     []string{v.user},
 			"password":     []string{v.password},
 			"credentialId": []string{""},
 			"rememberMe":   []string{"on"},
@@ -244,25 +244,54 @@ func (v *API) integration(cookieClient *request.Helper) error {
 			if resp, err = cookieClient.Do(req); err == nil {
 				defer resp.Body.Close()
 
-				var doc *goquery.Document
-				if doc, err = goquery.NewDocumentFromReader(resp.Body); err == nil {
-					if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
-						err = errors.New(span.Text())
-					}
-				}
-
-				if err == nil {
+				// need 302
+				if resp.StatusCode != http.StatusFound {
 					err = errors.New("login failed")
+
+					if doc, errr := goquery.NewDocumentFromReader(resp.Body); errr == nil {
+						if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
+							err = errors.New(span.Text())
+						}
+					}
 				}
 			}
 
-			// fmt.Println(resp)
-			// body, _ := io.ReadAll(resp.Body)
-			// fmt.Println(string(body))
+			cookieClient.CheckRedirect = nil
 		}
 	}
 
-	// panic(1)
+	var userId string
+	if err == nil {
+		resp, err = cookieClient.Get(resp.Header.Get("Location"))
+		if err == nil {
+			defer resp.Body.Close()
+
+			userId = resp.Request.URL.Query().Get("userId")
+			if len(userId) == 0 {
+				err = errors.New("usedId not found")
+			}
+		}
+	}
+
+	if err == nil {
+		data := map[string]string{
+			"userId": userId,
+		}
+
+		req, err = request.New(http.MethodPost, v.config.URI+v.config.SilentSignin, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
+
+			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			res := make(map[string]string)
+			err = cookieClient.DoJSON(req, &res)
+			fmt.Println(res)
+		}
+	}
+
+	fmt.Println(err)
+
+	panic(1)
 	return err
 }
 
