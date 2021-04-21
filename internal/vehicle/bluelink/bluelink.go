@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
@@ -27,18 +28,21 @@ var (
 	errAuthFail = errors.New("authorization failed")
 
 	defaults = Config{
-		DeviceID:    "/api/v1/spa/notifications/register",
-		Lang:        "/api/v1/user/language",
-		Login:       "/api/v1/user/signin",
-		AccessToken: "/api/v1/user/oauth2/token",
-		Vehicles:    "/api/v1/spa/vehicles",
-		Status:      "/api/v1/spa/vehicles/%s/status",
+		DeviceID:        "/api/v1/spa/notifications/register",
+		IntegrationInfo: "/api/v1/user/integrationinfo",
+		Lang:            "/api/v1/user/language",
+		Login:           "/api/v1/user/signin",
+		AccessToken:     "/api/v1/user/oauth2/token",
+		Vehicles:        "/api/v1/spa/vehicles",
+		Status:          "/api/v1/spa/vehicles/%s/status",
 	}
 )
 
 // Config is the bluelink API configuration
 type Config struct {
 	URI               string
+	BrandAuthUrl      string // v2
+	IntegrationInfo   string // v2
 	TokenAuth         string
 	CCSPServiceID     string
 	CCSPApplicationID string
@@ -172,6 +176,96 @@ func (v *API) getCookies() (cookieClient *request.Helper, err error) {
 	return cookieClient, err
 }
 
+// func formVar(body io.Reader, q string) (*goquery.Selection, bool) {
+// 	// span class="kc-feedback-text"
+
+// 	if doc, err := goquery.NewDocumentFromReader(body); err == nil {
+// 		if el := doc.Find(q); el != nil && el.Length() == 1 {
+// 			if res, ok := form.Attr("action"); ok {
+// 				return res, ok
+// 			}
+// 		}
+// 	}
+
+// 	return "", false
+// }
+
+func (v *API) integration(cookieClient *request.Helper) error {
+	req, err := request.New(http.MethodGet, v.config.URI+v.config.IntegrationInfo, nil, request.JSONEncoding)
+
+	var info struct {
+		UserId    string `json:"userId"`
+		ServiceId string `json:"serviceId"`
+	}
+
+	if err == nil {
+		err = cookieClient.DoJSON(req, &info)
+	}
+
+	var action string
+	var resp *http.Response
+
+	if err == nil {
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.URI, "en", info.ServiceId, info.UserId)
+
+		req, err = request.New(http.MethodGet, uri, nil)
+		if err == nil {
+			if resp, err = cookieClient.Do(req); err == nil {
+				defer resp.Body.Close()
+
+				var doc *goquery.Document
+				if doc, err = goquery.NewDocumentFromReader(resp.Body); err == nil {
+					err = errors.New("form not found")
+
+					if form := doc.Find("form"); form != nil && form.Length() == 1 {
+						var ok bool
+						if action, ok = form.Attr("action"); ok {
+							err = nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// fmt.Println(string(body))
+
+	if err == nil {
+		data := url.Values{
+			"email":        []string{v.user},
+			"password":     []string{v.password},
+			"credentialId": []string{""},
+			"rememberMe":   []string{"on"},
+		}
+
+		req, err = request.New(http.MethodPost, action, strings.NewReader(data.Encode()), request.URLEncoding)
+		if err == nil {
+			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+			if resp, err = cookieClient.Do(req); err == nil {
+				defer resp.Body.Close()
+
+				var doc *goquery.Document
+				if doc, err = goquery.NewDocumentFromReader(resp.Body); err == nil {
+					if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
+						err = errors.New(span.Text())
+					}
+				}
+
+				if err == nil {
+					err = errors.New("login failed")
+				}
+			}
+
+			// fmt.Println(resp)
+			// body, _ := io.ReadAll(resp.Body)
+			// fmt.Println(string(body))
+		}
+	}
+
+	// panic(1)
+	return err
+}
+
 func (v *API) setLanguage(cookieClient *request.Helper) error {
 	data := map[string]interface{}{
 		"lang": "en",
@@ -275,6 +369,10 @@ func (v *API) authFlow() (err error) {
 	var cookieClient *request.Helper
 	if err == nil {
 		cookieClient, err = v.getCookies()
+	}
+
+	if err == nil {
+		err = v.integration(cookieClient)
 	}
 
 	if err == nil {
