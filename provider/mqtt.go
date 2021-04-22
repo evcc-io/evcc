@@ -197,10 +197,9 @@ func (h *msgHandler) hasValue() (string, error) {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
-	var val interface{}
 	var err error = nil
-
 	if h.jq != nil {
+		var val interface{}
 		val, err = jq.Query(h.jq, []byte(h.payload))
 		if err == nil {
 			h.payload = fmt.Sprintf("%v", val)
