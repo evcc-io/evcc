@@ -66,13 +66,17 @@ type API struct {
 	apiG     func() (interface{}, error)
 	config   Config
 	auth     Auth
+	Vehicle  Vehicle
 }
 
 // Auth bundles miscellaneous authorization data
 type Auth struct {
-	accToken  string
-	deviceID  string
-	vehicleID string
+	accToken string
+	deviceID string
+}
+
+type Vehicle struct {
+	Vin, VehicleName, VehicleID string
 }
 
 type response struct {
@@ -87,15 +91,13 @@ type response struct {
 					Value, Unit int
 				}
 			}
-			DrvDistance []drvDistance
+			DrvDistance []DrivingDistance
 		}
-		Vehicles []struct {
-			VehicleID string
-		}
+		Vehicles []Vehicle
 	}
 }
 
-type drvDistance struct {
+type DrivingDistance struct {
 	RangeByFuel struct {
 		EvModeRange struct {
 			Value int
@@ -178,21 +180,23 @@ func (v *API) getCookies() (cookieClient *request.Helper, err error) {
 	return cookieClient, err
 }
 
-// func formVar(body io.Reader, q string) (*goquery.Selection, bool) {
-// 	// span class="kc-feedback-text"
+func (v *API) setLanguage(cookieClient *request.Helper) error {
+	data := map[string]interface{}{
+		"lang": "en",
+	}
 
-// 	if doc, err := goquery.NewDocumentFromReader(body); err == nil {
-// 		if el := doc.Find(q); el != nil && el.Length() == 1 {
-// 			if res, ok := form.Attr("action"); ok {
-// 				return res, ok
-// 			}
-// 		}
-// 	}
+	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		var resp *http.Response
+		if resp, err = cookieClient.Do(req); err == nil {
+			resp.Body.Close()
+		}
+	}
 
-// 	return "", false
-// }
+	return err
+}
 
-func (v *API) integration(cookieClient *request.Helper) error {
+func (v *API) brandLogin(cookieClient *request.Helper) (string, error) {
 	req, err := request.New(http.MethodGet, v.config.URI+v.config.IntegrationInfo, nil, request.JSONEncoding)
 
 	var info struct {
@@ -246,9 +250,9 @@ func (v *API) integration(cookieClient *request.Helper) error {
 
 				// need 302
 				if resp.StatusCode != http.StatusFound {
-					err = errors.New("login failed")
+					err = errors.New("missing redirect")
 
-					if doc, errr := goquery.NewDocumentFromReader(resp.Body); errr == nil {
+					if doc, err2 := goquery.NewDocumentFromReader(resp.Body); err2 == nil {
 						if span := doc.Find("span[class=kc-feedback-text]"); span != nil && span.Length() == 1 {
 							err = errors.New(span.Text())
 						}
@@ -273,6 +277,7 @@ func (v *API) integration(cookieClient *request.Helper) error {
 		}
 	}
 
+	var code string
 	if err == nil {
 		data := map[string]string{
 			"userId": userId,
@@ -281,37 +286,28 @@ func (v *API) integration(cookieClient *request.Helper) error {
 		req, err = request.New(http.MethodPost, v.config.URI+v.config.SilentSignin, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
+			req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_1 like Mac OS X) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0 Mobile/15B92 Safari/604.1")
 
 			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
-			res := make(map[string]string)
-			err = cookieClient.DoJSON(req, &res)
-			fmt.Println(res)
+			var res struct {
+				RedirectUrl string `json:"redirectUrl"`
+			}
+			if err = cookieClient.DoJSON(req, &res); err == nil {
+				fmt.Println(res)
+				var uri *url.URL
+				if uri, err = url.Parse(res.RedirectUrl); err == nil {
+					if code = uri.Query().Get("code"); len(code) == 0 {
+						err = errors.New("code not found")
+					}
+				}
+			}
 		}
 	}
 
-	fmt.Println(err)
-
-	panic(1)
-	return err
+	return code, err
 }
 
-func (v *API) setLanguage(cookieClient *request.Helper) error {
-	data := map[string]interface{}{
-		"lang": "en",
-	}
-
-	req, err := request.New(http.MethodPost, v.config.URI+v.config.Lang, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		var resp *http.Response
-		if resp, err = cookieClient.Do(req); err == nil {
-			resp.Body.Close()
-		}
-	}
-
-	return err
-}
-
-func (v *API) login(cookieClient *request.Helper) (string, error) {
+func (v *API) bluelinkLogin(cookieClient *request.Helper) (string, error) {
 	data := map[string]interface{}{
 		"email":    v.user,
 		"password": v.password,
@@ -367,10 +363,16 @@ func (v *API) getToken(accCode string) (string, error) {
 	return accToken, err
 }
 
-func (v *API) getVehicles(accToken, did string) (string, error) {
+func (v *API) Vehicles() ([]Vehicle, error) {
+	if v.auth.accToken == "" {
+		if err := v.authFlow(); err != nil {
+			return nil, err
+		}
+	}
+
 	headers := map[string]string{
-		"Authorization":       accToken,
-		"ccsp-device-id":      did,
+		"Authorization":       v.auth.accToken,
+		"ccsp-device-id":      v.auth.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
@@ -378,18 +380,13 @@ func (v *API) getVehicles(accToken, did string) (string, error) {
 	}
 
 	req, err := request.New(http.MethodGet, v.config.URI+v.config.Vehicles, nil, headers)
-	if err == nil {
-		var resp response
-		if err = v.DoJSON(req, &resp); err == nil {
-			if len(resp.ResMsg.Vehicles) == 1 {
-				return resp.ResMsg.Vehicles[0].VehicleID, nil
-			}
 
-			err = errors.New("couldn't find vehicle")
-		}
+	var resp response
+	if err == nil {
+		err = v.DoJSON(req, &resp)
 	}
 
-	return "", err
+	return resp.ResMsg.Vehicles, err
 }
 
 func (v *API) authFlow() (err error) {
@@ -401,24 +398,27 @@ func (v *API) authFlow() (err error) {
 	}
 
 	if err == nil {
-		err = v.integration(cookieClient)
-	}
-
-	if err == nil {
 		err = v.setLanguage(cookieClient)
 	}
 
 	var accCode string
 	if err == nil {
-		accCode, err = v.login(cookieClient)
+		// try new login first, then fallback
+		if accCode, err = v.brandLogin(cookieClient); err != nil {
+			accCode, err = v.bluelinkLogin(cookieClient)
+		}
+
+		if err != nil {
+			err = fmt.Errorf("login failed: %w", err)
+		}
 	}
 
 	if err == nil {
 		v.auth.accToken, err = v.getToken(accCode)
 	}
 
-	if err == nil {
-		v.auth.vehicleID, err = v.getVehicles(v.auth.accToken, v.auth.deviceID)
+	if err != nil {
+		err = fmt.Errorf("login failed: %w", err)
 	}
 
 	return err
@@ -440,7 +440,7 @@ func (v *API) getStatus() (response, error) {
 		"Stamp":               v.stamp(),
 	}
 
-	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.auth.vehicleID)
+	uri := fmt.Sprintf(v.config.URI+v.config.Status, v.Vehicle.VehicleID)
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		err = v.DoJSON(req, &resp)
