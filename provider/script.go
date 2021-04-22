@@ -58,6 +58,7 @@ func NewScriptProvider(script string, timeout time.Duration, jq string, cache ti
 		timeout: timeout,
 		cache:   cache,
 	}
+	
 	if jq != "" {
 		op, err := gojq.Parse(jq)
 		if err != nil {
@@ -107,14 +108,14 @@ func (e *Script) StringGetter() func() (string, error) {
 			e.val, e.err = e.exec(e.script)
 			e.updated = time.Now()
 
-			if e.jq != nil {
+			if e.err == nil && e.jq != nil {
 				var v interface{}
-				v, e.err = jq.Query(e.jq, []byte(e.val))
-				if e.err == nil {
+				if v, e.err = jq.Query(e.jq, []byte(e.val)); e.err == nil {
 					e.val = fmt.Sprintf("%v", v)
 				}
 			}
 		}
+		
 		return e.val, e.err
 	}
 }
