@@ -12,10 +12,7 @@ import (
 	"github.com/andig/evcc/util/request"
 )
 
-const (
-	resOK       = "S"
-	resAuthFail = "F"
-)
+const resOK = "S" // auth fail: F
 
 const (
 	VehiclesURL = "/api/v1/spa/vehicles"
