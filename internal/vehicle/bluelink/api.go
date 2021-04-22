@@ -51,15 +51,32 @@ func NewAPI(log *util.Logger, identity *Identity, cache time.Duration) *API {
 	return v
 }
 
+type VehiclesResponse struct {
+	RetCode string
+	ResMsg  struct {
+		Vehicles []Vehicle
+	}
+}
+
 type Vehicle struct {
 	Vin, VehicleName, VehicleID string
+}
+
+func (v *API) Vehicles() ([]Vehicle, error) {
+	req, err := v.identity.Request(http.MethodGet, VehiclesURL)
+
+	var resp VehiclesResponse
+	if err == nil {
+		err = v.DoJSON(req, &resp)
+	}
+
+	return resp.ResMsg.Vehicles, err
 }
 
 type StatusResponse struct {
 	timestamp time.Time // add missing timestamp
 	RetCode   string
 	ResMsg    struct {
-		DeviceID string
 		EvStatus struct {
 			BatteryStatus float64
 			RemainTime2   struct {
@@ -79,17 +96,6 @@ type DrivingDistance struct {
 			Value int
 		}
 	}
-}
-
-func (v *API) Vehicles() ([]Vehicle, error) {
-	req, err := v.identity.Request(http.MethodGet, VehiclesURL)
-
-	var resp StatusResponse
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
-
-	return resp.ResMsg.Vehicles, err
 }
 
 func (v *API) getStatus() (StatusResponse, error) {
