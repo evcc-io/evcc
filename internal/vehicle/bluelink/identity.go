@@ -221,12 +221,12 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			req.Header.Set("ccsp-service-id", v.config.CCSPServiceID)
-			req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_1 like Mac OS X) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0 Mobile/15B92 Safari/604.1")
-
 			cookieClient.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse } // don't follow redirects
+
 			var res struct {
 				RedirectUrl string `json:"redirectUrl"`
 			}
+
 			if err = cookieClient.DoJSON(req, &res); err == nil {
 				fmt.Println(res)
 				var uri *url.URL
