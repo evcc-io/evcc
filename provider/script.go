@@ -46,12 +46,12 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		return nil, err
 	}
 
-	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Cache, cc.Jq)
+	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Jq, cc.Cache)
 }
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, cache time.Duration, jq string) (*Script, error) {
+func NewScriptProvider(script string, timeout time.Duration, jq string, cache time.Duration) (*Script, error) {
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
@@ -107,14 +107,10 @@ func (e *Script) StringGetter() func() (string, error) {
 			e.val, e.err = e.exec(e.script)
 			e.updated = time.Now()
 
-			if e.jq != nil {
-				v, err := jq.Query(e.jq, []byte(e.val))
-				if err != nil {
-					e.err = err
-					e.val = ""
-				} else {
-					e.val = fmt.Sprintf("%v", v)
-				}
+			var v interface{}
+			v, e.err = jq.Query(e.jq, []byte(e.val))
+			if e.err == nil {
+				e.val = fmt.Sprintf("%v", v)
 			}
 		}
 		return e.val, e.err
