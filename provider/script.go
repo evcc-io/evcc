@@ -107,10 +107,12 @@ func (e *Script) StringGetter() func() (string, error) {
 			e.val, e.err = e.exec(e.script)
 			e.updated = time.Now()
 
-			var v interface{}
-			v, e.err = jq.Query(e.jq, []byte(e.val))
-			if e.err == nil {
-				e.val = fmt.Sprintf("%v", v)
+			if e.jq != nil {
+				var v interface{}
+				v, e.err = jq.Query(e.jq, []byte(e.val))
+				if e.err == nil {
+					e.val = fmt.Sprintf("%v", v)
+				}
 			}
 		}
 		return e.val, e.err
