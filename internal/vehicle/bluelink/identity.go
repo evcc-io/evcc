@@ -228,7 +228,6 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 			}
 
 			if err = cookieClient.DoJSON(req, &res); err == nil {
-				fmt.Println(res)
 				var uri *url.URL
 				if uri, err = url.Parse(res.RedirectUrl); err == nil {
 					if code = uri.Query().Get("code"); len(code) == 0 {
