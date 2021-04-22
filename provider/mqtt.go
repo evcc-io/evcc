@@ -8,6 +8,8 @@ import (
 
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/jq"
+	"github.com/itchyny/gojq"
 )
 
 // Mqtt provider
@@ -18,6 +20,7 @@ type Mqtt struct {
 	payload string
 	scale   float64
 	timeout time.Duration
+	jq      *gojq.Query
 }
 
 func init() {
@@ -31,6 +34,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		Topic, Payload string // Payload only applies to setters
 		Scale          float64
 		Timeout        time.Duration
+		Jq             string
 	}{
 		Scale: 1,
 	}
@@ -46,13 +50,20 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)
+	m := NewMqttWithJQ(log, client, cc.Topic, cc.Payload, cc.Jq, cc.Scale, cc.Timeout)
 
 	return m, err
 }
 
-// NewMqtt creates mqtt provider for given topic
+// NewMqtt creates mqtt provider for given topic without a JQ query set
 func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, payload string, scale float64, timeout time.Duration) *Mqtt {
+	// Unfortunatelly Go does not support overloading
+	return NewMqttWithJQ(log, client, topic, payload, "", scale, timeout)
+}
+
+// NewMqttWithJQ creates mqtt provider for given topic with a JQ query set
+func NewMqttWithJQ(log *util.Logger, client *mqtt.Client, topic string, payload string, jq string, scale float64, timeout time.Duration) *Mqtt {
+
 	m := &Mqtt{
 		log:     log,
 		client:  client,
@@ -60,7 +71,19 @@ func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, payload string
 		payload: payload,
 		scale:   scale,
 		timeout: timeout,
+		jq:      nil,
 	}
+
+	if jq != "" {
+		op, err := gojq.Parse(jq)
+		if err != nil {
+			// func NewMqtt() is not allowed to return an error, so can only print to log.ERROR:
+			m.log.ERROR.Printf("invalid jq query '%s' for MQTT topic '%s': %s", jq, topic, err.Error())
+		} else {
+			m.jq = op
+		}
+	}
+
 	return m
 }
 
@@ -70,6 +93,7 @@ func (m *Mqtt) FloatGetter() func() (float64, error) {
 		topic: m.topic,
 		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
@@ -82,6 +106,7 @@ func (m *Mqtt) IntGetter() func() (int64, error) {
 		topic: m.topic,
 		scale: float64(m.scale),
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
@@ -93,6 +118,7 @@ func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
@@ -104,6 +130,7 @@ func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
@@ -151,6 +178,7 @@ type msgHandler struct {
 	scale   float64
 	topic   string
 	payload string
+	jq      *gojq.Query
 }
 
 func (h *msgHandler) receive(payload string) {
@@ -169,7 +197,17 @@ func (h *msgHandler) hasValue() (string, error) {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
-	return h.payload, nil
+	var val interface{}
+	var err error = nil
+
+	if h.jq != nil {
+		val, err = jq.Query(h.jq, []byte(h.payload))
+		if err == nil {
+			h.payload = fmt.Sprintf("%v", val)
+		}
+	}
+
+	return h.payload, err
 }
 
 func (h *msgHandler) floatGetter() (float64, error) {
