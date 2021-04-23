@@ -152,6 +152,16 @@ func (c *TPLink) CurrentPower() (float64, error) {
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
 func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 
+	// encode command message
+	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
+	var key byte = 171 // initialization vector
+	for i := 0; i < len(cmd); i++ {
+		key = key ^ cmd[i]
+		_ = buf.WriteByte(key)
+	}
+	// write 4 bytes to start of buffer with command length
+	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
+
 	// open connection via TP-Link Smart Home Protocol
 	conn, err := net.DialTimeout("tcp", c.uri, 5*time.Second)
 	if err != nil {
@@ -159,50 +169,24 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	}
 	defer conn.Close()
 	// send command
-	if _, err = c.encode(cmd).WriteTo(conn); err != nil {
+	if _, err = buf.WriteTo(conn); err != nil {
 		return nil, err
 	}
 	// read response
 	resp := make([]byte, 2048)
-	len, err := conn.Read(resp)
+	resplen, err := conn.Read(resp)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.decode(resp[0:len]), nil
-}
-
-// encode encrypts the TP-Link Smart Home Protocol command
-func (c *TPLink) encode(cmd string) *bytes.Buffer {
-
-	// encode command message
-	c.log.TRACE.Printf("sent: %s", cmd)
-	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
-	var ekey byte = 171 // initialization vector
-	for i := 0; i < len(cmd); i++ {
-		ekey = ekey ^ cmd[i]
-		_ = buf.WriteByte(ekey)
-	}
-	// write 4 bytes to start of buffer with command length
-	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
-	c.log.TRACE.Printf("sent encoded:\n% 0#2x", buf.Bytes())
-
-	return buf
-}
-
-// decode the TP-Link Smart Home plug response
-func (c *TPLink) decode(resp []byte) []byte {
-
 	// decode response message
-	c.log.TRACE.Printf("received encoded:\n% 0#2x", resp)
-	var buf bytes.Buffer
-	var dkey byte = 171 // initialization vector
-	for i := 4; i < len(resp); i++ {
-		dec := dkey ^ resp[i]
-		dkey = resp[i]
+	key = 171 // Reset initialization vector
+	for i := 4; i < resplen; i++ {
+		dec := key ^ resp[i]
+		key = resp[i]
 		_ = buf.WriteByte(dec)
 	}
 	c.log.TRACE.Printf("received: %s", buf.String())
 
-	return buf.Bytes()
+	return buf.Bytes(), nil
 }
