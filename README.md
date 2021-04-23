@@ -168,7 +168,8 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 
 ### Charger
 
-Charger is responsible for handling EV state and adjusting charge current. Available charger implementations are:
+Charger is responsible for handling EV state and adjusting charge current.
+Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
@@ -185,7 +186,7 @@ Charger is responsible for handling EV state and adjusting charge current. Avail
 - `warp`: Tinkerforge Warp/ Warp Pro charger
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
-Smart-Home outlets
+Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
 - `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
