@@ -168,7 +168,7 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 
 ### Charger
 
-Charger is responsible for handling EV state and adjusting charge current.
+Charger is responsible for handling EV state and adjusting charge current.    
 Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
