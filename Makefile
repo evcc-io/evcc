@@ -42,7 +42,7 @@ assets:
 	go generate ./...
 
 lint:
-	golangci-lint run --timeout 10m0s
+	golangci-lint run
 
 lint-ui:
 	npm run lint
