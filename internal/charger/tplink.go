@@ -151,7 +151,6 @@ func (c *TPLink) CurrentPower() (float64, error) {
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
 func (c *TPLink) execCmd(cmd string) ([]byte, error) {
-
 	// encode command message
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
 	var key byte = 171 // initialization vector
@@ -168,20 +167,21 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		return nil, err
 	}
 	defer conn.Close()
+
 	// send command
 	if _, err = buf.WriteTo(conn); err != nil {
 		return nil, err
 	}
 	// read response
 	resp := make([]byte, 2048)
-	resplen, err := conn.Read(resp)
+	len, err := conn.Read(resp)
 	if err != nil {
 		return nil, err
 	}
 
 	// decode response message
-	key = 171 // Reset initialization vector
-	for i := 4; i < resplen; i++ {
+	key = 171 // reset initialization vector
+	for i := 4; i < len; i++ {
 		dec := key ^ resp[i]
 		key = resp[i]
 		_ = buf.WriteByte(dec)
