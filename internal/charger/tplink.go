@@ -56,25 +56,20 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	resp, err := c.execCmd(`{"system":{"get_sysinfo":null}}`)
-	if err != nil {
+	var resp tplink.SystemResponse
+	if err := c.execCmd(`{"system":{"get_sysinfo":null}}`, &resp); err != nil {
 		return false, err
 	}
 
-	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(resp, &systemResponse); err != nil {
-		return false, err
-	}
-
-	if err := systemResponse.System.GetSysinfo.ErrCode; err != 0 {
+	if err := resp.System.GetSysinfo.ErrCode; err != 0 {
 		return false, fmt.Errorf("get_sysinfo error %d", err)
 	}
 
-	if !strings.Contains(systemResponse.System.GetSysinfo.Feature, "ENE") {
-		return false, errors.New(systemResponse.System.GetSysinfo.Model + " not supported, energy meter feature missing")
+	if !strings.Contains(resp.System.GetSysinfo.Feature, "ENE") {
+		return false, errors.New(resp.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
 
-	return int(1) == systemResponse.System.GetSysinfo.RelayState, err
+	return int(1) == resp.System.GetSysinfo.RelayState, err
 }
 
 // Enable implements the Charger.Enable interface
@@ -84,13 +79,8 @@ func (c *TPLink) Enable(enable bool) error {
 		cmd = `{"system":{"set_relay_state":{"state":1}}}`
 	}
 
-	resp, err := c.execCmd(cmd)
-	if err != nil {
-		return err
-	}
-
-	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(resp, &systemResponse); err != nil {
+	var resp tplink.SystemResponse
+	if err := c.execCmd(cmd, &resp); err != nil {
 		return err
 	}
 
@@ -122,22 +112,18 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	resp, err := c.execCmd(`{"emeter":{"get_realtime":null}}`)
-	if err != nil {
+	var resp tplink.EmeterResponse
+	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
 		return 0, err
 	}
 
-	var emeterResponse tplink.EmeterResponse
-	if err := json.Unmarshal(resp, &emeterResponse); err != nil {
-		return 0, err
-	}
-	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
+	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
 		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	power := emeterResponse.Emeter.GetRealtime.PowerMw / 1000
+	power := resp.Emeter.GetRealtime.PowerMw / 1000
 	if power == 0 {
-		power = emeterResponse.Emeter.GetRealtime.Power
+		power = resp.Emeter.GetRealtime.Power
 	}
 
 	// ignore standby power
@@ -145,11 +131,11 @@ func (c *TPLink) CurrentPower() (float64, error) {
 		power = 0
 	}
 
-	return power, err
+	return power, nil
 }
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
-func (c *TPLink) execCmd(cmd string) ([]byte, error) {
+func (c *TPLink) execCmd(cmd string, res interface{}) error {
 	// encode command message
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
 	var key byte = 171 // initialization vector
@@ -164,20 +150,20 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	// open connection via TP-Link Smart Home Protocol
 	conn, err := net.DialTimeout("tcp", c.uri, 5*time.Second)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
 	// send command
 	if _, err = buf.WriteTo(conn); err != nil {
-		return nil, err
+		return err
 	}
 
 	// read response
 	resp := make([]byte, 2048)
 	len, err := conn.Read(resp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// decode response message
@@ -189,5 +175,5 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	}
 	c.log.TRACE.Printf("recv: %s", buf.String())
 
-	return buf.Bytes(), nil
+	return json.Unmarshal(buf.Bytes(), res)
 }
