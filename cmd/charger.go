@@ -29,13 +29,10 @@ func runCharger(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup mqtt
-	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt)
+	// setup environment
+	if err := configureEnvironment(conf); err != nil {
+		log.FATAL.Fatal(err)
 	}
-
-	// setup javascript VMs
-	configureJavascript(conf.Javascript)
 
 	if err := cp.configureChargers(conf); err != nil {
 		log.FATAL.Fatal(err)

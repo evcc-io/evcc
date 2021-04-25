@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,10 +8,9 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/charger/easee"
-	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/util/sponsor"
 )
 
 // Easee charger implementation
@@ -48,28 +46,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
 }
 
-func isAuthorized(token string) bool {
-	host := util.Getenv("GRPC_URI", cloud.Host)
-	conn, err := cloud.Connection(host)
-	if err != nil {
-		return false
-	}
-
-	client := pb.NewAuthClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	_, err = client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
-
-	return err == nil
-}
-
 // NewEasee creates Easee charger
 func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee")
 
-	if !isAuthorized(token) {
+	if !sponsor.IsAuthorized() {
 		return nil, errors.New("easee requires evcc sponsorship, register at https://cloud.evcc.io")
 	}
 

@@ -5,7 +5,6 @@ import (
 
 	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/soc/server/auth"
-	"github.com/andig/evcc/util/cloud"
 )
 
 type AuthServer struct {
@@ -13,26 +12,29 @@ type AuthServer struct {
 }
 
 func (s *AuthServer) IsAuthorized(ctx context.Context, r *pb.AuthRequest) (*pb.AuthReply, error) {
-	_, _, err := isAuthorized(r)
-	return &pb.AuthReply{}, err
+	authorized, _, claims, err := isAuthorized(r)
+
+	res := &pb.AuthReply{Authorized: authorized}
+	if err == nil {
+		res.Subject = claims.Subject
+	}
+
+	return res, err
 }
 
 type tokenizer interface {
 	GetToken() string
 }
 
-func isAuthorized(r tokenizer) (string, *auth.Claims, error) {
+func isAuthorized(r tokenizer) (bool, string, *auth.Claims, error) {
 	token := r.GetToken()
 
 	claims, err := auth.ParseToken(token)
 	if err != nil {
-		return token, claims, err
+		return false, token, claims, err
 	}
 
 	authorized, err := auth.IsAuthorized(claims.Subject)
-	if err == nil && !authorized {
-		err = cloud.ErrNotAuthorized
-	}
 
-	return token, claims, err
+	return authorized, token, claims, err
 }

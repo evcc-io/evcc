@@ -14,22 +14,23 @@ import (
 )
 
 type config struct {
-	URI        string
-	Log        string
-	Metrics    bool
-	Profile    bool
-	Levels     map[string]string
-	Interval   time.Duration
-	Mqtt       mqttConfig
-	Javascript map[string]interface{}
-	Influx     server.InfluxConfig
-	HEMS       typedConfig
-	Messaging  messagingConfig
-	Meters     []qualifiedConfig
-	Chargers   []qualifiedConfig
-	Vehicles   []qualifiedConfig
-	Site       map[string]interface{}
-	LoadPoints []map[string]interface{}
+	URI          string
+	Log          string
+	SponsorToken string
+	Metrics      bool
+	Profile      bool
+	Levels       map[string]string
+	Interval     time.Duration
+	Mqtt         mqttConfig
+	Javascript   map[string]interface{}
+	Influx       server.InfluxConfig
+	HEMS         typedConfig
+	Messaging    messagingConfig
+	Meters       []qualifiedConfig
+	Chargers     []qualifiedConfig
+	Vehicles     []qualifiedConfig
+	Site         map[string]interface{}
+	LoadPoints   []map[string]interface{}
 }
 
 type mqttConfig struct {

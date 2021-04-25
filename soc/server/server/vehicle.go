@@ -50,9 +50,12 @@ func stringMapToInterface(in map[string]string) map[string]interface{} {
 }
 
 func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error) {
-	token, claims, err := isAuthorized(r)
+	authorized, token, claims, err := isAuthorized(r)
 	if err != nil {
 		return nil, err
+	}
+	if !authorized {
+		return nil, cloud.ErrNotAuthorized
 	}
 
 	typ := r.GetType()
