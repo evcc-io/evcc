@@ -56,13 +56,13 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	sysResp, err := c.execCmd(`{"system":{"get_sysinfo":null}}`)
+	resp, err := c.execCmd(`{"system":{"get_sysinfo":null}}`)
 	if err != nil {
 		return false, err
 	}
 
 	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
+	if err := json.Unmarshal(resp, &systemResponse); err != nil {
 		return false, err
 	}
 
@@ -84,14 +84,13 @@ func (c *TPLink) Enable(enable bool) error {
 		cmd = `{"system":{"set_relay_state":{"state":1}}}`
 	}
 
-	// Execute TP-Link set_relay_state command
-	sysResp, err := c.execCmd(cmd)
+	resp, err := c.execCmd(cmd)
 	if err != nil {
 		return err
 	}
 
 	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
+	if err := json.Unmarshal(resp, &systemResponse); err != nil {
 		return err
 	}
 
@@ -123,13 +122,13 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	emeResp, err := c.execCmd(`{"emeter":{"get_realtime":null}}`)
+	resp, err := c.execCmd(`{"emeter":{"get_realtime":null}}`)
 	if err != nil {
 		return 0, err
 	}
 
 	var emeterResponse tplink.EmeterResponse
-	if err := json.Unmarshal(emeResp, &emeterResponse); err != nil {
+	if err := json.Unmarshal(resp, &emeterResponse); err != nil {
 		return 0, err
 	}
 	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
@@ -158,7 +157,8 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		key = key ^ cmd[i]
 		_ = buf.WriteByte(key)
 	}
-	// write 4 bytes to start of buffer with command length
+
+	// write 4 bytes command length to start of buffer
 	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
 
 	// open connection via TP-Link Smart Home Protocol
@@ -172,6 +172,7 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 	if _, err = buf.WriteTo(conn); err != nil {
 		return nil, err
 	}
+
 	// read response
 	resp := make([]byte, 2048)
 	len, err := conn.Read(resp)
@@ -186,7 +187,7 @@ func (c *TPLink) execCmd(cmd string) ([]byte, error) {
 		key = resp[i]
 		_ = buf.WriteByte(dec)
 	}
-	c.log.TRACE.Printf("received: %s", buf.String())
+	c.log.TRACE.Printf("recv: %s", buf.String())
 
 	return buf.Bytes(), nil
 }
