@@ -54,7 +54,7 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 	return c, nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.ChargerEnabled interface
 func (c *TPLink) Enabled() (bool, error) {
 	var resp tplink.SystemResponse
 	if err := c.execCmd(`{"system":{"get_sysinfo":null}}`, &resp); err != nil {
@@ -72,7 +72,7 @@ func (c *TPLink) Enabled() (bool, error) {
 	return resp.System.GetSysinfo.RelayState == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.ChargerEnable interface
 func (c *TPLink) Enable(enable bool) error {
 	cmd := `{"system":{"set_relay_state":{"state":0}}}`
 	if enable {
@@ -91,12 +91,12 @@ func (c *TPLink) Enable(enable bool) error {
 	return nil
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.ChargerMaxCurrent interface
 func (c *TPLink) MaxCurrent(current int64) error {
 	return nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.ChargerStatus interface
 func (c *TPLink) Status() (api.ChargeStatus, error) {
 	power, err := c.CurrentPower()
 

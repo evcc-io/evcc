@@ -101,7 +101,7 @@ func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
 	return strings.TrimSpace(string(response)), err
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
@@ -130,7 +130,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
 	// state 0/1 - DECT Switch state off/on (empty if unkown or error)
 	resp, err := c.execFritzDectCmd("getswitchstate")
@@ -143,7 +143,7 @@ func (c *FritzDECT) Enabled() (bool, error) {
 	return state == 1, err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *FritzDECT) Enable(enable bool) error {
 	cmd := "setswitchoff"
 	if enable {
@@ -170,7 +170,7 @@ func (c *FritzDECT) Enable(enable bool) error {
 	}
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }

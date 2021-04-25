@@ -157,7 +157,7 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 	}
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *Keba) Status() (api.ChargeStatus, error) {
 	var kr keba.Report2
 	err := c.roundtrip("report", 2, &kr)
@@ -182,7 +182,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	return api.StatusA, fmt.Errorf("unexpected status: %+v", kr)
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *Keba) Enabled() (bool, error) {
 	var kr keba.Report2
 	err := c.roundtrip("report", 2, &kr)
@@ -213,7 +213,7 @@ func (c *Keba) enableRFID() error {
 	return nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *Keba) Enable(enable bool) error {
 	if enable && c.rfid.Tag != "" {
 		if err := c.enableRFID(); err != nil {
@@ -235,7 +235,7 @@ func (c *Keba) Enable(enable bool) error {
 	return nil
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *Keba) MaxCurrent(current int64) error {
 	d := 1000 * current
 
@@ -266,7 +266,7 @@ func (c *Keba) MaxCurrentMillis(current float64) error {
 
 var _ api.Meter = (*Keba)(nil)
 
-// CurrentPower implements the Meter interface
+// CurrentPower implements the api.Meter interface
 func (c *Keba) CurrentPower() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
@@ -277,7 +277,7 @@ func (c *Keba) CurrentPower() (float64, error) {
 
 var _ api.MeterEnergy = (*Keba)(nil)
 
-// TotalEnergy implements the MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (c *Keba) TotalEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
@@ -299,7 +299,7 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 
 var _ api.MeterCurrent = (*Keba)(nil)
 
-// Currents implements the MeterCurrents interface
+// Currents implements the api.MeterCurrent interface
 func (c *Keba) Currents() (float64, float64, float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)

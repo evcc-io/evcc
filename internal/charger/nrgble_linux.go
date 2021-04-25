@@ -218,7 +218,7 @@ func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
 	}
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	res := nrgble.Power{}
 	if err := nrg.read(nrgble.PowerService, &res); err != nil {
@@ -239,7 +239,7 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	return api.StatusA, fmt.Errorf("unexpected cp signal: %d", res.CPSignal)
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
@@ -254,7 +254,7 @@ func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	return !res.PauseCharging || res.ChargingActive, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (nrg *NRGKickBLE) Enable(enable bool) error {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
@@ -281,7 +281,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	return nrg.write(nrgble.SettingsService, &settings)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {

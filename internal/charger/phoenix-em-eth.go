@@ -88,7 +88,7 @@ func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.ChargerStatus interface
 func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegStatus, 1)
 	if err != nil {
@@ -98,7 +98,7 @@ func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(string(b[1])), nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.ChargerEnabled interface
 func (wb *PhoenixEMEth) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(phxEMEthRegEnable, 1)
 	if err != nil {
@@ -108,7 +108,7 @@ func (wb *PhoenixEMEth) Enabled() (bool, error) {
 	return b[0] == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.ChargerEnable interface
 func (wb *PhoenixEMEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -120,7 +120,7 @@ func (wb *PhoenixEMEth) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.ChargerMaxCurrent interface
 func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
@@ -133,7 +133,7 @@ func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*PhoenixEMEth)(nil)
 
-// ChargingTime yields current charge run duration
+// ChargingTime implements the api.ChargeTimer interface
 func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegChargeTime, 2)
 	if err != nil {

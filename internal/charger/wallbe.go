@@ -118,7 +118,7 @@ func NewWallbe(uri string) (*Wallbe, error) {
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.ChargerStatus interface
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
 	if err != nil {
@@ -128,7 +128,7 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(string(b[1])), nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.ChargerEnabled interface
 func (wb *Wallbe) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(wbRegEnable, 1)
 	if err != nil {
@@ -138,7 +138,7 @@ func (wb *Wallbe) Enabled() (bool, error) {
 	return b[0] == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.ChargerEnable interface
 func (wb *Wallbe) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -150,7 +150,7 @@ func (wb *Wallbe) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.ChargerMaxCurrent interface
 func (wb *Wallbe) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)

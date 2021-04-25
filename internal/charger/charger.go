@@ -78,7 +78,7 @@ func NewConfigurable(
 	return c, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (m *Charger) Status() (api.ChargeStatus, error) {
 	s, err := m.statusG()
 	if err != nil {
@@ -88,17 +88,17 @@ func (m *Charger) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(s), nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (m *Charger) Enabled() (bool, error) {
 	return m.enabledG()
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (m *Charger) Enable(enable bool) error {
 	return m.enableS(enable)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (m *Charger) MaxCurrent(current int64) error {
 	return m.maxCurrentS(current)
 }

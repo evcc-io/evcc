@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/internal/charger/easee"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -144,7 +145,7 @@ func (c *Easee) state() (easee.ChargerStatus, error) {
 	return c.status, err
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
 	res, err := c.state()
 	if err != nil {
@@ -165,13 +166,13 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
 	res, err := c.state()
 	return res.DynamicCircuitCurrentP1 > 0, err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *Easee) Enable(enable bool) error {
 	res, err := c.state()
 	if err != nil {
@@ -208,12 +209,14 @@ func (c *Easee) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
 	return c.MaxCurrentMillis(float64(current))
 }
 
-// MaxCurrentMillis implements the Charger.MaxCurrentMillis interface
+var _ api.ChargerEx = (*Easee)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Easee) MaxCurrentMillis(current float64) error {
 	cur := int(current)
 	data := easee.CircuitSettings{
@@ -231,19 +234,23 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-// CurrentPower implements the Meter interface.
+// CurrentPower implements the api.Meter interface.
 func (c *Easee) CurrentPower() (float64, error) {
 	res, err := c.state()
 	return 1e3 * res.TotalPower, err
 }
 
-// ChargedEnergy implements the ChargeRater interface
+var _ api.ChargeRater = (*Easee)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
 	res, err := c.state()
 	return res.SessionEnergy, err
 }
 
-// Currents implements the MeterCurrent interface
+var _ api.MeterCurrent = (*Easee)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
 	res, err := c.state()
 	return res.CircuitTotalPhaseConductorCurrentL1,

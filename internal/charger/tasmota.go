@@ -66,7 +66,7 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 	return c, nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.ChargerEnabled interface
 func (c *Tasmota) Enabled() (bool, error) {
 	var tStatus tasmota.StatusResponse
 
@@ -76,7 +76,7 @@ func (c *Tasmota) Enabled() (bool, error) {
 	return int(1) == tStatus.Status.Power, err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.ChargerEnable interface
 func (c *Tasmota) Enable(enable bool) error {
 	var tPower tasmota.PowerResponse
 
@@ -100,12 +100,12 @@ func (c *Tasmota) Enable(enable bool) error {
 	}
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.ChargerMaxCurrent interface
 func (c *Tasmota) MaxCurrent(current int64) error {
 	return nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.ChargerStatus interface
 func (c *Tasmota) Status() (api.ChargeStatus, error) {
 	power, err := c.CurrentPower()
 
