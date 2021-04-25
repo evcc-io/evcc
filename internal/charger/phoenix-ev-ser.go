@@ -58,7 +58,7 @@ func NewPhoenixEVSer(uri, device, comset string, baudrate int, id uint8) (*Phoen
 	return wb, nil
 }
 
-// Status implements the api.ChargerStatus interface
+// Status implements the api.Charger interface
 func (wb *PhoenixEVSer) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEVSerRegStatus, 1)
 	if err != nil {
@@ -68,7 +68,7 @@ func (wb *PhoenixEVSer) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(string(b[0])), nil
 }
 
-// Enabled implements the api.ChargerEnabled interface
+// Enabled implements the api.Charger interface
 func (wb *PhoenixEVSer) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(phxEVSerRegEnable, 1)
 	if err != nil {
@@ -78,7 +78,7 @@ func (wb *PhoenixEVSer) Enabled() (bool, error) {
 	return b[0] == 1, nil
 }
 
-// Enable implements the api.ChargerEnable interface
+// Enable implements the api.Charger interface
 func (wb *PhoenixEVSer) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -90,7 +90,7 @@ func (wb *PhoenixEVSer) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.ChargerMaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (wb *PhoenixEVSer) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)

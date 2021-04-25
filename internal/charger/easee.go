@@ -233,6 +233,8 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.Meter = (*Easee)(nil)
+
 // CurrentPower implements the api.Meter interface.
 func (c *Easee) CurrentPower() (float64, error) {
 	res, err := c.state()

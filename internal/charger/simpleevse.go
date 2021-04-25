@@ -62,7 +62,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	return evse, nil
 }
 
-// Status implements the api.ChargerStatus interface
+// Status implements the api.Charger interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	if err != nil {
@@ -85,7 +85,7 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the api.ChargerEnabled interface
+// Enabled implements the api.Charger interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
@@ -100,7 +100,7 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 	return enabled, nil
 }
 
-// Enable implements the api.ChargerEnable interface
+// Enable implements the api.Charger interface
 func (evse *SimpleEVSE) Enable(enable bool) error {
 	b := []byte{0, 0}
 
@@ -113,7 +113,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.ChargerMaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 

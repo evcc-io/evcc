@@ -123,12 +123,12 @@ func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	return err
 }
 
-// Status implements the api.ChargerStatus interface
+// Status implements the api.Charger interface
 func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 	return api.StatusC, nil
 }
 
-// Enabled implements the api.ChargerEnabled interface
+// Enabled implements the api.Charger interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	var res NRGSettings
 	err := nrg.GetJSON(nrg.apiURL(nrgSettings), &res)
@@ -143,7 +143,7 @@ func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	return *res.Values.ChargingStatus.Charging, nil
 }
 
-// Enable implements the api.ChargerEnable interface
+// Enable implements the api.Charger interface
 func (nrg *NRGKickConnect) Enable(enable bool) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.password
@@ -152,7 +152,7 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 	return nrg.putJSON(nrg.apiURL(nrgSettings), settings)
 }
 
-// MaxCurrent implements the api.ChargerMaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.password
