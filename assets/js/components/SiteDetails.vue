@@ -1,5 +1,5 @@
 <template>
-	<div class="row row-cols-3 justify-content-between justify-content-md-end overflow-hidden">
+	<div class="row row-cols-3 justify-content-between justify-content-md-start overflow-hidden">
 		<div class="px-3" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
 				Bezug <fa-icon icon="arrow-down" class="text-primary" />

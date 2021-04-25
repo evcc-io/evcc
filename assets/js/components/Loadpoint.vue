@@ -9,16 +9,16 @@
 		</div>
 
 		<div class="row">
-			<Vehicle
-				class="col-12 col-md-6 col-lg-8 mb-4"
-				v-bind="vehicle"
-				@target-soc-updated="setTargetSoC"
-			/>
 			<Mode
 				class="col-12 col-md-6 col-lg-4 mb-4"
 				:mode="mode"
 				:pvConfigured="pvConfigured"
 				v-on:updated="setTargetMode"
+			/>
+			<Vehicle
+				class="col-12 col-md-6 col-lg-8 mb-4"
+				v-bind="vehicle"
+				@target-soc-updated="setTargetSoC"
 			/>
 		</div>
 		<LoadpointDetails v-bind="details" />

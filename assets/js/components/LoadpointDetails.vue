@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<div class="row justify-content-end">
-			<div class="col-6 col-sm-3 col-lg-2 mt-3">
+		<div class="row">
+			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
 				<div class="mb-2 value">
 					Leistung
 					<fa-icon
