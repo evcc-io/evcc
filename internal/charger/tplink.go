@@ -69,7 +69,7 @@ func (c *TPLink) Enabled() (bool, error) {
 		return false, errors.New(resp.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
 
-	return int(1) == resp.System.GetSysinfo.RelayState, err
+	return int(1) == resp.System.GetSysinfo.RelayState, nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -84,7 +84,7 @@ func (c *TPLink) Enable(enable bool) error {
 		return err
 	}
 
-	if err := systemResponse.System.SetRelayState.ErrCode; err != 0 {
+	if err := resp.System.SetRelayState.ErrCode; err != 0 {
 		return fmt.Errorf("set_relay_state error %d", err)
 	}
 
