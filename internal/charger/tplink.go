@@ -17,6 +17,7 @@ import (
 
 // TPLink charger implementation
 type TPLink struct {
+	log          *util.Logger
 	uri          string
 	standbypower float64
 }
@@ -46,6 +47,7 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewTPLink creates TP-Link charger
 func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 	c := &TPLink{
+		log:          util.NewLogger("tplink"),
 		uri:          net.JoinHostPort(uri, "9999"),
 		standbypower: standbypower,
 	}
@@ -54,25 +56,20 @@ func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 
 // Enabled implements the Charger.Enabled interface
 func (c *TPLink) Enabled() (bool, error) {
-	sysResp, err := c.execCmd(`{"system":{"get_sysinfo":null}}`)
-	if err != nil {
+	var resp tplink.SystemResponse
+	if err := c.execCmd(`{"system":{"get_sysinfo":null}}`, &resp); err != nil {
 		return false, err
 	}
 
-	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
-		return false, err
-	}
-
-	if err := systemResponse.System.GetSysinfo.ErrCode; err != 0 {
+	if err := resp.System.GetSysinfo.ErrCode; err != 0 {
 		return false, fmt.Errorf("get_sysinfo error %d", err)
 	}
 
-	if !strings.Contains(systemResponse.System.GetSysinfo.Feature, "ENE") {
-		return false, errors.New(systemResponse.System.GetSysinfo.Model + " not supported, energy meter feature missing")
+	if !strings.Contains(resp.System.GetSysinfo.Feature, "ENE") {
+		return false, errors.New(resp.System.GetSysinfo.Model + " not supported, energy meter feature missing")
 	}
 
-	return int(1) == systemResponse.System.GetSysinfo.RelayState, err
+	return resp.System.GetSysinfo.RelayState == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -82,18 +79,12 @@ func (c *TPLink) Enable(enable bool) error {
 		cmd = `{"system":{"set_relay_state":{"state":1}}}`
 	}
 
-	// Execute TP-Link set_relay_state command
-	sysResp, err := c.execCmd(cmd)
-	if err != nil {
+	var resp tplink.SystemResponse
+	if err := c.execCmd(cmd, &resp); err != nil {
 		return err
 	}
 
-	var systemResponse tplink.SystemResponse
-	if err := json.Unmarshal(sysResp, &systemResponse); err != nil {
-		return err
-	}
-
-	if err := systemResponse.System.SetRelayState.ErrCode; err != 0 {
+	if err := resp.System.SetRelayState.ErrCode; err != 0 {
 		return fmt.Errorf("set_relay_state error %d", err)
 	}
 
@@ -121,22 +112,18 @@ var _ api.Meter = (*TPLink)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *TPLink) CurrentPower() (float64, error) {
-	emeResp, err := c.execCmd(`{"emeter":{"get_realtime":null}}`)
-	if err != nil {
+	var resp tplink.EmeterResponse
+	if err := c.execCmd(`{"emeter":{"get_realtime":null}}`, &resp); err != nil {
 		return 0, err
 	}
 
-	var emeterResponse tplink.EmeterResponse
-	if err := json.Unmarshal(emeResp, &emeterResponse); err != nil {
-		return 0, err
-	}
-	if err := emeterResponse.Emeter.GetRealtime.ErrCode; err != 0 {
+	if err := resp.Emeter.GetRealtime.ErrCode; err != 0 {
 		return 0, fmt.Errorf("get_realtime error %d", err)
 	}
 
-	power := emeterResponse.Emeter.GetRealtime.PowerMw / 1000
+	power := resp.Emeter.GetRealtime.PowerMw / 1000
 	if power == 0 {
-		power = emeterResponse.Emeter.GetRealtime.Power
+		power = resp.Emeter.GetRealtime.Power
 	}
 
 	// ignore standby power
@@ -144,48 +131,49 @@ func (c *TPLink) CurrentPower() (float64, error) {
 		power = 0
 	}
 
-	return power, err
+	return power, nil
 }
 
 // execCmd executes an TP-Link Smart Home Protocol command and provides the response
-func (c *TPLink) execCmd(cmd string) ([]byte, error) {
+func (c *TPLink) execCmd(cmd string, res interface{}) error {
 	// encode command message
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
-	var ekey byte = 171 // initialization vector
+	var key byte = 171 // initialization vector
 	for i := 0; i < len(cmd); i++ {
-		ekey = ekey ^ cmd[i]
-		_ = buf.WriteByte(ekey)
+		key = key ^ cmd[i]
+		_ = buf.WriteByte(key)
 	}
 
-	// write 4 bytes to start of buffer with command length
+	// write 4 bytes command length to start of buffer
 	binary.BigEndian.PutUint32(buf.Bytes(), uint32(buf.Len()-4))
 
 	// open connection via TP-Link Smart Home Protocol
 	conn, err := net.DialTimeout("tcp", c.uri, 5*time.Second)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer conn.Close()
 
 	// send command
 	if _, err = buf.WriteTo(conn); err != nil {
-		return nil, err
+		return err
 	}
 
 	// read response
 	resp := make([]byte, 2048)
-	n, err := conn.Read(resp)
+	len, err := conn.Read(resp)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// decode response message
-	var dkey byte = 171 // initialization vector
-	for i := 4; i < n; i++ {
-		dec := dkey ^ resp[i]
-		dkey = resp[i]
+	key = 171 // reset initialization vector
+	for i := 4; i < len; i++ {
+		dec := key ^ resp[i]
+		key = resp[i]
 		_ = buf.WriteByte(dec)
 	}
+	c.log.TRACE.Printf("recv: %s", buf.String())
 
-	return buf.Bytes(), nil
+	return json.Unmarshal(buf.Bytes(), res)
 }
