@@ -1,7 +1,7 @@
 package charger
 
 import (
-    "errors"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,6 +10,7 @@ import (
 	"github.com/andig/evcc/internal/charger/easee"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/util/sponsor"
 )
 
 // Easee charger implementation
@@ -49,7 +50,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee")
 
-	if true {
+	if !sponsor.IsAuthorized() {
 		return nil, errors.New("easee requires evcc sponsorship, register at https://cloud.evcc.io")
 	}
 

@@ -1,6 +1,10 @@
 uri: 0.0.0.0:7070 # uri for ui
 interval: 10s # control cycle interval
 
+# sponsor token enables optional features
+# request sponsor token at https://cloud.evcc.io
+sponsortoken:
+
 # log settings
 log: error
 levels:

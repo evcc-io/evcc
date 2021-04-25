@@ -5,25 +5,25 @@ syntax = "proto3";
 option go_package = "proto/pb";
 
 service Vehicle {
-  rpc New (NewRequest) returns (NewReply) {}
-  rpc SoC (SoCRequest) returns (SoCReply) {}
+	rpc New (NewRequest) returns (NewReply) {}
+	rpc SoC (SoCRequest) returns (SoCReply) {}
 }
 
 message NewRequest {
-  string token = 1;
-  string type = 2;
-  map<string,string> config = 3;
+	string token = 1;
+	string type = 2;
+	map<string,string> config = 3;
 }
 
 message NewReply {
-  int64 vehicle_id = 1;
+	int64 vehicle_id = 1;
 }
 
 message SoCRequest {
-  string token = 1;
-  int64 vehicle_id = 2;
+	string token = 1;
+	int64 vehicle_id = 2;
 }
 
 message SoCReply {
-  double soc = 1;
+	double soc = 1;
 }

@@ -7,36 +7,15 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle"
-	"github.com/andig/evcc/internal/vehicle/cloud"
 	"github.com/andig/evcc/soc/proto/pb"
-	"github.com/andig/evcc/soc/server/auth"
+	"github.com/andig/evcc/util/cloud"
 )
 
 var vehicleID int64
 
-type Server struct {
+type VehicleServer struct {
 	vehicles map[string]map[int64]api.Vehicle
 	pb.UnimplementedVehicleServer
-}
-
-type tokenizer interface {
-	GetToken() string
-}
-
-func (s *Server) isAuthorized(r tokenizer) (string, *auth.Claims, error) {
-	token := r.GetToken()
-
-	claims, err := auth.ParseToken(token)
-	if err != nil {
-		return token, claims, err
-	}
-
-	authorized, err := auth.IsAuthorized(claims.Subject)
-	if err == nil && !authorized {
-		err = cloud.ErrNotAuthorized
-	}
-
-	return token, claims, err
 }
 
 type vehicler interface {
@@ -44,7 +23,7 @@ type vehicler interface {
 	GetVehicleId() int64
 }
 
-func (s *Server) vehicle(r vehicler) (api.Vehicle, error) {
+func (s *VehicleServer) vehicle(r vehicler) (api.Vehicle, error) {
 	token := r.GetToken()
 	vehicles, ok := s.vehicles[token]
 	if !ok {
@@ -70,10 +49,13 @@ func stringMapToInterface(in map[string]string) map[string]interface{} {
 	return res
 }
 
-func (s *Server) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error) {
-	token, claims, err := s.isAuthorized(r)
+func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error) {
+	authorized, token, claims, err := isAuthorized(r)
 	if err != nil {
 		return nil, err
+	}
+	if !authorized {
+		return nil, cloud.ErrNotAuthorized
 	}
 
 	typ := r.GetType()
@@ -100,7 +82,7 @@ func (s *Server) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error
 	return &res, nil
 }
 
-func (s *Server) SoC(ctx context.Context, r *pb.SoCRequest) (*pb.SoCReply, error) {
+func (s *VehicleServer) SoC(ctx context.Context, r *pb.SoCRequest) (*pb.SoCReply, error) {
 	v, err := s.vehicle(r)
 	if err != nil {
 		return nil, err

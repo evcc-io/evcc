@@ -58,17 +58,16 @@ func Run() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	srv := &Server{
-		vehicles: make(map[string]map[int64]api.Vehicle),
-	}
-
 	serverOptions := []grpc.ServerOption{}
 	if tlsConfig != nil {
 		serverOptions = append(serverOptions, grpc.Creds(credentials.NewTLS(tlsConfig)))
 	}
-
 	grpcServer := grpc.NewServer(serverOptions...)
-	pb.RegisterVehicleServer(grpcServer, srv)
+
+	pb.RegisterVehicleServer(grpcServer, &VehicleServer{
+		vehicles: make(map[string]map[int64]api.Vehicle),
+	})
+	pb.RegisterAuthServer(grpcServer, &AuthServer{})
 
 	log.Fatal(grpcServer.Serve(listener))
 }

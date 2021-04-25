@@ -21,6 +21,9 @@
         "type": "string"
       }
     },
+    "sponsortoken": {
+      "type": "string"
+    },
     "chargers": {
       "type": "array",
       "description": "List of chargers",

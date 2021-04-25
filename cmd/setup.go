@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -13,8 +14,11 @@ import (
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/pipe"
+	"github.com/andig/evcc/util/sponsor"
 	"github.com/spf13/viper"
 )
 
@@ -23,6 +27,60 @@ func init() {
 }
 
 var cp = &ConfigProvider{}
+
+func loadConfigFile(cfgFile string) (conf config, err error) {
+	if cfgFile != "" {
+		log.INFO.Println("using config file", cfgFile)
+		if err := viper.UnmarshalExact(&conf); err != nil {
+			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
+		}
+	} else {
+		err = errors.New("missing evcc config")
+	}
+
+	return conf, err
+}
+
+func configureEnvironment(conf config) (err error) {
+	// setup sponsorship
+	if conf.SponsorToken != "" {
+		err = configureSponsorship(conf.SponsorToken)
+	}
+
+	// setup mqtt client listener
+	if err == nil && conf.Mqtt.Broker != "" {
+		err = configureMQTT(conf.Mqtt)
+	}
+
+	// setup javascript VMs
+	if err == nil {
+		err = configureJavascript(conf.Javascript)
+	}
+
+	return
+}
+
+func configureSponsorship(token string) error {
+	host := util.Getenv("GRPC_URI", cloud.Host)
+	conn, err := cloud.Connection(host)
+	if err != nil {
+		return err
+	}
+
+	client := pb.NewAuthClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	res, err := client.IsAuthorized(ctx, &pb.AuthRequest{Token: token})
+	if err == nil {
+		if res.Authorized {
+			sponsor.Subject = res.Subject
+		}
+	}
+
+	return err
+}
 
 // setup influx databases
 func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI, in <-chan util.Param) {
@@ -47,22 +105,25 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 }
 
 // setup mqtt
-func configureMQTT(conf mqttConfig) {
+func configureMQTT(conf mqttConfig) error {
 	log := util.NewLogger("mqtt")
 	clientID := mqtt.ClientID()
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring mqtt: %v", err)
+		return fmt.Errorf("failed configuring mqtt: %w", err)
 	}
+
+	return nil
 }
 
 // setup javascript
-func configureJavascript(conf map[string]interface{}) {
+func configureJavascript(conf map[string]interface{}) error {
 	if err := javascript.Configure(conf); err != nil {
-		log.FATAL.Fatalf("failed configuring javascript: %v", err)
+		return fmt.Errorf("failed configuring javascript: %w", err)
 	}
+	return nil
 }
 
 // setup HEMS
@@ -93,7 +154,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	return notificationChan
 }
 
-func loadConfig(conf config) (site *core.Site, err error) {
+func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
 		var loadPoints []*core.LoadPoint
 		loadPoints, err = configureLoadPoints(conf, cp)
@@ -137,17 +198,4 @@ func configureLoadPoints(conf config, cp *ConfigProvider) (loadPoints []*core.Lo
 	}
 
 	return loadPoints, nil
-}
-
-func loadConfigFile(cfgFile string) (conf config, err error) {
-	if cfgFile != "" {
-		log.INFO.Println("using config file", cfgFile)
-		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
-		}
-	} else {
-		err = errors.New("missing evcc config")
-	}
-
-	return conf, err
 }

@@ -152,13 +152,16 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
-	// setup mqtt client listener
-	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt)
+	// setup environment
+	if err := configureEnvironment(conf); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
-	// setup javascript VMs
-	configureJavascript(conf.Javascript)
+	// setup loadpoints
+	site, err := configureSiteAndLoadpoints(conf)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// start broadcasting values
 	tee := &util.Tee{}
@@ -166,12 +169,6 @@ func run(cmd *cobra.Command, args []string) {
 	// value cache
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
-
-	// setup loadpoints
-	site, err := loadConfig(conf)
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
 
 	// setup database
 	if conf.Influx.URL != "" {
