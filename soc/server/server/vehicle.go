@@ -7,8 +7,8 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle"
-	"github.com/andig/evcc/internal/vehicle/cloud"
 	"github.com/andig/evcc/soc/proto/pb"
+	"github.com/andig/evcc/util/cloud"
 )
 
 var vehicleID int64

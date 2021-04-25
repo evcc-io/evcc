@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 
-	"github.com/andig/evcc/internal/vehicle/cloud"
 	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/soc/server/auth"
+	"github.com/andig/evcc/util/cloud"
 )
 
 type AuthServer struct {
