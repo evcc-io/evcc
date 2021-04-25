@@ -49,7 +49,7 @@ func configureEnvironment(conf config) (err error) {
 
 	// setup mqtt client listener
 	if err == nil && conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt)
+		err = configureMQTT(conf.Mqtt)
 	}
 
 	// setup javascript VMs
