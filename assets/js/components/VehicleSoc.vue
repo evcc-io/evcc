@@ -220,7 +220,7 @@ export default {
 	top: calc(var(--label-height) * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
+	padding: 0 var(--thumb-horizontal-padding);
 	box-sizing: content-box;
 	background-clip: content-box;
 	background-color: var(--dark);

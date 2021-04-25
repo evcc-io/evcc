@@ -2,7 +2,7 @@
 	<div class="flex-grow-1 d-flex flex-column">
 		<div class="row mt-4 pt-2">
 			<div class="d-none d-md-flex col-12 col-md-3 col-lg-4 align-items-end">
-				<p class="h1">{{ siteTitle || "Home" }}</p>
+				<p class="h1 text-truncate">{{ siteTitle || "Home" }}</p>
 			</div>
 			<div class="col-12 col-md-9 col-lg-6 flex-grow-1">
 				<SiteDetails v-bind="details"></SiteDetails>
