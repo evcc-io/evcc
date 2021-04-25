@@ -168,7 +168,7 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 // Enabled implements the Charger.Enabled interface
 func (c *Easee) Enabled() (bool, error) {
 	res, err := c.state()
-	return res.DynamicChargerCurrent > 0, err
+	return res.DynamicCircuitCurrentP1 > 0, err
 }
 
 // Enable implements the Charger.Enable interface
