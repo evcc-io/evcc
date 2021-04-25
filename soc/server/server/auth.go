@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 
 	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/soc/server/auth"
@@ -13,6 +14,9 @@ type AuthServer struct {
 
 func (s *AuthServer) IsAuthorized(ctx context.Context, r *pb.AuthRequest) (*pb.AuthReply, error) {
 	authorized, _, claims, err := isAuthorized(r)
+
+	// track auth requests
+	log.Printf(claims.Subject+": %v", authorized)
 
 	res := &pb.AuthReply{Authorized: authorized}
 	if err == nil {

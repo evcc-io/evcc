@@ -79,6 +79,10 @@ func configureSponsorship(token string) error {
 		}
 	}
 
+	if err != nil {
+		err = fmt.Errorf("sponsortoken: %w", err)
+	}
+
 	return err
 }
 

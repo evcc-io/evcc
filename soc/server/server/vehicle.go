@@ -2,7 +2,7 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"sync/atomic"
 
 	"github.com/andig/evcc/api"
@@ -62,7 +62,7 @@ func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply
 	config := r.GetConfig()
 
 	// track vehicle create
-	fmt.Println(claims.Subject+":", typ)
+	log.Println(claims.Subject+":", typ)
 
 	v, err := vehicle.NewFromConfig(typ, stringMapToInterface(config))
 	if err != nil {
