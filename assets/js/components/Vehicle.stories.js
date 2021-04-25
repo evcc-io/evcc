@@ -30,6 +30,7 @@ Connected.args = {
   hasVehicle: true,
   charging: false,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 export const ReadyToCharge = Template.bind({});
@@ -40,6 +41,7 @@ ReadyToCharge.args = {
   hasVehicle: true,
   charging: false,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 export const Charging = Template.bind({});
@@ -50,6 +52,7 @@ Charging.args = {
   hasVehicle: true,
   charging: true,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 const hoursFromNow = function (hours) {
@@ -97,6 +100,7 @@ MinCharge.args = {
   socCharge: 17,
   minSoC: 20,
   charging: true,
+  targetSoC: 90,
 };
 
 export const UnknownVehicleConnected = Template.bind({});

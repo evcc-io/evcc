@@ -5,6 +5,7 @@ export default {
   component: Loadpoint,
   argTypes: {
     mode: { control: { type: "inline-radio", options: ["off", "now", "minpv", "pv"] } },
+    remoteDisabled: { control: { type: "radio", options: ["", "soft", "hard"] } },
     climater: { control: { type: "inline-radio", options: ["on", "heating", "cooling"] } },
   },
 };
@@ -19,11 +20,29 @@ export const Base = Template.bind({});
 Base.args = {
   id: 0,
   pvConfigured: true,
+  chargePower: 2800,
+  chargedEnergy: 11e3,
+  chargeDuration: 95 * 60,
+  hasVehicle: true,
+  socTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  charging: true,
+  socCharge: 66,
+  targetSoC: 90,
 };
 
-export const WithLevels = Template.bind({});
-WithLevels.args = {
+export const Disabled = Template.bind({});
+Disabled.args = {
   id: 0,
   pvConfigured: true,
-  socLevels: [20, 50, 80, 100],
+  remoteDisabled: "soft",
+  remoteDisabledSource: "Sunny Home Manager",
+  hasVehicle: true,
+  socTitle: "Mein Auto",
+  enabled: true,
+  connected: true,
+  charging: false,
+  socCharge: 66,
+  targetSoC: 100,
 };

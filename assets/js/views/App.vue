@@ -1,6 +1,6 @@
 <template>
-	<div class="app d-flex flex-column justify-content-between">
-		<div>
+	<div class="app d-flex flex-column justify-content-between overflow-hidden">
+		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
 					<a class="navbar-brand" href="https://github.com/andig/evcc">
@@ -32,7 +32,9 @@
 				</div>
 			</nav>
 
-			<router-view></router-view>
+			<router-view
+				class="flex-grow-1 d-flex flex-column justify-content-stretch"
+			></router-view>
 		</div>
 		<Footer :version="version"></Footer>
 	</div>
