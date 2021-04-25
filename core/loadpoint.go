@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -42,7 +41,6 @@ type PollConfig struct {
 type SoCConfig struct {
 	Poll         PollConfig `mapstructure:"poll"`
 	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
-	Levels       []int      `mapstructure:"levels"`
 	Estimate     bool       `mapstructure:"estimate"`
 	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
 	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
@@ -112,11 +110,12 @@ type LoadPoint struct {
 	socTimer     *soc.Timer
 
 	// cached state
-	status        api.ChargeStatus // Charger status
-	remoteDemand  RemoteDemand     // External status demand
-	chargePower   float64          // Charging power
-	connectedTime time.Time        // Time when vehicle was connected
-	pvTimer       time.Time        // PV enabled/disable timer
+	status         api.ChargeStatus // Charger status
+	remoteDemand   RemoteDemand     // External status demand
+	chargePower    float64          // Charging power
+	chargeCurrents []float64        // Phase currents
+	connectedTime  time.Time        // Time when vehicle was connected
+	pvTimer        time.Time        // PV enabled/disable timer
 
 	socCharge      float64       // Vehicle SoC
 	chargedEnergy  float64       // Charged energy while connected in Wh
@@ -133,8 +132,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// set sane defaults
 	lp.Mode = api.ChargeModeString(string(lp.Mode))
 	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
-
-	sort.Ints(lp.SoC.Levels)
 
 	// set vehicle polling mode
 	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
@@ -165,10 +162,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
 		if lp.SoC.Target == 0 {
 			lp.SoC.Target = 100
-		}
-
-		if len(lp.SoC.Levels) > 0 {
-			lp.SoC.Target = lp.SoC.Levels[len(lp.SoC.Levels)-1]
 		}
 	}
 
@@ -410,7 +403,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
 	lp.publish("minSoC", lp.SoC.Min)
-	lp.publish("socLevels", lp.SoC.Levels)
 	lp.Unlock()
 
 	// use first vehicle for estimator
@@ -651,43 +643,14 @@ func (lp *LoadPoint) updateChargerStatus() error {
 	return nil
 }
 
-// detectPhases uses MeterCurrent interface to count phases with current >=1A
-func (lp *LoadPoint) detectPhases() {
-	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
-	if !ok {
-		return
-	}
-
-	i1, i2, i3, err := phaseMeter.Currents()
-	if err != nil {
-		lp.log.ERROR.Printf("charge meter error: %v", err)
-		return
-	}
-
-	currents := []float64{i1, i2, i3}
-	lp.log.TRACE.Printf("charge currents: %.3gA", currents)
-	lp.publish("chargeCurrents", currents)
-
-	if lp.charging() {
-		var phases int64
-		for _, i := range currents {
-			if i >= minActiveCurrent {
-				phases++
-			}
-		}
-
-		if phases > 0 {
-			lp.Phases = phases
-			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", lp.Phases, currents)
-
-			lp.publish("activePhases", lp.Phases)
-		}
-	}
-}
-
 // effectiveCurrent returns the currently effective charging current
 // it does not take measured currents into account
 func (lp *LoadPoint) effectiveCurrent() float64 {
+	// use measured L1 current
+	if lp.chargeCurrents != nil {
+		return lp.chargeCurrents[0]
+	}
+
 	if lp.status != api.StatusC {
 		return 0
 	}
@@ -706,7 +669,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
 	targetCurrent := math.Max(math.Min(effectiveCurrent+deltaCurrent, float64(lp.MaxCurrent)), 0)
 
-	lp.log.DEBUG.Printf("max charge current: %.2gA = %.2gA + %.2gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
+	lp.log.DEBUG.Printf("max charge current: %.1fA = %.1fA + %.1fA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
 
 	// in MinPV mode return at least minCurrent
 	if mode == api.ModeMinPV && targetCurrent < float64(lp.MinCurrent) {
@@ -741,7 +704,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		if targetCurrent >= float64(lp.MinCurrent) ||
+		if (lp.Enable.Threshold == 0 && targetCurrent >= float64(lp.MinCurrent)) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
 			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
@@ -772,8 +735,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	return targetCurrent
 }
 
-// updateChargeMete updates and publishes single meter
-func (lp *LoadPoint) updateChargeMeter() {
+// updateChargePower updates charge meter power
+func (lp *LoadPoint) updateChargePower() {
 	err := retry.Do(func() error {
 		value, err := lp.chargeMeter.CurrentPower()
 		if err != nil {
@@ -790,6 +753,41 @@ func (lp *LoadPoint) updateChargeMeter() {
 	if err != nil {
 		err = fmt.Errorf("updating charge meter: %v", err)
 		lp.log.ERROR.Printf("%v", err)
+	}
+}
+
+// updateChargeCurrents uses MeterCurrent interface to count phases with current >=1A
+func (lp *LoadPoint) updateChargeCurrents() {
+	lp.chargeCurrents = nil
+	phaseMeter, ok := lp.chargeMeter.(api.MeterCurrent)
+	if !ok {
+		return
+	}
+
+	i1, i2, i3, err := phaseMeter.Currents()
+	if err != nil {
+		lp.log.ERROR.Printf("charge meter error: %v", err)
+		return
+	}
+
+	lp.chargeCurrents = []float64{i1, i2, i3}
+	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
+	lp.publish("chargeCurrents", lp.chargeCurrents)
+
+	if lp.charging() {
+		var phases int64
+		for _, i := range lp.chargeCurrents {
+			if i >= minActiveCurrent {
+				phases++
+			}
+		}
+
+		if phases > 0 {
+			lp.Phases = phases
+			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", lp.Phases, lp.chargeCurrents)
+
+			lp.publish("activePhases", lp.Phases)
+		}
 	}
 }
 
@@ -885,7 +883,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	lp.publish("mode", mode)
 
 	// read and publish meters first
-	lp.updateChargeMeter()
+	lp.updateChargePower()
+	lp.updateChargeCurrents()
 
 	// update ChargeRater here to make sure initial meter update is caught
 	lp.bus.Publish(evChargeCurrent, lp.chargeCurrent)
@@ -912,9 +911,6 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// sync settings with charger
 	lp.syncCharger()
-
-	// phase detection
-	lp.detectPhases()
 
 	// check if car connected and ready for charging
 	var err error

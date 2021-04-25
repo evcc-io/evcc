@@ -5,8 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"github.com/andig/evcc/soc/proto/pb"
-	"github.com/andig/evcc/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -14,8 +12,7 @@ import (
 var Host = "cloud.evcc.io:8080"
 
 var (
-	conn   *grpc.ClientConn
-	client pb.VehicleClient
+	conn *grpc.ClientConn
 )
 
 func loadTLSCredentials() (*tls.Config, error) {
@@ -32,7 +29,7 @@ func loadTLSCredentials() (*tls.Config, error) {
 	return config, nil
 }
 
-func Client(log *util.Logger, uri string) (pb.VehicleClient, error) {
+func Connection(uri string) (*grpc.ClientConn, error) {
 	var err error
 	if conn == nil {
 		var tlsConfig *tls.Config
@@ -48,9 +45,5 @@ func Client(log *util.Logger, uri string) (pb.VehicleClient, error) {
 		conn, err = grpc.Dial(uri, transportOption)
 	}
 
-	if client == nil && err == nil {
-		client = pb.NewVehicleClient(conn)
-	}
-
-	return client, err
+	return conn, err
 }

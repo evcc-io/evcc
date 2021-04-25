@@ -1,32 +1,26 @@
 <template>
-	<div>
-		<div class="row">
-			<div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
+	<div class="flex-grow-1 d-flex flex-column">
+		<div class="row mt-4 pt-2">
+			<div class="d-none d-md-flex col-12 col-md-3 col-lg-4 align-items-end">
 				<p class="h1">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-8 mt-md-4" v-if="multi">
+			<div class="col-12 col-md-9 col-lg-6 flex-grow-1">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
-
-		<div class="row d-none d-md-flex border-bottom"></div>
-
-		<div class="row" v-if="!multi">
-			<div class="d-none d-md-block col-md-4"></div>
-			<div class="col-12 col-md-8">
-				<SiteDetails v-bind="details"></SiteDetails>
-			</div>
+		<hr class="w-100 my-4" />
+		<div class="flex-grow-1 d-flex justify-content-around flex-column">
+			<template v-for="(loadpoint, id) in loadpoints">
+				<hr class="w-100 my-4" v-if="id > 0" :key="id + '_hr'" />
+				<Loadpoint
+					:key="loadpoint"
+					v-bind="loadpoint"
+					:single="loadpoints.length === 1"
+					:id="id"
+					:pvConfigured="pvConfigured"
+				/>
+			</template>
 		</div>
-
-		<Loadpoint
-			v-for="(loadpoint, id) in loadpoints"
-			v-bind="loadpoint"
-			:id="id"
-			:key="id"
-			:multi="multi"
-			:pvConfigured="pvConfigured"
-		>
-		</Loadpoint>
 	</div>
 </template>
 
@@ -50,16 +44,14 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoC: Number,
+		gridCurrents: Object,
+		prioritySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },
 	mixins: [formatter, collector],
 	computed: {
 		details: function () {
 			return this.collectProps(SiteDetails);
-		},
-		multi: function () {
-			// TODO fix compact
-			return this.loadpoints.length > 1 /* || app.compact*/;
 		},
 	},
 };

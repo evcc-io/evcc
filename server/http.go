@@ -292,7 +292,7 @@ func TargetChargeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 		timeS, ok := vars["time"]
 		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
 
-		if !ok || err != nil || timeV.Before(time.Now()) {
+		if !ok || err != nil {
 			log.DEBUG.Printf("parse time: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return

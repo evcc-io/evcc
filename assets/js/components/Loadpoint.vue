@@ -1,143 +1,32 @@
 <template>
 	<div>
-		<div class="row" v-if="multi">
-			<div class="col-12 col-md-4 d-md-flex mt-3 mt-md-5 align-items-end">
-				<span class="h1 align-bottom">{{ title || "Ladepunkt" }}</span>
-			</div>
-
-			<div class="col-12 col-md-8 d-none d-md-block mt-3 mt-md-5">
-				<LoadpointDetails v-bind="details"> </LoadpointDetails>
-			</div>
-
-			<div class="col-12 d-md-none">
-				<div class="row mt-3 pb-3 bg-light">
-					<div class="col-12 mt-3">
-						<Mode
-							class="w-100"
-							:mode="mode"
-							:pvConfigured="pvConfigured"
-							v-on:updated="setTargetMode"
-						></Mode>
-					</div>
-					<div class="col-12 mt-3" v-if="hasTargetSoC">
-						<Soc
-							class="w-100"
-							:soc="targetSoC"
-							:levels="socLevels"
-							v-on:updated="setTargetSoC"
-						></Soc>
-					</div>
-				</div>
-			</div>
+		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">{{ title || "Ladepunkt" }}</p>
+		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
+			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
 		</div>
-
-		<div class="row d-none d-md-flex mt-5 py-3 pb-4 text-center bg-light" v-if="!multi">
-			<div class="mt-3" :class="{ 'col-md-6': hasTargetSoC, 'col-md-12': !hasTargetSoC }">
-				<Mode
-					:mode="mode"
-					:pvConfigured="pvConfigured"
-					:caption="true"
-					v-on:updated="setTargetMode"
-				></Mode>
-			</div>
-			<div class="col-md-6 mt-3" v-if="hasTargetSoC">
-				<Soc
-					:soc="targetSoC"
-					:levels="socLevels"
-					:caption="true"
-					v-on:updated="setTargetSoC"
-				></Soc>
-				<!-- <div class="btn-group btn-group-toggle bg-white shadow-none">
-					<label class="btn btn-outline-primary">
-						<input
-							type="checkbox"
-							class="disabled"
-							v-on:click="alert('not implemented - use api')"
-						/>
-						<fa-icon
-							icon="clock"
-							v-bind:class="{ fas: timerActive, far: !timerActive }"
-						></fa-icon>
-					</label>
-				</div> -->
-			</div>
+		<div class="alert alert-danger mt-4 mb-2" role="alert" v-if="remoteDisabled == 'hard'">
+			{{ remoteDisabledSource }}: Deaktiviert
 		</div>
-
-		<div class="row d-md-none mt-2 pb-3 bg-light" v-if="!multi">
-			<div class="col-12 mt-3">
-				<Mode
-					class="w-100"
-					:mode="mode"
-					:pvConfigured="pvConfigured"
-					v-on:updated="setTargetMode"
-				></Mode>
-			</div>
-			<div class="col-12 mt-3" v-if="hasTargetSoC">
-				<Soc
-					class="w-100"
-					:soc="targetSoC"
-					:levels="socLevels"
-					v-on:updated="setTargetSoC"
-				></Soc>
-			</div>
-		</div>
-
-		<div class="row" v-if="!multi">
-			<div class="col-12 col-md-4 d-none d-md-flex mt-3 mt-md-5">
-				<span class="h1">{{ title || "Ladepunkt" }}</span>
-			</div>
-			<div class="col-12 col-md-8 d-flex d-md-flex mt-3 mt-md-5 pt-3" v-if="remoteDisabled">
-				<h5 class="w-100">
-					<span class="badge badge-warning w-100" v-if="remoteDisabled == 'soft'">
-						{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
-					</span>
-					<span class="badge badge-danger w-100" v-if="remoteDisabled == 'hard'">
-						{{ remoteDisabledSource }}: Deaktiviert
-					</span>
-				</h5>
-			</div>
-		</div>
-
-		<div class="row border-bottom d-none d-md-block"></div>
 
 		<div class="row">
-			<div class="col-12 col-md-4 mt-3 mb-3 mb-md-0">
-				<Vehicle v-bind="vehicle"></Vehicle>
-			</div>
-
-			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi">
-				<div class="mb-2 pb-1">Modus</div>
-				<Mode
-					class="btn-group-sm"
-					:mode="mode"
-					:pvConfigured="pvConfigured"
-					v-on:updated="setTargetMode"
-				></Mode>
-			</div>
-			<div class="col-12 col-md-4 d-none d-md-block mt-3" v-if="multi && hasTargetSoC">
-				<div class="mb-2 pb-1">Ladeziel</div>
-				<Soc
-					class="btn-group-sm"
-					:soc="targetSoC"
-					:levels="socLevels"
-					v-on:updated="setTargetSoC"
-				></Soc>
-			</div>
-
-			<div class="col-md-8 d-none d-md-block" v-if="!multi">
-				<LoadpointDetails v-bind="details"></LoadpointDetails>
-			</div>
-
-			<div class="col-12 d-md-none">
-				<LoadpointDetails v-bind="details"></LoadpointDetails>
-			</div>
+			<Mode
+				class="col-12 col-md-6 col-lg-4 mb-4"
+				:mode="mode"
+				:pvConfigured="pvConfigured"
+				v-on:updated="setTargetMode"
+			/>
+			<Vehicle
+				class="col-12 col-md-6 col-lg-8 mb-4"
+				v-bind="vehicle"
+				@target-soc-updated="setTargetSoC"
+			/>
 		</div>
+		<LoadpointDetails v-bind="details" />
 	</div>
 </template>
 
 <script>
 import axios from "axios";
-import Soc from "./Soc";
 import Mode from "./Mode";
 import Vehicle from "./Vehicle";
 import LoadpointDetails from "./LoadpointDetails";
@@ -148,14 +37,13 @@ export default {
 	name: "Loadpoint",
 	props: {
 		id: Number,
-		multi: Boolean,
 		pvConfigured: Boolean,
+		single: Boolean,
 
 		// main
 		title: String,
 		mode: String,
 		targetSoC: Number,
-		socLevels: Array,
 		remoteDisabled: Boolean,
 		remoteDisabledSource: String,
 		chargeDuration: Number,
@@ -180,8 +68,20 @@ export default {
 		climater: String,
 		range: Number,
 		chargeEstimate: Number,
+
+		// other information
+		phases: Number,
+		minCurrent: Number,
+		maxCurrent: Number,
+		activePhases: Number,
+		chargeCurrent: Number,
+		socCapacity: Number,
+		connectedDuration: Number,
+		chargeCurrents: Object,
+		chargeConfigured: Boolean,
+		chargeRemainingEnergy: Number,
 	},
-	components: { LoadpointDetails, Soc, Mode, Vehicle },
+	components: { LoadpointDetails, Mode, Vehicle },
 	mixins: [formatter, collector],
 	data: function () {
 		return {
@@ -195,9 +95,6 @@ export default {
 		},
 		vehicle: function () {
 			return this.collectProps(Vehicle);
-		},
-		hasTargetSoC: function () {
-			return this.socLevels != null && this.socLevels.length > 0;
 		},
 	},
 	watch: {

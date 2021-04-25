@@ -1,59 +1,62 @@
 <template>
-	<div class="row">
-		<div class="col-6 col-md-3 mt-3">
-			<div class="mb-2 value">
-				Leistung
-				<fa-icon
-					class="text-primary ml-1"
-					icon="temperature-low"
-					v-if="climater == 'heating'"
-				></fa-icon>
-				<fa-icon
-					class="text-primary ml-1"
-					icon="temperature-high"
-					v-if="climater == 'cooling'"
-				></fa-icon>
-				<fa-icon
-					class="text-primary ml-1"
-					icon="thermometer-half"
-					v-if="climater == 'on'"
-				></fa-icon>
+	<div>
+		<div class="row">
+			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
+				<div class="mb-2 value">
+					Leistung
+					<fa-icon
+						class="text-primary ml-1"
+						icon="temperature-low"
+						v-if="climater == 'heating'"
+					></fa-icon>
+					<fa-icon
+						class="text-primary ml-1"
+						icon="temperature-high"
+						v-if="climater == 'cooling'"
+					></fa-icon>
+					<fa-icon
+						class="text-primary ml-1"
+						icon="thermometer-half"
+						v-if="climater == 'on'"
+					></fa-icon>
+				</div>
+				<h3 class="value">
+					{{ fmt(chargePower) }}
+					<small class="text-muted">{{ fmtUnit(chargePower) }}W</small>
+				</h3>
 			</div>
-			<h2 class="value">
-				{{ fmt(chargePower) }}
-				<small class="text-muted">{{ fmtUnit(chargePower) }}W</small>
-			</h2>
-		</div>
-		<div class="col-6 col-md-3 mt-3">
-			<div class="mb-2 value">Geladen</div>
-			<h2 class="value">
-				{{ fmt(chargedEnergy) }}
-				<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
-			</h2>
-		</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="range >= 0">
-			<div class="mb-2 value">Reichweite</div>
-			<h2 class="value">
-				{{ Math.round(range) }}
-				<small class="text-muted">km</small>
-			</h2>
-		</div>
+			<div class="col-6 col-sm-3 col-lg-2 mt-3">
+				<div class="mb-2 value">Geladen</div>
+				<h3 class="value">
+					{{ fmt(chargedEnergy) }}
+					<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
+				</h3>
+			</div>
 
-		<div class="col-6 col-md-3 mt-3" v-else>
-			<div class="mb-2 value">Dauer</div>
-			<h2 class="value">
-				{{ fmtShortDuration(chargeDuration) }}
-				<small class="text-muted">{{ fmtShortDurationUnit(chargeDuration) }}</small>
-			</h2>
-		</div>
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="range >= 0">
+				<div class="mb-2 value">Reichweite</div>
+				<h3 class="value">
+					{{ Math.round(range) }}
+					<small class="text-muted">km</small>
+				</h3>
+			</div>
 
-		<div class="col-6 col-md-3 mt-3" v-if="hasVehicle">
-			<div class="mb-2 value">Restzeit</div>
-			<h2 class="value">
-				{{ fmtShortDuration(chargeEstimate) }}
-				<small class="text-muted">{{ fmtShortDurationUnit(chargeEstimate) }}</small>
-			</h2>
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-else>
+				<div class="mb-2 value">Dauer</div>
+				<h3 class="value">
+					{{ fmtShortDuration(chargeDuration) }}
+					<small class="text-muted">{{ fmtShortDurationUnit(chargeDuration) }}</small>
+				</h3>
+			</div>
+
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="hasVehicle">
+				<div class="mb-2 value">Restzeit</div>
+				<h3 class="value">
+					{{ fmtShortDuration(chargeEstimate) }}
+					<small class="text-muted">{{ fmtShortDurationUnit(chargeEstimate) }}</small>
+				</h3>
+			</div>
 		</div>
 	</div>
 </template>

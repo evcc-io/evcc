@@ -1,35 +1,32 @@
 <template>
-	<div class="btn-group btn-group-toggle bg-white shadow-none">
-		<label
-			class="btn btn-outline-primary value disabled caption font-weight-bold"
-			v-if="caption"
-		>
-			Modus
-		</label>
-		<label class="btn btn-outline-primary" :class="{ active: mode == 'off', first: !caption }">
-			<input type="radio" value="off" v-on:click="setTargetMode('off')" />Stop
-		</label>
-		<label class="btn btn-outline-primary" :class="{ active: mode == 'now' }">
-			<input type="radio" value="now" v-on:click="setTargetMode('now')" />Sofort
-		</label>
-		<label
-			class="btn btn-outline-primary"
-			:class="{ active: mode == 'minpv' }"
-			v-if="pvConfigured"
-		>
-			<input type="radio" value="minpv" v-on:click="setTargetMode('minpv')" />
-			<span class="d-inline d-lg-none">Min</span>
-			<span class="d-none d-lg-inline">Min + PV</span>
-		</label>
-		<label
-			class="btn btn-outline-primary"
-			:class="{ active: mode == 'pv' }"
-			v-if="pvConfigured"
-		>
-			<input type="radio" value="pv" v-on:click="setTargetMode('pv')" />
-			<span class="d-inline d-md-none">PV</span>
-			<span class="d-none d-md-inline">Nur PV</span>
-		</label>
+	<div>
+		<div class="mb-3">Modus</div>
+		<div class="btn-group btn-group-toggle bg-white shadow-none w-100">
+			<label class="btn btn-outline-primary first" :class="{ active: mode == 'off' }">
+				<input type="radio" value="off" @click="setTargetMode('off')" />Stop
+			</label>
+			<label class="btn btn-outline-primary" :class="{ active: mode == 'now' }">
+				<input type="radio" value="now" @click="setTargetMode('now')" />Sofort
+			</label>
+			<label
+				class="btn btn-outline-primary"
+				:class="{ active: mode == 'minpv' }"
+				v-if="pvConfigured"
+			>
+				<input type="radio" value="minpv" @click="setTargetMode('minpv')" />
+				<span class="d-inline d-sm-none">Min</span>
+				<span class="d-none d-sm-inline">Min + PV</span>
+			</label>
+			<label
+				class="btn btn-outline-primary"
+				:class="{ active: mode == 'pv' }"
+				v-if="pvConfigured"
+			>
+				<input type="radio" value="pv" @click="setTargetMode('pv')" />
+				<span class="d-inline d-sm-none">PV</span>
+				<span class="d-none d-sm-inline">Nur PV</span>
+			</label>
+		</div>
 	</div>
 </template>
 
@@ -39,7 +36,6 @@ export default {
 	props: {
 		mode: String,
 		pvConfigured: Boolean,
-		caption: Boolean,
 	},
 	methods: {
 		setTargetMode: function (mode) {
@@ -48,3 +44,10 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+.btn {
+	/* equal width buttons */
+	flex-basis: 0;
+}
+</style>
