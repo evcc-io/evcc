@@ -18,6 +18,7 @@ type Charger struct {
 
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
+	registry.Add("plugin", NewConfigurableFromConfig)
 }
 
 // NewConfigurableFromConfig creates a new configurable charger
@@ -28,13 +29,13 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	}
 
 	for k, v := range map[string]string{
-		"status":     cc.Status.Type,
-		"enable":     cc.Enable.Type,
-		"enabled":    cc.Enabled.Type,
-		"maxcurrent": cc.MaxCurrent.Type,
+		"status":     cc.Status.PluginType(),
+		"enable":     cc.Enable.PluginType(),
+		"enabled":    cc.Enabled.PluginType(),
+		"maxcurrent": cc.MaxCurrent.PluginType(),
 	} {
 		if v == "" {
-			return nil, fmt.Errorf("default charger config: %s required", k)
+			return nil, fmt.Errorf("default charger config: missing plugin configuration: %s", k)
 		}
 	}
 

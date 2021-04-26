@@ -100,7 +100,7 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 
 		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
 
-		// TODO: not available; use target temp to avoid wrong heating/cooling display
+		// TODO not available; use target temp to avoid wrong heating/cooling display
 		outsideTemp = targetTemp
 
 		return active, outsideTemp, targetTemp, nil
