@@ -35,7 +35,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		"maxcurrent": cc.MaxCurrent.PluginType(),
 	} {
 		if v == "" {
-			return nil, fmt.Errorf("default charger config: missing plugin configuration: %s", k)
+			return nil, fmt.Errorf("missing plugin configuration: %s", k)
 		}
 	}
 

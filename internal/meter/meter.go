@@ -31,7 +31,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 
 	for k, v := range map[string]string{"power": cc.Power.PluginType()} {
 		if v == "" {
-			return nil, fmt.Errorf("default meter config: missing plugin configuration: %s", k)
+			return nil, fmt.Errorf("missing plugin configuration: %s", k)
 		}
 	}
 

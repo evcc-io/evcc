@@ -58,7 +58,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	for k, v := range map[string]string{"charge": cc.Charge.PluginType()} {
 		if v == "" {
-			return nil, fmt.Errorf("default vehicle config: missing plugin configuration: %s", k)
+			return nil, fmt.Errorf("missing plugin configuration: %s", k)
 		}
 	}
 
