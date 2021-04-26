@@ -13,6 +13,7 @@ import (
 	"github.com/andig/evcc/server/updater"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/pipe"
+	"github.com/andig/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -207,6 +208,11 @@ func run(cmd *cobra.Command, args []string) {
 	// setup values channel
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
+
+	// expose sponsor to UI
+	if sponsor.Subject != "" {
+		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
+	}
 
 	// version check
 	go updater.Run(log, httpd, tee, valueChan)
