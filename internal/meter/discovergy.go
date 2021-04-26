@@ -3,6 +3,7 @@ package meter
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
@@ -75,7 +76,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, ".values.power", 0.001)
+	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, ".values.power", 0.001, 10 * time.Second)
 	if err != nil {
 		return nil, err
 	}

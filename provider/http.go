@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/jq"
@@ -54,8 +55,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
+		Timeout     time.Duration
 	}{
 		Headers: make(map[string]string),
+		Timeout: 10 * time.Second,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -79,11 +82,12 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Insecure,
 		cc.Jq,
 		cc.Scale,
+		cc.Timeout,
 	)
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64, timeout time.Duration) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -97,6 +101,8 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		body:    body,
 		scale:   scale,
 	}
+
+	p.Client.Timeout = timeout
 
 	// ignore the self signed certificate
 	if insecure {
