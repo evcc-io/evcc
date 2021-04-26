@@ -44,6 +44,7 @@ type SoCConfig struct {
 	Estimate     bool       `mapstructure:"estimate"`
 	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
 	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
+	Levels       []int      `mapstructure:"levels"` // deprecated
 }
 
 // Poll modes
@@ -156,6 +157,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		} else {
 			log.WARN.Printf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll.Interval, pollInterval)
 		}
+	}
+
+	if len(lp.SoC.Levels) > 0 {
+		log.WARN.Printf("soc.levels are deprecated and will be removed in an upcoming release")
 	}
 
 	if lp.SoC.Target == 0 {
