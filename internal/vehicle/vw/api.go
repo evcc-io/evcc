@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -91,6 +92,14 @@ func (v *API) HomeRegion(vin string) error {
 	}
 
 	return err
+}
+
+// RolesRights updates the home region for the given vehicle
+func (v *API) RolesRights(vin string) (string, error) {
+	var res json.RawMessage
+	uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
+	err := v.getJSON(uri, &res)
+	return string(res), err
 }
 
 // ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
