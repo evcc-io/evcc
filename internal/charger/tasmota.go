@@ -139,6 +139,21 @@ func (c *Tasmota) CurrentPower() (float64, error) {
 	return power, err
 }
 
+var _ api.ChargeRater = (*Tasmota)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *Tasmota) ChargedEnergy() (float64, error) {
+	var tStatusSNS tasmota.StatusSNSResponse
+
+	// Execute Tasmota Status 8 command
+	err := c.GetJSON(c.cmdUri("Status 8"), &tStatusSNS)
+	if err != nil {
+		return math.NaN(), err
+	}
+
+	return float64(tStatusSNS.StatusSNS.Energy.Today), err
+}
+
 // cmdUri creates the Tasmota command web request
 // https://tasmota.github.io/docs/Commands/#with-web-requests
 func (c *Tasmota) cmdUri(cmd string) string {
