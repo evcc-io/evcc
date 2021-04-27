@@ -58,7 +58,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Timeout     time.Duration
 	}{
 		Headers: make(map[string]string),
-		Timeout: 10 * time.Second,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
