@@ -24,6 +24,9 @@ import (
 //go:embed index.html
 var indexHtml string
 
+//go:embed privacy.html
+var privacyHtml string
+
 var (
 	// login ui and callback
 	redirectURL = util.Getenv("REDIRECT_URL")
@@ -37,7 +40,7 @@ var (
 )
 
 var (
-	indexTpl *template.Template
+	indexTpl, privacyTpl *template.Template
 
 	oauthState  = randomString()
 	oauthConfig *oauth2.Config
@@ -71,6 +74,7 @@ func init() {
 	}
 
 	indexTpl = template.Must(template.New("index").Parse(indexHtml))
+	privacyTpl = template.Must(template.New("privacy").Parse(privacyHtml))
 }
 
 func randomString() string {
@@ -99,6 +103,10 @@ func handleMain(w http.ResponseWriter, r *http.Request) {
 	<a href="/login" class="btn btn-lg btn-secondary fw-bold border-white bg-white">Anmelden</a>
 </p>`),
 	})
+}
+
+func handlePrivacy(w http.ResponseWriter, r *http.Request) {
+	_ = privacyTpl.Execute(w, nil)
 }
 
 func templateError(w http.ResponseWriter, r *http.Request, err string) {
@@ -207,6 +215,7 @@ func getUserInfo(state string, code string) (*User, error) {
 func Run() {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/", handleMain)
+	mux.HandleFunc("/privacy", handlePrivacy)
 	mux.HandleFunc("/login", handleLogin)
 	mux.HandleFunc("/callback", handleCallback)
 
