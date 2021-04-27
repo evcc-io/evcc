@@ -41,7 +41,7 @@ type EmeterResponse struct {
 	} `json:"emeter"`
 }
 
-// EmeterResponse is the TP-Link plug/outlet api emeter get_realtime get_daystat response
+// DayStatResponse is the TP-Link plug/outlet api emeter get_realtime get_daystat response
 type DayStatResponse struct {
 	Emeter struct {
 		GetDaystat struct {
