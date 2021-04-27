@@ -412,6 +412,7 @@ auth: # basic authorization
 insecure: false # set to true to trust self-signed certificates
 jq: .data.tuples[0][1] # parse response json
 scale: 0.001 # floating point factor applied to result, e.g. for kW to W conversion
+timeout: 10s # timeout in golang duration format, see https://golang.org/pkg/time/#ParseDuration
 ```
 
 Sample write configuration:
