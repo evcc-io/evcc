@@ -41,7 +41,7 @@ func TestUnmarshalTPLinkSystemResponses(t *testing.T) {
 		t.Error("GetSysinfo.Feature")
 	}
 
-	// Test 1st emeter generation response
+	// Test 1st emeter generation get_realtime response
 	var emeresp EmeterResponse
 	jsonstr = `{"emeter":{"get_realtime":{"current":0.033759,"voltage":234.824322,"power":3.121391,"total":0.015000,"err_code":0}}}`
 	if err := json.Unmarshal([]byte(jsonstr), &emeresp); err != nil {
@@ -63,9 +63,9 @@ func TestUnmarshalTPLinkSystemResponses(t *testing.T) {
 		t.Error("GetRealtime.ErrCode")
 	}
 
-	// Test 2nd emeter generation response
+	// Test 2nd emeter generation get_realtime response
 	var emeresp2 EmeterResponse
-	jsonstr = ` {"emeter":{"get_realtime":{"voltage_mv":237119,"current_ma":218,"power_mw":31259,"total_wh":107,"err_code":0}}}`
+	jsonstr = `{"emeter":{"get_realtime":{"voltage_mv":237119,"current_ma":218,"power_mw":31259,"total_wh":107,"err_code":0}}}`
 	if err := json.Unmarshal([]byte(jsonstr), &emeresp2); err != nil {
 		t.Error(err)
 	}
@@ -85,4 +85,47 @@ func TestUnmarshalTPLinkSystemResponses(t *testing.T) {
 		t.Error("GetRealtime.ErrCode")
 	}
 
+	// Test 1st emeter generation get_daystat response
+	var dstatresp DayStatResponse
+	jsonstr = `{"emeter":{"get_daystat":{"day_list":[{"year":2021,"month":4,"day":22,"energy":0},{"year":2021,"month":4,"day":23,"energy":0.016000},{"year":2021,"month":4,"day":24,"energy":0.020000},{"year":2021,"month":4,"day":25,"energy":0.005000},{"year":2021,"month":4,"day":26,"energy":0.245000}],"err_code":0}}}`
+	if err := json.Unmarshal([]byte(jsonstr), &dstatresp); err != nil {
+		t.Error(err)
+	}
+	if dstatresp.Emeter.GetDaystat.DayList[len(dstatresp.Emeter.GetDaystat.DayList)-1].Year != 2021 {
+		t.Error("GetDaystat.DayList[last].Year")
+	}
+	if dstatresp.Emeter.GetDaystat.DayList[len(dstatresp.Emeter.GetDaystat.DayList)-1].Month != 4 {
+		t.Error("GetDaystat.DayList[last].Month")
+	}
+	if dstatresp.Emeter.GetDaystat.DayList[len(dstatresp.Emeter.GetDaystat.DayList)-1].Day != 26 {
+		t.Error("GetDaystat.DayList[last].Day")
+	}
+	if dstatresp.Emeter.GetDaystat.DayList[len(dstatresp.Emeter.GetDaystat.DayList)-1].Energy != 0.245 {
+		t.Error("GetDaystat.DayList[last].Energy")
+	}
+	if dstatresp.Emeter.GetDaystat.ErrCode != 0 {
+		t.Error("GetDaystat.ErrCode")
+	}
+
+	// Test 2nd emeter generation get_daystat response
+	var dstatresp2 DayStatResponse
+	jsonstr = `{"emeter":{"get_daystat":{"day_list":[{"year":2021,"month":4,"day":18,"energy_wh":3},{"year":2021,"month":4,"day":19,"energy_wh":0},{"year":2021,"month":4,"day":20,"energy_wh":2029},{"year":2021,"month":4,"day":21,"energy_wh":1201},{"year":2021,"month":4,"day":22,"energy_wh":0},{"year":2021,"month":4,"day":23,"energy_wh":1059}],"err_code":0}}}`
+	if err := json.Unmarshal([]byte(jsonstr), &dstatresp2); err != nil {
+		t.Error(err)
+	}
+	if dstatresp2.Emeter.GetDaystat.DayList[len(dstatresp2.Emeter.GetDaystat.DayList)-1].Year != 2021 {
+		t.Error("GetDaystat.DayList[last].Year")
+	}
+	if dstatresp2.Emeter.GetDaystat.DayList[len(dstatresp2.Emeter.GetDaystat.DayList)-1].Month != 4 {
+		t.Error("GetDaystat.DayList[last].Month")
+	}
+	if dstatresp2.Emeter.GetDaystat.DayList[len(dstatresp2.Emeter.GetDaystat.DayList)-1].Day != 23 {
+		t.Error("GetDaystat.DayList[last].Day")
+	}
+	if dstatresp2.Emeter.GetDaystat.DayList[len(dstatresp2.Emeter.GetDaystat.DayList)-1].EnergyWh != 1059 {
+		t.Error("GetDaystat.DayList[last].EnergyWh")
+	}
+	if dstatresp2.Emeter.GetDaystat.ErrCode != 0 {
+		t.Error("GetDaystat.ErrCode")
+	}
 }

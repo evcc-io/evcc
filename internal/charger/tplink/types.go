@@ -21,21 +21,41 @@ type SystemResponse struct {
 	} `json:"system"`
 }
 
-// EmeterResponse is the TP-Link plug/outlet api emeter response
+// EmeterResponse is the TP-Link plug/outlet api emeter get_realtime response
 type EmeterResponse struct {
 	Emeter struct {
 		GetRealtime struct {
-			// 1st plug generation E-Meter Response
+			// 1st plug generation E-Meter get_realtime Response
 			Current float64 `json:"current,omitempty"`
 			Voltage float64 `json:"voltage,omitempty"`
 			Power   float64 `json:"power,omitempty"`
 			Total   float64 `json:"total,omitempty"`
-			// 2nd plug generation E-Meter Response
+			// 2nd plug generation E-Meter get_realtime Response
 			CurrentMa float64 `json:"current_ma,omitempty"`
 			VoltageMv float64 `json:"voltage_mv,omitempty"`
 			PowerMw   float64 `json:"power_mw,omitempty"`
 			TotalWh   float64 `json:"total_wh,omitempty"`
-			ErrCode   int     `json:"err_code,omitempty"`
+			// Common E-Meter get_realtime Response
+			ErrCode int `json:"err_code,omitempty"`
 		} `json:"get_realtime"`
+	} `json:"emeter"`
+}
+
+// DayStatResponse is the TP-Link plug/outlet api emeter get_realtime get_daystat response
+type DayStatResponse struct {
+	Emeter struct {
+		GetDaystat struct {
+			DayList []struct {
+				Year  int `json:"year,omitempty"`
+				Month int `json:"month,omitempty"`
+				Day   int `json:"day,omitempty"`
+				// 1st plug generation E-Meter get_daystat Response
+				Energy float64 `json:"energy,omitempty"`
+				// 2nd plug generation E-Meter get_daystat Response
+				EnergyWh float64 `json:"energy_wh,omitempty"`
+			} `json:"day_list"`
+			// Common E-Meter get_daystat Response
+			ErrCode int `json:"err_code,omitempty"`
+		} `json:"get_daystat"`
 	} `json:"emeter"`
 }
