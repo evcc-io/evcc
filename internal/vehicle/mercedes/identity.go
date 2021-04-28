@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"os/exec"
@@ -25,17 +24,6 @@ import (
 
 const redirectURI = "localhost:34972"
 
-var AuthConfig = &oauth2.Config{
-	ClientID:     id,
-	ClientSecret: secret,
-	Endpoint: oauth2.Endpoint{
-		AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
-		TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
-		AuthStyle: oauth2.AuthStyleInHeader,
-	},
-	Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
-}
-
 type ClientOption func(c *Identity) error
 
 // WithToken provides an oauth2.Token to the client for auth.
@@ -47,16 +35,26 @@ func WithToken(t *oauth2.Token) ClientOption {
 }
 
 type Identity struct {
-	log         *util.Logger
-	AuthConfig  *oauth2.Config
-	token       *oauth2.Token
-	tokenSource oauth2.TokenSource
-	router      *mux.Router
+	log        *util.Logger
+	AuthConfig *oauth2.Config
+	token      *oauth2.Token
+	// tokenSource oauth2.TokenSource
+	router *mux.Router
 }
 
 func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (*Identity, error) {
 	v := &Identity{
 		log: log,
+		AuthConfig: &oauth2.Config{
+			ClientID:     id,
+			ClientSecret: secret,
+			Endpoint: oauth2.Endpoint{
+				AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
+				TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
+				AuthStyle: oauth2.AuthStyleInHeader,
+			},
+			Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
+		},
 	}
 
 	var err error
@@ -66,9 +64,9 @@ func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (
 		}
 	}
 
-	if err == nil && v.token == nil {
-		err = v.Login()
-	}
+	// if err == nil && v.token == nil {
+	// 	err = v.Login()
+	// }
 
 	return v, err
 }
@@ -99,8 +97,17 @@ func urlOpen(url string) error {
 	return exec.Command(cmd, args...).Start()
 }
 
-func (v *Identity) Token() *oauth2.Token {
-	return v.token
+func (v *Identity) Token() (*oauth2.Token, error) {
+	var err error
+	if v.token == nil {
+		if v.router == nil {
+			return nil, errors.New("missing web access")
+		}
+
+		err = v.Login()
+	}
+
+	return v.token, err
 }
 
 var _ internal.WebController = (*Identity)(nil)
@@ -109,20 +116,11 @@ func (v *Identity) WebControl(router *mux.Router) {
 	v.router = router
 }
 
-func (v *Identity) callbackHandler(http.ResponseWriter, *http.Request) {
-	router.HandleFunc("/vehicle/mercedes/callback", v.callbackHandler)
-}
-
 func (v *Identity) Login() error {
 	state := state()
 	uri := v.AuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("prompt", "login consent"),
 	)
-
-	ln, err := net.Listen("tcp", redirectURI)
-	if err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(
 		context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(v.log).Client),
@@ -131,10 +129,9 @@ func (v *Identity) Login() error {
 	defer cancel()
 
 	done := make(chan struct{})
-	srv := &http.Server{Handler: v.redirectHandler(ctx, state, done)}
+	handler := v.redirectHandler(ctx, state, done)
 
-	defer func() { _ = srv.Close() }()
-	go func() { _ = srv.Serve(ln) }()
+	v.router.HandleFunc("/vehicle/mercedes/callback", handler)
 
 	if err := urlOpen(uri); err != nil {
 		return err
