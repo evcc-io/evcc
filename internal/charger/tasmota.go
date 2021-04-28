@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"math"
 	"net/url"
 	"strings"
 
@@ -68,17 +67,17 @@ func NewTasmota(uri, user, password string, standbypower float64) (*Tasmota, err
 
 // Enabled implements the api.Charger interface
 func (c *Tasmota) Enabled() (bool, error) {
-	var tStatus tasmota.StatusResponse
+	var resp tasmota.StatusResponse
 
 	// Execute Tasmota Status 0 command
-	err := c.GetJSON(c.cmdUri("Status 0"), &tStatus)
+	err := c.GetJSON(c.cmdUri("Status 0"), &resp)
 
-	return int(1) == tStatus.Status.Power, err
+	return int(1) == resp.Status.Power, err
 }
 
 // Enable implements the api.Charger interface
 func (c *Tasmota) Enable(enable bool) error {
-	var tPower tasmota.PowerResponse
+	var resp tasmota.PowerResponse
 
 	cmd := "Power off"
 	if enable {
@@ -86,14 +85,14 @@ func (c *Tasmota) Enable(enable bool) error {
 	}
 
 	// Execute Tasmota Power on/off command
-	err := c.GetJSON(c.cmdUri(cmd), &tPower)
+	err := c.GetJSON(c.cmdUri(cmd), &resp)
 
 	switch {
 	case err != nil:
 		return err
-	case enable && tPower.POWER != "ON":
+	case enable && resp.POWER != "ON":
 		return errors.New("switchOn failed")
-	case !enable && tPower.POWER != "OFF":
+	case !enable && resp.POWER != "OFF":
 		return errors.New("switchOff failed")
 	default:
 		return nil
@@ -121,15 +120,11 @@ var _ api.Meter = (*Tasmota)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Tasmota) CurrentPower() (float64, error) {
-	var tStatusSNS tasmota.StatusSNSResponse
+	var resp tasmota.StatusSNSResponse
 
 	// Execute Tasmota Status 8 command
-	err := c.GetJSON(c.cmdUri("Status 8"), &tStatusSNS)
-
-	if err != nil {
-		return math.NaN(), err
-	}
-	power := float64(tStatusSNS.StatusSNS.Energy.Power)
+	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
+	power := float64(resp.StatusSNS.Energy.Power)
 
 	// ignore standby power
 	if power < c.standbypower {
@@ -143,15 +138,12 @@ var _ api.ChargeRater = (*Tasmota)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Tasmota) ChargedEnergy() (float64, error) {
-	var tStatusSNS tasmota.StatusSNSResponse
+	var resp tasmota.StatusSNSResponse
 
 	// Execute Tasmota Status 8 command
-	err := c.GetJSON(c.cmdUri("Status 8"), &tStatusSNS)
-	if err != nil {
-		return math.NaN(), err
-	}
+	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
 
-	return float64(tStatusSNS.StatusSNS.Energy.Today), err
+	return float64(resp.StatusSNS.Energy.Today), err
 }
 
 // cmdUri creates the Tasmota command web request

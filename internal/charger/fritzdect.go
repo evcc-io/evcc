@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"math"
 	"net/url"
 	"strconv"
 	"strings"
@@ -205,20 +204,19 @@ func (c *FritzDECT) ChargedEnergy() (float64, error) {
 	// fetch basicdevicestats
 	resp, err := c.execFritzDectCmd("getbasicdevicestats")
 	if err != nil {
-		return math.NaN(), err
+		return 0, err
 	}
 
 	// unmarshal devicestats
 	var statsresp fritzdect.Devicestats
-	err = xml.Unmarshal([]byte(resp), &statsresp)
-	if err != nil {
-		return math.NaN(), err
+	if err = xml.Unmarshal([]byte(resp), &statsresp); err != nil {
+		return 0, err
 	}
 
 	// select energy value of current day
-	energylst := strings.Split(statsresp.Energy.Values[1], ",")
+	energylist := strings.Split(statsresp.Energy.Values[1], ",")
 	var energy float64
-	energy, err = strconv.ParseFloat(energylst[0], 64)
+	energy, err = strconv.ParseFloat(energylist[0], 64)
 
 	return energy / 1000, err
 }
