@@ -215,8 +215,7 @@ func (c *FritzDECT) ChargedEnergy() (float64, error) {
 
 	// select energy value of current day
 	energylist := strings.Split(statsresp.Energy.Values[1], ",")
-	var energy float64
-	energy, err = strconv.ParseFloat(energylist[0], 64)
+	energy, err := strconv.ParseFloat(energylist[0], 64)
 
 	return energy / 1000, err
 }
