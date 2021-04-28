@@ -6,12 +6,14 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"math"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/charger/fritzdect"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"golang.org/x/text/encoding/unicode"
@@ -194,6 +196,31 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 	}
 
 	return power, err
+}
+
+var _ api.ChargeRater = (*FritzDECT)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *FritzDECT) ChargedEnergy() (float64, error) {
+	// fetch basicdevicestats
+	resp, err := c.execFritzDectCmd("getbasicdevicestats")
+	if err != nil {
+		return math.NaN(), err
+	}
+
+	// unmarshal devicestats
+	var statsresp fritzdect.Devicestats
+	err = xml.Unmarshal([]byte(resp), &statsresp)
+	if err != nil {
+		return math.NaN(), err
+	}
+
+	// select energy value of current day
+	energylst := strings.Split(statsresp.Energy.Values[1], ",")
+	var energy float64
+	energy, err = strconv.ParseFloat(energylst[0], 64)
+
+	return energy / 1000, err
 }
 
 // Fritzbox helpers (based on ideas of https://github.com/rsdk/ahago)
