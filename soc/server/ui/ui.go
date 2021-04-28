@@ -24,6 +24,9 @@ import (
 //go:embed index.html
 var indexHtml string
 
+//go:embed privacy.html
+var privacyHtml string
+
 var (
 	// login ui and callback
 	redirectURL = util.Getenv("REDIRECT_URL")
@@ -37,7 +40,7 @@ var (
 )
 
 var (
-	indexTpl *template.Template
+	indexTpl, privacyTpl *template.Template
 
 	oauthState  = randomString()
 	oauthConfig *oauth2.Config
@@ -71,6 +74,7 @@ func init() {
 	}
 
 	indexTpl = template.Must(template.New("index").Parse(indexHtml))
+	privacyTpl = template.Must(template.New("privacy").Parse(privacyHtml))
 }
 
 func randomString() string {
@@ -85,20 +89,11 @@ func randomString() string {
 }
 
 func handleMain(w http.ResponseWriter, r *http.Request) {
-	_ = indexTpl.Execute(w, map[string]interface{}{
-		"Content": template.HTML(`
-<h1>Willkommen</h1>
-<p class="lead">
-	evcc cloud erfordert eine einmalige Anmeldung um evcc cloud mit dem Github Konto des evcc Sponsors zu
-	verknüpfen. Mit der Verknüpfung wird das Registrierungstoken erzeugt.
-</p>
-<p class="lead">
-	Die evcc cloud speichert keine Benutzerdaten. Alle Daten werden weiterhin lokal verarbeitet.
-</p>
-<p class="lead">
-	<a href="/login" class="btn btn-lg btn-secondary fw-bold border-white bg-white">Anmelden</a>
-</p>`),
-	})
+	_ = indexTpl.Execute(w, nil)
+}
+
+func handlePrivacy(w http.ResponseWriter, r *http.Request) {
+	_ = privacyTpl.Execute(w, nil)
 }
 
 func templateError(w http.ResponseWriter, r *http.Request, err string) {
@@ -140,7 +135,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		_ = indexTpl.Execute(w, map[string]interface{}{
 			"Content": template.HTML(`
 	<h1>Inaktiv</h1>
-	<p class="lead">Github Sponsorship für evcc ist inaktiv. Um evcc cloud zu nutzen, ist es notwendig, evcc zu unterstützen.</p>
+	<p class="lead">Github Sponsorship für evcc ist inaktiv. Um erweiterte Funktionen zu nutzen, ist es notwendig, evcc zu unterstützen.</p>
 	<p class="lead">evcc bei Github <a href="https://github.com/sponsors/andig" class="text-warning">unterstützen</a>.</p>`),
 		})
 		return
@@ -155,7 +150,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 	_ = indexTpl.Execute(w, map[string]interface{}{
 		"Content": template.HTML(fmt.Sprintf(`
 <h1>Aktiv</h1>
-<p class="lead">Github Sponsorship für evcc ist aktiv. Der folgende Token kann für den Zugriff auf evcc cloud genutzt werden.</p>
+<p class="lead">Github Sponsorship für evcc ist aktiv. Das folgende Registrierungstoken kann für den Zugriff auf evcc genutzt werden.</p>
 <p class="lead">Der Code ist %d Tage gültig und kann jederzeit neu erzeugt werden.</p>
 <p class="lead"><code>`+jwt+`</code></p>`, auth.TokenExpiry),
 		)})
@@ -207,6 +202,7 @@ func getUserInfo(state string, code string) (*User, error) {
 func Run() {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/", handleMain)
+	mux.HandleFunc("/privacy", handlePrivacy)
 	mux.HandleFunc("/login", handleLogin)
 	mux.HandleFunc("/callback", handleCallback)
 
