@@ -14,14 +14,27 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 )
 
 // https://id.mercedes-benz.com/.well-known/openid-configuration
 
 const redirectURI = "localhost:34972"
+
+var AuthConfig = &oauth2.Config{
+	ClientID:     id,
+	ClientSecret: secret,
+	Endpoint: oauth2.Endpoint{
+		AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
+		TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
+		AuthStyle: oauth2.AuthStyleInHeader,
+	},
+	Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
+}
 
 type ClientOption func(c *Identity) error
 
@@ -34,24 +47,16 @@ func WithToken(t *oauth2.Token) ClientOption {
 }
 
 type Identity struct {
-	log        *util.Logger
-	AuthConfig *oauth2.Config
-	token      *oauth2.Token
+	log         *util.Logger
+	AuthConfig  *oauth2.Config
+	token       *oauth2.Token
+	tokenSource oauth2.TokenSource
+	router      *mux.Router
 }
 
 func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (*Identity, error) {
 	v := &Identity{
 		log: log,
-		AuthConfig: &oauth2.Config{
-			ClientID:     id,
-			ClientSecret: secret,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
-				TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
-				AuthStyle: oauth2.AuthStyleInHeader,
-			},
-			Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
-		},
 	}
 
 	var err error
@@ -96,6 +101,16 @@ func urlOpen(url string) error {
 
 func (v *Identity) Token() *oauth2.Token {
 	return v.token
+}
+
+var _ internal.WebController = (*Identity)(nil)
+
+func (v *Identity) WebControl(router *mux.Router) {
+	v.router = router
+}
+
+func (v *Identity) callbackHandler(http.ResponseWriter, *http.Request) {
+	router.HandleFunc("/vehicle/mercedes/callback", v.callbackHandler)
 }
 
 func (v *Identity) Login() error {

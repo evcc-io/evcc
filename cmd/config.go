@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/internal/charger"
 	"github.com/andig/evcc/internal/meter"
 	"github.com/andig/evcc/internal/vehicle"
@@ -153,4 +154,13 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	}
 
 	return nil
+}
+
+// webControl hands the router to implementing devices
+func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
+	for _, v := range cp.vehicles {
+		if ctrl, ok := v.(internal.WebController); ok {
+			ctrl.WebControl(httpd.Router())
+		}
+	}
 }
