@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	Issuer      = "evcc.io"
 	TokenExpiry = 365 // days
 	tokenSecret = util.Getenv("JWT_TOKEN_SECRET")
 )
@@ -25,7 +26,8 @@ var (
 const updateInterval = 5 * time.Minute
 
 type Claims struct {
-	Username string `json:"username"`
+	Username      string `json:"username"`
+	SponsorExempt bool   `json:"spe"`
 	jwt.StandardClaims
 }
 
@@ -33,15 +35,10 @@ func keyFunc(token *jwt.Token) (interface{}, error) {
 	return []byte(tokenSecret), nil
 }
 
-func AuthorizedToken(name, login string) (string, error) {
-	expiry := time.Now().Add(24 * time.Hour * time.Duration(TokenExpiry))
-	claims := Claims{
-		Username: name,
-		StandardClaims: jwt.StandardClaims{
-			Subject:   login,
-			ExpiresAt: expiry.Unix(),
-		},
-	}
+func AuthorizedToken(claims Claims) (string, error) {
+	claims.Issuer = Issuer
+	claims.IssuedAt = time.Now().Unix()
+	claims.ExpiresAt = time.Now().Add(24 * time.Hour * time.Duration(TokenExpiry)).Unix()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(tokenSecret))
@@ -53,25 +50,17 @@ func ParseToken(token string) (*Claims, error) {
 		return nil, err
 	}
 
-	if !jwt.Valid {
-		return nil, errors.New("token invalid")
-	}
-
 	claims, ok := jwt.Claims.(*Claims)
 	if !ok {
-		return nil, errors.New("token claims invalid")
+		return nil, errors.New("claims invalid")
 	}
 
 	return claims, nil
 }
 
-func IsAuthorized(login string) (bool, error) {
+func IsSponsor(login string) (bool, error) {
 	mux.Lock()
 	defer mux.Unlock()
-
-	if login == "demo" {
-		return true, nil
-	}
 
 	if _, ok := authorized[login]; !ok {
 		if time.Since(updated) < updateInterval {
@@ -85,7 +74,6 @@ func IsAuthorized(login string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		// fmt.Println("sponsors:", all)
 
 		updated = time.Now()
 

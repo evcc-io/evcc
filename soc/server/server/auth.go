@@ -38,7 +38,10 @@ func isAuthorized(r tokenizer) (bool, string, *auth.Claims, error) {
 		return false, token, claims, err
 	}
 
-	authorized, err := auth.IsAuthorized(claims.Subject)
+	authorized := claims.SponsorExempt
+	if !authorized {
+		authorized, err = auth.IsSponsor(claims.Subject)
+	}
 
 	return authorized, token, claims, err
 }
