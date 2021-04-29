@@ -16,6 +16,7 @@ import (
 
 	"github.com/andig/evcc/soc/server/auth"
 	"github.com/andig/evcc/util"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -122,7 +123,7 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authorized, err := auth.IsAuthorized(user.Login)
+	authorized, err := auth.IsSponsor(user.Login)
 	if err != nil {
 		templateError(w, r, err.Error())
 		return
@@ -141,7 +142,14 @@ func handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwt, err := auth.AuthorizedToken(user.Name, user.Login)
+	claims := auth.Claims{
+		Username: user.Name,
+		StandardClaims: jwt.StandardClaims{
+			Subject: user.Login,
+		},
+	}
+
+	jwt, err := auth.AuthorizedToken(claims)
 	if err != nil {
 		templateError(w, r, err.Error())
 		return
