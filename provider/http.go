@@ -87,9 +87,11 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
-	http.Helper.SetTimeout(cc.Timeout)
+	if err == nil {
+		http.Client.Timeout = cc.Timeout
+	}
 
-	return http, nil
+	return http, err
 }
 
 // NewHTTP create HTTP provider

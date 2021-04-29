@@ -64,8 +64,3 @@ func (r *Helper) GetJSON(url string, res interface{}) error {
 	}
 	return err
 }
-
-// Sets the timeout for the request
-func (r *Helper) SetTimeout(timeout time.Duration) {
-	r.Client.Timeout = timeout
-}
