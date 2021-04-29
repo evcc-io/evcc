@@ -74,7 +74,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		}
 	}
 
-	return NewHTTP(log,
+	http, err := NewHTTP(log,
 		cc.Method,
 		cc.URI,
 		cc.Headers,
@@ -82,12 +82,18 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Insecure,
 		cc.Jq,
 		cc.Scale,
-		cc.Timeout,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	http.Helper.SetTimeout(cc.Timeout)
+
+	return http, nil
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64, timeout time.Duration) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -101,8 +107,6 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		body:    body,
 		scale:   scale,
 	}
-
-	p.Client.Timeout = timeout
 
 	// ignore the self signed certificate
 	if insecure {
