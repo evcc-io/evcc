@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
@@ -18,7 +19,7 @@ type Charger struct {
 
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
-	registry.Add("plugin", NewConfigurableFromConfig)
+	registry.Add(internal.Custom, NewConfigurableFromConfig)
 }
 
 // NewConfigurableFromConfig creates a new configurable charger

@@ -48,14 +48,14 @@ var registry providerRegistry = make(map[string]func(map[string]interface{}) (In
 
 // Config is the general provider config
 type Config struct {
-	Plugin string
+	Source string
 	// Type   string                 // TODO remove deprecated
 	Other map[string]interface{} `mapstructure:",remain"`
 }
 
 // PluginType returns the plugin type in a legacy-aware way
 func (c Config) PluginType() string {
-	typ := c.Plugin
+	typ := c.Source
 	// if typ == "" {
 	// 	typ = c.Type
 	// }
