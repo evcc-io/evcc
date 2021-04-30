@@ -13,7 +13,7 @@
 			<template v-for="(loadpoint, id) in loadpoints">
 				<hr class="w-100 my-4" v-if="id > 0" :key="id + '_hr'" />
 				<Loadpoint
-					:key="loadpoint"
+					:key="id"
 					v-bind="loadpoint"
 					:single="loadpoints.length === 1"
 					:id="id"

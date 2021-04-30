@@ -5,17 +5,17 @@
 				<div class="mb-2 value">
 					Leistung
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="temperature-low"
 						v-if="climater == 'heating'"
 					></fa-icon>
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="temperature-high"
 						v-if="climater == 'cooling'"
 					></fa-icon>
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="thermometer-half"
 						v-if="climater == 'on'"
 					></fa-icon>
