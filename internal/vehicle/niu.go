@@ -33,8 +33,7 @@ func init() {
 // NewFordFromConfig creates a new vehicle
 func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
+		embed                  `mapstructure:",squash"`
 		User, Password, Serial string
 		Cache                  time.Duration
 	}{
@@ -52,7 +51,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("niu")
 
 	v := &Niu{
-		embed:    &embed{cc.Title, cc.Capacity},
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

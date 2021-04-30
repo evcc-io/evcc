@@ -45,8 +45,7 @@ type PSA struct {
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
+		embed                  `mapstructure:",squash"`
 		ClientID, ClientSecret string
 		User, Password, VIN    string
 		Cache                  time.Duration
@@ -59,7 +58,7 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 	}
 
 	v := &PSA{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	api := psa.NewAPI(log, brand, realm, cc.ClientID, cc.ClientSecret)

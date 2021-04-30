@@ -31,12 +31,11 @@ func init() {
 // NewCloudFromConfig creates a new vehicle
 func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Token    string
-		Title    string
-		Capacity int64
-		Brand    string
-		Other    map[string]string `mapstructure:",remain"`
-		Cache    time.Duration
+		Token string
+		embed `mapstructure:",squash"`
+		Brand string
+		Other map[string]string `mapstructure:",remain"`
+		Cache time.Duration
 	}{
 		Cache: interval,
 	}
@@ -56,7 +55,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Cloud{
-		embed:  &embed{cc.Title, cc.Capacity},
+		embed:  &cc.embed,
 		token:  cc.Token,
 		brand:  cc.Brand,
 		config: cc.Other,

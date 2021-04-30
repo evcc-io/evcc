@@ -118,3 +118,8 @@ type VehicleClimater interface {
 type VehicleStartCharge interface {
 	StartCharge() error
 }
+
+// Identifier identifies a vehicle
+type Identifier interface {
+	Identify() (string, error)
+}
