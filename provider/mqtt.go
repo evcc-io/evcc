@@ -50,8 +50,11 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)
+	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout)
 
+	if cc.Payload != "" {
+		m = m.WithPayload(cc.Payload)
+	}
 	if cc.Jq != "" {
 		m, err = m.WithJq(cc.Jq)
 	}
@@ -60,16 +63,21 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 }
 
 // NewMqtt creates mqtt provider for given topic without a JQ query set
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic, payload string, scale float64, timeout time.Duration) *Mqtt {
+func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,
 		topic:   topic,
-		payload: payload,
 		scale:   scale,
 		timeout: timeout,
 	}
 
+	return m
+}
+
+// WithPayload adds payload for setters
+func (m *Mqtt) WithPayload(payload string) *Mqtt {
+	m.payload = payload
 	return m
 }
 
