@@ -81,7 +81,7 @@ func (m *Mqtt) WithPayload(payload string) *Mqtt {
 	return m
 }
 
-// WithJq adds a jq query to the mqtt results
+// WithJq adds a jq query applied to the mqtt listener payload
 func (m *Mqtt) WithJq(jq string) (*Mqtt, error) {
 	op, err := gojq.Parse(jq)
 	if err != nil {
