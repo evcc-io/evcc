@@ -160,6 +160,8 @@ func (m *Warp) status() (warpStatus, error) {
 	return res, err
 }
 
+// autostart reads the enabled state from charger
+// use function instead of jq to honor evse/state updates
 func (m *Warp) autostart() (bool, error) {
 	var res struct {
 		AutoStartCharging bool `json:"auto_start_charging"`
