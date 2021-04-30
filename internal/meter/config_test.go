@@ -15,6 +15,7 @@ func TestMeters(t *testing.T) {
 		"missing password", // Powerwall
 		"connect: no route to host",
 		"connect: connection refused",
+		"i/o timeout",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("meter") {
