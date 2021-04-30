@@ -62,7 +62,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	return m, err
 }
 
-// NewMqtt creates mqtt provider for given topic without a JQ query set
+// NewMqtt creates mqtt provider for given topic
 func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
