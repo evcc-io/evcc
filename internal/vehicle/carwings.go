@@ -27,8 +27,7 @@ func init() {
 // NewCarWingsFromConfig creates a new vehicle
 func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
+		embed                  `mapstructure:",squash"`
 		User, Password, Region string
 		Cache                  time.Duration
 	}{
@@ -41,7 +40,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &CarWings{
-		embed:    &embed{cc.Title, cc.Capacity},
+		embed:    &cc.embed,
 		user:     cc.User,
 		password: cc.Password,
 		region:   cc.Region,

@@ -424,7 +424,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 			_ = lp.setLimit(float64(lp.MinCurrent), false)
 		}
 	} else {
-		lp.log.ERROR.Printf("charger error: %v", err)
+		lp.log.ERROR.Printf("charger: %v", err)
 	}
 }
 
@@ -436,7 +436,7 @@ func (lp *LoadPoint) syncCharger() {
 	}
 
 	if err != nil {
-		lp.log.ERROR.Printf("charger error: %v", err)
+		lp.log.ERROR.Printf("charger: %v", err)
 	}
 }
 
@@ -568,10 +568,41 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
+	// find vehicles by id
+	if identifier, ok := lp.charger.(api.Identifier); ok {
+		id, err := identifier.Identify()
+
+		if err == nil {
+			lp.log.DEBUG.Println("charger vehicle id:", id)
+
+			// find exact match
+			for _, vehicle := range lp.vehicles {
+				if vid, err := vehicle.Identify(); err == nil && vid == id {
+					lp.setActiveVehicle(vehicle)
+					return
+				}
+			}
+
+			// find placeholder match
+			for _, vehicle := range lp.vehicles {
+				if vid, err := vehicle.Identify(); err == nil && vid == "*" {
+					lp.setActiveVehicle(vehicle)
+					return
+				}
+			}
+		} else {
+			lp.log.ERROR.Println("charger vehicle id:", err)
+		}
+
+		// TODO implement removing vehicle
+		// lp.setActiveVehicle(nil)
+	}
+
 	if len(lp.vehicles) <= 1 {
 		return
 	}
 
+	// find vehicles by charge state
 	if vs, ok := lp.vehicle.(api.ChargeState); ok {
 		status, err := vs.Status()
 
@@ -602,6 +633,8 @@ func (lp *LoadPoint) findActiveVehicle() {
 					}
 				}
 			}
+		} else {
+			lp.log.ERROR.Println("vehicle charge state:", err)
 		}
 	}
 }
@@ -756,7 +789,7 @@ func (lp *LoadPoint) updateChargePower() {
 	}, retryOptions...)
 
 	if err != nil {
-		err = fmt.Errorf("updating charge meter: %v", err)
+		err = fmt.Errorf("updating charge meter: %w", err)
 		lp.log.ERROR.Printf("%v", err)
 	}
 }
@@ -771,7 +804,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 
 	i1, i2, i3, err := phaseMeter.Currents()
 	if err != nil {
-		lp.log.ERROR.Printf("charge meter error: %v", err)
+		lp.log.ERROR.Printf("charge meter: %v", err)
 		return
 	}
 
@@ -801,13 +834,13 @@ func (lp *LoadPoint) publishChargeProgress() {
 	if f, err := lp.chargeRater.ChargedEnergy(); err == nil {
 		lp.chargedEnergy = 1e3 * f // convert to Wh
 	} else {
-		lp.log.ERROR.Printf("charge rater error: %v", err)
+		lp.log.ERROR.Printf("charge rater: %v", err)
 	}
 
 	if d, err := lp.chargeTimer.ChargingTime(); err == nil {
 		lp.chargeDuration = d.Round(time.Second)
 	} else {
-		lp.log.ERROR.Printf("charge timer error: %v", err)
+		lp.log.ERROR.Printf("charge timer: %v", err)
 	}
 
 	lp.publish("chargedEnergy", lp.chargedEnergy)
@@ -858,7 +891,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			// we need a value- so retry on error
 			lp.socUpdated = lp.clock.Now()
 
-			lp.log.ERROR.Printf("vehicle error: %v", err)
+			lp.log.ERROR.Printf("vehicle: %v", err)
 		}
 
 		// range
@@ -900,7 +933,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// read and publish status
 	if err := lp.updateChargerStatus(); err != nil {
-		lp.log.ERROR.Printf("charger error: %v", err)
+		lp.log.ERROR.Printf("charger: %v", err)
 		return
 	}
 
