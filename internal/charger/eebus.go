@@ -24,7 +24,8 @@ type Certificate struct {
 
 type EEBUSCharger struct {
 	*request.Helper
-	ski string
+	ski              string
+	latestMaxCurrent float64
 }
 
 func init() {
@@ -104,12 +105,18 @@ func (eeb *EEBUSCharger) Enabled() (bool, error) {
 		return false, nil
 	}
 
-	// are all currents above 1?
-	// if disabled, value is < 0.3, mostly 0.1
-	// if current was set to min, the reported current is lower, e.g. 5.9
-	if data.EVData.Measurements.CurrentL1 >= 0.3 ||
-		data.EVData.Measurements.CurrentL2 >= 0.3 ||
-		data.EVData.Measurements.CurrentL3 >= 0.3 {
+	// when stopping charging by sending default current values to L1, it looks like the
+	// Taycan OBC sets current to 0.5 and power varies between 1-3W
+	// on enabling with 2A on L1, the measurement e..g goes:
+	// 18:19:57 set limit on L1 to 2A
+	// 18:19:57 measurement on L1 1.2A - 170W
+	// 18:19:59 measurement on L1 0.5A - 3W
+	// 18:20:01 measurement on L1 0.5A - 3W
+	// 18:20:02 measurement on L1 2A - 450W
+	// so it took 5 seconds to reach the low setting. if we check enabled in between, it may appear as disabled!
+	if data.EVData.Measurements.CurrentL1 > 0.5 ||
+		data.EVData.Measurements.CurrentL2 > 0.5 ||
+		data.EVData.Measurements.CurrentL3 > 0.5 {
 		return true, nil
 	}
 
@@ -132,10 +139,16 @@ func (eeb *EEBUSCharger) Enable(enable bool) error {
 		// IEC61851 mode:
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
+		eeb.latestMaxCurrent = 0
 		return eebus.Instance.SetCurrents(eeb.ski, 0.0, 0.0, 0.0)
 	}
 
-	return eebus.Instance.SetCurrents(eeb.ski, data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min)
+	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
+	if eeb.latestMaxCurrent > 0 {
+		return eebus.Instance.SetCurrents(eeb.ski, eeb.latestMaxCurrent, eeb.latestMaxCurrent, eeb.latestMaxCurrent)
+	} else {
+		return eebus.Instance.SetCurrents(eeb.ski, data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min)
+	}
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -161,6 +174,8 @@ func (eeb *EEBUSCharger) MaxCurrentMillis(current float64) error {
 	if current > data.EVData.LimitsL1.Max {
 		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
 	}
+
+	eeb.latestMaxCurrent = current
 
 	return eebus.Instance.SetCurrents(eeb.ski, current, current, current)
 }

@@ -46,7 +46,6 @@ func New(logger *util.Logger, key, cert string) (*Cem, error) {
 		Private: key,
 	}
 	l.eebusSC = communication.NewServiceController(logging, deviceDetails, certData)
-	l.eebusSC.StopEVChargingOnEVConnect = true
 
 	go func() {
 		if err := l.eebusSC.Boot(); err != nil {
