@@ -118,7 +118,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	if jq != "" {
 		op, err := gojq.Parse(jq)
 		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
+			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
 		}
 
 		p.jq = op
