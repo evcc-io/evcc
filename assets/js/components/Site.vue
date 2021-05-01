@@ -17,7 +17,6 @@
 					v-bind="loadpoint"
 					:single="loadpoints.length === 1"
 					:id="id"
-					:pvConfigured="pvConfigured"
 				/>
 			</template>
 		</div>
