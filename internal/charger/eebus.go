@@ -230,3 +230,17 @@ func (eeb *EEBUSCharger) Currents() (float64, float64, float64, error) {
 
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
+
+// Identifier identifies a vehicle and is implemented by the charger
+func (eeb *EEBUSCharger) Identify() (string, error) {
+	data, err := eebus.Instance.GetData(eeb.ski)
+	if err != nil {
+		return "", err
+	}
+
+	if len(data.EVData.Identification) > 0 {
+		return data.EVData.Identification, nil
+	}
+
+	return "", nil
+}
