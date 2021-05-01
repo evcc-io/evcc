@@ -24,17 +24,6 @@ type Easee struct {
 	cache         time.Duration
 }
 
-// charge mode definition
-const (
-	ModeOffline       int = 0
-	ModeDisconnected  int = 1
-	ModeAwaitingStart int = 2
-	ModeCharging      int = 3
-	ModeCompleted     int = 4
-	ModeError         int = 5
-	ModeReadyToCharge int = 6
-)
-
 func init() {
 	registry.Add("easee", NewEaseeFromConfig)
 }
@@ -163,13 +152,13 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	}
 
 	switch res.ChargerOpMode {
-	case ModeDisconnected:
+	case easee.ModeDisconnected:
 		return api.StatusA, nil
-	case ModeAwaitingStart, ModeCompleted, ModeReadyToCharge:
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
 		return api.StatusB, nil
-	case ModeCharging:
+	case easee.ModeCharging:
 		return api.StatusC, nil
-	case ModeError:
+	case easee.ModeError:
 		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("unknown opmode: %d", res.ChargerOpMode)
@@ -179,7 +168,7 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
 	res, err := c.state()
-	return res.ChargerOpMode == ModeCharging || res.ChargerOpMode == ModeReadyToCharge, err
+	return res.ChargerOpMode == easee.ModeCharging || res.ChargerOpMode == easee.ModeReadyToCharge, err
 }
 
 // Enable implements the api.Charger interface
