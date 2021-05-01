@@ -31,7 +31,7 @@
 				@click="setTargetMode('minpv')"
 				:checked="mode == 'minpv'"
 			/>
-			<label for="mode_minpv" class="btn btn-outline-primary" v-if="pvConfigured">
+			<label for="mode_minpv" class="btn btn-outline-primary">
 				<span class="d-inline d-sm-none">Min</span>
 				<span class="d-none d-sm-inline">Min + PV</span>
 			</label>
@@ -44,7 +44,7 @@
 				@click="setTargetMode('pv')"
 				:checked="mode == 'pv'"
 			/>
-			<label for="mode_pv" class="btn btn-outline-primary" v-if="pvConfigured">
+			<label for="mode_pv" class="btn btn-outline-primary">
 				<span class="d-inline d-sm-none">PV</span>
 				<span class="d-none d-sm-inline">Nur PV</span>
 			</label>
@@ -57,7 +57,6 @@ export default {
 	name: "Mode",
 	props: {
 		mode: String,
-		pvConfigured: Boolean,
 	},
 	methods: {
 		setTargetMode: function (mode) {

@@ -7,6 +7,8 @@ import (
 )
 
 func TestVehicles(t *testing.T) {
+	test.SkipCI(t)
+
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"missing mqtt broker configuration",

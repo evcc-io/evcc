@@ -26,8 +26,9 @@ var (
 const updateInterval = 5 * time.Minute
 
 type Claims struct {
-	Username      string `json:"username"`
-	SponsorExempt bool   `json:"spe"`
+	UsernameDeprecated string `json:"username,omitempty"`
+	Username           string `json:"usr,omitempty"`
+	SponsorExempt      bool   `json:"spe,omitempty"`
 	jwt.StandardClaims
 }
 

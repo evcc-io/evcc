@@ -54,12 +54,12 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, tim
 
 	// timeout handler
 	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), "", 1, timeout,
+		fmt.Sprintf("%s/system/%s", topic, openwb.TimestampTopic), 1, timeout,
 	).IntGetter()
 
 	// getters
 	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).BoolGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).BoolGetter()
 		return func() (val bool, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -69,7 +69,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, tim
 	}
 
 	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).FloatGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
 		return func() (val float64, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -95,10 +95,10 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, tim
 	// setters
 	enable := provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.EnabledTopic),
-		"", 1, timeout).BoolSetter("enable")
+		1, timeout).BoolSetter("enable")
 	maxcurrent := provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.MaxCurrentTopic),
-		"", 1, timeout).IntSetter("maxcurrent")
+		1, timeout).IntSetter("maxcurrent")
 
 	// meter getters
 	currentPowerG := floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargePowerTopic))

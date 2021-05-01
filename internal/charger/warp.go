@@ -83,11 +83,11 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 
 	// timeout handler
 	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/state", topic), "", 1, timeout,
+		fmt.Sprintf("%s/evse/state", topic), 1, timeout,
 	).StringGetter()
 
 	stringG := func(topic string) func() (string, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).StringGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).StringGetter()
 		return func() (val string, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -101,14 +101,14 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
 	m.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/auto_start_charging_update", topic),
-		`{ "auto_start_charging": ${enable} }`, 1, 0,
-	).BoolSetter("enable")
+		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 1, 0).
+		WithPayload(`{ "auto_start_charging": ${enable} }`).
+		BoolSetter("enable")
 
 	m.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/current_limit", topic),
-		`{ "current": ${maxcurrent} }`, 1, 0,
-	).IntSetter("maxcurrent")
+		fmt.Sprintf("%s/evse/current_limit", topic), 1, 0).
+		WithPayload(`{ "current": ${maxcurrent} }`).
+		IntSetter("maxcurrent")
 
 	return m, nil
 }
@@ -160,6 +160,8 @@ func (m *Warp) status() (warpStatus, error) {
 	return res, err
 }
 
+// autostart reads the enabled state from charger
+// use function instead of jq to honor evse/state updates
 func (m *Warp) autostart() (bool, error) {
 	var res struct {
 		AutoStartCharging bool `json:"auto_start_charging"`
