@@ -113,9 +113,9 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.VehicleRange); ok {
 		if rng, err := v.Range(); err != nil {
-			fmt.Fprintf(w, "Vehicle range:\t%v\n", err)
+			fmt.Fprintf(w, "Range:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Vehicle range:\t%vkm\n", rng)
+			fmt.Fprintf(w, "Range:\t%vkm\n", rng)
 		}
 	}
 
@@ -138,6 +138,16 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if !math.IsNaN(tt) {
 				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
 			}
+		}
+	}
+
+	// Identity
+
+	if v, ok := v.(api.Identifier); ok {
+		if id, err := v.Identify(); err != nil {
+			fmt.Fprintf(w, "Identifier:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}
 
