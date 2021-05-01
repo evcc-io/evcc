@@ -49,7 +49,7 @@ func init() {
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed
+		embed  `mapstructure:",squash"`
 		Charge provider.Config
 		Status *provider.Config
 		Range  *provider.Config
