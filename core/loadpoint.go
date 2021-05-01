@@ -575,8 +575,17 @@ func (lp *LoadPoint) findActiveVehicle() {
 		if err == nil {
 			lp.log.DEBUG.Println("charger vehicle id:", id)
 
+			// find exact match
 			for _, vehicle := range lp.vehicles {
 				if vid, _ := vehicle.Identify(); id == vid {
+					lp.setActiveVehicle(vehicle)
+					return
+				}
+			}
+
+			// find placeholder match
+			for _, vehicle := range lp.vehicles {
+				if vid, _ := vehicle.Identify(); "*" == vid {
 					lp.setActiveVehicle(vehicle)
 					return
 				}
