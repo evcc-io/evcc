@@ -1,6 +1,6 @@
 <template>
-	<div class="row row-cols-3 justify-content-between justify-content-md-start overflow-hidden">
-		<div class="px-3" v-if="gridConfigured">
+	<div class="row justify-content-md-start overflow-hidden" :class="`row-cols-${numberOfPanels}`">
+		<div class="px-3" :class="panelClass" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
 				Bezug <fa-icon icon="arrow-down" class="text-primary" />
 			</div>
@@ -13,7 +13,7 @@
 			</h3>
 		</div>
 
-		<div class="px-3" v-if="pvConfigured">
+		<div class="px-3" :class="panelClass" v-if="pvConfigured">
 			<div class="mb-2 value">
 				Erzeugung
 				<fa-icon
@@ -29,7 +29,7 @@
 				<small class="text-muted">{{ fmtUnit(pvPower) }}W</small>
 			</h3>
 		</div>
-		<div class="px-3" v-if="batteryConfigured">
+		<div class="px-3" :class="panelClass" v-if="batteryConfigured">
 			<div class="mb-2 value">
 				<div class="d-block d-sm-none">
 					Akku <span class="text-muted"> / {{ batterySoC }} %</span>
@@ -84,6 +84,15 @@ export default {
 			if (this.pvConfigured) count++;
 			if (this.batteryConfigured) count++;
 			return count;
+		},
+		panelClass: function () {
+			if (this.numberOfPanels == 3) {
+				return "col-4 col-md-4 col-lg-3";
+			}
+			if (this.numberOfPanels == 2) {
+				return "col-6 col-md-4 col-lg-6";
+			}
+			return "col-12";
 		},
 		batteryIcon: function () {
 			if (Math.abs(this.batteryPower) < limit) {

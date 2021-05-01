@@ -4,7 +4,7 @@
 			<div class="d-none d-md-flex col-12 col-md-3 col-lg-4 align-items-end">
 				<p class="h1 text-truncate">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-9 col-lg-6 flex-grow-1">
+			<div class="col-12 col-md-9 col-lg-8 flex-grow-1">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
