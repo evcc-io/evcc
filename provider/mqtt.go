@@ -218,14 +218,16 @@ func (h *msgHandler) hasValue() (string, error) {
 	}
 
 	var err error
+	payload := h.payload
+
 	if h.jq != nil {
 		var val interface{}
-		if val, err = jq.Query(h.jq, []byte(h.payload)); err == nil {
-			h.payload = fmt.Sprintf("%v", val)
+		if val, err = jq.Query(h.jq, []byte(payload)); err == nil {
+			payload = fmt.Sprintf("%v", val)
 		}
 	}
 
-	return h.payload, err
+	return payload, err
 }
 
 func (h *msgHandler) floatGetter() (float64, error) {
