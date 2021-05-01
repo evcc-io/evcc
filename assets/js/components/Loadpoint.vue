@@ -9,12 +9,7 @@
 		</div>
 
 		<div class="row">
-			<Mode
-				class="col-12 col-md-6 col-lg-4 mb-4"
-				:mode="mode"
-				:pvConfigured="pvConfigured"
-				v-on:updated="setTargetMode"
-			/>
+			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" v-on:updated="setTargetMode" />
 			<Vehicle
 				class="col-12 col-md-6 col-lg-8 mb-4"
 				v-bind="vehicle"
@@ -37,7 +32,6 @@ export default {
 	name: "Loadpoint",
 	props: {
 		id: Number,
-		pvConfigured: Boolean,
 		single: Boolean,
 
 		// main
