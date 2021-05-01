@@ -77,7 +77,7 @@ export default {
 		chargeCurrent: Number,
 		socCapacity: Number,
 		connectedDuration: Number,
-		chargeCurrents: Object,
+		chargeCurrents: Array,
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
 	},

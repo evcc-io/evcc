@@ -45,6 +45,7 @@
     "@fortawesome/vue-fontawesome": "^2.0.0",
     "axios": "^0.21.0",
     "bootstrap": "^5.0.0-beta3",
+    "canvas-confetti": "^1.4.0",
     "vue": "^2.6.12",
     "vue-hot-reload-api": "^2.3.4",
     "vue-router": "^3.5.1"

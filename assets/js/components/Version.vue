@@ -5,7 +5,7 @@
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
 			v-if="newVersionAvailable"
-			class="btn btn-link text-decoration-none link-dark text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
 			<fa-icon icon="gift" class="icon me-1"></fa-icon>
 			Update<span class="d-none d-sm-inline"> verfügbar</span>: {{ available }}
@@ -13,7 +13,7 @@
 		<a
 			:href="releaseNotesUrl(installed)"
 			target="_blank"
-			class="btn btn-link text-decoration-none link-dark text-nowrap"
+			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 			v-else
 		>
 			Version {{ installed }}

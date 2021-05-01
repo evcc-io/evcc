@@ -44,7 +44,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoC: Number,
-		gridCurrents: Object,
+		gridCurrents: Array,
 		prioritySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },

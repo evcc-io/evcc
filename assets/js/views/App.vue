@@ -7,31 +7,36 @@
 						<Logo class="logo"></Logo>
 					</a>
 					<div class="d-flex">
-						<Notifications :notifications="notifications" />
-						<button
-							class="navbar-toggler"
-							type="button"
-							data-bs-toggle="collapse"
-							data-bs-target="#navbarNavAltMarkup"
-							aria-controls="navbarNavAltMarkup"
-							aria-expanded="false"
-							aria-label="Toggle navigation"
+						<div class="d-flex">
+							<Notifications :notifications="notifications" />
+							<button
+								class="navbar-toggler"
+								type="button"
+								data-bs-toggle="collapse"
+								data-bs-target="#navbarNavAltMarkup"
+								aria-controls="navbarNavAltMarkup"
+								aria-expanded="false"
+								aria-label="Toggle navigation"
+							>
+								<span class="navbar-toggler-icon"></span>
+							</button>
+						</div>
+						<div
+							class="collapse navbar-collapse flex-lg-grow-0"
+							id="navbarNavAltMarkup"
 						>
-							<span class="navbar-toggler-icon"></span>
-						</button>
-					</div>
-					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-						<ul class="navbar-nav">
-							<li class="nav-item">
-								<a
-									class="nav-link"
-									href="https://github.com/andig/evcc/discussions"
-									target="_blank"
-								>
-									Support
-								</a>
-							</li>
-						</ul>
+							<ul class="navbar-nav">
+								<li class="nav-item">
+									<a
+										class="nav-link"
+										href="https://github.com/andig/evcc/discussions"
+										target="_blank"
+									>
+										Support
+									</a>
+								</li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</nav>
@@ -103,7 +108,7 @@ export default {
 			};
 		},
 		supporter: function () {
-			return this.sponsor !== null;
+			return !!this.store.state.sponsor;
 		},
 	},
 	props: {
