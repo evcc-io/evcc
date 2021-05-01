@@ -152,13 +152,13 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 	}
 
 	switch res.ChargerOpMode {
-	case 1:
+	case easee.ModeDisconnected:
 		return api.StatusA, nil
-	case 2, 4, 6:
+	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
 		return api.StatusB, nil
-	case 3:
+	case easee.ModeCharging:
 		return api.StatusC, nil
-	case 5:
+	case easee.ModeError:
 		return api.StatusF, nil
 	default:
 		return api.StatusNone, fmt.Errorf("unknown opmode: %d", res.ChargerOpMode)
@@ -168,7 +168,7 @@ func (c *Easee) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
 	res, err := c.state()
-	return res.DynamicCircuitCurrentP1 > 0, err
+	return res.ChargerOpMode == easee.ModeCharging || res.ChargerOpMode == easee.ModeReadyToCharge, err
 }
 
 // Enable implements the api.Charger interface

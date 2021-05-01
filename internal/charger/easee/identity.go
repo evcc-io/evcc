@@ -18,6 +18,17 @@ type Token struct {
 	Valid        time.Time // helper to store validity timestamp
 }
 
+// charge mode definition
+const (
+	ModeOffline       int = 0
+	ModeDisconnected  int = 1
+	ModeAwaitingStart int = 2
+	ModeCharging      int = 3
+	ModeCompleted     int = 4
+	ModeError         int = 5
+	ModeReadyToCharge int = 6
+)
+
 // Identity manages the /api/accounts/token and /api/accounts/refresh_token response
 type Identity struct {
 	*request.Helper
