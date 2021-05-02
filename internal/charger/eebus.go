@@ -33,7 +33,7 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski         string
-		certificate struct {
+		Certificate struct {
 			Public, Private []byte
 		}
 	}{}
@@ -42,7 +42,7 @@ func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	cert, err := tls.X509KeyPair(cc.certificate.Public, cc.certificate.Private)
+	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
 		return nil, err
 	}
