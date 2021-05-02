@@ -24,7 +24,7 @@ func refresher(log *util.Logger, clientID string) oauth.TokenRefresher {
 }
 
 // Refresh is the oauth.TokenRefresher
-func (tr *tokenRefresher) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values(map[string][]string{
 		"grant_type":    {"refresh_token"},
 		"refresh_token": {token.RefreshToken},

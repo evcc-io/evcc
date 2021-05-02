@@ -228,7 +228,7 @@ func (v *Nissan) authFlow() (oauth.Token, error) {
 	return res, err
 }
 
-func (v *Nissan) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Nissan) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{nissanClientID},
 		"client_secret": []string{nissanClientSecret},

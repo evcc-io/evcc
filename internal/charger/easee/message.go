@@ -3,6 +3,17 @@ package easee
 // API is the Easee API endpoint
 const API = "https://api.easee.cloud/api"
 
+// charge mode definition
+const (
+	ModeOffline       int = 0
+	ModeDisconnected  int = 1
+	ModeAwaitingStart int = 2
+	ModeCharging      int = 3
+	ModeCompleted     int = 4
+	ModeError         int = 5
+	ModeReadyToCharge int = 6
+)
+
 // Charger is the charger type
 type Charger struct {
 	ID   string `json:"id"`

@@ -290,7 +290,7 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 }
 
 // Refresh implements token refresh
-func (v *Identity) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,
 		"Content-type":  "application/x-www-form-urlencoded",
