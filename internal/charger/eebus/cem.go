@@ -3,12 +3,10 @@
 package eebus
 
 import (
-	"log"
 	"os"
 	"sync"
 
 	"github.com/amp-x/eebus/communication"
-	eebusutil "github.com/amp-x/eebus/util"
 	"github.com/andig/evcc/util"
 )
 
@@ -26,9 +24,9 @@ type Cem struct {
 }
 
 // New creates the CEM
-func New(logger *util.Logger, key, cert string) (*Cem, error) {
+func New(log *util.Logger, key, cert string) (*Cem, error) {
 	l := &Cem{
-		log:  logger,
+		log:  log,
 		key:  key,
 		cert: cert,
 	}
@@ -40,16 +38,15 @@ func New(logger *util.Logger, key, cert string) (*Cem, error) {
 		BrandName:     "EVCC",
 	}
 
-	logging := log.New(&eebusutil.LogWriter{os.Stdout, "2006/01/02 15:04:05 "}, "[eebus] ", 0)
 	certData := &communication.CertificateBase64Encoded{
 		Public:  cert,
 		Private: key,
 	}
-	l.eebusSC = communication.NewServiceController(logging, deviceDetails, certData)
+	l.eebusSC = communication.NewServiceController(log.TRACE, deviceDetails, certData)
 
 	go func() {
 		if err := l.eebusSC.Boot(); err != nil {
-			logger.FATAL.Fatal(err)
+			log.FATAL.Fatal(err)
 			os.Exit(1)
 		}
 	}()
