@@ -5,7 +5,7 @@
 				class="progress-bar"
 				role="progressbar"
 				:class="{
-					'progress-bar-striped': charging,
+					'progress-bar-striped': charging || enabled,
 					'progress-bar-animated': charging,
 					[progressColor]: true,
 				}"
@@ -101,10 +101,7 @@ export default {
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
-			if (this.enabled) {
-				return "bg-primary";
-			}
-			return "bg-secondary";
+			return "bg-primary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
