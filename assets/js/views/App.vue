@@ -6,27 +6,36 @@
 					<a class="navbar-brand" href="https://github.com/andig/evcc">
 						<Logo class="logo"></Logo>
 					</a>
-					<button
-						class="navbar-toggler"
-						type="button"
-						data-toggle="collapse"
-						data-target="#navbarNavAltMarkup"
-						aria-controls="navbarNavAltMarkup"
-						aria-expanded="false"
-						aria-label="Toggle navigation"
-					>
-						<span class="navbar-toggler-icon"></span>
-					</button>
-					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-						<div class="navbar-nav mr-auto"></div>
-						<div class="navbar-nav">
-							<a
-								class="nav-item nav-link"
-								href="https://github.com/andig/evcc/discussions"
-								target="_blank"
+					<div class="d-flex">
+						<div class="d-flex">
+							<Notifications :notifications="notifications" />
+							<button
+								class="navbar-toggler"
+								type="button"
+								data-bs-toggle="collapse"
+								data-bs-target="#navbarNavAltMarkup"
+								aria-controls="navbarNavAltMarkup"
+								aria-expanded="false"
+								aria-label="Toggle navigation"
 							>
-								Support
-							</a>
+								<span class="navbar-toggler-icon"></span>
+							</button>
+						</div>
+						<div
+							class="collapse navbar-collapse flex-lg-grow-0"
+							id="navbarNavAltMarkup"
+						>
+							<ul class="navbar-nav">
+								<li class="nav-item">
+									<a
+										class="nav-link"
+										href="https://github.com/andig/evcc/discussions"
+										target="_blank"
+									>
+										Support
+									</a>
+								</li>
+							</ul>
 						</div>
 					</div>
 				</div>
@@ -36,7 +45,7 @@
 				class="flex-grow-1 d-flex flex-column justify-content-stretch"
 			></router-view>
 		</div>
-		<Footer :version="version"></Footer>
+		<Footer :version="version" :sponsor="sponsor"></Footer>
 	</div>
 </template>
 
@@ -44,11 +53,13 @@
 import "../icons";
 import Logo from "../components/Logo";
 import Footer from "../components/Footer";
+import Notifications from "../components/Notifications";
+
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Logo, Footer },
+	components: { Logo, Footer, Notifications },
 	data: function () {
 		return {
 			compact: false,
@@ -80,7 +91,7 @@ export default {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
 				} catch (e) {
-					window.toasts.error(e, evt.data);
+					window.app.error(e, evt.data);
 				}
 			};
 		},
@@ -96,6 +107,12 @@ export default {
 				uploadProgress: this.store.state.uploadProgress,
 			};
 		},
+		sponsor: function () {
+			return this.store.state.sponsor;
+		},
+	},
+	props: {
+		notifications: Array,
 	},
 	created: function () {
 		const urlParams = new URLSearchParams(window.location.search);

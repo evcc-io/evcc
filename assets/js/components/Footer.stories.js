@@ -16,6 +16,7 @@ export const KeinUpdate = Template.bind({});
 KeinUpdate.args = {
   version: { installed: "0.40" },
 };
+
 export const UpdateVerfuegbar = Template.bind({});
 UpdateVerfuegbar.args = {
   version: {
@@ -23,6 +24,15 @@ UpdateVerfuegbar.args = {
     available: "0.40",
     releaseNotes: "Lorem ipsum dolor sit amet consectetur",
   },
+};
+
+export const Sponsor = Template.bind({});
+Sponsor.args = {
+  version: {
+    installed: "0.36",
+    available: "0.40",
+  },
+  sponsor: "naltatis",
 };
 
 export const Updater = Template.bind({});

@@ -1,7 +1,7 @@
 import Version from "./Version.vue";
 
 export default {
-  title: "Main/Version",
+  title: "Main/Footer/Version",
   component: Version,
   argTypes: {},
 };

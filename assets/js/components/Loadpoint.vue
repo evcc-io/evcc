@@ -71,7 +71,7 @@ export default {
 		chargeCurrent: Number,
 		socCapacity: Number,
 		connectedDuration: Number,
-		chargeCurrents: Object,
+		chargeCurrents: Array,
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
 	},
@@ -119,7 +119,7 @@ export default {
 						this.mode = response.data.mode;
 					}.bind(this)
 				)
-				.catch(window.toasts.error);
+				.catch(window.app.error);
 		},
 		setTargetSoC: function (soc) {
 			axios
@@ -130,7 +130,7 @@ export default {
 						this.targetSoC = response.data.targetSoC;
 					}.bind(this)
 				)
-				.catch(window.toasts.error);
+				.catch(window.app.error);
 		},
 	},
 	destroyed: function () {
