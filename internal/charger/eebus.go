@@ -239,6 +239,8 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
 
+var _ api.Identifier = (*EEBus)(nil)
+
 // Identifier identifies a vehicle and is implemented by the charger
 func (c *EEBus) Identify() (string, error) {
 	data, err := eebus.Instance.GetData(c.ski)
