@@ -107,7 +107,6 @@ export default {
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
-		supporter: Boolean,
 	},
 	data: function () {
 		return {

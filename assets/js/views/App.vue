@@ -45,7 +45,7 @@
 				class="flex-grow-1 d-flex flex-column justify-content-stretch"
 			></router-view>
 		</div>
-		<Footer :version="version" :supporter="supporter"></Footer>
+		<Footer :version="version" :sponsor="sponsor"></Footer>
 	</div>
 </template>
 
@@ -107,8 +107,8 @@ export default {
 				uploadProgress: this.store.state.uploadProgress,
 			};
 		},
-		supporter: function () {
-			return !!this.store.state.sponsor;
+		sponsor: function () {
+			return this.store.state.sponsor;
 		},
 	},
 	props: {

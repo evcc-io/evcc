@@ -1,21 +1,22 @@
 <template>
 	<div
-		ref="supporter"
-		v-if="supporter"
-		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap supporter-button"
+		ref="sponsor"
+		v-if="sponsor"
+		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap sponsor-button"
 		@click.stop.prevent="surprise"
 	>
-		<span>Supporter</span>
-		<fa-icon icon="star" class="icon ms-1"></fa-icon>
+		Danke<span class="d-none d-sm-inline"> {{ sponsor }}</span>
+		<fa-icon :icon="['fas', 'heart']" class="icon ms-1"></fa-icon>
 	</div>
 	<a
 		v-else
 		href="https://github.com/sponsors/andig"
 		target="_blank"
-		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap"
+		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap support-button"
 	>
 		<span class="d-none d-sm-inline">Projekt </span>unterstützen
-		<fa-icon icon="heart" class="icon ms-1"></fa-icon>
+		<fa-icon :icon="['far', 'heart']" class="icon ms-1 outline"></fa-icon>
+		<fa-icon :icon="['fas', 'heart']" class="icon ms-1 solid"></fa-icon>
 	</a>
 </template>
 
@@ -23,14 +24,14 @@
 import confetti from "canvas-confetti";
 
 export default {
-	name: "Supporter",
+	name: "sponsor",
 	props: {
-		supporter: Boolean,
+		sponsor: String,
 	},
 	methods: {
 		surprise: function () {
-			console.log(this.$refs.supporter);
-			const { top, height, left, width } = this.$refs.supporter.getBoundingClientRect();
+			console.log(this.$refs.sponsor);
+			const { top, height, left, width } = this.$refs.sponsor.getBoundingClientRect();
 			const x = (left + width / 2) / window.innerWidth;
 			const y = (top + height / 2) / window.innerHeight;
 			const origin = { x, y };
@@ -63,10 +64,20 @@ export default {
 <style scoped>
 .icon {
 	color: #0fdd42;
+	display: inline-block;
 }
-.supporter-button {
+.sponsor-button {
 	/* prevent double-tap zoom */
 	touch-action: none;
 	user-select: none;
+}
+.support-button .solid {
+	display: none;
+}
+.support-button:hover .solid {
+	display: inline-block;
+}
+.support-button:hover .outline {
+	display: none;
 }
 </style>

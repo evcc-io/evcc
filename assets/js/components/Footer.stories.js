@@ -26,13 +26,13 @@ UpdateVerfuegbar.args = {
   },
 };
 
-export const Supporter = Template.bind({});
-Supporter.args = {
+export const Sponsor = Template.bind({});
+Sponsor.args = {
   version: {
     installed: "0.36",
     available: "0.40",
   },
-  supporter: true,
+  sponsor: "naltatis",
 };
 
 export const Updater = Template.bind({});
