@@ -25,18 +25,17 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity *Identity, brand, country string) *API {
-	helper := request.NewHelper(log)
-	helper.Client.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   helper.Transport,
-	}
-
+func NewAPI(log *util.Logger, identity oauth2.TokenSource, brand, country string) *API {
 	v := &API{
-		Helper:  helper,
+		Helper:  request.NewHelper(log),
 		brand:   brand,
 		country: country,
 		baseURI: DefaultBaseURI,
+	}
+
+	v.Client.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   v.Client.Transport,
 	}
 
 	return v

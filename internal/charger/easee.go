@@ -65,7 +65,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		return c, err
 	}
 
-	// replace transport client with authenticated client
+	// replace client transport with authenticated transport
 	c.Client.Transport = &oauth2.Transport{
 		Source: ts,
 		Base:   c.Client.Transport,
