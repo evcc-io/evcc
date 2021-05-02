@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	// IdentityURI is the VW OIDC identidy provider uri
+	// IdentityURI is the VW OIDC identity provider uri
 	IdentityURI = "https://identity.vwgroup.io"
 
 	// OauthTokenURI is used for refreshing tokens

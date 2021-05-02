@@ -19,7 +19,7 @@ func Refresher(log *util.Logger) oauth.TokenRefresher {
 	}
 }
 
-// Refresh is the oauth.TokenRefresher
+// RefreshToken implements oauth.TokenRefresher
 func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
 

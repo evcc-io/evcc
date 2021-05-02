@@ -82,9 +82,9 @@ func (c *Tasmota) Enable(enable bool) error {
 	switch {
 	case err != nil:
 		return err
-	case enable && resp.POWER != "ON":
+	case enable && resp.Power != "ON":
 		return errors.New("switchOn failed")
-	case !enable && resp.POWER != "OFF":
+	case !enable && resp.Power != "OFF":
 		return errors.New("switchOff failed")
 	default:
 		return nil
