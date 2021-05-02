@@ -32,7 +32,7 @@
 										href="https://github.com/andig/evcc/discussions"
 										target="_blank"
 									>
-										Support
+										{{ $t("header.support") }}
 									</a>
 								</li>
 							</ul>
@@ -40,7 +40,6 @@
 					</div>
 				</div>
 			</nav>
-
 			<router-view
 				class="flex-grow-1 d-flex flex-column justify-content-stretch"
 			></router-view>

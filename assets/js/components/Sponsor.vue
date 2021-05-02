@@ -5,7 +5,10 @@
 		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap sponsor-button"
 		@click.stop.prevent="surprise"
 	>
-		Danke<span class="d-none d-sm-inline"> {{ sponsor }}</span>
+		<span class="d-inline d-sm-none">{{ $t("footer.sponsor.sponsoredShort") }}</span>
+		<span class="d-none d-sm-inline">{{
+			$t("footer.sponsor.sponsoredLong", { sponsor })
+		}}</span>
 		<fa-icon :icon="['fas', 'heart']" class="icon ms-1"></fa-icon>
 	</div>
 	<a
@@ -14,7 +17,8 @@
 		target="_blank"
 		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap support-button"
 	>
-		<span class="d-none d-sm-inline">Projekt </span>unterstützen
+		<span class="d-inline d-sm-none">{{ $t("footer.sponsor.supportProjectShort") }}</span>
+		<span class="d-none d-sm-inline">{{ $t("footer.sponsor.supportProjectLong") }}</span>
 		<fa-icon :icon="['far', 'heart']" class="icon ms-1 outline"></fa-icon>
 		<fa-icon :icon="['fas', 'heart']" class="icon ms-1 solid"></fa-icon>
 	</a>

@@ -8,7 +8,9 @@
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
 			<fa-icon icon="gift" class="icon me-1"></fa-icon>
-			Update<span class="d-none d-sm-inline"> verfügbar</span>: {{ available }}
+			<span class="d-none d-sm-inline"> {{ $t("footer.version.availableLong") }}: </span>
+			<span class="d-inline d-sm-none"> {{ $t("footer.version.availableShort") }}: </span>
+			{{ available }}
 		</button>
 		<a
 			:href="releaseNotesUrl(installed)"
@@ -16,14 +18,14 @@
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 			v-else
 		>
-			Version {{ installed }}
+			{{ $t("footer.version.version") }} {{ installed }}
 		</a>
 
 		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">Update verfügbar</h5>
+						<h5 class="modal-title">{{ $t("footer.version.modalTitle") }}</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -33,7 +35,7 @@
 					</div>
 					<div class="modal-body">
 						<div v-if="updateStarted">
-							<p>Nach der Aktualisierung wird evcc neu gestartet.</p>
+							<p>{{ $t("footer.version.modalUpdateStarted") }}</p>
 							<div class="progress my-3">
 								<div
 									class="progress-bar progress-bar-striped progress-bar-animated"
@@ -45,13 +47,15 @@
 						</div>
 						<div v-else>
 							<p>
-								<small>Aktuell installierte Version: {{ installed }}</small>
+								<small>
+									{{ $t("footer.version.modalInstalledVersion") }}:
+									{{ installed }}
+								</small>
 							</p>
 							<div v-if="releaseNotes" v-html="releaseNotes"></div>
 							<p v-else>
-								Keine Releasenotes verfügbar. Mehr Informationen zur neuen Version
-								findest du
-								<a :href="releaseNotesUrl(available)">hier</a>.
+								{{ $t("footer.version.modalNoReleaseNotes") }}
+								<a :href="releaseNotesUrl(available)">GitHub</a>.
 							</p>
 						</div>
 					</div>
@@ -62,7 +66,7 @@
 							:disabled="updateStarted"
 							data-bs-dismiss="modal"
 						>
-							Abbrechen
+							{{ $t("footer.version.modalCancel") }}
 						</button>
 						<div>
 							<button
@@ -79,12 +83,12 @@
 										aria-hidden="true"
 									>
 									</span>
-									Akualisieren
+									{{ $t("footer.version.modalUpdate") }}
 								</span>
-								<span v-else>Jetzt aktualisieren</span>
+								<span v-else>{{ $t("footer.version.modalUpdateNow") }}</span>
 							</button>
 							<a :href="releaseNotesUrl(available)" class="btn btn-primary" v-else>
-								Download
+								{{ $t("footer.version.modalDownload") }}
 							</a>
 						</div>
 					</div>
@@ -118,10 +122,10 @@ export default {
 		update: async function () {
 			try {
 				await axios.post("update");
-				this.updateStatus = "Aktualisierung gestartet: ";
+				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
 				this.updateStarted = true;
 			} catch (e) {
-				this.updateStatus = "Aktualisierung nicht möglich: " + e;
+				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart") + e;
 			}
 		},
 		releaseNotesUrl: function (version) {

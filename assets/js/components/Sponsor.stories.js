@@ -1,4 +1,5 @@
 import Sponsor from "./Sponsor.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Footer/Sponsor",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Sponsor },
   template: '<Sponsor v-bind="$props"></Sponsor>',

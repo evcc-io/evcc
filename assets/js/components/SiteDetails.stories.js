@@ -1,4 +1,5 @@
 import SiteDetails from "./SiteDetails.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/SiteDetails",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { SiteDetails },
   template: '<SiteDetails v-bind="$props"></SiteDetails>',
