@@ -108,10 +108,8 @@ func (v *Ford) login() (oauth.Token, error) {
 	return res, err
 }
 
-var _ oauth.TokenRefresher = (*Ford)(nil)
-
 // Refresh implements the oauth.TokenRefresher interface
-func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Ford) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
 		"grant_type":    []string{"refresh_token"},

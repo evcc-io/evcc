@@ -9,7 +9,7 @@ import (
 )
 
 type TokenRefresher interface {
-	Refresh(token *oauth2.Token) (*oauth2.Token, error)
+	RefreshToken(token *oauth2.Token) (*oauth2.Token, error)
 }
 
 type TokenSource struct {
@@ -25,7 +25,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	var err error
 	if time.Until(ts.token.Expiry) < time.Minute {
 		var token *oauth2.Token
-		if token, err = ts.refresher.Refresh(ts.token); err == nil {
+		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
 			if token.AccessToken == "" {
 				err = errors.New("token refresh failed to obtain access token")
 			} else {
