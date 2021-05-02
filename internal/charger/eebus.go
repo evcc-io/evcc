@@ -3,6 +3,7 @@
 package charger
 
 import (
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"strings"
@@ -13,15 +14,10 @@ import (
 	"github.com/andig/evcc/internal/charger/eebus"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/util/sponsor"
+	// "github.com/andig/evcc/util/sponsor"
 )
 
 const messagesTimeout = 10 * time.Second
-
-type Certificate struct {
-	Public  string
-	Private string
-}
 
 type EEBus struct {
 	*request.Helper
@@ -37,28 +33,35 @@ func init() {
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski         string
-		Certificate Certificate
+		certificate struct {
+			Public, Private []byte
+		}
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski, cc.Certificate.Public, cc.Certificate.Private)
+	cert, err := tls.X509KeyPair(cc.certificate.Public, cc.certificate.Private)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewEEBus(cc.Ski, cert)
 }
 
 // NewMobileConnect creates MCC charger
-func NewEEBus(ski, cert, key string) (*EEBus, error) {
-	log := util.NewLogger("mcc")
+func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
+	log := util.NewLogger("eebus")
 
-	if !sponsor.IsAuthorized() {
-		return nil, errors.New("easee requires evcc sponsorship, register at https://cloud.evcc.io")
-	}
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, errors.New("eebus requires evcc sponsorship, register at https://cloud.evcc.io")
+	// }
 
 	if eebus.Instance == nil {
 		var err error
 
-		instance, err := eebus.New(log, key, cert)
+		instance, err := eebus.New(log, cert)
 		if err != nil {
 			return nil, err
 		}
