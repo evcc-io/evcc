@@ -13,14 +13,12 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/charger/eebus"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	// "github.com/andig/evcc/util/sponsor"
 )
 
 const messagesTimeout = 10 * time.Second
 
 type EEBus struct {
-	*request.Helper
 	ski              string
 	latestMaxCurrent float64
 }
@@ -71,8 +69,7 @@ func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
 	shortedSki := strings.ReplaceAll(ski, "-", "")
 
 	c := &EEBus{
-		Helper: request.NewHelper(log),
-		ski:    shortedSki,
+		ski: shortedSki,
 	}
 
 	// on start we need to disable charging as it would otherwise start with max current
@@ -142,9 +139,9 @@ func (c *EEBus) Enable(enable bool) error {
 	if !enable {
 		// Important notes on enabling/disabling!!
 		// ISO15118 mode:
-		//   non-asymetric or all phases set to 0: the OBC will wait for 1 minute, if the values remain after 1 min, it will pause then
-		//   asymetric and only some phases set to 0: no pauses or waiting for changes required
-		//   asymetric mode requires Plug & Charge (PnC) and Value Added Services (VAS)
+		//   non-asymmetric or all phases set to 0: the OBC will wait for 1 minute, if the values remain after 1 min, it will pause then
+		//   asymmetric and only some phases set to 0: no pauses or waiting for changes required
+		//   asymmetric mode requires Plug & Charge (PnC) and Value Added Services (VAS)
 		// IEC61851 mode:
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
