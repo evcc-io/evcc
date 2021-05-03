@@ -41,7 +41,7 @@ type ovmsChargeResponse struct {
 	CoolDownActive      string `json:"cooldown_active"`
 	CoolDownBattery     string `json:"cooldown_tbattery"`
 	CoolDownTimeLimit   string `json:"cooldown_timelimit"`
-	DoorOpen            int    `json:"cp_dooropen"`
+	ChargePortOpen      int    `json:"cp_dooropen"`
 	EstimatedRange      string `json:"estimatedrange"`
 	IdealRange          string `json:"idealrange"`
 	IdealRangeMax       string `json:"idealrange_max"`
@@ -176,15 +176,15 @@ var _ api.ChargeState = (*Ovms)(nil)
 func (v *Ovms) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	// res, err := v.batteryG()
-	// if res, ok := res.(kamereonResponse); err == nil && ok {
-	// 	if res.Data.Attributes.PlugStatus > 0 {
-	// 		status = api.StatusB
-	// 	}
-	// 	if res.Data.Attributes.ChargingStatus >= 1.0 {
-	// 		status = api.StatusC
-	// 	}
-	// }
+	res, err := v.chargeG()
+	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
+		if res.ChargePortOpen > 0 {
+			status = api.StatusB
+		}
+		if res.ChargeState != "stopped" {
+			status = api.StatusC
+		}
+	}
 
 	return status, nil
 }
@@ -193,11 +193,11 @@ var _ api.VehicleRange = (*Ovms)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Ovms) Range() (int64, error) {
-	// res, err := v.batteryG()
+	res, err := v.chargeG()
 
-	// if res, ok := res.(kamereonResponse); err == nil && ok {
-	// 	return int64(res.Data.Attributes.BatteryAutonomy), nil
-	// }
+	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
+		return strconv.ParseInt(res.EstimatedRange, 0, 64)
+	}
 
 	return 0, nil
 }
@@ -206,19 +206,16 @@ var _ api.VehicleFinishTimer = (*Ovms)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Ovms) FinishTime() (time.Time, error) {
-	// res, err := v.batteryG()
+	res, err := v.chargeG()
 
-	// if res, ok := res.(kamereonResponse); err == nil && ok {
-	// 	timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
+	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
+		cd, err := strconv.ParseInt(res.ChargeDuration, 0, 64)
+		if err == nil {
+			return time.Now().Add(time.Duration(cd) * time.Minute), err
+		}
+	}
 
-	// 	if res.Data.Attributes.RemainingTime == nil {
-	// 		return time.Time{}, api.ErrNotAvailable
-	// 	}
-
-	// 	return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
-	// }
-
-	return time.Time{}, nil
+	return time.Time{}, api.ErrNotAvailable
 }
 
 var _ api.VehicleClimater = (*Ovms)(nil)
