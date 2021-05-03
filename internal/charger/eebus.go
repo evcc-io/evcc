@@ -15,6 +15,7 @@ import (
 )
 
 type EEBus struct {
+	log        *util.Logger
 	cc         *communication.ConnectionController
 	maxCurrent float64
 }
@@ -61,7 +62,7 @@ func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
 		go eebus.Instance.Run()
 	}
 
-	c := &EEBus{}
+	c := &EEBus{log: log}
 
 	eebus.Instance.Register(ski, c.onConnect)
 
