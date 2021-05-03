@@ -114,27 +114,22 @@ func (c *CEM) onConnect(conn ship.Conn) error {
 	if cb != nil {
 		ctrl := communication.NewConnectionController(c.log.TRACE, conn, c.hems)
 		cb(ctrl)
-
-		c.log.TRACE.Println("booting")
-		err := ctrl.Boot()
-		c.log.TRACE.Println("booting:", err)
-
-		return err
+		return ctrl.Boot()
 	}
 
 	return errors.New("client not registered")
 }
 
 func (c *CEM) onCertificate(leaf *x509.Certificate) error {
-	c.mux.Lock()
-	defer c.mux.Unlock()
-
 	ski, err := cert.SkiFromX509(leaf)
 	if err != nil {
 		return err
 	}
 
 	c.log.TRACE.Printf("verifying client ski: %s", ski)
+
+	c.mux.Lock()
+	defer c.mux.Unlock()
 
 	for allowed := range c.clients {
 		if ski == allowed {
