@@ -6,7 +6,7 @@ export default {
       availableShort: "available",
       availableLong: "update available",
       modalTitle: "Update available",
-      modalUpdateStarted: "After the update evcc is restarted.",
+      modalUpdateStarted: "Evcc will restart after the update..",
       modalInstalledVersion: "Currently installed version",
       modalNoReleaseNotes:
         "No release notes available. More information about the new version can be found here:",
