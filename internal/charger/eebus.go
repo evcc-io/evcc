@@ -6,8 +6,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"strings"
-	"time"
 
 	"github.com/amp-x/eebus/communication"
 	"github.com/andig/evcc/api"
@@ -16,18 +14,16 @@ import (
 	// "github.com/andig/evcc/util/sponsor"
 )
 
-const messagesTimeout = 10 * time.Second
-
 type EEBus struct {
-	ski              string
-	latestMaxCurrent float64
+	cc         *communication.ConnectionController
+	maxCurrent float64
 }
 
 func init() {
 	registry.Add("eebus", NewEEBusFromConfig)
 }
 
-// NewEEBusFromConfig creates an EEBUS charger from generic config
+// NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Ski         string
@@ -58,19 +54,16 @@ func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
 
 	if eebus.Instance == nil {
 		var err error
-
-		instance, err := eebus.New(log, cert)
-		if err != nil {
+		if eebus.Instance, err = eebus.New(log, cert); err != nil {
 			return nil, err
 		}
-		eebus.Instance = instance
+
+		go eebus.Instance.Run()
 	}
 
-	shortedSki := strings.ReplaceAll(ski, "-", "")
+	c := &EEBus{}
 
-	c := &EEBus{
-		ski: shortedSki,
-	}
+	eebus.Instance.Register(ski, c.onConnect)
 
 	// on start we need to disable charging as it would otherwise start with max current
 	_ = c.Enable(false)
@@ -78,9 +71,13 @@ func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
 	return c, nil
 }
 
+func (c *EEBus) onConnect(cc *communication.ConnectionController) {
+	c.cc = cc
+}
+
 // Status implements the api.Charger interface
 func (c *EEBus) Status() (api.ChargeStatus, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -102,7 +99,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *EEBus) Enabled() (bool, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return false, err
 	}
@@ -114,11 +111,11 @@ func (c *EEBus) Enabled() (bool, error) {
 	// when stopping charging by sending default current values to L1, it looks like the
 	// Taycan OBC sets current to 0.5 and power varies between 1-3W
 	// on enabling with 2A on L1, the measurement e..g goes:
-	// 18:19:57 set limit on L1 to 2A
-	// 18:19:57 measurement on L1 1.2A - 170W
-	// 18:19:59 measurement on L1 0.5A - 3W
-	// 18:20:01 measurement on L1 0.5A - 3W
-	// 18:20:02 measurement on L1 2A - 450W
+	//   18:19:57 set limit on L1 to 2A
+	//   18:19:57 measurement on L1 1.2A - 170W
+	//   18:19:59 measurement on L1 0.5A - 3W
+	//   18:20:01 measurement on L1 0.5A - 3W
+	//   18:20:02 measurement on L1 2A - 450W
 	// so it took 5 seconds to reach the low setting. if we check enabled in between, it may appear as disabled!
 	if data.EVData.Measurements.CurrentL1 > 0.5 ||
 		data.EVData.Measurements.CurrentL2 > 0.5 ||
@@ -131,7 +128,7 @@ func (c *EEBus) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return err
 	}
@@ -145,16 +142,18 @@ func (c *EEBus) Enable(enable bool) error {
 		// IEC61851 mode:
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
-		c.latestMaxCurrent = 0
-		return eebus.Instance.SetCurrents(c.ski, 0.0, 0.0, 0.0)
+		c.maxCurrent = 0
+		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, data.EVData)
 	}
 
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
-	if c.latestMaxCurrent > 0 {
-		return eebus.Instance.SetCurrents(c.ski, c.latestMaxCurrent, c.latestMaxCurrent, c.latestMaxCurrent)
+	if c.maxCurrent > 0 {
+		c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, data.EVData)
 	} else {
-		return eebus.Instance.SetCurrents(c.ski, data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min)
+		c.cc.WriteCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min}, data.EVData)
 	}
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -166,7 +165,7 @@ var _ api.ChargerEx = (*EEBus)(nil)
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *EEBus) MaxCurrentMillis(current float64) error {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return err
 	}
@@ -183,18 +182,21 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
 	}
 
-	c.latestMaxCurrent = current
+	c.maxCurrent = current
 
-	return eebus.Instance.SetCurrents(c.ski, current, current, current)
+	// TODO error handling
+	c.cc.WriteCurrentLimitData([]float64{current, current, current}, data.EVData)
+
+	return nil
 }
 
 var _ api.Meter = (*EEBus)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *EEBus) CurrentPower() (float64, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
-		return 0.0, err
+		return 0, err
 	}
 
 	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
@@ -206,9 +208,9 @@ var _ api.ChargeRater = (*EEBus)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *EEBus) ChargedEnergy() (float64, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
-		return 0.0, err
+		return 0, err
 	}
 
 	return data.EVData.Measurements.ChargedEnergy, nil
@@ -231,7 +233,7 @@ var _ api.MeterCurrent = (*EEBus)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *EEBus) Currents() (float64, float64, float64, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -241,9 +243,9 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 
 var _ api.Identifier = (*EEBus)(nil)
 
-// Identifier identifies a vehicle and is implemented by the charger
+// Identifier implements the api.Identifier interface
 func (c *EEBus) Identify() (string, error) {
-	data, err := eebus.Instance.GetData(c.ski)
+	data, err := c.cc.GetData()
 	if err != nil {
 		return "", err
 	}
