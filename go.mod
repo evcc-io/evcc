@@ -87,4 +87,4 @@ require (
 	nhooyr.io/websocket v1.8.7 // indirect
 )
 
-replace github.com/andig/evcc-config => github.com/premultiply/evcc-config v0.0.0-20210430222220-c418e3d77b9f
+replace github.com/andig/evcc-config => github.com/premultiply/evcc-config v0.0.0-20210501194336-3cf090d136ab
