@@ -3,7 +3,7 @@
 		<small class="text-secondary">
 			<span v-if="minSoCActive">
 				<fa-icon class="text-muted me-1" icon="exclamation-circle"></fa-icon>
-				Mindestladung bis {{ minSoC }}%
+				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
 		<small

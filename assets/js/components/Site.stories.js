@@ -1,4 +1,5 @@
 import Site from "./Site.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Site",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Site },
   template: '<Site v-bind="$props"></Site>',
