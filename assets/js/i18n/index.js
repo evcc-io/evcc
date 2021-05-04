@@ -2,6 +2,7 @@ import Vue from "vue";
 import VueI18n from "vue-i18n";
 import de from "./de";
 import en from "./en";
+import it from "./it";
 
 Vue.use(VueI18n);
 
@@ -18,5 +19,5 @@ function getBrowserLocale() {
 export default new VueI18n({
   locale: getBrowserLocale(),
   fallbackLocale: "en",
-  messages: { de, en },
+  messages: { de, en, it },
 });
