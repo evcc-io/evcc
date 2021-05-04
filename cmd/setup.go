@@ -57,6 +57,11 @@ func configureEnvironment(conf config) (err error) {
 		err = configureJavascript(conf.Javascript)
 	}
 
+	// setup EEBus server
+	if err == nil {
+		err = configureEEBus(conf.EEBus)
+	}
+
 	return
 }
 
@@ -126,6 +131,15 @@ func configureMQTT(conf mqttConfig) error {
 func configureJavascript(conf map[string]interface{}) error {
 	if err := javascript.Configure(conf); err != nil {
 		return fmt.Errorf("failed configuring javascript: %w", err)
+	}
+	return nil
+}
+
+// setup EEBus
+func configureEEBus(conf map[string]interface{}) error {
+	var err error
+	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
+		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
 	return nil
 }

@@ -3,15 +3,17 @@
 package charger
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
+	"sync"
 
+	"github.com/amp-x/eebus/app"
 	"github.com/amp-x/eebus/communication"
+	"github.com/amp-x/eebus/ship"
+	"github.com/amp-x/eebus/spine"
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/internal/charger/eebus"
+	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
-	// "github.com/andig/evcc/util/sponsor"
 )
 
 type EEBus struct {
@@ -27,44 +29,27 @@ func init() {
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Ski         string
-		Certificate struct {
-			Public, Private []byte
-		}
+		Ski string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewEEBus(cc.Ski, cert)
+	return NewEEBus(cc.Ski)
 }
 
-// NewMobileConnect creates MCC charger
-func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
+// NewEEBus creates EEBus charger
+func NewEEBus(ski string) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, errors.New("eebus requires evcc sponsorship, register at https://cloud.evcc.io")
-	// }
-
-	if eebus.Instance == nil {
-		var err error
-		if eebus.Instance, err = eebus.New(log, cert); err != nil {
-			return nil, err
-		}
-
-		go eebus.Instance.Run()
+	if server.EEBusInstance == nil {
+		return nil, errors.New("eebus not configured")
 	}
 
 	c := &EEBus{log: log}
 
-	eebus.Instance.Register(ski, c.onConnect)
+	server.EEBusInstance.Register(ski, c.onConnect)
 
 	// on start we need to disable charging as it would otherwise start with max current
 	_ = c.Enable(false)
@@ -72,8 +57,15 @@ func NewEEBus(ski string, cert tls.Certificate) (*EEBus, error) {
 	return c, nil
 }
 
-func (c *EEBus) onConnect(cc *communication.ConnectionController) {
-	c.cc = cc
+var eebusDevice spine.Device
+var once sync.Once
+
+func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
+	once.Do(func() {
+		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
+	})
+	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
+	return c.cc.Boot()
 }
 
 // Status implements the api.Charger interface
