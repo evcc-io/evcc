@@ -141,6 +141,9 @@ func configureEEBus(conf map[string]interface{}) error {
 	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
 		return fmt.Errorf("failed configuring eebus: %w", err)
 	}
+
+	go server.EEBusInstance.Run()
+
 	return nil
 }
 
