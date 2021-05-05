@@ -47,15 +47,16 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	// 	return nil, errors.New("eebus requires evcc sponsorship, register at https://cloud.evcc.io")
 	// }
 
+	details := EEBusInstance.DeviceInfo()
+
 	log := util.NewLogger("eebus")
-	id := server.UniqueID{Prefix: "evcc"}.String()
+	id := server.UniqueID{Prefix: details.BrandName}.String()
 
 	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
 		return nil, err
 	}
 
-	details := EEBusInstance.DeviceInfo()
 	srv := &eebus.Server{
 		Log:         log.TRACE,
 		Addr:        cc.Uri,
