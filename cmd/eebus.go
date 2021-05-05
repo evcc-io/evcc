@@ -3,11 +3,11 @@
 package cmd
 
 import (
-	"bufio"
 	"crypto/x509/pkix"
-	"fmt"
-	"strings"
+	"os"
+	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	certhelper "github.com/amp-x/eebus/cert"
 	"github.com/amp-x/eebus/communication"
 	"github.com/andig/evcc/server"
@@ -27,6 +27,17 @@ func init() {
 	rootCmd.AddCommand(eebusCmd)
 }
 
+const tmpl = `
+Add the following to the evcc config file:
+
+eebus:
+  certificate:
+    public: |
+{{ .public | indent 6 }}
+    private: |
+{{ .private | indent 6 }}
+`
+
 func generateEEBUSCert() {
 	details := communication.ManufacturerDetails{
 		DeviceName:    "EVCC",
@@ -43,30 +54,20 @@ func generateEEBUSCert() {
 
 	cert, err := certhelper.CreateCertificate(true, subject)
 	if err != nil {
-		fmt.Println("Could not create certificate")
-		return
+		log.FATAL.Fatal("could not create certificate")
 	}
 
-	certValue, keyValue, err := certhelper.GetX509KeyPair(cert)
+	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
 	if err != nil {
-		fmt.Println("Could not process generated certificate")
-		return
+		log.FATAL.Fatal("could not process generated certificate")
 	}
 
-	fmt.Println()
-	fmt.Println("Add the following configuration to the config:")
-	fmt.Println()
-	fmt.Println("eebus:")
-	fmt.Println("  certificate:")
-	fmt.Println("    public: |")
-	scanner := bufio.NewScanner(strings.NewReader(certValue))
-	for scanner.Scan() {
-		fmt.Println("      ", scanner.Text())
-	}
-	fmt.Println("    private: |")
-	scanner = bufio.NewScanner(strings.NewReader(keyValue))
-	for scanner.Scan() {
-		fmt.Println("      ", scanner.Text())
+	t := template.Must(template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl))
+	if err := t.Execute(os.Stdout, map[string]interface{}{
+		"public":  pubKey,
+		"private": privKey,
+	}); err != nil {
+		log.FATAL.Fatal("rendering failed", err)
 	}
 }
 

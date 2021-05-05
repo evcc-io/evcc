@@ -3,6 +3,7 @@ module github.com/andig/evcc
 go 1.16
 
 require (
+	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/amp-x/eebus v0.0.0-20210501172036-113fddb03bba
 	github.com/andig/evcc-config v0.0.0-20210426054204-3450b327d1e5
