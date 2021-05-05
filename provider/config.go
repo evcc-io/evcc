@@ -48,7 +48,7 @@ var registry providerRegistry = make(map[string]func(map[string]interface{}) (In
 
 // Config is the general provider config
 type Config struct {
-	Source string                 `mapstructure:"plugin"`
+	Source string
 	Type   string                 // TODO remove deprecated
 	Other  map[string]interface{} `mapstructure:",remain"`
 }
