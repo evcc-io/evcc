@@ -13,7 +13,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
-  - Smart-Home outlets: FritzDECT, Tasmota, TP-Link 
+  - Smart-Home outlets: FritzDECT, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
 - wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
@@ -168,7 +168,7 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 
 ### Charger
 
-Charger is responsible for handling EV state and adjusting charge current.    
+Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
@@ -184,7 +184,7 @@ Available charger implementations are:
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `warp`: Tinkerforge Warp/ Warp Pro charger
-- `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
+- `custom`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
@@ -235,7 +235,7 @@ Available meter implementations are:
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
-- `default`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
+- `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
 Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
 
@@ -261,7 +261,7 @@ Available vehicle remote interface implementations are:
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
-- `default`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
+- `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
 
@@ -281,7 +281,7 @@ to the left makes **Min+PV** behave as described above. Pushing completely to th
 
 ## Plugins
 
-Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `default` type meter, charger or vehicle.
+Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `custom` type meter, charger or vehicle.
 
 Plugins support both _read_ and _write_ access. When using plugins for _write_ access, the actual data is provided as variable in form of `${var[:format]}`. If `format` is omitted, data is formatted according to the default Go `%v` [format](https://golang.org/pkg/fmt/). The variable is replaced with the actual data before the plugin is executed.
 
@@ -296,7 +296,7 @@ The meter configuration consists of the actual physical connection and the value
 If the device is physically connected using an RS485 adapter, `device` and serial configuration `baudrate`, `comset` must be specified:
 
 ```yaml
-type: modbus
+source: modbus
 device: /dev/ttyUSB0
 baudrate: 9600
 comset: "8N1"
@@ -305,7 +305,7 @@ comset: "8N1"
 If the device is a grid inverter or a Modbus meter connected via TCP, `uri` must be specified:
 
 ```yaml
-type: modbus
+source: modbus
 uri: 192.168.0.11:502
 id: 1 # modbus slave id
 ```
@@ -313,7 +313,7 @@ id: 1 # modbus slave id
 If the device is a Modbus RTU device connected using an RS485/Ethernet adapter, set `rtu: true`. The serial configuration must be done directly on the adapter. Example:
 
 ```yaml
-type: modbus
+source: modbus
 uri: 192.168.0.10:502
 id: 3 # modbus slave id
 rtu: true
@@ -321,10 +321,10 @@ rtu: true
 
 #### Logical connection <!-- omit in toc -->
 
-The meter device type `meter` and the device's slave id `id` are always required:
+The device's type `model` and the device's slave id `id` are always required:
 
 ```yaml
-type: ...
+source: modbus
 uri/device/id: ...
 model: sdm
 value: Power
@@ -357,11 +357,11 @@ In case of SunSpec-compatible inverters, values can also be configured in the fo
 If the Modbus device is not supported by MBMD, the Modbus register can also be manually configured:
 
 ```yaml
-type: ...
+source: modbus
 uri/device/id: ...
 register:
   address: 40070
-  type: holding # holding or input
+  source: holding # holding or input
   decode: int32 # int16|32|64, uint16|32|64, float32|64 and u|int32s + float32s
 scale: -1 # floating point factor applied to result, e.g. for kW to W conversion
 ```
@@ -377,7 +377,7 @@ The `mqtt` plugin allows to read values from MQTT topics. This is particularly u
 Sample configuration:
 
 ```yaml
-type: mqtt
+source: mqtt
 topic: mbmd/sdm1-1/Power
 timeout: 30s # don't accept values older than timeout
 scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
@@ -386,7 +386,7 @@ scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conve
 Sample write configuration:
 
 ```yaml
-type: mqtt
+source: mqtt
 topic: mbmd/charger/maxcurrent
 payload: ${var:%d}
 ```
@@ -400,7 +400,7 @@ The `http` plugin executes HTTP requests to read or update data. Includes the ab
 Sample read configuration:
 
 ```yaml
-type: http
+source: http
 uri: https://volkszaehler/api/data/<uuid>.json?from=now
 method: GET # default HTTP method
 headers:
@@ -428,7 +428,7 @@ The `websocket` plugin implements a web socket listener. Includes the ability to
 Sample configuration (read only):
 
 ```yaml
-type: http
+source: http
 uri: ws://<volkszaehler host:port>/socket
 jq: .data | select(.uuid=="<uuid>") .tuples[0][1] # parse message json
 scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
@@ -440,7 +440,7 @@ timeout: 30s # error if no update received in 30 seconds
 EVCC includes a bundled Javascript interpreter with Underscore.js library installed. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
 
 ```yaml
-type: js
+source: js
 script: |
   var res = 500;
   2 * res; // returns 1000
@@ -450,9 +450,9 @@ When using the `js` plugin for writing, the value to write is handed to the scri
 
 ```yaml
 charger:
-- type: generic
+- type: custom
   maxcurrent:
-    type: js
+    source: js
     script: |
       console.log(maxcurrent);
 ```
@@ -464,7 +464,7 @@ The `script` plugin executes external scripts to read or update data. This plugi
 Sample read configuration:
 
 ```yaml
-type: script
+source: script
 cmd: /bin/bash -c "cat /dev/urandom"
 timeout: 5s
 ```
@@ -472,7 +472,7 @@ timeout: 5s
 Sample write configuration:
 
 ```yaml
-type: script
+source: script
 cmd: /home/user/my-script.sh ${enable:%b} # format boolean enable as 0/1
 timeout: 5s
 ```
@@ -482,11 +482,11 @@ timeout: 5s
 The `calc` plugin allows calculating the sum of other plugins:
 
 ```yaml
-type: calc
+source: calc
 add:
-- type: ...
+- source: ...
   ...
-- type: ...
+- source: ...
   ...
 ```
 
@@ -499,12 +499,12 @@ The `combined` status plugin is used to convert a mixed boolean status of plugge
 Sample configuration (read only):
 
 ```yaml
-type: combined
+source: combined
 plugged:
-  type: mqtt
+  source: mqtt
   topic: openWB/lp/1/boolPlugStat
 charging:
-  type: mqtt
+  source: mqtt
   topic: openWB/lp/1/boolChargeStat
 ```
 

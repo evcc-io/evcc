@@ -4,9 +4,7 @@ go 1.16
 
 require (
 	github.com/PuerkitoBio/goquery v1.6.1
-	github.com/andig/evcc-config v0.0.0-20210426054204-3450b327d1e5
-	github.com/andig/gosunspec v0.0.0-20210401131709-cd89d66b502d // indirect
-	github.com/andybalholm/cascadia v1.2.0 // indirect
+	github.com/andig/evcc-config v0.0.0-20210505193639-b12d8515d6f1
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0

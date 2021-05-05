@@ -5,12 +5,14 @@ import (
 	"fmt"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
 
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
+	registry.Add(internal.Custom, NewConfigurableFromConfig)
 }
 
 //go:generate go run ../../cmd/tools/decorate.go -p meter -f decorateMeter -b api.Meter -o meter_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
@@ -28,9 +30,9 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Meter, error) 
 		return nil, err
 	}
 
-	for k, v := range map[string]string{"power": cc.Power.Type} {
+	for k, v := range map[string]string{"power": cc.Power.PluginType()} {
 		if v == "" {
-			return nil, fmt.Errorf("default meter config: %s required", k)
+			return nil, fmt.Errorf("missing plugin configuration: %s", k)
 		}
 	}
 

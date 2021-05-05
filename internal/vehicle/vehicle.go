@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 )
@@ -36,6 +37,7 @@ type Vehicle struct {
 
 func init() {
 	registry.Add("default", NewConfigurableFromConfig)
+	registry.Add(internal.Custom, NewConfigurableFromConfig)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
@@ -55,9 +57,9 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		return nil, err
 	}
 
-	for k, v := range map[string]string{"charge": cc.Charge.Type} {
+	for k, v := range map[string]string{"charge": cc.Charge.PluginType()} {
 		if v == "" {
-			return nil, fmt.Errorf("default vehicle config: %s required", k)
+			return nil, fmt.Errorf("missing plugin configuration: %s", k)
 		}
 	}
 
