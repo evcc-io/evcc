@@ -14,7 +14,7 @@
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
-				v-if="remainingSoCWidth > 0"
+				v-if="remainingSoCWidth > 0 && enabled"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -101,10 +101,7 @@ export default {
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
-			if (this.enabled) {
-				return "bg-primary";
-			}
-			return "bg-secondary";
+			return "bg-primary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
