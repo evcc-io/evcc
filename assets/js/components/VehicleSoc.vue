@@ -76,13 +76,13 @@ export default {
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
 			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
-				let chargeStatus = "getrennt";
+				let chargeStatus = this.$t("main.vehicleSoc.disconnected");
 				if (this.charging) {
-					chargeStatus = "lädt";
+					chargeStatus = this.$t("main.vehicleSoc.charging");
 				} else if (this.enabled) {
-					chargeStatus = "bereit";
+					chargeStatus = this.$t("main.vehicleSoc.ready");
 				} else if (this.connected) {
-					chargeStatus = "verbunden";
+					chargeStatus = this.$t("main.vehicleSoc.connected");
 				}
 				return chargeStatus;
 			}

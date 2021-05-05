@@ -1,11 +1,13 @@
 <template>
 	<div>
-		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">{{ title || "Ladepunkt" }}</p>
+		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">
+			{{ title || $t("main.loadpoint.fallbackName") }}
+		</p>
 		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
-			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
+			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
 		</div>
 		<div class="alert alert-danger mt-4 mb-2" role="alert" v-if="remoteDisabled == 'hard'">
-			{{ remoteDisabledSource }}: Deaktiviert
+			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
 		</div>
 
 		<div class="row">

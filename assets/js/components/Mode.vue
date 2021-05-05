@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<div class="mb-3">Modus</div>
+		<div class="mb-3">{{ $t("main.mode.title") }}</div>
 		<div class="btn-group w-100" role="group">
 			<input
 				id="mode_off"
@@ -11,7 +11,9 @@
 				@click="setTargetMode('off')"
 				:checked="mode == 'off'"
 			/>
-			<label for="mode_off" class="btn btn-outline-primary"> Stop </label>
+			<label for="mode_off" class="btn btn-outline-primary">
+				{{ $t("main.mode.stop") }}
+			</label>
 			<input
 				id="mode_now"
 				type="radio"
@@ -21,7 +23,9 @@
 				@click="setTargetMode('now')"
 				:checked="mode == 'now'"
 			/>
-			<label for="mode_now" class="btn btn-outline-primary"> Sofort </label>
+			<label for="mode_now" class="btn btn-outline-primary">
+				{{ $t("main.mode.now") }}
+			</label>
 			<input
 				id="mode_minpv"
 				type="radio"
@@ -32,8 +36,8 @@
 				:checked="mode == 'minpv'"
 			/>
 			<label for="mode_minpv" class="btn btn-outline-primary">
-				<span class="d-inline d-sm-none">Min</span>
-				<span class="d-none d-sm-inline">Min + PV</span>
+				<span class="d-inline d-sm-none"> {{ $t("main.mode.minpvShort") }} </span>
+				<span class="d-none d-sm-inline"> {{ $t("main.mode.minpvLong") }} </span>
 			</label>
 			<input
 				id="mode_pv"
@@ -45,8 +49,8 @@
 				:checked="mode == 'pv'"
 			/>
 			<label for="mode_pv" class="btn btn-outline-primary">
-				<span class="d-inline d-sm-none">PV</span>
-				<span class="d-none d-sm-inline">Nur PV</span>
+				<span class="d-inline d-sm-none"> {{ $t("main.mode.pvShort") }} </span>
+				<span class="d-none d-sm-inline"> {{ $t("main.mode.pvLong") }} </span>
 			</label>
 		</div>
 	</div>

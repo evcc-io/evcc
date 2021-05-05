@@ -5,6 +5,7 @@ import Vue from "vue";
 import axios from "axios";
 import App from "./views/App";
 import router from "./router";
+import i18n from "./i18n";
 import store from "./store";
 
 const loc = window.location;
@@ -15,6 +16,7 @@ axios.defaults.headers.post["Content-Type"] = "application/json";
 window.app = new Vue({
   el: "#app",
   router,
+  i18n,
   data: { store, notifications: [] },
   render: function (h) {
     return h(App, { props: { notifications: this.notifications } });

@@ -20,7 +20,7 @@
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">Meldungen</h5>
+						<h5 class="modal-title">{{ $t("notifications.modalTitle") }}</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -53,7 +53,7 @@
 							@click="clear"
 							class="btn btn-outline-secondary"
 						>
-							Meldungen entfernen
+							{{ $t("notifications.dismissAll") }}
 						</button>
 					</div>
 				</div>

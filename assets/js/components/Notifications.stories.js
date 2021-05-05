@@ -1,4 +1,5 @@
 import Notifications from "./Notifications.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Notifications",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Notifications },
   template: '<Notifications v-bind="$props"></Notifications>',
