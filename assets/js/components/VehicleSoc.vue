@@ -5,7 +5,7 @@
 				class="progress-bar"
 				role="progressbar"
 				:class="{
-					'progress-bar-striped': charging || enabled,
+					'progress-bar-striped': charging,
 					'progress-bar-animated': charging,
 					[progressColor]: true,
 				}"
@@ -14,7 +14,7 @@
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
-				v-if="remainingSoCWidth > 0"
+				v-if="remainingSoCWidth > 0 && enabled"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
