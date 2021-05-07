@@ -3,7 +3,7 @@ module github.com/andig/evcc
 go 1.16
 
 require (
-	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/amp-x/eebus v0.0.0-20210501172036-113fddb03bba
 	github.com/andig/evcc-config v0.0.0-20210426054204-3450b327d1e5
@@ -32,6 +32,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/grandcat/zeroconf v1.0.0
 	github.com/gregdel/pushover v1.0.0
 	github.com/grid-x/modbus v0.0.0-20210224155242-c4a3d042e99b
 	github.com/hashicorp/go-version v1.3.0
