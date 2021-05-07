@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -789,8 +788,7 @@ func (lp *LoadPoint) updateChargePower() {
 	}, retryOptions...)
 
 	if err != nil {
-		err = fmt.Errorf("updating charge meter: %w", err)
-		lp.log.ERROR.Printf("%v", err)
+		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }
 
