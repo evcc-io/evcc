@@ -51,9 +51,6 @@ func NewEEBus(ski string) (*EEBus, error) {
 
 	server.EEBusInstance.Register(ski, c.onConnect)
 
-	// on start we need to disable charging as it would otherwise start with max current
-	_ = c.Enable(false)
-
 	return c, nil
 }
 
