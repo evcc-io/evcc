@@ -177,8 +177,8 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 }
 
 // NewDevice creates physical modbus device from config
-func NewDevice(model string, subdevice int, isRS485 bool) (device meters.Device, err error) {
-	if isRS485 {
+func NewDevice(model string, subdevice int) (device meters.Device, err error) {
+	if IsRS485(model) {
 		device, err = rs485.NewDevice(strings.ToUpper(model))
 	} else {
 		device = sunspec.NewDevice(strings.ToUpper(model), subdevice)
