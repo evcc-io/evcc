@@ -184,13 +184,13 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 	}
 
 	if err != nil {
-		c.log.TRACE.Printf("%s: client done: %v", entry.HostName, err)
+		log.FATAL.Fatalf("%s: client done: %v", entry.HostName, err)
 		return
 	}
 
 	err = c.shipHandler(svc.SKI, conn)
 	if err != nil {
-		c.log.TRACE.Printf("%s: error calling shipHandler: %v", entry.HostName, err)
+		log.FATAL.Fatalf("%s: error calling shipHandler: %v", entry.HostName, err)
 		return
 	}
 }
