@@ -17,9 +17,11 @@ import (
 )
 
 type EEBus struct {
-	log        *util.Logger
-	cc         *communication.ConnectionController
-	maxCurrent float64
+	log         *util.Logger
+	cc          *communication.ConnectionController
+	maxCurrent  float64
+	isEnabling  bool
+	isDisabling bool
 }
 
 func init() {
@@ -98,6 +100,14 @@ func (c *EEBus) Enabled() (bool, error) {
 		return false, nil
 	}
 
+	if data.EVData.Measurements.CurrentL1 < data.EVData.LimitsL1.Default-0.3 ||
+		data.EVData.Measurements.CurrentL2 < data.EVData.LimitsL2.Default-0.3 ||
+		data.EVData.Measurements.CurrentL3 < data.EVData.LimitsL3.Default-0.3 {
+		if c.isEnabling {
+			return true, nil
+		}
+	}
+
 	// when stopping charging by sending default current values to L1, it looks like the
 	// Taycan OBC sets current to 0.5 and power varies between 1-3W
 	// on enabling with 2A on L1, the measurement e..g goes:
@@ -110,9 +120,14 @@ func (c *EEBus) Enabled() (bool, error) {
 	if data.EVData.Measurements.CurrentL1 > 0.5 ||
 		data.EVData.Measurements.CurrentL2 > 0.5 ||
 		data.EVData.Measurements.CurrentL3 > 0.5 {
+		if c.isDisabling {
+			return false, nil
+		}
+		c.isEnabling = false
 		return true, nil
 	}
 
+	c.isDisabling = false
 	return false, nil
 }
 
@@ -133,11 +148,13 @@ func (c *EEBus) Enable(enable bool) error {
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
+		c.isDisabling = true
 		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, data.EVData)
 
 		return nil
 	}
 
+	c.isEnabling = true
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
 	if c.maxCurrent > 0 {
 		c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, data.EVData)
