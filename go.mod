@@ -8,7 +8,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0
-	github.com/bogosj/tesla v0.0.0-20210425155839-8493aa0dee71
+	github.com/bogosj/tesla v1.0.0
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.6.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
