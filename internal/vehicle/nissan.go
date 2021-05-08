@@ -81,10 +81,10 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	token, err := v.authFlow()
 	if err == nil {
-		// replace transport client with authenticated client
-		v.Helper.Client.Transport = &oauth2.Transport{
+		// replace client transport with authenticated transport
+		v.Client.Transport = &oauth2.Transport{
 			Source: oauth.RefreshTokenSource((*oauth2.Token)(&token), v),
-			Base:   v.Helper.Client.Transport,
+			Base:   v.Client.Transport,
 		}
 	}
 
@@ -227,7 +227,7 @@ func (v *Nissan) authFlow() (oauth.Token, error) {
 	return res, err
 }
 
-func (v *Nissan) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Nissan) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{nissanClientID},
 		"client_secret": []string{nissanClientSecret},

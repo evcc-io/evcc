@@ -6,13 +6,11 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/amp-x/eebus v0.0.0-20210501172036-113fddb03bba
-	github.com/andig/evcc-config v0.0.0-20210426054204-3450b327d1e5
-	github.com/andig/gosunspec v0.0.0-20210401131709-cd89d66b502d // indirect
-	github.com/andybalholm/cascadia v1.2.0 // indirect
+	github.com/andig/evcc-config v0.0.0-20210505193639-b12d8515d6f1
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0
-	github.com/bogosj/tesla v0.0.0-20210425155839-8493aa0dee71
+	github.com/bogosj/tesla v1.0.0
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.6.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -53,7 +51,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/muka/go-bluetooth v0.0.0-20201211051136-07f31c601d33
+	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5

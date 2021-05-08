@@ -81,13 +81,13 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, up
 }
 
 func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
-	// Refresh Fritzbox session id
+	// refresh Fritzbox session id
 	if time.Since(c.updated).Minutes() >= 10 {
 		err := c.getSessionID()
 		if err != nil {
 			return "", err
 		}
-		// Update session timestamp
+		// update session timestamp
 		c.updated = time.Now()
 	}
 
@@ -104,7 +104,6 @@ func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
 
 // Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
 	resp, err := c.execFritzDectCmd("getswitchpresent")
@@ -208,13 +207,13 @@ func (c *FritzDECT) ChargedEnergy() (float64, error) {
 	}
 
 	// unmarshal devicestats
-	var statsresp fritzdect.Devicestats
-	if err = xml.Unmarshal([]byte(resp), &statsresp); err != nil {
+	var stats fritzdect.Devicestats
+	if err = xml.Unmarshal([]byte(resp), &stats); err != nil {
 		return 0, err
 	}
 
 	// select energy value of current day
-	energylist := strings.Split(statsresp.Energy.Values[1], ",")
+	energylist := strings.Split(stats.Energy.Values[1], ",")
 	energy, err := strconv.ParseFloat(energylist[0], 64)
 
 	return energy / 1000, err

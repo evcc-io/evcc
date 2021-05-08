@@ -14,7 +14,7 @@
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
-				v-if="remainingSoCWidth > 0"
+				v-if="remainingSoCWidth > 0 && enabled"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -25,7 +25,7 @@
 			></div>
 		</div>
 		<div
-			v-if="hasVehicle && visibleTargetSoC"
+			v-if="connected && hasVehicle && visibleTargetSoC"
 			class="target"
 			:class="{ 'target--max': visibleTargetSoC === 100 }"
 		>
@@ -76,13 +76,13 @@ export default {
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
 			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
-				let chargeStatus = "getrennt";
+				let chargeStatus = this.$t("main.vehicleSoc.disconnected");
 				if (this.charging) {
-					chargeStatus = "lädt";
+					chargeStatus = this.$t("main.vehicleSoc.charging");
 				} else if (this.enabled) {
-					chargeStatus = "bereit";
+					chargeStatus = this.$t("main.vehicleSoc.ready");
 				} else if (this.connected) {
-					chargeStatus = "verbunden";
+					chargeStatus = this.$t("main.vehicleSoc.connected");
 				}
 				return chargeStatus;
 			}
@@ -101,10 +101,7 @@ export default {
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
-			if (this.enabled) {
-				return "bg-primary";
-			}
-			return "bg-secondary";
+			return "bg-primary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
@@ -161,7 +158,7 @@ export default {
 	color: var(--white);
 }
 .bg-light {
-	color: var(--dark);
+	color: var(--bs-gray-dark);
 }
 .target-label {
 	width: 3em;
@@ -170,7 +167,7 @@ export default {
 	position: absolute;
 	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
 	text-align: center;
-	color: var(--dark);
+	color: var(--bs-gray-dark);
 	font-size: 1rem;
 	opacity: 1;
 	transition: opacity 0.2s ease 1s;
@@ -189,6 +186,7 @@ export default {
 }
 /* Note: Safari,Chrome,Blink and Firefox specific styles need to be in separate definitions to work */
 .target-slider::-webkit-slider-runnable-track {
+	position: relative;
 	background: transparent;
 	border: none;
 	height: 100%;
@@ -209,7 +207,7 @@ export default {
 	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
-	background-color: var(--dark);
+	background-color: var(--bs-gray-dark);
 	cursor: grab;
 	border: none;
 	opacity: 1;
@@ -220,10 +218,10 @@ export default {
 	top: calc(var(--label-height) * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: 0 var(--thumb-horizontal-padding);
+	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
-	background-color: var(--dark);
+	background-color: var(--bs-gray-dark);
 	cursor: grab;
 	border: none;
 	opacity: 1;

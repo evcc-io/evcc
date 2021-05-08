@@ -4,7 +4,7 @@
 			<div class="d-none d-md-flex col-12 col-md-3 col-lg-4 align-items-end">
 				<p class="h1 text-truncate">{{ siteTitle || "Home" }}</p>
 			</div>
-			<div class="col-12 col-md-9 col-lg-6 flex-grow-1">
+			<div class="col-12 col-md-9 col-lg-8 flex-grow-1">
 				<SiteDetails v-bind="details"></SiteDetails>
 			</div>
 		</div>
@@ -13,11 +13,10 @@
 			<template v-for="(loadpoint, id) in loadpoints">
 				<hr class="w-100 my-4" v-if="id > 0" :key="id + '_hr'" />
 				<Loadpoint
-					:key="loadpoint"
+					:key="id"
 					v-bind="loadpoint"
 					:single="loadpoints.length === 1"
 					:id="id"
-					:pvConfigured="pvConfigured"
 				/>
 			</template>
 		</div>
@@ -44,7 +43,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoC: Number,
-		gridCurrents: Object,
+		gridCurrents: Array,
 		prioritySoC: Number,
 	},
 	components: { SiteDetails, Loadpoint },

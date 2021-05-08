@@ -42,12 +42,12 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	// timeout handler
 	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), "", 1, cc.Timeout,
+		fmt.Sprintf("%s/system/%s", cc.Topic, openwb.TimestampTopic), 1, cc.Timeout,
 	).IntGetter()
 
 	// getters
 	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).BoolGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).BoolGetter()
 		return func() (val bool, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -57,7 +57,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).FloatGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
 		return func() (val float64, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()

@@ -3,19 +3,19 @@
 		<div class="row">
 			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
 				<div class="mb-2 value">
-					Leistung
+					{{ $t("main.loadpointDetails.power") }}
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="temperature-low"
 						v-if="climater == 'heating'"
 					></fa-icon>
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="temperature-high"
 						v-if="climater == 'cooling'"
 					></fa-icon>
 					<fa-icon
-						class="text-primary ml-1"
+						class="text-primary ms-1"
 						icon="thermometer-half"
 						v-if="climater == 'on'"
 					></fa-icon>
@@ -27,15 +27,15 @@
 			</div>
 
 			<div class="col-6 col-sm-3 col-lg-2 mt-3">
-				<div class="mb-2 value">Geladen</div>
+				<div class="mb-2 value">{{ $t("main.loadpointDetails.charged") }}</div>
 				<h3 class="value">
 					{{ fmt(chargedEnergy) }}
 					<small class="text-muted">{{ fmtUnit(chargedEnergy) }}Wh</small>
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="range >= 0">
-				<div class="mb-2 value">Reichweite</div>
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="range && range >= 0">
+				<div class="mb-2 value">{{ $t("main.loadpointDetails.range") }}</div>
 				<h3 class="value">
 					{{ Math.round(range) }}
 					<small class="text-muted">km</small>
@@ -43,7 +43,7 @@
 			</div>
 
 			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-else>
-				<div class="mb-2 value">Dauer</div>
+				<div class="mb-2 value">{{ $t("main.loadpointDetails.duration") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeDuration) }}
 					<small class="text-muted">{{ fmtShortDurationUnit(chargeDuration) }}</small>
@@ -51,7 +51,7 @@
 			</div>
 
 			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="hasVehicle">
-				<div class="mb-2 value">Restzeit</div>
+				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeEstimate) }}
 					<small class="text-muted">{{ fmtShortDurationUnit(chargeEstimate) }}</small>

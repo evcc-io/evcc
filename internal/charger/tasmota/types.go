@@ -47,8 +47,7 @@ type StatusSNSResponse struct {
 }
 
 // PowerResponse is the Tasmota Power command Status response
-// ON, OFF, Error
 // https://tasmota.github.io/docs/Commands/#with-web-requests
 type PowerResponse struct {
-	POWER string
+	Power string // ON, OFF, Error
 }

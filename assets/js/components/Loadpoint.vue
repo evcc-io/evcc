@@ -1,20 +1,17 @@
 <template>
 	<div>
-		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">{{ title || "Ladepunkt" }}</p>
+		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">
+			{{ title || $t("main.loadpoint.fallbackName") }}
+		</p>
 		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
-			{{ remoteDisabledSource }}: Adaptives PV-Laden deaktiviert
+			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
 		</div>
 		<div class="alert alert-danger mt-4 mb-2" role="alert" v-if="remoteDisabled == 'hard'">
-			{{ remoteDisabledSource }}: Deaktiviert
+			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
 		</div>
 
 		<div class="row">
-			<Mode
-				class="col-12 col-md-6 col-lg-4 mb-4"
-				:mode="mode"
-				:pvConfigured="pvConfigured"
-				v-on:updated="setTargetMode"
-			/>
+			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" v-on:updated="setTargetMode" />
 			<Vehicle
 				class="col-12 col-md-6 col-lg-8 mb-4"
 				v-bind="vehicle"
@@ -37,7 +34,6 @@ export default {
 	name: "Loadpoint",
 	props: {
 		id: Number,
-		pvConfigured: Boolean,
 		single: Boolean,
 
 		// main
@@ -77,7 +73,7 @@ export default {
 		chargeCurrent: Number,
 		socCapacity: Number,
 		connectedDuration: Number,
-		chargeCurrents: Object,
+		chargeCurrents: Array,
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
 	},
@@ -125,7 +121,7 @@ export default {
 						this.mode = response.data.mode;
 					}.bind(this)
 				)
-				.catch(window.toasts.error);
+				.catch(window.app.error);
 		},
 		setTargetSoC: function (soc) {
 			axios
@@ -136,7 +132,7 @@ export default {
 						this.targetSoC = response.data.targetSoC;
 					}.bind(this)
 				)
-				.catch(window.toasts.error);
+				.catch(window.app.error);
 		},
 	},
 	destroyed: function () {

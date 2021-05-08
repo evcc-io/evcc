@@ -1,4 +1,5 @@
 import Vehicle from "./Vehicle.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Vehicle",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Vehicle },
   template: '<Vehicle v-bind="$props"></Vehicle>',
