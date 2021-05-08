@@ -134,6 +134,8 @@ func (c *EEBus) Enable(enable bool) error {
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
 		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, data.EVData)
+
+		return nil
 	}
 
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
@@ -203,7 +205,7 @@ func (c *EEBus) ChargedEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return data.EVData.Measurements.ChargedEnergy, nil
+	return data.EVData.Measurements.ChargedEnergy / 1000, nil
 }
 
 // var _ api.ChargeTimer = (*EEBus)(nil)
