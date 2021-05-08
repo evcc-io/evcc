@@ -148,12 +148,14 @@ func (c *EEBus) Enable(enable bool) error {
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
+		c.isEnabling = false
 		c.isDisabling = true
 		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, data.EVData)
 
 		return nil
 	}
 
+	c.isDisabling = false
 	c.isEnabling = true
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
 	if c.maxCurrent > 0 {
