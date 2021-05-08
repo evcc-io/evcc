@@ -48,7 +48,7 @@ require (
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mattn/go-runewidth v0.0.12 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/muka/go-bluetooth v0.0.0-20201211051136-07f31c601d33
+	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
