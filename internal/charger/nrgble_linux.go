@@ -60,14 +60,19 @@ func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	logger := util.NewLogger("nrg-bt")
 
+	ainfo, err := hw.GetAdapter(device)
+	if err != nil {
+		return nil, err
+	}
+
 	// set LE mode
-	btmgmt := hw.NewBtMgmt(device)
+	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
 
 	if len(os.Getenv("DOCKER")) > 0 {
 		btmgmt.BinPath = "./docker-btmgmt"
 	}
 
-	err := btmgmt.SetPowered(false)
+	err = btmgmt.SetPowered(false)
 	if err == nil {
 		err = btmgmt.SetLe(true)
 		if err == nil {
@@ -82,7 +87,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 		return nil, err
 	}
 
-	adapt, err := adapter.NewAdapter1FromAdapterID(device)
+	adapt, err := adapter.NewAdapter1FromAdapterID(ainfo.AdapterID)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +110,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	nrg := &NRGKickBLE{
 		log:     logger,
 		timer:   time.NewTimer(1),
-		device:  device,
+		device:  ainfo.AdapterID,
 		mac:     mac,
 		pin:     pin,
 		adapter: adapt,
