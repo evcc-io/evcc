@@ -2,6 +2,7 @@
 .PHONY: docker publish-testing publish-latest publish-images
 .PHONY: prepare-image image-rootfs image-update
 .PHONY: soc server server-image
+.PHONY: eebus publish-eebus
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -14,6 +15,7 @@ BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
 # docker
 DOCKER_IMAGE := andig/evcc
+DOCKER_EEBUS_IMAGE := therealkerni/evcc-eebus
 ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
@@ -112,3 +114,11 @@ publish-server:
 	GOOS=linux GOARCH=amd64 go build -o soc-server $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/soc/server
 	docker build -f soc/Dockerfile --platform linux/amd64 -t andig/evcc-cloud .
 	docker push andig/evcc-cloud
+
+eebus:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	GOOS=linux GOARCH=arm64 go build -o evcc $(BUILD_TAGS),eebus
+
+publish-eebus:
+	docker build -f eebus/Dockerfile --platform linux/arm64 -t $(DOCKER_EEBUS_IMAGE) .
+	docker push $(DOCKER_EEBUS_IMAGE)
