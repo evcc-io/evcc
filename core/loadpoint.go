@@ -426,6 +426,11 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	} else {
 		lp.log.ERROR.Printf("charger error: %v", err)
 	}
+
+	// allow charger to  access loadpoint
+	if ctrl, ok := lp.charger.(LoadpointController); ok {
+		ctrl.LoadpointControl(lp)
+	}
 }
 
 func (lp *LoadPoint) syncCharger() {

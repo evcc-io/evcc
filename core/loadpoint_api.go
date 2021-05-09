@@ -7,6 +7,11 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 )
 
+// LoadpointController gives access to loadpoint
+type LoadpointController interface {
+	LoadpointControl(LoadPointAPI)
+}
+
 // LoadPointAPI is the external loadpoint API
 type LoadPointAPI interface {
 	Name() string
