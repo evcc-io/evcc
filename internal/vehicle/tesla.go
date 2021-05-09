@@ -3,7 +3,6 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -216,7 +215,6 @@ func (v *Tesla) StartCharge() error {
 				return v.vehicle.StartCharging()
 			}
 
-			fmt.Println("start:", err)
 			if err.Error() != "408 Request Timeout" {
 				return err
 			}
@@ -231,7 +229,6 @@ var _ api.VehicleStopCharge = (*Tesla)(nil)
 // StopCharge implements the api.VehicleStopCharge interface
 func (v *Tesla) StopCharge() error {
 	err := v.vehicle.StopCharging()
-	fmt.Println("stop:", err)
 
 	// ignore sleeping vehicle
 	if err != nil && err.Error() == "408 Request Timeout" {
