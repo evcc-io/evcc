@@ -63,7 +63,7 @@ type HttpHandler struct {
 	Timeout              time.Duration
 }
 
-func (h *HttpHandler) Test(log *util.Logger, in Details) []Details {
+func (h *HttpHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	port := in.Port
 	if port == 0 {
 		port = h.Port
@@ -122,7 +122,7 @@ func (h *HttpHandler) Test(log *util.Logger, in Details) []Details {
 	if err == nil {
 		out := in.Clone()
 		out.Port = port
-		return []Details{out}
+		return []ResultDetails{out}
 	}
 
 	return nil

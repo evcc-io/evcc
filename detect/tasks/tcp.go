@@ -33,7 +33,7 @@ type TcpHandler struct {
 	dialer  net.Dialer
 }
 
-func (h *TcpHandler) Test(log *util.Logger, in Details) (res []Details) {
+func (h *TcpHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	for _, port := range h.Ports {
 		addr := fmt.Sprintf("%s:%d", in.IP, port)
 		conn, err := h.dialer.Dial("tcp", addr)

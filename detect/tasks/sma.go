@@ -55,7 +55,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	return true
 }
 
-func (h *SMAHandler) Test(log *util.Logger, in Details) (res []Details) {
+func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	h.mux.Lock()
 
 	if h.listener != nil {

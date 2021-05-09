@@ -28,7 +28,7 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, in Details) []Details {
+func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	pinger, err := ping.NewPinger(in.IP)
 	if err != nil {
 		panic(err)
@@ -60,5 +60,5 @@ func (h *PingHandler) Test(log *util.Logger, in Details) []Details {
 		return nil
 	}
 
-	return []Details{in}
+	return []ResultDetails{in}
 }

@@ -1,41 +1,29 @@
 package tasks
 
 import (
-	"fmt"
-
 	"github.com/andig/evcc/util"
 	"github.com/jinzhu/copier"
 )
 
-type Details struct {
-	IP   string
-	Port int
-	// Attributes   map[string]interface{}
+type ResultDetails struct {
+	IP           string
+	Port         int
 	Topic        string
 	ModbusResult *ModbusResult
 	KebaResult   *KebaResult
 	SmaResult    *SmaResult
 }
 
-func (d *Details) Clone() Details {
-	fmt.Println(d)
-	var c Details
+func (d *ResultDetails) Clone() ResultDetails {
+	var c ResultDetails
 	copier.Copy(&c, *d)
-	fmt.Println(c)
 	return c
 }
 
-// func (d *Details) Attr(key string, val interface{}) {
-// 	if d.Attributes == nil {
-// 		d.Attributes = make(map[string]interface{})
-// 	}
-// 	d.Attributes[key] = val
-// }
-
 type Result struct {
 	Task
-	Details    Details
-	Attributes map[string]interface{}
+	ResultDetails
+	Attributes map[string]interface{} // TODO remove, only used for post-processing
 }
 
 type Task struct {
@@ -46,5 +34,5 @@ type Task struct {
 }
 
 type TaskHandler interface {
-	Test(log *util.Logger, in Details) []Details
+	Test(log *util.Logger, in ResultDetails) []ResultDetails
 }

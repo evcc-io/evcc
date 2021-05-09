@@ -80,7 +80,7 @@ func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
 	return handler
 }
 
-func (l *TaskList) Test(log *util.Logger, id string, input tasks.Details) []tasks.Result {
+func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) []tasks.Result {
 	l.once.Do(l.sort)
 
 	log.INFO.Printf("ip: %s task: %s (%v)", input.IP, id, input)
@@ -98,8 +98,8 @@ func (l *TaskList) Test(log *util.Logger, id string, input tasks.Details) []task
 	var all []tasks.Result
 	for _, detail := range results {
 		all = append(all, tasks.Result{
-			Task:    task,
-			Details: detail,
+			Task:          task,
+			ResultDetails: detail,
 		})
 	}
 

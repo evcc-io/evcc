@@ -26,7 +26,7 @@ func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks
 
 func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
 	for ip := range ips {
-		res := taskList.Test(log, "ping", tasks.Details{IP: ip})
+		res := taskList.Test(log, "ping", tasks.ResultDetails{IP: ip})
 		hits <- res
 	}
 }
@@ -86,10 +86,10 @@ func postProcess(res []tasks.Result) []tasks.Result {
 
 	// sort by host
 	sort.Slice(res, func(i, j int) bool {
-		if res[i].Details.IP == res[j].Details.IP {
+		if res[i].ResultDetails.IP == res[j].ResultDetails.IP {
 			return res[i].Type < res[j].Type
 		}
-		return res[i].Details.IP < res[j].Details.IP
+		return res[i].ResultDetails.IP < res[j].ResultDetails.IP
 	})
 
 	return res

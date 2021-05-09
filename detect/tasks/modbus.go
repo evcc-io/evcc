@@ -28,7 +28,7 @@ type ModbusResult struct {
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
 	port := handler.(*ModbusHandler).Port
 	cc := map[string]interface{}{
-		"uri":   fmt.Sprintf("%s:%d", res.Details.IP, port),
+		"uri":   fmt.Sprintf("%s:%d", res.ResultDetails.IP, port),
 		"model": "sunspec",
 		"id":    r.SlaveID,
 	}
@@ -167,7 +167,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 	return false
 }
 
-func (h *ModbusHandler) Test(log *util.Logger, in Details) (res []Details) {
+func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	port := in.Port
 	if port == 0 {
 		port = h.Port

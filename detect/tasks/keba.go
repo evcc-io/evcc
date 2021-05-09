@@ -32,7 +32,7 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *KEBAHandler) Test(log *util.Logger, in Details) []Details {
+func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	h.mux.Lock()
 
 	if h.listener == nil {
@@ -76,7 +76,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in Details) []Details {
 				Serial: t.Report.Serial,
 			}
 
-			return []Details{out}
+			return []ResultDetails{out}
 
 		case <-timer.C:
 			return nil

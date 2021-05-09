@@ -80,20 +80,15 @@ func display(res []tasks.Result) {
 
 		default:
 			host := ""
-			hosts, err := net.LookupAddr(hit.Details.IP)
+			hosts, err := net.LookupAddr(hit.ResultDetails.IP)
 			if err == nil && len(hosts) > 0 {
 				host = strings.TrimSuffix(hosts[0], ".")
 			}
 
-			// details := ""
-			// if hit.Details != nil {
-			// 	details = fmt.Sprintf("%+v", hit.Details)
-			// }
+			details := fmt.Sprintf("%+v", hit.ResultDetails)
 
-			details := fmt.Sprintf("%+v", hit.Details)
-
-			fmt.Printf("%-16s %-20s %-16s %s\n", hit.Details.IP, host, hit.ID, details)
-			table.Append([]string{hit.Details.IP, host, hit.ID, details})
+			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.ResultDetails.IP, host, hit.ID, details)
+			table.Append([]string{hit.ResultDetails.IP, host, hit.ID, details})
 		}
 	}
 
@@ -136,7 +131,6 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 
 		hosts = append(hosts, "127.0.0.1")
 		hosts = append(hosts, IPsFromSubnet(myIP.String())...)
-		// hosts = []string{"192.168.0.8"}
 	}
 
 	// magic happens here

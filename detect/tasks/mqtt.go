@@ -33,7 +33,7 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(log *util.Logger, in Details) []Details {
+func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	broker := fmt.Sprintf("%s:%d", in.IP, h.Port)
 
 	opt := mqtt.NewClientOptions()
@@ -61,7 +61,7 @@ func (h *MqttHandler) Test(log *util.Logger, in Details) []Details {
 			case <-recv:
 				out := in.Clone()
 				out.Topic = h.Topic
-				return []Details{out}
+				return []ResultDetails{out}
 			case <-timer.C:
 				return nil
 			}
