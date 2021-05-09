@@ -185,7 +185,7 @@ Available charger implementations are:
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `warp`: Tinkerforge Warp/ Warp Pro charger
 - `default`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
-- `easee`: Easee Home chargers using Easee's cloud API to control charging (to use Easee Home chargers please request a sponsor token at https://cloud.evcc.io/)
+- `easee`: Easee Home charger (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 
 Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
