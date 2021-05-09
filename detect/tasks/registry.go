@@ -1,14 +1,8 @@
-package detect
+package tasks
 
 import (
 	"fmt"
-
-	"github.com/andig/evcc/util"
 )
-
-type TaskHandler interface {
-	Test(log *util.Logger, in Details) []Details
-}
 
 type TaskHandlerRegistry map[string]func(map[string]interface{}) (TaskHandler, error)
 
@@ -21,8 +15,16 @@ func (r TaskHandlerRegistry) Add(name string, factory func(map[string]interface{
 	r[name] = factory
 }
 
-func (r TaskHandlerRegistry) Get(name string) (func(map[string]interface{}) (TaskHandler, error), error) {
-	factory, exists := r[name]
+// func (r TaskHandlerRegistry) Get(name string) (func(map[string]interface{}) (TaskHandler, error), error) {
+// 	factory, exists := r[name]
+// 	if !exists {
+// 		return nil, fmt.Errorf("charger type not registered: %s", name)
+// 	}
+// 	return factory, nil
+// }
+
+func Get(name string) (func(map[string]interface{}) (TaskHandler, error), error) {
+	factory, exists := registry[name]
 	if !exists {
 		return nil, fmt.Errorf("charger type not registered: %s", name)
 	}

@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"sync"
@@ -32,7 +32,7 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
+func (h *KEBAHandler) Test(log *util.Logger, in Details) []Details {
 	h.mux.Lock()
 
 	if h.listener == nil {
@@ -48,16 +48,16 @@ func (h *KEBAHandler) Test(log *util.Logger, ip string) []interface{} {
 	h.mux.Unlock()
 
 	resC := make(chan keba.UDPMsg)
-	h.listener.Subscribe(ip, resC)
+	h.listener.Subscribe(in.IP, resC)
 
-	sender, err := keba.NewSender(log, ip)
+	sender, err := keba.NewSender(log, in.IP)
 	if err != nil {
 		log.ERROR.Println("keba:", err)
 		return nil
 	}
 
 	timer := time.NewTimer(h.Timeout)
-WAIT:
+
 	for {
 		go func() {
 			_ = sender.Send("report 1")
@@ -70,17 +70,16 @@ WAIT:
 				continue
 			}
 
-			r := KebaResult{
+			out := in.Clone()
+			out.KebaResult = &KebaResult{
 				Addr:   t.Addr,
 				Serial: t.Report.Serial,
 			}
 
-			return []interface{}{r}
+			return []Details{out}
 
 		case <-timer.C:
-			break WAIT
+			return nil
 		}
 	}
-
-	return nil
 }

@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"encoding/binary"
@@ -28,10 +28,12 @@ type ModbusResult struct {
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
 	port := handler.(*ModbusHandler).Port
 	cc := map[string]interface{}{
-		"uri":   fmt.Sprintf("%s:%d", res.Host, port),
+		"uri":   fmt.Sprintf("%s:%d", res.Details.IP, port),
 		"model": "sunspec",
 		"id":    r.SlaveID,
 	}
+
+	fmt.Println(cc)
 
 	return cc
 }
@@ -203,7 +205,7 @@ func (h *ModbusHandler) Test(log *util.Logger, in Details) (res []Details) {
 		}
 
 		if ok {
-			out := in
+			out := in.Clone()
 			out.ModbusResult = &mr
 			res = append(res, out)
 		}

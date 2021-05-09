@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"errors"
@@ -42,7 +42,7 @@ func (h *TcpHandler) Test(log *util.Logger, in Details) (res []Details) {
 		}
 
 		if err == nil {
-			out := in
+			out := in.Clone()
 			out.Port = port
 			res = append(res, out)
 		}

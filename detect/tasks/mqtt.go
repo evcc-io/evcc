@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"errors"
@@ -33,8 +33,8 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(log *util.Logger, ip string) []interface{} {
-	broker := fmt.Sprintf("%s:%d", ip, h.Port)
+func (h *MqttHandler) Test(log *util.Logger, in Details) []Details {
+	broker := fmt.Sprintf("%s:%d", in.IP, h.Port)
 
 	opt := mqtt.NewClientOptions()
 	opt.AddBroker(broker)
@@ -55,20 +55,17 @@ func (h *MqttHandler) Test(log *util.Logger, ip string) []interface{} {
 		})
 
 		timer := time.NewTimer(timeout)
-	WAIT:
+
 		for {
 			select {
 			case <-recv:
-				break WAIT
+				out := in.Clone()
+				out.Topic = h.Topic
+				return []Details{out}
 			case <-timer.C:
-				ok = false
-				break WAIT
+				return nil
 			}
 		}
-	}
-
-	if ok {
-		return []interface{}{nil}
 	}
 
 	return nil

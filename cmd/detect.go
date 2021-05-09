@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/detect"
+	"github.com/andig/evcc/detect/tasks"
 	"github.com/andig/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
@@ -66,7 +67,7 @@ func ParseHostIPNet(arg string) (res []string) {
 	return IPsFromSubnet(arg)
 }
 
-func display(res []detect.Result) {
+func display(res []tasks.Result) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
 	table.SetAutoMergeCells(true)
@@ -74,12 +75,12 @@ func display(res []detect.Result) {
 
 	for _, hit := range res {
 		switch hit.ID {
-		// case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
-		// 	continue
+		case detect.TaskPing, detect.TaskTcpHttp, detect.TaskTcpModbus:
+			continue
 
 		default:
 			host := ""
-			hosts, err := net.LookupAddr(hit.Host)
+			hosts, err := net.LookupAddr(hit.Details.IP)
 			if err == nil && len(hosts) > 0 {
 				host = strings.TrimSuffix(hosts[0], ".")
 			}
@@ -91,8 +92,8 @@ func display(res []detect.Result) {
 
 			details := fmt.Sprintf("%+v", hit.Details)
 
-			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
-			table.Append([]string{hit.Host, host, hit.ID, details})
+			fmt.Printf("%-16s %-20s %-16s %s\n", hit.Details.IP, host, hit.ID, details)
+			table.Append([]string{hit.Details.IP, host, hit.ID, details})
 		}
 	}
 
@@ -135,6 +136,7 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 
 		hosts = append(hosts, "127.0.0.1")
 		hosts = append(hosts, IPsFromSubnet(myIP.String())...)
+		// hosts = []string{"192.168.0.8"}
 	}
 
 	// magic happens here

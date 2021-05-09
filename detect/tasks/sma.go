@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"crypto/tls"
@@ -55,7 +55,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	return true
 }
 
-func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+func (h *SMAHandler) Test(log *util.Logger, in Details) (res []Details) {
 	h.mux.Lock()
 
 	if h.listener != nil {
@@ -80,18 +80,19 @@ WAIT:
 		case t := <-resC:
 			// eliminate duplicates
 			for _, r := range res {
-				if r.(SmaResult).Serial == t.Serial {
+				if r.SmaResult != nil && r.SmaResult.Serial == t.Serial {
 					continue WAIT
 				}
 			}
 
-			r := SmaResult{
+			out := in.Clone()
+			out.SmaResult = &SmaResult{
 				Addr:   t.Addr,
 				Serial: t.Serial,
 				Http:   h.httpAvailable(t.Addr),
 			}
 
-			res = append(res, r)
+			res = append(res, out)
 
 		case <-timer.C:
 			break WAIT

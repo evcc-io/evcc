@@ -39,6 +39,7 @@ require (
 	github.com/itchyny/gojq v0.12.3
 	github.com/itchyny/timefmt-go v0.1.3 // indirect
 	github.com/jeremywohl/flatten v1.0.1
+	github.com/jinzhu/copier v0.3.0
 	github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/klauspost/compress v1.12.2 // indirect

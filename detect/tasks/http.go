@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"fmt"
@@ -120,8 +120,9 @@ func (h *HttpHandler) Test(log *util.Logger, in Details) []Details {
 	}
 
 	if err == nil {
-		in.Port = port
-		return []Details{in}
+		out := in.Clone()
+		out.Port = port
+		return []Details{out}
 	}
 
 	return nil

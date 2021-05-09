@@ -4,23 +4,17 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/andig/evcc/detect/tasks"
 	"github.com/andig/evcc/util"
-	"github.com/thoas/go-funk"
 )
 
-type Task struct {
-	ID, Type string
-	Depends  string
-	Config   map[string]interface{}
-}
-
 type TaskList struct {
-	tasks    []Task
-	handlers []TaskHandler
-	once     sync.Once
+	tasks []tasks.Task
+	once  sync.Once
 }
 
-func (l *TaskList) Add(task Task) {
+func (l *TaskList) Add(task tasks.Task) {
+	task.TaskHandler = l.handler(task)
 	l.tasks = append(l.tasks, task)
 }
 
@@ -42,7 +36,7 @@ func (l *TaskList) delete(i int) {
 }
 
 func (l *TaskList) sort() {
-	var res []Task
+	var res []tasks.Task
 
 	for len(l.tasks) > 0 {
 		last := len(l.tasks)
@@ -72,57 +66,50 @@ func (l *TaskList) sort() {
 	l.tasks = res
 }
 
-func (l *TaskList) createHandlers() {
-	for _, task := range l.tasks {
-		factory, err := registry.Get(task.Type)
-		if err != nil {
-			panic("invalid task type " + task.Type)
-		}
-
-		handler, err := factory(task.Config)
-		if err != nil {
-			panic("invalid config: " + err.Error())
-		}
-
-		l.handlers = append(l.handlers, handler)
+func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
+	factory, err := tasks.Get(task.Type)
+	if err != nil {
+		panic("invalid task type " + task.Type)
 	}
+
+	handler, err := factory(task.Config)
+	if err != nil {
+		panic("invalid config: " + err.Error())
+	}
+
+	return handler
 }
 
-func (l *TaskList) Test(log *util.Logger, ip string) (all []Result) {
-	l.once.Do(func() {
-		l.sort()
-		l.createHandlers()
-	})
+func (l *TaskList) Test(log *util.Logger, id string, input tasks.Details) []tasks.Result {
+	l.once.Do(l.sort)
 
-	failed := make([]string, 0)
+	log.INFO.Printf("ip: %s task: %s (%v)", input.IP, id, input)
 
-	// start with ip
-	intermediate := []Details{{IP: ip}}
-
-HANDLERS:
-	for id, handler := range l.handlers {
-		task := l.tasks[id]
-
-		if funk.ContainsString(failed, task.Depends) {
-			continue HANDLERS
+	var task tasks.Task
+	for _, t := range l.tasks {
+		if t.ID == id {
+			task = t
+			break
 		}
+	}
 
-		for _, details := range intermediate {
-			results := handler.Test(log, details)
+	results := task.Test(log, input)
 
-			if len(results) > 0 {
-				log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
+	var all []tasks.Result
+	for _, detail := range results {
+		all = append(all, tasks.Result{
+			Task:    task,
+			Details: detail,
+		})
+	}
 
-				for _, detail := range results {
-					all = append(all, Result{
-						Task:    task,
-						Host:    ip,
-						Details: detail,
-					})
-				}
-			} else {
-				log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
-				failed = append(failed, task.ID)
+	// run dependent tasks
+	for _, task := range l.tasks {
+		if task.Depends == id {
+			// fmt.Println("task:", task)
+			for _, input := range results {
+				// fmt.Println("input:", input)
+				all = append(all, l.Test(log, task.ID, input)...)
 			}
 		}
 	}
