@@ -75,7 +75,7 @@ func display(res []tasks.Result) {
 
 	for _, hit := range res {
 		switch hit.ID {
-		case detect.TaskPing, detect.TaskTcpHttp, detect.TaskTcpModbus:
+		case detect.TaskPing, detect.TaskHttp, detect.TaskModbus:
 			continue
 
 		default:
