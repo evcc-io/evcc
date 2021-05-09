@@ -220,6 +220,8 @@ func (v *Tesla) StartCharge() error {
 			if err.Error() != "408 Request Timeout" {
 				return err
 			}
+
+			time.Sleep(time.Second)
 		}
 	}
 }
