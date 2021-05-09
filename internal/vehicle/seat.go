@@ -26,8 +26,7 @@ func init() {
 // NewSeatFromConfig creates a new vehicle
 func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
@@ -39,7 +38,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Seat{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("seat")

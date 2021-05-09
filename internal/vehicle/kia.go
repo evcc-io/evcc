@@ -23,8 +23,7 @@ func init() {
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title          string
-		Capacity       int64
+		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
 		Cache          time.Duration
@@ -80,7 +79,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Kia{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 		API:   api,
 	}
 

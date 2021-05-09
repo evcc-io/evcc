@@ -34,8 +34,7 @@ func init() {
 // NewTeslaFromConfig creates a new Tesla vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
+		embed                  `mapstructure:",squash"`
 		ClientID, ClientSecret string
 		User, Password         string
 		Tokens                 teslaTokens
@@ -54,7 +53,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Tesla{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	// authenticated http client with logging injected to the Tesla client

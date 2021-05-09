@@ -23,8 +23,7 @@ func init() {
 // NewHyundaiFromConfig creates a new Vehicle
 func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title          string
-		Capacity       int64
+		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
 		Cache          time.Duration
@@ -80,7 +79,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Hyundai{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 		API:   api,
 	}
 

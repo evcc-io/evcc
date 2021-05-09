@@ -308,7 +308,18 @@ func (c *Keba) Currents() (float64, float64, float64, error) {
 	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
 }
 
-// Diagnose implements the Diagnosis interface
+var _ api.Identifier = (*Keba)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *Keba) Identify() (string, error) {
+	var kr keba.Report100
+	err := c.roundtrip("report", 100, &kr)
+	return kr.RFIDTag, err
+}
+
+var _ api.Diagnosis = (*Keba)(nil)
+
+// Diagnose implements the api.Diagnosis interface
 func (c *Keba) Diagnose() {
 	var kr keba.Report100
 	if err := c.roundtrip("report", 100, &kr); err == nil {

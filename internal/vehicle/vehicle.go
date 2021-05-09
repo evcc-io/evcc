@@ -11,18 +11,26 @@ import (
 )
 
 type embed struct {
-	title    string
-	capacity int64
+	Title_      string `mapstructure:"title"`
+	Capacity_   int64  `mapstructure:"capacity"`
+	Identifier_ string `mapstructure:"identifier"`
 }
 
 // Title implements the Vehicle.Title interface
 func (m *embed) Title() string {
-	return m.title
+	return m.Title_
 }
 
 // Capacity implements the Vehicle.Capacity interface
 func (m *embed) Capacity() int64 {
-	return m.capacity
+	return m.Capacity_
+}
+
+var _ api.Identifier = (*embed)(nil)
+
+// Identify implements the api.Identifier interface
+func (m *embed) Identify() (string, error) {
+	return m.Identifier_, nil
 }
 
 //go:generate go run ../../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
@@ -43,12 +51,11 @@ func init() {
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title    string
-		Capacity int64
-		Charge   provider.Config
-		Status   *provider.Config
-		Range    *provider.Config
-		Cache    time.Duration
+		embed  `mapstructure:",squash"`
+		Charge provider.Config
+		Status *provider.Config
+		Range  *provider.Config
+		Cache  time.Duration
 	}{
 		Cache: interval,
 	}
@@ -73,7 +80,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	}
 
 	v := &Vehicle{
-		embed:   &embed{cc.Title, cc.Capacity},
+		embed:   &cc.embed,
 		chargeG: getter,
 	}
 
