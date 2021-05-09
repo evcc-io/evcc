@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.6.1
-	github.com/amp-x/eebus v0.0.0-20210501172036-113fddb03bba
+	github.com/amp-x/eebus v0.0.0-20210508113918-d920cc2c10ad
 	github.com/andig/evcc-config v0.0.0-20210505193639-b12d8515d6f1
 	github.com/andig/gosunspec v0.0.0-20210401131709-cd89d66b502d // indirect
 	github.com/andybalholm/cascadia v1.2.0 // indirect
