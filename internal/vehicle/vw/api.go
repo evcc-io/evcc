@@ -169,6 +169,43 @@ func (v *API) Climater(vin string) (ClimaterResponse, error) {
 	return res, err
 }
 
+const (
+	ActionCharge      = "batterycharge"
+	ActionChargeStart = "start"
+	ActionChargeStop  = "stop"
+)
+
+type actionDefinition struct {
+	contentType string
+	appendix    string
+}
+
+var actionDefinitions = map[string]actionDefinition{
+	ActionCharge: {
+		"application/vnd.vwg.mbb.ChargerAction_v1_0_0+xml",
+		"charger/actions",
+	},
+}
+
+// Action implements vehicle actions
+func (v *API) Action(vin, action, value string) error {
+	def := actionDefinitions[action]
+
+	uri := fmt.Sprintf("%s/bs/%s/v1/%s/%s/vehicles/%s/%s", v.baseURI, action, v.brand, v.country, vin, def.appendix)
+	body := "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><action><type>" + value + "</type></action>"
+
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(body), map[string]string{
+		"Content-type": def.contentType,
+	})
+
+	if err == nil {
+		var res interface{}
+		err = v.DoJSON(req, &res)
+	}
+
+	return err
+}
+
 // Any implements any api response
 func (v *API) Any(base, vin string) (interface{}, error) {
 	var res interface{}
