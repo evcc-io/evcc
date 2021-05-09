@@ -878,10 +878,10 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	if lp.socPollAllowed() {
+		lp.socUpdated = lp.clock.Now()
+
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
-			lp.socUpdated = lp.clock.Now()
-
 			lp.socCharge = math.Trunc(f)
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 			lp.publish("socCharge", lp.socCharge)
@@ -896,6 +896,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
+				lp.socUpdated = time.Time{}
 				lp.log.DEBUG.Printf("vehicle: waiting for update")
 			} else {
 				lp.log.ERROR.Printf("vehicle: %v", err)
