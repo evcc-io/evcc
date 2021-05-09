@@ -33,8 +33,6 @@ func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string
 		"id":    r.SlaveID,
 	}
 
-	fmt.Println(cc)
-
 	return cc
 }
 
