@@ -72,6 +72,7 @@ func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
 		panic("invalid task type " + task.Type)
 	}
 
+	// fmt.Println(task)
 	handler, err := factory(task.Config)
 	if err != nil {
 		panic("invalid config: " + err.Error())

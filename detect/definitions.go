@@ -239,7 +239,7 @@ func init() {
 		Type:    "tcp",
 		Depends: TaskPing,
 		Config: map[string]interface{}{
-			"port": 9999, // TP-Link Smart Home Protocol standard port
+			"ports": []int{9999}, // TP-Link Smart Home Protocol standard port
 		},
 	})
 
