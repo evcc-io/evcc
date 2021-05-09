@@ -38,6 +38,7 @@ var EEBusInstance *EEBus
 func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	cc := struct {
 		Uri         string
+		ShipID      string
 		Certificate struct {
 			Public, Private []byte
 		}
@@ -57,6 +58,9 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 
 	log := util.NewLogger("eebus")
 	id := server.UniqueID{Prefix: details.BrandName}.String()
+	if len(cc.ShipID) > 0 {
+		id = cc.ShipID
+	}
 
 	cert, err := tls.X509KeyPair(cc.Certificate.Public, cc.Certificate.Private)
 	if err != nil {
