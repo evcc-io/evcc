@@ -183,7 +183,7 @@ func (c *Easee) Enable(enable bool) error {
 
 		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if req, err = request.New(http.MethodGet, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
+		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
 			_, err = c.Do(req)
 			c.updated = time.Time{} // clear cache
 		}
@@ -224,7 +224,7 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	}
 
 	uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
-	req, err := request.New(http.MethodGet, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = c.Do(req)
 		c.updated = time.Time{} // clear cache
