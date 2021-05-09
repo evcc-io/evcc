@@ -234,7 +234,7 @@ func (v *Tesla) StopCharge() error {
 	fmt.Println("stop:", err)
 
 	// ignore sleeping vehicle
-	if err.Error() == "408 Request Timeout" {
+	if err != nil && err.Error() == "408 Request Timeout" {
 		err = nil
 	}
 
