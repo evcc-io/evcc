@@ -199,7 +199,7 @@ func (c *Easee) Enable(enable bool) error {
 
 	var req *http.Request
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if req, err = request.New(http.MethodGet, uri, nil, request.JSONEncoding); err == nil {
+	if req, err = request.New(http.MethodPost, uri, nil, request.JSONEncoding); err == nil {
 		_, err = c.Do(req)
 		c.updated = time.Time{} // clear cache
 	}
