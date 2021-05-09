@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/internal/charger/easee"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
