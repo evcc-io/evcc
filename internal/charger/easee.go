@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/internal/charger/easee"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
@@ -22,6 +23,7 @@ type Easee struct {
 	status        easee.ChargerStatus
 	updated       time.Time
 	cache         time.Duration
+	lp            core.LoadPointAPI
 }
 
 func init() {
@@ -181,7 +183,7 @@ func (c *Easee) Enable(enable bool) error {
 
 		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if req, err = request.New(http.MethodGet, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
+		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
 			_, err = c.Do(req)
 			c.updated = time.Time{} // clear cache
 		}
@@ -197,7 +199,7 @@ func (c *Easee) Enable(enable bool) error {
 
 	var req *http.Request
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if req, err = request.New(http.MethodGet, uri, nil, request.JSONEncoding); err == nil {
+	if req, err = request.New(http.MethodPost, uri, nil, request.JSONEncoding); err == nil {
 		_, err = c.Do(req)
 		c.updated = time.Time{} // clear cache
 	}
@@ -222,7 +224,7 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	}
 
 	uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
-	req, err := request.New(http.MethodGet, uri, request.MarshalJSON(data), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = c.Do(req)
 		c.updated = time.Time{} // clear cache
@@ -256,4 +258,11 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 		res.CircuitTotalPhaseConductorCurrentL2,
 		res.CircuitTotalPhaseConductorCurrentL3,
 		err
+}
+
+var _ core.LoadpointController = (*Easee)(nil)
+
+// LoadpointControl implements core.LoadpointController
+func (c *Easee) LoadpointControl(lp core.LoadPointAPI) {
+	c.lp = lp
 }

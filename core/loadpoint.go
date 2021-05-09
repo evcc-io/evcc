@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -426,6 +425,11 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	} else {
 		lp.log.ERROR.Printf("charger: %v", err)
 	}
+
+	// allow charger to  access loadpoint
+	if ctrl, ok := lp.charger.(LoadpointController); ok {
+		ctrl.LoadpointControl(lp)
+	}
 }
 
 func (lp *LoadPoint) syncCharger() {
@@ -464,6 +468,13 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
 			return nil
+		}
+
+		// sleep vehicle
+		if car, ok := lp.vehicle.(api.VehicleStopCharge); !enabled && ok {
+			if err := car.StopCharge(); err != nil {
+				lp.log.ERROR.Printf("vehicle remote charge stop: %v", err)
+			}
 		}
 
 		lp.log.DEBUG.Printf("charger %s", status[enabled])
@@ -789,8 +800,7 @@ func (lp *LoadPoint) updateChargePower() {
 	}, retryOptions...)
 
 	if err != nil {
-		err = fmt.Errorf("updating charge meter: %w", err)
-		lp.log.ERROR.Printf("%v", err)
+		lp.log.ERROR.Printf("charge meter: %v", err)
 	}
 }
 
