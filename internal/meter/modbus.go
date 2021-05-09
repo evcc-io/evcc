@@ -38,6 +38,9 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Timeout            time.Duration
 	}{
 		Power: "Power",
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -65,7 +68,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	conn.Logger(log.TRACE)
 
 	// prepare device
-	device, err := modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
+	device, err := modbus.NewDevice(cc.Model, cc.SubDevice)
 
 	if err == nil {
 		err = device.Initialize(conn)

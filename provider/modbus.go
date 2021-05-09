@@ -75,7 +75,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	// no registered configured - need device
 	if cc.Register.Decode == "" {
-		device, err = modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
+		device, err = modbus.NewDevice(cc.Model, cc.SubDevice)
 
 		// prepare device
 		if err == nil {
