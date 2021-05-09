@@ -16,7 +16,9 @@ type ResultDetails struct {
 
 func (d *ResultDetails) Clone() ResultDetails {
 	var c ResultDetails
-	copier.Copy(&c, *d)
+	if err := copier.Copy(&c, *d); err != nil {
+		panic(err)
+	}
 	return c
 }
 
