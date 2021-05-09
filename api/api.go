@@ -118,3 +118,8 @@ type VehicleClimater interface {
 type VehicleStartCharge interface {
 	StartCharge() error
 }
+
+// VehicleStopCharge stops the charging session on the vehicle side
+type VehicleStopCharge interface {
+	StopCharge() error
+}

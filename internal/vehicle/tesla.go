@@ -199,3 +199,17 @@ func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64
 
 	return false, 0, 0, api.ErrNotAvailable
 }
+
+var _ api.VehicleStartCharge = (*Tesla)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Tesla) StartCharge() error {
+	return v.vehicle.StartCharging()
+}
+
+var _ api.VehicleStopCharge = (*Tesla)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Tesla) StopCharge() error {
+	return v.vehicle.StopCharging()
+}
