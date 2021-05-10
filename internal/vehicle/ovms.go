@@ -209,9 +209,9 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 	res, err := v.chargeG()
 
 	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		cd, err := strconv.ParseInt(res.ChargeDuration, 0, 64)
+		cef, err := strconv.ParseInt(res.ChargeEtrFull, 0, 64)
 		if err == nil {
-			return time.Now().Add(time.Duration(cd) * time.Minute), err
+			return time.Now().Add(time.Duration(cef) * time.Minute), err
 		}
 	}
 
