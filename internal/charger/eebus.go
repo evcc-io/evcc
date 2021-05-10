@@ -12,6 +12,7 @@ import (
 	"github.com/amp-x/eebus/ship"
 	"github.com/amp-x/eebus/spine"
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
 )
@@ -19,6 +20,7 @@ import (
 type EEBus struct {
 	log         *util.Logger
 	cc          *communication.ConnectionController
+	lp          core.LoadPointAPI
 	maxCurrent  float64
 	isEnabling  bool
 	isDisabling bool
@@ -201,6 +203,9 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
 	}
 
+	c.lp.SetMinCurrent(int64(data.EVData.LimitsL1.Min))
+	c.lp.SetMaxCurrent(int64(data.EVData.LimitsL1.Max))
+
 	c.maxCurrent = current
 
 	// TODO error handling
@@ -290,4 +295,11 @@ func (c *EEBus) Identify() (string, error) {
 	}
 
 	return "", nil
+}
+
+var _ core.LoadpointController = (*Easee)(nil)
+
+// LoadpointControl implements core.LoadpointController
+func (c *EEBus) LoadpointControl(lp core.LoadPointAPI) {
+	c.lp = lp
 }

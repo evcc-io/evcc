@@ -29,7 +29,9 @@ type LoadPointAPI interface {
 
 	// energy
 	GetMinCurrent() int64
+	SetMinCurrent(int64)
 	GetMaxCurrent() int64
+	SetMaxCurrent(int64)
 	GetMinPower() int64
 	GetMaxPower() int64
 }
@@ -159,9 +161,19 @@ func (lp *LoadPoint) GetMinCurrent() int64 {
 	return lp.MinCurrent
 }
 
-// GetMaxCurrent returns the minimal loadpoint current
+// SetMinCurrent sets the minimal loadpoint current
+func (lp *LoadPoint) SetMinCurrent(value int64) {
+	lp.MinCurrent = value
+}
+
+// GetMaxCurrent returns the maximum loadpoint current
 func (lp *LoadPoint) GetMaxCurrent() int64 {
 	return lp.MaxCurrent
+}
+
+// SetMaxCurrent sets the maximum loadpoint current
+func (lp *LoadPoint) SetMaxCurrent(value int64) {
+	lp.MaxCurrent = value
 }
 
 // GetMinPower returns the minimal loadpoint power for a single phase
