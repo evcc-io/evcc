@@ -699,7 +699,13 @@ func TestSoCPoll(t *testing.T) {
 		lp.SoC.Poll.Mode = tc.mode
 		lp.status = tc.status
 
-		if res := lp.socPollAllowed(); tc.res != res {
+		res := lp.socPollAllowed()
+		if res {
+			// mimic update outside of socPollAllowed
+			lp.socUpdated = clock.Now()
+		}
+
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}
