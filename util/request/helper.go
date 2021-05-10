@@ -47,19 +47,21 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 	return body, err
 }
 
-// DoJSON executes HTTP request and decodes JSON response
+// DoJSON executes HTTP request and decodes JSON response and. It error on response codes other than HTTP 2xx.
 func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 	resp, err := r.Do(req)
 	if err == nil {
+		defer resp.Body.Close()
 		err = DecodeJSON(resp, &res)
 	}
 	return err
 }
 
-// GetJSON executes HTTP GET request and decodes JSON response
+// GetJSON executes HTTP GET request and decodes JSON response. It returns error on response codes other than HTTP 2xx.
 func (r *Helper) GetJSON(url string, res interface{}) error {
 	resp, err := r.Get(url)
 	if err == nil {
+		defer resp.Body.Close()
 		err = DecodeJSON(resp, &res)
 	}
 	return err

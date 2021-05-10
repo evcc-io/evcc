@@ -1,7 +1,6 @@
 package request
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -66,9 +65,6 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-
-	// maintain body after reading
-	resp.Body = io.NopCloser(bytes.NewBuffer(b))
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return b, StatusError{resp: resp}
