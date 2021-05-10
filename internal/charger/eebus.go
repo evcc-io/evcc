@@ -138,6 +138,10 @@ func (c *EEBus) Enable(enable bool) error {
 		return err
 	}
 
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return errors.New("can not enable/disable charging as ev is unplugged")
+	}
+
 	if !enable {
 		// Important notes on enabling/disabling!!
 		// ISO15118 mode:
@@ -181,6 +185,10 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return err
 	}
 
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return errors.New("can set new current as ev is unplugged")
+	}
+
 	if data.EVData.LimitsL1.Min == 0 {
 		return errors.New("we did not yet receive min and max currents to validate the call of MaxCurrent")
 	}
@@ -210,6 +218,10 @@ func (c *EEBus) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return 0, errors.New("ev is unplugged")
+	}
+
 	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
 
 	return power, nil
@@ -222,6 +234,10 @@ func (c *EEBus) ChargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return 0, err
+	}
+
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return 0, errors.New("ev is unplugged")
 	}
 
 	return data.EVData.Measurements.ChargedEnergy / 1000, nil
@@ -249,6 +265,10 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return 0, 0, 0, errors.New("ev is unplugged")
+	}
+
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
 
@@ -259,6 +279,10 @@ func (c *EEBus) Identify() (string, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		return "", err
+	}
+
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		return "", nil
 	}
 
 	if len(data.EVData.Identification) > 0 {
