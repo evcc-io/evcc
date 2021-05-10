@@ -180,12 +180,8 @@ func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 	}
 
 	req, err = request.New(http.MethodPost, "https://login.porsche.com/as/token.oauth2", strings.NewReader(dataAPIToken.Encode()), request.URLEncoding)
-
 	if err == nil {
-		resp, err = v.Client.Do(req)
-		if err == nil {
-			err = request.DecodeJSON(resp, &pr)
-		}
+		err = v.DoJSON(req, &pr)
 	}
 
 	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
@@ -212,7 +208,6 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 	})
 
 	var vehicles []VehicleResponse
-
 	if err == nil {
 		err = v.DoJSON(req, &vehicles)
 	}
