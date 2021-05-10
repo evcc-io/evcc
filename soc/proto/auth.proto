@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+// protoc proto/auth.proto --go_out=. --go-grpc_out=.
+
+option go_package = "proto/pb";
+
+service Auth {
+	rpc IsAuthorized (AuthRequest) returns (AuthReply) {}
+}
+
+message AuthRequest {
+	string token = 1;
+}
+
+message AuthReply {
+	bool authorized = 1;
+	string subject = 2;
+}

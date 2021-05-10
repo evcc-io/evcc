@@ -8,6 +8,8 @@ import (
 
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/jq"
+	"github.com/itchyny/gojq"
 )
 
 // Mqtt provider
@@ -18,6 +20,7 @@ type Mqtt struct {
 	payload string
 	scale   float64
 	timeout time.Duration
+	jq      *gojq.Query
 }
 
 func init() {
@@ -31,6 +34,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		Topic, Payload string // Payload only applies to setters
 		Scale          float64
 		Timeout        time.Duration
+		Jq             string
 	}{
 		Scale: 1,
 	}
@@ -46,23 +50,50 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Payload, cc.Scale, cc.Timeout)
+	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout)
+
+	if cc.Payload != "" {
+		m = m.WithPayload(cc.Payload)
+	}
+	if cc.Jq != "" {
+		m, err = m.WithJq(cc.Jq)
+	}
 
 	return m, err
 }
 
 // NewMqtt creates mqtt provider for given topic
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, payload string, scale float64, timeout time.Duration) *Mqtt {
+func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,
 		topic:   topic,
-		payload: payload,
 		scale:   scale,
 		timeout: timeout,
 	}
+
 	return m
 }
+
+// WithPayload adds payload for setters
+func (m *Mqtt) WithPayload(payload string) *Mqtt {
+	m.payload = payload
+	return m
+}
+
+// WithJq adds a jq query applied to the mqtt listener payload
+func (m *Mqtt) WithJq(jq string) (*Mqtt, error) {
+	op, err := gojq.Parse(jq)
+	if err != nil {
+		return m, fmt.Errorf("invalid jq query '%s': %w", jq, err)
+	}
+
+	m.jq = op
+
+	return m, nil
+}
+
+var _ FloatProvider = (*Mqtt)(nil)
 
 // FloatGetter creates handler for float64 from MQTT topic that returns cached value
 func (m *Mqtt) FloatGetter() func() (float64, error) {
@@ -70,11 +101,14 @@ func (m *Mqtt) FloatGetter() func() (float64, error) {
 		topic: m.topic,
 		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
 	return h.floatGetter
 }
+
+var _ IntProvider = (*Mqtt)(nil)
 
 // IntGetter creates handler for int64 from MQTT topic that returns cached value
 func (m *Mqtt) IntGetter() func() (int64, error) {
@@ -82,33 +116,42 @@ func (m *Mqtt) IntGetter() func() (int64, error) {
 		topic: m.topic,
 		scale: float64(m.scale),
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
 	return h.intGetter
 }
 
+var _ StringProvider = (*Mqtt)(nil)
+
 // StringGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
 	return h.stringGetter
 }
 
+var _ BoolProvider = (*Mqtt)(nil)
+
 // BoolGetter creates handler for string from MQTT topic that returns cached value
 func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		jq:    m.jq,
 	}
 
 	m.client.Listen(m.topic, h.receive)
 	return h.boolGetter
 }
+
+var _ SetIntProvider = (*Mqtt)(nil)
 
 // IntSetter publishes topic with parameter replaced by int value
 func (m *Mqtt) IntSetter(param string) func(int64) error {
@@ -122,6 +165,8 @@ func (m *Mqtt) IntSetter(param string) func(int64) error {
 	}
 }
 
+var _ SetBoolProvider = (*Mqtt)(nil)
+
 // BoolSetter invokes script with parameter replaced by bool value
 func (m *Mqtt) BoolSetter(param string) func(bool) error {
 	return func(v bool) error {
@@ -134,23 +179,26 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 	}
 }
 
-// StringSetter invokes script with parameter replaced by string value
-func (m *Mqtt) StringSetter(param string) func(string) error {
-	return func(v string) error {
-		payload, err := setFormattedValue(m.payload, param, v)
-		if err != nil {
-			return err
-		}
+// var _ SetStringProvider = (*Mqtt)(nil)
 
-		return m.client.Publish(m.topic, false, payload)
-	}
-}
+// // StringSetter invokes script with parameter replaced by string value
+// func (m *Mqtt) StringSetter(param string) func(string) error {
+// 	return func(v string) error {
+// 		payload, err := setFormattedValue(m.payload, param, v)
+// 		if err != nil {
+// 			return err
+// 		}
+
+// 		return m.client.Publish(m.topic, false, payload)
+// 	}
+// }
 
 type msgHandler struct {
 	mux     *util.Waiter
 	scale   float64
 	topic   string
 	payload string
+	jq      *gojq.Query
 }
 
 func (h *msgHandler) receive(payload string) {
@@ -169,7 +217,17 @@ func (h *msgHandler) hasValue() (string, error) {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
 	}
 
-	return h.payload, nil
+	var err error
+	payload := h.payload
+
+	if h.jq != nil {
+		var val interface{}
+		if val, err = jq.Query(h.jq, []byte(payload)); err == nil {
+			payload = fmt.Sprintf("%v", val)
+		}
+	}
+
+	return payload, err
 }
 
 func (h *msgHandler) floatGetter() (float64, error) {

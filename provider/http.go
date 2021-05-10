@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/jq"
@@ -54,8 +55,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
+		Timeout     time.Duration
 	}{
 		Headers: make(map[string]string),
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,7 +74,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		}
 	}
 
-	return NewHTTP(log,
+	http, err := NewHTTP(log,
 		cc.Method,
 		cc.URI,
 		cc.Headers,
@@ -80,6 +83,15 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Jq,
 		cc.Scale,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err == nil {
+		http.Client.Timeout = cc.Timeout
+	}
+
+	return http, err
 }
 
 // NewHTTP create HTTP provider
@@ -106,7 +118,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	if jq != "" {
 		op, err := gojq.Parse(jq)
 		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
+			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
 		}
 
 		p.jq = op

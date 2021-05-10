@@ -1,4 +1,5 @@
 import LoadpointDetails from "./LoadpointDetails.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/LoadpointDetails",
@@ -9,6 +10,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { LoadpointDetails },
   template: '<LoadpointDetails v-bind="$props"></LoadpointDetails>',

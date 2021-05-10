@@ -92,9 +92,15 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
+// Identifier identifies a vehicle and is implemented by the charger
+type Identifier interface {
+	Identify() (string, error)
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
+	Identifier
 	Title() string
 	Capacity() int64
 }
@@ -117,4 +123,9 @@ type VehicleClimater interface {
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
+}
+
+// VehicleStopCharge stops the charging session on the vehicle side
+type VehicleStopCharge interface {
+	StopCharge() error
 }

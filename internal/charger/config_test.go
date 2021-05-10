@@ -7,6 +7,8 @@ import (
 )
 
 func TestChargers(t *testing.T) {
+	test.SkipCI(t)
+
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"missing mqtt broker configuration",
@@ -14,6 +16,7 @@ func TestChargers(t *testing.T) {
 		"invalid charger type: nrgkick-bluetooth",
 		"NRGKick bluetooth is only supported on linux",
 		"invalid pin:",
+		"hciconfig provided no response",
 		"connect: no route to host",
 		"connect: connection refused",
 		"error connecting: Network Error",

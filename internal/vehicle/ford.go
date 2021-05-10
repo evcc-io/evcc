@@ -42,8 +42,7 @@ func init() {
 // NewFordFromConfig creates a new vehicle
 func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
@@ -61,7 +60,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("ford")
 
 	v := &Ford{
-		embed:    &embed{cc.Title, cc.Capacity},
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		log:      log,
 		user:     cc.User,
@@ -108,10 +107,8 @@ func (v *Ford) login() (oauth.Token, error) {
 	return res, err
 }
 
-var _ oauth.TokenRefresher = (*Ford)(nil)
-
 // Refresh implements the oauth.TokenRefresher interface
-func (v *Ford) Refresh(token *oauth2.Token) (*oauth2.Token, error) {
+func (v *Ford) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
 		"grant_type":    []string{"refresh_token"},

@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -26,8 +27,7 @@ func init() {
 // NewSkodaFromConfig creates a new vehicle
 func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
@@ -39,7 +39,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Skoda{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("skoda")
@@ -53,17 +53,23 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	err := identity.Login(query, cc.User, cc.Password)
-	if err == nil {
-		api := vw.NewAPI(log, identity, "VW", "CZ")
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
 
-		if cc.VIN == "" {
-			cc.VIN, err = findVehicle(api.Vehicles())
-			if err == nil {
-				log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-			}
+	api := vw.NewAPI(log, identity, "VW", "CZ")
+
+	if cc.VIN == "" {
+		cc.VIN, err = findVehicle(api.Vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 		}
+	}
 
-		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		}
 	}
 
 	return v, err

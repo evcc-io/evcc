@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/internal/charger/fritzdect"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"golang.org/x/text/encoding/unicode"
@@ -80,13 +81,13 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, up
 }
 
 func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
-	// Refresh Fritzbox session id
+	// refresh Fritzbox session id
 	if time.Since(c.updated).Minutes() >= 10 {
 		err := c.getSessionID()
 		if err != nil {
 			return "", err
 		}
-		// Update session timestamp
+		// update session timestamp
 		c.updated = time.Now()
 	}
 
@@ -101,9 +102,8 @@ func (c *FritzDECT) execFritzDectCmd(function string) (string, error) {
 	return strings.TrimSpace(string(response)), err
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *FritzDECT) Status() (api.ChargeStatus, error) {
-
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
 	resp, err := c.execFritzDectCmd("getswitchpresent")
@@ -130,7 +130,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *FritzDECT) Enabled() (bool, error) {
 	// state 0/1 - DECT Switch state off/on (empty if unkown or error)
 	resp, err := c.execFritzDectCmd("getswitchstate")
@@ -143,7 +143,7 @@ func (c *FritzDECT) Enabled() (bool, error) {
 	return state == 1, err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *FritzDECT) Enable(enable bool) error {
 	cmd := "setswitchoff"
 	if enable {
@@ -170,7 +170,7 @@ func (c *FritzDECT) Enable(enable bool) error {
 	}
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
@@ -194,6 +194,29 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 	}
 
 	return power, err
+}
+
+var _ api.ChargeRater = (*FritzDECT)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (c *FritzDECT) ChargedEnergy() (float64, error) {
+	// fetch basicdevicestats
+	resp, err := c.execFritzDectCmd("getbasicdevicestats")
+	if err != nil {
+		return 0, err
+	}
+
+	// unmarshal devicestats
+	var stats fritzdect.Devicestats
+	if err = xml.Unmarshal([]byte(resp), &stats); err != nil {
+		return 0, err
+	}
+
+	// select energy value of current day
+	energylist := strings.Split(stats.Energy.Values[1], ",")
+	energy, err := strconv.ParseFloat(energylist[0], 64)
+
+	return energy / 1000, err
 }
 
 // Fritzbox helpers (based on ideas of https://github.com/rsdk/ahago)

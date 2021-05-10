@@ -152,7 +152,7 @@ func (evse *EVSEWifi) HasMeter() (bool, error) {
 	return params.UseMeter, err
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	params, err := evse.getParameters()
 	if err != nil {
@@ -175,7 +175,7 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (evse *EVSEWifi) Enabled() (bool, error) {
 	params, err := evse.getParameters()
 	return params.EvseState, err
@@ -189,7 +189,7 @@ func (evse *EVSEWifi) checkError(b []byte, err error) error {
 	return err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 
@@ -203,7 +203,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 	return evse.checkError(evse.GetBody(url))
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
@@ -212,25 +212,25 @@ func (evse *EVSEWifi) MaxCurrent(current int64) error {
 
 var _ api.ChargeTimer = (*EVSEWifi)(nil)
 
-// ChargingTime yields current charge run duration
+// ChargingTime implements the api.ChargeTimer interface
 func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	params, err := evse.getParameters()
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
-// CurrentPower implements the Meter interface
+// CurrentPower implements the api.Meter interface
 func (evse *EVSEWifi) currentPower() (float64, error) {
 	params, err := evse.getParameters()
 	return 1000 * params.ActualPower, err
 }
 
-// TotalEnergy implements the MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (evse *EVSEWifi) totalEnergy() (float64, error) {
 	params, err := evse.getParameters()
 	return params.MeterReading, err
 }
 
-// Currents implements the MeterCurrents interface
+// Currents implements the api.MeterCurrents interface
 func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	params, err := evse.getParameters()
 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err

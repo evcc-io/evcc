@@ -3,14 +3,13 @@ package vehicle
 import (
 	"context"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/internal/vehicle/cloud"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/soc/proto/pb"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/request"
 )
 
@@ -32,12 +31,11 @@ func init() {
 // NewCloudFromConfig creates a new vehicle
 func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Token    string
-		Title    string
-		Capacity int64
-		Brand    string
-		Other    map[string]string `mapstructure:",remain"`
-		Cache    time.Duration
+		Token string
+		embed `mapstructure:",squash"`
+		Brand string
+		Other map[string]string `mapstructure:",remain"`
+		Cache time.Duration
 	}{
 		Cache: interval,
 	}
@@ -50,19 +48,18 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing required token")
 	}
 
-	if host := os.Getenv("GRPC_URI"); host != "" {
-		cloud.Host = host
+	host := util.Getenv("GRPC_URI", cloud.Host)
+	conn, err := cloud.Connection(host)
+	if err != nil {
+		return nil, err
 	}
 
-	log := util.NewLogger("cloud")
-	client, err := cloud.Client(log, cloud.Host)
-
 	v := &Cloud{
-		embed:  &embed{cc.Title, cc.Capacity},
+		embed:  &cc.embed,
 		token:  cc.Token,
 		brand:  cc.Brand,
 		config: cc.Other,
-		client: client,
+		client: pb.NewVehicleClient(conn),
 	}
 
 	if err == nil {

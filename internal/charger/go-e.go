@@ -148,7 +148,7 @@ func isValid(status goeStatusResponse) bool {
 	return status.Fwv != ""
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
 	status, err := c.apiStatus()
 	if err != nil {
@@ -167,7 +167,7 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *GoE) Enabled() (bool, error) {
 	status, err := c.apiStatus()
 	if err != nil {
@@ -184,7 +184,7 @@ func (c *GoE) Enabled() (bool, error) {
 	}
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *GoE) Enable(enable bool) error {
 	var b int
 	if enable {
@@ -199,7 +199,7 @@ func (c *GoE) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
 	if err == nil && isValid(status) && int64(status.Amp) != current {

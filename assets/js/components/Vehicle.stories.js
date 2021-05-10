@@ -1,4 +1,5 @@
 import Vehicle from "./Vehicle.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Vehicle",
@@ -7,6 +8,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Vehicle },
   template: '<Vehicle v-bind="$props"></Vehicle>',
@@ -30,6 +32,7 @@ Connected.args = {
   hasVehicle: true,
   charging: false,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 export const ReadyToCharge = Template.bind({});
@@ -40,6 +43,7 @@ ReadyToCharge.args = {
   hasVehicle: true,
   charging: false,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 export const Charging = Template.bind({});
@@ -50,6 +54,7 @@ Charging.args = {
   hasVehicle: true,
   charging: true,
   socCharge: 66,
+  targetSoC: 90,
 };
 
 const hoursFromNow = function (hours) {
@@ -97,6 +102,7 @@ MinCharge.args = {
   socCharge: 17,
   minSoC: 20,
   charging: true,
+  targetSoC: 90,
 };
 
 export const UnknownVehicleConnected = Template.bind({});

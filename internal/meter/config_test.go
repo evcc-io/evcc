@@ -7,6 +7,8 @@ import (
 )
 
 func TestMeters(t *testing.T) {
+	test.SkipCI(t)
+
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"missing mqtt broker configuration",
@@ -15,6 +17,7 @@ func TestMeters(t *testing.T) {
 		"missing password", // Powerwall
 		"connect: no route to host",
 		"connect: connection refused",
+		"i/o timeout",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("meter") {

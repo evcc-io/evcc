@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -57,5 +58,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(soc)
+	fmt.Println(int(math.Round(soc)))
 }

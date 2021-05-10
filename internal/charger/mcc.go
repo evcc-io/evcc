@@ -219,7 +219,7 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 	return json.Unmarshal([]byte(s), &result)
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
 	if err != nil {
@@ -245,7 +245,7 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (mcc *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
 	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
@@ -266,13 +266,13 @@ func (mcc *MobileConnect) Enabled() (bool, error) {
 	return false, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (mcc *MobileConnect) Enable(enable bool) error {
 	// As we don't know of the API to disable charging this for now always returns an error
 	return nil
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	// The device doesn't return an error if we set a value greater than the
 	// current allowed max or smaller than the allowed min
@@ -316,7 +316,7 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 
 var _ api.Meter = (*MobileConnect)(nil)
 
-// CurrentPower implements the Meter interface.
+// CurrentPower implements the api.Meter interface
 func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
@@ -326,7 +326,7 @@ func (mcc *MobileConnect) CurrentPower() (float64, error) {
 
 var _ api.ChargeRater = (*MobileConnect)(nil)
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the api.ChargeRater interface
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
@@ -338,7 +338,7 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 
 var _ api.ChargeTimer = (*MobileConnect)(nil)
 
-// ChargingTime yields current charge run duration
+// ChargingTime implements the api.ChargeTimer interface
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
@@ -350,7 +350,7 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 
 var _ api.MeterCurrent = (*MobileConnect)(nil)
 
-// Currents implements the MeterCurrent interface
+// Currents implements the api.MeterCurrent interface
 func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
