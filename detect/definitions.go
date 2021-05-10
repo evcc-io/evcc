@@ -39,7 +39,7 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
-	taskTPLink       = "tplink"
+	// taskTPLink       = "tplink"
 )
 
 func init() {
