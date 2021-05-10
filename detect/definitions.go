@@ -39,7 +39,7 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
-	taskTPLink       = "tplink"
+	// taskTPLink       = "tplink"
 )
 
 func init() {
@@ -235,17 +235,6 @@ func init() {
 	})
 
 	taskList.Add(tasks.Task{
-		ID:      taskTPLink,
-		Type:    tasks.Http,
-		Depends: TaskHttp,
-		Config: map[string]interface{}{
-			"ResponseHeader": map[string]string{
-				"Server": "TP-LINK Smart Plug",
-			},
-		},
-	})
-
-	taskList.Add(tasks.Task{
 		ID:      taskTasmota,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
@@ -254,6 +243,17 @@ func init() {
 			"jq":   ".Module",
 		},
 	})
+
+	// taskList.Add(tasks.Task{
+	// 	ID:      taskTPLink,
+	// 	Type:    tasks.Http,
+	// 	Depends: TaskHttp,
+	// 	Config: map[string]interface{}{
+	// 		"ResponseHeader": map[string]string{
+	// 			"Server": "TP-LINK Smart Plug",
+	// 		},
+	// 	},
+	// })
 
 	taskList.Add(tasks.Task{
 		ID:      "volkszähler",
