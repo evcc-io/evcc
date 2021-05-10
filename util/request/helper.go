@@ -57,7 +57,7 @@ func decodeJSON(resp *http.Response, res interface{}) error {
 	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
-// DoJSON executes HTTP request and decodes JSON response. It error on response codes other than HTTP 2xx.
+// DoJSON executes HTTP request and decodes JSON response. It returns a StatusError on response codes other than HTTP 2xx.
 func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 	resp, err := r.Do(req)
 	if err == nil {
@@ -67,7 +67,7 @@ func (r *Helper) DoJSON(req *http.Request, res interface{}) error {
 	return err
 }
 
-// GetJSON executes HTTP GET request and decodes JSON response. It returns error on response codes other than HTTP 2xx.
+// GetJSON executes HTTP GET request and decodes JSON response. It returns a StatusError on response codes other than HTTP 2xx.
 func (r *Helper) GetJSON(url string, res interface{}) error {
 	resp, err := r.Get(url)
 	if err == nil {
