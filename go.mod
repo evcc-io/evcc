@@ -19,7 +19,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.4
 	github.com/fatih/structs v1.1.0
 	github.com/felixge/httpsnoop v1.0.2 // indirect
-	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
+	github.com/go-ping/ping v0.0.0-20210407214646-e4e642a95741
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/godbus/dbus/v5 v5.0.4
 	github.com/gokrazy/updater v0.0.0-20210130175436-d85b92498a28
