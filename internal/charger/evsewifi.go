@@ -181,8 +181,9 @@ func (evse *EVSEWifi) Enabled() (bool, error) {
 	return params.EvseState, err
 }
 
-// checkError checks for EVSE error response with HTTP 200 status
-func (evse *EVSEWifi) checkError(b []byte, err error) error {
+// get executes GET request and checks for EVSE error response
+func (evse *EVSEWifi) get(uri string) error {
+	b, err := evse.GetBody(uri)
 	if err == nil && !strings.HasPrefix(string(b), evseSuccess) {
 		err = errors.New(string(b))
 	}
@@ -200,14 +201,14 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
-	return evse.checkError(evse.GetBody(url))
+	return evse.get(url)
 }
 
 // MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
 	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
-	return evse.checkError(evse.GetBody(url))
+	return evse.get(url)
 }
 
 var _ api.ChargeTimer = (*EVSEWifi)(nil)
