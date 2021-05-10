@@ -84,31 +84,36 @@ func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
 func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) []tasks.Result {
 	l.once.Do(l.sort)
 
-	log.INFO.Printf("ip: %s task: %s (%v)", input.IP, id, input)
-
-	var task tasks.Task
-	for _, t := range l.tasks {
-		if t.ID == id {
-			task = t
-			break
-		}
-	}
-
-	results := task.Test(log, input)
-
 	var all []tasks.Result
-	for _, detail := range results {
-		all = append(all, tasks.Result{
-			Task:          task,
-			ResultDetails: detail,
-		})
+	var inputs []tasks.ResultDetails
+
+	if id == "" {
+		inputs = append(inputs, input)
+	} else {
+		log.DEBUG.Printf("ip: %s task: %s (%v)", input.IP, id, input)
+
+		var task tasks.Task
+		for _, t := range l.tasks {
+			if t.ID == id {
+				task = t
+				break
+			}
+		}
+
+		inputs = task.Test(log, input)
+		for _, detail := range inputs {
+			all = append(all, tasks.Result{
+				Task:          task,
+				ResultDetails: detail,
+			})
+		}
 	}
 
 	// run dependent tasks
 	for _, task := range l.tasks {
 		if task.Depends == id {
 			// fmt.Println("task:", task)
-			for _, input := range results {
+			for _, input := range inputs {
 				// fmt.Println("input:", input)
 				all = append(all, l.Test(log, task.ID, input)...)
 			}

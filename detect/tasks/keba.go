@@ -8,12 +8,14 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-type KebaResult struct {
-	Addr, Serial string
-}
+const Keba TaskType = "keba"
 
 func init() {
-	registry.Add("keba", KEBAHandlerFactory)
+	registry.Add(Keba, KEBAHandlerFactory)
+}
+
+type KebaResult struct {
+	Addr, Serial string
 }
 
 func KEBAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {

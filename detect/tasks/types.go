@@ -28,10 +28,13 @@ type Result struct {
 	Attributes map[string]interface{} // TODO remove, only used for post-processing
 }
 
+type TaskType string
+
 type Task struct {
-	ID, Type string
-	Depends  string
-	Config   map[string]interface{}
+	ID      string
+	Type    TaskType
+	Depends string
+	Config  map[string]interface{}
 	TaskHandler
 }
 

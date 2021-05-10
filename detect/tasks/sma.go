@@ -11,13 +11,15 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+const Sma TaskType = "sma"
+
+func init() {
+	registry.Add(Sma, SMAHandlerFactory)
+}
+
 type SmaResult struct {
 	Addr, Serial string
 	Http         bool
-}
-
-func init() {
-	registry.Add("sma", SMAHandlerFactory)
 }
 
 func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {

@@ -26,7 +26,7 @@ func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks
 
 func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
 	for ip := range ips {
-		res := taskList.Test(log, "ping", tasks.ResultDetails{IP: ip})
+		res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
 		hits <- res
 	}
 }

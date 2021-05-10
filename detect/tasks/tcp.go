@@ -9,8 +9,10 @@ import (
 	"github.com/andig/evcc/util"
 )
 
+const Tcp TaskType = "tcp"
+
 func init() {
-	registry.Add("tcp", TcpHandlerFactory)
+	registry.Add(Tcp, TcpHandlerFactory)
 }
 
 func TcpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
@@ -48,6 +50,5 @@ func (h *TcpHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 		}
 	}
 
-	fmt.Println("tcp", h.Ports, res)
 	return res
 }

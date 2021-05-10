@@ -9,8 +9,10 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const Mqtt TaskType = "mqtt"
+
 func init() {
-	registry.Add("mqtt", MqttHandlerFactory)
+	registry.Add(Mqtt, MqttHandlerFactory)
 }
 
 func MqttHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {

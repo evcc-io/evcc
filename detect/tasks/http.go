@@ -12,8 +12,10 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+const Http TaskType = "http"
+
 func init() {
-	registry.Add("http", HttpHandlerFactory)
+	registry.Add(Http, HttpHandlerFactory)
 }
 
 type HttpResult struct {
@@ -23,7 +25,6 @@ type HttpResult struct {
 func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := HttpHandler{
 		Schema: "http",
-		// Port:   80,
 		Method: "GET",
 		Codes:  []int{200},
 		Header: map[string]string{

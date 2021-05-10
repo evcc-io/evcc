@@ -8,8 +8,10 @@ import (
 	"github.com/go-ping/ping"
 )
 
+const Ping TaskType = "ping"
+
 func init() {
-	registry.Add("ping", PingHandlerFactory)
+	registry.Add(Ping, PingHandlerFactory)
 }
 
 func PingHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {

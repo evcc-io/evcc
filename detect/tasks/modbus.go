@@ -14,8 +14,10 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+const Modbus TaskType = "modbus"
+
 func init() {
-	registry.Add("modbus", ModbusHandlerFactory)
+	registry.Add(Modbus, ModbusHandlerFactory)
 }
 
 type ModbusResult struct {
