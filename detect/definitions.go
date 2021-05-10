@@ -39,7 +39,7 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
-	// taskTPLink       = "tplink"
+	taskTPLink       = "tplink"
 )
 
 func init() {
@@ -234,14 +234,16 @@ func init() {
 		},
 	})
 
-	// taskList.Add(tasks.Task{
-	// 	ID:      taskTPLink,
-	// 	Type:    tasks.Tcp,
-	// 	Depends: TaskPing,
-	// 	Config: map[string]interface{}{
-	// 		"ports": []int{9999}, // TP-Link Smart Home Protocol standard port
-	// 	},
-	// })
+	taskList.Add(tasks.Task{
+		ID:      taskTPLink,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
+		Config: map[string]interface{}{
+			"ResponseHeader": map[string]string{
+				"Server": "TP-LINK Smart Plug",
+			},
+		},
+	})
 
 	taskList.Add(tasks.Task{
 		ID:      taskTasmota,

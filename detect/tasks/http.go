@@ -60,6 +60,7 @@ type HttpHandler struct {
 	Schema, Method, Path string
 	Codes                []int
 	Header               map[string]string
+	ResponseHeader       map[string]string
 	Jq                   string
 	Timeout              time.Duration
 }
@@ -105,13 +106,19 @@ func (h *HttpHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 		}
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil
+	for k, v := range h.ResponseHeader {
+		if resp.Header.Get(k) != v {
+			return nil
+		}
 	}
 
 	var res HttpResult
 	if h.query != nil {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil
+		}
+
 		val, err := jq.Query(h.query, body)
 		res.Jq = val
 
