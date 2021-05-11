@@ -188,7 +188,7 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 	}
 
 	if err != nil {
-		log.FATAL.Fatalf("%s: client done: %v", entry.HostName, err)
+		c.log.TRACE.Printf("%s: client done: %v", entry.HostName, err)
 		return
 	}
 
