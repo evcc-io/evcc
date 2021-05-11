@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -85,10 +86,10 @@ func display(res []tasks.Result) {
 				host = strings.TrimSuffix(hosts[0], ".")
 			}
 
-			details := fmt.Sprintf("%+v", hit.ResultDetails)
+			b, _ := json.Marshal(hit.ResultDetails)
 
 			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.ResultDetails.IP, host, hit.ID, details)
-			table.Append([]string{hit.ResultDetails.IP, host, hit.ID, details})
+			table.Append([]string{hit.ResultDetails.IP, host, hit.ID, string(b)})
 		}
 	}
 

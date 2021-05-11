@@ -22,9 +22,9 @@ func init() {
 
 type ModbusResult struct {
 	SlaveID uint8
-	Model   int
-	Point   string
-	Value   interface{}
+	Model   int         `json:",omitempty"`
+	Point   string      `json:",omitempty"`
+	Value   interface{} `json:",omitempty"`
 }
 
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {

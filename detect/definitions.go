@@ -25,7 +25,7 @@ const (
 const (
 	taskOpenwb       = "openwb"
 	taskSMA          = "sma"
-	taskKEBA         = "KEBA"
+	taskKEBA         = "keba"
 	taskE3DC         = "e3dc_simple"
 	taskSonnen       = "sonnen"
 	taskPowerwall    = "powerwall"

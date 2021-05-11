@@ -7,11 +7,11 @@ import (
 
 type ResultDetails struct {
 	IP           string
-	Port         int
-	Topic        string
-	ModbusResult *ModbusResult
-	KebaResult   *KebaResult
-	SmaResult    *SmaResult
+	Port         int           `json:",omitempty"`
+	Topic        string        `json:",omitempty"`
+	ModbusResult *ModbusResult `json:",omitempty"`
+	KebaResult   *KebaResult   `json:",omitempty"`
+	SmaResult    *SmaResult    `json:",omitempty"`
 }
 
 func (d *ResultDetails) Clone() ResultDetails {
