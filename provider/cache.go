@@ -1,9 +1,11 @@
 package provider
 
 import (
+	"errors"
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
@@ -180,7 +182,7 @@ func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.clock.Since(c.updated) > c.cache || errors.Is(c.err, api.ErrMustRetry) && c.clock.Since(c.updated) > 5*time.Second {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}

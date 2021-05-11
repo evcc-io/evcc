@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	fordAuth             = "https://fcis.ice.ibmcloud.com"
-	fordAPI              = "https://usapi.cv.ford.com"
-	fordVehicleList      = "https://api.mps.ford.com/api/users/vehicles"
-	fordOutdatedAfter    = 5 * time.Minute       // if returned status value is older, evcc will init refresh
-	fordMaxRefreshTrials = 20                    // max trials to get status after refresh, poll interval is 1.5s, i.e. timeout = maxTrials * 1.5s
-	fordTimeFormat       = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
+	fordAuth           = "https://fcis.ice.ibmcloud.com"
+	fordAPI            = "https://usapi.cv.ford.com"
+	fordVehicleList    = "https://api.mps.ford.com/api/users/vehicles"
+	fordOutdatedAfter  = 5 * time.Minute       // if returned status value is older, evcc will init refresh
+	fordRefreshTimeout = time.Minute           // timeout to get status after refresh
+	fordTimeFormat     = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
 )
 
 // Ford is an api.Vehicle implementation for Ford cars
@@ -33,6 +33,8 @@ type Ford struct {
 	user, password, vin string
 	tokenSource         oauth2.TokenSource
 	statusG             func() (interface{}, error)
+	statusRefreshId     string
+	statusRefreshStart  time.Time
 }
 
 func init() {
@@ -199,50 +201,60 @@ func (v *Ford) vehicles() ([]string, error) {
 
 // vehicleStatus performs a /status request to the Ford API and triggers a refresh if
 // the received status is too old
-func (v *Ford) vehicleStatus() (fordVehicleStatus, error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
+func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
+	if v.statusRefreshId != "" {
+		// if status refresh has been started, follow up
+		if res, err = v.vehicleStatusRefresh(); errors.Is(err, api.ErrMustRetry) && time.Since(v.statusRefreshStart) > fordRefreshTimeout {
+			v.statusRefreshId = ""
+			err = api.ErrTimeout
+		}
+	} else {
+		// otherwise start normal workflow
+		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
+		var req *http.Request
+		req, err = v.request(http.MethodGet, uri)
+		if err == nil {
+			err = v.DoJSON(req, &res)
+		}
 
-	var res fordVehicleStatus
-	req, err := v.request(http.MethodGet, uri)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+		if err == nil {
+			var lastUpdate time.Time
+			lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
-	if err == nil {
-		var lastUpdate time.Time
-		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
-
-		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
-			res, err = v.vehicleStatusRefresh()
+			if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
+				v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
+				res, err = v.vehicleStatusRefresh()
+			}
 		}
 	}
 
 	return res, err
 }
 
-// vehicleStatusRefresh triggers an update and waits until refreshed data is available or request times out
-func (v *Ford) vehicleStatusRefresh() (fordVehicleStatus, error) {
-	commandId, err := v.requestRefresh()
+// vehicleStatusRefresh triggers an update if not already in progress, otherwise gets result
+func (v *Ford) vehicleStatusRefresh() (res fordVehicleStatus, err error) {
+	if v.statusRefreshId == "" {
+		err = v.requestRefresh()
+	}
 
-	var res fordVehicleStatus
 	if err == nil {
-		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, commandId)
+		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, v.statusRefreshId)
 
 		// if status attribute in JSON response is 200, update is complete, otherwise server is still
 		// waiting for vehicle and the request needs to be repeated
-		for counter := 0; counter < fordMaxRefreshTrials && res.Status != 200 && err == nil; counter++ {
-			var req *http.Request
-			if req, err = v.request(http.MethodGet, uri); err == nil {
-				err = v.DoJSON(req, &res)
-			}
-
-			time.Sleep(1500 * time.Millisecond)
+		var req *http.Request
+		if req, err = v.request(http.MethodGet, uri); err == nil {
+			err = v.DoJSON(req, &res)
 		}
 
 		if err == nil && res.Status != 200 {
-			err = fmt.Errorf("refresh failed: status %d", res.Status)
+			err = api.ErrMustRetry
 		}
+	}
+
+	// clear command id, if not required to follow up
+	if !errors.Is(err, api.ErrMustRetry) {
+		v.statusRefreshId = ""
 	}
 
 	return res, err
@@ -250,7 +262,7 @@ func (v *Ford) vehicleStatusRefresh() (fordVehicleStatus, error) {
 
 // requestRefresh requests Ford API to poll vehicle for updated data
 // returns commandId to track the request and get the data after server received update from vehicle
-func (v *Ford) requestRefresh() (string, error) {
+func (v *Ford) requestRefresh() error {
 	var resp struct {
 		CommandId string
 	}
@@ -261,7 +273,16 @@ func (v *Ford) requestRefresh() (string, error) {
 		err = v.DoJSON(req, &resp)
 	}
 
-	return resp.CommandId, err
+	if err == nil {
+		v.statusRefreshId = resp.CommandId
+		v.statusRefreshStart = time.Now()
+
+		if resp.CommandId == "" {
+			err = errors.New("refresh request failed, no command id received")
+		}
+	}
+
+	return err
 }
 
 var _ api.Battery = (*Ford)(nil)
