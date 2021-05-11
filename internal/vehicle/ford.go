@@ -183,13 +183,12 @@ func (v *Ford) vehicles() ([]string, error) {
 		}
 	}
 
-	var vehicles []string
-
 	req, err := v.request(http.MethodGet, fordVehicleList)
 	if err == nil {
 		err = v.DoJSON(req, &resp)
 	}
 
+	var vehicles []string
 	if err == nil {
 		for _, v := range resp.Vehicles.Values {
 			vehicles = append(vehicles, v.VIN)
@@ -202,28 +201,32 @@ func (v *Ford) vehicles() ([]string, error) {
 // vehicleStatus performs a /status request to the Ford API and triggers a refresh if
 // the received status is too old
 func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
+	// follow up requested refresh
 	if v.statusRefreshId != "" {
-		// if status refresh has been started, follow up
-		if res, err = v.vehicleStatusRefresh(); errors.Is(err, api.ErrMustRetry) && time.Since(v.statusRefreshStart) > fordRefreshTimeout {
+		if res, err = v.refreshResult(); errors.Is(err, api.ErrMustRetry) && time.Since(v.statusRefreshStart) > fordRefreshTimeout {
 			v.statusRefreshId = ""
 			err = api.ErrTimeout
 		}
-	} else {
-		// otherwise start normal workflow
-		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
-		var req *http.Request
-		req, err = v.request(http.MethodGet, uri)
-		if err == nil {
-			err = v.DoJSON(req, &res)
-		}
 
-		if err == nil {
-			var lastUpdate time.Time
-			lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
+		return res, err
+	}
 
-			if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
-				v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
-				res, err = v.vehicleStatusRefresh()
+	// otherwise start normal workflow
+	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", fordAPI, v.vin)
+	req, err := v.request(http.MethodGet, uri)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	if err == nil {
+		var lastUpdate time.Time
+		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
+
+		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
+			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
+
+			if err = v.requestRefresh(); err == nil {
+				err = api.ErrMustRetry
 			}
 		}
 	}
@@ -231,30 +234,23 @@ func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
 	return res, err
 }
 
-// vehicleStatusRefresh triggers an update if not already in progress, otherwise gets result
-func (v *Ford) vehicleStatusRefresh() (res fordVehicleStatus, err error) {
-	if v.statusRefreshId == "" {
-		err = v.requestRefresh()
+// refreshResult triggers an update if not already in progress, otherwise gets result
+func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
+	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, v.statusRefreshId)
+
+	var req *http.Request
+	if req, err = v.request(http.MethodGet, uri); err == nil {
+		err = v.DoJSON(req, &res)
 	}
 
+	// if status attribute in JSON response is 200, update is complete, otherwise server is still
+	// waiting for vehicle and the request needs to be repeated
 	if err == nil {
-		uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, v.statusRefreshId)
-
-		// if status attribute in JSON response is 200, update is complete, otherwise server is still
-		// waiting for vehicle and the request needs to be repeated
-		var req *http.Request
-		if req, err = v.request(http.MethodGet, uri); err == nil {
-			err = v.DoJSON(req, &res)
-		}
-
-		if err == nil && res.Status != 200 {
+		if res.Status == 200 {
+			v.statusRefreshId = ""
+		} else {
 			err = api.ErrMustRetry
 		}
-	}
-
-	// clear command id, if not required to follow up
-	if !errors.Is(err, api.ErrMustRetry) {
-		v.statusRefreshId = ""
 	}
 
 	return res, err
@@ -278,7 +274,7 @@ func (v *Ford) requestRefresh() error {
 		v.statusRefreshStart = time.Now()
 
 		if resp.CommandId == "" {
-			err = errors.New("refresh request failed, no command id received")
+			err = errors.New("refresh failed")
 		}
 	}
 

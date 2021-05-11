@@ -51,6 +51,10 @@ func (c *Cached) reset() {
 	c.mux.Unlock()
 }
 
+func (c *Cached) mustUpdate() bool {
+	return c.clock.Since(c.updated) > c.cache || errors.Is(c.err, api.ErrMustRetry)
+}
+
 // FloatGetter gets float value
 func (c *Cached) FloatGetter() func() (float64, error) {
 	g, ok := c.getter.(func() (float64, error))
@@ -62,7 +66,7 @@ func (c *Cached) FloatGetter() func() (float64, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -82,7 +86,7 @@ func (c *Cached) IntGetter() func() (int64, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -102,7 +106,7 @@ func (c *Cached) StringGetter() func() (string, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -122,7 +126,7 @@ func (c *Cached) BoolGetter() func() (bool, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -142,7 +146,7 @@ func (c *Cached) DurationGetter() func() (time.Duration, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -162,7 +166,7 @@ func (c *Cached) TimeGetter() func() (time.Time, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -182,7 +186,7 @@ func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 		c.mux.Lock()
 		defer c.mux.Unlock()
 
-		if c.clock.Since(c.updated) > c.cache || errors.Is(c.err, api.ErrMustRetry) && c.clock.Since(c.updated) > 5*time.Second {
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
