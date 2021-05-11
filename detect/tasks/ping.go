@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"runtime"
@@ -8,8 +8,10 @@ import (
 	"github.com/go-ping/ping"
 )
 
+const Ping TaskType = "ping"
+
 func init() {
-	registry.Add("ping", PingHandlerFactory)
+	registry.Add(Ping, PingHandlerFactory)
 }
 
 func PingHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
@@ -28,8 +30,8 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, ip string) (res []interface{}) {
-	pinger, err := ping.NewPinger(ip)
+func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+	pinger, err := ping.NewPinger(in.IP)
 	if err != nil {
 		panic(err)
 	}
@@ -60,5 +62,5 @@ func (h *PingHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 		return nil
 	}
 
-	return []interface{}{nil}
+	return []ResultDetails{in}
 }

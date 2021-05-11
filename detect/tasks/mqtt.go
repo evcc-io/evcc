@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"errors"
@@ -9,8 +9,10 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const Mqtt TaskType = "mqtt"
+
 func init() {
-	registry.Add("mqtt", MqttHandlerFactory)
+	registry.Add(Mqtt, MqttHandlerFactory)
 }
 
 func MqttHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
@@ -33,8 +35,8 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(log *util.Logger, ip string) []interface{} {
-	broker := fmt.Sprintf("%s:%d", ip, h.Port)
+func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+	broker := fmt.Sprintf("%s:%d", in.IP, h.Port)
 
 	opt := mqtt.NewClientOptions()
 	opt.AddBroker(broker)
@@ -55,20 +57,17 @@ func (h *MqttHandler) Test(log *util.Logger, ip string) []interface{} {
 		})
 
 		timer := time.NewTimer(timeout)
-	WAIT:
+
 		for {
 			select {
 			case <-recv:
-				break WAIT
+				out := in.Clone()
+				out.Topic = h.Topic
+				return []ResultDetails{out}
 			case <-timer.C:
-				ok = false
-				break WAIT
+				return nil
 			}
 		}
-	}
-
-	if ok {
-		return []interface{}{nil}
 	}
 
 	return nil

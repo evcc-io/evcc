@@ -1,6 +1,10 @@
 package detect
 
-import "time"
+import (
+	"time"
+
+	"github.com/andig/evcc/detect/tasks"
+)
 
 var (
 	taskList = &TaskList{}
@@ -9,21 +13,19 @@ var (
 	chargeStatus = []int{0x41, 0x42, 0x43} // status values A..C
 )
 
-const timeout = 200 * time.Millisecond
-
 // public task ids
 const (
 	TaskPing    = "ping"
-	TaskTCP80   = "tcp_80"
-	TaskTCP502  = "tcp_502"
+	TaskHttp    = "tcp_http"
+	TaskModbus  = "tcp_modbus"
 	TaskSunspec = "sunspec"
 )
 
 // private task ids
 const (
 	taskOpenwb       = "openwb"
-	taskSMA          = "sma"
-	taskKEBA         = "KEBA"
+	taskSMA          = "shm"
+	taskKEBA         = "keba"
 	taskE3DC         = "e3dc_simple"
 	taskSonnen       = "sonnen"
 	taskPowerwall    = "powerwall"
@@ -37,38 +39,38 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
-	taskTPLink       = "tplink"
+	// taskTPLink       = "tplink"
 )
 
 func init() {
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:   taskSMA,
-		Type: "sma",
+		Type: tasks.Sma,
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:   taskKEBA,
-		Type: "keba",
+		Type: tasks.Keba,
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:   TaskPing,
-		Type: "ping",
+		Type: tasks.Ping,
 	})
 
-	taskList.Add(Task{
-		ID:      TaskTCP502,
-		Type:    "tcp",
+	taskList.Add(tasks.Task{
+		ID:      TaskModbus,
+		Type:    tasks.Tcp,
 		Depends: TaskPing,
 		Config: map[string]interface{}{
-			"port": 502,
+			"ports": []int{502, 1502},
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      TaskSunspec,
-		Type:    "modbus",
-		Depends: TaskTCP502,
+		Type:    tasks.Modbus,
+		Depends: TaskModbus,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
 			"models": []int{1},
@@ -76,9 +78,9 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskInverter,
-		Type:    "modbus",
+		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
@@ -88,9 +90,9 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskBattery,
-		Type:    "modbus",
+		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":     sunspecIDs,
@@ -100,9 +102,9 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskMeter,
-		Type:    "modbus",
+		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
@@ -111,10 +113,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskE3DC,
-		Type:    "modbus",
-		Depends: TaskTCP502,
+		Type:    tasks.Modbus,
+		Depends: TaskModbus,
 		Config: map[string]interface{}{
 			"ids":     []int{1, 2, 3, 4, 5, 6},
 			"address": 40000,
@@ -124,10 +126,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskWallbe,
-		Type:    "modbus",
-		Depends: TaskTCP502,
+		Type:    tasks.Modbus,
+		Depends: TaskModbus,
 		Config: map[string]interface{}{
 			"ids":     []int{255},
 			"address": 100,
@@ -137,10 +139,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskPhoenixEMEth,
-		Type:    "modbus",
-		Depends: TaskTCP502,
+		Type:    tasks.Modbus,
+		Depends: TaskModbus,
 		Config: map[string]interface{}{
 			"ids":     []int{180},
 			"address": 100,
@@ -150,10 +152,10 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskPhoenixEVEth,
-		Type:    "modbus",
-		Depends: TaskTCP502,
+		Type:    tasks.Modbus,
+		Depends: TaskModbus,
 		Config: map[string]interface{}{
 			"ids":     []int{255},
 			"address": 100,
@@ -163,47 +165,47 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskOpenwb,
-		Type:    "mqtt",
+		Type:    tasks.Mqtt,
 		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"topic": "openWB",
 		},
 	})
 
-	taskList.Add(Task{
-		ID:      TaskTCP80,
-		Type:    "tcp",
+	taskList.Add(tasks.Task{
+		ID:      TaskHttp,
+		Type:    tasks.Tcp,
 		Depends: TaskPing,
 		Config: map[string]interface{}{
-			"port": 80,
+			"ports": []int{80, 443},
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskGoE,
-		Type:    "http",
-		Depends: TaskTCP80,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
 		Config: map[string]interface{}{
 			"path": "/status",
 			"jq":   ".car",
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskEVSEWifi,
-		Type:    "http",
-		Depends: TaskTCP80,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
 		Config: map[string]interface{}{
 			"path": "/getParameters",
 			"jq":   ".type",
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskSonnen,
-		Type:    "http",
+		Type:    tasks.Http,
 		Depends: TaskPing,
 		Config: map[string]interface{}{
 			"port": 8080,
@@ -212,52 +214,54 @@ func init() {
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskPowerwall,
-		Type:    "http",
-		Depends: TaskTCP80,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
 		Config: map[string]interface{}{
 			"path": "/api/meters/aggregates",
 			"jq":   ".load",
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskFronius,
-		Type:    "http",
-		Depends: TaskTCP80,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
 		Config: map[string]interface{}{
 			"path": "/solar_api/GetAPIVersion.cgi",
 			"jq":   ".BaseURL",
 		},
 	})
 
-	taskList.Add(Task{
+	taskList.Add(tasks.Task{
 		ID:      taskTasmota,
-		Type:    "http",
-		Depends: TaskTCP80,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
 		Config: map[string]interface{}{
 			"path": "//cm?cmnd=Module",
 			"jq":   ".Module",
 		},
 	})
 
-	taskList.Add(Task{
-		ID:      taskTPLink,
-		Type:    "tcp",
-		Depends: TaskPing,
-		Config: map[string]interface{}{
-			"port": 9999, // TP-Link Smart Home Protocol standard port
-		},
-	})
-
-	// taskList.Add(Task{
-	// 	ID:      "volkszähler",
-	// 	Type:    "http",
-	// 	Depends: TaskTCP80,
+	// taskList.Add(tasks.Task{
+	// 	ID:      taskTPLink,
+	// 	Type:    tasks.Http,
+	// 	Depends: TaskHttp,
 	// 	Config: map[string]interface{}{
-	// 		"path":    "/middleware.php/entity.json",
-	// 		"timeout": 500 * time.Millisecond,
+	// 		"ResponseHeader": map[string]string{
+	// 			"Server": "TP-LINK Smart Plug",
+	// 		},
 	// 	},
 	// })
+
+	taskList.Add(tasks.Task{
+		ID:      "volkszähler",
+		Type:    tasks.Http,
+		Depends: TaskHttp,
+		Config: map[string]interface{}{
+			"path":    "/middleware.php/entity.json",
+			"timeout": 500 * time.Millisecond,
+		},
+	})
 }
