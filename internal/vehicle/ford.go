@@ -256,8 +256,7 @@ func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
 	return res, err
 }
 
-// refreshRequest requests Ford API to poll vehicle for updated data
-// commandId tracks the request to check for update
+// refreshRequest requests status refresh tracked by commandId
 func (v *Ford) refreshRequest() error {
 	var resp struct {
 		CommandId string
