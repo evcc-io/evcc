@@ -186,12 +186,37 @@ var _ api.VehicleStartCharge = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleStartCharge interface
 func (v *Tesla) StartCharge() error {
-	return v.vehicle.StartCharging()
+	timer := time.NewTimer(10 * time.Second)
+
+	for {
+		select {
+		case <-timer.C:
+			return errors.New("timeout")
+		default:
+			_, err := v.vehicle.Wakeup()
+			if err == nil {
+				return v.vehicle.StartCharging()
+			}
+
+			if err.Error() != "408 Request Timeout" {
+				return err
+			}
+
+			time.Sleep(time.Second)
+		}
+	}
 }
 
 var _ api.VehicleStopCharge = (*Tesla)(nil)
 
 // StopCharge implements the api.VehicleStopCharge interface
 func (v *Tesla) StopCharge() error {
-	return v.vehicle.StopCharging()
+	err := v.vehicle.StopCharging()
+
+	// ignore sleeping vehicle
+	if err != nil && err.Error() == "408 Request Timeout" {
+		err = nil
+	}
+
+	return err
 }
