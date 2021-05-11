@@ -98,16 +98,3 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	return api.StatusNone, err
 }
-
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
-		return active, 20, 20, nil
-	}
-
-	return active, outsideTemp, targetTemp, err
-}

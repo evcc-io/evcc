@@ -12,7 +12,6 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/thoas/go-funk"
 )
 
 // Credits to
@@ -397,30 +396,4 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
-}
-
-var _ api.VehicleClimater = (*Renault)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.hvacG()
-
-	// Zoe Ph2
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden) {
-		return false, 0, 0, api.ErrNotAvailable
-	}
-
-	if res, ok := res.(kamereonResponse); err == nil && ok {
-		state := strings.ToLower(res.Data.Attributes.HvacStatus)
-
-		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
-		}
-
-		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
-
-		return active, res.Data.Attributes.ExternalTemperature, 20, nil
-	}
-
-	return false, 0, 0, err
 }
