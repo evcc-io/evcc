@@ -129,9 +129,9 @@ func (c *Easee) chargerDetails() (res easee.Site, err error) {
 	return res, err
 }
 
-func (c *Easee) syncSmartCharging() {
+func (c *Easee) syncSmartCharging() error {
 	if c.lp == nil {
-		return
+		return nil
 	}
 
 	if c.lp.GetMode() != c.lastChargeMode {
@@ -154,7 +154,7 @@ func (c *Easee) syncSmartCharging() {
 			c.lastChargeMode = c.lp.GetMode()
 			c.lastSmartCharging = newSmartCharging
 		}
-		return
+		return err
 	}
 
 	if c.lastSmartCharging != c.status.SmartCharging {
@@ -167,6 +167,7 @@ func (c *Easee) syncSmartCharging() {
 		c.lastSmartCharging = c.status.SmartCharging
 		c.lastChargeMode = c.lp.GetMode()
 	}
+	return nil
 }
 
 func (c *Easee) state() (easee.ChargerStatus, error) {
@@ -178,7 +179,7 @@ func (c *Easee) state() (easee.ChargerStatus, error) {
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
 		if err = c.DoJSON(req, &c.status); err == nil {
-			c.syncSmartCharging()
+			err = c.syncSmartCharging()
 			c.updated = time.Now()
 		}
 	}
