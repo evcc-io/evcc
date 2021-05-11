@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -52,17 +53,23 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	err := identity.Login(query, cc.User, cc.Password)
-	if err == nil {
-		api := vw.NewAPI(log, identity, "VW", "ES")
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
 
-		if cc.VIN == "" {
-			cc.VIN, err = findVehicle(api.Vehicles())
-			if err == nil {
-				log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-			}
+	api := vw.NewAPI(log, identity, "VW", "ES")
+
+	if cc.VIN == "" {
+		cc.VIN, err = findVehicle(api.Vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 		}
+	}
 
-		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		}
 	}
 
 	return v, err

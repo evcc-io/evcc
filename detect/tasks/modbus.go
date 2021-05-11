@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"encoding/binary"
@@ -14,21 +14,23 @@ import (
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
+const Modbus TaskType = "modbus"
+
 func init() {
-	registry.Add("modbus", ModbusHandlerFactory)
+	registry.Add(Modbus, ModbusHandlerFactory)
 }
 
 type ModbusResult struct {
 	SlaveID uint8
-	Model   int
-	Point   string
-	Value   interface{}
+	Model   int         `json:",omitempty"`
+	Point   string      `json:",omitempty"`
+	Value   interface{} `json:",omitempty"`
 }
 
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
 	port := handler.(*ModbusHandler).Port
 	cc := map[string]interface{}{
-		"uri":   fmt.Sprintf("%s:%d", res.Host, port),
+		"uri":   fmt.Sprintf("%s:%d", res.ResultDetails.IP, port),
 		"model": "sunspec",
 		"id":    r.SlaveID,
 	}
@@ -38,7 +40,7 @@ func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string
 
 func ModbusHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := ModbusHandler{
-		Port:    502,
+		// Port:    502,
 		IDs:     []uint8{1},
 		Models:  []int{1},
 		Point:   "Md", // Model
@@ -148,6 +150,8 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 				val = int(res.Uint16())
 			case "enum16":
 				val = int(res.Enum16())
+			case "count":
+				val = int(res.Count())
 			default:
 				panic("invalid point type: " + typ)
 			}
@@ -165,8 +169,17 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 	return false
 }
 
-func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
-	addr := fmt.Sprintf("%s:%d", ip, h.Port)
+func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
+	port := in.Port
+	if port == 0 {
+		port = h.Port
+	}
+	if port == 0 {
+		fmt.Println("modbus", in)
+		panic("modbus: invalid port")
+	}
+
+	addr := fmt.Sprintf("%s:%d", in.IP, port)
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 
@@ -194,7 +207,9 @@ func (h *ModbusHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 		}
 
 		if ok {
-			res = append(res, mr)
+			out := in.Clone()
+			out.ModbusResult = &mr
+			res = append(res, out)
 		}
 	}
 

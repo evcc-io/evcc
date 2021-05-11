@@ -1,8 +1,6 @@
 package request
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -67,23 +65,11 @@ func ReadBody(resp *http.Response) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	// maintain body after reading
-	resp.Body = io.NopCloser(bytes.NewBuffer(b))
-
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return b, StatusError{resp: resp}
 	}
 
 	return b, nil
-}
-
-// DecodeJSON reads HTTP response and decodes JSON body if error is nil
-func DecodeJSON(resp *http.Response, res interface{}) error {
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return StatusError{resp: resp}
-	}
-
-	return json.NewDecoder(resp.Body).Decode(&res)
 }
 
 // New builds and executes HTTP request and returns the response

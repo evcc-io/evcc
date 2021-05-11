@@ -1,7 +1,6 @@
 package id
 
 import (
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -10,8 +9,8 @@ import (
 
 // Provider is an api.Vehicle implementation for VW ID cars
 type Provider struct {
-	statusG           func() (interface{}, error)
-	startChargeAction func() error
+	statusG func() (interface{}, error)
+	action  func(action, value string) error
 }
 
 // NewProvider creates a new vehicle
@@ -20,8 +19,8 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
-		startChargeAction: func() error {
-			return api.Action(vin, ActionCharge, ActionChargeStart)
+		action: func(action, value string) error {
+			return api.Action(vin, action, value)
 		},
 	}
 	return impl
@@ -84,34 +83,16 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
-
-		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
-		}
-
-		active := state != "off" && state != "invalid" && state != "error"
-
-		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
-
-		// TODO not available; use target temp to avoid wrong heating/cooling display
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, nil
-	}
-
-	return active, outsideTemp, targetTemp, err
-}
-
 var _ api.VehicleStartCharge = (*Provider)(nil)
 
 // StartCharge implements the api.VehicleStartCharge interface
 func (v *Provider) StartCharge() error {
-	return v.startChargeAction()
+	return v.action(ActionCharge, ActionChargeStart)
+}
+
+var _ api.VehicleStopCharge = (*Provider)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Provider) StopCharge() error {
+	return v.action(ActionCharge, ActionChargeStop)
 }

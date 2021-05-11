@@ -525,37 +525,6 @@ func (lp *LoadPoint) minSocNotReached() bool {
 		lp.socCharge < float64(lp.SoC.Min)
 }
 
-// climateActive checks if vehicle has active climate request
-func (lp *LoadPoint) climateActive() bool {
-	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
-		active, outsideTemp, targetTemp, err := cl.Climater()
-		if err == nil {
-			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)
-
-			status := "off"
-			if active {
-				status = "on"
-
-				switch {
-				case outsideTemp < targetTemp:
-					status = "heating"
-				case outsideTemp > targetTemp:
-					status = "cooling"
-				}
-			}
-
-			lp.publish("climater", status)
-			return active
-		}
-
-		if !errors.Is(err, api.ErrNotAvailable) {
-			lp.log.ERROR.Printf("climater: %v", err)
-		}
-	}
-
-	return false
-}
-
 // remoteControlled returns true if remote control status is active
 func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 	lp.Lock()
@@ -868,12 +837,7 @@ func (lp *LoadPoint) socPollAllowed() bool {
 		lp.log.DEBUG.Printf("next soc poll remaining time: %v", remaining.Truncate(time.Second))
 	}
 
-	res := lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
-	if res {
-		lp.socUpdated = lp.clock.Now()
-	}
-
-	return res
+	return lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
 }
 
 // publish state of charge, remaining charge duration and range
@@ -883,6 +847,8 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	if lp.socPollAllowed() {
+		lp.socUpdated = lp.clock.Now()
+
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)
@@ -898,10 +864,12 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
 			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
 		} else {
-			// we need a value- so retry on error
-			lp.socUpdated = lp.clock.Now()
-
-			lp.log.ERROR.Printf("vehicle: %v", err)
+			if errors.Is(err, api.ErrMustRetry) {
+				lp.socUpdated = time.Time{}
+				lp.log.DEBUG.Printf("vehicle: waiting for update")
+			} else {
+				lp.log.ERROR.Printf("vehicle: %v", err)
+			}
 		}
 
 		// range
@@ -975,12 +943,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case lp.targetSocReached():
 		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.socCharge, lp.SoC.Target)
-		var targetCurrent float64 // zero disables
-		if lp.climateActive() {
-			lp.log.DEBUG.Println("climater active")
-			targetCurrent = float64(lp.MinCurrent)
-		}
-		err = lp.setLimit(targetCurrent, true)
+		err = lp.setLimit(0, true)
 		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
 
 	// OCPP has priority over target charging
@@ -1007,13 +970,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
 		lp.log.DEBUG.Printf("pv max charge current: %.2gA", targetCurrent)
 
-		var required bool // false
-		if targetCurrent == 0 && lp.climateActive() {
-			targetCurrent = float64(lp.MinCurrent)
-			required = true
-		}
-
 		// Sunny Home Manager
+		var required bool // false
 		if lp.remoteControlled(RemoteSoftDisable) {
 			remoteDisabled = RemoteSoftDisable
 			targetCurrent = 0

@@ -216,10 +216,3 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 
 	return time.Time{}, api.ErrNotAvailable
 }
-
-var _ api.VehicleClimater = (*Ovms)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Ovms) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	return false, 0, 0, api.ErrNotAvailable
-}
