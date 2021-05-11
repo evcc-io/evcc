@@ -211,13 +211,16 @@ func (site *Site) publish(key string, val interface{}) {
 }
 
 // updateMeter updates and publishes single meter
-func (site *Site) updateMeter(name string, meter api.Meter, power *float64) error {
+func (site *Site) updateMeter(name string, meter api.Meter, power *float64, oneWay bool) error {
 	value, err := meter.CurrentPower()
 	if err != nil {
 		return err
 	}
 
 	*power = value // update value if no error
+	if oneWay && *power > 0 {
+		*power = 0
+	}
 
 	site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
 	site.publish(name+"Power", *power)
@@ -227,13 +230,13 @@ func (site *Site) updateMeter(name string, meter api.Meter, power *float64) erro
 
 // updateMeter updates and publishes single meter
 func (site *Site) updateMeters() error {
-	retryMeter := func(s string, m api.Meter, f *float64) error {
+	retryMeter := func(s string, m api.Meter, f *float64, oneWay bool) error {
 		if m == nil {
 			return nil
 		}
 
 		err := retry.Do(func() error {
-			return site.updateMeter(s, m, f)
+			return site.updateMeter(s, m, f, oneWay)
 		}, retryOptions...)
 
 		if err != nil {
@@ -245,11 +248,11 @@ func (site *Site) updateMeters() error {
 	}
 
 	// pv meter is not critical for operation
-	_ = retryMeter("pv", site.pvMeter, &site.pvPower)
+	_ = retryMeter("pv", site.pvMeter, &site.pvPower, true)
 
-	err := retryMeter("grid", site.gridMeter, &site.gridPower)
+	err := retryMeter("grid", site.gridMeter, &site.gridPower, false)
 	if err == nil {
-		err = retryMeter("battery", site.batteryMeter, &site.batteryPower)
+		err = retryMeter("battery", site.batteryMeter, &site.batteryPower, false)
 	}
 
 	// currents
