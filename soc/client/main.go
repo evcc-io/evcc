@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle"
 	"github.com/andig/evcc/util"
 )
@@ -29,16 +30,21 @@ func main() {
 	params := make(map[string]interface{})
 	params["brand"] = strings.ToLower(os.Args[1])
 
+	action := "soc"
+
 	var key string
 	for _, arg := range os.Args[2:] {
-		if key == "" {
+		switch key {
+		case "":
 			key = strings.ToLower(strings.TrimLeft(arg, "-"))
-		} else {
-			if key == "log" {
-				util.LogLevel(arg, nil)
-			} else {
-				params[key] = arg
-			}
+		case "log":
+			util.LogLevel(arg, nil)
+			key = ""
+		case "action":
+			action = arg
+			key = ""
+		default:
+			params[key] = arg
 			key = ""
 		}
 	}
@@ -53,10 +59,24 @@ func main() {
 		log.Fatal(err)
 	}
 
-	soc, err := v.SoC()
-	if err != nil {
-		log.Fatal(err)
-	}
+	switch action {
+	case "wakeup":
+		vv, ok := v.(api.VehicleStartCharge)
+		if !ok {
+			log.Fatal("not supported:", action)
+		}
+		if err := vv.StartCharge(); err != nil {
+			log.Fatal(err)
+		}
 
-	fmt.Println(int(math.Round(soc)))
+	case "soc":
+		soc, err := v.SoC()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(int(math.Round(soc)))
+
+	default:
+		log.Fatal("invalid action:", action)
+	}
 }
