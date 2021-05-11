@@ -146,7 +146,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Identifier); ok {
 		if id, err := v.Identify(); err != nil {
 			fmt.Fprintf(w, "Identifier:\t%v\n", err)
-		} else {
+		} else if id != "" {
 			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}
