@@ -10,7 +10,6 @@ import (
 // Provider implements the evcc vehicle api
 type Provider struct {
 	chargerG func() (interface{}, error)
-	climateG func() (interface{}, error)
 	action   func(action, value string) error
 }
 
@@ -19,9 +18,6 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		chargerG: provider.NewCached(func() (interface{}, error) {
 			return api.Charger(vin)
-		}, cache).InterfaceGetter(),
-		climateG: provider.NewCached(func() (interface{}, error) {
-			return api.Climater(vin)
 		}, cache).InterfaceGetter(),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
