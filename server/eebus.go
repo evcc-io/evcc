@@ -184,7 +184,7 @@ func (c *EEBus) connectDiscoveredEntry(entry *zeroconf.ServiceEntry) {
 	var conn ship.Conn
 	if err == nil {
 		c.log.TRACE.Printf("%s: client connect", entry.HostName)
-		conn, err = svc.Connect(c.log.TRACE, c.id, c.srv.Certificate)
+		conn, err = svc.Connect(c.log.TRACE, c.id, c.srv.Certificate, c.shipCloseHandler)
 	}
 
 	if err != nil {
@@ -248,4 +248,16 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 	c.mux.Unlock()
 
 	return errors.New("client not registered")
+}
+
+// handles connection closed
+func (c *EEBus) shipCloseHandler(ski string) {
+	c.mux.Lock()
+
+	_, found := c.connectedClients[ski]
+	if found {
+		delete(c.connectedClients, ski)
+	}
+
+	c.mux.Unlock()
 }
