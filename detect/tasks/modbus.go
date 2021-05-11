@@ -150,6 +150,8 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 				val = int(res.Uint16())
 			case "enum16":
 				val = int(res.Enum16())
+			case "count":
+				val = int(res.Count())
 			default:
 				panic("invalid point type: " + typ)
 			}

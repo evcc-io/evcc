@@ -35,6 +35,7 @@ const (
 	taskEVSEWifi     = "evsewifi"
 	taskGoE          = "go-e"
 	taskInverter     = "inverter"
+	taskStrings      = "strings"
 	taskBattery      = "battery"
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
@@ -86,6 +87,18 @@ func init() {
 			"ids":     sunspecIDs,
 			"models":  []int{101, 103},
 			"point":   "W",
+			"invalid": []int{0xFFFF},
+		},
+	})
+
+	taskList.Add(tasks.Task{
+		ID:      taskStrings,
+		Type:    tasks.Modbus,
+		Depends: TaskSunspec,
+		Config: map[string]interface{}{
+			"ids":     sunspecIDs,
+			"models":  []int{160},
+			"point":   "N",
 			"invalid": []int{0xFFFF},
 		},
 	})
