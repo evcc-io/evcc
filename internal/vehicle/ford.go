@@ -33,8 +33,8 @@ type Ford struct {
 	user, password, vin string
 	tokenSource         oauth2.TokenSource
 	statusG             func() (interface{}, error)
-	statusRefreshId     string
-	statusRefreshStart  time.Time
+	refreshId           string
+	refreshTime         time.Time
 }
 
 func init() {
@@ -76,7 +76,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.statusG = provider.NewCached(func() (interface{}, error) {
-		return v.vehicleStatus()
+		return v.status()
 	}, cc.Cache).InterfaceGetter()
 
 	if err == nil && cc.VIN == "" {
@@ -198,13 +198,13 @@ func (v *Ford) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// vehicleStatus performs a /status request to the Ford API and triggers a refresh if
+// status performs a /status request to the Ford API and triggers a refresh if
 // the received status is too old
-func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
+func (v *Ford) status() (res fordVehicleStatus, err error) {
 	// follow up requested refresh
-	if v.statusRefreshId != "" {
-		if res, err = v.refreshResult(); errors.Is(err, api.ErrMustRetry) && time.Since(v.statusRefreshStart) > fordRefreshTimeout {
-			v.statusRefreshId = ""
+	if v.refreshId != "" {
+		if res, err = v.refreshResult(); errors.Is(err, api.ErrMustRetry) && time.Since(v.refreshTime) > fordRefreshTimeout {
+			v.refreshId = ""
 			err = api.ErrTimeout
 		}
 
@@ -225,7 +225,7 @@ func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
 		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
 			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
 
-			if err = v.requestRefresh(); err == nil {
+			if err = v.refreshRequest(); err == nil {
 				err = api.ErrMustRetry
 			}
 		}
@@ -236,7 +236,7 @@ func (v *Ford) vehicleStatus() (res fordVehicleStatus, err error) {
 
 // refreshResult triggers an update if not already in progress, otherwise gets result
 func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, v.statusRefreshId)
+	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", fordAPI, v.vin, v.refreshId)
 
 	var req *http.Request
 	if req, err = v.request(http.MethodGet, uri); err == nil {
@@ -247,7 +247,7 @@ func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
 	// waiting for vehicle and the request needs to be repeated
 	if err == nil {
 		if res.Status == 200 {
-			v.statusRefreshId = ""
+			v.refreshId = ""
 		} else {
 			err = api.ErrMustRetry
 		}
@@ -256,9 +256,9 @@ func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
 	return res, err
 }
 
-// requestRefresh requests Ford API to poll vehicle for updated data
-// returns commandId to track the request and get the data after server received update from vehicle
-func (v *Ford) requestRefresh() error {
+// refreshRequest requests Ford API to poll vehicle for updated data
+// commandId tracks the request to check for update
+func (v *Ford) refreshRequest() error {
 	var resp struct {
 		CommandId string
 	}
@@ -270,8 +270,8 @@ func (v *Ford) requestRefresh() error {
 	}
 
 	if err == nil {
-		v.statusRefreshId = resp.CommandId
-		v.statusRefreshStart = time.Now()
+		v.refreshId = resp.CommandId
+		v.refreshTime = time.Now()
 
 		if resp.CommandId == "" {
 			err = errors.New("refresh failed")
