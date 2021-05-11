@@ -1,7 +1,6 @@
 package id
 
 import (
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -82,31 +81,6 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	return 0, err
-}
-
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
-
-		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
-		}
-
-		active := state != "off" && state != "invalid" && state != "error"
-
-		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
-
-		// TODO not available; use target temp to avoid wrong heating/cooling display
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, nil
-	}
-
-	return active, outsideTemp, targetTemp, err
 }
 
 var _ api.VehicleStartCharge = (*Provider)(nil)
