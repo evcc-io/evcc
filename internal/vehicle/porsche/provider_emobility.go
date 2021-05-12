@@ -162,3 +162,20 @@ func (v *EMobilityProvider) Status() (api.ChargeStatus, error) {
 
 	return api.StatusNone, err
 }
+
+var _ api.VehicleClimater = (*EMobilityProvider)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *EMobilityProvider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	res, err := v.statusG()
+	if res, ok := res.(EmobilityResponse); err == nil && ok {
+		switch res.DirectClimatisation.ClimatisationState {
+		case "OFF":
+			return false, 0, 0, nil
+		case "ON":
+			return true, 0, 0, nil
+		}
+	}
+
+	return active, outsideTemp, targetTemp, err
+}
