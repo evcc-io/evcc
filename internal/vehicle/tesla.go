@@ -182,22 +182,7 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-var _ api.VehicleClimater = (*Tesla)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.climateStateG()
-
-	if res, ok := res.(*tesla.ClimateState); err == nil && ok {
-		active = res.IsPreconditioning
-		outsideTemp = res.OutsideTemp
-		targetTemp = res.PassengerTempSetting
-
-		return active, outsideTemp, targetTemp, nil
-	}
-
-	return false, 0, 0, api.ErrNotAvailable
-}
+// TODO api.Climater implementation has been removed as it drains battery. Re-check at t later time.
 
 var _ api.VehicleStartCharge = (*Tesla)(nil)
 
