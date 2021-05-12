@@ -78,14 +78,22 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 	currentState := data.EVData.ChargeState
 
+	enabled, err := c.Enabled()
+
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
+		if enabled && err == nil {
+			return api.StatusC, nil
+		}
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeError: // Error
 		return api.StatusF, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
+		if !enabled && err == nil {
+			return api.StatusB, nil
+		}
 		return api.StatusC, nil
 	}
 	return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
