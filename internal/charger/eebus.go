@@ -24,6 +24,7 @@ type EEBus struct {
 	maxCurrent  float64
 	isEnabling  bool
 	isDisabling bool
+	connected   bool
 }
 
 func init() {
@@ -53,7 +54,7 @@ func NewEEBus(ski string) (*EEBus, error) {
 
 	c := &EEBus{log: log}
 
-	server.EEBusInstance.Register(ski, c.onConnect)
+	server.EEBusInstance.Register(ski, c.onConnect, c.onDisconnect)
 
 	return c, nil
 }
@@ -66,7 +67,15 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
 	})
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
-	return c.cc.Boot()
+	err := c.cc.Boot()
+	if err == nil {
+		c.connected = true
+	}
+	return err
+}
+
+func (c *EEBus) onDisconnect(ski string) {
+	c.connected = false
 }
 
 // Status implements the api.Charger interface
@@ -77,6 +86,10 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	}
 
 	currentState := data.EVData.ChargeState
+
+	if !c.connected {
+		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
+	}
 
 	enabled, err := c.Enabled()
 
@@ -110,9 +123,9 @@ func (c *EEBus) Enabled() (bool, error) {
 		return false, nil
 	}
 
-	if data.EVData.Measurements.CurrentL1 < data.EVData.LimitsL1.Default-0.3 ||
-		data.EVData.Measurements.CurrentL2 < data.EVData.LimitsL2.Default-0.3 ||
-		data.EVData.Measurements.CurrentL3 < data.EVData.LimitsL3.Default-0.3 {
+	if data.EVData.Measurements.CurrentL1 < data.EVData.LimitsL1.Min-0.3 ||
+		data.EVData.Measurements.CurrentL2 < data.EVData.LimitsL2.Min-0.3 ||
+		data.EVData.Measurements.CurrentL3 < data.EVData.LimitsL3.Min-0.3 {
 		if c.isEnabling {
 			return true, nil
 		}
