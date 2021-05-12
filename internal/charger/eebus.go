@@ -203,8 +203,10 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
 	}
 
-	c.lp.SetMinCurrent(int64(data.EVData.LimitsL1.Min))
-	c.lp.SetMaxCurrent(int64(data.EVData.LimitsL1.Max))
+	if c.lp != nil {
+		c.lp.SetMinCurrent(int64(data.EVData.LimitsL1.Min))
+		c.lp.SetMaxCurrent(int64(data.EVData.LimitsL1.Max))
+	}
 
 	c.maxCurrent = current
 
