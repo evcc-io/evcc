@@ -23,12 +23,17 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
+type EEBusClients struct {
+	onConnect    func(string, ship.Conn) error
+	onDisconnect func(string)
+}
+
 type EEBus struct {
 	mux               sync.Mutex
 	log               *util.Logger
 	srv               *eebus.Server
 	id                string
-	clients           map[string]func(string, ship.Conn) error
+	clients           map[string]EEBusClients
 	connectedClients  map[string]ship.Conn
 	discoveredClients map[string]*zeroconf.ServiceEntry
 }
@@ -87,7 +92,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		log:               log,
 		srv:               srv,
 		id:                id,
-		clients:           make(map[string]func(string, ship.Conn) error),
+		clients:           make(map[string]EEBusClients),
 		connectedClients:  make(map[string]ship.Conn),
 		discoveredClients: make(map[string]*zeroconf.ServiceEntry),
 	}
@@ -104,12 +109,12 @@ func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
 	}
 }
 
-func (c *EEBus) Register(ski string, shipHandler func(string, ship.Conn) error) {
+func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {
 	ski = strings.ReplaceAll(ski, "-", "")
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	c.mux.Lock()
-	c.clients[ski] = shipHandler
+	c.clients[ski] = EEBusClients{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
 	c.mux.Unlock()
 
 	// maybe the SKI is already discovered
@@ -240,7 +245,7 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 			if !found {
 				c.connectedClients[ski] = conn
 				c.mux.Unlock()
-				return cb(ski, conn)
+				return cb.onConnect(ski, conn)
 			}
 		}
 	}
@@ -256,6 +261,12 @@ func (c *EEBus) shipCloseHandler(ski string) {
 
 	_, found := c.connectedClients[ski]
 	if found {
+		for client, cb := range c.clients {
+			if client == ski {
+				cb.onDisconnect(ski)
+				break
+			}
+		}
 		delete(c.connectedClients, ski)
 	}
 
