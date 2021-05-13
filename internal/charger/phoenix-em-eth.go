@@ -32,7 +32,7 @@ func init() {
 	registry.Add("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go run ../../cmd/tools/decorate.go -p charger -f decoratePhoenixEMEth -o phoenix-em-eth_decorators -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../../cmd/tools/decorate.go -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
