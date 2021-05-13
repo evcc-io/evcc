@@ -18,13 +18,14 @@ import (
 )
 
 type EEBus struct {
-	log         *util.Logger
-	cc          *communication.ConnectionController
-	lp          core.LoadPointAPI
-	maxCurrent  float64
-	isEnabling  bool
-	isDisabling bool
-	connected   bool
+	log                   *util.Logger
+	cc                    *communication.ConnectionController
+	lp                    core.LoadPointAPI
+	maxCurrent            float64
+	isEnabling            bool
+	isDisabling           bool
+	connected             bool
+	communicationStandard communication.EVCommunicationStandardEnumType
 }
 
 func init() {
@@ -52,7 +53,10 @@ func NewEEBus(ski string) (*EEBus, error) {
 		return nil, errors.New("eebus not configured")
 	}
 
-	c := &EEBus{log: log}
+	c := &EEBus{
+		log:                   log,
+		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
+	}
 
 	server.EEBusInstance.Register(ski, c.onConnect, c.onDisconnect)
 
@@ -67,6 +71,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
 	})
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
+	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
 	err := c.cc.Boot()
 	if err == nil {
 		c.connected = true
@@ -76,6 +81,38 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 
 func (c *EEBus) onDisconnect(ski string) {
 	c.connected = false
+}
+
+func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
+	switch dataType {
+	case communication.EVDataElementUpdateEVConnectionState:
+		return
+	case communication.EVDataElementUpdateCommunicationStandard:
+		c.communicationStandard = data.EVData.CommunicationStandard
+		return
+	case communication.EVDataElementUpdateAsymetricChargingType:
+		return
+	case communication.EVDataElementUpdateEVSEOperationState:
+		return
+	case communication.EVDataElementUpdateEVChargeState:
+		return
+	case communication.EVDataElementUpdateConnectedPhases:
+		return
+	case communication.EVDataElementUpdatePowerLimits:
+		return
+	case communication.EVDataElementUpdateAmperageLimits:
+		if c.lp != nil {
+			newMin := int64(data.EVData.LimitsL1.Min)
+			newMax := int64(data.EVData.LimitsL1.Max)
+			if c.lp.GetMinCurrent() != newMin {
+				c.lp.SetMinCurrent(newMin)
+			}
+			if c.lp.GetMaxCurrent() != newMax {
+				c.lp.SetMinCurrent(newMax)
+			}
+		}
+		return
+	}
 }
 
 // Status implements the api.Charger interface
@@ -210,18 +247,6 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
 		return errors.New("can set new current as ev is unplugged")
-	}
-
-	// TODO don't adjust the new limits and status changes when evcc tries to use it, adjust them when happen
-	if c.lp != nil {
-		newMin := int64(data.EVData.LimitsL1.Min)
-		newMax := int64(data.EVData.LimitsL1.Max)
-		if c.lp.GetMinCurrent() != newMin {
-			c.lp.SetMinCurrent(newMin)
-		}
-		if c.lp.GetMaxCurrent() != newMax {
-			c.lp.SetMinCurrent(newMax)
-		}
 	}
 
 	if data.EVData.LimitsL1.Min == 0 {
