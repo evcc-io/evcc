@@ -198,6 +198,11 @@ func main() {
 	pflag.Usage = Usage
 	pflag.Parse()
 
+	// read target from go:generate
+	if gopkg, ok := os.LookupEnv("GOPACKAGE"); *pkg == "" && ok {
+		pkg = &gopkg
+	}
+
 	if *base == "" || *pkg == "" || len(*types) == 0 {
 		Usage()
 		os.Exit(2)
@@ -218,7 +223,14 @@ func main() {
 	generated := strings.TrimSpace(buf.String()) + "\n"
 
 	var out io.Writer = os.Stdout
-	if *target != "" {
+
+	// read target from go:generate
+	if gofile, ok := os.LookupEnv("GOFILE"); *target == "" && ok {
+		gofile = strings.TrimSuffix(gofile, ".go") + "_decorators.go"
+		target = &gofile
+	}
+
+	if target != nil {
 		name := *target
 		if !strings.HasSuffix(name, ".go") {
 			name += ".go"

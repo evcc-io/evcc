@@ -182,33 +182,43 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-var _ api.VehicleClimater = (*Tesla)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Tesla) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.climateStateG()
-
-	if res, ok := res.(*tesla.ClimateState); err == nil && ok {
-		active = res.IsPreconditioning
-		outsideTemp = res.OutsideTemp
-		targetTemp = res.PassengerTempSetting
-
-		return active, outsideTemp, targetTemp, nil
-	}
-
-	return false, 0, 0, api.ErrNotAvailable
-}
+// TODO api.Climater implementation has been removed as it drains battery. Re-check at t later time.
 
 var _ api.VehicleStartCharge = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleStartCharge interface
 func (v *Tesla) StartCharge() error {
-	return v.vehicle.StartCharging()
+	timer := time.NewTimer(10 * time.Second)
+
+	for {
+		select {
+		case <-timer.C:
+			return errors.New("timeout")
+		default:
+			_, err := v.vehicle.Wakeup()
+			if err == nil {
+				return v.vehicle.StartCharging()
+			}
+
+			if err.Error() != "408 Request Timeout" {
+				return err
+			}
+
+			time.Sleep(time.Second)
+		}
+	}
 }
 
 var _ api.VehicleStopCharge = (*Tesla)(nil)
 
 // StopCharge implements the api.VehicleStopCharge interface
 func (v *Tesla) StopCharge() error {
-	return v.vehicle.StopCharging()
+	err := v.vehicle.StopCharging()
+
+	// ignore sleeping vehicle
+	if err != nil && err.Error() == "408 Request Timeout" {
+		err = nil
+	}
+
+	return err
 }

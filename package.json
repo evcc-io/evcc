@@ -18,23 +18,23 @@
     "@storybook/addon-links": "^6.2.9",
     "@storybook/addon-postcss": "^2.0.0",
     "@storybook/vue": "^6.2.9",
-    "@vue/cli-service": "^4.5.12",
+    "@vue/cli-service": "^4.5.13",
     "@vue/component-compiler-utils": "^3.2.0",
-    "@vue/eslint-config-standard": "^5.1.2",
-    "eslint": "^7.25.0",
-    "eslint-config-prettier": "^6.15.0",
+    "@vue/eslint-config-standard": "^6.0.0",
+    "eslint": "^7.26.0",
+    "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.4.0",
-    "eslint-plugin-promise": "^4.3.1",
-    "eslint-plugin-standard": "^4.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-standard": "^5.0.0",
     "eslint-plugin-vue": "^7.9.0",
-    "prettier": "^2.2.0",
+    "prettier": "^2.3.0",
     "vue-template-compiler": "^2.6.12"
   },
   "engines": {
-    "npm": "^6.0.0",
-    "node": "^14.0.0"
+    "npm": ">=6.0.0",
+    "node": ">=14.0.0"
   },
   "alias": {
     "vue": "./node_modules/vue/dist/vue.js"
@@ -46,7 +46,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/vue-fontawesome": "^2.0.0",
     "axios": "^0.21.0",
-    "bootstrap": "^5.0.0-beta3",
+    "bootstrap": "^5.0.0",
     "canvas-confetti": "^1.4.0",
     "vue": "^2.6.12",
     "vue-hot-reload-api": "^2.3.4",

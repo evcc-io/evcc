@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"crypto/tls"
@@ -11,13 +11,15 @@ import (
 	"github.com/andig/evcc/util"
 )
 
-type SmaResult struct {
-	Addr, Serial string
-	Http         bool
-}
+const Sma TaskType = "shm"
 
 func init() {
-	registry.Add("sma", SMAHandlerFactory)
+	registry.Add(Sma, SMAHandlerFactory)
+}
+
+type ShmResult struct {
+	Serial string
+	Http   bool
 }
 
 func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
@@ -55,7 +57,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	return true
 }
 
-func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
+func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	h.mux.Lock()
 
 	if h.listener != nil {
@@ -65,7 +67,7 @@ func (h *SMAHandler) Test(log *util.Logger, ip string) (res []interface{}) {
 
 	var err error
 	if h.listener, err = sma.New(log); err != nil {
-		log.ERROR.Println("sma:", err)
+		log.ERROR.Println("shm:", err)
 		return nil
 	}
 	h.mux.Unlock()
@@ -80,18 +82,20 @@ WAIT:
 		case t := <-resC:
 			// eliminate duplicates
 			for _, r := range res {
-				if r.(SmaResult).Serial == t.Serial {
+				if r.ShmResult != nil && r.ShmResult.Serial == t.Serial {
 					continue WAIT
 				}
 			}
 
-			r := SmaResult{
-				Addr:   t.Addr,
-				Serial: t.Serial,
-				Http:   h.httpAvailable(t.Addr),
+			out := ResultDetails{
+				IP: t.Addr,
+				ShmResult: &ShmResult{
+					Serial: t.Serial,
+					Http:   h.httpAvailable(t.Addr),
+				},
 			}
 
-			res = append(res, r)
+			res = append(res, out)
 
 		case <-timer.C:
 			break WAIT

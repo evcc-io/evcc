@@ -1,4 +1,4 @@
-package detect
+package tasks
 
 import (
 	"fmt"
@@ -12,8 +12,10 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+const Http TaskType = "http"
+
 func init() {
-	registry.Add("http", HttpHandlerFactory)
+	registry.Add(Http, HttpHandlerFactory)
 }
 
 type HttpResult struct {
@@ -23,7 +25,6 @@ type HttpResult struct {
 func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := HttpHandler{
 		Schema: "http",
-		Port:   80,
 		Method: "GET",
 		Codes:  []int{200},
 		Header: map[string]string{
@@ -34,9 +35,11 @@ func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 
 	err := util.DecodeOther(conf, &handler)
 
-	if !(handler.Schema == "http" && handler.Port == 80 ||
-		handler.Schema == "https" && handler.Port == 443) {
-		handler.optionalPort = fmt.Sprintf(":%d", handler.Port)
+	switch handler.Schema {
+	case "http":
+		handler.Port = 80
+	case "https":
+		handler.Port = 443
 	}
 
 	if handler.Jq != "" {
@@ -54,16 +57,25 @@ func HttpHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 type HttpHandler struct {
 	query                *gojq.Query
 	Port                 int
-	optionalPort         string
 	Schema, Method, Path string
 	Codes                []int
 	Header               map[string]string
+	ResponseHeader       map[string]string
 	Jq                   string
 	Timeout              time.Duration
 }
 
-func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
-	uri := fmt.Sprintf("%s://%s%s/%s", h.Schema, ip, h.optionalPort, strings.TrimLeft(h.Path, "/"))
+func (h *HttpHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+	port := in.Port
+	if port == 0 {
+		port = h.Port
+	}
+
+	if port == 0 {
+		panic("http: invalid port")
+	}
+
+	uri := fmt.Sprintf("%s://%s:%d/%s", h.Schema, in.IP, port, strings.TrimLeft(h.Path, "/"))
 	req, err := http.NewRequest(strings.ToUpper(h.Method), uri, nil)
 	if err != nil {
 		return nil
@@ -94,13 +106,19 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 		}
 	}
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil
+	for k, v := range h.ResponseHeader {
+		if resp.Header.Get(k) != v {
+			return nil
+		}
 	}
 
 	var res HttpResult
 	if h.query != nil {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil
+		}
+
 		val, err := jq.Query(h.query, body)
 		res.Jq = val
 
@@ -110,7 +128,9 @@ func (h *HttpHandler) Test(log *util.Logger, ip string) []interface{} {
 	}
 
 	if err == nil {
-		return []interface{}{res}
+		out := in.Clone()
+		out.Port = port
+		return []ResultDetails{out}
 	}
 
 	return nil
