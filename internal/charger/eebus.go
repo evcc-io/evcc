@@ -212,6 +212,18 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 		return errors.New("can set new current as ev is unplugged")
 	}
 
+	// TODO don't adjust the new limits and status changes when evcc tries to use it, adjust them when happen
+	if c.lp != nil {
+		newMin := int64(data.EVData.LimitsL1.Min)
+		newMax := int64(data.EVData.LimitsL1.Max)
+		if c.lp.GetMinCurrent() != newMin {
+			c.lp.SetMinCurrent(newMin)
+		}
+		if c.lp.GetMaxCurrent() != newMax {
+			c.lp.SetMinCurrent(newMax)
+		}
+	}
+
 	if data.EVData.LimitsL1.Min == 0 {
 		return errors.New("we did not yet receive min and max currents to validate the call of MaxCurrent")
 	}
@@ -222,11 +234,6 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 
 	if current > data.EVData.LimitsL1.Max {
 		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
-	}
-
-	if c.lp != nil {
-		c.lp.SetMinCurrent(int64(data.EVData.LimitsL1.Min))
-		c.lp.SetMaxCurrent(int64(data.EVData.LimitsL1.Max))
 	}
 
 	c.maxCurrent = current
@@ -320,7 +327,7 @@ func (c *EEBus) Identify() (string, error) {
 	return "", nil
 }
 
-var _ core.LoadpointController = (*Easee)(nil)
+var _ core.LoadpointController = (*EEBus)(nil)
 
 // LoadpointControl implements core.LoadpointController
 func (c *EEBus) LoadpointControl(lp core.LoadPointAPI) {
