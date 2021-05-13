@@ -245,7 +245,13 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 			if !found {
 				c.connectedClients[ski] = conn
 				c.mux.Unlock()
-				return cb.onConnect(ski, conn)
+				err := cb.onConnect(ski, conn)
+				if err != nil {
+					c.mux.Lock()
+					delete(c.connectedClients, ski)
+					c.mux.Unlock()
+				}
+				return err
 			}
 		}
 	}
