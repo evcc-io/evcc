@@ -203,13 +203,7 @@ func (v *Ford) vehicles() ([]string, error) {
 func (v *Ford) status() (res fordVehicleStatus, err error) {
 	// follow up requested refresh
 	if v.refreshId != "" {
-		res, err := v.refreshResult()
-		if errors.Is(err, api.ErrMustRetry) && time.Since(v.refreshTime) > fordRefreshTimeout {
-			v.refreshId = ""
-			err = api.ErrTimeout
-		}
-
-		return res, err
+		return v.refreshResult()
 	}
 
 	// otherwise start normal workflow
@@ -244,14 +238,21 @@ func (v *Ford) refreshResult() (res fordVehicleStatus, err error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	// if status attribute in JSON response is 200, update is complete, otherwise server is still
-	// waiting for vehicle and the request needs to be repeated
+	// update successful and completed
+	if err == nil && res.Status == 200 {
+		v.refreshId = ""
+		return res, nil
+	}
+
+	// update still in progress, keep retrying
+	if time.Since(v.refreshTime) < fordRefreshTimeout {
+		return res, api.ErrMustRetry
+	}
+
+	// give up
+	v.refreshId = ""
 	if err == nil {
-		if res.Status == 200 {
-			v.refreshId = ""
-		} else {
-			err = api.ErrMustRetry
-		}
+		err = api.ErrTimeout
 	}
 
 	return res, err
