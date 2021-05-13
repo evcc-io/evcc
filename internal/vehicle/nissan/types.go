@@ -14,6 +14,8 @@ const (
 	UserBaseURL        = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
 )
 
+const timeFormat = "2006-01-02T15:04:05Z"
+
 type Auth struct {
 	AuthID    string         `json:"authId"`
 	Template  string         `json:"template"`

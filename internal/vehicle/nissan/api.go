@@ -1,19 +1,26 @@
 package nissan
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle/kamereon"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
+const refreshTimeout = 5 * time.Minute
+
 type API struct {
 	*request.Helper
-	VIN string
+	VIN         string
+	refreshID   string
+	refreshTime time.Time
 }
 
 func NewAPI(log *util.Logger, identity oauth2.TokenSource, vin string) *API {
@@ -53,8 +60,48 @@ func (v *API) Vehicles() ([]string, error) {
 }
 
 // Battery provides battery api response
-func (v *API) Battery() (interface{}, error) {
-	// refresh battery status
+func (v *API) Battery() (kamereon.Response, error) {
+	// request battery status
+	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, v.VIN)
+
+	var res kamereon.Response
+	err := v.GetJSON(uri, &res)
+
+	var ts time.Time
+	if err == nil {
+		ts, err = time.Parse(timeFormat, res.Data.Attributes.LastUpdateTime)
+
+		// return the current value
+		if time.Since(ts) <= refreshTimeout {
+			return res, err
+		}
+	}
+
+	// request a refresh, irrespective of a previous error
+	if v.refreshID == "" {
+		if err = v.refreshRequest(); err == nil {
+			err = api.ErrMustRetry
+		}
+
+		return res, err
+	}
+
+	// refresh finally expired
+	if time.Since(v.refreshTime) > refreshTimeout {
+		v.refreshID = ""
+		if err == nil {
+			err = api.ErrTimeout
+		}
+	} else {
+		// wait for refresh, irrespective of a previous error
+		err = api.ErrMustRetry
+	}
+
+	return res, err
+}
+
+// refreshRequest requests  battery status refresh
+func (v *API) refreshRequest() error {
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, v.VIN)
 
 	data := strings.NewReader(`{"data": {"type": "RefreshBatteryStatus"}}`)
@@ -67,11 +114,14 @@ func (v *API) Battery() (interface{}, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	// request battery status
 	if err == nil {
-		uri = fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, v.VIN)
-		err = v.GetJSON(uri, &res)
+		v.refreshID = res.Data.ID
+		v.refreshTime = time.Now()
+
+		if v.refreshID == "" {
+			err = errors.New("refresh failed")
+		}
 	}
 
-	return res, err
+	return err
 }
