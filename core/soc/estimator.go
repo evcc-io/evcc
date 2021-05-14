@@ -15,6 +15,7 @@ const chargeEfficiency = 0.9 // assume charge 90% efficiency
 // Vehicle SoC can be estimated to provide more granularity
 type Estimator struct {
 	log      *util.Logger
+	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
 
@@ -27,9 +28,10 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
 	s := &Estimator{
 		log:      log,
+		charger:  charger,
 		vehicle:  vehicle,
 		estimate: estimate,
 	}
@@ -91,7 +93,19 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	f, err := s.vehicle.SoC()
+	var f float64
+	err := api.ErrNotAvailable
+
+	// try to get soc from charger
+	if charger, ok := s.charger.(api.Battery); ok {
+		f, err = charger.SoC()
+	}
+
+	// fall back to soc from vehicle
+	if errors.Is(err, api.ErrNotAvailable) {
+		f, err = s.vehicle.SoC()
+	}
+
 	if err != nil {
 		if errors.Is(err, api.ErrMustRetry) {
 			return 0, err
