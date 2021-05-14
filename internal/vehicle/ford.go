@@ -20,7 +20,7 @@ const (
 	fordAuth           = "https://fcis.ice.ibmcloud.com"
 	fordAPI            = "https://usapi.cv.ford.com"
 	fordVehicleList    = "https://api.mps.ford.com/api/users/vehicles"
-	fordOutdatedAfter  = 5 * time.Minute       // if returned status value is older, evcc will init refresh
+	fordStatusExpiry   = 5 * time.Minute       // if returned status value is older, evcc will init refresh
 	fordRefreshTimeout = time.Minute           // timeout to get status after refresh
 	fordTimeFormat     = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
 )
@@ -217,8 +217,8 @@ func (v *Ford) status() (res fordVehicleStatus, err error) {
 		var lastUpdate time.Time
 		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
-		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordOutdatedAfter {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordOutdatedAfter)
+		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordStatusExpiry {
+			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordStatusExpiry)
 
 			if err = v.refreshRequest(); err == nil {
 				err = api.ErrMustRetry
