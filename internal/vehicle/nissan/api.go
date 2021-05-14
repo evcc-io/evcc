@@ -73,6 +73,7 @@ func (v *API) Battery() (kamereon.Response, error) {
 
 		// return the current value
 		if time.Since(ts) <= refreshTimeout {
+			v.refreshID = ""
 			return res, err
 		}
 	}
