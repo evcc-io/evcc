@@ -14,7 +14,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const refreshTimeout = 5 * time.Minute
+const (
+	refreshTimeout = 5 * time.Minute
+	statusExpiry   = time.Minute
+)
 
 type API struct {
 	*request.Helper
@@ -72,7 +75,7 @@ func (v *API) Battery() (kamereon.Response, error) {
 		ts, err = time.Parse(timeFormat, res.Data.Attributes.LastUpdateTime)
 
 		// return the current value
-		if time.Since(ts) <= refreshTimeout {
+		if time.Since(ts) <= statusExpiry {
 			v.refreshID = ""
 			return res, err
 		}
