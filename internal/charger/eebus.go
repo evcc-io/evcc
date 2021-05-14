@@ -83,6 +83,21 @@ func (c *EEBus) onDisconnect(ski string) {
 	c.connected = false
 }
 
+func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType) {
+	if c.lp == nil {
+		return
+	}
+
+	newMin := int64(data.EVData.LimitsL1.Min)
+	newMax := int64(data.EVData.LimitsL1.Max)
+	if c.lp.GetMinCurrent() != newMin {
+		c.lp.SetMinCurrent(newMin)
+	}
+	if c.lp.GetMaxCurrent() != newMax {
+		c.lp.SetMinCurrent(newMax)
+	}
+}
+
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
 	switch dataType {
 	case communication.EVDataElementUpdateEVConnectionState:
@@ -101,16 +116,7 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	case communication.EVDataElementUpdatePowerLimits:
 		return
 	case communication.EVDataElementUpdateAmperageLimits:
-		if c.lp != nil {
-			newMin := int64(data.EVData.LimitsL1.Min)
-			newMax := int64(data.EVData.LimitsL1.Max)
-			if c.lp.GetMinCurrent() != newMin {
-				c.lp.SetMinCurrent(newMin)
-			}
-			if c.lp.GetMaxCurrent() != newMax {
-				c.lp.SetMinCurrent(newMax)
-			}
-		}
+		c.setLoadpointMinMaxLimits(data)
 		return
 	}
 }
@@ -357,4 +363,11 @@ var _ core.LoadpointController = (*EEBus)(nil)
 // LoadpointControl implements core.LoadpointController
 func (c *EEBus) LoadpointControl(lp core.LoadPointAPI) {
 	c.lp = lp
+
+	// set current known min, max current limits
+	data, err := c.cc.GetData()
+	if err != nil {
+		return
+	}
+	c.setLoadpointMinMaxLimits(data)
 }
