@@ -607,7 +607,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.vehicleIdError = nil
 
 	lp.vehicle = vehicle
-	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+	lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, lp.SoC.Estimate)
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
