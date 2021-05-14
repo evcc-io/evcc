@@ -56,6 +56,7 @@ func (v *API) Vehicles() (res []string, err error) {
 	var vehicles struct {
 		Data []struct {
 			VIN      string
+			Model    string
 			Nickname string
 		}
 	}

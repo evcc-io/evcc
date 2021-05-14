@@ -74,12 +74,8 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 		uri = "https://login.apps.emea.vwapps.io/authorize?nonce=NZ2Q3T6jak0E5pDh&redirect_uri=weconnect://authenticated"
 	}
 
-	resp, err := v.Get(uri)
-	if err == nil {
-		resp.Body.Close()
-	}
-
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
+	resp, err := v.Get(uri)
 	if err == nil {
 		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
 		resp.Body.Close()
@@ -96,13 +92,9 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 
 		uri = IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
+			vars, err = FormValues(resp.Body, "form#credentialsForm")
 			resp.Body.Close()
 		}
-	}
-
-	// GET identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa&email=...
-	if err == nil {
-		vars, err = FormValues(resp.Body, "form#credentialsForm")
 	}
 
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
