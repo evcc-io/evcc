@@ -358,6 +358,20 @@ func (c *EEBus) Identify() (string, error) {
 	return "", nil
 }
 
+// SoC implements the api.Vehicle interface
+func (c *EEBus) SoC() (float64, error) {
+	data, err := c.cc.GetData()
+	if err != nil {
+		return 0, api.ErrNotAvailable
+	}
+
+	if !data.EVData.SoCDataAvailable {
+		return 0, api.ErrNotAvailable
+	}
+
+	return data.EVData.Measurements.SoC, nil
+}
+
 var _ core.LoadpointController = (*EEBus)(nil)
 
 // LoadpointControl implements core.LoadpointController
