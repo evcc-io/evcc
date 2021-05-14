@@ -13,7 +13,7 @@ type roundTripper struct {
 	transport http.RoundTripper
 }
 
-const max = 2048
+const max = 2048 * 32
 
 // NewTripper creates a logging roundtrip handler
 func NewTripper(log *util.Logger, transport http.RoundTripper) http.RoundTripper {

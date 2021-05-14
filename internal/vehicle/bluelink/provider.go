@@ -30,8 +30,8 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return float64(res.ResMsg.EvStatus.BatteryStatus), nil
+	if res, ok := res.(StatusData); err == nil && ok {
+		return float64(res.EvStatus.BatteryStatus), nil
 	}
 
 	return 0, err
@@ -43,14 +43,15 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		remaining := res.ResMsg.EvStatus.RemainTime2.Atc.Value
+	if res, ok := res.(StatusData); err == nil && ok {
+		remaining := res.EvStatus.RemainTime2.Atc.Value
 
 		if remaining == 0 {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		return res.timestamp.Add(time.Duration(remaining) * time.Minute), nil
+		ts, err := res.Updated()
+		return ts.Add(time.Duration(remaining) * time.Minute), err
 	}
 
 	return time.Time{}, err
@@ -62,8 +63,8 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		if dist := res.ResMsg.EvStatus.DrvDistance; len(dist) == 1 {
+	if res, ok := res.(StatusData); err == nil && ok {
+		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
 			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
 		}
 
