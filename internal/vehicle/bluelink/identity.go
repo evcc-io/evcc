@@ -39,10 +39,10 @@ type Config struct {
 // Based on https://github.com/Hacksore/bluelinky.
 type Identity struct {
 	*request.Helper
-	log         *util.Logger
-	config      Config
-	deviceID    string
-	tokenSource oauth2.TokenSource
+	log      *util.Logger
+	config   Config
+	deviceID string
+	oauth2.TokenSource
 }
 
 // NewIdentity creates a new BlueLink API
@@ -340,7 +340,7 @@ func (v *Identity) Login(user, password string) (err error) {
 	if err == nil {
 		var token oauth.Token
 		if token, err = v.exchangeCode(code); err == nil {
-			v.tokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
+			v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
 		}
 	}
 
@@ -353,7 +353,7 @@ func (v *Identity) Login(user, password string) (err error) {
 
 // Request creates authenticated request
 func (v *Identity) Request(method, path string) (*http.Request, error) {
-	token, err := v.tokenSource.Token()
+	token, err := v.Token()
 	if err != nil {
 		return nil, err
 	}
