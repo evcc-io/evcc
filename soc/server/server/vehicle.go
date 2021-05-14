@@ -69,6 +69,8 @@ func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply
 		return nil, err
 	}
 
+	updateActiveVehiclesMetric(typ, 1)
+
 	id := atomic.AddInt64(&vehicleID, 1)
 	if s.vehicles[token] == nil {
 		s.vehicles[token] = make(map[int64]api.Vehicle)

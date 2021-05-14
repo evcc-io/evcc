@@ -26,6 +26,8 @@ func init() {
 	if tlsConfig, err = loadTLSCredentials(); err != nil {
 		log.Fatalf("cannot load TLS credentials: %v", err)
 	}
+
+	registerMetrics()
 }
 
 func loadTLSCredentials() (*tls.Config, error) {
