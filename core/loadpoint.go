@@ -883,6 +883,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socPollAllowed() {
 		lp.socUpdated = lp.clock.Now()
 
+		// soc
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
 		if err == nil {
 			lp.socCharge = math.Trunc(f)
