@@ -26,7 +26,7 @@ func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 
 var _ api.Battery = (*Provider)(nil)
 
-// SoC implements the api.Vehicle interface
+// SoC implements the api.Battery interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.apiG()
 
