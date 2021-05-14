@@ -125,8 +125,6 @@ func (v *API) Status(vid string) (StatusData, error) {
 			err = fmt.Errorf("unexpected response: %s", resp.RetCode)
 		}
 
-		fmt.Printf("\n\n%+v\n\n", resp)
-
 		var ts time.Time
 		if err == nil {
 			ts, err = resp.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
