@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider"
 )
 
 // Response structure for kamereon api
@@ -12,6 +13,7 @@ type Response struct {
 }
 
 type data struct {
+	Type, ID   string     // battery refresh
 	Attributes attributes `json:"attributes"`
 }
 
@@ -30,20 +32,24 @@ type attributes struct {
 	RemainingTime      *int    `json:"chargingRemainingTime"`
 }
 
-// API is a kamereon API implementation
-type API struct {
+// Provider is a kamereon provider
+type Provider struct {
 	apiG func() (interface{}, error)
 }
 
-// New returns a kamereon API implementation
-func New(apiG func() (interface{}, error)) *API {
-	return &API{apiG: apiG}
+// NewProvider returns a kamereon provider
+func NewProvider(respG func() (Response, error), cache time.Duration) *Provider {
+	return &Provider{
+		apiG: provider.NewCached(func() (interface{}, error) {
+			return respG()
+		}, cache).InterfaceGetter(),
+	}
 }
 
-var _ api.Battery = (*API)(nil)
+var _ api.Battery = (*Provider)(nil)
 
 // SoC implements the api.Vehicle interface
-func (v *API) SoC() (float64, error) {
+func (v *Provider) SoC() (float64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {
@@ -53,10 +59,10 @@ func (v *API) SoC() (float64, error) {
 	return 0, err
 }
 
-var _ api.ChargeState = (*API)(nil)
+var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
-func (v *API) Status() (api.ChargeStatus, error) {
+func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.apiG()
@@ -72,10 +78,10 @@ func (v *API) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-var _ api.VehicleRange = (*API)(nil)
+var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *API) Range() (int64, error) {
+func (v *Provider) Range() (int64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {
@@ -85,10 +91,10 @@ func (v *API) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*API)(nil)
+var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
-func (v *API) FinishTime() (time.Time, error) {
+func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(Response); err == nil && ok {
