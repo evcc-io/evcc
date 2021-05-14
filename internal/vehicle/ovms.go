@@ -105,16 +105,18 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-func (v *Ovms) GetCookies(url string) ([]*http.Cookie, error) {
-	resp, err := v.Get(url)
+func (v *Ovms) getCookies() ([]*http.Cookie, error) {
+	uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
+
+	resp, err := v.Get(uri)
 	if err == nil {
 		return resp.Cookies(), nil
 	}
 	return nil, err
 }
 
-func (v *Ovms) Delete(url string, cookie *http.Cookie) (err error) {
-	req, err := v.requestWithCookie(http.MethodDelete, url, cookie)
+func (v *Ovms) delete(url string, cookies []*http.Cookie) (err error) {
+	req, err := v.requestWithCookies(http.MethodDelete, url, cookies)
 	if err != nil {
 		return err
 	}
@@ -123,59 +125,48 @@ func (v *Ovms) Delete(url string, cookie *http.Cookie) (err error) {
 	return err
 }
 
-func (v *Ovms) requestWithCookie(method string, uri string, cookie *http.Cookie) (*http.Request, error) {
+func (v *Ovms) requestWithCookies(method string, uri string, cookies []*http.Cookie) (*http.Request, error) {
 	req, err := request.New(method, uri, nil)
 	if err == nil {
-		req.AddCookie(cookie)
+		for _, cookie := range cookies {
+			req.AddCookie(cookie)
+		}
 	}
 
 	return req, err
 }
 
-func (v *Ovms) authFlow() (*http.Cookie, error) {
+func (v *Ovms) authFlow() ([]*http.Cookie, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 
-	cookie, err := v.sessionCookie()
+	cookies, err := v.getCookies()
 	if err == nil {
-		req, err := v.requestWithCookie(http.MethodGet, uri, cookie)
+		req, err := v.requestWithCookies(http.MethodGet, uri, cookies)
 		if err == nil {
 			_, err = v.Do(req)
 		}
-		return cookie, err
+		return cookies, err
 	}
 	return nil, err
 }
 
-func (v *Ovms) sessionCookie() (*http.Cookie, error) {
-	uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
-
-	cookies, err := v.GetCookies(uri)
-
-	var cookie *http.Cookie
-	if err == nil && len(cookies) > 0 {
-		cookie = cookies[0]
-	}
-
-	return cookie, err
-}
-
-func (v *Ovms) disconnect(cookie *http.Cookie) error {
+func (v *Ovms) disconnect(cookies []*http.Cookie) error {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 
-	err := v.Delete(uri, cookie)
+	err := v.delete(uri, cookies)
 	if err == nil {
 		uri = fmt.Sprintf("http://%s:6868/api/cookie", v.server)
-		return v.Delete(uri, cookie)
+		return v.delete(uri, cookies)
 	}
 
 	return err
 }
 
-func (v *Ovms) chargeRequest(cookie *http.Cookie) (ovmsChargeResponse, error) {
+func (v *Ovms) chargeRequest(cookies []*http.Cookie) (ovmsChargeResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
 
-	req, err := v.requestWithCookie(http.MethodGet, uri, cookie)
+	req, err := v.requestWithCookies(http.MethodGet, uri, cookies)
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -187,11 +178,11 @@ func (v *Ovms) chargeRequest(cookie *http.Cookie) (ovmsChargeResponse, error) {
 func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
 
-	cookie, err := v.authFlow()
-	if err == nil && cookie != nil {
-		resp, err = v.chargeRequest(cookie)
+	cookies, err := v.authFlow()
+	if err == nil && cookies != nil {
+		resp, err = v.chargeRequest(cookies)
 		if err == nil {
-			return resp, v.disconnect(cookie)
+			return resp, v.disconnect(cookies)
 		}
 	}
 
