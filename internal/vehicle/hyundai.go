@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 // Hyundai is an api.Vehicle implementation
 type Hyundai struct {
 	*embed
-	*bluelink.API
+	*bluelink.Provider
 }
 
 func init() {
@@ -64,23 +65,25 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	var vehicle bluelink.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
-		api.Vehicle = vehicles[0]
+		vehicle = vehicles[0]
+		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 	} else {
-		for _, vehicle := range vehicles {
-			if vehicle.Vin == strings.ToUpper(cc.VIN) {
-				api.Vehicle = vehicle
+		for _, v := range vehicles {
+			if v.Vin == strings.ToUpper(cc.VIN) {
+				vehicle = v
 			}
 		}
 	}
 
-	if len(api.Vehicle.Vin) == 0 {
-		return nil, errors.New("vin not found")
+	if len(vehicle.Vin) == 0 {
+		return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 
 	v := &Hyundai{
-		embed: &cc.embed,
-		API:   api,
+		embed:    &cc.embed,
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
 	}
 
 	return v, nil
