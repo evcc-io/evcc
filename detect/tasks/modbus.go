@@ -199,10 +199,10 @@ func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDe
 
 		var ok bool
 		if h.op.OpCode > 0 {
-			log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
+			// log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
 			ok = h.testRegister(log, conn.ModbusClient())
 		} else {
-			log.DEBUG.Printf("slave id: %d models: %v", slaveID, h.Models)
+			// log.DEBUG.Printf("slave id: %d models: %v", slaveID, h.Models)
 			ok = h.testSunSpec(log, conn, dev, &mr)
 		}
 

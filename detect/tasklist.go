@@ -90,8 +90,6 @@ func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) 
 	if id == "" {
 		inputs = append(inputs, input)
 	} else {
-		log.DEBUG.Printf("ip: %s task: %s (%v)", input.IP, id, input)
-
 		var task tasks.Task
 		for _, t := range l.tasks {
 			if t.ID == id {
@@ -101,6 +99,9 @@ func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) 
 		}
 
 		inputs = task.Test(log, input)
+		success := len(inputs) > 0
+		log.DEBUG.Printf("task: %s %v -> %v", id, input, success)
+
 		for _, detail := range inputs {
 			all = append(all, tasks.Result{
 				Task:          task,
