@@ -316,8 +316,11 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	// flush all vahicles before updating state
+	// flush all vehicles before updating state
 	provider.ResetCached()
+
+	// immediately allow pv mode activity
+	lp.pvDisableTimer()
 
 	lp.triggerEvent(evVehicleConnect)
 }
