@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/internal/vehicle"
@@ -17,7 +19,7 @@ func usage() {
 soc
 
 Usage:
-  soc vehicle [--log level] [--param value [...]]
+  soc brand [--log level] [--param value [...]]
 `)
 }
 
@@ -70,11 +72,25 @@ func main() {
 		}
 
 	case "soc":
-		soc, err := v.SoC()
-		if err != nil {
-			log.Fatal(err)
+		start := time.Now()
+		for {
+			if time.Since(start) > time.Minute {
+				log.Fatal(api.ErrTimeout)
+			}
+
+			soc, err := v.SoC()
+			if err != nil {
+				if errors.As(err, &api.ErrMustRetry) {
+					time.Sleep(5 * time.Second)
+					continue
+				}
+
+				log.Fatal(err)
+			}
+
+			fmt.Println(int(math.Round(soc)))
+			break
 		}
-		fmt.Println(int(math.Round(soc)))
 
 	default:
 		log.Fatal("invalid action:", action)
