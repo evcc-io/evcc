@@ -16,8 +16,8 @@ func TestRemainingChargeDuration(t *testing.T) {
 	// 9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
-	ce := NewEstimator(util.NewLogger("foo"), nil, vehicle, false)
-	ce.socCharge = 20.0
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, false)
+	ce.estimatedSoC = 20.0
 
 	chargePower := 1000.0
 	targetSoC := 80
@@ -35,8 +35,8 @@ func TestSoCEstimation(t *testing.T) {
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewEstimator(util.NewLogger("foo"), nil, vehicle, true)
-	ce.socCharge = 20.0
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, true)
+	ce.estimatedSoC = 20.0
 
 	tc := []struct {
 		chargedEnergy   float64
