@@ -366,7 +366,8 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 	}
 
 	if c.asymetricChargingEnabled {
-		return data.EVData.Measurements.CurrentL1 + data.EVData.Measurements.CurrentL2 + data.EVData.Measurements.CurrentL3, 0, 0, nil
+		phase1Current := data.EVData.Measurements.CurrentL1 + data.EVData.Measurements.CurrentL2 + data.EVData.Measurements.CurrentL3
+		return phase1Current, 0, 0, nil
 	} else {
 		return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 	}
@@ -391,6 +392,8 @@ func (c *EEBus) Identify() (string, error) {
 
 	return "", nil
 }
+
+var _ api.Battery = (*EEBus)(nil)
 
 // SoC implements the api.Vehicle interface
 func (c *EEBus) SoC() (float64, error) {
