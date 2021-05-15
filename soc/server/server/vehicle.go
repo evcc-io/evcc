@@ -40,11 +40,6 @@ func (s *VehicleServer) vehicle(r vehicler) (api.Vehicle, error) {
 		return nil, cloud.ErrVehicleNotAvailable
 	}
 
-	var vv []string
-	for _, v := range vehicles {
-		vv = append(vv, fmt.Sprintf("{id:%d hash:%x}", v.id, v.hash))
-	}
-
 	id := r.GetVehicleId()
 	for _, c := range vehicles {
 		if c.id == id {
@@ -77,10 +72,10 @@ func (s *VehicleServer) addVehicleToRegistry(token, typ string, config map[strin
 
 	// hash config
 	h := sha256.New()
-	h.Write([]byte(typ))
+	_, _ = h.Write([]byte(typ))
 	for _, k := range keys {
-		h.Write([]byte(k))
-		h.Write([]byte(config[k]))
+		_, _ = h.Write([]byte(k))
+		_, _ = h.Write([]byte(config[k]))
 	}
 	hash := h.Sum(nil)
 
@@ -102,7 +97,7 @@ func (s *VehicleServer) addVehicleToRegistry(token, typ string, config map[strin
 	s.registry[token] = append(s.registry[token], &c)
 
 	h.Reset()
-	h.Write([]byte(token))
+	_, _ = h.Write([]byte(token))
 	thash := fmt.Sprintf("%x", h.Sum(nil))
 
 	updateActiveVehiclesMetric(thash, typ, 1)
