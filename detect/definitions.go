@@ -38,6 +38,7 @@ const (
 	taskMeter        = "meter"
 	taskFronius      = "fronius"
 	taskTasmota      = "tasmota"
+	taskShelly       = "shelly"
 	// taskTPLink       = "tplink"
 )
 
@@ -252,7 +253,7 @@ func init() {
 		Type:    tasks.Http,
 		Depends: TaskHttp,
 		Config: map[string]interface{}{
-			"path": "//cm?cmnd=Module",
+			"path": "/cm?cmnd=Module",
 			"jq":   ".Module",
 		},
 	})
@@ -275,6 +276,16 @@ func init() {
 		Config: map[string]interface{}{
 			"path": "/middleware.php/entity.json",
 			"jq":   ".version",
+		},
+	})
+
+	taskList.Add(tasks.Task{
+		ID:      taskShelly,
+		Type:    tasks.Http,
+		Depends: TaskHttp,
+		Config: map[string]interface{}{
+			"path": "/shelly",
+			"jq":   ".type",
 		},
 	})
 }
