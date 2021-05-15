@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/andig/evcc/api"
@@ -44,7 +43,9 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI          string
 		Channel      int
 		StandbyPower float64
-	}{}
+	}{
+		Channel: 0,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -116,6 +117,9 @@ var _ api.Meter = (*Shelly)(nil)
 func (c *Shelly) CurrentPower() (float64, error) {
 	var resp shellyStatusResponse
 	err := c.GetJSON(fmt.Sprintf("%s/%s", c.uri, "status"), &resp)
+	if c.channel >= len(resp.Meters) {
+		return 0, errors.New("invalid channel, power meter missing")
+	}
 	power := resp.Meters[c.channel].Power
 
 	// ignore standby power
