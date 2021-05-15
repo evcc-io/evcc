@@ -3,6 +3,7 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -101,7 +102,12 @@ func (v *Cloud) chargeState() (float64, error) {
 	defer cancel()
 
 	res, err := v.client.SoC(ctx, req)
-	if errors.As(err, &cloud.ErrVehicleNotAvailable) && v.prepareVehicle() == nil {
+
+	if err != nil && strings.Contains(err.Error(), api.ErrMustRetry.Error()) {
+		return 0, api.ErrMustRetry
+	}
+
+	if err != nil && strings.Contains(err.Error(), cloud.ErrVehicleNotAvailable.Error()) && v.prepareVehicle() == nil {
 		req.VehicleId = v.vehicleID
 		res, err = v.client.SoC(ctx, req)
 	}

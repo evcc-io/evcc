@@ -199,8 +199,10 @@ func (v *API) Action(vin, action, value string) error {
 	})
 
 	if err == nil {
-		var res interface{}
-		err = v.DoJSON(req, &res)
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return err

@@ -25,10 +25,13 @@ type discovergyMeter struct {
 
 // NewDiscovergyFromConfig creates a new configurable meter
 func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
-	var cc struct {
+	cc := struct {
 		User     string
 		Password string
 		Meter    string
+		Scale    float64
+	}{
+		Scale: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -75,7 +78,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, ".values.power", 0.001)
+	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, ".values.power", 0.001*cc.Scale)
 	if err != nil {
 		return nil, err
 	}

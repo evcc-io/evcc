@@ -107,6 +107,10 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	}
 
 	if err != nil {
+		if errors.Is(err, api.ErrMustRetry) {
+			return 0, err
+		}
+
 		s.log.WARN.Printf("updating soc failed: %v", err)
 
 		// try to recover from temporary vehicle-api errors

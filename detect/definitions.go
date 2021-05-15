@@ -1,8 +1,6 @@
 package detect
 
 import (
-	"time"
-
 	"github.com/andig/evcc/detect/tasks"
 )
 
@@ -45,18 +43,20 @@ const (
 
 func init() {
 	taskList.Add(tasks.Task{
-		ID:   taskSMA,
-		Type: tasks.Sma,
-	})
-
-	taskList.Add(tasks.Task{
-		ID:   taskKEBA,
-		Type: tasks.Keba,
-	})
-
-	taskList.Add(tasks.Task{
 		ID:   TaskPing,
 		Type: tasks.Ping,
+	})
+
+	taskList.Add(tasks.Task{
+		ID:      taskSMA,
+		Type:    tasks.Sma,
+		Depends: TaskPing,
+	})
+
+	taskList.Add(tasks.Task{
+		ID:      taskKEBA,
+		Type:    tasks.Keba,
+		Depends: TaskPing,
 	})
 
 	taskList.Add(tasks.Task{
@@ -273,8 +273,8 @@ func init() {
 		Type:    tasks.Http,
 		Depends: TaskHttp,
 		Config: map[string]interface{}{
-			"path":    "/middleware.php/entity.json",
-			"timeout": 500 * time.Millisecond,
+			"path": "/middleware.php/entity.json",
+			"jq":   ".version",
 		},
 	})
 }

@@ -1,6 +1,7 @@
 package request
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -25,25 +26,34 @@ func NewTripper(log *util.Logger, transport http.RoundTripper) http.RoundTripper
 	return tripper
 }
 
+var bld = strings.Builder{}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if body, err := httputil.DumpRequest(req, true); err == nil {
-		s := strings.TrimSpace(string(body))
-		if len(s) > max {
-			s = s[:max]
-		}
-		r.log.TRACE.Println(s)
+	bld.Reset()
+
+	if body, err := httputil.DumpRequestOut(req, true); err == nil {
+		bld.WriteString("\n")
+		bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 	}
 
 	resp, err := r.transport.RoundTrip(req)
 
 	if resp != nil {
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
-			s := strings.TrimSpace(string(body))
-			if len(s) > max {
-				s = s[:max]
-			}
-			r.log.TRACE.Println(s)
+			bld.WriteString("\n\n")
+			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 		}
+	}
+
+	if bld.Len() > 0 {
+		r.log.TRACE.Println(bld.String())
 	}
 
 	return resp, err

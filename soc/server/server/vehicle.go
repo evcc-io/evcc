@@ -1,8 +1,12 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"fmt"
 	"log"
+	"sort"
 	"sync/atomic"
 
 	"github.com/andig/evcc/api"
@@ -13,8 +17,14 @@ import (
 
 var vehicleID int64
 
+type VehicleContainer struct {
+	id      int64
+	hash    []byte
+	vehicle api.Vehicle
+}
+
 type VehicleServer struct {
-	vehicles map[string]map[int64]api.Vehicle
+	registry map[string][]*VehicleContainer
 	pb.UnimplementedVehicleServer
 }
 
@@ -25,18 +35,19 @@ type vehicler interface {
 
 func (s *VehicleServer) vehicle(r vehicler) (api.Vehicle, error) {
 	token := r.GetToken()
-	vehicles, ok := s.vehicles[token]
+	vehicles, ok := s.registry[token]
 	if !ok {
 		return nil, cloud.ErrVehicleNotAvailable
 	}
 
 	id := r.GetVehicleId()
-	v, ok := vehicles[id]
-	if !ok {
-		return nil, cloud.ErrVehicleNotAvailable
+	for _, c := range vehicles {
+		if c.id == id {
+			return c.vehicle, nil
+		}
 	}
 
-	return v, nil
+	return nil, cloud.ErrVehicleNotAvailable
 }
 
 func stringMapToInterface(in map[string]string) map[string]interface{} {
@@ -47,6 +58,51 @@ func stringMapToInterface(in map[string]string) map[string]interface{} {
 	}
 
 	return res
+}
+
+func (s *VehicleServer) addVehicleToRegistry(token, typ string, config map[string]string, v api.Vehicle) int64 {
+	id := atomic.AddInt64(&vehicleID, 1)
+
+	// sort config keys
+	var keys []string
+	for k := range config {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// hash config
+	h := sha256.New()
+	_, _ = h.Write([]byte(typ))
+	for _, k := range keys {
+		_, _ = h.Write([]byte(k))
+		_, _ = h.Write([]byte(config[k]))
+	}
+	hash := h.Sum(nil)
+
+	// find vehicle by hash and update it
+	for _, c := range s.registry[token] {
+		if bytes.Equal(c.hash, hash) {
+			c.vehicle = v
+			c.id = id
+			return id
+		}
+	}
+
+	// register new vehicle
+	c := VehicleContainer{
+		id:      id,
+		hash:    hash,
+		vehicle: v,
+	}
+	s.registry[token] = append(s.registry[token], &c)
+
+	h.Reset()
+	_, _ = h.Write([]byte(token))
+	thash := fmt.Sprintf("%x", h.Sum(nil))
+
+	updateActiveVehiclesMetric(thash, typ, 1)
+
+	return id
 }
 
 func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply, error) {
@@ -69,11 +125,7 @@ func (s *VehicleServer) New(ctx context.Context, r *pb.NewRequest) (*pb.NewReply
 		return nil, err
 	}
 
-	id := atomic.AddInt64(&vehicleID, 1)
-	if s.vehicles[token] == nil {
-		s.vehicles[token] = make(map[int64]api.Vehicle)
-	}
-	s.vehicles[token][id] = v
+	id := s.addVehicleToRegistry(token, typ, config, v)
 
 	res := pb.NewReply{
 		VehicleId: id,
