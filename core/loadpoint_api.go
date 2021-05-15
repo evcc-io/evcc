@@ -34,6 +34,9 @@ type LoadPointAPI interface {
 	SetMaxCurrent(int64)
 	GetMinPower() int64
 	GetMaxPower() int64
+
+	GetPhases() int64
+	SetPhases(int64)
 }
 
 // GetMode returns loadpoint charge mode
@@ -184,4 +187,14 @@ func (lp *LoadPoint) GetMinPower() int64 {
 // GetMaxPower returns the minimal loadpoint power taking active phases into account
 func (lp *LoadPoint) GetMaxPower() int64 {
 	return int64(Voltage) * lp.Phases * lp.MaxCurrent
+}
+
+func (lp *LoadPoint) GetPhases() int64 {
+	return lp.Phases
+}
+
+func (lp *LoadPoint) SetPhases(value int64) {
+	if value > 0 {
+		lp.Phases = value
+	}
 }

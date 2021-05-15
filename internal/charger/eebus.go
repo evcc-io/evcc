@@ -18,14 +18,16 @@ import (
 )
 
 type EEBus struct {
-	log                   *util.Logger
-	cc                    *communication.ConnectionController
-	lp                    core.LoadPointAPI
-	maxCurrent            float64
-	isEnabling            bool
-	isDisabling           bool
-	connected             bool
-	communicationStandard communication.EVCommunicationStandardEnumType
+	log                        *util.Logger
+	cc                         *communication.ConnectionController
+	lp                         core.LoadPointAPI
+	maxCurrent                 float64
+	isEnabling                 bool
+	isDisabling                bool
+	connected                  bool
+	communicationStandard      communication.EVCommunicationStandardEnumType
+	asymetricChargingSupported bool
+	asymetricChargingEnabled   bool
 }
 
 func init() {
@@ -90,12 +92,23 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 
 	newMin := int64(data.EVData.LimitsL1.Min)
 	newMax := int64(data.EVData.LimitsL1.Max)
+
 	if c.lp.GetMinCurrent() != newMin {
 		c.lp.SetMinCurrent(newMin)
 	}
 	if c.lp.GetMaxCurrent() != newMax {
-		c.lp.SetMinCurrent(newMax)
+		c.lp.SetMaxCurrent(newMax)
 	}
+
+	if data.EVData.AsymetricChargingSupported && data.EVData.ConnectedPhases > 1 {
+		c.lp.SetPhases(1)
+		c.lp.SetMaxCurrent(newMax * int64(data.EVData.ConnectedPhases))
+		c.asymetricChargingEnabled = true
+	} else {
+		c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
+		c.asymetricChargingEnabled = false
+	}
+
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
@@ -104,14 +117,18 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		return
 	case communication.EVDataElementUpdateCommunicationStandard:
 		c.communicationStandard = data.EVData.CommunicationStandard
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateAsymetricChargingType:
+		c.asymetricChargingSupported = data.EVData.AsymetricChargingSupported
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateEVSEOperationState:
 		return
 	case communication.EVDataElementUpdateEVChargeState:
 		return
 	case communication.EVDataElementUpdateConnectedPhases:
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdatePowerLimits:
 		return
@@ -270,7 +287,20 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	c.maxCurrent = current
 
 	// TODO error handling
-	c.cc.WriteCurrentLimitData([]float64{current, current, current}, data.EVData)
+
+	// simulate 1p/3p handling by considering the max current value to be the sum of all phases max current
+	// and the minimum to be the minimum of phase 1 only and transforming the values to phase specific values
+	if c.asymetricChargingEnabled {
+		totalPhasesMinCurrent := data.EVData.LimitsL1.Min + data.EVData.LimitsL2.Min + data.EVData.LimitsL3.Min
+		if current < totalPhasesMinCurrent {
+			c.cc.WriteCurrentLimitData([]float64{current, data.EVData.LimitsL2.Default, data.EVData.LimitsL3.Default}, data.EVData)
+		} else {
+			currentPerPhase := current / float64(data.EVData.ConnectedPhases)
+			c.cc.WriteCurrentLimitData([]float64{currentPerPhase, currentPerPhase, currentPerPhase}, data.EVData)
+		}
+	} else {
+		c.cc.WriteCurrentLimitData([]float64{current, current, current}, data.EVData)
+	}
 
 	return nil
 }
@@ -335,7 +365,11 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, errors.New("ev is unplugged")
 	}
 
-	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
+	if c.asymetricChargingEnabled {
+		return data.EVData.Measurements.CurrentL1 + data.EVData.Measurements.CurrentL2 + data.EVData.Measurements.CurrentL3, 0, 0, nil
+	} else {
+		return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
+	}
 }
 
 var _ api.Identifier = (*EEBus)(nil)
