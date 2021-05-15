@@ -188,8 +188,8 @@ Available charger implementations are:
 
 Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
-- `shelly`: Shelly switch controled outlets 
-- `tasmota`: Tasmota switch controled outlets
+- `shelly`: Shelly outlets 
+- `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
 
 Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
