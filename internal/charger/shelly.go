@@ -107,12 +107,10 @@ func (c *Shelly) MaxCurrent(current int64) error {
 func (c *Shelly) Status() (api.ChargeStatus, error) {
 	power, err := c.CurrentPower()
 
-	switch {
-	case power > 0:
+	if power > 0 {
 		return api.StatusC, err
-	default:
-		return api.StatusB, err
 	}
+	return api.StatusB, err
 }
 
 var _ api.Meter = (*Shelly)(nil)
