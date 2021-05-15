@@ -44,12 +44,10 @@ func (s *VehicleServer) vehicle(r vehicler) (api.Vehicle, error) {
 	for _, v := range vehicles {
 		vv = append(vv, fmt.Sprintf("{id:%d hash:%x}", v.id, v.hash))
 	}
-	log.Println("vehicles for token:", vv)
 
 	id := r.GetVehicleId()
 	for _, c := range vehicles {
 		if c.id == id {
-			log.Println("found vehicle:", id)
 			return c.vehicle, nil
 		}
 	}
