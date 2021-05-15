@@ -72,7 +72,7 @@ func NewShelly(uri string, channel int, standbypower float64) (*Shelly, error) {
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
 	var resp shellyRelayResponse
-	err := c.GetJSON(fmt.Sprintf("%s/%s", c.uri, "relay/"+strconv.Itoa(c.channel)), &resp)
+	err := c.GetJSON(fmt.Sprintf("%s/relay/%d", c.uri, c.channel), &resp)
 
 	return resp.Ison, err
 }
@@ -80,11 +80,8 @@ func (c *Shelly) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
 	var resp shellyRelayResponse
-	cmd := map[bool]string{
-		true:  "on",
-		false: "off",
-	}
-	err := c.GetJSON(fmt.Sprintf("%s/relay/%s?turn=%s", c.uri, strconv.Itoa(c.channel), cmd[enable]), &resp)
+	onoff := map[bool]string{true: "on", false: "off"}
+	err := c.GetJSON(fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable]), &resp)
 
 	switch {
 	case err != nil:
