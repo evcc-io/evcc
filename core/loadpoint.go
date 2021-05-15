@@ -266,8 +266,8 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 }
 
-// triggerEvent sends push messages to clients
-func (lp *LoadPoint) triggerEvent(event string) {
+// pushEvent sends push messages to clients
+func (lp *LoadPoint) pushEvent(event string) {
 	lp.pushChan <- push.Event{Event: event}
 }
 
@@ -281,7 +281,7 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
-	lp.triggerEvent(evChargeStart)
+	lp.pushEvent(evChargeStart)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -290,7 +290,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.triggerEvent(evChargeStop)
+	lp.pushEvent(evChargeStop)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -322,7 +322,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	// immediately allow pv mode activity
 	lp.pvDisableTimer()
 
-	lp.triggerEvent(evVehicleConnect)
+	lp.pushEvent(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -333,7 +333,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
-	lp.triggerEvent(evVehicleDisconnect)
+	lp.pushEvent(evVehicleDisconnect)
 
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
