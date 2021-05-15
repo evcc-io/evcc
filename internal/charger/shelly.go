@@ -29,9 +29,9 @@ type shellyStatusResponse struct {
 // Shelly charger implementation
 type Shelly struct {
 	*request.Helper
-	uri, user, password string
-	channel             int
-	standbypower        float64
+	uri          string
+	channel      int
+	standbypower float64
 }
 
 func init() {
@@ -42,8 +42,6 @@ func init() {
 func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI          string
-		User         string
-		Password     string
 		Channel      int
 		StandbyPower float64
 	}{}
@@ -56,16 +54,14 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewShelly(cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
+	return NewShelly(cc.URI, cc.Channel, cc.StandbyPower)
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
+func NewShelly(uri string, channel int, standbypower float64) (*Shelly, error) {
 	c := &Shelly{
 		Helper:       request.NewHelper(util.NewLogger("shelly")),
 		uri:          strings.TrimRight(uri, "/"),
-		user:         user,
-		password:     password,
 		channel:      channel,
 		standbypower: standbypower,
 	}
