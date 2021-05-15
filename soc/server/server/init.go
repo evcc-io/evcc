@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 
-	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/soc/cert/ca"
 	"github.com/andig/evcc/soc/cert/server"
 	"github.com/andig/evcc/soc/proto/pb"
@@ -67,7 +66,7 @@ func Run() {
 	grpcServer := grpc.NewServer(serverOptions...)
 
 	pb.RegisterVehicleServer(grpcServer, &VehicleServer{
-		vehicles: make(map[string]map[int64]api.Vehicle),
+		registry: make(map[string][]*VehicleContainer),
 	})
 	pb.RegisterAuthServer(grpcServer, &AuthServer{})
 

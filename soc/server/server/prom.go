@@ -14,15 +14,16 @@ func registerMetrics() {
 	promActiveVehicles = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "soc",
 		Name:      "active_vehicles",
-	}, []string{"brand"})
+	}, []string{"token", "brand"})
 
 	if err := prometheus.Register(promActiveVehicles); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func updateActiveVehiclesMetric(typ string, delta int) {
+func updateActiveVehiclesMetric(token, typ string, delta int) {
 	g, err := promActiveVehicles.GetMetricWith(prometheus.Labels{
+		"token": token,
 		"brand": typ,
 	})
 	if err != nil {
