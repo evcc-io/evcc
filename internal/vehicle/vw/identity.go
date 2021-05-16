@@ -148,7 +148,7 @@ func (v *Identity) LoginVAG(query url.Values, clientID, user, password string) e
 		if err == nil {
 			var token oauth.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), refresher(v.log, clientID))
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), Refresher(v.log, clientID))
 			}
 		}
 	}

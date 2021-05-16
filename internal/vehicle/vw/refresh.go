@@ -16,7 +16,7 @@ type tokenRefresher struct {
 	clientID string
 }
 
-func refresher(log *util.Logger, clientID string) oauth.TokenRefresher {
+func Refresher(log *util.Logger, clientID string) oauth.TokenRefresher {
 	return &tokenRefresher{
 		Helper:   request.NewHelper(log),
 		clientID: clientID,
