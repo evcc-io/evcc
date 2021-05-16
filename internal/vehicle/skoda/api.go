@@ -91,7 +91,14 @@ type ChargerResponse struct {
 	}
 }
 
-// Charger implements the /charger response
+// charging/settings
+// {
+//     "autoUnlockPlugWhenCharged": "Permanent",
+//     "maxChargeCurrentAc": "Maximum",
+//     "targetStateOfChargeInPercent": 100
+// }
+
+// Charger implements the /v1/charging/<vin>/status response
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/v1/charging/%s/status", BaseURI, vin)

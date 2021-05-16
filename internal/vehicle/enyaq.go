@@ -14,7 +14,7 @@ import (
 
 // https://github.com/lendy007/skodaconnect
 
-// Enyaq is an api.Vehicle implementation for Enyaq cars
+// Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
 	*embed
 	*skoda.Provider // provides the api implementations

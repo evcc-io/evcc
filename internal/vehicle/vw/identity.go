@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/andig/evcc/internal/vehicle/id"
+	"github.com/andig/evcc/internal/vehicle/skoda"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
@@ -27,6 +28,9 @@ const (
 
 	// AppsURI is the login uri for ID vehicles
 	AppsURI = "https://login.apps.emea.vwapps.io"
+
+	// TokenServiceURI is the token service uri (used for Skoda Enyaq vehicles)
+	TokenServiceURI = "https://tokenrefreshservice.apps.emea.vwapps.io"
 )
 
 // Identity provides the identity.vwgroup.io login token source
@@ -164,13 +168,13 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 		})
 
 		var req *http.Request
-		uri = "https://tokenrefreshservice.apps.emea.vwapps.io/exchangeAuthCode"
+		uri = fmt.Sprintf("%s/exchangeAuthCode", TokenServiceURI)
 		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
 		if err == nil {
 			var token oauth.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), refresher(v.log, ""))
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), skoda.Refresher(v.log))
 			}
 		}
 	}
