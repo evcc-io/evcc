@@ -43,7 +43,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("skoda")
-	identity := vw.NewIdentity(log, "28cd30c6-dee7-4529-a0e6-b1e07ff90b79")
+	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{
 		"response_type": {"code id_token"},
@@ -52,7 +52,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile phone address cars email birthdate badge dealers driversLicense mbb"},
 	})
 
-	err := identity.Login(query, cc.User, cc.Password)
+	err := identity.LoginVAG("28cd30c6-dee7-4529-a0e6-b1e07ff90b79", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

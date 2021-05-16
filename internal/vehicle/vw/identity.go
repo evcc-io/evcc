@@ -1,13 +1,14 @@
 package vw
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
 	"github.com/andig/evcc/internal/vehicle/id"
+	"github.com/andig/evcc/internal/vehicle/skoda"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
@@ -24,22 +25,26 @@ const (
 
 	// OauthRevokeURI is used for revoking tokens
 	OauthRevokeURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/revoke"
+
+	// AppsURI is the login uri for ID vehicles
+	AppsURI = "https://login.apps.emea.vwapps.io"
+
+	// TokenServiceURI is the token service uri (used for Skoda Enyaq vehicles)
+	TokenServiceURI = "https://tokenrefreshservice.apps.emea.vwapps.io"
 )
 
 // Identity provides the identity.vwgroup.io login token source
 type Identity struct {
 	log *util.Logger
 	*request.Helper
-	clientID string
 	oauth2.TokenSource
 }
 
 // NewIdentity creates VW identity
-func NewIdentity(log *util.Logger, clientID string) *Identity {
+func NewIdentity(log *util.Logger) *Identity {
 	v := &Identity{
-		log:      log,
-		Helper:   request.NewHelper(log),
-		clientID: clientID,
+		log:    log,
+		Helper: request.NewHelper(log),
 	}
 
 	jar, _ := cookiejar.New(&cookiejar.Options{
@@ -59,20 +64,15 @@ func NewIdentity(log *util.Logger, clientID string) *Identity {
 }
 
 // Login performs the identity.vwgroup.io login
-func (v *Identity) Login(query url.Values, user, password string) error {
+func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	var vars FormVars
-	var req *http.Request
 
 	// add nonce and state
-	query.Set("nonce", RandomString(43))
-	query.Set("state", RandomString(43))
-
-	uri := "https://identity.vwgroup.io/oidc/v1/authorize?" + query.Encode()
-
-	// ID - get login url
-	if v.clientID == "" {
-		uri = "https://login.apps.emea.vwapps.io/authorize?nonce=NZ2Q3T6jak0E5pDh&redirect_uri=weconnect://authenticated"
+	query := url.Values{
+		"nonce": []string{RandomString(43)},
+		"state": []string{RandomString(43)},
 	}
+	uri += "&" + query.Encode()
 
 	// GET identity.vwgroup.io/signin-service/v1/signin/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com?relayState=15404cb51c8b4cc5efeee1d2c2a73e5b41562faa
 	resp, err := v.Get(uri)
@@ -120,38 +120,76 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 	var location *url.URL
 	if err == nil {
 		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
-		location, err = url.Parse(loc)
-
-		if err == nil && location.Query().Get("id_token") == "" {
-			err = errors.New("missing id token")
+		if location, err = url.Parse(loc); err == nil {
+			return location.Query(), nil
 		}
 	}
 
-	// VW or Audi
-	if err == nil && v.clientID != "" {
+	return nil, err
+}
+
+// LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
+func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
+	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+
+	q, err := v.login(uri, user, password)
+	if err == nil {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {location.Query().Get("id_token")},
+			"token":      {q.Get("id_token")},
 		})
 
+		var req *http.Request
 		req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
 			"Content-Type": "application/x-www-form-urlencoded",
-			"X-Client-Id":  v.clientID,
+			"X-Client-Id":  clientID,
 		})
 
 		if err == nil {
 			var token oauth.Token
 			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), refresher(v.log, v.clientID))
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), Refresher(v.log, clientID))
 			}
 		}
 	}
 
-	// ID
-	if err == nil && v.clientID == "" {
-		q := location.Query()
+	return err
+}
 
+// LoginSkoda performs Skoda login and finally exchanges code and id token for access and refresh tokens
+func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
+	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+
+	q, err := v.login(uri, user, password)
+	if err == nil {
+		data := url.Values(map[string][]string{
+			"auth_code": {q.Get("code")},
+			"id_token":  {q.Get("id_token")},
+			"brand":     {"skoda"},
+		})
+
+		var req *http.Request
+		uri = fmt.Sprintf("%s/exchangeAuthCode", TokenServiceURI)
+		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+		if err == nil {
+			var token oauth.Token
+			if err = v.DoJSON(req, &token); err == nil {
+				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), skoda.Refresher(v.log))
+			}
+		}
+	}
+
+	return err
+}
+
+// LoginID performs ID login and finally exchanges state and id token for access and refresh tokens
+func (v *Identity) LoginID(query url.Values, user, password string) error {
+	uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())
+
+	q, err := v.login(uri, user, password)
+	if err == nil {
 		data := map[string]string{
 			"state":             q.Get("state"),
 			"id_token":          q.Get("id_token"),
@@ -161,7 +199,8 @@ func (v *Identity) Login(query url.Values, user, password string) error {
 			"authorizationCode": q.Get("code"),
 		}
 
-		uri := "https://login.apps.emea.vwapps.io/login/v1"
+		var req *http.Request
+		uri = fmt.Sprintf("%s/login/v1", AppsURI)
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 		if err == nil {

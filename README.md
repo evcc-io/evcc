@@ -258,7 +258,8 @@ Available vehicle remote interface implementations are:
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citygo, Enyaq)
+- `skoda`: Skoda (Citygo)
+- `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
