@@ -103,11 +103,11 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter  api.Meter     // Charger usage meter
-	vehicle      api.Vehicle   // Currently active vehicle
-	vehicles     []api.Vehicle // Assigned vehicles
-	socEstimator *soc.Estimator
-	socTimer     *soc.Timer
+	chargeMeter api.Meter     // Charger usage meter
+	vehicle     api.Vehicle   // Currently active vehicle
+	vehicles    []api.Vehicle // Assigned vehicles
+	estimator   *soc.Estimator
+	socTimer    *soc.Timer
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -312,8 +312,8 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.socUpdated = time.Time{}
 
 	// soc update reset on car change
-	if lp.socEstimator != nil {
-		lp.socEstimator.Reset()
+	if lp.estimator != nil {
+		lp.estimator.ResetCapacity(lp.vehicle.Capacity())
 	}
 
 	// flush all vehicles before updating state
@@ -574,7 +574,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	}
 
 	lp.vehicle = vehicle
-	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+	lp.estimator = soc.NewEstimator(lp.log, vehicle.Capacity(), lp.SoC.Estimate)
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
@@ -877,116 +877,70 @@ func (lp *LoadPoint) socPollAllowed() bool {
 // publish state of charge, remaining charge duration and range
 func (lp *LoadPoint) publishSoCAndRange() {
 	var soc float64
-	err := api.ErrNotAvailable
+	var timeRemaining time.Duration
 
 	// try to get soc from charger
+	err := api.ErrNotAvailable
 	if charger, ok := lp.charger.(api.Battery); ok {
 		soc, err = charger.SoC()
 	}
 
-	var poll bool
-	if errors.Is(err, api.ErrNotAvailable) && lp.socPollAllowed() {
-		poll = true
+	// poll vehicle api for soc and remaining charge time
+	if lp.socPollAllowed() {
+		// get soc
+		if errors.Is(err, api.ErrNotAvailable) {
+			soc, err = lp.vehicle.SoC()
+			lp.socUpdated = lp.clock.Now()
 
-		soc, err = lp.vehicle.SoC()
-		lp.socUpdated = lp.clock.Now()
-
-		if err != nil {
-			if errors.Is(err, api.ErrMustRetry) {
+			if err != nil && errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
 				lp.log.DEBUG.Printf("vehicle: waiting for update")
-			} else {
-				lp.log.ERROR.Printf("vehicle: %v", err)
+			}
+		}
+
+		// get remaining time
+		if vr, ok := lp.vehicle.(api.VehicleFinishTimer); err == nil && ok {
+			finishTime, err := vr.FinishTime()
+			lp.socUpdated = lp.clock.Now()
+
+			if err == nil {
+				timeRemaining = time.Until(finishTime)
+			}
+		}
+
+		// range
+		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+			rng, err := vs.Range()
+			lp.socUpdated = lp.clock.Now()
+
+			if err == nil {
+				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+				lp.publish("range", rng)
 			}
 		}
 	}
 
-	// soc
-	soc, err := lp.socEstimator.SoC(lp.chargedEnergy)
 	if err == nil {
+		soc = lp.estimator.SoC(soc, lp.chargedEnergy)
 		lp.socCharge = math.Trunc(soc)
 		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 		lp.publish("socCharge", lp.socCharge)
 
 		chargeEstimate := time.Duration(-1)
 		if lp.charging() {
-			chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
+			chargeEstimate = lp.estimator.RemainingChargeDuration(lp.SoC.Target, lp.chargePower, timeRemaining)
 		}
 		lp.publish("chargeEstimate", chargeEstimate)
 
-		chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
+		chargeRemainingEnergy := 1e3 * lp.estimator.RemainingChargeEnergy(lp.SoC.Target)
 		lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
-	} else {
-		if errors.Is(err, api.ErrMustRetry) {
-			lp.socUpdated = time.Time{}
-			lp.log.DEBUG.Printf("vehicle: waiting for update")
-		} else {
-			lp.log.ERROR.Printf("vehicle: %v", err)
-		}
-	}
-
-	// range
-	if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-		if rng, err := vs.Range(); err == nil {
-			lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-			lp.publish("range", rng)
-		}
-	}
-
-	return
-
-	if err == nil {
-		soc = lp.socEstimator.UpdateSoC(soc, lp.chargedEnergy)
-
-		lp.socCharge = math.Trunc(soc)
-		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
-		lp.publish("socCharge", lp.socCharge)
-	}
-
-	if lp.socPollAllowed() && errors.Is(err, api.ErrNotAvailable) {
-		lp.socUpdated = lp.clock.Now()
-
-		// soc
-		soc, err := lp.socEstimator.SoC(lp.chargedEnergy)
-		if err == nil {
-			lp.socCharge = math.Trunc(soc)
-			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
-			lp.publish("socCharge", lp.socCharge)
-
-			chargeEstimate := time.Duration(-1)
-			if lp.charging() {
-				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
-			}
-			lp.publish("chargeEstimate", chargeEstimate)
-
-			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
-			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
-		} else {
-			if errors.Is(err, api.ErrMustRetry) {
-				lp.socUpdated = time.Time{}
-				lp.log.DEBUG.Printf("vehicle: waiting for update")
-			} else {
-				lp.log.ERROR.Printf("vehicle: %v", err)
-			}
-		}
-
-		// range
-		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-			if rng, err := vs.Range(); err == nil {
-				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-				lp.publish("range", rng)
-			}
-		}
-
-		return
 	}
 
 	// reset if poll: connected/charging and not connected
 	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
 		lp.publish("socCharge", -1)
 		lp.publish("chargeEstimate", time.Duration(-1))
-
-		// range
+		lp.publish("chargeRemainingEnergy", -1)
 		lp.publish("range", -1)
 	}
 }
