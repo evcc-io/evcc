@@ -42,9 +42,8 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("enyaq")
-
 	var err error
+	log := util.NewLogger("enyaq")
 
 	if cc.VIN == "" {
 		identity := vw.NewIdentity(log)
@@ -59,7 +58,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 		err = identity.LoginSkoda(query, cc.User, cc.Password)
 		if err != nil {
-			return v, fmt.Errorf("native login failed: %w", err)
+			return v, fmt.Errorf("login failed: %w", err)
 		}
 
 		api := skoda.NewAPI(log, identity)

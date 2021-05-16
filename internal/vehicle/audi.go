@@ -54,9 +54,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"ui_locales":    {"de-DE"},
 	})
 
-	const cid = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
-
-	err := identity.LoginVAG(query, cid, cc.User, cc.Password)
+	err := identity.LoginVAG("77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

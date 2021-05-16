@@ -128,7 +128,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	return nil, err
 }
 
-func (v *Identity) LoginVAG(query url.Values, clientID, user, password string) error {
+func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 	q, err := v.login(uri, user, password)

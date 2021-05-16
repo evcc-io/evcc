@@ -52,9 +52,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile mbb cars birthdate nickname address phone"},
 	})
 
-	const cid = "38761134-34d0-41f3-9a73-c4be88d7d337"
-
-	err := identity.LoginVAG(query, cid, cc.User, cc.Password)
+	err := identity.LoginVAG("38761134-34d0-41f3-9a73-c4be88d7d337", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
