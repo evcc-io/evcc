@@ -128,6 +128,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	return nil, err
 }
 
+// LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
 func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
@@ -156,6 +157,7 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 	return err
 }
 
+// LoginSkoda performs Skoda login and finally exchanges code and id token for access and refresh tokens
 func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
@@ -182,6 +184,7 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 	return err
 }
 
+// LoginID performs ID login and finally exchanges state and id token for access and refresh tokens
 func (v *Identity) LoginID(query url.Values, user, password string) error {
 	uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())
 
