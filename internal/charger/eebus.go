@@ -18,13 +18,16 @@ import (
 )
 
 type EEBus struct {
-	log                        *util.Logger
-	cc                         *communication.ConnectionController
-	lp                         core.LoadPointAPI
-	maxCurrent                 float64
-	isEnabling                 bool
-	isDisabling                bool
-	connected                  bool
+	log           *util.Logger
+	cc            *communication.ConnectionController
+	lp            core.LoadPointAPI
+	forcePVLimits bool
+
+	maxCurrent  float64
+	isEnabling  bool
+	isDisabling bool
+	connected   bool
+
 	communicationStandard      communication.EVCommunicationStandardEnumType
 	asymetricChargingSupported bool
 	asymetricChargingEnabled   bool
@@ -37,18 +40,19 @@ func init() {
 // NewEEBusFromConfig creates an EEBus charger from generic config
 func NewEEBusFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		Ski string
+		Ski           string
+		ForcePVLimits bool
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewEEBus(cc.Ski)
+	return NewEEBus(cc.Ski, cc.ForcePVLimits)
 }
 
 // NewEEBus creates EEBus charger
-func NewEEBus(ski string) (*EEBus, error) {
+func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 	log := util.NewLogger("eebus")
 
 	if server.EEBusInstance == nil {
@@ -57,6 +61,7 @@ func NewEEBus(ski string) (*EEBus, error) {
 
 	c := &EEBus{
 		log:                   log,
+		forcePVLimits:         forcePVLimits,
 		communicationStandard: communication.EVCommunicationStandardEnumTypeUnknown,
 	}
 
@@ -214,6 +219,14 @@ func (c *EEBus) Enabled() (bool, error) {
 	return false, nil
 }
 
+func (c *EEBus) currentLimitObligationEnabled() bool {
+	if c.communicationStandard == communication.EVCommunicationStandardEnumTypeIEC61851 {
+		return true
+	}
+
+	return c.forcePVLimits
+}
+
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
 	data, err := c.cc.GetData()
@@ -237,7 +250,7 @@ func (c *EEBus) Enable(enable bool) error {
 		c.maxCurrent = 0
 		c.isEnabling = false
 		c.isDisabling = true
-		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, data.EVData)
+		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, c.currentLimitObligationEnabled(), data.EVData)
 
 		return nil
 	}
@@ -246,9 +259,9 @@ func (c *EEBus) Enable(enable bool) error {
 	c.isEnabling = true
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
 	if c.maxCurrent > 0 {
-		c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, data.EVData)
+		c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, c.currentLimitObligationEnabled(), data.EVData)
 	} else {
-		c.cc.WriteCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min}, data.EVData)
+		c.cc.WriteCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min}, c.currentLimitObligationEnabled(), data.EVData)
 	}
 
 	return nil
@@ -293,13 +306,13 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	if c.asymetricChargingEnabled {
 		totalPhasesMinCurrent := data.EVData.LimitsL1.Min + data.EVData.LimitsL2.Min + data.EVData.LimitsL3.Min
 		if current < totalPhasesMinCurrent {
-			c.cc.WriteCurrentLimitData([]float64{current, data.EVData.LimitsL2.Default, data.EVData.LimitsL3.Default}, data.EVData)
+			c.cc.WriteCurrentLimitData([]float64{current, data.EVData.LimitsL2.Default, data.EVData.LimitsL3.Default}, c.currentLimitObligationEnabled(), data.EVData)
 		} else {
 			currentPerPhase := current / float64(data.EVData.ConnectedPhases)
-			c.cc.WriteCurrentLimitData([]float64{currentPerPhase, currentPerPhase, currentPerPhase}, data.EVData)
+			c.cc.WriteCurrentLimitData([]float64{currentPerPhase, currentPerPhase, currentPerPhase}, c.currentLimitObligationEnabled(), data.EVData)
 		}
 	} else {
-		c.cc.WriteCurrentLimitData([]float64{current, current, current}, data.EVData)
+		c.cc.WriteCurrentLimitData([]float64{current, current, current}, c.currentLimitObligationEnabled(), data.EVData)
 	}
 
 	return nil
