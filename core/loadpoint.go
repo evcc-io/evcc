@@ -266,8 +266,8 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 }
 
-// triggerEvent sends push messages to clients
-func (lp *LoadPoint) triggerEvent(event string) {
+// pushEvent sends push messages to clients
+func (lp *LoadPoint) pushEvent(event string) {
 	lp.pushChan <- push.Event{Event: event}
 }
 
@@ -281,7 +281,7 @@ func (lp *LoadPoint) publish(key string, val interface{}) {
 // evChargeStartHandler sends external start event
 func (lp *LoadPoint) evChargeStartHandler() {
 	lp.log.INFO.Println("start charging ->")
-	lp.triggerEvent(evChargeStart)
+	lp.pushEvent(evChargeStart)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -290,7 +290,7 @@ func (lp *LoadPoint) evChargeStartHandler() {
 // evChargeStopHandler sends external stop event
 func (lp *LoadPoint) evChargeStopHandler() {
 	lp.log.INFO.Println("stop charging <-")
-	lp.triggerEvent(evChargeStop)
+	lp.pushEvent(evChargeStop)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -316,10 +316,13 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 		lp.socEstimator.Reset()
 	}
 
-	// flush all vahicles before updating state
+	// flush all vehicles before updating state
 	provider.ResetCached()
 
-	lp.triggerEvent(evVehicleConnect)
+	// immediately allow pv mode activity
+	lp.pvDisableTimer()
+
+	lp.pushEvent(evVehicleConnect)
 }
 
 // evVehicleDisconnectHandler sends external start event
@@ -330,7 +333,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
-	lp.triggerEvent(evVehicleDisconnect)
+	lp.pushEvent(evVehicleDisconnect)
 
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
@@ -523,6 +526,37 @@ func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
 		lp.SoC.Min > 0 &&
 		lp.socCharge < float64(lp.SoC.Min)
+}
+
+// climateActive checks if vehicle has active climate request
+func (lp *LoadPoint) climateActive() bool {
+	if cl, ok := lp.vehicle.(api.VehicleClimater); ok {
+		active, outsideTemp, targetTemp, err := cl.Climater()
+		if err == nil {
+			lp.log.DEBUG.Printf("climater active: %v, target temp: %.1f°C, outside temp: %.1f°C", active, targetTemp, outsideTemp)
+
+			status := "off"
+			if active {
+				status = "on"
+
+				switch {
+				case outsideTemp < targetTemp:
+					status = "heating"
+				case outsideTemp > targetTemp:
+					status = "cooling"
+				}
+			}
+
+			lp.publish("climater", status)
+			return active
+		}
+
+		if !errors.Is(err, api.ErrNotAvailable) {
+			lp.log.ERROR.Printf("climater: %v", err)
+		}
+	}
+
+	return false
 }
 
 // remoteControlled returns true if remote control status is active
@@ -943,7 +977,12 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case lp.targetSocReached():
 		lp.log.DEBUG.Printf("targetSoC reached: %.1f > %d", lp.socCharge, lp.SoC.Target)
-		err = lp.setLimit(0, true)
+		var targetCurrent float64 // zero disables
+		if lp.climateActive() {
+			lp.log.DEBUG.Println("climater active")
+			targetCurrent = float64(lp.MinCurrent)
+		}
+		err = lp.setLimit(targetCurrent, true)
 		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
 
 	// OCPP has priority over target charging
@@ -970,8 +1009,13 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
 		lp.log.DEBUG.Printf("pv max charge current: %.2gA", targetCurrent)
 
-		// Sunny Home Manager
 		var required bool // false
+		if targetCurrent == 0 && lp.climateActive() {
+			targetCurrent = float64(lp.MinCurrent)
+			required = true
+		}
+
+		// Sunny Home Manager
 		if lp.remoteControlled(RemoteSoftDisable) {
 			remoteDisabled = RemoteSoftDisable
 			targetCurrent = 0
