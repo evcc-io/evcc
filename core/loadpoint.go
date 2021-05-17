@@ -938,10 +938,10 @@ func (lp *LoadPoint) publishSoCAndRange() {
 
 	// reset if poll: connected/charging and not connected
 	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
-		lp.publish("socCharge", -1)
+		lp.publish("socCharge", float64(-1))
 		lp.publish("chargeEstimate", time.Duration(-1))
-		lp.publish("chargeRemainingEnergy", -1)
-		lp.publish("range", -1)
+		lp.publish("chargeRemainingEnergy", float64(-1))
+		lp.publish("range", int64(-1))
 	}
 }
 
