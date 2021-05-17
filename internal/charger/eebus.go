@@ -109,12 +109,14 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
 	switch dataType {
 	case communication.EVDataElementUpdateEVConnectionState:
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateCommunicationStandard:
 		c.communicationStandard = data.EVData.CommunicationStandard
 		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateAsymetricChargingType:
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateEVSEOperationState:
 		return
@@ -124,6 +126,7 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdatePowerLimits:
+		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateAmperageLimits:
 		c.setLoadpointMinMaxLimits(data)
