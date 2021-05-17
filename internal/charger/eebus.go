@@ -25,10 +25,9 @@ type EEBus struct {
 
 	communicationStandard communication.EVCommunicationStandardEnumType
 
-	maxCurrent                  float64
-	connected                   bool
-	initialEnableStateRequested bool
-	expectedEnableState         bool
+	maxCurrent          float64
+	connected           bool
+	expectedEnableState bool
 }
 
 func init() {
@@ -168,10 +167,9 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (c *EEBus) Enabled() (bool, error) {
 	// initially we declare to be enabled
-	if !c.initialEnableStateRequested {
-		c.initialEnableStateRequested = true
+	once.Do(func() {
 		c.expectedEnableState = true
-	}
+	})
 
 	// return the save enable state as we assume enabling/disabling always works
 	return c.expectedEnableState, nil
