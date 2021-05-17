@@ -23,14 +23,12 @@ type EEBus struct {
 	lp            core.LoadPointAPI
 	forcePVLimits bool
 
-	maxCurrent  float64
-	isEnabling  bool
-	isDisabling bool
-	connected   bool
+	communicationStandard communication.EVCommunicationStandardEnumType
 
-	communicationStandard      communication.EVCommunicationStandardEnumType
-	asymetricChargingSupported bool
-	asymetricChargingEnabled   bool
+	maxCurrent                  float64
+	connected                   bool
+	initialEnableStateRequested bool
+	expectedEnableState         bool
 }
 
 func init() {
@@ -105,15 +103,7 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		c.lp.SetMaxCurrent(newMax)
 	}
 
-	if data.EVData.AsymetricChargingSupported && data.EVData.ConnectedPhases > 1 {
-		c.lp.SetPhases(1)
-		c.lp.SetMaxCurrent(newMax * int64(data.EVData.ConnectedPhases))
-		c.asymetricChargingEnabled = true
-	} else {
-		c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
-		c.asymetricChargingEnabled = false
-	}
-
+	c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
@@ -125,8 +115,6 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateAsymetricChargingType:
-		c.asymetricChargingSupported = data.EVData.AsymetricChargingSupported
-		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateEVSEOperationState:
 		return
@@ -179,52 +167,14 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *EEBus) Enabled() (bool, error) {
-	data, err := c.cc.GetData()
-	if err != nil {
-		return false, err
+	// initially we declare to be enabled
+	if !c.initialEnableStateRequested {
+		c.initialEnableStateRequested = true
+		c.expectedEnableState = true
 	}
 
-	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		return false, nil
-	}
-
-	if data.EVData.Measurements.CurrentL1 < data.EVData.LimitsL1.Min-0.3 ||
-		data.EVData.Measurements.CurrentL2 < data.EVData.LimitsL2.Min-0.3 ||
-		data.EVData.Measurements.CurrentL3 < data.EVData.LimitsL3.Min-0.3 {
-		if c.isEnabling {
-			return true, nil
-		}
-	}
-
-	// when stopping charging by sending default current values to L1, it looks like the
-	// Taycan OBC sets current to 0.5 and power varies between 1-3W
-	// on enabling with 2A on L1, the measurement e..g goes:
-	//   18:19:57 set limit on L1 to 2A
-	//   18:19:57 measurement on L1 1.2A - 170W
-	//   18:19:59 measurement on L1 0.5A - 3W
-	//   18:20:01 measurement on L1 0.5A - 3W
-	//   18:20:02 measurement on L1 2A - 450W
-	// so it took 5 seconds to reach the low setting. if we check enabled in between, it may appear as disabled!
-	if data.EVData.Measurements.CurrentL1 > 0.5 ||
-		data.EVData.Measurements.CurrentL2 > 0.5 ||
-		data.EVData.Measurements.CurrentL3 > 0.5 {
-		if c.isDisabling {
-			return false, nil
-		}
-		c.isEnabling = false
-		return true, nil
-	}
-
-	c.isDisabling = false
-	return false, nil
-}
-
-func (c *EEBus) currentLimitObligationEnabled() bool {
-	if c.communicationStandard == communication.EVCommunicationStandardEnumTypeIEC61851 {
-		return true
-	}
-
-	return c.forcePVLimits
+	// return the save enable state as we assume enabling/disabling always works
+	return c.expectedEnableState, nil
 }
 
 // Enable implements the api.Charger interface
@@ -238,6 +188,8 @@ func (c *EEBus) Enable(enable bool) error {
 		return errors.New("can not enable/disable charging as ev is unplugged")
 	}
 
+	c.expectedEnableState = enable
+
 	if !enable {
 		// Important notes on enabling/disabling!!
 		// ISO15118 mode:
@@ -248,23 +200,37 @@ func (c *EEBus) Enable(enable bool) error {
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
-		c.isEnabling = false
-		c.isDisabling = true
-		c.cc.WriteCurrentLimitData([]float64{0.0, 0.0, 0.0}, c.currentLimitObligationEnabled(), data.EVData)
+		c.writeCurrentLimitData([]float64{0.0, 0.0, 0.0})
 
 		return nil
 	}
 
-	c.isDisabling = false
-	c.isEnabling = true
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
 	if c.maxCurrent > 0 {
-		c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, c.currentLimitObligationEnabled(), data.EVData)
+		c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
 	} else {
-		c.cc.WriteCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min}, c.currentLimitObligationEnabled(), data.EVData)
+		c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
 	}
 
 	return nil
+}
+
+func (c *EEBus) writeCurrentLimitData(currents []float64) {
+	data, err := c.cc.GetData()
+	if err != nil {
+		return
+	}
+
+	// are the limits obligations or recommendations
+	// in the scenarios IEC, ISO without asymetric charging, the limits are always obligations
+	obligationEnabled := true
+
+	// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
+	if data.EVData.AsymetricChargingSupported {
+		obligationEnabled = c.forcePVLimits
+	}
+
+	c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -301,19 +267,8 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 
 	// TODO error handling
 
-	// simulate 1p/3p handling by considering the max current value to be the sum of all phases max current
-	// and the minimum to be the minimum of phase 1 only and transforming the values to phase specific values
-	if c.asymetricChargingEnabled {
-		totalPhasesMinCurrent := data.EVData.LimitsL1.Min + data.EVData.LimitsL2.Min + data.EVData.LimitsL3.Min
-		if current < totalPhasesMinCurrent {
-			c.cc.WriteCurrentLimitData([]float64{current, data.EVData.LimitsL2.Default, data.EVData.LimitsL3.Default}, c.currentLimitObligationEnabled(), data.EVData)
-		} else {
-			currentPerPhase := current / float64(data.EVData.ConnectedPhases)
-			c.cc.WriteCurrentLimitData([]float64{currentPerPhase, currentPerPhase, currentPerPhase}, c.currentLimitObligationEnabled(), data.EVData)
-		}
-	} else {
-		c.cc.WriteCurrentLimitData([]float64{current, current, current}, c.currentLimitObligationEnabled(), data.EVData)
-	}
+	currents := []float64{current, current, current}
+	c.writeCurrentLimitData(currents)
 
 	return nil
 }
@@ -378,12 +333,7 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, errors.New("ev is unplugged")
 	}
 
-	if c.asymetricChargingEnabled {
-		phase1Current := data.EVData.Measurements.CurrentL1 + data.EVData.Measurements.CurrentL2 + data.EVData.Measurements.CurrentL3
-		return phase1Current, 0, 0, nil
-	} else {
-		return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
-	}
+	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
 
 var _ api.Identifier = (*EEBus)(nil)
