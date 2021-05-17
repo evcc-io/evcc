@@ -202,7 +202,7 @@ func (v *Tesla) StartCharge() error {
 			case <-timer.C:
 				return api.ErrTimeout
 			default:
-				time.Sleep(time.Second)
+				time.Sleep(2 * time.Second)
 				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
 					return err
 				}
