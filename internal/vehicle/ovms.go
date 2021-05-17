@@ -52,15 +52,24 @@ type ovmsChargeResponse struct {
 	Soh                 string `json:"soh"`
 	StaleAmbient        string `json:"staleambient"`
 	StaleTemps          string `json:"staletemps"`
-	TemperaturAmbient   string `json:"temperature_ambient"`
-	TemperaturBattery   string `json:"temperature_battery"`
-	TemperaturCharger   string `json:"temperature_charger"`
-	TemperaturMotor     string `json:"temperature_motor"`
-	TemperaturPem       string `json:"temperature_pem"`
+	TemperatureAmbient  string `json:"temperature_ambient"`
+	TemperatureBattery  string `json:"temperature_battery"`
+	TemperatureCharger  string `json:"temperature_charger"`
+	TemperatureMotor    string `json:"temperature_motor"`
+	TemperaturePem      string `json:"temperature_pem"`
 	Units               string `json:"units"`
 	Vehicle12v          string `json:"vehicle12v"`
 	Vehicle12vCurrent   string `json:"vehicle12v_current"`
 	Vehicle12vReference string `json:"vehicle12v_ref"`
+}
+
+type ovmsConnectResponse struct {
+	MessageAge    int    `json:"m_msgage_s"`
+	MessageTime   string `json:"m_msgtime_s"`
+	AppsConnected int    `json:"v_apps_connected"`
+	BtcsConnected int    `json:"v_btcs_connected"`
+	FirstPeer     int    `json:"v_first_peer"`
+	NetConnected  int    `json:"v_net_connected"`
 }
 
 // OVMS is an api.Vehicle implementation for dexters-web server requests
@@ -115,7 +124,7 @@ func (v *Ovms) getCookies() ([]*http.Cookie, error) {
 	return nil, err
 }
 
-func (v *Ovms) delete(url string, cookies []*http.Cookie) (err error) {
+func (v *Ovms) delete(url string, cookies []*http.Cookie) error {
 	req, err := v.requestWithCookies(http.MethodDelete, url, cookies)
 	if err != nil {
 		return err
@@ -137,29 +146,31 @@ func (v *Ovms) requestWithCookies(method string, uri string, cookies []*http.Coo
 }
 
 func (v *Ovms) authFlow() ([]*http.Cookie, error) {
-	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
+	var resp ovmsConnectResponse
 
 	cookies, err := v.getCookies()
 	if err == nil {
-		req, err := v.requestWithCookies(http.MethodGet, uri, cookies)
-		if err == nil {
-			_, err = v.Do(req)
+		resp, err = v.connectRequest(cookies)
+		for err == nil && resp.MessageAge > 60 && resp.NetConnected == 1 {
+			time.Sleep(3 * time.Second)
+			resp, err = v.connectRequest(cookies)
 		}
+
 		return cookies, err
 	}
 	return nil, err
 }
 
-func (v *Ovms) disconnect(cookies []*http.Cookie) error {
+func (v *Ovms) connectRequest(cookies []*http.Cookie) (ovmsConnectResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
+	var res ovmsConnectResponse
 
-	err := v.delete(uri, cookies)
+	req, err := v.requestWithCookies(http.MethodGet, uri, cookies)
 	if err == nil {
-		uri = fmt.Sprintf("http://%s:6868/api/cookie", v.server)
-		return v.delete(uri, cookies)
+		err = v.DoJSON(req, &res)
 	}
 
-	return err
+	return res, err
 }
 
 func (v *Ovms) chargeRequest(cookies []*http.Cookie) (ovmsChargeResponse, error) {
@@ -172,6 +183,18 @@ func (v *Ovms) chargeRequest(cookies []*http.Cookie) (ovmsChargeResponse, error)
 	}
 
 	return res, err
+}
+
+func (v *Ovms) disconnect(cookies []*http.Cookie) error {
+	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
+
+	err := v.delete(uri, cookies)
+	if err == nil {
+		uri = fmt.Sprintf("http://%s:6868/api/cookie", v.server)
+		return v.delete(uri, cookies)
+	}
+
+	return err
 }
 
 // batteryAPI provides battery-status api response
