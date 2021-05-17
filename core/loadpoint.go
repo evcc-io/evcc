@@ -1004,7 +1004,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
 		lp.publish("socCharge", -1)
 		lp.publish("chargeEstimate", time.Duration(-1))
-		lp.publish("chargeRemainingEnergy", -1)
+		lp.publish("chargeRemainingEnergy", float64(-1))
 		lp.publish("range", -1)
 	}
 }
