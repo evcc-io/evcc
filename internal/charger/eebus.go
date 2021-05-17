@@ -79,6 +79,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	err := c.cc.Boot()
 	if err == nil {
 		c.connected = true
+		c.expectedEnableState = true
 	}
 	return err
 }
@@ -166,11 +167,6 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *EEBus) Enabled() (bool, error) {
-	// initially we declare to be enabled
-	once.Do(func() {
-		c.expectedEnableState = true
-	})
-
 	// return the save enable state as we assume enabling/disabling always works
 	return c.expectedEnableState, nil
 }
