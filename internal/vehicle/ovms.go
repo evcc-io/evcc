@@ -13,63 +13,16 @@ import (
 )
 
 type ovmsChargeResponse struct {
-	BattVoltage         string `json:"battvoltage"`
-	Cac100              string `json:"cac100"`
-	CarAwake            int    `json:"carawake"`
-	CarOn               int    `json:"caron"`
-	ChargeEstimate      string `json:"charge_estimate"`
-	ChargeEtrFull       string `json:"charge_etr_full"`
-	ChargeEtrLimit      string `json:"charge_etr_limit"`
-	ChargeEtrRange      string `json:"charge_etr_range"`
-	ChargeEtrSoc        string `json:"charge_etr_soc"`
-	ChargeLimitRange    string `json:"charge_limit_range"`
-	ChargeLimitSoc      string `json:"charge_limit_soc"`
-	ChargeB4            string `json:"chargeb4"`
-	ChargeCurrent       string `json:"chargecurrent"`
-	ChargeDuration      string `json:"chargeduration"`
-	ChargeEnergy        string `json:"chargekwh"`
-	ChargeLimit         string `json:"chargelimit"`
-	ChargePower         string `json:"chargepower"`
-	ChargeStartTime     string `json:"chargestarttime"`
-	ChargeState         string `json:"chargestate"`
-	ChargeSubState      string `json:"chargesubstate"`
-	ChargeTimerMode     string `json:"chargetimermode"`
-	ChargeTimerStale    string `json:"chargetimerstale"`
-	ChargeTape          string `json:"chargetype"`
-	Charging            int    `json:"charging"`
-	Charging12v         int    `json:"charging_12v"`
-	CoolDownActive      string `json:"cooldown_active"`
-	CoolDownBattery     string `json:"cooldown_tbattery"`
-	CoolDownTimeLimit   string `json:"cooldown_timelimit"`
-	ChargePortOpen      int    `json:"cp_dooropen"`
-	EstimatedRange      string `json:"estimatedrange"`
-	IdealRange          string `json:"idealrange"`
-	IdealRangeMax       string `json:"idealrange_max"`
-	LineVoltage         string `json:"linevoltage"`
-	Mode                string `json:"mode"`
-	PilotPresent        int    `json:"pilotpresent"`
-	Soc                 string `json:"soc"`
-	Soh                 string `json:"soh"`
-	StaleAmbient        string `json:"staleambient"`
-	StaleTemps          string `json:"staletemps"`
-	TemperatureAmbient  string `json:"temperature_ambient"`
-	TemperatureBattery  string `json:"temperature_battery"`
-	TemperatureCharger  string `json:"temperature_charger"`
-	TemperatureMotor    string `json:"temperature_motor"`
-	TemperaturePem      string `json:"temperature_pem"`
-	Units               string `json:"units"`
-	Vehicle12v          string `json:"vehicle12v"`
-	Vehicle12vCurrent   string `json:"vehicle12v_current"`
-	Vehicle12vReference string `json:"vehicle12v_ref"`
+	ChargeEtrFull    string `json:"charge_etr_full"`
+	ChargeState      string `json:"chargestate"`
+	ChargePortOpen   int    `json:"cp_dooropen"`
+	EstimatedRange   string `json:"estimatedrange"`
+	MessageAgeServer int    `json:"m_msgage_s"`
+	Soc              string `json:"soc"`
 }
 
 type ovmsConnectResponse struct {
-	MessageAge    int    `json:"m_msgage_s"`
-	MessageTime   string `json:"m_msgtime_s"`
-	AppsConnected int    `json:"v_apps_connected"`
-	BtcsConnected int    `json:"v_btcs_connected"`
-	FirstPeer     int    `json:"v_first_peer"`
-	NetConnected  int    `json:"v_net_connected"`
+	NetConnected int `json:"v_net_connected"`
 }
 
 // OVMS is an api.Vehicle implementation for dexters-web server requests
@@ -145,20 +98,19 @@ func (v *Ovms) requestWithCookies(method string, uri string, cookies []*http.Coo
 	return req, err
 }
 
-func (v *Ovms) authFlow() ([]*http.Cookie, error) {
+func (v *Ovms) authFlow() ([]*http.Cookie, bool, error) {
 	var resp ovmsConnectResponse
 
 	cookies, err := v.getCookies()
 	if err == nil {
 		resp, err = v.connectRequest(cookies)
-		for err == nil && resp.MessageAge > 60 && resp.NetConnected == 1 {
-			time.Sleep(3 * time.Second)
-			resp, err = v.connectRequest(cookies)
+		if err == nil {
+			return cookies, resp.NetConnected == 1, err
 		}
 
-		return cookies, err
+		return cookies, false, err
 	}
-	return nil, err
+	return nil, false, err
 }
 
 func (v *Ovms) connectRequest(cookies []*http.Cookie) (ovmsConnectResponse, error) {
@@ -200,13 +152,20 @@ func (v *Ovms) disconnect(cookies []*http.Cookie) error {
 // batteryAPI provides battery-status api response
 func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
+	var ovmsConnected bool
 
-	cookies, err := v.authFlow()
+	cookies, ovmsConnected, err := v.authFlow()
 	if err == nil && cookies != nil {
+		time.Sleep(3 * time.Second)
 		resp, err = v.chargeRequest(cookies)
-		if err == nil {
-			return resp, v.disconnect(cookies)
+		for err != nil && resp.MessageAgeServer > 59 && ovmsConnected {
+			time.Sleep(3 * time.Second)
+			resp, err = v.chargeRequest(cookies)
 		}
+	}
+
+	if cookies != nil {
+		err = v.disconnect(cookies)
 	}
 
 	return resp, err
