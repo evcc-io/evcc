@@ -28,6 +28,7 @@ type EEBus struct {
 	maxCurrent          float64
 	connected           bool
 	expectedEnableState bool
+	disablePending      bool
 }
 
 func init() {
@@ -107,6 +108,11 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
+	if c.disablePending {
+		c.log.TRACE.Println("DISABLEPENDING try resolving")
+		c.Enable(false)
+	}
+
 	switch dataType {
 	case communication.EVDataElementUpdateEVConnectionState:
 		c.setLoadpointMinMaxLimits(data)
@@ -176,6 +182,10 @@ func (c *EEBus) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
+	if !enable {
+		c.disablePending = true
+	}
+
 	data, err := c.cc.GetData()
 	if err != nil {
 		return err
@@ -197,25 +207,31 @@ func (c *EEBus) Enable(enable bool) error {
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
-		c.writeCurrentLimitData([]float64{0.0, 0.0, 0.0})
+		err = c.writeCurrentLimitData([]float64{0.0, 0.0, 0.0})
+		if err == nil {
+			c.disablePending = false
+		} else {
+			c.log.TRACE.Println("DISABLEPENDING ENABLED!!!")
+		}
+		return err
+	}
 
-		return nil
+	if c.disablePending && enable {
+		c.disablePending = false
 	}
 
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
 	if c.maxCurrent > 0 {
-		c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
-	} else {
-		c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
+		return c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
 	}
 
-	return nil
+	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
 }
 
-func (c *EEBus) writeCurrentLimitData(currents []float64) {
+func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
-		return
+		return err
 	}
 
 	// are the limits obligations or recommendations
@@ -228,6 +244,8 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) {
 	}
 
 	c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
+
+	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -265,9 +283,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	// TODO error handling
 
 	currents := []float64{current, current, current}
-	c.writeCurrentLimitData(currents)
-
-	return nil
+	return c.writeCurrentLimitData(currents)
 }
 
 var _ api.Meter = (*EEBus)(nil)
