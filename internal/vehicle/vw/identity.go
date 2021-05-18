@@ -47,12 +47,19 @@ func NewIdentity(log *util.Logger) *Identity {
 		Helper: request.NewHelper(log),
 	}
 
+	return v
+}
+
+// Login performs the identity.vwgroup.io login
+func (v *Identity) login(uri, user, password string) (url.Values, error) {
+	// track cookies and don't follow redirects
 	jar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
-	// track cookies and don't follow redirects
 	v.Client.Jar = jar
+	defer func() { v.Client.Jar = nil }()
+
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if req.URL.Scheme != "https" {
 			return http.ErrUseLastResponse
@@ -60,11 +67,6 @@ func NewIdentity(log *util.Logger) *Identity {
 		return nil
 	}
 
-	return v
-}
-
-// Login performs the identity.vwgroup.io login
-func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	var vars FormVars
 
 	// add nonce and state
