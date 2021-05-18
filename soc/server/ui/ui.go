@@ -12,13 +12,16 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/internal/vehicle"
 	"github.com/andig/evcc/soc/server/auth"
 	"github.com/andig/evcc/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/thoas/go-funk"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
@@ -209,12 +212,53 @@ func getUserInfo(state string, code string) (*User, error) {
 	return &user, nil
 }
 
+var typeFilter = []string{"custom", "cloud", "niu", "tesla"}
+
+var typeMap = map[string]string{
+	"bmw":     "BMW",
+	"citroen": "Citroën",
+	"skoda":   "Škoda",
+	"enyaq":   "Škoda Enyaq",
+	"vw":      "VW",
+	"id":      "VW ID",
+}
+
+type typeDesc struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func handleVehicles(w http.ResponseWriter, r *http.Request) {
+	types := make([]typeDesc, 0)
+
+	for _, id := range vehicle.Types() {
+		if funk.ContainsString(typeFilter, id) {
+			continue
+		}
+
+		vt := typeDesc{ID: id, Name: strings.Title(id)}
+		if name, ok := typeMap[id]; ok {
+			vt.Name = name
+		}
+
+		types = append(types, vt)
+	}
+
+	sort.Slice(types, func(i, j int) bool {
+		return strings.Compare(types[i].Name, types[j].Name) < 0
+	})
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	_ = json.NewEncoder(w).Encode(types)
+}
+
 func Run() {
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/", handleMain)
 	mux.HandleFunc("/privacy", handlePrivacy)
 	mux.HandleFunc("/login", handleLogin)
 	mux.HandleFunc("/callback", handleCallback)
+	mux.HandleFunc("/api/vehicles", handleVehicles)
 
 	mux.Handle("/metrics", promhttp.Handler())
 
