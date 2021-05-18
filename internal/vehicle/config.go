@@ -29,6 +29,15 @@ func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Veh
 
 var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
 
+// Types returns the list of vehicle types
+func Types() []string {
+	var res []string
+	for typ := range registry {
+		res = append(res, typ)
+	}
+	return res
+}
+
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
 	factory, err := registry.Get(strings.ToLower(typ))
