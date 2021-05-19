@@ -115,6 +115,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 
 	switch dataType {
 	case communication.EVDataElementUpdateEVConnectionState:
+		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+			c.expectedEnableState = false
+		}
 		c.setLoadpointMinMaxLimits(data)
 		return
 	case communication.EVDataElementUpdateCommunicationStandard:
