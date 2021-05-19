@@ -236,6 +236,13 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
 	if data.EVData.AsymetricChargingSupported {
 		obligationEnabled = c.forcePVLimits
+		if c.lp != nil && !obligationEnabled {
+			// recommendations only work in PV modes
+			chargeMode := c.lp.GetMode()
+			if chargeMode != api.ModePV && chargeMode != api.ModeMinPV {
+				obligationEnabled = true
+			}
+		}
 	}
 
 	c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
