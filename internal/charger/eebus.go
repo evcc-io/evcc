@@ -346,7 +346,7 @@ func (c *EEBus) Currents() (float64, float64, float64, error) {
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		return 0, 0, 0, errors.New("ev is unplugged")
+		return 0, 0, 0, nil
 	}
 
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
