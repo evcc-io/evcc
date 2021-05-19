@@ -80,7 +80,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	err := c.cc.Boot()
 	if err == nil {
 		c.connected = true
-		c.expectedEnableState = true
+		c.expectedEnableState = false
 	}
 	return err
 }
@@ -97,10 +97,10 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 	newMin := int64(data.EVData.LimitsL1.Min)
 	newMax := int64(data.EVData.LimitsL1.Max)
 
-	if c.lp.GetMinCurrent() != newMin {
+	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
 		c.lp.SetMinCurrent(newMin)
 	}
-	if c.lp.GetMaxCurrent() != newMax {
+	if c.lp.GetMaxCurrent() != newMax && newMax > 0 {
 		c.lp.SetMaxCurrent(newMax)
 	}
 
@@ -156,22 +156,14 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
 	}
 
-	enabled, err := c.Enabled()
-
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
-		if enabled && err == nil {
-			return api.StatusC, nil
-		}
 		return api.StatusB, nil
 	case communication.EVChargeStateEnumTypeError: // Error
 		return api.StatusF, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		if !enabled && err == nil {
-			return api.StatusB, nil
-		}
 		return api.StatusC, nil
 	}
 	return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
