@@ -5,6 +5,7 @@
 [![Latest Version](https://img.shields.io/github/release/andig/evcc.svg)](https://github.com/andig/evcc/releases)
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandig%2Fevcc.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandig%2Fevcc?ref=badge_shield)
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
@@ -557,3 +558,7 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 [4]: https://getbootstrap.org
 [5]: https://hub.docker.com/repository/docker/andig/evcc
 [6]: https://github.com/volkszaehler/mbmd
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandig%2Fevcc.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandig%2Fevcc?ref=badge_large)
