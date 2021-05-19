@@ -157,6 +157,8 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	}
 
 	switch currentState {
+	case communication.EVChargeStateEnumTypeUnknown:
+		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
