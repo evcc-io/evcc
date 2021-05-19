@@ -299,7 +299,7 @@ func (c *EEBus) CurrentPower() (float64, error) {
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		return 0, errors.New("ev is unplugged")
+		return 0, nil
 	}
 
 	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
@@ -317,7 +317,7 @@ func (c *EEBus) ChargedEnergy() (float64, error) {
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		return 0, errors.New("ev is unplugged")
+		return 0, nil
 	}
 
 	return data.EVData.Measurements.ChargedEnergy / 1000, nil
