@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -67,21 +68,22 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 
 	api := psa.NewAPI(log, brand, realm, cc.ClientID, cc.ClientSecret)
 	err := api.Login(cc.User, cc.Password)
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
 
-	var vehicles []psa.Vehicle
-	if err == nil {
-		vehicles, err = api.Vehicles()
+	vehicles, err := api.Vehicles()
+	if err != nil {
+		return nil, err
 	}
 
 	var vid string
-	if err == nil {
-		if cc.VIN == "" && len(vehicles) == 1 {
-			vid = vehicles[0].ID
-		} else {
-			for _, vehicle := range vehicles {
-				if vehicle.VIN == strings.ToUpper(cc.VIN) {
-					vid = vehicle.ID
-				}
+	if cc.VIN == "" && len(vehicles) == 1 {
+		vid = vehicles[0].ID
+	} else {
+		for _, vehicle := range vehicles {
+			if vehicle.VIN == strings.ToUpper(cc.VIN) {
+				vid = vehicle.ID
 			}
 		}
 	}
