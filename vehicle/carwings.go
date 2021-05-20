@@ -23,7 +23,7 @@ type CarWings struct {
 	user, password string
 	region         string
 	session        *carwings.Session
-	statusG        func() (interface{}, error)
+	statusG        func() (bool, error)
 	refreshKey     string
 	refreshTime    time.Time
 }
@@ -61,14 +61,9 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		region:   cc.Region,
 	}
 
-	err := v.initSession()
-	if err != nil {
-		v.session = nil
-	}
-
-	v.statusG = provider.NewCached(func() (interface{}, error) {
+	v.statusG = provider.NewCached(func() (bool, error) {
 		return v.status()
-	}, cc.Cache).InterfaceGetter()
+	}, cc.Cache).BoolGetter()
 	return v, nil
 }
 
@@ -77,92 +72,47 @@ func (v *CarWings) initSession() error {
 	v.session = &carwings.Session{
 		Region: v.region,
 	}
-	v.refreshKey = ""
 	return v.session.Connect(v.user, v.password)
 }
 
-// carwingsVehicleStatus holds the relevant data extracted from carwings API
-// on vehicle status request
-type carwingsVehicleStatus struct {
-	VehicleStatus struct {
-		SOC            float64
-		Range          int64
-		ChargingStatus carwings.ChargingStatus
-		PlugStatus     carwings.PluginState
-		ClimateStatus  struct {
-			active      bool
-			targetTemp  float64
-			outsideTemp float64
-		}
-		LastRefresh time.Time
-	}
-}
-
-func (v *CarWings) status() (res carwingsVehicleStatus, err error) {
+func (v *CarWings) status() (success bool, err error) {
 	// follow up requested refresh
 	if v.refreshKey != "" {
 		return v.refreshResult()
 	}
 
-	// otherwise start normal workflow
-	if v.session == nil {
-		if err := v.initSession(); err != nil {
-			return res, api.ErrNotAvailable
-		}
+	if err = v.refreshRequest(); err != nil {
+		return false, err
 	}
 
-	v.refreshKey, err = v.session.UpdateStatus()
-
+	success, err = v.refreshResult()
 	if err == nil {
-		v.refreshTime = time.Now()
-	}
-	res, err = v.refreshResult()
-	if err == nil {
-		var lastUpdate time.Time
-		lastUpdate = res.VehicleStatus.LastRefresh
-
-		if elapsed := time.Since(lastUpdate); elapsed > carwingsStatusExpiry {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, carwingsStatusExpiry)
-
-			if err = v.refreshRequest(); err == nil {
-				err = api.ErrMustRetry
+		bs, err := v.session.BatteryStatus()
+		if err == nil {
+			if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
+				v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, carwingsStatusExpiry)
+				if err = v.refreshRequest(); err == nil {
+					err = api.ErrMustRetry
+				}
 			}
 		}
 	}
 
-	return res, err
+	return success, err
 }
 
 // refreshResult triggers an update if not already in progress, otherwise gets result
-func (v *CarWings) refreshResult() (res carwingsVehicleStatus, err error) {
-
+func (v *CarWings) refreshResult() (success bool, err error) {
 	finished, err := v.session.CheckUpdate(v.refreshKey)
 	// update successful and completed
 	if err == nil && finished {
 		v.refreshKey = ""
-		var bs carwings.BatteryStatus
-		bs, err = v.session.BatteryStatus()
-		if err == nil {
-			res.VehicleStatus.SOC = float64(bs.StateOfCharge)
-			res.VehicleStatus.Range = int64(bs.CruisingRangeACOn) / 1000
-			res.VehicleStatus.ChargingStatus = bs.ChargingStatus
-			res.VehicleStatus.PlugStatus = bs.PluginState
-			res.VehicleStatus.LastRefresh = bs.Timestamp
-		}
-		var ccs carwings.ClimateStatus
-		ccs, err = v.session.ClimateControlStatus()
-		if err == nil {
-			res.VehicleStatus.ClimateStatus.active = ccs.Running
-			res.VehicleStatus.ClimateStatus.targetTemp = float64(ccs.Temperature)
-			res.VehicleStatus.ClimateStatus.outsideTemp = 0
-		}
-		// Update results here
-		return res, nil
+		return finished, err
 	}
 
 	// update still in progress, keep retrying
 	if time.Since(v.refreshTime) < carwingsRefreshTimeout {
-		return res, api.ErrMustRetry
+		return false, api.ErrMustRetry
 	}
 
 	// give up
@@ -171,12 +121,11 @@ func (v *CarWings) refreshResult() (res carwingsVehicleStatus, err error) {
 		err = api.ErrTimeout
 	}
 
-	return res, err
+	return false, err
 }
 
-// refreshRequest requests status refresh tracked by commandId
+// refreshRequest requests status refresh tracked by refreshKey
 func (v *CarWings) refreshRequest() error {
-	// otherwise start normal workflow
 	if v.session == nil {
 		if err := v.initSession(); err != nil {
 			return api.ErrNotAvailable
@@ -187,7 +136,6 @@ func (v *CarWings) refreshRequest() error {
 	v.refreshKey, err = v.session.UpdateStatus()
 	if err == nil {
 		v.refreshTime = time.Now()
-
 		if v.refreshKey == "" {
 			err = errors.New("refresh failed")
 		}
@@ -198,9 +146,13 @@ func (v *CarWings) refreshRequest() error {
 
 // SoC implements the api.Vehicle interface
 func (v *CarWings) SoC() (float64, error) {
-	res, err := v.statusG()
-	if res, ok := res.(carwingsVehicleStatus); err == nil && ok {
-		return float64(res.VehicleStatus.SOC), nil
+	ok, err := v.statusG()
+	if err == nil && ok {
+		var bs carwings.BatteryStatus
+		bs, err = v.session.BatteryStatus()
+		if err == nil {
+			return float64(bs.StateOfCharge), nil
+		}
 	}
 
 	return 0, err
@@ -210,13 +162,15 @@ var _ api.VehicleClimater = (*CarWings)(nil)
 
 // Climater implements the api.Vehicle.Climater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(carwingsVehicleStatus); err == nil && ok {
-		active = res.VehicleStatus.ClimateStatus.active
-
-		targetTemp = res.VehicleStatus.ClimateStatus.targetTemp
-
-		outsideTemp = res.VehicleStatus.ClimateStatus.outsideTemp
+	ok, err := v.statusG()
+	if err == nil && ok {
+		var ccs carwings.ClimateStatus
+		ccs, err = v.session.ClimateControlStatus()
+		if err == nil {
+			active = ccs.Running
+			targetTemp = float64(ccs.Temperature)
+			outsideTemp = targetTemp
+		}
 
 		return active, outsideTemp, targetTemp, nil
 	}
@@ -227,10 +181,15 @@ func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp floa
 var _ api.VehicleRange = (*CarWings)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *CarWings) Range() (int64, error) {
-	res, err := v.statusG()
-	if res, ok := res.(carwingsVehicleStatus); err == nil && ok {
-		return res.VehicleStatus.Range, nil
+func (v *CarWings) Range() (Range int64, err error) {
+	ok, err := v.statusG()
+	if err == nil && ok {
+		var bs carwings.BatteryStatus
+		bs, err = v.session.BatteryStatus()
+		if err == nil {
+			Range = int64(bs.CruisingRangeACOn) / 1000
+		}
+		return Range, nil
 	}
 
 	return 0, err
@@ -242,13 +201,17 @@ var _ api.ChargeState = (*CarWings)(nil)
 func (v *CarWings) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
-	res, err := v.statusG()
-	if res, ok := res.(carwingsVehicleStatus); err == nil && ok {
-		if res.VehicleStatus.PlugStatus == carwings.Connected {
-			status = api.StatusB // connected, not charging
-		}
-		if res.VehicleStatus.ChargingStatus == carwings.NormalCharging {
-			status = api.StatusC // charging
+	ok, err := v.statusG()
+	if err == nil && ok {
+		var bs carwings.BatteryStatus
+		bs, err = v.session.BatteryStatus()
+		if err == nil {
+			if bs.PluginState == carwings.Connected {
+				status = api.StatusB // connected, not charging
+			}
+			if bs.ChargingStatus == carwings.NormalCharging {
+				status = api.StatusC // charging
+			}
 		}
 	}
 
