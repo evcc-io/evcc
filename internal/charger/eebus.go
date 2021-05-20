@@ -287,7 +287,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		return errors.New("can set new current as ev is unplugged")
+		return errors.New("can't set new current as ev is unplugged")
 	}
 
 	if data.EVData.LimitsL1.Min == 0 {
@@ -295,11 +295,13 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	}
 
 	if current < data.EVData.LimitsL1.Min {
-		return fmt.Errorf("value is lower than the allowed minimum value %f", data.EVData.LimitsL1.Min)
+		c.log.TRACE.Printf("current value %f is lower than the allowed minimum value %f", current, data.EVData.LimitsL1.Min)
+		current = data.EVData.LimitsL1.Min
 	}
 
 	if current > data.EVData.LimitsL1.Max {
-		return fmt.Errorf("value is higher than the allowed maximum value %f", data.EVData.LimitsL1.Max)
+		c.log.TRACE.Printf("current value %f is higher than the allowed maximum value %f", current, data.EVData.LimitsL1.Max)
+		current = data.EVData.LimitsL1.Max
 	}
 
 	c.maxCurrent = current
