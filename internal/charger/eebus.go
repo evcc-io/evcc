@@ -117,12 +117,15 @@ func (c *EEBus) showCurrentChargingSetup() {
 		return
 	}
 
+	prevComStandard := data.EVData.CommunicationStandard
 	comStandard := "ISO15118-2"
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeISO151182ED1 {
 		comStandard = "IEC61851"
 	}
 
-	c.log.WARN.Println("ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "W - ", data.EVData.LimitsL1.Max, "W")
+	if prevComStandard != data.EVData.CommunicationStandard {
+		c.log.WARN.Println("ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "-", data.EVData.LimitsL1.Max, "kW")
+	}
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
