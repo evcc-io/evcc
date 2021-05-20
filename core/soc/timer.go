@@ -23,7 +23,7 @@ type Adapter interface {
 type Timer struct {
 	Adapter
 	log            *util.Logger
-	maxCurrent     int64
+	maxCurrent     float64
 	current        float64
 	SoC            int
 	Time           time.Time
@@ -32,7 +32,7 @@ type Timer struct {
 }
 
 // NewTimer creates a Timer
-func NewTimer(log *util.Logger, adapter Adapter, maxCurrent int64) *Timer {
+func NewTimer(log *util.Logger, adapter Adapter, maxCurrent float64) *Timer {
 	lp := &Timer{
 		log:        log,
 		Adapter:    adapter,
@@ -64,7 +64,7 @@ func (lp *Timer) StartRequired() bool {
 		return false
 	}
 
-	power := float64(lp.maxCurrent*lp.ActivePhases()) * lp.Voltage()
+	power := float64(lp.ActivePhases()) * lp.maxCurrent * lp.Voltage()
 
 	// time
 	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)

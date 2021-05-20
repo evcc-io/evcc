@@ -90,8 +90,8 @@ type LoadPoint struct {
 	}
 	Enable, Disable ThresholdConfig
 
-	MinCurrent    int64         // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    int64         // Max allowed current. Physically ensured by the charger
+	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
+	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled       bool      // Charger enabled state
@@ -423,7 +423,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 		if lp.enabled = enabled; enabled {
 			lp.guardUpdated = lp.clock.Now()
 			// set defined current for use by pv mode
-			_ = lp.setLimit(float64(lp.MinCurrent), false)
+			_ = lp.setLimit(lp.GetMinCurrent(), false)
 		}
 	} else {
 		lp.log.ERROR.Printf("charger: %v", err)
@@ -449,7 +449,7 @@ func (lp *LoadPoint) syncCharger() {
 
 func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	// set current
-	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= float64(lp.MinCurrent) {
+	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			lp.log.DEBUG.Printf("max charge current: %.2g", chargeCurrent)
 			err = charger.MaxCurrentMillis(chargeCurrent)
@@ -467,7 +467,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	}
 
 	// set enabled
-	if enabled := chargeCurrent >= float64(lp.MinCurrent); enabled != lp.enabled && err == nil {
+	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled && err == nil {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
 			return nil
@@ -727,17 +727,18 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	// calculate target charge current from delta power and actual current
 	effectiveCurrent := lp.effectiveCurrent()
 	deltaCurrent := powerToCurrent(-sitePower, lp.Phases)
-	targetCurrent := math.Max(math.Min(effectiveCurrent+deltaCurrent, float64(lp.MaxCurrent)), 0)
+	targetCurrent := math.Max(math.Min(effectiveCurrent+deltaCurrent, lp.GetMaxCurrent()), 0)
 
 	lp.log.DEBUG.Printf("max charge current: %.1fA = %.1fA + %.1fA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.Phases)
 
 	// in MinPV mode return at least minCurrent
-	if mode == api.ModeMinPV && targetCurrent < float64(lp.MinCurrent) {
-		return float64(lp.MinCurrent)
+	minCurrent := lp.GetMinCurrent()
+	if mode == api.ModeMinPV && targetCurrent < minCurrent {
+		return minCurrent
 	}
 
 	// read only once to simplify testing
-	if mode == api.ModePV && lp.enabled && targetCurrent < float64(lp.MinCurrent) {
+	if mode == api.ModePV && lp.enabled && targetCurrent < minCurrent {
 		// kick off disable sequence
 		if sitePower >= lp.Disable.Threshold {
 			lp.log.DEBUG.Printf("site power %.0fW >= disable threshold %.0fW", sitePower, lp.Disable.Threshold)
@@ -759,12 +760,12 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 			lp.pvTimer = lp.clock.Now()
 		}
 
-		return float64(lp.MinCurrent)
+		return minCurrent
 	}
 
 	if mode == api.ModePV && !lp.enabled {
 		// kick off enable sequence
-		if (lp.Enable.Threshold == 0 && targetCurrent >= float64(lp.MinCurrent)) ||
+		if (lp.Enable.Threshold == 0 && targetCurrent >= minCurrent) ||
 			(lp.Enable.Threshold != 0 && sitePower <= lp.Enable.Threshold) {
 			lp.log.DEBUG.Printf("site power %.0fW < enable threshold %.0fW", sitePower, lp.Enable.Threshold)
 
@@ -776,7 +777,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Enable.Delay {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
-				return float64(lp.MinCurrent)
+				return minCurrent
 			}
 
 			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
@@ -988,7 +989,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		var targetCurrent float64 // zero disables
 		if lp.climateActive() {
 			lp.log.DEBUG.Println("climater active")
-			targetCurrent = float64(lp.MinCurrent)
+			targetCurrent = lp.GetMinCurrent()
 		}
 		err = lp.setLimit(targetCurrent, true)
 		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
@@ -1002,11 +1003,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 		err = lp.setLimit(0, true)
 
 	case lp.minSocNotReached():
-		err = lp.setLimit(float64(lp.MaxCurrent), true)
+		err = lp.setLimit(lp.GetMaxCurrent(), true)
 		lp.pvDisableTimer() // let PV mode disable immediately afterwards
 
 	case mode == api.ModeNow:
-		err = lp.setLimit(float64(lp.MaxCurrent), true)
+		err = lp.setLimit(lp.GetMaxCurrent(), true)
 
 	// target charging
 	case lp.socTimer.StartRequired():
@@ -1019,7 +1020,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
-			targetCurrent = float64(lp.MinCurrent)
+			targetCurrent = lp.GetMaxCurrent()
 			required = true
 		}
 
