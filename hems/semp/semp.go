@@ -428,21 +428,12 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	return res
 }
 
+// TODO remove GetChecked function
+
 func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
-	mode := api.ModeOff
-	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		mode = modeP.Val.(api.ChargeMode)
-	}
-
-	var connected bool
-	if connectedP, err := s.cache.GetChecked(id, "connected"); err == nil {
-		connected = connectedP.Val.(bool)
-	}
-
-	var charging bool
-	if chargingP, err := s.cache.GetChecked(id, "charging"); err == nil {
-		charging = chargingP.Val.(bool)
-	}
+	mode := lp.GetMode()
+	charging := lp.GetStatus() == api.StatusC
+	connected := charging || lp.GetStatus() == api.StatusB
 
 	chargeEstimate := time.Duration(-1)
 	if chargeEstimateP, err := s.cache.GetChecked(id, "chargeEstimate"); err == nil {

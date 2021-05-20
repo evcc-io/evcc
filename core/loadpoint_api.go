@@ -17,6 +17,9 @@ type LoadPointAPI interface {
 	Name() string
 	HasChargeMeter() bool
 
+	// status
+	GetStatus() api.ChargeStatus
+
 	// settings
 	GetMode() api.ChargeMode
 	SetMode(api.ChargeMode)
@@ -32,6 +35,13 @@ type LoadPointAPI interface {
 	GetMaxCurrent() int64
 	GetMinPower() int64
 	GetMaxPower() int64
+}
+
+// GetStatus returns the charging status
+func (lp *LoadPoint) GetStatus() api.ChargeStatus {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.status
 }
 
 // GetMode returns loadpoint charge mode

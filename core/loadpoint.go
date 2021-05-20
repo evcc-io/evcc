@@ -363,7 +363,7 @@ func (lp *LoadPoint) evChargeCurrentHandler(current float64) {
 func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 	power := current * float64(lp.Phases) * Voltage
 
-	if !lp.enabled || lp.status != api.StatusC {
+	if !lp.enabled || lp.GetStatus() != api.StatusC {
 		// if disabled we cannot be charging
 		power = 0
 	}
@@ -503,12 +503,20 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 
 // connected returns the EVs connection state
 func (lp *LoadPoint) connected() bool {
-	return lp.status == api.StatusB || lp.status == api.StatusC
+	status := lp.GetStatus()
+	return status == api.StatusB || status == api.StatusC
 }
 
 // charging returns the EVs charging state
 func (lp *LoadPoint) charging() bool {
-	return lp.status == api.StatusC
+	return lp.GetStatus() == api.StatusC
+}
+
+// charging returns the EVs charging state
+func (lp *LoadPoint) setStatus(status api.ChargeStatus) {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.status = status
 }
 
 // targetSocReached checks if target is configured and reached.
@@ -662,8 +670,8 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 	lp.log.DEBUG.Printf("charger status: %s", status)
 
-	if prevStatus := lp.status; status != prevStatus {
-		lp.status = status
+	if prevStatus := lp.GetStatus(); status != prevStatus {
+		lp.setStatus(status)
 
 		// changed from empty (initial startup) - set connected without sending message
 		if prevStatus == api.StatusNone {
@@ -703,7 +711,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 		return lp.chargeCurrents[0]
 	}
 
-	if lp.status != api.StatusC {
+	if lp.GetStatus() != api.StatusC {
 		return 0
 	}
 	return lp.chargeCurrent
