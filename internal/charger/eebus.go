@@ -107,11 +107,31 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 	c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
 }
 
+func (c *EEBus) showCurrentChargingSetup() {
+	if c.lp == nil {
+		return
+	}
+
+	data, err := c.cc.GetData()
+	if err != nil {
+		return
+	}
+
+	comStandard := "ISO15118-2"
+	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeISO151182ED1 {
+		comStandard = "IEC61851"
+	}
+
+	c.log.WARN.Println("ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "W - ", data.EVData.LimitsL1.Max, "W")
+}
+
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
 	if c.disablePending {
 		c.log.TRACE.Println("DISABLEPENDING try resolving")
 		c.Enable(false)
 	}
+
+	c.showCurrentChargingSetup()
 
 	switch dataType {
 	case communication.EVDataElementUpdateEVConnectionState:
@@ -401,4 +421,5 @@ func (c *EEBus) LoadpointControl(lp core.LoadPointAPI) {
 		return
 	}
 	c.setLoadpointMinMaxLimits(data)
+	c.showCurrentChargingSetup()
 }
