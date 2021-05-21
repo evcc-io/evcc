@@ -72,13 +72,6 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.loadpoints = loadpoints
 
-	// configure meter from references
-	// if site.Meters.PVMeterRef == "" && site.Meters.GridMeterRef == "" {
-	// 	nil, errors.New("missing either pv or grid meter")
-	// }
-	if site.Meters.GridMeterRef == "" {
-		return nil, errors.New("missing grid meter")
-	}
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
 	}
@@ -87,6 +80,11 @@ func NewSiteFromConfig(
 	}
 	if site.Meters.BatteryMeterRef != "" {
 		site.batteryMeter = cp.Meter(site.Meters.BatteryMeterRef)
+	}
+
+	// configure meter from references
+	if site.gridMeter == nil && site.pvMeter == nil {
+		return nil, errors.New("missing either grid or pv meter")
 	}
 
 	return site, nil
@@ -260,6 +258,11 @@ func (site *Site) updateMeters() error {
 			site.log.TRACE.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		}
+	}
+
+	// allow using PV as estimate for grid power
+	if site.gridMeter == nil {
+		site.gridPower = site.pvPower
 	}
 
 	return err
