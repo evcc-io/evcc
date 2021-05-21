@@ -78,10 +78,8 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
 	err := c.cc.Boot()
-	if err == nil {
-		c.connected = true
-		c.expectedEnableState = false
-	}
+	c.connected = true
+	c.expectedEnableState = false
 	return err
 }
 
