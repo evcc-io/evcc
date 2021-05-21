@@ -44,7 +44,7 @@ func loadTLSCredentials() (*tls.Config, error) {
 	// Create the credentials and return it
 	config := &tls.Config{
 		Certificates: []tls.Certificate{serverCert},
-		ClientAuth:   tls.VerifyClientCertIfGiven,
+		ClientAuth:   tls.RequestClientCert,
 		ClientCAs:    certPool,
 	}
 
