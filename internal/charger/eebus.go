@@ -292,7 +292,7 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 	}
 
 	if data.EVData.LimitsL1.Min == 0 {
-		return errors.New("we did not yet receive min and max currents to validate the call of MaxCurrent")
+		c.log.TRACE.Println("we did not yet receive min and max currents to validate the call of MaxCurrent, use it as is")
 	}
 
 	if current < data.EVData.LimitsL1.Min {
