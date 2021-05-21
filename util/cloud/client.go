@@ -1,7 +1,10 @@
 package cloud
 
 import (
+	"strings"
+
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var Host = "cloud.evcc.io:8080"
@@ -14,6 +17,9 @@ func Connection(uri string) (*grpc.ClientConn, error) {
 	var err error
 	if conn == nil {
 		transportOption := grpc.WithInsecure()
+		if !strings.HasPrefix(uri, "localhost") {
+			transportOption = grpc.WithTransportCredentials(credentials.NewTLS(nil))
+		}
 		conn, err = grpc.Dial(uri, transportOption)
 	}
 
