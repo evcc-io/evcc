@@ -715,22 +715,32 @@ func TestMinSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
 
+	var min0 []int
+	for i := 0; i < 12; i++ {
+		min0 = append(min0, 0)
+	}
+
+	var min80 []int
+	for i := 0; i < 12; i++ {
+		min80 = append(min80, 80)
+	}
+
 	tc := []struct {
 		vehicle api.Vehicle
-		min     int
+		min     []int
 		soc     float64
 		res     bool
 	}{
-		{nil, 0, 0, false},    // never reached without vehicle
-		{nil, 0, 10, false},   // never reached without vehicle
-		{nil, 80, 0, false},   // never reached without vehicle
-		{nil, 80, 80, false},  // never reached without vehicle
-		{nil, 80, 100, false}, // never reached without vehicle
-		{vhc, 0, 0, false},    // min disabled
-		{vhc, 0, 10, false},   // min disabled
-		{vhc, 80, 0, true},    // min not reached
-		{vhc, 80, 80, false},  // min reached
-		{vhc, 80, 100, false}, // min reached
+		{nil, min0, 0, false},    // never reached without vehicle
+		{nil, min0, 10, false},   // never reached without vehicle
+		{nil, min80, 0, false},   // never reached without vehicle
+		{nil, min80, 80, false},  // never reached without vehicle
+		{nil, min80, 100, false}, // never reached without vehicle
+		{vhc, min0, 0, false},    // min disabled
+		{vhc, min0, 10, false},   // min disabled
+		{vhc, min80, 0, true},    // min not reached
+		{vhc, min80, 80, false},  // min reached
+		{vhc, min80, 100, false}, // min reached
 	}
 
 	for _, tc := range tc {

@@ -92,7 +92,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) error {
 func (lp *LoadPoint) GetMinSoC() int {
 	lp.Lock()
 	defer lp.Unlock()
-	return lp.SoC.Min
+	return lp.SoC.Min[int(time.Now().Month())-1]
 }
 
 // SetMinSoC sets loadpoint charge minimum soc
@@ -107,8 +107,8 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	lp.log.INFO.Println("set min soc:", soc)
 
 	// apply immediately
-	if lp.SoC.Min != soc {
-		lp.SoC.Min = soc
+	if lp.SoC.Min[int(time.Now().Month())-1] != soc {
+		lp.SoC.Min[int(time.Now().Month())-1] = soc
 		lp.publish("minSoC", soc)
 		lp.requestUpdate()
 	}

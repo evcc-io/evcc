@@ -41,7 +41,7 @@ type SoCConfig struct {
 	Poll         PollConfig `mapstructure:"poll"`
 	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
 	Estimate     bool       `mapstructure:"estimate"`
-	Min          int        `mapstructure:"min"`    // Default minimum SoC, guarded by mutex
+	Min          []int      `mapstructure:"min"`    // Default minimum SoC per month, guarded by mutex
 	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 	Levels       []int      `mapstructure:"levels"` // deprecated
 }
@@ -391,6 +391,16 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
 
+	// populate monthly min soc values
+	if len(lp.SoC.Min) < 12 {
+		if len(lp.SoC.Min) == 0 {
+			lp.SoC.Min = append(lp.SoC.Min, 0)
+		}
+		for i := 0; i < 11; i++ {
+			lp.SoC.Min = append(lp.SoC.Min, lp.SoC.Min[0])
+		}
+	}
+
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
 	_ = lp.bus.Subscribe(evChargeStop, lp.evChargeStopHandler)
@@ -409,7 +419,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
-	lp.publish("minSoC", lp.SoC.Min)
+	lp.publish("minSoC", lp.SoC.Min[int(time.Now().Month())-1])
 	lp.Unlock()
 
 	// use first vehicle for estimator
@@ -524,8 +534,8 @@ func (lp *LoadPoint) targetSocReached() bool {
 // If vehicle is not configured this will always return true
 func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
-		lp.SoC.Min > 0 &&
-		lp.socCharge < float64(lp.SoC.Min)
+		lp.SoC.Min[int(time.Now().Month())-1] > 0 &&
+		lp.socCharge < float64(lp.SoC.Min[int(time.Now().Month())-1])
 }
 
 // climateActive checks if vehicle has active climate request
