@@ -132,6 +132,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		c.Enable(false)
 	}
 
+	// we receive data, so it is connected
+	c.connected = true
+
 	c.showCurrentChargingSetup()
 
 	switch dataType {
