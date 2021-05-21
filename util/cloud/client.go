@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"crypto/tls"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -18,7 +19,9 @@ func Connection(uri string) (*grpc.ClientConn, error) {
 	if conn == nil {
 		transportOption := grpc.WithInsecure()
 		if !strings.HasPrefix(uri, "localhost") {
-			transportOption = grpc.WithTransportCredentials(credentials.NewTLS(nil))
+			transportOption = grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+				InsecureSkipVerify: true,
+			}))
 		}
 		conn, err = grpc.Dial(uri, transportOption)
 	}
