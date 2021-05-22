@@ -113,7 +113,7 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
 func (s *Estimator) RemainingChargeDuration(targetSoC int, chargePower float64, timeRemaining time.Duration) time.Duration {
-	if chargePower <= 0 {
+	if chargePower <= 50 {
 		return -1
 	}
 
