@@ -904,6 +904,14 @@ func (lp *LoadPoint) initMinSoCs(minlst []int) {
 	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
 }
 
+// setMinSoCMonth sets loadpoint soc min month
+func (lp *LoadPoint) setMinSoCMonth() {
+	lp.Lock()
+	defer lp.Unlock()
+	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
+	lp.log.DEBUG.Printf("set soc: min month: %d", lp.socMinMonth+1)
+}
+
 // publish state of charge, remaining charge duration and range
 func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socEstimator == nil {
@@ -986,6 +994,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	// update active vehicle and publish soc
 	// must be run after updating charger status to make sure
 	// initial update of connected state matches charger status
+	lp.setMinSoCMonth()
 	lp.findActiveVehicle()
 	lp.publishSoCAndRange()
 
