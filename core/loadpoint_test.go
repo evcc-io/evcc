@@ -715,19 +715,19 @@ func TestMinSoC(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	vhc := mock.NewMockVehicle(ctrl)
 
-	var min0 []int
+	var min0 [12]int
 	for i := 0; i < 12; i++ {
-		min0 = append(min0, 0)
+		min0[i] = 0
 	}
 
-	var min80 []int
+	var min80 [12]int
 	for i := 0; i < 12; i++ {
-		min80 = append(min80, 80)
+		min80[i] = 80
 	}
 
 	tc := []struct {
 		vehicle api.Vehicle
-		min     []int
+		min     [12]int
 		soc     float64
 		res     bool
 	}{

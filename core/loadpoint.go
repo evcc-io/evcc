@@ -41,7 +41,7 @@ type SoCConfig struct {
 	Poll         PollConfig `mapstructure:"poll"`
 	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
 	Estimate     bool       `mapstructure:"estimate"`
-	Min          []int      `mapstructure:"min"`    // Default minimum SoC per month, guarded by mutex
+	Min          [12]int    `mapstructure:"min"`    // Default minimum SoC per month, guarded by mutex
 	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 	Levels       []int      `mapstructure:"levels"` // deprecated
 }
@@ -117,6 +117,7 @@ type LoadPoint struct {
 	connectedTime  time.Time        // Time when vehicle was connected
 	pvTimer        time.Time        // PV enabled/disable timer
 
+	socMinMonth    int           // Minimum SoC Month
 	socCharge      float64       // Vehicle SoC
 	chargedEnergy  float64       // Charged energy while connected in Wh
 	chargeDuration time.Duration // Charge duration
@@ -197,7 +198,17 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	}
 
+	// handle monthly min soc parameters
+	lp.socMinMonth = int(time.Now().Month()) - 1
+	if minlen := len(lp.SoC.Min); minlen < 12 {
+		for i := minlen; i < 12; i++ {
+			lp.SoC.Min[i] = 0
+		}
+	}
+	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
+
 	return lp, nil
+
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults
@@ -391,13 +402,11 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.pushChan = pushChan
 	lp.lpChan = lpChan
 
-	// populate monthly min soc values
-	if len(lp.SoC.Min) < 12 {
-		if len(lp.SoC.Min) == 0 {
-			lp.SoC.Min = append(lp.SoC.Min, 0)
-		}
-		for i := 0; i < 11; i++ {
-			lp.SoC.Min = append(lp.SoC.Min, lp.SoC.Min[0])
+	// prepare monthly min soc elements
+	lp.socMinMonth = int(time.Now().Month()) - 1
+	if minlen := len(lp.SoC.Min); minlen < 12 {
+		for i := minlen; i < 12; i++ {
+			lp.SoC.Min[i] = 0
 		}
 	}
 
@@ -419,7 +428,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
 	lp.publish("targetSoC", lp.SoC.Target)
-	lp.publish("minSoC", lp.SoC.Min[int(time.Now().Month())-1])
+	lp.publish("minSoC", lp.SoC.Min[lp.socMinMonth])
 	lp.Unlock()
 
 	// use first vehicle for estimator
@@ -534,8 +543,8 @@ func (lp *LoadPoint) targetSocReached() bool {
 // If vehicle is not configured this will always return true
 func (lp *LoadPoint) minSocNotReached() bool {
 	return lp.vehicle != nil &&
-		lp.SoC.Min[int(time.Now().Month())-1] > 0 &&
-		lp.socCharge < float64(lp.SoC.Min[int(time.Now().Month())-1])
+		lp.SoC.Min[lp.socMinMonth] > 0 &&
+		lp.socCharge < float64(lp.SoC.Min[lp.socMinMonth])
 }
 
 // climateActive checks if vehicle has active climate request
