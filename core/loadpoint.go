@@ -898,7 +898,7 @@ func (lp *LoadPoint) initMinSoCs(minlst []int) {
 	}
 
 	if minlen > 1 && minlen < 12 {
-		lp.log.WARN.Printf("monthly min soc list incomplete: %v", lp.SoC.Min)
+		lp.log.WARN.Printf("soc: min format invalid: %v", lp.SoC.Min)
 	}
 
 	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
