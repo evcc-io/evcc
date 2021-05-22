@@ -199,7 +199,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	// initialize monthly min soc parameters
-	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
 	lp.initMinSoCs(lp.SoC.Min)
 
 	return lp, nil
@@ -398,7 +397,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.lpChan = lpChan
 
 	// prepare monthly min soc elements
-	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
 	lp.initMinSoCs(lp.SoC.Min)
 
 	// event handlers
@@ -886,7 +884,10 @@ func (lp *LoadPoint) socPollAllowed() bool {
 
 // initMinSoCs populates the loadpoints monthly min soc array
 func (lp *LoadPoint) initMinSoCs(minlst []int) {
-	if minlen := len(minlst); minlen < 12 {
+	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
+
+	minlen := len(minlst)
+	if minlen < 12 {
 		for i := minlen; i < 12; i++ {
 			if minlen == 1 {
 				// use first soc min value for all 12 months
@@ -896,6 +897,11 @@ func (lp *LoadPoint) initMinSoCs(minlst []int) {
 			}
 		}
 	}
+
+	if minlen > 1 && minlen < 12 {
+		lp.log.WARN.Printf("monthly min soc list incomplete: %v", lp.SoC.Min)
+	}
+
 	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
 }
 
