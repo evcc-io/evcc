@@ -195,7 +195,7 @@ func (v *Tesla) StartCharge() error {
 			return err
 		}
 
-		timer := time.NewTimer(30 * time.Second)
+		timer := time.NewTimer(90 * time.Second)
 
 		for {
 			select {
