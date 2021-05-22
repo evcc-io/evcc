@@ -945,12 +945,16 @@ func (lp *LoadPoint) publishSoCAndRange() {
 
 	// try to get soc from charger
 	err := api.ErrNotAvailable
+	socProvidedByCharger := false
 	if charger, ok := lp.charger.(api.Battery); ok {
 		soc, err = charger.SoC()
+		if !errors.Is(err, api.ErrNotAvailable) {
+			socProvidedByCharger = true
+		}
 	}
 
 	// poll vehicle api for soc and remaining charge time
-	if lp.socPollAllowed() {
+	if lp.socPollAllowed() && !socProvidedByCharger {
 		// get soc
 		if errors.Is(err, api.ErrNotAvailable) {
 			soc, err = lp.vehicle.SoC()
@@ -985,7 +989,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 
 	if err == nil {
-		soc = lp.estimator.SoC(soc, lp.chargedEnergy)
+		soc = lp.estimator.SoC(soc, lp.chargedEnergy, socProvidedByCharger)
 		lp.socCharge = math.Trunc(soc)
 		lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.socCharge)
 		lp.publish("socCharge", lp.socCharge)
