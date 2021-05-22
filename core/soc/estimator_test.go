@@ -61,7 +61,7 @@ func TestSoCEstimation(t *testing.T) {
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
-		soc := ce.SoC(tc.vehicleSoC, tc.chargedEnergy)
+		soc := ce.SoC(tc.vehicleSoC, tc.chargedEnergy, false)
 
 		// validate soc estimate
 		if tc.estimatedSoC != soc {

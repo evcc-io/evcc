@@ -67,10 +67,12 @@ func (s *Estimator) ResetCapacity(capacity int64) {
 // 	return s.UpdateSoC(f, chargedEnergy), err
 // }
 
-func (s *Estimator) SoC(soc, chargedEnergy float64) float64 {
+func (s *Estimator) SoC(soc, chargedEnergy float64, socKnown bool) float64 {
 	estimatedSoC := soc
 
-	if s.estimate {
+	if socKnown {
+		s.measuredSoC = soc
+	} else if s.estimate {
 		socDelta := soc - s.measuredSoC
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
