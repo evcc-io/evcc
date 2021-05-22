@@ -41,7 +41,7 @@ type SoCConfig struct {
 	Poll         PollConfig `mapstructure:"poll"`
 	AlwaysUpdate bool       `mapstructure:"alwaysUpdate"`
 	Estimate     bool       `mapstructure:"estimate"`
-	Min          [12]int    `mapstructure:"min"`    // Default minimum SoC per month, guarded by mutex
+	Min          []int      `mapstructure:"min"`    // Default minimum SoC per month, guarded by mutex
 	Target       int        `mapstructure:"target"` // Default target SoC, guarded by mutex
 	Levels       []int      `mapstructure:"levels"` // deprecated
 }
@@ -198,14 +198,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	}
 
-	// handle monthly min soc parameters
-	lp.socMinMonth = int(time.Now().Month()) - 1
-	if minlen := len(lp.SoC.Min); minlen < 12 {
-		for i := minlen; i < 12; i++ {
-			lp.SoC.Min[i] = 0
-		}
-	}
-	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
+	// initialize monthly min soc parameters
+	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
+	lp.initMinSoCs(lp.SoC.Min)
 
 	return lp, nil
 
@@ -403,12 +398,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.lpChan = lpChan
 
 	// prepare monthly min soc elements
-	lp.socMinMonth = int(time.Now().Month()) - 1
-	if minlen := len(lp.SoC.Min); minlen < 12 {
-		for i := minlen; i < 12; i++ {
-			lp.SoC.Min[i] = 0
-		}
-	}
+	lp.socMinMonth = int(lp.clock.Now().Month()) - 1
+	lp.initMinSoCs(lp.SoC.Min)
 
 	// event handlers
 	_ = lp.bus.Subscribe(evChargeStart, lp.evChargeStartHandler)
@@ -891,6 +882,21 @@ func (lp *LoadPoint) socPollAllowed() bool {
 	}
 
 	return lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
+}
+
+// initMinSoCs populates the loadpoints monthly min soc array
+func (lp *LoadPoint) initMinSoCs(minlst []int) {
+	if minlen := len(minlst); minlen < 12 {
+		for i := minlen; i < 12; i++ {
+			if minlen == 1 {
+				// use first soc min value for all 12 months
+				lp.SoC.Min = append(lp.SoC.Min, lp.SoC.Min[0])
+			} else {
+				lp.SoC.Min = append(lp.SoC.Min, 0)
+			}
+		}
+	}
+	lp.log.DEBUG.Printf("min soc: %d %%, month: %d ", lp.SoC.Min[lp.socMinMonth], lp.socMinMonth+1)
 }
 
 // publish state of charge, remaining charge duration and range
