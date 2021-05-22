@@ -202,7 +202,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.initMinSoCs(lp.SoC.Min)
 
 	return lp, nil
-
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults
