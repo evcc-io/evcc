@@ -262,7 +262,7 @@ func (site *Site) updateMeters() error {
 
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
-		site.gridPower = site.pvPower
+		site.gridPower = -site.pvPower
 	}
 
 	return err
