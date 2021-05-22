@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/amp-x/eebus/app"
 	"github.com/amp-x/eebus/communication"
@@ -115,14 +116,15 @@ func (c *EEBus) showCurrentChargingSetup() {
 		return
 	}
 
-	prevComStandard := data.EVData.CommunicationStandard
+	prevComStandard := c.communicationStandard
 	comStandard := "ISO15118-2"
 	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeISO151182ED1 {
 		comStandard = "IEC61851"
 	}
 
 	if prevComStandard != data.EVData.CommunicationStandard {
-		c.log.WARN.Println("ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "-", data.EVData.LimitsL1.Max, "kW")
+		timestamp := time.Now()
+		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "-", data.EVData.LimitsL1.Max, "kW")
 	}
 }
 
