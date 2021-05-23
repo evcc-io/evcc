@@ -36,7 +36,8 @@ const (
 	taskStrings      = "strings"
 	taskBattery      = "battery"
 	taskMeter        = "meter"
-	taskFronius      = "fronius"
+	taskFroniusWeb   = "fronius-web"
+	taskFroniusEM    = "fronius-meter"
 	taskTasmota      = "tasmota"
 	taskShelly       = "shelly"
 	// taskTPLink       = "tplink"
@@ -124,6 +125,17 @@ func init() {
 			"ids":    sunspecIDs,
 			"models": []int{201, 203},
 			"point":  "W",
+		},
+	})
+
+	taskList.Add(tasks.Task{
+		ID:      taskFroniusEM,
+		Type:    tasks.Modbus,
+		Depends: TaskSunspec,
+		Config: map[string]interface{}{
+			"ids":    sunspecIDs,
+			"models": []int{200, 201, 202, 203, 204, 240, 241, 242, 243, 244},
+			"point":  "Power",
 		},
 	})
 
@@ -239,7 +251,7 @@ func init() {
 	})
 
 	taskList.Add(tasks.Task{
-		ID:      taskFronius,
+		ID:      taskFroniusWeb,
 		Type:    tasks.Http,
 		Depends: TaskHttp,
 		Config: map[string]interface{}{
