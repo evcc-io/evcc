@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/andig/evcc/util"
@@ -104,7 +105,33 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(log *util.Logger) (*Listener, error) {
+func New(network string, log *util.Logger) (*Listener, error) {
+	//Select local network interface
+	var iface *net.Interface = nil
+	if network != "" {
+		interfaces, err := net.Interfaces()
+		if err != nil {
+			return nil, fmt.Errorf("error resolving network interfaces: %w", err)
+		}
+
+		for i := range interfaces {
+			addresses, err := interfaces[i].Addrs()
+			if err != nil {
+				return nil, fmt.Errorf("error resolving IP addresses network interface %s: %w", interfaces[i].Name, err)
+			}
+			for n := range addresses {
+				if strings.HasPrefix(addresses[n].(*net.IPNet).String(), network) {
+					iface = &interfaces[i]
+				}
+			}
+		}
+
+		if iface == nil {
+			return nil, fmt.Errorf("network %s cannot be found in local network interfaces", network)
+		}
+	}
+
+
 	// Parse the string address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
@@ -112,7 +139,7 @@ func New(log *util.Logger) (*Listener, error) {
 	}
 
 	// Open up a connection
-	conn, err := net.ListenMulticastUDP("udp4", nil, gaddr)
+	conn, err := net.ListenMulticastUDP("udp4", iface, gaddr)
 	if err != nil {
 		return nil, fmt.Errorf("error opening connecting: %w", err)
 	}
