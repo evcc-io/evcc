@@ -86,7 +86,8 @@ func (v *CarWings) status() (err error) {
 	}
 
 	if err = v.refreshResult(); err == nil {
-		if bs, err := v.session.BatteryStatus(); err == nil {
+		var bs carwings.BatteryStatus
+		if bs, err = v.session.BatteryStatus(); err == nil {
 			if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
 				v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, carwingsStatusExpiry)
 				if err = v.refreshRequest(); err == nil {
