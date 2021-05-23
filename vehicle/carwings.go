@@ -146,7 +146,8 @@ func (v *CarWings) SoC() (soc float64, err error) {
 	soc = 0
 
 	if _, err = v.statusG(); err == nil {
-		if bs, err := v.session.BatteryStatus(); err == nil {
+		var bs carwings.BatteryStatus
+		if bs, err = v.session.BatteryStatus(); err == nil {
 			soc = float64(bs.StateOfCharge)
 		}
 	}
@@ -159,7 +160,8 @@ var _ api.VehicleClimater = (*CarWings)(nil)
 // Climater implements the api.Vehicle.Climater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	if _, err = v.statusG(); err == nil {
-		if ccs, err := v.session.ClimateControlStatus(); err == nil {
+		var ccs carwings.ClimateStatus
+		if ccs, err = v.session.ClimateControlStatus(); err == nil {
 			active = ccs.Running
 			targetTemp = float64(ccs.Temperature)
 			outsideTemp = targetTemp
@@ -178,7 +180,8 @@ func (v *CarWings) Range() (Range int64, err error) {
 	Range = 0
 
 	if _, err = v.statusG(); err == nil {
-		if bs, err := v.session.BatteryStatus(); err == nil {
+		var bs carwings.BatteryStatus
+		if bs, err = v.session.BatteryStatus(); err == nil {
 			Range = int64(bs.CruisingRangeACOn) / 1000
 		}
 	}
@@ -193,7 +196,8 @@ func (v *CarWings) Status() (status api.ChargeStatus, err error) {
 	status = api.StatusA // disconnected
 
 	if _, err = v.statusG(); err == nil {
-		if bs, err := v.session.BatteryStatus(); err == nil {
+		var bs carwings.BatteryStatus
+		if bs, err = v.session.BatteryStatus(); err == nil {
 			if bs.PluginState == carwings.Connected {
 				status = api.StatusB // connected, not charging
 			}
