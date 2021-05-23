@@ -7,8 +7,8 @@ import (
 var (
 	taskList = &TaskList{}
 
-	sunspecIDs   = []int{1, 2, 3, 71, 126} // modbus ids
-	chargeStatus = []int{0x41, 0x42, 0x43} // status values A..C
+	sunspecIDs   = []int{1, 2, 3, 71, 126, 200, 240} // modbus ids
+	chargeStatus = []int{0x41, 0x42, 0x43}           // status values A..C
 )
 
 // public task ids
@@ -122,7 +122,7 @@ func init() {
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
-			"models": []int{200, 201, 203, 240},
+			"models": []int{201, 203},
 			"point":  "W",
 		},
 	})
