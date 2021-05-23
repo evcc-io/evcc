@@ -7,8 +7,8 @@ import (
 var (
 	taskList = &TaskList{}
 
-	sunspecIDs   = []int{1, 2, 3, 71, 126, 200, 201, 202, 203, 204, 240, 241, 242, 243, 244} // modbus ids
-	chargeStatus = []int{0x41, 0x42, 0x43}                                                   // status values A..C
+	sunspecIDs   = []int{1, 2, 3, 71, 126, 200, 201, 202, 203, 204, 240} // modbus ids
+	chargeStatus = []int{0x41, 0x42, 0x43}                               // status values A..C
 )
 
 // public task ids
