@@ -11,7 +11,10 @@ import (
 	"github.com/benbjohnson/clock"
 )
 
-var bus = EventBus.New()
+var (
+	bus = EventBus.New()
+	log = util.NewLogger("cache")
+)
 
 const reset = "reset"
 
@@ -22,7 +25,6 @@ func ResetCached() {
 // Cached wraps a getter with a cache
 type Cached struct {
 	mux     sync.Mutex
-	log     *util.Logger
 	clock   clock.Clock
 	updated time.Time
 	cache   time.Duration
@@ -34,7 +36,6 @@ type Cached struct {
 // NewCached wraps a getter with a cache
 func NewCached(getter interface{}, cache time.Duration) *Cached {
 	c := &Cached{
-		log:    util.NewLogger("cache"),
 		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,
@@ -59,7 +60,7 @@ func (c *Cached) mustUpdate() bool {
 func (c *Cached) FloatGetter() func() (float64, error) {
 	g, ok := c.getter.(func() (float64, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (float64, error) {
@@ -79,7 +80,7 @@ func (c *Cached) FloatGetter() func() (float64, error) {
 func (c *Cached) IntGetter() func() (int64, error) {
 	g, ok := c.getter.(func() (int64, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (int64, error) {
@@ -99,7 +100,7 @@ func (c *Cached) IntGetter() func() (int64, error) {
 func (c *Cached) StringGetter() func() (string, error) {
 	g, ok := c.getter.(func() (string, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (string, error) {
@@ -119,7 +120,7 @@ func (c *Cached) StringGetter() func() (string, error) {
 func (c *Cached) BoolGetter() func() (bool, error) {
 	g, ok := c.getter.(func() (bool, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (bool, error) {
@@ -139,7 +140,7 @@ func (c *Cached) BoolGetter() func() (bool, error) {
 func (c *Cached) DurationGetter() func() (time.Duration, error) {
 	g, ok := c.getter.(func() (time.Duration, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (time.Duration, error) {
@@ -159,7 +160,7 @@ func (c *Cached) DurationGetter() func() (time.Duration, error) {
 func (c *Cached) TimeGetter() func() (time.Time, error) {
 	g, ok := c.getter.(func() (time.Time, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (time.Time, error) {
@@ -179,7 +180,7 @@ func (c *Cached) TimeGetter() func() (time.Time, error) {
 func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 	g, ok := c.getter.(func() (interface{}, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (interface{}, error) {

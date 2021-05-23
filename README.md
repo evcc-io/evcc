@@ -77,7 +77,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Installation
 
-EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
+EVCC is provided as binary executable file and Docker image. Download the file for your platform and then execute like this:
 
 ```sh
 evcc -h
@@ -102,6 +102,8 @@ EVCC can also be run using Docker. Here's and example with given config file and
 docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 ```
 
+**Note**: don't mount `/etc` as volume as this will effectively remove the entire folder from the container and will lead to hard to diagnose errors.
+
 If using Docker with a meter or charger that requires UDP like KEBA, make sure that the Docker container can receive UDP messages on the relevant ports (`:7090` for KEBA):
 
 ```sh
@@ -112,6 +114,12 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 
 ```sh
 docker run --network host andig/evcc ...
+```
+
+For use with SMA Sunny Home Manager, `evcc` needs to generate a unique device id. On Linux, we're using `machine-id` for this purpose, make sure to mount the host folders into the container:
+
+```sh
+docker run -v /etc/machine-id:/etc/machine-id -v /var/lib/dbus/machine-id:/var/lib/dbus/machine-id andig/evcc ...
 ```
 
 To build EVCC from source, [Go](2) 1.16 and [Node](3) 14 are required:
@@ -188,7 +196,7 @@ Available charger implementations are:
 
 Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
-- `shelly`: Shelly outlets 
+- `shelly`: Shelly outlets
 - `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
 
