@@ -122,7 +122,7 @@ func init() {
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
 			"ids":    sunspecIDs,
-			"models": []int{201, 203},
+			"models": []int{201, 203, 211, 213},
 			"point":  "W",
 		},
 	})
