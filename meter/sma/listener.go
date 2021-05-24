@@ -106,7 +106,7 @@ type Listener struct {
 // New creates a Listener
 func New(log *util.Logger, network string) (*Listener, error) {
 	//Select local network interface
-	var iface *net.Interface = nil
+	var iface *net.Interface
 	if network != "" {
 		interfaces, err := net.Interfaces()
 		if err != nil {
@@ -116,12 +116,13 @@ func New(log *util.Logger, network string) (*Listener, error) {
 		for i := range interfaces {
 			addresses, err := interfaces[i].Addrs()
 			if err != nil {
-				return nil, fmt.Errorf("error resolving IP addresses network interface %s: %w", interfaces[i].Name, err)
-			}
-
-			for n := range addresses {
-				if addresses[n].(*net.IPNet).Contains(net.ParseIP(network)) && iface == nil {
-					iface = &interfaces[i]
+				log.WARN.Printf("error resolving IP addresses network interface %s: %w", interfaces[i].Name, err)
+			} else {
+				for n := range addresses {
+					ipNet, success := addresses[n].(*net.IPNet)
+					if success && ipNet.Contains(net.ParseIP(network)) && iface == nil {
+						iface = &interfaces[i]
+					}
 				}
 			}
 		}
