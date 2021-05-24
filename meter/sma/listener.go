@@ -130,6 +130,8 @@ func New(log *util.Logger, network string) (*Listener, error) {
 		if iface == nil {
 			return nil, fmt.Errorf("network %s cannot be found in local network interfaces", network)
 		}
+
+		log.DEBUG.Printf("listening on iface %s for multicasts", iface.Name)
 	}
 
 
@@ -140,11 +142,6 @@ func New(log *util.Logger, network string) (*Listener, error) {
 	}
 
 	// Open up a connection
-	if iface != nil {
-		log.DEBUG.Printf("listening on iface: %s", iface.Name)
-	} else {
-		log.DEBUG.Printf("listening on default iface")
-	}
 	conn, err := net.ListenMulticastUDP("udp4", iface, gaddr)
 	if err != nil {
 		return nil, fmt.Errorf("error opening connecting: %w", err)
