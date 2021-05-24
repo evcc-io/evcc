@@ -264,6 +264,7 @@ Available vehicle remote interface implementations are:
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
+- `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
 - `skoda`: Skoda (Citygo)
