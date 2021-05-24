@@ -69,7 +69,6 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 func (v *Ovms) getCookies() ([]*http.Cookie, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
-
 	resp, err := v.Get(uri)
 	if err == nil {
 		return resp.Cookies(), nil
@@ -79,11 +78,9 @@ func (v *Ovms) getCookies() ([]*http.Cookie, error) {
 
 func (v *Ovms) delete(url string, cookies []*http.Cookie) error {
 	req, err := v.requestWithCookies(http.MethodDelete, url, cookies)
-	if err != nil {
-		return err
+	if err == nil {
+		_, err = v.Do(req)
 	}
-
-	_, err = v.Do(req)
 	return err
 }
 
@@ -99,10 +96,9 @@ func (v *Ovms) requestWithCookies(method string, uri string, cookies []*http.Coo
 }
 
 func (v *Ovms) authFlow() ([]*http.Cookie, bool, error) {
-	var resp ovmsConnectResponse
-
 	cookies, err := v.getCookies()
 	if err == nil {
+		var resp ovmsConnectResponse
 		resp, err = v.connectRequest(cookies)
 		if err == nil {
 			return cookies, resp.NetConnected == 1, err
@@ -110,6 +106,7 @@ func (v *Ovms) authFlow() ([]*http.Cookie, bool, error) {
 
 		return cookies, false, err
 	}
+	
 	return nil, false, err
 }
 
