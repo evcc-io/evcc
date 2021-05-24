@@ -139,7 +139,11 @@ func New(log *util.Logger, network string) (*Listener, error) {
 	}
 
 	// Open up a connection
-	log.DEBUG.Printf("listening on iface: %s", iface.Name)
+	if iface != nil {
+		log.DEBUG.Printf("listening on iface: %s", iface.Name)
+	} else {
+		log.DEBUG.Printf("listening on default iface")
+	}
 	conn, err := net.ListenMulticastUDP("udp4", iface, gaddr)
 	if err != nil {
 		return nil, fmt.Errorf("error opening connecting: %w", err)
