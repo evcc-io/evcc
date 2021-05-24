@@ -104,7 +104,7 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(network string, log *util.Logger) (*Listener, error) {
+func New(log *util.Logger, network string) (*Listener, error) {
 	//Select local network interface
 	var iface *net.Interface = nil
 	if network != "" {

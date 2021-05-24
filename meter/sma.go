@@ -69,7 +69,7 @@ func NewSMA(uri, serial, network, power, energy string) (api.Meter, error) {
 	}
 
 	if sma.Instance == nil {
-		instance, err := sma.New(network, log)
+		instance, err := sma.New(log, network)
 		if err != nil {
 			return nil, err
 		}
