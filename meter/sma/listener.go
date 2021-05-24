@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/andig/evcc/util"
@@ -119,8 +118,9 @@ func New(network string, log *util.Logger) (*Listener, error) {
 			if err != nil {
 				return nil, fmt.Errorf("error resolving IP addresses network interface %s: %w", interfaces[i].Name, err)
 			}
+
 			for n := range addresses {
-				if strings.HasPrefix(addresses[n].(*net.IPNet).String(), network) {
+				if addresses[n].(*net.IPNet).Contains(net.ParseIP(network)) && iface == nil {
 					iface = &interfaces[i]
 				}
 			}
