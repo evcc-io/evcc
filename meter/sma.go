@@ -27,6 +27,7 @@ type SMA struct {
 	mux     *util.Waiter
 	uri     string
 	serial  string
+	iface 	string
 	values  values
 	powerO  sma.Obis
 	energyO sma.Obis
@@ -42,18 +43,18 @@ func init() {
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Serial, Power, Energy string
+		URI, Serial, Interface, Power, Energy string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Serial, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Serial, cc.Interface, cc.Power, cc.Energy)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
+func NewSMA(uri, serial, iface, power, energy string) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
 	sm := &SMA{
@@ -61,13 +62,14 @@ func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
 		log:     log,
 		uri:     uri,
 		serial:  serial,
+		iface: iface,
 		powerO:  sma.Obis(power),
 		energyO: sma.Obis(energy),
 		recv:    make(chan sma.Telegram),
 	}
 
 	if sma.Instance == nil {
-		instance, err := sma.New(log)
+		instance, err := sma.New(log, iface)
 		if err != nil {
 			return nil, err
 		}
