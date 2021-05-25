@@ -104,34 +104,17 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(log *util.Logger, network string) (*Listener, error) {
+func New(log *util.Logger, ifaceName string) (*Listener, error) {
 	//Select local network interface
-	var iface *net.Interface
-	if network != "" {
-		interfaces, err := net.Interfaces()
+	var iface *net.Interface //Default is nil = System Default
+	if ifaceName != "" {
+		foundInterface, err := net.InterfaceByName(ifaceName)
 		if err != nil {
-			return nil, fmt.Errorf("error resolving network interfaces: %w", err)
+			return nil, fmt.Errorf("error resolving network interface '%s': %w", ifaceName, err)
 		}
 
-		for i := range interfaces {
-			addresses, err := interfaces[i].Addrs()
-			if err != nil {
-				log.WARN.Printf("error resolving IP addresses network interface %s: %s", interfaces[i].Name, err)
-			} else {
-				for n := range addresses {
-					ipNet, success := addresses[n].(*net.IPNet)
-					if success && ipNet.Contains(net.ParseIP(network)) && iface == nil {
-						iface = &interfaces[i]
-					}
-				}
-			}
-		}
-
-		if iface == nil {
-			return nil, fmt.Errorf("network %s cannot be found in local network interfaces", network)
-		}
-
-		log.DEBUG.Printf("listening on iface %s for multicasts", iface.Name)
+		iface = foundInterface
+		log.DEBUG.Printf("listening on network interface %s for multicasts", iface.Name)
 	}
 
 
