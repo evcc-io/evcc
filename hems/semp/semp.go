@@ -10,7 +10,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -27,7 +26,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-28081973-%s-00"
+	sempDeviceId     = "F-28081973-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -45,6 +44,7 @@ type SEMP struct {
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
+	did          []byte
 	uid          string
 	hostURI      string
 	port         int
@@ -54,6 +54,7 @@ type SEMP struct {
 // New generates SEMP Gateway listening at /semp endpoint
 func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	cc := struct {
+		DeviceID     string
 		AllowControl bool
 	}{}
 
@@ -73,6 +74,13 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 		site:         site,
 		uid:          uid.String(),
 		controllable: cc.AllowControl,
+	}
+
+	if len(cc.DeviceID) > 0 {
+		s.did, err = hex.DecodeString(cc.DeviceID)
+		if err != nil || len(s.did) != 6 {
+			return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+		}
 	}
 
 	// find external port
@@ -312,15 +320,10 @@ func (s *SEMP) serialNumber(id int) string {
 	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
-var once sync.Once
-var seq []byte
-
 // deviceID creates a 6-bytes device id from machine id plus device number
 func (s *SEMP) deviceID(id int) string {
-	const bytes = 6
-	did := make([]byte, bytes)
-
-	once.Do(func() {
+	bytes := 6
+	if s.did == nil {
 		mid, err := machineid.ProtectedID("evcc-semp")
 		if err != nil {
 			panic(err)
@@ -335,14 +338,12 @@ func (s *SEMP) deviceID(id int) string {
 			b[i%bytes] += v
 		}
 
-		seq = b[:bytes]
-	})
+		s.did = b[:bytes]
+	}
 
 	// numerically add device number
-	_ = copy(did, seq)
-	binary.BigEndian.PutUint32(did[2:], binary.BigEndian.Uint32(did[2:])+uint32(id))
-
-	return fmt.Sprintf(sempDeviceId, hex.EncodeToString(did))
+	did := append([]byte{0, 0}, s.did...)
+	return fmt.Sprintf(sempDeviceId, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
 }
 
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
