@@ -66,21 +66,23 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 
+	var err error
+	v.Jar, err = cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return v, nil
 }
 
 func (v *Ovms) loginToServer() (err error) {
-	v.Jar, err = cookiejar.New(&cookiejar.Options{
-		PublicSuffixList: publicsuffix.List,
-	})
+	uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
 
-	if err == nil {
-		uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
-
-		var resp *http.Response
-		if resp, err = v.Get(uri); err == nil {
-			resp.Body.Close()
-		}
+	var resp *http.Response
+	if resp, err = v.Get(uri); err == nil {
+		resp.Body.Close()
 	}
 
 	return err
@@ -89,7 +91,12 @@ func (v *Ovms) loginToServer() (err error) {
 func (v *Ovms) delete(url string) error {
 	req, err := request.New(http.MethodDelete, url, nil)
 	if err == nil {
-		_, err = v.Do(req)
+
+		var resp *http.Response
+		resp, err = v.Do(req)
+		if err == nil {
+			resp.Body.Close()
+		}
 	}
 	return err
 }
@@ -102,8 +109,6 @@ func (v *Ovms) authFlow() (bool, error) {
 		if err == nil {
 			return resp.NetConnected == 1, err
 		}
-
-		return false, err
 	}
 
 	return false, err
@@ -113,11 +118,7 @@ func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 	var res ovmsConnectResponse
 
-	req, err := request.New(http.MethodGet, uri, nil)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
+	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
@@ -125,11 +126,7 @@ func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
 
-	req, err := request.New(http.MethodGet, uri, nil)
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
+	err := v.GetJSON(uri, &res)
 	return res, err
 }
 
@@ -148,20 +145,18 @@ func (v *Ovms) disconnect() error {
 // batteryAPI provides battery-status api response
 func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
-	var ovmsConnected bool
 
 	ovmsConnected, err := v.authFlow()
 	if err == nil {
-		time.Sleep(3 * time.Second)
 		resp, err = v.chargeRequest()
-		for err != nil && resp.MessageAgeServer > 59 && ovmsConnected {
-			time.Sleep(3 * time.Second)
-			resp, err = v.chargeRequest()
-		}
-	}
 
-	if ovmsConnected {
-		err = v.disconnect()
+		if err == nil {
+			err = v.disconnect()
+		}
+
+		if err == nil && resp.MessageAgeServer > 59 && ovmsConnected {
+			err = api.ErrMustRetry
+		}
 	}
 
 	return resp, err
