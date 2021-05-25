@@ -116,7 +116,7 @@ func New(log *util.Logger, network string) (*Listener, error) {
 		for i := range interfaces {
 			addresses, err := interfaces[i].Addrs()
 			if err != nil {
-				log.WARN.Printf("error resolving IP addresses network interface %s: %w", interfaces[i].Name, err)
+				log.WARN.Printf("error resolving IP addresses network interface %s: %s", interfaces[i].Name, err)
 			} else {
 				for n := range addresses {
 					ipNet, success := addresses[n].(*net.IPNet)
