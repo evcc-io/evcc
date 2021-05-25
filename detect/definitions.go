@@ -35,7 +35,7 @@ const (
 	taskInverter     = "inverter"
 	taskStrings      = "strings"
 	taskBattery      = "battery"
-	taskSunspecMeter = "sunspec-meter"
+	taskMeter        = "meter"
 	taskFroniusWeb   = "fronius-web"
 	taskTasmota      = "tasmota"
 	taskShelly       = "shelly"
@@ -117,7 +117,7 @@ func init() {
 	})
 
 	taskList.Add(tasks.Task{
-		ID:      taskSunspecMeter,
+		ID:      taskMeter,
 		Type:    tasks.Modbus,
 		Depends: TaskSunspec,
 		Config: map[string]interface{}{
