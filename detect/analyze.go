@@ -84,7 +84,7 @@ func Consolidate(res []tasks.Result) Summary {
 
 	meter := filter(res, []Criteria{
 		{tid: taskSMA, smaHttp: true},
-		{tid: taskSunspecMeter},
+		{tid: taskMeter},
 	})
 
 	return Summary{
