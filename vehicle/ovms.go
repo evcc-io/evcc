@@ -30,7 +30,7 @@ type ovmsConnectResponse struct {
 // OVMS is an api.Vehicle implementation for dexters-web server requests
 type Ovms struct {
 	*embed
-	log                               *util.Logger
+	*request.Helper
 	user, password, vehicleId, server string
 	chargeG                           func() (interface{}, error)
 }
@@ -57,7 +57,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Ovms{
 		embed:     &cc.embed,
-		log:       log,
+		Helper:    request.NewHelper(log),
 		user:      cc.User,
 		password:  cc.Password,
 		vehicleId: cc.VehicleID,
@@ -69,9 +69,8 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, nil
 }
 
-func (v *Ovms) getCookies() (cookieClient *request.Helper, err error) {
-	cookieClient = request.NewHelper(v.log)
-	cookieClient.Client.Jar, err = cookiejar.New(&cookiejar.Options{
+func (v *Ovms) loginToServer() (err error) {
+	v.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 
@@ -79,68 +78,68 @@ func (v *Ovms) getCookies() (cookieClient *request.Helper, err error) {
 		uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
 
 		var resp *http.Response
-		if resp, err = cookieClient.Get(uri); err == nil {
+		if resp, err = v.Get(uri); err == nil {
 			resp.Body.Close()
 		}
 	}
 
-	return cookieClient, err
+	return err
 }
 
-func (v *Ovms) delete(url string, cookieClient *request.Helper) error {
+func (v *Ovms) delete(url string) error {
 	req, err := request.New(http.MethodDelete, url, nil)
 	if err == nil {
-		_, err = cookieClient.Do(req)
+		_, err = v.Do(req)
 	}
 	return err
 }
 
-func (v *Ovms) authFlow() (*request.Helper, bool, error) {
-	cookieClient, err := v.getCookies()
+func (v *Ovms) authFlow() (bool, error) {
+	err := v.loginToServer()
 	if err == nil {
 		var resp ovmsConnectResponse
-		resp, err = v.connectRequest(cookieClient)
+		resp, err = v.connectRequest()
 		if err == nil {
-			return cookieClient, resp.NetConnected == 1, err
+			return resp.NetConnected == 1, err
 		}
 
-		return cookieClient, false, err
+		return false, err
 	}
 
-	return nil, false, err
+	return false, err
 }
 
-func (v *Ovms) connectRequest(cookieClient *request.Helper) (ovmsConnectResponse, error) {
+func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 	var res ovmsConnectResponse
 
 	req, err := request.New(http.MethodGet, uri, nil)
 	if err == nil {
-		err = cookieClient.DoJSON(req, &res)
+		err = v.DoJSON(req, &res)
 	}
 
 	return res, err
 }
 
-func (v *Ovms) chargeRequest(cookieClient *request.Helper) (ovmsChargeResponse, error) {
+func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
 
 	req, err := request.New(http.MethodGet, uri, nil)
 	if err == nil {
-		err = cookieClient.DoJSON(req, &res)
+		err = v.DoJSON(req, &res)
 	}
 
 	return res, err
 }
 
-func (v *Ovms) disconnect(cookieClient *request.Helper) error {
+func (v *Ovms) disconnect() error {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 
-	err := v.delete(uri, cookieClient)
+	err := v.delete(uri)
 	if err == nil {
 		uri = fmt.Sprintf("http://%s:6868/api/cookie", v.server)
-		return v.delete(uri, cookieClient)
+		return v.delete(uri)
 	}
 
 	return err
@@ -151,18 +150,18 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
 	var ovmsConnected bool
 
-	cookieClient, ovmsConnected, err := v.authFlow()
-	if err == nil && cookieClient != nil {
+	ovmsConnected, err := v.authFlow()
+	if err == nil {
 		time.Sleep(3 * time.Second)
-		resp, err = v.chargeRequest(cookieClient)
+		resp, err = v.chargeRequest()
 		for err != nil && resp.MessageAgeServer > 59 && ovmsConnected {
 			time.Sleep(3 * time.Second)
-			resp, err = v.chargeRequest(cookieClient)
+			resp, err = v.chargeRequest()
 		}
 	}
 
-	if cookieClient != nil {
-		err = v.disconnect(cookieClient)
+	if ovmsConnected {
+		err = v.disconnect()
 	}
 
 	return resp, err
