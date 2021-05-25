@@ -5,12 +5,12 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/internal/charger"
-	"github.com/andig/evcc/internal/meter"
-	"github.com/andig/evcc/internal/vehicle"
+	"github.com/andig/evcc/charger"
+	"github.com/andig/evcc/meter"
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/vehicle"
 )
 
 type config struct {

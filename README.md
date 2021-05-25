@@ -13,7 +13,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
-  - Smart-Home outlets: FritzDECT, Tasmota, TP-Link
+  - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
 - wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
@@ -77,7 +77,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Installation
 
-EVCC is provided as binary executable file and docker image. Download the file for your platform and then execute like this:
+EVCC is provided as binary executable file and Docker image. Download the file for your platform and then execute like this:
 
 ```sh
 evcc -h
@@ -102,6 +102,8 @@ EVCC can also be run using Docker. Here's and example with given config file and
 docker run -v $(pwd)/evcc.dist.yaml:/etc/evcc.yaml -p 7070:7070 andig/evcc -h
 ```
 
+**Note**: don't mount `/etc` as volume as this will effectively remove the entire folder from the container and will lead to hard to diagnose errors.
+
 If using Docker with a meter or charger that requires UDP like KEBA, make sure that the Docker container can receive UDP messages on the relevant ports (`:7090` for KEBA):
 
 ```sh
@@ -112,6 +114,12 @@ When using Docker with a device that requires multicast UDP like SMA, make sure 
 
 ```sh
 docker run --network host andig/evcc ...
+```
+
+For use with SMA Sunny Home Manager, `evcc` needs to generate a unique device id. On Linux, we're using `machine-id` for this purpose, make sure to mount the host folders into the container:
+
+```sh
+docker run -v /etc/machine-id:/etc/machine-id -v /var/lib/dbus/machine-id:/var/lib/dbus/machine-id andig/evcc ...
 ```
 
 To build EVCC from source, [Go](2) 1.16 and [Node](3) 14 are required:
@@ -188,6 +196,7 @@ Available charger implementations are:
 
 Smart-Home outlet charger implementations:
 - `fritzdect`: Fritz!DECT 200/210 outlets
+- `shelly`: Shelly outlets
 - `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
 
@@ -257,7 +266,8 @@ Available vehicle remote interface implementations are:
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citygo, Enyaq)
+- `skoda`: Skoda (Citygo)
+- `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo

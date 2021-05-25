@@ -104,7 +104,7 @@ image-update:
 
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/soc/client
+	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/cmd/soc
 
 server:
 	@echo Version: $(VERSION) $(BUILD_DATE)
