@@ -26,7 +26,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-28081973-%x-00"
+	sempDeviceId     = "F-28081973-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -343,7 +343,7 @@ func (s *SEMP) deviceID(id int) string {
 
 	// numerically add device number
 	did := append([]byte{0, 0}, s.did...)
-	return fmt.Sprintf(sempDeviceId, binary.BigEndian.Uint64(did)+uint64(id))
+	return fmt.Sprintf(sempDeviceId, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
 }
 
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
