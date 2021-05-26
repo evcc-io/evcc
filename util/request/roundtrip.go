@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -10,23 +11,21 @@ import (
 )
 
 type roundTripper struct {
-	log       *util.Logger
-	transport http.RoundTripper
+	log  *util.Logger
+	base http.RoundTripper
 }
 
-const max = 2048
+const max = 2048 * 2
 
 // NewTripper creates a logging roundtrip handler
-func NewTripper(log *util.Logger, transport http.RoundTripper) http.RoundTripper {
+func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	tripper := &roundTripper{
-		log:       log,
-		transport: transport,
+		log:  log,
+		base: base,
 	}
 
 	return tripper
 }
-
-var bld = strings.Builder{}
 
 func min(a, b int) int {
 	if a < b {
@@ -36,14 +35,15 @@ func min(a, b int) int {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	bld.Reset()
+	var bld strings.Builder
+	bld.WriteString(fmt.Sprintf("%s %s", req.Method, req.URL.String()))
 
 	if body, err := httputil.DumpRequestOut(req, true); err == nil {
 		bld.WriteString("\n")
 		bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 	}
 
-	resp, err := r.transport.RoundTrip(req)
+	resp, err := r.base.RoundTrip(req)
 
 	if resp != nil {
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
