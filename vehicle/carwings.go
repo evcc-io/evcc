@@ -76,24 +76,32 @@ func (v *CarWings) initSession() error {
 }
 
 func (v *CarWings) status() (err error) {
-	// follow up requested refresh
-	if v.refreshKey != "" {
-		return v.refreshResult()
+	if v.session == nil {
+		if err = v.initSession(); err != nil {
+			return api.ErrNotAvailable
+		}
 	}
 
-	if err = v.refreshRequest(); err != nil {
-		return err
-	}
+	var bs carwings.BatteryStatus
+	if bs, err = v.session.BatteryStatus(); err == nil {
+		if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
 
-	if err = v.refreshResult(); err == nil {
-		var bs carwings.BatteryStatus
-		if bs, err = v.session.BatteryStatus(); err == nil {
-			if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
-				v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, carwingsStatusExpiry)
-				if err = v.refreshRequest(); err == nil {
-					err = api.ErrMustRetry
-				}
+			if v.refreshKey != "" {
+				return v.refreshResult()
 			}
+
+			if err = v.refreshRequest(); err != nil {
+				return err
+			}
+			// check result in next retry
+			err = api.ErrMustRetry
+		} else {
+			// Update finished in the meantime, reset key for next request
+			v.refreshKey = ""
+		}
+	} else if err == carwings.ErrNotLoggedIn {
+		if err = v.session.Connect(v.user, v.password); err == nil {
+			err = api.ErrMustRetry
 		}
 	}
 
