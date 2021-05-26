@@ -70,11 +70,8 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.Jar, err = cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
-	if err != nil {
-		return nil, err
-	}
 
-	return v, nil
+	return v, err
 }
 
 func (v *Ovms) loginToServer() (err error) {
@@ -91,10 +88,8 @@ func (v *Ovms) loginToServer() (err error) {
 func (v *Ovms) delete(url string) error {
 	req, err := request.New(http.MethodDelete, url, nil)
 	if err == nil {
-
 		var resp *http.Response
-		resp, err = v.Do(req)
-		if err == nil {
+		if resp, err = v.Do(req); err == nil {
 			resp.Body.Close()
 		}
 	}
@@ -102,22 +97,17 @@ func (v *Ovms) delete(url string) error {
 }
 
 func (v *Ovms) authFlow() (bool, error) {
+	var resp ovmsConnectResponse
 	err := v.loginToServer()
 	if err == nil {
-		var resp ovmsConnectResponse
 		resp, err = v.connectRequest()
-		if err == nil {
-			return resp.NetConnected == 1, err
-		}
 	}
-
-	return false, err
+	return resp.NetConnected == 1, err
 }
 
 func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
 	var res ovmsConnectResponse
-
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
@@ -125,7 +115,6 @@ func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
 func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 	uri := fmt.Sprintf("http://%s:6868/api/charge/%s", v.server, v.vehicleId)
 	var res ovmsChargeResponse
-
 	err := v.GetJSON(uri, &res)
 	return res, err
 }
