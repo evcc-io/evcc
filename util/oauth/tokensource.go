@@ -33,7 +33,6 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 			}
 		}
 	}
-
 	return ts.token, err
 }
 

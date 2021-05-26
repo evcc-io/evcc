@@ -40,7 +40,6 @@ func (v *Provider) SoC() (float64, error) {
 	if res, ok := res.(ChargerResponse); err == nil && ok {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
-
 	return 0, err
 }
 
