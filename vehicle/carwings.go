@@ -22,7 +22,7 @@ type CarWings struct {
 	log            *util.Logger
 	user, password string
 	session        *carwings.Session
-	statusG        func() (bool, error)
+	statusG        func() (interface{}, error)
 	refreshKey     string
 	refreshTime    time.Time
 }
@@ -62,9 +62,19 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.statusG = provider.NewCached(func() (bool, error) {
 		return true, v.status()
-	}, cc.Cache).BoolGetter()
+	}, cc.Cache).InterfaceGetter()
 
 	return v, nil
+}
+
+// connectIfRequired will return ErrMustRetry if ErrNotLoggedIn error could be resolved
+func (v *CarWings) connectIfRequired(err error) error {
+	if err == carwings.ErrNotLoggedIn {
+		if err = v.session.Connect(v.user, v.password); err == nil {
+			err = api.ErrMustRetry
+		}
+	}
+	return err
 }
 
 func (v *CarWings) status() error {
@@ -82,10 +92,8 @@ func (v *CarWings) status() error {
 
 			err = api.ErrMustRetry
 		}
-	} else if err == carwings.ErrNotLoggedIn {
-		if err = v.session.Connect(v.user, v.password); err == nil {
-			err = api.ErrMustRetry
-		}
+	} else {
+		err = v.connectIfRequired(err)
 	}
 
 	return err
@@ -122,10 +130,8 @@ func (v *CarWings) refreshRequest() (err error) {
 		if v.refreshKey == "" {
 			err = errors.New("refresh failed")
 		}
-	} else if err == carwings.ErrNotLoggedIn {
-		if err = v.session.Connect(v.user, v.password); err == nil {
-			err = api.ErrMustRetry
-		}
+	} else {
+		err = v.connectIfRequired(err)
 	}
 
 	return err
