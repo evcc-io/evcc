@@ -147,7 +147,7 @@ func (v *CarWings) SoC() (soc float64, err error) {
 
 var _ api.VehicleClimater = (*CarWings)(nil)
 
-// Climater implements the api.Vehicle.Climater interface
+// Climater implements the api.VehicleClimater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	if _, err = v.statusG(); err == nil {
 		var ccs carwings.ClimateStatus
@@ -166,17 +166,17 @@ func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp floa
 var _ api.VehicleRange = (*CarWings)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *CarWings) Range() (Range int64, err error) {
-	Range = 0
+func (v *CarWings) Range() (rng int64, err error) {
+	rng = 0
 
 	if _, err = v.statusG(); err == nil {
 		var bs carwings.BatteryStatus
 		if bs, err = v.session.BatteryStatus(); err == nil {
-			Range = int64(bs.CruisingRangeACOn) / 1000
+			rng = int64(bs.CruisingRangeACOn) / 1000
 		}
 	}
 
-	return Range, err
+	return rng, err
 }
 
 var _ api.ChargeState = (*CarWings)(nil)
