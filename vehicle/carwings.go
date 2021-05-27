@@ -21,7 +21,6 @@ type CarWings struct {
 	*embed
 	log            *util.Logger
 	user, password string
-	region         string
 	session        *carwings.Session
 	statusG        func() (bool, error)
 	refreshKey     string
@@ -58,34 +57,21 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		log:      log,
 		user:     cc.User,
 		password: cc.Password,
-		region:   cc.Region,
+		session:  &carwings.Session{Region: cc.Region},
 	}
 
 	v.statusG = provider.NewCached(func() (bool, error) {
 		return true, v.status()
 	}, cc.Cache).BoolGetter()
+
 	return v, nil
 }
 
-// Init new carwings session
-func (v *CarWings) initSession() error {
-	v.session = &carwings.Session{
-		Region: v.region,
-	}
-	return v.session.Connect(v.user, v.password)
-}
-
-func (v *CarWings) status() (err error) {
-	if v.session == nil {
-		if err = v.initSession(); err != nil {
-			return api.ErrNotAvailable
-		}
-	}
-
-	var bs carwings.BatteryStatus
-	if bs, err = v.session.BatteryStatus(); err == nil {
+func (v *CarWings) status() error {
+	bs, err := v.session.BatteryStatus()
+	if err == nil {
 		if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
-
+			// api result is stale
 			if v.refreshKey != "" {
 				return v.refreshResult()
 			}
@@ -93,11 +79,8 @@ func (v *CarWings) status() (err error) {
 			if err = v.refreshRequest(); err != nil {
 				return err
 			}
-			// check result in next retry
+
 			err = api.ErrMustRetry
-		} else {
-			// Update finished in the meantime, reset key for next request
-			v.refreshKey = ""
 		}
 	} else if err == carwings.ErrNotLoggedIn {
 		if err = v.session.Connect(v.user, v.password); err == nil {
@@ -111,10 +94,11 @@ func (v *CarWings) status() (err error) {
 // refreshResult triggers an update if not already in progress, otherwise gets result
 func (v *CarWings) refreshResult() error {
 	finished, err := v.session.CheckUpdate(v.refreshKey)
+
 	// update successful and completed
 	if err == nil && finished {
 		v.refreshKey = ""
-		return err
+		return nil
 	}
 
 	// update still in progress, keep retrying
@@ -133,16 +117,14 @@ func (v *CarWings) refreshResult() error {
 
 // refreshRequest requests status refresh tracked by refreshKey
 func (v *CarWings) refreshRequest() (err error) {
-	if v.session == nil {
-		if err = v.initSession(); err != nil {
-			return api.ErrNotAvailable
-		}
-	}
-
 	if v.refreshKey, err = v.session.UpdateStatus(); err == nil {
 		v.refreshTime = time.Now()
 		if v.refreshKey == "" {
 			err = errors.New("refresh failed")
+		}
+	} else if err == carwings.ErrNotLoggedIn {
+		if err = v.session.Connect(v.user, v.password); err == nil {
+			err = api.ErrMustRetry
 		}
 	}
 
