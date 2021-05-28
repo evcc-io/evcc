@@ -60,8 +60,8 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		session:  &carwings.Session{Region: cc.Region},
 	}
 
-	v.statusG = provider.NewCached(func() (bool, error) {
-		return true, v.status()
+	v.statusG = provider.NewCached(func() (interface{}, error) {
+		return nil, v.status()
 	}, cc.Cache).InterfaceGetter()
 
 	return v, nil
