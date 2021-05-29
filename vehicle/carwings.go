@@ -101,6 +101,10 @@ func (v *CarWings) status() error {
 			}
 
 			err = api.ErrMustRetry
+		} else {
+			// Reset refreshKey if elapsed < carwingsStatusExpiry,
+			// otherwise next check after soc timeout does not trigger update because refreshResult succeds on old key
+			v.refreshKey = ""
 		}
 	} else {
 		err = v.connectIfRequired(err)
