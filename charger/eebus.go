@@ -107,24 +107,17 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 }
 
 func (c *EEBus) showCurrentChargingSetup() {
-	if c.lp == nil {
-		return
-	}
-
 	data, err := c.cc.GetData()
 	if err != nil {
 		return
 	}
 
 	prevComStandard := c.communicationStandard
-	comStandard := "ISO15118-2"
-	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeISO151182ED1 {
-		comStandard = "IEC61851"
-	}
 
 	if prevComStandard != data.EVData.CommunicationStandard {
+		c.communicationStandard = data.EVData.CommunicationStandard
 		timestamp := time.Now()
-		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed: ", comStandard, "; ", data.EVData.LimitsL1.Min, "-", data.EVData.LimitsL1.Max, "kW")
+		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
 	}
 }
 
