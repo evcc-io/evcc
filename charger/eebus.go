@@ -166,12 +166,14 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 func (c *EEBus) Status() (api.ChargeStatus, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("status: no eebus data available yet")
 		return api.StatusNone, err
 	}
 
 	currentState := data.EVData.ChargeState
 
 	if !c.connected {
+		c.log.TRACE.Printf("currents: ev reported as unplugged")
 		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
 	}
 
@@ -218,10 +220,12 @@ func (c *EEBus) Enable(enable bool) error {
 
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("enable: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("currents: ev reported as unplugged")
 		return errors.New("can not enable/disable charging as ev is unplugged")
 	}
 
@@ -296,10 +300,12 @@ var _ api.ChargerEx = (*EEBus)(nil)
 func (c *EEBus) MaxCurrentMillis(current float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("currents: no eebus data available yet")
 		return err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("currents: ev reported as unplugged")
 		return errors.New("can't set new current as ev is unplugged")
 	}
 
@@ -321,6 +327,8 @@ func (c *EEBus) MaxCurrentMillis(current float64) error {
 
 	// TODO error handling
 
+	c.log.TRACE.Printf("currents: returning %f", current)
+
 	currents := []float64{current, current, current}
 	return c.writeCurrentLimitData(currents)
 }
@@ -331,14 +339,17 @@ var _ api.Meter = (*EEBus)(nil)
 func (c *EEBus) CurrentPower() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("current power: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("current power: ev reported as unplugged")
 		return 0, nil
 	}
 
 	power := data.EVData.Measurements.PowerL1 + data.EVData.Measurements.PowerL2 + data.EVData.Measurements.PowerL3
+	c.log.TRACE.Printf("current power: returning %f", power)
 
 	return power, nil
 }
@@ -349,14 +360,19 @@ var _ api.ChargeRater = (*EEBus)(nil)
 func (c *EEBus) ChargedEnergy() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("charged energy: no eebus data available yet")
 		return 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("charged energy: ev reported as unplugged")
 		return 0, nil
 	}
 
-	return data.EVData.Measurements.ChargedEnergy / 1000, nil
+	energy := data.EVData.Measurements.ChargedEnergy / 1000
+	c.log.TRACE.Printf("charged energy: returning %f", energy)
+
+	return energy, nil
 }
 
 // var _ api.ChargeTimer = (*EEBus)(nil)
@@ -378,12 +394,16 @@ var _ api.MeterCurrent = (*EEBus)(nil)
 func (c *EEBus) Currents() (float64, float64, float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("currents: no eebus data available yet")
 		return 0, 0, 0, err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("currents: ev reported as unplugged")
 		return 0, 0, 0, nil
 	}
+
+	c.log.TRACE.Printf("currents: returning %f, %f, %f, ", data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3)
 
 	return data.EVData.Measurements.CurrentL1, data.EVData.Measurements.CurrentL2, data.EVData.Measurements.CurrentL3, nil
 }
@@ -394,17 +414,21 @@ var _ api.Identifier = (*EEBus)(nil)
 func (c *EEBus) Identify() (string, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("identify: no eebus data available yet")
 		return "", err
 	}
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+		c.log.TRACE.Printf("identify: ev reported as unplugged")
 		return "", nil
 	}
 
 	if len(data.EVData.Identification) > 0 {
+		c.log.TRACE.Printf("identify: returning %s", data.EVData.Identification)
 		return data.EVData.Identification, nil
 	}
 
+	c.log.TRACE.Printf("identify: returning nothing")
 	return "", nil
 }
 
@@ -414,13 +438,16 @@ var _ api.Battery = (*EEBus)(nil)
 func (c *EEBus) SoC() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
+		c.log.TRACE.Printf("soc: no eebus data available yet")
 		return 0, api.ErrNotAvailable
 	}
 
 	if !data.EVData.SoCDataAvailable {
+		c.log.TRACE.Printf("soc: feature not available")
 		return 0, api.ErrNotAvailable
 	}
 
+	c.log.TRACE.Printf("soc: returning %f", data.EVData.Measurements.SoC)
 	return data.EVData.Measurements.SoC, nil
 }
 
