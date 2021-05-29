@@ -199,6 +199,20 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (c *EEBus) Enabled() (bool, error) {
+	// we might already be enabled and charging due to connection issues
+	data, err := c.cc.GetData()
+	if err == nil {
+		chargeState, _ := c.Status()
+		if chargeState == api.StatusB || chargeState == api.StatusC {
+			// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
+			if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
+				if c.expectedEnableState == false {
+					c.expectedEnableState = true
+				}
+			}
+		}
+	}
+
 	// return the save enable state as we assume enabling/disabling always works
 	return c.expectedEnableState, nil
 }
