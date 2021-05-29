@@ -64,6 +64,8 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, v.status()
 	}, cc.Cache).InterfaceGetter()
 
+	v.session.Connect(v.user, v.password)
+
 	return v, nil
 }
 
