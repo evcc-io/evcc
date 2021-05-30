@@ -23,7 +23,6 @@ type CarWings struct {
 	user, password string
 	session        *carwings.Session
 	statusG        func() (interface{}, error)
-	needLogin      bool
 	refreshKey     string
 	refreshTime    time.Time
 }
@@ -54,12 +53,11 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("carwin")
 
 	v := &CarWings{
-		embed:     &cc.embed,
-		log:       log,
-		user:      cc.User,
-		password:  cc.Password,
-		session:   &carwings.Session{Region: cc.Region},
-		needLogin: true,
+		embed:    &cc.embed,
+		log:      log,
+		user:     cc.User,
+		password: cc.Password,
+		session:  &carwings.Session{Region: cc.Region},
 	}
 
 	v.statusG = provider.NewCached(func() (interface{}, error) {
@@ -71,7 +69,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // connectIfRequired will return ErrMustRetry if ErrNotLoggedIn error could be resolved
 func (v *CarWings) connectIfRequired(err error) error {
-	if err == carwings.ErrNotLoggedIn {
+	if err == carwings.ErrNotLoggedIn || err.Error() == "received status code 404" {
 		if err = v.session.Connect(v.user, v.password); err == nil {
 			err = api.ErrMustRetry
 		}
@@ -80,14 +78,6 @@ func (v *CarWings) connectIfRequired(err error) error {
 }
 
 func (v *CarWings) status() error {
-	if v.needLogin {
-		// Run login here because of PR #585
-		v.needLogin = false
-		if err := v.session.Connect(v.user, v.password); err != nil {
-			return err
-		}
-	}
-
 	bs, err := v.session.BatteryStatus()
 	if err == nil {
 		if elapsed := time.Since(bs.Timestamp); elapsed > carwingsStatusExpiry {
