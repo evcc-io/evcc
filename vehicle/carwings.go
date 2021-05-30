@@ -155,40 +155,6 @@ func (v *CarWings) SoC() (soc float64, err error) {
 	return soc, err
 }
 
-var _ api.VehicleClimater = (*CarWings)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	if _, err = v.statusG(); err == nil {
-		var ccs carwings.ClimateStatus
-		if ccs, err = v.session.ClimateControlStatus(); err == nil {
-			active = ccs.Running
-			targetTemp = float64(ccs.Temperature)
-			outsideTemp = targetTemp
-		}
-
-		return active, outsideTemp, targetTemp, err
-	}
-
-	return false, 0, 0, err
-}
-
-var _ api.VehicleRange = (*CarWings)(nil)
-
-// Range implements the api.VehicleRange interface
-func (v *CarWings) Range() (rng int64, err error) {
-	rng = 0
-
-	if _, err = v.statusG(); err == nil {
-		var bs carwings.BatteryStatus
-		if bs, err = v.session.BatteryStatus(); err == nil {
-			rng = int64(bs.CruisingRangeACOn) / 1000
-		}
-	}
-
-	return rng, err
-}
-
 var _ api.ChargeState = (*CarWings)(nil)
 
 // Status implements the api.ChargeState interface
@@ -208,4 +174,38 @@ func (v *CarWings) Status() (status api.ChargeStatus, err error) {
 	}
 
 	return status, err
+}
+
+var _ api.VehicleRange = (*CarWings)(nil)
+
+// Range implements the api.VehicleRange interface
+func (v *CarWings) Range() (rng int64, err error) {
+	rng = 0
+
+	if _, err = v.statusG(); err == nil {
+		var bs carwings.BatteryStatus
+		if bs, err = v.session.BatteryStatus(); err == nil {
+			rng = int64(bs.CruisingRangeACOn) / 1000
+		}
+	}
+
+	return rng, err
+}
+
+var _ api.VehicleClimater = (*CarWings)(nil)
+
+// Climater implements the api.VehicleClimater interface
+func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	if _, err = v.statusG(); err == nil {
+		var ccs carwings.ClimateStatus
+		if ccs, err = v.session.ClimateControlStatus(); err == nil {
+			active = ccs.Running
+			targetTemp = float64(ccs.Temperature)
+			outsideTemp = targetTemp
+		}
+
+		return active, outsideTemp, targetTemp, err
+	}
+
+	return false, 0, 0, err
 }
