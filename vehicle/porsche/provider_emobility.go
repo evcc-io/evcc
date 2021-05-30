@@ -89,7 +89,7 @@ func (v *EMobilityProvider) request(uri string) (*http.Request, error) {
 	return req, err
 }
 
-// Status implements the vehicle status repsonse
+// Status implements the vehicle status response
 func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/J1/%s?timezone=Europe/Berlin", vin)
 	req, err := v.request(uri)
