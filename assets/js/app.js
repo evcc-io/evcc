@@ -24,8 +24,21 @@ window.app = new Vue({
   methods: {
     raise: function (msg) {
       console[msg.type](msg);
-      const withoutThisMsg = this.notifications.filter((m) => m.message !== msg.message);
-      this.notifications = [msg, ...withoutThisMsg];
+      const now = new Date();
+      const latestMsg = this.notifications[0];
+      if (latestMsg && latestMsg.message === msg.message) {
+        latestMsg.count++;
+        latestMsg.time = now;
+      } else {
+        this.notifications = [
+          {
+            ...msg,
+            count: 1,
+            time: now,
+          },
+          ...this.notifications,
+        ];
+      }
     },
     clear: function () {
       this.notifications = [];
