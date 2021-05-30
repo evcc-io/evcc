@@ -256,6 +256,7 @@ Available vehicle remote interface implementations are:
 
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
+- `carwings`: Nissan (Leaf pre 2019)
 - `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Bluelink vehicles like Soul 2019)
@@ -264,6 +265,7 @@ Available vehicle remote interface implementations are:
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
+- `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
 - `skoda`: Skoda (Citygo)

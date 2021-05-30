@@ -104,15 +104,25 @@ type Listener struct {
 }
 
 // New creates a Listener
-func New(log *util.Logger) (*Listener, error) {
-	// Parse the string address
+func New(log *util.Logger, ifaceName string) (*Listener, error) {
+	var iface *net.Interface
+	if ifaceName != "" {
+		var err error
+		if iface, err = net.InterfaceByName(ifaceName); err != nil {
+			return nil, fmt.Errorf("error resolving network interface '%s': %w", ifaceName, err)
+		}
+
+		log.DEBUG.Printf("listening on network interface %s for multicasts", iface.Name)
+	}
+
+	// parse address
 	gaddr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
 		return nil, fmt.Errorf("error resolving udp address: %w", err)
 	}
 
-	// Open up a connection
-	conn, err := net.ListenMulticastUDP("udp4", nil, gaddr)
+	// open connection
+	conn, err := net.ListenMulticastUDP("udp4", iface, gaddr)
 	if err != nil {
 		return nil, fmt.Errorf("error opening connecting: %w", err)
 	}

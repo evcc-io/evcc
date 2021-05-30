@@ -66,7 +66,7 @@ func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 	}
 
 	var err error
-	if h.listener, err = sma.New(log); err != nil {
+	if h.listener, err = sma.New(log, ""); err != nil {
 		log.ERROR.Println("shm:", err)
 		return nil
 	}

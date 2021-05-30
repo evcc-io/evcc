@@ -183,7 +183,7 @@ func (c *TPLink) execCmd(cmd string, res interface{}) error {
 	}
 
 	// read response
-	resp := make([]byte, 2048)
+	resp := make([]byte, 8192)
 	len, err := conn.Read(resp)
 	if err != nil {
 		return err
