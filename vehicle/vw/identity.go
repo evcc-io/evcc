@@ -67,7 +67,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 		return nil
 	}
 
-	var vars map[string]string
+	var vars FormVars
 
 	// add nonce and state
 	query := url.Values{
@@ -86,13 +86,13 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
 		data := url.Values(map[string][]string{
-			"_csrf":      {vars["_csrf"]},
-			"relayState": {vars["relayState"]},
-			"hmac":       {vars["hmac"]},
+			"_csrf":      {vars.Inputs["_csrf"]},
+			"relayState": {vars.Inputs["relayState"]},
+			"hmac":       {vars.Inputs["hmac"]},
 			"email":      {user},
 		})
 
-		uri = IdentityURI + vars["action"]
+		uri = IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
 			vars, err = FormValues(resp.Body, "form#credentialsForm")
 			resp.Body.Close()
@@ -102,14 +102,14 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
 		data := url.Values(map[string][]string{
-			"_csrf":      {vars["_csrf"]},
-			"relayState": {vars["relayState"]},
-			"hmac":       {vars["hmac"]},
+			"_csrf":      {vars.Inputs["_csrf"]},
+			"relayState": {vars.Inputs["relayState"]},
+			"hmac":       {vars.Inputs["hmac"]},
 			"email":      {user},
 			"password":   {password},
 		})
 
-		uri = IdentityURI + vars["action"]
+		uri = IdentityURI + vars.Action
 		if resp, err = v.PostForm(uri, data); err == nil {
 			resp.Body.Close()
 
@@ -138,7 +138,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 }
 
 func (v *Identity) postTos(uri string) (*http.Response, error) {
-	var vars map[string]string
+	var vars FormVars
 	resp, err := v.Get(uri)
 	if err == nil {
 		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
@@ -146,13 +146,11 @@ func (v *Identity) postTos(uri string) (*http.Response, error) {
 
 	if err == nil {
 		data := make(url.Values)
-		for k, v := range vars {
-			if k != "action" {
-				data.Set(k, v)
-			}
+		for k, v := range vars.Inputs {
+			data.Set(k, v)
 		}
 
-		uri := IdentityURI + vars["action"]
+		uri := IdentityURI + vars.Action
 		resp, err = v.PostForm(uri, data)
 	}
 

@@ -9,15 +9,13 @@ import (
 
 // FormVars holds HTML form input values required for login
 type FormVars struct {
-	Action     string
-	Csrf       string
-	RelayState string
-	Hmac       string
+	Action string
+	Inputs map[string]string
 }
 
 // FormValues extracts FormVars from given HTML document
-func FormValues(reader io.Reader, id string) (map[string]string, error) {
-	vars := make(map[string]string)
+func FormValues(reader io.Reader, id string) (FormVars, error) {
+	vars := FormVars{Inputs: make(map[string]string)}
 
 	doc, err := goquery.NewDocumentFromReader(reader)
 	if err == nil {
@@ -31,7 +29,7 @@ func FormValues(reader io.Reader, id string) (map[string]string, error) {
 			if !exists {
 				return vars, errors.New("meta not found")
 			}
-			vars["_csrf"] = csrf
+			vars.Inputs["_csrf"] = csrf
 			return vars, nil
 		}
 
@@ -44,11 +42,11 @@ func FormValues(reader io.Reader, id string) (map[string]string, error) {
 		if !exists {
 			return vars, errors.New("attribute not found")
 		}
-		vars["action"] = action
+		vars.Inputs["action"] = action
 
 		form.Find("input").Each(func(_ int, el *goquery.Selection) {
 			if name, ok := el.Attr("name"); ok {
-				vars[name], _ = el.Attr("value")
+				vars.Inputs[name], _ = el.Attr("value")
 			}
 		})
 	}
