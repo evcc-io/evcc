@@ -284,9 +284,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		}
 	}
 
-	c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
-
-	return nil
+	return c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
