@@ -206,6 +206,10 @@ func (c *EEBus) Enabled() (bool, error) {
 				}
 			}
 		}
+		// handle ev being disconnected
+		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
+			c.expectedEnableState = false
+		}
 	}
 
 	// return the save enable state as we assume enabling/disabling always works
