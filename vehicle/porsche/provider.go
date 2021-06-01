@@ -74,7 +74,7 @@ func (v *Provider) request(uri string) (*http.Request, error) {
 	return req, err
 }
 
-// Status implements the vehicle status repsonse
+// Status implements the vehicle status response
 func (v *Provider) status(vin string) (interface{}, error) {
 	uri := fmt.Sprintf("https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles/%s", vin)
 	req, err := v.request(uri)
