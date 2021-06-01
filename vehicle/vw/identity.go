@@ -67,7 +67,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 		return nil
 	}
 
-	var vars FormVars
+	var vars map[string]string
 
 	// add nonce and state
 	query := url.Values{
@@ -86,13 +86,13 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/identifier
 	if err == nil {
 		data := url.Values(map[string][]string{
-			"_csrf":      {vars.Csrf},
-			"relayState": {vars.RelayState},
-			"hmac":       {vars.Hmac},
+			"_csrf":      {vars["_csrf"]},
+			"relayState": {vars["relayState"]},
+			"hmac":       {vars["hmac"]},
 			"email":      {user},
 		})
 
-		uri = IdentityURI + vars.Action
+		uri = IdentityURI + vars["action"]
 		if resp, err = v.PostForm(uri, data); err == nil {
 			vars, err = FormValues(resp.Body, "form#credentialsForm")
 			resp.Body.Close()
@@ -102,16 +102,23 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	// POST identity.vwgroup.io/signin-service/v1/b7a5bb47-f875-47cf-ab83-2ba3bf6bb738@apps_vw-dilab_com/login/authenticate
 	if err == nil {
 		data := url.Values(map[string][]string{
-			"_csrf":      {vars.Csrf},
-			"relayState": {vars.RelayState},
-			"hmac":       {vars.Hmac},
+			"_csrf":      {vars["_csrf"]},
+			"relayState": {vars["relayState"]},
+			"hmac":       {vars["hmac"]},
 			"email":      {user},
 			"password":   {password},
 		})
 
-		uri = IdentityURI + vars.Action
+		uri = IdentityURI + vars["action"]
 		if resp, err = v.PostForm(uri, data); err == nil {
 			resp.Body.Close()
+
+			if u := resp.Request.URL.Query().Get("updated"); u != "" {
+				v.log.WARN.Println("accepting updated", u)
+				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
+					resp.Body.Close()
+				}
+			}
 		}
 	}
 
@@ -128,6 +135,28 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 	}
 
 	return nil, err
+}
+
+func (v *Identity) postTos(uri string) (*http.Response, error) {
+	var vars map[string]string
+	resp, err := v.Get(uri)
+	if err == nil {
+		vars, err = FormValues(resp.Body, "form#emailPasswordForm")
+	}
+
+	if err == nil {
+		data := make(url.Values)
+		for k, v := range vars {
+			if k != "action" {
+				data.Set(k, v)
+			}
+		}
+
+		uri := IdentityURI + vars["action"]
+		resp, err = v.PostForm(uri, data)
+	}
+
+	return resp, err
 }
 
 // LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens

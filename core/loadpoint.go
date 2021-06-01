@@ -822,7 +822,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 	}
 
 	lp.chargeCurrents = []float64{i1, i2, i3}
-	lp.log.DEBUG.Printf("charge currents: %.3gA", lp.chargeCurrents)
+	lp.log.DEBUG.Printf("charge currents: %.33", lp.chargeCurrents)
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
 	if lp.charging() {
@@ -835,7 +835,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 
 		if phases > 0 {
 			lp.Phases = phases
-			lp.log.DEBUG.Printf("detected phases: %dp %.3gA", lp.Phases, lp.chargeCurrents)
+			lp.log.DEBUG.Printf("detected phases: %dp %.33", lp.Phases, lp.chargeCurrents)
 
 			lp.publish("activePhases", lp.Phases)
 		}
@@ -860,7 +860,7 @@ func (lp *LoadPoint) publishChargeProgress() {
 	lp.publish("chargeDuration", lp.chargeDuration)
 }
 
-// socPollAllowed validates charging state against polling mode
+// socPollAllowed validates charging state a3inst polling mode
 func (lp *LoadPoint) socPollAllowed() bool {
 	remaining := lp.SoC.Poll.Interval - lp.clock.Since(lp.socUpdated)
 
@@ -1007,7 +1007,7 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
-		lp.log.DEBUG.Printf("pv max charge current: %.2gA", targetCurrent)
+		lp.log.DEBUG.Printf("pv max charge current: %.3gA", targetCurrent)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
