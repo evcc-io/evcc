@@ -13,12 +13,14 @@ import (
 
 type tokenRefresher struct {
 	*request.Helper
+	login    func() (oauth.Token, error)
 	clientID string
 }
 
-func Refresher(log *util.Logger, clientID string) oauth.TokenRefresher {
+func Refresher(log *util.Logger, login func() (oauth.Token, error), clientID string) oauth.TokenRefresher {
 	return &tokenRefresher{
 		Helper:   request.NewHelper(log),
+		login:    login,
 		clientID: clientID,
 	}
 }
@@ -39,6 +41,10 @@ func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, erro
 	var res oauth.Token
 	if err == nil {
 		err = tr.DoJSON(req, &res)
+	}
+
+	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden) {
+		res, err = tr.login()
 	}
 
 	return (*oauth2.Token)(&res), err
