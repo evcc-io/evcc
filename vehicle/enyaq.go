@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/skoda"
 	"github.com/andig/evcc/vehicle/vw"
 )
@@ -30,8 +31,10 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -62,6 +65,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 
 		api := skoda.NewAPI(log, identity)
+		api.Client.Timeout = cc.Timeout
 
 		cc.VIN, err = findVehicle(api.Vehicles())
 		if err == nil {
@@ -86,6 +90,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 
 		api := skoda.NewAPI(log, identity)
+		api.Client.Timeout = cc.Timeout
 
 		v.Provider = skoda.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 	}

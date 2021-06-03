@@ -8,6 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/vehicle/id"
 	"github.com/andig/evcc/vehicle/vw"
 )
@@ -30,8 +31,10 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -58,6 +61,7 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	api := id.NewAPI(log, identity)
+	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
 		cc.VIN, err = findVehicle(api.Vehicles())

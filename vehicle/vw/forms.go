@@ -22,12 +22,12 @@ func FormValues(reader io.Reader, id string) (FormVars, error) {
 		// only interested in meta tag?
 		if meta := doc.Find("meta[name=_csrf]"); id == "meta" {
 			if meta.Length() != 1 {
-				return vars, errors.New("unexpected length")
+				return vars, errors.New("meta not found")
 			}
 
 			csrf, exists := meta.Attr("content")
 			if !exists {
-				return vars, errors.New("meta not found")
+				return vars, errors.New("meta attribute not found")
 			}
 			vars.Inputs["_csrf"] = csrf
 			return vars, nil
@@ -35,12 +35,12 @@ func FormValues(reader io.Reader, id string) (FormVars, error) {
 
 		form := doc.Find(id).First()
 		if form.Length() != 1 {
-			return vars, errors.New("unexpected length")
+			return vars, errors.New("form not found")
 		}
 
 		action, exists := form.Attr("action")
 		if !exists {
-			return vars, errors.New("attribute not found")
+			return vars, errors.New("form attribute not found")
 		}
 		vars.Action = action
 
