@@ -2,7 +2,6 @@ package request
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -35,9 +34,9 @@ func min(a, b int) int {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	var bld strings.Builder
-	bld.WriteString(fmt.Sprintf("%s %s", req.Method, req.URL.String()))
+	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
+	var bld strings.Builder
 	if body, err := httputil.DumpRequestOut(req, true); err == nil {
 		bld.WriteString("\n")
 		bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
