@@ -40,7 +40,7 @@ func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, erro
 		err = tr.DoJSON(req, &res)
 	}
 
-	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusUnauthorized, http.StatusForbidden) {
+	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden) {
 		res, err = tr.login()
 	}
 
