@@ -19,11 +19,13 @@ type roundTripper struct {
 const max = 2048 * 2
 
 var (
-	reqMetric *prometheus.SummaryVec
-	errMetric *prometheus.CounterVec
+	reqMetric            *prometheus.SummaryVec
+	cntMetric, errMetric *prometheus.CounterVec
 )
 
 func init() {
+	labels := []string{"host"}
+
 	reqMetric = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Namespace: "evcc",
 		Subsystem: "http",
@@ -34,22 +36,23 @@ func init() {
 			0.9:  0.01,  // 90th percentile with a max. absolute error of 0.01
 			0.99: 0.001, // 99th percentile with a max. absolute error of 0.001
 		},
-	}, []string{"host"})
+	}, labels)
 
-	if err := prometheus.Register(reqMetric); err != nil {
-		panic(err)
-	}
+	cntMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "evcc",
+		Subsystem: "http",
+		Name:      "request_total",
+		Help:      "Total count of HTTP requests",
+	}, labels)
 
 	errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "evcc",
 		Subsystem: "http",
 		Name:      "request_errors",
 		Help:      "Total count of HTTP request errors",
-	}, []string{"host"})
+	}, labels)
 
-	if err := prometheus.Register(errMetric); err != nil {
-		panic(err)
-	}
+	prometheus.MustRegister(reqMetric, cntMetric, errMetric)
 }
 
 // NewTripper creates a logging roundtrip handler
@@ -80,24 +83,17 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	startTime := time.Now()
 	resp, err := r.base.RoundTrip(req)
+	cntMetric.WithLabelValues(req.URL.Hostname()).Add(1)
 
 	if err == nil {
-		if mv, err := reqMetric.GetMetricWith(prometheus.Labels{
-			"host": req.URL.Hostname(),
-		}); err == nil {
-			mv.Observe(time.Since(startTime).Seconds())
-		}
+		reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
 			bld.WriteString("\n\n")
 			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 		}
 	} else {
-		if mv, err := errMetric.GetMetricWith(prometheus.Labels{
-			"host": req.URL.Hostname(),
-		}); err == nil {
-			mv.Add(1)
-		}
+		errMetric.WithLabelValues(req.URL.Hostname()).Add(1)
 	}
 
 	if bld.Len() > 0 {
