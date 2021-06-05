@@ -67,10 +67,12 @@ func (s *Estimator) ResetCapacity(capacity int64) {
 // 	return s.UpdateSoC(f, chargedEnergy), err
 // }
 
-func (s *Estimator) SoC(soc, chargedEnergy float64) float64 {
+func (s *Estimator) SoC(soc, chargedEnergy float64, socKnown bool) float64 {
 	estimatedSoC := soc
 
-	if s.estimate {
+	if socKnown {
+		s.measuredSoC = soc
+	} else if s.estimate {
 		socDelta := soc - s.measuredSoC
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
@@ -113,7 +115,7 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
 func (s *Estimator) RemainingChargeDuration(targetSoC int, chargePower float64, timeRemaining time.Duration) time.Duration {
-	if chargePower <= 0 {
+	if chargePower <= 50 {
 		return -1
 	}
 
