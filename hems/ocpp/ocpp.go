@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/hems/ocpp/profile"
 	"github.com/andig/evcc/util"
@@ -81,14 +82,12 @@ func (s *OCPP) errorHandler(errC <-chan error) {
 // Run executes the OCPP chargepoint client
 func (s *OCPP) Run() {
 	for {
-		for id := range s.site.LoadPoints() {
+		for id, lp := range s.site.LoadPoints() {
 			connector := id + 1
 
 			status := ocppcore.ChargePointStatusAvailable
-			if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
-				if statusP.Val.(bool) {
-					status = ocppcore.ChargePointStatusCharging
-				}
+			if lp.GetStatus() == api.StatusC {
+				status = ocppcore.ChargePointStatusCharging
 			}
 
 			s.log.TRACE.Printf("send: lp-%d status: %+v", connector, status)
