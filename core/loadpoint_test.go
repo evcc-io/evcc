@@ -370,21 +370,21 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle, false)
+	estimator := soc.NewEstimator(util.NewLogger("foo"), 10, false)
 
 	lp := &LoadPoint{
-		log:          util.NewLogger("foo"),
-		bus:          evbus.New(),
-		clock:        clock,
-		charger:      charger,
-		chargeMeter:  &Null{}, // silence nil panics
-		chargeRater:  &Null{}, // silence nil panics
-		chargeTimer:  &Null{}, // silence nil panics
-		MinCurrent:   minA,
-		MaxCurrent:   maxA,
-		vehicle:      vehicle,      // needed for targetSoC check
-		socEstimator: socEstimator, // instead of vehicle: vehicle,
-		Mode:         api.ModeNow,
+		log:         util.NewLogger("foo"),
+		bus:         evbus.New(),
+		clock:       clock,
+		charger:     charger,
+		chargeMeter: &Null{}, // silence nil panics
+		chargeRater: &Null{}, // silence nil panics
+		chargeTimer: &Null{}, // silence nil panics
+		MinCurrent:  minA,
+		MaxCurrent:  maxA,
+		vehicle:     vehicle,   // needed for targetSoC check
+		estimator:   estimator, // instead of vehicle: vehicle,
+		Mode:        api.ModeNow,
 		SoC: SoCConfig{
 			Target: 90,
 			Poll: PollConfig{
