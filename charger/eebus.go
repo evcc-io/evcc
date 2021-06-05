@@ -29,7 +29,6 @@ type EEBus struct {
 	maxCurrent          float64
 	connected           bool
 	expectedEnableState bool
-	disablePending      bool
 }
 
 func init() {
@@ -122,11 +121,6 @@ func (c *EEBus) showCurrentChargingSetup() {
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
-	if c.disablePending {
-		c.log.TRACE.Println("DISABLEPENDING try resolving")
-		c.Enable(false)
-	}
-
 	// we receive data, so it is connected
 	c.connected = true
 
@@ -219,10 +213,6 @@ func (c *EEBus) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *EEBus) Enable(enable bool) error {
-	if !enable {
-		c.disablePending = true
-	}
-
 	data, err := c.cc.GetData()
 	if err != nil {
 		c.log.TRACE.Printf("enable: no eebus data available yet")
@@ -246,17 +236,7 @@ func (c *EEBus) Enable(enable bool) error {
 		//   switching between 1/3 phases: stop charging, pause for 2 minutes, change phases, resume charging
 		//   frequent switching should be avoided by all means!
 		c.maxCurrent = 0
-		err = c.writeCurrentLimitData([]float64{0.0, 0.0, 0.0})
-		if err == nil {
-			c.disablePending = false
-		} else {
-			c.log.TRACE.Println("DISABLEPENDING ENABLED!!!")
-		}
-		return err
-	}
-
-	if c.disablePending && enable {
-		c.disablePending = false
+		return c.writeCurrentLimitData([]float64{0.0, 0.0, 0.0})
 	}
 
 	// if we set MaxCurrent > Min value and then try to enable the charger, it would reset it to min
