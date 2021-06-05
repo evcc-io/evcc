@@ -14,7 +14,7 @@
 				{{ socChargeDisplayValue }}
 			</div>
 			<div
-				v-if="remainingSoCWidth > 0"
+				v-if="remainingSoCWidth > 0 && enabled"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -76,13 +76,13 @@ export default {
 		socChargeDisplayValue: function () {
 			// no soc or no soc value
 			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
-				let chargeStatus = "getrennt";
+				let chargeStatus = this.$t("main.vehicleSoc.disconnected");
 				if (this.charging) {
-					chargeStatus = "lädt";
+					chargeStatus = this.$t("main.vehicleSoc.charging");
 				} else if (this.enabled) {
-					chargeStatus = "bereit";
+					chargeStatus = this.$t("main.vehicleSoc.ready");
 				} else if (this.connected) {
-					chargeStatus = "verbunden";
+					chargeStatus = this.$t("main.vehicleSoc.connected");
 				}
 				return chargeStatus;
 			}
@@ -101,10 +101,7 @@ export default {
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
-			if (this.enabled) {
-				return "bg-primary";
-			}
-			return "bg-secondary";
+			return "bg-primary";
 		},
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.socCharge < this.minSoC;
@@ -221,7 +218,7 @@ export default {
 	top: calc(var(--label-height) * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
+	padding: 0 var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
 	background-color: var(--bs-gray-dark);

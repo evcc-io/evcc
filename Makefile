@@ -102,13 +102,4 @@ image-update:
 
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/soc/client
-
-server:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -o soc-server $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/soc/server
-
-publish-server:
-	GOOS=linux GOARCH=amd64 go build -o soc-server $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/soc/server
-	docker build -f soc/Dockerfile --platform linux/amd64 -t andig/evcc-cloud .
-	docker push andig/evcc-cloud
+	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/cmd/soc

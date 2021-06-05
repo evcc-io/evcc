@@ -7,10 +7,18 @@ import (
 	"github.com/andig/evcc/core/wrapper"
 )
 
+// LoadpointController gives access to loadpoint
+type LoadpointController interface {
+	LoadpointControl(LoadPointAPI)
+}
+
 // LoadPointAPI is the external loadpoint API
 type LoadPointAPI interface {
 	Name() string
 	HasChargeMeter() bool
+
+	// status
+	GetStatus() api.ChargeStatus
 
 	// settings
 	GetMode() api.ChargeMode
@@ -23,10 +31,19 @@ type LoadPointAPI interface {
 	RemoteControl(string, RemoteDemand)
 
 	// energy
-	GetMinCurrent() int64
-	GetMaxCurrent() int64
-	GetMinPower() int64
-	GetMaxPower() int64
+	GetMinCurrent() float64
+	SetMinCurrent(float64)
+	GetMaxCurrent() float64
+	SetMaxCurrent(float64)
+	GetMinPower() float64
+	GetMaxPower() float64
+}
+
+// GetStatus returns the charging status
+func (lp *LoadPoint) GetStatus() api.ChargeStatus {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.status
 }
 
 // GetMode returns loadpoint charge mode
@@ -47,6 +64,10 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	if lp.Mode != mode {
 		lp.Mode = mode
 		lp.publish("mode", mode)
+
+		// immediately allow pv mode activity
+		lp.pvDisableTimer()
+
 		lp.requestUpdate()
 	}
 }
@@ -149,22 +170,48 @@ func (lp *LoadPoint) HasChargeMeter() bool {
 	return lp.chargeMeter != nil && !isWrapped
 }
 
-// GetMinCurrent returns the minimal loadpoint current
-func (lp *LoadPoint) GetMinCurrent() int64 {
+// GetMinCurrent returns the min loadpoint current
+func (lp *LoadPoint) GetMinCurrent() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return lp.MinCurrent
 }
 
-// GetMaxCurrent returns the minimal loadpoint current
-func (lp *LoadPoint) GetMaxCurrent() int64 {
+// SetMinCurrent returns the min loadpoint current
+func (lp *LoadPoint) SetMinCurrent(current float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if current != lp.MinCurrent {
+		lp.MinCurrent = current
+		lp.publish("minCurrent", lp.MinCurrent)
+	}
+}
+
+// GetMaxCurrent returns the max loadpoint current
+func (lp *LoadPoint) GetMaxCurrent() float64 {
+	lp.Lock()
+	defer lp.Unlock()
 	return lp.MaxCurrent
 }
 
-// GetMinPower returns the minimal loadpoint power for a single phase
-func (lp *LoadPoint) GetMinPower() int64 {
-	return int64(Voltage) * lp.MinCurrent
+// SetMaxCurrent returns the max loadpoint current
+func (lp *LoadPoint) SetMaxCurrent(current float64) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if current != lp.MaxCurrent {
+		lp.MaxCurrent = current
+		lp.publish("maxCurrent", lp.MaxCurrent)
+	}
 }
 
-// GetMaxPower returns the minimal loadpoint power taking active phases into account
-func (lp *LoadPoint) GetMaxPower() int64 {
-	return int64(Voltage) * lp.Phases * lp.MaxCurrent
+// GetMinPower returns the min loadpoint power for a single phase
+func (lp *LoadPoint) GetMinPower() float64 {
+	return Voltage * lp.GetMinCurrent()
+}
+
+// GetMaxPower returns the max loadpoint power taking active phases into account
+func (lp *LoadPoint) GetMaxPower() float64 {
+	return Voltage * lp.GetMaxCurrent() * float64(lp.Phases)
 }

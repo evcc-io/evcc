@@ -2,10 +2,12 @@
 	<div class="row justify-content-md-start overflow-hidden" :class="`row-cols-${numberOfPanels}`">
 		<div class="px-3" :class="panelClass" v-if="gridConfigured">
 			<div class="mb-2 value" v-if="gridPower > 0">
-				Bezug <fa-icon icon="arrow-down" class="text-primary" />
+				{{ $t("main.siteDetails.import") }}
+				<fa-icon icon="arrow-down" class="text-primary" />
 			</div>
 			<div class="mb-2 value" v-else>
-				Einspeisung <fa-icon icon="arrow-up" class="text-primary"></fa-icon>
+				{{ $t("main.siteDetails.export") }}
+				<fa-icon icon="arrow-up" class="text-primary"></fa-icon>
 			</div>
 			<h3 class="value">
 				{{ fmt(gridPower) }}
@@ -15,7 +17,7 @@
 
 		<div class="px-3" :class="panelClass" v-if="pvConfigured">
 			<div class="mb-2 value">
-				Erzeugung
+				{{ $t("main.siteDetails.production") }}
 				<fa-icon
 					icon="sun"
 					:class="{
@@ -32,10 +34,12 @@
 		<div class="px-3" :class="panelClass" v-if="batteryConfigured">
 			<div class="mb-2 value">
 				<div class="d-block d-sm-none">
-					Akku <span class="text-muted"> / {{ batterySoC }} %</span>
+					{{ $t("main.siteDetails.batteryShort") }}
+					<span class="text-muted"> / {{ batterySoC }} %</span>
 				</div>
 				<div class="d-none d-sm-block">
-					Batterie <span class="text-muted"> / {{ batterySoC }}% </span>
+					{{ $t("main.siteDetails.batteryLong") }}
+					<span class="text-muted"> / {{ batterySoC }}% </span>
 					<fa-icon class="text-primary" :icon="batteryIcon"></fa-icon>
 				</div>
 			</div>

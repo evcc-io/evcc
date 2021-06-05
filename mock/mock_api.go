@@ -205,6 +205,21 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
+// Identify mocks base method.
+func (m *MockVehicle) Identify() (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Identify")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Identify indicates an expected call of Identify.
+func (mr *MockVehicleMockRecorder) Identify() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identify", reflect.TypeOf((*MockVehicle)(nil).Identify))
+}
+
 // SoC mocks base method.
 func (m *MockVehicle) SoC() (float64, error) {
 	m.ctrl.T.Helper()

@@ -6,7 +6,7 @@ import (
 
 var (
 	status   = map[bool]string{false: "disable", true: "enable"}
-	presence = map[bool]string{false: "—", true: "✓"}
+	presence = map[bool]string{false: "✗", true: "✓"}
 
 	// retryOptions ist the default options set for retryable operations
 	retryOptions = []retry.Option{retry.Attempts(3), retry.LastErrorOnly(true)}
