@@ -163,28 +163,35 @@ func (v *Identity) postTos(uri string) (*http.Response, error) {
 
 // LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
 func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
-	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+	login := func() (oauth.Token, error) {
+		var token oauth.Token
+		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
-	q, err := v.login(uri, user, password)
-	if err == nil {
-		data := url.Values(map[string][]string{
-			"grant_type": {"id_token"},
-			"scope":      {"sc2:fal"},
-			"token":      {q.Get("id_token")},
-		})
-
-		var req *http.Request
-		req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
-			"Content-Type": "application/x-www-form-urlencoded",
-			"X-Client-Id":  clientID,
-		})
-
+		q, err := v.login(uri, user, password)
 		if err == nil {
-			var token oauth.Token
-			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), Refresher(v.log, clientID))
+			data := url.Values(map[string][]string{
+				"grant_type": {"id_token"},
+				"scope":      {"sc2:fal"},
+				"token":      {q.Get("id_token")},
+			})
+
+			var req *http.Request
+			req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
+				"Content-Type": "application/x-www-form-urlencoded",
+				"X-Client-Id":  clientID,
+			})
+
+			if err == nil {
+				err = v.DoJSON(req, &token)
 			}
 		}
+
+		return token, err
+	}
+
+	token, err := login()
+	if err == nil {
+		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), Refresher(v.log, login, clientID))
 	}
 
 	return err
@@ -192,26 +199,33 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 
 // LoginSkoda performs Skoda login and finally exchanges code and id token for access and refresh tokens
 func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
-	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+	login := func() (oauth.Token, error) {
+		var token oauth.Token
+		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
-	q, err := v.login(uri, user, password)
-	if err == nil {
-		data := url.Values(map[string][]string{
-			"auth_code": {q.Get("code")},
-			"id_token":  {q.Get("id_token")},
-			"brand":     {"skoda"},
-		})
-
-		var req *http.Request
-		uri = fmt.Sprintf("%s/exchangeAuthCode", TokenServiceURI)
-		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
+		q, err := v.login(uri, user, password)
 		if err == nil {
-			var token oauth.Token
-			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), skoda.Refresher(v.log))
+			data := url.Values(map[string][]string{
+				"auth_code": {q.Get("code")},
+				"id_token":  {q.Get("id_token")},
+				"brand":     {"skoda"},
+			})
+
+			var req *http.Request
+			uri = fmt.Sprintf("%s/exchangeAuthCode", TokenServiceURI)
+			req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+
+			if err == nil {
+				err = v.DoJSON(req, &token)
 			}
 		}
+
+		return token, err
+	}
+
+	token, err := login()
+	if err == nil {
+		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), skoda.Refresher(v.log, login))
 	}
 
 	return err
@@ -219,29 +233,36 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 
 // LoginID performs ID login and finally exchanges state and id token for access and refresh tokens
 func (v *Identity) LoginID(query url.Values, user, password string) error {
-	uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())
+	login := func() (id.Token, error) {
+		var token id.Token
+		uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())
 
-	q, err := v.login(uri, user, password)
-	if err == nil {
-		data := map[string]string{
-			"state":             q.Get("state"),
-			"id_token":          q.Get("id_token"),
-			"redirect_uri":      "weconnect://authenticated",
-			"region":            "emea",
-			"access_token":      q.Get("access_token"),
-			"authorizationCode": q.Get("code"),
-		}
-
-		var req *http.Request
-		uri = fmt.Sprintf("%s/login/v1", AppsURI)
-		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
+		q, err := v.login(uri, user, password)
 		if err == nil {
-			var token id.Token
-			if err = v.DoJSON(req, &token); err == nil {
-				v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), id.Refresher(v.log))
+			data := map[string]string{
+				"state":             q.Get("state"),
+				"id_token":          q.Get("id_token"),
+				"redirect_uri":      "weconnect://authenticated",
+				"region":            "emea",
+				"access_token":      q.Get("access_token"),
+				"authorizationCode": q.Get("code"),
+			}
+
+			var req *http.Request
+			uri = fmt.Sprintf("%s/login/v1", AppsURI)
+			req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+
+			if err == nil {
+				err = v.DoJSON(req, &token)
 			}
 		}
+
+		return token, err
+	}
+
+	token, err := login()
+	if err == nil {
+		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), id.Refresher(v.log, login))
 	}
 
 	return err

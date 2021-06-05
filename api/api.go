@@ -64,7 +64,7 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// Charger is able to provide current charging status and to enable/disabler charging
+// Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)

@@ -2,12 +2,13 @@ package request
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"github.com/andig/evcc/util"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type roundTripper struct {
@@ -16,6 +17,43 @@ type roundTripper struct {
 }
 
 const max = 2048 * 2
+
+var (
+	reqMetric            *prometheus.SummaryVec
+	cntMetric, errMetric *prometheus.CounterVec
+)
+
+func init() {
+	labels := []string{"host"}
+
+	reqMetric = prometheus.NewSummaryVec(prometheus.SummaryOpts{
+		Namespace: "evcc",
+		Subsystem: "http",
+		Name:      "request_duration_seconds",
+		Help:      "A summary of HTTP request durations",
+		Objectives: map[float64]float64{
+			0.5:  0.05,  // 50th percentile with a max. absolute error of 0.05
+			0.9:  0.01,  // 90th percentile with a max. absolute error of 0.01
+			0.99: 0.001, // 99th percentile with a max. absolute error of 0.001
+		},
+	}, labels)
+
+	cntMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "evcc",
+		Subsystem: "http",
+		Name:      "request_total",
+		Help:      "Total count of HTTP requests",
+	}, labels)
+
+	errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "evcc",
+		Subsystem: "http",
+		Name:      "request_errors",
+		Help:      "Total count of HTTP request errors",
+	}, labels)
+
+	prometheus.MustRegister(reqMetric, cntMetric, errMetric)
+}
 
 // NewTripper creates a logging roundtrip handler
 func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
@@ -35,21 +73,27 @@ func min(a, b int) int {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	var bld strings.Builder
-	bld.WriteString(fmt.Sprintf("%s %s", req.Method, req.URL.String()))
+	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
 
+	var bld strings.Builder
 	if body, err := httputil.DumpRequestOut(req, true); err == nil {
 		bld.WriteString("\n")
 		bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 	}
 
+	startTime := time.Now()
 	resp, err := r.base.RoundTrip(req)
+	cntMetric.WithLabelValues(req.URL.Hostname()).Add(1)
 
-	if resp != nil {
+	if err == nil {
+		reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
+
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
 			bld.WriteString("\n\n")
 			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 		}
+	} else {
+		errMetric.WithLabelValues(req.URL.Hostname()).Add(1)
 	}
 
 	if bld.Len() > 0 {

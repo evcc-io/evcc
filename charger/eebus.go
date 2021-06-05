@@ -92,8 +92,8 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		return
 	}
 
-	newMin := int64(data.EVData.LimitsL1.Min)
-	newMax := int64(data.EVData.LimitsL1.Max)
+	newMin := data.EVData.LimitsL1.Min
+	newMax := data.EVData.LimitsL1.Max
 
 	if c.lp.GetMinCurrent() != newMin && newMin > 0 {
 		c.lp.SetMinCurrent(newMin)
@@ -102,7 +102,8 @@ func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType)
 		c.lp.SetMaxCurrent(newMax)
 	}
 
-	c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
+	// TODO uncomment once the API is available
+	// c.lp.SetPhases(int64(data.EVData.ConnectedPhases))
 }
 
 func (c *EEBus) showCurrentChargingSetup() {
