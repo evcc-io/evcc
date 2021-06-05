@@ -192,6 +192,7 @@ Available charger implementations are:
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `warp`: Tinkerforge Warp/ Warp Pro charger
+- `easee`: Easee Home charger (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 - `custom`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Smart-Home outlet charger implementations:
