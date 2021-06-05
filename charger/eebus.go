@@ -247,6 +247,19 @@ func (c *EEBus) Enable(enable bool) error {
 	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
 }
 
+// returns true if the connected EV supports charging recommandation
+func (c *EEBus) recommendationChargingPossible() bool {
+	data, err := c.cc.GetData()
+	if err == nil {
+		// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
+		if data.EVData.AsymetricChargingSupported {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
@@ -258,7 +271,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	obligationEnabled := true
 
 	// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
-	if data.EVData.AsymetricChargingSupported {
+	if c.recommendationChargingPossible() {
 		obligationEnabled = c.forcePVLimits
 		if c.lp != nil && !obligationEnabled {
 			// recommendations only work in PV modes
