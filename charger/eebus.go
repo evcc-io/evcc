@@ -181,7 +181,10 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	case communication.EVChargeStateEnumTypeError: // Error
 		return api.StatusF, nil
 	case communication.EVChargeStateEnumTypeActive: // Active
-		return api.StatusC, nil
+		if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
+			return api.StatusC, nil
+		}
+		return api.StatusB, nil
 	}
 	return api.StatusNone, fmt.Errorf("properties unknown result: %s", currentState)
 }
