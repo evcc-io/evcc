@@ -435,11 +435,18 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+// syncCharger updates charger status and synchronizes it with expectations
 func (lp *LoadPoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
-	if err == nil && enabled != lp.enabled {
-		lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-		err = lp.charger.Enable(lp.enabled)
+	if err == nil {
+		if enabled != lp.enabled {
+			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+			err = lp.charger.Enable(lp.enabled)
+		}
+
+		if !enabled && lp.GetStatus() == api.StatusC {
+			lp.log.WARN.Println("charger logic error: disabled but charging")
+		}
 	}
 
 	if err != nil {
@@ -447,6 +454,7 @@ func (lp *LoadPoint) syncCharger() {
 	}
 }
 
+// setLimit applies charger current limits and enables/disables accordingly
 func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
@@ -714,6 +722,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 	if lp.GetStatus() != api.StatusC {
 		return 0
 	}
+
 	return lp.chargeCurrent
 }
 
@@ -757,9 +766,11 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 			lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
+			lp.log.DEBUG.Printf("reset pv disable timer: %v", lp.Disable.Delay)
 			lp.pvTimer = lp.clock.Now()
 		}
 
+		lp.log.DEBUG.Println("pv enable timer: keep enabled")
 		return minCurrent
 	}
 
@@ -783,9 +794,11 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
+			lp.log.DEBUG.Printf("reset pv enable timer: %v", lp.Enable.Delay)
 			lp.pvTimer = lp.clock.Now()
 		}
 
+		lp.log.DEBUG.Println("pv enable timer: keep disabled")
 		return 0
 	}
 
