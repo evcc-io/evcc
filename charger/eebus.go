@@ -270,6 +270,9 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 		return err
 	}
 
+	selfConsumptionCurrents := []float64{0.0, 0.0, 0.0}
+	overloadProtectionCurrents := currents
+
 	// are the limits obligations or recommendations
 	// in the scenarios IEC, ISO without asymetric charging, the limits are always obligations
 	obligationEnabled := true
@@ -288,14 +291,11 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 
 	// when recommending a current make sure the overload protection limit is set to max
 	if !obligationEnabled {
-		err = c.cc.WriteCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent}, true, data.EVData)
-		if err != nil {
-			c.log.ERROR.Println("setting max current to max limits when charing with recommendations failed: ", err)
-			return err
-		}
+		selfConsumptionCurrents = currents
+		overloadProtectionCurrents = []float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max}
 	}
 
-	return c.cc.WriteCurrentLimitData(currents, obligationEnabled, data.EVData)
+	return c.cc.WriteCurrentLimitData(overloadProtectionCurrents, selfConsumptionCurrents, data.EVData)
 }
 
 // MaxCurrent implements the api.Charger interface
