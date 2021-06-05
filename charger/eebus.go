@@ -24,7 +24,9 @@ type EEBus struct {
 	lp            core.LoadPointAPI
 	forcePVLimits bool
 
-	communicationStandard communication.EVCommunicationStandardEnumType
+	communicationStandard           communication.EVCommunicationStandardEnumType
+	socSupportAvailable             bool
+	selfConsumptionSupportAvailable bool
 
 	maxCurrent          float64
 	connected           bool
@@ -113,12 +115,27 @@ func (c *EEBus) showCurrentChargingSetup() {
 	}
 
 	prevComStandard := c.communicationStandard
+	prevSoCSupport := c.socSupportAvailable
+	prevSelfConsumptionSupport := c.selfConsumptionSupportAvailable
 
 	if prevComStandard != data.EVData.CommunicationStandard {
 		c.communicationStandard = data.EVData.CommunicationStandard
 		timestamp := time.Now()
 		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-communication changed from ", prevComStandard, " to ", data.EVData.CommunicationStandard)
 	}
+
+	if prevSoCSupport != data.EVData.UCSoCAvailable {
+		c.socSupportAvailable = data.EVData.UCSoCAvailable
+		timestamp := time.Now()
+		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-soc support changed from ", prevSoCSupport, " to ", data.EVData.UCSoCAvailable)
+	}
+
+	if prevSelfConsumptionSupport != data.EVData.UCSelfConsumptionAvailable {
+		c.selfConsumptionSupportAvailable = data.EVData.UCSelfConsumptionAvailable
+		timestamp := time.Now()
+		c.log.WARN.Println(timestamp.Format("2006-01-02 15:04:05"), " ev-charger-self-consumption-support support changed from ", prevSelfConsumptionSupport, " to ", data.EVData.UCSelfConsumptionAvailable)
+	}
+
 }
 
 func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType, data *communication.EVSEClientDataType) {
@@ -128,32 +145,28 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	c.showCurrentChargingSetup()
 
 	switch dataType {
+	case communication.EVDataElementUpdateUseCaseSelfConsumption:
+		// if availability of self consumption use case changes, resend the current charging limit
+		c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
+	// case communication.EVDataElementUpdateUseCaseSoC:
 	case communication.EVDataElementUpdateEVConnectionState:
 		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
 			c.expectedEnableState = false
 		}
 		c.setLoadpointMinMaxLimits(data)
-		return
 	case communication.EVDataElementUpdateCommunicationStandard:
 		c.communicationStandard = data.EVData.CommunicationStandard
 		c.setLoadpointMinMaxLimits(data)
-		return
 	case communication.EVDataElementUpdateAsymetricChargingType:
 		c.setLoadpointMinMaxLimits(data)
-		return
-	case communication.EVDataElementUpdateEVSEOperationState:
-		return
-	case communication.EVDataElementUpdateEVChargeState:
-		return
+	// case communication.EVDataElementUpdateEVSEOperationState:
+	// case communication.EVDataElementUpdateEVChargeState:
 	case communication.EVDataElementUpdateConnectedPhases:
 		c.setLoadpointMinMaxLimits(data)
-		return
 	case communication.EVDataElementUpdatePowerLimits:
 		c.setLoadpointMinMaxLimits(data)
-		return
 	case communication.EVDataElementUpdateAmperageLimits:
 		c.setLoadpointMinMaxLimits(data)
-		return
 	}
 }
 
@@ -252,13 +265,10 @@ func (c *EEBus) Enable(enable bool) error {
 }
 
 // returns true if the connected EV supports charging recommandation
-func (c *EEBus) recommendationChargingPossible() bool {
+func (c *EEBus) optimizationSelfConsumptionAvailable() bool {
 	data, err := c.cc.GetData()
 	if err == nil {
-		// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
-		if data.EVData.AsymetricChargingSupported {
-			return true
-		}
+		return data.EVData.UCSelfConsumptionAvailable
 	}
 
 	return false
@@ -277,8 +287,7 @@ func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	// in the scenarios IEC, ISO without asymetric charging, the limits are always obligations
 	obligationEnabled := true
 
-	// only if asymetricChargingEnabled is true, SelfConsumption is supported and forcePVLimits=false may be considered
-	if c.recommendationChargingPossible() {
+	if c.optimizationSelfConsumptionAvailable() {
 		obligationEnabled = c.forcePVLimits
 		if c.lp != nil && !obligationEnabled {
 			// recommendations only work in PV modes
@@ -451,7 +460,7 @@ func (c *EEBus) SoC() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 
-	if !data.EVData.SoCDataAvailable {
+	if !data.EVData.UCSoCAvailable || !data.EVData.SoCDataAvailable {
 		c.log.TRACE.Printf("soc: feature not available")
 		return 0, api.ErrNotAvailable
 	}
