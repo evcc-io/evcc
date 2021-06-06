@@ -104,7 +104,7 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		}
 
 		if sm.device == nil {
-			return nil, fmt.Errorf("failed to find device wirth serial: %s", serial)
+			return nil, fmt.Errorf("failed to find device with serial: %s", serial)
 		}
 	} else {
 		return nil, errors.New("missing uri or serial")

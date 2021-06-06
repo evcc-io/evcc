@@ -722,8 +722,8 @@ github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-gitlab.com/bboehmke/sunny v0.10.3 h1:p+jrs84HvKzdUjCy7hPUv1LO+ueQJvIFMN5Y1OTofc4=
-gitlab.com/bboehmke/sunny v0.10.3/go.mod h1:ccjTFmq8sFeBctdsjVUhWde9PCvQ91dqqeJJaBV1ZNc=
+gitlab.com/bboehmke/sunny v0.10.4 h1:+ASfNtSCK0ct4LJsHURpf1xBgklftgZNc8vK0QWl0q0=
+gitlab.com/bboehmke/sunny v0.10.4/go.mod h1:ccjTFmq8sFeBctdsjVUhWde9PCvQ91dqqeJJaBV1ZNc=
 go.coder.com/go-tools v0.0.0-20190317003359-0c6a35b74a16/go.mod h1:iKV5yK9t+J5nG9O3uF6KYdPEz3dyfMyB15MN1rbQ8Qw=
 go.etcd.io/bbolt v1.3.2/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
