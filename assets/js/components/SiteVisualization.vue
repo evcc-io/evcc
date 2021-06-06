@@ -1,28 +1,38 @@
 <template>
 	<div>
+		<div class="labels d-flex justify-content-between">
+			<div>
+				Verbrauch:
+				<strong class="label-usage">{{ kw(usage) }}</strong>
+			</div>
+			<div>
+				Einspeisung:
+				<strong class="label-pv-export">{{ kw(pvExport) }}</strong>
+			</div>
+		</div>
 		<div class="site-progress">
-			<div class="grid-used" :style="{ width: width(gridUsed) }">
+			<div class="usage" :style="{ width: width(usage) }"></div>
+			<!--
+			<div class="grid-usage" :style="{ width: width(gridUsage) }">
 				<span class="label">Bezug</span>
-				<span class="detail">{{ kw(gridUsed) }}</span>
+				<span class="detail">{{ kw(gridUsage) }}</span>
 			</div>
-			<div class="pv-used" :style="{ width: width(pvUsed) }">
+			<div class="pv-usage" :style="{ width: width(pvUsage) }">
 				<span class="label">Eigenverbrauch</span>
-				<span class="detail">{{ kw(pvUsed) }}</span>
+				<span class="detail">{{ kw(pvUsage) }}</span>
 			</div>
-			<div class="pv-available" :style="{ width: width(pvAvailable) }">
-				<span class="label">Einspeisung</span>
-				<span class="detail">{{ kw(pvAvailable) }}</span>
-			</div>
+			-->
+			<div class="pv-export" :style="{ width: width(pvExport) }"></div>
 		</div>
 		<div class="site-charger">
 			<div
 				class="charger1"
 				:style="{
-					width: width(Math.min(used, loadpoints[0].chargePower)),
-					marginRight: width(pvAvailable),
+					width: width(Math.min(usage, loadpoints[0].chargePower)),
+					marginRight: width(pvExport),
 				}"
 			>
-				<span>{{ kw(Math.min(used, loadpoints[0].chargePower)) }}</span>
+				<span>{{ kw(Math.min(usage, loadpoints[0].chargePower)) }}</span>
 			</div>
 		</div>
 	</div>
@@ -46,20 +56,20 @@ export default {
 	},
 	mixins: [formatter],
 	computed: {
-		used: function () {
-			return this.pvPower + this.gridPower;
+		usage: function () {
+			return Math.max(0, this.pvPower + this.gridPower);
 		},
-		gridUsed: function () {
+		gridUsage: function () {
 			return Math.max(0, this.gridPower);
 		},
-		pvUsed: function () {
+		pvUsage: function () {
 			return Math.min(this.pvPower, this.pvPower + this.gridPower);
 		},
-		pvAvailable: function () {
-			return this.pvPower - this.pvUsed;
+		pvExport: function () {
+			return this.pvPower - this.pvUsage;
 		},
 		max: function () {
-			return this.gridUsed + this.pvUsed + this.pvAvailable;
+			return this.usage + this.pvExport;
 		},
 	},
 	methods: {
@@ -74,9 +84,8 @@ export default {
 </script>
 <style scoped>
 .site-progress {
-	margin: 3rem 0 1rem;
+	margin: 1rem 0;
 	height: 1.5rem;
-	background-color: #eee;
 	display: flex;
 }
 .site-progress .label {
@@ -86,23 +95,30 @@ export default {
 	display: block;
 }
 
-.grid-used {
+.usage {
+	background-color: #999;
+	color: #eee;
+	border-radius: 5px;
+}
+.grid-usage {
 	background-color: #18191a;
 	color: #eee;
 }
-.pv-used {
+.pv-usage {
 	background-color: #66d85a;
 	color: #18191a;
 }
-.pv-available {
+.pv-export {
 	background-color: #fbdf4b;
 	color: #18191a;
+	margin-left: 10px;
+	border-radius: 5px;
 }
-.grid-used,
-.pv-used,
-.pv-available {
+.usage,
+.grid-usage,
+.pv-usage,
+.pv-export {
 	overflow-x: hidden;
-	border-right: 1px solid #eee;
 	display: flex;
 	justify-content: center;
 	align-items: center;
