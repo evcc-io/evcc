@@ -19,6 +19,9 @@ import (
 	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/pipe"
 	"github.com/andig/evcc/util/sponsor"
+	"github.com/denisbrodbeck/machineid"
+	"github.com/prometheus/client_golang/prometheus"
+	prompush "github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/viper"
 )
 
@@ -41,6 +44,24 @@ func loadConfigFile(cfgFile string) (conf config, err error) {
 	return conf, err
 }
 
+func configureReporting() {
+	id, err := machineid.ProtectedID("evcc-push")
+	if err != nil {
+		id = fmt.Sprintf("%d", rand.Int31())
+	}
+
+	uri := util.Getenv("PUSH_URI", cloud.Push)
+	pusher := prompush.New(uri, "evcc").Gatherer(prometheus.DefaultGatherer).Grouping("instance", id)
+
+	go func() {
+		for range time.NewTicker(time.Minute).C {
+			if err := pusher.Push(); err != nil {
+				log.ERROR.Println("reporting:", err)
+			}
+		}
+	}()
+}
+
 func configureEnvironment(conf config) (err error) {
 	// setup sponsorship
 	if conf.SponsorToken != "" {
@@ -61,7 +82,7 @@ func configureEnvironment(conf config) (err error) {
 }
 
 func configureSponsorship(token string) error {
-	host := util.Getenv("GRPC_URI", cloud.Host)
+	host := util.Getenv("GRPC_URI", cloud.Grpc)
 	conn, err := cloud.Connection(host)
 	if err != nil {
 		return err
