@@ -44,6 +44,13 @@ Base.args = {
       time: timeAgo(1, 12, 44),
     },
     {
+      message:
+        "Block device full: can not write to /tmp/evcc/foobarloremawefhwuiehfwuiehfwiauhefjkajowaeigjwalvmoweivwail",
+      type: "error",
+      count: 1,
+      time: timeAgo(1, 12, 44),
+    },
+    {
       message: "charger out of sync: expected disabled, got enabled",
       type: "warn",
       count: 4,

@@ -17,7 +17,10 @@
 			role="dialog"
 			aria-hidden="true"
 		>
-			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+			<div
+				class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+				role="document"
+			>
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">{{ $t("notifications.modalTitle") }}</h5>
@@ -45,7 +48,7 @@
 									class="flex-grow-0 d-block"
 									icon="exclamation-triangle"
 								></fa-icon>
-								<span class="flex-grow-1 px-2 py-1">
+								<span class="flex-grow-1 px-2 py-1 text-break">
 									{{ msg.message }}
 								</span>
 								<span class="badge rounded-pill bg-secondary" v-if="msg.count > 1">
