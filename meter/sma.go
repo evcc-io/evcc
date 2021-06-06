@@ -48,7 +48,9 @@ func init() {
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Password, Serial, Interface, Power, Energy string
-	}{}
+	}{
+		Password: "0000",
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -61,13 +63,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
-	if password == "" {
-		password = "0000"
-	}
-
-	err := sunny.SetMulticastInterface(iface)
-	if err != nil {
-		return nil, err
+	if iface != "" {
+		err := sunny.SetMulticastInterface(iface)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	device, err := sunny.NewDevice(uri, password)
@@ -159,35 +159,27 @@ func (sm *SMA) updateValues() {
 			sm.values.power = sm.convertValue(power)
 			sm.mux.Update()
 		} else {
-			sm.log.WARN.Println("missing value for power")
+			sm.log.DEBUG.Println("missing value for power")
 		}
 
 		if currentL1, ok := vals["current_ac1"]; ok {
-			sm.values.currentL1 = sm.convertValue(currentL1)
+			sm.values.currentL1 = sm.convertValue(currentL1) / 1000
 			sm.mux.Update()
-		} else {
-			sm.log.WARN.Println("missing value for currentL1")
 		}
 
 		if currentL2, ok := vals["current_ac2"]; ok {
-			sm.values.currentL2 = sm.convertValue(currentL2)
+			sm.values.currentL2 = sm.convertValue(currentL2) / 1000
 			sm.mux.Update()
-		} else {
-			// can be missing for battery inverters
 		}
 
 		if currentL3, ok := vals["current_ac3"]; ok {
-			sm.values.currentL3 = sm.convertValue(currentL3)
+			sm.values.currentL3 = sm.convertValue(currentL3) / 1000
 			sm.mux.Update()
-		} else {
-			// can be missing for battery inverters
 		}
 
 		if soc, ok := vals["battery_charge"]; ok {
 			sm.values.soc = sm.convertValue(soc)
 			sm.mux.Update()
-		} else {
-			// only exist for battery inverters
 		}
 	}
 }
