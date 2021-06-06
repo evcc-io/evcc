@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net/http"
 	"net/http/httputil"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,8 +20,8 @@ type roundTripper struct {
 const max = 2048 * 2
 
 var (
-	reqMetric            *prometheus.SummaryVec
-	cntMetric, errMetric *prometheus.CounterVec
+	reqMetric                       *prometheus.SummaryVec
+	cntMetric, resMetric, errMetric *prometheus.CounterVec
 )
 
 func init() {
@@ -45,6 +46,13 @@ func init() {
 		Help:      "Total count of HTTP requests",
 	}, labels)
 
+	resMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "evcc",
+		Subsystem: "http",
+		Name:      "request_completed_total",
+		Help:      "Total count of completed HTTP requests",
+	}, append(labels, "status"))
+
 	errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "evcc",
 		Subsystem: "http",
@@ -52,7 +60,7 @@ func init() {
 		Help:      "Total count of HTTP request errors",
 	}, labels)
 
-	prometheus.MustRegister(reqMetric, cntMetric, errMetric)
+	prometheus.MustRegister(reqMetric, cntMetric, resMetric, errMetric)
 }
 
 // NewTripper creates a logging roundtrip handler
@@ -87,6 +95,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	if err == nil {
 		reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
+		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
 			bld.WriteString("\n\n")
