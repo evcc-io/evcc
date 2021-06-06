@@ -1,8 +1,10 @@
 package meter
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -70,24 +72,45 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		}
 	}
 
-	device, err := sunny.NewDevice(uri, password)
-	if err != nil {
-		return nil, err
-	}
-
 	sm := &SMA{
 		mux:          util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:          log,
 		uri:          uri,
-		serial:       serial, // TODO
+		serial:       serial,
 		iface:        iface,
 		powerO:       sma.Obis(power),  // TODO
 		energyO:      sma.Obis(energy), // TODO
-		device:       device,
 		updateTicker: time.NewTicker(time.Second),
 	}
 
-	vals, err := device.GetValues()
+	var err error
+	if uri != "" {
+		sm.device, err = sunny.NewDevice(uri, password)
+		if err != nil {
+			return nil, err
+		}
+	} else if serial != "" {
+		// list all devices
+		devices, err := sunny.DiscoverDevices(password)
+		if err != nil {
+			return nil, err
+		}
+
+		// check if device with serial number is present
+		for _, device := range devices {
+			if serial == strconv.FormatInt(int64(device.SerialNumber()), 10) {
+				sm.device = device
+			}
+		}
+
+		if sm.device == nil {
+			return nil, fmt.Errorf("failed to find device wirth serial: %s", serial)
+		}
+	} else {
+		return nil, errors.New("missing uri or serial")
+	}
+
+	vals, err := sm.device.GetValues()
 	if err != nil {
 		return nil, err
 	}
