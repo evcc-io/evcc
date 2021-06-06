@@ -1,7 +1,7 @@
 .PHONY: default all clean install install-ui ui assets lint lint-ui test build test-release release
 .PHONY: docker publish-testing publish-latest publish-images
 .PHONY: prepare-image image-rootfs image-update
-.PHONY: soc server server-image
+.PHONY: soc stamps
 
 # build vars
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
@@ -103,3 +103,8 @@ image-update:
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/andig/evcc/cmd/soc
+
+stamps:
+	docker pull hacksore/hks
+	docker run --rm hacksore/hks hyundai list 99cfff84-f4e2-4be8-a5ed-e5b755eb6581 | head -n 101 | tail -n 100 > vehicle/bluelink/99cfff84-f4e2-4be8-a5ed-e5b755eb6581
+	docker run --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
