@@ -14,6 +14,7 @@ require (
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.6.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.4
 	github.com/fatih/structs v1.1.0

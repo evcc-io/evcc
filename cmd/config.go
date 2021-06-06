@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/vehicle"
+	"github.com/dustin/go-humanize"
 )
 
 type config struct {
@@ -100,7 +101,11 @@ func (cp *ConfigProvider) configure(conf config) error {
 
 func (cp *ConfigProvider) configureMeters(conf config) error {
 	cp.meters = make(map[string]api.Meter)
-	for _, cc := range conf.Meters {
+	for id, cc := range conf.Meters {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
+		}
+
 		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
@@ -119,7 +124,11 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
 	cp.chargers = make(map[string]api.Charger)
-	for _, cc := range conf.Chargers {
+	for id, cc := range conf.Chargers {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
+		}
+
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
@@ -138,11 +147,14 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
 	cp.vehicles = make(map[string]api.Vehicle)
-	for _, cc := range conf.Vehicles {
+	for id, cc := range conf.Vehicles {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
-			return err
+			return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
