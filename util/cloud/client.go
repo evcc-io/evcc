@@ -1,9 +1,12 @@
 package cloud
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	_ "embed"
 	"fmt"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -14,6 +17,14 @@ var Host = "cloud.evcc.io:8080"
 var (
 	conn *grpc.ClientConn
 )
+
+//go:embed ca-cert.pem
+var caCert []byte
+
+func caPEM() []byte {
+	copy := bytes.NewBuffer(caCert)
+	return copy.Bytes()
+}
 
 func loadTLSCredentials() (*tls.Config, error) {
 	certPool := x509.NewCertPool()
@@ -32,16 +43,15 @@ func loadTLSCredentials() (*tls.Config, error) {
 func Connection(uri string) (*grpc.ClientConn, error) {
 	var err error
 	if conn == nil {
-		var tlsConfig *tls.Config
-		if tlsConfig, err = loadTLSCredentials(); err != nil {
-			return nil, fmt.Errorf("cannot load TLS credentials: %w", err)
-		}
-
 		transportOption := grpc.WithInsecure()
-		if tlsConfig != nil {
+		if !strings.HasPrefix(uri, "localhost") {
+			var tlsConfig *tls.Config
+			if tlsConfig, err = loadTLSCredentials(); err != nil {
+				return nil, err
+			}
+
 			transportOption = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
 		}
-
 		conn, err = grpc.Dial(uri, transportOption)
 	}
 

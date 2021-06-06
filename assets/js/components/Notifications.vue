@@ -17,7 +17,10 @@
 			role="dialog"
 			aria-hidden="true"
 		>
-			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+			<div
+				class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"
+				role="document"
+			>
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">{{ $t("notifications.modalTitle") }}</h5>
@@ -29,21 +32,30 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<p
-							v-for="(notification, index) in notifications"
-							:key="index"
-							class="d-flex align-items-baseline"
-						>
-							<fa-icon
-								:class="{
-									'text-danger': notification.type === 'error',
-									'text-warning': notification.type === 'warn',
-								}"
-								class="flex-grow-0 d-block"
-								icon="exclamation-triangle"
-							></fa-icon>
-							<span class="flex-grow-1 px-2 py-1">{{ notification.message }}</span>
-						</p>
+						<div v-for="(msg, index) in notifications" :key="index">
+							<small
+								class="d-flex justify-content-end mt-3"
+								:title="fmtAbsoluteDate(msg.time)"
+							>
+								{{ fmtTimeAgo(msg.time) }}
+							</small>
+							<p class="d-flex align-items-baseline">
+								<fa-icon
+									:class="{
+										'text-danger': msg.type === 'error',
+										'text-warning': msg.type === 'warn',
+									}"
+									class="flex-grow-0 d-block"
+									icon="exclamation-triangle"
+								></fa-icon>
+								<span class="flex-grow-1 px-2 py-1 text-break">
+									{{ msg.message }}
+								</span>
+								<span class="badge rounded-pill bg-secondary" v-if="msg.count > 1">
+									{{ msg.count }}
+								</span>
+							</p>
+						</div>
 					</div>
 					<div class="modal-footer">
 						<button
@@ -83,8 +95,16 @@ export default {
 	},
 	methods: {
 		clear: function () {
-			window.app.clear();
+			window.app && window.app.clear();
 		},
+	},
+	created: function () {
+		this.interval = setInterval(() => {
+			this.$forceUpdate();
+		}, 10 * 1000);
+	},
+	destroyed: function () {
+		clearTimeout(this.interval);
 	},
 	mixins: [formatter],
 };

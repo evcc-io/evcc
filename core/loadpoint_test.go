@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	minA int64 = 6
-	maxA int64 = 16
+	minA float64 = 6
+	maxA float64 = 16
 )
 
 type Null struct{}
@@ -62,7 +62,7 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 
 	if charger, ok := lp.charger.(*mock.MockCharger); ok && charger != nil {
 		charger.EXPECT().Enabled().Return(true, nil)
-		charger.EXPECT().MaxCurrent(lp.MinCurrent).Return(nil)
+		charger.EXPECT().MaxCurrent(int64(lp.MinCurrent)).Return(nil)
 	}
 
 	lp.Prepare(uiChan, pushChan, lpChan)
@@ -111,7 +111,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			h.EXPECT().Enable(false)
 		}},
 		{api.StatusB, api.ModeNow, func(h *mock.MockCharger) {
-			h.EXPECT().MaxCurrent(maxA) // true
+			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
 		{api.StatusB, api.ModeMinPV, func(h *mock.MockCharger) {
 			// MaxCurrent omitted since identical value
@@ -126,7 +126,7 @@ func TestUpdatePowerZero(t *testing.T) {
 			h.EXPECT().Enable(false)
 		}},
 		{api.StatusC, api.ModeNow, func(h *mock.MockCharger) {
-			h.EXPECT().MaxCurrent(maxA) // true
+			h.EXPECT().MaxCurrent(int64(maxA)) // true
 		}},
 		{api.StatusC, api.ModeMinPV, func(h *mock.MockCharger) {
 			// MaxCurrent omitted since identical value
@@ -179,7 +179,7 @@ func TestPVHysteresis(t *testing.T) {
 	type se struct {
 		site    float64
 		delay   time.Duration // test case delay since start
-		current int64
+		current float64
 	}
 	tc := []struct {
 		enabled         bool
@@ -325,8 +325,8 @@ func TestPVHysteresis(t *testing.T) {
 				lp.enabled = tc.enabled
 				current := lp.pvMaxCurrent(api.ModePV, se.site)
 
-				if current != float64(se.current) {
-					t.Errorf("step %d: wanted %d, got %.f", step, se.current, current)
+				if current != se.current {
+					t.Errorf("step %d: wanted %.1f, got %.1f", step, se.current, current)
 				}
 			}
 
@@ -351,10 +351,8 @@ func TestPVHysteresisForStatusOtherThanC(t *testing.T) {
 	// not connected, test PV mode logic  short-circuited
 	lp.status = api.StatusA
 
-	// maxCurrent will read actual current in PV mode
-
 	// maxCurrent will read enabled state in PV mode
-	sitePower := -float64(minA*lp.Phases)*Voltage + 1 // 1W below min power
+	sitePower := -float64(lp.Phases)*minA*Voltage + 1 // 1W below min power
 	current := lp.pvMaxCurrent(api.ModePV, sitePower)
 
 	if current != 0 {
@@ -405,7 +403,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	vehicle.EXPECT().SoC().Return(85.0, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	charger.EXPECT().MaxCurrent(maxA).Return(nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500)
 
 	t.Log("charging above target - soc deactivates charger")
@@ -474,7 +472,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	t.Log("charging at min")
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	charger.EXPECT().MaxCurrent(maxA).Return(nil)
+	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
 	lp.Update(500)
 
 	t.Log("switch off when disconnected")
