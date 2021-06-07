@@ -20,8 +20,8 @@ type roundTripper struct {
 const max = 2048 * 2
 
 var (
-	reqMetric                       *prometheus.SummaryVec
-	cntMetric, resMetric, errMetric *prometheus.CounterVec
+	reqMetric *prometheus.SummaryVec
+	resMetric *prometheus.CounterVec
 )
 
 func init() {
@@ -39,28 +39,14 @@ func init() {
 		},
 	}, labels)
 
-	cntMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
+	resMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Namespace: "evcc",
 		Subsystem: "http",
 		Name:      "request_total",
 		Help:      "Total count of HTTP requests",
-	}, labels)
-
-	resMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "evcc",
-		Subsystem: "http",
-		Name:      "request_completed_total",
-		Help:      "Total count of completed HTTP requests",
 	}, append(labels, "status"))
 
-	errMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: "evcc",
-		Subsystem: "http",
-		Name:      "request_errors",
-		Help:      "Total count of HTTP request errors",
-	}, labels)
-
-	prometheus.MustRegister(reqMetric, cntMetric, resMetric, errMetric)
+	prometheus.MustRegister(reqMetric, resMetric)
 }
 
 // NewTripper creates a logging roundtrip handler
@@ -91,10 +77,10 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	startTime := time.Now()
 	resp, err := r.base.RoundTrip(req)
-	cntMetric.WithLabelValues(req.URL.Hostname()).Add(1)
+
+	reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 
 	if err == nil {
-		reqMetric.WithLabelValues(req.URL.Hostname()).Observe(time.Since(startTime).Seconds())
 		resMetric.WithLabelValues(req.URL.Hostname(), strconv.Itoa(resp.StatusCode)).Add(1)
 
 		if body, err := httputil.DumpResponse(resp, true); err == nil {
@@ -102,7 +88,7 @@ func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 			bld.Write(bytes.TrimSpace(body[:min(max, len(body))]))
 		}
 	} else {
-		errMetric.WithLabelValues(req.URL.Hostname()).Add(1)
+		resMetric.WithLabelValues(req.URL.Hostname(), "999").Add(1)
 	}
 
 	if bld.Len() > 0 {
