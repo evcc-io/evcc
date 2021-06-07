@@ -54,7 +54,7 @@ func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
 	}
 
 	// fetch updated stamps
-	go Downloader()
+	updateStamps(log, config.CCSPApplicationID)
 
 	return v, nil
 }

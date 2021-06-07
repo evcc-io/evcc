@@ -28,42 +28,49 @@ var stamps = Stamps{
 }
 
 var (
-	mu     sync.Mutex
-	client *request.Helper
+	mu      sync.Mutex
+	updater map[string]struct{} = make(map[string]struct{})
+
+	client = request.NewHelper(util.NewLogger("http"))
+	brands = map[string]string{
+		"693a33fa-c117-43f2-ae3b-61a02d24f417": "kia",
+		"99cfff84-f4e2-4be8-a5ed-e5b755eb6581": "hyundai",
+	}
 )
 
-var brands = map[string]string{
-	"693a33fa-c117-43f2-ae3b-61a02d24f417": "kia",
-	"99cfff84-f4e2-4be8-a5ed-e5b755eb6581": "hyundai",
-}
-
-func download(id, brand string) {
+func download(log *util.Logger, id, brand string) {
 	var res []string
 	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s.json", brand)
-	if err := client.GetJSON(uri, &res); err == nil {
-		if len(res) < 100 {
-			return
-		}
 
-		mu.Lock()
-		stamps[id] = res[:99]
-		mu.Unlock()
-	}
-}
-
-// Downloader updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
-func Downloader() {
-	if client == nil {
+	err := client.GetJSON(uri, &res)
+	if err != nil {
+		log.ERROR.Println(err)
 		return
 	}
 
-	client = request.NewHelper(util.NewLogger("http"))
-
-	for ; true; <-time.NewTicker(24 * time.Hour).C {
-		for k, v := range brands {
-			download(k, v)
-		}
+	if len(res) < 100 {
+		return
 	}
+
+	mu.Lock()
+	stamps[id] = res
+	mu.Unlock()
+}
+
+// updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
+func updateStamps(log *util.Logger, id string) {
+	if _, ok := updater[id]; ok {
+		return
+	}
+
+	updater[id] = struct{}{}
+	download(log, id, brands[id])
+
+	go func() {
+		for range time.NewTicker(24 * time.Hour).C {
+			download(log, id, brands[id])
+		}
+	}()
 }
 
 func unpack(source string) (res []string) {
