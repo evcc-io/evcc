@@ -1,40 +1,47 @@
 <template>
-	<div>
-		<div class="labels d-flex justify-content-between">
-			<div>
-				Verbrauch:
-				<strong class="label-usage">{{ kw(usage) }}</strong>
-			</div>
-			<div>
-				Einspeisung:
-				<strong class="label-pv-export">{{ kw(pvExport) }}</strong>
-			</div>
+	<div class="site-visualization">
+		<div class="d-flex justify-content-between">
+			<span class="usage-label">Verbrauch {{ pvExport > 0 ? "" : kw(usage) }} </span>
+			<span class="pv-export-label" :style="{ opacity: pvExport > 0 ? 1 : 0 }">
+				Einspeisung
+			</span>
 		</div>
 		<div class="site-progress">
-			<div class="usage" :style="{ width: width(usage) }"></div>
-			<!--
-			<div class="grid-usage" :style="{ width: width(gridUsage) }">
-				<span class="label">Bezug</span>
-				<span class="detail">{{ kw(gridUsage) }}</span>
+			<div class="site-progress-bar usage" :style="{ width: widthTotal(usage) }">
+				<div class="site-progress-bar grid-usage" :style="{ width: widthUsage(gridUsage) }">
+					<span class="power">{{ kw(gridUsage) }}</span>
+				</div>
+				<div class="site-progress-bar pv-usage" :style="{ width: widthUsage(pvUsage) }">
+					<span class="power">{{ kw(pvUsage) }}</span>
+				</div>
 			</div>
-			<div class="pv-usage" :style="{ width: width(pvUsage) }">
-				<span class="label">Eigenverbrauch</span>
-				<span class="detail">{{ kw(pvUsage) }}</span>
+			<div
+				class="site-progress-bar pv-export"
+				:style="{ width: widthTotal(pvExport), marginLeft: pvExport > 0 ? null : 0 }"
+			>
+				<span class="power">{{ kw(pvExport) }}</span>
 			</div>
-			-->
-			<div class="pv-export" :style="{ width: width(pvExport) }"></div>
 		</div>
+		<div class="d-flex">
+			<span class="grid-usage-label" :style="{ width: widthUsage(gridUsage) }">
+				Netzbezug
+			</span>
+			<span class="pv-usage-label" :style="{ width: widthUsage(pvUsage) }">
+				Eigenverbrauch
+			</span>
+		</div>
+		<!--
 		<div class="site-charger">
 			<div
 				class="charger1"
 				:style="{
-					width: width(Math.min(usage, loadpoints[0].chargePower)),
-					marginRight: width(pvExport),
+					width: widthUsage(Math.min(usage, loadpoints[0].chargePower)),
 				}"
 			>
 				<span>{{ kw(Math.min(usage, loadpoints[0].chargePower)) }}</span>
 			</div>
 		</div>
+		-->
 	</div>
 </template>
 
@@ -68,13 +75,16 @@ export default {
 		pvExport: function () {
 			return this.pvPower - this.pvUsage;
 		},
-		max: function () {
+		total: function () {
 			return this.usage + this.pvExport;
 		},
 	},
 	methods: {
-		width: function (power) {
-			return (100 / this.max) * power + "%";
+		widthTotal: function (power) {
+			return (100 / this.total) * power + "%";
+		},
+		widthUsage: function (power) {
+			return (100 / this.usage) * power + "%";
 		},
 		kw: function (watt) {
 			return (watt / 1000).toFixed(1) + " kW";
@@ -83,45 +93,73 @@ export default {
 };
 </script>
 <style scoped>
+.site-visualization {
+}
 .site-progress {
-	margin: 1rem 0;
+	margin: 0.5rem 0 0.3rem;
 	height: 1.5rem;
 	display: flex;
 }
-.site-progress .label {
-	display: none;
+.site-progress-bar {
+	text-align: center;
+	transition-property: margin, width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+	overflow: hidden;
+	white-space: nowrap;
 }
-.site-progress .detail {
-	display: block;
-}
-
 .usage {
-	background-color: #999;
-	color: #eee;
 	border-radius: 5px;
+	display: flex;
 }
 .grid-usage {
-	background-color: #18191a;
 	color: #eee;
+	background-color: #18191a;
 }
 .pv-usage {
 	background-color: #66d85a;
-	color: #18191a;
 }
 .pv-export {
 	background-color: #fbdf4b;
 	color: #18191a;
-	margin-left: 10px;
 	border-radius: 5px;
+	margin-left: 10px;
 }
-.usage,
-.grid-usage,
-.pv-usage,
-.pv-export {
-	overflow-x: hidden;
-	display: flex;
-	justify-content: center;
-	align-items: center;
+.usage-label,
+.pv-export-label,
+.pv-usage-label,
+.grid-usage-label {
+	color: var(--bs-gray-dark);
+	text-decoration-line: underline;
+	text-decoration-skip-ink: auto;
+	text-decoration-thickness: 2px;
+	text-decoration-style: solid;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: block;
+	transition-property: opacity, width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+}
+.power {
+	display: block;
+	margin: 0 0.5rem;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+.usage-label {
+	text-decoration: none;
+}
+.pv-export-label {
+	text-decoration-color: #fbdf4b;
+}
+.grid-usage-label {
+	text-decoration-color: #18191a;
+	font-size: 0.875em;
+}
+.pv-usage-label {
+	text-decoration-color: #66d85a;
+	font-size: 0.875em;
 }
 
 .site-charger {
@@ -129,6 +167,7 @@ export default {
 	padding: 1rem 0;
 	display: flex;
 	justify-content: flex-end;
+	visibility: hidden;
 }
 .charger1 {
 	position: relative;
