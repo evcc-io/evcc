@@ -1,10 +1,8 @@
 <template>
 	<div class="site-visualization">
 		<div class="d-flex justify-content-between">
-			<span class="usage-label">Verbrauch {{ pvExport > 0 ? "" : kw(usage) }} </span>
-			<span class="pv-export-label" :style="{ opacity: pvExport > 0 ? 1 : 0 }">
-				Einspeisung
-			</span>
+			<span class="usage-label">Verbrauch {{ kw(usage) }}</span>
+			<span class="surplus-label" v-if="pvPower > 0">Produktion {{ kw(pvPower) }}</span>
 		</div>
 		<div class="site-progress">
 			<div class="site-progress-bar usage" :style="{ width: widthTotal(usage) }">
@@ -14,21 +12,34 @@
 				<div class="site-progress-bar pv-usage" :style="{ width: widthUsage(pvUsage) }">
 					<span class="power">{{ kw(pvUsage) }}</span>
 				</div>
+				<div
+					class="site-progress-bar battery-usage"
+					:style="{ width: widthUsage(batteryUsage) }"
+				>
+					<span class="power">{{ kw(batteryUsage) }}</span>
+				</div>
 			</div>
 			<div
-				class="site-progress-bar pv-export"
-				:style="{ width: widthTotal(pvExport), marginLeft: pvExport > 0 ? null : 0 }"
+				class="site-progress-bar surplus"
+				:style="{ width: widthTotal(surplus), marginLeft: surplus > 0 ? null : 0 }"
 			>
-				<span class="power">{{ kw(pvExport) }}</span>
+				<div
+					class="site-progress-bar battery-charge"
+					:style="{ width: widthSurplus(batteryCharge) }"
+				>
+					<span class="power">{{ kw(batteryCharge) }}</span>
+				</div>
+				<div class="site-progress-bar pv-export" :style="{ width: widthSurplus(pvExport) }">
+					<span class="power">{{ kw(pvExport) }}</span>
+				</div>
 			</div>
 		</div>
-		<div class="d-flex">
-			<span class="grid-usage-label" :style="{ width: widthUsage(gridUsage) }">
-				Netzbezug
-			</span>
-			<span class="pv-usage-label" :style="{ width: widthUsage(pvUsage) }">
-				Eigenverbrauch
-			</span>
+		<div class="d-flex justify-content-between">
+			<span class="grid-usage-label" v-if="gridUsage"> Netzbezug </span>
+			<span class="pv-usage-label" v-if="pvUsage"> Eigenverbrauch </span>
+			<span class="battery-usage-label" v-if="batteryUsage"> Akkuverbrauch </span>
+			<span class="battery-charge-label" v-if="batteryCharge"> Akku laden </span>
+			<span class="pv-export-label" v-if="pvExport"> Einspeisung </span>
 		</div>
 		<!--
 		<div class="site-charger">
@@ -64,24 +75,39 @@ export default {
 	mixins: [formatter],
 	computed: {
 		usage: function () {
-			return Math.max(0, this.pvPower + this.gridPower);
+			return Math.max(
+				0,
+				this.pvPower + this.gridPower + this.batteryUsage - this.batteryCharge
+			);
 		},
 		gridUsage: function () {
 			return Math.max(0, this.gridPower);
 		},
 		pvUsage: function () {
-			return Math.min(this.pvPower, this.pvPower + this.gridPower);
+			return Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge);
 		},
 		pvExport: function () {
-			return this.pvPower - this.pvUsage;
+			return this.pvPower - this.pvUsage - this.batteryCharge;
+		},
+		batteryUsage: function () {
+			return Math.max(0, this.batteryPower);
+		},
+		batteryCharge: function () {
+			return Math.min(0, this.batteryPower) * -1;
+		},
+		surplus: function () {
+			return this.pvExport + this.batteryCharge;
 		},
 		total: function () {
-			return this.usage + this.pvExport;
+			return this.usage + this.surplus;
 		},
 	},
 	methods: {
 		widthTotal: function (power) {
 			return (100 / this.total) * power + "%";
+		},
+		widthSurplus: function (power) {
+			return (100 / this.surplus) * power + "%";
 		},
 		widthUsage: function (power) {
 			return (100 / this.usage) * power + "%";
@@ -119,16 +145,26 @@ export default {
 .pv-usage {
 	background-color: #66d85a;
 }
+.surplus {
+	border-radius: 5px;
+	display: flex;
+	margin-left: 10px;
+}
 .pv-export {
 	background-color: #fbdf4b;
 	color: #18191a;
-	border-radius: 5px;
-	margin-left: 10px;
+}
+.battery-usage,
+.battery-charge {
+	background-color: #ee706b;
+	color: #eee;
 }
 .usage-label,
 .pv-export-label,
 .pv-usage-label,
-.grid-usage-label {
+.grid-usage-label,
+.battery-usage-label,
+.battery-charge-label {
 	color: var(--bs-gray-dark);
 	text-decoration-line: underline;
 	text-decoration-skip-ink: auto;
@@ -155,6 +191,14 @@ export default {
 }
 .grid-usage-label {
 	text-decoration-color: #18191a;
+	font-size: 0.875em;
+}
+.battery-usage-label {
+	text-decoration-color: #ee706b;
+	font-size: 0.875em;
+}
+.battery-charge-label {
+	text-decoration-color: #ee706b;
 	font-size: 0.875em;
 }
 .pv-usage-label {
