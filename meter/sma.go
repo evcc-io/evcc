@@ -44,12 +44,12 @@ func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b api.Meter -t "api.Battery,SoC,func() (float64, error)"
 
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Password, Serial, Interface, Power, Energy string
+		URI, Password, Serial, Interface string
 	}{
 		Password: "0000",
 	}
@@ -58,11 +58,11 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, error) {
+func NewSMA(uri, password, serial, iface string) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
 	if iface != "" {
@@ -78,8 +78,6 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		uri:          uri,
 		serial:       serial,
 		iface:        iface,
-		powerO:       sma.Obis(power),  // TODO
-		energyO:      sma.Obis(energy), // TODO
 		updateTicker: time.NewTicker(time.Second),
 	}
 
@@ -115,12 +113,6 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		return nil, err
 	}
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
-	if energy != "" {
-		totalEnergy = sm.totalEnergy
-	}
-
 	// decorate api.Battery
 	var soc func() (float64, error)
 	if _, ok := vals["battery_charge"]; ok {
@@ -133,7 +125,7 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		}
 	}()
 
-	return decorateSMA(sm, totalEnergy, soc), nil
+	return decorateSMA(sm, soc), nil
 }
 
 func (sm *SMA) updateValues() {
@@ -177,6 +169,11 @@ func (sm *SMA) updateValues() {
 			sm.log.WARN.Println("missing value for currentL3")
 		}
 
+		if energyTotal, ok := vals["active_energy_plus"]; ok {
+			sm.values.energy = sm.convertValue(energyTotal) / 3600000
+			sm.mux.Update()
+		}
+
 	} else {
 		if power, ok := vals["power_ac_total"]; ok {
 			sm.values.power = sm.convertValue(power)
@@ -202,6 +199,11 @@ func (sm *SMA) updateValues() {
 
 		if soc, ok := vals["battery_charge"]; ok {
 			sm.values.soc = sm.convertValue(soc)
+			sm.mux.Update()
+		}
+
+		if energyTotal, ok := vals["energy_total"]; ok {
+			sm.values.energy = sm.convertValue(energyTotal) / 1000
 			sm.mux.Update()
 		}
 	}
@@ -230,8 +232,8 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 	return values.currentL1, values.currentL2, values.currentL3, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (sm *SMA) totalEnergy() (float64, error) {
+// TotalEnergy implements the api.MeterEnergy interface
+func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.hasValue()
 	return values.energy, err
 }
