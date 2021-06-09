@@ -1,8 +1,21 @@
 <template>
 	<div class="site-visualization">
 		<div class="d-flex justify-content-between">
-			<span class="usage-label">Verbrauch {{ kw(usage) }}</span>
-			<span class="surplus-label" v-if="pvPower > 0">Produktion {{ kw(pvPower) }}</span>
+			<span class="usage-label d-flex align-items-center">
+				<fa-icon icon="plug" class="d-block d-sm-none me-1"></fa-icon>
+				<span class="d-none d-sm-block me-1">Verbrauch</span>
+				<span>{{ kw(usage) }}</span>
+			</span>
+			<span class="surplus-label d-flex align-items-center" v-if="batteryConfigured">
+				<fa-icon icon="battery-three-quarters" class="d-block d-sm-none me-1"></fa-icon>
+				<span class="d-none d-sm-block me-1">Batterie</span>
+				{{ batterySoC }}%
+			</span>
+			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
+				<fa-icon icon="sun" class="d-block d-sm-none me-1"></fa-icon>
+				<span class="d-none d-sm-block me-1">Produktion</span>
+				{{ kw(pvPower) }}
+			</span>
 		</div>
 		<div class="site-progress">
 			<div class="site-progress-bar usage" :style="{ width: widthTotal(usage) }">
@@ -35,11 +48,11 @@
 			</div>
 		</div>
 		<div class="d-flex justify-content-between">
-			<span class="grid-usage-label" v-if="gridUsage"> Netzbezug </span>
-			<span class="pv-usage-label" v-if="pvUsage"> Eigenverbrauch </span>
-			<span class="battery-usage-label" v-if="batteryUsage"> Akkuverbrauch </span>
-			<span class="battery-charge-label" v-if="batteryCharge"> Akku laden </span>
-			<span class="pv-export-label" v-if="pvExport"> Einspeisung </span>
+			<span class="grid-usage-label" v-if="gridUsage">Netzbezug</span>
+			<span class="pv-usage-label" v-if="pvUsage">Eigenverbrauch</span>
+			<span class="battery-usage-label" v-if="batteryUsage">Batterie ▼</span>
+			<span class="battery-charge-label" v-if="batteryCharge">Batterie ▲</span>
+			<span class="pv-export-label" v-if="pvExport">Einspeisung</span>
 		</div>
 		<!--
 		<div class="site-charger">
@@ -132,7 +145,6 @@ export default {
 	transition-duration: 500ms;
 	transition-timing-function: linear;
 	overflow: hidden;
-	white-space: nowrap;
 }
 .usage {
 	border-radius: 5px;
@@ -159,7 +171,6 @@ export default {
 	background-color: #ee706b;
 	color: #eee;
 }
-.usage-label,
 .pv-export-label,
 .pv-usage-label,
 .grid-usage-label,
@@ -171,17 +182,18 @@ export default {
 	text-decoration-thickness: 2px;
 	text-decoration-style: solid;
 	overflow: hidden;
+	white-space: nowrap;
 	text-overflow: ellipsis;
 	display: block;
 	transition-property: opacity, width;
 	transition-duration: 500ms;
 	transition-timing-function: linear;
+	font-size: 0.875em;
 }
 .power {
 	display: block;
 	margin: 0 0.5rem;
-	text-overflow: ellipsis;
-	overflow: hidden;
+	white-space: nowrap;
 }
 .usage-label {
 	text-decoration: none;
@@ -191,19 +203,15 @@ export default {
 }
 .grid-usage-label {
 	text-decoration-color: #18191a;
-	font-size: 0.875em;
 }
 .battery-usage-label {
 	text-decoration-color: #ee706b;
-	font-size: 0.875em;
 }
 .battery-charge-label {
 	text-decoration-color: #ee706b;
-	font-size: 0.875em;
 }
 .pv-usage-label {
 	text-decoration-color: #66d85a;
-	font-size: 0.875em;
 }
 
 .site-charger {

@@ -24,17 +24,30 @@ GridAndPV.args = {
   pvConfigured: true,
   gridPower: -2300,
   pvPower: 7320,
+  batteryConfigured: false,
   loadpoints: [{ chargePower: 4500 }],
 };
 
-export const WithBattery = Template.bind({});
-WithBattery.args = {
+export const BatteryAndGrid = Template.bind({});
+BatteryAndGrid.args = {
   gridConfigured: true,
   pvConfigured: true,
   batteryConfigured: true,
-  gridPower: 2400,
-  pvPower: 800,
-  batteryPower: 100,
-  batterySoC: 0,
+  gridPower: 1200,
+  pvPower: 0,
+  batteryPower: 800,
+  batterySoC: 77,
+  loadpoints: [{ chargePower: 1800 }],
+};
+
+export const BatteryCharging = Template.bind({});
+BatteryCharging.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: false,
+  gridPower: 1000,
+  pvPower: 5000,
+  batteryPower: 0,
+  batterySoC: 49,
   loadpoints: [{ chargePower: 1800 }],
 };

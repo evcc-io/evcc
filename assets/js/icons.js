@@ -22,6 +22,7 @@ import { faHeart as farHeart } from "@fortawesome/free-regular-svg-icons/faHeart
 import { faHeart as fasHeart } from "@fortawesome/free-solid-svg-icons/faHeart";
 import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
 import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
+import { faPlug } from "@fortawesome/free-solid-svg-icons/faPlug";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
 
 library.add(
@@ -45,6 +46,7 @@ library.add(
   fasHeart,
   faGift,
   faBox,
+  faPlug,
   faExclamationCircle
 );
 
