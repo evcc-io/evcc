@@ -49,7 +49,7 @@ func init() {
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Password, Serial, Interface string
+		URI, Password, Serial, Interface, Power, Energy string
 	}{
 		Password: "0000",
 	}
@@ -58,12 +58,20 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface)
+	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, password, serial, iface string) (api.Meter, error) {
+func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, error) {
 	log := util.NewLogger("sma")
+
+	// print warnings for unused config
+	if power != "" {
+		log.WARN.Println("SMA power not supported -> ignoring")
+	}
+	if energy != "" {
+		log.WARN.Println("SMA energy not supported -> ignoring")
+	}
 
 	if iface != "" {
 		err := sunny.SetMulticastInterface(iface)
