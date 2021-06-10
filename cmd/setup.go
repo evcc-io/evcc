@@ -139,10 +139,8 @@ func configureJavascript(conf map[string]interface{}) error {
 func configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err != nil {
-		return fmt.Errorf("failed configuring eebus: %w", err)
+		go server.EEBusInstance.Run()
 	}
-
-	go server.EEBusInstance.Run()
 
 	return nil
 }
