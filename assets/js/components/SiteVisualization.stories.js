@@ -44,10 +44,22 @@ export const BatteryCharging = Template.bind({});
 BatteryCharging.args = {
   gridConfigured: true,
   pvConfigured: true,
-  batteryConfigured: false,
-  gridPower: 1000,
+  batteryConfigured: true,
+  gridPower: -1300,
   pvPower: 5000,
-  batteryPower: 0,
+  batteryPower: -1500,
   batterySoC: 49,
+  loadpoints: [{ chargePower: 1800 }],
+};
+
+export const BatteryUsage = Template.bind({});
+BatteryUsage.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  gridPower: 700,
+  pvPower: 0,
+  batteryPower: 1500,
+  batterySoC: 30,
   loadpoints: [{ chargePower: 1800 }],
 };

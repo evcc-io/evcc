@@ -9,7 +9,15 @@
 			<span class="surplus-label d-flex align-items-center" v-if="batteryConfigured">
 				<fa-icon icon="battery-three-quarters" class="d-block d-sm-none me-1"></fa-icon>
 				<span class="d-none d-sm-block me-1">Batterie</span>
-				{{ batterySoC }}%
+				<span class="d-block me-1">{{ batterySoC }}%</span>
+				<fa-icon
+					icon="chevron-right"
+					class="arrow"
+					:class="{
+						'arrow-up': batteryCharge,
+						'arrow-down': batteryUsage,
+					}"
+				></fa-icon>
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
 				<fa-icon icon="sun" class="d-block d-sm-none me-1"></fa-icon>
@@ -20,16 +28,22 @@
 		<div class="site-progress">
 			<div class="site-progress-bar usage" :style="{ width: widthTotal(usage) }">
 				<div class="site-progress-bar grid-usage" :style="{ width: widthUsage(gridUsage) }">
-					<span class="power">{{ kw(gridUsage) }}</span>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
+						{{ kw(gridUsage) }}
+					</span>
 				</div>
 				<div class="site-progress-bar pv-usage" :style="{ width: widthUsage(pvUsage) }">
-					<span class="power">{{ kw(pvUsage) }}</span>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(pvUsage) }">
+						{{ kw(pvUsage) }}
+					</span>
 				</div>
 				<div
 					class="site-progress-bar battery-usage"
 					:style="{ width: widthUsage(batteryUsage) }"
 				>
-					<span class="power">{{ kw(batteryUsage) }}</span>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(batteryUsage) }">
+						{{ kw(batteryUsage) }}
+					</span>
 				</div>
 			</div>
 			<div
@@ -40,18 +54,21 @@
 					class="site-progress-bar battery-charge"
 					:style="{ width: widthSurplus(batteryCharge) }"
 				>
-					<span class="power">{{ kw(batteryCharge) }}</span>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(batteryCharge) }">
+						{{ kw(batteryCharge) }}
+					</span>
 				</div>
 				<div class="site-progress-bar pv-export" :style="{ width: widthSurplus(pvExport) }">
-					<span class="power">{{ kw(pvExport) }}</span>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
+						{{ kw(pvExport) }}
+					</span>
 				</div>
 			</div>
 		</div>
 		<div class="d-flex justify-content-between">
 			<span class="grid-usage-label" v-if="gridUsage">Netzbezug</span>
-			<span class="pv-usage-label" v-if="pvUsage">Eigenverbrauch</span>
-			<span class="battery-usage-label" v-if="batteryUsage">Batterie ▼</span>
-			<span class="battery-charge-label" v-if="batteryCharge">Batterie ▲</span>
+			<span class="pv-usage-label" v-if="pvUsage">Direktverbrauch</span>
+			<span class="battery-label" v-if="batteryUsage || batteryCharge">Batterie</span>
 			<span class="pv-export-label" v-if="pvExport">Einspeisung</span>
 		</div>
 		<!--
@@ -100,7 +117,7 @@ export default {
 			return Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge);
 		},
 		pvExport: function () {
-			return this.pvPower - this.pvUsage - this.batteryCharge;
+			return Math.min(0, this.gridPower) * -1;
 		},
 		batteryUsage: function () {
 			return Math.max(0, this.batteryPower);
@@ -127,6 +144,9 @@ export default {
 		},
 		kw: function (watt) {
 			return (watt / 1000).toFixed(1) + " kW";
+		},
+		hidePowerLabel(power) {
+			return (100 / this.total) * power < 18;
 		},
 	},
 };
@@ -168,14 +188,13 @@ export default {
 }
 .battery-usage,
 .battery-charge {
-	background-color: #ee706b;
+	background-color: #2b6319;
 	color: #eee;
 }
 .pv-export-label,
 .pv-usage-label,
 .grid-usage-label,
-.battery-usage-label,
-.battery-charge-label {
+.battery-label {
 	color: var(--bs-gray-dark);
 	text-decoration-line: underline;
 	text-decoration-skip-ink: auto;
@@ -204,14 +223,26 @@ export default {
 .grid-usage-label {
 	text-decoration-color: #18191a;
 }
-.battery-usage-label {
-	text-decoration-color: #ee706b;
-}
-.battery-charge-label {
-	text-decoration-color: #ee706b;
+.battery-label {
+	text-decoration-color: #2b6319;
 }
 .pv-usage-label {
 	text-decoration-color: #66d85a;
+}
+.arrow {
+	transition-property: opacity, transform;
+	transition-duration: 500ms;
+	transition-timing-function: ease-in;
+	opacity: 0;
+	transform: rotate(0);
+}
+.arrow-up {
+	opacity: 1;
+	transform: rotate(-90deg);
+}
+.arrow-down {
+	opacity: 1;
+	transform: rotate(90deg);
 }
 
 .site-charger {
