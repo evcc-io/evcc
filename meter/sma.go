@@ -64,6 +64,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
+	sunny.Log = log.TRACE
 
 	// print warnings for unused config
 	if power != "" {
