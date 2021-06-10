@@ -71,8 +71,7 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 	}
 
 	if iface != "" {
-		err := sunny.SetMulticastInterface(iface)
-		if err != nil {
+		if err := sunny.SetMulticastInterface(iface); err != nil {
 			return nil, err
 		}
 	}
@@ -139,7 +138,7 @@ func (sm *SMA) updateValues() {
 
 	vals, err := sm.device.GetValues()
 	if err != nil {
-		sm.log.WARN.Printf("failed to get values: %v", err)
+		sm.log.ERROR.Printf("failed to get values: %v", err)
 		return
 	}
 
@@ -150,28 +149,28 @@ func (sm *SMA) updateValues() {
 			sm.values.power = sm.convertValue(powerP) - sm.convertValue(powerM)
 			sm.mux.Update()
 		} else {
-			sm.log.WARN.Println("missing value for power")
+			sm.log.ERROR.Println("missing value for power")
 		}
 
 		if currentL1, ok := vals["l1_current"]; ok {
 			sm.values.currentL1 = sm.convertValue(currentL1)
 			sm.mux.Update()
 		} else {
-			sm.log.WARN.Println("missing value for currentL1")
+			sm.log.ERROR.Println("missing value for currentL1")
 		}
 
 		if currentL2, ok := vals["l2_current"]; ok {
 			sm.values.currentL2 = sm.convertValue(currentL2)
 			sm.mux.Update()
 		} else {
-			sm.log.WARN.Println("missing value for currentL2")
+			sm.log.ERROR.Println("missing value for currentL2")
 		}
 
 		if currentL3, ok := vals["l3_current"]; ok {
 			sm.values.currentL3 = sm.convertValue(currentL3)
 			sm.mux.Update()
 		} else {
-			sm.log.WARN.Println("missing value for currentL3")
+			sm.log.ERROR.Println("missing value for currentL3")
 		}
 
 		if energyTotal, ok := vals["active_energy_plus"]; ok {
@@ -184,7 +183,7 @@ func (sm *SMA) updateValues() {
 			sm.values.power = sm.convertValue(power)
 			sm.mux.Update()
 		} else {
-			sm.log.DEBUG.Println("missing value for power")
+			sm.log.ERROR.Println("missing value for power")
 		}
 
 		if currentL1, ok := vals["current_ac1"]; ok {
