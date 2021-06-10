@@ -111,7 +111,10 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI,
 // setup mqtt
 func configureMQTT(conf mqttConfig) error {
 	log := util.NewLogger("mqtt")
-	clientID := mqtt.ClientID()
+	clientID := conf.ClientID
+	if clientID == "" {
+		clientID = mqtt.ClientID()
+	}
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
