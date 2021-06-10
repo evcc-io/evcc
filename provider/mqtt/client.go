@@ -30,7 +30,7 @@ type Config struct {
 	Broker   string
 	User     string
 	Password string
-    ClientID string
+	ClientID string
 }
 
 // Client encapsulates mqtt publish/subscribe functions
