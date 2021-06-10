@@ -22,7 +22,7 @@ const (
 // private task ids
 const (
 	taskOpenwb       = "openwb"
-	taskSMA          = "shm"
+	taskSMA          = "sma"
 	taskKEBA         = "keba"
 	taskE3DC         = "e3dc_simple"
 	taskSonnen       = "sonnen"

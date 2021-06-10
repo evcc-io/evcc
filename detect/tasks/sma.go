@@ -12,13 +12,13 @@ import (
 	"gitlab.com/bboehmke/sunny"
 )
 
-const Sma TaskType = "shm"
+const Sma TaskType = "sma"
 
 func init() {
 	registry.Add(Sma, SMAHandlerFactory)
 }
 
-type ShmResult struct {
+type SmaResult struct {
 	Serial string
 	Http   bool
 }
@@ -70,7 +70,7 @@ func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 
 	devices, err := sunny.DiscoverDevices(h.Password)
 	if err != nil {
-		log.ERROR.Println("shm:", err)
+		log.ERROR.Println("sma:", err)
 		return nil
 	}
 	h.handled = true
@@ -79,7 +79,7 @@ func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 	for _, device := range devices {
 		res = append(res, ResultDetails{
 			IP: device.Address().IP.String(),
-			ShmResult: &ShmResult{
+			SmaResult: &SmaResult{
 				Serial: strconv.FormatInt(int64(device.SerialNumber()), 10),
 				Http:   h.httpAvailable(device.Address().IP.String()),
 			},
