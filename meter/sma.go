@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -251,6 +253,45 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.hasValue()
 	return values.soc, err
+}
+
+// Diagnose implements the api.Diagnosis interface
+func (sm *SMA) Diagnose() {
+	fmt.Printf("  IP:             %s\n", sm.device.Address())
+	fmt.Printf("  Serial:         %d\n", sm.device.SerialNumber())
+	fmt.Printf("  Is EnergyMeter: %v\n", sm.device.IsEnergyMeter())
+	fmt.Printf("\n")
+	name, err := sm.device.GetDeviceName()
+	if err != nil {
+		fmt.Printf("  ERROR: %v\n", err)
+	} else {
+		fmt.Printf("  Name: %s\n", name)
+	}
+	devClass, err := sm.device.GetDeviceClass()
+	if err != nil {
+		fmt.Printf("  ERROR: %v\n", err)
+	} else {
+		fmt.Printf("  Device Class: 0x%X\n", devClass)
+	}
+	fmt.Printf("\n")
+	values, err := sm.device.GetValues()
+	if err != nil {
+		fmt.Printf("  ERROR: %v\n", err)
+	} else {
+		keys := make([]string, 0, len(values))
+		keyLength := 0
+		for k := range values {
+			keys = append(keys, k)
+			if len(k) > keyLength {
+				keyLength = len(k)
+			}
+		}
+		sort.Strings(keys)
+
+		for _, k := range keys {
+			fmt.Printf("  %s:%s %v %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[k], sm.device.GetValueInfo(k).Unit)
+		}
+	}
 }
 
 func (sm *SMA) convertValue(value interface{}) float64 {
