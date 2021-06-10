@@ -6,17 +6,17 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateSMA(base api.Meter, battery func() (float64, error)) api.Meter {
+func decorateSMA(base *SMA, battery func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil:
 		return base
 
 	case battery != nil:
 		return &struct {
-			api.Meter
+			*SMA
 			api.Battery
 		}{
-			Meter: base,
+			SMA: base,
 			Battery: &decorateSMABatteryImpl{
 				battery: battery,
 			},
