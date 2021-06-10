@@ -32,6 +32,7 @@ type SMA struct {
 	serial string
 	iface  string
 	values values
+	scale  float64
 
 	device       *sunny.Device
 	updateTicker *time.Ticker
@@ -47,19 +48,21 @@ func init() {
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Password, Serial, Interface, Power, Energy string
+		Scale                                           float64
 	}{
 		Password: "0000",
+		Scale:    1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy, cc.Scale)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, error) {
+func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
 	// print warnings for unused config
@@ -83,6 +86,7 @@ func NewSMA(uri, password, serial, iface, power, energy string) (api.Meter, erro
 		serial:       serial,
 		iface:        iface,
 		updateTicker: time.NewTicker(time.Second),
+		scale:        scale,
 	}
 
 	var err error
@@ -146,7 +150,7 @@ func (sm *SMA) updateValues() {
 		powerP, ok1 := vals["active_power_plus"]
 		powerM, ok2 := vals["active_power_minus"]
 		if ok1 && ok2 {
-			sm.values.power = sm.convertValue(powerP) - sm.convertValue(powerM)
+			sm.values.power = sm.scale * (sm.convertValue(powerP) - sm.convertValue(powerM))
 			sm.mux.Update()
 		} else {
 			sm.log.ERROR.Println("missing value for power")
