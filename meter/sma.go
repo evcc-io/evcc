@@ -27,10 +27,11 @@ type SMA struct {
 	mux     *util.Waiter
 	uri     string
 	serial  string
-	iface 	string
+	iface   string
 	values  values
 	powerO  sma.Obis
 	energyO sma.Obis
+	scale   float64
 	recv    chan sma.Telegram
 }
 
@@ -44,17 +45,20 @@ func init() {
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Serial, Interface, Power, Energy string
-	}{}
+		Scale                                 float64
+	}{
+		Scale: 1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Serial, cc.Interface, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Serial, cc.Interface, cc.Power, cc.Energy, cc.Scale)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, serial, iface, power, energy string) (api.Meter, error) {
+func NewSMA(uri, serial, iface, power, energy string, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
 
 	sm := &SMA{
@@ -62,10 +66,11 @@ func NewSMA(uri, serial, iface, power, energy string) (api.Meter, error) {
 		log:     log,
 		uri:     uri,
 		serial:  serial,
-		iface: iface,
+		iface:   iface,
 		powerO:  sma.Obis(power),
 		energyO: sma.Obis(energy),
 		recv:    make(chan sma.Telegram),
+		scale:   scale,
 	}
 
 	if sma.Instance == nil {
@@ -104,11 +109,11 @@ func (sm *SMA) updateMeterValues(msg sma.Telegram) {
 	if sm.powerO != "" {
 		// use user-defined obis
 		if power, ok := msg.Values[sm.powerO]; ok {
-			sm.values.power = power
+			sm.values.power = sm.scale * power
 			sm.mux.Update()
 		}
 	} else {
-		sm.values.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
+		sm.values.power = sm.scale * (msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower])
 		sm.mux.Update()
 	}
 
