@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/sma"
 	"github.com/andig/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
@@ -27,14 +26,12 @@ type values struct {
 
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
-	log     *util.Logger
-	mux     *util.Waiter
-	uri     string
-	serial  string
-	iface   string
-	values  values
-	powerO  sma.Obis
-	energyO sma.Obis
+	log    *util.Logger
+	mux    *util.Waiter
+	uri    string
+	serial string
+	iface  string
+	values values
 
 	device       *sunny.Device
 	updateTicker *time.Ticker
