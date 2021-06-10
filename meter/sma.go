@@ -190,7 +190,9 @@ func (sm *SMA) updateValues() {
 			sm.values.power = sm.convertValue(power)
 			sm.mux.Update()
 		} else {
-			sm.log.ERROR.Println("missing value for power")
+			sm.log.DEBUG.Println("missing value for power -> set to 0")
+			sm.values.power = 0
+			sm.mux.Update()
 		}
 
 		if currentL1, ok := vals["current_ac1"]; ok {
