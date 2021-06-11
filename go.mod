@@ -16,6 +16,7 @@ require (
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.6.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
+	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.4
 	github.com/fatih/structs v1.1.0
@@ -72,6 +73,7 @@ require (
 	github.com/thoas/go-funk v0.8.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
+	gitlab.com/bboehmke/sunny v0.11.1
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210508051633-16afe75a6701

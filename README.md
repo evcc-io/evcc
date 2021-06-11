@@ -6,7 +6,7 @@
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
-EVCC is an extensible EV Charge Controller with PV integration implemented in [Go](2). Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
+EVCC is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
 ## Features <!-- omit in toc -->
 
@@ -122,7 +122,7 @@ For use with SMA Sunny Home Manager, `evcc` needs to generate a unique device id
 docker run -v /etc/machine-id:/etc/machine-id -v /var/lib/dbus/machine-id:/var/lib/dbus/machine-id andig/evcc ...
 ```
 
-To build EVCC from source, [Go](2) 1.16 and [Node](3) 14 are required:
+To build EVCC from source, [Go][2] 1.16 is required:
 
 ```sh
 make
@@ -221,7 +221,7 @@ To allow controlling charge start/stop, the Wallbe physical configuration must b
 
 More information on interacting with Wallbe chargers can be found at [GoingElectric](https://www.goingelectric.de/forum/viewtopic.php?p=1212583). Use with care.
 
-**NOTE:** The Wallbe products come in two flavors. Older models (2017 known to be "old", 2019 known to be "new") use the Phoenix EV-CC-AC1-M3-CBC-RCM controller. For such models make sure to set `legacy: true`. You can find you which one you have using [MBMD](5):
+**NOTE:** The Wallbe products come in two flavors. Older models (2017 known to be "old", 2019 known to be "new") use the Phoenix EV-CC-AC1-M3-CBC-RCM controller. For such models make sure to set `legacy: true`. You can find you which one you have using [MBMD][6]:
 
 ```sh
 mbmd read -a 192.168.0.8:502 -d 255 -t holding -e int 300 1
@@ -385,7 +385,7 @@ To write a register use `type: writesingle` which writes a single 16bit register
 
 ### MQTT (read/write)
 
-The `mqtt` plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD](5) for an example how to get Modbus meter data into MQTT. Includes the ability to read and parse JSON using jq-like queries (see [HTTP plugin](#http-readwrite)).
+The `mqtt` plugin allows to read values from MQTT topics. This is particularly useful for meters, e.g. when meter data is already available on MQTT. See [MBMD][6] for an example how to get Modbus meter data into MQTT. Includes the ability to read and parse JSON using jq-like queries (see [HTTP plugin](#http-readwrite)).
 
 Sample configuration:
 
@@ -553,18 +553,17 @@ Note: to modify writable settings append `/set` to the topic for writing.
 
 <img src="docs/logo.png" align="right" width="150" />
 
-EVCC is heavily inspired by [OpenWB](1). However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's](1) flexibility.
+EVCC is heavily inspired by [OpenWB][1]. However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's][1] flexibility.
 
 Hence, for a simplified and stricter implementation of an EV charge controller, the design goals for EVCC were:
 
-- typed language with ability for systematic testing - achieved by using [Go](2)
+- typed language with ability for systematic testing - achieved by using [Go][2]
 - structured configuration - supports YAML-based [config file](evcc.dist.yaml)
-- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap](4)
-- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image](5)
+- avoidance of feature bloat, simple and clean UI - utilizes [Bootstrap][4]
+- containerized operation beyond Raspberry Pi - provide multi-arch [Docker Image][5]
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
-[3]: https://nodejs.org
 [4]: https://getbootstrap.org
 [5]: https://hub.docker.com/repository/docker/andig/evcc
 [6]: https://github.com/volkszaehler/mbmd

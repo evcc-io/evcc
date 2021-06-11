@@ -33,7 +33,7 @@ func RegisteredClient(log *util.Logger, broker, user, password, clientID string,
 	client, err := registry.Get(key)
 
 	if err != nil {
-		if client, err = NewClient(log, broker, user, password, ClientID(), qos); err == nil {
+		if client, err = NewClient(log, broker, user, password, clientID, qos); err == nil {
 			registry.Add(key, client)
 		}
 	}

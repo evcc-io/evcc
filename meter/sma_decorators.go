@@ -6,19 +6,19 @@ import (
 	"github.com/andig/evcc/api"
 )
 
-func decorateSMA(base api.Meter, meterEnergy func() (float64, error)) api.Meter {
+func decorateSMA(base *SMA, battery func() (float64, error)) api.Meter {
 	switch {
-	case meterEnergy == nil:
+	case battery == nil:
 		return base
 
-	case meterEnergy != nil:
+	case battery != nil:
 		return &struct {
-			api.Meter
-			api.MeterEnergy
+			*SMA
+			api.Battery
 		}{
-			Meter: base,
-			MeterEnergy: &decorateSMAMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			SMA: base,
+			Battery: &decorateSMABatteryImpl{
+				battery: battery,
 			},
 		}
 	}
@@ -26,10 +26,10 @@ func decorateSMA(base api.Meter, meterEnergy func() (float64, error)) api.Meter 
 	return nil
 }
 
-type decorateSMAMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
+type decorateSMABatteryImpl struct {
+	battery func() (float64, error)
 }
 
-func (impl *decorateSMAMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateSMABatteryImpl) SoC() (float64, error) {
+	return impl.battery()
 }
