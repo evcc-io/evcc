@@ -4,27 +4,29 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/meter/sma"
 	"github.com/andig/evcc/util"
+	"gitlab.com/bboehmke/sunny"
 )
 
-const Sma TaskType = "shm"
+const Sma TaskType = "sma"
 
 func init() {
 	registry.Add(Sma, SMAHandlerFactory)
 }
 
-type ShmResult struct {
+type SmaResult struct {
 	Serial string
 	Http   bool
 }
 
 func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 	handler := SMAHandler{
-		Timeout: 5 * time.Second,
+		Timeout:  5 * time.Second,
+		Password: "0000",
 	}
 
 	err := util.DecodeOther(conf, &handler)
@@ -34,8 +36,9 @@ func SMAHandlerFactory(conf map[string]interface{}) (TaskHandler, error) {
 
 type SMAHandler struct {
 	mux      sync.Mutex
-	listener *sma.Listener
+	handled  bool
 	Timeout  time.Duration
+	Password string
 }
 
 func (h *SMAHandler) httpAvailable(ip string) bool {
@@ -60,46 +63,27 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	h.mux.Lock()
 
-	if h.listener != nil {
+	if h.handled {
 		h.mux.Unlock()
 		return nil
 	}
 
-	var err error
-	if h.listener, err = sma.New(log, ""); err != nil {
-		log.ERROR.Println("shm:", err)
+	devices, err := sunny.DiscoverDevices(h.Password)
+	if err != nil {
+		log.ERROR.Println("sma:", err)
 		return nil
 	}
+	h.handled = true
 	h.mux.Unlock()
 
-	resC := make(chan sma.Telegram)
-	h.listener.Subscribe(sma.Any, resC)
-
-	timer := time.NewTimer(h.Timeout)
-WAIT:
-	for {
-		select {
-		case t := <-resC:
-			// eliminate duplicates
-			for _, r := range res {
-				if r.ShmResult != nil && r.ShmResult.Serial == t.Serial {
-					continue WAIT
-				}
-			}
-
-			out := ResultDetails{
-				IP: t.Addr,
-				ShmResult: &ShmResult{
-					Serial: t.Serial,
-					Http:   h.httpAvailable(t.Addr),
-				},
-			}
-
-			res = append(res, out)
-
-		case <-timer.C:
-			break WAIT
-		}
+	for _, device := range devices {
+		res = append(res, ResultDetails{
+			IP: device.Address().IP.String(),
+			SmaResult: &SmaResult{
+				Serial: strconv.FormatInt(int64(device.SerialNumber()), 10),
+				Http:   h.httpAvailable(device.Address().IP.String()),
+			},
+		})
 	}
 
 	return res

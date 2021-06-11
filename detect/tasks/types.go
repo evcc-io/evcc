@@ -11,7 +11,7 @@ type ResultDetails struct {
 	Topic        string        `json:",omitempty"`
 	ModbusResult *ModbusResult `json:",omitempty"`
 	KebaResult   *KebaResult   `json:",omitempty"`
-	ShmResult    *ShmResult    `json:",omitempty"`
+	SmaResult    *SmaResult    `json:",omitempty"`
 }
 
 func (d *ResultDetails) Clone() ResultDetails {
