@@ -25,7 +25,6 @@ GridAndPV.args = {
   gridPower: -2300,
   pvPower: 7320,
   batteryConfigured: false,
-  loadpoints: [{ chargePower: 4500 }],
 };
 
 export const BatteryAndGrid = Template.bind({});
@@ -37,7 +36,6 @@ BatteryAndGrid.args = {
   pvPower: 0,
   batteryPower: 800,
   batterySoC: 77,
-  loadpoints: [{ chargePower: 1800 }],
 };
 
 export const BatteryCharging = Template.bind({});
@@ -49,17 +47,37 @@ BatteryCharging.args = {
   pvPower: 5000,
   batteryPower: -1500,
   batterySoC: 49,
-  loadpoints: [{ chargePower: 1800 }],
 };
 
-export const BatteryUsage = Template.bind({});
-BatteryUsage.args = {
+export const GridPvAndBattery = Template.bind({});
+GridPvAndBattery.args = {
   gridConfigured: true,
   pvConfigured: true,
   batteryConfigured: true,
   gridPower: 700,
-  pvPower: 0,
+  pvPower: 1000,
   batteryPower: 1500,
   batterySoC: 30,
-  loadpoints: [{ chargePower: 1800 }],
+};
+
+export const SmallPowerThresholds = Template.bind({});
+SmallPowerThresholds.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  gridPower: -110,
+  pvPower: 8740,
+  batteryPower: -100,
+  batterySoC: 30,
+};
+
+export const GridOnly = Template.bind({});
+GridOnly.args = {
+  gridConfigured: true,
+  pvConfigured: false,
+  batteryConfigured: false,
+  gridPower: -6230,
+  pvPower: 0,
+  batteryPower: 0,
+  batterySoC: 0,
 };
