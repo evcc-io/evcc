@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -106,17 +107,39 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
 		}
 
-		m, err := meter.NewFromConfig(cc.Type, cc.Other)
-		if err != nil {
-			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
-			return err
-		}
-
 		if _, exists := cp.meters[cc.Name]; exists {
 			return fmt.Errorf("duplicate meter name: %s already defined and must be unique", cc.Name)
 		}
 
-		cp.meters[cc.Name] = m
+		// load meter later
+		cp.meters[cc.Name] = nil
+	}
+
+	var metersMutex sync.Mutex
+	var meterErrors []error
+	var wg sync.WaitGroup
+	wg.Add(len(conf.Meters))
+
+	// load meter in parallel to speed up startup
+	for _, cc := range conf.Meters {
+		go func(c qualifiedConfig) {
+			m, err := meter.NewFromConfig(c.Type, c.Other)
+
+			metersMutex.Lock()
+			defer metersMutex.Unlock()
+
+			if err != nil {
+				meterErrors = append(meterErrors, fmt.Errorf("['%s': %w]", c.Name, err))
+			} else {
+				cp.meters[c.Name] = m
+			}
+			wg.Done()
+		}(cc)
+	}
+	wg.Wait()
+
+	if len(meterErrors) > 0 {
+		return fmt.Errorf("cannot create %d meters: %s", len(meterErrors), meterErrors)
 	}
 
 	return nil
