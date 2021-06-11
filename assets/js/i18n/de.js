@@ -36,6 +36,14 @@ export default {
       batteryShort: "Akku",
       batteryLong: "Batterie",
     },
+    siteVisualization: {
+      consumption: "Verbrauch",
+      battery: "Batterie",
+      production: "Erzeugung",
+      import: "Netzbezug",
+      direct: "Direktverbauch",
+      export: "Einspeisung",
+    },
     mode: {
       title: "Modus",
       stop: "Stop",

@@ -3,12 +3,16 @@
 		<div class="d-flex justify-content-between">
 			<span class="usage-label d-flex align-items-center">
 				<fa-icon icon="plug" class="d-block me-1"></fa-icon>
-				<span class="d-none d-sm-block me-1">Verbrauch</span>
+				<span class="d-none d-sm-block me-1">
+					{{ $t("main.siteVisualization.consumption") }}
+				</span>
 				<span>{{ kw(usage) }}</span>
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="batteryConfigured">
 				<fa-icon icon="battery-three-quarters" class="d-block me-1"></fa-icon>
-				<span class="d-none d-sm-block me-1">Batterie</span>
+				<span class="d-none d-sm-block me-1">
+					{{ $t("main.siteVisualization.battery") }}
+				</span>
 				<span class="d-block me-1">{{ batterySoC }}%</span>
 				<fa-icon
 					icon="chevron-right"
@@ -21,7 +25,9 @@
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
 				<fa-icon icon="sun" class="d-block me-1"></fa-icon>
-				<span class="d-none d-sm-block me-1">Produktion</span>
+				<span class="d-none d-sm-block me-1">
+					{{ $t("main.siteVisualization.production") }}
+				</span>
 				{{ kw(pvPower) }}
 			</span>
 		</div>
@@ -48,7 +54,10 @@
 			</div>
 			<div
 				class="site-progress-bar surplus"
-				:style="{ width: widthTotal(surplus), marginLeft: surplus > 0 ? null : 0 }"
+				:style="{
+					width: widthTotal(surplus),
+					marginLeft: surplus > 0 && usage > 0 ? null : 0,
+				}"
 			>
 				<div
 					class="site-progress-bar battery-charge"
@@ -66,12 +75,18 @@
 			</div>
 		</div>
 		<div class="d-flex justify-content-between">
-			<span class="grid-usage-label" v-if="showLabel(gridUsage)">Netzbezug</span>
-			<span class="pv-usage-label" v-if="showLabel(pvUsage)">Direktverbrauch</span>
-			<span class="battery-label" v-if="showLabel(batteryUsage) || showLabel(batteryCharge)"
-				>Batterie</span
-			>
-			<span class="pv-export-label" v-if="showLabel(pvExport)">Einspeisung</span>
+			<span class="grid-usage-label" v-if="gridUsage">
+				{{ $t("main.siteVisualization.import") }}
+			</span>
+			<span class="pv-usage-label" v-if="pvUsage">
+				{{ $t("main.siteVisualization.direct") }}
+			</span>
+			<span class="battery-label" v-if="batteryUsage || batteryCharge">
+				{{ $t("main.siteVisualization.battery") }}
+			</span>
+			<span class="pv-export-label" v-if="pvExport">
+				{{ $t("main.siteVisualization.export") }}
+			</span>
 		</div>
 	</div>
 </template>
@@ -90,30 +105,31 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
-		loadpoints: Array,
 	},
 	mixins: [formatter],
 	computed: {
-		usage: function () {
-			return Math.max(
-				0,
-				this.pvPower + this.gridPower + this.batteryUsage - this.batteryCharge
-			);
+		rawTotal: function () {
+			return Math.max(0, this.batteryPower) + Math.max(0, this.gridPower) + this.pvPower;
 		},
 		gridUsage: function () {
-			return Math.max(0, this.gridPower);
+			return this.applyThreshold(Math.max(0, this.gridPower));
 		},
 		pvUsage: function () {
-			return Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge);
-		},
-		pvExport: function () {
-			return Math.min(0, this.gridPower) * -1;
+			return this.applyThreshold(
+				Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge)
+			);
 		},
 		batteryUsage: function () {
-			return Math.max(0, this.batteryPower);
+			return this.applyThreshold(Math.max(0, this.batteryPower));
+		},
+		usage: function () {
+			return this.gridUsage + this.pvUsage + this.batteryUsage;
+		},
+		pvExport: function () {
+			return this.applyThreshold(Math.min(0, this.gridPower) * -1);
 		},
 		batteryCharge: function () {
-			return Math.min(0, this.batteryPower) * -1;
+			return this.applyThreshold(Math.min(0, this.batteryPower) * -1);
 		},
 		surplus: function () {
 			return this.pvExport + this.batteryCharge;
@@ -138,9 +154,9 @@ export default {
 		hidePowerLabel(power) {
 			return (100 / this.total) * power < 18;
 		},
-		showLabel(power) {
-			const threshold = 50;
-			return power > threshold;
+		applyThreshold(power) {
+			// adjust all values under 2% of the total power mix to 0
+			return (100 / this.rawTotal) * power < 2 ? 0 : power;
 		},
 	},
 };
@@ -149,8 +165,8 @@ export default {
 .site-visualization {
 	--evcc-grid: #000033;
 	--evcc-pv-usage: #66d85a;
-	--evcc-battery: #006600;
-	--evcc-pv-export: #ffff00;
+	--evcc-battery: #007700;
+	--evcc-pv-export: #ffe000;
 }
 .site-progress {
 	margin: 0.5rem 0 0.3rem;
@@ -202,7 +218,7 @@ export default {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	display: block;
-	transition-property: opacity, width;
+	transition-property: opacity;
 	transition-duration: 500ms;
 	transition-timing-function: linear;
 	font-size: 0.875em;
