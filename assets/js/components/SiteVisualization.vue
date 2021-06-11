@@ -2,12 +2,12 @@
 	<div class="site-visualization">
 		<div class="d-flex justify-content-between">
 			<span class="usage-label d-flex align-items-center">
-				<fa-icon icon="plug" class="d-block d-sm-none me-1"></fa-icon>
+				<fa-icon icon="plug" class="d-block me-1"></fa-icon>
 				<span class="d-none d-sm-block me-1">Verbrauch</span>
 				<span>{{ kw(usage) }}</span>
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="batteryConfigured">
-				<fa-icon icon="battery-three-quarters" class="d-block d-sm-none me-1"></fa-icon>
+				<fa-icon icon="battery-three-quarters" class="d-block me-1"></fa-icon>
 				<span class="d-none d-sm-block me-1">Batterie</span>
 				<span class="d-block me-1">{{ batterySoC }}%</span>
 				<fa-icon
@@ -20,7 +20,7 @@
 				></fa-icon>
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
-				<fa-icon icon="sun" class="d-block d-sm-none me-1"></fa-icon>
+				<fa-icon icon="sun" class="d-block me-1"></fa-icon>
 				<span class="d-none d-sm-block me-1">Produktion</span>
 				{{ kw(pvPower) }}
 			</span>
@@ -66,23 +66,13 @@
 			</div>
 		</div>
 		<div class="d-flex justify-content-between">
-			<span class="grid-usage-label" v-if="gridUsage">Netzbezug</span>
-			<span class="pv-usage-label" v-if="pvUsage">Direktverbrauch</span>
-			<span class="battery-label" v-if="batteryUsage || batteryCharge">Batterie</span>
-			<span class="pv-export-label" v-if="pvExport">Einspeisung</span>
-		</div>
-		<!--
-		<div class="site-charger">
-			<div
-				class="charger1"
-				:style="{
-					width: widthUsage(Math.min(usage, loadpoints[0].chargePower)),
-				}"
+			<span class="grid-usage-label" v-if="showLabel(gridUsage)">Netzbezug</span>
+			<span class="pv-usage-label" v-if="showLabel(pvUsage)">Direktverbrauch</span>
+			<span class="battery-label" v-if="showLabel(batteryUsage) || showLabel(batteryCharge)"
+				>Batterie</span
 			>
-				<span>{{ kw(Math.min(usage, loadpoints[0].chargePower)) }}</span>
-			</div>
+			<span class="pv-export-label" v-if="showLabel(pvExport)">Einspeisung</span>
 		</div>
-		-->
 	</div>
 </template>
 
@@ -148,11 +138,19 @@ export default {
 		hidePowerLabel(power) {
 			return (100 / this.total) * power < 18;
 		},
+		showLabel(power) {
+			const threshold = 50;
+			return power > threshold;
+		},
 	},
 };
 </script>
 <style scoped>
 .site-visualization {
+	--evcc-grid: #000033;
+	--evcc-pv-usage: #66d85a;
+	--evcc-battery: #006600;
+	--evcc-pv-export: #ffff00;
 }
 .site-progress {
 	margin: 0.5rem 0 0.3rem;
@@ -171,25 +169,25 @@ export default {
 	display: flex;
 }
 .grid-usage {
-	color: #eee;
-	background-color: #18191a;
+	background-color: var(--evcc-grid);
+	color: var(--bs-light);
 }
 .pv-usage {
-	background-color: #66d85a;
+	background-color: var(--evcc-pv-usage);
 }
 .surplus {
 	border-radius: 5px;
 	display: flex;
 	margin-left: 10px;
 }
-.pv-export {
-	background-color: #fbdf4b;
-	color: #18191a;
-}
 .battery-usage,
 .battery-charge {
-	background-color: #2b6319;
-	color: #eee;
+	background-color: var(--evcc-battery);
+	color: var(--bs-light);
+}
+.pv-export {
+	background-color: var(--evcc-pv-export);
+	color: var(--bs-dark);
 }
 .pv-export-label,
 .pv-usage-label,
@@ -218,16 +216,16 @@ export default {
 	text-decoration: none;
 }
 .pv-export-label {
-	text-decoration-color: #fbdf4b;
+	text-decoration-color: var(--evcc-pv-export);
 }
 .grid-usage-label {
-	text-decoration-color: #18191a;
+	text-decoration-color: var(--evcc-grid);
 }
 .battery-label {
-	text-decoration-color: #2b6319;
+	text-decoration-color: var(--evcc-battery);
 }
 .pv-usage-label {
-	text-decoration-color: #66d85a;
+	text-decoration-color: var(--evcc-pv-usage);
 }
 .arrow {
 	transition-property: opacity, transform;
@@ -243,40 +241,5 @@ export default {
 .arrow-down {
 	opacity: 1;
 	transform: rotate(90deg);
-}
-
-.site-charger {
-	margin: 1rem 0;
-	padding: 1rem 0;
-	display: flex;
-	justify-content: flex-end;
-	visibility: hidden;
-}
-.charger1 {
-	position: relative;
-	background-color: #18191a;
-	text-align: center;
-	height: 1px;
-}
-.charger1::before,
-.charger1::after {
-	content: "";
-	border-left: 1px solid #18191a;
-	position: absolute;
-	top: -5px;
-	height: 11px;
-}
-.charger1::before {
-	left: 0;
-}
-.charger1::after {
-	right: 0;
-}
-.charger1 span {
-	background-color: #fff;
-	top: -0.7em;
-	line-height: 1em;
-	position: relative;
-	padding: 0.5em;
 }
 </style>
