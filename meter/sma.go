@@ -88,13 +88,13 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		scale:        scale,
 	}
 
-	connection, err := sunny.NewConnection(iface)
+	conn, err := sunny.NewConnection(iface)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get SMA connection: %w", err)
 	}
 
 	if uri != "" {
-		sm.device, err = connection.NewDevice(uri, password)
+		sm.device, err = conn.NewDevice(uri, password)
 		if err != nil {
 			return nil, err
 		}
@@ -116,7 +116,7 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		}()
 
 		// discover devices and wait for results
-		connection.DiscoverDevices(ctx, devices, password)
+		conn.DiscoverDevices(ctx, devices, password)
 		close(devices)
 		wg.Wait()
 
