@@ -1,12 +1,14 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -76,12 +78,6 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		log.WARN.Println("SMA energy not supported -> ignoring")
 	}
 
-	if iface != "" {
-		if err := sunny.SetMulticastInterface(iface); err != nil {
-			return nil, err
-		}
-	}
-
 	sm := &SMA{
 		mux:          util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:          log,
@@ -92,25 +88,37 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		scale:        scale,
 	}
 
-	var err error
+	connection, err := sunny.NewConnection(iface)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SMA connection: %w", err)
+	}
+
 	if uri != "" {
-		sm.device, err = sunny.NewDevice(uri, password)
+		sm.device, err = connection.NewDevice(uri, password)
 		if err != nil {
 			return nil, err
 		}
 	} else if serial != "" {
-		// list all devices
-		devices, err := sunny.DiscoverDevices(password)
-		if err != nil {
-			return nil, err
-		}
+		devices := make(chan *sunny.Device, 10)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 
-		// check if device with serial number is present
-		for _, device := range devices {
-			if serial == strconv.FormatInt(int64(device.SerialNumber()), 10) {
-				sm.device = device
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			for device := range devices {
+				// check if devices serial match and stop discovery if device found
+				if serial == strconv.FormatInt(int64(device.SerialNumber()), 10) {
+					sm.device = device
+					cancel()
+				}
 			}
-		}
+			wg.Done()
+		}()
+
+		// discover devices and wait for results
+		connection.DiscoverDevices(ctx, devices, password)
+		close(devices)
+		wg.Wait()
 
 		if sm.device == nil {
 			return nil, fmt.Errorf("failed to find device with serial: %s", serial)
@@ -119,15 +127,17 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		return nil, errors.New("missing uri or serial")
 	}
 
-	vals, err := sm.device.GetValues()
-	if err != nil {
-		return nil, err
-	}
-
 	// decorate api.Battery
 	var soc func() (float64, error)
-	if _, ok := vals["battery_charge"]; ok {
-		soc = sm.soc
+	if !sm.device.IsEnergyMeter() { // only for inverters possible
+		vals, err := sm.device.GetValues()
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := vals["battery_charge"]; ok {
+			soc = sm.soc
+		}
 	}
 
 	go func() {
