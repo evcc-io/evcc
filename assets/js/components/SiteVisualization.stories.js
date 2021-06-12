@@ -8,6 +8,7 @@ export default {
     gridPower: { control: { type: "range", min: -5000, max: 20000, step: 100 } },
     pvPower: { control: { type: "range", min: 0, max: 10000, step: 100 } },
     batteryPower: { control: { type: "range", min: -4000, max: 4000, step: 100 } },
+    batterySoC: { control: { type: "range", min: 0, max: 100, step: 1 } },
   },
 };
 
@@ -46,7 +47,7 @@ BatteryCharging.args = {
   gridPower: -1300,
   pvPower: 5000,
   batteryPower: -1500,
-  batterySoC: 49,
+  batterySoC: 75,
 };
 
 export const GridPvAndBattery = Template.bind({});
@@ -68,7 +69,7 @@ SmallPowerThresholds.args = {
   gridPower: -110,
   pvPower: 8740,
   batteryPower: -100,
-  batterySoC: 30,
+  batterySoC: 95,
 };
 
 export const GridOnly = Template.bind({});
