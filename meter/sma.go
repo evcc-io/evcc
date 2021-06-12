@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -17,6 +18,76 @@ import (
 )
 
 const udpTimeout = 10 * time.Second
+
+// SMADiscoverHelper discovers SMA devices in background while providing already found devices
+type SMADiscoverHelper struct {
+	conn         *sunny.Connection
+	devices      map[string]*sunny.Device
+	devicesMutex sync.RWMutex
+	done         uint32
+}
+
+// NewSMADiscoverHelper creates discovery helper for given connection (normally one per interface)
+func NewSMADiscoverHelper(conn *sunny.Connection) *SMADiscoverHelper {
+	discover := SMADiscoverHelper{
+		conn:    conn,
+		devices: make(map[string]*sunny.Device),
+	}
+
+	go discover.run()
+
+	return &discover
+}
+
+// run discover and store found devices
+func (d *SMADiscoverHelper) run() {
+	devices := make(chan *sunny.Device, 10)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		for device := range devices {
+			d.devicesMutex.Lock()
+			d.devices[strconv.FormatInt(int64(device.SerialNumber()), 10)] = device
+			d.devicesMutex.Unlock()
+		}
+		wg.Done()
+	}()
+
+	// discover devices and wait for results
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	d.conn.DiscoverDevices(ctx, devices, "")
+	cancel()
+	close(devices)
+	wg.Wait()
+
+	// mark discover as done
+	atomic.AddUint32(&d.done, 1)
+}
+
+func (d *SMADiscoverHelper) get(serial string) *sunny.Device {
+	d.devicesMutex.RLock()
+	defer d.devicesMutex.RUnlock()
+	return d.devices[serial]
+}
+
+// GetDevice with the given serial number
+func (d *SMADiscoverHelper) GetDevice(serial string) *sunny.Device {
+	start := time.Now()
+	for time.Since(start) < time.Second*3 {
+		// discover done -> return immediately regardless of result
+		if atomic.LoadUint32(&d.done) != 0 {
+			return d.get(serial)
+
+			// device with serial found -> return
+		} else if device := d.get(serial); device != nil {
+			return device
+		}
+
+		time.Sleep(time.Millisecond * 10)
+	}
+	return d.get(serial)
+}
 
 // values bundles SMA readings
 type values struct {
@@ -65,6 +136,9 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy, cc.Scale)
 }
 
+// map of created discover instances
+var discovers = make(map[string]*SMADiscoverHelper)
+
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
@@ -99,30 +173,15 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 			return nil, err
 		}
 	} else if serial != "" {
-		devices := make(chan *sunny.Device, 10)
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		if _, ok := discovers[iface]; !ok {
+			discovers[iface] = NewSMADiscoverHelper(conn)
+		}
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go func() {
-			for device := range devices {
-				// check if devices serial match and stop discovery if device found
-				if serial == strconv.FormatInt(int64(device.SerialNumber()), 10) {
-					sm.device = device
-					cancel()
-				}
-			}
-			wg.Done()
-		}()
-
-		// discover devices and wait for results
-		conn.DiscoverDevices(ctx, devices, password)
-		close(devices)
-		wg.Wait()
-
+		sm.device = discovers[iface].GetDevice(serial)
 		if sm.device == nil {
 			return nil, fmt.Errorf("failed to find device with serial: %s", serial)
 		}
+		sm.device.SetPassword(password)
 	} else {
 		return nil, errors.New("missing uri or serial")
 	}
