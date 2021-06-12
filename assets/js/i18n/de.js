@@ -43,6 +43,8 @@ export default {
       import: "Netzbezug",
       direct: "Direktverbauch",
       export: "Einspeisung",
+      batteryUsage: "Batterie entladen",
+      batteryCharge: "Batterie laden",
     },
     mode: {
       title: "Modus",

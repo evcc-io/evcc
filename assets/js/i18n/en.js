@@ -43,6 +43,8 @@ export default {
       import: "Import",
       direct: "Direct-Consumption",
       export: "Export",
+      batteryUsage: "Battery-Usage",
+      batteryCharge: "Battery-Consumption",
     },
     mode: {
       title: "Mode",

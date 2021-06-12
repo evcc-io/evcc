@@ -9,8 +9,8 @@ import { faBatteryFull } from "@fortawesome/free-solid-svg-icons/faBatteryFull";
 import { faBatteryHalf } from "@fortawesome/free-solid-svg-icons/faBatteryHalf";
 import { faBatteryQuarter } from "@fortawesome/free-solid-svg-icons/faBatteryQuarter";
 import { faBatteryThreeQuarters } from "@fortawesome/free-solid-svg-icons/faBatteryThreeQuarters";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
-import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faAngleUp } from "@fortawesome/free-solid-svg-icons/faAngleUp";
+import { faAngleDown } from "@fortawesome/free-solid-svg-icons/faAngleDown";
 import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
@@ -34,8 +34,8 @@ library.add(
   faBatteryHalf,
   faBatteryQuarter,
   faBatteryThreeQuarters,
-  faChevronDown,
-  faChevronUp,
+  faAngleUp,
+  faAngleDown,
   faClock,
   faExclamationTriangle,
   faLeaf,

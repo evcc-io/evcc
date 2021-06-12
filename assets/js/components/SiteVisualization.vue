@@ -8,20 +8,14 @@
 				</span>
 				<span>{{ kw(usage) }}</span>
 			</span>
-			<span class="surplus-label d-flex align-items-center" v-if="batteryConfigured">
-				<fa-icon icon="battery-three-quarters" class="d-block me-1"></fa-icon>
+			<span class="battery-label d-flex align-items-center" v-if="batteryConfigured">
+				<fa-icon :icon="batteryIcon" class="d-block me-1"></fa-icon>
+				<fa-icon icon="angle-up" class="arrow-up" v-if="batteryCharge"></fa-icon>
+				<fa-icon icon="angle-down" class="arrow-down" v-if="batteryUsage"></fa-icon>
 				<span class="d-none d-sm-block me-1">
 					{{ $t("main.siteVisualization.battery") }}
 				</span>
 				<span class="d-block me-1">{{ batterySoC }}%</span>
-				<fa-icon
-					icon="chevron-right"
-					class="arrow"
-					:class="{
-						'arrow-up': batteryCharge,
-						'arrow-down': batteryUsage,
-					}"
-				></fa-icon>
 			</span>
 			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
 				<fa-icon icon="sun" class="d-block me-1"></fa-icon>
@@ -81,8 +75,11 @@
 			<span class="pv-usage-label" v-if="pvUsage">
 				{{ $t("main.siteVisualization.direct") }}
 			</span>
-			<span class="battery-label" v-if="batteryUsage || batteryCharge">
-				{{ $t("main.siteVisualization.battery") }}
+			<span class="battery-usage-label" v-if="batteryUsage">
+				{{ $t("main.siteVisualization.batteryUsage") }}
+			</span>
+			<span class="battery-charge-label" v-if="batteryCharge">
+				{{ $t("main.siteVisualization.batteryCharge") }}
 			</span>
 			<span class="pv-export-label" v-if="pvExport">
 				{{ $t("main.siteVisualization.export") }}
@@ -136,6 +133,13 @@ export default {
 		},
 		total: function () {
 			return this.usage + this.surplus;
+		},
+		batteryIcon: function () {
+			if (this.batterySoC > 80) return "battery-full";
+			if (this.batterySoC > 60) return "battery-three-quarters";
+			if (this.batterySoC > 40) return "battery-half";
+			if (this.batterySoC > 20) return "battery-quarter";
+			return "battery-empty";
 		},
 	},
 	methods: {
@@ -208,12 +212,13 @@ export default {
 .pv-export-label,
 .pv-usage-label,
 .grid-usage-label,
-.battery-label {
+.battery-usage-label,
+.battery-charge-label {
 	color: var(--bs-gray-dark);
 	text-decoration-line: underline;
 	text-decoration-skip-ink: auto;
 	text-decoration-thickness: 2px;
-	text-decoration-style: solid;
+	text-decoration-style: dotted;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
@@ -228,8 +233,18 @@ export default {
 	margin: 0 0.5rem;
 	white-space: nowrap;
 }
+.usage-label,
+.surplus-label {
+	flex-basis: 33%;
+}
+.battery-label {
+	position: relative;
+}
 .usage-label {
-	text-decoration: none;
+	justify-content: flex-start;
+}
+.surplus-label {
+	justify-content: flex-end;
 }
 .pv-export-label {
 	text-decoration-color: var(--evcc-pv-export);
@@ -237,25 +252,23 @@ export default {
 .grid-usage-label {
 	text-decoration-color: var(--evcc-grid);
 }
-.battery-label {
+.battery-usage-label,
+.battery-charge-label {
 	text-decoration-color: var(--evcc-battery);
 }
 .pv-usage-label {
 	text-decoration-color: var(--evcc-pv-usage);
 }
-.arrow {
-	transition-property: opacity, transform;
-	transition-duration: 500ms;
-	transition-timing-function: ease-in;
-	opacity: 0;
-	transform: rotate(0);
+.arrow-up,
+.arrow-down {
+	position: absolute;
+	left: 0.35rem;
+	width: 0.5rem;
 }
 .arrow-up {
-	opacity: 1;
-	transform: rotate(-90deg);
+	top: -0.3rem;
 }
 .arrow-down {
-	opacity: 1;
-	transform: rotate(90deg);
+	bottom: -0.3rem;
 }
 </style>
