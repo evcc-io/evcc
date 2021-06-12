@@ -68,11 +68,13 @@ func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 		return nil
 	}
 
-	devices, err := sunny.DiscoverDevices(h.Password)
+	connection, err := sunny.NewConnection("")
 	if err != nil {
 		log.ERROR.Println("sma:", err)
 		return nil
 	}
+
+	devices := connection.SimpleDiscoverDevices(h.Password)
 	h.handled = true
 	h.mux.Unlock()
 
