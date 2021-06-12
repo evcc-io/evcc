@@ -1,12 +1,15 @@
 package meter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -15,6 +18,76 @@ import (
 )
 
 const udpTimeout = 10 * time.Second
+
+// SMADiscoverHelper discovers SMA devices in background while providing already found devices
+type SMADiscoverHelper struct {
+	conn         *sunny.Connection
+	devices      map[string]*sunny.Device
+	devicesMutex sync.RWMutex
+	done         uint32
+}
+
+// NewSMADiscoverHelper creates discovery helper for given connection (normally one per interface)
+func NewSMADiscoverHelper(conn *sunny.Connection) *SMADiscoverHelper {
+	discover := SMADiscoverHelper{
+		conn:    conn,
+		devices: make(map[string]*sunny.Device),
+	}
+
+	go discover.run()
+
+	return &discover
+}
+
+// run discover and store found devices
+func (d *SMADiscoverHelper) run() {
+	devices := make(chan *sunny.Device, 10)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		for device := range devices {
+			d.devicesMutex.Lock()
+			d.devices[strconv.FormatInt(int64(device.SerialNumber()), 10)] = device
+			d.devicesMutex.Unlock()
+		}
+		wg.Done()
+	}()
+
+	// discover devices and wait for results
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	d.conn.DiscoverDevices(ctx, devices, "")
+	cancel()
+	close(devices)
+	wg.Wait()
+
+	// mark discover as done
+	atomic.AddUint32(&d.done, 1)
+}
+
+func (d *SMADiscoverHelper) get(serial string) *sunny.Device {
+	d.devicesMutex.RLock()
+	defer d.devicesMutex.RUnlock()
+	return d.devices[serial]
+}
+
+// GetDevice with the given serial number
+func (d *SMADiscoverHelper) GetDevice(serial string) *sunny.Device {
+	start := time.Now()
+	for time.Since(start) < time.Second*3 {
+		// discover done -> return immediately regardless of result
+		if atomic.LoadUint32(&d.done) != 0 {
+			return d.get(serial)
+
+			// device with serial found -> return
+		} else if device := d.get(serial); device != nil {
+			return device
+		}
+
+		time.Sleep(time.Millisecond * 10)
+	}
+	return d.get(serial)
+}
 
 // values bundles SMA readings
 type values struct {
@@ -63,6 +136,9 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy, cc.Scale)
 }
 
+// map of created discover instances
+var discovers = make(map[string]*SMADiscoverHelper)
+
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
@@ -76,12 +152,6 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		log.WARN.Println("SMA energy not supported -> ignoring")
 	}
 
-	if iface != "" {
-		if err := sunny.SetMulticastInterface(iface); err != nil {
-			return nil, err
-		}
-	}
-
 	sm := &SMA{
 		mux:          util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:          log,
@@ -92,42 +162,41 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		scale:        scale,
 	}
 
-	var err error
+	conn, err := sunny.NewConnection(iface)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get SMA connection: %w", err)
+	}
+
 	if uri != "" {
-		sm.device, err = sunny.NewDevice(uri, password)
+		sm.device, err = conn.NewDevice(uri, password)
 		if err != nil {
 			return nil, err
 		}
 	} else if serial != "" {
-		// list all devices
-		devices, err := sunny.DiscoverDevices(password)
-		if err != nil {
-			return nil, err
+		if _, ok := discovers[iface]; !ok {
+			discovers[iface] = NewSMADiscoverHelper(conn)
 		}
 
-		// check if device with serial number is present
-		for _, device := range devices {
-			if serial == strconv.FormatInt(int64(device.SerialNumber()), 10) {
-				sm.device = device
-			}
-		}
-
+		sm.device = discovers[iface].GetDevice(serial)
 		if sm.device == nil {
 			return nil, fmt.Errorf("failed to find device with serial: %s", serial)
 		}
+		sm.device.SetPassword(password)
 	} else {
 		return nil, errors.New("missing uri or serial")
 	}
 
-	vals, err := sm.device.GetValues()
-	if err != nil {
-		return nil, err
-	}
-
 	// decorate api.Battery
 	var soc func() (float64, error)
-	if _, ok := vals["battery_charge"]; ok {
-		soc = sm.soc
+	if !sm.device.IsEnergyMeter() { // only for inverters possible
+		vals, err := sm.device.GetValues()
+		if err != nil {
+			return nil, err
+		}
+
+		if _, ok := vals["battery_charge"]; ok {
+			soc = sm.soc
+		}
 	}
 
 	go func() {
