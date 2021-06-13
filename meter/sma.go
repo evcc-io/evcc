@@ -222,15 +222,9 @@ func (sm *SMA) CurrentPower() (float64, error) {
 
 	var power float64
 	if sm.device.IsEnergyMeter() {
-		powerP, ok1 := values["active_power_plus"]
-		powerM, ok2 := values["active_power_minus"]
-		if ok1 && ok2 {
-			power = sm.scale * (sm.convertValue(powerP) - sm.convertValue(powerM))
-		}
+		power = sm.scale * (sm.convertValue(values["active_power_plus"]) - sm.convertValue(values["active_power_minus"]))
 	} else {
-		if val, ok := values["power_ac_total"]; ok {
-			power = sm.convertValue(val)
-		}
+		power = sm.convertValue(values["power_ac_total"])
 	}
 
 	return power, err
@@ -242,13 +236,9 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 
 	var energy float64
 	if sm.device.IsEnergyMeter() {
-		if val, ok := values["active_energy_plus"]; ok {
-			energy = sm.convertValue(val) / 3600000
-		}
+		energy = sm.convertValue(values["active_energy_plus"]) / 3600000
 	} else {
-		if val, ok := values["energy_total"]; ok {
-			energy = sm.convertValue(val) / 1000
-		}
+		energy = sm.convertValue(values["energy_total"]) / 1000
 	}
 
 	return energy, err
@@ -281,25 +271,19 @@ func (sm *SMA) soc() (float64, error) {
 func (sm *SMA) Diagnose() {
 	fmt.Printf("  IP:             %s\n", sm.device.Address())
 	fmt.Printf("  Serial:         %d\n", sm.device.SerialNumber())
-	fmt.Printf("  Is EnergyMeter: %v\n", sm.device.IsEnergyMeter())
+	fmt.Printf("  EnergyMeter:    %v\n", sm.device.IsEnergyMeter())
 	fmt.Printf("\n")
-	name, err := sm.device.GetDeviceName()
-	if err != nil {
-		fmt.Printf("  ERROR: %v\n", err)
-	} else {
+
+	if name, err := sm.device.GetDeviceName(); err == nil {
 		fmt.Printf("  Name: %s\n", name)
 	}
-	devClass, err := sm.device.GetDeviceClass()
-	if err != nil {
-		fmt.Printf("  ERROR: %v\n", err)
-	} else {
+
+	if devClass, err := sm.device.GetDeviceClass(); err == nil {
 		fmt.Printf("  Device Class: 0x%X\n", devClass)
 	}
 	fmt.Printf("\n")
-	values, err := sm.device.GetValues()
-	if err != nil {
-		fmt.Printf("  ERROR: %v\n", err)
-	} else {
+
+	if values, err := sm.device.GetValues(); err == nil {
 		keys := make([]string, 0, len(values))
 		keyLength := 0
 		for k := range values {
