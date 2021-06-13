@@ -238,8 +238,8 @@ func (sm *SMA) CurrentPower() (float64, error) {
 			power = sm.scale * (sm.convertValue(powerP) - sm.convertValue(powerM))
 		}
 	} else {
-		if power, ok := values["power_ac_total"]; ok {
-			power = sm.convertValue(power)
+		if val, ok := values["power_ac_total"]; ok {
+			power = sm.convertValue(val)
 		}
 	}
 
@@ -252,12 +252,12 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 
 	var energy float64
 	if sm.device.IsEnergyMeter() {
-		if energyTotal, ok := values["active_energy_plus"]; ok {
-			energy = sm.convertValue(energyTotal) / 3600000
+		if val, ok := values["active_energy_plus"]; ok {
+			energy = sm.convertValue(val) / 3600000
 		}
 	} else {
-		if energyTotal, ok := values["energy_total"]; ok {
-			energy = sm.convertValue(energyTotal) / 1000
+		if val, ok := values["energy_total"]; ok {
+			energy = sm.convertValue(val) / 1000
 		}
 	}
 
