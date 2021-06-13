@@ -72,16 +72,6 @@ func (d *smaDiscoverer) deviceBySerial(serial uint32) *sunny.Device {
 	return d.get(serial)
 }
 
-// values bundles SMA readings
-type values struct {
-	power     float64
-	energy    float64
-	currentL1 float64
-	currentL2 float64
-	currentL3 float64
-	soc       float64
-}
-
 // SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
 type SMA struct {
 	log    *util.Logger
