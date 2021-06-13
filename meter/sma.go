@@ -197,16 +197,15 @@ func (sm *SMA) updateValues() {
 	defer sm.mux.Unlock()
 
 	values, err := sm.device.GetValues()
-	if err != nil {
-		sm.log.ERROR.Printf("failed to get values: %v", err)
-		return
+	if err == nil {
+		err = mergo.Merge(sm.values, values)
 	}
 
-	if err := mergo.Merge(sm.values, values); err != nil {
+	if err == nil {
+		sm.mux.Update()
+	} else {
 		sm.log.ERROR.Println(err)
 	}
-
-	sm.mux.Update()
 }
 
 func (sm *SMA) hasValue() (map[string]interface{}, error) {
