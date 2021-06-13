@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -21,53 +20,50 @@ const udpTimeout = 10 * time.Second
 // smaDiscoverer discovers SMA devices in background while providing already found devices
 type smaDiscoverer struct {
 	conn    *sunny.Connection
-	devices map[string]*sunny.Device
+	devices map[uint32]*sunny.Device
 	mux     sync.RWMutex
 	done    uint32
 }
 
 // run discover and store found devices
 func (d *smaDiscoverer) run() {
-	devices := make(chan *sunny.Device, 10)
+	devices := make(chan *sunny.Device)
 
-	var wg sync.WaitGroup
-	wg.Add(1)
 	go func() {
 		for device := range devices {
 			d.mux.Lock()
-			d.devices[strconv.FormatInt(int64(device.SerialNumber()), 10)] = device
+			d.devices[device.SerialNumber()] = device
 			d.mux.Unlock()
 		}
-		wg.Done()
 	}()
 
 	// discover devices and wait for results
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	d.conn.DiscoverDevices(ctx, devices, "")
 	cancel()
 	close(devices)
-	wg.Wait()
 
 	// mark discover as done
 	atomic.AddUint32(&d.done, 1)
 }
 
-func (d *smaDiscoverer) get(serial string) *sunny.Device {
+func (d *smaDiscoverer) get(serial uint32) *sunny.Device {
 	d.mux.RLock()
 	defer d.mux.RUnlock()
 	return d.devices[serial]
 }
 
-// GetDevice with the given serial number
-func (d *smaDiscoverer) GetDevice(serial string) *sunny.Device {
+// deviceBySerial with the given serial number
+func (d *smaDiscoverer) deviceBySerial(serial uint32) *sunny.Device {
 	start := time.Now()
 	for time.Since(start) < time.Second*3 {
 		// discover done -> return immediately regardless of result
 		if atomic.LoadUint32(&d.done) != 0 {
 			return d.get(serial)
+		}
 
-			// device with serial found -> return
-		} else if device := d.get(serial); device != nil {
+		// device with serial found -> return
+		if device := d.get(serial); device != nil {
 			return device
 		}
 
@@ -91,7 +87,6 @@ type SMA struct {
 	log    *util.Logger
 	mux    *util.Waiter
 	uri    string
-	serial string
 	iface  string
 	values values
 	scale  float64
@@ -109,8 +104,10 @@ func init() {
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Password, Serial, Interface, Power, Energy string
-		Scale                                           float64
+		URI, Password, Interface string
+		Serial                   uint32
+		Power, Energy            string
+		Scale                    float64
 	}{
 		Password: "0000",
 		Scale:    1,
@@ -120,30 +117,30 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Password, cc.Serial, cc.Interface, cc.Power, cc.Energy, cc.Scale)
+	// print warnings for unused config
+	log := util.NewLogger("sma")
+	if cc.Power != "" {
+		log.WARN.Println("power setting is deprecated")
+	}
+	if cc.Energy != "" {
+		log.WARN.Println("energy setting is deprecated")
+	}
+
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
 }
 
 // map of created discover instances
 var discoverers = make(map[string]*smaDiscoverer)
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
+func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
 	sunny.Log = log.TRACE
-
-	// print warnings for unused config
-	if power != "" {
-		log.WARN.Println("power setting is deprecated")
-	}
-	if energy != "" {
-		log.WARN.Println("energy setting is deprecated")
-	}
 
 	sm := &SMA{
 		mux:          util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
 		log:          log,
 		uri:          uri,
-		serial:       serial,
 		iface:        iface,
 		updateTicker: time.NewTicker(time.Second),
 		scale:        scale,
@@ -151,7 +148,7 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 
 	conn, err := sunny.NewConnection(iface)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get SMA connection: %w", err)
+		return nil, fmt.Errorf("connection failed: %w", err)
 	}
 
 	switch {
@@ -161,12 +158,12 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 			return nil, err
 		}
 
-	case serial != "":
+	case serial > 0:
 		discoverer, ok := discoverers[iface]
 		if !ok {
 			discoverer = &smaDiscoverer{
 				conn:    conn,
-				devices: make(map[string]*sunny.Device),
+				devices: make(map[uint32]*sunny.Device),
 			}
 
 			go discoverer.run()
@@ -174,9 +171,9 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 			discoverers[iface] = discoverer
 		}
 
-		sm.device = discoverer.GetDevice(serial)
+		sm.device = discoverer.deviceBySerial(serial)
 		if sm.device == nil {
-			return nil, fmt.Errorf("device not found: %s", serial)
+			return nil, fmt.Errorf("device not found: %d", serial)
 		}
 		sm.device.SetPassword(password)
 
@@ -256,7 +253,7 @@ func (sm *SMA) updateValues() {
 			sm.values.power = sm.convertValue(power)
 			sm.mux.Update()
 		} else {
-			sm.log.DEBUG.Println("missing value for power -> set to 0")
+			sm.log.DEBUG.Println("missing value for power -> set to 0") // TODO remove
 			sm.values.power = 0
 			sm.mux.Update()
 		}
