@@ -12,6 +12,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
+	"github.com/imdario/mergo"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -201,7 +202,10 @@ func (sm *SMA) updateValues() {
 		return
 	}
 
-	sm.values = values
+	if err := mergo.Merge(sm.values, values); err != nil {
+		sm.log.ERROR.Println(err)
+	}
+
 	sm.mux.Update()
 }
 
