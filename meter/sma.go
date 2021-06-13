@@ -96,7 +96,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		URI, Password, Interface string
 		Serial                   uint32
 		Power, Energy            string
-		Scale                    float64
+		Scale                    float64 // power only
 	}{
 		Password: "0000",
 		Scale:    1,
@@ -225,12 +225,12 @@ func (sm *SMA) CurrentPower() (float64, error) {
 
 	var power float64
 	if sm.device.IsEnergyMeter() {
-		power = sm.scale * (sm.convertValue(values["active_power_plus"]) - sm.convertValue(values["active_power_minus"]))
+		power = sm.convertValue(values["active_power_plus"]) - sm.convertValue(values["active_power_minus"])
 	} else {
 		power = sm.convertValue(values["power_ac_total"])
 	}
 
-	return power, err
+	return sm.scale * power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
