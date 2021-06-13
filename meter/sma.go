@@ -88,11 +88,9 @@ type SMA struct {
 	mux    *util.Waiter
 	uri    string
 	iface  string
-	values values
+	values map[string]interface{}
 	scale  float64
-
-	device       *sunny.Device
-	updateTicker *time.Ticker
+	device *sunny.Device
 }
 
 func init() {
@@ -138,12 +136,12 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	sunny.Log = log.TRACE
 
 	sm := &SMA{
-		mux:          util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
-		log:          log,
-		uri:          uri,
-		iface:        iface,
-		updateTicker: time.NewTicker(time.Second),
-		scale:        scale,
+		mux:    util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
+		log:    log,
+		uri:    uri,
+		iface:  iface,
+		values: make(map[string]interface{}),
+		scale:  scale,
 	}
 
 	conn, err := sunny.NewConnection(iface)
@@ -195,7 +193,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	}
 
 	go func() {
-		for range sm.updateTicker.C {
+		for range time.NewTicker(time.Second).C {
 			sm.updateValues()
 		}
 	}()
@@ -207,90 +205,22 @@ func (sm *SMA) updateValues() {
 	sm.mux.Lock()
 	defer sm.mux.Unlock()
 
-	vals, err := sm.device.GetValues()
+	values, err := sm.device.GetValues()
 	if err != nil {
 		sm.log.ERROR.Printf("failed to get values: %v", err)
 		return
 	}
 
-	if sm.device.IsEnergyMeter() {
-		powerP, ok1 := vals["active_power_plus"]
-		powerM, ok2 := vals["active_power_minus"]
-		if ok1 && ok2 {
-			sm.values.power = sm.scale * (sm.convertValue(powerP) - sm.convertValue(powerM))
-			sm.mux.Update()
-		} else {
-			sm.log.ERROR.Println("missing value for power")
-		}
-
-		if currentL1, ok := vals["l1_current"]; ok {
-			sm.values.currentL1 = sm.convertValue(currentL1)
-			sm.mux.Update()
-		} else {
-			sm.log.ERROR.Println("missing value for currentL1")
-		}
-
-		if currentL2, ok := vals["l2_current"]; ok {
-			sm.values.currentL2 = sm.convertValue(currentL2)
-			sm.mux.Update()
-		} else {
-			sm.log.ERROR.Println("missing value for currentL2")
-		}
-
-		if currentL3, ok := vals["l3_current"]; ok {
-			sm.values.currentL3 = sm.convertValue(currentL3)
-			sm.mux.Update()
-		} else {
-			sm.log.ERROR.Println("missing value for currentL3")
-		}
-
-		if energyTotal, ok := vals["active_energy_plus"]; ok {
-			sm.values.energy = sm.convertValue(energyTotal) / 3600000
-			sm.mux.Update()
-		}
-	} else {
-		if power, ok := vals["power_ac_total"]; ok {
-			sm.values.power = sm.convertValue(power)
-			sm.mux.Update()
-		} else {
-			sm.log.DEBUG.Println("missing value for power -> set to 0") // TODO remove
-			sm.values.power = 0
-			sm.mux.Update()
-		}
-
-		if currentL1, ok := vals["current_ac1"]; ok {
-			sm.values.currentL1 = sm.convertValue(currentL1) / 1000
-			sm.mux.Update()
-		}
-
-		if currentL2, ok := vals["current_ac2"]; ok {
-			sm.values.currentL2 = sm.convertValue(currentL2) / 1000
-			sm.mux.Update()
-		}
-
-		if currentL3, ok := vals["current_ac3"]; ok {
-			sm.values.currentL3 = sm.convertValue(currentL3) / 1000
-			sm.mux.Update()
-		}
-
-		if soc, ok := vals["battery_charge"]; ok {
-			sm.values.soc = sm.convertValue(soc)
-			sm.mux.Update()
-		}
-
-		if energyTotal, ok := vals["energy_total"]; ok {
-			sm.values.energy = sm.convertValue(energyTotal) / 1000
-			sm.mux.Update()
-		}
-	}
+	sm.values = values
+	sm.mux.Update()
 }
 
-func (sm *SMA) hasValue() (values, error) {
+func (sm *SMA) hasValue() (map[string]interface{}, error) {
 	elapsed := sm.mux.LockWithTimeout()
 	defer sm.mux.Unlock()
 
 	if elapsed > 0 {
-		return values{}, fmt.Errorf("update timeout: %v", elapsed.Truncate(time.Second))
+		return nil, fmt.Errorf("update timeout: %v", elapsed.Truncate(time.Second))
 	}
 
 	return sm.values, nil
@@ -299,25 +229,62 @@ func (sm *SMA) hasValue() (values, error) {
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.hasValue()
-	return values.power, err
-}
 
-// Currents implements the api.MeterCurrent interface
-func (sm *SMA) Currents() (float64, float64, float64, error) {
-	values, err := sm.hasValue()
-	return values.currentL1, values.currentL2, values.currentL3, err
+	var power float64
+	if sm.device.IsEnergyMeter() {
+		powerP, ok1 := values["active_power_plus"]
+		powerM, ok2 := values["active_power_minus"]
+		if ok1 && ok2 {
+			power = sm.scale * (sm.convertValue(powerP) - sm.convertValue(powerM))
+		}
+	} else {
+		if power, ok := values["power_ac_total"]; ok {
+			power = sm.convertValue(power)
+		}
+	}
+
+	return power, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.hasValue()
-	return values.energy, err
+
+	var energy float64
+	if sm.device.IsEnergyMeter() {
+		if energyTotal, ok := values["active_energy_plus"]; ok {
+			energy = sm.convertValue(energyTotal) / 3600000
+		}
+	} else {
+		if energyTotal, ok := values["energy_total"]; ok {
+			energy = sm.convertValue(energyTotal) / 1000
+		}
+	}
+
+	return energy, err
+}
+
+// Currents implements the api.MeterCurrent interface
+func (sm *SMA) Currents() (float64, float64, float64, error) {
+	values, err := sm.hasValue()
+
+	measurements := []string{"l1_current", "l2_current", "l3_current"}
+	if !sm.device.IsEnergyMeter() {
+		measurements = []string{"current_ac1", "current_ac2", "current_ac3"}
+	}
+
+	var vals [3]float64
+	for i := 0; i < 3; i++ {
+		vals[i] = sm.convertValue(values[measurements[i]])
+	}
+
+	return vals[0], vals[1], vals[2], err
 }
 
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.hasValue()
-	return values.soc, err
+	return sm.convertValue(values["battery_charge"]), err
 }
 
 // Diagnose implements the api.Diagnosis interface
@@ -371,6 +338,8 @@ func (sm *SMA) convertValue(value interface{}) float64 {
 		return float64(v)
 	case uint64:
 		return float64(v)
+	case nil:
+		return 0
 	default:
 		sm.log.WARN.Printf("unknown value type: %T", value)
 		return 0
