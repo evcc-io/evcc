@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -19,37 +18,25 @@ import (
 
 const udpTimeout = 10 * time.Second
 
-// SMADiscoverHelper discovers SMA devices in background while providing already found devices
-type SMADiscoverHelper struct {
-	conn         *sunny.Connection
-	devices      map[string]*sunny.Device
-	devicesMutex sync.RWMutex
-	done         uint32
-}
-
-// NewSMADiscoverHelper creates discovery helper for given connection (normally one per interface)
-func NewSMADiscoverHelper(conn *sunny.Connection) *SMADiscoverHelper {
-	discover := SMADiscoverHelper{
-		conn:    conn,
-		devices: make(map[string]*sunny.Device),
-	}
-
-	go discover.run()
-
-	return &discover
+// smaDiscoverer discovers SMA devices in background while providing already found devices
+type smaDiscoverer struct {
+	conn    *sunny.Connection
+	devices map[string]*sunny.Device
+	mux     sync.RWMutex
+	done    uint32
 }
 
 // run discover and store found devices
-func (d *SMADiscoverHelper) run() {
+func (d *smaDiscoverer) run() {
 	devices := make(chan *sunny.Device, 10)
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		for device := range devices {
-			d.devicesMutex.Lock()
+			d.mux.Lock()
 			d.devices[strconv.FormatInt(int64(device.SerialNumber()), 10)] = device
-			d.devicesMutex.Unlock()
+			d.mux.Unlock()
 		}
 		wg.Done()
 	}()
@@ -65,14 +52,14 @@ func (d *SMADiscoverHelper) run() {
 	atomic.AddUint32(&d.done, 1)
 }
 
-func (d *SMADiscoverHelper) get(serial string) *sunny.Device {
-	d.devicesMutex.RLock()
-	defer d.devicesMutex.RUnlock()
+func (d *smaDiscoverer) get(serial string) *sunny.Device {
+	d.mux.RLock()
+	defer d.mux.RUnlock()
 	return d.devices[serial]
 }
 
 // GetDevice with the given serial number
-func (d *SMADiscoverHelper) GetDevice(serial string) *sunny.Device {
+func (d *smaDiscoverer) GetDevice(serial string) *sunny.Device {
 	start := time.Now()
 	for time.Since(start) < time.Second*3 {
 		// discover done -> return immediately regardless of result
@@ -137,7 +124,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 }
 
 // map of created discover instances
-var discovers = make(map[string]*SMADiscoverHelper)
+var discoverers = make(map[string]*smaDiscoverer)
 
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (api.Meter, error) {
@@ -146,10 +133,10 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 
 	// print warnings for unused config
 	if power != "" {
-		log.WARN.Println("SMA power not supported -> ignoring")
+		log.WARN.Println("power setting is deprecated")
 	}
 	if energy != "" {
-		log.WARN.Println("SMA energy not supported -> ignoring")
+		log.WARN.Println("energy setting is deprecated")
 	}
 
 	sm := &SMA{
@@ -167,28 +154,39 @@ func NewSMA(uri, password, serial, iface, power, energy string, scale float64) (
 		return nil, fmt.Errorf("failed to get SMA connection: %w", err)
 	}
 
-	if uri != "" {
+	switch {
+	case uri != "":
 		sm.device, err = conn.NewDevice(uri, password)
 		if err != nil {
 			return nil, err
 		}
-	} else if serial != "" {
-		if _, ok := discovers[iface]; !ok {
-			discovers[iface] = NewSMADiscoverHelper(conn)
+
+	case serial != "":
+		discoverer, ok := discoverers[iface]
+		if !ok {
+			discoverer = &smaDiscoverer{
+				conn:    conn,
+				devices: make(map[string]*sunny.Device),
+			}
+
+			go discoverer.run()
+
+			discoverers[iface] = discoverer
 		}
 
-		sm.device = discovers[iface].GetDevice(serial)
+		sm.device = discoverer.GetDevice(serial)
 		if sm.device == nil {
-			return nil, fmt.Errorf("failed to find device with serial: %s", serial)
+			return nil, fmt.Errorf("device not found: %s", serial)
 		}
 		sm.device.SetPassword(password)
-	} else {
+
+	default:
 		return nil, errors.New("missing uri or serial")
 	}
 
-	// decorate api.Battery
+	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
-	if !sm.device.IsEnergyMeter() { // only for inverters possible
+	if !sm.device.IsEnergyMeter() {
 		vals, err := sm.device.GetValues()
 		if err != nil {
 			return nil, err
@@ -253,7 +251,6 @@ func (sm *SMA) updateValues() {
 			sm.values.energy = sm.convertValue(energyTotal) / 3600000
 			sm.mux.Update()
 		}
-
 	} else {
 		if power, ok := vals["power_ac_total"]; ok {
 			sm.values.power = sm.convertValue(power)
@@ -378,7 +375,7 @@ func (sm *SMA) convertValue(value interface{}) float64 {
 	case uint64:
 		return float64(v)
 	default:
-		sm.log.WARN.Printf("unknown value type: %s", reflect.TypeOf(value).Name())
+		sm.log.WARN.Printf("unknown value type: %T", value)
 		return 0
 	}
 }
