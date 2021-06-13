@@ -106,13 +106,8 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	// print warnings for unused config
-	log := util.NewLogger("sma")
-	if cc.Power != "" {
-		log.WARN.Println("power setting is deprecated")
-	}
-	if cc.Energy != "" {
-		log.WARN.Println("energy setting is deprecated")
+	if cc.Power != "" || cc.Energy != "" {
+		util.NewLogger("sma").WARN.Println("energy and power setting are deprecated and will be removed in a future release")
 	}
 
 	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
