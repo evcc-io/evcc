@@ -220,9 +220,9 @@ func (sm *SMA) CurrentPower() (float64, error) {
 
 	var power float64
 	if sm.device.IsEnergyMeter() {
-		power = sm.convertValue(values["active_power_plus"]) - sm.convertValue(values["active_power_minus"])
+		power = sm.asFloat(values["active_power_plus"]) - sm.asFloat(values["active_power_minus"])
 	} else {
-		power = sm.convertValue(values["power_ac_total"])
+		power = sm.asFloat(values["power_ac_total"])
 	}
 
 	return sm.scale * power, err
@@ -234,9 +234,9 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 
 	var energy float64
 	if sm.device.IsEnergyMeter() {
-		energy = sm.convertValue(values["active_energy_plus"]) / 3600000
+		energy = sm.asFloat(values["active_energy_plus"]) / 3600000
 	} else {
-		energy = sm.convertValue(values["energy_total"]) / 1000
+		energy = sm.asFloat(values["energy_total"]) / 1000
 	}
 
 	return energy, err
@@ -253,7 +253,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 
 	var vals [3]float64
 	for i := 0; i < 3; i++ {
-		vals[i] = sm.convertValue(values[measurements[i]])
+		vals[i] = sm.asFloat(values[measurements[i]])
 	}
 
 	return vals[0], vals[1], vals[2], err
@@ -262,7 +262,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.hasValue()
-	return sm.convertValue(values["battery_charge"]), err
+	return sm.asFloat(values["battery_charge"]), err
 }
 
 // Diagnose implements the api.Diagnosis interface
@@ -298,7 +298,7 @@ func (sm *SMA) Diagnose() {
 	}
 }
 
-func (sm *SMA) convertValue(value interface{}) float64 {
+func (sm *SMA) asFloat(value interface{}) float64 {
 	switch v := value.(type) {
 	case float64:
 		return v
