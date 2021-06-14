@@ -193,7 +193,7 @@ func (sm *SMA) updateValues() {
 
 	values, err := sm.device.GetValues()
 	if err == nil {
-		err = mergo.Merge(&sm.values, values)
+		err = mergo.Merge(&sm.values, values, mergo.WithOverride)
 	}
 
 	if err == nil {
