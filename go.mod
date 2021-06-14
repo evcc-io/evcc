@@ -70,7 +70,7 @@ require (
 	github.com/thoas/go-funk v0.8.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20210117183837-59dcc46d62d4
-	gitlab.com/bboehmke/sunny v0.12.1
+	gitlab.com/bboehmke/sunny v0.12.2
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf // indirect
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20210508051633-16afe75a6701
