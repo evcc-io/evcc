@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -64,7 +65,15 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Battery); ok {
-		if soc, err := v.SoC(); err != nil {
+		soc, err := v.SoC()
+
+		for err != nil && errors.Is(err, api.ErrMustRetry) {
+			fmt.Fprint(w, ".")
+			time.Sleep(3 * time.Second)
+			soc, err = v.SoC()
+		}
+
+		if err != nil {
 			fmt.Fprintf(w, "SoC:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "SoC:\t%.0f%%\n", soc)
