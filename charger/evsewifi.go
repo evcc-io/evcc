@@ -52,6 +52,7 @@ type EVSEWifi struct {
 	uri          string
 	alwaysActive bool
 	current      int64
+	mA           bool
 }
 
 func init() {
@@ -63,8 +64,9 @@ func init() {
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI   string
-		Meter struct {
+		URI         string
+		MilliAmpere bool
+		Meter       struct {
 			Power, Energy, Currents bool
 		}
 	}{}
@@ -73,7 +75,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
+	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.MilliAmpere)
 	if err != nil {
 		return evse, err
 	}
@@ -107,7 +109,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string) (*EVSEWifi, error) {
+func NewEVSEWifi(uri string, mA bool) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
@@ -115,6 +117,7 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
+		mA:      mA,
 	}
 
 	return evse, nil
@@ -206,6 +209,13 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
+	evse.current = current
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
+	return evse.get(url)
+}
+
+// maxCurrentEx implements the api.ChargerEx interface
+func (evse *EVSEWifi) maxCurrentEx(current float64) error {
 	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.get(url)
