@@ -32,6 +32,9 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource, vin string) *API {
 		VIN:    vin,
 	}
 
+	// api is unbelievably slow when retrieving status
+	v.Client.Timeout = 120 * time.Second
+
 	// replace client transport with authenticated transport
 	v.Client.Transport = &oauth2.Transport{
 		Source: identity,
