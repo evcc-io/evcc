@@ -32,12 +32,11 @@ func init() {
 // NewNissanFromConfig creates a new vehicle
 func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                       `mapstructure:",squash"`
-		User, Password, Region, VIN string
-		Cache                       time.Duration
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
 	}{
-		Region: "de_DE",
-		Cache:  interval,
+		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
