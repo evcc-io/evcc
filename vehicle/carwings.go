@@ -7,6 +7,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/request"
 
 	"github.com/joeshaw/carwings"
 )
@@ -19,7 +20,6 @@ const (
 // CarWings is an api.Vehicle implementation for CarWings cars
 type CarWings struct {
 	*embed
-	log            *util.Logger
 	user, password string
 	session        *carwings.Session
 	statusG        func() (interface{}, error)
@@ -51,16 +51,11 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	log := util.NewLogger("carwings")
-
-	// TODO: wait for https://github.com/joeshaw/carwings/pull/38
-	// client := request.NewHelper(log).Client
-	// client.Timeout = 3 * time.Minute
-	// carwings.Client = client
+	carwings.Client = request.NewHelper(util.NewLogger("carwings")).Client
+	carwings.Client.Timeout = time.Minute
 
 	v := &CarWings{
 		embed:    &cc.embed,
-		log:      log,
 		user:     cc.User,
 		password: cc.Password,
 		session: &carwings.Session{
