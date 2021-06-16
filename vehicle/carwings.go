@@ -69,7 +69,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}, cc.Cache).InterfaceGetter()
 
 	v.climateG = provider.NewCached(func() (interface{}, error) {
-		return v.climater()
+		return v.session.ClimateControlStatus()
 	}, cc.Cache).InterfaceGetter()
 
 	_ = v.session.Connect(v.user, v.password)
@@ -196,10 +196,6 @@ func (v *CarWings) Range() (int64, error) {
 }
 
 var _ api.VehicleClimater = (*CarWings)(nil)
-
-func (v *CarWings) climater() (interface{}, error) {
-	return v.session.ClimateControlStatus()
-}
 
 // Climater implements the api.VehicleClimater interface
 func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
