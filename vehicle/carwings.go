@@ -155,7 +155,7 @@ func (v *CarWings) refreshRequest() (err error) {
 }
 
 // SoC implements the api.Vehicle interface
-func (v *CarWings) SoC() (soc float64, err error) {
+func (v *CarWings) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(carwings.BatteryStatus); err == nil && ok {
 		return float64(res.StateOfCharge), nil
@@ -167,8 +167,8 @@ func (v *CarWings) SoC() (soc float64, err error) {
 var _ api.ChargeState = (*CarWings)(nil)
 
 // Status implements the api.ChargeState interface
-func (v *CarWings) Status() (status api.ChargeStatus, err error) {
-	status = api.StatusA // disconnected
+func (v *CarWings) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
 	if res, ok := res.(carwings.BatteryStatus); err == nil && ok {
@@ -186,9 +186,7 @@ func (v *CarWings) Status() (status api.ChargeStatus, err error) {
 var _ api.VehicleRange = (*CarWings)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *CarWings) Range() (rng int64, err error) {
-	rng = 0
-
+func (v *CarWings) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(carwings.BatteryStatus); err == nil && ok {
 		return int64(res.CruisingRangeACOn) / 1000, nil
