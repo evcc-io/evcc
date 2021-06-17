@@ -145,8 +145,8 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 			err = v.disconnect()
 		}
 
-		messageAge := time.Duration(resp.MessageAgeServer * int(time.Second))
-		if err == nil && messageAge > (v.interval+time.Minute) && ovmsConnected {
+		messageAge := time.Duration(resp.MessageAgeServer) * time.Second
+		if err == nil && messageAge > v.interval+time.Minute && ovmsConnected {
 			err = api.ErrMustRetry
 		}
 	}
