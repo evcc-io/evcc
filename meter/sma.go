@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
+	"text/tabwriter"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -247,28 +248,26 @@ func (sm *SMA) soc() (float64, error) {
 
 // Diagnose implements the api.Diagnosis interface
 func (sm *SMA) Diagnose() {
-	fmt.Printf("  IP:             %s\n", sm.device.Address())
-	fmt.Printf("  Serial:         %d\n", sm.device.SerialNumber())
-	fmt.Printf("  EnergyMeter:    %v\n", sm.device.IsEnergyMeter())
-	fmt.Printf("\n")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
+	fmt.Fprintf(w, "  IP:\t%s\n", sm.device.Address())
+	fmt.Fprintf(w, "  Serial:\t%d\n", sm.device.SerialNumber())
+	fmt.Fprintf(w, "  EnergyMeter:\t%v\n", sm.device.IsEnergyMeter())
+	fmt.Fprintf(w, "\n")
 
 	if name, err := sm.device.GetDeviceName(); err == nil {
-		fmt.Printf("  Name: %s\n", name)
+		fmt.Fprintf(w, "  Name:\t%s\n", name)
 	}
 
 	if devClass, err := sm.device.GetDeviceClass(); err == nil {
-		fmt.Printf("  Device Class: 0x%X\n", devClass)
+		fmt.Fprintf(w, "  Device Class:\t0x%X\n", devClass)
 	}
-	fmt.Printf("\n")
+	fmt.Fprintf(w, "\n")
 
 	if values, err := sm.device.GetValues(); err == nil {
 		ids := make([]sunny.ValueID, 0, len(values))
-		keyLength := 0
 		for k := range values {
 			ids = append(ids, k)
-			if len(k.String()) > keyLength {
-				keyLength = len(k.String())
-			}
 		}
 
 		sort.Slice(ids, func(i, j int) bool {
@@ -278,12 +277,13 @@ func (sm *SMA) Diagnose() {
 		for _, id := range ids {
 			switch values[id].(type) {
 			case float64:
-				fmt.Printf("  %s:%s %f %s\n", id.String(), strings.Repeat(" ", keyLength-len(id.String())), values[id], sunny.GetValueInfo(id).Unit)
+				fmt.Fprintf(w, "  %s:\t%f %s\n", id.String(), values[id], sunny.GetValueInfo(id).Unit)
 			default:
-				fmt.Printf("  %s:%s %v %s\n", id.String(), strings.Repeat(" ", keyLength-len(id.String())), values[id], sunny.GetValueInfo(id).Unit)
+				fmt.Fprintf(w, "  %s:\t%v %s\n", id.String(), values[id], sunny.GetValueInfo(id).Unit)
 			}
 		}
 	}
+	w.Flush()
 }
 
 func (sm *SMA) asFloat(value interface{}) float64 {
