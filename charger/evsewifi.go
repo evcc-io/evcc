@@ -27,22 +27,23 @@ type EVSEParameterResponse struct {
 
 // EVSEListEntry is EVSEParameterResponse.List
 type EVSEListEntry struct {
-	VehicleState   int64   `json:"vehicleState"`
-	EvseState      bool    `json:"evseState"`
-	MaxCurrent     int64   `json:"maxCurrent"`
-	ActualCurrent  int64   `json:"actualCurrent"`
-	ActualPower    float64 `json:"actualPower"`
-	Duration       int64   `json:"duration"`
-	AlwaysActive   bool    `json:"alwaysActive"`
-	UseMeter       bool    `json:"useMeter"`
-	LastActionUser string  `json:"lastActionUser"`
-	LastActionUID  string  `json:"lastActionUID"`
-	Energy         float64 `json:"energy"`
-	Mileage        float64 `json:"mileage"`
-	MeterReading   float64 `json:"meterReading"`
-	CurrentP1      float64 `json:"currentP1"`
-	CurrentP2      float64 `json:"currentP2"`
-	CurrentP3      float64 `json:"currentP3"`
+	VehicleState    int64   `json:"vehicleState"`
+	EvseState       bool    `json:"evseState"`
+	MaxCurrent      int64   `json:"maxCurrent"`
+	ActualCurrent   int64   `json:"actualCurrent"`
+	ActualCurrentEx *int64  `json:"actualCurrentMA"` // 1/100 A
+	ActualPower     float64 `json:"actualPower"`
+	Duration        int64   `json:"duration"`
+	AlwaysActive    bool    `json:"alwaysActive"`
+	UseMeter        bool    `json:"useMeter"`
+	LastActionUser  string  `json:"lastActionUser"`
+	LastActionUID   string  `json:"lastActionUID"`
+	Energy          float64 `json:"energy"`
+	Mileage         float64 `json:"mileage"`
+	MeterReading    float64 `json:"meterReading"`
+	CurrentP1       float64 `json:"currentP1"`
+	CurrentP2       float64 `json:"currentP2"`
+	CurrentP3       float64 `json:"currentP3"`
 }
 
 // EVSEWifi charger implementation
@@ -51,22 +52,21 @@ type EVSEWifi struct {
 	log          *util.Logger
 	uri          string
 	alwaysActive bool
-	current      int64
-	mA           bool
+	current      float64
+	hires        bool
 }
 
 func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI         string
-		MilliAmpere bool
-		Meter       struct {
+		URI   string
+		Meter struct {
 			Power, Energy, Currents bool
 		}
 	}{}
@@ -75,16 +75,25 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"), cc.MilliAmpere)
+	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
 	if err != nil {
 		return evse, err
 	}
 
-	// auto-detect EVSE meter
-	if meter, err := evse.HasMeter(); meter && err == nil {
+	// auto-detect capabilities
+	params, err := evse.getParameters()
+	if err != nil {
+		return evse, err
+	}
+
+	if params.UseMeter {
 		cc.Meter.Energy = true
 		cc.Meter.Energy = true
 		cc.Meter.Currents = true
+	}
+
+	if params.ActualCurrentEx != nil {
+		evse.hires = true
 	}
 
 	// decorate Charger with Meter
@@ -105,11 +114,17 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currents = evse.currents
 	}
 
-	return decorateEVSE(evse, currentPower, totalEnergy, currents), nil
+	// decorate Charger with MaxCurrentEx
+	var maxCurrentEx func(float64) error
+	if evse.hires {
+		maxCurrentEx = evse.maxCurrentEx
+	}
+
+	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
-func NewEVSEWifi(uri string, mA bool) (*EVSEWifi, error) {
+func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
@@ -117,7 +132,6 @@ func NewEVSEWifi(uri string, mA bool) (*EVSEWifi, error) {
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
-		mA:      mA,
 	}
 
 	return evse, nil
@@ -147,12 +161,6 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 
 	evse.alwaysActive = params.AlwaysActive
 	return params, nil
-}
-
-// HasMeter returns the useMeter api response
-func (evse *EVSEWifi) HasMeter() (bool, error) {
-	params, err := evse.getParameters()
-	return params.UseMeter, err
 }
 
 // Status implements the api.Charger interface
@@ -200,7 +208,10 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 	if evse.alwaysActive {
 		var current int64
 		if enable {
-			current = evse.current
+			current = int64(evse.current)
+			if evse.hires {
+				current = int64(100 * evse.current)
+			}
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
@@ -209,7 +220,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
-	evse.current = current
+	evse.current = float64(current)
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.get(url)
 }
@@ -217,7 +228,7 @@ func (evse *EVSEWifi) MaxCurrent(current int64) error {
 // maxCurrentEx implements the api.ChargerEx interface
 func (evse *EVSEWifi) maxCurrentEx(current float64) error {
 	evse.current = current
-	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), int64(100*current))
 	return evse.get(url)
 }
 
