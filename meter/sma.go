@@ -117,12 +117,12 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 var discoverers = make(map[string]*smaDiscoverer)
 
 // initialize sunny logger only once
-var logInitOnce sync.Once
+var once sync.Once
 
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
-	logInitOnce.Do(func() {
+	once.Do(func() {
 		sunny.Log = log.TRACE
 	})
 
