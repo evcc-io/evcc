@@ -65,11 +65,11 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			Timeout:   timeout,
 			KeepAlive: 30 * time.Second, // default
 		}).DialContext,
+		TLSHandshakeTimeout:   timeout,
 		ForceAttemptHTTP2:     true,             // default
 		MaxIdleConns:          100,              // default
 		IdleConnTimeout:       90 * time.Second, // default
-		TLSHandshakeTimeout:   timeout,
-		ExpectContinueTimeout: 1 * time.Second, // default
+		ExpectContinueTimeout: 1 * time.Second,  // default
 	})
 
 	carwings.Client = &http.Client{
