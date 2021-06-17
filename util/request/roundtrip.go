@@ -49,6 +49,10 @@ func init() {
 	prometheus.MustRegister(reqMetric, resMetric)
 }
 
+func Metrics() []prometheus.Collector {
+	return []prometheus.Collector{reqMetric, resMetric}
+}
+
 // NewTripper creates a logging roundtrip handler
 func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
 	tripper := &roundTripper{
