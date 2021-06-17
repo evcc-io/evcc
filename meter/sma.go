@@ -253,7 +253,7 @@ func (sm *SMA) Diagnose() {
 	fmt.Fprintf(w, "  IP:\t%s\n", sm.device.Address())
 	fmt.Fprintf(w, "  Serial:\t%d\n", sm.device.SerialNumber())
 	fmt.Fprintf(w, "  EnergyMeter:\t%v\n", sm.device.IsEnergyMeter())
-	fmt.Fprintf(w, "\n")
+	fmt.Fprintln(w)
 
 	if name, err := sm.device.GetDeviceName(); err == nil {
 		fmt.Fprintf(w, "  Name:\t%s\n", name)
@@ -262,7 +262,7 @@ func (sm *SMA) Diagnose() {
 	if devClass, err := sm.device.GetDeviceClass(); err == nil {
 		fmt.Fprintf(w, "  Device Class:\t0x%X\n", devClass)
 	}
-	fmt.Fprintf(w, "\n")
+	fmt.Fprintln(w)
 
 	if values, err := sm.device.GetValues(); err == nil {
 		ids := make([]sunny.ValueID, 0, len(values))
