@@ -116,10 +116,15 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 // map of created discover instances
 var discoverers = make(map[string]*smaDiscoverer)
 
+// initialize sunny logger only once
+var once sync.Once
+
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	log := util.NewLogger("sma")
-	sunny.Log = log.TRACE
+	once.Do(func() {
+		sunny.Log = log.TRACE
+	})
 
 	sm := &SMA{
 		mux:    util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
