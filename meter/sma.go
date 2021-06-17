@@ -14,7 +14,6 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/imdario/mergo"
 	"gitlab.com/bboehmke/sunny"
-	"gitlab.com/bboehmke/sunny/value_def"
 )
 
 const udpTimeout = 10 * time.Second
@@ -80,7 +79,7 @@ type SMA struct {
 	mux    *util.Waiter
 	uri    string
 	iface  string
-	values map[value_def.ValueID]interface{}
+	values map[sunny.ValueID]interface{}
 	scale  float64
 	device *sunny.Device
 }
@@ -127,7 +126,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 		log:    log,
 		uri:    uri,
 		iface:  iface,
-		values: make(map[value_def.ValueID]interface{}),
+		values: make(map[sunny.ValueID]interface{}),
 		scale:  scale,
 	}
 
@@ -174,7 +173,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 			return nil, err
 		}
 
-		if _, ok := vals[value_def.BatteryCharge]; ok {
+		if _, ok := vals[sunny.BatteryCharge]; ok {
 			soc = sm.soc
 		}
 	}
@@ -204,7 +203,7 @@ func (sm *SMA) updateValues() {
 	}
 }
 
-func (sm *SMA) hasValue() (map[value_def.ValueID]interface{}, error) {
+func (sm *SMA) hasValue() (map[sunny.ValueID]interface{}, error) {
 	elapsed := sm.mux.LockWithTimeout()
 	defer sm.mux.Unlock()
 
@@ -218,20 +217,20 @@ func (sm *SMA) hasValue() (map[value_def.ValueID]interface{}, error) {
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
 	values, err := sm.hasValue()
-	return sm.scale * (sm.asFloat(values[value_def.ActivePowerPlus]) - sm.asFloat(values[value_def.ActivePowerMinus])), err
+	return sm.scale * (sm.asFloat(values[sunny.ActivePowerPlus]) - sm.asFloat(values[sunny.ActivePowerMinus])), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.hasValue()
-	return sm.asFloat(values[value_def.ActiveEnergyPlus]) / 3600000, err
+	return sm.asFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
 // Currents implements the api.MeterCurrent interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.hasValue()
 
-	measurements := []value_def.ValueID{value_def.CurrentL1, value_def.CurrentL2, value_def.CurrentL3}
+	measurements := []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3}
 	var vals [3]float64
 	for i := 0; i < 3; i++ {
 		vals[i] = sm.asFloat(values[measurements[i]])
@@ -243,7 +242,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
 	values, err := sm.hasValue()
-	return sm.asFloat(values[value_def.BatteryCharge]), err
+	return sm.asFloat(values[sunny.BatteryCharge]), err
 }
 
 // Diagnose implements the api.Diagnosis interface
@@ -266,19 +265,20 @@ func (sm *SMA) Diagnose() {
 		keys := make([]string, 0, len(values))
 		keyLength := 0
 		for k := range values {
-			keys = append(keys, string(k))
-			if len(k) > keyLength {
-				keyLength = len(k)
+			keys = append(keys, k.String())
+			if len(k.String()) > keyLength {
+				keyLength = len(k.String())
 			}
 		}
 		sort.Strings(keys)
 
 		for _, k := range keys {
-			switch values[value_def.ValueID(k)].(type) {
+			id, _ := sunny.ValueIDString(k)
+			switch values[id].(type) {
 			case float64:
-				fmt.Printf("  %s:%s %f %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[value_def.ValueID(k)], value_def.GetValueInfo(value_def.ValueID(k)).Unit)
+				fmt.Printf("  %s:%s %f %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[id], sunny.GetValueInfo(id).Unit)
 			default:
-				fmt.Printf("  %s:%s %v %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[value_def.ValueID(k)], value_def.GetValueInfo(value_def.ValueID(k)).Unit)
+				fmt.Printf("  %s:%s %v %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[id], sunny.GetValueInfo(id).Unit)
 			}
 		}
 	}
