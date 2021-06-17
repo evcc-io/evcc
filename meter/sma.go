@@ -262,23 +262,25 @@ func (sm *SMA) Diagnose() {
 	fmt.Printf("\n")
 
 	if values, err := sm.device.GetValues(); err == nil {
-		keys := make([]string, 0, len(values))
+		ids := make([]sunny.ValueID, 0, len(values))
 		keyLength := 0
 		for k := range values {
-			keys = append(keys, k.String())
+			ids = append(ids, k)
 			if len(k.String()) > keyLength {
 				keyLength = len(k.String())
 			}
 		}
-		sort.Strings(keys)
 
-		for _, k := range keys {
-			id, _ := sunny.ValueIDString(k)
+		sort.Slice(ids, func(i, j int) bool {
+			return ids[i].String() < ids[j].String()
+		})
+
+		for _, id := range ids {
 			switch values[id].(type) {
 			case float64:
-				fmt.Printf("  %s:%s %f %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[id], sunny.GetValueInfo(id).Unit)
+				fmt.Printf("  %s:%s %f %s\n", id.String(), strings.Repeat(" ", keyLength-len(id.String())), values[id], sunny.GetValueInfo(id).Unit)
 			default:
-				fmt.Printf("  %s:%s %v %s\n", k, strings.Repeat(" ", keyLength-len(k)), values[id], sunny.GetValueInfo(id).Unit)
+				fmt.Printf("  %s:%s %v %s\n", id.String(), strings.Repeat(" ", keyLength-len(id.String())), values[id], sunny.GetValueInfo(id).Unit)
 			}
 		}
 	}
