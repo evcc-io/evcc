@@ -31,7 +31,7 @@ type EVSEListEntry struct {
 	EvseState       bool    `json:"evseState"`
 	MaxCurrent      int64   `json:"maxCurrent"`
 	ActualCurrent   int64   `json:"actualCurrent"`
-	ActualCurrentEx *int64  `json:"actualCurrentMA"` // 1/100 A
+	ActualCurrentMA *int64  `json:"actualCurrentMA"` // 1/100 A
 	ActualPower     float64 `json:"actualPower"`
 	Duration        int64   `json:"duration"`
 	AlwaysActive    bool    `json:"alwaysActive"`
@@ -92,7 +92,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		cc.Meter.Currents = true
 	}
 
-	if params.ActualCurrentEx != nil {
+	if params.ActualCurrentMA != nil {
 		evse.hires = true
 	}
 
