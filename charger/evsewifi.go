@@ -52,7 +52,7 @@ type EVSEWifi struct {
 	log          *util.Logger
 	uri          string
 	alwaysActive bool
-	current      float64
+	current      int64 // current will always be the physical value sent to the API
 	hires        bool
 }
 
@@ -118,6 +118,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var maxCurrentEx func(float64) error
 	if evse.hires {
 		maxCurrentEx = evse.maxCurrentEx
+		evse.current = 100 * evse.current
 	}
 
 	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx), nil
@@ -208,10 +209,7 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 	if evse.alwaysActive {
 		var current int64
 		if enable {
-			current = int64(evse.current)
-			if evse.hires {
-				current = int64(100 * evse.current)
-			}
+			current = evse.current
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
@@ -220,15 +218,18 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
-	evse.current = float64(current)
+	if evse.hires {
+		current = 100 * current
+	}
+	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	return evse.get(url)
 }
 
 // maxCurrentEx implements the api.ChargerEx interface
 func (evse *EVSEWifi) maxCurrentEx(current float64) error {
-	evse.current = current
-	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), int64(100*current))
+	evse.current = int64(100 * current)
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), evse.current)
 	return evse.get(url)
 }
 
