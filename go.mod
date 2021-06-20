@@ -40,7 +40,7 @@ require (
 	github.com/itchyny/gojq v0.12.4
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.2
-	github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc
+	github.com/joeshaw/carwings v0.0.0-20210616193757-7fbc6f7c3c73
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/koron/go-ssdp v0.0.2

@@ -383,8 +383,8 @@ github.com/jeremywohl/flatten v1.0.1/go.mod h1:4AmD/VxjWcI5SRB0n6szE2A6s2fsNHDLO
 github.com/jinzhu/copier v0.3.2 h1:QdBOCbaouLDYaIPFfi1bKv5F5tPpeTwXe4sD0jqtz5w=
 github.com/jinzhu/copier v0.3.2/go.mod h1:24xnZezI2Yqac9J61UC6/dG/k76ttpq0DdJI3QmUvro=
 github.com/joeshaw/carwings v0.0.0-20191118152321-61b46581307a/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
-github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc h1:lvs05O5riVMhA70SOK53fthEZ5lMDHHy51ZKDldr0aE=
-github.com/joeshaw/carwings v0.0.0-20210208214325-dacfdd3d7acc/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
+github.com/joeshaw/carwings v0.0.0-20210616193757-7fbc6f7c3c73 h1:0GC7kKnW8vFHZB1txMdeiaVx1X65V9x8sWi5xoxUCfc=
+github.com/joeshaw/carwings v0.0.0-20210616193757-7fbc6f7c3c73/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/jsgoecke/tesla v0.0.0-20200530171421-e02ebd220e5a/go.mod h1:GlLJU/C6KA3FEAIZTFDvIDlNGE1+YlKGHHXdNVkt5ow=
