@@ -327,6 +327,9 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	// flush all vehicles before updating state
 	provider.ResetCached()
 
+	// identify active vehicle
+	lp.findActiveVehicle()
+
 	// immediately allow pv mode activity
 	lp.pvDisableTimer()
 
@@ -983,10 +986,8 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
 
-	// update active vehicle and publish soc
-	// must be run after updating charger status to make sure
+	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
-	lp.findActiveVehicle()
 	lp.publishSoCAndRange()
 
 	// sync settings with charger
