@@ -263,6 +263,10 @@ func (site *Site) updateMeters() error {
 	// allow using PV as estimate for grid power
 	if site.gridMeter == nil {
 		site.gridPower = -site.pvPower
+
+		for _, lp := range site.loadpoints {
+			site.gridPower += lp.GetChargePower()
+		}
 	}
 
 	return err
