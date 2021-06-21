@@ -15,12 +15,12 @@ import (
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/server/metrics"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/pipe"
 	"github.com/andig/evcc/util/sponsor"
 	"github.com/denisbrodbeck/machineid"
-	"github.com/prometheus/client_golang/prometheus"
 	prompush "github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/viper"
 )
@@ -51,7 +51,7 @@ func configureReporting() {
 	}
 
 	uri := util.Getenv("PUSH_URI", cloud.Push)
-	pusher := prompush.New(uri, "evcc").Gatherer(prometheus.DefaultGatherer).Grouping("instance", id)
+	pusher := prompush.New(uri, "evcc").Gatherer(metrics.PushRegistry).Grouping("instance", id)
 
 	go func() {
 		for range time.NewTicker(time.Minute).C {
