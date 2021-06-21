@@ -31,6 +31,7 @@ type LoadPointAPI interface {
 	RemoteControl(string, RemoteDemand)
 
 	// energy
+	GetChargePower() float64
 	GetMinCurrent() float64
 	SetMinCurrent(float64)
 	GetMaxCurrent() float64
@@ -168,6 +169,13 @@ func (lp *LoadPoint) RemoteControl(source string, demand RemoteDemand) {
 func (lp *LoadPoint) HasChargeMeter() bool {
 	_, isWrapped := lp.chargeMeter.(*wrapper.ChargeMeter)
 	return lp.chargeMeter != nil && !isWrapped
+}
+
+// GetChargePower returns the current charge power
+func (lp *LoadPoint) GetChargePower() float64 {
+	lp.Lock()
+	defer lp.Unlock()
+	return lp.chargePower
 }
 
 // GetMinCurrent returns the min loadpoint current
