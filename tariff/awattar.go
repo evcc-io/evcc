@@ -50,5 +50,18 @@ func (t *Awattar) Run() {
 func (t *Awattar) IsCheap() bool {
 	t.mux.Lock()
 	defer t.mux.Unlock()
+
+	for i := len(t.data) - 1; i >= 0; i-- {
+		pi := t.data[i]
+
+		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
+			if pi.Marketprice <= t.Cheap {
+				return true
+			}
+
+			break
+		}
+	}
+
 	return false
 }

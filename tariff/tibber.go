@@ -91,5 +91,20 @@ func (t *Tibber) Run() {
 }
 
 func (t *Tibber) IsCheap() bool {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+
+	for i := len(t.data) - 1; i >= 0; i-- {
+		pi := t.data[i]
+
+		if pi.StartsAt.Before(time.Now()) {
+			if pi.Total <= t.Cheap {
+				return true
+			}
+
+			break
+		}
+	}
+
 	return false
 }
