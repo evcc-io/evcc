@@ -83,8 +83,8 @@ func (p *PriceInfoA) UnmarshalJSON(data []byte) error {
 
 	err := json.Unmarshal(data, &s)
 	if err == nil {
-		p.StartTimestamp = time.Unix(s.StartTimestamp/1e6, 0)
-		p.EndTimestamp = time.Unix(s.EndTimestamp/1e6, 0)
+		p.StartTimestamp = time.Unix(s.StartTimestamp/1e3, 0)
+		p.EndTimestamp = time.Unix(s.EndTimestamp/1e3, 0)
 		p.Marketprice = s.Marketprice
 		p.Unit = s.Unit
 	}
@@ -100,9 +100,14 @@ func main() {
 
 	client := graphql.NewClient("https://api.tibber.com/v1-beta/gql", tc)
 
-	q := &prices{}
+	qh := homes{}
+	if err := client.Query(context.Background(), &qh, nil); err != nil {
+		panic(err)
+	}
+
+	q := prices{}
 	v := map[string]interface{}{
-		"id": graphql.ID(homeID),
+		"id": graphql.ID(qh.Viewer.Homes[0].ID),
 	}
 
 	if err := client.Query(context.Background(), &q, v); err != nil {
