@@ -44,6 +44,7 @@ type EVSEListEntry struct {
 	CurrentP1       float64 `json:"currentP1"`
 	CurrentP2       float64 `json:"currentP2"`
 	CurrentP3       float64 `json:"currentP3"`
+	RFIDUID         *string `json:"RFIDUID"`
 }
 
 // EVSEWifi charger implementation
@@ -60,7 +61,7 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -121,7 +122,13 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		evse.current = 100 * evse.current
 	}
 
-	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx), nil
+	// decorate Charger with Identifier
+	var identify func() (string, error)
+	if params.RFIDUID != nil {
+		identify = evse.identify
+	}
+
+	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -257,6 +264,12 @@ func (evse *EVSEWifi) totalEnergy() (float64, error) {
 func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	params, err := evse.getParameters()
 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+}
+
+// Identify implements the api.Identifier interface
+func (evse *EVSEWifi) identify() (string, error) {
+	params, err := evse.getParameters()
+	return *params.RFIDUID, err
 }
 
 // // ChargedEnergy implements the ChargeRater interface
