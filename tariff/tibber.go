@@ -98,11 +98,7 @@ func (t *Tibber) IsCheap() bool {
 		pi := t.data[i]
 
 		if pi.StartsAt.Before(time.Now()) {
-			if pi.Total <= t.Cheap {
-				return true
-			}
-
-			break
+			return pi.Total <= t.Cheap
 		}
 	}
 
