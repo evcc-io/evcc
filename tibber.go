@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	"github.com/shurcooL/graphql"
 	"golang.org/x/oauth2"
 )
@@ -54,7 +52,7 @@ type prices struct {
 			ID                  string
 			TimeZone            string
 			CurrentSubscription Subscription
-		} `graphql:"home(id: $id)"`
+		} //`graphql:"home(id: $id)"`
 	}
 }
 
@@ -100,14 +98,14 @@ func main() {
 
 	client := graphql.NewClient("https://api.tibber.com/v1-beta/gql", tc)
 
-	qh := homes{}
-	if err := client.Query(context.Background(), &qh, nil); err != nil {
-		panic(err)
-	}
+	// qh := homes{}
+	// if err := client.Query(context.Background(), &qh, nil); err != nil {
+	// 	panic(err)
+	// }
 
 	q := prices{}
 	v := map[string]interface{}{
-		"id": graphql.ID(qh.Viewer.Homes[0].ID),
+		// "id": graphql.ID(qh.Viewer.Homes[0].ID),
 	}
 
 	if err := client.Query(context.Background(), &q, v); err != nil {
@@ -116,10 +114,10 @@ func main() {
 
 	fmt.Println(q)
 
-	var res AwattarPrices
-	h := request.NewHelper(util.NewLogger("foo"))
-	if err := h.GetJSON(awattarURI, &res); err != nil {
-		panic(err)
-	}
-	fmt.Println(res)
+	// var res AwattarPrices
+	// h := request.NewHelper(util.NewLogger("foo"))
+	// if err := h.GetJSON(awattarURI, &res); err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(res)
 }
