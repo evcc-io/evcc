@@ -1,5 +1,6 @@
 import SiteVisualization from "./SiteVisualization.vue";
 import i18n from "../i18n";
+import "../tooltip";
 
 export default {
   title: "Main/SiteVisualization",

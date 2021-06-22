@@ -1,89 +1,109 @@
 <template>
-	<div class="site-visualization">
-		<div class="d-flex justify-content-between">
-			<span class="usage-label d-flex align-items-center">
-				<fa-icon icon="plug" class="d-block me-1"></fa-icon>
-				<span class="d-none d-sm-block me-1">
-					{{ $t("main.siteVisualization.consumption") }}
-				</span>
-				<span>{{ kw(usage) }}</span>
-			</span>
-			<span class="battery-label d-flex align-items-center" v-if="batteryConfigured">
-				<fa-icon :icon="batteryIcon" class="d-block me-1"></fa-icon>
-				<fa-icon icon="angle-up" class="arrow-up" v-if="batteryCharge"></fa-icon>
-				<fa-icon icon="angle-down" class="arrow-down" v-if="batteryUsage"></fa-icon>
-				<span class="d-none d-sm-block me-1">
-					{{ $t("main.siteVisualization.battery") }}
-				</span>
-				<span class="d-block me-1">{{ batterySoC }}%</span>
-			</span>
-			<span class="surplus-label d-flex align-items-center" v-if="pvConfigured">
-				<fa-icon icon="sun" class="d-block me-1"></fa-icon>
-				<span class="d-none d-sm-block me-1">
-					{{ $t("main.siteVisualization.production") }}
-				</span>
-				{{ kw(pvPower) }}
-			</span>
-		</div>
-		<div class="site-progress">
-			<div class="site-progress-bar usage" :style="{ width: widthTotal(usage) }">
-				<div class="site-progress-bar grid-usage" :style="{ width: widthUsage(gridUsage) }">
-					<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
-						{{ kw(gridUsage) }}
-					</span>
-				</div>
-				<div class="site-progress-bar pv-usage" :style="{ width: widthUsage(pvUsage) }">
-					<span class="power" :class="{ 'd-none': hidePowerLabel(pvUsage) }">
-						{{ kw(pvUsage) }}
-					</span>
+	<div class="site-visualization py-4" :class="{ 'show-values': showValues }">
+		<div class="label-scale">
+			<div class="d-flex justify-content-start">
+				<div
+					class="label-bar label-bar--down"
+					v-if="usage"
+					:style="{ width: widthTotal(usage) }"
+					v-tooltip="{
+						trigger: 'manual',
+						content: $t('main.siteVisualization.consumption') + ': ' + kw(usage),
+						placement: 'top',
+						show: tooltip === 'usage',
+					}"
+					@click="toggleTooltip('usage')"
+				>
+					<div class="label-bar-scale">
+						<div class="label-bar-icon">
+							<fa-icon icon="plug"></fa-icon>
+						</div>
+					</div>
 				</div>
 				<div
-					class="site-progress-bar battery-usage"
-					:style="{ width: widthUsage(batteryUsage) }"
+					class="label-bar label-bar--down"
+					v-if="batteryCharge"
+					:style="{ width: widthTotal(batteryCharge) }"
+					v-tooltip="{
+						trigger: 'manual',
+						content:
+							$t('main.siteVisualization.batteryCharge') + ': ' + kw(batteryCharge),
+						placement: 'top',
+						show: tooltip === 'batteryCharge',
+					}"
+					@click="toggleTooltip('batteryCharge')"
 				>
-					<span class="power" :class="{ 'd-none': hidePowerLabel(batteryUsage) }">
-						{{ kw(batteryUsage) }}
-					</span>
-				</div>
-			</div>
-			<div
-				class="site-progress-bar surplus"
-				:style="{
-					width: widthTotal(surplus),
-					marginLeft: surplus > 0 && usage > 0 ? null : 0,
-				}"
-			>
-				<div
-					class="site-progress-bar battery-charge"
-					:style="{ width: widthSurplus(batteryCharge) }"
-				>
-					<span class="power" :class="{ 'd-none': hidePowerLabel(batteryCharge) }">
-						{{ kw(batteryCharge) }}
-					</span>
-				</div>
-				<div class="site-progress-bar pv-export" :style="{ width: widthSurplus(pvExport) }">
-					<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
-						{{ kw(pvExport) }}
-					</span>
+					<div class="label-bar-scale">
+						<div class="label-bar-icon"><fa-icon :icon="batteryIcon"></fa-icon> ↑</div>
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="d-flex justify-content-between">
-			<span class="grid-usage-label" v-if="gridUsage">
-				{{ $t("main.siteVisualization.import") }}
-			</span>
-			<span class="pv-usage-label" v-if="pvUsage">
-				{{ $t("main.siteVisualization.direct") }}
-			</span>
-			<span class="battery-usage-label" v-if="batteryUsage">
-				{{ $t("main.siteVisualization.batteryUsage") }}
-			</span>
-			<span class="battery-charge-label" v-if="batteryCharge">
-				{{ $t("main.siteVisualization.batteryCharge") }}
-			</span>
-			<span class="pv-export-label" v-if="pvExport">
-				{{ $t("main.siteVisualization.export") }}
-			</span>
+		<div class="site-progress" @click="toggleValues()">
+			<div class="site-progress-bar grid-usage" :style="{ width: widthTotal(gridUsage) }">
+				<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
+					{{ kw(gridUsage) }}
+				</span>
+			</div>
+			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(batteryUsage) }">
+				<span class="power" :class="{ 'd-none': hidePowerLabel(batteryUsage) }">
+					{{ kw(batteryUsage) }}
+				</span>
+			</div>
+			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(pvUsage) }">
+				<span class="power" :class="{ 'd-none': hidePowerLabel(pvUsage) }">
+					{{ kw(pvUsage) }}
+				</span>
+			</div>
+			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(batteryCharge) }">
+				<span class="power" :class="{ 'd-none': hidePowerLabel(batteryCharge) }">
+					{{ kw(batteryCharge) }}
+				</span>
+			</div>
+			<div class="site-progress-bar surplus" :style="{ width: widthTotal(pvExport) }">
+				<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
+					{{ kw(pvExport) }}
+				</span>
+			</div>
+		</div>
+		<div class="label-scale">
+			<div class="d-flex justify-content-end">
+				<div
+					class="label-bar label-bar--up"
+					v-if="batteryUsage"
+					:style="{ width: widthTotal(batteryUsage) }"
+					v-tooltip="{
+						trigger: 'manual',
+						content:
+							$t('main.siteVisualization.batteryDischarge') + ': ' + kw(batteryUsage),
+						placement: 'bottom',
+						show: tooltip === 'batteryUsage',
+					}"
+					@click="toggleTooltip('batteryUsage')"
+				>
+					<div class="label-bar-scale label-bar-scale--up">
+						<div class="label-bar-icon"><fa-icon :icon="batteryIcon"></fa-icon> ↓</div>
+					</div>
+				</div>
+				<div
+					class="label-bar label-bar--up"
+					v-if="pvPower"
+					:style="{ width: widthTotal(pvPower) }"
+					v-tooltip="{
+						trigger: 'manual',
+						content: $t('main.siteVisualization.pv') + ': ' + kw(pvPower),
+						placement: 'bottom',
+						show: tooltip === 'pvPower',
+					}"
+					@click="toggleTooltip('pvPower')"
+				>
+					<div class="label-bar-scale label-bar-scale--up">
+						<div class="label-bar-icon">
+							<fa-icon icon="sun"></fa-icon>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -102,6 +122,9 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
+	},
+	data: function () {
+		return { showValues: false, tooltip: null };
 	},
 	mixins: [formatter],
 	computed: {
@@ -128,6 +151,9 @@ export default {
 		batteryCharge: function () {
 			return this.applyThreshold(Math.min(0, this.batteryPower) * -1);
 		},
+		selfUsage: function () {
+			return this.pvUsage + this.batteryUsage;
+		},
 		surplus: function () {
 			return this.pvExport + this.batteryCharge;
 		},
@@ -153,14 +179,26 @@ export default {
 			return (100 / this.usage) * power + "%";
 		},
 		kw: function (watt) {
-			return (watt / 1000).toFixed(1) + " kW";
+			return Math.max(0, (watt / 1000).toFixed(1)) + " kW";
 		},
 		hidePowerLabel(power) {
 			return (100 / this.total) * power < 18;
 		},
 		applyThreshold(power) {
-			// adjust all values under 2% of the total power mix to 0
-			return (100 / this.rawTotal) * power < 2 ? 0 : power;
+			// adjust all values under 5% of the total power mix to 0
+			return (100 / this.rawTotal) * power < 5 ? 0 : power;
+		},
+		toggleTooltip(name) {
+			if (this.tooltip === name) {
+				this.tooltip = null;
+			} else {
+				this.tooltip = name;
+				this.showValues = true;
+			}
+		},
+		toggleValues() {
+			this.showValues = !this.showValues;
+			this.tooltip = null;
 		},
 	},
 };
@@ -168,73 +206,69 @@ export default {
 <style scoped>
 .site-visualization {
 	--evcc-grid: #000033;
-	--evcc-pv-usage: #66d85a;
-	--evcc-battery: #007700;
-	--evcc-pv-export: #ffe000;
+	--evcc-self: #66d85a;
+	--evcc-surplus: #ffe000;
 }
 .site-progress {
-	margin: 0.5rem 0 0.3rem;
-	height: 1.5rem;
-	display: flex;
-}
-.site-progress-bar {
-	text-align: center;
-	transition-property: margin, width;
-	transition-duration: 500ms;
-	transition-timing-function: linear;
-	overflow: hidden;
-}
-.usage {
+	margin: 0.75rem 0;
 	border-radius: 5px;
 	display: flex;
+	overflow: hidden;
+	cursor: pointer;
+}
+.site-progress-bar {
+	display: flex;
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	height: 1.5rem;
+	position: relative;
+}
+.site-progress-bar::before,
+.site-progress-bar::after {
+	content: "";
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: white;
+	position: absolute;
+}
+.site-progress-bar::before {
+	left: 0px;
+}
+.site-progress-bar::after {
+	right: 0px;
 }
 .grid-usage {
 	background-color: var(--evcc-grid);
 	color: var(--bs-light);
 }
-.pv-usage {
-	background-color: var(--evcc-pv-usage);
-}
-.surplus {
-	border-radius: 5px;
-	display: flex;
-	margin-left: 10px;
-}
-.battery-usage,
-.battery-charge {
-	background-color: var(--evcc-battery);
+.self-usage {
+	background-color: var(--evcc-self);
 	color: var(--bs-light);
 }
-.pv-export {
-	background-color: var(--evcc-pv-export);
-	color: var(--bs-dark);
+.surplus {
+	background-color: var(--evcc-surplus);
+	color: var(--bs-gray);
 }
-.pv-export-label,
-.pv-usage-label,
-.grid-usage-label,
-.battery-usage-label,
-.battery-charge-label {
-	color: var(--bs-gray-dark);
-	text-decoration-line: underline;
-	text-decoration-skip-ink: auto;
-	text-decoration-thickness: 2px;
-	text-decoration-style: dotted;
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
-	display: block;
-	transition-property: opacity;
-	transition-duration: 500ms;
-	transition-timing-function: linear;
-	font-size: 0.875em;
-}
+
 .power {
 	display: block;
 	margin: 0 0.5rem;
 	white-space: nowrap;
+	opacity: 0;
+	transition: opacity 100ms ease;
 }
+
+.show-values .power {
+	opacity: 1;
+}
+
 .usage-label,
-.surplus-label {
+.production-label {
 	flex-basis: 33%;
 }
 .battery-label {
@@ -243,21 +277,8 @@ export default {
 .usage-label {
 	justify-content: flex-start;
 }
-.surplus-label {
+.production-label {
 	justify-content: flex-end;
-}
-.pv-export-label {
-	text-decoration-color: var(--evcc-pv-export);
-}
-.grid-usage-label {
-	text-decoration-color: var(--evcc-grid);
-}
-.battery-usage-label,
-.battery-charge-label {
-	text-decoration-color: var(--evcc-battery);
-}
-.pv-usage-label {
-	text-decoration-color: var(--evcc-pv-usage);
 }
 .arrow-up,
 .arrow-down {
@@ -270,5 +291,39 @@ export default {
 }
 .arrow-down {
 	bottom: -0.3rem;
+}
+.label-bar {
+	margin: 0;
+	height: 1.25rem;
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+	cursor: pointer;
+}
+.label-bar--down {
+	padding-top: 0.75rem;
+}
+.label-bar--up {
+	padding-bottom: 0.75rem;
+}
+.label-bar-scale {
+	border: 1px solid var(--bs-gray);
+	height: 7px;
+	background: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	white-space: nowrap;
+}
+.label-bar--down .label-bar-scale {
+	border-bottom: 5px solid transparent;
+}
+.label-bar--up .label-bar-scale {
+	border-top: 5px solid transparent;
+}
+.label-bar-icon {
+	background-color: white;
+	color: var(--bs-gray);
+	padding: 0 0.75rem;
 }
 </style>
