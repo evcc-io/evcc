@@ -17,6 +17,8 @@ func TestVehicles(t *testing.T) {
 		"401 Unauthorized",
 		"unexpected length",
 		"i/o timeout",
+		"no such host",
+		"network is unreachable",
 		"Missing required parameter", // Renault
 		"error connecting: Network Error",
 		"unexpected status: 401",
