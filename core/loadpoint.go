@@ -103,11 +103,12 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter  api.Meter     // Charger usage meter
-	vehicle      api.Vehicle   // Currently active vehicle
-	vehicles     []api.Vehicle // Assigned vehicles
-	socEstimator *soc.Estimator
-	socTimer     *soc.Timer
+	chargeMeter    api.Meter     // Charger usage meter
+	vehicle        api.Vehicle   // Currently active vehicle
+	vehicles       []api.Vehicle // Assigned vehicles
+	socEstimator   *soc.Estimator
+	socTimer       *soc.Timer
+	vehicleIdError error // state of last vehicle identification
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -600,11 +601,19 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", lp.vehicle.Title(), vehicle.Title())
 	}
 
+	// update successful
+	lp.vehicleIdError = nil
+
 	lp.vehicle = vehicle
 	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
+}
+
+// vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
+func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
+	return errors.Is(lp.vehicleIdError, api.ErrMustRetry)
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
@@ -613,26 +622,28 @@ func (lp *LoadPoint) findActiveVehicle() {
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
 
-		if err == nil {
-			lp.log.DEBUG.Println("charger vehicle id:", id)
-
-			// find exact match
-			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil && vid == id {
-					lp.setActiveVehicle(vehicle)
-					return
-				}
-			}
-
-			// find placeholder match
-			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil && vid == "*" {
-					lp.setActiveVehicle(vehicle)
-					return
-				}
-			}
-		} else {
+		if err != nil {
+			lp.vehicleIdError = err
 			lp.log.ERROR.Println("charger vehicle id:", err)
+			return
+		}
+
+		lp.log.DEBUG.Println("charger vehicle id:", id)
+
+		// find exact match
+		for _, vehicle := range lp.vehicles {
+			if vid, err := vehicle.Identify(); err == nil && vid == id {
+				lp.setActiveVehicle(vehicle)
+				return
+			}
+		}
+
+		// find placeholder match
+		for _, vehicle := range lp.vehicles {
+			if vid, err := vehicle.Identify(); err == nil && vid == "*" {
+				lp.setActiveVehicle(vehicle)
+				return
+			}
 		}
 
 		// TODO implement removing vehicle
@@ -643,39 +654,47 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	// find vehicles by charge state
+	// find vehicles by charge state - current vehicle
 	if vs, ok := lp.vehicle.(api.ChargeState); ok {
 		status, err := vs.Status()
 
-		if err == nil {
-			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
+		if err != nil {
+			lp.vehicleIdError = err
+			lp.log.ERROR.Println("vehicle charge state:", err)
+			return
+		}
 
-			// vehicle is plugged or charging, so it should be the right one
-			if status == api.StatusB || status == api.StatusC {
+		lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
+
+		// vehicle is plugged or charging, so it should be the right one
+		if status == api.StatusB || status == api.StatusC {
+			lp.vehicleIdError = nil
+			return
+		}
+	}
+
+	// find vehicles by charge state
+	for _, vehicle := range lp.vehicles {
+		if vehicle == lp.vehicle {
+			continue
+		}
+
+		if vs, ok := vehicle.(api.ChargeState); ok {
+			status, err := vs.Status()
+
+			if err != nil {
+				lp.vehicleIdError = err
+				lp.log.ERROR.Println("vehicle charge state:", err)
 				return
 			}
 
-			for _, vehicle := range lp.vehicles {
-				if vehicle == lp.vehicle {
-					continue
-				}
+			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
 
-				if vs, ok := vehicle.(api.ChargeState); ok {
-					status, err := vs.Status()
-
-					if err == nil {
-						lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
-
-						// vehicle is plugged or charging, so it should be the right one
-						if status == api.StatusB || status == api.StatusC {
-							lp.setActiveVehicle(vehicle)
-							return
-						}
-					}
-				}
+			// vehicle is plugged or charging, so it should be the right one
+			if status == api.StatusB || status == api.StatusC {
+				lp.setActiveVehicle(vehicle)
+				return
 			}
-		} else {
-			lp.log.ERROR.Println("vehicle charge state:", err)
 		}
 	}
 }
@@ -985,6 +1004,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	lp.publish("connected", lp.connected())
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
+
+	// update active vehicle if not yet done
+	if lp.vehicleIdentificationAllowed() {
+		lp.findActiveVehicle()
+	}
 
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
