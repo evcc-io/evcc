@@ -428,6 +428,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
 		lp.setActiveVehicle(lp.vehicles[0])
+		lp.findActiveVehicle()
 	}
 
 	// read initial charger state to prevent immediately disabling charger
