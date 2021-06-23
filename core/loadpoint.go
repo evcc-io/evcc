@@ -169,6 +169,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		}
 	}
 
+	if lp.MinCurrent == 0 {
+		log.WARN.Println("minCurrent must not be zero")
+	}
+
+	if lp.MaxCurrent <= lp.MinCurrent {
+		log.WARN.Println("maxCurrent must be larger than minCurrent")
+	}
+
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
 	}
