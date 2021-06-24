@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,22 +14,33 @@ import (
 
 type Awattar struct {
 	mux   sync.Mutex
-	Cheap float64
+	uri   string
+	cheap float64
 	data  []awattar.PriceInfo
 }
 
 var _ api.Tariff = (*Awattar)(nil)
 
 func NewAwattar(other map[string]interface{}) (*Awattar, error) {
-	cc := Awattar{}
+	cc := struct {
+		Cheap  float64
+		Region string
+	}{
+		Region: "DE",
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	go cc.Run()
+	t := &Awattar{
+		cheap: cc.Cheap,
+		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
+	}
 
-	return &cc, nil
+	go t.Run()
+
+	return t, nil
 }
 
 func (t *Awattar) Run() {
@@ -36,7 +49,7 @@ func (t *Awattar) Run() {
 
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
-		if err := client.GetJSON(awattar.URI, &res); err != nil {
+		if err := client.GetJSON(t.uri, &res); err != nil {
 			log.ERROR.Println(err)
 			continue
 		}
@@ -55,7 +68,7 @@ func (t *Awattar) IsCheap() bool {
 		pi := t.data[i]
 
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice <= t.Cheap
+			return pi.Marketprice <= t.cheap
 		}
 	}
 
