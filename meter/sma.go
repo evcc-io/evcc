@@ -13,7 +13,7 @@ import (
 	"gitlab.com/bboehmke/sunny"
 )
 
-// SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
+// SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
 	log    *util.Logger
 	uri    string
