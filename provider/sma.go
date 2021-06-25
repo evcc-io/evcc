@@ -69,8 +69,6 @@ func NewSMAFromConfig(other map[string]interface{}) (IntProvider, error) {
 	return provider, err
 }
 
-var _ FloatProvider = (*Mqtt)(nil)
-
 // FloatGetter creates handler for float64
 func (p *SMA) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {

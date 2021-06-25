@@ -40,6 +40,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT (read/write)](#mqtt-readwrite)
   - [HTTP (read/write)](#http-readwrite)
   - [Websocket (read only)](#websocket-read-only)
+  - [SMA/Speedwire (read only)](#smaspeedwire-read-only)
   - [Javascript (read/write)](#javascript-readwrite)
   - [Shell Script (read/write)](#shell-script-readwrite)
   - [Calc (read only)](#calc-read-only)
@@ -460,7 +461,7 @@ uri: 192.168.4.51 # alternative to serial
 serial: 123456 # alternative to uri
 value: ActivePowerPlus # ID of value to read
 password: "0000" # optional (default: 0000)
-interface: "eth0" # optional
+interface: eth0 # optional
 scale: 1 # optional scale factor for value
 ```
 
