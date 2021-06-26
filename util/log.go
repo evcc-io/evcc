@@ -36,6 +36,13 @@ type Logger struct {
 
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	if logger, ok := loggers[area]; ok {
+		return logger
+	}
+
 	padded := area
 	for len(padded) < LogAreaPadding {
 		padded = padded + " "
@@ -43,9 +50,6 @@ func NewLogger(area string) *Logger {
 
 	level := LogLevelForArea(area)
 	notepad := jww.NewNotepad(level, level, os.Stdout, io.Discard, padded, log.Ldate|log.Ltime)
-
-	loggersMux.Lock()
-	defer loggersMux.Unlock()
 
 	logger := &Logger{
 		Notepad: notepad,
