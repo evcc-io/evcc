@@ -629,26 +629,28 @@ func (lp *LoadPoint) findActiveVehicle() {
 			return
 		}
 
-		lp.log.DEBUG.Println("charger vehicle id:", id)
+		if id != "" {
+			lp.log.DEBUG.Println("charger vehicle id:", id)
 
-		// find exact match
-		for _, vehicle := range lp.vehicles {
-			if vid, err := vehicle.Identify(); err == nil && vid == id {
-				lp.setActiveVehicle(vehicle)
-				return
+			// find exact match
+			for _, vehicle := range lp.vehicles {
+				if vid, err := vehicle.Identify(); err == nil && vid == id {
+					lp.setActiveVehicle(vehicle)
+					return
+				}
 			}
-		}
 
-		// find placeholder match
-		for _, vehicle := range lp.vehicles {
-			if vid, err := vehicle.Identify(); err == nil && vid == "*" {
-				lp.setActiveVehicle(vehicle)
-				return
+			// find placeholder match
+			for _, vehicle := range lp.vehicles {
+				if vid, err := vehicle.Identify(); err == nil && vid == "*" {
+					lp.setActiveVehicle(vehicle)
+					return
+				}
 			}
-		}
 
-		// TODO implement removing vehicle
-		// lp.setActiveVehicle(nil)
+			// TODO implement removing vehicle
+			// lp.setActiveVehicle(nil)
+		}
 	}
 
 	if len(lp.vehicles) <= 1 {
@@ -1082,7 +1084,9 @@ func (lp *LoadPoint) Update(sitePower float64) {
 	}
 
 	// effective disabled status
-	lp.publish("remoteDisabled", remoteDisabled)
+	if remoteDisabled != RemoteEnable {
+		lp.publish("remoteDisabled", remoteDisabled)
+	}
 
 	if err != nil {
 		lp.log.ERROR.Println(err)
