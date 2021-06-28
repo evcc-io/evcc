@@ -269,7 +269,7 @@ Available vehicle remote interface implementations are:
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citygo)
+- `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
