@@ -3,6 +3,7 @@ package core
 import (
 	"errors"
 	"math"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -642,9 +643,17 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 			// find placeholder match
 			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil && vid == "*" {
-					lp.setActiveVehicle(vehicle)
-					return
+				if vid, err := vehicle.Identify(); err == nil {
+					re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
+					if err != nil {
+						lp.log.ERROR.Printf("vehicle identity: %v", err)
+						continue
+					}
+
+					if re.MatchString(id) {
+						lp.setActiveVehicle(vehicle)
+						return
+					}
 				}
 			}
 
