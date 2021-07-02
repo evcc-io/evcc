@@ -538,6 +538,7 @@ Note: to modify writable settings perform a `POST` request appending the value a
 The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
 
 - `evcc`: root topic
+- `evcc/status`: status (`online`/`offline`)
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
 - `evcc/site/prioritySoC`: battery priority SoC (writable)

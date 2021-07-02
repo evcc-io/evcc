@@ -19,10 +19,6 @@ type MQTT struct {
 
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
-	if root == "" {
-		root = "evcc"
-	}
-
 	return &MQTT{
 		Handler: mqtt.Instance,
 		root:    root,
@@ -88,6 +84,10 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 
 // Run starts the MQTT publisher for the MQTT API
 func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
+	// alive
+	topic := fmt.Sprintf("%s/status", m.root)
+	m.publish(topic, true, "online")
+
 	// site setters
 	m.Handler.Listen(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		soc, err := strconv.Atoi(payload)
@@ -97,7 +97,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	})
 
 	// number of loadpoints
-	topic := fmt.Sprintf("%s/loadpoints", m.root)
+	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	// loadpoint setters

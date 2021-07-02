@@ -19,6 +19,7 @@ import (
 	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/pipe"
 	"github.com/andig/evcc/util/sponsor"
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/spf13/viper"
 )
 
@@ -117,7 +118,10 @@ func configureMQTT(conf mqttConfig) error {
 	}
 
 	var err error
-	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1, func(options *paho.ClientOptions) {
+		topic := fmt.Sprintf("%s/status", conf.RootTopic())
+		options.SetWill(topic, "offline", 1, true)
+	})
 	if err != nil {
 		return fmt.Errorf("failed configuring mqtt: %w", err)
 	}
