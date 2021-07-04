@@ -40,6 +40,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT (read/write)](#mqtt-readwrite)
   - [HTTP (read/write)](#http-readwrite)
   - [Websocket (read only)](#websocket-read-only)
+  - [SMA/Speedwire (read only)](#smaspeedwire-read-only)
   - [Javascript (read/write)](#javascript-readwrite)
   - [Shell Script (read/write)](#shell-script-readwrite)
   - [Calc (read only)](#calc-read-only)
@@ -243,7 +244,7 @@ Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-readwrite) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `sma`: SMA Home Manager 2.0, SMA Energy Meter and Inverters via SMA Speedwire.
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
@@ -447,6 +448,29 @@ jq: .data | select(.uuid=="<uuid>") .tuples[0][1] # parse message json
 scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conversion
 timeout: 30s # error if no update received in 30 seconds
 ```
+
+### SMA/Speedwire (read only)
+
+The `sma` plugin provides an interface to SMA devices via the Speedwire protocol.
+
+Sample configuration (read only):
+
+```yaml
+source: sma
+uri: 192.168.4.51 # alternative to serial
+serial: 123456 # alternative to uri
+value: ActivePowerPlus # ID of value to read
+password: "0000" # optional (default: 0000)
+interface: eth0 # optional
+scale: 1 # optional scale factor for value
+```
+
+Supported values for `value` can be found in the diagnostic dump of the command
+`evcc meter` (with a configured SMA meter).
+
+All possible values can be found as const [here](https://gitlab.com/bboehmke/sunny/-/blob/master/values.go#L24)
+(use the names of the const for `value`).
+
 
 ### Javascript (read/write)
 

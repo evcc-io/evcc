@@ -1,88 +1,25 @@
 package meter
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
 	"sort"
-	"sync"
-	"sync/atomic"
 	"text/tabwriter"
-	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider/sma"
 	"github.com/andig/evcc/util"
-	"github.com/imdario/mergo"
 	"gitlab.com/bboehmke/sunny"
 )
 
-const udpTimeout = 10 * time.Second
-
-// smaDiscoverer discovers SMA devices in background while providing already found devices
-type smaDiscoverer struct {
-	conn    *sunny.Connection
-	devices map[uint32]*sunny.Device
-	mux     sync.RWMutex
-	done    uint32
-}
-
-// run discover and store found devices
-func (d *smaDiscoverer) run() {
-	devices := make(chan *sunny.Device)
-
-	go func() {
-		for device := range devices {
-			d.mux.Lock()
-			d.devices[device.SerialNumber()] = device
-			d.mux.Unlock()
-		}
-	}()
-
-	// discover devices and wait for results
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	d.conn.DiscoverDevices(ctx, devices, "")
-	cancel()
-	close(devices)
-
-	// mark discover as done
-	atomic.AddUint32(&d.done, 1)
-}
-
-func (d *smaDiscoverer) get(serial uint32) *sunny.Device {
-	d.mux.RLock()
-	defer d.mux.RUnlock()
-	return d.devices[serial]
-}
-
-// deviceBySerial with the given serial number
-func (d *smaDiscoverer) deviceBySerial(serial uint32) *sunny.Device {
-	start := time.Now()
-	for time.Since(start) < time.Second*3 {
-		// discover done -> return immediately regardless of result
-		if atomic.LoadUint32(&d.done) != 0 {
-			return d.get(serial)
-		}
-
-		// device with serial found -> return
-		if device := d.get(serial); device != nil {
-			return device
-		}
-
-		time.Sleep(time.Millisecond * 10)
-	}
-	return d.get(serial)
-}
-
-// SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
+// SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
 	log    *util.Logger
-	mux    *util.Waiter
 	uri    string
 	iface  string
-	values map[sunny.ValueID]interface{}
 	scale  float64
-	device *sunny.Device
+	device *sma.Device
 }
 
 func init() {
@@ -114,58 +51,32 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
 }
 
-// map of created discover instances
-var discoverers = make(map[string]*smaDiscoverer)
-
-// initialize sunny logger only once
-var once sync.Once
-
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
-	log := util.NewLogger("sma")
-	once.Do(func() {
-		sunny.Log = log.TRACE
-	})
-
 	sm := &SMA{
-		mux:    util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
-		log:    log,
-		uri:    uri,
-		iface:  iface,
-		values: make(map[sunny.ValueID]interface{}),
-		scale:  scale,
+		log:   util.NewLogger("sma"),
+		uri:   uri,
+		iface: iface,
+		scale: scale,
 	}
 
-	conn, err := sunny.NewConnection(iface)
+	discoverer, err := sma.GetDiscoverer(iface)
 	if err != nil {
-		return nil, fmt.Errorf("connection failed: %w", err)
+		return nil, fmt.Errorf("failed to get discoverer failed: %w", err)
 	}
 
 	switch {
 	case uri != "":
-		sm.device, err = conn.NewDevice(uri, password)
+		sm.device, err = discoverer.DeviceByIP(uri, password)
 		if err != nil {
 			return nil, err
 		}
 
 	case serial > 0:
-		discoverer, ok := discoverers[iface]
-		if !ok {
-			discoverer = &smaDiscoverer{
-				conn:    conn,
-				devices: make(map[uint32]*sunny.Device),
-			}
-
-			go discoverer.run()
-
-			discoverers[iface] = discoverer
-		}
-
-		sm.device = discoverer.deviceBySerial(serial)
+		sm.device = discoverer.DeviceBySerial(serial, password)
 		if sm.device == nil {
 			return nil, fmt.Errorf("device not found: %d", serial)
 		}
-		sm.device.SetPassword(password)
 
 	default:
 		return nil, errors.New("missing uri or serial")
@@ -174,7 +85,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
 	if !sm.device.IsEnergyMeter() {
-		vals, err := sm.device.GetValues()
+		vals, err := sm.device.Values()
 		if err != nil {
 			return nil, err
 		}
@@ -184,75 +95,41 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 		}
 	}
 
-	go func() {
-		for range time.NewTicker(time.Second).C {
-			sm.updateValues()
-		}
-	}()
-
 	return decorateSMA(sm, soc), nil
-}
-
-func (sm *SMA) updateValues() {
-	sm.mux.Lock()
-	defer sm.mux.Unlock()
-
-	values, err := sm.device.GetValues()
-	if err == nil {
-		err = mergo.Merge(&sm.values, values, mergo.WithOverride)
-	}
-
-	if err == nil {
-		sm.mux.Update()
-	} else {
-		sm.log.ERROR.Println(err)
-	}
-}
-
-func (sm *SMA) hasValue() (map[sunny.ValueID]interface{}, error) {
-	elapsed := sm.mux.LockWithTimeout()
-	defer sm.mux.Unlock()
-
-	if elapsed > 0 {
-		return nil, fmt.Errorf("update timeout: %v", elapsed.Truncate(time.Second))
-	}
-
-	return sm.values, nil
 }
 
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
-	values, err := sm.hasValue()
-	return sm.scale * (sm.asFloat(values[sunny.ActivePowerPlus]) - sm.asFloat(values[sunny.ActivePowerMinus])), err
+	values, err := sm.device.Values()
+	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
 var _ api.MeterEnergy = (*SMA)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
-	values, err := sm.hasValue()
-	return sm.asFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+	values, err := sm.device.Values()
+	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
 var _ api.MeterCurrent = (*SMA)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
-	values, err := sm.hasValue()
+	values, err := sm.device.Values()
 
-	measurements := []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3}
-	var vals [3]float64
-	for i := 0; i < 3; i++ {
-		vals[i] = sm.asFloat(values[measurements[i]])
+	var currents [3]float64
+	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
+		currents[i] = sma.AsFloat(values[id])
 	}
 
-	return vals[0], vals[1], vals[2], err
+	return currents[0], currents[1], currents[2], err
 }
 
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
-	values, err := sm.hasValue()
-	return sm.asFloat(values[sunny.BatteryCharge]), err
+	values, err := sm.device.Values()
+	return sma.AsFloat(values[sunny.BatteryCharge]), err
 }
 
 var _ api.Diagnosis = (*SMA)(nil)
@@ -275,7 +152,7 @@ func (sm *SMA) Diagnose() {
 	}
 	fmt.Fprintln(w)
 
-	if values, err := sm.device.GetValues(); err == nil {
+	if values, err := sm.device.Values(); err == nil {
 		ids := make([]sunny.ValueID, 0, len(values))
 		for k := range values {
 			ids = append(ids, k)
@@ -295,24 +172,4 @@ func (sm *SMA) Diagnose() {
 		}
 	}
 	w.Flush()
-}
-
-func (sm *SMA) asFloat(value interface{}) float64 {
-	switch v := value.(type) {
-	case float64:
-		return v
-	case int32:
-		return float64(v)
-	case int64:
-		return float64(v)
-	case uint32:
-		return float64(v)
-	case uint64:
-		return float64(v)
-	case nil:
-		return 0
-	default:
-		sm.log.WARN.Printf("unknown value type: %T", value)
-		return 0
-	}
 }
