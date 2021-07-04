@@ -208,7 +208,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 		if err == nil {
 			defer resp.Body.Close()
 
-			userId = resp.Request.URL.Query().Get("userId")
+			userId = resp.Request.URL.Query().Get("intUserId")
 			if len(userId) == 0 {
 				err = errors.New("usedId not found")
 			}
@@ -218,7 +218,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var code string
 	if err == nil {
 		data := map[string]string{
-			"userId": userId,
+			"intUserId": userId,
 		}
 
 		req, err = request.New(http.MethodPost, v.config.URI+SilentSigninURL, request.MarshalJSON(data), request.JSONEncoding)
