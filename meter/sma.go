@@ -226,11 +226,15 @@ func (sm *SMA) CurrentPower() (float64, error) {
 	return sm.scale * (sm.asFloat(values[sunny.ActivePowerPlus]) - sm.asFloat(values[sunny.ActivePowerMinus])), err
 }
 
+var _ api.MeterEnergy = (*SMA)(nil)
+
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
 	values, err := sm.hasValue()
 	return sm.asFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
+
+var _ api.MeterCurrent = (*SMA)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
@@ -250,6 +254,8 @@ func (sm *SMA) soc() (float64, error) {
 	values, err := sm.hasValue()
 	return sm.asFloat(values[sunny.BatteryCharge]), err
 }
+
+var _ api.Diagnosis = (*SMA)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (sm *SMA) Diagnose() {
