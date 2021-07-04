@@ -85,7 +85,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
 	if !sm.device.IsEnergyMeter() {
-		vals, err := sm.device.GetValues()
+		vals, err := sm.device.Values()
 		if err != nil {
 			return nil, err
 		}
@@ -100,19 +100,19 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 
 // CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
-	values, err := sm.device.GetValues()
+	values, err := sm.device.Values()
 	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (sm *SMA) TotalEnergy() (float64, error) {
-	values, err := sm.device.GetValues()
+	values, err := sm.device.Values()
 	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
 }
 
 // Currents implements the api.MeterCurrent interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
-	values, err := sm.device.GetValues()
+	values, err := sm.device.Values()
 
 	measurements := []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3}
 	var vals [3]float64
@@ -125,7 +125,7 @@ func (sm *SMA) Currents() (float64, float64, float64, error) {
 
 // soc implements the api.Battery interface
 func (sm *SMA) soc() (float64, error) {
-	values, err := sm.device.GetValues()
+	values, err := sm.device.Values()
 	return sma.AsFloat(values[sunny.BatteryCharge]), err
 }
 
@@ -147,7 +147,7 @@ func (sm *SMA) Diagnose() {
 	}
 	fmt.Fprintln(w)
 
-	if values, err := sm.device.GetValues(); err == nil {
+	if values, err := sm.device.Values(); err == nil {
 		ids := make([]sunny.ValueID, 0, len(values))
 		for k := range values {
 			ids = append(ids, k)

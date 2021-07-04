@@ -72,7 +72,7 @@ func NewSMAFromConfig(other map[string]interface{}) (IntProvider, error) {
 // FloatGetter creates handler for float64
 func (p *SMA) FloatGetter() func() (float64, error) {
 	return func() (float64, error) {
-		values, err := p.device.GetValues()
+		values, err := p.device.Values()
 		if err != nil {
 			return 0, err
 		}

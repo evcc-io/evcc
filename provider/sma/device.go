@@ -30,7 +30,7 @@ func (d *Device) updateValues() error {
 	return err
 }
 
-func (d *Device) GetValues() (map[sunny.ValueID]interface{}, error) {
+func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
 	elapsed := d.mux.LockWithTimeout()
 	defer d.mux.Unlock()
 

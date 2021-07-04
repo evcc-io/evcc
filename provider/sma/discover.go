@@ -130,7 +130,7 @@ func (d *Discoverer) DeviceBySerial(serial uint32, password string) *Device {
 			return d.get(serial, password)
 		}
 
-		// Device with serial found -> return
+		// device with serial found -> return
 		if device := d.get(serial, password); device != nil {
 			return device
 		}
