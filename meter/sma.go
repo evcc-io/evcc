@@ -114,13 +114,12 @@ func (sm *SMA) TotalEnergy() (float64, error) {
 func (sm *SMA) Currents() (float64, float64, float64, error) {
 	values, err := sm.device.Values()
 
-	measurements := []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3}
-	var vals [3]float64
-	for i := 0; i < 3; i++ {
-		vals[i] = sma.AsFloat(values[measurements[i]])
+	var currents [3]float64
+	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
+		currents[i] = sma.AsFloat(values[id])
 	}
 
-	return vals[0], vals[1], vals[2], err
+	return currents[0], currents[1], currents[2], err
 }
 
 // soc implements the api.Battery interface
