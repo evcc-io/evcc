@@ -1,108 +1,147 @@
 <template>
-	<div class="site-visualization py-4" :class="{ 'show-values': showValues }">
-		<div class="label-scale">
-			<div class="d-flex justify-content-start">
-				<div
-					class="label-bar label-bar--down"
-					v-if="usage"
-					:style="{ width: widthTotal(usage) }"
-					v-tooltip="{
-						trigger: 'manual',
-						content: $t('main.siteVisualization.consumption') + ': ' + kw(usage),
-						placement: 'top',
-						show: tooltip === 'usage',
-					}"
-					@click="toggleTooltip('usage')"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon icon="plug"></fa-icon>
+	<div
+		class="row align-items-start align-items-md-center mt-4"
+		:class="{ 'show-details': showDetails }"
+	>
+		<div class="d-none d-md-flex col-12 col-md-3 col-lg-4">
+			<h4><span class="h6">Aktuelle</span><br />Energiebilanz</h4>
+		</div>
+		<div
+			class="col-12 flex-grow-1"
+			:class="`col-md-${showDetails ? '6' : '8'} col-lg-${showDetails ? '5' : '7'}`"
+			@click="toggleDetails"
+		>
+			<div class="label-scale">
+				<div class="d-flex justify-content-start">
+					<div class="label-bar label-bar--down" :style="{ width: widthTotal(usage) }">
+						<div class="label-bar-scale">
+							<div class="label-bar-icon">
+								<fa-icon icon="home"></fa-icon>
+							</div>
+						</div>
+					</div>
+					<div
+						class="label-bar label-bar--down"
+						v-if="batteryCharge"
+						:style="{ width: widthTotal(batteryCharge) }"
+					>
+						<div class="label-bar-scale">
+							<div class="label-bar-icon">
+								<fa-icon :icon="batteryIcon"></fa-icon> ↑
+							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+			<div class="site-progress" ref="site_progress">
+				<div class="site-progress-bar grid-usage" :style="{ width: widthTotal(gridUsage) }">
+					<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
+						{{ kw(gridUsage) }}
+					</span>
+				</div>
 				<div
-					class="label-bar label-bar--down"
-					v-if="batteryCharge"
-					:style="{ width: widthTotal(batteryCharge) }"
-					v-tooltip="{
-						trigger: 'manual',
-						content:
-							$t('main.siteVisualization.batteryCharge') + ': ' + kw(batteryCharge),
-						placement: 'top',
-						show: tooltip === 'batteryCharge',
-					}"
-					@click="toggleTooltip('batteryCharge')"
+					class="site-progress-bar self-usage"
+					:style="{ width: widthTotal(batteryUsage + pvUsage + batteryCharge) }"
 				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon"><fa-icon :icon="batteryIcon"></fa-icon> ↑</div>
+					<span
+						class="power"
+						:class="{
+							'd-none': hidePowerLabel(batteryUsage + pvUsage + batteryCharge),
+						}"
+					>
+						{{ kw(batteryUsage + pvUsage + batteryCharge) }}
+					</span>
+				</div>
+				<div class="site-progress-bar surplus" :style="{ width: widthTotal(pvExport) }">
+					<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
+						{{ kw(pvExport) }}
+					</span>
+				</div>
+			</div>
+			<div class="label-scale">
+				<div class="d-flex justify-content-end">
+					<div
+						class="label-bar label-bar--up"
+						v-if="batteryUsage"
+						:style="{ width: widthTotal(batteryUsage) }"
+					>
+						<div class="label-bar-scale label-bar-scale--up">
+							<div class="label-bar-icon">
+								<fa-icon :icon="batteryIcon"></fa-icon> ↓
+							</div>
+						</div>
+					</div>
+					<div class="label-bar label-bar--up" :style="{ width: widthTotal(pvPower) }">
+						<div class="label-bar-scale label-bar-scale--up">
+							<div class="label-bar-icon">
+								<fa-icon icon="sun"></fa-icon>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="site-progress" @click="toggleValues()">
-			<div class="site-progress-bar grid-usage" :style="{ width: widthTotal(gridUsage) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
-					{{ kw(gridUsage) }}
-				</span>
+		<div
+			class="col-12 col-sm-6 col-md-3 col-lg-3 mt-2 mt-md-0 small"
+			@click="toggleDetails"
+			v-if="showDetails"
+		>
+			<div class="d-flex justify-content-between">
+				<span class="details-icon"><fa-icon icon="home"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{
+					$t("main.siteVisualization.consumption")
+				}}</span>
+				<span class="text-end text-nowrap ps-1">{{ kw(usage) }}</span>
 			</div>
-			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(batteryUsage) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(batteryUsage) }">
-					{{ kw(batteryUsage) }}
-				</span>
+			<div class="d-flex justify-content-between">
+				<span class="details-icon"><fa-icon icon="sun"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.pv") }}</span>
+				<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
 			</div>
-			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(pvUsage) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(pvUsage) }">
-					{{ kw(pvUsage) }}
+			<div v-if="batteryConfigured" class="d-flex justify-content-between">
+				<span class="details-icon"><fa-icon :icon="batteryIcon"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">
+					{{ $t("main.siteVisualization.battery") }}
+					<span v-if="batteryCharge"> ↑ </span>
+					<span v-if="batteryUsage"> ↓ </span>
+					{{ batterySoC }}%
 				</span>
-			</div>
-			<div class="site-progress-bar self-usage" :style="{ width: widthTotal(batteryCharge) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(batteryCharge) }">
-					{{ kw(batteryCharge) }}
-				</span>
-			</div>
-			<div class="site-progress-bar surplus" :style="{ width: widthTotal(pvExport) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
-					{{ kw(pvExport) }}
+				<span class="text-end text-nowrap ps-1">
+					{{ kw(Math.abs(batteryPower)) }}
 				</span>
 			</div>
 		</div>
-		<div class="label-scale">
-			<div class="d-flex justify-content-end">
-				<div
-					class="label-bar label-bar--up"
-					v-if="batteryUsage"
-					:style="{ width: widthTotal(batteryUsage) }"
-					v-tooltip="{
-						trigger: 'manual',
-						content:
-							$t('main.siteVisualization.batteryDischarge') + ': ' + kw(batteryUsage),
-						placement: 'bottom',
-						show: tooltip === 'batteryUsage',
-					}"
-					@click="toggleTooltip('batteryUsage')"
-				>
-					<div class="label-bar-scale label-bar-scale--up">
-						<div class="label-bar-icon"><fa-icon :icon="batteryIcon"></fa-icon> ↓</div>
-					</div>
-				</div>
-				<div
-					class="label-bar label-bar--up"
-					v-if="pvPower"
-					:style="{ width: widthTotal(pvPower) }"
-					v-tooltip="{
-						trigger: 'manual',
-						content: $t('main.siteVisualization.pv') + ': ' + kw(pvPower),
-						placement: 'bottom',
-						show: tooltip === 'pvPower',
-					}"
-					@click="toggleTooltip('pvPower')"
-				>
-					<div class="label-bar-scale label-bar-scale--up">
-						<div class="label-bar-icon">
-							<fa-icon icon="sun"></fa-icon>
-						</div>
-					</div>
-				</div>
+		<div
+			class="
+				col-12 col-sm-6
+				offset-md-3
+				col-md-6
+				offset-lg-4
+				col-lg-5
+				d-block d-md-flex
+				justify-content-between
+				mt-2
+				small
+			"
+			@click="toggleDetails"
+			v-if="showDetails"
+		>
+			<div class="text-nowrap d-flex d-md-block">
+				<span class="color-grid details-icon"><fa-icon icon="square"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.grid") }}</span>
+				<span class="text-end text-nowrap d-md-none">{{ kw(gridUsage) }}</span>
+			</div>
+			<div class="text-nowrap d-flex d-md-block">
+				<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.self") }}</span>
+				<span class="text-end text-nowrap d-md-none">{{ kw(selfUsage) }}</span>
+			</div>
+			<div class="text-nowrap d-flex d-md-block">
+				<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{
+					$t("main.siteVisualization.export")
+				}}</span>
+				<span class="text-end text-nowrap d-md-none">{{ kw(pvExport) }}</span>
 			</div>
 		</div>
 	</div>
@@ -124,7 +163,16 @@ export default {
 		batterySoC: { type: Number, default: 0 },
 	},
 	data: function () {
-		return { showValues: false, tooltip: null };
+		return { showDetails: false, width: 0 };
+	},
+	mounted: function () {
+		this.$nextTick(function () {
+			window.addEventListener("resize", this.updateElementWidth);
+			this.updateElementWidth();
+		});
+	},
+	beforeDestroy() {
+		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	mixins: [formatter],
 	computed: {
@@ -132,7 +180,7 @@ export default {
 			return Math.max(0, this.batteryPower) + Math.max(0, this.gridPower) + this.pvPower;
 		},
 		gridUsage: function () {
-			return this.applyThreshold(Math.max(0, this.gridPower));
+			return Math.max(0, this.gridPower);
 		},
 		pvUsage: function () {
 			return this.applyThreshold(
@@ -179,38 +227,30 @@ export default {
 			return (100 / this.usage) * power + "%";
 		},
 		kw: function (watt) {
-			return Math.max(0, (watt / 1000).toFixed(1)) + " kW";
+			return Math.max(0, watt / 1000).toFixed(1) + " kW";
 		},
 		hidePowerLabel(power) {
-			return (100 / this.total) * power < 18;
+			const minWidth = 75;
+			const percent = (100 / this.total) * power;
+			return (this.width / 100) * percent < minWidth;
 		},
 		applyThreshold(power) {
-			// adjust all values under 5% of the total power mix to 0
-			return (100 / this.rawTotal) * power < 5 ? 0 : power;
+			// set value to 0 if it doesn't exceed 200kW
+			return power < 200 ? 0 : power;
 		},
-		toggleTooltip(name) {
-			if (this.tooltip === name) {
-				this.tooltip = null;
-			} else {
-				this.tooltip = name;
-				this.showValues = true;
-			}
+		toggleDetails() {
+			this.showDetails = !this.showDetails;
+			this.$nextTick(() => this.updateElementWidth());
 		},
-		toggleValues() {
-			this.showValues = !this.showValues;
-			this.tooltip = null;
+		updateElementWidth() {
+			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
 	},
 };
 </script>
 <style scoped>
-.site-visualization {
-	--evcc-grid: #000033;
-	--evcc-self: #66d85a;
-	--evcc-surplus: #ffe000;
-}
 .site-progress {
-	margin: 0.75rem 0;
+	margin: 0.25rem 0;
 	border-radius: 5px;
 	display: flex;
 	overflow: hidden;
@@ -252,7 +292,20 @@ export default {
 }
 .surplus {
 	background-color: var(--evcc-surplus);
-	color: var(--bs-gray);
+	color: var(--bs-dark);
+}
+.color-grid {
+	color: var(--evcc-grid);
+}
+.color-self {
+	color: var(--evcc-self);
+}
+.color-export {
+	color: var(--evcc-surplus);
+}
+.details-icon {
+	text-align: center;
+	width: 2.5rem;
 }
 
 .power {
@@ -262,8 +315,7 @@ export default {
 	opacity: 0;
 	transition: opacity 100ms ease;
 }
-
-.show-values .power {
+.show-details .power {
 	opacity: 1;
 }
 
@@ -280,31 +332,15 @@ export default {
 .production-label {
 	justify-content: flex-end;
 }
-.arrow-up,
-.arrow-down {
-	position: absolute;
-	left: 0.35rem;
-	width: 0.5rem;
-}
-.arrow-up {
-	top: -0.3rem;
-}
-.arrow-down {
-	bottom: -0.3rem;
-}
 .label-bar {
 	margin: 0;
-	height: 1.25rem;
+	height: 1.5rem;
+	padding: 0.5rem 0;
 	transition-property: width;
 	transition-duration: 500ms;
 	transition-timing-function: linear;
 	cursor: pointer;
-}
-.label-bar--down {
-	padding-top: 0.75rem;
-}
-.label-bar--up {
-	padding-bottom: 0.75rem;
+	overflow: hidden;
 }
 .label-bar-scale {
 	border: 1px solid var(--bs-gray);
@@ -325,5 +361,8 @@ export default {
 	background-color: white;
 	color: var(--bs-gray);
 	padding: 0 0.75rem;
+}
+.table > tbody > tr:last-child > td {
+	border-bottom: none;
 }
 </style>

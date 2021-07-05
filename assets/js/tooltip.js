@@ -1,5 +1,5 @@
 import Vue from "vue";
 import VTooltip from "v-tooltip";
-import "./tooltip.css";
+import "../css/tooltip.css";
 
 Vue.use(VTooltip);
