@@ -62,23 +62,12 @@ type Discoverer struct {
 }
 
 func (d *Discoverer) createDevice(device *sunny.Device) *Device {
-	dev := &Device{
+	return &Device{
 		Device: device,
 		log:    d.log,
 		mux:    util.NewWaiter(udpTimeout, func() { d.log.TRACE.Println("wait for initial value") }),
 		values: make(map[sunny.ValueID]interface{}),
 	}
-
-	go func() {
-		for range time.NewTicker(time.Second).C {
-			err := dev.updateValues()
-			if err != nil {
-				d.log.ERROR.Println(err)
-			}
-		}
-	}()
-
-	return dev
 }
 
 func (d *Discoverer) addDevice(device *sunny.Device) {

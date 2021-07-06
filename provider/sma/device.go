@@ -2,6 +2,7 @@ package sma
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/util"
@@ -16,9 +17,22 @@ type Device struct {
 	log    *util.Logger
 	mux    *util.Waiter
 	values map[sunny.ValueID]interface{}
+	once   sync.Once
 }
 
-func (d *Device) updateValues() error {
+// StartUpdateLoop if not already started
+func (d *Device) StartUpdateLoop() {
+	d.once.Do(func() {
+		go func() {
+			d.updateValues()
+			for range time.NewTicker(time.Second).C {
+				d.updateValues()
+			}
+		}()
+	})
+}
+
+func (d *Device) updateValues() {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -27,10 +41,16 @@ func (d *Device) updateValues() error {
 		err = mergo.Merge(&d.values, values, mergo.WithOverride)
 		d.mux.Update()
 	}
-	return err
+
+	if err != nil {
+		d.log.ERROR.Println(err)
+	}
 }
 
 func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
+	// ensure update loop was started
+	d.StartUpdateLoop()
+
 	elapsed := d.mux.LockWithTimeout()
 	defer d.mux.Unlock()
 
