@@ -2,18 +2,25 @@
 	<div
 		class="row align-items-start align-items-md-center mt-4"
 		:class="{ 'show-details': showDetails }"
+		@click="toggleDetails"
 	>
 		<div class="d-none d-md-flex col-12 col-md-3 col-lg-4">
-			<h4><span class="h6">Aktuelle</span><br />Energiebilanz</h4>
+			<h4>
+				<span class="h6">{{ $t("main.energyflow.titleSup") }}</span>
+				<br />
+				{{ $t("main.energyflow.title") }}
+			</h4>
 		</div>
 		<div
 			class="col-12 flex-grow-1"
 			:class="`col-md-${showDetails ? '6' : '8'} col-lg-${showDetails ? '5' : '7'}`"
-			@click="toggleDetails"
 		>
 			<div class="label-scale">
 				<div class="d-flex justify-content-start">
-					<div class="label-bar label-bar--down" :style="{ width: widthTotal(usage) }">
+					<div
+						class="label-bar label-bar--down"
+						:style="{ width: widthTotal(houseConsumption) }"
+					>
 						<div class="label-bar-scale">
 							<div class="label-bar-icon">
 								<fa-icon icon="home"></fa-icon>
@@ -34,25 +41,28 @@
 				</div>
 			</div>
 			<div class="site-progress" ref="site_progress">
-				<div class="site-progress-bar grid-usage" :style="{ width: widthTotal(gridUsage) }">
-					<span class="power" :class="{ 'd-none': hidePowerLabel(gridUsage) }">
-						{{ kw(gridUsage) }}
+				<div
+					class="site-progress-bar grid-import"
+					:style="{ width: widthTotal(gridImport) }"
+				>
+					<span class="power" :class="{ 'd-none': hidePowerLabel(gridImport) }">
+						{{ kw(gridImport) }}
 					</span>
 				</div>
 				<div
-					class="site-progress-bar self-usage"
-					:style="{ width: widthTotal(batteryUsage + pvUsage + batteryCharge) }"
+					class="site-progress-bar self-consumption"
+					:style="{ width: widthTotal(selfConsumption) }"
 				>
 					<span
 						class="power"
 						:class="{
-							'd-none': hidePowerLabel(batteryUsage + pvUsage + batteryCharge),
+							'd-none': hidePowerLabel(selfConsumption),
 						}"
 					>
-						{{ kw(batteryUsage + pvUsage + batteryCharge) }}
+						{{ kw(selfConsumption) }}
 					</span>
 				</div>
-				<div class="site-progress-bar surplus" :style="{ width: widthTotal(pvExport) }">
+				<div class="site-progress-bar pv-export" :style="{ width: widthTotal(pvExport) }">
 					<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
 						{{ kw(pvExport) }}
 					</span>
@@ -62,8 +72,8 @@
 				<div class="d-flex justify-content-end">
 					<div
 						class="label-bar label-bar--up"
-						v-if="batteryUsage"
-						:style="{ width: widthTotal(batteryUsage) }"
+						v-if="batteryDischarge"
+						:style="{ width: widthTotal(batteryDischarge) }"
 					>
 						<div class="label-bar-scale label-bar-scale--up">
 							<div class="label-bar-icon">
@@ -81,29 +91,27 @@
 				</div>
 			</div>
 		</div>
-		<div
-			class="col-12 col-sm-6 col-md-3 col-lg-3 mt-2 mt-md-0 small"
-			@click="toggleDetails"
-			v-if="showDetails"
-		>
-			<div class="d-flex justify-content-between">
+		<div class="col-12 col-sm-6 col-md-3 col-lg-3 mt-2 mt-md-0 small" v-if="showDetails">
+			<div class="d-flex justify-content-between" data-test-house-consumption>
 				<span class="details-icon"><fa-icon icon="home"></fa-icon></span>
 				<span class="text-nowrap flex-grow-1">{{
-					$t("main.siteVisualization.consumption")
+					$t("main.energyflow.houseConsumption")
 				}}</span>
-				<span class="text-end text-nowrap ps-1">{{ kw(usage) }}</span>
+				<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
 			</div>
-			<div class="d-flex justify-content-between">
+			<div class="d-flex justify-content-between" data-test-pv-production>
 				<span class="details-icon"><fa-icon icon="sun"></fa-icon></span>
-				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.pv") }}</span>
+				<span class="text-nowrap flex-grow-1">{{
+					$t("main.energyflow.pvProduction")
+				}}</span>
 				<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
 			</div>
-			<div v-if="batteryConfigured" class="d-flex justify-content-between">
+			<div v-if="batteryConfigured" class="d-flex justify-content-between" data-test-battery>
 				<span class="details-icon"><fa-icon :icon="batteryIcon"></fa-icon></span>
 				<span class="text-nowrap flex-grow-1">
-					{{ $t("main.siteVisualization.battery") }}
+					{{ $t("main.energyflow.battery") }}
 					<span v-if="batteryCharge"> ↑ </span>
-					<span v-if="batteryUsage"> ↓ </span>
+					<span v-if="batteryDischarge"> ↓ </span>
 					{{ batterySoC }}%
 				</span>
 				<span class="text-end text-nowrap ps-1">
@@ -123,24 +131,23 @@
 				mt-2
 				small
 			"
-			@click="toggleDetails"
 			v-if="showDetails"
 		>
-			<div class="text-nowrap d-flex d-md-block">
+			<div class="text-nowrap d-flex d-md-block" data-test-grid-import>
 				<span class="color-grid details-icon"><fa-icon icon="square"></fa-icon></span>
-				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.grid") }}</span>
-				<span class="text-end text-nowrap d-md-none">{{ kw(gridUsage) }}</span>
+				<span class="text-nowrap flex-grow-1">{{ $t("main.energyflow.gridImport") }}</span>
+				<span class="text-end text-nowrap d-md-none">{{ kw(gridImport) }}</span>
 			</div>
-			<div class="text-nowrap d-flex d-md-block">
+			<div class="text-nowrap d-flex d-md-block" data-test-self-consumption>
 				<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
-				<span class="text-nowrap flex-grow-1">{{ $t("main.siteVisualization.self") }}</span>
-				<span class="text-end text-nowrap d-md-none">{{ kw(selfUsage) }}</span>
-			</div>
-			<div class="text-nowrap d-flex d-md-block">
-				<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
 				<span class="text-nowrap flex-grow-1">{{
-					$t("main.siteVisualization.export")
+					$t("main.energyflow.selfConsumption")
 				}}</span>
+				<span class="text-end text-nowrap d-md-none">{{ kw(selfConsumption) }}</span>
+			</div>
+			<div class="text-nowrap d-flex d-md-block" data-test-pv-export>
+				<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{ $t("main.energyflow.pvExport") }}</span>
 				<span class="text-end text-nowrap d-md-none">{{ kw(pvExport) }}</span>
 			</div>
 		</div>
@@ -152,7 +159,7 @@ import "../icons";
 import formatter from "../mixins/formatter";
 
 export default {
-	name: "SiteVisualization",
+	name: "energyflow",
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
@@ -179,34 +186,31 @@ export default {
 		rawTotal: function () {
 			return Math.max(0, this.batteryPower) + Math.max(0, this.gridPower) + this.pvPower;
 		},
-		gridUsage: function () {
+		gridImport: function () {
 			return Math.max(0, this.gridPower);
 		},
-		pvUsage: function () {
+		pvConsumption: function () {
 			return this.applyThreshold(
 				Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge)
 			);
 		},
-		batteryUsage: function () {
+		batteryDischarge: function () {
 			return this.applyThreshold(Math.max(0, this.batteryPower));
-		},
-		usage: function () {
-			return this.gridUsage + this.pvUsage + this.batteryUsage;
-		},
-		pvExport: function () {
-			return this.applyThreshold(Math.min(0, this.gridPower) * -1);
 		},
 		batteryCharge: function () {
 			return this.applyThreshold(Math.min(0, this.batteryPower) * -1);
 		},
-		selfUsage: function () {
-			return this.pvUsage + this.batteryUsage;
+		houseConsumption: function () {
+			return this.gridImport + this.pvConsumption + this.batteryDischarge;
 		},
-		surplus: function () {
-			return this.pvExport + this.batteryCharge;
+		selfConsumption: function () {
+			return this.batteryDischarge + this.pvConsumption + this.batteryCharge;
+		},
+		pvExport: function () {
+			return this.applyThreshold(Math.min(0, this.gridPower) * -1);
 		},
 		total: function () {
-			return this.usage + this.surplus;
+			return this.gridImport + this.selfConsumption + this.pvExport;
 		},
 		batteryIcon: function () {
 			if (this.batterySoC > 80) return "battery-full";
@@ -219,12 +223,6 @@ export default {
 	methods: {
 		widthTotal: function (power) {
 			return (100 / this.total) * power + "%";
-		},
-		widthSurplus: function (power) {
-			return (100 / this.surplus) * power + "%";
-		},
-		widthUsage: function (power) {
-			return (100 / this.usage) * power + "%";
 		},
 		kw: function (watt) {
 			return Math.max(0, watt / 1000).toFixed(1) + " kW";
@@ -282,16 +280,16 @@ export default {
 .site-progress-bar::after {
 	right: 0px;
 }
-.grid-usage {
+.grid-import {
 	background-color: var(--evcc-grid);
 	color: var(--bs-light);
 }
-.self-usage {
+.self-consumption {
 	background-color: var(--evcc-self);
 	color: var(--bs-light);
 }
-.surplus {
-	background-color: var(--evcc-surplus);
+.pv-export {
+	background-color: var(--evcc-export);
 	color: var(--bs-dark);
 }
 .color-grid {
@@ -301,13 +299,13 @@ export default {
 	color: var(--evcc-self);
 }
 .color-export {
-	color: var(--evcc-surplus);
+	color: var(--evcc-export);
 }
 .details-icon {
-	text-align: center;
-	width: 2.5rem;
+	text-align: left;
+	width: 20px;
+	margin-right: 0.25rem;
 }
-
 .power {
 	display: block;
 	margin: 0 0.5rem;
@@ -317,20 +315,6 @@ export default {
 }
 .show-details .power {
 	opacity: 1;
-}
-
-.usage-label,
-.production-label {
-	flex-basis: 33%;
-}
-.battery-label {
-	position: relative;
-}
-.usage-label {
-	justify-content: flex-start;
-}
-.production-label {
-	justify-content: flex-end;
 }
 .label-bar {
 	margin: 0;
@@ -361,8 +345,5 @@ export default {
 	background-color: white;
 	color: var(--bs-gray);
 	padding: 0 0.75rem;
-}
-.table > tbody > tr:last-child > td {
-	border-bottom: none;
 }
 </style>

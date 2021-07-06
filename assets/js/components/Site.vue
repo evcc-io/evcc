@@ -1,6 +1,6 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
-		<SiteVisualization v-if="enableVisualization" v-bind="visualization" />
+		<Energyflow v-bind="energyflow" />
 		<hr class="w-100 my-4" />
 		<div class="flex-grow-1 d-flex justify-content-around flex-column">
 			<template v-for="(loadpoint, id) in loadpoints">
@@ -17,8 +17,7 @@
 </template>
 
 <script>
-import SiteDetails from "./SiteDetails";
-import SiteVisualization from "./SiteVisualization";
+import Energyflow from "./Energyflow";
 import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -40,17 +39,11 @@ export default {
 		gridCurrents: Array,
 		prioritySoC: Number,
 	},
-	data: function () {
-		return { enableVisualization: true };
-	},
-	components: { SiteDetails, Loadpoint, SiteVisualization },
+	components: { Loadpoint, Energyflow },
 	mixins: [formatter, collector],
 	computed: {
-		details: function () {
-			return this.collectProps(SiteDetails);
-		},
-		visualization: function () {
-			return this.collectProps(SiteVisualization);
+		energyflow: function () {
+			return this.collectProps(Energyflow);
 		},
 	},
 };

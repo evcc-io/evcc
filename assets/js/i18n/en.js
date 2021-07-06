@@ -29,22 +29,15 @@ export default {
     dismissAll: "Dismiss all",
   },
   main: {
-    siteDetails: {
-      import: "Import",
-      export: "Export",
-      production: "Production",
-      batteryShort: "Batt.",
-      batteryLong: "Battery",
-    },
-    siteVisualization: {
-      consumption: "Consumption",
+    energyflow: {
+      titleSup: "Current",
+      title: "Energyflow",
+      houseConsumption: "Consumption",
+      pvProduction: "Production",
       battery: "Battery",
-      production: "Production",
-      import: "Grid consumption",
-      direct: "Direct consumption",
-      export: "Grid feed-in",
-      batteryUsage: "Battery charge",
-      batteryCharge: "Battery discharge",
+      gridImport: "Grid import",
+      selfConsumption: "Self consumption",
+      pvExport: "Grid feed-in",
     },
     mode: {
       title: "Mode",

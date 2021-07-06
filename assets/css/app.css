@@ -4,7 +4,7 @@
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-green);
-	--evcc-surplus: var(--evcc-yellow);
+	--evcc-export: var(--evcc-yellow);
 
 	--bs-primary: var(--evcc-green);
 }

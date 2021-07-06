@@ -29,24 +29,15 @@ export default {
     dismissAll: "Meldungen entfernen",
   },
   main: {
-    siteDetails: {
-      import: "Bezug",
-      export: "Einspeisung",
-      production: "Erzeugung",
-      batteryShort: "Akku",
-      batteryLong: "Batterie",
-    },
-    siteVisualization: {
-      consumption: "Verbrauch",
+    energyflow: {
+      titleSup: "Aktueller",
+      title: "Energiefluss",
+      houseConsumption: "Verbrauch",
+      pvProduction: "Erzeugung",
       battery: "Batterie",
-      production: "Erzeugung",
-      grid: "Netzbezug",
-      self: "Eigenverbrauch",
-      pv: "Erzeugung",
-      surplus: "Überschuss",
-      export: "Einspeisung",
-      batteryCharge: "Batterie laden",
-      batteryDischarge: "Batterie entladen",
+      gridImport: "Netzbezug",
+      selfConsumption: "Eigenverbrauch",
+      pvExport: "Einspeisung",
     },
     mode: {
       title: "Modus",

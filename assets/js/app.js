@@ -7,7 +7,6 @@ import App from "./views/App";
 import router from "./router";
 import i18n from "./i18n";
 import store from "./store";
-import "./tooltip";
 
 const loc = window.location;
 axios.defaults.baseURL =

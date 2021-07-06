@@ -1,10 +1,9 @@
-import SiteVisualization from "./SiteVisualization.vue";
+import Energyflow from "./Energyflow.vue";
 import i18n from "../i18n";
-import "../tooltip";
 
 export default {
-  title: "Main/SiteVisualization",
-  component: SiteVisualization,
+  title: "Main/Energyflow",
+  component: Energyflow,
   argTypes: {
     gridPower: { control: { type: "range", min: -5000, max: 20000, step: 100 } },
     pvPower: { control: { type: "range", min: 0, max: 10000, step: 100 } },
@@ -16,8 +15,8 @@ export default {
 const Template = (args, { argTypes }) => ({
   i18n,
   props: Object.keys(argTypes),
-  components: { SiteVisualization },
-  template: '<SiteVisualization v-bind="$props"></SiteVisualization>',
+  components: { Energyflow },
+  template: '<Energyflow v-bind="$props"></Energyflow>',
 });
 
 export const GridAndPV = Template.bind({});
