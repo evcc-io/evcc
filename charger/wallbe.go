@@ -236,6 +236,8 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 	return currents[0], currents[1], currents[2], nil
 }
 
+var _ api.Diagnosis = (*Wallbe)(nil)
+
 // Diagnose implements the Diagnosis interface
 func (wb *Wallbe) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 6); err == nil {

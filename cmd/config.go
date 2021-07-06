@@ -39,6 +39,13 @@ type mqttConfig struct {
 	Topic       string
 }
 
+func (conf *mqttConfig) RootTopic() string {
+	if conf.Topic != "" {
+		return conf.Topic
+	}
+	return "evcc"
+}
+
 type qualifiedConfig struct {
 	Name, Type string
 	Other      map[string]interface{} `mapstructure:",remain"`

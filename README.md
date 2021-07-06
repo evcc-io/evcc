@@ -40,6 +40,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [MQTT (read/write)](#mqtt-readwrite)
   - [HTTP (read/write)](#http-readwrite)
   - [Websocket (read only)](#websocket-read-only)
+  - [SMA/Speedwire (read only)](#smaspeedwire-read-only)
   - [Javascript (read/write)](#javascript-readwrite)
   - [Shell Script (read/write)](#shell-script-readwrite)
   - [Calc (read only)](#calc-read-only)
@@ -243,7 +244,7 @@ Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-readwrite) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `sma`: SMA Home Manager 2.0, SMA Energy Meter and Inverters via SMA Speedwire.
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
@@ -269,7 +270,7 @@ Available vehicle remote interface implementations are:
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
 - `porsche`: Porsche (Taycan)
 - `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citygo)
+- `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
@@ -448,6 +449,29 @@ scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conve
 timeout: 30s # error if no update received in 30 seconds
 ```
 
+### SMA/Speedwire (read only)
+
+The `sma` plugin provides an interface to SMA devices via the Speedwire protocol.
+
+Sample configuration (read only):
+
+```yaml
+source: sma
+uri: 192.168.4.51 # alternative to serial
+serial: 123456 # alternative to uri
+value: ActivePowerPlus # ID of value to read
+password: "0000" # optional (default: 0000)
+interface: eth0 # optional
+scale: 1 # optional scale factor for value
+```
+
+Supported values for `value` can be found in the diagnostic dump of the command
+`evcc meter` (with a configured SMA meter).
+
+All possible values can be found as const [here](https://gitlab.com/bboehmke/sunny/-/blob/master/values.go#L24)
+(use the names of the const for `value`).
+
+
 ### Javascript (read/write)
 
 EVCC includes a bundled Javascript interpreter with Underscore.js library installed. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
@@ -538,6 +562,7 @@ Note: to modify writable settings perform a `POST` request appending the value a
 The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
 
 - `evcc`: root topic
+- `evcc/status`: status (`online`/`offline`)
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
 - `evcc/site/prioritySoC`: battery priority SoC (writable)

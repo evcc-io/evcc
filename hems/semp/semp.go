@@ -383,23 +383,14 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 }
 
 func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
-	var chargePower float64
-	if chargePowerP, err := s.cache.GetChecked(id, "chargePower"); err == nil {
-		chargePower = chargePowerP.Val.(float64)
-	}
+	chargePower := lp.GetChargePower()
 
-	isPV := false
-	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		if mode, ok := modeP.Val.(api.ChargeMode); ok && (mode == api.ModeMinPV || mode == api.ModePV) {
-			isPV = true
-		}
-	}
+	mode := lp.GetMode()
+	isPV := mode == api.ModeMinPV || mode == api.ModePV
 
 	status := StatusOff
-	if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
-		if statusP.Val.(bool) {
-			status = StatusOn
-		}
+	if lp.GetStatus() == api.StatusC {
+		status = StatusOn
 	}
 
 	var hasVehicle bool

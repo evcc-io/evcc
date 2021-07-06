@@ -178,7 +178,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.Topic)
+		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 

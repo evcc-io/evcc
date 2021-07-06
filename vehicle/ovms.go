@@ -32,6 +32,7 @@ type Ovms struct {
 	*embed
 	*request.Helper
 	user, password, vehicleId, server string
+	interval                          time.Duration
 	chargeG                           func() (interface{}, error)
 }
 
@@ -62,6 +63,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		password:  cc.Password,
 		vehicleId: cc.VehicleID,
 		server:    cc.Server,
+		interval:  cc.Cache,
 	}
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
@@ -143,7 +145,8 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 			err = v.disconnect()
 		}
 
-		if err == nil && resp.MessageAgeServer > 59 && ovmsConnected {
+		messageAge := time.Duration(resp.MessageAgeServer) * time.Second
+		if err == nil && messageAge > v.interval+time.Minute && ovmsConnected {
 			err = api.ErrMustRetry
 		}
 	}
