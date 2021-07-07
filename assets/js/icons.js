@@ -2,8 +2,6 @@ import Vue from "vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { library } from "@fortawesome/fontawesome-svg-core";
 
-import { faArrowDown } from "@fortawesome/free-solid-svg-icons/faArrowDown";
-import { faArrowUp } from "@fortawesome/free-solid-svg-icons/faArrowUp";
 import { faBatteryEmpty } from "@fortawesome/free-solid-svg-icons/faBatteryEmpty";
 import { faBatteryFull } from "@fortawesome/free-solid-svg-icons/faBatteryFull";
 import { faBatteryHalf } from "@fortawesome/free-solid-svg-icons/faBatteryHalf";
@@ -13,7 +11,6 @@ import { faAngleUp } from "@fortawesome/free-solid-svg-icons/faAngleUp";
 import { faAngleDown } from "@fortawesome/free-solid-svg-icons/faAngleDown";
 import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
-import { faLeaf } from "@fortawesome/free-solid-svg-icons/faLeaf";
 import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
 import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
 import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
@@ -25,35 +22,34 @@ import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
 import { faHome } from "@fortawesome/free-solid-svg-icons/faHome";
 import { faCar } from "@fortawesome/free-solid-svg-icons/faCar";
 import { faSquare } from "@fortawesome/free-solid-svg-icons/faSquare";
-import { faChevronRight } from "@fortawesome/free-solid-svg-icons/faChevronRight";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
+import { faCaretLeft } from "@fortawesome/free-solid-svg-icons/faCaretLeft";
+import { faCaretRight } from "@fortawesome/free-solid-svg-icons/faCaretRight";
 
 library.add(
-  faArrowDown,
-  faArrowUp,
+  faAngleDown,
+  faAngleUp,
   faBatteryEmpty,
   faBatteryFull,
   faBatteryHalf,
   faBatteryQuarter,
   faBatteryThreeQuarters,
-  faAngleUp,
-  faAngleDown,
+  faBox,
+  faCar,
+  faCaretLeft,
+  faCaretRight,
   faClock,
+  faExclamationCircle,
   faExclamationTriangle,
-  faLeaf,
+  faGift,
+  faHome,
+  farHeart,
+  fasHeart,
+  faSquare,
   faSun,
   faTemperatureHigh,
   faTemperatureLow,
-  faThermometerHalf,
-  farHeart,
-  fasHeart,
-  faGift,
-  faBox,
-  faHome,
-  faCar,
-  faChevronRight,
-  faExclamationCircle,
-  faSquare
+  faThermometerHalf
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

@@ -35,6 +35,8 @@ export default {
       houseConsumption: "Consumption",
       pvProduction: "Produzione",
       battery: "Batteria",
+      batteryCharge: "Battery charge",
+      batteryDischarge: "Battery discharge",
       gridImport: "Grid import",
       selfConsumption: "Self consumption",
       pvExport: "Grid feed-in",

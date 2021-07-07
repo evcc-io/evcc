@@ -15,7 +15,7 @@ describe("Energyflow.vue", () => {
 
   it("using pv and grid power", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
+      mocks: { $t: (x) => x },
       propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000 },
     });
 
@@ -32,7 +32,7 @@ describe("Energyflow.vue", () => {
 
   it("exporting all pv power, no usage", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
+      mocks: { $t: (x) => x },
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000 },
     });
 
@@ -49,7 +49,7 @@ describe("Energyflow.vue", () => {
 
   it("more grid export than pv, grid value wins (invalid state)", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
+      mocks: { $t: (x) => x },
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 3000 },
     });
 
@@ -64,10 +64,16 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
   });
 
-  it("only grid usage, no pv", async () => {
+  it("only grid usage, no pv, idleBattery", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
-      propsData: { ...defaultProps, gridPower: 360, pvPower: 0 },
+      mocks: { $t: (x) => x },
+      propsData: {
+        ...defaultProps,
+        gridPower: 360,
+        pvPower: 0,
+        batteryConfigured: true,
+        batteryPower: 0,
+      },
     });
 
     await wrapper.trigger("click");
@@ -78,17 +84,18 @@ describe("Energyflow.vue", () => {
 
     expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.4 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
-    expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.battery");
   });
 
   it("grid and battery usage, no pv", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
+      mocks: { $t: (x) => x },
       propsData: {
         ...defaultProps,
         gridPower: 300,
         batteryConfigured: true,
         batteryPower: 200,
+        batterySoC: 77,
         pvPower: 0,
       },
     });
@@ -102,12 +109,13 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.5 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("0.2 kW");
-    expect(wrapper.find("[data-test-battery]").text()).toMatch("↓");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("77%");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryDischarge");
   });
 
   it("battery charge, pv export", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: () => {} },
+      mocks: { $t: (x) => x },
       propsData: {
         ...defaultProps,
         gridPower: -2500,
@@ -126,6 +134,6 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("4.8 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("9.0 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("1.7 kW");
-    expect(wrapper.find("[data-test-battery]").text()).toMatch("↑");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryCharge");
   });
 });

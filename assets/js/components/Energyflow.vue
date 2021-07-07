@@ -34,7 +34,8 @@
 					>
 						<div class="label-bar-scale">
 							<div class="label-bar-icon">
-								<fa-icon :icon="batteryIcon"></fa-icon> ↑
+								<fa-icon :icon="batteryIcon"></fa-icon>
+								<fa-icon icon="caret-left"></fa-icon>
 							</div>
 						</div>
 					</div>
@@ -77,7 +78,8 @@
 					>
 						<div class="label-bar-scale label-bar-scale--up">
 							<div class="label-bar-icon">
-								<fa-icon :icon="batteryIcon"></fa-icon> ↓
+								<fa-icon :icon="batteryIcon"></fa-icon>
+								<fa-icon icon="caret-right"></fa-icon>
 							</div>
 						</div>
 					</div>
@@ -107,14 +109,20 @@
 				<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
 			</div>
 			<div v-if="batteryConfigured" class="d-flex justify-content-between" data-test-battery>
-				<span class="details-icon"><fa-icon :icon="batteryIcon"></fa-icon></span>
-				<span class="text-nowrap flex-grow-1">
-					{{ $t("main.energyflow.battery") }}
-					<span v-if="batteryCharge"> ↑ </span>
-					<span v-if="batteryDischarge"> ↓ </span>
-					{{ batterySoC }}%
+				<span class="details-icon">
+					<fa-icon :icon="batteryIcon"></fa-icon>
+					<fa-icon icon="caret-left" v-if="batteryCharge"></fa-icon>
+					<fa-icon icon="caret-right" v-if="batteryDischarge"></fa-icon>
+				</span>
+				<span class="text-nowrap flex-grow-1 text-truncate">
+					<span v-if="batteryCharge">{{ $t("main.energyflow.batteryCharge") }}</span>
+					<span v-else-if="batteryDischarge">{{
+						$t("main.energyflow.batteryDischarge")
+					}}</span>
+					<span v-else>{{ $t("main.energyflow.batteryDischarge") }}</span>
 				</span>
 				<span class="text-end text-nowrap ps-1">
+					({{ batterySoC }}%)
 					{{ kw(Math.abs(batteryPower)) }}
 				</span>
 			</div>
@@ -302,9 +310,11 @@ export default {
 	color: var(--evcc-export);
 }
 .details-icon {
-	text-align: left;
-	width: 20px;
+	text-align: center;
+	width: 30px;
 	margin-right: 0.25rem;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 .power {
 	display: block;
