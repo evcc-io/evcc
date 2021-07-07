@@ -119,7 +119,7 @@
 					<span v-else-if="batteryDischarge">{{
 						$t("main.energyflow.batteryDischarge")
 					}}</span>
-					<span v-else>{{ $t("main.energyflow.batteryDischarge") }}</span>
+					<span v-else>{{ $t("main.energyflow.battery") }}</span>
 				</span>
 				<span class="text-end text-nowrap ps-1">
 					({{ batterySoC }}%)
