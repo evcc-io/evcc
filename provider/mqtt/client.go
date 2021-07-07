@@ -8,7 +8,7 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	paho "github.com/eclipse/paho.mqtt.golang"
 )
 
 const (
@@ -37,14 +37,16 @@ type Config struct {
 type Client struct {
 	log      *util.Logger
 	mux      sync.Mutex
-	Client   mqtt.Client
+	Client   paho.Client
 	broker   string
 	Qos      byte
 	listener map[string][]func(string)
 }
 
+type Option func(*paho.ClientOptions)
+
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte) (*Client, error) {
+func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
 	broker = util.DefaultPort(broker, 1883)
 	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
@@ -55,7 +57,7 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 		listener: make(map[string][]func(string)),
 	}
 
-	options := mqtt.NewClientOptions()
+	options := paho.NewClientOptions()
 	options.AddBroker(broker)
 	options.SetUsername(user)
 	options.SetPassword(password)
@@ -66,7 +68,12 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	options.SetConnectionLostHandler(mc.ConnectionLostHandler)
 	options.SetConnectTimeout(connectTimeout)
 
-	client := mqtt.NewClient(options)
+	// additional options
+	for _, o := range opts {
+		o(options)
+	}
+
+	client := paho.NewClient(options)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return nil, fmt.Errorf("error connecting: %w", token.Error())
 	}
@@ -77,12 +84,12 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 }
 
 // ConnectionLostHandler logs cause of connection loss as warning
-func (m *Client) ConnectionLostHandler(client mqtt.Client, reason error) {
+func (m *Client) ConnectionLostHandler(client paho.Client, reason error) {
 	m.log.ERROR.Printf("%s connection lost: %v", m.broker, reason.Error())
 }
 
 // ConnectionHandler restores listeners
-func (m *Client) ConnectionHandler(client mqtt.Client) {
+func (m *Client) ConnectionHandler(client paho.Client) {
 	m.log.DEBUG.Printf("%s connected", m.broker)
 
 	m.mux.Lock()
@@ -115,7 +122,7 @@ func (m *Client) Listen(topic string, callback func(string)) {
 
 // listen attaches listener to topic
 func (m *Client) listen(topic string) {
-	token := m.Client.Subscribe(topic, m.Qos, func(c mqtt.Client, msg mqtt.Message) {
+	token := m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {
 		payload := string(msg.Payload())
 		m.log.TRACE.Printf("recv %s: '%v'", topic, payload)
 		if len(payload) > 0 {
@@ -132,7 +139,7 @@ func (m *Client) listen(topic string) {
 }
 
 // WaitForToken synchronously waits until token operation completed
-func (m *Client) WaitForToken(token mqtt.Token) {
+func (m *Client) WaitForToken(token paho.Token) {
 	if token.WaitTimeout(publishTimeout) {
 		if token.Error() != nil {
 			m.log.ERROR.Printf("error: %s", token.Error())

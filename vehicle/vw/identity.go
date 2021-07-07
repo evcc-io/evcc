@@ -1,6 +1,7 @@
 package vw
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
@@ -163,6 +164,10 @@ func (v *Identity) postTos(uri string) (*http.Response, error) {
 
 // LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
 func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
+	if user == "" || password == "" {
+		return errors.New("missing credentials")
+	}
+
 	login := func() (oauth.Token, error) {
 		var token oauth.Token
 		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
@@ -199,6 +204,10 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 
 // LoginSkoda performs Skoda login and finally exchanges code and id token for access and refresh tokens
 func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
+	if user == "" || password == "" {
+		return errors.New("missing credentials")
+	}
+
 	login := func() (oauth.Token, error) {
 		var token oauth.Token
 		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
@@ -233,6 +242,10 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 
 // LoginID performs ID login and finally exchanges state and id token for access and refresh tokens
 func (v *Identity) LoginID(query url.Values, user, password string) error {
+	if user == "" || password == "" {
+		return errors.New("missing credentials")
+	}
+
 	login := func() (id.Token, error) {
 		var token id.Token
 		uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())

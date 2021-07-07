@@ -42,8 +42,8 @@ func IPsFromSubnet(arg string) (res []string) {
 	for ip := gen.Next(); ip != nil; ip = gen.Next() {
 		res = append(res, ip.String())
 	}
-
-	return res
+	// remove network and broadcast address
+	return res[1 : len(res)-1]
 }
 
 // ParseHostIPNet converts host or cidr into a host list
