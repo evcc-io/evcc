@@ -447,7 +447,7 @@ func (c *EEBus) Identify() (string, error) {
 	}
 
 	c.log.TRACE.Printf("identify: returning nothing")
-	return "", nil
+	return "", api.ErrMustRetry
 }
 
 var _ api.Battery = (*EEBus)(nil)
