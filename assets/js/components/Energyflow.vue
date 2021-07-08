@@ -1,9 +1,5 @@
 <template>
-	<div
-		class="row align-items-start align-items-md-center mt-4"
-		:class="{ 'show-details': showDetails }"
-		@click="toggleDetails"
-	>
+	<div class="row align-items-start align-items-md-center mt-4" @click="toggleDetails">
 		<div class="d-none d-md-flex col-12 col-md-3 col-lg-4">
 			<h4>
 				<span class="h6">{{ $t("main.energyflow.titleSup") }}</span>
@@ -16,26 +12,23 @@
 			:class="`col-md-${showDetails ? '6' : '8'} col-lg-${showDetails ? '5' : '7'}`"
 		>
 			<div class="label-scale">
-				<div class="d-flex justify-content-start">
+				<div class="d-flex justify-content-end">
 					<div
 						class="label-bar label-bar--down"
-						:style="{ width: widthTotal(houseConsumption) }"
-					>
-						<div class="label-bar-scale">
-							<div class="label-bar-icon">
-								<fa-icon icon="home"></fa-icon>
-							</div>
-						</div>
-					</div>
-					<div
-						class="label-bar label-bar--down"
-						v-if="batteryCharge"
-						:style="{ width: widthTotal(batteryCharge) }"
+						v-if="batteryDischarge"
+						:style="{ width: widthTotal(batteryDischarge) }"
 					>
 						<div class="label-bar-scale">
 							<div class="label-bar-icon">
 								<fa-icon :icon="batteryIcon"></fa-icon>
-								<fa-icon icon="caret-left"></fa-icon>
+								<fa-icon icon="caret-right"></fa-icon>
+							</div>
+						</div>
+					</div>
+					<div class="label-bar label-bar--down" :style="{ width: widthTotal(pvPower) }">
+						<div class="label-bar-scale">
+							<div class="label-bar-icon">
+								<fa-icon icon="sun"></fa-icon>
 							</div>
 						</div>
 					</div>
@@ -70,23 +63,26 @@
 				</div>
 			</div>
 			<div class="label-scale">
-				<div class="d-flex justify-content-end">
+				<div class="d-flex justify-content-start">
 					<div
 						class="label-bar label-bar--up"
-						v-if="batteryDischarge"
-						:style="{ width: widthTotal(batteryDischarge) }"
+						:style="{ width: widthTotal(houseConsumption) }"
 					>
-						<div class="label-bar-scale label-bar-scale--up">
+						<div class="label-bar-scale">
 							<div class="label-bar-icon">
-								<fa-icon :icon="batteryIcon"></fa-icon>
-								<fa-icon icon="caret-right"></fa-icon>
+								<fa-icon icon="home"></fa-icon>
 							</div>
 						</div>
 					</div>
-					<div class="label-bar label-bar--up" :style="{ width: widthTotal(pvPower) }">
-						<div class="label-bar-scale label-bar-scale--up">
+					<div
+						class="label-bar label-bar--up"
+						v-if="batteryCharge"
+						:style="{ width: widthTotal(batteryCharge) }"
+					>
+						<div class="label-bar-scale">
 							<div class="label-bar-icon">
-								<fa-icon icon="sun"></fa-icon>
+								<fa-icon :icon="batteryIcon"></fa-icon>
+								<fa-icon icon="caret-left"></fa-icon>
 							</div>
 						</div>
 					</div>
@@ -94,19 +90,19 @@
 			</div>
 		</div>
 		<div class="col-12 col-sm-6 col-md-3 col-lg-3 mt-2 mt-md-0 small" v-if="showDetails">
-			<div class="d-flex justify-content-between" data-test-house-consumption>
-				<span class="details-icon"><fa-icon icon="home"></fa-icon></span>
-				<span class="text-nowrap flex-grow-1">{{
-					$t("main.energyflow.houseConsumption")
-				}}</span>
-				<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
-			</div>
 			<div class="d-flex justify-content-between" data-test-pv-production>
 				<span class="details-icon"><fa-icon icon="sun"></fa-icon></span>
 				<span class="text-nowrap flex-grow-1">{{
 					$t("main.energyflow.pvProduction")
 				}}</span>
 				<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
+			</div>
+			<div class="d-flex justify-content-between" data-test-house-consumption>
+				<span class="details-icon"><fa-icon icon="home"></fa-icon></span>
+				<span class="text-nowrap flex-grow-1">{{
+					$t("main.energyflow.houseConsumption")
+				}}</span>
+				<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
 			</div>
 			<div v-if="batteryConfigured" class="d-flex justify-content-between" data-test-battery>
 				<span class="details-icon">
@@ -320,11 +316,6 @@ export default {
 	display: block;
 	margin: 0 0.5rem;
 	white-space: nowrap;
-	opacity: 0;
-	transition: opacity 100ms ease;
-}
-.show-details .power {
-	opacity: 1;
 }
 .label-bar {
 	margin: 0;
