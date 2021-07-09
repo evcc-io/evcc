@@ -286,11 +286,11 @@ export default {
 }
 .grid-import {
 	background-color: var(--evcc-grid);
-	color: var(--bs-light);
+	color: var(--bs-white);
 }
 .self-consumption {
 	background-color: var(--evcc-self);
-	color: var(--bs-light);
+	color: var(--bs-white);
 }
 .pv-export {
 	background-color: var(--evcc-export);

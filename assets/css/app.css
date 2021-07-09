@@ -1,16 +1,17 @@
 :root {
 	--evcc-green: #66d85a;
+	--evcc-dark-green: #3aba2c;
 	--evcc-yellow: #ffe000;
 
 	--evcc-grid: var(--bs-gray-dark);
-	--evcc-self: var(--evcc-green);
+	--evcc-self: var(--evcc-dark-green);
 	--evcc-export: var(--evcc-yellow);
 
-	--bs-primary: var(--evcc-green);
+	--bs-primary: var(--evcc-dark-green);
 }
 
 .bg-primary {
-	background-color: var(--evcc-green) !important;
+	background-color: var(--evcc-dark-green) !important;
 }
 
 /* reverse loading animation */
@@ -25,8 +26,8 @@
 	border-color: var(--bs-gray-dark);
 }
 .btn-outline-primary:hover {
-	color: #fff;
-	background-color: var(--evcc-green);
+	color: var(--bs-white);
+	background-color: var(--evcc-dark-green);
 	border-color: var(--bs-gray-dark);
 }
 .btn-check:active + .btn-outline-primary,
@@ -34,6 +35,7 @@
 .btn-outline-primary.active,
 .btn-outline-primary.dropdown-toggle.show,
 .btn-outline-primary:active {
-	color: #fff;
-	background-color: var(--evcc-green);
+	color: var(--bs-white);
+	background-color: var(--evcc-dark-green);
+	border-color: var(--bs-gray-dark);
 }
