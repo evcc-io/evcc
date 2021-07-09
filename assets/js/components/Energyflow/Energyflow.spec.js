@@ -1,6 +1,6 @@
 /* globals describe, it, expect */
 import { shallowMount } from "@vue/test-utils";
-import Energyflow from "./Energyflow.vue";
+import Energyflow from "./";
 
 describe("Energyflow.vue", () => {
   const defaultProps = {
@@ -135,5 +135,29 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("9.0 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("1.7 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryCharge");
+  });
+
+  it("thresholds", async () => {
+    const wrapper = shallowMount(Energyflow, {
+      mocks: { $t: (x) => x },
+      propsData: {
+        ...defaultProps,
+        gridPower: 5555,
+        batteryConfigured: true,
+        batteryPower: 1234,
+        pvPower: 378,
+      },
+    });
+
+    await wrapper.trigger("click");
+
+    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("5.6 kW");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("1.6 kW");
+    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
+
+    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("7.2 kW");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.4 kW");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("1.2 kW");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryDischarge");
   });
 });
