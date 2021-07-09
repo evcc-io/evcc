@@ -1,6 +1,7 @@
 <template>
 	<div
 		class="col-12 flex-grow-1"
+		v-if="totalAdjusted > 0"
 		:class="`col-md-${showDetails ? '6' : '8'} col-lg-${showDetails ? '5' : '7'}`"
 	>
 		<div class="label-scale">
