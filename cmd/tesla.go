@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"image"
+	"image/png"
+	"io"
 	"os"
 	"strings"
 
@@ -12,10 +16,14 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/gocolly/twocaptcha"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
+
+	"github.com/srwiley/oksvg"
+	"github.com/srwiley/rasterx"
 )
 
 // teslaCmd represents the vehicle command
@@ -44,11 +52,41 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 	return devices[0], strings.TrimSpace(code), err
 }
 
+func solveCaptcha(ctx context.Context, svg io.Reader) (string, error) {
+	token := os.Getenv("CAPTCHA_TOKEN")
+	client := twocaptcha.New(token)
+
+	icon, err := oksvg.ReadIconStream(svg)
+	if err != nil {
+		return "", err
+	}
+
+	w := int(icon.ViewBox.W)
+	h := int(icon.ViewBox.H)
+
+	icon.SetTarget(0, 0, float64(w), float64(h))
+	rgba := image.NewRGBA(image.Rect(0, 0, w, h))
+	icon.Draw(rasterx.NewDasher(w, h, rasterx.NewScannerGV(w, h, rgba, rgba.Bounds())), 1)
+
+	img := &bytes.Buffer{}
+	err = png.Encode(img, rgba)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Println("solving captcha...")
+	solution, err := client.SolveCaptcha(img.Bytes())
+	fmt.Println(solution, err)
+
+	return solution, err
+}
+
 func generateToken(username, password string) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 	client, err := tesla.NewClient(
 		ctx,
 		tesla.WithMFAHandler(codePrompt),
+		tesla.WithCaptchaHandler(solveCaptcha),
 		tesla.WithCredentials(username, password),
 	)
 	if err != nil {
