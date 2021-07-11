@@ -25,7 +25,7 @@ func (d *Device) StartUpdateLoop() {
 	d.once.Do(func() {
 		go func() {
 			d.updateValues()
-			for range time.NewTicker(time.Second).C {
+			for range time.NewTicker(time.Second * 5).C {
 				d.updateValues()
 			}
 		}()
