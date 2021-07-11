@@ -181,7 +181,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 	currentState := data.EVData.ChargeState
 
 	if !c.connected {
-		c.log.TRACE.Printf("currents: ev reported as unplugged")
+		c.log.TRACE.Printf("status: charger reported as disconnected")
 		return api.StatusNone, fmt.Errorf("charger reported as disconnected")
 	}
 
@@ -436,8 +436,13 @@ func (c *EEBus) Identify() (string, error) {
 		return "", err
 	}
 
-	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
-		c.log.TRACE.Printf("identify: ev reported as unplugged")
+	if !c.connected {
+		c.log.TRACE.Printf("identify: charger reported as disconnected")
+		return "", nil
+	}
+
+	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged || data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnknown {
+		c.log.TRACE.Printf("identify: ev reported as unplugged or unknown")
 		return "", nil
 	}
 
