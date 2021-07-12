@@ -1,8 +1,11 @@
 <template>
 	<div
-		class="col-12 flex-grow-1"
-		v-if="totalAdjusted > 0"
-		:class="`col-md-${showDetails ? '6' : '8'} col-lg-${showDetails ? '5' : '7'}`"
+		class="col-12 flex-grow-1 visualization"
+		:class="{
+			[`col-md-${showDetails ? '6' : '8'}`]: true,
+			[`col-lg-${showDetails ? '5' : '7'}`]: true,
+			'visualization--ready': totalAdjusted > 0,
+		}"
 	>
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
@@ -183,6 +186,12 @@ export default {
 };
 </script>
 <style scoped>
+.visualization {
+	opacity: 0;
+}
+.visualization--ready {
+	opacity: 1;
+}
 .site-progress {
 	margin: 0.25rem 0;
 	border-radius: 5px;
