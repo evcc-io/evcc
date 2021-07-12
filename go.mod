@@ -84,5 +84,4 @@ require (
 
 replace (
 	github.com/bogosj/tesla => ../tesla
-	github.com/gocolly/twocaptcha => ../twocaptcha
 )
