@@ -10,7 +10,7 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0
-	github.com/bogosj/tesla v1.0.0
+	github.com/bogosj/tesla v1.0.1-0.20210712105030-72768808bec9
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.7.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -80,8 +80,4 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	nhooyr.io/websocket v1.8.7 // indirect
-)
-
-replace (
-	github.com/bogosj/tesla => ../tesla
 )
