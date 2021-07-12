@@ -47,7 +47,7 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 	return devices[0], strings.TrimSpace(code), err
 }
 
-func solveCaptcha(ctx context.Context, svg io.Reader) (string, error) {
+func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "evcc-*.svg")
 	if err != nil {
 		return "", fmt.Errorf("cannot create temp file: %w", err)
@@ -78,7 +78,7 @@ func generateToken(username, password string) {
 	client, err := tesla.NewClient(
 		ctx,
 		tesla.WithMFAHandler(codePrompt),
-		tesla.WithCaptchaHandler(solveCaptcha),
+		tesla.WithCaptchaHandler(captchaPrompt),
 		tesla.WithCredentials(username, password),
 	)
 	if err != nil {
