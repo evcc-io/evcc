@@ -1,12 +1,5 @@
 <template>
-	<div
-		class="col-12 flex-grow-1 visualization"
-		:class="{
-			[`col-md-${showDetails ? '6' : '8'}`]: true,
-			[`col-lg-${showDetails ? '5' : '7'}`]: true,
-			'visualization--ready': totalAdjusted > 0,
-		}"
-	>
+	<div class="visualization" :class="{ 'visualization--ready': totalAdjusted > 0 }">
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
 				<div
@@ -197,7 +190,6 @@ export default {
 	border-radius: 5px;
 	display: flex;
 	overflow: hidden;
-	cursor: pointer;
 }
 .site-progress-bar {
 	display: flex;
@@ -250,7 +242,6 @@ export default {
 	transition-property: width, opacity;
 	transition-duration: 1000ms, 2000ms;
 	transition-timing-function: linear, ease-in-out;
-	cursor: pointer;
 	overflow: hidden;
 }
 .label-bar-scale {

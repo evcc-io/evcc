@@ -25,7 +25,6 @@ import collector from "../mixins/collector";
 export default {
 	name: "Site",
 	props: {
-		siteTitle: String,
 		loadpoints: Array,
 
 		// details
