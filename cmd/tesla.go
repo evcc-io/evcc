@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"image"
-	"image/png"
 	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -16,14 +14,11 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
-	"github.com/gocolly/twocaptcha"
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
-
-	"github.com/srwiley/oksvg"
-	"github.com/srwiley/rasterx"
 )
 
 // teslaCmd represents the vehicle command
@@ -53,32 +48,29 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 }
 
 func solveCaptcha(ctx context.Context, svg io.Reader) (string, error) {
-	token := os.Getenv("CAPTCHA_TOKEN")
-	client := twocaptcha.New(token)
-
-	icon, err := oksvg.ReadIconStream(svg)
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "evcc-*.svg")
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("cannot create temp file: %w", err)
 	}
 
-	w := int(icon.ViewBox.W)
-	h := int(icon.ViewBox.H)
-
-	icon.SetTarget(0, 0, float64(w), float64(h))
-	rgba := image.NewRGBA(image.Rect(0, 0, w, h))
-	icon.Draw(rasterx.NewDasher(w, h, rasterx.NewScannerGV(w, h, rgba, rgba.Bounds())), 1)
-
-	img := &bytes.Buffer{}
-	err = png.Encode(img, rgba)
-	if err != nil {
-		return "", err
+	if _, err := io.Copy(tmpFile, svg); err != nil {
+		return "", fmt.Errorf("cannot write temp file: %w", err)
 	}
 
-	fmt.Println("solving captcha...")
-	solution, err := client.SolveCaptcha(img.Bytes())
-	fmt.Println(solution, err)
+	_ = tmpFile.Close()
 
-	return solution, err
+	if err := open.Run(tmpFile.Name()); err != nil {
+		return "", fmt.Errorf("cannot open captcha for display: %w", err)
+	}
+
+	fmt.Println("Captcha is now being opened in default application for svg files.")
+	fmt.Println()
+
+	fmt.Print("Please enter captcha: ")
+	reader := bufio.NewReader(os.Stdin)
+	captcha, err := reader.ReadString('\n')
+
+	return strings.TrimSpace(captcha), err
 }
 
 func generateToken(username, password string) {
