@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -12,6 +14,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/thoas/go-funk"
@@ -44,11 +47,38 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 	return devices[0], strings.TrimSpace(code), err
 }
 
+func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "evcc-*.svg")
+	if err != nil {
+		return "", fmt.Errorf("cannot create temp file: %w", err)
+	}
+
+	if _, err := io.Copy(tmpFile, svg); err != nil {
+		return "", fmt.Errorf("cannot write temp file: %w", err)
+	}
+
+	_ = tmpFile.Close()
+
+	if err := open.Run(tmpFile.Name()); err != nil {
+		return "", fmt.Errorf("cannot open captcha for display: %w", err)
+	}
+
+	fmt.Println("Captcha is now being opened in default application for svg files.")
+	fmt.Println()
+
+	fmt.Print("Please enter captcha: ")
+	reader := bufio.NewReader(os.Stdin)
+	captcha, err := reader.ReadString('\n')
+
+	return strings.TrimSpace(captcha), err
+}
+
 func generateToken(username, password string) {
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 	client, err := tesla.NewClient(
 		ctx,
 		tesla.WithMFAHandler(codePrompt),
+		tesla.WithCaptchaHandler(captchaPrompt),
 		tesla.WithCredentials(username, password),
 	)
 	if err != nil {

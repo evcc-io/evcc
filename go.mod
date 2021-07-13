@@ -3,14 +3,13 @@ module github.com/andig/evcc
 go 1.16
 
 require (
-	github.com/PuerkitoBio/goquery v1.7.0
+	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/andig/gosunspec v0.0.0-20210511114617-aa30cf9b7a3f // indirect
-	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0
-	github.com/bogosj/tesla v1.0.0
+	github.com/bogosj/tesla v1.0.1-0.20210712193118-0e5b7bb5e924
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.7.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -59,6 +58,7 @@ require (
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
