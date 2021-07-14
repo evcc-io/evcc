@@ -132,9 +132,11 @@ export default {
 		targetTimeLabel: function () {
 			if (this.targetChargeEnabled) {
 				const targetDate = new Date(this.targetTime);
-				return `bis ${this.fmtAbsoluteDate(targetDate)} Uhr`;
+				return this.$t("main.targetCharge.activeLabel", {
+					time: this.fmtAbsoluteDate(targetDate),
+				});
 			}
-			return "Zielzeit";
+			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
 			const now = new Date();
@@ -145,7 +147,11 @@ export default {
 			return now;
 		},
 		initInputFields: function () {
-			const date = this.targetChargeEnabled ? new Date(this.targetTime) : this.defaultDate();
+			let date = this.defaultDate();
+			let targetTimeInTheFuture = new Date(this.targetTime) > new Date();
+			if (this.targetChargeEnabled && targetTimeInTheFuture) {
+				date = new Date(this.targetTime);
+			}
 			this.selectedDay = this.fmtDayString(date);
 			this.selectedTime = this.fmtTimeString(date);
 		},

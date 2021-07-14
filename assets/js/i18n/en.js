@@ -67,6 +67,8 @@ export default {
       mincharge: "minimum charging to {soc}%",
     },
     targetCharge: {
+      inactiveLabel: "Target time",
+      activeLabel: "until {time}",
       modalTitle: "Set Target Time",
       description: "When should the vehicle be chargerd to <strong>{targetSoC}%</strong>?",
       today: "today",

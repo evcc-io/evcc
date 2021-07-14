@@ -6,7 +6,7 @@
 				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
-		<TargetCharge v-bind="targetCharge" />
+		<TargetCharge v-bind="targetCharge" @target-time-updated="targetTimeUpdated" />
 	</div>
 </template>
 
@@ -35,5 +35,10 @@ export default {
 		},
 	},
 	mixins: [collector],
+	methods: {
+		targetTimeUpdated: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
+		},
+	},
 };
 </script>
