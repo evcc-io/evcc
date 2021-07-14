@@ -30,8 +30,7 @@ export default {
   },
   main: {
     energyflow: {
-      titleSup: "Aktueller",
-      title: "Energiefluss",
+      title: "Aktueller Energiefluss",
       houseConsumption: "Verbrauch",
       pvProduction: "Erzeugung",
       battery: "Batterie",

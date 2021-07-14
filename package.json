@@ -4,12 +4,11 @@
   "author": "naltatis & andig",
   "scripts": {
     "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit",
+    "test": "vue-cli-service test:unit",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
     "build-storybook": "build-storybook",
     "dev": "vue-cli-service build --watch --mode=development",
-    "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "storybook": "start-storybook -p 6006 -s assets,node_modules/bootstrap/dist"
   },
   "main": "index.js",
   "dependencies": {
@@ -23,6 +22,7 @@
     "vue": "^2.6.14",
     "vue-hot-reload-api": "^2.3.4",
     "vue-i18n": "^8.24.5",
+    "vue-meta": "^2.4.0",
     "vue-router": "^3.5.2"
   },
   "devDependencies": {

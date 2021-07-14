@@ -1,5 +1,5 @@
-import Energyflow from "./Energyflow.vue";
-import i18n from "../i18n";
+import Energyflow from "./";
+import i18n from "../../i18n";
 
 export default {
   title: "Main/Energyflow",
@@ -61,15 +61,26 @@ GridPvAndBattery.args = {
   batterySoC: 30,
 };
 
-export const SmallPowerThresholds = Template.bind({});
-SmallPowerThresholds.args = {
+export const BatteryThresholds = Template.bind({});
+BatteryThresholds.args = {
   gridConfigured: true,
   pvConfigured: true,
   batteryConfigured: true,
-  gridPower: -110,
+  gridPower: -510,
   pvPower: 8740,
   batteryPower: -100,
   batterySoC: 95,
+};
+
+export const PvThresholds = Template.bind({});
+PvThresholds.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  batteryPower: 800,
+  gridPower: 5555,
+  pvPower: 300,
+  batterySoC: 76,
 };
 
 export const GridOnly = Template.bind({});
