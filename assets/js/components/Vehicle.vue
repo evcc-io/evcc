@@ -18,6 +18,7 @@ export default {
 	name: "Vehicle",
 	components: { VehicleSoc, VehicleSubline },
 	props: {
+		id: Number,
 		connected: Boolean,
 		hasVehicle: Boolean,
 		socCharge: Number,

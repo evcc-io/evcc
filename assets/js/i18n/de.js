@@ -66,6 +66,15 @@ export default {
     vehicleSubline: {
       mincharge: "Mindestladung bis {soc}%",
     },
+    targetCharge: {
+      modalTitle: "Zielzeit festlegen",
+      description: "Wann soll das Fahrzeug auf <strong>{targetSoC}%</strong> geladen sein?",
+      today: "heute",
+      tomorrow: "morgen",
+      targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
+      remove: "Keine Zeilzeit",
+      activate: "Zielzeit aktivieren",
+    },
     loadpointDetails: {
       power: "Leistung",
       range: "Reichweite",

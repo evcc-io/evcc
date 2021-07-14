@@ -66,6 +66,15 @@ export default {
     vehicleSubline: {
       mincharge: "minimum charging to {soc}%",
     },
+    targetCharge: {
+      modalTitle: "Set Target Time",
+      description: "When should the vehicle be chargerd to <strong>{targetSoC}%</strong>?",
+      today: "today",
+      tomorrow: "tomorrow",
+      targetIsInThePast: "The chosen time is in the past.",
+      remove: "Remove",
+      activate: "Activate",
+    },
     loadpointDetails: {
       power: "Power",
       range: "Range",

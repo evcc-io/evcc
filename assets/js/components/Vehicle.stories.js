@@ -22,6 +22,7 @@ Base.args = {
   hasVehicle: true,
   socCharge: 42,
   targetSoC: 90,
+  id: 0,
 };
 
 export const Connected = Template.bind({});
@@ -33,6 +34,7 @@ Connected.args = {
   charging: false,
   socCharge: 66,
   targetSoC: 90,
+  id: 0,
 };
 
 export const ReadyToCharge = Template.bind({});
@@ -44,6 +46,7 @@ ReadyToCharge.args = {
   charging: false,
   socCharge: 66,
   targetSoC: 90,
+  id: 0,
 };
 
 export const Charging = Template.bind({});
@@ -55,6 +58,7 @@ Charging.args = {
   charging: true,
   socCharge: 66,
   targetSoC: 90,
+  id: 0,
 };
 
 const hoursFromNow = function (hours) {
@@ -76,6 +80,7 @@ TargetChargePlanned.args = {
   timerActive: false,
   targetSoC: 45,
   targetTime: hoursFromNow(14),
+  id: 0,
 };
 
 export const TargetChargeActive = Template.bind({});
@@ -91,6 +96,7 @@ TargetChargeActive.args = {
   timerActive: true,
   targetSoC: 80,
   targetTime: hoursFromNow(2),
+  id: 0,
 };
 
 export const MinCharge = Template.bind({});
@@ -103,6 +109,7 @@ MinCharge.args = {
   minSoC: 20,
   charging: true,
   targetSoC: 90,
+  id: 0,
 };
 
 export const UnknownVehicleConnected = Template.bind({});
@@ -111,6 +118,7 @@ UnknownVehicleConnected.args = {
   enabled: false,
   connected: true,
   hasVehicle: false,
+  id: 0,
 };
 
 export const UnknownVehicleReadyToCharge = Template.bind({});
@@ -120,6 +128,7 @@ UnknownVehicleReadyToCharge.args = {
   connected: true,
   hasVehicle: false,
   charging: false,
+  id: 0,
 };
 
 export const UnknownVehicleCharging = Template.bind({});
@@ -129,6 +138,7 @@ UnknownVehicleCharging.args = {
   connected: true,
   hasVehicle: false,
   charging: true,
+  id: 0,
 };
 
 export const Disconnected = Template.bind({});
@@ -136,6 +146,7 @@ Disconnected.args = {
   socTitle: "Mein Auto",
   connected: false,
   hasVehicle: false,
+  id: 0,
 };
 
 export const DisconnectedKnownSoc = Template.bind({});
@@ -146,4 +157,5 @@ DisconnectedKnownSoc.args = {
   hasVehicle: true,
   socCharge: 17,
   targetSoC: 60,
+  id: 0,
 };
