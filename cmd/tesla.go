@@ -65,7 +65,7 @@ func getUsernameAndPassword() (string, string, error) {
 	return user, password, nil
 }
 
-func codePrompt(ctx context.Context, devices []tesla.Device) (d tesla.Device, passcode string, err error) {
+func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, string, error) {
 	var i int
 	if len(devices) > 1 {
 		var err error
@@ -79,7 +79,7 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (d tesla.Device, pa
 		}
 	}
 
-	passcode, err = (&promptui.Prompt{
+	code, err := (&promptui.Prompt{
 		Label:   "Passcode",
 		Pointer: promptui.PipeCursor,
 		Validate: func(s string) error {
@@ -93,7 +93,7 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (d tesla.Device, pa
 		return tesla.Device{}, "", err
 	}
 
-	return devices[i], passcode, nil
+	return devices[i], strings.TrimSpace(code), nil
 }
 
 func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
