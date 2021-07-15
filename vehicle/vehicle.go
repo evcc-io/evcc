@@ -16,20 +16,18 @@ type embed struct {
 }
 
 // Title implements the Vehicle.Title interface
-func (m *embed) Title() string {
-	return m.Title_
+func (v *embed) Title() string {
+	return v.Title_
 }
 
 // Capacity implements the Vehicle.Capacity interface
-func (m *embed) Capacity() int64 {
-	return m.Capacity_
+func (v *embed) Capacity() int64 {
+	return v.Capacity_
 }
 
-var _ api.Identifier = (*embed)(nil)
-
 // Identify implements the api.Identifier interface
-func (m *embed) Identify() (string, error) {
-	return m.Identifier_, nil
+func (v *embed) Identify() (string, error) {
+	return v.Identifier_, nil
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
@@ -109,15 +107,15 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 }
 
 // SoC implements the api.Vehicle interface
-func (m *Vehicle) SoC() (float64, error) {
-	return m.chargeG()
+func (v *Vehicle) SoC() (float64, error) {
+	return v.chargeG()
 }
 
 // SoC implements the api.Vehicle interface
-func (m *Vehicle) status() (api.ChargeStatus, error) {
+func (v *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
-	statusS, err := m.statusG()
+	statusS, err := v.statusG()
 	if err == nil {
 		status = api.ChargeStatus(statusS)
 	}
@@ -126,6 +124,6 @@ func (m *Vehicle) status() (api.ChargeStatus, error) {
 }
 
 // rng implements the api.VehicleRange interface
-func (m *Vehicle) rng() (int64, error) {
-	return m.rangeG()
+func (v *Vehicle) rng() (int64, error) {
+	return v.rangeG()
 }

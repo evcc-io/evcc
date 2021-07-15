@@ -8,25 +8,34 @@ import (
 
 // Wrapper wraps an api.Vehicle to capture initialization errors
 type Wrapper struct {
-	api.Vehicle
 	err error
 }
 
 // New creates a new Vehicle
 func New(w api.Vehicle, err error) (api.Vehicle, error) {
 	v := &Wrapper{
-		err:     fmt.Errorf("vehicle not available: %w", err),
-		Vehicle: w,
+		err: fmt.Errorf("vehicle not available: %w", err),
 	}
 
 	return v, nil
 }
 
+// Title implements the Vehicle.Title interface
+func (v *Wrapper) Title() string {
+	return "unavailable"
+}
+
+// Capacity implements the Vehicle.Capacity interface
+func (v *Wrapper) Capacity() int64 {
+	return 0
+}
+
+// Identify implements the api.Identifier interface
+func (v *Wrapper) Identify() (string, error) {
+	return "", v.err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Wrapper) SoC() (float64, error) {
-	if v.err != nil {
-		return 0, v.err
-	}
-
-	return v.Vehicle.SoC()
+	return 0, v.err
 }
