@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/vehicle/wrapper"
 )
 
 const interval = 15 * time.Minute
@@ -43,7 +44,8 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
+			// wrap any created errors to prevent fatals
+			v, err = wrapper.New(v, err)
 		}
 	} else {
 		err = fmt.Errorf("invalid vehicle type: %s", typ)
