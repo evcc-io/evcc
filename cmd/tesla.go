@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -14,17 +13,17 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/manifoldco/promptui"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
 // teslaCmd represents the vehicle command
 var teslaCmd = &cobra.Command{
-	Use:   "tesla-token [name]",
-	Short: "Generate Tesla access token for configured vehicle",
+	Use:   "tesla-token",
+	Short: "Generate Tesla token credentials",
 	Run:   runTeslaToken,
 }
 
@@ -32,19 +31,69 @@ func init() {
 	rootCmd.AddCommand(teslaCmd)
 }
 
-func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, string, error) {
-	fmt.Println("Authentication devices:", funk.Map(devices, func(d tesla.Device) string {
-		return d.Name
-	}))
-	if len(devices) > 1 {
-		return tesla.Device{}, "", errors.New("multiple devices found, only single device supported")
+// copied from https://github.com/bogosj/tesla
+func getUsernameAndPassword() (string, string, error) {
+	user, err := (&promptui.Prompt{
+		Label:   "Username",
+		Pointer: promptui.PipeCursor,
+		Validate: func(s string) error {
+			if len(s) == 0 {
+				return errors.New("len(s) == 0")
+			}
+			return nil
+		},
+	}).Run()
+	if err != nil {
+		return "", "", err
 	}
 
-	fmt.Print("Please enter passcode: ")
-	reader := bufio.NewReader(os.Stdin)
-	code, err := reader.ReadString('\n')
+	password, err := (&promptui.Prompt{
+		Label:   "Password",
+		Mask:    '*',
+		Pointer: promptui.PipeCursor,
+		Validate: func(s string) error {
+			if len(s) == 0 {
+				return errors.New("len(s) == 0")
+			}
+			return nil
+		},
+	}).Run()
+	if err != nil {
+		return "", "", err
+	}
 
-	return devices[0], strings.TrimSpace(code), err
+	return user, password, nil
+}
+
+func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, string, error) {
+	var i int
+	if len(devices) > 1 {
+		var err error
+		i, _, err = (&promptui.Select{
+			Label:   "Device",
+			Items:   devices,
+			Pointer: promptui.PipeCursor,
+		}).Run()
+		if err != nil {
+			return tesla.Device{}, "", fmt.Errorf("select device: %w", err)
+		}
+	}
+
+	code, err := (&promptui.Prompt{
+		Label:   "Passcode",
+		Pointer: promptui.PipeCursor,
+		Validate: func(s string) error {
+			if len(s) != 6 {
+				return errors.New("len(s) != 6")
+			}
+			return nil
+		},
+	}).Run()
+	if err != nil {
+		return tesla.Device{}, "", err
+	}
+
+	return devices[i], strings.TrimSpace(code), nil
 }
 
 func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
@@ -64,11 +113,17 @@ func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
 	}
 
 	fmt.Println("Captcha is now being opened in default application for svg files.")
-	fmt.Println()
 
-	fmt.Print("Please enter captcha: ")
-	reader := bufio.NewReader(os.Stdin)
-	captcha, err := reader.ReadString('\n')
+	captcha, err := (&promptui.Prompt{
+		Label:   "Captcha",
+		Pointer: promptui.PipeCursor,
+		Validate: func(s string) error {
+			if len(s) < 4 {
+				return errors.New("len(s) < 4")
+			}
+			return nil
+		},
+	}).Run()
 
 	return strings.TrimSpace(captcha), err
 }
@@ -102,37 +157,10 @@ func runTeslaToken(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
-	// load config
-	conf, err := loadConfigFile(cfgFile)
+	user, password, err := getUsernameAndPassword()
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
 
-	teslas := funk.Filter(conf.Vehicles, func(v qualifiedConfig) bool {
-		return strings.ToLower(v.Type) == "tesla"
-	}).([]qualifiedConfig)
-
-	var vehicleConf qualifiedConfig
-	if len(teslas) == 1 {
-		vehicleConf = teslas[0]
-	} else if len(args) == 1 {
-		vehicleConf = funk.Find(teslas, func(v qualifiedConfig) bool {
-			return strings.EqualFold(v.Name, args[0])
-		}).(qualifiedConfig)
-	}
-
-	if vehicleConf.Name == "" {
-		log.FATAL.Fatal("vehicle not found")
-	}
-
-	var credentials struct {
-		User, Password string
-		Other          map[string]interface{} `mapstructure:",remain"`
-	}
-
-	if err := util.DecodeOther(vehicleConf.Other, &credentials); err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	generateToken(credentials.User, credentials.Password)
+	generateToken(user, password)
 }

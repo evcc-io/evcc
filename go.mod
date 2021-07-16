@@ -47,6 +47,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lorenzodonini/ocpp-go v0.14.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
+	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181

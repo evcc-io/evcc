@@ -34,12 +34,11 @@ func init() {
 // NewTeslaFromConfig creates a new Tesla vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		User, Password         string
-		Tokens                 teslaTokens
-		VIN                    string
-		Cache                  time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string // deprecated
+		Tokens         teslaTokens
+		VIN            string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
@@ -48,8 +47,12 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" && cc.Tokens.Access == "" {
-		return nil, errors.New("missing credentials")
+	if cc.User != "" {
+		return nil, errors.New("user/password authentication deprecated, use tesla-token command to create credentials")
+	}
+
+	if cc.Tokens.Access == "" {
+		return nil, errors.New("missing token credentials")
 	}
 
 	v := &Tesla{
@@ -60,16 +63,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("tesla")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
-	var options []tesla.ClientOption
-	if cc.Tokens.Access != "" {
-		options = append(options, tesla.WithToken(&oauth2.Token{
-			AccessToken:  cc.Tokens.Access,
-			RefreshToken: cc.Tokens.Refresh,
-			Expiry:       time.Now(),
-		}))
-	} else {
-		options = append(options, tesla.WithCredentials(cc.User, cc.Password))
-	}
+	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
+		AccessToken:  cc.Tokens.Access,
+		RefreshToken: cc.Tokens.Refresh,
+		Expiry:       time.Now(),
+	})}
 
 	client, err := tesla.NewClient(ctx, options...)
 	if err != nil {
