@@ -186,6 +186,8 @@ export default {
 	opacity: 1;
 }
 .site-progress {
+	--height: 38px;
+	height: var(--height);
 	margin: 0.25rem 0;
 	border-radius: 5px;
 	display: flex;
@@ -199,7 +201,7 @@ export default {
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
-	height: 1.5rem;
+	/* height: 1.5rem; */
 	position: relative;
 }
 .site-progress-bar::before,

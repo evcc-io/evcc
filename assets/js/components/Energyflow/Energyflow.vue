@@ -31,29 +31,33 @@
 				:batteryIcon="batteryIcon"
 			/>
 			<div
-				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0 small"
+				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0"
 				:class="`${showDetails ? 'd-block' : `d-none d-md-block`}`"
 			>
 				<div class="d-flex justify-content-between" data-test-pv-production>
-					<span class="details-icon"><fa-icon icon="sun"></fa-icon></span>
+					<span class="details-icon text-muted"><fa-icon icon="sun"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvProduction")
 					}}</span>
-					<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
+					<span class="text-end text-nowrap ps-1"
+						>{{ kw(pvPower) }}<span class="text-muted small"> kW</span></span
+					>
 				</div>
 				<div class="d-flex justify-content-between" data-test-house-consumption>
-					<span class="details-icon"><fa-icon icon="home"></fa-icon></span>
+					<span class="details-icon text-muted"><fa-icon icon="home"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.houseConsumption")
 					}}</span>
-					<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
+					<span class="text-end text-nowrap ps-1"
+						>{{ kw(houseConsumption) }}<span class="text-muted small"> kW</span></span
+					>
 				</div>
 				<div
 					v-if="batteryConfigured"
 					class="d-flex justify-content-between"
 					data-test-battery
 				>
-					<span class="details-icon">
+					<span class="details-icon text-muted">
 						<fa-icon :icon="batteryIcon"></fa-icon>
 						<fa-icon icon="caret-left" v-if="batteryCharge"></fa-icon>
 						<fa-icon icon="caret-right" v-if="batteryDischarge"></fa-icon>
@@ -66,8 +70,9 @@
 						<span v-else>{{ $t("main.energyflow.battery") }}</span>
 					</span>
 					<span class="text-end text-nowrap ps-1">
-						({{ batterySoC }}%)
+						({{ batterySoC }}<span class="text-muted">%</span>)
 						{{ kw(Math.abs(batteryPower)) }}
+						<span class="text-muted small"> kW</span>
 					</span>
 				</div>
 			</div>
@@ -165,7 +170,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return Math.max(0, watt / 1000).toFixed(1) + " kW";
+			return Math.max(0, watt / 1000).toFixed(1);
 		},
 		toggleDetails() {
 			this.showDetails = !this.showDetails;
