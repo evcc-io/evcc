@@ -1,9 +1,13 @@
 package vehicle
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 	"time"
@@ -11,18 +15,12 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
-	"golang.org/x/oauth2"
-)
-
-const (
-	FiatAuth           = "https://fcis.ice.ibmcloud.com"
-	FiatAPI            = "https://usapi.cv.Fiat.com"
-	FiatVehicleList    = "https://api.mps.Fiat.com/api/users/vehicles"
-	FiatStatusExpiry   = 5 * time.Minute       // if returned status value is older, evcc will init refresh
-	FiatRefreshTimeout = time.Minute           // timeout to get status after refresh
-	FiatTimeFormat     = "01-02-2006 15:04:05" // time format used by Fiat API, time is in UTC
+	"github.com/andig/evcc/vehicle/aws"
+	"github.com/andig/evcc/vehicle/fiat"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/thoas/go-funk"
 )
 
 // Fiat is an api.Vehicle implementation for Fiat cars
@@ -31,10 +29,9 @@ type Fiat struct {
 	*request.Helper
 	log                 *util.Logger
 	user, password, vin string
-	tokenSource         oauth2.TokenSource
+	uid                 string
+	creds               *credentials.Credentials
 	statusG             func() (interface{}, error)
-	refreshId           string
-	refreshTime         time.Time
 }
 
 func init() {
@@ -59,7 +56,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	log := util.NewLogger("Fiat")
+	log := util.NewLogger("fiat")
 
 	v := &Fiat{
 		embed:    &cc.embed,
@@ -70,14 +67,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	token, err := v.login()
-	if err == nil {
-		v.tokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
-	}
-
-	v.statusG = provider.NewCached(func() (interface{}, error) {
-		return v.status()
-	}, cc.Cache).InterfaceGetter()
+	err := v.login(v.user, v.password)
 
 	if err == nil && cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
@@ -86,209 +76,232 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
+	v.statusG = provider.NewCached(func() (interface{}, error) {
+		return v.status()
+	}, cc.Cache).InterfaceGetter()
+
 	return v, err
 }
 
 // login authenticates with username/password to get new token
-func (v *Fiat) login() (oauth.Token, error) {
-	data := url.Values{
-		"client_id":  []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
-		"grant_type": []string{"password"},
-		"username":   []string{v.user},
-		"password":   []string{v.password},
+func (v *Fiat) login(user, password string) error {
+	v.Client.Jar, _ = cookiejar.New(nil)
+
+	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap", fiat.LoginURI)
+
+	data := url.Values(map[string][]string{
+		"APIKey":   {fiat.ApiKey},
+		"pageURL":  {"https://myuconnect.fiat.com/de/de/vehicle-services"},
+		"sdk":      {"js_latest"},
+		"sdkBuild": {"12234"},
+		"format":   {"json"},
+	})
+
+	headers := map[string]string{
+		"Accept": "*/*",
 	}
 
-	uri := FiatAuth + "/v1.0/endpoint/default/token"
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
-	var res oauth.Token
+	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
-		err = v.DoJSON(req, &res)
+		req.URL.RawQuery = data.Encode()
+		_, err = v.Do(req)
 	}
 
-	return res, err
-}
-
-// Refresh implements the oauth.TokenRefresher interface
-func (v *Fiat) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
-		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{token.RefreshToken},
+	var res struct {
+		ErrorCode    int
+		UID          string
+		StatusReason string
+		SessionInfo  struct {
+			LoginToken string `json:"login_token"`
+			ExpiresIn  string `json:"expires_in"`
+		}
 	}
 
-	uri := FiatAuth + "/v1.0/endpoint/default/token"
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
-	var res oauth.Token
 	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+		uri = fmt.Sprintf("%s/accounts.login", fiat.LoginURI)
 
-	if err != nil {
-		res, err = v.login()
-	}
-
-	return (*oauth2.Token)(&res), err
-}
-
-// request is a helper to send API requests, sets header the Fiat API expects
-func (v *Fiat) request(method, uri string) (*http.Request, error) {
-	token, err := v.tokenSource.Token()
-
-	var req *http.Request
-	if err == nil {
-		req, err = request.New(method, uri, nil, map[string]string{
-			"Content-type":   "application/json",
-			"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
-			"Auth-Token":     token.AccessToken,
+		data := url.Values(map[string][]string{
+			"loginID":           {user},
+			"password":          {password},
+			"sessionExpiration": {"7776000"},
+			"APIKey":            {fiat.ApiKey},
+			"pageURL":           {"https://myuconnect.fiat.com/de/de/login"},
+			"sdk":               {"js_latest"},
+			"sdkBuild":          {"12234"},
+			"format":            {"json"},
+			"targetEnv":         {"jssdk"},
+			"include":           {"profile,data,emails"}, // subscriptions,preferences
+			"includeUserInfo":   {"true"},
+			"loginMode":         {"standard"},
+			"lang":              {"de0de"},
+			"source":            {"showScreenSet"},
+			"authMode":          {"cookie"},
 		})
+
+		headers := map[string]string{
+			"Accept":       "*/*",
+			"Content-type": "application/x-www-form-urlencoded",
+		}
+
+		if req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), headers); err == nil {
+			if err = v.DoJSON(req, &res); err == nil {
+				v.uid = res.UID
+			}
+		}
+	}
+
+	var token struct {
+		ErrorCode    int `json:"errorCode"`
+		StatusReason string
+		IDToken      string `json:"id_token"`
+	}
+
+	if err == nil {
+		uri = fmt.Sprintf("%s/accounts.getJWT", fiat.LoginURI)
+
+		data := url.Values(map[string][]string{
+			"fields":      {"profile.firstName,profile.lastName,profile.email,country,locale,data.disclaimerCodeGSDP"}, // data.GSDPisVerified
+			"APIKey":      {fiat.ApiKey},
+			"pageURL":     {"https://myuconnect.fiat.com/de/de/dashboard"},
+			"sdk":         {"js_latest"},
+			"sdkBuild":    {"12234"},
+			"format":      {"json"},
+			"login_token": {res.SessionInfo.LoginToken},
+			"authMode":    {"cookie"},
+		})
+
+		headers := map[string]string{
+			"Accept": "*/*",
+		}
+
+		if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
+			req.URL.RawQuery = data.Encode()
+			err = v.DoJSON(req, &token)
+		}
+	}
+
+	var identity struct {
+		Token, IdentityID string
+	}
+
+	if err == nil {
+		uri = "https://authz.sdpr-01.fcagcv.com/v2/cognito/identity/token"
+
+		data := struct {
+			GigyaToken string `json:"gigya_token"`
+		}{
+			GigyaToken: token.IDToken,
+		}
+
+		headers := map[string]string{
+			"Content-type":        "application/json",
+			"X-Clientapp-Version": "1.0",
+			"ClientRequestId":     util.RandomString(16),
+			"X-api-key":           "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je",
+			"X-originator-type":   "web",
+		}
+
+		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), headers); err == nil {
+			err = v.DoJSON(req, &identity)
+		}
+	}
+
+	var awsIdentity struct {
+		Credentials aws.Credentials
+		IdentityID  string
+	}
+
+	if err == nil {
+		uri = "https://cognito-identity.eu-west-1.amazonaws.com"
+
+		data := struct {
+			IdentityId string
+			Logins     map[string]string
+		}{
+			IdentityId: identity.IdentityID,
+			Logins: map[string]string{
+				"cognito-identity.amazonaws.com": identity.Token,
+			},
+		}
+
+		// sha256 hex digest
+		var b []byte
+		b, _ = io.ReadAll(request.MarshalJSON(data))
+		sum := sha256.Sum256(b)
+		hash := hex.EncodeToString(sum[:])
+
+		headers := map[string]string{
+			"Content-type":         "application/x-amz-json-1.1",
+			"x-amz-user-agent":     "aws-sdk-js/2.283.1 callback",
+			"x-amz-content-sha256": hash,
+			"x-amz-target":         "AWSCognitoIdentityService.GetCredentialsForIdentity",
+		}
+
+		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), headers); err == nil {
+			err = v.DoJSON(req, &awsIdentity)
+		}
+	}
+
+	v.creds = credentials.NewStaticCredentials(awsIdentity.Credentials.AccessKeyID, awsIdentity.Credentials.SecretKey, awsIdentity.Credentials.SessionToken)
+
+	return err
+}
+
+func (v *Fiat) request(method, uri string, body io.Reader) (*http.Request, error) {
+	headers := map[string]string{
+		"Content-Type":        "application/json",
+		"x-clientapp-version": "1.0",
+		"clientrequestid":     util.RandomString(16),
+		"X-Api-Key":           "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je",
+		"x-originator-type":   "web",
+	}
+
+	req, err := request.New(method, uri, body, headers)
+	if err == nil {
+		signer := v4.NewSigner(v.creds)
+		_, err = signer.Sign(req, nil, "execute-api", "eu-west-1", time.Now())
 	}
 
 	return req, err
 }
 
-// FiatVehicleStatus holds the relevant data extracted from JSON that the server sends
-// on vehicle status request
-type FiatVehicleStatus struct {
-	VehicleStatus struct {
-		BatteryFillLevel struct {
-			Value     float64
-			Timestamp string
-		}
-		ElVehDTE struct {
-			Value     float64
-			Timestamp string
-		}
-		ChargingStatus struct {
-			Value     string
-			Timestamp string
-		}
-		PlugStatus struct {
-			Value     int
-			Timestamp string
-		}
-		LastRefresh string
-	}
-	Status int
-}
-
-// vehicles returns the list of user vehicles
 func (v *Fiat) vehicles() ([]string, error) {
-	var resp struct {
-		Vehicles struct {
-			Values []struct {
-				VIN string
-			} `json:"$values"`
-		}
+	var res struct {
+		Vehicles []fiat.Vehicle
 	}
 
-	req, err := v.request(http.MethodGet, FiatVehicleList)
+	uri := fmt.Sprintf("%s/v4/accounts/%s/vehicles?stage=ALL", fiat.ApiURI, v.uid)
+
+	req, err := v.request(http.MethodGet, uri, nil)
 	if err == nil {
-		err = v.DoJSON(req, &resp)
+		err = v.DoJSON(req, &res)
 	}
 
-	var vehicles []string
-	if err == nil {
-		for _, v := range resp.Vehicles.Values {
-			vehicles = append(vehicles, v.VIN)
-		}
-	}
+	vehicles := funk.Map(res.Vehicles, func(v fiat.Vehicle) string {
+		return v.VIN
+	}).([]string)
 
 	return vehicles, err
 }
 
-// status performs a /status request to the Fiat API and triggers a refresh if
-// the received status is too old
-func (v *Fiat) status() (res FiatVehicleStatus, err error) {
-	// follow up requested refresh
-	if v.refreshId != "" {
-		return v.refreshResult()
-	}
+func (v *Fiat) status() (interface{}, error) {
+	var res fiat.Status
 
-	// otherwise start normal workflow
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", FiatAPI, v.vin)
-	req, err := v.request(http.MethodGet, uri)
+	uri := fmt.Sprintf("%s/v2/accounts/%s/vehicles/%s/status", fiat.ApiURI, v.uid, v.vin)
+
+	req, err := v.request(http.MethodGet, uri, nil)
 	if err == nil {
 		err = v.DoJSON(req, &res)
-	}
-
-	if err == nil {
-		var lastUpdate time.Time
-		lastUpdate, err = time.Parse(FiatTimeFormat, res.VehicleStatus.LastRefresh)
-
-		if elapsed := time.Since(lastUpdate); err == nil && elapsed > FiatStatusExpiry {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, FiatStatusExpiry)
-
-			if err = v.refreshRequest(); err == nil {
-				err = api.ErrMustRetry
-			}
-		}
 	}
 
 	return res, err
 }
 
-// refreshResult triggers an update if not already in progress, otherwise gets result
-func (v *Fiat) refreshResult() (res FiatVehicleStatus, err error) {
-	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", FiatAPI, v.vin, v.refreshId)
-
-	var req *http.Request
-	if req, err = v.request(http.MethodGet, uri); err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	// update successful and completed
-	if err == nil && res.Status == 200 {
-		v.refreshId = ""
-		return res, nil
-	}
-
-	// update still in progress, keep retrying
-	if time.Since(v.refreshTime) < FiatRefreshTimeout {
-		return res, api.ErrMustRetry
-	}
-
-	// give up
-	v.refreshId = ""
-	if err == nil {
-		err = api.ErrTimeout
-	}
-
-	return res, err
-}
-
-// refreshRequest requests status refresh tracked by commandId
-func (v *Fiat) refreshRequest() error {
-	var resp struct {
-		CommandId string
-	}
-
-	uri := fmt.Sprintf("%s/api/vehicles/v2/%s/status", FiatAPI, v.vin)
-	req, err := v.request(http.MethodPut, uri)
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
-
-	if err == nil {
-		v.refreshId = resp.CommandId
-		v.refreshTime = time.Now()
-
-		if resp.CommandId == "" {
-			err = errors.New("refresh failed")
-		}
-	}
-
-	return err
-}
-
-var _ api.Battery = (*Fiat)(nil)
-
-// SoC implements the api.Battery interface
+// SoC implements the api.Vehicle interface
 func (v *Fiat) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(FiatVehicleStatus); err == nil && ok {
-		return float64(res.VehicleStatus.BatteryFillLevel.Value), nil
+	if res, ok := res.(fiat.Status); err == nil && ok {
+		return float64(res.EvInfo.Battery.StateOfCharge), nil
 	}
 
 	return 0, err
@@ -299,8 +312,8 @@ var _ api.VehicleRange = (*Fiat)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Fiat) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(FiatVehicleStatus); err == nil && ok {
-		return int64(res.VehicleStatus.ElVehDTE.Value), nil
+	if res, ok := res.(fiat.Status); err == nil && ok {
+		return int64(res.EvInfo.Battery.DistanceToEmpty.Value), nil
 	}
 
 	return 0, err
@@ -313,11 +326,11 @@ func (v *Fiat) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(FiatVehicleStatus); err == nil && ok {
-		if res.VehicleStatus.PlugStatus.Value == 1 {
+	if res, ok := res.(fiat.Status); err == nil && ok {
+		if res.EvInfo.Battery.PlugInStatus {
 			status = api.StatusB // connected, not charging
 		}
-		if res.VehicleStatus.ChargingStatus.Value == "ChargingAC" {
+		if res.EvInfo.Battery.ChargingStatus == "CHARGING" {
 			status = api.StatusC // charging
 		}
 	}
