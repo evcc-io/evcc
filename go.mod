@@ -4,15 +4,14 @@ go 1.16
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/PuerkitoBio/goquery v1.7.0
+	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/amp-x/eebus v0.0.0-20210508113918-d920cc2c10ad
 	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/andig/gosunspec v0.0.0-20210511114617-aa30cf9b7a3f // indirect
-	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/benbjohnson/clock v1.1.0
-	github.com/bogosj/tesla v1.0.0
+	github.com/bogosj/tesla v1.0.1-0.20210712193118-0e5b7bb5e924
 	github.com/containrrr/shoutrrr v0.4.4
 	github.com/deepmap/oapi-codegen v1.7.1 // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
@@ -51,6 +50,7 @@ require (
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lorenzodonini/ocpp-go v0.14.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
+	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
@@ -62,6 +62,7 @@ require (
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452
 	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5
@@ -69,7 +70,7 @@ require (
 	github.com/thoas/go-funk v0.8.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
 	github.com/volkszaehler/mbmd v0.0.0-20210526131012-e1fec7232ed7
-	gitlab.com/bboehmke/sunny v0.13.2
+	gitlab.com/bboehmke/sunny v0.14.2
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	golang.org/x/oauth2 v0.0.0-20210615190721-d04028783cf1
