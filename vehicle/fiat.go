@@ -32,9 +32,8 @@ type Fiat struct {
 	log                 *util.Logger
 	user, password, vin string
 	uid                 string
-	// creds               *credentials.Credentials
-	creds   *cognitoidentity.Credentials
-	statusG func() (interface{}, error)
+	creds               *cognitoidentity.Credentials
+	statusG             func() (interface{}, error)
 }
 
 func init() {
@@ -244,7 +243,7 @@ func (v *Fiat) request(method, uri string, body io.Reader) (*http.Request, error
 	headers := map[string]string{
 		"Content-Type":        "application/json",
 		"x-clientapp-version": "1.0",
-		"clientrequestid":     util.RandomString(16),
+		"ClientrequestId":     util.RandomString(16),
 		"X-Api-Key":           "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je",
 		"x-originator-type":   "web",
 	}
