@@ -1,8 +1,6 @@
 package vehicle
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -16,10 +14,12 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/aws"
 	"github.com/andig/evcc/vehicle/fiat"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/thoas/go-funk"
 )
 
@@ -32,8 +32,9 @@ type Fiat struct {
 	log                 *util.Logger
 	user, password, vin string
 	uid                 string
-	creds               *credentials.Credentials
-	statusG             func() (interface{}, error)
+	// creds               *credentials.Credentials
+	creds   *cognitoidentity.Credentials
+	statusG func() (interface{}, error)
 }
 
 func init() {
@@ -211,50 +212,30 @@ func (v *Fiat) login() error {
 		}
 	}
 
-	var awsIdentity struct {
-		Credentials aws.Credentials
-		IdentityID  string
+	var credRes *cognitoidentity.GetCredentialsForIdentityOutput
+
+	if err == nil {
+		session := session.Must(session.NewSession(&aws.Config{Region: aws.String("eu-west-1")}))
+		svc := cognitoidentity.New(session)
+
+		credRes, err = svc.GetCredentialsForIdentity(&cognitoidentity.GetCredentialsForIdentityInput{
+			IdentityId: &identity.IdentityID,
+			Logins: map[string]*string{
+				"cognito-identity.amazonaws.com": &identity.Token,
+			},
+		})
 	}
 
 	if err == nil {
-		uri = "https://cognito-identity.eu-west-1.amazonaws.com"
-
-		data := struct {
-			IdentityId string
-			Logins     map[string]string
-		}{
-			IdentityId: identity.IdentityID,
-			Logins: map[string]string{
-				"cognito-identity.amazonaws.com": identity.Token,
-			},
-		}
-
-		// sha256 hex digest
-		var b []byte
-		b, _ = io.ReadAll(request.MarshalJSON(data))
-		sum := sha256.Sum256(b)
-		hash := hex.EncodeToString(sum[:])
-
-		headers := map[string]string{
-			"Content-type":         "application/x-amz-json-1.1",
-			"x-amz-user-agent":     "aws-sdk-js/2.283.1 callback",
-			"x-amz-content-sha256": hash,
-			"x-amz-target":         "AWSCognitoIdentityService.GetCredentialsForIdentity",
-		}
-
-		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), headers); err == nil {
-			err = v.DoJSON(req, &awsIdentity)
-		}
+		v.creds = credRes.Credentials
 	}
-
-	v.creds = aws.NewEphemeralCredentials(awsIdentity.Credentials)
 
 	return err
 }
 
 func (v *Fiat) request(method, uri string, body io.Reader) (*http.Request, error) {
 	// refresh credentials
-	if v.creds.IsExpired() {
+	if v.creds.Expiration.After(time.Now().Add(-time.Minute)) {
 		if err := v.login(); err != nil {
 			return nil, err
 		}
@@ -270,7 +251,9 @@ func (v *Fiat) request(method, uri string, body io.Reader) (*http.Request, error
 
 	req, err := request.New(method, uri, body, headers)
 	if err == nil {
-		signer := v4.NewSigner(v.creds)
+		signer := v4.NewSigner(credentials.NewStaticCredentials(
+			*v.creds.AccessKeyId, *v.creds.SecretKey, *v.creds.SessionToken,
+		))
 		_, err = signer.Sign(req, nil, "execute-api", "eu-west-1", time.Now())
 	}
 
