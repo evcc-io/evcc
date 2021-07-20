@@ -261,6 +261,12 @@ func (c *EEBus) Enable(enable bool) error {
 		return c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
 	}
 
+	// we need to check if the mode is set to now as the currents won't be adjusted afterwards any more in all cases
+	if c.lp.GetMode() == api.ModeNow {
+		return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Max, data.EVData.LimitsL2.Max, data.EVData.LimitsL3.Max})
+	}
+
+	// in non now mode only enable with min settings, so we don't excessivly consume power in case it has to be turned of in the next cycle anyways
 	return c.writeCurrentLimitData([]float64{data.EVData.LimitsL1.Min, data.EVData.LimitsL2.Min, data.EVData.LimitsL3.Min})
 }
 
