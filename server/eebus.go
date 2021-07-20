@@ -174,6 +174,8 @@ func (c *EEBus) handleDiscoveredSKI(ski string) {
 	_, registered := c.clients[ski]
 	entry, discovered := c.discoveredClients[ski]
 
+	c.log.TRACE.Printf("client %s connected %t, registered %t, discovered %t ", ski, connected, registered, discovered)
+
 	if !connected && discovered && registered {
 		c.mux.Unlock()
 		c.connectDiscoveredEntry(entry)
@@ -243,13 +245,17 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 		if client == ski {
 			currentConnection, found := c.connectedClients[ski]
 			connect := true
+			c.log.TRACE.Printf("client %s found? %t", ski, found)
 			if found {
 				if currentConnection.IsConnectionClosed() {
+					c.log.TRACE.Printf("client has closed connection")
 					delete(c.connectedClients, ski)
 				} else {
+					c.log.TRACE.Printf("client has no closed connection")
 					connect = false
 				}
 			}
+			c.log.TRACE.Printf("client %s connect? %t", ski, connect)
 			if connect {
 				c.connectedClients[ski] = conn
 				c.mux.Unlock()
