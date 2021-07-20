@@ -23,6 +23,8 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+// https://github.com/TA2k/ioBroker.fiat
+
 // Fiat is an api.Vehicle implementation for Fiat cars
 type Fiat struct {
 	*embed
@@ -67,9 +69,12 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
-	err := v.login(v.user, v.password)
+	err := v.login()
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
 
-	if err == nil && cc.VIN == "" {
+	if cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
@@ -83,8 +88,8 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-// login authenticates with username/password to get new token
-func (v *Fiat) login(user, password string) error {
+// login authenticates with username/password to get new aws credentials
+func (v *Fiat) login() error {
 	v.Client.Jar, _ = cookiejar.New(nil)
 
 	uri := fmt.Sprintf("%s/accounts.webSdkBootstrap", fiat.LoginURI)
@@ -121,8 +126,8 @@ func (v *Fiat) login(user, password string) error {
 		uri = fmt.Sprintf("%s/accounts.login", fiat.LoginURI)
 
 		data := url.Values(map[string][]string{
-			"loginID":           {user},
-			"password":          {password},
+			"loginID":           {v.user},
+			"password":          {v.password},
 			"sessionExpiration": {"7776000"},
 			"APIKey":            {fiat.ApiKey},
 			"pageURL":           {"https://myuconnect.fiat.com/de/de/login"},
@@ -242,12 +247,19 @@ func (v *Fiat) login(user, password string) error {
 		}
 	}
 
-	v.creds = credentials.NewStaticCredentials(awsIdentity.Credentials.AccessKeyID, awsIdentity.Credentials.SecretKey, awsIdentity.Credentials.SessionToken)
+	v.creds = aws.NewEphemeralCredentials(awsIdentity.Credentials)
 
 	return err
 }
 
 func (v *Fiat) request(method, uri string, body io.Reader) (*http.Request, error) {
+	// refresh credentials
+	if v.creds.IsExpired() {
+		if err := v.login(); err != nil {
+			return nil, err
+		}
+	}
+
 	headers := map[string]string{
 		"Content-Type":        "application/json",
 		"x-clientapp-version": "1.0",

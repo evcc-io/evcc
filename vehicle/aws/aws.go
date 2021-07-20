@@ -3,6 +3,8 @@ package aws
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws/credentials"
 )
 
 type Credentials struct {
@@ -31,4 +33,28 @@ func (c *Credentials) UnmarshalJSON(data []byte) error {
 	}
 
 	return err
+}
+
+type CredentialsProvider struct {
+	Value  credentials.Value
+	expiry time.Time
+}
+
+func (p *CredentialsProvider) Retrieve() (credentials.Value, error) {
+	return p.Value, nil
+}
+
+func (p *CredentialsProvider) IsExpired() bool {
+	return p.expiry.After(time.Now().Add(-time.Minute))
+}
+
+func NewEphemeralCredentials(c Credentials) *credentials.Credentials {
+	return credentials.NewCredentials(&CredentialsProvider{
+		Value: credentials.Value{
+			AccessKeyID:     c.AccessKeyID,
+			SecretAccessKey: c.SecretKey,
+			SessionToken:    c.SessionToken,
+		},
+		expiry: c.Expiry,
+	})
 }
