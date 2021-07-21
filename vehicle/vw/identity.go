@@ -72,8 +72,8 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 
 	// add nonce and state
 	query := url.Values{
-		"nonce": []string{RandomString(43)},
-		"state": []string{RandomString(43)},
+		"nonce": []string{util.RandomString(43)},
+		"state": []string{util.RandomString(43)},
 	}
 	uri += "&" + query.Encode()
 

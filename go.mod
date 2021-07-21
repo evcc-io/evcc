@@ -8,6 +8,7 @@ require (
 	github.com/andig/gosunspec v0.0.0-20210511114617-aa30cf9b7a3f // indirect
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/aws/aws-sdk-go v1.40.3
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.1-0.20210712193118-0e5b7bb5e924
 	github.com/containrrr/shoutrrr v0.4.4
