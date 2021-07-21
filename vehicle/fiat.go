@@ -81,7 +81,7 @@ func (v *Fiat) request(method, uri string, body io.ReadSeeker) (*http.Request, e
 		"Content-Type":        "application/json",
 		"X-Clientapp-Version": "1.0",
 		"ClientrequestId":     util.RandomString(16),
-		"X-Api-Key":           "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je",
+		"X-Api-Key":           fiat.XApiKey,
 		"X-Originator-Type":   "web",
 	}
 

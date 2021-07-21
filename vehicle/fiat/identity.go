@@ -138,8 +138,6 @@ func (v *Identity) Login() error {
 	}
 
 	if err == nil {
-		uri = "https://authz.sdpr-01.fcagcv.com/v2/cognito/identity/token"
-
 		data := struct {
 			GigyaToken string `json:"gigya_token"`
 		}{
@@ -150,11 +148,11 @@ func (v *Identity) Login() error {
 			"Content-Type":        "application/json",
 			"X-Clientapp-Version": "1.0",
 			"ClientRequestId":     util.RandomString(16),
-			"X-Api-Key":           "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je",
+			"X-Api-Key":           XApiKey,
 			"X-Originator-Type":   "web",
 		}
 
-		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), headers); err == nil {
+		if req, err = request.New(http.MethodPost, TokenURI, request.MarshalJSON(data), headers); err == nil {
 			err = v.DoJSON(req, &identity)
 		}
 	}
