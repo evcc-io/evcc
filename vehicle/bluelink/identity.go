@@ -35,7 +35,7 @@ type Config struct {
 	CCSPApplicationID string
 }
 
-// API implements the Kia/Hyundai bluelink api.
+// Identity implements the Kia/Hyundai bluelink identity.
 // Based on https://github.com/Hacksore/bluelinky.
 type Identity struct {
 	*request.Helper
@@ -45,7 +45,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
-// NewIdentity creates a new BlueLink API
+// NewIdentity creates BlueLink Identity
 func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
 	v := &Identity{
 		log:    log,
@@ -292,7 +292,7 @@ func (v *Identity) exchangeCode(accCode string) (oauth.Token, error) {
 	return token, err
 }
 
-// Refresh implements token refresh
+// RefreshToken implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	headers := map[string]string{
 		"Authorization": "Basic " + v.config.BasicToken,

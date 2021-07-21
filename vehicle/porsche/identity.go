@@ -39,7 +39,7 @@ type Identity struct {
 	user, password string
 }
 
-// NewIdentity creates a new Identity client
+// NewIdentity creates Porsche identity
 func NewIdentity(log *util.Logger, user, password string) *Identity {
 	v := &Identity{
 		log:      log,

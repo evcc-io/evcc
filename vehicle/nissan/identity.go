@@ -19,6 +19,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
+// NewIdentity creates Nissan identity
 func NewIdentity(log *util.Logger) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),
