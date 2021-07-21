@@ -10,6 +10,10 @@ type Vehicle struct {
 	VIN string
 }
 
+type Vehicles struct {
+	Vehicles []Vehicle
+}
+
 type Status struct {
 	EvInfo struct {
 		Battery struct {
