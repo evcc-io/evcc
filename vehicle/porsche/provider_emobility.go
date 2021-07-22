@@ -12,6 +12,24 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type CapabilitiesResponse struct {
+	DisplayParkingBrake      bool
+	NeedsSPIN                bool
+	HasRDK                   bool
+	EngineType               string
+	CarModel                 string
+	OnlineRemoteUpdateStatus struct {
+		EditableByUser bool
+		Active         bool
+	}
+	HeatingCapabilities struct {
+		FrontSeatHeatingAvailable bool
+		RearSeatHeatingAvailable  bool
+	}
+	SteeringWheelPosition string
+	HasHonkAndFlash       bool
+}
+
 type EmobilityResponse struct {
 	BatteryChargeStatus struct {
 		ChargeRate struct {
@@ -54,6 +72,7 @@ type EMobilityProvider struct {
 	*request.Helper
 	token    oauth2.Token
 	identity *Identity
+	carModel string
 	statusG  func() (interface{}, error)
 }
 
@@ -84,6 +103,7 @@ func (v *EMobilityProvider) request(uri string) (*http.Request, error) {
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", v.token.AccessToken),
+		"apikey":        EmobilityClientID,
 	})
 
 	return req, err
@@ -91,13 +111,29 @@ func (v *EMobilityProvider) request(uri string) (*http.Request, error) {
 
 // Status implements the vehicle status response
 func (v *EMobilityProvider) status(vin string) (interface{}, error) {
-	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/J1/%s?timezone=Europe/Berlin", vin)
+	if v.carModel == "" {
+		uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/vcs/capabilities/%s", vin)
+		req, err := v.request(uri)
+		if err != nil {
+			return 0, err
+		}
+
+		req.Header.Set("x-vrs-url-country", "de")
+		req.Header.Set("x-vrs-url-language", "de_DE")
+		var cr CapabilitiesResponse
+		err = v.DoJSON(req, &cr)
+		if err != nil {
+			return 0, err
+		}
+		v.carModel = cr.CarModel
+	}
+
+	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
 	}
 
-	req.Header.Set("apikey", EmobilityClientID)
 	var pr EmobilityResponse
 	err = v.DoJSON(req, &pr)
 
