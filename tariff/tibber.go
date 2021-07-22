@@ -27,13 +27,13 @@ type Tibber struct {
 var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
-	t := Tibber{}
+	t := &Tibber{
+		log: util.NewLogger("tibber"),
+	}
 
 	if err := util.DecodeOther(other, &t); err != nil {
 		return nil, err
 	}
-
-	t.log = util.NewLogger("tibber")
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: t.Token})
 	tc := oauth2.NewClient(context.Background(), ts)
@@ -60,7 +60,7 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 
 	go t.Run()
 
-	return &t, nil
+	return t, nil
 }
 
 func (t *Tibber) Run() {

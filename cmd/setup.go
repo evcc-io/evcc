@@ -164,13 +164,8 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 }
 
 func configureTariffs(conf tariffConfig) (t api.Tariff, err error) {
-	switch {
-	case len(conf.Fixed) > 0:
-		t, err = tariff.NewFixed(conf.Fixed)
-	case len(conf.Awattar) > 0:
-		t, err = tariff.NewAwattar(conf.Awattar)
-	case len(conf.Tibber) > 0:
-		t, err = tariff.NewTibber(conf.Tibber)
+	if conf.Grid.Type != "" {
+		t, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
 	}
 
 	if err != nil {

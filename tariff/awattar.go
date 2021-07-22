@@ -14,6 +14,7 @@ import (
 
 type Awattar struct {
 	mux   sync.Mutex
+	log   *util.Logger
 	uri   string
 	cheap float64
 	data  []awattar.PriceInfo
@@ -34,6 +35,7 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	}
 
 	t := &Awattar{
+		log:   util.NewLogger("awattar"),
 		cheap: cc.Cheap,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
@@ -44,13 +46,12 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 }
 
 func (t *Awattar) Run() {
-	log := util.NewLogger("awattar")
-	client := request.NewHelper(log)
+	client := request.NewHelper(t.log)
 
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
 		if err := client.GetJSON(t.uri, &res); err != nil {
-			log.ERROR.Println(err)
+			t.log.ERROR.Println(err)
 			continue
 		}
 
@@ -68,7 +69,7 @@ func (t *Awattar) IsCheap() bool {
 		pi := t.data[i]
 
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice <= t.cheap
+			return pi.Marketprice/10 <= t.cheap // Eur/MWh conversion
 		}
 	}
 

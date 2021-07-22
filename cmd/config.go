@@ -56,7 +56,7 @@ type messagingConfig struct {
 }
 
 type tariffConfig struct {
-	Fixed, Awattar, Tibber map[string]interface{}
+	Grid typedConfig
 }
 
 // ConfigProvider provides configuration items
