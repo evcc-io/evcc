@@ -231,9 +231,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 
 			// check if the found vehicle is a Taycan, because that one supports the emobility API
 			if accessTokens.EmobilityToken.AccessToken != "" {
-				if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
-					foundEmobilityVehicle = true
-				}
+				foundEmobilityVehicle = true
 			}
 		} else {
 			err = errors.New("vin not found")
