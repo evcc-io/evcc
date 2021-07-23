@@ -71,7 +71,7 @@ func (t *Tibber) Run() {
 					ID                  string
 					TimeZone            string
 					CurrentSubscription tibber.Subscription
-				} //`graphql:"home(id: $id)"`
+				} `graphql:"home(id: $id)"`
 			}
 		}
 
