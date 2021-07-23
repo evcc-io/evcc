@@ -35,10 +35,17 @@ func NewTibber(other map[string]interface{}) (*Tibber, error) {
 		return nil, err
 	}
 
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: t.Token})
-	tc := oauth2.NewClient(context.Background(), ts)
-	tc.Transport = request.NewTripper(t.log, tc.Transport)
-	t.client = graphql.NewClient(tibber.URI, tc)
+	ctx := context.WithValue(
+		context.Background(),
+		oauth2.HTTPClient,
+		request.NewHelper(t.log).Client,
+	)
+
+	client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: t.Token,
+	}))
+
+	t.client = graphql.NewClient(tibber.URI, client)
 
 	if t.HomeID == "" {
 		var res struct {
