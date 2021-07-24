@@ -36,6 +36,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Meter](#meter)
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
+  - [Flexible Energy Tariffs](#flexible-energy-tariffs)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
@@ -294,6 +295,25 @@ hems:
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
 to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
+
+### Flexible Energy Tariffs
+
+EVCC supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+
+```yaml
+tariffs:
+  grid:
+    # either
+    type: tibber
+    cheap: 20 # ct/kWh
+    token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
+    homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
+
+    # or
+    type: awattar
+    cheap: 20 # ct/kWh
+    region: de # optional, chose at for Austria
+```
 
 ## Plugins
 
