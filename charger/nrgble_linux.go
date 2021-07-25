@@ -248,7 +248,6 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
-		nrg.log.TRACE.Println(err)
 		return false, err
 	}
 

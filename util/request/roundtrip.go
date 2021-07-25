@@ -67,7 +67,7 @@ func min(a, b int) int {
 }
 
 func (r *roundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	r.log.TRACE.Printf("%s %s", req.Method, req.URL.String())
+	r.log.DEBUG.Printf("%s %s", req.Method, req.URL.String())
 
 	var bld strings.Builder
 	if body, err := httputil.DumpRequestOut(req, true); err == nil {
