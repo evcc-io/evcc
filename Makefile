@@ -67,17 +67,17 @@ docker:
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	EVCC_VERSION=testing seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "testing" --targets=$(TARGETS)
 
 publish-latest:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	EVCC_VERSION=latest seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
 
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	EVCC_VERSION=$(VERSION) seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 prepare-image:
