@@ -50,6 +50,9 @@ RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 # STEP 3 build a small image including module support
 FROM {{ .RuntimeImage }}
 
+ARG BUILD_VERSION={{ env "EVCC_VERSION" }}
+LABEL io.hass.version=${BUILD_VERSION}
+
 WORKDIR /app
 
 ENV TZ=Europe/Berlin
