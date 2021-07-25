@@ -136,7 +136,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 			mr.Point = h.Point
 			mr.Value = res.Value()
 
-			log.TRACE.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
+			log.DEBUG.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
 
 			if len(h.Invalid) == 0 {
 				return true

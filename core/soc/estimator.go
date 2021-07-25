@@ -119,7 +119,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			if socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
-				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
+				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			// sample charged energy at soc change, reset energy delta
@@ -127,7 +127,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			s.prevSoC = s.socCharge
 		} else {
 			s.socCharge = math.Min(f+energyDelta/s.energyPerSocStep, 100)
-			s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
+			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
 		}
 	}
 

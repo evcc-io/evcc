@@ -70,7 +70,7 @@ func (m *Telegram) trackChats() {
 func (m *Telegram) Send(title, msg string) {
 	m.Lock()
 	for chat := range m.chats {
-		log.TRACE.Printf("telegram: sending to %d", chat)
+		log.DEBUG.Printf("telegram: sending to %d", chat)
 
 		msg := tgbotapi.NewMessage(chat, msg)
 		if _, err := m.bot.Send(msg); err != nil {
