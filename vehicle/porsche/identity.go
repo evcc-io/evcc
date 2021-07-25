@@ -199,6 +199,14 @@ type Vehicle struct {
 type VehicleResponse struct {
 	VIN              string
 	ModelDescription string
+	Pictures         []struct {
+		URL         string
+		View        string
+		Size        int
+		Width       int
+		Height      int
+		Transparent bool
+	}
 }
 
 func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
