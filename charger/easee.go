@@ -104,14 +104,6 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	c.site = site.ID
 	c.circuit = site.Circuits[0].ID
 
-	uri := fmt.Sprintf("%s/streams/amqp", easee.API)
-	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err == nil {
-		var res map[string]interface{}
-		_ = c.DoJSON(req, &res)
-		fmt.Println(res)
-	}
-
 	return c, err
 }
 
