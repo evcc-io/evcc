@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math"
 	"strings"
@@ -23,8 +24,9 @@ const (
 	wbRegMaxCurrent    = 528 // Holding
 	wbRegFirmware      = 149 // Firmware
 
-	wbRegPower  = 120 // power reading
-	wbRegEnergy = 128 // energy reading
+	wbRegPower          = 120 // power reading
+	wbRegEnergy         = 128 // energy reading
+	wbRegEnergyDecimals = 904 // energy reading decimals
 
 	encodingSDM = "sdm"
 )
@@ -208,7 +210,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return wb.decodeReading(b), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -218,7 +220,18 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	res := wb.decodeReading(b)
+
+	if wb.encoding != encodingSDM {
+		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		res += float64(binary.BigEndian.Uint16(b)) / 1e3
+	}
+
+	return res, nil
 }
 
 // currents implements the api.MeterCurrent interface
