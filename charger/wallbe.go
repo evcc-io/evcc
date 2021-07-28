@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 const (
@@ -23,8 +24,9 @@ const (
 	wbRegMaxCurrent    = 528 // Holding
 	wbRegFirmware      = 149 // Firmware
 
-	wbRegPower  = 120 // power reading
-	wbRegEnergy = 128 // energy reading
+	wbRegPower          = 120 // power reading
+	wbRegEnergy         = 128 // energy reading
+	wbRegEnergyDecimals = 904 // energy reading decimals
 
 	encodingSDM = "sdm"
 )
@@ -184,21 +186,21 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	}
 
 	// 2 words, least significant word first
-	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
+	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
 func (wb *Wallbe) decodeReading(b []byte) float64 {
-	v := binary.BigEndian.Uint32(b)
+	switch wb.encoding {
+	case encodingSDM:
+		// high word first
+		bits := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
+		return float64(math.Float32frombits(bits))
 
-	// assuming high register first
-	if wb.encoding == encodingSDM {
-		bits := uint32(b[3])<<0 | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
-		f := math.Float32frombits(bits)
-		return float64(f)
+	default:
+		// low word first
+		return rs485.RTUUint32ToFloat64Swapped(b)
 	}
-
-	return float64(v)
 }
 
 // currentPower implements the api.Meter interface
@@ -208,7 +210,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return wb.decodeReading(b), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -218,7 +220,18 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	res := wb.decodeReading(b)
+
+	if wb.encoding != encodingSDM {
+		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		res += float64(binary.BigEndian.Uint16(b)) / 1e3
+	}
+
+	return res, nil
 }
 
 // currents implements the api.MeterCurrent interface
