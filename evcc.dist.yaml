@@ -53,15 +53,6 @@ vehicles:
   vin: WREN...
   cache: 5m
 
-# tariffs are the fixed or variable tariffs
-# cheap can be used to define a tariff rate considered cheap enough for charging
-tariffs:
-  grid:
-    type: tibber # or awattar or fixed
-    cheap: 20 # ct/kWh
-    token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4"
-    homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c"
-
 # site describes the EVU connection, PV and home battery
 site:
   title: Home # display name for UI
@@ -110,6 +101,15 @@ loadpoints:
   guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
+
+# tariffs are the fixed or variable tariffs
+# cheap can be used to define a tariff rate considered cheap enough for charging
+tariffs:
+  # grid:
+  #   type: tibber # or awattar or fixed
+  #   cheap: 20 # ct/kWh
+  #   token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4"
+  #   homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c"
 
 # mqtt message broker
 mqtt:
