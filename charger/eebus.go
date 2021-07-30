@@ -238,7 +238,12 @@ func (c *EEBus) Enable(enable bool) error {
 
 	if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
 		c.log.TRACE.Printf("currents: ev reported as unplugged")
-		return errors.New("can not enable/disable charging as ev is unplugged")
+		// if the ev is unplugged, we do not need to disable charging by setting a current of 0 as it already is
+		if !enable {
+			return nil
+		}
+		// if the ev is unplugged, we can not enable charging
+		return errors.New("can not enable charging as ev is unplugged")
 	}
 
 	c.expectedEnableState = enable
