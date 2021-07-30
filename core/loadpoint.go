@@ -95,10 +95,11 @@ type LoadPoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	enabled       bool      // Charger enabled state
-	chargeCurrent float64   // Charger current limit
-	guardUpdated  time.Time // Charger enabled/disabled timestamp
-	socUpdated    time.Time // SoC updated timestamp (poll: connected)
+	enabled          bool      // Charger enabled state
+	chargeCurrent    float64   // Charger current limit
+	guardUpdated     time.Time // Charger enabled/disabled timestamp
+	socUpdated       time.Time // SoC updated timestamp (poll: connected)
+	vehicleConnected time.Time // Vehicle connected timestamp
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -330,6 +331,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	provider.ResetCached()
 
 	// identify active vehicle
+	lp.vehicleConnected = lp.clock.Now()
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -597,6 +599,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	// update successful
 	lp.vehicleIdError = nil
+	lp.vehicleConnected = time.Time{}
 
 	lp.vehicle = vehicle
 	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
@@ -607,7 +610,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	return errors.Is(lp.vehicleIdError, api.ErrMustRetry)
+	justConnected := !lp.vehicleConnected.IsZero() && time.Since(lp.vehicleConnected) < 15*time.Minute
+	return justConnected || errors.Is(lp.vehicleIdError, api.ErrMustRetry)
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
@@ -664,7 +668,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 		if err != nil {
 			lp.vehicleIdError = err
-			lp.log.ERROR.Println("vehicle charge state:", err)
+			lp.log.ERROR.Println("vehicle status:", err)
 			return
 		}
 
@@ -688,7 +692,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 
 			if err != nil {
 				lp.vehicleIdError = err
-				lp.log.ERROR.Println("vehicle charge state:", err)
+				lp.log.ERROR.Println("vehicle status:", err)
 				return
 			}
 
