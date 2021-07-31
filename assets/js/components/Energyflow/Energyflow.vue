@@ -39,18 +39,14 @@
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvProduction")
 					}}</span>
-					<span class="text-end text-nowrap ps-1"
-						>{{ kw(pvPower) }}<span class="text-muted small"> kW</span></span
-					>
+					<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
 				</div>
 				<div class="d-flex justify-content-between" data-test-house-consumption>
 					<span class="details-icon text-muted"><fa-icon icon="home"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.houseConsumption")
 					}}</span>
-					<span class="text-end text-nowrap ps-1"
-						>{{ kw(houseConsumption) }}<span class="text-muted small"> kW</span></span
-					>
+					<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
 				</div>
 				<div
 					v-if="batteryConfigured"
@@ -70,9 +66,8 @@
 						<span v-else>{{ $t("main.energyflow.battery") }}</span>
 					</span>
 					<span class="text-end text-nowrap ps-1">
-						({{ batterySoC }}<span class="text-muted">%</span>)
+						({{ batterySoC }}%)
 						{{ kw(Math.abs(batteryPower)) }}
-						<span class="text-muted small"> kW</span>
 					</span>
 				</div>
 			</div>
@@ -87,7 +82,6 @@
 					order-md-3
 					justify-content-between
 					mt-2
-					small
 				"
 				v-if="showDetails"
 			>
@@ -170,7 +164,7 @@ export default {
 	},
 	methods: {
 		kw: function (watt) {
-			return Math.max(0, watt / 1000).toFixed(1);
+			return Math.max(0, watt / 1000).toFixed(1) + " kW";
 		},
 		toggleDetails() {
 			this.showDetails = !this.showDetails;

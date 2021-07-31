@@ -196,29 +196,14 @@ export default {
 .site-progress-bar {
 	display: flex;
 	transition-property: width;
-	transition-duration: 1000ms;
+	transition-duration: 500ms;
 	transition-timing-function: linear;
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
-	/* height: 1.5rem; */
 	position: relative;
 }
-.site-progress-bar::before,
-.site-progress-bar::after {
-	content: "";
-	top: 0;
-	bottom: 0;
-	width: 1px;
-	background: white;
-	position: absolute;
-}
-.site-progress-bar::before {
-	left: 0px;
-}
-.site-progress-bar::after {
-	right: 0px;
-}
+
 .grid-import {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
@@ -241,10 +226,16 @@ export default {
 	height: 1.5rem;
 	padding: 0.5rem 0;
 	opacity: 1;
-	transition-property: width, opacity;
-	transition-duration: 1000ms, 2000ms;
-	transition-timing-function: linear, ease-in-out;
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
 	overflow: hidden;
+}
+.label-bar--down:first-child {
+	margin-right: -1px;
+}
+.label-bar--up:last-child {
+	margin-left: -1px;
 }
 .label-bar-scale {
 	border: 1px solid var(--bs-gray);
@@ -256,17 +247,25 @@ export default {
 	white-space: nowrap;
 }
 .label-bar--down .label-bar-scale {
-	border-bottom: 5px solid transparent;
+	border-bottom: none;
 }
 .label-bar--up .label-bar-scale {
-	border-top: 5px solid transparent;
+	border-top: none;
 }
 .label-bar-icon {
 	background-color: white;
 	color: var(--bs-gray);
 	padding: 0 0.75rem;
+	opacity: 1;
+	transition: opacity 250ms ease-in;
 }
-.label-bar--invisible {
+.label-bar--down .label-bar-icon {
+	margin-top: -6px;
+}
+.label-bar--up .label-bar-icon {
+	margin-top: 6px;
+}
+.label-bar--invisible .label-bar-icon {
 	opacity: 0;
 }
 </style>
