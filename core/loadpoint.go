@@ -624,7 +624,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	justConnected := time.Since(lp.vehicleConnected) < 15*time.Minute
+	// allow for 3x 5min timeout
+	justConnected := time.Since(lp.vehicleConnected) < 16*time.Minute
 
 	// request vehicle api refresh while waiting to identify
 	if justConnected {
