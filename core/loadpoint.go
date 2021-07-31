@@ -617,6 +617,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
 	} else {
+		lp.socEstimator = nil
+
 		lp.publish("socTitle", "unknown")
 		lp.publish("socCapacity", 0)
 	}
