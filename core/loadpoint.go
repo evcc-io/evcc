@@ -616,6 +616,10 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
+	if len(lp.vehicles) <= 1 {
+		return
+	}
+
 	// find vehicles by id
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
@@ -652,41 +656,11 @@ func (lp *LoadPoint) findActiveVehicle() {
 					}
 				}
 			}
-
-			// TODO implement removing vehicle
-			// lp.setActiveVehicle(nil)
-		}
-	}
-
-	if len(lp.vehicles) <= 1 {
-		return
-	}
-
-	// find vehicles by charge state - current vehicle
-	if vs, ok := lp.vehicle.(api.ChargeState); ok {
-		status, err := vs.Status()
-
-		if err != nil {
-			lp.vehicleIdError = err
-			lp.log.ERROR.Println("vehicle status:", err)
-			return
-		}
-
-		lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
-
-		// vehicle is plugged or charging, so it should be the right one
-		if status == api.StatusB || status == api.StatusC {
-			lp.vehicleIdError = nil
-			return
 		}
 	}
 
 	// find vehicles by charge state
 	for _, vehicle := range lp.vehicles {
-		if vehicle == lp.vehicle {
-			continue
-		}
-
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
 
@@ -704,6 +678,11 @@ func (lp *LoadPoint) findActiveVehicle() {
 				return
 			}
 		}
+	}
+
+	// remove previously vehicle if status was not confirmed
+	if _, ok := lp.vehicle.(api.ChargeState); ok {
+		lp.setActiveVehicle(nil)
 	}
 }
 
