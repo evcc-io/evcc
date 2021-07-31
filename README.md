@@ -312,7 +312,7 @@ tariffs:
     # or
     type: awattar
     cheap: 20 # ct/kWh
-    region: de # optional, chose at for Austria
+    region: de # optional, choose at for Austria
 ```
 
 ## Plugins
