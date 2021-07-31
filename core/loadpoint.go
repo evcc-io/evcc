@@ -600,7 +600,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		}
 		to := "unknown"
 		if vehicle != nil {
-			from = vehicle.Title()
+			to = vehicle.Title()
 		}
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
