@@ -593,8 +593,16 @@ func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
-	if lp.vehicle != nil {
-		lp.log.INFO.Printf("vehicle updated: %s -> %s", lp.vehicle.Title(), vehicle.Title())
+	if lp.vehicle != vehicle {
+		from := "unknown"
+		if lp.vehicle != nil {
+			from = lp.vehicle.Title()
+		}
+		to := "unknown"
+		if vehicle != nil {
+			from = vehicle.Title()
+		}
+		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
 
 	// update successful
