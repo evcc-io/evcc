@@ -609,11 +609,15 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.vehicleIdError = nil
 	lp.vehicleConnected = time.Time{}
 
-	lp.vehicle = vehicle
-	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+	if lp.vehicle = vehicle; vehicle != nil {
+		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
-	lp.publish("socTitle", lp.vehicle.Title())
-	lp.publish("socCapacity", lp.vehicle.Capacity())
+		lp.publish("socTitle", lp.vehicle.Title())
+		lp.publish("socCapacity", lp.vehicle.Capacity())
+	} else {
+		lp.publish("socTitle", "unknown")
+		lp.publish("socCapacity", 0)
+	}
 }
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
