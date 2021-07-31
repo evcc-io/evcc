@@ -95,11 +95,12 @@ type LoadPoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	enabled          bool      // Charger enabled state
-	chargeCurrent    float64   // Charger current limit
-	guardUpdated     time.Time // Charger enabled/disabled timestamp
-	socUpdated       time.Time // SoC updated timestamp (poll: connected)
-	vehicleConnected time.Time // Vehicle connected timestamp
+	enabled                bool      // Charger enabled state
+	chargeCurrent          float64   // Charger current limit
+	guardUpdated           time.Time // Charger enabled/disabled timestamp
+	socUpdated             time.Time // SoC updated timestamp (poll: connected)
+	vehicleConnected       time.Time // Vehicle connected timestamp
+	vehicleConnectedTicker *time.Ticker
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -332,6 +333,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// identify active vehicle
 	lp.vehicleConnected = lp.clock.Now()
+	lp.vehicleConnectedTicker = time.NewTicker(5 * time.Minute)
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -622,7 +624,17 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	justConnected := !lp.vehicleConnected.IsZero() && time.Since(lp.vehicleConnected) < 15*time.Minute
+	justConnected := time.Since(lp.vehicleConnected) < 15*time.Minute
+
+	// request vehicle api refresh while waiting to identify
+	if justConnected {
+		select {
+		case <-lp.vehicleConnectedTicker.C:
+			provider.ResetCached()
+		default:
+		}
+	}
+
 	return justConnected || errors.Is(lp.vehicleIdError, api.ErrMustRetry)
 }
 
