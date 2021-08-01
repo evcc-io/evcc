@@ -187,6 +187,10 @@ func (v *EMobilityProvider) Status() (api.ChargeStatus, error) {
 		case "DISCONNECTED":
 			return api.StatusA, nil
 		case "CONNECTED":
+			// ignore if the car is connected to a DC charging station
+			if res.BatteryChargeStatus.ChargingInDCMode {
+				return api.StatusA, nil
+			}
 			switch res.BatteryChargeStatus.ChargingState {
 			case "OFF", "COMPLETED":
 				return api.StatusB, nil
