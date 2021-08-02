@@ -71,13 +71,13 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 	} else {
 		for _, v := range vehicles {
-			if v.Vin == strings.ToUpper(cc.VIN) {
+			if v.VIN == strings.ToUpper(cc.VIN) {
 				vehicle = v
 			}
 		}
 	}
 
-	if len(vehicle.Vin) == 0 {
+	if len(vehicle.VIN) == 0 {
 		return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 
