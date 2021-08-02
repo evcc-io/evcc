@@ -100,7 +100,7 @@ type LoadPoint struct {
 	guardUpdated           time.Time // Charger enabled/disabled timestamp
 	socUpdated             time.Time // SoC updated timestamp (poll: connected)
 	vehicleConnected       time.Time // Vehicle connected timestamp
-	vehicleConnectedTicker *time.Ticker
+	vehicleConnectedTicker *clock.Ticker
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -329,11 +329,12 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	}
 
 	// flush all vehicles before updating state
+	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
 
 	// identify active vehicle
 	lp.vehicleConnected = lp.clock.Now()
-	lp.vehicleConnectedTicker = time.NewTicker(5 * time.Minute)
+	lp.vehicleConnectedTicker = lp.clock.Ticker(3 * time.Minute)
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -626,13 +627,14 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	// allow for 3x 5min timeout
-	justConnected := time.Since(lp.vehicleConnected) < 16*time.Minute
+	// allow for 3x 3min timeout
+	justConnected := lp.clock.Since(lp.vehicleConnected) < 10*time.Minute
 
 	// request vehicle api refresh while waiting to identify
 	if justConnected {
 		select {
 		case <-lp.vehicleConnectedTicker.C:
+			lp.log.DEBUG.Println("vehicle api refresh")
 			provider.ResetCached()
 		default:
 		}
@@ -641,20 +643,15 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 	return justConnected || errors.Is(lp.vehicleIdError, api.ErrMustRetry)
 }
 
-// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
-func (lp *LoadPoint) findActiveVehicle() {
-	if len(lp.vehicles) <= 1 {
-		return
-	}
-
-	// find vehicles by id
+// find active vehicle by id
+func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
 
 		if err != nil {
 			lp.vehicleIdError = err
 			lp.log.ERROR.Println("charger vehicle id:", err)
-			return
+			return nil
 		}
 
 		if id != "" {
@@ -663,8 +660,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 			// find exact match
 			for _, vehicle := range lp.vehicles {
 				if vid, err := vehicle.Identify(); err == nil && vid == id {
-					lp.setActiveVehicle(vehicle)
-					return
+					return vehicle
 				}
 			}
 
@@ -678,15 +674,18 @@ func (lp *LoadPoint) findActiveVehicle() {
 					}
 
 					if re.MatchString(id) {
-						lp.setActiveVehicle(vehicle)
-						return
+						return vehicle
 					}
 				}
 			}
 		}
 	}
 
-	// find vehicles by charge state
+	return nil
+}
+
+// find active vehicle by charge state
+func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
 	for _, vehicle := range lp.vehicles {
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
@@ -694,17 +693,35 @@ func (lp *LoadPoint) findActiveVehicle() {
 			if err != nil {
 				lp.vehicleIdError = err
 				lp.log.ERROR.Println("vehicle status:", err)
-				return
+				return nil
 			}
 
 			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
-				lp.setActiveVehicle(vehicle)
-				return
+				return vehicle
 			}
 		}
+	}
+
+	return nil
+}
+
+// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
+func (lp *LoadPoint) findActiveVehicle() {
+	if len(lp.vehicles) <= 1 {
+		return
+	}
+
+	if vehicle := lp.findActiveVehicleByID(); vehicle != nil {
+		lp.setActiveVehicle(vehicle)
+		return
+	}
+
+	if vehicle := lp.findActiveVehicleByStatus(); vehicle != nil {
+		lp.setActiveVehicle(vehicle)
+		return
 	}
 
 	// remove previously vehicle if status was not confirmed
@@ -772,7 +789,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 
 // pvDisableTimer puts the pv enable/disable timer into elapsed state
 func (lp *LoadPoint) pvDisableTimer() {
-	lp.pvTimer = time.Now().Add(-lp.Disable.Delay)
+	lp.pvTimer = lp.clock.Now().Add(-lp.Disable.Delay)
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode

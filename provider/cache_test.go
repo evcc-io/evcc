@@ -28,8 +28,8 @@ func TestCachedGetter(t *testing.T) {
 
 	duration := time.Second
 	c := NewCached(g, duration)
-	clck := clock.NewMock()
-	c.clock = clck
+	clock := clock.NewMock()
+	c.clock = clock
 	getter := c.FloatGetter()
 
 	expect := func(s struct {
@@ -45,9 +45,36 @@ func TestCachedGetter(t *testing.T) {
 	expect(cases[0])
 	expect(cases[0])
 
-	clck.Add(2 * duration)
+	clock.Add(2 * duration)
 	expect(cases[1])
 
-	clck.Add(2 * duration)
+	clock.Add(2 * duration)
 	expect(cases[2])
+}
+
+func TestCacheReset(t *testing.T) {
+	var i int64
+	g := func() (int64, error) {
+		i++
+		return i, nil
+	}
+
+	c := NewCached(g, 10*time.Minute)
+	clock := clock.NewMock()
+	c.clock = clock
+
+	test := func(exp int64) {
+		v, _ := c.IntGetter()()
+		if exp != v {
+			t.Errorf("expected %d, got %d", exp, v)
+		}
+	}
+
+	test(1)
+	test(1)
+	ResetCached()
+	test(2)
+	test(2)
+	clock.Add(10*time.Minute + 1)
+	test(3)
 }
