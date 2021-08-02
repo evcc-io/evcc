@@ -462,6 +462,11 @@ func (c *EEBus) Identify() (string, error) {
 		return data.EVData.Identification, nil
 	}
 
+	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeIEC61851 {
+		c.log.TRACE.Printf("identify: ev communication is IEC61851 which does not support any identification")
+		return "", nil
+	}
+
 	c.log.TRACE.Printf("identify: returning nothing")
 	return "", api.ErrMustRetry
 }
