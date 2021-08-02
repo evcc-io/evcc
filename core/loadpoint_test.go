@@ -760,7 +760,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
 
 	type testcase struct {
-		desc    string
+		_       string
 		v1, v2  api.ChargeStatus
 		res     api.Vehicle
 		prepare func(testcase)
@@ -775,8 +775,6 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		{"B/A->1", api.StatusB, api.StatusA, v1, func(t testcase) {
 			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
 			v1.MockVehicle.EXPECT().Title().Return("v1")
-			// v2.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
-			// v2.MockVehicle.EXPECT().Title().Return("v2")
 		}},
 		{"A/B->2", api.StatusA, api.StatusB, v2, func(t testcase) {
 			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
@@ -787,8 +785,6 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		{"B/B->1", api.StatusB, api.StatusB, v1, func(t testcase) {
 			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
 			v1.MockVehicle.EXPECT().Title().Return("v1")
-			// v2.MockChargeState.EXPECT().Status().Return(api.StatusB, nil)
-			// v2.MockVehicle.EXPECT().Title().Return("v2")
 		}},
 	}
 
