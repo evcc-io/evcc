@@ -80,7 +80,7 @@ func main() {
 
 			soc, err := v.SoC()
 			if err != nil {
-				if errors.As(err, &api.ErrMustRetry) {
+				if errors.Is(err, api.ErrMustRetry) {
 					time.Sleep(5 * time.Second)
 					continue
 				}
