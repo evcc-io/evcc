@@ -3,19 +3,24 @@ package vehicle
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
+	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/vehicle/tronity"
 	"golang.org/x/oauth2"
 )
 
 // Tronity is an api.Vehicle implementation for the Tronity api
 type Tronity struct {
 	*embed
-	chargeStateG  func() (interface{}, error)
-	climateStateG func() (interface{}, error)
+	*request.Helper
+	vid   string
+	bulkG func() (interface{}, error)
 }
 
 func init() {
@@ -25,11 +30,11 @@ func init() {
 // NewTronityFromConfig creates a new Tronity vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string // deprecated
-		Tokens         Tokens
-		VIN            string
-		Cache          time.Duration
+		embed                  `mapstructure:",squash"`
+		ClientID, ClientSecret string
+		Tokens                 Tokens
+		VIN                    string
+		Cache                  time.Duration
 	}{
 		Cache: interval,
 	}
@@ -42,66 +47,79 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing token credentials")
 	}
 
-	v := &Tronity{
-		embed: &cc.embed,
-	}
-
 	// authenticated http client with logging injected to the Tronity client
 	log := util.NewLogger("tronity")
-	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
-	options := []Tronity.ClientOption{Tronity.WithToken(&oauth2.Token{
+	v := &Tronity{
+		embed:  &cc.embed,
+		Helper: request.NewHelper(log),
+	}
+
+	// cfg := tronity.OAuth2Config(cc.ClientID, cc.ClientSecret)
+
+	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
+	ts := tronity.OAuth2Config.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
 		RefreshToken: cc.Tokens.Refresh,
 		Expiry:       time.Now(),
-	})}
+	})
 
-	client, err := Tronity.NewClient(ctx, options...)
+	// replace client transport with authenticated transport
+	v.Client.Transport = &oauth2.Transport{
+		Source: ts,
+		Base:   v.Client.Transport,
+	}
+
+	vehicles, err := v.vehicles()
 	if err != nil {
 		return nil, err
 	}
 
-	// vehicles, err := client.Vehicles()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	if cc.VIN == "" && len(vehicles) == 1 {
+		v.vid = vehicles[0].ID
+	} else {
+		for _, vehicle := range vehicles {
+			if vehicle.VIN == strings.ToUpper(cc.VIN) {
+				v.vid = vehicle.ID
+			}
+		}
+	}
 
-	// if cc.VIN == "" && len(vehicles) == 1 {
-	// 	v.vehicle = vehicles[0]
-	// } else {
-	// 	for _, vehicle := range vehicles {
-	// 		if vehicle.Vin == strings.ToUpper(cc.VIN) {
-	// 			v.vehicle = vehicle
-	// 		}
-	// 	}
-	// }
+	if v.vid == "" {
+		return nil, errors.New("vin not found")
+	}
 
-	// if v.vehicle == nil {
-	// 	return nil, errors.New("vin not found")
-	// }
-
-	// v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
-	// v.climateStateG = provider.NewCached(v.climateState, cc.Cache).InterfaceGetter()
+	v.bulkG = provider.NewCached(v.bulk, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
 
-// // chargeState implements the charge state api
-// func (v *Tronity) chargeState() (interface{}, error) {
-// 	return v.ChargeState()
-// }
+// vehicles implements the vehicles api
+func (v *Tronity) vehicles() ([]tronity.Vehicle, error) {
+	uri := fmt.Sprintf("%s/v1/vehicles", tronity.URI)
 
-// // climateState implements the climater api
-// func (v *Tronity) climateState() (interface{}, error) {
-// 	return v.ClimateState()
-// }
+	var res tronity.Vehicles
+	err := v.GetJSON(uri, &res)
+
+	return res.Data, err
+}
+
+// bulk implements the bulk api
+func (v *Tronity) bulk() (interface{}, error) {
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/bulk", tronity.URI, v.vid)
+
+	var res tronity.Bulk
+	err := v.GetJSON(uri, &res)
+
+	return res, err
+}
 
 // SoC implements the api.Vehicle interface
 func (v *Tronity) SoC() (float64, error) {
-	res, err := v.chargeStateG()
+	res, err := v.bulkG()
 
-	if res, ok := res.(*Tronity.ChargeState); err == nil && ok {
-		return float64(res.BatteryLevel), nil
+	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+		return float64(res.Level), nil
 	}
 
 	return 0, err

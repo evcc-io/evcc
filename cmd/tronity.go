@@ -12,6 +12,7 @@ import (
 
 	"github.com/andig/evcc/server"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/vehicle/tronity"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,17 +30,6 @@ func init() {
 	rootCmd.AddCommand(tronityCmd)
 }
 
-// OAuth2Config is the OAuth2 configuration for authenticating with the Tesla API.
-var OAuth2Config = &oauth2.Config{
-	ClientID:    "db23e992-c64a-4263-9a9e-8f8f1b46ec41",
-	RedirectURL: "http://localhost:8080",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  "https://api-eu.tronity.io/oauth/authorize",
-		TokenURL: "https://api-eu.tronity.io/oauth/authentication",
-	},
-	Scopes: []string{"read_vin", "read_vehicle_info", "read_odometer", "read_charge", "read_charge", "read_battery", "read_location", "write_charge_start_stop", "write_wake_up"},
-}
-
 // github.com/uhthomas/tesla
 func state() string {
 	var b [9]byte
@@ -50,7 +40,7 @@ func state() string {
 }
 
 func tronityToken(username, password string) {
-	uri := OAuth2Config.AuthCodeURL(state(), oauth2.AccessTypeOffline)
+	uri := tronity.OAuth2Config.AuthCodeURL(state(), oauth2.AccessTypeOffline)
 	uri = strings.ReplaceAll(uri, "scope=", "scopes=")
 	if err := open.Start(uri); err != nil {
 		panic(err)
@@ -71,7 +61,7 @@ func handleMain(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(state)
 
 	ctx := context.Background()
-	token, err := OAuth2Config.Exchange(ctx, code,
+	token, err := tronity.OAuth2Config.Exchange(ctx, code,
 		oauth2.SetAuthURLParam("grant_type", "code"),
 	)
 
