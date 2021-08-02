@@ -23,8 +23,8 @@ import { faHome } from "@fortawesome/free-solid-svg-icons/faHome";
 import { faCar } from "@fortawesome/free-solid-svg-icons/faCar";
 import { faSquare } from "@fortawesome/free-solid-svg-icons/faSquare";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
-import { faCaretLeft } from "@fortawesome/free-solid-svg-icons/faCaretLeft";
-import { faCaretRight } from "@fortawesome/free-solid-svg-icons/faCaretRight";
+import { faAngleDoubleLeft } from "@fortawesome/free-solid-svg-icons/faAngleDoubleLeft";
+import { faAngleDoubleRight } from "@fortawesome/free-solid-svg-icons/faAngleDoubleRight";
 
 library.add(
   faAngleDown,
@@ -36,8 +36,8 @@ library.add(
   faBatteryThreeQuarters,
   faBox,
   faCar,
-  faCaretLeft,
-  faCaretRight,
+  faAngleDoubleLeft,
+  faAngleDoubleRight,
   faClock,
   faExclamationCircle,
   faExclamationTriangle,

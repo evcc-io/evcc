@@ -28,7 +28,7 @@
 				:batteryDischarge="batteryDischarge"
 				:pvProduction="pvPower"
 				:houseConsumption="houseConsumption"
-				:batteryIcon="batteryIcon"
+				:batterySoC="batterySoC"
 			/>
 			<div
 				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0"
@@ -54,9 +54,11 @@
 					data-test-battery
 				>
 					<span class="details-icon text-muted">
-						<fa-icon :icon="batteryIcon"></fa-icon>
-						<fa-icon icon="caret-left" v-if="batteryCharge"></fa-icon>
-						<fa-icon icon="caret-right" v-if="batteryDischarge"></fa-icon>
+						<BatteryIcon
+							:soc="batterySoC"
+							:charge="batteryCharge"
+							:discharge="batteryDischarge"
+						/>
 					</span>
 					<span class="text-nowrap flex-grow-1 text-truncate">
 						<span v-if="batteryCharge">{{ $t("main.energyflow.batteryCharge") }}</span>
@@ -66,7 +68,7 @@
 						<span v-else>{{ $t("main.energyflow.battery") }}</span>
 					</span>
 					<span class="text-end text-nowrap ps-1">
-						({{ batterySoC }}%)
+						{{ batterySoC }}% /
 						{{ kw(Math.abs(batteryPower)) }}
 					</span>
 				</div>
@@ -115,10 +117,11 @@
 import "../../icons";
 import formatter from "../../mixins/formatter";
 import Visualization from "./Visualization.vue";
+import BatteryIcon from "./BatteryIcon.vue";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization },
+	components: { Visualization, BatteryIcon },
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
@@ -153,13 +156,6 @@ export default {
 		},
 		pvExport: function () {
 			return Math.min(0, this.gridPower) * -1;
-		},
-		batteryIcon: function () {
-			if (this.batterySoC > 80) return "battery-full";
-			if (this.batterySoC > 60) return "battery-three-quarters";
-			if (this.batterySoC > 40) return "battery-half";
-			if (this.batterySoC > 20) return "battery-quarter";
-			return "battery-empty";
 		},
 	},
 	methods: {

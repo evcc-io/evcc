@@ -1,5 +1,5 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': totalAdjusted > 0 }">
+	<div>
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
 				<div
@@ -12,8 +12,7 @@
 				>
 					<div class="label-bar-scale">
 						<div class="label-bar-icon">
-							<fa-icon :icon="batteryIcon"></fa-icon>
-							<fa-icon icon="caret-right"></fa-icon>
+							<BatteryIcon :soc="batterySoC" charge />
 						</div>
 					</div>
 				</div>
@@ -35,7 +34,10 @@
 			</div>
 		</div>
 		<div class="site-progress" ref="site_progress">
-			<div class="site-progress-bar grid-import" :style="{ width: widthTotal(gridImport) }">
+			<div
+				class="site-progress-bar grid-import"
+				:style="{ width: widthTotal(gridImportAdjusted) }"
+			>
 				<span class="power" :class="{ 'd-none': hidePowerLabel(gridImport) }">
 					{{ kw(gridImport) }}
 				</span>
@@ -60,6 +62,9 @@
 				<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
 					{{ kw(pvExport) }}
 				</span>
+			</div>
+			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
+				<span>Keine Energiefluss</span>
 			</div>
 		</div>
 		<div class="label-scale">
@@ -89,8 +94,7 @@
 				>
 					<div class="label-bar-scale">
 						<div class="label-bar-icon">
-							<fa-icon :icon="batteryIcon"></fa-icon>
-							<fa-icon icon="caret-left"></fa-icon>
+							<BatteryIcon :soc="batterySoC" charge />
 						</div>
 					</div>
 				</div>
@@ -102,9 +106,11 @@
 <script>
 import "../../icons";
 import formatter from "../../mixins/formatter";
+import BatteryIcon from "./BatteryIcon.vue";
 
 export default {
 	name: "Visualization",
+	components: { BatteryIcon },
 	props: {
 		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
@@ -114,7 +120,7 @@ export default {
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
 		houseConsumption: { type: Number, default: 0 },
-		batteryIcon: { type: String },
+		batterySoC: { type: Number, default: 0 },
 	},
 	data: function () {
 		return { width: 0 };
@@ -153,6 +159,9 @@ export default {
 	},
 	methods: {
 		widthTotal: function (power) {
+			if (this.totalAdjusted === 0) {
+				return 0;
+			}
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		kw: function (watt) {
@@ -179,12 +188,6 @@ export default {
 };
 </script>
 <style scoped>
-.visualization {
-	opacity: 0;
-}
-.visualization--ready {
-	opacity: 1;
-}
 .site-progress {
 	--height: 38px;
 	height: var(--height);
@@ -202,6 +205,7 @@ export default {
 	align-items: center;
 	overflow: hidden;
 	position: relative;
+	width: 0;
 }
 
 .grid-import {
@@ -222,9 +226,10 @@ export default {
 	white-space: nowrap;
 }
 .label-bar {
+	width: 0;
 	margin: 0;
-	height: 1.5rem;
-	padding: 0.5rem 0;
+	height: 1.7rem;
+	padding: 0.6rem 0;
 	opacity: 1;
 	transition-property: width;
 	transition-duration: 500ms;
@@ -239,7 +244,7 @@ export default {
 }
 .label-bar-scale {
 	border: 1px solid var(--bs-gray);
-	height: 7px;
+	height: 0.5rem;
 	background: none;
 	display: flex;
 	justify-content: center;
