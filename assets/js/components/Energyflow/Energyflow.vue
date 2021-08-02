@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<h4 class="d-none d-md-block my-4">
-			{{ $t("main.energyflow.title") }}
+		<h4 class="d-none d-md-block my-4" v-if="siteTitle">
+			{{ siteTitle }}
 		</h4>
 		<div
 			class="row align-items-start align-items-md-center mt-4 energyflow"
@@ -26,7 +26,7 @@
 				:pvExport="pvExport"
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
-				:pvProduction="pvPower"
+				:pvProduction="pvProduction"
 				:houseConsumption="houseConsumption"
 				:batterySoC="batterySoC"
 			/>
@@ -39,7 +39,7 @@
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvProduction")
 					}}</span>
-					<span class="text-end text-nowrap ps-1">{{ kw(pvPower) }}</span>
+					<span class="text-end text-nowrap ps-1">{{ kw(pvProduction) }}</span>
 				</div>
 				<div class="d-flex justify-content-between" data-test-house-consumption>
 					<span class="details-icon text-muted"><fa-icon icon="home"></fa-icon></span>
@@ -56,8 +56,8 @@
 					<span class="details-icon text-muted">
 						<BatteryIcon
 							:soc="batterySoC"
-							:charge="batteryCharge"
-							:discharge="batteryDischarge"
+							:charge="batteryCharge > 0"
+							:discharge="batteryDischarge > 0"
 						/>
 					</span>
 					<span class="text-nowrap flex-grow-1 text-truncate">
@@ -94,7 +94,11 @@
 					}}</span>
 					<span class="text-end text-nowrap d-md-none">{{ kw(gridImport) }}</span>
 				</div>
-				<div class="text-nowrap d-flex d-md-block" data-test-self-consumption>
+				<div
+					class="text-nowrap d-flex d-md-block"
+					data-test-self-consumption
+					v-if="batteryConfigured || pvConfigured"
+				>
 					<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.selfConsumption")
@@ -130,6 +134,7 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
+		siteTitle: { type: String },
 	},
 	data: function () {
 		return { showDetails: false };
@@ -138,6 +143,9 @@ export default {
 	computed: {
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
+		},
+		pvProduction: function () {
+			return this.pvConfigured ? this.pvPower : this.pvExport;
 		},
 		pvConsumption: function () {
 			return Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge);

@@ -1,6 +1,6 @@
 /* globals describe, it, expect */
 import { shallowMount } from "@vue/test-utils";
-import Energyflow from "./";
+import Energyflow from "./Energyflow.vue";
 
 describe("Energyflow.vue", () => {
   const defaultProps = {
@@ -18,8 +18,7 @@ describe("Energyflow.vue", () => {
       mocks: { $t: (x) => x },
       propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000 },
     });
-
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("1.0 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("4.0 kW");
@@ -36,7 +35,7 @@ describe("Energyflow.vue", () => {
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000 },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
@@ -53,7 +52,7 @@ describe("Energyflow.vue", () => {
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 3000 },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
@@ -76,7 +75,7 @@ describe("Energyflow.vue", () => {
       },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.4 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
@@ -100,7 +99,7 @@ describe("Energyflow.vue", () => {
       },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.3 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.2 kW");
@@ -125,7 +124,7 @@ describe("Energyflow.vue", () => {
       },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("6.5 kW");
@@ -149,7 +148,7 @@ describe("Energyflow.vue", () => {
       },
     });
 
-    await wrapper.trigger("click");
+    await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("5.6 kW");
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("1.6 kW");

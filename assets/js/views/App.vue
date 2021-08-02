@@ -5,7 +5,6 @@
 				<div class="container">
 					<a class="navbar-brand" href="/" @click.prevent="reload">
 						<Logo class="logo me-3"></Logo>
-						<span v-if="title" class="title">{{ title }}</span>
 					</a>
 					<div class="d-flex">
 						<div class="d-flex">

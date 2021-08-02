@@ -5,23 +5,22 @@
 				<div
 					class="label-bar label-bar--down"
 					:class="{
-						'label-bar--invisible':
-							hideLabelBar(batteryDischarge) || !selfConsumptionAdjusted,
+						'label-bar--hide-icon': hideLabelIcon(batteryDischarge),
+						'label-bar--hidden': !selfConsumptionAdjusted,
 					}"
 					:style="{ width: widthTotal(batteryDischarge) }"
 				>
 					<div class="label-bar-scale">
 						<div class="label-bar-icon">
-							<BatteryIcon :soc="batterySoC" charge />
+							<BatteryIcon :soc="batterySoC" discharge />
 						</div>
 					</div>
 				</div>
 				<div
 					class="label-bar label-bar--down"
 					:class="{
-						'label-bar--invisible':
-							hideLabelBar(pvProduction) ||
-							(!selfConsumptionAdjusted && !pvExportAdjusted),
+						'label-bar--hide-icon': hideLabelIcon(pvProduction),
+						'label-bar--hidden': !selfConsumptionAdjusted && !pvExportAdjusted,
 					}"
 					:style="{ width: widthTotal(pvProduction) }"
 				>
@@ -72,9 +71,8 @@
 				<div
 					class="label-bar label-bar--up"
 					:class="{
-						'label-bar--invisible':
-							hideLabelBar(houseConsumption) ||
-							(!gridImportAdjusted && !selfConsumptionAdjusted),
+						'label-bar--hide-icon': hideLabelIcon(houseConsumption),
+						'label-bar--hidden': !gridImportAdjusted && !selfConsumptionAdjusted,
 					}"
 					:style="{ width: widthTotal(houseConsumption) }"
 				>
@@ -87,8 +85,8 @@
 				<div
 					class="label-bar label-bar--up"
 					:class="{
-						'label-bar--invisible':
-							hideLabelBar(batteryCharge) || !selfConsumptionAdjusted,
+						'label-bar--hide-icon': hideLabelIcon(batteryCharge),
+						'label-bar--hidden': !selfConsumptionAdjusted,
 					}"
 					:style="{ width: widthTotal(batteryCharge) }"
 				>
@@ -159,20 +157,20 @@ export default {
 	},
 	methods: {
 		widthTotal: function (power) {
-			if (this.totalAdjusted === 0) {
-				return 0;
-			}
+			if (this.totalAdjusted === 0) return "0%";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		kw: function (watt) {
 			return Math.max(0, watt / 1000).toFixed(1) + " kW";
 		},
 		hidePowerLabel(power) {
+			if (this.totalAdjusted === 0) return true;
 			const minWidth = 75;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent < minWidth;
 		},
-		hideLabelBar(power) {
+		hideLabelIcon(power) {
+			if (this.totalAdjusted === 0) return true;
 			const minWidth = 60;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent < minWidth;
@@ -231,9 +229,9 @@ export default {
 	height: 1.7rem;
 	padding: 0.6rem 0;
 	opacity: 1;
-	transition-property: width;
-	transition-duration: 500ms;
-	transition-timing-function: linear;
+	transition-property: width, opacity;
+	transition-duration: 500ms, 250ms;
+	transition-timing-function: linear, ease;
 	overflow: hidden;
 }
 .label-bar--down:first-child {
@@ -270,7 +268,10 @@ export default {
 .label-bar--up .label-bar-icon {
 	margin-top: 6px;
 }
-.label-bar--invisible .label-bar-icon {
+.label-bar--hide-icon .label-bar-icon {
+	opacity: 0;
+}
+.label-bar--hidden {
 	opacity: 0;
 }
 </style>

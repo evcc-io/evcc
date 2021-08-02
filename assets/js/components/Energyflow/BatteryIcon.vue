@@ -1,8 +1,11 @@
 <template>
 	<div>
-		<fa-icon class="battery" :icon="batteryIcon"></fa-icon>
-		<fa-icon class="arrow" icon="angle-double-left" v-if="charge"></fa-icon>
-		<fa-icon class="arrow" icon="angle-double-right" v-if="discharge"></fa-icon>
+		<fa-icon class="battery" :icon="batteryIcon"></fa-icon
+		><fa-icon
+			class="arrow"
+			icon="angle-double-left"
+			:class="{ 'arrow--in': charge, 'arrow--out': discharge }"
+		></fa-icon>
 	</div>
 </template>
 
@@ -32,6 +35,19 @@ export default {
 	transform: rotate(-90deg);
 }
 .arrow {
-	margin-left: -0.5rem;
+	margin-left: -0.25rem;
+	opacity: 0;
+	transform: scaleX(0);
+	transition-property: opacity, transform;
+	transition-duration: 250ms;
+	transition-timing-function: ease;
+}
+.arrow--in {
+	opacity: 1;
+	transform: scaleX(1);
+}
+.arrow--out {
+	opacity: 1;
+	transform: scaleX(-1);
 }
 </style>

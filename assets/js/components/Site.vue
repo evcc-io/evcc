@@ -37,6 +37,7 @@ export default {
 		batterySoC: Number,
 		gridCurrents: Array,
 		prioritySoC: Number,
+		siteTitle: String,
 	},
 	components: { Loadpoint, Energyflow },
 	mixins: [formatter, collector],
