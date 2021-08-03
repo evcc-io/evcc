@@ -760,7 +760,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	v2 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
 
 	type testcase struct {
-		_       string
+		string
 		v1, v2  api.ChargeStatus
 		res     api.Vehicle
 		prepare func(testcase)
