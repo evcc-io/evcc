@@ -1,22 +1,12 @@
 package tronity
 
 import (
-	"errors"
-
 	"golang.org/x/oauth2"
 )
 
 const URI = "https://api-eu.tronity.io"
 
 func OAuth2Config(id, secret string) (*oauth2.Config, error) {
-	if id == "" {
-		return nil, errors.New("missing client id")
-	}
-
-	if secret == "" {
-		return nil, errors.New("missing client secret")
-	}
-
 	return &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,

@@ -32,11 +32,11 @@ func init() {
 // NewTronityFromConfig creates a new Tronity vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
-		Client ClientCredentials
-		Tokens Tokens
-		VIN    string
-		Cache  time.Duration
+		embed       `mapstructure:",squash"`
+		Credentials ClientCredentials
+		Tokens      Tokens
+		VIN         string
+		Cache       time.Duration
 	}{
 		Cache: interval,
 	}
@@ -45,8 +45,12 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.Tokens.Access == "" {
-		return nil, errors.New("missing token credentials")
+	if err := cc.Credentials.Error(); err != nil {
+		return nil, err
+	}
+
+	if err := cc.Tokens.Error(); err != nil {
+		return nil, err
 	}
 
 	if !sponsor.IsAuthorized() {
@@ -61,7 +65,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper: request.NewHelper(log),
 	}
 
-	oc, err := tronity.OAuth2Config(cc.Client.ID, cc.Client.Secret)
+	oc, err := tronity.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret)
 	if err != nil {
 		return nil, err
 	}

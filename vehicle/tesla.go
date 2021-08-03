@@ -43,11 +43,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User != "" {
-		return nil, errors.New("user/password authentication deprecated, use tesla-token command to create credentials")
+		return nil, errors.New("user/password authentication deprecated, use `evcc token` to create credentials")
 	}
 
-	if cc.Tokens.Access == "" {
-		return nil, errors.New("missing token credentials")
+	if err := cc.Tokens.Error(); err != nil {
+		return nil, err
 	}
 
 	v := &Tesla{
