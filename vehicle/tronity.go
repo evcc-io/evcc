@@ -11,6 +11,7 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
+	"github.com/andig/evcc/util/sponsor"
 	"github.com/andig/evcc/vehicle/tronity"
 	"golang.org/x/oauth2"
 )
@@ -45,6 +46,10 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if cc.Tokens.Access == "" {
 		return nil, errors.New("missing token credentials")
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, errors.New("tronity requires evcc sponsorship, register at https://cloud.evcc.io")
 	}
 
 	// authenticated http client with logging injected to the Tronity client
