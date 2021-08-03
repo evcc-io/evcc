@@ -26,7 +26,7 @@ GridAndPV.args = {
   gridPower: -2300,
   pvPower: 7320,
   batteryConfigured: false,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const BatteryAndGrid = Template.bind({});
@@ -38,7 +38,7 @@ BatteryAndGrid.args = {
   pvPower: 0,
   batteryPower: 800,
   batterySoC: 77,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const BatteryCharging = Template.bind({});
@@ -50,7 +50,7 @@ BatteryCharging.args = {
   pvPower: 5000,
   batteryPower: -1500,
   batterySoC: 75,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const GridPvAndBattery = Template.bind({});
@@ -62,7 +62,7 @@ GridPvAndBattery.args = {
   pvPower: 1000,
   batteryPower: 1500,
   batterySoC: 30,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const BatteryThresholds = Template.bind({});
@@ -74,7 +74,7 @@ BatteryThresholds.args = {
   pvPower: 8740,
   batteryPower: -100,
   batterySoC: 95,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const PvThresholds = Template.bind({});
@@ -86,7 +86,7 @@ PvThresholds.args = {
   gridPower: 5555,
   pvPower: 300,
   batterySoC: 76,
-  title: "Home",
+  siteTitle: "Home",
 };
 
 export const GridOnly = Template.bind({});
@@ -98,5 +98,5 @@ GridOnly.args = {
   pvPower: 0,
   batteryPower: 0,
   batterySoC: 0,
-  title: "Home",
+  siteTitle: "Home",
 };

@@ -63,7 +63,7 @@
 				</span>
 			</div>
 			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
-				<span>Keine Energiefluss</span>
+				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
 		<div class="label-scale">

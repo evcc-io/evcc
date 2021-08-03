@@ -145,10 +145,13 @@ export default {
 			return Math.max(0, this.gridPower);
 		},
 		pvProduction: function () {
-			return this.pvConfigured ? this.pvPower : this.pvExport;
+			return this.pvConfigured ? Math.abs(this.pvPower) : this.pvExport;
 		},
 		pvConsumption: function () {
-			return Math.min(this.pvPower, this.pvPower + this.gridPower - this.batteryCharge);
+			return Math.min(
+				this.pvProduction,
+				this.pvProduction + this.gridPower - this.batteryCharge
+			);
 		},
 		batteryDischarge: function () {
 			return Math.max(0, this.batteryPower);

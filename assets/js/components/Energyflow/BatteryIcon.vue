@@ -1,11 +1,7 @@
 <template>
-	<div>
+	<div :class="{ 'power--in': charge, 'power--out': discharge }">
 		<fa-icon class="battery" :icon="batteryIcon"></fa-icon
-		><fa-icon
-			class="arrow"
-			icon="angle-double-left"
-			:class="{ 'arrow--in': charge, 'arrow--out': discharge }"
-		></fa-icon>
+		><fa-icon class="arrow" icon="angle-double-right"></fa-icon>
 	</div>
 </template>
 
@@ -32,22 +28,31 @@ export default {
 </script>
 <style scoped>
 .battery {
-	transform: rotate(-90deg);
+	transform: translateX(0.35rem) rotate(-90deg);
+	transition-property: transform;
+	transition-duration: 250ms;
+	transition-timing-function: ease;
+}
+.power--in .battery {
+	transform: translateX(0.7rem) rotate(-90deg);
+}
+.power--out .battery {
+	transform: translateX(0) rotate(-90deg);
 }
 .arrow {
-	margin-left: -0.25rem;
+	margin-left: -0.2rem;
 	opacity: 0;
-	transform: scaleX(0);
+	transform: translateX(-0.5rem);
 	transition-property: opacity, transform;
 	transition-duration: 250ms;
 	transition-timing-function: ease;
 }
-.arrow--in {
+.power--in .arrow {
 	opacity: 1;
-	transform: scaleX(1);
+	transform: translateX(-1rem) scaleX(1);
 }
-.arrow--out {
+.power--out .arrow {
 	opacity: 1;
-	transform: scaleX(-1);
+	transform: translateX(0rem) scaleX(1);
 }
 </style>
