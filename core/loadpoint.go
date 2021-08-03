@@ -669,7 +669,7 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 
 			// find placeholder match
 			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil {
+				if vid, err := vehicle.Identify(); err == nil && vid != "" {
 					re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
 					if err != nil {
 						lp.log.ERROR.Printf("vehicle identity: %v", err)
