@@ -21,6 +21,7 @@ func TestChargers(t *testing.T) {
 		"connect: connection refused",
 		"error connecting: Network Error",
 		"i/o timeout",
+		"(Client.Timeout exceeded while awaiting headers)",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {
