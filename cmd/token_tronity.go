@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/vehicle"
 	"github.com/andig/evcc/vehicle/tronity"
@@ -100,7 +101,7 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 
 	select {
 	case <-t.C:
-		return nil, errors.New("timeout")
+		return nil, api.ErrTimeout
 
 	case token := <-resC:
 		if token == nil {
