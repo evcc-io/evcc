@@ -713,7 +713,7 @@ func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
-	lp.log.DEBUG.Printf("!!findActiveVehicle %d", len(lp.vehicles))
+	lp.log.DEBUG.Printf("!!findActiveVehicle %d %v", len(lp.vehicles), lp.vehicles)
 	if len(lp.vehicles) <= 1 {
 		return
 	}
