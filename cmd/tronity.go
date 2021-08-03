@@ -56,7 +56,7 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 
 		ctx := context.Background()
 		token, err := oc.Exchange(ctx, code,
-			oauth2.SetAuthURLParam("grant_type", "app"),
+			oauth2.SetAuthURLParam("grant_type", "code"), // app
 		)
 
 		if err != nil {
