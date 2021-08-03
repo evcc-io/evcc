@@ -30,11 +30,11 @@ func init() {
 // NewTronityFromConfig creates a new Tronity vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		Tokens                 Tokens
-		VIN                    string
-		Cache                  time.Duration
+		embed  `mapstructure:",squash"`
+		Client ClientCredentials
+		Tokens Tokens
+		VIN    string
+		Cache  time.Duration
 	}{
 		Cache: interval,
 	}
@@ -55,10 +55,13 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper: request.NewHelper(log),
 	}
 
-	// cfg := tronity.OAuth2Config(cc.ClientID, cc.ClientSecret)
+	oc, err := tronity.OAuth2Config(cc.Client.ID, cc.Client.Secret)
+	if err != nil {
+		return nil, err
+	}
 
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
-	ts := tronity.OAuth2Config.TokenSource(ctx, &oauth2.Token{
+	ts := oc.TokenSource(ctx, &oauth2.Token{
 		AccessToken:  cc.Tokens.Access,
 		RefreshToken: cc.Tokens.Refresh,
 		Expiry:       time.Now(),
@@ -125,67 +128,34 @@ func (v *Tronity) SoC() (float64, error) {
 	return 0, err
 }
 
-// var _ api.ChargeState = (*Tronity)(nil)
+var _ api.ChargeState = (*Tronity)(nil)
 
-// // Status implements the api.ChargeState interface
-// func (v *Tronity) Status() (api.ChargeStatus, error) {
-// 	status := api.StatusA // disconnected
-// 	res, err := v.chargeStateG()
+// Status implements the api.ChargeState interface
+func (v *Tronity) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+	res, err := v.bulkG()
 
-// 	if res, ok := res.(*Tronity.ChargeState); err == nil && ok {
-// 		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
-// 			status = api.StatusB
-// 		}
-// 		if res.ChargingState == "Charging" {
-// 			status = api.StatusC
-// 		}
-// 	}
+	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+		if res.Charging == "Charging" {
+			status = api.StatusC
+		}
+	}
 
-// 	return status, err
-// }
+	return status, err
+}
 
-// var _ api.ChargeRater = (*Tronity)(nil)
+var _ api.VehicleRange = (*Tronity)(nil)
 
-// // ChargedEnergy implements the api.ChargeRater interface
-// func (v *Tronity) ChargedEnergy() (float64, error) {
-// 	res, err := v.chargeStateG()
+// Range implements the api.VehicleRange interface
+func (v *Tronity) Range() (int64, error) {
+	res, err := v.bulkG()
 
-// 	if res, ok := res.(*Tronity.ChargeState); err == nil && ok {
-// 		return float64(res.ChargeEnergyAdded), nil
-// 	}
+	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+		return int64(res.Range), nil
+	}
 
-// 	return 0, err
-// }
-
-// var _ api.VehicleRange = (*Tronity)(nil)
-
-// // Range implements the api.VehicleRange interface
-// func (v *Tronity) Range() (int64, error) {
-// 	res, err := v.chargeStateG()
-
-// 	if res, ok := res.(*Tronity.ChargeState); err == nil && ok {
-// 		// miles to km
-// 		return int64(1.609344 * res.EstBatteryRange), nil
-// 	}
-
-// 	return 0, err
-// }
-
-// var _ api.VehicleFinishTimer = (*Tronity)(nil)
-
-// // FinishTime implements the api.VehicleFinishTimer interface
-// func (v *Tronity) FinishTime() (time.Time, error) {
-// 	res, err := v.chargeStateG()
-
-// 	if res, ok := res.(*Tronity.ChargeState); err == nil && ok {
-// 		t := time.Now()
-// 		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
-// 	}
-
-// 	return time.Time{}, err
-// }
-
-// // TODO api.Climater implementation has been removed as it drains battery. Re-check at t later time.
+	return 0, err
+}
 
 // var _ api.VehicleStartCharge = (*Tronity)(nil)
 

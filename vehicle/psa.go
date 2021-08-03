@@ -46,10 +46,10 @@ type PSA struct {
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		User, Password, VIN    string
-		Cache                  time.Duration
+		embed               `mapstructure:",squash"`
+		Client              ClientCredentials
+		User, Password, VIN string
+		Cache               time.Duration
 	}{
 		Cache: interval,
 	}
@@ -58,7 +58,7 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 		return nil, err
 	}
 
-	if cc.ClientID == "" || cc.ClientSecret == "" {
+	if cc.Client.ID == "" || cc.Client.Secret == "" {
 		return nil, errors.New("missing client id and secret (see https://github.com/flobz/psa_car_controller)")
 	}
 
@@ -66,7 +66,7 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 		embed: &cc.embed,
 	}
 
-	api := psa.NewAPI(log, brand, realm, cc.ClientID, cc.ClientSecret)
+	api := psa.NewAPI(log, brand, realm, cc.Client.ID, cc.Client.Secret)
 	err := api.Login(cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)

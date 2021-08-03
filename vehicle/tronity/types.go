@@ -16,7 +16,7 @@ type Bulk struct {
 	Odometer  int
 	Range     int
 	Level     int
-	Charging  string
+	Charging  string // Charging
 	Latitude  float64
 	Longitude float64
 	Timestamp int64
