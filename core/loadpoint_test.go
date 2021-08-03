@@ -748,7 +748,7 @@ func TestMinSoC(t *testing.T) {
 	}
 }
 
-func TestVehicleDetectByIdentity(t *testing.T) {
+func TestVehicleDetectByID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	type charger struct {
