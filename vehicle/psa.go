@@ -47,7 +47,7 @@ type PSA struct {
 func newPSA(log *util.Logger, brand, realm string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
-		Client              ClientCredentials
+		Credentials         ClientCredentials
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
@@ -58,15 +58,15 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 		return nil, err
 	}
 
-	if cc.Client.ID == "" || cc.Client.Secret == "" {
-		return nil, errors.New("missing client id and secret (see https://github.com/flobz/psa_car_controller)")
+	if cc.Credentials.ID == "" || cc.Credentials.Secret == "" {
+		return nil, errors.New("missing credentials id and/or secret (see https://github.com/flobz/psa_car_controller)")
 	}
 
 	v := &PSA{
 		embed: &cc.embed,
 	}
 
-	api := psa.NewAPI(log, brand, realm, cc.Client.ID, cc.Client.Secret)
+	api := psa.NewAPI(log, brand, realm, cc.Credentials.ID, cc.Credentials.Secret)
 	err := api.Login(cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
