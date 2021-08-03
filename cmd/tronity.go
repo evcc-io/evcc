@@ -66,7 +66,7 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 			return
 		}
 
-		fmt.Fprintf(w, "%+v", *token)
+		fmt.Fprintln(w, "Token received, see console")
 		resC <- token
 	}
 }
