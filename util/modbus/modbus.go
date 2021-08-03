@@ -3,6 +3,7 @@ package modbus
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -264,6 +265,12 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = rs485.RTUInt32ToFloat64
 	case "int32s":
 		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "sf", "scalefactor":
+		op.Transform = func(b []byte) float64 {
+			e := rs485.RTUInt16ToFloat64(b)
+			return math.Pow(10, float64(e))
+		}
+		op.ReadLen = 1
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}
