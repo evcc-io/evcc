@@ -20,7 +20,6 @@ func OAuth2Config(id, secret string) (*oauth2.Config, error) {
 	return &oauth2.Config{
 		ClientID:     id,
 		ClientSecret: secret,
-		RedirectURL:  "http://localhost:8080",
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  "https://api-eu.tronity.io/oauth/authorize",
 			TokenURL: "https://api-eu.tronity.io/oauth/authentication",

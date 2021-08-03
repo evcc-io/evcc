@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/andig/evcc/server"
@@ -46,7 +48,7 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 	return func(w http.ResponseWriter, r *http.Request) {
 		if remote := r.URL.Query().Get("state"); state != remote {
 			w.WriteHeader(http.StatusBadRequest)
-			close(resC)
+			resC <- nil
 			return
 		}
 
@@ -60,30 +62,16 @@ func tokenExchangeHandler(oc *oauth2.Config, state string, resC chan *oauth2.Tok
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			fmt.Fprintln(w, err)
-			close(resC)
+			resC <- nil
 			return
 		}
 
-		fmt.Fprintf(w, "%+v", token)
+		fmt.Fprintf(w, "%+v", *token)
 		resC <- token
 	}
 }
 
-func handle(fun func(http.ResponseWriter, *http.Request)) {
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", fun)
-
-	s := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
-	}
-
-	go func() {
-		log.FATAL.Fatal(s.ListenAndServe())
-	}()
-}
-
-func tronityToken(oc *oauth2.Config) error {
+func tronityToken(addr string, oc *oauth2.Config) error {
 	state := state()
 
 	uri := oc.AuthCodeURL(state, oauth2.AccessTypeOffline)
@@ -97,7 +85,31 @@ func tronityToken(oc *oauth2.Config) error {
 	handler := tokenExchangeHandler(oc, state, resC)
 	defer close(resC)
 
-	handle(handler)
+	// handle request
+	mux := &http.ServeMux{}
+	mux.HandleFunc("/auth/tronity", handler)
+
+	wg := new(sync.WaitGroup)
+	s := &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
+
+	// start server
+	wg.Add(1)
+	go func() {
+		if err := s.ListenAndServe(); err != http.ErrServerClosed {
+			log.FATAL.Fatal(err)
+		}
+		wg.Done()
+	}()
+
+	// close on exit
+	defer func() {
+		_ = s.Close()
+		wg.Wait()
+		close(resC)
+	}()
 
 	t := time.NewTimer(time.Minute)
 
@@ -105,8 +117,8 @@ func tronityToken(oc *oauth2.Config) error {
 	case <-t.C:
 		return errors.New("timeout")
 
-	case token, ok := <-resC:
-		if !ok {
+	case token := <-resC:
+		if token == nil {
 			return errors.New("token not received")
 		}
 
@@ -150,8 +162,9 @@ func runTronityToken(cmd *cobra.Command, args []string) {
 	}
 
 	cc := struct {
-		Client vehicle.ClientCredentials
-		Other  map[string]interface{} `mapstructure:",remain"`
+		Client      vehicle.ClientCredentials
+		RedirectURI string
+		Other       map[string]interface{} `mapstructure:",remain"`
 	}{}
 
 	if err := util.DecodeOther(vehicleConf.Other, &cc); err != nil {
@@ -163,7 +176,16 @@ func runTronityToken(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	if err := tronityToken(oc); err != nil {
+	if oc.RedirectURL = cc.RedirectURI; oc.RedirectURL == "" {
+		_, port, err := net.SplitHostPort(conf.URI)
+		if err != nil {
+			log.FATAL.Fatal(err)
+		}
+
+		oc.RedirectURL = fmt.Sprintf("http://%s/auth/tronity", net.JoinHostPort("localhost", port))
+	}
+
+	if err := tronityToken(conf.URI, oc); err != nil {
 		log.FATAL.Fatal(err)
 	}
 }

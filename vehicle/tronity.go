@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -126,7 +127,7 @@ func (v *Tronity) bulk() (interface{}, error) {
 func (v *Tronity) SoC() (float64, error) {
 	res, err := v.bulkG()
 
-	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+	if res, ok := res.(tronity.Bulk); err == nil && ok {
 		return float64(res.Level), nil
 	}
 
@@ -140,7 +141,7 @@ func (v *Tronity) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.bulkG()
 
-	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+	if res, ok := res.(tronity.Bulk); err == nil && ok {
 		if res.Charging == "Charging" {
 			status = api.StatusC
 		}
@@ -155,52 +156,41 @@ var _ api.VehicleRange = (*Tronity)(nil)
 func (v *Tronity) Range() (int64, error) {
 	res, err := v.bulkG()
 
-	if res, ok := res.(*tronity.Bulk); err == nil && ok {
+	if res, ok := res.(tronity.Bulk); err == nil && ok {
 		return int64(res.Range), nil
 	}
 
 	return 0, err
 }
 
-// var _ api.VehicleStartCharge = (*Tronity)(nil)
+var _ api.VehicleStartCharge = (*Tronity)(nil)
 
-// // StartCharge implements the api.VehicleStartCharge interface
-// func (v *Tronity) StartCharge() error {
-// 	err := v.vehicle.StartCharging()
+func (v *Tronity) post(uri string) error {
+	resp, err := v.Post(uri, "", nil)
+	if err == nil {
+		err = request.ResponseError(resp)
+	}
 
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		if _, err := v.vehicle.Wakeup(); err != nil {
-// 			return err
-// 		}
+	// ignore HTTP 405
+	if err != nil {
+		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
+			err = nil
+		}
+	}
 
-// 		timer := time.NewTimer(90 * time.Second)
+	return err
+}
 
-// 		for {
-// 			select {
-// 			case <-timer.C:
-// 				return api.ErrTimeout
-// 			default:
-// 				time.Sleep(2 * time.Second)
-// 				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
-// 					return err
-// 				}
-// 			}
-// 		}
-// 	}
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Tronity) StartCharge() error {
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/charge_start", tronity.URI, v.vid)
+	return v.post(uri)
+}
 
-// 	return err
-// }
+var _ api.VehicleStopCharge = (*Tronity)(nil)
 
-// var _ api.VehicleStopCharge = (*Tronity)(nil)
-
-// // StopCharge implements the api.VehicleStopCharge interface
-// func (v *Tronity) StopCharge() error {
-// 	err := v.vehicle.StopCharging()
-
-// 	// ignore sleeping vehicle
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		err = nil
-// 	}
-
-// 	return err
-// }
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Tronity) StopCharge() error {
+	uri := fmt.Sprintf("%s/v1/vehicles/%s/charge_stop", tronity.URI, v.vid)
+	return v.post(uri)
+}
