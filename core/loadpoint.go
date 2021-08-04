@@ -334,8 +334,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	provider.ResetCached()
 
 	// identify active vehicle
-	lp.vehicleConnected = lp.clock.Now()
-	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
+	lp.startVehicleDetection()
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -426,8 +425,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// use first vehicle for estimator
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
+		lp.startVehicleDetection()
 		lp.setActiveVehicle(lp.vehicles[0])
-		lp.vehicleConnected = lp.clock.Now() // ensure we can detect attached vehicle after restart
 		lp.findActiveVehicle()
 	}
 
@@ -621,6 +620,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("socTitle", "unknown")
 		lp.publish("socCapacity", 0)
 	}
+}
+
+// startVehicleDetection resets connection timer and starts api refresh timer
+func (lp *LoadPoint) startVehicleDetection() {
+	lp.vehicleConnected = lp.clock.Now()
+	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
 }
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
