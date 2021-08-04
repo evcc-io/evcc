@@ -106,12 +106,11 @@ type LoadPoint struct {
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter    api.Meter     // Charger usage meter
-	vehicle        api.Vehicle   // Currently active vehicle
-	vehicles       []api.Vehicle // Assigned vehicles
-	socEstimator   *soc.Estimator
-	socTimer       *soc.Timer
-	vehicleIdError error // state of last vehicle identification
+	chargeMeter  api.Meter     // Charger usage meter
+	vehicle      api.Vehicle   // Currently active vehicle
+	vehicles     []api.Vehicle // Assigned vehicles
+	socEstimator *soc.Estimator
+	socTimer     *soc.Timer
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -426,6 +425,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
 		lp.setActiveVehicle(lp.vehicles[0])
+		lp.vehicleConnected = lp.clock.Now() // ensure we can detect attached vehicle after restart
 		lp.findActiveVehicle()
 	}
 
@@ -608,12 +608,11 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 	}
 
-	// update successful
-	lp.vehicleIdError = nil
-	lp.vehicleConnected = time.Time{}
-
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+
+		// vehicle detection reset
+		lp.vehicleConnected = time.Time{}
 
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
@@ -640,7 +639,7 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 		}
 	}
 
-	res := justConnected || errors.Is(lp.vehicleIdError, api.ErrMustRetry)
+	res := justConnected
 	lp.log.DEBUG.Printf("!!vehicleIdentificationAllowed vehicleConnected: %v -> %v", lp.clock.Since(lp.vehicleConnected).Round(time.Second), res)
 
 	return res
@@ -652,7 +651,6 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 		id, err := identifier.Identify()
 
 		if err != nil {
-			lp.vehicleIdError = err
 			lp.log.ERROR.Println("charger vehicle id:", err)
 			return nil
 		}
@@ -689,12 +687,14 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 
 // find active vehicle by charge state
 func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
-	for _, vehicle := range lp.vehicles {
+	for i, vehicle := range lp.vehicles {
+		lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %d", i)
 		if vs, ok := vehicle.(api.ChargeState); ok {
+			lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %d.(api.ChargeState)", i)
 			status, err := vs.Status()
+			lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %v %v", status, err)
 
 			if err != nil {
-				lp.vehicleIdError = err
 				lp.log.ERROR.Println("vehicle status:", err)
 				return nil
 			}
