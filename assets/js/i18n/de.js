@@ -29,12 +29,16 @@ export default {
     dismissAll: "Meldungen entfernen",
   },
   main: {
-    siteDetails: {
-      import: "Bezug",
-      export: "Einspeisung",
-      production: "Erzeugung",
-      batteryShort: "Akku",
-      batteryLong: "Batterie",
+    energyflow: {
+      noEnergy: "Kein Energiefluss",
+      houseConsumption: "Verbrauch",
+      pvProduction: "Erzeugung",
+      battery: "Batterie",
+      batteryCharge: "Batterie laden",
+      batteryDischarge: "Batterie entladen",
+      gridImport: "Netzbezug",
+      selfConsumption: "Eigenverbrauch",
+      pvExport: "Einspeisung",
     },
     mode: {
       title: "Modus",

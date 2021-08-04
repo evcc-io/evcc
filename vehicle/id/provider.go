@@ -65,8 +65,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		cst := res.Data.ChargingStatus
-		timestamp, err := time.Parse(time.RFC3339, cst.CarCapturedTimestamp)
-		return timestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
+		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
 
 	return time.Time{}, err

@@ -60,7 +60,7 @@ type VehiclesResponse struct {
 }
 
 type Vehicle struct {
-	Vin, VehicleName, VehicleID string
+	VIN, VehicleName, VehicleID string
 }
 
 func (v *API) Vehicles() ([]Vehicle, error) {

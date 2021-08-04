@@ -3,8 +3,8 @@
 		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/andig/evcc">
-						<Logo class="logo"></Logo>
+					<a class="navbar-brand" href="/" @click.prevent="reload">
+						<Logo class="logo me-3"></Logo>
 					</a>
 					<div class="d-flex">
 						<div class="d-flex">
@@ -94,6 +94,14 @@ export default {
 				}
 			};
 		},
+		reload() {
+			window.location.reload();
+		},
+	},
+	metaInfo() {
+		return {
+			title: this.title ? `evcc | ${this.title}` : "evcc",
+		};
 	},
 	computed: {
 		version: function () {
@@ -105,6 +113,9 @@ export default {
 				uploadMessage: this.store.state.uploadMessage,
 				uploadProgress: this.store.state.uploadProgress,
 			};
+		},
+		title: function () {
+			return this.store.state.siteTitle;
 		},
 		sponsor: function () {
 			return this.store.state.sponsor;
@@ -126,5 +137,9 @@ export default {
 }
 .app {
 	min-height: 100vh;
+}
+.title {
+	position: relative;
+	top: 0.1rem;
 }
 </style>

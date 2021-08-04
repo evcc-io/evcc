@@ -56,6 +56,14 @@ func (e StatusError) HasStatus(codes ...int) bool {
 	return false
 }
 
+// ResponseError turns an HTTP status code into an error
+func ResponseError(resp *http.Response) error {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return StatusError{resp: resp}
+	}
+	return nil
+}
+
 // ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx. It closes the request body after reading.
 func ReadBody(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()

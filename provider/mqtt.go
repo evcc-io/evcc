@@ -100,7 +100,7 @@ func (m *Mqtt) FloatGetter() func() (float64, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		scale: m.scale,
-		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		jq:    m.jq,
 	}
 
@@ -115,7 +115,7 @@ func (m *Mqtt) IntGetter() func() (int64, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		scale: float64(m.scale),
-		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		jq:    m.jq,
 	}
 
@@ -129,7 +129,7 @@ var _ StringProvider = (*Mqtt)(nil)
 func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
 		topic: m.topic,
-		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		jq:    m.jq,
 	}
 
@@ -143,7 +143,7 @@ var _ BoolProvider = (*Mqtt)(nil)
 func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
 		topic: m.topic,
-		mux:   util.NewWaiter(m.timeout, func() { m.log.TRACE.Printf("%s wait for initial value", m.topic) }),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		jq:    m.jq,
 	}
 

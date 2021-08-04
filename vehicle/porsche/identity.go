@@ -39,7 +39,7 @@ type Identity struct {
 	user, password string
 }
 
-// NewIdentity creates a new Identity client
+// NewIdentity creates Porsche identity
 func NewIdentity(log *util.Logger, user, password string) *Identity {
 	v := &Identity{
 		log:      log,
@@ -199,6 +199,14 @@ type Vehicle struct {
 type VehicleResponse struct {
 	VIN              string
 	ModelDescription string
+	Pictures         []struct {
+		URL         string
+		View        string
+		Size        int
+		Width       int
+		Height      int
+		Transparent bool
+	}
 }
 
 func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
@@ -229,11 +237,8 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 		if foundVehicle.VIN != "" {
 			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
 
-			// check if the found vehicle is a Taycan, because that one supports the emobility API
 			if accessTokens.EmobilityToken.AccessToken != "" {
-				if strings.Contains(foundVehicle.ModelDescription, "Taycan") {
-					foundEmobilityVehicle = true
-				}
+				foundEmobilityVehicle = true
 			}
 		} else {
 			err = errors.New("vin not found")

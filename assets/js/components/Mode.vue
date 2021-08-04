@@ -4,7 +4,7 @@
 		<div class="btn-group w-100" role="group">
 			<button
 				type="button"
-				class="btn btn-outline-primary"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'off' }"
 				@click="setTargetMode('off')"
 			>
@@ -12,7 +12,7 @@
 			</button>
 			<button
 				type="button"
-				class="btn btn-outline-primary"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'now' }"
 				@click="setTargetMode('now')"
 			>
@@ -20,7 +20,7 @@
 			</button>
 			<button
 				type="button"
-				class="btn btn-outline-primary"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'minpv' }"
 				@click="setTargetMode('minpv')"
 			>
@@ -29,7 +29,7 @@
 			</button>
 			<button
 				type="button"
-				class="btn btn-outline-primary"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'pv' }"
 				@click="setTargetMode('pv')"
 			>

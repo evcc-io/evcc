@@ -4,26 +4,38 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andig/evcc/mock"
 	"github.com/andig/evcc/util"
+	"github.com/golang/mock/gomock"
 )
 
 func TestRemainingChargeDuration(t *testing.T) {
-	// 9 kWh userBatCap => 10 kWh virtualBatCap
-	ce := NewEstimator(util.NewLogger("foo"), 9, false)
-	ce.estimatedSoC = 20.0
+	ctrl := gomock.NewController(t)
+	vehicle := mock.NewMockVehicle(ctrl)
+	//9 kWh userBatCap => 10 kWh virtualBatCap
+	vehicle.EXPECT().Capacity().Return(int64(9))
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, false)
+	ce.socCharge = 20.0
 
 	chargePower := 1000.0
 	targetSoC := 80
 
-	if remaining := ce.RemainingChargeDuration(targetSoC, chargePower, 0); remaining != 6*time.Hour {
+	if remaining := ce.RemainingChargeDuration(chargePower, targetSoC); remaining != 6*time.Hour {
 		t.Error("wrong remaining charge duration")
 	}
 }
 
 func TestSoCEstimation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	vehicle := mock.NewMockVehicle(ctrl)
+
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
-	ce := NewEstimator(util.NewLogger("foo"), 9, true)
-	ce.estimatedSoC = 20.0
+	var capacity int64 = 9
+	vehicle.EXPECT().Capacity().Return(capacity)
+
+	ce := NewEstimator(util.NewLogger("foo"), vehicle, true)
+	ce.socCharge = 20.0
 
 	tc := []struct {
 		chargedEnergy   float64
@@ -60,8 +72,12 @@ func TestSoCEstimation(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
+		vehicle.EXPECT().SoC().Return(tc.vehicleSoC, nil)
 
-		soc := ce.SoC(tc.vehicleSoC, tc.chargedEnergy, false)
+		soc, err := ce.SoC(tc.chargedEnergy)
+		if err != nil {
+			t.Error(err)
+		}
 
 		// validate soc estimate
 		if tc.estimatedSoC != soc {
@@ -79,7 +95,7 @@ func TestSoCEstimation(t *testing.T) {
 		remainingHours := (float64(targetSoC) - soc) / 100 * tc.virtualCapacity / chargePower
 		remainingDuration := time.Duration(float64(time.Hour) * remainingHours).Round(time.Second)
 
-		if rm := ce.RemainingChargeDuration(targetSoC, chargePower, 0); rm != remainingDuration {
+		if rm := ce.RemainingChargeDuration(chargePower, targetSoC); rm != remainingDuration {
 			t.Errorf("expected estimated duration: %v, got: %v", remainingDuration, rm)
 		}
 	}

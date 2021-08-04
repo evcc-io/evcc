@@ -16,7 +16,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity and any other connected vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -36,6 +36,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Meter](#meter)
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
+  - [Flexible Energy Tariffs](#flexible-energy-tariffs)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
@@ -261,21 +262,23 @@ Available vehicle remote interface implementations are:
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
 - `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
+- `fiat`: Fiat (500e)
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `kia`: Kia (Soul and other Bluelink models)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 - `nissan`: Nissan (Leaf)
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
-- `porsche`: Porsche (Taycan)
+- `porsche`: Porsche (Taycan, Cayenne E-Hybrid)
 - `seat`: Seat (Cupra, Mii)
 - `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
+- `tronity`: Tronity (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -293,6 +296,25 @@ hems:
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
 to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
+
+### Flexible Energy Tariffs
+
+EVCC supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+
+```yaml
+tariffs:
+  grid:
+    # either
+    type: tibber
+    cheap: 20 # ct/kWh
+    token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
+    homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
+
+    # or
+    type: awattar
+    cheap: 20 # ct/kWh
+    region: de # optional, choose at for Austria
+```
 
 ## Plugins
 

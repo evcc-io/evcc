@@ -96,7 +96,9 @@ jobs:
         fetch-depth: 0
 
     - name: Install
-      run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin v0.5.1
+      env:
+        SEIHON_VERSION: v0.8.3
+      run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
     - name: Login
       uses: docker/login-action@v1
@@ -180,8 +182,8 @@ jobs:
 
     - name: Clean git
       run: |
-         git checkout go.*
-         rm -rf flags buildflags
+        git checkout go.*
+        rm -rf flags buildflags
 
     - name: Create Github Release
       uses: goreleaser/goreleaser-action@v2

@@ -31,6 +31,7 @@ type config struct {
 	Meters       []qualifiedConfig
 	Chargers     []qualifiedConfig
 	Vehicles     []qualifiedConfig
+	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	LoadPoints   []map[string]interface{}
 }
@@ -60,6 +61,10 @@ type typedConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplate
 	Services []typedConfig
+}
+
+type tariffConfig struct {
+	Grid typedConfig
 }
 
 // ConfigProvider provides configuration items

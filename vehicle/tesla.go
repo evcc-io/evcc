@@ -22,11 +22,6 @@ type Tesla struct {
 	climateStateG func() (interface{}, error)
 }
 
-// teslaTokens contains access and refresh tokens
-type teslaTokens struct {
-	Access, Refresh string
-}
-
 func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
@@ -36,7 +31,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`
 		User, Password string // deprecated
-		Tokens         teslaTokens
+		Tokens         Tokens
 		VIN            string
 		Cache          time.Duration
 	}{
@@ -48,11 +43,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User != "" {
-		return nil, errors.New("user/password authentication deprecated, use tesla-token command to create credentials")
+		return nil, errors.New("user/password authentication deprecated, use `evcc token` to create credentials")
 	}
 
-	if cc.Tokens.Access == "" {
-		return nil, errors.New("missing token credentials")
+	if err := cc.Tokens.Error(); err != nil {
+		return nil, err
 	}
 
 	v := &Tesla{
