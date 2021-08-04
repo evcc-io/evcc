@@ -28,7 +28,9 @@ const (
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
-	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
+	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
+	vehicleDetectInterval = 3 * time.Minute
+	vehicleDetectDuration = 10 * time.Minute
 )
 
 // PollConfig defines the vehicle polling mode and interval
@@ -333,7 +335,7 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// identify active vehicle
 	lp.vehicleConnected = lp.clock.Now()
-	lp.vehicleConnectedTicker = lp.clock.Ticker(3 * time.Minute)
+	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -623,11 +625,10 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 // vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	// allow for 3x 3min timeout
-	justConnected := lp.clock.Since(lp.vehicleConnected) < 10*time.Minute
+	res := lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
-	if justConnected {
+	if res {
 		select {
 		case <-lp.vehicleConnectedTicker.C:
 			lp.log.DEBUG.Println("vehicle api refresh")
@@ -636,7 +637,6 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 		}
 	}
 
-	res := justConnected
 	lp.log.DEBUG.Printf("!!vehicleIdentificationAllowed vehicleConnected: %v -> %v", lp.clock.Since(lp.vehicleConnected).Round(time.Second), res)
 
 	return res
