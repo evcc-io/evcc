@@ -248,7 +248,6 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
-		nrg.log.TRACE.Println(err)
 		return false, err
 	}
 
@@ -346,7 +345,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		nil
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the ChargeRater interface
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
 // 	res := nrgble.Energy{}

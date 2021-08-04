@@ -83,19 +83,27 @@ type Status struct {
 		ClimatisationSettings ClimatisationSettings
 		ClimatisationStatus   ClimatisationStatus // may be currently not available
 	}
+	Error map[string]Error
+}
+
+// Error is the error status
+type Error struct {
+	Code          int
+	Message, Info string
 }
 
 // BatteryStatus is the /status.batteryStatus api
 type BatteryStatus struct {
-	CarCapturedTimestamp    string
+	CarCapturedTimestamp    Timestamp
 	CurrentSOCPercent       int `json:"currentSOC_pct"`
 	CruisingRangeElectricKm int `json:"cruisingRangeElectric_km"`
 }
 
 // ChargingStatus is the /status.chargingStatus api
 type ChargingStatus struct {
-	CarCapturedTimestamp               string
-	ChargingState                      string  // readyForCharging
+	CarCapturedTimestamp               Timestamp
+	ChargingState                      string  // readyForCharging/off
+	ChargeMode                         string  // invalid
 	RemainingChargingTimeToCompleteMin int     `json:"remainingChargingTimeToComplete_min"`
 	ChargePowerKW                      float64 `json:"chargePower_kW"`
 	ChargeRateKmph                     int     `json:"chargeRate_kmph"`
@@ -103,7 +111,7 @@ type ChargingStatus struct {
 
 // ChargingSettings is the /status.chargingSettings api
 type ChargingSettings struct {
-	CarCapturedTimestamp      string
+	CarCapturedTimestamp      Timestamp
 	MaxChargeCurrentAC        string // reduced, maximum
 	AutoUnlockPlugWhenCharged string
 	TargetSOCPercent          int `json:"targetSOC_pct"`
@@ -111,21 +119,21 @@ type ChargingSettings struct {
 
 // PlugStatus is the /status.plugStatus api
 type PlugStatus struct {
-	CarCapturedTimestamp string
+	CarCapturedTimestamp Timestamp
 	PlugConnectionState  string // connected, disconnected
-	PlugLockState        string
+	PlugLockState        string // locked, unlocked
 }
 
 // ClimatisationStatus is the /status.climatisationStatus api
 type ClimatisationStatus struct {
-	CarCapturedTimestamp          string
+	CarCapturedTimestamp          Timestamp
 	RemainingClimatisationTimeMin int    `json:"remainingClimatisationTime_min"`
 	ClimatisationState            string // off
 }
 
 // ClimatisationSettings is the /status.climatisationSettings api
 type ClimatisationSettings struct {
-	CarCapturedTimestamp              string
+	CarCapturedTimestamp              Timestamp
 	TargetTemperatureK                float64 `json:"targetTemperature_K"`
 	TargetTemperatureC                float64 `json:"targetTemperature_C"`
 	ClimatisationWithoutExternalPower bool
@@ -139,7 +147,7 @@ type ClimatisationSettings struct {
 
 // RangeStatus is the /status.rangeStatus api
 type RangeStatus struct {
-	CarCapturedTimestamp string
+	CarCapturedTimestamp Timestamp
 	CarType              string
 	PrimaryEngine        struct {
 		Type              string

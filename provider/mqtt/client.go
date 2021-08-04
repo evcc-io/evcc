@@ -96,7 +96,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 	defer m.mux.Unlock()
 
 	for topic := range m.listener {
-		m.log.TRACE.Printf("%s subscribe %s", m.broker, topic)
+		m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
 		go m.listen(topic)
 	}
 }

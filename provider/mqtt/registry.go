@@ -51,7 +51,7 @@ func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
 		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, ClientID(), 1)
 	}
 
-	if client == nil {
+	if client == nil && err == nil {
 		err = errors.New("missing mqtt broker configuration")
 	}
 

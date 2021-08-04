@@ -12,7 +12,7 @@ func (s *Core) OnGetConfiguration(request *core.GetConfigurationRequest) (confir
 	for _, key := range request.Key {
 		configKey, ok := s.configuration[key]
 		if !ok {
-			unknownKeys = append(unknownKeys, configKey.Value)
+			unknownKeys = append(unknownKeys, *configKey.Value)
 		} else {
 			resultKeys = append(resultKeys, configKey)
 		}

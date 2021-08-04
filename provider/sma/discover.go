@@ -65,7 +65,7 @@ func (d *Discoverer) createDevice(device *sunny.Device) *Device {
 	return &Device{
 		Device: device,
 		log:    d.log,
-		mux:    util.NewWaiter(udpTimeout, func() { d.log.TRACE.Println("wait for initial value") }),
+		mux:    util.NewWaiter(udpTimeout, func() { d.log.DEBUG.Println("wait for initial value") }),
 		values: make(map[sunny.ValueID]interface{}),
 	}
 }
@@ -76,6 +76,8 @@ func (d *Discoverer) addDevice(device *sunny.Device) {
 
 	if _, ok := d.devices[device.SerialNumber()]; !ok {
 		d.devices[device.SerialNumber()] = d.createDevice(device)
+	} else {
+		device.Close()
 	}
 }
 
