@@ -611,9 +611,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
-		// vehicle detection reset
-		lp.vehicleConnected = time.Time{}
-
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
 	} else {
