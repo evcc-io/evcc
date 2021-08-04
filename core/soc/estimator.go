@@ -96,7 +96,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	if charger, ok := s.charger.(api.Battery); ok {
 		f, err := charger.SoC()
 
-		if !errors.Is(err, api.ErrNotAvailable) {
+		if err == nil {
 			s.socCharge = f
 			return s.socCharge, nil
 		}
