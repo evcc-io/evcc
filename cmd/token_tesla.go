@@ -9,27 +9,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
 	"github.com/manifoldco/promptui"
 	"github.com/skratchdot/open-golang/open"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
-
-// teslaCmd represents the vehicle command
-var teslaCmd = &cobra.Command{
-	Use:   "tesla-token",
-	Short: "Generate Tesla token credentials",
-	Run:   runTeslaToken,
-}
-
-func init() {
-	rootCmd.AddCommand(teslaCmd)
-}
 
 // copied from https://github.com/bogosj/tesla
 func getUsernameAndPassword() (string, string, error) {
@@ -128,7 +113,12 @@ func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
 	return strings.TrimSpace(captcha), err
 }
 
-func generateToken(username, password string) {
+func teslaToken() (*oauth2.Token, error) {
+	username, password, err := getUsernameAndPassword()
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 	client, err := tesla.NewClient(
 		ctx,
@@ -137,30 +127,13 @@ func generateToken(username, password string) {
 		tesla.WithCredentials(username, password),
 	)
 	if err != nil {
-		log.FATAL.Fatalln(err)
+		return nil, err
 	}
 
 	token, err := client.Token()
 	if err != nil {
-		log.FATAL.Fatalln(err)
+		return nil, err
 	}
 
-	fmt.Println()
-	fmt.Println("Add the following tokens to the tesla vehicle config:")
-	fmt.Println()
-	fmt.Println("  tokens:")
-	fmt.Println("    access:", token.AccessToken)
-	fmt.Println("    refresh:", token.RefreshToken)
-}
-
-func runTeslaToken(cmd *cobra.Command, args []string) {
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
-
-	user, password, err := getUsernameAndPassword()
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
-
-	generateToken(user, password)
+	return token, nil
 }

@@ -16,7 +16,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity and any other connected vehicle using scripting
 - [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -278,6 +278,7 @@ Available vehicle remote interface implementations are:
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
+- `tronity`: Tronity (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
