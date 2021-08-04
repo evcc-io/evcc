@@ -74,19 +74,35 @@ var eebusDevice spine.Device
 var once sync.Once
 
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
+	c.log.WARN.Println("onCconnect invoked on ski ", ski)
+
 	once.Do(func() {
 		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
 	})
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
-	err := c.cc.Boot()
+
 	c.connected = true
-	c.expectedEnableState = false
+	c.setDefaultValues()
+
+	err := c.cc.Boot()
+
 	return err
 }
 
 func (c *EEBus) onDisconnect(ski string) {
+	c.log.WARN.Println("onDisconnect invoked on ski ", ski)
+
 	c.connected = false
+	c.setDefaultValues()
+}
+
+func (c *EEBus) setDefaultValues() {
+	c.expectedEnableState = false
+
+	c.communicationStandard = communication.EVCommunicationStandardEnumTypeUnknown
+	c.socSupportAvailable = false
+	c.selfConsumptionSupportAvailable = false
 }
 
 func (c *EEBus) setLoadpointMinMaxLimits(data *communication.EVSEClientDataType) {

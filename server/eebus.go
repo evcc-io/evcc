@@ -23,7 +23,7 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
-type EEBusClients struct {
+type EEBusClientCBs struct {
 	onConnect    func(string, ship.Conn) error
 	onDisconnect func(string)
 }
@@ -33,7 +33,7 @@ type EEBus struct {
 	log               *util.Logger
 	srv               *eebus.Server
 	id                string
-	clients           map[string]EEBusClients
+	clients           map[string]EEBusClientCBs
 	connectedClients  map[string]ship.Conn
 	discoveredClients map[string]*zeroconf.ServiceEntry
 }
@@ -92,7 +92,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		log:               log,
 		srv:               srv,
 		id:                id,
-		clients:           make(map[string]EEBusClients),
+		clients:           make(map[string]EEBusClientCBs),
 		connectedClients:  make(map[string]ship.Conn),
 		discoveredClients: make(map[string]*zeroconf.ServiceEntry),
 	}
@@ -114,7 +114,7 @@ func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) 
 	c.log.TRACE.Printf("registering ski: %s", ski)
 
 	c.mux.Lock()
-	c.clients[ski] = EEBusClients{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
+	c.clients[ski] = EEBusClientCBs{onConnect: shipConnectHandler, onDisconnect: shipDisconnectHandler}
 	c.mux.Unlock()
 
 	// maybe the SKI is already discovered
@@ -279,15 +279,22 @@ func (c *EEBus) shipHandler(ski string, conn ship.Conn) error {
 func (c *EEBus) shipCloseHandler(ski string) {
 	c.mux.Lock()
 
-	_, found := c.connectedClients[ski]
+	currentConnection, found := c.connectedClients[ski]
 	if found {
-		for client, cb := range c.clients {
-			if client == ski {
-				cb.onDisconnect(ski)
+		var closeConnection bool
+		var clientCB EEBusClientCBs
+		for clientSki, client := range c.clients {
+			if clientSki == ski && !currentConnection.IsConnectionClosed() {
+				clientCB = client
+				closeConnection = true
 				break
 			}
 		}
-		delete(c.connectedClients, ski)
+		if closeConnection {
+			clientCB.onDisconnect(ski)
+			delete(c.connectedClients, ski)
+			delete(c.clients, ski)
+		}
 	}
 
 	c.mux.Unlock()
