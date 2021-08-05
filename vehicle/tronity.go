@@ -165,7 +165,7 @@ func (v *Tronity) SoC() (float64, error) {
 	res, err := v.bulkG()
 
 	if res, ok := res.(tronity.Bulk); err == nil && ok {
-		return float64(res.Level), nil
+		return res.Level, nil
 	}
 
 	return 0, err
