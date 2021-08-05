@@ -130,10 +130,9 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 // apiUpdate invokes either cloud or local api
 // goeStatusResponse is only valid for local api. Use Fwv if valid.
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
-	// let charger settle after update
-	defer time.Sleep(2 * time.Second)
-
 	if c.token == "" {
+		// let charger settle after update
+		defer time.Sleep(2 * time.Second)
 		return c.localResponse("mqtt", payload)
 	}
 
