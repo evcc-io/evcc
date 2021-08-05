@@ -13,15 +13,15 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger):
-  - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
+  - Wallbe, Phoenix (includes ESL Walli), go-eCharger (includes Heidelberg Energy Control), NRGkick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity and any other connected vehicle using scripting
-- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
-- status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
+- status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- granular charge power control down to 25W steps with supported chargers
-- REST API
+- granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
+- REST and MQTT [APIs](#api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/andig/evcc-hassio-addon))
 
 ![Screenshot](docs/screenshot.png)
 
@@ -183,7 +183,7 @@ Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
-- `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
+- `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required). Includes Heidelberg Energy Control using [github.com/steff393/wbec](https://github.com/steff393/wbec).
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
