@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/util/sponsor"
+	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -39,6 +40,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
+		Circuit  int
 		Cache    time.Duration
 	}{
 		Cache: 10 * time.Second,
@@ -48,11 +50,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Circuit, cc.Cache)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, circuit int, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee")
 
 	if !sponsor.IsAuthorized() {
@@ -62,6 +64,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	c := &Easee{
 		Helper:  request.NewHelper(log),
 		charger: charger,
+		circuit: circuit,
 		cache:   cache,
 		log:     log,
 	}
@@ -77,6 +80,14 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		Base:   c.Client.Transport,
 	}
 
+	// find site
+	site, err := c.chargerDetails()
+	if err != nil {
+		return c, err
+	}
+
+	c.site = site.ID
+
 	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
@@ -85,47 +96,43 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", chargers)
+			return c, fmt.Errorf("cannot determine charger id, found: %v", funk.Map(chargers, func(c easee.Charger) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
 	}
 
-	// find site and circuit
-	site, err := c.chargerDetails()
-	if err != nil {
-		return c, err
-	}
+	// find circuit
+	if circuit == 0 {
+		if len(site.Circuits) != 1 {
+			return c, fmt.Errorf("cannot determine circuit id, found: %v", funk.Map(site.Circuits, func(c easee.Circuit) int { return c.ID }))
+		}
 
-	if len(site.Circuits) != 1 {
-		return c, fmt.Errorf("cannot determine circuit id, found: %v", site.Circuits)
+		c.circuit = site.Circuits[0].ID
 	}
-
-	c.site = site.ID
-	c.circuit = site.Circuits[0].ID
 
 	return c, err
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
 	uri := fmt.Sprintf("%s/chargers", easee.API)
+
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
-	err = c.DoJSON(req, &res)
 	return res, err
 }
 
 func (c *Easee) chargerDetails() (res easee.Site, err error) {
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, c.charger)
+
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err != nil {
-		return res, err
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
-	err = c.DoJSON(req, &res)
 	return res, err
 }
 
@@ -145,15 +152,17 @@ func (c *Easee) syncSmartCharging() error {
 			SmartCharging: &newSmartCharging,
 		}
 
-		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 		if err == nil {
-			_, err = c.Do(req)
-			c.updated = time.Time{} // clear cache
-			c.lastChargeMode = c.lp.GetMode()
-			c.lastSmartCharging = newSmartCharging
+			resp.Body.Close()
 		}
+
+		c.updated = time.Time{} // clear cache
+
+		c.lastChargeMode = c.lp.GetMode()
+		c.lastSmartCharging = newSmartCharging
+
 		return err
 	}
 
@@ -227,12 +236,13 @@ func (c *Easee) Enable(enable bool) error {
 			Enabled: &enable,
 		}
 
-		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
-			_, err = c.Do(req)
-			c.updated = time.Time{} // clear cache
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		if err == nil {
+			resp.Body.Close()
 		}
+
+		c.updated = time.Time{} // clear cache
 
 		return err
 	}
@@ -243,12 +253,9 @@ func (c *Easee) Enable(enable bool) error {
 		action = "resume_charging"
 	}
 
-	var req *http.Request
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if req, err = request.New(http.MethodPost, uri, nil, request.JSONEncoding); err == nil {
-		_, err = c.Do(req)
-		c.updated = time.Time{} // clear cache
-	}
+	_, err = c.Post(uri, request.JSONContent, nil)
+	c.updated = time.Time{} // clear cache
 
 	return err
 }
@@ -270,11 +277,12 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	}
 
 	uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		_, err = c.Do(req)
-		c.updated = time.Time{} // clear cache
+		resp.Body.Close()
 	}
+
+	c.updated = time.Time{} // clear cache
 
 	return err
 }
