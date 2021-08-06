@@ -12,6 +12,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
 	"github.com/andig/evcc/util/sponsor"
+	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -95,7 +96,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		}
 
 		if len(chargers) != 1 {
-			return c, fmt.Errorf("cannot determine charger id, found: %v", chargers)
+			return c, fmt.Errorf("cannot determine charger id, found: %v", funk.Map(chargers, func(c easee.Charger) string { return c.ID }))
 		}
 
 		c.charger = chargers[0].ID
@@ -104,7 +105,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	// find circuit
 	if circuit == 0 {
 		if len(site.Circuits) != 1 {
-			return c, fmt.Errorf("cannot determine circuit id, found: %v", site.Circuits)
+			return c, fmt.Errorf("cannot determine circuit id, found: %v", funk.Map(site.Circuits, func(c easee.Circuit) int { return c.ID }))
 		}
 
 		c.circuit = site.Circuits[0].ID
