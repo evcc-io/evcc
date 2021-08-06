@@ -39,6 +39,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
+		Circuit  int
 		Cache    time.Duration
 	}{
 		Cache: 10 * time.Second,
@@ -48,11 +49,11 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Circuit, cc.Cache)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, circuit int, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee")
 
 	if !sponsor.IsAuthorized() {
@@ -62,6 +63,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	c := &Easee{
 		Helper:  request.NewHelper(log),
 		charger: charger,
+		circuit: circuit,
 		cache:   cache,
 		log:     log,
 	}
@@ -77,6 +79,14 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		Base:   c.Client.Transport,
 	}
 
+	// find site
+	site, err := c.chargerDetails()
+	if err != nil {
+		return c, err
+	}
+
+	c.site = site.ID
+
 	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
@@ -91,18 +101,14 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 		c.charger = chargers[0].ID
 	}
 
-	// find site and circuit
-	site, err := c.chargerDetails()
-	if err != nil {
-		return c, err
-	}
+	// find circuit
+	if circuit == 0 {
+		if len(site.Circuits) != 1 {
+			return c, fmt.Errorf("cannot determine circuit id, found: %v", site.Circuits)
+		}
 
-	if len(site.Circuits) != 1 {
-		return c, fmt.Errorf("cannot determine circuit id, found: %v", site.Circuits)
+		c.circuit = site.Circuits[0].ID
 	}
-
-	c.site = site.ID
-	c.circuit = site.Circuits[0].ID
 
 	return c, err
 }
