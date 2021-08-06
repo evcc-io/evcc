@@ -601,17 +601,19 @@ func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
-	if lp.vehicle != vehicle {
-		from := "unknown"
-		if lp.vehicle != nil {
-			from = lp.vehicle.Title()
-		}
-		to := "unknown"
-		if vehicle != nil {
-			to = vehicle.Title()
-		}
-		lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
+	if lp.vehicle == vehicle {
+		return
 	}
+
+	from := "unknown"
+	if lp.vehicle != nil {
+		from = lp.vehicle.Title()
+	}
+	to := "unknown"
+	if vehicle != nil {
+		to = vehicle.Title()
+	}
+	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
@@ -691,7 +693,7 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 
 // find active vehicle by charge state
 func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
-	for i, vehicle := range lp.vehicles {
+	for _, vehicle := range lp.vehicles {
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
 
