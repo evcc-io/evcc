@@ -646,8 +646,6 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 		}
 	}
 
-	lp.log.DEBUG.Printf("!!vehicleIdentificationAllowed vehicleConnected: %v -> %v", lp.clock.Since(lp.vehicleConnected).Round(time.Second), res)
-
 	return res
 }
 
@@ -694,11 +692,8 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 // find active vehicle by charge state
 func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
 	for i, vehicle := range lp.vehicles {
-		lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %d", i)
 		if vs, ok := vehicle.(api.ChargeState); ok {
-			lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %d.(api.ChargeState)", i)
 			status, err := vs.Status()
-			lp.log.DEBUG.Printf("!!findActiveVehicleByStatus %v %v", status, err)
 
 			if err != nil {
 				lp.log.ERROR.Println("vehicle status:", err)
@@ -719,28 +714,22 @@ func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
-	lp.log.DEBUG.Printf("!!findActiveVehicle %d %v", len(lp.vehicles), lp.vehicles)
 	if len(lp.vehicles) <= 1 {
 		return
 	}
 
-	lp.log.DEBUG.Printf("!!findActiveVehicleByID")
 	if vehicle := lp.findActiveVehicleByID(); vehicle != nil {
-		lp.log.DEBUG.Printf("!!found")
 		lp.setActiveVehicle(vehicle)
 		return
 	}
 
-	lp.log.DEBUG.Printf("!!findActiveVehicleByStatus")
 	if vehicle := lp.findActiveVehicleByStatus(); vehicle != nil {
-		lp.log.DEBUG.Printf("!!found")
 		lp.setActiveVehicle(vehicle)
 		return
 	}
 
 	// remove previously vehicle if status was not confirmed
 	if _, ok := lp.vehicle.(api.ChargeState); ok {
-		lp.log.DEBUG.Printf("!!remove vehicle")
 		lp.setActiveVehicle(nil)
 	}
 }
