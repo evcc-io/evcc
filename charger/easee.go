@@ -116,23 +116,23 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
 	uri := fmt.Sprintf("%s/chargers", easee.API)
+
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err != nil {
-		return nil, err
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
-	err = c.DoJSON(req, &res)
 	return res, err
 }
 
 func (c *Easee) chargerDetails() (res easee.Site, err error) {
 	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, c.charger)
+
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err != nil {
-		return res, err
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
-	err = c.DoJSON(req, &res)
 	return res, err
 }
 
@@ -152,15 +152,13 @@ func (c *Easee) syncSmartCharging() error {
 			SmartCharging: &newSmartCharging,
 		}
 
-		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err == nil {
-			_, err = c.Do(req)
-			c.updated = time.Time{} // clear cache
-			c.lastChargeMode = c.lp.GetMode()
-			c.lastSmartCharging = newSmartCharging
-		}
+		_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		c.updated = time.Time{} // clear cache
+
+		c.lastChargeMode = c.lp.GetMode()
+		c.lastSmartCharging = newSmartCharging
+
 		return err
 	}
 
@@ -234,12 +232,9 @@ func (c *Easee) Enable(enable bool) error {
 			Enabled: &enable,
 		}
 
-		var req *http.Request
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		if req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding); err == nil {
-			_, err = c.Do(req)
-			c.updated = time.Time{} // clear cache
-		}
+		_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		c.updated = time.Time{} // clear cache
 
 		return err
 	}
@@ -250,12 +245,9 @@ func (c *Easee) Enable(enable bool) error {
 		action = "resume_charging"
 	}
 
-	var req *http.Request
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	if req, err = request.New(http.MethodPost, uri, nil, request.JSONEncoding); err == nil {
-		_, err = c.Do(req)
-		c.updated = time.Time{} // clear cache
-	}
+	_, err = c.Post(uri, request.JSONContent, nil)
+	c.updated = time.Time{} // clear cache
 
 	return err
 }
@@ -277,11 +269,8 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	}
 
 	uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		_, err = c.Do(req)
-		c.updated = time.Time{} // clear cache
-	}
+	_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+	c.updated = time.Time{} // clear cache
 
 	return err
 }
