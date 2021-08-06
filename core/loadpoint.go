@@ -353,6 +353,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
+	// remove active vehicle
+	if len(lp.vehicles) > 1 {
+		lp.setActiveVehicle(nil)
+	}
+
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(lp.OnDisconnect.Mode)
@@ -425,9 +430,8 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// use first vehicle for estimator
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
-		lp.startVehicleDetection()
 		lp.setActiveVehicle(lp.vehicles[0])
-		lp.findActiveVehicle()
+		lp.startVehicleDetection()
 	}
 
 	// read initial charger state to prevent immediately disabling charger
@@ -628,9 +632,9 @@ func (lp *LoadPoint) startVehicleDetection() {
 	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
 }
 
-// vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
+// vehicleIdentificationAllowed checks if loadpoint has multiple vehicles associated and starts discovery period
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	res := lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+	res := len(lp.vehicles) > 1 && lp.connected() && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
 	if res {
