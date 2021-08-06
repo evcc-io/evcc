@@ -730,7 +730,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	// remove previously vehicle if status was not confirmed
+	// remove previous vehicle if status was not confirmed
 	if _, ok := lp.vehicle.(api.ChargeState); ok {
 		lp.setActiveVehicle(nil)
 	}
