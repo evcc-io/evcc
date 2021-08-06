@@ -153,7 +153,11 @@ func (c *Easee) syncSmartCharging() error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		if err == nil {
+			resp.Body.Close()
+		}
+
 		c.updated = time.Time{} // clear cache
 
 		c.lastChargeMode = c.lp.GetMode()
@@ -233,7 +237,11 @@ func (c *Easee) Enable(enable bool) error {
 		}
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+		if err == nil {
+			resp.Body.Close()
+		}
+
 		c.updated = time.Time{} // clear cache
 
 		return err
@@ -269,7 +277,11 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	}
 
 	uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
-	_, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
+	if err == nil {
+		resp.Body.Close()
+	}
+
 	c.updated = time.Time{} // clear cache
 
 	return err
