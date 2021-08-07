@@ -120,7 +120,10 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 		cur = wb.current
 	}
 
-	_, err := wb.conn.WriteSingleRegister(hecRegAmpsConfig, cur)
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, cur)
+
+	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -142,9 +145,11 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
+	b := make([]byte, 2)
 	cur := uint16(10 * current)
+	binary.BigEndian.PutUint16(b, cur)
 
-	_, err := wb.conn.WriteSingleRegister(hecRegAmpsConfig, cur)
+	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
 	if err == nil {
 		wb.current = cur
 	}
