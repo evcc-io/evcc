@@ -64,7 +64,7 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, rtu bool, slaveID
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(hecRegVehicleStatus, 1)
 	if err != nil {
@@ -83,7 +83,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (wb *HeidelbergEC) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(hecRegAmpsConfig, 1)
 	if err != nil {
@@ -100,7 +100,7 @@ func (wb *HeidelbergEC) Enabled() (bool, error) {
 	return enabled, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (wb *HeidelbergEC) Enable(enable bool) error {
 	var cur uint16
 	if enable {
@@ -112,7 +112,7 @@ func (wb *HeidelbergEC) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (wb *HeidelbergEC) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
