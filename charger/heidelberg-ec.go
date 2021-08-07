@@ -2,11 +2,13 @@ package charger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
+	"github.com/andig/evcc/util/sponsor"
 )
 
 // HeidelbergEC charger implementation
@@ -55,6 +57,10 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, rtu bool, slaveID
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, errors.New("heidelberg requires evcc sponsorship, register at https://cloud.evcc.io")
 	}
 
 	log := util.NewLogger("hec")
