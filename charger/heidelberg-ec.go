@@ -17,9 +17,14 @@ type HeidelbergEC struct {
 }
 
 const (
-	hecRegVehicleStatus = 5
-	hecRegAmpsConfig    = 261
+	hecRegFirmware      = 1   // Input
+	hecRegVehicleStatus = 5   // Input
+	hecRegPower         = 14  // Input
+	hecRegEnergy        = 17  // Input
+	hecRegAmpsConfig    = 261 // Holding
 )
+
+var hecRegCurrents = []uint16{6, 7, 8}
 
 func init() {
 	registry.Add("heidelberg", NewHeidelbergECFromConfig)
@@ -137,4 +142,55 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 	}
 
 	return err
+}
+
+var _ api.Meter = (*HeidelbergEC)(nil)
+
+// CurrentPower implements the api.Meter interface
+func (wb *HeidelbergEC) CurrentPower() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(hecRegPower, 1)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint16(b)), nil
+}
+
+var _ api.MeterEnergy = (*HeidelbergEC)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *HeidelbergEC) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(hecRegEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint32(b)), nil
+}
+
+var _ api.MeterCurrent = (*HeidelbergEC)(nil)
+
+// Currents implements the api.MeterCurrent interface
+func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
+	var currents []float64
+	for _, regCurrent := range hecRegCurrents {
+		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		currents = append(currents, float64(binary.BigEndian.Uint16(b))/10)
+	}
+
+	return currents[0], currents[1], currents[2], nil
+}
+
+var _ api.Diagnosis = (*HeidelbergEC)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (wb *HeidelbergEC) Diagnose() {
+	b, err := wb.conn.ReadInputRegisters(hecRegFirmware, 2)
+	if err == nil {
+		fmt.Printf("Firmware:\t%d.%d.%d\n", b[1], b[2], b[3])
+	}
 }
