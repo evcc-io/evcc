@@ -747,3 +747,142 @@ func TestMinSoC(t *testing.T) {
 		}
 	}
 }
+
+func TestVehicleDetectByID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type charger struct {
+		*mock.MockCharger
+		*mock.MockIdentifier
+	}
+
+	c := &charger{mock.NewMockCharger(ctrl), mock.NewMockIdentifier(ctrl)}
+
+	v1 := mock.NewMockVehicle(ctrl)
+	v2 := mock.NewMockVehicle(ctrl)
+
+	type testcase struct {
+		string
+		id, i1, i2 string
+		res        api.Vehicle
+		prepare    func(testcase)
+	}
+	tc := []testcase{
+		{"_/_/_->0", "", "", "", nil, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+		}},
+		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+		}},
+		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			// v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			log:      util.NewLogger("foo"),
+			charger:  c,
+			vehicles: []api.Vehicle{v1, v2},
+		}
+
+		if tc.prepare != nil {
+			tc.prepare(tc)
+		}
+
+		if res := lp.findActiveVehicleByID(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+
+func TestVehicleDetectByStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type vehicle struct {
+		*mock.MockVehicle
+		*mock.MockChargeState
+	}
+
+	v1 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+	v2 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+
+	type testcase struct {
+		string
+		v1, v2  api.ChargeStatus
+		res     api.Vehicle
+		prepare func(testcase)
+	}
+	tc := []testcase{
+		{"A/A->0", api.StatusA, api.StatusA, nil, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+			v2.MockChargeState.EXPECT().Status().Return(t.v2, nil)
+			v2.MockVehicle.EXPECT().Title().Return("v2")
+		}},
+		{"B/A->1", api.StatusB, api.StatusA, v1, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+		}},
+		{"A/B->2", api.StatusA, api.StatusB, v2, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+			v2.MockChargeState.EXPECT().Status().Return(t.v2, nil)
+			v2.MockVehicle.EXPECT().Title().Return("v2")
+		}},
+		{"B/B->1", api.StatusB, api.StatusB, v1, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			log:      util.NewLogger("foo"),
+			vehicles: []api.Vehicle{v1, v2},
+		}
+
+		if tc.prepare != nil {
+			tc.prepare(tc)
+		}
+
+		if res := lp.findActiveVehicleByStatus(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}

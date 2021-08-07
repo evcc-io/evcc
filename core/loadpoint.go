@@ -28,7 +28,9 @@ const (
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
-	minActiveCurrent = 1.0 // minimum current at which a phase is treated as active
+	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
+	vehicleDetectInterval = 3 * time.Minute
+	vehicleDetectDuration = 10 * time.Minute
 )
 
 // PollConfig defines the vehicle polling mode and interval
@@ -95,21 +97,22 @@ type LoadPoint struct {
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
-	enabled       bool      // Charger enabled state
-	chargeCurrent float64   // Charger current limit
-	guardUpdated  time.Time // Charger enabled/disabled timestamp
-	socUpdated    time.Time // SoC updated timestamp (poll: connected)
+	enabled                bool      // Charger enabled state
+	chargeCurrent          float64   // Charger current limit
+	guardUpdated           time.Time // Charger enabled/disabled timestamp
+	socUpdated             time.Time // SoC updated timestamp (poll: connected)
+	vehicleConnected       time.Time // Vehicle connected timestamp
+	vehicleConnectedTicker *clock.Ticker
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
 	chargeRater api.ChargeRater
 
-	chargeMeter    api.Meter     // Charger usage meter
-	vehicle        api.Vehicle   // Currently active vehicle
-	vehicles       []api.Vehicle // Assigned vehicles
-	socEstimator   *soc.Estimator
-	socTimer       *soc.Timer
-	vehicleIdError error // state of last vehicle identification
+	chargeMeter  api.Meter     // Charger usage meter
+	vehicle      api.Vehicle   // Currently active vehicle
+	vehicles     []api.Vehicle // Assigned vehicles
+	socEstimator *soc.Estimator
+	socTimer     *soc.Timer
 
 	// cached state
 	status         api.ChargeStatus // Charger status
@@ -327,9 +330,11 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	}
 
 	// flush all vehicles before updating state
+	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
 
 	// identify active vehicle
+	lp.startVehicleDetection()
 	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
@@ -347,6 +352,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	lp.publish("connectedDuration", lp.clock.Since(lp.connectedTime))
 
 	lp.pushEvent(evVehicleDisconnect)
+
+	// remove active vehicle
+	if len(lp.vehicles) > 1 {
+		lp.setActiveVehicle(nil)
+	}
 
 	// set default mode on disconnect
 	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
@@ -421,7 +431,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
 		lp.setActiveVehicle(lp.vehicles[0])
-		lp.findActiveVehicle()
+		lp.startVehicleDetection()
 	}
 
 	// read initial charger state to prevent immediately disabling charger
@@ -591,35 +601,64 @@ func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
-	if lp.vehicle != nil {
-		lp.log.INFO.Printf("vehicle updated: %s -> %s", lp.vehicle.Title(), vehicle.Title())
+	if lp.vehicle == vehicle {
+		return
 	}
 
-	// update successful
-	lp.vehicleIdError = nil
+	from := "unknown"
+	if lp.vehicle != nil {
+		from = lp.vehicle.Title()
+	}
+	to := "unknown"
+	if vehicle != nil {
+		to = vehicle.Title()
+	}
+	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
-	lp.vehicle = vehicle
-	lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+	if lp.vehicle = vehicle; vehicle != nil {
+		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
-	lp.publish("socTitle", lp.vehicle.Title())
-	lp.publish("socCapacity", lp.vehicle.Capacity())
+		lp.publish("socTitle", lp.vehicle.Title())
+		lp.publish("socCapacity", lp.vehicle.Capacity())
+	} else {
+		lp.socEstimator = nil
+
+		lp.publish("socTitle", "unknown")
+		lp.publish("socCapacity", 0)
+	}
 }
 
-// vehicleIdentificationAllowed returns true if active vehicle has not yet been identified
+// startVehicleDetection resets connection timer and starts api refresh timer
+func (lp *LoadPoint) startVehicleDetection() {
+	lp.vehicleConnected = lp.clock.Now()
+	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
+}
+
+// vehicleIdentificationAllowed checks if loadpoint has multiple vehicles associated and starts discovery period
 func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	return errors.Is(lp.vehicleIdError, api.ErrMustRetry)
+	res := len(lp.vehicles) > 1 && lp.connected() && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+
+	// request vehicle api refresh while waiting to identify
+	if res {
+		select {
+		case <-lp.vehicleConnectedTicker.C:
+			lp.log.DEBUG.Println("vehicle api refresh")
+			provider.ResetCached()
+		default:
+		}
+	}
+
+	return res
 }
 
-// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
-func (lp *LoadPoint) findActiveVehicle() {
-	// find vehicles by id
+// find active vehicle by id
+func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 	if identifier, ok := lp.charger.(api.Identifier); ok {
 		id, err := identifier.Identify()
 
 		if err != nil {
-			lp.vehicleIdError = err
 			lp.log.ERROR.Println("charger vehicle id:", err)
-			return
+			return nil
 		}
 
 		if id != "" {
@@ -628,14 +667,13 @@ func (lp *LoadPoint) findActiveVehicle() {
 			// find exact match
 			for _, vehicle := range lp.vehicles {
 				if vid, err := vehicle.Identify(); err == nil && vid == id {
-					lp.setActiveVehicle(vehicle)
-					return
+					return vehicle
 				}
 			}
 
 			// find placeholder match
 			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil {
+				if vid, err := vehicle.Identify(); err == nil && vid != "" {
 					re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
 					if err != nil {
 						lp.log.ERROR.Printf("vehicle identity: %v", err)
@@ -643,63 +681,58 @@ func (lp *LoadPoint) findActiveVehicle() {
 					}
 
 					if re.MatchString(id) {
-						lp.setActiveVehicle(vehicle)
-						return
+						return vehicle
 					}
 				}
 			}
-
-			// TODO implement removing vehicle
-			// lp.setActiveVehicle(nil)
 		}
 	}
 
-	if len(lp.vehicles) <= 1 {
-		return
-	}
+	return nil
+}
 
-	// find vehicles by charge state - current vehicle
-	if vs, ok := lp.vehicle.(api.ChargeState); ok {
-		status, err := vs.Status()
-
-		if err != nil {
-			lp.vehicleIdError = err
-			lp.log.ERROR.Println("vehicle charge state:", err)
-			return
-		}
-
-		lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, lp.vehicle.Title())
-
-		// vehicle is plugged or charging, so it should be the right one
-		if status == api.StatusB || status == api.StatusC {
-			lp.vehicleIdError = nil
-			return
-		}
-	}
-
-	// find vehicles by charge state
+// find active vehicle by charge state
+func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
 	for _, vehicle := range lp.vehicles {
-		if vehicle == lp.vehicle {
-			continue
-		}
-
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()
 
 			if err != nil {
-				lp.vehicleIdError = err
-				lp.log.ERROR.Println("vehicle charge state:", err)
-				return
+				lp.log.ERROR.Println("vehicle status:", err)
+				return nil
 			}
 
 			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
 
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
-				lp.setActiveVehicle(vehicle)
-				return
+				return vehicle
 			}
 		}
+	}
+
+	return nil
+}
+
+// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
+func (lp *LoadPoint) findActiveVehicle() {
+	if len(lp.vehicles) <= 1 {
+		return
+	}
+
+	if vehicle := lp.findActiveVehicleByID(); vehicle != nil {
+		lp.setActiveVehicle(vehicle)
+		return
+	}
+
+	if vehicle := lp.findActiveVehicleByStatus(); vehicle != nil {
+		lp.setActiveVehicle(vehicle)
+		return
+	}
+
+	// remove previous vehicle if status was not confirmed
+	if _, ok := lp.vehicle.(api.ChargeState); ok {
+		lp.setActiveVehicle(nil)
 	}
 }
 
@@ -762,7 +795,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 
 // pvDisableTimer puts the pv enable/disable timer into elapsed state
 func (lp *LoadPoint) pvDisableTimer() {
-	lp.pvTimer = time.Now().Add(-lp.Disable.Delay)
+	lp.pvTimer = lp.clock.Now().Add(-lp.Disable.Delay)
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
