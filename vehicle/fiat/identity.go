@@ -57,7 +57,11 @@ func (v *Identity) Login() error {
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		req.URL.RawQuery = data.Encode()
-		_, err = v.Do(req)
+
+		var resp *http.Response
+		if resp, err = v.Do(req); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	var res struct {
