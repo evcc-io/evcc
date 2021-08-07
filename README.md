@@ -53,6 +53,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [API](#api)
   - [REST API](#rest-api)
   - [MQTT API](#mqtt-api)
+- [Sponsorship](#sponsorship)
 - [Background](#background)
 
 
@@ -185,10 +186,11 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
-- `abl`: ABL eMH1 (requires Modbus adapter; available to Github sponsors only, request sponsor token at [cloud.evcc.io](https://cloud.evcc.io/))
+- `abl`: ABL eMH1 (requires Modbus adapter; [sponsors only](#sponsorship))
+- `easee`: Easee Home charger ([sponsors only](#sponsorship))
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
-- `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; available to Github sponsors only, request sponsor token at [cloud.evcc.io](https://cloud.evcc.io/))
+- `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; [sponsors only](#sponsorship))
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
@@ -200,7 +202,6 @@ Available charger implementations are:
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `warp`: Tinkerforge Warp/ Warp Pro charger
-- `easee`: Easee Home charger (available to Github sponsors only, request sponsor token at [cloud.evcc.io](https://cloud.evcc.io/))
 - `custom`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Smart-Home outlet charger implementations:
@@ -284,7 +285,7 @@ Available vehicle remote interface implementations are:
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
-- `tronity`: Tronity (available to Github sponsors only, request sponsor token at [cloud.evcc.io](https://cloud.evcc.io/))
+- `tronity`: Tronity ([sponsors only](#sponsorship))
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -602,6 +603,15 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.
+
+## Sponsorship
+
+EVCC believes in open source software. We're committed to provide best in class EV charging experience.
+Maintaining EVCC consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep EVCC alive.
+
+While EVCC is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like hours that provide additional value to otherwised closed hardware. Where this is not the case, EVCC requires "sponsor token" to finance ongoing development and support of evcc.
+
+The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/andig) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/). A sponsor token is valid for one year and can be renewed any time with active sponsorship.
 
 ## Background
 
