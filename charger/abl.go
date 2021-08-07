@@ -9,8 +9,8 @@ import (
 	"github.com/andig/evcc/util/modbus"
 )
 
-// AblEmh charger implementation
-type AblEmh struct {
+// ABLeMH charger implementation
+type ABLeMH struct {
 	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
@@ -23,13 +23,13 @@ const (
 )
 
 func init() {
-	registry.Add("abl", NewAblEmhFromConfig)
+	registry.Add("abl", NewABLeMHFromConfig)
 }
 
 // https://www.goingelectric.de/forum/viewtopic.php?p=1550459#p1550459
 
-// NewAblEmhFromConfig creates a AblEmh charger from generic config
-func NewAblEmhFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewABLeMHFromConfig creates a ABLeMH charger from generic config
+func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		modbus.Settings `mapstructure:",squash"`
 	}{
@@ -42,11 +42,11 @@ func NewAblEmhFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewAblEmh(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
+	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
-// NewAblEmh creates AblEmh charger
-func NewAblEmh(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+// NewABLeMH creates ABLeMH charger
+func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.AsciiFormat, slaveID)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func NewAblEmh(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	log := util.NewLogger("abl")
 	conn.Logger(log.TRACE)
 
-	wb := &AblEmh{
+	wb := &ABLeMH{
 		log:     log,
 		conn:    conn,
 		current: 60, // assume min current
@@ -64,8 +64,8 @@ func NewAblEmh(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
-func (wb *AblEmh) Status() (api.ChargeStatus, error) {
+// Status implements the api.Charger interface
+func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(ablRegVehicleStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -81,8 +81,8 @@ func (wb *AblEmh) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
-func (wb *AblEmh) Enabled() (bool, error) {
+// Enabled implements the api.Charger interface
+func (wb *ABLeMH) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
@@ -98,8 +98,8 @@ func (wb *AblEmh) Enabled() (bool, error) {
 	return enabled, nil
 }
 
-// Enable implements the Charger.Enable interface
-func (wb *AblEmh) Enable(enable bool) error {
+// Enable implements the api.Charger interface
+func (wb *ABLeMH) Enable(enable bool) error {
 	var cur uint16
 	if enable {
 		cur = wb.current
@@ -110,8 +110,8 @@ func (wb *AblEmh) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
-func (wb *AblEmh) MaxCurrent(current int64) error {
+// MaxCurrent implements the api.Charger interface
+func (wb *ABLeMH) MaxCurrent(current int64) error {
 	// 01 10 00 1400 0102 0064
 	b := []byte{0x01, 0x02}
 	c := byte(current)
@@ -136,10 +136,10 @@ func (wb *AblEmh) MaxCurrent(current int64) error {
 	return err
 }
 
-var _ api.Diagnosis = (*AblEmh)(nil)
+var _ api.Diagnosis = (*ABLeMH)(nil)
 
 // Diagnose implements the api.Diagnosis interface
-func (wb *AblEmh) Diagnose() {
+func (wb *ABLeMH) Diagnose() {
 	if b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2); err == nil {
 		fmt.Printf("Firmware: %0 x\n", b)
 	}
