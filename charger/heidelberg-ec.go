@@ -76,7 +76,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[0] {
+	switch sb := b[1]; sb {
 	case 2, 3:
 		return api.StatusA, nil
 	case 4, 5:
@@ -84,7 +84,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 6, 7:
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %v", b)
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", sb)
 	}
 }
 
