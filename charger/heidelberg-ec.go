@@ -182,7 +182,7 @@ var _ api.MeterCurrent = (*HeidelbergEC)(nil)
 func (wb *HeidelbergEC) Currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range hecRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+		b, err := wb.conn.ReadInputRegisters(regCurrent, 1)
 		if err != nil {
 			return 0, 0, 0, err
 		}
