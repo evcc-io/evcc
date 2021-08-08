@@ -55,21 +55,20 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		conn: conn,
 	}
 
+	// // :01 10 0005 0001 02 E0E0 19
+	// wb.Enable(false)
+
+	// // :01 10 0005 0001 02 A1A1 97
+	// wb.Enable(true)
+
+	// // :01 10 0014 0001 02 0064 66
+	// wb.MaxCurrent(6)
+
+	// // :01 10 0014 0001 02 010B BE
+	// wb.MaxCurrent(16)
+
 	return wb, nil
 }
-
-//  Start           : 1 char
-//  Address         : 2 chars
-//  Function        : 2 chars
-//  Data            : 0 up to 2x252 chars
-//  LRC             : 2 chars
-//  End             : 2 chars
-
-// readHoldingRegisterFunctionCode = 0x03
-// readInputRegisterFunctionCode   = 0x04
-
-// writeSingleRegisterFunctionCode   = 0x06
-// writeMultipleRegisterFunctionCode = 0x10
 
 // Status implements the api.Charger interface
 func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
@@ -88,8 +87,6 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// :0F 10 0005 0001 02 02A1 36
-
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(ablRegEnable, 1)
@@ -105,27 +102,15 @@ func (wb *ABLeMH) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	b := []byte{0x02, 0xE0}
+	b := []byte{0xE0, 0xE0}
 	if enable {
-		b[1] = 0xA1
+		b = []byte{0xA1, 0xA1}
 	}
 
 	_, err := wb.conn.WriteMultipleRegisters(ablRegEnable, 1, b)
 
 	return err
 }
-
-//  Start           : 1 char
-//  Address         : 2 chars
-//  Function        : 2 chars
-//  Data            : 0 up to 2x252 chars
-//  LRC             : 2 chars
-//  End             : 2 chars
-
-// :01 10 0005 0001 02 A1A1
-// :01 10 0014 0001 02 0064
-// :0F 10 0014 0002 02 0064 65\r\n
-//  0F 10 0014 0001 02 010B BE
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
