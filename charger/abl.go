@@ -2,11 +2,13 @@ package charger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/modbus"
+	"github.com/andig/evcc/util/sponsor"
 )
 
 // ABLeMH charger implementation
@@ -20,6 +22,7 @@ const (
 	ablRegFirmware      = 0x01
 	ablRegVehicleStatus = 0x04
 	ablRegAmpsConfig    = 0x14
+	ablRegStatus        = 0x2E
 
 	ablAmpsDisabled uint16 = 0x03E8
 
@@ -55,9 +58,9 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, errors.New("abl requires evcc sponsorship, register at https://cloud.evcc.io")
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, errors.New("abl requires evcc sponsorship, register at https://cloud.evcc.io")
+	}
 
 	log := util.NewLogger("abl")
 	conn.Logger(log.TRACE)
@@ -133,6 +136,28 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	}
 
 	return err
+}
+
+var _ api.MeterCurrent = (*ABLeMH)(nil)
+
+// Currents implements the api.MeterCurrent interface
+func (wb *ABLeMH) Currents() (float64, float64, float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 5)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	var currents []float64
+	for i := 0; i < 3; i++ {
+		u := binary.BigEndian.Uint16(b[4+2*i:])
+		if u == ablAmpsDisabled {
+			u = 0
+		}
+
+		currents = append(currents, float64(u)/10)
+	}
+
+	return currents[0], currents[1], currents[2], nil
 }
 
 var _ api.Diagnosis = (*ABLeMH)(nil)
