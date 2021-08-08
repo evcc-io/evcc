@@ -32,7 +32,6 @@ type Ovms struct {
 	*embed
 	*request.Helper
 	user, password, vehicleId, server string
-	interval                          time.Duration
 	chargeG                           func() (interface{}, error)
 }
 
@@ -63,7 +62,6 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		password:  cc.Password,
 		vehicleId: cc.VehicleID,
 		server:    cc.Server,
-		interval:  cc.Cache,
 	}
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
@@ -87,24 +85,16 @@ func (v *Ovms) loginToServer() (err error) {
 	return err
 }
 
-func (v *Ovms) delete(url string) error {
-	req, err := request.New(http.MethodDelete, url, nil)
-	if err == nil {
-		var resp *http.Response
-		if resp, err = v.Do(req); err == nil {
-			resp.Body.Close()
-		}
-	}
-	return err
-}
-
-func (v *Ovms) authFlow() (bool, error) {
+func (v *Ovms) authFlow() error {
 	var resp ovmsConnectResponse
 	err := v.loginToServer()
 	if err == nil {
 		resp, err = v.connectRequest()
+		if err == nil && resp.NetConnected != 1 {
+			return api.ErrMustRetry
+		}
 	}
-	return resp.NetConnected == 1, err
+	return err
 }
 
 func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
@@ -121,34 +111,21 @@ func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 	return res, err
 }
 
-func (v *Ovms) disconnect() error {
-	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
-
-	err := v.delete(uri)
-	if err == nil {
-		uri = fmt.Sprintf("http://%s:6868/api/cookie", v.server)
-		return v.delete(uri)
-	}
-
-	return err
-}
-
 // batteryAPI provides battery-status api response
 func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
 
-	ovmsConnected, err := v.authFlow()
-	if err == nil {
-		resp, err = v.chargeRequest()
-
+	resp, err := v.chargeRequest()
+	if err != nil {
+		err = v.authFlow()
 		if err == nil {
-			err = v.disconnect()
+			resp, err = v.chargeRequest()
 		}
+	}
 
-		messageAge := time.Duration(resp.MessageAgeServer) * time.Second
-		if err == nil && messageAge > v.interval+time.Minute && ovmsConnected {
-			err = api.ErrMustRetry
-		}
+	messageAge := time.Duration(resp.MessageAgeServer) * time.Second
+	if err == nil && messageAge > time.Minute {
+		err = api.ErrMustRetry
 	}
 
 	return resp, err
@@ -181,7 +158,7 @@ func (v *Ovms) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	return status, nil
+	return status, err
 }
 
 var _ api.VehicleRange = (*Ovms)(nil)
@@ -194,7 +171,7 @@ func (v *Ovms) Range() (int64, error) {
 		return strconv.ParseInt(res.EstimatedRange, 0, 64)
 	}
 
-	return 0, nil
+	return 0, err
 }
 
 var _ api.VehicleFinishTimer = (*Ovms)(nil)
@@ -210,5 +187,5 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, api.ErrNotAvailable
+	return time.Time{}, err
 }
