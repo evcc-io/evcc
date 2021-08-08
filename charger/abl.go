@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"encoding/binary"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -11,14 +10,14 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	current uint16
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
 	ablRegFirmware      = 0x01
 	ablRegVehicleStatus = 0x04
+	ablRegEnable        = 0x05
 	ablRegAmpsConfig    = 0x14
 )
 
@@ -30,12 +29,8 @@ func init() {
 
 // NewABLeMHFromConfig creates a ABLeMH charger from generic config
 func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -56,13 +51,25 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		log:     log,
-		conn:    conn,
-		current: 60, // assume min current
+		log:  log,
+		conn: conn,
 	}
 
 	return wb, nil
 }
+
+//  Start           : 1 char
+//  Address         : 2 chars
+//  Function        : 2 chars
+//  Data            : 0 up to 2x252 chars
+//  LRC             : 2 chars
+//  End             : 2 chars
+
+// readHoldingRegisterFunctionCode = 0x03
+// readInputRegisterFunctionCode   = 0x04
+
+// writeSingleRegisterFunctionCode   = 0x06
+// writeMultipleRegisterFunctionCode = 0x10
 
 // Status implements the api.Charger interface
 func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
@@ -81,39 +88,48 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	}
 }
 
+// :0F 10 0005 0001 02 02A1 36
+
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
 
-	cur := binary.BigEndian.Uint16(b)
-
-	enabled := cur != 0
-	if enabled {
-		wb.current = cur
-	}
+	_ = b
+	enabled := true
 
 	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	var cur uint16
+	b := []byte{0x02, 0xE0}
 	if enable {
-		cur = wb.current
+		b[1] = 0xA1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(ablRegAmpsConfig, cur)
+	_, err := wb.conn.WriteMultipleRegisters(ablRegEnable, 1, b)
 
 	return err
 }
 
+//  Start           : 1 char
+//  Address         : 2 chars
+//  Function        : 2 chars
+//  Data            : 0 up to 2x252 chars
+//  LRC             : 2 chars
+//  End             : 2 chars
+
+// :01 10 0005 0001 02 A1A1
+// :01 10 0014 0001 02 0064
+// :0F 10 0014 0002 02 0064 65\r\n
+//  0F 10 0014 0001 02 010B BE
+
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
-	// 01 10 00 1400 0102 0064
-	b := []byte{0x01, 0x02}
+	b := []byte{}
 	c := byte(current)
 
 	switch current {
@@ -131,7 +147,7 @@ func (wb *ABLeMH) MaxCurrent(current int64) error {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 2, b)
+	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
 
 	return err
 }
