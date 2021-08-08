@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/api/proto/pb"
 	"github.com/andig/evcc/core"
 	"github.com/andig/evcc/hems"
@@ -15,10 +16,12 @@ import (
 	"github.com/andig/evcc/provider/mqtt"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/server"
+	"github.com/andig/evcc/tariff"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/cloud"
 	"github.com/andig/evcc/util/pipe"
 	"github.com/andig/evcc/util/sponsor"
+	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/spf13/viper"
 )
 
@@ -117,7 +120,10 @@ func configureMQTT(conf mqttConfig) error {
 	}
 
 	var err error
-	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1)
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1, func(options *paho.ClientOptions) {
+		topic := fmt.Sprintf("%s/status", conf.RootTopic())
+		options.SetWill(topic, "offline", 1, true)
+	})
 	if err != nil {
 		return fmt.Errorf("failed configuring mqtt: %w", err)
 	}
@@ -161,21 +167,38 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	return notificationChan
 }
 
+func configureTariffs(conf tariffConfig) (t api.Tariff, err error) {
+	if conf.Grid.Type != "" {
+		t, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+	}
+
+	if err != nil {
+		err = fmt.Errorf("failed configuring tariff: %w", err)
+	}
+
+	return t, err
+}
+
 func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 	if err = cp.configure(conf); err == nil {
 		var loadPoints []*core.LoadPoint
 		loadPoints, err = configureLoadPoints(conf, cp)
 
+		var tariff api.Tariff
 		if err == nil {
-			site, err = configureSite(conf.Site, cp, loadPoints)
+			tariff, err = configureTariffs(conf.Tariffs)
+		}
+
+		if err == nil {
+			site, err = configureSite(conf.Site, cp, loadPoints, tariff)
 		}
 	}
 
 	return site, err
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints)
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint, tariff api.Tariff) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, tariff)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}

@@ -168,7 +168,7 @@ func TestUpdatePowerZero(t *testing.T) {
 		}
 
 		lp.Mode = tc.mode
-		lp.Update(0) // sitePower 0
+		lp.Update(0, false) // sitePower 0
 
 		ctrl.Finish()
 	}
@@ -404,7 +404,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500)
+	lp.Update(500, false)
 
 	t.Log("charging above target - soc deactivates charger")
 	clock.Add(5 * time.Minute)
@@ -412,20 +412,20 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(500)
+	lp.Update(500, false)
 
 	t.Log("deactivated charger changes status to B")
 	clock.Add(5 * time.Minute)
 	vehicle.EXPECT().SoC().Return(95.0, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-5000)
+	lp.Update(-5000, false)
 
 	t.Log("soc has fallen below target - soc update prevented by timer")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
-	lp.Update(-5000)
+	lp.Update(-5000, false)
 
 	t.Log("soc has fallen below target - soc update timer expired")
 	clock.Add(pollInterval)
@@ -433,7 +433,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 	charger.EXPECT().Status().Return(api.StatusB, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Enable(true).Return(nil)
-	lp.Update(-5000)
+	lp.Update(-5000, false)
 
 	ctrl.Finish()
 }
@@ -473,14 +473,14 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
 	charger.EXPECT().MaxCurrent(int64(maxA)).Return(nil)
-	lp.Update(500)
+	lp.Update(500, false)
 
 	t.Log("switch off when disconnected")
 	clock.Add(5 * time.Minute)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusA, nil)
 	charger.EXPECT().Enable(false).Return(nil)
-	lp.Update(-3000)
+	lp.Update(-3000, false)
 
 	if lp.Mode != api.ModeOff {
 		t.Error("unexpected mode", lp.Mode)
@@ -541,14 +541,14 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(0.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 
 	t.Log("at 1:00h charging at 5 kWh")
 	clock.Add(time.Hour)
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h stop charging at 5 kWh")
@@ -556,7 +556,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:00h restart charging at 5 kWh")
@@ -564,7 +564,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(5.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 	expectCache("chargedEnergy", 5000.0)
 
 	t.Log("at 1:30h continue charging at 7.5 kWh")
@@ -572,7 +572,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(7.5, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusC, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 	expectCache("chargedEnergy", 7500.0)
 
 	t.Log("at 2:00h stop charging at 10 kWh")
@@ -580,7 +580,7 @@ func TestChargedEnergyAtDisconnect(t *testing.T) {
 	rater.EXPECT().ChargedEnergy().Return(10.0, nil)
 	charger.EXPECT().Enabled().Return(lp.enabled, nil)
 	charger.EXPECT().Status().Return(api.StatusB, nil)
-	lp.Update(-1)
+	lp.Update(-1, false)
 	expectCache("chargedEnergy", 10000.0)
 
 	ctrl.Finish()
@@ -743,6 +743,145 @@ func TestMinSoC(t *testing.T) {
 		}
 
 		if res := lp.minSocNotReached(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+
+func TestVehicleDetectByID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type charger struct {
+		*mock.MockCharger
+		*mock.MockIdentifier
+	}
+
+	c := &charger{mock.NewMockCharger(ctrl), mock.NewMockIdentifier(ctrl)}
+
+	v1 := mock.NewMockVehicle(ctrl)
+	v2 := mock.NewMockVehicle(ctrl)
+
+	type testcase struct {
+		string
+		id, i1, i2 string
+		res        api.Vehicle
+		prepare    func(testcase)
+	}
+	tc := []testcase{
+		{"_/_/_->0", "", "", "", nil, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+		}},
+		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+		}},
+		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			// v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
+			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+			v1.EXPECT().Identify().Return(tc.i1, nil)
+			v2.EXPECT().Identify().Return(tc.i2, nil)
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			log:      util.NewLogger("foo"),
+			charger:  c,
+			vehicles: []api.Vehicle{v1, v2},
+		}
+
+		if tc.prepare != nil {
+			tc.prepare(tc)
+		}
+
+		if res := lp.findActiveVehicleByID(); tc.res != res {
+			t.Errorf("expected %v, got %v", tc.res, res)
+		}
+	}
+}
+
+func TestVehicleDetectByStatus(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	type vehicle struct {
+		*mock.MockVehicle
+		*mock.MockChargeState
+	}
+
+	v1 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+	v2 := &vehicle{mock.NewMockVehicle(ctrl), mock.NewMockChargeState(ctrl)}
+
+	type testcase struct {
+		string
+		v1, v2  api.ChargeStatus
+		res     api.Vehicle
+		prepare func(testcase)
+	}
+	tc := []testcase{
+		{"A/A->0", api.StatusA, api.StatusA, nil, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+			v2.MockChargeState.EXPECT().Status().Return(t.v2, nil)
+			v2.MockVehicle.EXPECT().Title().Return("v2")
+		}},
+		{"B/A->1", api.StatusB, api.StatusA, v1, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+		}},
+		{"A/B->2", api.StatusA, api.StatusB, v2, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+			v2.MockChargeState.EXPECT().Status().Return(t.v2, nil)
+			v2.MockVehicle.EXPECT().Title().Return("v2")
+		}},
+		{"B/B->1", api.StatusB, api.StatusB, v1, func(t testcase) {
+			v1.MockChargeState.EXPECT().Status().Return(t.v1, nil)
+			v1.MockVehicle.EXPECT().Title().Return("v1")
+		}},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		lp := &LoadPoint{
+			log:      util.NewLogger("foo"),
+			vehicles: []api.Vehicle{v1, v2},
+		}
+
+		if tc.prepare != nil {
+			tc.prepare(tc)
+		}
+
+		if res := lp.findActiveVehicleByStatus(); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}

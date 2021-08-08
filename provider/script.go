@@ -58,7 +58,7 @@ func NewScriptProvider(script string, timeout time.Duration, jq string, cache ti
 		timeout: timeout,
 		cache:   cache,
 	}
-	
+
 	if jq != "" {
 		op, err := gojq.Parse(jq)
 		if err != nil {
@@ -96,7 +96,7 @@ func (e *Script) exec(script string) (string, error) {
 		return "", err
 	}
 
-	e.log.TRACE.Printf("%s: %s", strings.Join(args, " "), s)
+	e.log.DEBUG.Printf("%s: %s", strings.Join(args, " "), s)
 
 	return s, nil
 }
@@ -115,7 +115,7 @@ func (e *Script) StringGetter() func() (string, error) {
 				}
 			}
 		}
-		
+
 		return e.val, e.err
 	}
 }

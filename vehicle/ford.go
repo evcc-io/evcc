@@ -109,7 +109,7 @@ func (v *Ford) login() (oauth.Token, error) {
 	return res, err
 }
 
-// Refresh implements the oauth.TokenRefresher interface
+// Refresh implements oauth.TokenRefresher
 func (v *Ford) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},

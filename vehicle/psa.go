@@ -59,7 +59,7 @@ func newPSA(log *util.Logger, brand, realm string, other map[string]interface{})
 	}
 
 	if cc.ClientID == "" || cc.ClientSecret == "" {
-		return nil, errors.New("missing client id and secret (see https://github.com/flobz/psa_car_controller)")
+		return nil, errors.New("missing client id and/or secret (see https://github.com/flobz/psa_car_controller)")
 	}
 
 	v := &PSA{

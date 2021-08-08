@@ -1,5 +1,6 @@
 # evcc <!-- omit in toc -->
 
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/andig/evcc)
 [![Build Status](https://github.com/andig/evcc/workflows/Build/badge.svg)](https://github.com/andig/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
 [![Latest Version](https://img.shields.io/github/release/andig/evcc.svg)](https://github.com/andig/evcc/releases)
@@ -12,15 +13,15 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger):
-  - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
+  - Wallbe, Phoenix (includes ESL Walli), go-eCharger (includes Heidelberg Energy Control), NRGkick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
-- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
-- status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
+- status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- granular charge power control down to 25W steps with supported chargers
-- REST API
+- granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
+- REST and MQTT [APIs](#api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/andig/evcc-hassio-addon))
 
 ![Screenshot](docs/screenshot.png)
 
@@ -35,11 +36,13 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Meter](#meter)
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
+  - [Flexible Energy Tariffs](#flexible-energy-tariffs)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
   - [HTTP (read/write)](#http-readwrite)
   - [Websocket (read only)](#websocket-read-only)
+  - [SMA/Speedwire (read only)](#smaspeedwire-read-only)
   - [Javascript (read/write)](#javascript-readwrite)
   - [Shell Script (read/write)](#shell-script-readwrite)
   - [Calc (read only)](#calc-read-only)
@@ -180,7 +183,7 @@ Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
-- `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
+- `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required). Includes Heidelberg Energy Control using [github.com/steff393/wbec](https://github.com/steff393/wbec).
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
@@ -243,7 +246,7 @@ Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-readwrite) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
-- `sma`: SMA Home Manager 2.0 and SMA Energy Meter. Power reading is configured out of the box but can be customized if necessary. To obtain specific energy readings define the desired Obis code (Import Energy: "1:1.8.0", Export Energy: "1:2.8.0").
+- `sma`: SMA Home Manager 2.0, SMA Energy Meter and Inverters via SMA Speedwire.
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
@@ -259,21 +262,23 @@ Available vehicle remote interface implementations are:
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
 - `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
+- `fiat`: Fiat (500e)
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `kia`: Kia (Soul and other Bluelink models)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
 - `nissan`: Nissan (Leaf)
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
-- `porsche`: Porsche (Taycan)
+- `porsche`: Porsche (Taycan, Cayenne E-Hybrid)
 - `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citygo)
+- `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
+- `tronity`: Tronity (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
 Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
@@ -291,6 +296,25 @@ hems:
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
 to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
+
+### Flexible Energy Tariffs
+
+EVCC supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+
+```yaml
+tariffs:
+  grid:
+    # either
+    type: tibber
+    cheap: 20 # ct/kWh
+    token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
+    homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
+
+    # or
+    type: awattar
+    cheap: 20 # ct/kWh
+    region: de # optional, choose at for Austria
+```
 
 ## Plugins
 
@@ -448,6 +472,29 @@ scale: 0.001 # floating point factor applied to result, e.g. for Wh to kWh conve
 timeout: 30s # error if no update received in 30 seconds
 ```
 
+### SMA/Speedwire (read only)
+
+The `sma` plugin provides an interface to SMA devices via the Speedwire protocol.
+
+Sample configuration (read only):
+
+```yaml
+source: sma
+uri: 192.168.4.51 # alternative to serial
+serial: 123456 # alternative to uri
+value: ActivePowerPlus # ID of value to read
+password: "0000" # optional (default: 0000)
+interface: eth0 # optional
+scale: 1 # optional scale factor for value
+```
+
+Supported values for `value` can be found in the diagnostic dump of the command
+`evcc meter` (with a configured SMA meter).
+
+All possible values can be found as const [here](https://gitlab.com/bboehmke/sunny/-/blob/master/values.go#L24)
+(use the names of the const for `value`).
+
+
 ### Javascript (read/write)
 
 EVCC includes a bundled Javascript interpreter with Underscore.js library installed. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
@@ -538,6 +585,7 @@ Note: to modify writable settings perform a `POST` request appending the value a
 The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
 
 - `evcc`: root topic
+- `evcc/status`: status (`online`/`offline`)
 - `evcc/updated`: timestamp of last update
 - `evcc/site`: site dynamic state
 - `evcc/site/prioritySoC`: battery priority SoC (writable)

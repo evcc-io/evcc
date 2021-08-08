@@ -30,6 +30,7 @@ type config struct {
 	Meters       []qualifiedConfig
 	Chargers     []qualifiedConfig
 	Vehicles     []qualifiedConfig
+	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	LoadPoints   []map[string]interface{}
 }
@@ -37,6 +38,13 @@ type config struct {
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
+}
+
+func (conf *mqttConfig) RootTopic() string {
+	if conf.Topic != "" {
+		return conf.Topic
+	}
+	return "evcc"
 }
 
 type qualifiedConfig struct {
@@ -52,6 +60,10 @@ type typedConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplate
 	Services []typedConfig
+}
+
+type tariffConfig struct {
+	Grid typedConfig
 }
 
 // ConfigProvider provides configuration items

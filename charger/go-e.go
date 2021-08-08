@@ -193,7 +193,7 @@ func (c *GoE) Enable(enable bool) error {
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
 	if err == nil && isValid(status) && status.Alw != b {
-		return fmt.Errorf("alw update failed: %d", status.Amp)
+		return fmt.Errorf("alw update failed: %d", status.Alw)
 	}
 
 	return err

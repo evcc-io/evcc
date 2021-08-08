@@ -17,7 +17,7 @@ type roundTripper struct {
 	base http.RoundTripper
 }
 
-const max = 2048 * 2
+const max = 1024 * 64
 
 var (
 	reqMetric *prometheus.SummaryVec

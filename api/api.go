@@ -2,7 +2,7 @@ package api
 
 import "time"
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,Meter,MeterEnergy,Vehicle,ChargeRater
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,ChargeState,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -128,4 +128,8 @@ type VehicleStartCharge interface {
 // VehicleStopCharge stops the charging session on the vehicle side
 type VehicleStopCharge interface {
 	StopCharge() error
+}
+
+type Tariff interface {
+	IsCheap() bool
 }

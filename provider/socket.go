@@ -61,7 +61,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.TRACE.Println("wait for initial value") }),
+		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
