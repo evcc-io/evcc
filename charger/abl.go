@@ -1,6 +1,7 @@
 package charger
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -98,8 +99,7 @@ func (wb *ABLeMH) Enabled() (bool, error) {
 		return false, err
 	}
 
-	_ = b
-	enabled := true
+	enabled := binary.BigEndian.Uint16(b) == 0xA1A1
 
 	return enabled, nil
 }

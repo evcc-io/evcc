@@ -163,7 +163,7 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 		if wire == RtuFormat {
 			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
 		} else {
-			conn = registeredConnection(uri, NewASCII(device, baudrate, comset))
+			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
 		}
 	}
 
@@ -174,7 +174,7 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 		case RtuFormat:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
 		case AsciiFormat:
-			conn = registeredConnection(uri, NewASCIIOverTCP(uri))
+			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
 		default:
 			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
