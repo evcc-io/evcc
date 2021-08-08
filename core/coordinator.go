@@ -11,11 +11,13 @@ type vehicleCoordinator struct {
 
 var coordinator *vehicleCoordinator
 
-func (lp *vehicleCoordinator) own(vehicle api.Vehicle) {
-	if lp.tracked == nil {
-		lp.tracked = make(map[api.Vehicle]struct{})
+func init() {
+	coordinator = &vehicleCoordinator{
+		tracked: make(map[api.Vehicle]struct{}),
 	}
+}
 
+func (lp *vehicleCoordinator) own(vehicle api.Vehicle) {
 	lp.tracked[vehicle] = struct{}{}
 }
 
