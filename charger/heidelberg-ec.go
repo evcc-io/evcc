@@ -145,8 +145,9 @@ func (wb *HeidelbergEC) MaxCurrentMillis(current float64) error {
 		return fmt.Errorf("invalid current %.1f", current)
 	}
 
-	b := make([]byte, 2)
 	cur := uint16(10 * current)
+
+	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, cur)
 
 	_, err := wb.conn.WriteMultipleRegisters(hecRegAmpsConfig, 1, b)
