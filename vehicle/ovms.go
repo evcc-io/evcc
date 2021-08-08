@@ -171,7 +171,7 @@ func (v *Ovms) Range() (int64, error) {
 		return strconv.ParseInt(res.EstimatedRange, 0, 64)
 	}
 
-	return 0, nil
+	return 0, err
 }
 
 var _ api.VehicleFinishTimer = (*Ovms)(nil)
@@ -187,5 +187,5 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 		}
 	}
 
-	return time.Time{}, api.ErrNotAvailable
+	return time.Time{}, err
 }
