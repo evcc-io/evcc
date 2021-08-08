@@ -148,8 +148,8 @@ func (wb *ABLeMH) Currents() (float64, float64, float64, error) {
 	}
 
 	var currents []float64
-	for i := 0; i < 3; i++ {
-		u := binary.BigEndian.Uint16(b[4+2*i:])
+	for i := 2; i < 5; i++ {
+		u := binary.BigEndian.Uint16(b[2*i:])
 		if u == ablAmpsDisabled {
 			u = 0
 		}
