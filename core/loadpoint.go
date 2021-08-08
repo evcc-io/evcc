@@ -607,10 +607,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	from := "unknown"
 	if lp.vehicle != nil {
+		coordinator.disown(lp.vehicle)
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
 	if vehicle != nil {
+		coordinator.own(vehicle)
 		to = vehicle.Title()
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
@@ -691,29 +693,6 @@ func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
 	return nil
 }
 
-// find active vehicle by charge state
-func (lp *LoadPoint) findActiveVehicleByStatus() api.Vehicle {
-	for _, vehicle := range lp.vehicles {
-		if vs, ok := vehicle.(api.ChargeState); ok {
-			status, err := vs.Status()
-
-			if err != nil {
-				lp.log.ERROR.Println("vehicle status:", err)
-				return nil
-			}
-
-			lp.log.DEBUG.Printf("vehicle status: %s (%s)", status, vehicle.Title())
-
-			// vehicle is plugged or charging, so it should be the right one
-			if status == api.StatusB || status == api.StatusC {
-				return vehicle
-			}
-		}
-	}
-
-	return nil
-}
-
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
 func (lp *LoadPoint) findActiveVehicle() {
 	if len(lp.vehicles) <= 1 {
@@ -725,7 +704,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	if vehicle := lp.findActiveVehicleByStatus(); vehicle != nil {
+	if vehicle := coordinator.findActiveVehicleByStatus(lp.log, lp.vehicles); vehicle != nil {
 		lp.setActiveVehicle(vehicle)
 		return
 	}
