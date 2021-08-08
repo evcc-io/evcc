@@ -11,15 +11,22 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	log  *util.Logger
-	conn *modbus.Connection
+	log     *util.Logger
+	conn    *modbus.Connection
+	current uint16
 }
 
 const (
 	ablRegFirmware      = 0x01
 	ablRegVehicleStatus = 0x04
-	ablRegEnable        = 0x05
 	ablRegAmpsConfig    = 0x14
+
+	ablAmpsDisabled uint16 = 0x03E8
+
+	// ablRegMode          = 0x05
+	// ablReset   uint16 = 0x5A5A
+	// ablEnable  uint16 = 0xA1A1
+	// ablDisable uint16 = 0xE0E0
 )
 
 func init() {
@@ -56,21 +63,10 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		log:  log,
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		current: 0x64, // 6A
 	}
-
-	// // :01 10 0005 0001 02 E0E0 19
-	// wb.Enable(false)
-
-	// // :01 10 0005 0001 02 A1A1 97
-	// wb.Enable(true)
-
-	// // :01 10 0014 0001 02 0064 66
-	// wb.MaxCurrent(6)
-
-	// // :01 10 0014 0001 02 010B BE
-	// wb.MaxCurrent(16)
 
 	return wb, nil
 }
@@ -94,49 +90,47 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(ablRegEnable, 1)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
 
-	enabled := binary.BigEndian.Uint16(b) == 0xA1A1
+	enabled := binary.BigEndian.Uint16(b) != ablAmpsDisabled
 
 	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	b := []byte{0xE0, 0xE0}
+	u := ablAmpsDisabled
 	if enable {
-		b = []byte{0xA1, 0xA1}
+		u = wb.current
 	}
 
-	_, err := wb.conn.WriteMultipleRegisters(ablRegEnable, 1, b)
+	_, err := wb.conn.WriteSingleRegister(ablRegAmpsConfig, u)
 
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (wb *ABLeMH) MaxCurrent(current int64) error {
-	b := []byte{}
-	c := byte(current)
+	return wb.MaxCurrentMillis(float64(current))
+}
 
-	switch current {
-	case 6, 7, 8:
-		b = append(b, 0x00, c<<4+c-2)
-	case 9, 10, 11:
-		b = append(b, 0x00, c<<4+c-3)
-	case 12, 13, 14:
-		b = append(b, 0x00, c<<4+c-4)
-	case 15:
-		b = append(b, 0x00, 0xFA)
-	case 16:
-		b = append(b, 0x01, 0x0B)
-	default:
-		return fmt.Errorf("invalid current %d", current)
+var _ api.ChargerEx = (*ABLeMH)(nil)
+
+// MaxCurrent implements the api.ChargerEx interface
+func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
+	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
+	u := uint16(current / 0.06)
+
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, u)
+
+	_, err := wb.conn.WriteSingleRegister(ablRegAmpsConfig, u)
+	if err == nil {
+		wb.current = u
 	}
-
-	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
 
 	return err
 }
