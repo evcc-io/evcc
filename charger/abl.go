@@ -47,6 +47,10 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		return nil, err
 	}
 
+	// if !sponsor.IsAuthorized() {
+	// 	return nil, errors.New("abl requires evcc sponsorship, register at https://cloud.evcc.io")
+	// }
+
 	log := util.NewLogger("abl")
 	conn.Logger(log.TRACE)
 

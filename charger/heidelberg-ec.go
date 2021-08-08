@@ -39,12 +39,8 @@ func init() {
 
 // NewHeidelbergECFromConfig creates a HeidelbergEC charger from generic config
 func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
