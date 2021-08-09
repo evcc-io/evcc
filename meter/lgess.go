@@ -4,16 +4,48 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"net/url"
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/meter/lgessv1"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/meter/lgpcs"
 )
 
-// lgess is the LG ESS HOME meter
+/**
+ * This meter supports the LGESS HOME 8 and LGESS HOME 10 systems from LG with / without battery.
+ *
+ ** Usages **
+ * The following usages are supported:
+ * - grid    ... for reading the power imported or exported to the grid
+ * - pv      ... for reading the power produced by the Photovoltaik
+ * - battery ... for reading the power imported or exported to the battery
+ *  *
+ ** Example configuration **
+ *
+ * meters:
+ * - name: GridMeter
+ *   type: lgess
+ *   usage: grid
+ *   uri: https://192.168.1.23
+ *   password: "DE200....."
+ * - name: PvMeter
+ *   type: lgess
+ *   usage: pv
+ * - name: BatteryMeter
+ *   type: lgess
+ *   usage: battery
+ *
+ *
+ ** Limitations **
+ * It is not allowed to provide different URIs or passwords for different lgess meters since always the
+ * same hardware instance is accessed with the different usages.
+ *
+ * */
+
+/**
+ * Instance of one meter - multiple meter instances with different usages are allowed
+ */
 type LgEss struct {
 	usage string 			// grid, pv, battery
-	lgaccess *lgessv1.LgEssAccess 	// singleton controlling the acces to the LgEss data via the auth_key
+	lgcom *lgpcs.LgPcsCom 	// singleton controlling the access to the LgEss data via the auth_key.
 }
 
 func init() {
@@ -37,32 +69,21 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
 	}
-
-	if cc.Password == "" {
-		return nil, errors.New("missing password")
-	}
-
-	_, err := url.Parse(cc.URI)
-	if err != nil {
-		return nil, fmt.Errorf("%s is invalid: %s", cc.URI, err)
-	}
 	return NewLgEss(cc.URI, cc.Usage, cc.Password)
 }
 
 // NewLgEss creates an LgEss Meter
 func NewLgEss(uri, usage, password string) (api.Meter, error) {
 
-	lgaccess, err := lgessv1.GetInstance(uri, password)
+	lgpcs, err := lgpcs.GetInstance(uri, password)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
-		usage:      strings.ToLower(usage),
-		lgaccess:   lgaccess,
+		usage:   strings.ToLower(usage),
+		lgcom:   lgpcs,
 	}
-
-	//fmt.Printf("Usage:%v\r\nUri:%v\r\npassword:%v\r\n",m.usage, m.lgaccess.uri, m.lgaccess.password)
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
@@ -75,7 +96,6 @@ func NewLgEss(uri, usage, password string) (api.Meter, error) {
 	if usage == "battery" {
 		batterySoC = m.batterySoC
 	}
-
 	return decorateLgEss(m, totalEnergy, batterySoC), nil
 }
 
@@ -83,25 +103,18 @@ func NewLgEss(uri, usage, password string) (api.Meter, error) {
 // @return float64 current power in W
 func (m *LgEss) CurrentPower() (float64, error) {
 
+	data, err := m.lgcom.GetData()
+	if err != nil {
+		return 0, err
+	}
+
 	switch m.usage {
 	case "grid":
-		power,err := m.lgaccess.GetGridPower()
-		if err != nil {
-			return 0, err
-		}
-		return power, nil
+		return data.GridPower, nil
 	case "pv":
-		power,err := m.lgaccess.GetPvPower()
-		if err != nil {
-			return 0, err
-		}
-		return power, nil
+		return data.PvPower, nil
 	case "battery":
-		power,err := m.lgaccess.GetBatPower()
-		if err != nil {
-			return 0, err
-		}
-		return power, nil
+		return data.BatPower, nil
 	}
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
@@ -110,19 +123,16 @@ func (m *LgEss) CurrentPower() (float64, error) {
 // @return float64 Current energy in kWh (of this day)
 func (m *LgEss) totalEnergy() (float64, error) {
 
+	data, err := m.lgcom.GetData()
+	if err != nil {
+		return 0, err
+	}
+
 	switch m.usage {
 	case "grid":
-		energy,err := m.lgaccess.GetGridEnergy()
-		if err != nil {
-			return 0, err
-		}
-		return energy, nil
+		return data.GridEnergy, nil
 	case "pv":
-		energy,err := m.lgaccess.GetPvEnergy()
-		if err != nil {
-			return 0, err
-		}
-		return energy, nil
+		return data.PvEnergy, nil
 	}
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
@@ -130,139 +140,9 @@ func (m *LgEss) totalEnergy() (float64, error) {
 // batterySoC implements the api.Battery interface
 // @return float64 The battery state of charge (SoC)
 func (m *LgEss) batterySoC() (float64, error) {
-	batSoC,err := m.lgaccess.GetBatSoC()
+	data, err := m.lgcom.GetData()
 	if err != nil {
 		return 0, err
 	}
-	return batSoC, nil
+	return data.BatSoC, nil
 }
-
-/* example json result of uri: /v1/user/essinfo/home
-{
-    "statistics":
-    {
-        "pcs_pv_total_power": "0",
-        "batconv_power": "1287",
-        "bat_use": "1",
-        "bat_status": "2",
-        "bat_user_soc": "59.3",
-        "load_power": "1289",
-        "ac_output_power": "10",
-        "load_today": "0.0",
-        "grid_power": "2",
-        "current_day_self_consumption": "70.7",
-        "current_pv_generation_sum": "62253",
-        "current_grid_feed_in_energy": "18250"
-    },
-    "direction":
-    {
-        "is_direct_consuming_": "0",
-        "is_battery_charging_": "0",
-        "is_battery_discharging_": "1",
-        "is_grid_selling_": "0",
-        "is_grid_buying_": "0",
-        "is_charging_from_grid_": "0",
-        "is_discharging_to_grid_": "0"
-    },
-    "operation":
-    {
-        "status": "start",
-        "mode": "1",
-        "pcs_standbymode": "false",
-        "drm_mode0": "0",
-        "remote_mode": "0",
-        "drm_control": "255"
-    },
-    "wintermode":
-    {
-        "winter_status": "off",
-        "backup_status": "off"
-    },
-    "backupmode": "",
-    "pcs_fault":
-    {
-        "pcs_status": "pcs_ok",
-        "pcs_op_status": "pcs_run"
-    },
-    "heatpump":
-    {
-        "heatpump_protocol": "0",
-        "heatpump_activate": "off",
-        "current_temp": "0",
-        "heatpump_working": "off"
-    },
-    "evcharger":
-    {
-        "ev_activate": "off",
-        "ev_power": "0"
-    },
-    "gridWaitingTime": "0"
-}
-
-
-{
-    "statistics":
-    {
-        "pcs_pv_total_power": "638",
-        "batconv_power": "469",
-        "bat_use": "1",
-        "bat_status": "0",
-        "bat_user_soc": "55.7",
-        "load_power": "703",
-        "ac_output_power": "10",
-        "load_today": "0.0",
-        "grid_power": "404",
-        "current_day_self_consumption": "94.6",
-        "current_pv_generation_sum": "31386",
-        "current_grid_feed_in_energy": "1697"
-    },
-    "direction":
-    {
-        "is_direct_consuming_": "1",
-        "is_battery_charging_": "0",
-        "is_battery_discharging_": "0",
-        "is_grid_selling_": "1",
-        "is_grid_buying_": "0",
-        "is_charging_from_grid_": "0",
-        "is_discharging_to_grid_": "0"
-    },
-    "operation":
-    {
-        "status": "start",
-        "mode": "1",
-        "pcs_standbymode": "false",
-        "drm_mode0": "0",
-        "remote_mode": "0",
-        "drm_control": "255"
-    },
-    "wintermode":
-    {
-        "winter_status": "off",
-        "backup_status": "off"
-    },
-    "backupmode": "",
-    "pcs_fault":
-    {
-        "pcs_status": "pcs_ok",
-        "pcs_op_status": "pcs_run"
-    },
-    "heatpump":
-    {
-        "heatpump_protocol": "0",
-        "heatpump_activate": "off",
-        "current_temp": "0",
-        "heatpump_working": "off"
-    },
-    "evcharger":
-    {
-        "ev_activate": "off",
-        "ev_power": "0"
-    },
-    "gridWaitingTime": "0"
-}
-
-
-*/
-
-
-
