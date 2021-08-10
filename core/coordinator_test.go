@@ -30,6 +30,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		{"B/A->1", api.StatusB, api.StatusA, v1},
 		{"B/A->1", api.StatusB, api.StatusA, v1},
 		{"A/B->2", api.StatusA, api.StatusB, v2},
+		{"A/B->2", api.StatusA, api.StatusB, v2},
 		{"B/B->1", api.StatusB, api.StatusB, nil},
 	}
 
