@@ -50,14 +50,14 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("nissan")
 	identity := nissan.NewIdentity(log)
 
-	err := identity.Login(cc.User, cc.Password)
-	if err != nil {
+	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := nissan.NewAPI(log, identity, strings.ToUpper(cc.VIN))
 
-	if err == nil && cc.VIN == "" {
+	var err error
+	if cc.VIN == "" {
 		api.VIN, err = findVehicle(api.Vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", api.VIN)
