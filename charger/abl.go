@@ -138,6 +138,14 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	return err
 }
 
+var _ api.Meter = (*ABLeMH)(nil)
+
+// Currents implements the api.MeterCurrent interface
+func (wb *ABLeMH) CurrentPower() (float64, error) {
+	l1, l2, l3, err := wb.Currents()
+	return 230 * (l1 + l2 + l3), err
+}
+
 var _ api.MeterCurrent = (*ABLeMH)(nil)
 
 // Currents implements the api.MeterCurrent interface
