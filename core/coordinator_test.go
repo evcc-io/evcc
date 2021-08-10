@@ -28,12 +28,16 @@ func TestVehicleDetectByStatus(t *testing.T) {
 	tc := []testcase{
 		{"A/A->0", api.StatusA, api.StatusA, nil},
 		{"B/A->1", api.StatusB, api.StatusA, v1},
+		{"B/A->1", api.StatusB, api.StatusA, v1},
 		{"A/B->2", api.StatusA, api.StatusB, v2},
 		{"B/B->1", api.StatusB, api.StatusB, nil},
 	}
 
 	log := util.NewLogger("foo")
 	vehicles := []api.Vehicle{v1, v2}
+
+	lp := &LoadPoint{}
+	c := &vehicleCoordinator{make(map[api.Vehicle]interface{})}
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
@@ -43,10 +47,16 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		v1.MockVehicle.EXPECT().Title().Return("v1")
 		v2.MockVehicle.EXPECT().Title().Return("v2")
 
-		lp := new(vehicleCoordinator)
-
-		if res := lp.findActiveVehicleByStatus(log, vehicles); tc.res != res {
+		res := c.findActiveVehicleByStatus(log, lp, vehicles)
+		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
+
+		if res != nil {
+			c.aquire(lp, res)
+		} else {
+			c.release(res)
+		}
 	}
+
 }

@@ -427,10 +427,13 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.Unlock()
 
-	// use first vehicle for estimator
 	// run during prepare() to ensure cache has been attached
 	if len(lp.vehicles) > 0 {
-		lp.setActiveVehicle(lp.vehicles[0])
+		// associate first vehicle if it cannot be auto-detected
+		if _, ok := lp.vehicles[0].(api.ChargeState); !ok {
+			lp.setActiveVehicle(lp.vehicles[0])
+		}
+
 		lp.startVehicleDetection()
 	}
 
@@ -607,12 +610,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	from := "unknown"
 	if lp.vehicle != nil {
-		coordinator.disown(lp.vehicle)
+		coordinator.release(lp.vehicle)
 		from = lp.vehicle.Title()
 	}
 	to := "unknown"
 	if vehicle != nil {
-		coordinator.own(vehicle)
+		coordinator.aquire(lp, vehicle)
 		to = vehicle.Title()
 	}
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
@@ -704,7 +707,7 @@ func (lp *LoadPoint) findActiveVehicle() {
 		return
 	}
 
-	if vehicle := coordinator.findActiveVehicleByStatus(lp.log, lp.vehicles); vehicle != nil {
+	if vehicle := coordinator.findActiveVehicleByStatus(lp.log, lp, lp.vehicles); vehicle != nil {
 		lp.setActiveVehicle(vehicle)
 		return
 	}

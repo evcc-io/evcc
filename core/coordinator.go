@@ -6,31 +6,31 @@ import (
 )
 
 type vehicleCoordinator struct {
-	tracked map[api.Vehicle]struct{}
+	tracked map[api.Vehicle]interface{}
 }
 
 var coordinator *vehicleCoordinator
 
 func init() {
 	coordinator = &vehicleCoordinator{
-		tracked: make(map[api.Vehicle]struct{}),
+		tracked: make(map[api.Vehicle]interface{}),
 	}
 }
 
-func (lp *vehicleCoordinator) own(vehicle api.Vehicle) {
-	lp.tracked[vehicle] = struct{}{}
+func (lp *vehicleCoordinator) aquire(owner interface{}, vehicle api.Vehicle) {
+	lp.tracked[vehicle] = owner
 }
 
-func (lp *vehicleCoordinator) disown(vehicle api.Vehicle) {
+func (lp *vehicleCoordinator) release(vehicle api.Vehicle) {
 	delete(lp.tracked, vehicle)
 }
 
-func (lp *vehicleCoordinator) availableVehicles(vehicles []api.Vehicle) []api.Vehicle {
+func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []api.Vehicle) []api.Vehicle {
 	var res []api.Vehicle
 
 	for _, vv := range vehicles {
 		if _, ok := vv.(api.ChargeState); ok {
-			if _, ok := lp.tracked[vv]; !ok {
+			if o, ok := lp.tracked[vv]; o == owner || !ok {
 				res = append(res, vv)
 			}
 		}
@@ -40,10 +40,10 @@ func (lp *vehicleCoordinator) availableVehicles(vehicles []api.Vehicle) []api.Ve
 }
 
 // find active vehicle by charge state
-func (lp *vehicleCoordinator) findActiveVehicleByStatus(log *util.Logger, vehicles []api.Vehicle) api.Vehicle {
+func (lp *vehicleCoordinator) findActiveVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
 	var res api.Vehicle
 
-	available := lp.availableVehicles(vehicles)
+	available := lp.availableVehicles(owner, vehicles)
 	// log.DEBUG.Printf("!!available vehicles: %v", funk.Map(available, func(v api.Vehicle) string {
 	// 	return v.Title()
 	// }))
