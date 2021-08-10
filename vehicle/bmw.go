@@ -12,7 +12,9 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
+	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -35,8 +37,6 @@ type BMW struct {
 	*embed
 	*request.Helper
 	user, password, vin string
-	token               string
-	tokenValid          time.Time
 	chargeStateG        func() (float64, error)
 }
 
@@ -68,9 +68,18 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      strings.ToUpper(cc.VIN),
 	}
 
+	token, err := v.RefreshToken(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	v.Client.Transport = &oauth2.Transport{
+		Source: oauth.RefreshTokenSource(token, v),
+		Base:   v.Client.Transport,
+	}
+
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
 
-	var err error
 	if cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
@@ -81,10 +90,10 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *BMW) login(user, password string) error {
+func (v *BMW) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"username":      []string{user},
-		"password":      []string{password},
+		"username":      []string{v.user},
+		"password":      []string{v.password},
 		"client_id":     []string{"dbf0a542-ebd1-4ff0-a9a7-55172fbfce35"},
 		"redirect_uri":  []string{"https://www.bmw-connecteddrive.com/app/default/static/external-dispatch.html"},
 		"response_type": []string{"token"},
@@ -95,50 +104,35 @@ func (v *BMW) login(user, password string) error {
 
 	req, err := request.New(http.MethodPost, bmwAuth, strings.NewReader(data.Encode()), request.URLEncoding)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	client := &http.Client{
-		Timeout:       v.Helper.Client.Timeout,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }, // don't follow redirects
-	}
+	// don't follow redirects
+	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
+	defer func() { v.Client.CheckRedirect = nil }()
 
-	resp, err := client.Do(req)
+	resp, err := v.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Header.Get("Location"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	token := query.Get("access_token")
+	at := query.Get("access_token")
 	expires, err := strconv.Atoi(query.Get("expires_in"))
-	if err != nil || token == "" || expires == 0 {
-		return errors.New("could not obtain token")
+	if err != nil || at == "" || expires == 0 {
+		return nil, errors.New("could not obtain token")
 	}
 
-	v.token = token
-	v.tokenValid = time.Now().Add(time.Duration(expires) * time.Second)
-
-	return nil
-}
-
-func (v *BMW) request(uri string) (*http.Request, error) {
-	if v.token == "" || time.Since(v.tokenValid) > 0 {
-		if err := v.login(v.user, v.password); err != nil {
-			return nil, err
-		}
+	token := &oauth2.Token{
+		AccessToken: at,
+		Expiry:      time.Now().Add(time.Duration(expires) * time.Second),
 	}
 
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
-	if err == nil {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", v.token))
-	}
-
-	return req, nil
+	return token, nil
 }
 
 // vehicles implements returns the list of user vehicles
@@ -146,17 +140,14 @@ func (v *BMW) vehicles() ([]string, error) {
 	var resp bmwVehiclesResponse
 	uri := fmt.Sprintf("%s/me/vehicles/v2/", bmwAPI)
 
-	var vehicles []string
-
-	req, err := v.request(uri)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err == nil {
 		err = v.DoJSON(req, &resp)
 	}
 
-	if err == nil {
-		for _, v := range resp {
-			vehicles = append(vehicles, v.VIN)
-		}
+	var vehicles []string
+	for _, v := range resp {
+		vehicles = append(vehicles, v.VIN)
 	}
 
 	return vehicles, err
@@ -167,7 +158,7 @@ func (v *BMW) chargeState() (float64, error) {
 	var resp bmwDynamicResponse
 	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", bmwAPI, v.vin)
 
-	req, err := v.request(uri)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return 0, err
 	}
