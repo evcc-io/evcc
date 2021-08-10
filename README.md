@@ -199,6 +199,7 @@ Available charger implementations are:
 - `custom`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Smart-Home outlet charger implementations:
+
 - `fritzdect`: Fritz!DECT 200/210 outlets
 - `shelly`: Shelly outlets
 - `tasmota`: Tasmota outlets
@@ -261,7 +262,7 @@ Available vehicle remote interface implementations are:
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
-- `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
+- `citroen`, `ds`, `opel`, `peugeot`: All PSA brands
 - `fiat`: Fiat (500e)
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Soul and other Bluelink models)
