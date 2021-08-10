@@ -131,6 +131,8 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 // goeStatusResponse is only valid for local api. Use Fwv if valid.
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
+		// let charger settle after update
+		defer time.Sleep(2 * time.Second)
 		return c.localResponse("mqtt", payload)
 	}
 
@@ -141,11 +143,6 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	}
 
 	return status, err
-}
-
-// isValid checks is status response is local
-func isValid(status goeStatusResponse) bool {
-	return status.Fwv != ""
 }
 
 // Status implements the api.Charger interface
@@ -192,8 +189,10 @@ func (c *GoE) Enable(enable bool) error {
 	}
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && isValid(status) && status.Alw != b {
-		return fmt.Errorf("alw update failed: %d", status.Alw)
+	if err == nil {
+		if status, err = c.apiStatus(); err == nil && status.Alw != b {
+			return fmt.Errorf("alw update failed: %d", status.Alw)
+		}
 	}
 
 	return err
@@ -202,8 +201,10 @@ func (c *GoE) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil && isValid(status) && int64(status.Amp) != current {
-		return fmt.Errorf("amp update failed: %d", status.Amp)
+	if err == nil {
+		if status, err = c.apiStatus(); err == nil && int64(status.Amp) != current {
+			return fmt.Errorf("amp update failed: %d", status.Amp)
+		}
 	}
 
 	return err
