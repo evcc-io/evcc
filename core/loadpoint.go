@@ -335,7 +335,6 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// identify active vehicle
 	lp.startVehicleDetection()
-	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
 	lp.pvDisableTimer()
