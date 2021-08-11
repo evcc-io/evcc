@@ -9,11 +9,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://github.com/bimmerconnected/bimmer_connected
+
 const ApiURI = "https://www.bmw-connecteddrive.com/api"
 
 type DynamicResponse struct {
 	AttributesMap struct {
-		ChargingLevelHv float64 `json:"chargingLevelHv,string"`
+		ChargingHVStatus       string  `json:"chargingHVStatus"` // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
+		ChargingLevelHv        float64 `json:"chargingLevelHv,string"`
+		BERemainingRangeFuelKm float64 `json:"beRemainingRangeFuelKm,string"`
+		Mileage                float64 `json:"mileage,string"`
 	}
 }
 
