@@ -231,9 +231,12 @@ func (c *EEBus) certificateHandler(leaf *x509.Certificate) error {
 
 	for client := range c.clients {
 		if client == ski {
+			c.log.TRACE.Printf("client ski found")
 			return nil
 		}
 	}
+
+	c.log.TRACE.Printf("client ski not found!")
 
 	return fmt.Errorf("client ski not allowed: %s", ski)
 }
@@ -291,9 +294,9 @@ func (c *EEBus) shipCloseHandler(ski string) {
 			}
 		}
 		if closeConnection {
+			c.log.TRACE.Printf("close client %s connection", ski)
 			clientCB.onDisconnect(ski)
 			delete(c.connectedClients, ski)
-			delete(c.clients, ski)
 		}
 	}
 

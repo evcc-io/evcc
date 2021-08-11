@@ -74,7 +74,7 @@ var eebusDevice spine.Device
 var once sync.Once
 
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
-	c.log.WARN.Println("onCconnect invoked on ski ", ski)
+	c.log.TRACE.Println("onCconnect invoked on ski ", ski)
 
 	once.Do(func() {
 		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
@@ -91,7 +91,7 @@ func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 }
 
 func (c *EEBus) onDisconnect(ski string) {
-	c.log.WARN.Println("onDisconnect invoked on ski ", ski)
+	c.log.TRACE.Println("onDisconnect invoked on ski ", ski)
 
 	c.connected = false
 	c.setDefaultValues()
