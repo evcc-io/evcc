@@ -15,12 +15,12 @@ type embed struct {
 	Identifier_ string `mapstructure:"identifier"`
 }
 
-// Title implements the Vehicle.Title interface
+// Title implements the api.Vehicle interface
 func (v *embed) Title() string {
 	return v.Title_
 }
 
-// Capacity implements the Vehicle.Capacity interface
+// Capacity implements the api.Vehicle interface
 func (v *embed) Capacity() int64 {
 	return v.Capacity_
 }

@@ -1,5 +1,7 @@
 package tronity
 
+// https://app.platform.tronity.io/docs#operation
+
 type Vehicles struct {
 	Data []Vehicle
 }
@@ -12,28 +14,34 @@ type Vehicle struct {
 }
 
 type Bulk struct {
-	VIN       string
-	Odometer  int
-	Range     int
-	Level     int
-	Charging  string // Charging
-	Latitude  float64
-	Longitude float64
+	VIN      string
+	Odometer float64
+	Range    float64
+	Level    float64
+	Charging string // Charging
+	// Latitude  float64/string
+	// Longitude float64/string
 	Timestamp int64
 }
 
 type Odometer struct {
-	Odometer  int
-	Timestamp int64
+	Odometer  float64
+	Timestamp float64
 }
 
 type EVBatteryLevel struct {
-	Range     int
-	Level     int
+	Range     float64
+	Level     float64
 	Timestamp int64
 }
 
 type EVChargingStatus struct {
 	Charging  string
+	Timestamp int64
+}
+
+type Location struct {
+	// Latitude  float64/string
+	// Longitude float64/string
 	Timestamp int64
 }

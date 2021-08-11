@@ -1,8 +1,6 @@
 package nissan
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,6 +9,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
+	"github.com/avast/retry-go"
 	"golang.org/x/oauth2"
 )
 
@@ -55,23 +54,23 @@ func (v *Identity) Login(user, password string) error {
 			}
 		}
 
-		var body []byte
-		body, err = json.Marshal(res)
-
-		if err == nil {
-			req, err = request.New(http.MethodPost, uri, bytes.NewReader(body), map[string]string{
-				"Content-type":       "application/json",
-				"Accept":             "application/json",
+		// https://github.com/Tobiaswk/dartnissanconnect/commit/7d28dd5461aaed3e46b5be0c9fd58887e1e0cd0b
+		err = retry.Do(func() error {
+			req, err = request.New(http.MethodPost, uri, request.MarshalJSON(res), map[string]string{
 				"Accept-Api-Version": APIVersion,
 				"X-Username":         "anonymous",
 				"X-Password":         "anonymous",
+				"Content-type":       "application/json",
+				"Accept":             "application/json",
 			})
-		}
 
-		if err == nil {
-			err = v.DoJSON(req, &nToken)
-			realm = strings.Trim(nToken.Realm, "/")
-		}
+			if err == nil {
+				err = v.DoJSON(req, &nToken)
+				realm = strings.Trim(nToken.Realm, "/")
+			}
+
+			return err
+		}, retry.Attempts(10), retry.LastErrorOnly(true))
 	}
 
 	if err == nil {

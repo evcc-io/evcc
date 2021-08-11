@@ -7,18 +7,21 @@ import (
 )
 
 var (
+	FormContent = "application/x-www-form-urlencoded"
+	JSONContent = "application/json"
+
 	// URLEncoding specifies application/x-www-form-urlencoded
-	URLEncoding = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
+	URLEncoding = map[string]string{"Content-Type": FormContent}
 
 	// JSONEncoding specifies application/json
 	JSONEncoding = map[string]string{
-		"Content-Type": "application/json",
-		"Accept":       "application/json",
+		"Content-Type": JSONContent,
+		"Accept":       JSONContent,
 	}
 
 	// AcceptJSON accepting application/json
 	AcceptJSON = map[string]string{
-		"Accept": "application/json",
+		"Accept": JSONContent,
 	}
 )
 

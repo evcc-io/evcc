@@ -20,12 +20,12 @@ func New(w api.Vehicle, err error) (api.Vehicle, error) {
 	return v, nil
 }
 
-// Title implements the Vehicle.Title interface
+// Title implements the api.Vehicle interface
 func (v *Wrapper) Title() string {
 	return "unavailable"
 }
 
-// Capacity implements the Vehicle.Capacity interface
+// Capacity implements the api.Vehicle interface
 func (v *Wrapper) Capacity() int64 {
 	return 0
 }
@@ -35,7 +35,7 @@ func (v *Wrapper) Identify() (string, error) {
 	return "", v.err
 }
 
-// SoC implements the api.Vehicle interface
+// SoC implements the api.Battery interface
 func (v *Wrapper) SoC() (float64, error) {
 	return 0, v.err
 }

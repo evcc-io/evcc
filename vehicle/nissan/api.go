@@ -51,7 +51,7 @@ func (v *API) Vehicles() ([]string, error) {
 
 	var res Vehicles
 	if err == nil {
-		uri := fmt.Sprintf("%s/v2/users/%s/cars", UserBaseURL, user.UserID)
+		uri := fmt.Sprintf("%s/v4/users/%s/cars", UserBaseURL, user.UserID)
 		err = v.GetJSON(uri, &res)
 	}
 
