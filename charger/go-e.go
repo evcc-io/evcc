@@ -34,6 +34,44 @@ type goeStatusResponse struct {
 	Tmp int    `json:"tmp,string"` // temperature [°C]
 	Dws int    `json:"dws,string"` // energy [Ws]
 	Nrg []int  `json:"nrg"`        // voltage, current, power
+	Uby int    `json:"uby,string"` // unlocked_by
+	Rna string `json:"rna"`        // RFID 1
+	Rnm string `json:"rnm"`        // RFID 2
+	Rne string `json:"rne"`        // RFID 3
+	Rn4 string `json:"rn4"`        // RFID 4
+	Rn5 string `json:"rn5"`        // RFID 5
+	Rn6 string `json:"rn6"`        // RFID 6
+	Rn7 string `json:"rn7"`        // RFID 7
+	Rn8 string `json:"rn8"`        // RFID 8
+	Rn9 string `json:"rn9"`        // RFID 9
+	Rn1 string `json:"rn1"`        // RFID 10
+}
+
+func (g goeStatusResponse) RFIDName(id int) string {
+	switch id {
+	case 1:
+		return g.Rna
+	case 2:
+		return g.Rnm
+	case 3:
+		return g.Rne
+	case 4:
+		return g.Rn4
+	case 5:
+		return g.Rn5
+	case 6:
+		return g.Rn6
+	case 7:
+		return g.Rn7
+	case 8:
+		return g.Rn8
+	case 9:
+		return g.Rn9
+	case 10:
+		return g.Rn1
+	default:
+		return ""
+	}
 }
 
 // GoE charger implementation
@@ -240,4 +278,15 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
 	}
 	return 0, 0, 0, err
+}
+
+var _ api.Identifier = (*GoE)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *GoE) Identify() (string, error) {
+	status, err := c.apiStatus()
+	if status.Uby == 0 {
+		return "", api.ErrNotAvailable
+	}
+	return status.RFIDName(status.Uby), err
 }
