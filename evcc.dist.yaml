@@ -91,6 +91,10 @@ loadpoints:
   onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
+  onIdentify: # set defaults when vehicle is identified
+  - e-Up:
+      mode: pv # switch back to pv mode
+      targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long

@@ -48,7 +48,7 @@ func TestVehicleDetectByStatus(t *testing.T) {
 		v1.MockVehicle.EXPECT().Title().Return("v1")
 		v2.MockVehicle.EXPECT().Title().Return("v2")
 
-		res := c.findActiveVehicleByStatus(log, lp, vehicles)
+		res := c.identifyVehicleByStatus(log, lp, vehicles)
 		if tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
