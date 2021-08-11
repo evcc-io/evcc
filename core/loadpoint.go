@@ -640,6 +640,7 @@ func (lp *LoadPoint) identifyVehicle() {
 		}
 
 		if action, ok := lp.OnIdentify[id]; ok {
+			lp.log.DEBUG.Println("running vehicle action:", action)
 			lp.applyAction(action)
 		}
 	}
