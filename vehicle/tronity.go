@@ -32,7 +32,7 @@ func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
 
-// NewTronityFromConfig creates a new Tronity vehicle
+// NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed       `mapstructure:",squash"`
