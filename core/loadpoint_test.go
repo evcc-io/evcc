@@ -370,7 +370,7 @@ func TestDisableAndEnableAtTargetSoC(t *testing.T) {
 
 	// wrap vehicle with estimator
 	vehicle.EXPECT().Capacity().Return(int64(10))
-	socEstimator := soc.NewEstimator(util.NewLogger("foo"), vehicle, false)
+	socEstimator := soc.NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 
 	lp := &LoadPoint{
 		log:          util.NewLogger("foo"),

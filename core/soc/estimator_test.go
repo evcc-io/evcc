@@ -11,11 +11,12 @@ import (
 
 func TestRemainingChargeDuration(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
 	//9 kWh userBatCap => 10 kWh virtualBatCap
 	vehicle.EXPECT().Capacity().Return(int64(9))
 
-	ce := NewEstimator(util.NewLogger("foo"), vehicle, false)
+	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, false)
 	ce.socCharge = 20.0
 
 	chargePower := 1000.0
@@ -28,13 +29,14 @@ func TestRemainingChargeDuration(t *testing.T) {
 
 func TestSoCEstimation(t *testing.T) {
 	ctrl := gomock.NewController(t)
+	charger := mock.NewMockCharger(ctrl)
 	vehicle := mock.NewMockVehicle(ctrl)
 
 	// 9 kWh user battery capacity is converted to initial value of 10 kWh virtual capacity
 	var capacity int64 = 9
 	vehicle.EXPECT().Capacity().Return(capacity)
 
-	ce := NewEstimator(util.NewLogger("foo"), vehicle, true)
+	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
 	ce.socCharge = 20.0
 
 	tc := []struct {
