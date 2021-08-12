@@ -40,14 +40,10 @@ func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []ap
 }
 
 // find active vehicle by charge state
-func (lp *vehicleCoordinator) findActiveVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
-	var res api.Vehicle
-
+func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
 	available := lp.availableVehicles(owner, vehicles)
-	// log.DEBUG.Printf("!!available vehicles: %v", funk.Map(available, func(v api.Vehicle) string {
-	// 	return v.Title()
-	// }))
 
+	var res api.Vehicle
 	for _, vehicle := range available {
 		if vs, ok := vehicle.(api.ChargeState); ok {
 			status, err := vs.Status()

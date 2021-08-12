@@ -751,13 +751,6 @@ func TestMinSoC(t *testing.T) {
 func TestVehicleDetectByID(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
-	type charger struct {
-		*mock.MockCharger
-		*mock.MockIdentifier
-	}
-
-	c := &charger{mock.NewMockCharger(ctrl), mock.NewMockIdentifier(ctrl)}
-
 	v1 := mock.NewMockVehicle(ctrl)
 	v2 := mock.NewMockVehicle(ctrl)
 
@@ -768,41 +761,32 @@ func TestVehicleDetectByID(t *testing.T) {
 		prepare    func(testcase)
 	}
 	tc := []testcase{
-		{"_/_/_->0", "", "", "", nil, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
-		}},
 		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 		}},
 		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 		}},
 		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 		}},
 		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			// v2.EXPECT().Identify().Return(tc.i2, nil)
 		}},
 		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 		}},
 		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
-			c.MockIdentifier.EXPECT().Identify().Return(tc.id, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
 			v2.EXPECT().Identify().Return(tc.i2, nil)
 			v1.EXPECT().Identify().Return(tc.i1, nil)
@@ -815,7 +799,6 @@ func TestVehicleDetectByID(t *testing.T) {
 
 		lp := &LoadPoint{
 			log:      util.NewLogger("foo"),
-			charger:  c,
 			vehicles: []api.Vehicle{v1, v2},
 		}
 
@@ -823,7 +806,7 @@ func TestVehicleDetectByID(t *testing.T) {
 			tc.prepare(tc)
 		}
 
-		if res := lp.findActiveVehicleByID(); tc.res != res {
+		if res := lp.selectVehicleByID(tc.id); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		}
 	}

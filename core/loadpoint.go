@@ -64,6 +64,12 @@ type ThresholdConfig struct {
 	Threshold float64
 }
 
+// ActionConfig defines an action to take on event
+type ActionConfig struct {
+	Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
+	TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
+}
+
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -86,11 +92,9 @@ type LoadPoint struct {
 	Meters      struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC          SoCConfig
-	OnDisconnect struct {
-		Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-		TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-	}
+	SoC             SoCConfig
+	OnDisconnect    ActionConfig            `mapstructure:"onDisconnect"`
+	OnIdentify      map[string]ActionConfig `mapstructure:"onIdentify"`
 	Enable, Disable ThresholdConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
@@ -103,6 +107,7 @@ type LoadPoint struct {
 	socUpdated             time.Time // SoC updated timestamp (poll: connected)
 	vehicleConnected       time.Time // Vehicle connected timestamp
 	vehicleConnectedTicker *clock.Ticker
+	vehicleID              string
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
@@ -358,12 +363,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 
 	// set default mode on disconnect
-	if lp.OnDisconnect.Mode != "" && lp.GetMode() != api.ModeOff {
-		lp.SetMode(lp.OnDisconnect.Mode)
-	}
-	if lp.OnDisconnect.TargetSoC != 0 {
-		_ = lp.SetTargetSoC(lp.OnDisconnect.TargetSoC)
-	}
+	lp.applyAction(lp.OnDisconnect)
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -392,6 +392,16 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 	// handler only called if charge meter was replaced by dummy
 	lp.chargeMeter.(*wrapper.ChargeMeter).SetPower(power)
+}
+
+// applyAction executes the action
+func (lp *LoadPoint) applyAction(action ActionConfig) {
+	if action.Mode != "" && lp.GetMode() != api.ModeOff {
+		lp.SetMode(action.Mode)
+	}
+	if action.TargetSoC != 0 {
+		_ = lp.SetTargetSoC(action.TargetSoC)
+	}
 }
 
 // Name returns the human-readable loadpoint title
@@ -600,6 +610,68 @@ func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
 	return lp.remoteDemand == demand
 }
 
+// identifyVehicle reads vehicle identification from charger
+func (lp *LoadPoint) identifyVehicle() {
+	identifier, ok := lp.charger.(api.Identifier)
+	if !ok {
+		return
+	}
+
+	id, err := identifier.Identify()
+	if err != nil {
+		lp.log.ERROR.Println("charger vehicle id:", err)
+		return
+	}
+
+	if lp.vehicleID == id {
+		return
+	}
+
+	// vehicle found or removed
+	lp.vehicleID = id
+
+	lp.log.DEBUG.Println("charger vehicle id:", id)
+	lp.publish("socIdentity", id)
+
+	if id != "" {
+		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
+			lp.setActiveVehicle(vehicle)
+		}
+
+		if action, ok := lp.OnIdentify[id]; ok {
+			lp.log.DEBUG.Println("running vehicle action:", action)
+			lp.applyAction(action)
+		}
+	}
+}
+
+// selectVehicleByID selects the vehicle with the given ID
+func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
+	// find exact match
+	for _, vehicle := range lp.vehicles {
+		if vid, err := vehicle.Identify(); err == nil && vid == id {
+			return vehicle
+		}
+	}
+
+	// find placeholder match
+	for _, vehicle := range lp.vehicles {
+		if vid, err := vehicle.Identify(); err == nil && vid != "" {
+			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
+			if err != nil {
+				lp.log.ERROR.Printf("vehicle id: %v", err)
+				continue
+			}
+
+			if re.MatchString(id) {
+				return vehicle
+			}
+		}
+	}
+
+	return nil
+}
+
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle == vehicle {
@@ -639,9 +711,9 @@ func (lp *LoadPoint) startVehicleDetection() {
 	lp.vehicleConnectedTicker = lp.clock.Ticker(vehicleDetectInterval)
 }
 
-// vehicleIdentificationAllowed checks if loadpoint has multiple vehicles associated and starts discovery period
-func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
-	res := len(lp.vehicles) > 1 && lp.connected() && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+// vehicleUnidentified checks if loadpoint has multiple vehicles associated and starts discovery period
+func (lp *LoadPoint) vehicleUnidentified() bool {
+	res := len(lp.vehicles) > 1 && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
 	if res {
@@ -656,58 +728,13 @@ func (lp *LoadPoint) vehicleIdentificationAllowed() bool {
 	return res
 }
 
-// find active vehicle by id
-func (lp *LoadPoint) findActiveVehicleByID() api.Vehicle {
-	if identifier, ok := lp.charger.(api.Identifier); ok {
-		id, err := identifier.Identify()
-
-		if err != nil {
-			lp.log.ERROR.Println("charger vehicle id:", err)
-			return nil
-		}
-
-		if id != "" {
-			lp.log.DEBUG.Println("charger vehicle id:", id)
-
-			// find exact match
-			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil && vid == id {
-					return vehicle
-				}
-			}
-
-			// find placeholder match
-			for _, vehicle := range lp.vehicles {
-				if vid, err := vehicle.Identify(); err == nil && vid != "" {
-					re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
-					if err != nil {
-						lp.log.ERROR.Printf("vehicle identity: %v", err)
-						continue
-					}
-
-					if re.MatchString(id) {
-						return vehicle
-					}
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-// findActiveVehicle validates if the active vehicle is still connected to the loadpoint
-func (lp *LoadPoint) findActiveVehicle() {
+// identifyVehicleByStatus validates if the active vehicle is still connected to the loadpoint
+func (lp *LoadPoint) identifyVehicleByStatus() {
 	if len(lp.vehicles) <= 1 {
 		return
 	}
 
-	if vehicle := lp.findActiveVehicleByID(); vehicle != nil {
-		lp.setActiveVehicle(vehicle)
-		return
-	}
-
-	if vehicle := coordinator.findActiveVehicleByStatus(lp.log, lp, lp.vehicles); vehicle != nil {
+	if vehicle := coordinator.identifyVehicleByStatus(lp.log, lp, lp.vehicles); vehicle != nil {
 		lp.setActiveVehicle(vehicle)
 		return
 	}
@@ -1024,9 +1051,15 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 	lp.publish("charging", lp.charging())
 	lp.publish("enabled", lp.enabled)
 
-	// update active vehicle if not yet done
-	if lp.vehicleIdentificationAllowed() {
-		lp.findActiveVehicle()
+	// identify connected vehicle
+	if lp.connected() {
+		// read identity and run associated action
+		lp.identifyVehicle()
+
+		// find vehicle by status for a couple of minutes after connecting
+		if lp.vehicleUnidentified() {
+			lp.identifyVehicleByStatus()
+		}
 	}
 
 	// publish soc after updating charger status to make sure
