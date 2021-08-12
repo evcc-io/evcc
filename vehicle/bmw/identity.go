@@ -53,7 +53,7 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		"client_id":     []string{"dbf0a542-ebd1-4ff0-a9a7-55172fbfce35"},
 		"redirect_uri":  []string{"https://www.bmw-connecteddrive.com/app/default/static/external-dispatch.html"},
 		"response_type": []string{"token"},
-		"scope":         []string{"authenticate_user fupo"},
+		"scope":         []string{"authenticate_user vehicle_data remote_services"},
 		"state":         []string{"eyJtYXJrZXQiOiJkZSIsImxhbmd1YWdlIjoiZGUiLCJkZXN0aW5hdGlvbiI6ImxhbmRpbmdQYWdlIn0"},
 		"locale":        []string{"DE-de"},
 	}

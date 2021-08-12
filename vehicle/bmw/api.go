@@ -11,26 +11,26 @@ import (
 
 // https://github.com/bimmerconnected/bimmer_connected
 
-const ApiURI = "https://www.bmw-connecteddrive.com/api"
+const ApiURI = "https://b2vapi.bmwgroup.com/webapi/v1"
 
-type DynamicResponse struct {
-	AttributesMap struct {
-		ChargingStatus               string `json:"charging_status"` // CHARGINGACTIVE
-		SoCHVPercent                 int    `json:"soc_hv_percent,string"`
-		RemainingChargingTimeMinutes int    `json:"remaining_charging_time_minutes,string"`
-
-		ChargingTimeRemaining      int     `json:"chargingTimeRemaining,string"`
-		ConnectorStatus            string  `json:"connectorStatus"`  // CONNECTED
-		ChargingHVStatus           string  `json:"chargingHVStatus"` // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
-		ChargingLevelHv            float64 `json:"chargingLevelHv,string"`
-		BERemainingRangeFuelKm     float64 `json:"beRemainingRangeFuelKm,string"`
-		BERemainingRangeElectricKm int     `json:"beRemainingRangeElectricKm,string"`
-		Mileage                    float64 `json:"mileage,string"`
+type StatusResponse struct {
+	VehicleStatus struct {
+		ConnectionStatus       string // CONNECTED
+		ChargingStatus         string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
+		ChargingLevelHv        int
+		RemainingRangeElectric int
+		Mileage                int
+		// UpdateTime             time.Time // 2021-08-12T12:00:08+0000
 	}
 }
 
-type VehiclesResponse []struct {
-	VIN string `json:"vin"`
+type VehiclesResponse struct {
+	Vehicles []Vehicle
+}
+
+type Vehicle struct {
+	VIN   string
+	Model string
 }
 
 // API is an api.Vehicle implementation for BMW cars
@@ -53,10 +53,10 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	return v
 }
 
-// Vehicles implements returns the /me/vehicles api
+// Vehicles implements returns the /user/vehicles api
 func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
-	uri := fmt.Sprintf("%s/me/vehicles/v2/", ApiURI)
+	uri := fmt.Sprintf("%s/user/vehicles", ApiURI)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err == nil {
@@ -64,17 +64,17 @@ func (v *API) Vehicles() ([]string, error) {
 	}
 
 	var vehicles []string
-	for _, v := range resp {
+	for _, v := range resp.Vehicles {
 		vehicles = append(vehicles, v.VIN)
 	}
 
 	return vehicles, err
 }
 
-// Dynamic implements the /vehicle/dynamic api
-func (v *API) Dynamic(vin string) (DynamicResponse, error) {
-	var resp DynamicResponse
-	uri := fmt.Sprintf("%s/vehicle/dynamic/v1/%s", ApiURI, vin)
+// Status implements the /user/vehicles/<vin>/status api
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var resp StatusResponse
+	uri := fmt.Sprintf("%s/user/vehicles/%s/status", ApiURI, vin)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err == nil {
