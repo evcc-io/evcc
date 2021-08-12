@@ -9,7 +9,7 @@ import (
 	"github.com/andig/evcc/vehicle/bmw"
 )
 
-// BMW is an api.Vehicle implementation for BMW cars
+// BMW is an api.Vehicle implementation for BMW and Mini cars
 type BMW struct {
 	*embed
 	*bmw.Provider // provides the api implementations
@@ -17,6 +17,7 @@ type BMW struct {
 
 func init() {
 	registry.Add("bmw", NewBMWFromConfig)
+	registry.Add("mini", NewBMWFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle

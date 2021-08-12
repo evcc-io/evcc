@@ -16,7 +16,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - Wallbe, Phoenix (includes ESL Walli), go-eCharger (includes Heidelberg Energy Control), NRGkick, SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -267,6 +267,7 @@ Available vehicle remote interface implementations are:
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Soul and other Bluelink models)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
+- `mini`: Mini (Cooper SE)
 - `nissan`: Nissan (Leaf)
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
