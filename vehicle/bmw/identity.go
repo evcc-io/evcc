@@ -50,12 +50,11 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"username":      []string{v.user},
 		"password":      []string{v.password},
-		"client_id":     []string{"dbf0a542-ebd1-4ff0-a9a7-55172fbfce35"},
-		"redirect_uri":  []string{"https://www.bmw-connecteddrive.com/app/default/static/external-dispatch.html"},
+		"client_id":     []string{"31c357a0-7a1d-4590-aa99-33b97244d048"},
+		"redirect_uri":  []string{"com.bmw.connected://oauth"},
 		"response_type": []string{"token"},
 		"scope":         []string{"authenticate_user vehicle_data remote_services"},
-		"state":         []string{"eyJtYXJrZXQiOiJkZSIsImxhbmd1YWdlIjoiZGUiLCJkZXN0aW5hdGlvbiI6ImxhbmRpbmdQYWdlIn0"},
-		"locale":        []string{"DE-de"},
+		"nonce":         []string{"login_nonce"},
 	}
 
 	req, err := request.New(http.MethodPost, AuthURI, strings.NewReader(data.Encode()), request.URLEncoding)
@@ -72,7 +71,9 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 		return nil, err
 	}
 
-	query, err := url.ParseQuery(resp.Header.Get("Location"))
+	uri := resp.Header.Get("Location")
+
+	query, err := url.ParseQuery(strings.TrimPrefix(uri, "com.bmw.connected://oauth#"))
 	if err != nil {
 		return nil, err
 	}
