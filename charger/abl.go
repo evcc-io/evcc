@@ -2,7 +2,6 @@ package charger
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -59,7 +58,7 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	}
 
 	if !sponsor.IsAuthorized() {
-		return nil, errors.New("abl requires evcc sponsorship, register at https://cloud.evcc.io")
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("abl")

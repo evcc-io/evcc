@@ -2,7 +2,6 @@ package charger
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -58,7 +57,7 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 	}
 
 	if !sponsor.IsAuthorized() {
-		return nil, errors.New("heidelberg requires evcc sponsorship, register at https://cloud.evcc.io")
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("hec")

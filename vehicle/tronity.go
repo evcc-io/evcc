@@ -53,7 +53,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if !sponsor.IsAuthorized() {
-		return nil, errors.New("tronity requires evcc sponsorship, register at https://cloud.evcc.io")
+		return nil, api.ErrSponsorRequired
 	}
 
 	// authenticated http client with logging injected to the tronity client

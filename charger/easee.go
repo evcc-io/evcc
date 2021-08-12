@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -58,7 +57,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	log := util.NewLogger("easee")
 
 	if !sponsor.IsAuthorized() {
-		return nil, errors.New("easee requires evcc sponsorship, register at https://cloud.evcc.io")
+		return nil, api.ErrSponsorRequired
 	}
 
 	c := &Easee{
