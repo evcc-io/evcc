@@ -14,8 +14,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Closed systems (documentation available): go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe
-  - Closed systems (no documentation available): ABL eMH1, Mobile Charger Connect
+  - Other commercial: ABL eMH1, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect
   - Build-your-own: Phoenix (includes ESL Walli), [SimpleEVSE](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
