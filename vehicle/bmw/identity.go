@@ -30,8 +30,6 @@ func NewIdentity(log *util.Logger) *Identity {
 		Helper: request.NewHelper(log),
 	}
 
-	v.TokenSource = oauth.RefreshTokenSource(nil, v)
-
 	return v
 }
 
@@ -39,7 +37,11 @@ func (v *Identity) Login(user, password string) error {
 	v.user = user
 	v.password = password
 
-	_, err := v.RefreshToken(nil)
+	token, err := v.RefreshToken(nil)
+
+	if err == nil {
+		v.TokenSource = oauth.RefreshTokenSource(token, v)
+	}
 
 	return err
 }

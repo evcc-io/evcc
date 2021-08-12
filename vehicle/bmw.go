@@ -1,10 +1,10 @@
 package vehicle
 
 import (
+	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/vehicle/bmw"
 )
@@ -12,7 +12,7 @@ import (
 // BMW is an api.Vehicle implementation for BMW cars
 type BMW struct {
 	*embed
-	chargeStateG func() (float64, error)
+	*bmw.Provider // provides the api implementations
 }
 
 func init() {
@@ -54,15 +54,7 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.chargeStateG = provider.NewCached(func() (float64, error) {
-		res, err := api.Dynamic(cc.VIN)
-		return res.AttributesMap.ChargingLevelHv, err
-	}, cc.Cache).FloatGetter()
+	v.Provider = bmw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 
 	return v, err
-}
-
-// SoC implements the api.Vehicle interface
-func (v *BMW) SoC() (float64, error) {
-	return v.chargeStateG()
 }

@@ -15,10 +15,17 @@ const ApiURI = "https://www.bmw-connecteddrive.com/api"
 
 type DynamicResponse struct {
 	AttributesMap struct {
-		ChargingHVStatus       string  `json:"chargingHVStatus"` // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
-		ChargingLevelHv        float64 `json:"chargingLevelHv,string"`
-		BERemainingRangeFuelKm float64 `json:"beRemainingRangeFuelKm,string"`
-		Mileage                float64 `json:"mileage,string"`
+		ChargingStatus               string `json:"charging_status"` // CHARGINGACTIVE
+		SoCHVPercent                 int    `json:"soc_hv_percent,string"`
+		RemainingChargingTimeMinutes int    `json:"remaining_charging_time_minutes,string"`
+
+		ChargingTimeRemaining      int     `json:"chargingTimeRemaining,string"`
+		ConnectorStatus            string  `json:"connectorStatus"`  // CONNECTED
+		ChargingHVStatus           string  `json:"chargingHVStatus"` // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
+		ChargingLevelHv            float64 `json:"chargingLevelHv,string"`
+		BERemainingRangeFuelKm     float64 `json:"beRemainingRangeFuelKm,string"`
+		BERemainingRangeElectricKm int     `json:"beRemainingRangeElectricKm,string"`
+		Mileage                    float64 `json:"mileage,string"`
 	}
 }
 
