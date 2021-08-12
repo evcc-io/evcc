@@ -335,7 +335,6 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 
 	// identify active vehicle
 	lp.startVehicleDetection()
-	lp.findActiveVehicle()
 
 	// immediately allow pv mode activity
 	lp.pvDisableTimer()
@@ -419,7 +418,6 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("maxCurrent", lp.MaxCurrent)
 	lp.publish("phases", lp.Phases)
 	lp.publish("activePhases", lp.Phases)
-	lp.publish("hasVehicle", len(lp.vehicles) > 0)
 
 	lp.Lock()
 	lp.publish("mode", lp.Mode)
@@ -623,12 +621,14 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle = vehicle; vehicle != nil {
 		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
 
+		lp.publish("hasVehicle", true)
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
 	} else {
 		lp.socEstimator = nil
 
-		lp.publish("socTitle", "unknown")
+		lp.publish("hasVehicle", false)
+		lp.publish("socTitle", "")
 		lp.publish("socCapacity", 0)
 	}
 }
