@@ -2,6 +2,14 @@
 import { shallowMount } from "@vue/test-utils";
 import Energyflow from "./Energyflow.vue";
 
+const mocks = {
+  $t: (x) => x,
+  $n: function (value, options) {
+    const n = new Intl.NumberFormat("en-EN", options);
+    return n.format(value);
+  },
+};
+
 describe("Energyflow.vue", () => {
   const defaultProps = {
     gridConfigured: true,
@@ -15,7 +23,7 @@ describe("Energyflow.vue", () => {
 
   it("using pv and grid power", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000 },
     });
     await wrapper.find(".energyflow").trigger("click");
@@ -31,7 +39,7 @@ describe("Energyflow.vue", () => {
 
   it("exporting all pv power, no usage", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000 },
     });
 
@@ -48,7 +56,7 @@ describe("Energyflow.vue", () => {
 
   it("more grid export than pv, grid value wins (invalid state)", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: { ...defaultProps, gridPower: -4000, pvPower: 3000 },
     });
 
@@ -65,7 +73,7 @@ describe("Energyflow.vue", () => {
 
   it("only grid usage, no pv, idleBattery", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: {
         ...defaultProps,
         gridPower: 360,
@@ -77,23 +85,23 @@ describe("Energyflow.vue", () => {
 
     await wrapper.find(".energyflow").trigger("click");
 
-    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.4 kW");
-    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
-    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("360 W");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0 W");
+    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0 W");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.4 kW");
-    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("360 W");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0 W");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.battery");
   });
 
   it("grid and battery usage, no pv", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: {
         ...defaultProps,
         gridPower: 300,
         batteryConfigured: true,
-        batteryPower: 200,
+        batteryPower: 234,
         batterySoC: 77,
         pvPower: 0,
       },
@@ -101,20 +109,20 @@ describe("Energyflow.vue", () => {
 
     await wrapper.find(".energyflow").trigger("click");
 
-    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.3 kW");
-    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.2 kW");
-    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("300 W");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("234 W");
+    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0 W");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.5 kW");
-    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
-    expect(wrapper.find("[data-test-battery]").text()).toMatch("0.2 kW");
+    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("534 W");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0 W");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("234 W");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("77%");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryDischarge");
   });
 
   it("battery charge, pv export", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: {
         ...defaultProps,
         gridPower: -2500,
@@ -138,7 +146,7 @@ describe("Energyflow.vue", () => {
 
   it("thresholds", async () => {
     const wrapper = shallowMount(Energyflow, {
-      mocks: { $t: (x) => x },
+      mocks,
       propsData: {
         ...defaultProps,
         gridPower: 5555,
