@@ -491,6 +491,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			lp.log.DEBUG.Printf("max charge current: %.2g", chargeCurrent)
 			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
+			chargeCurrent = math.Trunc(chargeCurrent)
 			lp.log.DEBUG.Printf("max charge current: %d", int64(chargeCurrent))
 			err = lp.charger.MaxCurrent(int64(chargeCurrent))
 		}
