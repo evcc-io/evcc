@@ -47,8 +47,8 @@ type goeStatusResponse struct {
 	Rn1 string `json:"rn1"`        // RFID 10
 }
 
-func (g goeStatusResponse) RFIDName(id int) string {
-	switch id {
+func (g goeStatusResponse) RFIDName() string {
+	switch g.Uby {
 	case 1:
 		return g.Rna
 	case 2:
@@ -285,8 +285,5 @@ var _ api.Identifier = (*GoE)(nil)
 // Identify implements the api.Identifier interface
 func (c *GoE) Identify() (string, error) {
 	status, err := c.apiStatus()
-	if status.Uby == 0 {
-		return "", api.ErrNotAvailable
-	}
-	return status.RFIDName(status.Uby), err
+	return status.RFIDName(), err
 }
