@@ -93,22 +93,19 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	var fetchedSoC float64
-	var err error
+	var fetchedSoC *float64
 
-	socChargerSucceeded := false
 	if charger, ok := s.charger.(api.Battery); ok {
 		f, err := charger.SoC()
 
 		if err == nil {
 			s.socCharge = f
-			fetchedSoC = f
-			socChargerSucceeded = true
+			fetchedSoC = &f
 		}
 	}
 
-	if !socChargerSucceeded {
-		fetchedSoC, err = s.vehicle.SoC()
+	if fetchedSoC == nil {
+		f, err := s.vehicle.SoC()
 		if err != nil {
 			if errors.Is(err, api.ErrMustRetry) {
 				return 0, err
@@ -121,10 +118,11 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				return s.socCharge, err
 			}
 
-			fetchedSoC = s.prevSoC // recover last received soc
+			f = s.prevSoC // recover last received soc
 		}
 
-		s.socCharge = fetchedSoC
+		fetchedSoC = &f
+		s.socCharge = f
 	}
 
 	if s.estimate {
@@ -144,8 +142,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
 			s.prevSoC = s.socCharge
 		} else {
-			s.socCharge = math.Min(fetchedSoC+energyDelta/s.energyPerSocStep, 100)
-			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, fetchedSoC)
+			s.socCharge = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
+			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, *fetchedSoC)
 		}
 	}
 
