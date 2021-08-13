@@ -81,7 +81,7 @@ loadpoints:
       # poll mode defines under which condition the vehicle API is called:
       #   charging: update vehicle ONLY when charging (this is the recommended default)
       #   connected: update vehicle when connected (not only charging), interval defines how often
-      #   always: always update vehicle regardless of connection state, interval defines how often
+      #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
       mode: charging
       # poll interval defines how often the vehicle API may be polled if NOT charging
       interval: 60m

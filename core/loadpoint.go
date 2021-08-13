@@ -435,13 +435,13 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.publish("minSoC", lp.SoC.Min)
 	lp.Unlock()
 
-	// run during prepare() to ensure cache has been attached
-	if len(lp.vehicles) > 0 {
-		// associate first vehicle if it cannot be auto-detected
-		if _, ok := lp.vehicles[0].(api.ChargeState); !ok {
-			lp.setActiveVehicle(lp.vehicles[0])
-		}
+	// always treat single vehicle as attached to allow poll mode: always
+	if len(lp.vehicles) == 1 {
+		lp.setActiveVehicle(lp.vehicles[0])
+	}
 
+	// start detection if we have multiple vehicles
+	if len(lp.vehicles) > 1 {
 		lp.startVehicleDetection()
 	}
 
