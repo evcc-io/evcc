@@ -213,6 +213,8 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.socTimer = soc.NewTimer(lp.log, lp.adapter(), lp.MaxCurrent)
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
+	} else if lp.Enable.Threshold > 0 {
+		log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
 	return lp, nil
