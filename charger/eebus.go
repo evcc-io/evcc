@@ -262,6 +262,13 @@ func (c *EEBus) Enable(enable bool) error {
 		return errors.New("can not enable charging as ev is unplugged")
 	}
 
+	// if we disable charging with a potential but not yet known communication standard ISO15118
+	// this would set allowed A value to be 0. And this would trigger ISO connections to switch to IEC!
+	if data.EVData.CommunicationStandard == communication.EVCommunicationStandardEnumTypeUnknown {
+		c.log.TRACE.Printf("enable: cannot enable or disable as communication standard is not yet known")
+		return api.ErrMustRetry
+	}
+
 	c.expectedEnableState = enable
 
 	if !enable {
