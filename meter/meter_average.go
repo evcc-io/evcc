@@ -81,10 +81,9 @@ func (m *MovingAverage) CurrentPower() (float64, error) {
 func (m *MovingAverage) add(value float64) float64 {
 	if m.value == nil {
 		m.value = &value
-		return value
+	} else {
+		*m.value = (value * m.decay) + (*m.value * (1 - m.decay))
 	}
-
-	*m.value = (value * m.decay) + (*m.value * (1 - m.decay))
 
 	return *m.value
 }
