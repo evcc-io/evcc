@@ -100,3 +100,15 @@ GridOnly.args = {
   batterySoC: 0,
   siteTitle: "Home",
 };
+
+export const LowEnergy = Template.bind({});
+LowEnergy.args = {
+  gridConfigured: true,
+  pvConfigured: true,
+  batteryConfigured: true,
+  gridPower: -352,
+  pvPower: 710,
+  batteryPower: 86,
+  batterySoC: 55,
+  siteTitle: "Home",
+};

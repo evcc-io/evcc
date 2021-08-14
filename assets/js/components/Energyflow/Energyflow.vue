@@ -29,6 +29,7 @@
 				:pvProduction="pvProduction"
 				:houseConsumption="houseConsumption"
 				:batterySoC="batterySoC"
+				:valuesInKw="valuesInKw"
 			/>
 			<div
 				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0"
@@ -153,25 +154,32 @@ export default {
 				this.pvProduction + this.gridPower - this.batteryCharge
 			);
 		},
+		batteryPowerAdjusted: function () {
+			const batteryPowerThreshold = 50;
+			return Math.abs(this.batteryPower) < batteryPowerThreshold ? 0 : this.batteryPower;
+		},
 		batteryDischarge: function () {
-			return Math.max(0, this.batteryPower);
+			return Math.max(0, this.batteryPowerAdjusted);
 		},
 		batteryCharge: function () {
-			return Math.min(0, this.batteryPower) * -1;
+			return Math.min(0, this.batteryPowerAdjusted) * -1;
 		},
 		houseConsumption: function () {
-			return this.gridImport + this.pvConsumption + this.batteryDischarge;
+			return Math.max(0, this.gridImport + this.pvConsumption + this.batteryDischarge);
 		},
 		selfConsumption: function () {
-			return this.batteryDischarge + this.pvConsumption + this.batteryCharge;
+			return Math.max(0, this.batteryDischarge + this.pvConsumption + this.batteryCharge);
 		},
 		pvExport: function () {
-			return Math.min(0, this.gridPower) * -1;
+			return Math.max(0, this.gridPower * -1);
+		},
+		valuesInKw: function () {
+			return this.gridImport + this.selfConsumption + this.pvExport > 1000;
 		},
 	},
 	methods: {
 		kw: function (watt) {
-			return Math.max(0, watt / 1000).toFixed(1) + " kW";
+			return this.fmtKw(watt, this.valuesInKw);
 		},
 		toggleDetails() {
 			this.showDetails = !this.showDetails;
