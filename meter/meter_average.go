@@ -84,7 +84,7 @@ func (m *MovingAverage) add(value float64) {
 	if m.value == nil { // this is a proxy for "uninitialized"
 		m.value = &value
 	} else {
-		*m.value = (value * m.decay) + (*m.value * (1 - m.decay))
+		*m.value = (value * m.decay) + (m.get() * (1 - m.decay))
 	}
 }
 
