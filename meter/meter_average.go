@@ -72,27 +72,19 @@ func (m *MovingAverage) CurrentPower() (float64, error) {
 		return power, err
 	}
 
-	m.add(power)
-
-	return m.get(), nil
+	return m.add(power), nil
 }
 
 // modeled after https://github.com/VividCortex/ewma
 
 // Add adds a value to the series and updates the moving average.
-func (m *MovingAverage) add(value float64) {
-	if m.value == nil { // this is a proxy for "uninitialized"
+func (m *MovingAverage) add(value float64) float64 {
+	if m.value == nil {
 		m.value = &value
-	} else {
-		*m.value = (value * m.decay) + (m.get() * (1 - m.decay))
+		return value
 	}
-}
 
-// Value returns the current value of the moving averagm.
-func (m *MovingAverage) get() float64 {
-	if m.value == nil { // this is a proxy for "uninitialized"
-		return 0
-	} else {
-		return *m.value
-	}
+	*m.value = (value * m.decay) + (*m.value * (1 - m.decay))
+
+	return *m.value
 }
