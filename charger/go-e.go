@@ -47,7 +47,12 @@ type goeStatusResponse struct {
 	Rn1 string `json:"rn1"`        // RFID 10
 }
 
-func (g goeStatusResponse) RFIDName() string {
+// isLocal checks if the status response is from local api
+func (g *goeStatusResponse) isLocal() bool {
+	return g.Fwv != ""
+}
+
+func (g *goeStatusResponse) RFIDName() string {
 	switch g.Uby {
 	case 1:
 		return g.Rna
@@ -152,8 +157,6 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		return c.localResponse("status", "")
 	}
 
-	status = c.status // cached value
-
 	if time.Since(c.updated) >= c.cache {
 		status, err = c.cloudResponse("api_status", "")
 		if err == nil {
@@ -162,7 +165,7 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		}
 	}
 
-	return status, err
+	return c.status, err
 }
 
 // apiUpdate invokes either cloud or local api
@@ -176,8 +179,8 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 
 	status, err := c.cloudResponse("api", payload)
 	if err == nil {
-		c.updated = time.Now()
-		c.status = status
+		// cloud api sends partial response, don't store it as status
+		c.updated = time.Time{}
 	}
 
 	return status, err
@@ -227,10 +230,8 @@ func (c *GoE) Enable(enable bool) error {
 	}
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil {
-		if status, err = c.apiStatus(); err == nil && status.Alw != b {
-			return fmt.Errorf("alw update failed: %d", status.Alw)
-		}
+	if err == nil && status.isLocal() && status.Alw != b {
+		return fmt.Errorf("alw update failed: %d", status.Alw)
 	}
 
 	return err
@@ -239,10 +240,8 @@ func (c *GoE) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil {
-		if status, err = c.apiStatus(); err == nil && int64(status.Amp) != current {
-			return fmt.Errorf("amp update failed: %d", status.Amp)
-		}
+	if err == nil && status.isLocal() && int64(status.Amp) != current {
+		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
 
 	return err
