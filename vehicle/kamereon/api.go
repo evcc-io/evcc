@@ -7,14 +7,22 @@ import (
 	"github.com/andig/evcc/provider"
 )
 
-// Response structure for kamereon api
-type Response struct {
-	Data data `json:"data"`
+// Request structure for kamereon api
+type Request struct {
+	Data Payload `json:"data"`
 }
 
-type data struct {
-	Type, ID   string     // battery refresh
-	Attributes attributes `json:"attributes"`
+type Payload struct {
+	Type       string                 `json:"type"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+}
+
+// Response structure for kamereon api
+type Response struct {
+	Data struct {
+		Type, ID   string     // battery refresh
+		Attributes attributes `json:"attributes"`
+	} `json:"data"`
 }
 
 type attributes struct {

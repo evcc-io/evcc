@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -111,8 +110,13 @@ func (v *API) Battery() (kamereon.Response, error) {
 func (v *API) refreshRequest() error {
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, v.VIN)
 
-	data := strings.NewReader(`{"data": {"type": "RefreshBatteryStatus"}}`)
-	req, err := request.New(http.MethodPost, uri, data, map[string]string{
+	data := kamereon.Request{
+		Data: kamereon.Payload{
+			Type: "RefreshBatteryStatus",
+		},
+	}
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
 		"Content-Type": "application/vnd.api+json",
 	})
 
@@ -131,4 +135,36 @@ func (v *API) refreshRequest() error {
 	}
 
 	return err
+}
+
+type Action string
+
+const (
+	ActionStart Action = "start"
+	ActionStop  Action = "stop"
+)
+
+// ChargingAction provides actions/charging-start api response
+func (v *API) ChargingAction(action Action) (kamereon.Response, error) {
+	uri := fmt.Sprintf("%s/v1/cars/%s/actions/charging-start", CarAdapterBaseURL, v.VIN)
+
+	data := kamereon.Request{
+		Data: kamereon.Payload{
+			Type: "ChargingStart",
+			Attributes: map[string]interface{}{
+				"action": action,
+			},
+		},
+	}
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), map[string]string{
+		"Content-Type": "application/vnd.api+json",
+	})
+
+	var res kamereon.Response
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	return res, err
 }
