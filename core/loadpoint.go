@@ -694,7 +694,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	lp.log.INFO.Printf("vehicle updated: %s -> %s", from, to)
 
 	if lp.vehicle = vehicle; vehicle != nil {
-		lp.socEstimator = soc.NewEstimator(lp.log, vehicle, lp.SoC.Estimate)
+		lp.socEstimator = soc.NewEstimator(lp.log, lp.charger, vehicle, lp.SoC.Estimate)
 
 		lp.publish("hasVehicle", true)
 		lp.publish("socTitle", lp.vehicle.Title())
@@ -975,13 +975,23 @@ func (lp *LoadPoint) socPollAllowed() bool {
 	return lp.charging() || honourUpdateInterval && (remaining <= 0) || lp.connected() && lp.socUpdated.IsZero()
 }
 
+// checks if the connected charger can provide SoC to the connected vehicle
+func (lp *LoadPoint) socProvidedByCharger() bool {
+	if charger, ok := lp.charger.(api.Battery); ok {
+		if _, err := charger.SoC(); err == nil {
+			return true
+		}
+	}
+	return false
+}
+
 // publish state of charge, remaining charge duration and range
 func (lp *LoadPoint) publishSoCAndRange() {
 	if lp.socEstimator == nil {
 		return
 	}
 
-	if lp.socPollAllowed() {
+	if lp.socPollAllowed() || lp.socProvidedByCharger() {
 		lp.socUpdated = lp.clock.Now()
 
 		f, err := lp.socEstimator.SoC(lp.chargedEnergy)
