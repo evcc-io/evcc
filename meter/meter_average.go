@@ -9,8 +9,6 @@ func init() {
 	registry.Add("movingaverage", NewMovingAverageFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateMeter -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
-
 // NewMovingAverageFromConfig creates api.Meter from config
 func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
