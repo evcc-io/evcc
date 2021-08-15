@@ -161,22 +161,6 @@ func (v *Tesla) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*Tesla)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Tesla) FinishTime() (time.Time, error) {
-	res, err := v.chargeStateG()
-
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		t := time.Now()
-		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
-// TODO api.Climater implementation has been removed as it drains battery. Re-check at t later time.
-
 var _ api.VehicleStartCharge = (*Tesla)(nil)
 
 // StartCharge implements the api.VehicleStartCharge interface

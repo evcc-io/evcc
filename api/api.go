@@ -105,19 +105,9 @@ type Vehicle interface {
 	Capacity() int64
 }
 
-// VehicleFinishTimer provides estimated charge cycle finish time
-type VehicleFinishTimer interface {
-	FinishTime() (time.Time, error)
-}
-
 // VehicleRange provides the vehicles remaining km range
 type VehicleRange interface {
 	Range() (int64, error)
-}
-
-// VehicleClimater provides climatisation data
-type VehicleClimater interface {
-	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
 
 // VehicleStartCharge starts the charging session on the vehicle side

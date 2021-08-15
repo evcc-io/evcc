@@ -37,26 +37,6 @@ func (v *Provider) SoC() (float64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
-
-	if res, ok := res.(StatusData); err == nil && ok {
-		remaining := res.EvStatus.RemainTime2.Atc.Value
-
-		if remaining == 0 {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		ts, err := res.Updated()
-		return ts.Add(time.Duration(remaining) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface

@@ -173,19 +173,3 @@ func (v *Ovms) Range() (int64, error) {
 
 	return 0, err
 }
-
-var _ api.VehicleFinishTimer = (*Ovms)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Ovms) FinishTime() (time.Time, error) {
-	res, err := v.chargeG()
-
-	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
-		cef, err := strconv.ParseInt(res.ChargeEtrFull, 0, 64)
-		if err == nil {
-			return time.Now().Add(time.Duration(cef) * time.Minute), err
-		}
-	}
-
-	return time.Time{}, err
-}

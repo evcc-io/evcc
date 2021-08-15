@@ -228,20 +228,3 @@ func (v *CarWings) Range() (int64, error) {
 
 	return 0, err
 }
-
-var _ api.VehicleClimater = (*CarWings)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *CarWings) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.climateG()
-
-	if res, ok := res.(carwings.ClimateStatus); err == nil && ok {
-		active = res.Running
-		targetTemp = float64(res.Temperature)
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, err
-	}
-
-	return false, 0, 0, err
-}

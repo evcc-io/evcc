@@ -55,23 +55,6 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		if len(res.Energy) == 1 {
-			e := res.Energy[0]
-			return e.UpdatedAt.Add(e.Charging.RemainingTime.Duration), nil
-		}
-
-		err = api.ErrNotAvailable
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
@@ -97,17 +80,4 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	}
 
 	return api.StatusNone, err
-}
-
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		active := strings.ToLower(res.Preconditionning.AirConditioning.Status) != "disabled"
-		return active, 20, 20, nil
-	}
-
-	return active, outsideTemp, targetTemp, err
 }

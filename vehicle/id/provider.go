@@ -1,7 +1,6 @@
 package id
 
 import (
-	"strings"
 	"time"
 
 	"github.com/andig/evcc/api"
@@ -58,19 +57,6 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		cst := res.Data.ChargingStatus
-		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
@@ -81,31 +67,6 @@ func (v *Provider) Range() (int64, error) {
 	}
 
 	return 0, err
-}
-
-var _ api.VehicleClimater = (*Provider)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.statusG()
-	if res, ok := res.(Status); err == nil && ok {
-		state := strings.ToLower(res.Data.ClimatisationStatus.ClimatisationState)
-
-		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
-		}
-
-		active := state != "off" && state != "invalid" && state != "error"
-
-		targetTemp = res.Data.ClimatisationSettings.TargetTemperatureC
-
-		// TODO not available; use target temp to avoid wrong heating/cooling display
-		outsideTemp = targetTemp
-
-		return active, outsideTemp, targetTemp, nil
-	}
-
-	return active, outsideTemp, targetTemp, err
 }
 
 var _ api.VehicleStartCharge = (*Provider)(nil)

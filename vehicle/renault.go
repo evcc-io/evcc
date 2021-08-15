@@ -12,7 +12,6 @@ import (
 	"github.com/andig/evcc/provider"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/thoas/go-funk"
 )
 
 // Credits to
@@ -378,49 +377,4 @@ func (v *Renault) Range() (int64, error) {
 	}
 
 	return 0, err
-}
-
-var _ api.VehicleFinishTimer = (*Renault)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Renault) FinishTime() (time.Time, error) {
-	res, err := v.batteryG()
-
-	if res, ok := res.(kamereonResponse); err == nil && ok {
-		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-
-		if res.Data.Attributes.RemainingTime == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
-
-var _ api.VehicleClimater = (*Renault)(nil)
-
-// Climater implements the api.VehicleClimater interface
-func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	res, err := v.hvacG()
-
-	// Zoe Ph2
-	if err, ok := err.(request.StatusError); ok && err.HasStatus(http.StatusForbidden) {
-		return false, 0, 0, api.ErrNotAvailable
-	}
-
-	if res, ok := res.(kamereonResponse); err == nil && ok {
-		state := strings.ToLower(res.Data.Attributes.HvacStatus)
-
-		if state == "" {
-			return false, 0, 0, api.ErrNotAvailable
-		}
-
-		active := !funk.ContainsString([]string{"off", "false", "invalid", "error"}, state)
-
-		return active, res.Data.Attributes.ExternalTemperature, 20, nil
-	}
-
-	return false, 0, 0, err
 }

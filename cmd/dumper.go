@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"math"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -125,28 +124,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Range:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Range:\t%vkm\n", rng)
-		}
-	}
-
-	if v, ok := v.(api.VehicleFinishTimer); ok {
-		if ft, err := v.FinishTime(); err != nil {
-			fmt.Fprintf(w, "Finish time:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Finish time:\t%v\n", ft.Truncate(time.Minute))
-		}
-	}
-
-	if v, ok := v.(api.VehicleClimater); ok {
-		if active, ot, tt, err := v.Climater(); err != nil {
-			fmt.Fprintf(w, "Climater:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "Climate active:\t%v\n", active)
-			if !math.IsNaN(ot) {
-				fmt.Fprintf(w, "Outside temp:\t%.1f°C\n", ot)
-			}
-			if !math.IsNaN(tt) {
-				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
-			}
 		}
 	}
 

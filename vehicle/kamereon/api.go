@@ -90,22 +90,3 @@ func (v *Provider) Range() (int64, error) {
 
 	return 0, err
 }
-
-var _ api.VehicleFinishTimer = (*Provider)(nil)
-
-// FinishTime implements the api.VehicleFinishTimer interface
-func (v *Provider) FinishTime() (time.Time, error) {
-	res, err := v.apiG()
-
-	if res, ok := res.(Response); err == nil && ok {
-		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-
-		if res.Data.Attributes.RemainingTime == nil {
-			return time.Time{}, api.ErrNotAvailable
-		}
-
-		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
-	}
-
-	return time.Time{}, err
-}
