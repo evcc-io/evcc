@@ -220,6 +220,18 @@ func (v *Volvo) Range() (int64, error) {
 	return 0, err
 }
 
+var _ api.VehicleOdometer = (*Volvo)(nil)
+
+// VehicleOdometer implements the api.VehicleOdometer interface
+func (v *Volvo) Odometer() (int64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(volvoStatus); err == nil && ok {
+		return int64(res.Odometer), nil
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleFinishTimer = (*Volvo)(nil)
 
 // FinishTime implements the VehicleFinishTimer interface
