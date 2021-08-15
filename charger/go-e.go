@@ -34,6 +34,49 @@ type goeStatusResponse struct {
 	Tmp int    `json:"tmp,string"` // temperature [°C]
 	Dws int    `json:"dws,string"` // energy [Ws]
 	Nrg []int  `json:"nrg"`        // voltage, current, power
+	Uby int    `json:"uby,string"` // unlocked_by
+	Rna string `json:"rna"`        // RFID 1
+	Rnm string `json:"rnm"`        // RFID 2
+	Rne string `json:"rne"`        // RFID 3
+	Rn4 string `json:"rn4"`        // RFID 4
+	Rn5 string `json:"rn5"`        // RFID 5
+	Rn6 string `json:"rn6"`        // RFID 6
+	Rn7 string `json:"rn7"`        // RFID 7
+	Rn8 string `json:"rn8"`        // RFID 8
+	Rn9 string `json:"rn9"`        // RFID 9
+	Rn1 string `json:"rn1"`        // RFID 10
+}
+
+// isLocal checks if the status response is from local api
+func (g *goeStatusResponse) isLocal() bool {
+	return g.Fwv != ""
+}
+
+func (g *goeStatusResponse) RFIDName() string {
+	switch g.Uby {
+	case 1:
+		return g.Rna
+	case 2:
+		return g.Rnm
+	case 3:
+		return g.Rne
+	case 4:
+		return g.Rn4
+	case 5:
+		return g.Rn5
+	case 6:
+		return g.Rn6
+	case 7:
+		return g.Rn7
+	case 8:
+		return g.Rn8
+	case 9:
+		return g.Rn9
+	case 10:
+		return g.Rn1
+	default:
+		return ""
+	}
 }
 
 // GoE charger implementation
@@ -114,8 +157,6 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		return c.localResponse("status", "")
 	}
 
-	status = c.status // cached value
-
 	if time.Since(c.updated) >= c.cache {
 		status, err = c.cloudResponse("api_status", "")
 		if err == nil {
@@ -124,7 +165,7 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		}
 	}
 
-	return status, err
+	return c.status, err
 }
 
 // apiUpdate invokes either cloud or local api
@@ -138,8 +179,8 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 
 	status, err := c.cloudResponse("api", payload)
 	if err == nil {
-		c.updated = time.Now()
-		c.status = status
+		// cloud api sends partial response, don't store it as status
+		c.updated = time.Time{}
 	}
 
 	return status, err
@@ -189,10 +230,8 @@ func (c *GoE) Enable(enable bool) error {
 	}
 
 	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil {
-		if status, err = c.apiStatus(); err == nil && status.Alw != b {
-			return fmt.Errorf("alw update failed: %d", status.Alw)
-		}
+	if err == nil && status.isLocal() && status.Alw != b {
+		return fmt.Errorf("alw update failed: %d", status.Alw)
 	}
 
 	return err
@@ -201,10 +240,8 @@ func (c *GoE) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
 	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil {
-		if status, err = c.apiStatus(); err == nil && int64(status.Amp) != current {
-			return fmt.Errorf("amp update failed: %d", status.Amp)
-		}
+	if err == nil && status.isLocal() && int64(status.Amp) != current {
+		return fmt.Errorf("amp update failed: %d", status.Amp)
 	}
 
 	return err
@@ -240,4 +277,12 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
 	}
 	return 0, 0, 0, err
+}
+
+var _ api.Identifier = (*GoE)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *GoE) Identify() (string, error) {
+	status, err := c.apiStatus()
+	return status.RFIDName(), err
 }

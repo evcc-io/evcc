@@ -16,6 +16,14 @@ import (
 // WriteSingleRegister 16-bit wise write access
 const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
 
+type WireFormat int
+
+const (
+	TcpFormat WireFormat = iota
+	RtuFormat
+	AsciiFormat
+)
+
 // Settings contains the ModBus settings
 type Settings struct {
 	ID                  uint8
@@ -140,7 +148,7 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -151,15 +159,23 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 		if baudrate == 0 || comset == "" {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
-		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+
+		if wire == RtuFormat {
+			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		} else {
+			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
+		}
 	}
 
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		if rtu {
+		switch wire {
+		case RtuFormat:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
-		} else {
+		case AsciiFormat:
+			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
+		default:
 			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
 	}

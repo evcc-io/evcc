@@ -81,7 +81,7 @@ loadpoints:
       # poll mode defines under which condition the vehicle API is called:
       #   charging: update vehicle ONLY when charging (this is the recommended default)
       #   connected: update vehicle when connected (not only charging), interval defines how often
-      #   always: always update vehicle regardless of connection state, interval defines how often
+      #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
       mode: charging
       # poll interval defines how often the vehicle API may be polled if NOT charging
       interval: 60m
@@ -91,6 +91,10 @@ loadpoints:
   onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
+  onIdentify: # set defaults when vehicle is identified
+  - e-Up:
+      mode: pv # switch back to pv mode
+      targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long

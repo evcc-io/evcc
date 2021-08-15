@@ -14,7 +14,7 @@ import (
 	"github.com/andig/evcc/util/request"
 )
 
-// Cloud is an api.Vehicle implementation for Cloud cars
+// Cloud is an api.Vehicle implementation
 type Cloud struct {
 	*embed
 	token        string

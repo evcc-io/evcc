@@ -15,6 +15,7 @@ const chargeEfficiency = 0.9 // assume charge 90% efficiency
 // Vehicle SoC can be estimated to provide more granularity
 type Estimator struct {
 	log      *util.Logger
+	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
 
@@ -27,9 +28,10 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
 	s := &Estimator{
 		log:      log,
+		charger:  charger,
 		vehicle:  vehicle,
 		estimate: estimate,
 	}
@@ -91,23 +93,37 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	f, err := s.vehicle.SoC()
-	if err != nil {
-		if errors.Is(err, api.ErrMustRetry) {
-			return 0, err
+	var fetchedSoC *float64
+
+	if charger, ok := s.charger.(api.Battery); ok {
+		f, err := charger.SoC()
+
+		if err == nil {
+			s.socCharge = f
+			fetchedSoC = &f
 		}
-
-		s.log.WARN.Printf("updating soc failed: %v", err)
-
-		// try to recover from temporary vehicle-api errors
-		if s.prevSoC == 0 { // never received a soc value
-			return s.socCharge, err
-		}
-
-		f = s.prevSoC // recover last received soc
 	}
 
-	s.socCharge = f
+	if fetchedSoC == nil {
+		f, err := s.vehicle.SoC()
+		if err != nil {
+			if errors.Is(err, api.ErrMustRetry) {
+				return 0, err
+			}
+
+			s.log.WARN.Printf("updating soc failed: %v", err)
+
+			// try to recover from temporary vehicle-api errors
+			if s.prevSoC == 0 { // never received a soc value
+				return s.socCharge, err
+			}
+
+			f = s.prevSoC // recover last received soc
+		}
+
+		fetchedSoC = &f
+		s.socCharge = f
+	}
 
 	if s.estimate {
 		socDelta := s.socCharge - s.prevSoC
@@ -126,8 +142,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
 			s.prevSoC = s.socCharge
 		} else {
-			s.socCharge = math.Min(f+energyDelta/s.energyPerSocStep, 100)
-			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
+			s.socCharge = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
+			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, *fetchedSoC)
 		}
 	}
 

@@ -26,7 +26,7 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-// NewTeslaFromConfig creates a new Tesla vehicle
+// NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed          `mapstructure:",squash"`

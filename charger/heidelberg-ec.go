@@ -1,8 +1,24 @@
 package charger
 
+// LICENSE
+
+// Copyright (c) 2019-2021 andig
+
+// This module is NOT covered by the MIT license. All rights reserved.
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/andig/evcc/api"
@@ -39,30 +55,26 @@ func init() {
 
 // NewHeidelbergECFromConfig creates a HeidelbergEC charger from generic config
 func NewHeidelbergECFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct {
-		modbus.Settings `mapstructure:",squash"`
-	}{
-		Settings: modbus.Settings{
-			ID: 1,
-		},
+	cc := modbus.Settings{
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, true, cc.ID)
+	return NewHeidelbergEC(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
 // NewHeidelbergEC creates HeidelbergEC charger
-func NewHeidelbergEC(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
+func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}
 
 	if !sponsor.IsAuthorized() {
-		return nil, errors.New("heidelberg requires evcc sponsorship, register at https://cloud.evcc.io")
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("hec")
