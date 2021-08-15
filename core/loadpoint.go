@@ -67,8 +67,10 @@ type ThresholdConfig struct {
 
 // ActionConfig defines an action to take on event
 type ActionConfig struct {
-	Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-	TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
+	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode to apply when car disconnected
+	MinCurrent float64
+	MaxCurrent float64
+	TargetSoC  int `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
 }
 
 // LoadPoint is responsible for controlling charge depending on
@@ -401,6 +403,12 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 func (lp *LoadPoint) applyAction(action ActionConfig) {
 	if action.Mode != "" && lp.GetMode() != api.ModeOff {
 		lp.SetMode(action.Mode)
+	}
+	if action.MinCurrent != 0 {
+		lp.SetMinCurrent(action.MinCurrent)
+	}
+	if action.MaxCurrent != 0 {
+		lp.SetMaxCurrent(action.MaxCurrent)
 	}
 	if action.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(action.TargetSoC)
