@@ -9,7 +9,6 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/kamereon"
 	"golang.org/x/oauth2"
 )
 
@@ -64,12 +63,14 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
+const timeFormat = "2006-01-02T15:04:05Z"
+
 // Battery provides battery api response
-func (v *API) Battery() (kamereon.Response, error) {
+func (v *API) Battery() (Response, error) {
 	// request battery status
 	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, v.VIN)
 
-	var res kamereon.Response
+	var res Response
 	err := v.GetJSON(uri, &res)
 
 	var ts time.Time
@@ -110,8 +111,8 @@ func (v *API) Battery() (kamereon.Response, error) {
 func (v *API) refreshRequest() error {
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, v.VIN)
 
-	data := kamereon.Request{
-		Data: kamereon.Payload{
+	data := Request{
+		Data: Payload{
 			Type: "RefreshBatteryStatus",
 		},
 	}
@@ -120,7 +121,7 @@ func (v *API) refreshRequest() error {
 		"Content-Type": "application/vnd.api+json",
 	})
 
-	var res kamereon.Response
+	var res Response
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
@@ -140,16 +141,16 @@ func (v *API) refreshRequest() error {
 type Action string
 
 const (
-	ActionStart Action = "start"
-	ActionStop  Action = "stop"
+	ActionChargeStart Action = "start"
+	ActionChargeStop  Action = "stop"
 )
 
 // ChargingAction provides actions/charging-start api response
-func (v *API) ChargingAction(action Action) (kamereon.Response, error) {
+func (v *API) ChargingAction(action Action) (Response, error) {
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/charging-start", CarAdapterBaseURL, v.VIN)
 
-	data := kamereon.Request{
-		Data: kamereon.Payload{
+	data := Request{
+		Data: Payload{
 			Type: "ChargingStart",
 			Attributes: map[string]interface{}{
 				"action": action,
@@ -161,7 +162,7 @@ func (v *API) ChargingAction(action Action) (kamereon.Response, error) {
 		"Content-Type": "application/vnd.api+json",
 	})
 
-	var res kamereon.Response
+	var res Response
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
