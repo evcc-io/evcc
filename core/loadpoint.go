@@ -710,12 +710,21 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("hasVehicle", true)
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
+
+		// TODO handle ErrMustRetry
+		if v, ok := vehicle.(api.VehicleOdometer); ok {
+			odo, err := v.Odometer()
+			if err == nil {
+				lp.publish("socOdometer", odo)
+			}
+		}
 	} else {
 		lp.socEstimator = nil
 
 		lp.publish("hasVehicle", false)
 		lp.publish("socTitle", "")
-		lp.publish("socCapacity", 0)
+		lp.publish("socCapacity", int64(0))
+		lp.publish("socOdometer", int64(0))
 	}
 }
 
