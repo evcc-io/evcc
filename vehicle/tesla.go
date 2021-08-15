@@ -147,6 +147,8 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	return 0, err
 }
 
+const kmPerMile = 1.609344
+
 var _ api.VehicleRange = (*Tesla)(nil)
 
 // Range implements the api.VehicleRange interface
@@ -155,7 +157,7 @@ func (v *Tesla) Range() (int64, error) {
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
 		// miles to km
-		return int64(1.609344 * res.EstBatteryRange), nil
+		return int64(kmPerMile * res.EstBatteryRange), nil
 	}
 
 	return 0, err
@@ -169,7 +171,7 @@ func (v *Tesla) Odometer() (int64, error) {
 
 	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
 		// miles to km
-		return int64(res.Odometer), nil
+		return int64(kmPerMile * res.Odometer), nil
 	}
 
 	return 0, err
