@@ -158,6 +158,11 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 	}
 
 	if time.Since(c.updated) >= c.cache {
+		// let cloud api settle after update
+		if c.updated.IsZero() {
+			time.Sleep(time.Second)
+		}
+
 		status, err = c.cloudResponse("api_status", "")
 		if err == nil {
 			c.updated = time.Now()
