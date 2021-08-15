@@ -27,7 +27,7 @@
 		<div
 			v-if="connected && hasVehicle && visibleTargetSoC"
 			class="target"
-			:class="{ 'target--max': visibleTargetSoC === 100 }"
+			:class="{ 'target--slider-hidden': allowSliderHiding && visibleTargetSoC === 100 }"
 		>
 			<div
 				class="target-label d-flex align-items-center justify-content-center"
@@ -64,7 +64,13 @@ export default {
 	data: function () {
 		return {
 			selectedTargetSoC: null,
+			allowSliderHiding: false,
 		};
+	},
+	mounted: function () {
+		setTimeout(() => {
+			this.allowSliderHiding = true;
+		}, 1000);
 	},
 	computed: {
 		socChargeDisplayWidth: function () {
@@ -225,15 +231,15 @@ export default {
 	cursor: grab;
 	border: none;
 	opacity: 1;
-	transition: opacity 0.2s ease 1s;
+	transition: opacity 0.5s ease 1s;
 }
 /* auto-hide targetSoC marker at 100% */
-.target--max .target-slider::-webkit-slider-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-webkit-slider-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
-.target--max .target-slider::-moz-range-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-moz-range-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
 .target:hover .target-slider::-webkit-slider-thumb,
