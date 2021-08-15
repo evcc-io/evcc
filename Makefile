@@ -8,7 +8,7 @@ TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
-BUILD_TAGS := -tags=release
+BUILD_TAGS := -tags=release,eebus
 LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 
