@@ -95,6 +95,8 @@ loadpoints:
   - e-Up:
       mode: pv # switch back to pv mode
       targetSoC: 100 # charge to 100%
+      # mincurrent: 6 # minimum charge current
+      # maxcurrent: 16 # maximum charge current
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
