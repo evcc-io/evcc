@@ -2,6 +2,8 @@
 FROM node:14-alpine as node
 
 RUN apk update && apk add --no-cache make
+RUN GOCACHE=OFF
+RUN go env -w GOPRIVATE=github.com/amp-x/eebus
 
 WORKDIR /build
 
@@ -40,6 +42,9 @@ RUN make assets
 
 # copy ui
 COPY --from=node /build/dist /build/dist
+
+# add private repository
+RUN git config --global url."https://golang:${GITHUB_TOKEN}@github.com".insteadOf "https://github.com"
 
 # build
 RUN make build
