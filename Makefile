@@ -68,6 +68,7 @@ build:
 build-ci:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	go env -w GOPRIVATE=github.com/amp-x/eebus
+	sed -i.bak 's/replace github.com\/amp-x\/eebus => .\/eebus/ /g' go.mod && rm go.mod.bak
 	go build -v $(BUILD_CI_TAGS) $(BUILD_ARGS)
 
 release-test:
