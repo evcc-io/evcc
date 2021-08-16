@@ -343,7 +343,7 @@ func (v *Renault) hvacAPI() (interface{}, error) {
 
 // cockpitAPI provides cockpit api response
 func (v *Renault) cockpitAPI() (interface{}, error) {
-	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v1/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
 	res, err := v.kamereonRequest(uri)
 
 	// repeat auth if error
