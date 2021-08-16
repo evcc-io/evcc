@@ -667,14 +667,14 @@ func (lp *LoadPoint) identifyVehicle() {
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find exact match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid == id {
+		if vid := vehicle.Identify(); vid == id {
 			return vehicle
 		}
 	}
 
 	// find placeholder match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid != "" {
+		if vid := vehicle.Identify(); vid != "" {
 			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
 			if err != nil {
 				lp.log.ERROR.Printf("vehicle id: %v", err)

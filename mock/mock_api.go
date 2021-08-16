@@ -282,12 +282,11 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 }
 
 // Identify mocks base method.
-func (m *MockVehicle) Identify() (string, error) {
+func (m *MockVehicle) Identify() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Identify")
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // Identify indicates an expected call of Identify.
