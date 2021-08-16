@@ -31,8 +31,8 @@ func (v *Wrapper) Capacity() int64 {
 }
 
 // Identify implements the api.Identifier interface
-func (v *Wrapper) Identify() (string, error) {
-	return "", v.err
+func (v *Wrapper) Identify() string {
+	return ""
 }
 
 // SoC implements the api.Battery interface
