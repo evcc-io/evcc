@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.7.1
-	github.com/amp-x/eebus v0.0.0-20210814141459-8ba52f926ee4
+	github.com/amp-x/eebus v0.0.0-20210814141459-8ba52f926ee4 // indirect
 	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go v3.0.0+incompatible
