@@ -128,6 +128,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.VehicleOdometer); ok {
+		if rng, err := v.Odometer(); err != nil {
+			fmt.Fprintf(w, "Odometer:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Odometer:\t%vkm\n", rng)
+		}
+	}
+
 	if v, ok := v.(api.VehicleFinishTimer); ok {
 		if ft, err := v.FinishTime(); err != nil {
 			fmt.Fprintf(w, "Finish time:\t%v\n", err)
