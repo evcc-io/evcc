@@ -12,7 +12,7 @@ BUILD_TAGS := -tags=release
 BUILD_CI_TAGS := $(BUILD_TAGS),eebus
 LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
-GITHUB_TOKEN ?= ''
+GH_API_TOKEN ?= ''
 
 # docker
 DOCKER_IMAGE := andig/evcc
@@ -32,6 +32,7 @@ clean:
 	rm -rf dist/
 
 install:
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go install github.com/golang/mock/mockgen
 
 install-ui:
@@ -41,9 +42,11 @@ ui:
 	npm run build
 
 assets:
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go generate ./...
 
 lint:
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	golangci-lint run
 
 lint-ui:
@@ -54,14 +57,17 @@ test-ui:
 
 test:
 	@echo "Running testsuite"
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go test ./...
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
 
 build-ci:
 	@echo Version: $(VERSION) $(BUILD_DATE)
+	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go build -v $(BUILD_CI_TAGS) $(BUILD_ARGS)
 
 release-test:
@@ -76,7 +82,7 @@ docker:
 
 docker-ci:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	docker build --build-arg GITHUB_TOKEN=${GITHUB_TOKEN} --tag $(DOCKER_IMAGE):testing .
+	docker build --build-arg GH_API_TOKEN=${GH_API_TOKEN} --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)

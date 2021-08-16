@@ -44,7 +44,7 @@ RUN make assets
 COPY --from=node /build/dist /build/dist
 
 # add private repository
-RUN git config --global url."https://golang:${GITHUB_TOKEN}@github.com".insteadOf "https://github.com"
+RUN git config --global url."https://golang:${GH_API_TOKEN}@github.com".insteadOf "https://github.com"
 
 # build
 RUN make build
