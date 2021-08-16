@@ -134,14 +134,15 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 func (c *FritzDECT) Enabled() (bool, error) {
 	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.execFritzDectCmd("getswitchstate")
+	if err != nil {
+		return false, err
+	}
+
 	if resp == "inval" {
 		return false, api.ErrNotAvailable
 	}
 
-	var state int64
-	if err == nil {
-		state, err = strconv.ParseInt(resp, 10, 32)
-	}
+	state, err := strconv.ParseInt(resp, 10, 32)
 
 	return state == 1, err
 }
@@ -184,14 +185,15 @@ var _ api.Meter = (*FritzDECT)(nil)
 func (c *FritzDECT) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
 	resp, err := c.execFritzDectCmd("getswitchpower")
+	if err != nil {
+		return 0, err
+	}
+
 	if resp == "inval" {
 		return 0, api.ErrNotAvailable
 	}
 
-	var power float64
-	if err == nil {
-		power, err = strconv.ParseFloat(resp, 64)
-	}
+	power, err := strconv.ParseFloat(resp, 64)
 
 	// ignore standby power
 	power = power / 1000 // mW ==> W
