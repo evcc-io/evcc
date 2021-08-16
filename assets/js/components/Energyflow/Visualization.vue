@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
 				<div
@@ -122,7 +122,7 @@ export default {
 		valuesInKw: { type: Boolean, default: false },
 	},
 	data: function () {
-		return { width: 0 };
+		return { width: 0, visualizationReady: false };
 	},
 	mounted: function () {
 		this.$nextTick(function () {
@@ -154,6 +154,12 @@ export default {
 	watch: {
 		showDetails: function () {
 			this.$nextTick(() => this.updateElementWidth());
+		},
+		totalAdjusted: function () {
+			if (!this.visualizationReady && this.totalAdjusted > 0)
+				setTimeout(() => {
+					this.visualizationReady = true;
+				}, 500);
 		},
 	},
 	methods: {
@@ -196,16 +202,17 @@ export default {
 }
 .site-progress-bar {
 	display: flex;
-	transition-property: width;
-	transition-duration: 500ms;
-	transition-timing-function: linear;
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
 	position: relative;
 	width: 0;
 }
-
+.visualization--ready .site-progress-bar {
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+}
 .grid-import {
 	background-color: var(--evcc-grid);
 	color: var(--bs-white);
@@ -229,10 +236,12 @@ export default {
 	height: 1.7rem;
 	padding: 0.6rem 0;
 	opacity: 1;
+	overflow: hidden;
+}
+.visualization--ready .label-bar {
 	transition-property: width, opacity;
 	transition-duration: 500ms, 250ms;
 	transition-timing-function: linear, ease;
-	overflow: hidden;
 }
 .label-bar--down:first-child {
 	margin-right: -1px;
@@ -260,6 +269,8 @@ export default {
 	color: var(--bs-gray);
 	padding: 0 0.3rem;
 	opacity: 1;
+}
+.visualization--ready .label-bar-icon {
 	transition: opacity 250ms ease-in;
 }
 .label-bar--down .label-bar-icon {

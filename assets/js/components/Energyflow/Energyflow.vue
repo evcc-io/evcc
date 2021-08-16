@@ -1,7 +1,7 @@
 <template>
 	<div>
-		<h4 class="d-none d-md-block my-4" v-if="siteTitle">
-			{{ siteTitle }}
+		<h4 class="d-none d-md-block my-4">
+			{{ siteTitle || "Home" }}
 		</h4>
 		<div
 			class="row align-items-start align-items-md-center mt-4 energyflow"
@@ -88,30 +88,41 @@
 				"
 				v-if="showDetails"
 			>
-				<div class="text-nowrap d-flex d-md-block" data-test-grid-import>
+				<div
+					class="text-nowrap d-flex d-md-block flex-lg-grow-1 text-lg-start"
+					data-test-grid-import
+				>
 					<span class="color-grid details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.gridImport")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(gridImport) }}</span>
+					<span class="text-end text-nowrap d-md-none d-lg-inline">
+						{{ kw(gridImport) }}
+					</span>
 				</div>
 				<div
-					class="text-nowrap d-flex d-md-block"
+					class="text-nowrap d-flex d-md-block flex-lg-grow-1 text-lg-center"
 					data-test-self-consumption
-					v-if="batteryConfigured || pvConfigured"
 				>
 					<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.selfConsumption")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(selfConsumption) }}</span>
+					<span class="text-end text-nowrap d-md-none d-lg-inline">
+						{{ kw(selfConsumption) }}
+					</span>
 				</div>
-				<div class="text-nowrap d-flex d-md-block" data-test-pv-export>
+				<div
+					class="text-nowrap d-flex d-md-block flex-lg-grow-1 text-lg-end"
+					data-test-pv-export
+				>
 					<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvExport")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(pvExport) }}</span>
+					<span class="text-end text-nowrap d-md-none d-lg-inline">
+						{{ kw(pvExport) }}
+					</span>
 				</div>
 			</div>
 		</div>
