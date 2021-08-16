@@ -14,8 +14,6 @@ const (
 	UserBaseURL        = "https://nci-bff-web-prod.apps.eu.kamereon.io/bff-web"
 )
 
-const timeFormat = "2006-01-02T15:04:05Z"
-
 type Auth struct {
 	AuthID    string         `json:"authId"`
 	Template  string         `json:"template"`
@@ -49,4 +47,37 @@ type Vehicle struct {
 	VIN        string
 	ModelName  string
 	PictureURL string
+}
+
+// Request structure for kamereon api
+type Request struct {
+	Data Payload `json:"data"`
+}
+
+type Payload struct {
+	Type       string                 `json:"type"`
+	Attributes map[string]interface{} `json:"attributes,omitempty"`
+}
+
+// Response structure for kamereon api
+type Response struct {
+	Data struct {
+		Type, ID   string     // battery refresh
+		Attributes attributes `json:"attributes"`
+	} `json:"data"`
+}
+
+type attributes struct {
+	Timestamp          string  `json:"timestamp"`
+	ChargingStatus     float32 `json:"chargingStatus"`
+	InstantaneousPower int     `json:"instantaneousPower"`
+	RangeHvacOff       int     `json:"rangeHvacOff"`    // Nissan
+	BatteryAutonomy    int     `json:"batteryAutonomy"` // Renault
+	BatteryLevel       int     `json:"batteryLevel"`
+	BatteryCapacity    int     `json:"batteryCapacity"` // Nissan
+	BatteryTemperature int     `json:"batteryTemperature"`
+	PlugStatus         int     `json:"plugStatus"`
+	LastUpdateTime     string  `json:"lastUpdateTime"`
+	ChargePower        int     `json:"chargePower"`
+	RemainingTime      *int    `json:"chargingRemainingTime"`
 }
