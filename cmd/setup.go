@@ -144,16 +144,6 @@ func configureJavascript(conf map[string]interface{}) error {
 	return nil
 }
 
-// setup EEBus
-func configureEEBus(conf map[string]interface{}) error {
-	var err error
-	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
-		go server.EEBusInstance.Run()
-	}
-
-	return nil
-}
-
 // setup HEMS
 func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, cache, httpd)
