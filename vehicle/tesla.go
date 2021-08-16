@@ -166,12 +166,12 @@ func (v *Tesla) Range() (int64, error) {
 var _ api.VehicleOdometer = (*Tesla)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
-func (v *Tesla) Odometer() (int64, error) {
+func (v *Tesla) Odometer() (float64, error) {
 	res, err := v.vehicleStateG()
 
 	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
 		// miles to km
-		return int64(kmPerMile * res.Odometer), nil
+		return kmPerMile * res.Odometer, nil
 	}
 
 	return 0, err

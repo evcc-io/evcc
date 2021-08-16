@@ -93,7 +93,7 @@ type attributes struct {
 	ExternalTemperature float64 `json:"externalTemperature"`
 	HvacStatus          string  `json:"hvacStatus"`
 	// cockpit
-	TotalMileage int `json:"totalMileage"`
+	TotalMileage float64 `json:"totalMileage"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -402,11 +402,11 @@ func (v *Renault) Range() (int64, error) {
 var _ api.VehicleOdometer = (*Renault)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
-func (v *Renault) Odometer() (int64, error) {
+func (v *Renault) Odometer() (float64, error) {
 	res, err := v.cockpitG()
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
-		return int64(res.Data.Attributes.TotalMileage), nil
+		return res.Data.Attributes.TotalMileage, nil
 	}
 
 	return 0, err

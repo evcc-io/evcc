@@ -716,6 +716,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 			odo, err := v.Odometer()
 			if err == nil {
 				lp.publish("socOdometer", odo)
+			} else {
+				lp.log.ERROR.Printf("vehicle odometer: %v", err)
 			}
 		}
 	} else {
@@ -724,7 +726,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("hasVehicle", false)
 		lp.publish("socTitle", "")
 		lp.publish("socCapacity", int64(0))
-		lp.publish("socOdometer", int64(0))
+		lp.publish("socOdometer", 0.0)
 	}
 }
 

@@ -220,11 +220,11 @@ func (v *Tronity) Range() (int64, error) {
 var _ api.VehicleOdometer = (*Tronity)(nil)
 
 // Odometer implements the api.VehicleOdometer interface
-func (v *Tronity) Odometer() (int64, error) {
+func (v *Tronity) Odometer() (float64, error) {
 	res, err := v.bulkG()
 
 	if res, ok := res.(tronity.Bulk); err == nil && ok {
-		return int64(res.Odometer), nil
+		return res.Odometer, nil
 	}
 
 	return 0, err
