@@ -675,9 +675,9 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find placeholder match
 	for _, vehicle := range lp.vehicles {
 		if vid := vehicle.Identify(); vid != "" {
-			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
+			re, err := regexp.Compile(vid)
 			if err != nil {
-				lp.log.ERROR.Printf("vehicle id: %v", err)
+				lp.log.ERROR.Printf("vehicle id '%s' is not a regex: %v", vid, err)
 				continue
 			}
 
