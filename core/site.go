@@ -10,7 +10,7 @@ import (
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/push"
 	"github.com/andig/evcc/util"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 //go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core Updater

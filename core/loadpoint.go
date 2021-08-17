@@ -17,7 +17,7 @@ import (
 	"github.com/andig/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
 )
 
