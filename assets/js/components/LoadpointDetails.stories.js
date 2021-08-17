@@ -31,7 +31,7 @@ Vehicle.args = {
   chargePower: 2800,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
-  hasVehicle: true,
+  vehiclePresent: true,
   chargeEstimate: 5 * 3600,
 };
 
@@ -40,7 +40,7 @@ VehicleRange.args = {
   chargePower: 2800,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
-  hasVehicle: true,
+  vehiclePresent: true,
   range: 240.123,
   chargeEstimate: 5 * 3600,
 };
@@ -50,7 +50,7 @@ VehicleClimater.args = {
   chargePower: 2800,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
-  hasVehicle: true,
+  vehiclePresent: true,
   range: 240.123,
   chargeEstimate: 5 * 3600,
   climater: "on",
@@ -61,7 +61,7 @@ VehicleTimer.args = {
   chargePower: 2800,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
-  hasVehicle: true,
+  vehiclePresent: true,
   range: 240.123,
   chargeEstimate: 5 * 3600,
   timerSet: true,

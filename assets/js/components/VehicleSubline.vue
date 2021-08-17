@@ -26,7 +26,7 @@ import formatter from "../mixins/formatter";
 export default {
 	name: "VehicleSubline",
 	props: {
-		socCharge: Number,
+		vehicleSoc: Number,
 		minSoC: Number,
 		timerActive: Boolean,
 		timerSet: Boolean,
@@ -35,7 +35,7 @@ export default {
 	},
 	computed: {
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.socCharge < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoc < this.minSoC;
 		},
 		targetChargeEnabled: function () {
 			return this.targetTime && this.timerSet;

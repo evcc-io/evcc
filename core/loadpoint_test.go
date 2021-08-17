@@ -618,7 +618,7 @@ func TestTargetSoC(t *testing.T) {
 			SoC: SoCConfig{
 				Target: tc.target,
 			},
-			socCharge: tc.soc,
+			vehicleSoc: tc.soc,
 		}
 
 		if res := lp.targetSocReached(); tc.res != res {
@@ -741,7 +741,7 @@ func TestMinSoC(t *testing.T) {
 			SoC: SoCConfig{
 				Min: tc.min,
 			},
-			socCharge: tc.soc,
+			vehicleSoc: tc.soc,
 		}
 
 		if res := lp.minSocNotReached(); tc.res != res {

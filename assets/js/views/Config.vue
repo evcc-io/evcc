@@ -70,11 +70,11 @@
 					<div class="row h5">
 						<div class="col-6 py-3">
 							Modell:
-							<span class="text-primary">{{ loadpoint.socTitle || "—" }}</span>
+							<span class="text-primary">{{ loadpoint.vehicleTitle || "—" }}</span>
 						</div>
 						<div class="col-6 py-3">
 							Kapazität:
-							<span class="text-primary">{{ loadpoint.socCapacity }}kWh</span>
+							<span class="text-primary">{{ loadpoint.vehicleCapacity }}kWh</span>
 						</div>
 					</div>
 				</div>

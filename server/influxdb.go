@@ -90,7 +90,7 @@ func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	for param := range in {
 		// vehicle name
 		if param.LoadPoint != nil {
-			if name, ok := param.Val.(string); ok && param.Key == "socTitle" {
+			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
 				vehicles[*param.LoadPoint] = name
 				continue
 			}
