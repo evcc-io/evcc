@@ -6,7 +6,7 @@ require (
 	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2

@@ -9,7 +9,7 @@ import (
 	"github.com/andig/evcc/util"
 	"github.com/andig/evcc/util/oauth"
 	"github.com/andig/evcc/util/request"
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 	"golang.org/x/oauth2"
 )
 
