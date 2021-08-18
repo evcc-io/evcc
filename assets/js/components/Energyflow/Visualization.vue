@@ -4,10 +4,8 @@
 			<div class="d-flex justify-content-end">
 				<div
 					class="label-bar label-bar--down"
-					:class="{
-						'label-bar--hide-icon': hideLabelIcon(batteryDischarge, 44),
-						'label-bar--hidden': !selfConsumptionAdjusted,
-					}"
+					v-if="batteryDischarge"
+					:class="{ 'label-bar--hide-icon': hideLabelIcon(batteryDischarge, 44) }"
 					:style="{ width: widthTotal(batteryDischarge) }"
 				>
 					<div class="label-bar-scale">
@@ -18,10 +16,8 @@
 				</div>
 				<div
 					class="label-bar label-bar--down"
-					:class="{
-						'label-bar--hide-icon': hideLabelIcon(pvProduction),
-						'label-bar--hidden': !selfConsumptionAdjusted && !pvExportAdjusted,
-					}"
+					v-if="selfConsumptionAdjusted || pvExportAdjusted"
+					:class="{ 'label-bar--hide-icon': hideLabelIcon(pvProduction) }"
 					:style="{ width: widthTotal(pvProduction) }"
 				>
 					<div class="label-bar-scale">
@@ -37,29 +33,33 @@
 				class="site-progress-bar grid-import"
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
-				<span class="power" :class="{ 'd-none': hidePowerLabel(gridImport) }">
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
 					{{ kw(gridImport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+					{{ kwNoUnit(gridImport) }}
 				</span>
 			</div>
 			<div
 				class="site-progress-bar self-consumption"
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
-				<span
-					class="power"
-					:class="{
-						'd-none': hidePowerLabel(selfConsumption),
-					}"
-				>
+				<span class="power" v-if="powerLabelEnoughSpace(selfConsumption)">
 					{{ kw(selfConsumption) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(selfConsumption)">
+					{{ kwNoUnit(selfConsumption) }}
 				</span>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
+				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
 					{{ kw(pvExport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
+					{{ kwNoUnit(pvExport) }}
 				</span>
 			</div>
 			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
@@ -70,10 +70,8 @@
 			<div class="d-flex justify-content-start">
 				<div
 					class="label-bar label-bar--up"
-					:class="{
-						'label-bar--hide-icon': hideLabelIcon(houseConsumption),
-						'label-bar--hidden': !gridImportAdjusted && !selfConsumptionAdjusted,
-					}"
+					v-if="gridImportAdjusted || selfConsumptionAdjusted"
+					:class="{ 'label-bar--hide-icon': hideLabelIcon(houseConsumption) }"
 					:style="{ width: widthTotal(houseConsumption) }"
 				>
 					<div class="label-bar-scale">
@@ -84,10 +82,8 @@
 				</div>
 				<div
 					class="label-bar label-bar--up"
-					:class="{
-						'label-bar--hide-icon': hideLabelIcon(batteryCharge, 44),
-						'label-bar--hidden': !selfConsumptionAdjusted,
-					}"
+					v-if="batteryCharge"
+					:class="{ 'label-bar--hide-icon': hideLabelIcon(batteryCharge, 44) }"
 					:style="{ width: widthTotal(batteryCharge) }"
 				>
 					<div class="label-bar-scale">
@@ -168,13 +164,21 @@ export default {
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		kw: function (watt) {
-			return this.fmtKw(watt, this.valuesInKw);
+			return this.fmtKw(watt, this.valuesInKw, true);
 		},
-		hidePowerLabel(power) {
-			if (this.totalAdjusted === 0) return true;
-			const minWidth = 75;
+		kwNoUnit: function (watt) {
+			return this.fmtKw(watt, this.valuesInKw, false);
+		},
+		powerLabelAvailableSpace(power) {
+			if (this.totalAdjusted === 0) return 0;
 			const percent = (100 / this.totalAdjusted) * power;
-			return (this.width / 100) * percent < minWidth;
+			return (this.width / 100) * percent;
+		},
+		powerLabelEnoughSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 60;
+		},
+		powerLabelSomeSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 35;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
@@ -227,8 +231,9 @@ export default {
 }
 .power {
 	display: block;
-	margin: 0 0.5rem;
+	margin: 0 0.2rem;
 	white-space: nowrap;
+	overflow: hidden;
 }
 .label-bar {
 	width: 0;
@@ -263,6 +268,18 @@ export default {
 }
 .label-bar--up .label-bar-scale {
 	border-top: none;
+}
+.label-bar--down:first-child .label-bar-scale {
+	border-start-start-radius: 4px;
+}
+.label-bar--down:last-child .label-bar-scale {
+	border-start-end-radius: 4px;
+}
+.label-bar--up:first-child .label-bar-scale {
+	border-end-start-radius: 4px;
+}
+.label-bar--up:last-child .label-bar-scale {
+	border-end-end-radius: 4px;
 }
 .label-bar-icon {
 	background-color: white;
