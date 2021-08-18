@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	scale       float64
+	re          *regexp.Regexp
 	jq          *gojq.Query
 }
 
@@ -51,6 +53,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		URI, Method string
 		Headers     map[string]string
 		Body        string
+		Regex       string
 		Jq          string
 		Scale       float64
 		Insecure    bool
@@ -80,6 +83,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Headers,
 		cc.Body,
 		cc.Insecure,
+		cc.Regex,
 		cc.Jq,
 		cc.Scale,
 	)
@@ -95,7 +99,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -113,6 +117,15 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	// ignore the self signed certificate
 	if insecure {
 		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	}
+
+	if regex != "" {
+		re, err := regexp.Compile(regex)
+		if err != nil {
+			return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
+		}
+
+		p.re = re
 	}
 
 	if jq != "" {
@@ -178,6 +191,13 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		b, err := p.request()
 		if err != nil {
 			return string(b), err
+		}
+
+		if p.re != nil {
+			m := p.re.FindSubmatch(b)
+			if len(m) > 1 {
+				b = m[1] // first submatch
+			}
 		}
 
 		if p.jq != nil {
