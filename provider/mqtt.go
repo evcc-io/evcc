@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -20,6 +21,7 @@ type Mqtt struct {
 	payload string
 	scale   float64
 	timeout time.Duration
+	re      *regexp.Regexp
 	jq      *gojq.Query
 }
 
@@ -34,6 +36,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		Topic, Payload string // Payload only applies to setters
 		Scale          float64
 		Timeout        time.Duration
+		Regex          string
 		Jq             string
 	}{
 		Scale: 1,
@@ -54,6 +57,9 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	if cc.Payload != "" {
 		m = m.WithPayload(cc.Payload)
+	}
+	if cc.Regex != "" {
+		m, err = m.WithRegex(cc.Regex)
 	}
 	if cc.Jq != "" {
 		m, err = m.WithJq(cc.Jq)
@@ -81,6 +87,18 @@ func (m *Mqtt) WithPayload(payload string) *Mqtt {
 	return m
 }
 
+// WithRegex adds a regex query applied to the mqtt listener payload
+func (m *Mqtt) WithRegex(regex string) (*Mqtt, error) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		return m, fmt.Errorf("invalid regex '%s': %w", re, err)
+	}
+
+	m.re = re
+
+	return m, nil
+}
+
 // WithJq adds a jq query applied to the mqtt listener payload
 func (m *Mqtt) WithJq(jq string) (*Mqtt, error) {
 	op, err := gojq.Parse(jq)
@@ -101,6 +119,7 @@ func (m *Mqtt) FloatGetter() func() (float64, error) {
 		topic: m.topic,
 		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		re:    m.re,
 		jq:    m.jq,
 	}
 
@@ -116,6 +135,7 @@ func (m *Mqtt) IntGetter() func() (int64, error) {
 		topic: m.topic,
 		scale: float64(m.scale),
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		re:    m.re,
 		jq:    m.jq,
 	}
 
@@ -130,6 +150,7 @@ func (m *Mqtt) StringGetter() func() (string, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		re:    m.re,
 		jq:    m.jq,
 	}
 
@@ -144,6 +165,7 @@ func (m *Mqtt) BoolGetter() func() (bool, error) {
 	h := &msgHandler{
 		topic: m.topic,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		re:    m.re,
 		jq:    m.jq,
 	}
 
@@ -198,6 +220,7 @@ type msgHandler struct {
 	scale   float64
 	topic   string
 	payload string
+	re      *regexp.Regexp
 	jq      *gojq.Query
 }
 
@@ -219,6 +242,13 @@ func (h *msgHandler) hasValue() (string, error) {
 
 	var err error
 	payload := h.payload
+
+	if h.re != nil {
+		m := h.re.FindStringSubmatch(payload)
+		if len(m) > 1 {
+			payload = m[1] // first submatch
+		}
+	}
 
 	if h.jq != nil {
 		var val interface{}
