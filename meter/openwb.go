@@ -68,16 +68,19 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	var power func() (float64, error)
 	var soc func() (float64, error)
-	var currents []func() (float64, error)
+	var currents func() (float64, float64, float64, error)
 
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
 		power = floatG(fmt.Sprintf("%s/evu/%s", cc.Topic, openwb.PowerTopic))
 
+		var curr []func() (float64, error)
 		for i := 1; i <= 3; i++ {
 			current := floatG(fmt.Sprintf("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i))
-			currents = append(currents, current)
+			curr = append(curr, current)
 		}
+
+		currents = collectCurrentProviders(curr)
 
 	case "pv":
 		configuredG := boolG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PvConfigured))
