@@ -59,13 +59,17 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		m = m.WithPayload(cc.Payload)
 	}
 	if cc.Regex != "" {
-		m, err = m.WithRegex(cc.Regex)
+		if m, err = m.WithRegex(cc.Regex); err != nil {
+			return nil, err
+		}
 	}
 	if cc.Jq != "" {
-		m, err = m.WithJq(cc.Jq)
+		if m, err = m.WithJq(cc.Jq); err != nil {
+			return nil, err
+		}
 	}
 
-	return m, err
+	return m, nil
 }
 
 // NewMqtt creates mqtt provider for given topic
