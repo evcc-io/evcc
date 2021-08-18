@@ -38,7 +38,7 @@ export default {
       batteryDischarge: "Battery discharge",
       gridImport: "Grid import",
       selfConsumption: "Self consumption",
-      pvExport: "Grid feed-in",
+      pvExport: "Grid export",
     },
     mode: {
       title: "Mode",
