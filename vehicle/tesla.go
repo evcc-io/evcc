@@ -18,8 +18,8 @@ import (
 type Tesla struct {
 	*embed
 	vehicle       *tesla.Vehicle
-	chargeStateG  func() (interface{}, error)
-	vehicleStateG func() (interface{}, error)
+	chargeStateG  func() (*tesla.ChargeState, error)
+	vehicleStateG func() (*tesla.VehicleState, error)
 }
 
 func init() {
@@ -88,27 +88,17 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
-	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
+	v.chargeStateG = provider.NewCached[*tesla.ChargeState](v.vehicle.ChargeState, cc.Cache).Get
+	v.vehicleStateG = provider.NewCached[*tesla.VehicleState](v.vehicle.VehicleState, cc.Cache).Get
 
 	return v, nil
-}
-
-// chargeState implements the charge state api
-func (v *Tesla) chargeState() (interface{}, error) {
-	return v.vehicle.ChargeState()
-}
-
-// vehicleState implements the climater api
-func (v *Tesla) vehicleState() (interface{}, error) {
-	return v.vehicle.VehicleState()
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Tesla) SoC() (float64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		return float64(res.BatteryLevel), nil
 	}
 
@@ -122,7 +112,7 @@ func (v *Tesla) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
 			status = api.StatusB
 		}
@@ -140,7 +130,7 @@ var _ api.ChargeRater = (*Tesla)(nil)
 func (v *Tesla) ChargedEnergy() (float64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		return float64(res.ChargeEnergyAdded), nil
 	}
 
@@ -155,7 +145,7 @@ var _ api.VehicleRange = (*Tesla)(nil)
 func (v *Tesla) Range() (int64, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		// miles to km
 		return int64(kmPerMile * res.EstBatteryRange), nil
 	}
@@ -169,7 +159,7 @@ var _ api.VehicleOdometer = (*Tesla)(nil)
 func (v *Tesla) Odometer() (float64, error) {
 	res, err := v.vehicleStateG()
 
-	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
+	if err == nil {
 		// miles to km
 		return kmPerMile * res.Odometer, nil
 	}
@@ -183,7 +173,7 @@ var _ api.VehicleFinishTimer = (*Tesla)(nil)
 func (v *Tesla) FinishTime() (time.Time, error) {
 	res, err := v.chargeStateG()
 
-	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+	if err == nil {
 		t := time.Now()
 		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
 	}

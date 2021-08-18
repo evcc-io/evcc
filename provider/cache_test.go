@@ -27,7 +27,7 @@ func TestCachedGetter(t *testing.T) {
 	}
 
 	duration := time.Second
-	c := NewCached(g, duration)
+	c := NewCached[float64](g, duration)
 	clock := clock.NewMock()
 	c.clock = clock
 	getter := c.FloatGetter()

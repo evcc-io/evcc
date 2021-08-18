@@ -58,7 +58,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		serial:   strings.ToUpper(cc.Serial),
 	}
 
-	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.apiG = provider.NewCached(v.batteryAPI, cc.Cache).Get
 
 	return v, nil
 }

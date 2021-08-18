@@ -150,9 +150,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
-	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
-	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
+	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).Get
+	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).Get
+	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).Get
 
 	return v, err
 }

@@ -129,7 +129,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	v.bulkG = provider.NewCached(v.bulk, cc.Cache).InterfaceGetter()
+	v.bulkG = provider.NewCached(v.bulk, cc.Cache).Get
 
 	return v, nil
 }

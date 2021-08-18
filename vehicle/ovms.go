@@ -64,7 +64,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		server:    cc.Server,
 	}
 
-	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).Get
 
 	var err error
 	v.Jar, err = cookiejar.New(&cookiejar.Options{

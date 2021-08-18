@@ -11,20 +11,20 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (interface{}, error)
-	climateG func() (interface{}, error)
+	chargerG func() (ChargerResponse, error)
+	climateG func() (ClimaterResponse, error)
 	action   func(action, value string) error
 }
 
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		chargerG: provider.NewCached(func() (interface{}, error) {
+		chargerG: provider.NewCached[ChargerResponse](func() (ChargerResponse, error) {
 			return api.Charger(vin)
-		}, cache).InterfaceGetter(),
-		climateG: provider.NewCached(func() (interface{}, error) {
+		}, cache).Get,
+		climateG: provider.NewCached[ClimaterResponse](func() (ClimaterResponse, error) {
 			return api.Climater(vin)
-		}, cache).InterfaceGetter(),
+		}, cache).Get,
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
 		},
@@ -37,7 +37,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Charger.Status.BatteryStatusData.StateOfCharge.Content), nil
 	}
 	return 0, err
@@ -50,7 +50,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		if res.Charger.Status.PlugStatusData.PlugState.Content == "connected" {
 			status = api.StatusB
 		}
@@ -67,7 +67,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		rct := res.Charger.Status.BatteryStatusData.RemainingChargingTime
 
 		// estimate not available
@@ -87,7 +87,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		crsd := res.Charger.Status.CruisingRangeStatusData
 
 		rng = int64(crsd.PrimaryEngineRange.Content)
@@ -104,7 +104,7 @@ var _ api.VehicleClimater = (*Provider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.climateG()
-	if res, ok := res.(ClimaterResponse); err == nil && ok {
+	if err == nil {
 		state := strings.ToLower(res.Climater.Status.ClimatisationStatusData.ClimatisationState.Content)
 		active := state != "off" && state != "invalid" && state != "error"
 

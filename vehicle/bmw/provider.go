@@ -9,15 +9,15 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	statusG func() (interface{}, error)
+	statusG func() (StatusResponse, error)
 }
 
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		statusG: provider.NewCached(func() (interface{}, error) {
+		statusG: provider.NewCached[StatusResponse](func() (StatusResponse, error) {
 			return api.Status(vin)
-		}, cache).InterfaceGetter(),
+		}, cache).Get,
 	}
 	return impl
 }
@@ -27,7 +27,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.VehicleStatus.ChargingLevelHv), nil
 	}
 
@@ -41,7 +41,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		if res.VehicleStatus.ConnectionStatus == "CONNECTED" {
 			status = api.StatusB
 		}
@@ -58,7 +58,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 // // FinishTime implements the api.VehicleFinishTimer interface
 // func (v *Provider) FinishTime() (time.Time, error) {
 // 	res, err := v.statusG()
-// 	if res, ok := res.(StatusResponse); err == nil && ok {
+// 	if  err == nil {
 // 		ctr := res.VehicleStatus.ChargingTimeRemaining
 // 		return time.Now().Add(time.Duration(ctr) * time.Minute), err
 // 	}
@@ -71,7 +71,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.VehicleStatus.RemainingRangeElectric), nil
 	}
 
@@ -83,7 +83,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.VehicleStatus.Mileage), nil
 	}
 

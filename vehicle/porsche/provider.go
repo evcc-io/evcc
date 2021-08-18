@@ -39,7 +39,7 @@ type Provider struct {
 	*request.Helper
 	token    oauth2.Token
 	identity *Identity
-	statusG  func() (interface{}, error)
+	statusG  func() (StatusResponse, error)
 }
 
 // NewProvider creates a new vehicle
@@ -51,9 +51,9 @@ func NewProvider(log *util.Logger, identity *Identity, token oauth2.Token, vin s
 		identity: identity,
 	}
 
-	impl.statusG = provider.NewCached(func() (interface{}, error) {
+	impl.statusG = provider.NewCached[StatusResponse](func() (StatusResponse, error) {
 		return impl.status(vin)
-	}, cache).InterfaceGetter()
+	}, cache).Get
 
 	return impl
 }
@@ -75,11 +75,11 @@ func (v *Provider) request(uri string) (*http.Request, error) {
 }
 
 // Status implements the vehicle status response
-func (v *Provider) status(vin string) (interface{}, error) {
+func (v *Provider) status(vin string) (StatusResponse, error) {
 	uri := fmt.Sprintf("https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles/%s", vin)
 	req, err := v.request(uri)
 	if err != nil {
-		return 0, err
+		return StatusResponse{}, err
 	}
 
 	var pr StatusResponse
@@ -93,7 +93,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return res.CarControlData.BatteryLevel.Value, nil
 	}
 
@@ -105,7 +105,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
 
@@ -117,7 +117,7 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
+	if err == nil {
 		return res.CarControlData.Mileage.Value, nil
 	}
 

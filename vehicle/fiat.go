@@ -23,7 +23,7 @@ type Fiat struct {
 	*request.Helper
 	vin      string
 	identity *fiat.Identity
-	statusG  func() (interface{}, error)
+	statusG  func() (fiat.Status, error)
 }
 
 func init() {
@@ -69,9 +69,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.statusG = provider.NewCached(func() (interface{}, error) {
-		return v.status()
-	}, cc.Cache).InterfaceGetter()
+	v.statusG = provider.NewCached[fiat.Status](v.status, cc.Cache).Get
 
 	return v, err
 }
@@ -113,7 +111,7 @@ func (v *Fiat) vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *Fiat) status() (interface{}, error) {
+func (v *Fiat) status() (fiat.Status, error) {
 	var res fiat.Status
 
 	uri := fmt.Sprintf("%s/v2/accounts/%s/vehicles/%s/status", fiat.ApiURI, v.identity.UID(), v.vin)
@@ -129,7 +127,7 @@ func (v *Fiat) status() (interface{}, error) {
 // SoC implements the api.Vehicle interface
 func (v *Fiat) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(fiat.Status); err == nil && ok {
+	if err == nil {
 		return float64(res.EvInfo.Battery.StateOfCharge), nil
 	}
 
@@ -141,7 +139,7 @@ var _ api.VehicleRange = (*Fiat)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Fiat) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(fiat.Status); err == nil && ok {
+	if err == nil {
 		return int64(res.EvInfo.Battery.DistanceToEmpty.Value), nil
 	}
 
@@ -155,7 +153,7 @@ func (v *Fiat) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(fiat.Status); err == nil && ok {
+	if err == nil {
 		if res.EvInfo.Battery.PlugInStatus {
 			status = api.StatusB // connected, not charging
 		}

@@ -9,16 +9,14 @@ import (
 
 // Provider is a kamereon provider
 type Provider struct {
-	apiG   func() (interface{}, error)
+	apiG   func() (Response, error)
 	action func(value Action) error
 }
 
 // NewProvider returns a kamereon provider
 func NewProvider(api *API, cache time.Duration) *Provider {
 	return &Provider{
-		apiG: provider.NewCached(func() (interface{}, error) {
-			return api.Battery()
-		}, cache).InterfaceGetter(),
+		apiG: provider.NewCached[Response](api.Battery, cache).Get,
 		action: func(value Action) error {
 			_, err := api.ChargingAction(value)
 			return err
@@ -32,7 +30,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(Response); err == nil && ok {
+	if err == nil {
 		return float64(res.Data.Attributes.BatteryLevel), nil
 	}
 
@@ -46,7 +44,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.apiG()
-	if res, ok := res.(Response); err == nil && ok {
+	if err == nil {
 		if res.Data.Attributes.PlugStatus > 0 {
 			status = api.StatusB
 		}
@@ -64,7 +62,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(Response); err == nil && ok {
+	if err == nil {
 		return int64(res.Data.Attributes.RangeHvacOff), nil
 	}
 
@@ -77,7 +75,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(Response); err == nil && ok {
+	if err == nil {
 		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
 
 		if res.Data.Attributes.RemainingTime == nil {

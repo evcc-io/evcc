@@ -32,7 +32,7 @@ type Ford struct {
 	log                 *util.Logger
 	user, password, vin string
 	tokenSource         oauth2.TokenSource
-	statusG             func() (interface{}, error)
+	statusG             func() (fordVehicleStatus, error)
 	refreshId           string
 	refreshTime         time.Time
 }
@@ -75,9 +75,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		v.tokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), v)
 	}
 
-	v.statusG = provider.NewCached(func() (interface{}, error) {
-		return v.status()
-	}, cc.Cache).InterfaceGetter()
+	v.statusG = provider.NewCached[fordVehicleStatus](v.status, cc.Cache).Get
 
 	if err == nil && cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
@@ -287,7 +285,7 @@ var _ api.Battery = (*Ford)(nil)
 // SoC implements the api.Battery interface
 func (v *Ford) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(fordVehicleStatus); err == nil && ok {
+	if err == nil {
 		return float64(res.VehicleStatus.BatteryFillLevel.Value), nil
 	}
 
@@ -299,7 +297,7 @@ var _ api.VehicleRange = (*Ford)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Ford) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(fordVehicleStatus); err == nil && ok {
+	if err == nil {
 		return int64(res.VehicleStatus.ElVehDTE.Value), nil
 	}
 
@@ -313,7 +311,7 @@ func (v *Ford) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(fordVehicleStatus); err == nil && ok {
+	if err == nil {
 		if res.VehicleStatus.PlugStatus.Value == 1 {
 			status = api.StatusB // connected, not charging
 		}

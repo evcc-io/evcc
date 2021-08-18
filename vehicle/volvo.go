@@ -118,7 +118,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vin:      cc.VIN,
 	}
 
-	v.statusG = provider.NewCached(v.status, cc.Cache).InterfaceGetter()
+	v.statusG = provider.NewCached(v.status, cc.Cache).Get
 
 	var err error
 	if cc.VIN == "" {

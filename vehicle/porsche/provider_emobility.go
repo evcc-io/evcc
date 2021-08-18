@@ -73,7 +73,7 @@ type EMobilityProvider struct {
 	token    oauth2.Token
 	identity *Identity
 	carModel string
-	statusG  func() (interface{}, error)
+	statusG  func() (EmobilityResponse, error)
 }
 
 // NewEMobilityProvider creates a new vehicle
@@ -85,9 +85,9 @@ func NewEMobilityProvider(log *util.Logger, identity *Identity, token oauth2.Tok
 		identity: identity,
 	}
 
-	impl.statusG = provider.NewCached(func() (interface{}, error) {
+	impl.statusG = provider.NewCached[EmobilityResponse](func() (EmobilityResponse, error) {
 		return impl.status(vin)
-	}, cache).InterfaceGetter()
+	}, cache).Get
 
 	return impl
 }
@@ -110,28 +110,29 @@ func (v *EMobilityProvider) request(uri string) (*http.Request, error) {
 }
 
 // Status implements the vehicle status response
-func (v *EMobilityProvider) status(vin string) (interface{}, error) {
+func (v *EMobilityProvider) status(vin string) (EmobilityResponse, error) {
 	if v.carModel == "" {
 		uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/vcs/capabilities/%s", vin)
 		req, err := v.request(uri)
 		if err != nil {
-			return 0, err
+			return EmobilityResponse{}, err
 		}
 
 		req.Header.Set("x-vrs-url-country", "de")
 		req.Header.Set("x-vrs-url-language", "de_DE")
+
 		var cr CapabilitiesResponse
-		err = v.DoJSON(req, &cr)
-		if err != nil {
-			return 0, err
+		if err = v.DoJSON(req, &cr); err != nil {
+			return EmobilityResponse{}, err
 		}
+
 		v.carModel = cr.CarModel
 	}
 
 	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
 	req, err := v.request(uri)
 	if err != nil {
-		return 0, err
+		return EmobilityResponse{}, err
 	}
 
 	var pr EmobilityResponse
@@ -145,7 +146,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *EMobilityProvider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
 	}
 
@@ -157,7 +158,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *EMobilityProvider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
+	if err == nil {
 		return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
 	}
 
@@ -169,7 +170,7 @@ var _ api.VehicleFinishTimer = (*EMobilityProvider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *EMobilityProvider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if res, ok := res.(*EmobilityResponse); err == nil && ok {
+	if err == nil {
 		t := time.Now()
 		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
 	}
@@ -182,7 +183,7 @@ var _ api.ChargeState = (*EMobilityProvider)(nil)
 // Status implements the api.ChargeState interface
 func (v *EMobilityProvider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
+	if err == nil {
 		switch res.BatteryChargeStatus.PlugState {
 		case "DISCONNECTED":
 			return api.StatusA, nil
@@ -208,7 +209,7 @@ var _ api.VehicleClimater = (*EMobilityProvider)(nil)
 // Climater implements the api.VehicleClimater interface
 func (v *EMobilityProvider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.statusG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
+	if err == nil {
 		switch res.DirectClimatisation.ClimatisationState {
 		case "OFF":
 			return false, 0, 0, nil

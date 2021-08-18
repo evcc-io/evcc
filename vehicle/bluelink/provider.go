@@ -10,15 +10,15 @@ import (
 // Provider implements the Kia/Hyundai bluelink api.
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
-	apiG func() (interface{}, error)
+	apiG func() (StatusData, error)
 }
 
 // New creates a new BlueLink API
 func NewProvider(api *API, vid string, cache time.Duration) *Provider {
 	v := &Provider{
-		apiG: provider.NewCached(func() (interface{}, error) {
+		apiG: provider.NewCached[StatusData](func() (StatusData, error) {
 			return api.Status(vid)
-		}, cache).InterfaceGetter(),
+		}, cache).Get,
 	}
 
 	return v
@@ -30,7 +30,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if err == nil {
 		return float64(res.EvStatus.BatteryStatus), nil
 	}
 
@@ -43,7 +43,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if err == nil {
 		remaining := res.EvStatus.RemainTime2.Atc.Value
 
 		if remaining == 0 {
@@ -63,7 +63,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.apiG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if err == nil {
 		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
 			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
 		}

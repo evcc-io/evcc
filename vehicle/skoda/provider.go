@@ -9,7 +9,7 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (interface{}, error)
+	chargerG func() (ChargerResponse, error)
 	// climateG func() (interface{}, error)
 	// action   func(action, value string) error
 }
@@ -17,12 +17,12 @@ type Provider struct {
 // NewProvider provides the evcc vehicle api provider
 func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
-		chargerG: provider.NewCached(func() (interface{}, error) {
+		chargerG: provider.NewCached[ChargerResponse](func() (ChargerResponse, error) {
 			return api.Charger(vin)
-		}, cache).InterfaceGetter(),
+		}, cache).Get,
 		// climateG: provider.NewCached(func() (interface{}, error) {
 		// 	return api.Climater(vin)
-		// }, cache).InterfaceGetter(),
+		// }, cache).Get,
 		// action: func(action, value string) error {
 		// 	return api.Action(vin, action, value)
 		// },
@@ -35,7 +35,7 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		return float64(res.Battery.StateOfChargeInPercent), nil
 	}
 
@@ -49,7 +49,7 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		if res.Plug.ConnectionState == "Connected" {
 			status = api.StatusB
 		}
@@ -66,7 +66,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		crg := res.Charging
 
 		// estimate not available
@@ -86,7 +86,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
-	if res, ok := res.(ChargerResponse); err == nil && ok {
+	if err == nil {
 		rng = int64(res.Battery.CruisingRangeElectricInMeters) / 1e3
 	}
 
