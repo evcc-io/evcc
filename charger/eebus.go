@@ -223,19 +223,18 @@ func (c *EEBus) Enabled() (bool, error) {
 	// we might already be enabled and charging due to connection issues
 	data, err := c.cc.GetData()
 	if err == nil {
-		chargeState, _ := c.Status()
-		if chargeState == api.StatusB || chargeState == api.StatusC {
-			// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
-			if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
-				if c.expectedEnableState == false {
-					c.expectedEnableState = true
-				}
-			}
-		}
 		// handle ev being disconnected
 		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged ||
 			data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnknown {
 			c.expectedEnableState = false
+		} else {
+			chargeState, _ := c.Status()
+			if chargeState == api.StatusB || chargeState == api.StatusC {
+				// we assume that if any current power value of any phase is >50W, then charging is active and enabled is true
+				if data.EVData.Measurements.PowerL1 > 50 || data.EVData.Measurements.PowerL2 > 50 || data.EVData.Measurements.PowerL3 > 50 {
+					c.expectedEnableState = true
+				}
+			}
 		}
 	}
 
