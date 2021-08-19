@@ -71,7 +71,7 @@ func attachListeners(t *testing.T, lp *LoadPoint) {
 func TestNew(t *testing.T) {
 	lp := NewLoadPoint(util.NewLogger("foo"))
 
-	if lp.Phases != 1 {
+	if lp.Phases != 3 {
 		t.Errorf("Phases %v", lp.Phases)
 	}
 	if lp.MinCurrent != minA {

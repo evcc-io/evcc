@@ -233,7 +233,7 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		clock:         clock, // mockable time
 		bus:           bus,   // event bus
 		Mode:          api.ModeOff,
-		Phases:        1,
+		Phases:        3,
 		status:        api.StatusNone,
 		MinCurrent:    6,  // A
 		MaxCurrent:    16, // A
