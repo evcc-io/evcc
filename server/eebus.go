@@ -1,5 +1,3 @@
-// +build eebus
-
 package server
 
 import (

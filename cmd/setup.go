@@ -153,6 +153,16 @@ func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *
 	return hems
 }
 
+// setup EEBus
+func configureEEBus(conf map[string]interface{}) error {
+	var err error
+	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
+		go server.EEBusInstance.Run()
+	}
+
+	return nil
+}
+
 // setup messaging
 func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Event {
 	notificationChan := make(chan push.Event, 1)

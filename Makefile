@@ -9,7 +9,6 @@ SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
 BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
-BUILD_CI_TAGS := $(BUILD_TAGS),eebus
 LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
 GH_API_TOKEN ?= ''
@@ -32,7 +31,6 @@ clean:
 	rm -rf dist/
 
 install:
-	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go install github.com/golang/mock/mockgen
 
 install-ui:
@@ -42,11 +40,9 @@ ui:
 	npm run build
 
 assets:
-	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go generate ./...
 
 lint:
-	go env -w GOPRIVATE=github.com/amp-x/eebus
 	golangci-lint run
 
 lint-ui:
@@ -57,19 +53,11 @@ test-ui:
 
 test:
 	@echo "Running testsuite"
-	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go test ./...
 
 build:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go env -w GOPRIVATE=github.com/amp-x/eebus
 	go build -v $(BUILD_TAGS) $(BUILD_ARGS)
-
-build-ci:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	go env -w GOPRIVATE=github.com/amp-x/eebus
-	sed -i.bak 's/replace github.com\/amp-x\/eebus => .\/eebus/ /g' go.mod && rm go.mod.bak
-	go build -v $(BUILD_CI_TAGS) $(BUILD_ARGS)
 
 release-test:
 	goreleaser --snapshot --skip-publish --rm-dist
@@ -80,10 +68,6 @@ release:
 docker:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	docker build --tag $(DOCKER_IMAGE):testing .
-
-docker-ci:
-	@echo Version: $(VERSION) $(BUILD_DATE)
-	docker build --build-arg GH_API_TOKEN=${GH_API_TOKEN} --tag $(DOCKER_IMAGE):testing .
 
 publish-testing:
 	@echo Version: $(VERSION) $(BUILD_DATE)
