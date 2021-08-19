@@ -218,6 +218,7 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
+// should return true if the charger allows the EV to draw power
 func (c *EEBus) Enabled() (bool, error) {
 	// we might already be enabled and charging due to connection issues
 	data, err := c.cc.GetData()
@@ -243,6 +244,9 @@ func (c *EEBus) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
+// enable
+//	true: allow to EV to draw power
+//  false: do not allow the EV to draw power
 func (c *EEBus) Enable(enable bool) error {
 	data, err := c.cc.GetData()
 	if err != nil {
