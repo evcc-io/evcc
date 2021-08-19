@@ -80,6 +80,12 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 			_ = apiHandler.SetTargetSoC(soc)
 		}
 	})
+	m.Handler.Listen(topic+"/phases/set", func(payload string) {
+		phases, err := strconv.Atoi(payload)
+		if err == nil {
+			_ = apiHandler.SetPhases(phases)
+		}
+	})
 }
 
 // Run starts the MQTT publisher for the MQTT API

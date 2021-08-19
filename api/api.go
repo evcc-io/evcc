@@ -2,7 +2,7 @@ package api
 
 import "time"
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,ChargeState,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
@@ -75,6 +75,11 @@ type Charger interface {
 // ChargerEx provides milli-amp precision charger current control
 type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
+}
+
+// ChargePhases provides 1p3p switching
+type ChargePhases interface {
+	Phases1p3p(phases int) error
 }
 
 // Diagnosis is a helper interface that allows to dump diagnostic data to console

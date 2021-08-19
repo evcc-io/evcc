@@ -8,9 +8,13 @@ import (
 
 func TestOpenWBDecorators(t *testing.T) {
 	// host not reachable
-	wb, _ := NewOpenWBFromConfig(map[string]interface{}{
+	wb, err := NewOpenWBFromConfig(map[string]interface{}{
 		"broker": "192.0.2.2",
 	})
+
+	if err != nil {
+		t.Skip(err)
+	}
 
 	if _, ok := wb.(api.Meter); !ok {
 		t.Error("missing Meter api")

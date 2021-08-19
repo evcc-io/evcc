@@ -19,7 +19,7 @@ func (a *adapter) SocEstimator() *soc.Estimator {
 }
 
 func (a *adapter) ActivePhases() int64 {
-	return a.lp.Phases
+	return a.lp.activePhases
 }
 
 func (a *adapter) Voltage() float64 {
