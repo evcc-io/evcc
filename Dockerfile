@@ -3,7 +3,7 @@ FROM node:14-alpine as node
 
 RUN apk update && apk add --no-cache make
 RUN GOCACHE=OFF
-RUN go env -w GOPRIVATE=github.com/amp-x/eebus
+RUN go env -w GOPRIVATE=github.com/evcc-io/eebus
 
 WORKDIR /build
 

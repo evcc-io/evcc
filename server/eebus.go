@@ -10,14 +10,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amp-x/eebus"
-	"github.com/amp-x/eebus/cert"
-	"github.com/amp-x/eebus/communication"
-	"github.com/amp-x/eebus/mdns"
-	"github.com/amp-x/eebus/server"
-	"github.com/amp-x/eebus/ship"
-	"github.com/amp-x/eebus/spine/model"
 	"github.com/andig/evcc/util"
+	"github.com/evcc-io/eebus"
+	"github.com/evcc-io/eebus/cert"
+	"github.com/evcc-io/eebus/communication"
+	"github.com/evcc-io/eebus/mdns"
+	"github.com/evcc-io/eebus/server"
+	"github.com/evcc-io/eebus/ship"
+	"github.com/evcc-io/eebus/spine/model"
 	"github.com/grandcat/zeroconf"
 )
 
