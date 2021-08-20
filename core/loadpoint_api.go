@@ -27,6 +27,8 @@ type LoadPointAPI interface {
 	SetTargetSoC(int) error
 	GetMinSoC() int
 	SetMinSoC(int) error
+	GetPhases() int
+	SetPhases(int) error
 	SetTargetCharge(time.Time, int)
 	RemoteControl(string, RemoteDemand)
 
@@ -67,7 +69,7 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 		lp.publish("mode", mode)
 
 		// immediately allow pv mode activity
-		lp.pvDisableTimer()
+		lp.elapsePVTimer()
 
 		lp.requestUpdate()
 	}
@@ -127,6 +129,19 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 	}
 
 	return nil
+}
+
+// GetPhases returns loadpoint enabled phases
+func (lp *LoadPoint) GetPhases() int {
+	lp.Lock()
+	defer lp.Unlock()
+
+	return int(lp.Phases)
+}
+
+// SetPhases sets loadpoint enabled phases
+func (lp *LoadPoint) SetPhases(phases int) error {
+	return lp.scalePhases(phases)
 }
 
 // SetTargetCharge sets loadpoint charge targetSoC
@@ -221,5 +236,5 @@ func (lp *LoadPoint) GetMinPower() float64 {
 
 // GetMaxPower returns the max loadpoint power taking active phases into account
 func (lp *LoadPoint) GetMaxPower() float64 {
-	return Voltage * lp.GetMaxCurrent() * float64(lp.Phases)
+	return Voltage * lp.GetMaxCurrent() * float64(lp.GetPhases())
 }

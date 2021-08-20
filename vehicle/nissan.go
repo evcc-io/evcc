@@ -7,7 +7,6 @@ import (
 
 	"github.com/andig/evcc/api"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/kamereon"
 	"github.com/andig/evcc/vehicle/nissan"
 )
 
@@ -22,7 +21,7 @@ import (
 // Nissan is an api.Vehicle implementation for Nissan cars
 type Nissan struct {
 	*embed
-	*kamereon.Provider
+	*nissan.Provider
 }
 
 func init() {
@@ -64,7 +63,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.Provider = kamereon.NewProvider(api.Battery, cc.Cache)
+	v.Provider = nissan.NewProvider(api, cc.Cache)
 
 	return v, err
 }

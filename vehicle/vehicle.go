@@ -37,7 +37,6 @@ type Vehicle struct {
 	*embed
 	chargeG func() (float64, error)
 	statusG func() (string, error)
-	rangeG  func() (int64, error)
 }
 
 func init() {
@@ -88,11 +87,11 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate vehicle with Range
 	var rng func() (int64, error)
 	if cc.Range != nil {
-		v.rangeG, err = provider.NewIntGetterFromConfig(*cc.Range)
+		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
 		if err != nil {
 			return nil, fmt.Errorf("range: %w", err)
 		}
-		rng = v.rng
+		rng = rangeG
 	}
 
 	res := decorateVehicle(v, status, rng)
@@ -115,9 +114,4 @@ func (v *Vehicle) status() (api.ChargeStatus, error) {
 	}
 
 	return status, err
-}
-
-// rng implements the api.VehicleRange interface
-func (v *Vehicle) rng() (int64, error) {
-	return v.rangeG()
 }

@@ -109,7 +109,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate energy reading
+	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
 		cc.SoC = modbus.ReadingName(cc.SoC)

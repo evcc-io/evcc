@@ -28,17 +28,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 		return nil, err
 	}
 
-	for k, v := range map[string]string{
-		"status":     cc.Status.PluginType(),
-		"enable":     cc.Enable.PluginType(),
-		"enabled":    cc.Enabled.PluginType(),
-		"maxcurrent": cc.MaxCurrent.PluginType(),
-	} {
-		if v == "" {
-			return nil, fmt.Errorf("missing plugin configuration: %s", k)
-		}
-	}
-
 	status, err := provider.NewStringGetterFromConfig(cc.Status)
 	if err != nil {
 		return nil, fmt.Errorf("status: %w", err)

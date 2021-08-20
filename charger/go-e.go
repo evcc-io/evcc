@@ -47,11 +47,6 @@ type goeStatusResponse struct {
 	Rn1 string `json:"rn1"`        // RFID 10
 }
 
-// isLocal checks if the status response is from local api
-func (g *goeStatusResponse) isLocal() bool {
-	return g.Fwv != ""
-}
-
 func (g *goeStatusResponse) RFIDName() string {
 	switch g.Uby {
 	case 1:
@@ -172,8 +167,6 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 // goeStatusResponse is only valid for local api. Use Fwv if valid.
 func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 	if c.token == "" {
-		// let charger settle after update
-		defer time.Sleep(2 * time.Second)
 		return c.localResponse("mqtt", payload)
 	}
 
@@ -228,22 +221,13 @@ func (c *GoE) Enable(enable bool) error {
 	if enable {
 		b = 1
 	}
-
-	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && status.isLocal() && status.Alw != b {
-		return fmt.Errorf("alw update failed: %d", status.Alw)
-	}
-
+	_, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil && status.isLocal() && int64(status.Amp) != current {
-		return fmt.Errorf("amp update failed: %d", status.Amp)
-	}
-
+	_, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
 	return err
 }
 

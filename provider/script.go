@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ type Script struct {
 	updated time.Time
 	val     string
 	err     error
+	re      *regexp.Regexp
 	jq      *gojq.Query
 }
 
@@ -37,6 +39,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		Cmd     string
 		Timeout time.Duration
 		Cache   time.Duration
+		Regex   string
 		Jq      string
 	}{
 		Timeout: 5 * time.Second,
@@ -46,17 +49,26 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		return nil, err
 	}
 
-	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Jq, cc.Cache)
+	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Regex, cc.Jq, cc.Cache)
 }
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, jq string, cache time.Duration) (*Script, error) {
+func NewScriptProvider(script string, timeout time.Duration, regex, jq string, cache time.Duration) (*Script, error) {
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
 		cache:   cache,
+	}
+
+	if regex != "" {
+		re, err := regexp.Compile(regex)
+		if err != nil {
+			return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
+		}
+
+		s.re = re
 	}
 
 	if jq != "" {
@@ -107,6 +119,13 @@ func (e *Script) StringGetter() func() (string, error) {
 		if time.Since(e.updated) > e.cache {
 			e.val, e.err = e.exec(e.script)
 			e.updated = time.Now()
+
+			if e.err == nil && e.re != nil {
+				m := e.re.FindStringSubmatch(e.val)
+				if len(m) > 1 {
+					e.val = m[1] // first submatch
+				}
+			}
 
 			if e.err == nil && e.jq != nil {
 				var v interface{}

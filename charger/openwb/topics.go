@@ -20,6 +20,7 @@ const (
 	// getter/setter
 	EnabledTopic    = "ChargePointEnabled"
 	MaxCurrentTopic = "DirectChargeAmps"
+	PhasesTopic     = "U1p3p"
 
 	// charge power
 	ChargePowerTopic       = "W"

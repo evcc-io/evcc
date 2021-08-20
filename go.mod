@@ -7,11 +7,11 @@ require (
 	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
-	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2
-	github.com/containrrr/shoutrrr v0.4.4
+	github.com/containrrr/shoutrrr v0.5.0
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
@@ -41,7 +41,6 @@ require (
 	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
 	github.com/juju/ansiterm v0.0.0-20210706145210-9283cdf370b5 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
-	github.com/klauspost/compress v1.13.1 // indirect
 	github.com/koron/go-ssdp v0.0.2
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/leodido/go-urn v1.2.1 // indirect

@@ -1,8 +1,5 @@
 <template>
 	<div>
-		<h4 class="d-none d-md-block my-4" v-if="siteTitle">
-			{{ siteTitle }}
-		</h4>
 		<div
 			class="row align-items-start align-items-md-center mt-4 energyflow"
 			@click="toggleDetails"
@@ -93,25 +90,27 @@
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.gridImport")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(gridImport) }}</span>
+					<span class="text-end text-nowrap d-md-none">
+						{{ kw(gridImport) }}
+					</span>
 				</div>
-				<div
-					class="text-nowrap d-flex d-md-block"
-					data-test-self-consumption
-					v-if="batteryConfigured || pvConfigured"
-				>
+				<div class="text-nowrap d-flex d-md-block" data-test-self-consumption>
 					<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.selfConsumption")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(selfConsumption) }}</span>
+					<span class="text-end text-nowrap d-md-none">
+						{{ kw(selfConsumption) }}
+					</span>
 				</div>
 				<div class="text-nowrap d-flex d-md-block" data-test-pv-export>
 					<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvExport")
 					}}</span>
-					<span class="text-end text-nowrap d-md-none">{{ kw(pvExport) }}</span>
+					<span class="text-end text-nowrap d-md-none">
+						{{ kw(pvExport) }}
+					</span>
 				</div>
 			</div>
 		</div>
@@ -135,7 +134,6 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
-		siteTitle: { type: String },
 	},
 	data: function () {
 		return { showDetails: false };
