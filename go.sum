@@ -158,6 +158,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/eebus v0.0.0-20210820132515-f642048098a9 h1:bHX6qXdRA11yJOkkQx63klsjK/oklknZ812CxuDH80k=
 github.com/evcc-io/eebus v0.0.0-20210820132515-f642048098a9/go.mod h1:AeXkioPy1hPdVuo5ESEPBcOHyzHJBl/gd5X/P7qlAQs=
+github.com/evcc-io/eebus v0.0.0-20210820150518-44a8a6cef968 h1:n4eshc3bp2wX7vDYtXA+gIcQlaab6YY//Qkkh4p+/Io=
+github.com/evcc-io/eebus v0.0.0-20210820150518-44a8a6cef968/go.mod h1:AeXkioPy1hPdVuo5ESEPBcOHyzHJBl/gd5X/P7qlAQs=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.6.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
