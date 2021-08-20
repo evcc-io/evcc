@@ -11,7 +11,6 @@ BUILD_DATE := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 BUILD_TAGS := -tags=release
 LD_FLAGS := -X github.com/andig/evcc/server.Version=$(VERSION) -X github.com/andig/evcc/server.Commit=$(SHA) -s -w
 BUILD_ARGS := -ldflags='$(LD_FLAGS)'
-GH_API_TOKEN ?= ''
 
 # docker
 DOCKER_IMAGE := andig/evcc
