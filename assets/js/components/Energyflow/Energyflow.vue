@@ -1,8 +1,5 @@
 <template>
 	<div>
-		<h4 class="d-none d-md-block my-4">
-			{{ siteTitle || "Home" }}
-		</h4>
 		<div
 			class="row align-items-start align-items-md-center mt-4 energyflow"
 			@click="toggleDetails"
@@ -137,7 +134,6 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
-		siteTitle: { type: String },
 	},
 	data: function () {
 		return { showDetails: false };
