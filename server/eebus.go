@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/andig/evcc/util"
-	"github.com/evcc-io/eebus"
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/mdns"
@@ -29,7 +28,7 @@ type EEBusClientCBs struct {
 type EEBus struct {
 	mux               sync.Mutex
 	log               *util.Logger
-	srv               *eebus.Server
+	srv               *server.Server
 	id                string
 	clients           map[string]EEBusClientCBs
 	connectedClients  map[string]ship.Conn
@@ -70,7 +69,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		return nil, err
 	}
 
-	srv := &eebus.Server{
+	srv := &server.Server{
 		Log:         log.TRACE,
 		Addr:        cc.Uri,
 		Path:        "/ship/",
