@@ -23,8 +23,9 @@ type config struct {
 	Levels       map[string]string
 	Interval     time.Duration
 	Mqtt         mqttConfig
-	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
+	Javascript   map[string]interface{}
 	HEMS         typedConfig
 	Messaging    messagingConfig
 	Meters       []qualifiedConfig

@@ -135,6 +135,12 @@ influx:
   # user:
   # password:
 
+# eebus credentials
+eebus:
+  # uri: # :4712
+  # public: # public key
+  # private: # private key
+
 # push messages
 messaging:
   events:
