@@ -1,5 +1,8 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
+		<h3 class="d-none d-md-block my-4">
+			{{ siteTitle || "Home" }}
+		</h3>
 		<Energyflow v-bind="energyflow" />
 		<hr class="w-100 my-4" />
 		<div class="flex-grow-1 d-flex justify-content-around flex-column">
