@@ -161,7 +161,10 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	switch dataType {
 	case communication.EVDataElementUpdateUseCaseSelfConsumption:
 		// if availability of self consumption use case changes, resend the current charging limit
-		c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
+		err := c.writeCurrentLimitData([]float64{c.maxCurrent, c.maxCurrent, c.maxCurrent})
+		if err != nil {
+			c.log.ERROR.Println("failed to send current limit data: ", err)
+		}
 	// case communication.EVDataElementUpdateUseCaseSoC:
 	case communication.EVDataElementUpdateEVConnectionState:
 		if data.EVData.ChargeState == communication.EVChargeStateEnumTypeUnplugged {
