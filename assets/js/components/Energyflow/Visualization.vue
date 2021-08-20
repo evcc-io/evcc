@@ -16,7 +16,7 @@
 				</div>
 				<div
 					class="label-bar label-bar--down"
-					v-if="selfConsumptionAdjusted || pvExportAdjusted"
+					v-if="pvProduction"
 					:class="{ 'label-bar--hide-icon': hideLabelIcon(pvProduction) }"
 					:style="{ width: widthTotal(pvProduction) }"
 				>
@@ -70,7 +70,7 @@
 			<div class="d-flex justify-content-start">
 				<div
 					class="label-bar label-bar--up"
-					v-if="gridImportAdjusted || selfConsumptionAdjusted"
+					v-if="houseConsumption"
 					:class="{ 'label-bar--hide-icon': hideLabelIcon(houseConsumption) }"
 					:style="{ width: widthTotal(houseConsumption) }"
 				>
@@ -270,16 +270,16 @@ export default {
 	border-top: none;
 }
 .label-bar--down:first-child .label-bar-scale {
-	border-start-start-radius: 4px;
+	border-top-left-radius: 4px;
 }
 .label-bar--down:last-child .label-bar-scale {
-	border-start-end-radius: 4px;
+	border-top-right-radius: 4px;
 }
 .label-bar--up:first-child .label-bar-scale {
-	border-end-start-radius: 4px;
+	border-bottom-left-radius: 4px;
 }
 .label-bar--up:last-child .label-bar-scale {
-	border-end-end-radius: 4px;
+	border-bottom-right-radius: 4px;
 }
 .label-bar-icon {
 	background-color: white;
