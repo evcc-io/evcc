@@ -159,7 +159,7 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 		switch strings.ToUpper(comset) {
 		case "8N1", "8E1":
 		default:
-			return nil, fmt.Errorf("invalid invalid comset: %s", comset)
+			return nil, fmt.Errorf("invalid comset: %s", comset)
 		}
 
 		if baudrate == 0 {
