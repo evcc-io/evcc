@@ -14,7 +14,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Other commercial: ABL eMH1, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect
+  - Other commercial: ABL eMH1, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
   - Build-your-own: Phoenix (includes ESL Walli), [SimpleEVSE](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
@@ -187,6 +187,7 @@ Available charger implementations are:
 
 - `abl`: ABL eMH1 (requires Modbus adapter; [sponsors only](#sponsorship))
 - `easee`: Easee Home charger ([sponsors only](#sponsorship))
+- `eebus`: EEBUS compatible chargers (experimental)
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
 - `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; [sponsors only](#sponsorship))
@@ -211,6 +212,23 @@ Smart-Home outlet charger implementations:
 - `tplink`: TP-Link HSXXX series outlets
 
 Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
+
+#### EEBUS (experimental) preparation <!-- omit in toc -->
+
+1. Run `evcc eebus-cert`
+2. Add the output to the `evcc.yaml` configuration file
+3. Open the web interface of the charger to get the chargers SKI (Identifcation Number)
+   For Porsche Mobile Charger Connect this is available in the top menu "Connections" sub-menu "Energy Manager"
+4. Add the charger to your configuration:
+   ```
+   chargers:
+   - name: mcc
+     type: eebus
+     ski: 1234-5678-9012-3456-7890-1234-5678-9012-3456
+   ```
+5. Run `evcc`
+6. On the web interface of the charger typically in the page showing the chargers SKI, `EVCC` should be shown including an option to pair the charger with `EVCC`. Do just that.
+7. The EVCC web interface should show the charger and status of a connected car and allow to charge
 
 #### KEBA preparation <!-- omit in toc -->
 

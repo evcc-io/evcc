@@ -25,6 +25,7 @@ type config struct {
 	Mqtt         mqttConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
 	HEMS         typedConfig
 	Messaging    messagingConfig
 	Meters       []qualifiedConfig

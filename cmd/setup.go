@@ -60,6 +60,11 @@ func configureEnvironment(conf config) (err error) {
 		err = configureJavascript(conf.Javascript)
 	}
 
+	// setup EEBus server
+	if err == nil {
+		err = configureEEBus(conf.EEBus)
+	}
+
 	return
 }
 
@@ -146,6 +151,16 @@ func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *
 		log.FATAL.Fatalf("failed configuring hems: %v", err)
 	}
 	return hems
+}
+
+// setup EEBus
+func configureEEBus(conf map[string]interface{}) error {
+	var err error
+	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
+		go server.EEBusInstance.Run()
+	}
+
+	return nil
 }
 
 // setup messaging
