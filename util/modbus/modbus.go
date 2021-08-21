@@ -156,7 +156,13 @@ func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, sl
 	}
 
 	if device != "" {
-		if baudrate == 0 || comset == "" {
+		switch strings.ToUpper(comset) {
+		case "8N1", "8E1":
+		default:
+			return nil, fmt.Errorf("invalid invalid comset: %s", comset)
+		}
+
+		if baudrate == 0 {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
 
