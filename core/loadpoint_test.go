@@ -897,8 +897,8 @@ func TestScalePhases(t *testing.T) {
 			charger:      charger,
 			MinCurrent:   minA,
 			MaxCurrent:   maxA,
-			Phases:       int64(tc.phases),
-			activePhases: int64(tc.activePhases),
+			Phases:       tc.phases,
+			activePhases: tc.activePhases,
 			Enable: ThresholdConfig{
 				Delay: dt,
 			},
@@ -918,7 +918,7 @@ func TestScalePhases(t *testing.T) {
 		if res := lp.pvScalePhases(tc.availablePower, minA, maxA); tc.res != res {
 			t.Errorf("expected %v, got %v", tc.res, res)
 		} else {
-			if lp.Phases != int64(tc.toPhases) {
+			if lp.Phases != tc.toPhases {
 				t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
 			}
 		}

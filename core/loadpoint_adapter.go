@@ -18,7 +18,7 @@ func (a *adapter) SocEstimator() *soc.Estimator {
 	return a.lp.socEstimator
 }
 
-func (a *adapter) ActivePhases() int64 {
+func (a *adapter) ActivePhases() int {
 	return a.lp.activePhases
 }
 

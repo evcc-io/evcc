@@ -86,7 +86,7 @@ type LoadPoint struct {
 	Mode       api.ChargeMode `mapstructure:"mode"` // Charge mode, guarded by mutex
 
 	Title       string   `mapstructure:"title"`    // UI title
-	Phases      int64    `mapstructure:"phases"`   // Charger enabled phases
+	Phases      int      `mapstructure:"phases"`   // Charger enabled phases
 	ChargerRef  string   `mapstructure:"charger"`  // Charger reference
 	VehicleRef  string   `mapstructure:"vehicle"`  // Vehicle reference
 	VehiclesRef []string `mapstructure:"vehicles"` // Vehicles reference
@@ -103,7 +103,7 @@ type LoadPoint struct {
 	GuardDuration time.Duration // charger enable/disable minimum holding time
 
 	enabled                bool      // Charger enabled state
-	activePhases           int64     // Charger active phases as used by vehicle
+	activePhases           int       // Charger active phases as used by vehicle
 	chargeCurrent          float64   // Charger current limit
 	guardUpdated           time.Time // Charger enabled/disabled timestamp
 	socUpdated             time.Time // SoC updated timestamp (poll: connected)
@@ -848,7 +848,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 	}
 
 	lp.Lock()
-	if lp.Phases != int64(phases) {
+	if lp.Phases != phases {
 		lp.Unlock()
 
 		// disable charger - this will also stop the car charging using the api if available
@@ -862,7 +862,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 		}
 
 		lp.Lock()
-		lp.Phases = int64(phases)
+		lp.Phases = phases
 		lp.publish("phases", lp.Phases)
 
 		// disable phase timer
@@ -882,6 +882,10 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	phases := lp.GetPhases()
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
+
+	if phases < lp.activePhases {
+		lp.log.WARN.Printf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
+	}
 
 	lp.log.DEBUG.Printf("!!pvScalePhases available power %.0f for target current %.1f @ %dp/%dp", availablePower, targetCurrent, lp.activePhases, phases)
 	if lp.phaseTimer.IsZero() {
@@ -1070,7 +1074,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 		// guess active phases from power consumption
 		// assumes that chargePower has been updated before
 		if lp.charging() && lp.chargeCurrent > 0 {
-			phases := int64(math.Round(lp.chargePower / Voltage / lp.chargeCurrent))
+			phases := int(math.Round(lp.chargePower / Voltage / lp.chargeCurrent))
 			if phases >= 1 && phases <= 3 {
 				lp.activePhases = phases
 				lp.log.DEBUG.Printf("detected phases: %dp (%.1fA @ %.0fW)", lp.activePhases, lp.chargeCurrent, lp.chargePower)
@@ -1092,7 +1096,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 	lp.publish("chargeCurrents", lp.chargeCurrents)
 
 	if lp.charging() {
-		var phases int64
+		var phases int
 		for _, i := range lp.chargeCurrents {
 			if i >= minActiveCurrent {
 				phases++
