@@ -10,13 +10,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/util"
 	"github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/mdns"
 	"github.com/evcc-io/eebus/server"
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine/model"
+	"github.com/evcc-io/evcc/util"
 	"github.com/grandcat/zeroconf"
 )
 

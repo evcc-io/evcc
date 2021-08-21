@@ -6,10 +6,10 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
 	certhelper "github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

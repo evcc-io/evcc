@@ -3,7 +3,7 @@ package wrapper
 import (
 	"fmt"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 // Wrapper wraps an api.Vehicle to capture initialization errors

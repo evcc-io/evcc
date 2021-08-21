@@ -129,7 +129,7 @@ export default {
 			}
 		},
 		releaseNotesUrl: function (version) {
-			return `https://github.com/andig/evcc/releases/tag/${version}`;
+			return `https://github.com/evcc-io/evcc/releases/tag/${version}`;
 		},
 	},
 	computed: {

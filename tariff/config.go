@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 // NewFromConfig creates new HEMS from config

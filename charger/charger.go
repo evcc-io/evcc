@@ -3,9 +3,9 @@ package charger
 import (
 	"fmt"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Charger is an api.Charger implementation with configurable getters and setters.

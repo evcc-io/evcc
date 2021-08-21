@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/soc"
-	"github.com/andig/evcc/core/wrapper"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/core/wrapper"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/util"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
@@ -1256,7 +1256,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 	switch {
 	case !lp.connected():
 		// always disable charger if not connected
-		// https://github.com/andig/evcc/issues/105
+		// https://github.com/evcc-io/evcc/issues/105
 		err = lp.setLimit(0, false)
 
 	case lp.targetSocReached():

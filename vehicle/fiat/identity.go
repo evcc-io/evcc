@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const Region = "eu-west-1"

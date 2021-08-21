@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/oauth"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/google/uuid"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"

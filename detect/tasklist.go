@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/andig/evcc/detect/tasks"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 )
 
 type TaskList struct {

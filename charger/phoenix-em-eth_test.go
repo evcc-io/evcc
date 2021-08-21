@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 func TestPhoenixEMEthDecorators(t *testing.T) {

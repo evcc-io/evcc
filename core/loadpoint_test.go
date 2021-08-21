@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/soc"
-	"github.com/andig/evcc/mock"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/util"
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/soc"
+	"github.com/evcc-io/evcc/mock"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 )
 

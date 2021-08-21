@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/manifoldco/promptui"
 	"github.com/skratchdot/open-golang/open"
 	"golang.org/x/oauth2"

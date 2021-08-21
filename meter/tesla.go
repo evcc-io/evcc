@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/powerwall"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/powerwall"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // credits to https://github.com/vloschiavo/powerwall2

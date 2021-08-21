@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/andig/evcc/detect"
-	"github.com/andig/evcc/detect/tasks"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/detect"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -97,7 +97,7 @@ func display(res []tasks.Result) {
 	table.Render()
 
 	fmt.Println(`
-Please open https://github.com/andig/evcc/issues/new in your browser and copy the
+Please open https://github.com/evcc-io/evcc/issues/new in your browser and copy the
 results above into a new issue. Please tell us:
 
 	1. Is the scan result correct?

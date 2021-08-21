@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/mock"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/mock"
+	"github.com/evcc-io/evcc/util"
 	"github.com/golang/mock/gomock"
 )
 

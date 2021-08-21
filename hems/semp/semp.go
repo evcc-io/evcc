@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -215,7 +215,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 		Device: Device{
 			DeviceType:      sempGateway,
 			FriendlyName:    "evcc",
-			Manufacturer:    "github.com/andig/evcc",
+			Manufacturer:    "github.com/evcc-io/evcc",
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
@@ -358,7 +358,7 @@ func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 			DeviceName:   lp.Name(),
 			DeviceType:   sempCharger,
 			DeviceSerial: s.serialNumber(id),
-			DeviceVendor: "github.com/andig/evcc",
+			DeviceVendor: "github.com/evcc-io/evcc",
 		},
 		Capabilities: Capabilities{
 			CurrentPowerMethod:   method,

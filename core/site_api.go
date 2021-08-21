@@ -3,7 +3,7 @@ package core
 import (
 	"errors"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 // SiteAPI is the external site API

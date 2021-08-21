@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/hems/ocpp/profile"
-	"github.com/andig/evcc/util"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/hems/ocpp/profile"
+	"github.com/evcc-io/evcc/util"
 
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"

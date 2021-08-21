@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 //go:embed 693a33fa-c117-43f2-ae3b-61a02d24f417

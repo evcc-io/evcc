@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/vehicle/wrapper"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 const interval = 15 * time.Minute

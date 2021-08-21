@@ -3,8 +3,8 @@ package provider
 import (
 	"strings"
 
-	"github.com/andig/evcc/provider/javascript"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/provider/javascript"
+	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
 )
 

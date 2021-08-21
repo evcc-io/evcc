@@ -6,14 +6,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
 	"github.com/evcc-io/eebus/app"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 )
 
 type EEBus struct {

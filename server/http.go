@@ -10,10 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )

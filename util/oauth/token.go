@@ -3,7 +3,7 @@ package oauth
 import (
 	"encoding/json"
 
-	"github.com/andig/evcc/util/oauth/internal"
+	"github.com/evcc-io/evcc/util/oauth/internal"
 	"golang.org/x/oauth2"
 )
 

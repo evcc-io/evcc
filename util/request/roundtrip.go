@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

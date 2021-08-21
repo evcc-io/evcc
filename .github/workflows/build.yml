@@ -170,7 +170,7 @@ jobs:
     - name: Prepare Image
       run: |
         make prepare-image
-        sed -i -e 's#-ld.*$#& -X github.com/andig/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/andig/evcc/buildflags.txt
+        sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
         mkdir /home/runner/.config/gokrazy
         echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
 

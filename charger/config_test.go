@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/util/test"
 )
 
 func TestChargers(t *testing.T) {

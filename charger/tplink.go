@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/tplink"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/tplink"
+	"github.com/evcc-io/evcc/util"
 )
 
 // TPLink charger implementation

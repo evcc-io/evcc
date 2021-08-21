@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/keba"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/keba"
+	"github.com/evcc-io/evcc/util"
 )
 
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf

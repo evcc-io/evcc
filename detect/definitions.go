@@ -1,7 +1,7 @@
 package detect
 
 import (
-	"github.com/andig/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/detect/tasks"
 )
 
 var (

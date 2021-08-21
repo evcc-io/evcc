@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Timeout is the default request timeout used by the Helper

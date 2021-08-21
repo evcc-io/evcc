@@ -5,7 +5,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Sender is a KEBA UDP sender

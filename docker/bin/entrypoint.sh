@@ -10,7 +10,7 @@ if [ -f ${HASSIO_OPTIONSFILE} ]; then
 
     if [ ! -f ${CONFIG} ]; then
         echo "Config not found. Please create a config under ${CONFIG}."
-        echo "For details see evcc documentation at https://github.com/andig/evcc#readme."
+        echo "For details see evcc documentation at https://github.com/evcc-io/evcc#readme."
     else
         echo "starting evcc: 'evcc --config ${CONFIG}'"
         exec evcc --config ${CONFIG}

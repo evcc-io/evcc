@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
 )

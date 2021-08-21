@@ -7,9 +7,9 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider/sma"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider/sma"
+	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
 

@@ -13,10 +13,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle"
-	"github.com/andig/evcc/vehicle/tronity"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/vehicle"
+	"github.com/evcc-io/evcc/vehicle/tronity"
 	"github.com/skratchdot/open-golang/open"
 	"golang.org/x/oauth2"
 )

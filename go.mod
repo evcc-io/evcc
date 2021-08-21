@@ -1,4 +1,4 @@
-module github.com/andig/evcc
+module github.com/evcc-io/evcc
 
 go 1.16
 

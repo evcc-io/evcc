@@ -3,8 +3,8 @@ package core
 import (
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core/wrapper"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/wrapper"
 )
 
 // LoadpointController gives access to loadpoint

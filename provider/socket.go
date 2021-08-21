@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/gorilla/websocket"
 	"github.com/itchyny/gojq"
 )

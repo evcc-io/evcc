@@ -1,7 +1,7 @@
 package javascript
 
 import (
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
 )
 

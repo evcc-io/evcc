@@ -2,7 +2,7 @@
 
 package server
 
-import "github.com/andig/evcc/core"
+import "github.com/evcc-io/evcc/core"
 
 // HealthListener attaches listener to unix domain socket
 func HealthListener(site core.SiteAPI) {

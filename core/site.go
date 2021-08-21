@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/util"
 	"github.com/avast/retry-go/v3"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/andig/evcc/core Updater
+//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/evcc-io/evcc/core Updater
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {

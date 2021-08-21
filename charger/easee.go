@@ -22,12 +22,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/easee"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/easee"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )

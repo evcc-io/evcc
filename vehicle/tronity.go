@@ -25,13 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/oauth"
-	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/util/sponsor"
-	"github.com/andig/evcc/vehicle/tronity"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/vehicle/tronity"
 	"golang.org/x/oauth2"
 )
 

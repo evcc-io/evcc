@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/server"
+	"github.com/evcc-io/evcc/server"
 	"github.com/google/go-github/v32/github"
 	"github.com/hashicorp/go-version"
 )

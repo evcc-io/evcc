@@ -17,7 +17,7 @@
 							Erzeugen einer Konfigurationsdatei mit Namen
 							<code>evcc.yaml</code>. Die Standardkonfiguration
 							<code>evcc.dist.yaml</code> kann dafür als Vorlage dienen (<a
-								href="https://github.com/andig/evcc/blob/master/evcc.dist.yaml"
+								href="https://github.com/evcc-io/evcc/blob/master/evcc.dist.yaml"
 								>Download</a
 							>).
 						</li>
@@ -70,7 +70,7 @@
 					</p>
 					<p>
 						Viel Spass mit <b>evcc</b>! Bei Problemen kannst Du uns auf
-						<a href="https://github.com/andig/evcc/issues">GitHub</a>
+						<a href="https://github.com/evcc-io/evcc/issues">GitHub</a>
 						erreichen.
 					</p>
 				</div>
