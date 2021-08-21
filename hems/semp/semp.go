@@ -403,27 +403,25 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
 	chargePower := lp.GetChargePower()
 
+	status := lp.GetStatus()
 	mode := lp.GetMode()
 	isPV := mode == api.ModeMinPV || mode == api.ModePV
 
-	status := StatusOff
-	if lp.GetStatus() == api.StatusC {
-		status = StatusOn
+	deviceStatus := StatusOff
+	if status == api.StatusC {
+		deviceStatus = StatusOn
 	}
 
-	var vehiclePresent bool
-	if vehiclePresentP, err := s.cache.GetChecked(id, "vehiclePresent"); err == nil {
-		vehiclePresent = vehiclePresentP.Val.(bool)
-	}
+	connected := status == api.StatusB || status == api.StatusC
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV && vehiclePresent,
+		EMSignalsAccepted: s.controllable && isPV && connected,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
 		},
-		Status: status,
+		Status: deviceStatus,
 	}
 
 	return res
