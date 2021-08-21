@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.7.1
-	github.com/andig/evcc-config v0.0.0-20210516083211-8b5c1c7bd5b0
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.40.7
@@ -16,6 +15,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/evcc-io/config v0.0.0-20210821100131-47523461441a
 	github.com/evcc-io/eebus v0.0.0-20210820160836-f112bdfd2960
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0

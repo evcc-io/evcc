@@ -211,7 +211,7 @@ Smart-Home outlet charger implementations:
 - `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
 
-Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
+Configuration examples are documented at [evcc-io/config#chargers](https://github.com/evcc-io/config#chargers)
 
 #### EEBUS (experimental) preparation <!-- omit in toc -->
 
@@ -274,7 +274,7 @@ Available meter implementations are:
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
-Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
+Configuration examples are documented at [evcc-io/config#meters](https://github.com/evcc-io/config#meters)
 
 ### Vehicle
 
@@ -306,7 +306,7 @@ Available vehicle remote interface implementations are:
 - `tronity`: Tronity ([sponsors only](#sponsorship))
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
-Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
+Configuration examples are documented at [evcc-io/config#vehicles](https://github.com/evcc-io/config#vehicles)
 
 ### Home Energy Management System
 
