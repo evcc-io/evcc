@@ -1184,9 +1184,8 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
-				lp.log.DEBUG.Printf("vehicle: waiting for update")
 			} else {
-				lp.log.ERROR.Printf("vehicle: %v", err)
+				lp.log.ERROR.Printf("vehicle soc: %v", err)
 			}
 		}
 
