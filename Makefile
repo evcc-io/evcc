@@ -78,6 +78,11 @@ publish-latest:
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
 
+publish-latest-ci:
+	@echo Version: $(VERSION) $(BUILD_DATE)
+	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
+	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
+
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \

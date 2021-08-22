@@ -97,7 +97,7 @@ jobs:
 
     - name: Install
       env:
-        SEIHON_VERSION: v0.8.3
+        SEIHON_VERSION: v0.8.4
       run: curl -sfL https://raw.githubusercontent.com/ldez/seihon/master/godownloader.sh | sudo bash -s -- -b $GOPATH/bin ${SEIHON_VERSION}
 
     - name: Login
@@ -107,7 +107,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASS }}
 
     - name: Publish
-      run: make publish-latest
+      run: make publish-latest-ci
 
 
   dockerrelease:
