@@ -61,7 +61,7 @@ func configureEnvironment(conf config) (err error) {
 	}
 
 	// setup EEBus server
-	if err == nil {
+	if err == nil && conf.EEBus != nil {
 		err = configureEEBus(conf.EEBus)
 	}
 
