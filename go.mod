@@ -20,7 +20,7 @@ require (
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
-	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.0.2-0.20210820200834-309d612d7095
 	github.com/godbus/dbus/v5 v5.0.4
 	github.com/gokrazy/updater v0.0.0-20210130175436-d85b92498a28
 	github.com/golang/mock v1.6.0

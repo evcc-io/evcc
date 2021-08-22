@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 // Telegram implements the Telegram messenger
@@ -51,12 +51,7 @@ func (m *Telegram) trackChats() {
 	conf := tgbotapi.NewUpdate(0)
 	conf.Timeout = 1000
 
-	updates, err := m.bot.GetUpdatesChan(conf)
-	if err != nil {
-		log.ERROR.Printf("telegram: %v", err)
-	}
-
-	for update := range updates {
+	for update := range m.bot.GetUpdatesChan(conf) {
 		m.Lock()
 		if _, ok := m.chats[update.Message.Chat.ID]; !ok {
 			log.INFO.Printf("telegram: new chat id: %d", update.Message.Chat.ID)
