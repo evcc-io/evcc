@@ -111,14 +111,14 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				return 0, err
 			}
 
-			s.log.WARN.Printf("updating soc failed: %v", err)
-
-			// try to recover from temporary vehicle-api errors
-			if s.prevSoC == 0 { // never received a soc value
-				return s.socCharge, err
+			// never received a soc value
+			if s.prevSoC == 0 {
+				return 0, err
 			}
 
-			f = s.prevSoC // recover last received soc
+			// recover from temporary api errors
+			f = s.prevSoC
+			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
 		}
 
 		fetchedSoC = &f
