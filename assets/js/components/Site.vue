@@ -48,7 +48,7 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
-		activeLoadointsCount: function () {
+		activeLoadpointsCount: function () {
 			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
 		},
 		loadpointsPower: function () {

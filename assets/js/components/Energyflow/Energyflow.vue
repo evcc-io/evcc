@@ -50,8 +50,8 @@
 				<div class="d-flex justify-content-between" data-test-loadpoints>
 					<span class="details-icon text-muted"><fa-icon icon="car"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
-						$tc("main.energyflow.loadpoints", activeLoadointsCount, {
-							count: activeLoadointsCount,
+						$tc("main.energyflow.loadpoints", activeLoadpointsCount, {
+							count: activeLoadpointsCount,
 						})
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(loadpointsPower) }}</span>
@@ -142,7 +142,7 @@ export default {
 		pvConfigured: Boolean,
 		pvPower: { type: Number, default: 0 },
 		loadpointsPower: { type: Number, default: 0 },
-		activeLoadointsCount: { type: Number, default: 0 },
+		activeLoadpointsCount: { type: Number, default: 0 },
 		batteryConfigured: Boolean,
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },

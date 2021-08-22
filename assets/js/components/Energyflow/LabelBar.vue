@@ -51,6 +51,8 @@ export default {
 	justify-content: center;
 	align-items: center;
 	white-space: nowrap;
+	border-radius: 0;
+	transition: border-radius 500ms linear;
 }
 .label-bar--top .label-bar-scale {
 	border-bottom: none;

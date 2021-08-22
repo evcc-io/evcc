@@ -4,6 +4,7 @@ import Energyflow from "./Energyflow.vue";
 
 const mocks = {
   $t: (x) => x,
+  $tc: (x, n) => `${n} ${x}`,
   $n: function (value, options) {
     const n = new Intl.NumberFormat("en-EN", options);
     return n.format(value);
@@ -24,7 +25,7 @@ describe("Energyflow.vue", () => {
   it("using pv and grid power", async () => {
     const wrapper = shallowMount(Energyflow, {
       mocks,
-      propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000 },
+      propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000, loadpointsPower: 3700 },
     });
     await wrapper.find(".energyflow").trigger("click");
 
@@ -32,7 +33,8 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("4.0 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("5.0 kW");
+    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("1.3 kW");
+    expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("3.7 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("4.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
   });
@@ -40,7 +42,7 @@ describe("Energyflow.vue", () => {
   it("exporting all pv power, no usage", async () => {
     const wrapper = shallowMount(Energyflow, {
       mocks,
-      propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000 },
+      propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000, loadpointsPower: 1000 },
     });
 
     await wrapper.find(".energyflow").trigger("click");
@@ -50,6 +52,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("4.0 kW");
 
     expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("1.0 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("4.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
   });
@@ -67,7 +70,26 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("4.0 kW");
 
     expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("3.0 kW");
+    expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
+  });
+
+  it("more loadpoints power than grid import, loadpoints unchanged, house consumption min 0 (invalid state)", async () => {
+    const wrapper = shallowMount(Energyflow, {
+      mocks,
+      propsData: { ...defaultProps, gridPower: 6000, pvPower: 0, loadpointsPower: 7000 },
+    });
+
+    await wrapper.find(".energyflow").trigger("click");
+
+    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("6.0 kW");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
+
+    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("7.0 kW");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
   });
 
