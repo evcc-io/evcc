@@ -276,8 +276,8 @@ func (evse *EVSEWifi) clearRfid() error {
 // Identify implements the api.Identifier interface
 func (evse *EVSEWifi) identify() (string, error) {
 	params, err := evse.getParameters()
-	if err != nil || *params.RFIDUID == "" {
-		return *params.RFIDUID, err
+	if err != nil {
+		return "", err
 	}
 	return *params.RFIDUID, evse.clearRfid()
 }
