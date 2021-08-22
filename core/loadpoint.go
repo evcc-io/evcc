@@ -401,7 +401,7 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(action ActionConfig) {
-	if action.Mode != "" && lp.GetMode() != api.ModeOff {
+	if action.Mode != "" && (lp.GetMode() != api.ModeOff || lp.vehicle != nil) {
 		lp.SetMode(action.Mode)
 	}
 	if action.MinCurrent != 0 {
