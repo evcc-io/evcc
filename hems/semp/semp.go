@@ -26,7 +26,8 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-28081973-%.12x-00" // 6 bytes
+	sempVendorId     = "28081973"
+	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -44,6 +45,7 @@ type SEMP struct {
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
+	vid          string
 	did          []byte
 	uid          string
 	hostURI      string
@@ -54,6 +56,7 @@ type SEMP struct {
 // New generates SEMP Gateway listening at /semp endpoint
 func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	cc := struct {
+		VendorID     string
 		DeviceID     string
 		AllowControl bool
 	}{}
@@ -74,6 +77,13 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 		site:         site,
 		uid:          uid.String(),
 		controllable: cc.AllowControl,
+	}
+
+	if len(cc.VendorID) > 0 {
+		s.vid = cc.VendorID
+		if len(s.vid) != 8 {
+			return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+		}
 	}
 
 	if len(cc.DeviceID) > 0 {
@@ -322,6 +332,11 @@ func (s *SEMP) serialNumber(id int) string {
 
 // deviceID creates a 6-bytes device id from machine id plus device number
 func (s *SEMP) deviceID(id int) string {
+	vid := sempVendorId
+	if len(s.vid) == 8 {
+		vid = s.vid
+	}
+
 	bytes := 6
 	if s.did == nil {
 		mid, err := machineid.ProtectedID("evcc-semp")
@@ -343,7 +358,7 @@ func (s *SEMP) deviceID(id int) string {
 
 	// numerically add device number
 	did := append([]byte{0, 0}, s.did...)
-	return fmt.Sprintf(sempDeviceId, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
+	return fmt.Sprintf(sempDeviceId, vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
 }
 
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
