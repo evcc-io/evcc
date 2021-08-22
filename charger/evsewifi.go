@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	evseClearRFID     = "clearRfid"
 	evseGetParameters = "getParameters"
 	evseSetStatus     = "setStatus"
 	evseSetCurrent    = "setCurrent"
@@ -167,8 +168,23 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 		evse.log.WARN.Println("evse should be configured to remote mode")
 	}
 
+	// onDisconnect workarround to clear the RFID token if submitted
+	if params.VehicleState == 1 && params.RFIDUID != nil {
+		if *params.RFIDUID != "" {
+			if err := evse.clearRfid(); err != nil {
+				evse.log.WARN.Println("evse can't clear RFIDUID : ", err)
+			}
+		}
+	}
+
 	evse.alwaysActive = params.AlwaysActive
 	return params, nil
+}
+
+// clear evse RFID
+func (evse *EVSEWifi) clearRfid() error {
+	url := evse.apiURL(evseClearRFID)
+	return evse.get(url)
 }
 
 // Status implements the api.Charger interface
