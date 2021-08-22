@@ -2,30 +2,12 @@
 	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
-				<div
-					class="label-bar label-bar--down"
-					v-if="batteryDischarge"
-					:class="{ 'label-bar--hide-icon': hideLabelIcon(batteryDischarge, 44) }"
-					:style="{ width: widthTotal(batteryDischarge) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<BatteryIcon :soc="batterySoC" discharge />
-						</div>
-					</div>
-				</div>
-				<div
-					class="label-bar label-bar--down"
-					v-if="pvProduction"
-					:class="{ 'label-bar--hide-icon': hideLabelIcon(pvProduction) }"
-					:style="{ width: widthTotal(pvProduction) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon icon="sun"></fa-icon>
-						</div>
-					</div>
-				</div>
+				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
+					<BatteryIcon :soc="batterySoC" discharge />
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
+					<fa-icon icon="sun"></fa-icon>
+				</LabelBar>
 			</div>
 		</div>
 		<div class="site-progress" ref="site_progress">
@@ -68,30 +50,15 @@
 		</div>
 		<div class="label-scale">
 			<div class="d-flex justify-content-start">
-				<div
-					class="label-bar label-bar--up"
-					v-if="houseConsumption"
-					:class="{ 'label-bar--hide-icon': hideLabelIcon(houseConsumption) }"
-					:style="{ width: widthTotal(houseConsumption) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon icon="home"></fa-icon>
-						</div>
-					</div>
-				</div>
-				<div
-					class="label-bar label-bar--up"
-					v-if="batteryCharge"
-					:class="{ 'label-bar--hide-icon': hideLabelIcon(batteryCharge, 44) }"
-					:style="{ width: widthTotal(batteryCharge) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<BatteryIcon :soc="batterySoC" charge />
-						</div>
-					</div>
-				</div>
+				<LabelBar v-bind="labelBarProps('bottom', 'houseConsumption')">
+					<fa-icon icon="home"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
+					<fa-icon icon="car"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
+					<BatteryIcon :soc="batterySoC" charge />
+				</LabelBar>
 			</div>
 		</div>
 	</div>
@@ -101,15 +68,17 @@
 import "../../icons";
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
+import LabelBar from "./LabelBar.vue";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon },
+	components: { BatteryIcon, LabelBar },
 	props: {
 		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
+		loadpoints: { type: Number, default: 0 },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
@@ -192,6 +161,41 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
+		isLabelFirst(position, name) {
+			return this.isLabel(position, name, false);
+		},
+		isLabelLast(position, name) {
+			return this.isLabel(position, name, true);
+		},
+		isLabel(position, name, last) {
+			const labels = {
+				top: ["batteryDischarge", "pvProduction"],
+				bottom: ["houseConsumption", "loadpoints", "batteryCharge"],
+			};
+			const entries = [...labels[position]];
+			if (last) {
+				entries.reverse();
+			}
+			for (let i = 0; i < entries.length; i++) {
+				const entry = entries[i];
+				if (this[entry] > 0) {
+					return entry === name;
+				}
+			}
+			return false;
+		},
+		labelBarProps(position, name) {
+			const value = this[name];
+			const minWidth = name.startsWith("battery") ? 44 : 32;
+			return {
+				value,
+				hideIcon: this.hideLabelIcon(value, minWidth),
+				style: { width: this.widthTotal(value) },
+				first: this.isLabelFirst(position, name),
+				last: this.isLabelLast(position, name),
+				[position]: true,
+			};
+		},
 	},
 };
 </script>
@@ -235,71 +239,12 @@ export default {
 	white-space: nowrap;
 	overflow: hidden;
 }
-.label-bar {
-	width: 0;
-	margin: 0;
-	height: 1.7rem;
-	padding: 0.6rem 0;
-	opacity: 1;
-	overflow: hidden;
-}
-.visualization--ready .label-bar {
+.visualization--ready >>> .label-bar {
 	transition-property: width, opacity;
 	transition-duration: 500ms, 250ms;
 	transition-timing-function: linear, ease;
 }
-.label-bar--down:first-child {
-	margin-right: -1px;
-}
-.label-bar--up:last-child {
-	margin-left: -1px;
-}
-.label-bar-scale {
-	border: 1px solid var(--bs-gray);
-	height: 0.5rem;
-	background: none;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	white-space: nowrap;
-}
-.label-bar--down .label-bar-scale {
-	border-bottom: none;
-}
-.label-bar--up .label-bar-scale {
-	border-top: none;
-}
-.label-bar--down:first-child .label-bar-scale {
-	border-top-left-radius: 4px;
-}
-.label-bar--down:last-child .label-bar-scale {
-	border-top-right-radius: 4px;
-}
-.label-bar--up:first-child .label-bar-scale {
-	border-bottom-left-radius: 4px;
-}
-.label-bar--up:last-child .label-bar-scale {
-	border-bottom-right-radius: 4px;
-}
-.label-bar-icon {
-	background-color: white;
-	color: var(--bs-gray);
-	padding: 0 0.3rem;
-	opacity: 1;
-}
-.visualization--ready .label-bar-icon {
+.visualization--ready >>> .label-bar-icon {
 	transition: opacity 250ms ease-in;
-}
-.label-bar--down .label-bar-icon {
-	margin-top: -6px;
-}
-.label-bar--up .label-bar-icon {
-	margin-top: 6px;
-}
-.label-bar--hide-icon .label-bar-icon {
-	opacity: 0;
-}
-.label-bar--hidden {
-	opacity: 0;
 }
 </style>

@@ -7,6 +7,7 @@ export default {
   argTypes: {
     gridPower: { control: { type: "range", min: -5000, max: 20000, step: 100 } },
     pvPower: { control: { type: "range", min: 0, max: 10000, step: 100 } },
+    loadpointsPower: { control: { type: "range", min: 0, max: 20000, step: 100 } },
     batteryPower: { control: { type: "range", min: -4000, max: 4000, step: 100 } },
     batterySoC: { control: { type: "range", min: 0, max: 100, step: 1 } },
   },
@@ -25,6 +26,7 @@ GridAndPV.args = {
   pvConfigured: true,
   gridPower: -2300,
   pvPower: 7320,
+  loadpointsPower: 4200,
   batteryConfigured: false,
   siteTitle: "Home",
 };

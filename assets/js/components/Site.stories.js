@@ -59,11 +59,11 @@ export const Multi = Template.bind({});
 Multi.args = {
   gridConfigured: true,
   pvConfigured: true,
-  gridPower: -1000,
-  pvPower: 5500,
+  gridPower: 4000,
+  pvPower: 11500,
   batteryConfigured: false,
-  batteryPower: 70,
-  batterySoC: 60,
+  batteryPower: 0,
+  batterySoC: 0,
   loadpoints: [
     {
       title: "Ladepunkt 1",
@@ -84,6 +84,22 @@ Multi.args = {
     {
       title: "Ladepunkt 2",
       mode: "pv",
+    },
+    {
+      title: "Ladepunkt 3",
+      mode: "now",
+      socTitle: "Mein anderes Auto",
+      enabled: true,
+      connected: true,
+      hasVehicle: true,
+      charging: true,
+      socCharge: 22,
+      targetSoC: 100,
+      range: 34,
+      chargeEstimate: 22,
+      chargePower: 1423,
+      chargeDuration: 243,
+      chargedEnergy: 235,
     },
   ],
 };
