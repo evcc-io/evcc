@@ -269,7 +269,12 @@ func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 // Identify implements the api.Identifier interface
 func (evse *EVSEWifi) identify() (string, error) {
 	params, err := evse.getParameters()
-	return *params.RFIDUID, err
+	if err != nil {
+		return "", err
+	}
+
+	// we can rely on RFIDUID != nil here since identify() is only exposed if the EVSE API supports that property
+	return *params.RFIDUID, nil
 }
 
 // // ChargedEnergy implements the ChargeRater interface
