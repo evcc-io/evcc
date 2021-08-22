@@ -13,6 +13,7 @@ import (
 
 const (
 	evseGetParameters = "getParameters"
+	evseClearRFID     = "clearRfid"
 	evseSetStatus     = "setStatus"
 	evseSetCurrent    = "setCurrent"
 
@@ -266,10 +267,19 @@ func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
 }
 
+// clear evse RFID
+func (evse *EVSEWifi) clearRfid() error {
+	url := evse.apiURL(evseClearRFID)
+	return evse.get(url)
+}
+
 // Identify implements the api.Identifier interface
 func (evse *EVSEWifi) identify() (string, error) {
 	params, err := evse.getParameters()
-	return *params.RFIDUID, err
+	if err != nil || *params.RFIDUID == "" {
+		return *params.RFIDUID, err
+	}
+	return *params.RFIDUID, evse.clearRfid()
 }
 
 // // ChargedEnergy implements the ChargeRater interface
