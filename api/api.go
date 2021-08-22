@@ -9,6 +9,7 @@ type ChargeMode string
 
 // Charge modes
 const (
+	ModeEmpty ChargeMode = ""
 	ModeOff   ChargeMode = "off"
 	ModeNow   ChargeMode = "now"
 	ModeMinPV ChargeMode = "minpv"

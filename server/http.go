@@ -167,11 +167,12 @@ func ChargeModeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		modeS, ok := vars["mode"]
-		mode := api.ChargeModeString(modeS)
-		if mode == "" || string(mode) != modeS || !ok {
+		modeS := vars["mode"]
+
+		mode, err := api.ChargeModeString(modeS)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, errorJSON{Error: "invalid mode"})
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
@@ -195,14 +196,14 @@ func TargetSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		socS, ok := vars["soc"]
+		socS := vars["soc"]
 		soc, err := strconv.ParseInt(socS, 10, 32)
 
-		if ok && err == nil {
+		if err == nil {
 			err = loadpoint.SetTargetSoC(int(soc))
 		}
 
-		if !ok || err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
@@ -226,14 +227,14 @@ func MinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		socS, ok := vars["soc"]
+		socS := vars["soc"]
 		soc, err := strconv.ParseInt(socS, 10, 32)
 
-		if ok && err == nil {
+		if err == nil {
 			err = loadpoint.SetMinSoC(int(soc))
 		}
 
-		if !ok || err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
@@ -257,14 +258,14 @@ func PhasesHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		phasesS, ok := vars["phases"]
+		phasesS := vars["phases"]
 		phases, err := strconv.ParseInt(phasesS, 10, 32)
 
-		if ok && err == nil {
+		if err == nil {
 			err = loadpoint.SetPhases(int(phases))
 		}
 
-		if !ok || err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
@@ -418,7 +419,7 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			"getphases":       {[]string{"GET"}, "/phases", CurrentPhasesHandler(lp)},
 			"setphases":       {[]string{"POST", "OPTIONS"}, "/phases/{phases:[0-9]+}", PhasesHandler(lp)},
 			"settargetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
-			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
+			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", RemoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {
