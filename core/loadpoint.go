@@ -142,10 +142,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		return nil, err
 	}
 
-	// set sane defaults
-	lp.Mode = api.ChargeModeString(string(lp.Mode))
-	lp.OnDisconnect.Mode = api.ChargeModeString(string(lp.OnDisconnect.Mode))
-
 	// set vehicle polling mode
 	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
 	case pollCharging:
@@ -401,7 +397,7 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(action ActionConfig) {
-	if action.Mode != "" && lp.GetMode() != api.ModeOff {
+	if action.Mode != "" && lp.GetMode() != api.ModeEmpty {
 		lp.SetMode(action.Mode)
 	}
 	if action.TargetSoC != 0 {
