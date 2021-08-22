@@ -107,7 +107,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASS }}
 
     - name: Publish
-      run: make publish-latest
+      run: make publish-latest-ci
 
 
   dockerrelease:
