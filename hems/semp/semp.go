@@ -26,7 +26,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempDeviceId     = "F-28081973-%.12x-00" // 6 bytes
+	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -44,6 +44,7 @@ type SEMP struct {
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
+	vid          string
 	did          []byte
 	uid          string
 	hostURI      string
@@ -54,9 +55,12 @@ type SEMP struct {
 // New generates SEMP Gateway listening at /semp endpoint
 func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	cc := struct {
+		VendorID     string
 		DeviceID     string
 		AllowControl bool
-	}{}
+	}{
+		VendorID: "28081973",
+	}
 
 	if err := util.DecodeOther(conf, &cc); err != nil {
 		return nil, err
@@ -67,20 +71,31 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 		return nil, err
 	}
 
+	if len(cc.VendorID) != 8 {
+		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+	}
+
+	var did []byte
+	if cc.DeviceID == "" {
+		did, err = uniqueDeviceID()
+	} else {
+		did, err = hex.DecodeString(cc.DeviceID)
+
+	}
+
+	if err != nil || len(did) != 6 {
+		return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+	}
+
 	s := &SEMP{
 		doneC:        make(chan struct{}),
 		log:          util.NewLogger("semp"),
 		cache:        cache,
 		site:         site,
 		uid:          uid.String(),
+		vid:          cc.VendorID,
+		did:          did,
 		controllable: cc.AllowControl,
-	}
-
-	if len(cc.DeviceID) > 0 {
-		s.did, err = hex.DecodeString(cc.DeviceID)
-		if err != nil || len(s.did) != 6 {
-			return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
-		}
 	}
 
 	// find external port
@@ -320,30 +335,32 @@ func (s *SEMP) serialNumber(id int) string {
 	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
-// deviceID creates a 6-bytes device id from machine id plus device number
-func (s *SEMP) deviceID(id int) string {
+// uniqueDeviceID creates a 6-bytes base device id from machine id
+func uniqueDeviceID() ([]byte, error) {
 	bytes := 6
-	if s.did == nil {
-		mid, err := machineid.ProtectedID("evcc-semp")
-		if err != nil {
-			panic(err)
-		}
 
-		b, err := hex.DecodeString(mid)
-		if err != nil {
-			panic(err)
-		}
-
-		for i, v := range b {
-			b[i%bytes] += v
-		}
-
-		s.did = b[:bytes]
+	mid, err := machineid.ProtectedID("evcc-semp")
+	if err != nil {
+		return nil, err
 	}
 
+	b, err := hex.DecodeString(mid)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, v := range b {
+		b[i%bytes] += v
+	}
+
+	return b[:bytes], nil
+}
+
+// deviceID combines base device id with device number
+func (s *SEMP) deviceID(id int) string {
 	// numerically add device number
 	did := append([]byte{0, 0}, s.did...)
-	return fmt.Sprintf(sempDeviceId, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
+	return fmt.Sprintf(sempDeviceId, s.vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
 }
 
 func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
