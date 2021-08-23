@@ -29,23 +29,22 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	log     *util.Logger
-	conn    *modbus.Connection
-	current uint16
+	log  *util.Logger
+	conn *modbus.Connection
 }
 
 const (
-	ablRegFirmware      = 0x01
-	ablRegVehicleStatus = 0x04
-	ablRegAmpsConfig    = 0x14
-	ablRegStatus        = 0x2E
+	ablRegFirmware   = 0x01
+	ablRegStatus     = 0x04
+	ablRegMode       = 0x05
+	ablRegAmpsConfig = 0x14
+	ablRegStatusLong = 0x2E
+
+	ablStatusDisabled = 0xE0
 
 	ablAmpsDisabled uint16 = 0x03E8
-
-	// ablRegMode          = 0x05
-	// ablReset   uint16 = 0x5A5A
-	// ablEnable  uint16 = 0xA1A1
-	// ablDisable uint16 = 0xE0E0
+	ablModeEnable   uint16 = 0xA1A1
+	ablModeDisable  uint16 = 0xE0E0
 )
 
 func init() {
@@ -82,9 +81,8 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		log:     log,
-		conn:    conn,
-		current: 0x64, // 6A
+		log:  log,
+		conn: conn,
 	}
 
 	return wb, nil
@@ -92,7 +90,8 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 
 // Status implements the api.Charger interface
 func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadHoldingRegisters(ablRegVehicleStatus, 1)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -109,24 +108,29 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
 	if err != nil {
 		return false, err
 	}
 
-	enabled := binary.BigEndian.Uint16(b) != ablAmpsDisabled
+	enabled := b[1] != ablStatusDisabled
 
 	return enabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	u := ablAmpsDisabled
+	u := ablModeDisable
 	if enable {
-		u = wb.current
+		u = ablModeEnable
 	}
 
-	_, err := wb.conn.WriteSingleRegister(ablRegAmpsConfig, u)
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, u)
+
+	_, _ = wb.conn.WriteMultipleRegisters(ablRegMode, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(ablRegMode, 1, b)
 
 	return err
 }
@@ -146,10 +150,8 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, u)
 
-	_, err := wb.conn.WriteSingleRegister(ablRegAmpsConfig, u)
-	if err == nil {
-		wb.current = u
-	}
+	_, _ = wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -166,7 +168,8 @@ var _ api.MeterCurrent = (*ABLeMH)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *ABLeMH) Currents() (float64, float64, float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 5)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
 	if err != nil {
 		return 0, 0, 0, err
 	}
@@ -188,7 +191,9 @@ var _ api.Diagnosis = (*ABLeMH)(nil)
 
 // Diagnose implements the api.Diagnosis interface
 func (wb *ABLeMH) Diagnose() {
-	if b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2); err == nil {
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+	if err == nil {
 		fmt.Printf("Firmware: %0 x\n", b)
 	}
 }
