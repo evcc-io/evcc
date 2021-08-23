@@ -63,6 +63,19 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+
+	if res, ok := res.(Status); err == nil && ok {
+		return res.Odometer.Mileage, nil
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface

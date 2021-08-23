@@ -95,7 +95,10 @@ type Status struct {
 			Status    string // Disabled
 		}
 	}
-	Energy []Energy
+	Energy   []Energy
+	Odometer struct {
+		Mileage float64
+	} `json:"timed.odometer"`
 }
 
 // Energy is the /status partial energy response
