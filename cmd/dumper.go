@@ -129,10 +129,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.VehicleOdometer); ok {
-		if rng, err := v.Odometer(); err != nil {
+		if odo, err := v.Odometer(); err != nil {
 			fmt.Fprintf(w, "Odometer:\t%.0f\n", err)
 		} else {
-			fmt.Fprintf(w, "Odometer:\t%vkm\n", rng)
+			fmt.Fprintf(w, "Odometer:\t%vkm\n", odo)
 		}
 	}
 
