@@ -86,18 +86,6 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		conn: conn,
 	}
 
-	// fmt.Println("enable: true")
-	// _ = wb.Enable(true)
-	// res, err := wb.Enabled()
-	// fmt.Println("enabled:", res, err)
-
-	// fmt.Println("enable: false")
-	// _ = wb.Enable(false)
-	// res, err = wb.Enabled()
-	// fmt.Println("enabled:", res, err)
-
-	// os.Exit(0)
-
 	return wb, nil
 }
 
