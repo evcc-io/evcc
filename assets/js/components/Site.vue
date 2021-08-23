@@ -48,6 +48,15 @@ export default {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
 		},
+		activeLoadpointsCount: function () {
+			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
+		},
+		loadpointsPower: function () {
+			return this.loadpoints.reduce((sum, lp) => {
+				sum += lp.chargePower || 0;
+				return sum;
+			}, 0);
+		},
 	},
 };
 </script>
