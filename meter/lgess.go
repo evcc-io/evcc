@@ -4,9 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/meter/lgpcs"
+	"github.com/evcc-io/evcc/util"
 )
 
 /**
@@ -44,8 +45,8 @@ import (
  * Instance of one meter - multiple meter instances with different usages are allowed
  */
 type LgEss struct {
-	usage string 			// grid, pv, battery
-	lgcom *lgpcs.LgPcsCom 	// singleton controlling the access to the LgEss data via the auth_key.
+	usage string          // grid, pv, battery
+	lgcom *lgpcs.LgPcsCom // singleton controlling the access to the LgEss data via the auth_key.
 }
 
 func init() {
@@ -81,8 +82,8 @@ func NewLgEss(uri, usage, password string) (api.Meter, error) {
 	}
 
 	m := &LgEss{
-		usage:   strings.ToLower(usage),
-		lgcom:   lgpcs,
+		usage: strings.ToLower(usage),
+		lgcom: lgpcs,
 	}
 
 	// decorate api.MeterEnergy
