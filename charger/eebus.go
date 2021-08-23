@@ -505,7 +505,7 @@ func (c *EEBus) SoC() (float64, error) {
 	data, err := c.cc.GetData()
 	if err != nil {
 		c.log.TRACE.Printf("soc: no eebus data available yet")
-		return 0, api.ErrNotAvailable
+		return 0, api.ErrMustRetry
 	}
 
 	if !data.EVData.UCSoCAvailable || !data.EVData.SoCDataAvailable {
