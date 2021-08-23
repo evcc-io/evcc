@@ -5,26 +5,10 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
-type meterRegistry map[string]func(map[string]interface{}) (api.Meter, error)
-
-func (r meterRegistry) Add(name string, factory func(map[string]interface{}) (api.Meter, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate meter type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r meterRegistry) Get(name string) (func(map[string]interface{}) (api.Meter, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("meter type not registered: %s", name)
-	}
-	return factory, nil
-}
-
-var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.Meter, error))
+var registry = make(util.Registry[api.Meter])
 
 // NewFromConfig creates meter from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {

@@ -6,29 +6,13 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 const interval = 15 * time.Minute
 
-type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
-
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("vehicle type not registered: %s", name)
-	}
-	return factory, nil
-}
-
-var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
+var registry = make(util.Registry[api.Vehicle])
 
 // Types returns the list of vehicle types
 func Types() []string {

@@ -5,26 +5,10 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
-type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
-
-func (r chargerRegistry) Add(name string, factory func(map[string]interface{}) (api.Charger, error)) {
-	if _, exists := r[name]; exists {
-		panic(fmt.Sprintf("cannot register duplicate charger type: %s", name))
-	}
-	r[name] = factory
-}
-
-func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Charger, error), error) {
-	factory, exists := r[name]
-	if !exists {
-		return nil, fmt.Errorf("charger type not registered: %s", name)
-	}
-	return factory, nil
-}
-
-var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
+var registry = make(util.Registry[api.Charger])
 
 // NewFromConfig creates charger from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
