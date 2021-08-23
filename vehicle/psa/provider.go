@@ -30,6 +30,10 @@ func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return float64(e.Level), nil
 		}
 
@@ -46,6 +50,10 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return int64(e.Autonomy), nil
 		}
 
@@ -61,8 +69,11 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		if len(res.Energy) == 1 {
-			e := res.Energy[0]
+		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return e.UpdatedAt.Add(e.Charging.RemainingTime.Duration), nil
 		}
 
@@ -78,10 +89,13 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		if len(res.Energy) == 1 {
+		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			status := api.StatusA
 
-			e := res.Energy[0]
 			if e.Charging.Plugged {
 				status = api.StatusB
 

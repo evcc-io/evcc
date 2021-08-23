@@ -101,7 +101,7 @@ type Status struct {
 // Energy is the /status partial energy response
 type Energy struct {
 	UpdatedAt time.Time
-	Type      string // Electric
+	Type      string // Fuel/Electric
 	Level     int
 	Autonomy  int
 	Charging  struct {
