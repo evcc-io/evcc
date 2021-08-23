@@ -149,11 +149,11 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 	}{
 		// start with SoC from charger and errors
 		{0, 0.0, 0.0, 10000, false, errors.New("some error"), nil},
-		{10, 20.0, 20.0, 10000, false, api.ErrMustRetry, nil},
+		{10, 0.0, 20.0, 10000, false, api.ErrMustRetry, nil},
 		{10, 20.0, 20.0, 10000, false, nil, nil},
 		{0, 20.0, 20.0, 10000, false, nil, nil},
 		{123, 20.0, 21.23, 10000, false, nil, nil},
-		{123, 20.0, 21.23, 10000, false, errors.New("another error"), nil},
+		{123, 0.0, 21.23, 10000, false, errors.New("another error"), nil},
 		{1000, 20.0, 30.0, 10000, false, nil, nil},
 		{1100, 31.0, 31.0, 10000, false, nil, nil},
 		{1200, 32.0, 32.0, 10000, false, nil, nil},
@@ -164,11 +164,11 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 		{6500, 65.0, 65.0, 10000, false, nil, nil},
 		{7000, 65.0, 70.0, 10000, false, nil, nil},
 		// move to SoC from vehicle
-		{7000, 65.0, 70.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
-		{7100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
+		{7000, 0.0, 70.0, 10000, true, api.ErrNotAvailable, errors.New("some error")},
+		{7100, 0.0, 71.0, 10000, true, api.ErrNotAvailable, api.ErrMustRetry},
 		{7100, 71.0, 71.0, 10000, true, api.ErrNotAvailable, nil},
 		{7300, 72.0, 72.0, 10000, true, api.ErrNotAvailable, nil},
-		{7400, 73.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
+		{7400, 0.0, 73.0, 10000, true, api.ErrNotAvailable, errors.New("another error")},
 		{7400, 73.0, 73.0, 10000, true, api.ErrNotAvailable, nil},
 		{7700, 75.0, 75.0, 10000, true, api.ErrNotAvailable, nil},
 		{8200, 80.0, 80.0, 10000, true, api.ErrNotAvailable, nil},
