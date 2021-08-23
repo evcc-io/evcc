@@ -32,7 +32,7 @@ func (lp *LoadPoint) odometer() error {
 	odo, err := v.Odometer()
 	switch err {
 	case nil:
-		lp.publish("socOdometer", odo)
+		lp.publish("vehicleOdometer", odo)
 	case api.ErrMustRetry:
 	default:
 		lp.log.ERROR.Printf("vehicle odometer: %v", err)

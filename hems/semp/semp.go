@@ -410,14 +410,14 @@ func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
 		status = StatusOn
 	}
 
-	var hasVehicle bool
-	if hasVehicleP, err := s.cache.GetChecked(id, "hasVehicle"); err == nil {
-		hasVehicle = hasVehicleP.Val.(bool)
+	var vehiclePresent bool
+	if vehiclePresentP, err := s.cache.GetChecked(id, "vehiclePresent"); err == nil {
+		vehiclePresent = vehiclePresentP.Val.(bool)
 	}
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV && hasVehicle,
+		EMSignalsAccepted: s.controllable && isPV && vehiclePresent,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,

@@ -16,44 +16,44 @@ const Template = (args, { argTypes }) => ({
 
 export const Base = Template.bind({});
 Base.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 42,
+  vehiclePresent: true,
+  vehicleSoc: 42,
   targetSoC: 90,
 };
 
 export const Connected = Template.bind({});
 Connected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: false,
-  socCharge: 66,
+  vehicleSoc: 66,
   targetSoC: 90,
 };
 
 export const ReadyToCharge = Template.bind({});
 ReadyToCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: false,
-  socCharge: 66,
+  vehicleSoc: 66,
   targetSoC: 90,
 };
 
 export const Charging = Template.bind({});
 Charging.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: true,
-  socCharge: 66,
+  vehicleSoc: 66,
   targetSoC: 90,
 };
 
@@ -65,11 +65,11 @@ const hoursFromNow = function (hours) {
 
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: true,
-  socCharge: 31,
+  vehiclePresent: true,
+  vehicleSoc: 31,
   minSoC: 20,
   charging: false,
   timerSet: true,
@@ -80,11 +80,11 @@ TargetChargePlanned.args = {
 
 export const TargetChargeActive = Template.bind({});
 TargetChargeActive.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 66,
+  vehiclePresent: true,
+  vehicleSoc: 66,
   minSoC: 30,
   charging: true,
   timerSet: true,
@@ -95,11 +95,11 @@ TargetChargeActive.args = {
 
 export const MinCharge = Template.bind({});
 MinCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 17,
+  vehiclePresent: true,
+  vehicleSoc: 17,
   minSoC: 20,
   charging: true,
   targetSoC: 90,
@@ -107,43 +107,43 @@ MinCharge.args = {
 
 export const UnknownVehicleConnected = Template.bind({});
 UnknownVehicleConnected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
 };
 
 export const UnknownVehicleReadyToCharge = Template.bind({});
 UnknownVehicleReadyToCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
   charging: false,
 };
 
 export const UnknownVehicleCharging = Template.bind({});
 UnknownVehicleCharging.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
   charging: true,
 };
 
 export const Disconnected = Template.bind({});
 Disconnected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   connected: false,
-  hasVehicle: false,
+  vehiclePresent: false,
 };
 
 export const DisconnectedKnownSoc = Template.bind({});
 DisconnectedKnownSoc.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   connected: false,
   enabled: false,
-  hasVehicle: true,
-  socCharge: 17,
+  vehiclePresent: true,
+  vehicleSoc: 17,
   targetSoC: 60,
 };
