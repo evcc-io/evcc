@@ -101,10 +101,6 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		// if the charger does or could provide SoC, we always use it instead of using the vehicle API
 		if err == nil || !errors.Is(err, api.ErrNotAvailable) {
 			if err != nil {
-				if errors.Is(err, api.ErrMustRetry) {
-					return 0, err
-				}
-
 				// never received a soc value
 				if s.prevSoC == 0 {
 					return 0, err
@@ -123,6 +119,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	if fetchedSoC == nil {
 		f, err := s.vehicle.SoC()
 		if err != nil {
+			// required for online APIs with refresh tokens
 			if errors.Is(err, api.ErrMustRetry) {
 				return 0, err
 			}
