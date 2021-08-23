@@ -92,6 +92,8 @@ type attributes struct {
 	// hvac-status
 	ExternalTemperature float64 `json:"externalTemperature"`
 	HvacStatus          string  `json:"hvacStatus"`
+	// cockpit
+	TotalMileage float64 `json:"totalMileage"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -103,6 +105,7 @@ type Renault struct {
 	gigyaJwtToken       string
 	accountID           string
 	batteryG            func() (interface{}, error)
+	cockpitG            func() (interface{}, error)
 	hvacG               func() (interface{}, error)
 }
 
@@ -148,6 +151,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
 	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
 
 	return v, err
@@ -337,6 +341,21 @@ func (v *Renault) hvacAPI() (interface{}, error) {
 	return res, err
 }
 
+// cockpitAPI provides cockpit api response
+func (v *Renault) cockpitAPI() (interface{}, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
+	res, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			res, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return res, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Renault) SoC() (float64, error) {
 	res, err := v.batteryG()
@@ -375,6 +394,19 @@ func (v *Renault) Range() (int64, error) {
 
 	if res, ok := res.(kamereonResponse); err == nil && ok {
 		return int64(res.Data.Attributes.BatteryAutonomy), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Renault)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Renault) Odometer() (float64, error) {
+	res, err := v.cockpitG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		return res.Data.Attributes.TotalMileage, nil
 	}
 
 	return 0, err

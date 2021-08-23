@@ -66,20 +66,20 @@ type volvoStatus struct {
 		TimeToHVBatteryFullyCharged           int    `json:"timeToHVBatteryFullyCharged"`
 		TimeToHVBatteryFullyChargedTimestamp  string `json:"timeToHVBatteryFullyChargedTimestamp"`
 	} `json:"hvBattery"`
-	Odometer                           int    `json:"odometer"`
-	OdometerTimestamp                  string `json:"odometerTimestamp"`
-	PrivacyPolicyEnabled               bool   `json:"privacyPolicyEnabled"`
-	PrivacyPolicyEnabledTimestamp      string `json:"privacyPolicyEnabledTimestamp"`
-	RemoteClimatizationStatus          string `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
-	RemoteClimatizationStatusTimestamp string `json:"remoteClimatizationStatusTimestamp"`
-	ServiceWarningStatus               string `json:"serviceWarningStatus"`
-	ServiceWarningStatusTimestamp      string `json:"serviceWarningStatusTimestamp"`
-	TimeFullyAccessibleUntil           string `json:"timeFullyAccessibleUntil"`
-	TimePartiallyAccessibleUntil       string `json:"timePartiallyAccessibleUntil"`
-	TripMeter1                         int    `json:"tripMeter1"`
-	TripMeter1Timestamp                string `json:"tripMeter1Timestamp"`
-	TripMeter2                         int    `json:"tripMeter2"`
-	TripMeter2Timestamp                string `json:"tripMeter2Timestamp"`
+	Odometer                           float64 `json:"odometer"`
+	OdometerTimestamp                  string  `json:"odometerTimestamp"`
+	PrivacyPolicyEnabled               bool    `json:"privacyPolicyEnabled"`
+	PrivacyPolicyEnabledTimestamp      string  `json:"privacyPolicyEnabledTimestamp"`
+	RemoteClimatizationStatus          string  `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
+	RemoteClimatizationStatusTimestamp string  `json:"remoteClimatizationStatusTimestamp"`
+	ServiceWarningStatus               string  `json:"serviceWarningStatus"`
+	ServiceWarningStatusTimestamp      string  `json:"serviceWarningStatusTimestamp"`
+	TimeFullyAccessibleUntil           string  `json:"timeFullyAccessibleUntil"`
+	TimePartiallyAccessibleUntil       string  `json:"timePartiallyAccessibleUntil"`
+	TripMeter1                         int     `json:"tripMeter1"`
+	TripMeter1Timestamp                string  `json:"tripMeter1Timestamp"`
+	TripMeter2                         int     `json:"tripMeter2"`
+	TripMeter2Timestamp                string  `json:"tripMeter2Timestamp"`
 }
 
 // Volvo is an api.Vehicle implementation for Volvo cars
@@ -215,6 +215,18 @@ func (v *Volvo) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
 		return int64(res.HvBattery.DistanceToHVBatteryEmpty), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Volvo)(nil)
+
+// VehicleOdometer implements the api.VehicleOdometer interface
+func (v *Volvo) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(volvoStatus); err == nil && ok {
+		return float64(res.Odometer), nil
 	}
 
 	return 0, err

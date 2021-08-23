@@ -69,11 +69,23 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
-func (v *Provider) Range() (rng int64, err error) {
+func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		rng = int64(res.VehicleStatus.RemainingRangeElectric)
+		return int64(res.VehicleStatus.RemainingRangeElectric), nil
 	}
 
-	return rng, err
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		return float64(res.VehicleStatus.Mileage), nil
+	}
+
+	return 0, err
 }

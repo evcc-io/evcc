@@ -217,6 +217,19 @@ func (v *Tronity) Range() (int64, error) {
 	return 0, err
 }
 
+var _ api.VehicleOdometer = (*Tronity)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Tronity) Odometer() (float64, error) {
+	res, err := v.bulkG()
+
+	if res, ok := res.(tronity.Bulk); err == nil && ok {
+		return res.Odometer, nil
+	}
+
+	return 0, err
+}
+
 func (v *Tronity) post(uri string) error {
 	resp, err := v.Post(uri, "", nil)
 	if err == nil {

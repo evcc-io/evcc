@@ -133,6 +133,8 @@ type LoadPoint struct {
 	socCharge      float64       // Vehicle SoC
 	chargedEnergy  float64       // Charged energy while connected in Wh
 	chargeDuration time.Duration // Charge duration
+
+	tasks []func() error // task list for repeated execution
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
@@ -710,12 +712,15 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("hasVehicle", true)
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
+
+		lp.task(lp.odometer)
 	} else {
 		lp.socEstimator = nil
 
 		lp.publish("hasVehicle", false)
 		lp.publish("socTitle", "")
-		lp.publish("socCapacity", 0)
+		lp.publish("socCapacity", int64(0))
+		lp.publish("socOdometer", 0.0)
 	}
 }
 
@@ -1242,6 +1247,9 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 			lp.identifyVehicleByStatus()
 		}
 	}
+
+	// odometer etc, if active
+	lp.runTasks()
 
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status

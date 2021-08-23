@@ -126,6 +126,11 @@ type VehicleClimater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
 
+// VehicleOdometer returns the vehicles milage
+type VehicleOdometer interface {
+	Odometer() (float64, error)
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error

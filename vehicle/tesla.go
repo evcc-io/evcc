@@ -19,7 +19,7 @@ type Tesla struct {
 	*embed
 	vehicle       *tesla.Vehicle
 	chargeStateG  func() (interface{}, error)
-	climateStateG func() (interface{}, error)
+	vehicleStateG func() (interface{}, error)
 }
 
 func init() {
@@ -89,7 +89,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
-	v.climateStateG = provider.NewCached(v.climateState, cc.Cache).InterfaceGetter()
+	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -99,9 +99,9 @@ func (v *Tesla) chargeState() (interface{}, error) {
 	return v.vehicle.ChargeState()
 }
 
-// climateState implements the climater api
-func (v *Tesla) climateState() (interface{}, error) {
-	return v.vehicle.ClimateState()
+// vehicleState implements the climater api
+func (v *Tesla) vehicleState() (interface{}, error) {
+	return v.vehicle.VehicleState()
 }
 
 // SoC implements the api.Vehicle interface
@@ -147,6 +147,8 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	return 0, err
 }
 
+const kmPerMile = 1.609344
+
 var _ api.VehicleRange = (*Tesla)(nil)
 
 // Range implements the api.VehicleRange interface
@@ -155,7 +157,21 @@ func (v *Tesla) Range() (int64, error) {
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
 		// miles to km
-		return int64(1.609344 * res.EstBatteryRange), nil
+		return int64(kmPerMile * res.EstBatteryRange), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Tesla)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Tesla) Odometer() (float64, error) {
+	res, err := v.vehicleStateG()
+
+	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
+		// miles to km
+		return kmPerMile * res.Odometer, nil
 	}
 
 	return 0, err
