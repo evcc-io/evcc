@@ -688,23 +688,6 @@ func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	return nil
 }
 
-// task adds a task to the list of running tasks
-func (lp *LoadPoint) task(task func() error) {
-	lp.tasks = append(lp.tasks, task)
-}
-
-// runTasks runs all defined tasks
-func (lp *LoadPoint) runTasks() {
-	var incomplete []func() error
-	for _, task := range lp.tasks {
-		err := task()
-		if errors.Is(err, api.ErrMustRetry) {
-			incomplete = append(incomplete, task)
-		}
-	}
-	lp.tasks = incomplete
-}
-
 // setActiveVehicle assigns currently active vehicle and configures soc estimator
 func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if lp.vehicle == vehicle {
@@ -730,19 +713,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
 
-		if v, ok := vehicle.(api.VehicleOdometer); ok {
-			lp.task(func() error {
-				odo, err := v.Odometer()
-				switch err {
-				case nil:
-					lp.publish("socOdometer", odo)
-				case api.ErrMustRetry:
-				default:
-					lp.log.ERROR.Printf("vehicle odometer: %v", err)
-				}
-				return err
-			})
-		}
+		lp.task(lp.odometer)
 	} else {
 		lp.socEstimator = nil
 
