@@ -136,7 +136,7 @@ func TestSoCFromChargerAndVehicleWithErrors(t *testing.T) {
 	vehicle.EXPECT().Capacity().Return(capacity)
 
 	ce := NewEstimator(util.NewLogger("foo"), charger, vehicle, true)
-	ce.socCharge = 20.0
+	ce.vehicleSoc = 20.0
 
 	tc := []struct {
 		chargedEnergy   float64
