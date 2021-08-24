@@ -20,7 +20,7 @@ import (
  * - grid    ... for reading the power imported or exported to the grid
  * - pv      ... for reading the power produced by the Photovoltaik
  * - battery ... for reading the power imported or exported to the battery
- *  *
+ *
  ** Example configuration **
  *
  * meters:
@@ -36,11 +36,9 @@ import (
  *   type: lgess
  *   usage: battery
  *
- *
  ** Limitations **
  * It is not allowed to provide different URIs or passwords for different lgess meters since always the
  * same hardware instance is accessed with the different usages.
- *
  * */
 
 // LgEss implements the api.Meter interface
