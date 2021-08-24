@@ -18,7 +18,7 @@ import (
  ** Usages **
  * The following usages are supported:
  * - grid    ... for reading the power imported or exported to the grid
- * - pv      ... for reading the power produced by the Photovoltaik
+ * - pv      ... for reading the power produced by the pv
  * - battery ... for reading the power imported or exported to the battery
  *
  ** Example configuration **
