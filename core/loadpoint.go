@@ -809,11 +809,6 @@ func (lp *LoadPoint) updateChargerStatus() error {
 // effectiveCurrent returns the currently effective charging current
 // it does not take measured currents into account
 func (lp *LoadPoint) effectiveCurrent() float64 {
-	// use measured L1 current
-	if lp.chargeCurrents != nil {
-		return lp.chargeCurrents[0]
-	}
-
 	if lp.GetStatus() != api.StatusC {
 		return 0
 	}
