@@ -77,6 +77,14 @@ export default {
       targetIsInThePast: "The chosen time is in the past.",
       remove: "Remove",
       activate: "Activate",
+      experimentalLabel: "experimental",
+      experimentalText: `
+        This function is at an early stage.
+        The algorithm is not perfect yet.
+        The target time is currently not persisted - this means, it will be lost when your server restarts.
+        So do not rely too much on this function.
+        However, we look forward to your experiences and suggestions for improvement in the
+      `,
     },
     loadpointDetails: {
       power: "Power",

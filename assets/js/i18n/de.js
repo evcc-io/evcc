@@ -77,6 +77,14 @@ export default {
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
       remove: "Keine Zeilzeit",
       activate: "Zielzeit aktivieren",
+      experimentalLabel: "experimentell",
+      experimentalText: `
+        Diese Funktion ist in einem frühen Stadium. Der Algorithmus ist noch
+        nicht perfekt. Die Zielzeit wird aktuell nicht persistiert - das
+        heißt sie geht beim Neustart verloren. Verlasse dich also noch nicht
+        zu sehr auf diese Funktion. Wir freuen uns aber über deine
+        Erfahrungen und Verbessungsvorschläge in den
+      `,
     },
     loadpointDetails: {
       power: "Leistung",

@@ -16,7 +16,9 @@
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">{{ $t("main.targetCharge.modalTitle") }}</h5>
+						<h5 class="modal-title">
+							{{ $t("main.targetCharge.modalTitle") }}
+						</h5>
 						<button
 							type="button"
 							class="btn-close"
@@ -60,8 +62,20 @@
 									/>
 								</div>
 							</div>
-							<p class="text-danger mt-3 mb-0" v-if="!selectedTargetTimeValid">
+							<p class="text-danger mb-0" v-if="!selectedTargetTimeValid">
 								{{ $t("main.targetCharge.targetIsInThePast") }}
+							</p>
+							<p class="small mt-3 text-muted">
+								<strong class="text-primary">
+									<fa-icon icon="flask"></fa-icon>
+									{{ $t("main.targetCharge.experimentalLabel") }}:
+								</strong>
+								{{ $t("main.targetCharge.experimentalText") }}
+								<a
+									href="https://github.com/evcc-io/evcc/discussions/1433"
+									target="_blank"
+									>GitHub Discussions</a
+								>.
 							</p>
 						</div>
 						<div class="modal-footer d-flex justify-content-between">
