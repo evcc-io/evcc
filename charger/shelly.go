@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Shelly api homepage
@@ -114,7 +114,7 @@ var _ api.Meter = (*Shelly)(nil)
 func (c *Shelly) CurrentPower() (float64, error) {
 	var resp shellyStatusResponse
 	err := c.GetJSON(fmt.Sprintf("%s/%s", c.uri, "status"), &resp)
-	
+
 	if c.channel >= len(resp.Meters) {
 		return 0, errors.New("invalid channel, power meter missing")
 	}

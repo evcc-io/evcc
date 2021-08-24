@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/websocket"
 )
 

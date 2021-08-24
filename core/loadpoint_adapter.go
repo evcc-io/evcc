@@ -1,6 +1,6 @@
 package core
 
-import "github.com/andig/evcc/core/soc"
+import "github.com/evcc-io/evcc/core/soc"
 
 type adapter struct {
 	lp *LoadPoint
@@ -18,8 +18,8 @@ func (a *adapter) SocEstimator() *soc.Estimator {
 	return a.lp.socEstimator
 }
 
-func (a *adapter) ActivePhases() int64 {
-	return a.lp.Phases
+func (a *adapter) ActivePhases() int {
+	return a.lp.activePhases
 }
 
 func (a *adapter) Voltage() float64 {

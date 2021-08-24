@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -17,7 +17,7 @@ type roundTripper struct {
 	base http.RoundTripper
 }
 
-const max = 2048 * 2
+const max = 1024 * 64
 
 var (
 	reqMetric *prometheus.SummaryVec

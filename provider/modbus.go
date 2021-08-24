@@ -7,8 +7,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -49,7 +49,12 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		cc.RTU = &b
 	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
+	format := modbus.TcpFormat
+	if cc.RTU != nil && *cc.RTU {
+		format = modbus.RtuFormat
+	}
+
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
 	if err != nil {
 		return nil, err
 	}

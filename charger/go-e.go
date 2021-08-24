@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // https://go-e.co/app/api.pdf
@@ -34,6 +34,44 @@ type goeStatusResponse struct {
 	Tmp int    `json:"tmp,string"` // temperature [°C]
 	Dws int    `json:"dws,string"` // energy [Ws]
 	Nrg []int  `json:"nrg"`        // voltage, current, power
+	Uby int    `json:"uby,string"` // unlocked_by
+	Rna string `json:"rna"`        // RFID 1
+	Rnm string `json:"rnm"`        // RFID 2
+	Rne string `json:"rne"`        // RFID 3
+	Rn4 string `json:"rn4"`        // RFID 4
+	Rn5 string `json:"rn5"`        // RFID 5
+	Rn6 string `json:"rn6"`        // RFID 6
+	Rn7 string `json:"rn7"`        // RFID 7
+	Rn8 string `json:"rn8"`        // RFID 8
+	Rn9 string `json:"rn9"`        // RFID 9
+	Rn1 string `json:"rn1"`        // RFID 10
+}
+
+func (g *goeStatusResponse) RFIDName() string {
+	switch g.Uby {
+	case 1:
+		return g.Rna
+	case 2:
+		return g.Rnm
+	case 3:
+		return g.Rne
+	case 4:
+		return g.Rn4
+	case 5:
+		return g.Rn5
+	case 6:
+		return g.Rn6
+	case 7:
+		return g.Rn7
+	case 8:
+		return g.Rn8
+	case 9:
+		return g.Rn9
+	case 10:
+		return g.Rn1
+	default:
+		return ""
+	}
 }
 
 // GoE charger implementation
@@ -114,8 +152,6 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		return c.localResponse("status", "")
 	}
 
-	status = c.status // cached value
-
 	if time.Since(c.updated) >= c.cache {
 		status, err = c.cloudResponse("api_status", "")
 		if err == nil {
@@ -124,7 +160,7 @@ func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
 		}
 	}
 
-	return status, err
+	return c.status, err
 }
 
 // apiUpdate invokes either cloud or local api
@@ -136,16 +172,11 @@ func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
 
 	status, err := c.cloudResponse("api", payload)
 	if err == nil {
-		c.updated = time.Now()
-		c.status = status
+		// cloud api sends partial response, don't store it as status
+		c.updated = time.Time{}
 	}
 
 	return status, err
-}
-
-// isValid checks is status response is local
-func isValid(status goeStatusResponse) bool {
-	return status.Fwv != ""
 }
 
 // Status implements the api.Charger interface
@@ -190,22 +221,13 @@ func (c *GoE) Enable(enable bool) error {
 	if enable {
 		b = 1
 	}
-
-	status, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	if err == nil && isValid(status) && status.Alw != b {
-		return fmt.Errorf("alw update failed: %d", status.Amp)
-	}
-
+	_, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	status, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	if err == nil && isValid(status) && int64(status.Amp) != current {
-		return fmt.Errorf("amp update failed: %d", status.Amp)
-	}
-
+	_, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
 	return err
 }
 
@@ -239,4 +261,12 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
 	}
 	return 0, 0, 0, err
+}
+
+var _ api.Identifier = (*GoE)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *GoE) Identify() (string, error) {
+	status, err := c.apiStatus()
+	return status.RFIDName(), err
 }

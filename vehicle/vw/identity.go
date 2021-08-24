@@ -8,11 +8,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/oauth"
-	"github.com/andig/evcc/util/request"
-	"github.com/andig/evcc/vehicle/id"
-	"github.com/andig/evcc/vehicle/skoda"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/id"
+	"github.com/evcc-io/evcc/vehicle/skoda"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -72,8 +72,8 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 
 	// add nonce and state
 	query := url.Values{
-		"nonce": []string{RandomString(43)},
-		"state": []string{RandomString(43)},
+		"nonce": []string{util.RandomString(43)},
+		"state": []string{util.RandomString(43)},
 	}
 	uri += "&" + query.Encode()
 

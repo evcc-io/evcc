@@ -1,7 +1,7 @@
 package profile
 
 import (
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )

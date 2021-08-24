@@ -3,9 +3,9 @@ package charger
 import (
 	"fmt"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 const (
@@ -43,7 +43,7 @@ func NewPhoenixEVSerFromConfig(other map[string]interface{}) (api.Charger, error
 
 // NewPhoenixEVSer creates a Phoenix charger
 func NewPhoenixEVSer(uri, device, comset string, baudrate int, id uint8) (*PhoenixEVSer, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, true, id)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, id)
 	if err != nil {
 		return nil, err
 	}

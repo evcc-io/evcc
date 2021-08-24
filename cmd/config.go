@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger"
-	"github.com/andig/evcc/meter"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/vehicle"
 	"github.com/dustin/go-humanize"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/vehicle"
 )
 
 type config struct {
@@ -25,11 +25,13 @@ type config struct {
 	Mqtt         mqttConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
 	HEMS         typedConfig
 	Messaging    messagingConfig
 	Meters       []qualifiedConfig
 	Chargers     []qualifiedConfig
 	Vehicles     []qualifiedConfig
+	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	LoadPoints   []map[string]interface{}
 }
@@ -59,6 +61,10 @@ type typedConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplate
 	Services []typedConfig
+}
+
+type tariffConfig struct {
+	Grid typedConfig
 }
 
 // ConfigProvider provides configuration items

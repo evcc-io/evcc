@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/andig/evcc/detect/tasks"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 	"github.com/fatih/structs"
 	"github.com/jeremywohl/flatten"
 )

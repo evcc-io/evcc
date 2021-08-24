@@ -30,7 +30,7 @@ export default {
   },
   main: {
     energyflow: {
-      title: "Current Energyflow",
+      noEnergy: "No Energyflow",
       houseConsumption: "Consumption",
       pvProduction: "Produzione",
       battery: "Batteria",
@@ -38,7 +38,7 @@ export default {
       batteryDischarge: "Battery discharge",
       gridImport: "Grid import",
       selfConsumption: "Self consumption",
-      pvExport: "Grid feed-in",
+      pvExport: "Grid export",
     },
     mode: {
       title: "Modalità",

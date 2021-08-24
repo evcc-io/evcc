@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
@@ -90,7 +90,7 @@ func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	for param := range in {
 		// vehicle name
 		if param.LoadPoint != nil {
-			if name, ok := param.Val.(string); ok && param.Key == "socTitle" {
+			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
 				vehicles[*param.LoadPoint] = name
 				continue
 			}

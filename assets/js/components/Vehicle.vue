@@ -1,9 +1,9 @@
 <template>
 	<div>
 		<div class="mb-3">
-			{{ socTitle || $t("main.vehicle.fallbackName") }}
+			{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 		</div>
-		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
+		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline
 			v-bind="vehicleSubline"
 			@target-time-updated="targetTimeUpdated"
@@ -24,19 +24,19 @@ export default {
 	props: {
 		id: Number,
 		connected: Boolean,
-		hasVehicle: Boolean,
-		socCharge: Number,
+		vehiclePresent: Boolean,
+		vehicleSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
-		socTitle: String,
+		vehicleTitle: String,
 		timerActive: Boolean,
 		timerSet: Boolean,
 		targetTime: String,
 		targetSoC: Number,
 	},
 	computed: {
-		vehicleSoc: function () {
+		vehicleSocProps: function () {
 			return this.collectProps(VehicleSoc);
 		},
 		vehicleSubline: function () {

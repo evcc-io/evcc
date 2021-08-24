@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 const chargeEfficiency = 0.9 // assume charge 90% efficiency
@@ -15,21 +15,23 @@ const chargeEfficiency = 0.9 // assume charge 90% efficiency
 // Vehicle SoC can be estimated to provide more granularity
 type Estimator struct {
 	log      *util.Logger
+	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
 
 	capacity          float64 // vehicle capacity in Wh cached to simplify testing
 	virtualCapacity   float64 // estimated virtual vehicle capacity in Wh
-	socCharge         float64 // estimated vehicle SoC
+	vehicleSoc        float64 // estimated vehicle SoC
 	prevSoC           float64 // previous vehicle SoC in %
 	prevChargedEnergy float64 // previous charged energy in Wh
 	energyPerSocStep  float64 // Energy per SoC percent in Wh
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
 	s := &Estimator{
 		log:      log,
+		charger:  charger,
 		vehicle:  vehicle,
 		estimate: estimate,
 	}
@@ -51,7 +53,7 @@ func (s *Estimator) Reset() {
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
 func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
 	if chargePower > 0 {
-		percentRemaining := float64(targetSoC) - s.socCharge
+		percentRemaining := float64(targetSoC) - s.vehicleSoc
 		if percentRemaining <= 0 {
 			return 0
 		}
@@ -61,7 +63,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 			finishTime, err := vr.FinishTime()
 			if err == nil {
 				timeRemaining := time.Until(finishTime)
-				return time.Duration(float64(timeRemaining) * percentRemaining / (100 - s.socCharge))
+				return time.Duration(float64(timeRemaining) * percentRemaining / (100 - s.vehicleSoc))
 			}
 
 			if !errors.Is(err, api.ErrNotAvailable) {
@@ -79,7 +81,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 
 // RemainingChargeEnergy returns the remaining charge energy in kWh
 func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
-	percentRemaining := float64(targetSoC) - s.socCharge
+	percentRemaining := float64(targetSoC) - s.vehicleSoc
 	if percentRemaining <= 0 {
 		return 0
 	}
@@ -91,26 +93,40 @@ func (s *Estimator) RemainingChargeEnergy(targetSoC int) float64 {
 
 // SoC replaces the api.Vehicle.SoC interface to take charged energy into account
 func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
-	f, err := s.vehicle.SoC()
-	if err != nil {
-		if errors.Is(err, api.ErrMustRetry) {
-			return 0, err
+	var fetchedSoC *float64
+
+	if charger, ok := s.charger.(api.Battery); ok {
+		f, err := charger.SoC()
+
+		if err == nil {
+			s.vehicleSoc = f
+			fetchedSoC = &f
 		}
-
-		s.log.WARN.Printf("updating soc failed: %v", err)
-
-		// try to recover from temporary vehicle-api errors
-		if s.prevSoC == 0 { // never received a soc value
-			return s.socCharge, err
-		}
-
-		f = s.prevSoC // recover last received soc
 	}
 
-	s.socCharge = f
+	if fetchedSoC == nil {
+		f, err := s.vehicle.SoC()
+		if err != nil {
+			if errors.Is(err, api.ErrMustRetry) {
+				return 0, err
+			}
+
+			// never received a soc value
+			if s.prevSoC == 0 {
+				return 0, err
+			}
+
+			// recover from temporary api errors
+			f = s.prevSoC
+			s.log.WARN.Printf("vehicle soc: %v (ignored by estimator)", err)
+		}
+
+		fetchedSoC = &f
+		s.vehicleSoc = f
+	}
 
 	if s.estimate {
-		socDelta := s.socCharge - s.prevSoC
+		socDelta := s.vehicleSoc - s.prevSoC
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
@@ -119,17 +135,17 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 			if socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
-				s.log.TRACE.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
+				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)
 			}
 
 			// sample charged energy at soc change, reset energy delta
 			s.prevChargedEnergy = math.Max(chargedEnergy, 0)
-			s.prevSoC = s.socCharge
+			s.prevSoC = s.vehicleSoc
 		} else {
-			s.socCharge = math.Min(f+energyDelta/s.energyPerSocStep, 100)
-			s.log.TRACE.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.socCharge, f)
+			s.vehicleSoc = math.Min(*fetchedSoC+energyDelta/s.energyPerSocStep, 100)
+			s.log.DEBUG.Printf("soc estimated: %.2f%% (vehicle: %.2f%%)", s.vehicleSoc, *fetchedSoC)
 		}
 	}
 
-	return s.socCharge, nil
+	return s.vehicleSoc, nil
 }

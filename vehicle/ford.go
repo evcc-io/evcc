@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/oauth"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -109,7 +109,7 @@ func (v *Ford) login() (oauth.Token, error) {
 	return res, err
 }
 
-// Refresh implements the oauth.TokenRefresher interface
+// Refresh implements oauth.TokenRefresher
 func (v *Ford) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
 		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},

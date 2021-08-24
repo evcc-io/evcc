@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -107,6 +107,18 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
 		return int64(res.CarControlData.RemainingRanges.ElectricalRange.Distance.Value), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		return res.CarControlData.Mileage.Value, nil
 	}
 
 	return 0, err

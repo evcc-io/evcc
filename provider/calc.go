@@ -3,7 +3,7 @@ package provider
 import (
 	"fmt"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 type calcProvider struct {

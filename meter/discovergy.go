@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/thoas/go-funk"
 )
 
@@ -78,7 +78,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, ".values.power", 0.001*cc.Scale)
+	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, "", ".values.power", 0.001*cc.Scale)
 	if err != nil {
 		return nil, err
 	}

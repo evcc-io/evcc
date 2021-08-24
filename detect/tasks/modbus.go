@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -136,7 +136,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 			mr.Point = h.Point
 			mr.Value = res.Value()
 
-			log.TRACE.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
+			log.DEBUG.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
 
 			if len(h.Invalid) == 0 {
 				return true

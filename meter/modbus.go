@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -53,9 +53,12 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.RTU = &b
 	}
 
-	log := util.NewLogger("modbus")
+	format := modbus.TcpFormat
+	if cc.RTU != nil && *cc.RTU {
+		format = modbus.RtuFormat
+	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +68,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		conn.Timeout(cc.Timeout)
 	}
 
+	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)
 
 	// prepare device
@@ -105,7 +109,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate energy reading
+	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
 		cc.SoC = modbus.ReadingName(cc.SoC)

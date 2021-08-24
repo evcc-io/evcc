@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/server/updater"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/pipe"
-	"github.com/andig/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"

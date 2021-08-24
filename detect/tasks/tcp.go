@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 const Tcp TaskType = "tcp"

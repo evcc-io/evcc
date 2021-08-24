@@ -6,8 +6,8 @@ import (
 	"io/fs"
 	"log"
 
-	"github.com/andig/evcc/cmd"
-	"github.com/andig/evcc/server"
+	"github.com/evcc-io/evcc/cmd"
+	"github.com/evcc-io/evcc/server"
 )
 
 //go:embed dist

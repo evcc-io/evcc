@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/util"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/evcc-io/evcc/util"
 )
 
 const Mqtt TaskType = "mqtt"

@@ -1,8 +1,9 @@
 # evcc <!-- omit in toc -->
 
-[![Build Status](https://github.com/andig/evcc/workflows/Build/badge.svg)](https://github.com/andig/evcc/actions?query=workflow%3ABuild)
-[![Code Quality](https://goreportcard.com/badge/github.com/andig/evcc)](https://goreportcard.com/report/github.com/andig/evcc)
-[![Latest Version](https://img.shields.io/github/release/andig/evcc.svg)](https://github.com/andig/evcc/releases)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/andig/evcc)
+[![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
+[![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
+[![Latest Version](https://img.shields.io/github/release/andig/evcc.svg)](https://github.com/evcc-io/evcc/releases)
 [![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
@@ -12,15 +13,17 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 - simple and clean user interface
 - multiple [chargers](#charger):
-  - Wallbe, Phoenix (includes ESL Walli), go-eCharger, NRGkick (direct Bluetooth or via Connect device), SimpleEVSE, EVSEWifi, KEBA/BMW, openWB, Mobile Charger Connect and any other charger using scripting
+  - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
+  - Other commercial: ABL eMH1, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
+  - Build-your-own: Phoenix (includes ESL Walli), [SimpleEVSE](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo and any other connected vehicle using scripting
-- [plugins](#plugins) for integrating with hardware devices and home automation: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
-- status notifications using [Telegram](https://telegram.org) and [PushOver](https://pushover.net)
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
+- status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
-- granular charge power control down to 25W steps with supported chargers
-- REST API
+- granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
+- REST and MQTT [APIs](#api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
 
 ![Screenshot](docs/screenshot.png)
 
@@ -35,6 +38,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Meter](#meter)
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
+  - [Flexible Energy Tariffs](#flexible-energy-tariffs)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
@@ -48,6 +52,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [API](#api)
   - [REST API](#rest-api)
   - [MQTT API](#mqtt-api)
+- [Sponsorship](#sponsorship)
 - [Background](#background)
 
 
@@ -180,29 +185,50 @@ In general, due to the minimum value of 5% for signalling the EV duty cycle, the
 Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
-- `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/)
+- `abl`: ABL eMH1 (requires Modbus adapter; [sponsors only](#sponsorship))
+- `easee`: Easee Home charger ([sponsors only](#sponsorship))
+- `eebus`: EEBUS compatible chargers (experimental)
+- `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
+- `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; [sponsors only](#sponsorship))
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
 - `nrgkick-connect`: NRGkick chargers with additional NRGkick Connect module
-- `openWB`: openWB chargers using openWB's MQTT interface
+- `openWB`: openWB chargers using openWB's MQTT interface (set `phases: true` to indicate if openWB is equipped with 1p3p capability- currently this cannot be auto detected)
 - `phoenix-em-eth`: chargers with Phoenix **EM**-CP-PP-**ETH** controllers
 - `phoenix-ev-eth`: chargers with Phoenix **EV**-CC-\*\*\*-**ETH** controllers (see [Preparation](#phoenix-emev-ethernet-controller-preparation-))
 - `phoenix-ev-ser`: chargers with Phoenix **EV**-CC-\*\*\*-**SER** serial controllers (Modbus RTU)
 - `simpleevse`: chargers with SimpleEVSE controllers connected via ModBus (e.g. OpenWB Wallbox, Easy Wallbox B163, ...)
 - `wallbe`: Wallbe Eco chargers (see [Preparation](#wallbe-preparation-)). For older Wallbe boxes (pre 2019) with Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controllers make sure to set `legacy: true` to enable correct current configuration.
 - `warp`: Tinkerforge Warp/ Warp Pro charger
-- `easee`: Easee Home charger (available to Github sponsors only, request sponsor token at https://cloud.evcc.io/)
 - `custom`: default charger implementation using configurable [plugins](#plugins) for integrating any type of charger
 
 Smart-Home outlet charger implementations:
+
 - `fritzdect`: Fritz!DECT 200/210 outlets
 - `shelly`: Shelly outlets
 - `tasmota`: Tasmota outlets
 - `tplink`: TP-Link HSXXX series outlets
 
-Configuration examples are documented at [andig/evcc-config#chargers](https://github.com/andig/evcc-config#chargers)
+Configuration examples are documented at [evcc-io/config#chargers](https://github.com/evcc-io/config#chargers)
+
+#### EEBUS (experimental) preparation <!-- omit in toc -->
+
+1. Run `evcc eebus-cert`
+2. Add the output to the `evcc.yaml` configuration file
+3. Open the web interface of the charger to get the chargers SKI (Identifcation Number)
+   For Porsche Mobile Charger Connect this is available in the top menu "Connections" sub-menu "Energy Manager"
+4. Add the charger to your configuration:
+   ```
+   chargers:
+   - name: mcc
+     type: eebus
+     ski: 1234-5678-9012-3456-7890-1234-5678-9012-3456
+   ```
+5. Run `evcc`
+6. On the web interface of the charger typically in the page showing the chargers SKI, `EVCC` should be shown including an option to pair the charger with `EVCC`. Do just that.
+7. The EVCC web interface should show the charger and status of a connected car and allow to charge
 
 #### KEBA preparation <!-- omit in toc -->
 
@@ -238,7 +264,7 @@ Meters provide data about power and energy consumption, PV production or battery
 
 Chargers may also contain internal or attached meters. If the charger contains an internal meter, there's no need to configure the charge meter separately. If no charge meter is configured, EVCC will use the charger-attached meter (if exists) or assume the configured charger power as meter value.
 
-EVCC uses positive (+) sign for incoming energy (grid consumption, PV inverter production or home battery discharge) and negative (-) sign for outgoing energy (grid feed-in, PV inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive (+) sign.
+EVCC uses positive (+) sign for incoming energy (grid consumption, PV inverter production or home battery discharge) and negative (-) sign for outgoing energy (grid export, PV inverter remaining usage or home battery charge). All remaining home power usage, including the charger, is always of positive (+) sign.
 
 Available meter implementations are:
 
@@ -248,7 +274,7 @@ Available meter implementations are:
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
-Configuration examples are documented at [andig/evcc-config#meters](https://github.com/andig/evcc-config#meters)
+Configuration examples are documented at [evcc-io/config#meters](https://github.com/evcc-io/config#meters)
 
 ### Vehicle
 
@@ -259,25 +285,28 @@ Available vehicle remote interface implementations are:
 - `audi`: Audi (eTron, Q55)
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
-- `citroen`, `opel`, `peugeot`: Follow this [tutorial](https://github.com/flobz/psa_car_controller) to obtain client credentials for PSA.
+- `citroen`, `ds`, `opel`, `peugeot`: All PSA brands
+- `fiat`: Fiat (500e)
 - `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Bluelink vehicles like Soul 2019)
+- `kia`: Kia (Soul and other Bluelink models)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
+- `mini`: Mini (Cooper SE)
 - `nissan`: Nissan (Leaf)
 - `niu`: Niu Scooter
 - `tesla`: Tesla (any model)
 - `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
-- `porsche`: Porsche (Taycan)
+- `porsche`: Porsche (Taycan, Cayenne E-Hybrid)
 - `seat`: Seat (Cupra, Mii)
 - `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)
 - `id`: Volkswagen (ID.3, ID.4)
 - `volvo`: Volvo
+- `tronity`: Tronity ([sponsors only](#sponsorship))
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
 
-Configuration examples are documented at [andig/evcc-config#vehicles](https://github.com/andig/evcc-config#vehicles)
+Configuration examples are documented at [evcc-io/config#vehicles](https://github.com/evcc-io/config#vehicles)
 
 ### Home Energy Management System
 
@@ -292,6 +321,25 @@ hems:
 to the configuration. The EVCC loadpoints can then be added to the SHM configuration. When SHM is used, the ratio of Grid to PV Power for the **Min+PV** mode can be adjusted in
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
 to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
+
+### Flexible Energy Tariffs
+
+EVCC supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+
+```yaml
+tariffs:
+  grid:
+    # either
+    type: tibber
+    cheap: 20 # ct/kWh
+    token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
+    homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
+
+    # or
+    type: awattar
+    cheap: 20 # ct/kWh
+    region: de # optional, choose at for Austria
+```
 
 ## Plugins
 
@@ -553,7 +601,9 @@ EVCC provides a REST and MQTT APIs.
 
 - `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
+- `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
 - `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
+- `/api/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings perform a `POST` request appending the value as path segment.
 
@@ -571,8 +621,18 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `evcc/loadpoints/<id>/minSoC`: loadpoint minimum SoC (writable)
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
+- `evcc/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.
+
+## Sponsorship
+
+EVCC believes in open source software. We're committed to provide best in class EV charging experience.
+Maintaining EVCC consumes time and effort. With the vast amount of different devices to support, we depend on community and vendor support to keep EVCC alive.
+
+While EVCC is open source, we would also like to encourage vendors to provide open source hardware devices, public documentation and support open source projects like hours that provide additional value to otherwised closed hardware. Where this is not the case, EVCC requires "sponsor token" to finance ongoing development and support of evcc.
+
+The personal sponsor token requires a [Github Sponsorship](https://github.com/sponsors/andig) and can be requested at [cloud.evcc.io](https://cloud.evcc.io/). A sponsor token is valid for one year and can be renewed any time with active sponsorship.
 
 ## Background
 

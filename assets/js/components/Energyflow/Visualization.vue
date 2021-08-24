@@ -1,99 +1,64 @@
 <template>
-	<div class="visualization" :class="{ 'visualization--ready': totalAdjusted > 0 }">
+	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
-				<div
-					class="label-bar label-bar--down"
-					:class="{
-						'label-bar--invisible':
-							hideLabelBar(batteryDischarge) || !selfConsumptionAdjusted,
-					}"
-					:style="{ width: widthTotal(batteryDischarge) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon :icon="batteryIcon"></fa-icon>
-							<fa-icon icon="caret-right"></fa-icon>
-						</div>
-					</div>
-				</div>
-				<div
-					class="label-bar label-bar--down"
-					:class="{
-						'label-bar--invisible':
-							hideLabelBar(pvProduction) ||
-							(!selfConsumptionAdjusted && !pvExportAdjusted),
-					}"
-					:style="{ width: widthTotal(pvProduction) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon icon="sun"></fa-icon>
-						</div>
-					</div>
-				</div>
+				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
+					<BatteryIcon :soc="batterySoC" discharge />
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
+					<fa-icon icon="sun"></fa-icon>
+				</LabelBar>
 			</div>
 		</div>
 		<div class="site-progress" ref="site_progress">
-			<div class="site-progress-bar grid-import" :style="{ width: widthTotal(gridImport) }">
-				<span class="power" :class="{ 'd-none': hidePowerLabel(gridImport) }">
+			<div
+				class="site-progress-bar grid-import"
+				:style="{ width: widthTotal(gridImportAdjusted) }"
+			>
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
 					{{ kw(gridImport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+					{{ kwNoUnit(gridImport) }}
 				</span>
 			</div>
 			<div
 				class="site-progress-bar self-consumption"
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
-				<span
-					class="power"
-					:class="{
-						'd-none': hidePowerLabel(selfConsumption),
-					}"
-				>
+				<span class="power" v-if="powerLabelEnoughSpace(selfConsumption)">
 					{{ kw(selfConsumption) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(selfConsumption)">
+					{{ kwNoUnit(selfConsumption) }}
 				</span>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span class="power" :class="{ 'd-none': hidePowerLabel(pvExport) }">
+				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
 					{{ kw(pvExport) }}
 				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
+					{{ kwNoUnit(pvExport) }}
+				</span>
+			</div>
+			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
+				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
 		<div class="label-scale">
 			<div class="d-flex justify-content-start">
-				<div
-					class="label-bar label-bar--up"
-					:class="{
-						'label-bar--invisible':
-							hideLabelBar(houseConsumption) ||
-							(!gridImportAdjusted && !selfConsumptionAdjusted),
-					}"
-					:style="{ width: widthTotal(houseConsumption) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon icon="home"></fa-icon>
-						</div>
-					</div>
-				</div>
-				<div
-					class="label-bar label-bar--up"
-					:class="{
-						'label-bar--invisible':
-							hideLabelBar(batteryCharge) || !selfConsumptionAdjusted,
-					}"
-					:style="{ width: widthTotal(batteryCharge) }"
-				>
-					<div class="label-bar-scale">
-						<div class="label-bar-icon">
-							<fa-icon :icon="batteryIcon"></fa-icon>
-							<fa-icon icon="caret-left"></fa-icon>
-						</div>
-					</div>
-				</div>
+				<LabelBar v-bind="labelBarProps('bottom', 'houseConsumption')">
+					<fa-icon icon="home"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
+					<fa-icon icon="car"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
+					<BatteryIcon :soc="batterySoC" charge />
+				</LabelBar>
 			</div>
 		</div>
 	</div>
@@ -102,22 +67,27 @@
 <script>
 import "../../icons";
 import formatter from "../../mixins/formatter";
+import BatteryIcon from "./BatteryIcon.vue";
+import LabelBar from "./LabelBar.vue";
 
 export default {
 	name: "Visualization",
+	components: { BatteryIcon, LabelBar },
 	props: {
 		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
+		loadpoints: { type: Number, default: 0 },
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
 		houseConsumption: { type: Number, default: 0 },
-		batteryIcon: { type: String },
+		batterySoC: { type: Number, default: 0 },
+		valuesInKw: { type: Boolean, default: false },
 	},
 	data: function () {
-		return { width: 0 };
+		return { width: 0, visualizationReady: false };
 	},
 	mounted: function () {
 		this.$nextTick(function () {
@@ -150,21 +120,37 @@ export default {
 		showDetails: function () {
 			this.$nextTick(() => this.updateElementWidth());
 		},
+		totalAdjusted: function () {
+			if (!this.visualizationReady && this.totalAdjusted > 0)
+				setTimeout(() => {
+					this.visualizationReady = true;
+				}, 500);
+		},
 	},
 	methods: {
 		widthTotal: function (power) {
+			if (this.totalAdjusted === 0) return "0%";
 			return (100 / this.totalAdjusted) * power + "%";
 		},
 		kw: function (watt) {
-			return Math.max(0, watt / 1000).toFixed(1) + " kW";
+			return this.fmtKw(watt, this.valuesInKw, true);
 		},
-		hidePowerLabel(power) {
-			const minWidth = 75;
+		kwNoUnit: function (watt) {
+			return this.fmtKw(watt, this.valuesInKw, false);
+		},
+		powerLabelAvailableSpace(power) {
+			if (this.totalAdjusted === 0) return 0;
 			const percent = (100 / this.totalAdjusted) * power;
-			return (this.width / 100) * percent < minWidth;
+			return (this.width / 100) * percent;
 		},
-		hideLabelBar(power) {
-			const minWidth = 60;
+		powerLabelEnoughSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 60;
+		},
+		powerLabelSomeSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 35;
+		},
+		hideLabelIcon(power, minWidth = 32) {
+			if (this.totalAdjusted === 0) return true;
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent < minWidth;
 		},
@@ -175,17 +161,48 @@ export default {
 		updateElementWidth() {
 			this.width = this.$refs.site_progress.getBoundingClientRect().width;
 		},
+		isLabelFirst(position, name) {
+			return this.isLabel(position, name, false);
+		},
+		isLabelLast(position, name) {
+			return this.isLabel(position, name, true);
+		},
+		isLabel(position, name, last) {
+			const labels = {
+				top: ["batteryDischarge", "pvProduction"],
+				bottom: ["houseConsumption", "loadpoints", "batteryCharge"],
+			};
+			const entries = [...labels[position]];
+			if (last) {
+				entries.reverse();
+			}
+			for (let i = 0; i < entries.length; i++) {
+				const entry = entries[i];
+				if (this[entry] > 0) {
+					return entry === name;
+				}
+			}
+			return false;
+		},
+		labelBarProps(position, name) {
+			const value = this[name];
+			const minWidth = name.startsWith("battery") ? 44 : 32;
+			return {
+				value,
+				hideIcon: this.hideLabelIcon(value, minWidth),
+				style: { width: this.widthTotal(value) },
+				first: this.isLabelFirst(position, name),
+				last: this.isLabelLast(position, name),
+				[position]: true,
+			};
+		},
 	},
 };
 </script>
 <style scoped>
-.visualization {
-	opacity: 0;
-}
-.visualization--ready {
-	opacity: 1;
-}
 .site-progress {
+	--height: 38px;
+	height: var(--height);
 	margin: 0.25rem 0;
 	border-radius: 5px;
 	display: flex;
@@ -193,29 +210,16 @@ export default {
 }
 .site-progress-bar {
 	display: flex;
-	transition-property: width;
-	transition-duration: 1000ms;
-	transition-timing-function: linear;
 	justify-content: center;
 	align-items: center;
 	overflow: hidden;
-	height: 1.5rem;
 	position: relative;
+	width: 0;
 }
-.site-progress-bar::before,
-.site-progress-bar::after {
-	content: "";
-	top: 0;
-	bottom: 0;
-	width: 1px;
-	background: white;
-	position: absolute;
-}
-.site-progress-bar::before {
-	left: 0px;
-}
-.site-progress-bar::after {
-	right: 0px;
+.visualization--ready .site-progress-bar {
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
 }
 .grid-import {
 	background-color: var(--evcc-grid);
@@ -231,40 +235,16 @@ export default {
 }
 .power {
 	display: block;
-	margin: 0 0.5rem;
+	margin: 0 0.2rem;
 	white-space: nowrap;
-}
-.label-bar {
-	margin: 0;
-	height: 1.5rem;
-	padding: 0.5rem 0;
-	opacity: 1;
-	transition-property: width, opacity;
-	transition-duration: 1000ms, 2000ms;
-	transition-timing-function: linear, ease-in-out;
 	overflow: hidden;
 }
-.label-bar-scale {
-	border: 1px solid var(--bs-gray);
-	height: 7px;
-	background: none;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	white-space: nowrap;
+.visualization--ready >>> .label-bar {
+	transition-property: width, opacity;
+	transition-duration: 500ms, 250ms;
+	transition-timing-function: linear, ease;
 }
-.label-bar--down .label-bar-scale {
-	border-bottom: 5px solid transparent;
-}
-.label-bar--up .label-bar-scale {
-	border-top: 5px solid transparent;
-}
-.label-bar-icon {
-	background-color: white;
-	color: var(--bs-gray);
-	padding: 0 0.75rem;
-}
-.label-bar--invisible {
-	opacity: 0;
+.visualization--ready >>> .label-bar-icon {
+	transition: opacity 250ms ease-in;
 }
 </style>

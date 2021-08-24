@@ -7,9 +7,9 @@ import (
 	"sort"
 	"text/tabwriter"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider/sma"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider/sma"
+	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -143,15 +143,6 @@ func (sm *SMA) Diagnose() {
 	fmt.Fprintf(w, "  IP:\t%s\n", sm.device.Address())
 	fmt.Fprintf(w, "  Serial:\t%d\n", sm.device.SerialNumber())
 	fmt.Fprintf(w, "  EnergyMeter:\t%v\n", sm.device.IsEnergyMeter())
-	fmt.Fprintln(w)
-
-	if name, err := sm.device.GetDeviceName(); err == nil {
-		fmt.Fprintf(w, "  Name:\t%s\n", name)
-	}
-
-	if devClass, err := sm.device.GetDeviceClass(); err == nil {
-		fmt.Fprintf(w, "  Device Class:\t0x%X\n", devClass)
-	}
 	fmt.Fprintln(w)
 
 	if values, err := sm.device.Values(); err == nil {

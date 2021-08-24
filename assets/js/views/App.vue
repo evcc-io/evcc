@@ -3,9 +3,8 @@
 		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="/" @click.prevent="reload">
-						<Logo class="logo me-3"></Logo>
-						<span v-if="title" class="title">{{ title }}</span>
+					<a class="navbar-brand" href="https://github.com/evcc-io/evcc">
+						<Logo class="logo"></Logo>
 					</a>
 					<div class="d-flex">
 						<div class="d-flex">
@@ -30,7 +29,7 @@
 								<li class="nav-item">
 									<a
 										class="nav-link"
-										href="https://github.com/andig/evcc/discussions"
+										href="https://github.com/evcc-io/evcc/discussions"
 										target="_blank"
 									>
 										{{ $t("header.support") }}

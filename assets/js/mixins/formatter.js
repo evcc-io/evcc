@@ -17,6 +17,17 @@ export default {
       val = Math.abs(val);
       return val >= this.fmtLimit ? this.round(val / 1e3, this.fmtDigits) : this.round(val, 0);
     },
+    fmtKw: function (watt, kw = true, withUnit = true) {
+      const digits = kw ? 1 : 0;
+      const value = kw ? watt / 1000 : watt;
+      let unit = "";
+      if (withUnit) {
+        unit = kw ? " kW" : " W";
+      }
+      return (
+        this.$n(value, { minimumFractionDigits: digits, maximumFractionDigits: digits }) + unit
+      );
+    },
     fmtUnit: function (val) {
       return Math.abs(val) >= this.fmtLimit ? "k" : "";
     },

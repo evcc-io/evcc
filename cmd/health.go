@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tv42/httpunix"

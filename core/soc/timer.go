@@ -4,20 +4,12 @@ import (
 	"math"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 const (
 	deviation = 30 * time.Minute
 )
-
-// Adapter provides the required methods for interacting with the loadpoint
-type Adapter interface {
-	Publish(key string, val interface{})
-	SocEstimator() *Estimator
-	ActivePhases() int64
-	Voltage() float64
-}
 
 // Timer is the target charging handler
 type Timer struct {

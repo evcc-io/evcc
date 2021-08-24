@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -50,8 +50,8 @@ func (r *Helper) GetBody(url string) ([]byte, error) {
 
 // decodeJSON reads HTTP response and decodes JSON body if error is nil
 func decodeJSON(resp *http.Response, res interface{}) error {
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return StatusError{resp: resp}
+	if err := ResponseError(resp); err != nil {
+		return err
 	}
 
 	return json.NewDecoder(resp.Body).Decode(&res)

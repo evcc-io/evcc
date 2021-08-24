@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 type embed struct {
@@ -15,21 +15,19 @@ type embed struct {
 	Identifier_ string `mapstructure:"identifier"`
 }
 
-// Title implements the Vehicle.Title interface
-func (m *embed) Title() string {
-	return m.Title_
+// Title implements the api.Vehicle interface
+func (v *embed) Title() string {
+	return v.Title_
 }
 
-// Capacity implements the Vehicle.Capacity interface
-func (m *embed) Capacity() int64 {
-	return m.Capacity_
+// Capacity implements the api.Vehicle interface
+func (v *embed) Capacity() int64 {
+	return v.Capacity_
 }
-
-var _ api.Identifier = (*embed)(nil)
 
 // Identify implements the api.Identifier interface
-func (m *embed) Identify() (string, error) {
-	return m.Identifier_, nil
+func (v *embed) Identify() (string, error) {
+	return v.Identifier_, nil
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
@@ -39,7 +37,6 @@ type Vehicle struct {
 	*embed
 	chargeG func() (float64, error)
 	statusG func() (string, error)
-	rangeG  func() (int64, error)
 }
 
 func init() {
@@ -61,12 +58,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	for k, v := range map[string]string{"charge": cc.Charge.PluginType()} {
-		if v == "" {
-			return nil, fmt.Errorf("missing plugin configuration: %s", k)
-		}
 	}
 
 	getter, err := provider.NewFloatGetterFromConfig(cc.Charge)
@@ -96,11 +87,11 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate vehicle with Range
 	var rng func() (int64, error)
 	if cc.Range != nil {
-		v.rangeG, err = provider.NewIntGetterFromConfig(*cc.Range)
+		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
 		if err != nil {
 			return nil, fmt.Errorf("range: %w", err)
 		}
-		rng = v.rng
+		rng = rangeG
 	}
 
 	res := decorateVehicle(v, status, rng)
@@ -109,23 +100,18 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 }
 
 // SoC implements the api.Vehicle interface
-func (m *Vehicle) SoC() (float64, error) {
-	return m.chargeG()
+func (v *Vehicle) SoC() (float64, error) {
+	return v.chargeG()
 }
 
 // SoC implements the api.Vehicle interface
-func (m *Vehicle) status() (api.ChargeStatus, error) {
+func (v *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
-	statusS, err := m.statusG()
+	statusS, err := v.statusG()
 	if err == nil {
 		status = api.ChargeStatus(statusS)
 	}
 
 	return status, err
-}
-
-// rng implements the api.VehicleRange interface
-func (m *Vehicle) rng() (int64, error) {
-	return m.rangeG()
 }

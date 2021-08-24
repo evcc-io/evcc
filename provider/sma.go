@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/andig/evcc/provider/sma"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/provider/sma"
+	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
 

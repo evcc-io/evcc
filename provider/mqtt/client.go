@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
 	paho "github.com/eclipse/paho.mqtt.golang"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
 
 const (
@@ -96,7 +96,7 @@ func (m *Client) ConnectionHandler(client paho.Client) {
 	defer m.mux.Unlock()
 
 	for topic := range m.listener {
-		m.log.TRACE.Printf("%s subscribe %s", m.broker, topic)
+		m.log.DEBUG.Printf("%s subscribe %s", m.broker, topic)
 		go m.listen(topic)
 	}
 }

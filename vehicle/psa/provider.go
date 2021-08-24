@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 )
 
 // Provider is an api.Vehicle implementation for PSA cars
@@ -30,6 +30,10 @@ func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return float64(e.Level), nil
 		}
 
@@ -46,10 +50,27 @@ func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return int64(e.Autonomy), nil
 		}
 
 		err = api.ErrNotAvailable
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+
+	if res, ok := res.(Status); err == nil && ok {
+		return res.Odometer.Mileage, nil
 	}
 
 	return 0, err
@@ -61,8 +82,11 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		if len(res.Energy) == 1 {
-			e := res.Energy[0]
+		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			return e.UpdatedAt.Add(e.Charging.RemainingTime.Duration), nil
 		}
 
@@ -78,10 +102,13 @@ var _ api.ChargeState = (*Provider)(nil)
 func (v *Provider) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
-		if len(res.Energy) == 1 {
+		for _, e := range res.Energy {
+			if e.Type != "Electric" {
+				continue
+			}
+
 			status := api.StatusA
 
-			e := res.Energy[0]
 			if e.Charging.Plugged {
 				status = api.StatusB
 

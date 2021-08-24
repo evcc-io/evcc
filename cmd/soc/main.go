@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/vehicle"
 )
 
 func usage() {
@@ -80,7 +80,7 @@ func main() {
 
 			soc, err := v.SoC()
 			if err != nil {
-				if errors.As(err, &api.ErrMustRetry) {
+				if errors.Is(err, api.ErrMustRetry) {
 					time.Sleep(5 * time.Second)
 					continue
 				}

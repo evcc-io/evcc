@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/andig/evcc/core"
+	"github.com/evcc-io/evcc/core"
 )
 
 // SocketPath is the unix domain socket path

@@ -9,7 +9,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 var truefalse = map[bool]string{false: "false", true: "true"}
@@ -125,6 +125,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Range:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "Range:\t%vkm\n", rng)
+		}
+	}
+
+	if v, ok := v.(api.VehicleOdometer); ok {
+		if odo, err := v.Odometer(); err != nil {
+			fmt.Fprintf(w, "Odometer:\t%.0f\n", err)
+		} else {
+			fmt.Fprintf(w, "Odometer:\t%vkm\n", odo)
 		}
 	}
 

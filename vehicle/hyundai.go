@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/bluelink"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
 
 // Hyundai is an api.Vehicle implementation
@@ -71,13 +71,13 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 	} else {
 		for _, v := range vehicles {
-			if v.Vin == strings.ToUpper(cc.VIN) {
+			if v.VIN == strings.ToUpper(cc.VIN) {
 				vehicle = v
 			}
 		}
 	}
 
-	if len(vehicle.Vin) == 0 {
+	if len(vehicle.VIN) == 0 {
 		return nil, fmt.Errorf("cannot find vehicle: %v", vehicles)
 	}
 

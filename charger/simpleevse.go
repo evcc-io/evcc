@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // SimpleEVSE charger implementation
@@ -45,7 +45,7 @@ func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}

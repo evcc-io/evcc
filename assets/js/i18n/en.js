@@ -30,15 +30,16 @@ export default {
   },
   main: {
     energyflow: {
-      title: "Current Energyflow",
+      noEnergy: "No Energyflow",
       houseConsumption: "Consumption",
+      loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       pvProduction: "Production",
       battery: "Battery",
       batteryCharge: "Battery charge",
       batteryDischarge: "Battery discharge",
       gridImport: "Grid import",
       selfConsumption: "Self consumption",
-      pvExport: "Grid feed-in",
+      pvExport: "Grid export",
     },
     mode: {
       title: "Mode",

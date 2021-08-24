@@ -9,9 +9,9 @@
 					'progress-bar-animated': charging,
 					[progressColor]: true,
 				}"
-				:style="{ width: `${socChargeDisplayWidth}%` }"
+				:style="{ width: `${vehicleSocDisplayWidth}%` }"
 			>
-				{{ socChargeDisplayValue }}
+				{{ vehicleSocDisplayValue }}
 			</div>
 			<div
 				v-if="remainingSoCWidth > 0 && enabled"
@@ -25,9 +25,9 @@
 			></div>
 		</div>
 		<div
-			v-if="connected && hasVehicle && visibleTargetSoC"
+			v-if="connected && vehiclePresent && visibleTargetSoC"
 			class="target"
-			:class="{ 'target--max': visibleTargetSoC === 100 }"
+			:class="{ 'target--slider-hidden': allowSliderHiding && visibleTargetSoC === 100 }"
 		>
 			<div
 				class="target-label d-flex align-items-center justify-content-center"
@@ -54,8 +54,8 @@ export default {
 	name: "VehicleSoc",
 	props: {
 		connected: Boolean,
-		hasVehicle: Boolean,
-		socCharge: Number,
+		vehiclePresent: Boolean,
+		vehicleSoc: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
@@ -64,18 +64,24 @@ export default {
 	data: function () {
 		return {
 			selectedTargetSoC: null,
+			allowSliderHiding: false,
 		};
 	},
+	mounted: function () {
+		setTimeout(() => {
+			this.allowSliderHiding = true;
+		}, 1000);
+	},
 	computed: {
-		socChargeDisplayWidth: function () {
-			if (this.hasVehicle && this.socCharge >= 0) {
-				return this.socCharge;
+		vehicleSocDisplayWidth: function () {
+			if (this.vehiclePresent && this.vehicleSoc >= 0) {
+				return this.vehicleSoc;
 			}
 			return 100;
 		},
-		socChargeDisplayValue: function () {
+		vehicleSocDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
+			if (!this.vehiclePresent || !this.vehicleSoc || this.vehicleSoc < 0) {
 				let chargeStatus = this.$t("main.vehicleSoc.disconnected");
 				if (this.charging) {
 					chargeStatus = this.$t("main.vehicleSoc.charging");
@@ -88,11 +94,11 @@ export default {
 			}
 
 			// percent value if enough space
-			let socCharge = this.socCharge;
-			if (socCharge >= 10) {
-				socCharge += "%";
+			let vehicleSoc = this.vehicleSoc;
+			if (vehicleSoc >= 10) {
+				vehicleSoc += "%";
 			}
-			return socCharge;
+			return vehicleSoc;
 		},
 		progressColor: function () {
 			if (!this.connected) {
@@ -104,17 +110,17 @@ export default {
 			return "bg-primary";
 		},
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.socCharge < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoc < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.socChargeDisplayWidth === 100) {
+			if (this.vehicleSocDisplayWidth === 100) {
 				return null;
 			}
 			if (this.minSoCActive) {
-				return this.minSoC - this.socCharge;
+				return this.minSoC - this.vehicleSoc;
 			}
-			if (this.visibleTargetSoC > this.socCharge) {
-				return this.visibleTargetSoC - this.socCharge;
+			if (this.visibleTargetSoC > this.vehicleSoc) {
+				return this.visibleTargetSoC - this.vehicleSoc;
 			}
 			return null;
 		},
@@ -225,15 +231,15 @@ export default {
 	cursor: grab;
 	border: none;
 	opacity: 1;
-	transition: opacity 0.2s ease 1s;
+	transition: opacity 0.5s ease 1s;
 }
 /* auto-hide targetSoC marker at 100% */
-.target--max .target-slider::-webkit-slider-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-webkit-slider-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
-.target--max .target-slider::-moz-range-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-moz-range-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
 .target:hover .target-slider::-webkit-slider-thumb,

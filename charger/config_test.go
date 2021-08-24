@@ -3,7 +3,7 @@ package charger
 import (
 	"testing"
 
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/util/test"
 )
 
 func TestChargers(t *testing.T) {
@@ -21,6 +21,7 @@ func TestChargers(t *testing.T) {
 		"connect: connection refused",
 		"error connecting: Network Error",
 		"i/o timeout",
+		"(Client.Timeout exceeded while awaiting headers)",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/openwb"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/openwb"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/util"
 )
 
 func init() {
@@ -68,16 +68,19 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	var power func() (float64, error)
 	var soc func() (float64, error)
-	var currents []func() (float64, error)
+	var currents func() (float64, float64, float64, error)
 
 	switch strings.ToLower(cc.Usage) {
 	case "grid":
 		power = floatG(fmt.Sprintf("%s/evu/%s", cc.Topic, openwb.PowerTopic))
 
+		var curr []func() (float64, error)
 		for i := 1; i <= 3; i++ {
 			current := floatG(fmt.Sprintf("%s/evu/%s%d", cc.Topic, openwb.CurrentTopic, i))
-			currents = append(currents, current)
+			curr = append(curr, current)
 		}
+
+		currents = collectCurrentProviders(curr)
 
 	case "pv":
 		configuredG := boolG(fmt.Sprintf("%s/pv/%s", cc.Topic, openwb.PvConfigured))

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 )
 
 // Provider is an api.Vehicle implementation for VW ID cars
@@ -65,8 +65,7 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
 		cst := res.Data.ChargingStatus
-		timestamp, err := time.Parse(time.RFC3339, cst.CarCapturedTimestamp)
-		return timestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
+		return cst.CarCapturedTimestamp.Add(time.Duration(cst.RemainingChargingTimeToCompleteMin) * time.Minute), err
 	}
 
 	return time.Time{}, err

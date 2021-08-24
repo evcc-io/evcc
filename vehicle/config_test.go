@@ -3,7 +3,7 @@ package vehicle
 import (
 	"testing"
 
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/util/test"
 )
 
 func TestVehicles(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 type clientRegistry map[string]*Client
@@ -51,7 +51,7 @@ func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
 		client, err = RegisteredClient(log, cc.Broker, cc.User, cc.Password, ClientID(), 1)
 	}
 
-	if client == nil {
+	if client == nil && err == nil {
 		err = errors.New("missing mqtt broker configuration")
 	}
 

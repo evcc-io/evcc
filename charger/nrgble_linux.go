@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/nrgble"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/nrgble"
+	"github.com/evcc-io/evcc/util"
 	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"
 	"github.com/muka/go-bluetooth/bluez/profile/adapter"
@@ -248,14 +248,13 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
-		nrg.log.TRACE.Println(err)
 		return false, err
 	}
 
 	nrg.log.TRACE.Printf("read info: %+v", res)
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/evcc-io/evcc/pull/274
 	return !res.PauseCharging || res.ChargingActive, nil
 }
 
@@ -267,7 +266,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	}
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/evcc-io/evcc/pull/274
 	if !enable && res.PauseCharging {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)
@@ -346,7 +345,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		nil
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the ChargeRater interface
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
 // 	res := nrgble.Energy{}

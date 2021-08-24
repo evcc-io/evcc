@@ -7,18 +7,21 @@ import (
 )
 
 var (
+	FormContent = "application/x-www-form-urlencoded"
+	JSONContent = "application/json"
+
 	// URLEncoding specifies application/x-www-form-urlencoded
-	URLEncoding = map[string]string{"Content-Type": "application/x-www-form-urlencoded"}
+	URLEncoding = map[string]string{"Content-Type": FormContent}
 
 	// JSONEncoding specifies application/json
 	JSONEncoding = map[string]string{
-		"Content-Type": "application/json",
-		"Accept":       "application/json",
+		"Content-Type": JSONContent,
+		"Accept":       JSONContent,
 	}
 
 	// AcceptJSON accepting application/json
 	AcceptJSON = map[string]string{
-		"Accept": "application/json",
+		"Accept": JSONContent,
 	}
 )
 
@@ -54,6 +57,14 @@ func (e StatusError) HasStatus(codes ...int) bool {
 		}
 	}
 	return false
+}
+
+// ResponseError turns an HTTP status code into an error
+func ResponseError(resp *http.Response) error {
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return StatusError{resp: resp}
+	}
+	return nil
 }
 
 // ReadBody reads HTTP response and returns error on response codes other than HTTP 2xx. It closes the request body after reading.

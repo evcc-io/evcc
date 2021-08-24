@@ -13,23 +13,7 @@
 .bg-primary {
 	background-color: var(--evcc-dark-green) !important;
 }
-.text-primary {
-	color: var(--evcc-dark-green) !important;
-}
-.btn-primary {
-    color: #fff;
-    background-color: var(--evcc-dark-green);
-    border-color: var(--evcc-dark-green);
-}
-.btn-primary:hover {
-    background-color: var(--evcc-dark-green);
-    border-color: var(--evcc-dark-green);
-}
-.btn-primary.disabled, .btn-primary:disabled {
-    color: #fff;
-    background-color: var(--evcc-green);
-    border-color: var(--evcc-green);
-}
+
 /* reverse loading animation */
 .progress-bar-animated {
 	animation-direction: reverse;

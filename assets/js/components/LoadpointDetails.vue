@@ -50,7 +50,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="hasVehicle">
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehiclePresent">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeEstimate) }}
@@ -73,7 +73,7 @@ export default {
 		chargeEstimate: Number,
 		chargePower: Number,
 		climater: String,
-		hasVehicle: Boolean,
+		vehiclePresent: Boolean,
 		range: Number,
 	},
 	mixins: [formatter],

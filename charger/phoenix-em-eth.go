@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
@@ -73,7 +73,7 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 
 // NewPhoenixEMEth creates a Phoenix charger
 func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
 	if err != nil {
 		return nil, err
 	}

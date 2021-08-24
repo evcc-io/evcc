@@ -5,10 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/kamereon"
-	"github.com/andig/evcc/vehicle/nissan"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/vehicle/nissan"
 )
 
 // Credits to
@@ -22,7 +21,7 @@ import (
 // Nissan is an api.Vehicle implementation for Nissan cars
 type Nissan struct {
 	*embed
-	*kamereon.Provider
+	*nissan.Provider
 }
 
 func init() {
@@ -50,21 +49,21 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("nissan")
 	identity := nissan.NewIdentity(log)
 
-	err := identity.Login(cc.User, cc.Password)
-	if err != nil {
+	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := nissan.NewAPI(log, identity, strings.ToUpper(cc.VIN))
 
-	if err == nil && cc.VIN == "" {
+	var err error
+	if cc.VIN == "" {
 		api.VIN, err = findVehicle(api.Vehicles())
 		if err == nil {
 			log.DEBUG.Printf("found vehicle: %v", api.VIN)
 		}
 	}
 
-	v.Provider = kamereon.NewProvider(api.Battery, cc.Cache)
+	v.Provider = nissan.NewProvider(api, cc.Cache)
 
 	return v, err
 }

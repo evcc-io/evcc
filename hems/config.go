@@ -4,11 +4,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/hems/ocpp"
-	"github.com/andig/evcc/hems/semp"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/hems/ocpp"
+	"github.com/evcc-io/evcc/hems/semp"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 )
 
 // HEMS describes the HEMS system interface

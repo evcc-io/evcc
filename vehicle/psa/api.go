@@ -1,18 +1,16 @@
 package psa
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
-// https://github.com/flobz/psa_car_controller
 // https://developer.groupe-psa.io/webapi/b2c/api-reference/specification
 
 // BaseURL is the API base url
@@ -21,49 +19,25 @@ const BaseURL = "https://api.groupe-psa.com/connectedcar/v4"
 // API is an api.Vehicle implementation for PSA cars
 type API struct {
 	*request.Helper
-	brand, realm string
-	id, secret   string // client
+	realm string
+	id    string
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, brand, realm, id, secret string) *API {
+func NewAPI(log *util.Logger, identity oauth2.TokenSource, realm, id string) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
-		brand:  brand,
 		realm:  realm,
 		id:     id,
-		secret: secret,
+	}
+
+	// replace client transport with authenticated transport
+	v.Client.Transport = &oauth2.Transport{
+		Source: identity,
+		Base:   v.Client.Transport,
 	}
 
 	return v
-}
-
-// Login performs the login
-func (v *API) Login(user, password string) error {
-	config := oauth2.Config{
-		ClientID:     v.id,
-		ClientSecret: v.secret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:   "https://api.mpsa.com/api/connectedcar/v2/oauth/authorize",
-			TokenURL:  fmt.Sprintf("https://idpcvs.%s/am/oauth2/access_token", v.brand),
-			AuthStyle: oauth2.AuthStyleInHeader,
-		},
-		Scopes: []string{"openid profile"},
-	}
-
-	ctx := context.WithValue(
-		context.Background(),
-		oauth2.HTTPClient,
-		v.Client,
-	)
-
-	// replace client with authenticated oauth client
-	token, err := config.PasswordCredentialsToken(ctx, user, password)
-	if err == nil {
-		v.Client = config.Client(ctx, token)
-	}
-
-	return err
 }
 
 // Vehicle is a single vehicle
@@ -121,13 +95,16 @@ type Status struct {
 			Status    string // Disabled
 		}
 	}
-	Energy []Energy
+	Energy   []Energy
+	Odometer struct {
+		Mileage float64
+	} `json:"timed.odometer"`
 }
 
 // Energy is the /status partial energy response
 type Energy struct {
 	UpdatedAt time.Time
-	Type      string // Electric
+	Type      string // Fuel/Electric
 	Level     int
 	Autonomy  int
 	Charging  struct {

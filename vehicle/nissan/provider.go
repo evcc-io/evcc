@@ -1,48 +1,28 @@
-package kamereon
+package nissan
 
 import (
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
 )
-
-// Response structure for kamereon api
-type Response struct {
-	Data data `json:"data"`
-}
-
-type data struct {
-	Type, ID   string     // battery refresh
-	Attributes attributes `json:"attributes"`
-}
-
-type attributes struct {
-	Timestamp          string  `json:"timestamp"`
-	ChargingStatus     float32 `json:"chargingStatus"`
-	InstantaneousPower int     `json:"instantaneousPower"`
-	RangeHvacOff       int     `json:"rangeHvacOff"`    // Nissan
-	BatteryAutonomy    int     `json:"batteryAutonomy"` // Renault
-	BatteryLevel       int     `json:"batteryLevel"`
-	BatteryCapacity    int     `json:"batteryCapacity"` // Nissan
-	BatteryTemperature int     `json:"batteryTemperature"`
-	PlugStatus         int     `json:"plugStatus"`
-	LastUpdateTime     string  `json:"lastUpdateTime"`
-	ChargePower        int     `json:"chargePower"`
-	RemainingTime      *int    `json:"chargingRemainingTime"`
-}
 
 // Provider is a kamereon provider
 type Provider struct {
-	apiG func() (interface{}, error)
+	apiG   func() (interface{}, error)
+	action func(value Action) error
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(respG func() (Response, error), cache time.Duration) *Provider {
+func NewProvider(api *API, cache time.Duration) *Provider {
 	return &Provider{
 		apiG: provider.NewCached(func() (interface{}, error) {
-			return respG()
+			return api.Battery()
 		}, cache).InterfaceGetter(),
+		action: func(value Action) error {
+			_, err := api.ChargingAction(value)
+			return err
+		},
 	}
 }
 
@@ -108,4 +88,18 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	}
 
 	return time.Time{}, err
+}
+
+var _ api.VehicleStartCharge = (*Provider)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.action(ActionChargeStart)
+}
+
+var _ api.VehicleStopCharge = (*Provider)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Provider) StopCharge() error {
+	return v.action(ActionChargeStop)
 }

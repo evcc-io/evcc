@@ -1,5 +1,8 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
+		<h3 class="d-none d-md-block my-4">
+			{{ siteTitle || "Home" }}
+		</h3>
 		<Energyflow v-bind="energyflow" />
 		<hr class="w-100 my-4" />
 		<div class="flex-grow-1 d-flex justify-content-around flex-column">
@@ -37,12 +40,22 @@ export default {
 		batterySoC: Number,
 		gridCurrents: Array,
 		prioritySoC: Number,
+		siteTitle: String,
 	},
 	components: { Loadpoint, Energyflow },
 	mixins: [formatter, collector],
 	computed: {
 		energyflow: function () {
 			return this.collectProps(Energyflow);
+		},
+		activeLoadpointsCount: function () {
+			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
+		},
+		loadpointsPower: function () {
+			return this.loadpoints.reduce((sum, lp) => {
+				sum += lp.chargePower || 0;
+				return sum;
+			}, 0);
 		},
 	},
 };

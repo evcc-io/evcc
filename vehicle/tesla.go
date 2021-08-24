@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
@@ -19,27 +19,21 @@ type Tesla struct {
 	*embed
 	vehicle       *tesla.Vehicle
 	chargeStateG  func() (interface{}, error)
-	climateStateG func() (interface{}, error)
-}
-
-// teslaTokens contains access and refresh tokens
-type teslaTokens struct {
-	Access, Refresh string
+	vehicleStateG func() (interface{}, error)
 }
 
 func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-// NewTeslaFromConfig creates a new Tesla vehicle
+// NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
-		ClientID, ClientSecret string
-		User, Password         string
-		Tokens                 teslaTokens
-		VIN                    string
-		Cache                  time.Duration
+		embed          `mapstructure:",squash"`
+		User, Password string // deprecated
+		Tokens         Tokens
+		VIN            string
+		Cache          time.Duration
 	}{
 		Cache: interval,
 	}
@@ -48,8 +42,12 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" && cc.Tokens.Access == "" {
-		return nil, errors.New("missing credentials")
+	if cc.User != "" {
+		return nil, errors.New("user/password authentication deprecated, use `evcc token` to create credentials")
+	}
+
+	if err := cc.Tokens.Error(); err != nil {
+		return nil, err
 	}
 
 	v := &Tesla{
@@ -60,16 +58,11 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("tesla")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
-	var options []tesla.ClientOption
-	if cc.Tokens.Access != "" {
-		options = append(options, tesla.WithToken(&oauth2.Token{
-			AccessToken:  cc.Tokens.Access,
-			RefreshToken: cc.Tokens.Refresh,
-			Expiry:       time.Now(),
-		}))
-	} else {
-		options = append(options, tesla.WithCredentials(cc.User, cc.Password))
-	}
+	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
+		AccessToken:  cc.Tokens.Access,
+		RefreshToken: cc.Tokens.Refresh,
+		Expiry:       time.Now(),
+	})}
 
 	client, err := tesla.NewClient(ctx, options...)
 	if err != nil {
@@ -96,7 +89,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
-	v.climateStateG = provider.NewCached(v.climateState, cc.Cache).InterfaceGetter()
+	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -106,9 +99,9 @@ func (v *Tesla) chargeState() (interface{}, error) {
 	return v.vehicle.ChargeState()
 }
 
-// climateState implements the climater api
-func (v *Tesla) climateState() (interface{}, error) {
-	return v.vehicle.ClimateState()
+// vehicleState implements the climater api
+func (v *Tesla) vehicleState() (interface{}, error) {
+	return v.vehicle.VehicleState()
 }
 
 // SoC implements the api.Vehicle interface
@@ -154,6 +147,8 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	return 0, err
 }
 
+const kmPerMile = 1.609344
+
 var _ api.VehicleRange = (*Tesla)(nil)
 
 // Range implements the api.VehicleRange interface
@@ -162,7 +157,21 @@ func (v *Tesla) Range() (int64, error) {
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
 		// miles to km
-		return int64(1.609344 * res.EstBatteryRange), nil
+		return int64(kmPerMile * res.EstBatteryRange), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Tesla)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Tesla) Odometer() (float64, error) {
+	res, err := v.vehicleStateG()
+
+	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
+		// miles to km
+		return kmPerMile * res.Odometer, nil
 	}
 
 	return 0, err

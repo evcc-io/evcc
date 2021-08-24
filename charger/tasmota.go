@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/tasmota"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/tasmota"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // Tasmota project homepage

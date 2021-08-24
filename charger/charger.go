@@ -3,9 +3,9 @@ package charger
 import (
 	"fmt"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Charger is an api.Charger implementation with configurable getters and setters.
@@ -26,17 +26,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Charger, error
 	cc := struct{ Status, Enable, Enabled, MaxCurrent provider.Config }{}
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	for k, v := range map[string]string{
-		"status":     cc.Status.PluginType(),
-		"enable":     cc.Enable.PluginType(),
-		"enabled":    cc.Enabled.PluginType(),
-		"maxcurrent": cc.MaxCurrent.PluginType(),
-	} {
-		if v == "" {
-			return nil, fmt.Errorf("missing plugin configuration: %s", k)
-		}
 	}
 
 	status, err := provider.NewStringGetterFromConfig(cc.Status)
