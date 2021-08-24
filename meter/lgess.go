@@ -8,47 +8,41 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/lgpcs"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
-/**
- * This meter supports the LGESS HOME 8 and LGESS HOME 10 systems from LG with / without battery.
- *
- ** Usages **
- * The following usages are supported:
- * - grid    ... for reading the power imported or exported to the grid
- * - pv      ... for reading the power produced by the Photovoltaik
- * - battery ... for reading the power imported or exported to the battery
- *  *
- ** Example configuration **
- *
- * meters:
- * - name: GridMeter
- *   type: lgess
- *   usage: grid
- *   uri: https://192.168.1.23
- *   password: "DE200....."
- * - name: PvMeter
- *   type: lgess
- *   usage: pv
- * - name: BatteryMeter
- *   type: lgess
- *   usage: battery
- *
- *
- ** Limitations **
- * It is not allowed to provide different URIs or passwords for different lgess meters since always the
- * same hardware instance is accessed with the different usages.
- *
- * */
+/*
+This meter supports the LGESS HOME 8 and LGESS HOME 10 systems from LG with / without battery.
 
-/**
- * Instance of one meter - multiple meter instances with different usages are allowed
- */
+** Usages **
+The following usages are supported:
+- grid    ... for reading the power imported or exported to the grid
+- pv      ... for reading the power produced by the pv
+- battery ... for reading the power imported or exported to the battery
+
+** Example configuration **
+meters:
+- name: GridMeter
+  type: lgess
+  usage: grid
+  uri: https://192.168.1.23
+  password: "DE200....."
+- name: PvMeter
+  type: lgess
+  usage: pv
+- name: BatteryMeter
+  type: lgess
+  usage: battery
+
+** Limitations **
+It is not allowed to provide different URIs or passwords for different lgess meters since always the
+same hardware instance is accessed with the different usages.
+*/
+
+// LgEss is the LG ESS meter. Multiple meter instances with different usages are allowed
 type LgEss struct {
-	usage string // grid, pv, battery
-	essG  func() (interface{}, error)
+	usage string     // grid, pv, battery
+	lp    *lgpcs.Com // access to the lgpcps singleton
 }
 
 func init() {
@@ -81,22 +75,19 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewLgEss creates an LgEss Meter
 func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, error) {
-	lp, err := lgpcs.GetInstance(uri, password)
+	lp, err := lgpcs.GetInstance(uri, password, cache)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
 		usage: strings.ToLower(usage),
+		lp:    lp,
 	}
-
-	m.essG = provider.NewCached(func() (interface{}, error) {
-		return lp.Data()
-	}, cache).InterfaceGetter()
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
-	if m.usage == "grid" || m.usage == "pv" {
+	if m.usage == "grid" {
 		totalEnergy = m.totalEnergy
 	}
 
@@ -111,7 +102,7 @@ func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, erro
 
 // CurrentPower implements the api.Meter interface
 func (m *LgEss) CurrentPower() (float64, error) {
-	res, err := m.essG()
+	res, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
@@ -125,14 +116,14 @@ func (m *LgEss) CurrentPower() (float64, error) {
 		return data.PvTotalPower, nil
 	case "battery":
 		return data.BatConvPower, nil
+	default:
+		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
-
-	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *LgEss) totalEnergy() (float64, error) {
-	res, err := m.essG()
+	res, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
@@ -142,16 +133,14 @@ func (m *LgEss) totalEnergy() (float64, error) {
 	switch m.usage {
 	case "grid":
 		return data.CurrentGridFeedInEnergy / 1e3, nil
-	case "pv":
-		return data.CurrentPvGenerationSum / 1e3, nil
+	default:
+		return 0, fmt.Errorf("invalid usage: %s", m.usage)
 	}
-
-	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
 // batterySoC implements the api.Battery interface
 func (m *LgEss) batterySoC() (float64, error) {
-	res, err := m.essG()
+	res, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}

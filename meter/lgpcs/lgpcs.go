@@ -1,13 +1,16 @@
+// Package lgpcs implements access to the LG pcs device (aka inverter).
+// Pcs is the LG power conditioning system that converts the PV (or battery) - DC current into AC current (and controls the batteries)
 package lgpcs
 
-// pcs ... the LG power conditioning system - converts the PV (or battery) - DC current into AC current (and controls the batteries)
-
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -38,16 +41,18 @@ type EssData struct {
 type Com struct {
 	Helper   *request.Helper
 	Log      *util.Logger
-	uri      string // IP address of the LG ESS Inverter - e.g. "https://192.168.1.28"
+	uri      string // URI of the LG ESS inverter - e.g. "https://192.168.1.28"
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
+	Data     func() (interface{}, error)
 }
 
 var once sync.Once
 var instance *Com
 
-// GetInstance implements the singleton pattern to handel the access via the authkey to the PCS of the LGESSHome system
-func GetInstance(uri, password string) (*Com, error) {
+// GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
+func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
+	// if uri is empty "" the result will be "https:"
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	once.Do(func() {
@@ -61,16 +66,21 @@ func GetInstance(uri, password string) (*Com, error) {
 
 		// ignore the self signed certificate
 		instance.Helper.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+
+		// caches the access to the data for "cache" time duration - if that duration is expired a new request is sent to the pcs
+		instance.Data = provider.NewCached(func() (interface{}, error) {
+			return instance.refreshData()
+		}, cache).InterfaceGetter()
 	})
 
-	// it is suffucient to provide the uri once ... if not provided yet set uri now
-	if instance.uri == "" {
+	// it is sufficient to provide the uri once ... if not provided yet set uri now
+	if instance.uri == "https:" {
 		instance.uri = uri
 	}
 
 	// check if different uris are provided
-	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("Uri mismatch for same lgess. Uri1: %s, Uri2: %s", instance.uri, uri)
+	if uri != "https:" && instance.uri != uri {
+		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
 	}
 
 	// it is sufficient to provide the password once ... if not provided yet set password now
@@ -80,11 +90,11 @@ func GetInstance(uri, password string) (*Com, error) {
 
 	// check if different passwords are provided
 	if password != "" && instance.password != password {
-		return nil, fmt.Errorf("Password mismatch for same lgess. Pass1: %s, Pass2: %s", instance.password, password)
+		return nil, errors.New("password mismatch")
 	}
 
 	// do first login if no authKey exists and uri and password exist
-	if instance.authKey == "" && instance.uri != "" && instance.password != "" {
+	if instance.authKey == "" && instance.uri != "https:" && instance.password != "" {
 		instance.Log.DEBUG.Printf("Initial Login\r\n")
 		if err := instance.Login(); err != nil {
 			return nil, err
@@ -94,7 +104,7 @@ func GetInstance(uri, password string) (*Com, error) {
 	return instance, nil
 }
 
-// login calls login and stores the returned authorization key
+// Login calls login and stores the returned authorization key
 func (m *Com) Login() error {
 	data := map[string]interface{}{
 		"password": m.password,
@@ -109,8 +119,8 @@ func (m *Com) Login() error {
 
 	// read auth_key from response body
 	var res struct {
-		Status  string
-		AuthKey string
+		Status  string `json:"status,omitempty"`
+		AuthKey string `json:"auth_key"`
 	}
 
 	// use DoJSON as it will close the response body
@@ -120,7 +130,7 @@ func (m *Com) Login() error {
 
 	// check login response status
 	if res.Status != "success" {
-		return fmt.Errorf("login failed - status: %s", res.Status)
+		return fmt.Errorf("login failed: %s", res.Status)
 	}
 
 	// read auth_key from response
@@ -129,8 +139,8 @@ func (m *Com) Login() error {
 	return nil
 }
 
-// Data reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
-func (m *Com) Data() (EssData, error) {
+// refreshData reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
+func (m *Com) refreshData() (EssData, error) {
 	data := map[string]interface{}{
 		"auth_key": m.authKey,
 	}
@@ -144,7 +154,6 @@ func (m *Com) Data() (EssData, error) {
 
 	// re-login if request returns 405-error
 	if err := m.Helper.DoJSON(req, &resp); err != nil {
-		m.Log.DEBUG.Printf("Data refresh failed with response: [%v]\r\n", err)
 		// 405 if authKey expired - try re-login (only once)
 		if strings.Contains(err.Error(), "405") {
 			err = m.Login()
