@@ -26,24 +26,7 @@ a {
 .bg-muted {
 	opacity: 0.25;
 }
-.btn-outline-primary {
-	color: var(--bs-gray-dark);
-	border-color: var(--bs-gray-dark);
-}
-.btn-outline-primary:hover {
-	color: var(--bs-white);
-	background-color: var(--evcc-dark-green);
-	border-color: var(--bs-gray-dark);
-}
-.btn-check:active + .btn-outline-primary,
-.btn-check:checked + .btn-outline-primary,
-.btn-outline-primary.active,
-.btn-outline-primary.dropdown-toggle.show,
-.btn-outline-primary:active {
-	color: var(--bs-white);
-	background-color: var(--evcc-dark-green);
-	border-color: var(--bs-gray-dark);
-}
+
 .btn-primary {
 	background-color:  var(--bs-gray-dark);
 	border-color: var(--bs-gray-dark);
