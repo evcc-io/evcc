@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/lgpcs"
+	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -45,8 +47,8 @@ import (
  * Instance of one meter - multiple meter instances with different usages are allowed
  */
 type LgEss struct {
-	usage string          // grid, pv, battery
-	lgcom *lgpcs.LgPcsCom // singleton controlling the access to the LgEss data via the auth_key.
+	usage string // grid, pv, battery
+	essG  func() (interface{}, error)
 }
 
 func init() {
@@ -61,7 +63,10 @@ func init() {
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Usage, Password string
-	}{}
+		Cache                time.Duration
+	}{
+		Cache: 2 * time.Second,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -70,21 +75,24 @@ func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
 	if cc.Usage == "" {
 		return nil, errors.New("missing usage")
 	}
-	return NewLgEss(cc.URI, cc.Usage, cc.Password)
+
+	return NewLgEss(cc.URI, cc.Usage, cc.Password, cc.Cache)
 }
 
 // NewLgEss creates an LgEss Meter
-func NewLgEss(uri, usage, password string) (api.Meter, error) {
-
-	lgpcs, err := lgpcs.GetInstance(uri, password)
+func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, error) {
+	lp, err := lgpcs.GetInstance(uri, password)
 	if err != nil {
 		return nil, err
 	}
 
 	m := &LgEss{
 		usage: strings.ToLower(usage),
-		lgcom: lgpcs,
 	}
+
+	m.essG = provider.NewCached(func() (interface{}, error) {
+		return lp.Data()
+	}, cache).InterfaceGetter()
 
 	// decorate api.MeterEnergy
 	var totalEnergy func() (float64, error)
@@ -97,53 +105,58 @@ func NewLgEss(uri, usage, password string) (api.Meter, error) {
 	if usage == "battery" {
 		batterySoC = m.batterySoC
 	}
+
 	return decorateLgEss(m, totalEnergy, batterySoC), nil
 }
 
 // CurrentPower implements the api.Meter interface
-// @return float64 current power in W
 func (m *LgEss) CurrentPower() (float64, error) {
-
-	data, err := m.lgcom.GetData()
+	res, err := m.essG()
 	if err != nil {
 		return 0, err
 	}
+
+	data := res.(lgpcs.EssData)
 
 	switch m.usage {
 	case "grid":
 		return data.GridPower, nil
 	case "pv":
-		return data.PvPower, nil
+		return data.PvTotalPower, nil
 	case "battery":
-		return data.BatPower, nil
+		return data.BatConvPower, nil
 	}
+
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
 // totalEnergy implements the api.MeterEnergy interface
-// @return float64 Current energy in kWh (of this day)
 func (m *LgEss) totalEnergy() (float64, error) {
-
-	data, err := m.lgcom.GetData()
+	res, err := m.essG()
 	if err != nil {
 		return 0, err
 	}
 
+	data := res.(lgpcs.EssData)
+
 	switch m.usage {
 	case "grid":
-		return data.GridEnergy, nil
+		return data.CurrentGridFeedInEnergy / 1e3, nil
 	case "pv":
-		return data.PvEnergy, nil
+		return data.CurrentPvGenerationSum / 1e3, nil
 	}
+
 	return 0, fmt.Errorf("invalid usage: %s", m.usage)
 }
 
 // batterySoC implements the api.Battery interface
-// @return float64 The battery state of charge (SoC)
 func (m *LgEss) batterySoC() (float64, error) {
-	data, err := m.lgcom.GetData()
+	res, err := m.essG()
 	if err != nil {
 		return 0, err
 	}
-	return data.BatSoC, nil
+
+	data := res.(lgpcs.EssData)
+
+	return data.BatUserSoc, nil
 }

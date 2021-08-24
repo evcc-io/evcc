@@ -5,11 +5,8 @@ package lgpcs
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -21,87 +18,72 @@ const (
 	MeterURI = "/v1/user/essinfo/home"
 )
 
-type LgEssData struct {
-	GridPower          float64 // < 0 if selling to grid
-	GridEnergy         float64 // total grid energy of this day in kWh
-	PvPower            float64 // power of PV
-	PvEnergy           float64 // total pv energy of this day in kWh
-	BatPower           float64 // power of battery, < 0 if charging the battery
-	BatSoC             float64 // battery state of charge
-	lastRefreshTimeSec int64   // time of last refresh (unix time in seconds since jan 1st 1970 UTC)
+type MeterResponse struct {
+	Statistics EssData
+	Direction  struct {
+		IsGridSelling        int `json:"is_grid_selling_,string"`
+		IsBatteryDischarging int `json:"is_battery_discharging_,string"`
+	}
 }
 
-type LgPcsCom struct {
+type EssData struct {
+	GridPower               float64 `json:"grid_power,string"`
+	PvTotalPower            float64 `json:"pcs_pv_total_power,string"`
+	BatConvPower            float64 `json:"batconv_power,string"`
+	BatUserSoc              float64 `json:"bat_user_soc,string"`
+	CurrentGridFeedInEnergy float64 `json:"current_grid_feed_in_energy,string"`
+	CurrentPvGenerationSum  float64 `json:"current_pv_generation_sum,string"`
+}
+
+type Com struct {
 	Helper   *request.Helper
 	Log      *util.Logger
 	uri      string // IP address of the LG ESS Inverter - e.g. "https://192.168.1.28"
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
-	// can also be found in the app - menuitem "Systeminformation"
-	authKey string     // auth_key returned during login and renewed with new login after expiration
-	data    *LgEssData // power/energy data
+	authKey  string // auth_key returned during login and renewed with new login after expiration
 }
 
 var once sync.Once
-var instance *LgPcsCom
+var instance *Com
 
-/**
- * Implements the singleton pattern to handel the access via the authkey to the PCS of the LGESSHome system
- */
-func GetInstance(uri, password string) (*LgPcsCom, error) {
+// GetInstance implements the singleton pattern to handel the access via the authkey to the PCS of the LGESSHome system
+func GetInstance(uri, password string) (*Com, error) {
+	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
-	var convertedUri string = ""
-
-	// adapt uri if provided (!= "")
-	if uri != "" {
-		_, err := url.Parse(uri)
-		if err != nil {
-			return nil, fmt.Errorf("uri %s is invalid: %s", uri, err)
-		}
-		convertedUri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
-	}
 	once.Do(func() {
 		log := util.NewLogger("lgess")
-		instance = &LgPcsCom{
+		instance = &Com{
 			Helper:   request.NewHelper(log),
 			Log:      log,
-			uri:      convertedUri,
+			uri:      uri,
 			password: password,
-			authKey:  "",
-			data: &LgEssData{
-				GridPower:          0.0,
-				GridEnergy:         0.0,
-				PvPower:            0.0,
-				PvEnergy:           0.0,
-				BatPower:           0.0,
-				BatSoC:             0.0,
-				lastRefreshTimeSec: 0,
-			},
 		}
+
 		// ignore the self signed certificate
 		instance.Helper.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	})
 
-	//instance.Log.DEBUG.Printf("Uri: [%v]\r\n", instance.uri)
-	// It is suffucient to provide the uri once ... if not provided yet set uri now
+	// it is suffucient to provide the uri once ... if not provided yet set uri now
 	if instance.uri == "" {
-		instance.uri = convertedUri
+		instance.uri = uri
 	}
 
-	// Check if different uris are provided => report error
-	if convertedUri != "" && instance.uri != convertedUri {
-		return nil, fmt.Errorf("Uri mismatch for same lgess. Uri1: %s, Uri2: %s", instance.uri, convertedUri)
+	// check if different uris are provided
+	if uri != "" && instance.uri != uri {
+		return nil, fmt.Errorf("Uri mismatch for same lgess. Uri1: %s, Uri2: %s", instance.uri, uri)
 	}
 
-	// It is sufficient to provide the password once ... if not provided yet set password now
+	// it is sufficient to provide the password once ... if not provided yet set password now
 	if instance.password == "" {
 		instance.password = password
 	}
-	// Check if different passwors are provided => report error
+
+	// check if different passwords are provided
 	if password != "" && instance.password != password {
 		return nil, fmt.Errorf("Password mismatch for same lgess. Pass1: %s, Pass2: %s", instance.password, password)
 	}
 
-	// Do first login if no authKey exists and uri and password exist
+	// do first login if no authKey exists and uri and password exist
 	if instance.authKey == "" && instance.uri != "" && instance.password != "" {
 		instance.Log.DEBUG.Printf("Initial Login\r\n")
 		if err := instance.Login(); err != nil {
@@ -112,8 +94,8 @@ func GetInstance(uri, password string) (*LgPcsCom, error) {
 	return instance, nil
 }
 
-// Login calls login and stores the returned authorization key
-func (m *LgPcsCom) Login() error {
+// login calls login and stores the returned authorization key
+func (m *Com) Login() error {
 	data := map[string]interface{}{
 		"password": m.password,
 	}
@@ -126,139 +108,77 @@ func (m *LgPcsCom) Login() error {
 	}
 
 	// read auth_key from response body
-	var result map[string]interface{}
+	var res struct {
+		Status  string
+		AuthKey string
+	}
+
 	// use DoJSON as it will close the response body
-	if err := m.Helper.DoJSON(req, &result); err != nil {
+	if err := m.Helper.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
 	// check login response status
-	if status := result["status"].(string); status != "success" {
-		return fmt.Errorf("login failed - status: %s", status)
+	if res.Status != "success" {
+		return fmt.Errorf("login failed - status: %s", res.Status)
 	}
+
 	// read auth_key from response
-	m.authKey = result["auth_key"].(string)
-	m.Log.DEBUG.Printf("Login success. AuthKey:%v\r\n", m.authKey)
+	m.authKey = res.AuthKey
+
 	return nil
 }
 
-func (m *LgPcsCom) GetData() (*LgEssData, error) {
-	err := m.ReadData()
-	if err != nil {
-		return nil, err
-	}
-	return m.data, nil
-}
-
-/*
- * Read data from lgess pcs if more than 2 seconds expired since last access.
- * Tries to re-login if "405" auth_key expired is returned
- */
-func (m *LgPcsCom) ReadData() error {
-
-	currentTimeSec := time.Now().Unix()
-	// refresh when at least 2 seconds elapsed since the last ReadData request.
-	if (currentTimeSec - m.data.lastRefreshTimeSec) < 2 {
-		return nil
-	}
-	m.data.lastRefreshTimeSec = currentTimeSec
-
+// Data reads data from lgess pcs. Tries to re-login if "405" auth_key expired is returned
+func (m *Com) Data() (EssData, error) {
 	data := map[string]interface{}{
 		"auth_key": m.authKey,
 	}
-	m.Log.DEBUG.Printf("Data refresh using auth_key: %v\r\n", m.authKey)
+
 	req, err := request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
-		return err
+		return EssData{}, err
 	}
 
-	var res map[string]interface{}
+	var resp MeterResponse
+
 	// re-login if request returns 405-error
-	if err := m.Helper.DoJSON(req, &res); err != nil {
+	if err := m.Helper.DoJSON(req, &resp); err != nil {
 		m.Log.DEBUG.Printf("Data refresh failed with response: [%v]\r\n", err)
 		// 405 if authKey expired - try re-login (only once)
 		if strings.Contains(err.Error(), "405") {
 			err = m.Login()
 			if err != nil {
 				m.Log.ERROR.Printf("Re-Login failed - error: [%v]\r\n", err)
-				return err
+				return EssData{}, err
 			}
+
 			data["auth_key"] = m.authKey
+
 			req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 			if err != nil {
 				m.Log.ERROR.Printf("Failed to setup request - error: [%v]\r\n", err)
-				return err
+				return EssData{}, err
 			}
-			err = m.Helper.DoJSON(req, &res)
-			if err != nil {
+
+			if err = m.Helper.DoJSON(req, &resp); err != nil {
 				m.Log.ERROR.Printf("Re-Read data failed - error: [%v]\r\n", err)
-				return err
+				return EssData{}, err
 			}
 		} else {
-			return err
+			return EssData{}, err
 		}
 	}
 
-	statistics := res["statistics"].(map[string]interface{})
-	direction := res["direction"].(map[string]interface{})
-
-	gridPower, err := strconv.ParseFloat(statistics["grid_power"].(string), 64)
-	if err != nil {
-		return err
-	}
-
-	isGridSelling, err := strconv.Atoi(direction["is_grid_selling_"].(string))
-	if err != nil {
-		return err
-	}
-
-	// selling to grid: gridPower is negative, buying from grid: gridPower is positive
-	if isGridSelling == 1 {
-		gridPower = gridPower * (-1)
-	}
-	m.data.GridPower = gridPower
-
-	pvPower, err := strconv.ParseFloat(statistics["pcs_pv_total_power"].(string), 64)
-	if err != nil {
-		return err
-	}
-	m.data.PvPower = pvPower
-
-	batPower, err := strconv.ParseFloat(statistics["batconv_power"].(string), 64)
-	if err != nil {
-		return err
-	}
-	isBatDischarging, err := strconv.Atoi(direction["is_battery_discharging_"].(string))
-	if err != nil {
-		return err
+	res := resp.Statistics
+	if resp.Direction.IsGridSelling > 0 {
+		res.GridPower = -res.GridPower
 	}
 
 	// discharge battery: batPower is positive, charge battery: batPower is negative
-	if isBatDischarging == 0 {
-		batPower = batPower * (-1)
+	if resp.Direction.IsBatteryDischarging == 0 {
+		res.BatConvPower = -res.BatConvPower
 	}
-	m.data.BatPower = batPower
 
-	batSoC, err := strconv.ParseFloat(statistics["bat_user_soc"].(string), 64)
-	if err != nil {
-		return err
-	}
-	m.data.BatSoC = batSoC
-
-	gridEnergy, err := strconv.ParseFloat(statistics["current_grid_feed_in_energy"].(string), 64)
-	if err != nil {
-		return err
-	}
-	// from Wh to kWh
-	gridEnergy = gridEnergy / 1000
-	m.data.GridEnergy = gridEnergy
-
-	pvEnergy, err := strconv.ParseFloat(statistics["current_pv_generation_sum"].(string), 64)
-	if err != nil {
-		return err
-	}
-	// from Wh to kWh
-	pvEnergy = pvEnergy / 1000
-	m.data.PvEnergy = pvEnergy
-	return nil
+	return res, nil
 }
