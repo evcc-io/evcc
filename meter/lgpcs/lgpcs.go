@@ -3,6 +3,7 @@ package lgpcs
 // pcs ... the LG power conditioning system - converts the PV (or battery) - DC current into AC current (and controls the batteries)
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -36,8 +37,7 @@ type EssData struct {
 }
 
 type Com struct {
-	Helper   *request.Helper
-	Log      *util.Logger
+	*request.Helper
 	uri      string // IP address of the LG ESS Inverter - e.g. "https://192.168.1.28"
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
@@ -54,23 +54,22 @@ func GetInstance(uri, password string) (*Com, error) {
 		log := util.NewLogger("lgess")
 		instance = &Com{
 			Helper:   request.NewHelper(log),
-			Log:      log,
 			uri:      uri,
 			password: password,
 		}
 
 		// ignore the self signed certificate
-		instance.Helper.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		instance.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	})
 
-	// it is suffucient to provide the uri once ... if not provided yet set uri now
+	// it is sufficient to provide the uri once ... if not provided yet set uri now
 	if instance.uri == "" {
 		instance.uri = uri
 	}
 
 	// check if different uris are provided
 	if uri != "" && instance.uri != uri {
-		return nil, fmt.Errorf("Uri mismatch for same lgess. Uri1: %s, Uri2: %s", instance.uri, uri)
+		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
 	}
 
 	// it is sufficient to provide the password once ... if not provided yet set password now
@@ -80,18 +79,16 @@ func GetInstance(uri, password string) (*Com, error) {
 
 	// check if different passwords are provided
 	if password != "" && instance.password != password {
-		return nil, fmt.Errorf("Password mismatch for same lgess. Pass1: %s, Pass2: %s", instance.password, password)
+		return nil, errors.New("password mismatch")
 	}
 
 	// do first login if no authKey exists and uri and password exist
+	var err error
 	if instance.authKey == "" && instance.uri != "" && instance.password != "" {
-		instance.Log.DEBUG.Printf("Initial Login\r\n")
-		if err := instance.Login(); err != nil {
-			return nil, err
-		}
+		err = instance.Login()
 	}
 
-	return instance, nil
+	return instance, err
 }
 
 // login calls login and stores the returned authorization key
@@ -100,8 +97,6 @@ func (m *Com) Login() error {
 		"password": m.password,
 	}
 
-	m.Log.DEBUG.Printf("Login Uri: %v\r\n", m.uri)
-
 	req, err := request.New(http.MethodPut, m.uri+LoginURI, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
@@ -109,18 +104,17 @@ func (m *Com) Login() error {
 
 	// read auth_key from response body
 	var res struct {
-		Status  string
-		AuthKey string
+		Status  string `json:"status,omitempty"`
+		AuthKey string `json:"auth_key"`
 	}
 
-	// use DoJSON as it will close the response body
-	if err := m.Helper.DoJSON(req, &res); err != nil {
+	if err := m.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
 	// check login response status
 	if res.Status != "success" {
-		return fmt.Errorf("login failed - status: %s", res.Status)
+		return fmt.Errorf("login failed: %s", res.Status)
 	}
 
 	// read auth_key from response
@@ -142,32 +136,24 @@ func (m *Com) Data() (EssData, error) {
 
 	var resp MeterResponse
 
-	// re-login if request returns 405-error
-	if err := m.Helper.DoJSON(req, &resp); err != nil {
-		m.Log.DEBUG.Printf("Data refresh failed with response: [%v]\r\n", err)
-		// 405 if authKey expired - try re-login (only once)
-		if strings.Contains(err.Error(), "405") {
+	if err := m.DoJSON(req, &resp); err != nil {
+		// re-login if request returns 405-error
+		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
 			err = m.Login()
-			if err != nil {
-				m.Log.ERROR.Printf("Re-Login failed - error: [%v]\r\n", err)
-				return EssData{}, err
+
+			if err == nil {
+				data["auth_key"] = m.authKey
+				req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 			}
 
-			data["auth_key"] = m.authKey
-
-			req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
-			if err != nil {
-				m.Log.ERROR.Printf("Failed to setup request - error: [%v]\r\n", err)
-				return EssData{}, err
+			if err == nil {
+				err = m.DoJSON(req, &resp)
 			}
-
-			if err = m.Helper.DoJSON(req, &resp); err != nil {
-				m.Log.ERROR.Printf("Re-Read data failed - error: [%v]\r\n", err)
-				return EssData{}, err
-			}
-		} else {
-			return EssData{}, err
 		}
+	}
+
+	if err != nil {
+		return EssData{}, err
 	}
 
 	res := resp.Statistics

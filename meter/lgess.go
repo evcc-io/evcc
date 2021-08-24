@@ -43,9 +43,7 @@ import (
  *
  * */
 
-/**
- * Instance of one meter - multiple meter instances with different usages are allowed
- */
+// LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string // grid, pv, battery
 	essG  func() (interface{}, error)
@@ -55,8 +53,6 @@ func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//call "go generate" in the command line to automatically generate the decorators
-//defined with the following comment
 //go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
