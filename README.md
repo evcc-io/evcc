@@ -269,10 +269,10 @@ EVCC uses positive (+) sign for incoming energy (grid consumption, PV inverter p
 Available meter implementations are:
 
 - `modbus`: ModBus meters as supported by [MBMD](https://github.com/volkszaehler/mbmd#supported-devices). Configuration is similar to the [ModBus plugin](#modbus-readwrite) where `power` and `energy` specify the MBMD measurement value to use. Additionally, `soc` can specify an MBMD measurement value for home battery soc. Typical values are `power: Power`, `energy: Sum` and `soc: ChargeState` where only `power` applied per default.
+- `lgess`: LG ESS HOME meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`. Use `uri` to configure the IP address of the LG ESS HOME. Use `password` to configure the password required to access the LG ESS HOME. `uri` and `password` only need to be provided once if multiple usages are defined.
 - `openwb`: OpenWB meters. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
 - `sma`: SMA Home Manager 2.0, SMA Energy Meter and Inverters via SMA Speedwire.
 - `tesla`: Tesla PowerWall meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`.
-- `lgess`: LG ESS HOME meter. Use `usage` to choose meter type: `grid`/`pv`/`battery`. Use `uri` to configure the IP address of the LG ESS HOME. Use `password` to configure the password required to access the LG ESS HOME. `uri` and `password` only need to be provided once if multiple usages are defined.
 - `custom`: default meter implementation where meter readings- `power`, `energy`, per-phase `currents` and battery `soc` are configured using [plugins](#plugins)
 
 Configuration examples are documented at [evcc-io/config#meters](https://github.com/evcc-io/config#meters)
