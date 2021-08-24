@@ -119,7 +119,7 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 	if fetchedSoC == nil {
 		f, err := s.vehicle.SoC()
 		if err != nil {
-			// required for online APIs with refresh tokens
+			// required for online APIs with refreshkey
 			if errors.Is(err, api.ErrMustRetry) {
 				return 0, err
 			}
