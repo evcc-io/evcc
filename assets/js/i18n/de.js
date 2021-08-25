@@ -75,7 +75,7 @@ export default {
       today: "heute",
       tomorrow: "morgen",
       targetIsInThePast: "Zeitpunkt liegt in der Vergangenheit.",
-      remove: "Keine Zeilzeit",
+      remove: "Keine Zielzeit",
       activate: "Zielzeit aktivieren",
       experimentalLabel: "experimentell",
       experimentalText: `
