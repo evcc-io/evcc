@@ -6,26 +6,19 @@
 				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
-		<small
-			v-if="targetChargeEnabled"
-			:class="{
-				invisible: !targetSoC,
-				'text-primary': timerActive,
-				'text-secondary': !timerActive,
-			}"
-		>
-			{{ targetTimeLabel() }}
-			<fa-icon class="ms-1" icon="clock"></fa-icon>
-		</small>
+		<TargetCharge v-bind="targetCharge" @target-time-updated="targetTimeUpdated" />
 	</div>
 </template>
 
 <script>
-import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
+import TargetCharge from "./TargetCharge.vue";
 
 export default {
 	name: "VehicleSubline",
+	components: { TargetCharge },
 	props: {
+		id: Number,
 		vehicleSoc: Number,
 		minSoC: Number,
 		timerActive: Boolean,
@@ -37,17 +30,15 @@ export default {
 		minSoCActive: function () {
 			return this.minSoC > 0 && this.vehicleSoc < this.minSoC;
 		},
-		targetChargeEnabled: function () {
-			return this.targetTime && this.timerSet;
+		targetCharge: function () {
+			return this.collectProps(TargetCharge);
 		},
 	},
+	mixins: [collector],
 	methods: {
-		// not computed because it needs to update over time
-		targetTimeLabel: function () {
-			const targetDate = new Date(this.targetTime);
-			return `bis ${this.fmtAbsoluteDate(targetDate)} Uhr`;
+		targetTimeUpdated: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
 		},
 	},
-	mixins: [formatter],
 };
 </script>

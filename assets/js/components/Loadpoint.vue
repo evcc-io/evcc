@@ -16,6 +16,7 @@
 				class="col-12 col-md-6 col-lg-8 mb-4"
 				v-bind="vehicle"
 				@target-soc-updated="setTargetSoC"
+				@target-time-updated="setTargetTime"
 			/>
 		</div>
 		<LoadpointDetails v-bind="details" />
@@ -132,6 +133,12 @@ export default {
 						this.targetSoC = response.data.targetSoC;
 					}.bind(this)
 				)
+				.catch(window.app.error);
+		},
+		setTargetTime: function (date) {
+			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
+			axios
+				.post(this.api("targetcharge") + "/" + this.targetSoC + "/" + formattedDate)
 				.catch(window.app.error);
 		},
 	},
