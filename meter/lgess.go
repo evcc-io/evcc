@@ -39,18 +39,16 @@ It is not allowed to provide different URIs or passwords for different lgess met
 same hardware instance is accessed with the different usages.
 */
 
-// LgEss is the LG ESS meter. Multiple meter instances with different usages are allowed
+// LgEss implements the api.Meter interface
 type LgEss struct {
 	usage string     // grid, pv, battery
-	lp    *lgpcs.Com // access to the lgpcps singleton
+	lp    *lgpcs.Com // communication with the lgpcs device
 }
 
 func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//call "go generate" in the command line to automatically generate the decorators
-//defined with the following comment
 //go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config

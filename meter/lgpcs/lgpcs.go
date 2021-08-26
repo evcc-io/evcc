@@ -39,9 +39,8 @@ type EssData struct {
 }
 
 type Com struct {
-	Helper   *request.Helper
-	Log      *util.Logger
-	uri      string // URI of the LG ESS inverter - e.g. "https://192.168.1.28"
+	*request.Helper
+	uri      string // URI address of the LG ESS inverter - e.g. "https://192.168.1.28"
 	password string // registration number of the LG ESS Inverter - e.g. "DE2001..."
 	authKey  string // auth_key returned during login and renewed with new login after expiration
 	Data     func() (interface{}, error)
@@ -52,34 +51,34 @@ var instance *Com
 
 // GetInstance implements the singleton pattern to handle the access via the authkey to the PCS of the LG ESS HOME system
 func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
-	// if uri is empty "" the result will be "https:"
+	const emptyUri = "https:"
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	once.Do(func() {
 		log := util.NewLogger("lgess")
 		instance = &Com{
 			Helper:   request.NewHelper(log),
-			Log:      log,
 			uri:      uri,
 			password: password,
 		}
 
 		// ignore the self signed certificate
-		instance.Helper.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		instance.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
-		// caches the access to the data for "cache" time duration - if that duration is expired a new request is sent to the pcs
+		// caches the data access for the "cache" time duration
+		// sends a new request to the pcs if the cache is expired and Data() requested
 		instance.Data = provider.NewCached(func() (interface{}, error) {
 			return instance.refreshData()
 		}, cache).InterfaceGetter()
 	})
 
 	// it is sufficient to provide the uri once ... if not provided yet set uri now
-	if instance.uri == "https:" {
+	if instance.uri == emptyUri {
 		instance.uri = uri
 	}
 
 	// check if different uris are provided
-	if uri != "https:" && instance.uri != uri {
+	if uri != emptyUri && instance.uri != uri {
 		return nil, fmt.Errorf("uri mismatch: %s vs %s", instance.uri, uri)
 	}
 
@@ -94,14 +93,12 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 	}
 
 	// do first login if no authKey exists and uri and password exist
-	if instance.authKey == "" && instance.uri != "https:" && instance.password != "" {
-		instance.Log.DEBUG.Printf("Initial Login\r\n")
-		if err := instance.Login(); err != nil {
-			return nil, err
-		}
+	var err error
+	if instance.authKey == "" && instance.uri != emptyUri && instance.password != "" {
+		err = instance.Login()
 	}
 
-	return instance, nil
+	return instance, err
 }
 
 // Login calls login and stores the returned authorization key
@@ -109,8 +106,6 @@ func (m *Com) Login() error {
 	data := map[string]interface{}{
 		"password": m.password,
 	}
-
-	m.Log.DEBUG.Printf("Login Uri: %v\r\n", m.uri)
 
 	req, err := request.New(http.MethodPut, m.uri+LoginURI, request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
@@ -123,8 +118,7 @@ func (m *Com) Login() error {
 		AuthKey string `json:"auth_key"`
 	}
 
-	// use DoJSON as it will close the response body
-	if err := m.Helper.DoJSON(req, &res); err != nil {
+	if err := m.DoJSON(req, &res); err != nil {
 		return fmt.Errorf("login failed: %w", err)
 	}
 
@@ -152,31 +146,24 @@ func (m *Com) refreshData() (EssData, error) {
 
 	var resp MeterResponse
 
-	// re-login if request returns 405-error
-	if err := m.Helper.DoJSON(req, &resp); err != nil {
-		// 405 if authKey expired - try re-login (only once)
-		if strings.Contains(err.Error(), "405") {
+	if err := m.DoJSON(req, &resp); err != nil {
+		// re-login if request returns 405-error
+		if err2, ok := err.(request.StatusError); ok && err2.HasStatus(http.StatusMethodNotAllowed) {
 			err = m.Login()
-			if err != nil {
-				m.Log.ERROR.Printf("Re-Login failed - error: [%v]\r\n", err)
-				return EssData{}, err
+
+			if err == nil {
+				data["auth_key"] = m.authKey
+				req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
 			}
 
-			data["auth_key"] = m.authKey
-
-			req, err = request.New(http.MethodPost, m.uri+MeterURI, request.MarshalJSON(data), request.JSONEncoding)
-			if err != nil {
-				m.Log.ERROR.Printf("Failed to setup request - error: [%v]\r\n", err)
-				return EssData{}, err
+			if err == nil {
+				err = m.DoJSON(req, &resp)
 			}
-
-			if err = m.Helper.DoJSON(req, &resp); err != nil {
-				m.Log.ERROR.Printf("Re-Read data failed - error: [%v]\r\n", err)
-				return EssData{}, err
-			}
-		} else {
-			return EssData{}, err
 		}
+	}
+
+	if err != nil {
+		return EssData{}, err
 	}
 
 	res := resp.Statistics
