@@ -100,12 +100,10 @@ func NewLgEss(uri, usage, password string, cache time.Duration) (api.Meter, erro
 
 // CurrentPower implements the api.Meter interface
 func (m *LgEss) CurrentPower() (float64, error) {
-	res, err := m.lp.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
-
-	data := res.(lgpcs.EssData)
 
 	switch m.usage {
 	case "grid":
@@ -121,12 +119,10 @@ func (m *LgEss) CurrentPower() (float64, error) {
 
 // totalEnergy implements the api.MeterEnergy interface
 func (m *LgEss) totalEnergy() (float64, error) {
-	res, err := m.lp.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
-
-	data := res.(lgpcs.EssData)
 
 	switch m.usage {
 	case "grid":
@@ -138,12 +134,10 @@ func (m *LgEss) totalEnergy() (float64, error) {
 
 // batterySoC implements the api.Battery interface
 func (m *LgEss) batterySoC() (float64, error) {
-	res, err := m.lp.Data()
+	data, err := m.lp.Data()
 	if err != nil {
 		return 0, err
 	}
-
-	data := res.(lgpcs.EssData)
 
 	return data.BatUserSoc, nil
 }
