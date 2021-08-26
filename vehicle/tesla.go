@@ -29,21 +29,16 @@ func init() {
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string // deprecated
-		Tokens         Tokens
-		VIN            string
-		Cache          time.Duration
+		embed  `mapstructure:",squash"`
+		Tokens Tokens
+		VIN    string
+		Cache  time.Duration
 	}{
 		Cache: interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.User != "" {
-		return nil, errors.New("user/password authentication deprecated, use `evcc token` to create credentials")
 	}
 
 	if err := cc.Tokens.Error(); err != nil {

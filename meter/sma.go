@@ -33,7 +33,6 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
 		URI, Password, Interface string
 		Serial                   uint32
-		Power, Energy            string
 		Scale                    float64 // power only
 	}{
 		Password: "0000",
@@ -42,10 +41,6 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	if cc.Power != "" || cc.Energy != "" {
-		util.NewLogger("sma").WARN.Println("energy and power setting are deprecated and will be removed in a future release")
 	}
 
 	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
@@ -62,7 +57,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 
 	discoverer, err := sma.GetDiscoverer(iface)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get discoverer failed: %w", err)
+		return nil, fmt.Errorf("discoverer: %w", err)
 	}
 
 	switch {
