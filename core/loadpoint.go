@@ -807,8 +807,13 @@ func (lp *LoadPoint) updateChargerStatus() error {
 }
 
 // effectiveCurrent returns the currently effective charging current
-// it does not take measured currents into account
 func (lp *LoadPoint) effectiveCurrent() float64 {
+	// adjust actual current for vehicles like Zoe where it remains below target
+	if lp.chargeCurrents != nil {
+		cur := lp.chargeCurrents[0]
+		return math.Min(cur+2.0, lp.chargeCurrent)
+	}
+
 	if lp.GetStatus() != api.StatusC {
 		return 0
 	}
