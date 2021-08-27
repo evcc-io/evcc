@@ -17,7 +17,6 @@ import (
 type SMA struct {
 	log    *util.Logger
 	uri    string
-	iface  string
 	scale  float64
 	device *sma.Device
 }
@@ -51,7 +50,6 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	sm := &SMA{
 		log:   util.NewLogger("sma"),
 		uri:   uri,
-		iface: iface,
 		scale: scale,
 	}
 
