@@ -17,7 +17,6 @@ type Charger struct {
 }
 
 func init() {
-	registry.Add("default", NewConfigurableFromConfig)
 	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
