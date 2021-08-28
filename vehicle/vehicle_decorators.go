@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error)) api.Vehicle {
+func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, error), vehicleRange func() (int64, error), vehicleOdometer func() (float64, error)) api.Vehicle {
 	switch {
-	case chargeState == nil && vehicleRange == nil:
+	case chargeState == nil && vehicleOdometer == nil && vehicleRange == nil:
 		return base
 
-	case chargeState != nil && vehicleRange == nil:
+	case chargeState != nil && vehicleOdometer == nil && vehicleRange == nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -22,7 +22,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState == nil && vehicleRange != nil:
+	case chargeState == nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.VehicleRange
@@ -33,7 +33,7 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			},
 		}
 
-	case chargeState != nil && vehicleRange != nil:
+	case chargeState != nil && vehicleOdometer == nil && vehicleRange != nil:
 		return &struct {
 			api.Vehicle
 			api.ChargeState
@@ -42,6 +42,66 @@ func decorateVehicle(base api.Vehicle, chargeState func() (api.ChargeStatus, err
 			Vehicle: base,
 			ChargeState: &decorateVehicleChargeStateImpl{
 				chargeState: chargeState,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState == nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState != nil && vehicleOdometer != nil && vehicleRange == nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleOdometer
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+		}
+
+	case chargeState == nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
+			},
+			VehicleRange: &decorateVehicleVehicleRangeImpl{
+				vehicleRange: vehicleRange,
+			},
+		}
+
+	case chargeState != nil && vehicleOdometer != nil && vehicleRange != nil:
+		return &struct {
+			api.Vehicle
+			api.ChargeState
+			api.VehicleOdometer
+			api.VehicleRange
+		}{
+			Vehicle: base,
+			ChargeState: &decorateVehicleChargeStateImpl{
+				chargeState: chargeState,
+			},
+			VehicleOdometer: &decorateVehicleVehicleOdometerImpl{
+				vehicleOdometer: vehicleOdometer,
 			},
 			VehicleRange: &decorateVehicleVehicleRangeImpl{
 				vehicleRange: vehicleRange,
@@ -58,6 +118,14 @@ type decorateVehicleChargeStateImpl struct {
 
 func (impl *decorateVehicleChargeStateImpl) Status() (api.ChargeStatus, error) {
 	return impl.chargeState()
+}
+
+type decorateVehicleVehicleOdometerImpl struct {
+	vehicleOdometer func() (float64, error)
+}
+
+func (impl *decorateVehicleVehicleOdometerImpl) Odometer() (float64, error) {
+	return impl.vehicleOdometer()
 }
 
 type decorateVehicleVehicleRangeImpl struct {

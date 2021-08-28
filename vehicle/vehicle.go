@@ -30,7 +30,7 @@ func (v *embed) Identify() (string, error) {
 	return v.Identifier_, nil
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
@@ -47,11 +47,12 @@ func init() {
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed  `mapstructure:",squash"`
-		Charge provider.Config
-		Status *provider.Config
-		Range  *provider.Config
-		Cache  time.Duration
+		embed    `mapstructure:",squash"`
+		Charge   provider.Config
+		Status   *provider.Config
+		Range    *provider.Config
+		Odometer *provider.Config
+		Cache    time.Duration
 	}{
 		Cache: interval,
 	}
@@ -94,7 +95,17 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 		rng = rangeG
 	}
 
-	res := decorateVehicle(v, status, rng)
+	// decorate vehicle with Range
+	var odo func() (float64, error)
+	if cc.Odometer != nil {
+		odoG, err := provider.NewFloatGetterFromConfig(*cc.Odometer)
+		if err != nil {
+			return nil, fmt.Errorf("odometer: %w", err)
+		}
+		odo = odoG
+	}
+
+	res := decorateVehicle(v, status, rng, odo)
 
 	return res, nil
 }
@@ -104,7 +115,7 @@ func (v *Vehicle) SoC() (float64, error) {
 	return v.chargeG()
 }
 
-// SoC implements the api.Vehicle interface
+// SoC implements the api.ChargeState interface
 func (v *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
