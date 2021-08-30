@@ -233,7 +233,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 			}
 		}
 
-		if err != nil || repeat == true {
+		if err != nil || repeat {
 			fmt.Println()
 			if !askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()
