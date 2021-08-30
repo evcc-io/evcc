@@ -228,7 +228,10 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 				"certificate": configuration.EEBUS["certificate"],
 			}
 
-			configureEEBus(localConfiguration.EEBUS)
+			err = configureEEBus(localConfiguration.EEBUS)
+			if err != nil {
+				return classConfiguration, err
+			}
 
 			fmt.Println()
 			fmt.Println("You have selected an EEBUS wallbox.")
