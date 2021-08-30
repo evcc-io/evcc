@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -248,6 +249,10 @@ func fetchElements(class, filter string) []test.ConfigTemplate {
 			items = append(items, tmpl)
 		}
 	}
+
+	sort.Slice(items[:], func(i, j int) bool {
+		return strings.ToLower(items[i].Name) < strings.ToLower(items[j].Name)
+	})
 
 	return items
 }
