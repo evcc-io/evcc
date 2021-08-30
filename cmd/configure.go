@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/x509/pkix"
 	"errors"
 	"fmt"
 	"reflect"
@@ -10,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	certhelper "github.com/evcc-io/eebus/cert"
+	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
@@ -46,6 +49,7 @@ type Loadpoint struct {
 }
 
 type Config struct {
+	EEBUS      map[string]interface{}   `yaml:"eebus,omitempty"`
 	Chargers   []map[string]interface{} `yaml:"chargers,omitempty"`
 	Meters     []map[string]interface{} `yaml:"meters,omitempty"`
 	Vehicles   []map[string]interface{} `yaml:"vehicles,omitempty"`
@@ -59,6 +63,8 @@ type Config struct {
 		} `yaml:"meters,omitempty"`
 	} `yaml:"site,omitempty"`
 }
+
+var configuration Config
 
 // configureCmd represents the configure command
 var configureCmd = &cobra.Command{
@@ -82,7 +88,6 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("Let's start:")
 
-	var configuration Config
 	var err error
 
 	fmt.Println()
@@ -189,7 +194,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 	var classConfiguration test.ConfigTemplate
 
 	for ok := true; ok; ok = repeat {
-		var configuration Config
+		var localConfiguration Config
 
 		fmt.Println()
 		configItem := selectItem(title, class, filter)
@@ -201,24 +206,42 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 
 		switch class {
 		case "charger":
-			configuration.Chargers = append(configuration.Chargers, classConfiguration.Config)
+			localConfiguration.Chargers = append(localConfiguration.Chargers, classConfiguration.Config)
 		case "meter":
-			configuration.Meters = append(configuration.Meters, classConfiguration.Config)
+			localConfiguration.Meters = append(localConfiguration.Meters, classConfiguration.Config)
 		case "vehicle":
-			configuration.Vehicles = append(configuration.Vehicles, classConfiguration.Config)
+			localConfiguration.Vehicles = append(localConfiguration.Vehicles, classConfiguration.Config)
 		default:
 			return classConfiguration, fmt.Errorf("unknown class: %s", class)
 		}
 
-		yaml, err := yaml.Marshal(configuration)
+		// check if we need to setup an EEBUS hems
+		if class == "charger" && classConfiguration.Config["type"].(string) == "eebus" {
+			var err error
+			err = setupEEBUSConfig()
+
+			if err != nil {
+				return classConfiguration, fmt.Errorf("error creating EEBUS cert: %s", err)
+			}
+
+			localConfiguration.EEBUS = map[string]interface{}{
+				"certificate": configuration.EEBUS["certificate"],
+			}
+
+			configureEEBus(localConfiguration.EEBUS)
+
+			fmt.Println()
+			fmt.Println("You have selected an EEBUS wallbox.")
+			fmt.Println("Please pair your wallbox with EVCC in the wallbox web interface")
+			fmt.Println("When done, press enter to continue.")
+			fmt.Scanln()
+		}
+
+		fmt.Println(localConfiguration)
+		yaml, err := yaml.Marshal(localConfiguration)
 		if err != nil {
 			return classConfiguration, err
 		}
-
-		// check if we need to setup an EEBUS hems
-		// if class == "charger" {
-
-		// }
 
 		fmt.Println()
 		fmt.Println("Testing configuration...")
@@ -234,6 +257,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 		}
 
 		if err != nil || repeat {
+			fmt.Println("Error: ", err)
 			fmt.Println()
 			if !askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()
@@ -243,6 +267,43 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 	}
 
 	return classConfiguration, nil
+}
+
+// setup EEBUS certificate
+// this id nearly identical to eebus.go
+func setupEEBUSConfig() error {
+	details := communication.ManufacturerDetails{
+		DeviceName:    "EVCC",
+		DeviceCode:    "EVCC_HEMS_01",
+		DeviceAddress: "EVCC_HEMS",
+		BrandName:     "EVCC",
+	}
+
+	subject := pkix.Name{
+		CommonName:   details.DeviceCode,
+		Country:      []string{"DE"},
+		Organization: []string{details.BrandName},
+	}
+
+	cert, err := certhelper.CreateCertificate(true, subject)
+	if err != nil {
+		return fmt.Errorf("could not create certificate")
+	}
+
+	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
+	if err != nil {
+		return fmt.Errorf("could not process generated certificate")
+	}
+
+	var certificate = map[string]interface{}{
+		"public":  pubKey,
+		"private": privKey,
+	}
+	configuration.EEBUS = map[string]interface{}{
+		"certificate": certificate,
+	}
+
+	return nil
 }
 
 // return EVCC configuration items of a given class
@@ -435,6 +496,9 @@ func processConfigLevel(config map[string]interface{}) map[string]interface{} {
 			case "vin":
 				// Vehicle VIN
 				prompt = "Vehicle VIN"
+			case "ski":
+				// EEBUS Wallbox identifier
+				prompt = "Wallbox SKI"
 			default:
 				if valueType.Kind() == reflect.Map {
 					value = processConfigLevel(value.(map[string]interface{}))
