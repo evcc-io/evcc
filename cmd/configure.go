@@ -20,8 +20,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const defaultURI1st string = "192.0.2.2"
-const defaultURI2nd string = "192.0.2.3"
 const defaultChargerName string = "wallbox"
 const defaultGridMeterName string = "grid"
 const defaultPVInverterMeter string = "PV"
@@ -33,6 +31,13 @@ const defaultSiteTitle = "My Home"
 const itemNotPresent string = "My item is not in this list"
 
 var ErrItemNotPresent = errors.New("item not present")
+
+var uriMapping = map[string]string{
+	"192.0.2.2": "",
+	"192.0.2.3": "",
+	"192.0.2.4": "",
+	"192.0.2.5": "",
+}
 
 type Loadpoint struct {
 	Title   string `yaml:"title,omitempty"`
@@ -230,7 +235,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 
 		if err != nil || repeat == true {
 			fmt.Println()
-			if !askYesNo("Do you want to try it again?") {
+			if !askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()
 				return classConfiguration, ErrItemNotPresent
 			}
@@ -374,7 +379,7 @@ func processConfig(configItem test.ConfigTemplate, defaultName string) test.Conf
 	if len(conf) > 0 {
 		fmt.Println()
 		fmt.Println("Enter the configuration values:")
-		parsed.Config, _ = processConfigLevel(parsed.Config, "")
+		parsed.Config = processConfigLevel(parsed.Config)
 	}
 
 	parsed.Config["type"] = configItem.Template.Type
@@ -386,7 +391,7 @@ func processConfig(configItem test.ConfigTemplate, defaultName string) test.Conf
 	return parsed
 }
 
-func processConfigLevel(config map[string]interface{}, enteredURI string) (map[string]interface{}, string) {
+func processConfigLevel(config map[string]interface{}) map[string]interface{} {
 	if len(config) > 0 {
 		for param, value := range config {
 			var prompt string
@@ -431,26 +436,21 @@ func processConfigLevel(config map[string]interface{}, enteredURI string) (map[s
 				// Vehicle VIN
 				prompt = "Vehicle VIN"
 			default:
-				// fmt.Printf("param name: %s\n", param)
-				// fmt.Printf("param value: %s\n", value)
-				// fmt.Printf("param type: %s\n", valueType.Kind())
 				if valueType.Kind() == reflect.Map {
-					value, enteredURI = processConfigLevel(value.(map[string]interface{}), enteredURI)
-				} else if valueType.Kind() == reflect.String {
-					// check if the value constains a default URI 192.0.2.2 or 192.0.2.3 string
-					contains1stURI := strings.Contains(value.(string), defaultURI1st)
-					contains2ndURI := strings.Contains(value.(string), defaultURI2nd)
-					defaultURI := defaultURI1st
-					if contains2ndURI {
-						defaultURI = defaultURI2nd
+					value = processConfigLevel(value.(map[string]interface{}))
+				} else if valueType.Kind() == reflect.Slice {
+					sliceValue := value.([]interface{})
+					for i := range sliceValue {
+						value = processConfigLevel(sliceValue[i].(map[string]interface{}))
 					}
-
-					if contains1stURI || contains2ndURI {
-						if len(enteredURI) == 0 {
-							enteredURI = askValue("Address:", defaultURI).(string)
+				} else if valueType.Kind() == reflect.String {
+					for k := range uriMapping {
+						if strings.Contains(value.(string), k) {
+							if len(uriMapping[k]) == 0 {
+								uriMapping[k] = askValue("Address:", k).(string)
+							}
+							value = strings.Replace(value.(string), k, uriMapping[k], -1)
 						}
-
-						value = strings.Replace(value.(string), defaultURI, enteredURI, -1)
 					}
 				}
 			}
@@ -463,7 +463,7 @@ func processConfigLevel(config map[string]interface{}, enteredURI string) (map[s
 		}
 	}
 
-	return config, enteredURI
+	return config
 }
 
 // return a usable EVCC configuration
@@ -499,6 +499,7 @@ func testDeviceConfig(class string, configuration []byte) error {
 }
 
 // test a charger configuration
+// almost identical to charger.go implementation
 func testChargerConfig(conf config) error {
 	if err := cp.configureChargers(conf); err != nil {
 		return err
@@ -513,6 +514,7 @@ func testChargerConfig(conf config) error {
 }
 
 // test a meter configuration
+// almost identical to meter.go implementation
 func testMeterConfig(conf config) error {
 	if err := cp.configureMeters(conf); err != nil {
 		return err
@@ -527,6 +529,7 @@ func testMeterConfig(conf config) error {
 }
 
 // test a meter configuration
+// almost identical to vehicle.go implementation
 func testVehicleConfig(conf config) error {
 	if err := cp.configureVehicles(conf); err != nil {
 		return err
