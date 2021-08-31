@@ -483,25 +483,18 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
-			if err = charger.MaxCurrentMillis(chargeCurrent); err == nil {
-				lp.log.DEBUG.Printf("max charge current: %.2g", chargeCurrent)
-			} else {
-				err = fmt.Errorf("max charge current %.2g: %w", chargeCurrent, err)
-			}
+			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
 			chargeCurrent = math.Trunc(chargeCurrent)
-			if err = lp.charger.MaxCurrent(int64(chargeCurrent)); err == nil {
-				lp.log.DEBUG.Printf("max charge current: %d", int64(chargeCurrent))
-			} else {
-				err = fmt.Errorf("max charge current %d: %w", int64(chargeCurrent), err)
-			}
+			err = lp.charger.MaxCurrent(int64(chargeCurrent))
 		}
 
 		if err == nil {
 			lp.chargeCurrent = chargeCurrent
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 		} else {
-			err = fmt.Errorf("max charge current %.2g: %w", chargeCurrent, err)
+			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
 		}
 	}
 
@@ -958,7 +951,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	deltaCurrent := powerToCurrent(-sitePower, lp.activePhases)
 	targetCurrent := math.Max(effectiveCurrent+deltaCurrent, 0)
 
-	lp.log.DEBUG.Printf("max charge current: %.1fA = %.1fA + %.1fA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
+	lp.log.DEBUG.Printf("max charge current: %.3gA = %.3gA + %.3gA (%.0fW @ %dp)", targetCurrent, effectiveCurrent, deltaCurrent, sitePower, lp.activePhases)
 
 	// switch phases up/down
 	if _, ok := lp.charger.(api.ChargePhases); ok {
