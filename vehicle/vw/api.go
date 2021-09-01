@@ -71,10 +71,18 @@ func (v *API) HomeRegion(vin string) error {
 	return err
 }
 
-// RolesRights updates the home region for the given vehicle
-func (v *API) RolesRights(vin string) (string, error) {
-	var res json.RawMessage
+// RolesRights implements the /rolesrights/operationlist response
+func (v *API) RolesRights(vin string) (RolesRights, error) {
+	var res RolesRights
 	uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+// Status implements the /status response
+func (v *API) Status(vin string) (string, error) {
+	var res json.RawMessage
+	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s", RegionAPI, vin)
 	err := v.GetJSON(uri, &res)
 	return string(res), err
 }

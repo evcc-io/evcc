@@ -130,3 +130,28 @@ func (t *TimedTemperature) UnmarshalJSON(data []byte) error {
 func temp2Float(i int) float64 {
 	return float64(i)/10 - 273
 }
+
+type RolesRights struct {
+	OperationList struct {
+		VIN, UserId, Role, Status string
+		ServiceInfo               []ServiceInfo
+	}
+}
+
+type ServiceInfo struct {
+	ServiceId     string
+	ServiceType   string
+	ServiceStatus struct {
+		Status string
+	}
+	LicenseRequired            bool
+	CumulatedLicense           map[string]interface{}
+	PrimaryUserRequired        bool
+	TermsAndConditionsRequired bool
+	ServiceEol                 string
+	RolesAndRightsRequired     bool
+	InvocationUrl              struct {
+		Content string
+	}
+	Operation []map[string]interface{}
+}
