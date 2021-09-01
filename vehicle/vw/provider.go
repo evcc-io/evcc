@@ -1,12 +1,17 @@
 package vw
 
 import (
+	"fmt"
 	"math"
+	"os"
+	"sort"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/thoas/go-funk"
 )
 
 // Provider implements the evcc vehicle api
@@ -14,6 +19,7 @@ type Provider struct {
 	chargerG func() (interface{}, error)
 	climateG func() (interface{}, error)
 	action   func(action, value string) error
+	rr       func() (RolesRights, error)
 }
 
 // NewProvider provides the evcc vehicle api provider
@@ -27,6 +33,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache).InterfaceGetter(),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
+		},
+		rr: func() (RolesRights, error) {
+			return api.RolesRights(vin)
 		},
 	}
 	return impl
@@ -132,4 +141,42 @@ var _ api.VehicleStopCharge = (*Provider)(nil)
 // StopCharge implements the api.VehicleStopCharge interface
 func (v *Provider) StopCharge() error {
 	return v.action(ActionCharge, ActionChargeStop)
+}
+
+var _ api.Diagnosis = (*Provider)(nil)
+
+// Diagnosis implements the api.Diagnosis interface
+func (v *Provider) Diagnose() {
+	rr, err := v.rr()
+	if err != nil {
+		return
+	}
+
+	tw := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
+	sort.Slice(rr.OperationList.ServiceInfo, func(i, j int) bool {
+		return rr.OperationList.ServiceInfo[i].ServiceId < rr.OperationList.ServiceInfo[j].ServiceId
+	})
+
+	for _, si := range rr.OperationList.ServiceInfo {
+		if si.InvocationUrl.Content != "" {
+			fmt.Fprintf(tw, "%s:\t%s\n", si.ServiceId, si.InvocationUrl.Content)
+		}
+	}
+
+	// list remaining service
+	services := funk.Map(rr.OperationList.ServiceInfo, func(si ServiceInfo) string {
+		if si.InvocationUrl.Content == "" {
+			return si.ServiceId
+		}
+		return ""
+	}).([]string)
+
+	services = funk.FilterString(services, func(s string) bool {
+		return s != ""
+	})
+
+	fmt.Fprintf(tw, "No uri:\t%s\n", strings.Join(services, ","))
+
+	tw.Flush()
 }
