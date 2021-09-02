@@ -97,9 +97,10 @@ type LoadPoint struct {
 	OnIdentify      map[string]ActionConfig `mapstructure:"onIdentify"`
 	Enable, Disable ThresholdConfig
 
-	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
-	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
-	GuardDuration time.Duration // charger enable/disable minimum holding time
+	MinCurrent       float64       // PV mode: start current	Min+PV mode: min current
+	MaxCurrent       float64       // Max allowed current. Physically ensured by the charger
+	GuardDuration    time.Duration // charger enable/disable minimum holding time
+	MaxOffsetCurrent float64       // do not let current configured in wallbox and measured current diverge more than this
 
 	enabled                bool      // Charger enabled state
 	activePhases           int       // Charger active phases as used by vehicle
@@ -218,15 +219,16 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	bus := evbus.New()
 
 	lp := &LoadPoint{
-		log:           log,   // logger
-		clock:         clock, // mockable time
-		bus:           bus,   // event bus
-		Mode:          api.ModeOff,
-		Phases:        3,
-		status:        api.StatusNone,
-		MinCurrent:    6,  // A
-		MaxCurrent:    16, // A
-		GuardDuration: 5 * time.Minute,
+		log:              log,   // logger
+		clock:            clock, // mockable time
+		bus:              bus,   // event bus
+		Mode:             api.ModeOff,
+		Phases:           3,
+		status:           api.StatusNone,
+		MinCurrent:       6,  // A
+		MaxCurrent:       16, // A
+		GuardDuration:    5 * time.Minute,
+		MaxOffsetCurrent: 2, // A
 	}
 
 	return lp
@@ -793,9 +795,10 @@ func (lp *LoadPoint) updateChargerStatus() error {
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
 	// adjust actual current for vehicles like Zoe where it remains below target
+
 	if lp.chargeCurrents != nil {
 		cur := lp.chargeCurrents[0]
-		return math.Min(cur+2.0, lp.chargeCurrent)
+		return math.Min(cur+lp.MaxOffsetCurrent, lp.chargeCurrent)
 	}
 
 	if lp.GetStatus() != api.StatusC {
