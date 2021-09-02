@@ -105,6 +105,7 @@ loadpoints:
   guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
+  maxoffsetcurrent: 2 # do not let wallbox's configured current be above measured current + maxoffsetcurrent + delta (default 2A)
 
 # tariffs are the fixed or variable tariffs
 # cheap can be used to define a tariff rate considered cheap enough for charging
