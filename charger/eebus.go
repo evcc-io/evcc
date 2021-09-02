@@ -11,7 +11,7 @@ import (
 	"github.com/evcc-io/eebus/ship"
 	"github.com/evcc-io/eebus/spine"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 )
@@ -19,7 +19,7 @@ import (
 type EEBus struct {
 	log           *util.Logger
 	cc            *communication.ConnectionController
-	lp            core.LoadPointAPI
+	lp            loadpoint.API
 	forcePVLimits bool
 
 	communicationStandard           communication.EVCommunicationStandardEnumType
@@ -517,10 +517,10 @@ func (c *EEBus) SoC() (float64, error) {
 	return data.EVData.Measurements.SoC, nil
 }
 
-var _ core.LoadpointController = (*EEBus)(nil)
+var _ loadpoint.Controller = (*EEBus)(nil)
 
-// LoadpointControl implements core.LoadpointController
-func (c *EEBus) LoadpointControl(lp core.LoadPointAPI) {
+// LoadpointControl implements loadpoint.Controller
+func (c *EEBus) LoadpointControl(lp loadpoint.API) {
 	c.lp = lp
 
 	// set current known min, max current limits

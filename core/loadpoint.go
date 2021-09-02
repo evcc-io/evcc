@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/soc"
 	"github.com/evcc-io/evcc/core/wrapper"
 	"github.com/evcc-io/evcc/provider"
@@ -120,13 +121,13 @@ type LoadPoint struct {
 	socTimer     *soc.Timer
 
 	// cached state
-	status         api.ChargeStatus // Charger status
-	remoteDemand   RemoteDemand     // External status demand
-	chargePower    float64          // Charging power
-	chargeCurrents []float64        // Phase currents
-	connectedTime  time.Time        // Time when vehicle was connected
-	pvTimer        time.Time        // PV enabled/disable timer
-	phaseTimer     time.Time        // 1p3p switch timer
+	status         api.ChargeStatus       // Charger status
+	remoteDemand   loadpoint.RemoteDemand // External status demand
+	chargePower    float64                // Charging power
+	chargeCurrents []float64              // Phase currents
+	connectedTime  time.Time              // Time when vehicle was connected
+	pvTimer        time.Time              // PV enabled/disable timer
+	phaseTimer     time.Time              // 1p3p switch timer
 
 	vehicleSoc     float64       // Vehicle SoC
 	chargedEnergy  float64       // Charged energy while connected in Wh
@@ -201,7 +202,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.configureChargerType(lp.charger)
 
 	// allow target charge handler to access loadpoint
-	lp.socTimer = soc.NewTimer(lp.log, lp.adapter(), lp.MaxCurrent)
+	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
 	if lp.Enable.Threshold > lp.Disable.Threshold {
 		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
@@ -454,7 +455,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// allow charger to  access loadpoint
-	if ctrl, ok := lp.charger.(LoadpointController); ok {
+	if ctrl, ok := lp.charger.(loadpoint.Controller); ok {
 		ctrl.LoadpointControl(lp)
 	}
 }
@@ -602,7 +603,7 @@ func (lp *LoadPoint) climateActive() bool {
 }
 
 // remoteControlled returns true if remote control status is active
-func (lp *LoadPoint) remoteControlled(demand RemoteDemand) bool {
+func (lp *LoadPoint) remoteControlled(demand loadpoint.RemoteDemand) bool {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -1245,7 +1246,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 	var err error
 
 	// track if remote disabled is actually active
-	remoteDisabled := RemoteEnable
+	remoteDisabled := loadpoint.RemoteEnable
 
 	// execute loading strategy
 	switch {
@@ -1265,8 +1266,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		lp.socTimer.Reset() // once SoC is reached, the target charge request is removed
 
 	// OCPP has priority over target charging
-	case lp.remoteControlled(RemoteHardDisable):
-		remoteDisabled = RemoteHardDisable
+	case lp.remoteControlled(loadpoint.RemoteHardDisable):
+		remoteDisabled = loadpoint.RemoteHardDisable
 		fallthrough
 
 	case mode == api.ModeOff:
@@ -1286,9 +1287,9 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		}
 
 	// target charging
-	case lp.socTimer.StartRequired():
+	case lp.socTimer.DemandActive():
 		targetCurrent := lp.socTimer.Handle()
-		err = lp.setLimit(targetCurrent, false)
+		err = lp.setLimit(targetCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
@@ -1308,8 +1309,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		}
 
 		// Sunny Home Manager
-		if lp.remoteControlled(RemoteSoftDisable) {
-			remoteDisabled = RemoteSoftDisable
+		if lp.remoteControlled(loadpoint.RemoteSoftDisable) {
+			remoteDisabled = loadpoint.RemoteSoftDisable
 			targetCurrent = 0
 			required = true
 		}
@@ -1318,7 +1319,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 	}
 
 	// effective disabled status
-	if remoteDisabled != RemoteEnable {
+	if remoteDisabled != loadpoint.RemoteEnable {
 		lp.publish("remoteDisabled", remoteDisabled)
 	}
 

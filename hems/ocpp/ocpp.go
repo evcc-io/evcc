@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/denisbrodbeck/machineid"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
 
+	"github.com/denisbrodbeck/machineid"
 	ocpp16 "github.com/lorenzodonini/ocpp-go/ocpp1.6"
 	ocppcore "github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ws"
@@ -21,14 +21,14 @@ import (
 type OCPP struct {
 	log   *util.Logger
 	cache *util.Cache
-	site  core.SiteAPI
+	site  site.API
 	cp    ocpp16.ChargePoint
 }
 
 const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
-func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache) (*OCPP, error) {
+func New(conf map[string]interface{}, site site.API, cache *util.Cache) (*OCPP, error) {
 	cc := struct {
 		URI       string
 		StationID string

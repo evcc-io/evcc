@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
@@ -64,7 +65,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
+func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
@@ -89,7 +90,7 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 }
 
 // Run starts the MQTT publisher for the MQTT API
-func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
+func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	// alive
 	topic := fmt.Sprintf("%s/status", m.root)
 	m.publish(topic, true, "online")
