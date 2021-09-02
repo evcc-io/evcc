@@ -36,6 +36,7 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig // Meter references
 	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
+	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
 
 	// meters
 	gridMeter    api.Meter // Grid usage meter
@@ -300,9 +301,15 @@ func (site *Site) sitePower() (float64, error) {
 			site.Lock()
 			defer site.Unlock()
 
-			// if battery is charging give it priority
+			// if battery is charging below prioritySoC give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
-				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
+				site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", soc)
+				batteryPower = 0
+			}
+
+			// if battery is discharging above bufferSoC ignore it
+			if soc > site.BufferSoC && batteryPower > 0 && site.BufferSoC > 0 {
+				site.log.DEBUG.Printf("ignoring battery discharge at soc: %.0f", soc)
 				batteryPower = 0
 			}
 		}
