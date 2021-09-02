@@ -131,6 +131,13 @@ func temp2Float(i int) float64 {
 	return float64(i)/10 - 273
 }
 
+// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
+type VehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+}
+
 // HomeRegion is the home region API response
 type HomeRegion struct {
 	HomeRegion struct {
