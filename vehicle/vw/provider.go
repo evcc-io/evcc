@@ -176,7 +176,7 @@ func (v *Provider) Diagnose() {
 		return s != ""
 	})
 
-	fmt.Fprintf(tw, "No uri:\t%s\n", strings.Join(services, ","))
+	fmt.Fprintf(tw, "without uri:\t%s\n", strings.Join(services, ","))
 
 	tw.Flush()
 }
