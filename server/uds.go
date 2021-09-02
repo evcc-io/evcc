@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package server
@@ -7,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/site"
 )
 
 // SocketPath is the unix domain socket path
@@ -26,7 +27,7 @@ func remoteIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site core.SiteAPI) {
+func HealthListener(site site.API) {
 	remoteIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)

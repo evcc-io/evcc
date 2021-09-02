@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/api/proto/pb"
 	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/hems"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/provider/mqtt"
@@ -94,8 +95,8 @@ func configureSponsorship(token string) error {
 	return err
 }
 
-// setup influx databases
-func configureDatabase(conf server.InfluxConfig, loadPoints []core.LoadPointAPI, in <-chan util.Param) {
+// setup influx database
+func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in <-chan util.Param) {
 	influx := server.NewInfluxClient(
 		conf.URL,
 		conf.Token,

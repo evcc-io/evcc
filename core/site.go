@@ -9,6 +9,7 @@ import (
 
 	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
 )
@@ -105,8 +106,8 @@ func NewSite() *Site {
 }
 
 // LoadPoints returns the array of associated loadpoints
-func (site *Site) LoadPoints() []LoadPointAPI {
-	res := make([]LoadPointAPI, len(site.loadpoints))
+func (site *Site) LoadPoints() []loadpoint.API {
+	res := make([]loadpoint.API, len(site.loadpoints))
 	for id, lp := range site.loadpoints {
 		res[id] = lp
 	}
