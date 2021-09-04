@@ -98,7 +98,7 @@ loadpoints:
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
-    threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
+    threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
     delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
