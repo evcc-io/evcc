@@ -14,6 +14,10 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+type ovmsStatusResponse struct {
+	Odometer string `json:"odometer"`
+}
+
 type ovmsChargeResponse struct {
 	ChargeEtrFull    string `json:"charge_etr_full"`
 	ChargeState      string `json:"chargestate"`
@@ -33,6 +37,7 @@ type Ovms struct {
 	*request.Helper
 	user, password, vehicleId, server string
 	chargeG                           func() (interface{}, error)
+	statusG                           func() (interface{}, error)
 }
 
 func init() {
@@ -65,6 +70,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.statusG = provider.NewCached(v.statusAPI, cc.Cache).InterfaceGetter()
 
 	var err error
 	v.Jar, err = cookiejar.New(&cookiejar.Options{
@@ -111,6 +117,13 @@ func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
 	return res, err
 }
 
+func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
+	uri := fmt.Sprintf("http://%s:6868/api/status/%s", v.server, v.vehicleId)
+	var res ovmsStatusResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
 // batteryAPI provides battery-status api response
 func (v *Ovms) batteryAPI() (interface{}, error) {
 	var resp ovmsChargeResponse
@@ -126,6 +139,21 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 	messageAge := time.Duration(resp.MessageAgeServer) * time.Second
 	if err == nil && messageAge > time.Minute {
 		err = api.ErrMustRetry
+	}
+
+	return resp, err
+}
+
+// statusAPI provides vehicle status api response
+func (v *Ovms) statusAPI() (interface{}, error) {
+	var resp ovmsStatusResponse
+
+	resp, err := v.statusRequest()
+	if err != nil {
+		err = v.authFlow()
+		if err == nil {
+			resp, err = v.statusRequest()
+		}
 	}
 
 	return resp, err
@@ -169,6 +197,22 @@ func (v *Ovms) Range() (int64, error) {
 
 	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
 		return strconv.ParseInt(res.EstimatedRange, 0, 64)
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Ovms)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Ovms) Odometer() (float64, error) {
+	res, err := v.statusG()
+
+	if res, ok := res.(ovmsStatusResponse); err == nil && ok {
+		odometer, err := strconv.ParseFloat(res.Odometer, 64)
+		if err == nil {
+			return odometer / 10, nil
+		}
 	}
 
 	return 0, err
