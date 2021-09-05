@@ -15,8 +15,12 @@ func (r *errorReader) Read(p []byte) (int, error) {
 	return 0, r.err
 }
 
-// MarshalJSON marshals JSON into an io.Reader
-func MarshalJSON(data interface{}) io.Reader {
+func (r *errorReader) Seek(offset int64, whence int) (int64, error) {
+	return 0, r.err
+}
+
+// MarshalJSON marshals JSON into an io.ReadSeeker
+func MarshalJSON(data interface{}) io.ReadSeeker {
 	if data == nil {
 		return nil
 	}

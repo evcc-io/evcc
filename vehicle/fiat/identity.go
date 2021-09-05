@@ -18,7 +18,12 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-const Region = "eu-west-1"
+const (
+	LoginURI = "https://loginmyuconnect.fiat.com"
+	TokenURI = "https://authz.sdpr-01.fcagcv.com/v2/cognito/identity/token"
+
+	Region = "eu-west-1"
+)
 
 type Identity struct {
 	*request.Helper
