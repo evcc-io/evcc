@@ -13,8 +13,8 @@ type Status struct {
 		ChargingSettings      `json:"chargingSettings"`
 		PlugStatus            `json:"plugStatus"`
 		RangeStatus           `json:"rangeStatus"`
-		ClimatisationSettings `json:"climatisationStatus"`
-		ClimatisationStatus   `json:"climatisationSettings"` // may be currently not available
+		ClimatisationSettings `json:"climatisationSettings"`
+		ClimatisationStatus   `json:"climatisationStatus"` // may be currently not available
 		MaintenanceStatus     `json:"maintenanceStatus"`
 	}
 	Error map[string]Error
