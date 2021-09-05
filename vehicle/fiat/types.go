@@ -44,12 +44,7 @@ type StatusResponse struct {
 
 type ActionResponse struct {
 	Name, Message string
-}
-
-type PinResponse struct {
-	Data struct {
-		Token string
-	}
+	Token         string
 }
 
 // TimeMillis implements JSON unmarshal for Unix timestamps in milliseconds

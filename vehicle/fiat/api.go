@@ -83,7 +83,7 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 }
 
 func (v *API) pinAuth(pin string) (string, error) {
-	var res PinResponse
+	var res ActionResponse
 
 	uri := fmt.Sprintf("%s/v1/accounts/%s/ignite/pin/authenticate", ApiURI, v.identity.UID())
 
@@ -99,7 +99,11 @@ func (v *API) pinAuth(pin string) (string, error) {
 		err = v.DoJSON(req, &res)
 	}
 
-	return res.Data.Token, err
+	if err == nil && res.Message != "" {
+		err = fmt.Errorf("pin auth: %s", res.Message)
+	}
+
+	return res.Token, err
 }
 
 func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
@@ -127,7 +131,7 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 	}
 
 	if err == nil && res.Message != "" {
-		err = fmt.Errorf("action %s failed: %s", action, res.Message)
+		err = fmt.Errorf("action %s: %s", action, res.Message)
 	}
 
 	return res, err
