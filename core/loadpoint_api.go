@@ -212,15 +212,16 @@ func (lp *LoadPoint) setRemainingDuration(chargeRemainingDuration time.Duration)
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.chargeRemainingDuration = chargeRemainingDuration
-	lp.publish("chargeRemainingDuration", chargeRemainingDuration)
+	if lp.chargeRemainingDuration != chargeRemainingDuration {
+		lp.chargeRemainingDuration = chargeRemainingDuration
+		lp.publish("chargeRemainingDuration", chargeRemainingDuration)
+	}
 }
 
 // GetRemainingDuration is the estimated remaining charging duration
 func (lp *LoadPoint) GetRemainingDuration() time.Duration {
 	lp.Lock()
 	defer lp.Unlock()
-
 	return lp.chargeRemainingDuration
 }
 
@@ -229,14 +230,15 @@ func (lp *LoadPoint) setRemainingEnergy(chargeRemainingEnergy float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	lp.chargeRemainingEnergy = chargeRemainingEnergy
-	lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
+	if lp.chargeRemainingEnergy != chargeRemainingEnergy {
+		lp.chargeRemainingEnergy = chargeRemainingEnergy
+		lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
+	}
 }
 
 // GetRemainingEnergy is the remaining charge energy in Wh
 func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
-
 	return lp.chargeRemainingEnergy
 }
