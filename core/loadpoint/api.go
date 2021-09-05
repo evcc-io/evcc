@@ -29,24 +29,24 @@ type API interface {
 	// settings
 	//
 
-	// GetMode returns loadpoint charge mode
+	// GetMode returns the charge mode
 	GetMode() api.ChargeMode
-	// SetMode sets loadpoint charge mode
+	// SetMode sets the charge mode
 	SetMode(api.ChargeMode)
-	// GetTargetSoC returns loadpoint charge target soc
+	// GetTargetSoC returns the charge target soc
 	GetTargetSoC() int
-	// SetTargetSoC sets loadpoint charge target soc
+	// SetTargetSoC sets the charge target soc
 	SetTargetSoC(int) error
-	// GetMinSoC returns loadpoint charge minimum soc
+	// GetMinSoC returns the charge minimum soc
 	GetMinSoC() int
-	// SetMinSoC sets loadpoint charge minimum soc
+	// SetMinSoC sets the charge minimum soc
 	SetMinSoC(int) error
-	// GetPhases returns loadpoint enabled phases
+	// GetPhases returns the enabled phases
 	GetPhases() int
-	// SetPhases sets loadpoint enabled phases
+	// SetPhases sets the enabled phases
 	SetPhases(int) error
 
-	// SetTargetCharge sets loadpoint charge targetSoC
+	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int)
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
@@ -55,19 +55,19 @@ type API interface {
 	// power and energy
 	//
 
-	// GetChargePower returns the current charge power
+	// GetChargePower returns the current charging power
 	GetChargePower() float64
-	// GetMinCurrent returns the min loadpoint current
+	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
-	// SetMinCurrent returns the min loadpoint current
+	// SetMinCurrent returns the min charging current
 	SetMinCurrent(float64)
-	// GetMaxCurrent returns the max loadpoint current
+	// GetMaxCurrent returns the max charging current
 	GetMaxCurrent() float64
-	// SetMaxCurrent returns the max loadpoint current
+	// SetMaxCurrent returns the max charging current
 	SetMaxCurrent(float64)
-	// GetMinPower returns the min loadpoint power for a single phase
+	// GetMinPower returns the min charging power for a single phase
 	GetMinPower() float64
-	// GetMaxPower returns the max loadpoint power taking active phases into account
+	// GetMaxPower returns the max charging power taking active phases into account
 	GetMaxPower() float64
 
 	//
