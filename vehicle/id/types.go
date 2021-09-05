@@ -15,7 +15,7 @@ type Status struct {
 		RangeStatus           `json:"rangeStatus"`
 		ClimatisationSettings `json:"climatisationSettings"`
 		ClimatisationStatus   `json:"climatisationStatus"` // may be temporarily not available
-		MaintenanceStatus     `json:"maintenanceStatus"`
+		*MaintenanceStatus    `json:"maintenanceStatus"`   // optional
 	}
 	Error map[string]Error
 }

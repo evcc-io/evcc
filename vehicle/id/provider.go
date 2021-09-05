@@ -89,6 +89,9 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(Status); err == nil && ok {
+		if res.Data.MaintenanceStatus == nil {
+			return 0, api.ErrNotAvailable
+		}
 		return float64(res.Data.MaintenanceStatus.MileageKm), nil
 	}
 

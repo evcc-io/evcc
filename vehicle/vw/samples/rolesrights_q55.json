@@ -1,0 +1,2001 @@
+{
+  "operationList": {
+    "vin": "WAUZZZ...",
+    "channelClient": "APP",
+    "userId": "...",
+    "role": "PRIMARY_USER",
+    "securityLevel": "HG_2c",
+    "status": "ENABLED",
+    "vehicleLifeCycleStatus": {
+      "content": "DELIVERED",
+      "garage": false
+    },
+    "serviceInfo": [
+      {
+        "serviceId": "rolesrights_permissions_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/permissions/v1/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "fetchRole",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/permissions/v1/vehicles/{vin}/users/{userId}/",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "zieleinspeisung_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000423",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000423",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "duration": "P3Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/destinationfeedservice/mydestinations/v1/{brand}/{country}/vehicles/{vin}/users/{userId}/"
+        },
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "carfinder_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000026",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000026",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE3",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalGps"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/cf/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "FIND_CAR",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "app_amazonmusic_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "dormantService"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "statusreport_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000066",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000066",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE2",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/vsr/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_SVDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CVDATAID",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_RQSTAT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CVDATA",
+            "version": "1",
+            "xsd": "rvsRdk_v1_0_2",
+            "remoteCommand": "sendVehicleStatus",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "rolesrights_securitypin_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/securitypin/v2/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "prepareSecurityPinTransmission",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/securitypin/v2/users/{userId}/",
+              "method": "PUT"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "traffic-online_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000423",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000423",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "duration": "P3Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "vehicleusers_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "users_v3",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "app_audishop_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "dormantService"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "rlu_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000026",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000026",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE3",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": {
+          "parameter": [
+            {
+              "content": "1",
+              "name": "rsdAlwaysOn"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/bs/rlu/v1/{brand}/{country}/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_RQSTAT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "UNLOCK",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "extAuth": "SPIN",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_LACT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "LOCK",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "extAuth": "SPIN",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "news_v3",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000423",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000423",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "duration": "P3Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": true,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/news/myfeeds/v1/vehicles/{vin}/users/{userId}/"
+        }
+      },
+      {
+        "serviceId": "rolesrights_authorization_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/authorization/v2/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "completeExtAuthV100",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/rolesrights/authorization/v2/{brand}/{country}/",
+              "method": "POST"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "completeExtAuthV200",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/authorization/v2/",
+              "method": "POST"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "requestExtAuthV100",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/rolesrights/authorization/v2/{brand}/{country}/vehicles/{vin}/",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "requestExtAuthV200",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "initVTAN",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "travelguide_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "dealerappoint_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Disabled",
+          "reason": [
+            "initiallyDisabled"
+          ]
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000027",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000027",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE4",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": true,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/otv/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_CONFDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "ADM_SWITCH_ON",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SAPP",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "S_CONFDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "ADM_SWITCH_OFF",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_HIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "cc_breakdown_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000027",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000027",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE4",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalGps",
+            "personalUser",
+            "dormantService"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/opr/v1/vehicles/{vin}/"
+        },
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "rbatterycharge_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000066",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000066",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE2",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/bs/batterycharge/v1/{brand}/{country}/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_RESET",
+            "version": "1",
+            "xsd": "resetRemoteBatteryChargingToDefaultJob_v1_0_0",
+            "remoteCommand": "resetRemoteBatteryChargingToDefault",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_NOSET",
+            "version": "1",
+            "xsd": "startBatteryChargingJob_v1_0_1",
+            "remoteCommand": "startBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_CURRENT",
+            "version": "1",
+            "xsd": "getAllChargingReportJob_v1_0_0",
+            "remoteCommand": "getAllChargingReport",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START",
+            "version": "1",
+            "xsd": "startBatteryChargingJob_v1_0_1",
+            "remoteCommand": "startBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_STOP",
+            "version": "1",
+            "xsd": "stopBatteryChargingJob_v1_0_0",
+            "remoteCommand": "stopBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "rolesrights_primaryuser_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/primaryuser/v2/vehicles/{vin}/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "assignPrimaryUser",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "trip_statistic_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000066",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000066",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE2",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/tripstatistics/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b"
+          },
+          {
+            "id": "G_AGGR_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b"
+          }
+        ]
+      },
+      {
+        "serviceId": "primaryuser_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "usermanagement_users_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/usermanagement/users/v1/{brand}/{country}/"
+        },
+        "operation": [
+          {
+            "id": "getPairingStatus",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/usermanagement/users/v1/{brand}/{country}/users/{userId}/vehicles/{vin}/",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "removePairing",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/usermanagement/users/v1/{brand}/{country}/users/{userId}/vehicles/{vin}/",
+              "method": "DELETE"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "addPairing",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/usermanagement/users/v1/{brand}/{country}/users/{userId}/vehicles/{vin}/",
+              "method": "PUT"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "rolesrights_secondaryuser_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/secondaryuser/v2/vehicles/{vin}/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "nominateSecondaryUser",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "rolesrights_secondaryuser_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/secondaryuser/v1/vehicles/{vin}/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "nominateSecondaryUser",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "revokeSecondaryUser",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "app_calendar_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "dormantService"
+          ]
+        },
+        "parameters": {
+          "parameter": [
+            {
+              "content": "1",
+              "name": "ttsSupported"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "rclima_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000066",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000066",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE2",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/climatisation/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_CLIMA_EL",
+            "version": "1",
+            "xsd": "startClimatisationJob_v1_0_2",
+            "remoteCommand": "startClimatisation",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_STOP",
+            "version": "1",
+            "xsd": "stopClimatisationJob_v1_0_0",
+            "remoteCommand": "stopClimatisation",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_CLIMA_NOSET",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_CURRENT",
+            "version": "1",
+            "xsd": "getAllClimatisationSettingsReportJob_v1_0_0",
+            "remoteCommand": "getAllClimatisationSettingsReport",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "app_audishop_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "dormantService"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "operation": [
+          {
+            "id": "shop_access",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "ANONYMOUS_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "ecall_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000006",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000006",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE1",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2030-11-03T23:00:00Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalGps"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "appmedia_v1",
+        "serviceType": "app",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": true,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "mobiledevicemgmt_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/cs/mobiledevicemgmt/v1/"
+        },
+        "operation": [
+          {
+            "id": "registerMkiaaid",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/cs/mobiledevicemgmt/v1/",
+              "method": "PUT"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "timerprogramming_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000066",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000066",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "AU736Q7NFPHEVECE2",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": {
+          "parameter": [
+            {
+              "content": "2",
+              "name": "chargeTimerCount"
+            },
+            {
+              "content": "1",
+              "name": "heaterSourceSelectionAllowed"
+            },
+            {
+              "content": "2",
+              "name": "climateTimerCount"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/bs/departuretimer/v1/{brand}/{country}/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS_EL",
+            "version": "1",
+            "xsd": "setDepartureTimersAndProfiles_V1_0_2",
+            "remoteCommand": "setDepartureTimersAndProfiles",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTING_CML",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_CURRENT",
+            "version": "1",
+            "xsd": "getAllDepartureTimeReportJob_v1_0_0",
+            "remoteCommand": "getAllDepartureTimeReport",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_2b",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "lsd_v1",
+        "serviceType": "mbbInternal",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": {
+          "parameter": [
+            {
+              "content": "0",
+              "name": "privacySettingsTransmitted"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "lsd_v1",
+        "serviceType": "mbbInternal",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2120-08-31T13:50:52Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "rolesrights_securitypin_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/securitypin/v1/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "prepareSecurityPinTransmission",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://msg.audi.de/fs-car/rolesrights/securitypin/v1/{brand}/{country}/users/{userId}/",
+              "method": "PUT"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "confirmRestoredSecurityPin",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/securitypin/v1/vehicles/{vin}/",
+              "method": "POST"
+            },
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "twitter_v3",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-11-29T00:00:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-11-29T00:00:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000423",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000423",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "duration": "P3Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": true,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-08-30T14:06:06Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/social/twitter/v1/{brand}/{country}/vehicles/{vin}/"
+        }
+      },
+      {
+        "serviceId": "rolesrights_primaryuser_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "OTHER",
+        "serviceEol": "2121-09-01T10:17:43Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/rolesrights/primaryuser/v1/vehicles/{vin}/users/{userId}/"
+        },
+        "operation": [
+          {
+            "id": "revokePrimaryUser",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      }
+    ],
+    "privacyGroupStates": {
+      "privacyGroupState": [
+        {
+          "privacyGroup": "personalGps",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "pseudonymousGps",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "personalUser",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "personalVehicle",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "anonymousData",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "anonymousDataNoGPS",
+          "privacyGroupEnabled": true
+        },
+        {
+          "privacyGroup": "dormantService",
+          "privacyGroupEnabled": true
+        }
+      ]
+    }
+  }
+}
