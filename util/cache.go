@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -91,16 +90,4 @@ func (c *Cache) Get(key string) Param {
 	}
 
 	return Param{}
-}
-
-// GetChecked returns checked value from cache
-func (c *Cache) GetChecked(id int, key string) (res Param, err error) {
-	pid := Param{LoadPoint: &id, Key: key}
-
-	res = c.Get(pid.UniqueID())
-	if res.Key == "" {
-		err = errors.New("not found")
-	}
-
-	return res, err
 }

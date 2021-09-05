@@ -64,7 +64,7 @@ export default {
 		vehiclePresent: Boolean,
 		climater: String,
 		range: Number,
-		chargeEstimate: Number,
+		chargeRemainingDuration: Number,
 
 		// other information
 		phases: Number,

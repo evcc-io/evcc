@@ -53,8 +53,10 @@
 			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehiclePresent">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
-					{{ fmtShortDuration(chargeEstimate) }}
-					<small class="text-muted">{{ fmtShortDurationUnit(chargeEstimate) }}</small>
+					{{ fmtShortDuration(chargeRemainingDuration) }}
+					<small class="text-muted">{{
+						fmtShortDurationUnit(chargeRemainingDuration)
+					}}</small>
 				</h3>
 			</div>
 		</div>
@@ -70,7 +72,7 @@ export default {
 	props: {
 		chargedEnergy: Number,
 		chargeDuration: Number,
-		chargeEstimate: Number,
+		chargeRemainingDuration: Number,
 		chargePower: Number,
 		climater: String,
 		vehiclePresent: Boolean,
