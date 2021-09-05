@@ -32,7 +32,7 @@ Vehicle.args = {
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
   vehiclePresent: true,
-  chargeEstimate: 5 * 3600,
+  chargeRemainingDuration: 5 * 3600,
 };
 
 export const VehicleRange = Template.bind({});
@@ -42,7 +42,7 @@ VehicleRange.args = {
   chargeDuration: 95 * 60,
   vehiclePresent: true,
   range: 240.123,
-  chargeEstimate: 5 * 3600,
+  chargeRemainingDuration: 5 * 3600,
 };
 
 export const VehicleClimater = Template.bind({});
@@ -52,7 +52,7 @@ VehicleClimater.args = {
   chargeDuration: 95 * 60,
   vehiclePresent: true,
   range: 240.123,
-  chargeEstimate: 5 * 3600,
+  chargeRemainingDuration: 5 * 3600,
   climater: "on",
 };
 
@@ -63,7 +63,7 @@ VehicleTimer.args = {
   chargeDuration: 95 * 60,
   vehiclePresent: true,
   range: 240.123,
-  chargeEstimate: 5 * 3600,
+  chargeRemainingDuration: 5 * 3600,
   timerSet: true,
   timerActive: true,
 };

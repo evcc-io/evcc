@@ -435,27 +435,21 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	return res
 }
 
-// TODO remove GetChecked function
-
 func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
 	mode := lp.GetMode()
 	charging := lp.GetStatus() == api.StatusC
 	connected := charging || lp.GetStatus() == api.StatusB
 
-	chargeEstimate := time.Duration(-1)
-	if chargeEstimateP, err := s.cache.GetChecked(id, "chargeEstimate"); err == nil {
-		chargeEstimate = chargeEstimateP.Val.(time.Duration)
-	}
-
-	latestEnd := int(chargeEstimate / time.Second)
+	// remaining max demand duration in seconds
+	chargeRemainingDuration := lp.GetRemainingDuration()
+	latestEnd := int(chargeRemainingDuration / time.Second)
 	if mode == api.ModeMinPV || mode == api.ModePV || latestEnd <= 0 {
 		latestEnd = 24 * 3600
 	}
 
-	var maxEnergy int
-	if chargeRemainingEnergyP, err := s.cache.GetChecked(id, "chargeRemainingEnergy"); err == nil {
-		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
-	}
+	// remaining max energy demand in Wh
+	chargeRemainingEnergy := lp.GetRemainingEnergy()
+	maxEnergy := int(chargeRemainingEnergy)
 
 	// add 1kWh in case we're charging but battery claims full
 	if charging && maxEnergy == 0 {

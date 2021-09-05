@@ -129,9 +129,12 @@ type LoadPoint struct {
 	pvTimer        time.Time              // PV enabled/disable timer
 	phaseTimer     time.Time              // 1p3p switch timer
 
-	vehicleSoc     float64       // Vehicle SoC
-	chargedEnergy  float64       // Charged energy while connected in Wh
-	chargeDuration time.Duration // Charge duration
+	// charge progress
+	vehicleSoc              float64       // Vehicle SoC
+	chargeDuration          time.Duration // Charge duration
+	chargedEnergy           float64       // Charged energy while connected in Wh
+	chargeRemainingDuration time.Duration // Remaining charge duration
+	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
 
 	tasks []func() error // task list for repeated execution
 }
@@ -1158,14 +1161,13 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
 			lp.publish("vehicleSoc", lp.vehicleSoc)
 
-			chargeEstimate := time.Duration(-1)
 			if lp.charging() {
-				chargeEstimate = lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target)
+				lp.setRemainingDuration(lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target))
+			} else {
+				lp.setRemainingDuration(-1)
 			}
-			lp.publish("chargeEstimate", chargeEstimate)
 
-			chargeRemainingEnergy := 1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target)
-			lp.publish("chargeRemainingEnergy", chargeRemainingEnergy)
+			lp.setRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target))
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
@@ -1188,7 +1190,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	// reset if poll: connected/charging and not connected
 	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
 		lp.publish("vehicleSoc", -1)
-		lp.publish("chargeEstimate", time.Duration(-1))
+		lp.publish("chargeRemainingDuration", time.Duration(-1))
 
 		// range
 		lp.publish("range", -1)
