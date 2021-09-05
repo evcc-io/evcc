@@ -43,7 +43,10 @@
 				:value="visibleTargetSoC"
 				class="target-slider"
 				@input="movedTargetSoC"
-				@change="setTargetSoC"
+				@mousedown="changeTargetSoCStart"
+				@touchstart="changeTargetSoCStart"
+				@mouseup="changeTargetSoCEnd"
+				@touchend="changeTargetSoCEnd"
 			/>
 		</div>
 	</div>
@@ -65,12 +68,18 @@ export default {
 		return {
 			selectedTargetSoC: null,
 			allowSliderHiding: false,
+			interactionStartScreenY: null,
 		};
 	},
 	mounted: function () {
 		setTimeout(() => {
 			this.allowSliderHiding = true;
 		}, 1000);
+	},
+	watch: {
+		targetSoC: function () {
+			this.selectedTargetSoC = this.targetSoC;
+		},
 	},
 	computed: {
 		vehicleSocDisplayWidth: function () {
@@ -129,6 +138,24 @@ export default {
 		},
 	},
 	methods: {
+		changeTargetSoCStart: function (e) {
+			const screenY = e.screenY || e.changedTouches[0].screenY;
+			this.interactionStartScreenY = screenY;
+		},
+		changeTargetSoCEnd: function (e) {
+			const screenY = e.screenY || e.changedTouches[0].screenY;
+			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
+			// horizontal scroll detected - revert slider change
+			if (yDiff > 40) {
+				e.target.value = this.targetSoC;
+				this.selectedTargetSoC = this.targetSoC;
+				return false;
+			}
+			// value changed
+			if (e.target.value !== this.targetSoC) {
+				this.$emit("target-soc-updated", e.target.value);
+			}
+		},
 		movedTargetSoC: function (e) {
 			const minTargetSoC = 40;
 			if (e.target.value < minTargetSoC) {
@@ -139,9 +166,6 @@ export default {
 			}
 			this.selectedTargetSoC = e.target.value;
 			return true;
-		},
-		setTargetSoC: function (e) {
-			this.$emit("target-soc-updated", e.target.value);
 		},
 	},
 };
