@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/audi"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -19,6 +20,7 @@ import (
 type Audi struct {
 	*embed
 	*vw.Provider // provides the api implementations
+	audiProvider *audi.Provider
 }
 
 func init() {
@@ -78,5 +80,14 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
+	audiApi := audi.NewAPI(log, identity, "Audi", "DE")
+	v.audiProvider = audi.NewProvider(audiApi, cc.VIN, cc.Cache)
+
 	return v, err
+}
+
+var _ api.VehicleOdometer = (*Audi)(nil)
+
+func (v *Audi) Odometer() (float64, error) {
+	return v.audiProvider.Odometer()
 }
