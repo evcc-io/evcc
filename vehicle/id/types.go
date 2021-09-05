@@ -8,14 +8,14 @@ import (
 // Status is the /status api
 type Status struct {
 	Data struct {
-		BatteryStatus
-		ChargingStatus
-		ChargingSettings
-		PlugStatus
-		RangeStatus
-		ClimatisationSettings
-		ClimatisationStatus // may be currently not available
-		MaintenanceStatus
+		BatteryStatus         `json:"batteryStatus"`
+		ChargingStatus        `json:"chargingStatus"`
+		ChargingSettings      `json:"chargingSettings"`
+		PlugStatus            `json:"plugStatus"`
+		RangeStatus           `json:"rangeStatus"`
+		ClimatisationSettings `json:"climatisationSettings"`
+		ClimatisationStatus   `json:"climatisationStatus"` // may be temporarily not available
+		MaintenanceStatus     `json:"maintenanceStatus"`
 	}
 	Error map[string]Error
 }
