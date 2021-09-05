@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -14,6 +15,9 @@ const (
 	ApiURI  = "https://channels.sdpr-01.fcagcv.com"
 	ApiKey  = "3_mOx_J2dRgjXYCdyhchv3b5lhi54eBcdCTX4BI8MORqmZCoQWhA0mV2PTlptLGUQI"
 	XApiKey = "qLYupk65UU1tw2Ih1cJhs4izijgRDbir2UFHA3Je"
+
+	AuthURI     = "https://mfa.fcl-01.fcagcv.com"
+	XAuthApiKey = "JWRYW7IYhW9v0RqDghQSx4UcRYRILNmc8zAuh5ys"
 )
 
 // API is an api.Vehicle implementation for Fiat cars
@@ -39,9 +43,16 @@ func (v *API) request(method, uri string, body io.ReadSeeker) (*http.Request, er
 		"ClientrequestId":     util.RandomString(16),
 		"X-Api-Key":           XApiKey,
 		"X-Originator-Type":   "web",
+		"locale":              "de_de", // only required for pinAuth
 	}
 
 	req, err := request.New(method, uri, body, headers)
+
+	// hack for pinAuth method
+	if strings.HasPrefix(uri, AuthURI) {
+		req.Header.Set("X-Api-Key", XAuthApiKey)
+	}
+
 	if err == nil {
 		err = v.identity.Sign(req, body)
 	}
@@ -83,9 +94,9 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 }
 
 func (v *API) pinAuth(pin string) (string, error) {
-	var res ActionResponse
+	var res PinAuthResponse
 
-	uri := fmt.Sprintf("%s/v1/accounts/%s/ignite/pin/authenticate", ApiURI, v.identity.UID())
+	uri := fmt.Sprintf("%s/v1/accounts/%s/ignite/pin/authenticate", AuthURI, v.identity.UID())
 
 	data := struct {
 		PIN string `json:"pin"`
@@ -125,7 +136,6 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 	}
 
 	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
-
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}

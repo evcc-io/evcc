@@ -9,7 +9,10 @@ import (
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
-const interval = 15 * time.Minute
+const (
+	expiry   = 5 * time.Minute  // maximum response age before refresh
+	interval = 15 * time.Minute // refresh interval when charging
+)
 
 type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
 

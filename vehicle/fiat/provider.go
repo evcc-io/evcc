@@ -8,33 +8,81 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
+const refreshTimeout = time.Minute
+
 type Provider struct {
-	// api     *API
-	statusG func() (interface{}, error)
+	statusG     func() (interface{}, error)
+	action      func(action, cmd string) (ActionResponse, error)
+	expiry      time.Duration
+	refreshId   string
+	refreshTime time.Time
 }
 
-func NewProvider(api *API, vin, pin string, cache time.Duration) *Provider {
+func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
+		action: func(action, cmd string) (ActionResponse, error) {
+			return api.Action(vin, pin, action, cmd)
+		},
+		expiry: expiry,
 	}
 
+	// use pin for refreshing
 	if pin != "" {
-		res, err := api.Status(vin)
-		if err != nil {
-			panic(err)
+		statusG := func() (StatusResponse, error) {
+			return api.Status(vin)
 		}
 
-		fmt.Println(res.Timestamp)
-		fmt.Println(res.EvInfo.Timestamp)
-		fmt.Println(res.VehicleInfo.Timestamp)
-
-		api.Action(vin, pin, "ev", "DEEPREFRESH")
-		panic(1)
+		impl.statusG = provider.NewCached(func() (interface{}, error) {
+			return impl.status(statusG)
+		}, cache).InterfaceGetter()
 	}
 
 	return impl
+}
+
+func (v *Provider) deepRefresh() (string, error) {
+	res, err := v.action("ev", "DEEPREFRESH")
+	if err == nil && res.ResponseStatus != "pending" {
+		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
+	}
+	return res.CorrelationId, err
+}
+
+func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusResponse, error) {
+	res, err := statusG()
+
+	// handle refresh
+	if err == nil {
+		// result expired?
+		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
+			// start refresh
+			if v.refreshId == "" {
+				v.refreshId, err = v.deepRefresh()
+				if err != nil {
+					return res, err
+				}
+
+				v.refreshTime = time.Now()
+				return res, api.ErrMustRetry
+			}
+
+			// wait for refresh
+			if time.Since(v.refreshTime) > refreshTimeout {
+				v.refreshId = ""
+				return res, api.ErrTimeout
+			}
+
+			return res, api.ErrMustRetry
+		}
+
+		// refresh done
+		v.refreshId = ""
+	}
+
+	return res, err
 }
 
 // SoC implements the api.Vehicle interface

@@ -44,7 +44,19 @@ type StatusResponse struct {
 
 type ActionResponse struct {
 	Name, Message string
+
+	// deep refresh
+	Command          string
+	CorrelationId    string
+	ResponseStatus   string
+	StatusTimestamp  TimeMillis
+	AsyncRespTimeout int
+}
+
+type PinAuthResponse struct {
+	Name, Message string
 	Token         string
+	Expiry        int64 // ms duration
 }
 
 // TimeMillis implements JSON unmarshal for Unix timestamps in milliseconds

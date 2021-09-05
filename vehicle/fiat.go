@@ -28,9 +28,11 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
+		Expiry                   time.Duration
 		Cache                    time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -62,7 +64,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.Provider = fiat.NewProvider(api, strings.ToUpper(cc.VIN), cc.PIN, cc.Cache)
+	v.Provider = fiat.NewProvider(api, strings.ToUpper(cc.VIN), cc.PIN, cc.Expiry, cc.Cache)
 
 	return v, err
 }
