@@ -69,7 +69,7 @@ func (ct *TimeMillis) UnmarshalJSON(data []byte) error {
 	i, err := strconv.ParseInt(string(data), 10, 64)
 
 	if err == nil {
-		t := time.UnixMilli(i)
+		t := time.Unix(0, i*1e6)
 		(*ct).Time = t
 	}
 
