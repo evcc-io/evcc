@@ -1,9 +1,7 @@
 package fiat
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -95,12 +93,7 @@ func (v *API) pinAuth(pin string) (string, error) {
 		PIN: base64.StdEncoding.EncodeToString([]byte(pin)),
 	}
 
-	b, err := json.Marshal(data)
-
-	var req *http.Request
-	if err == nil {
-		req, err = v.request(http.MethodPost, uri, bytes.NewReader(b))
-	}
+	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
 
 	if err == nil {
 		err = v.DoJSON(req, &res)
@@ -127,12 +120,7 @@ func (v *API) Action(vin, pin, action, cmd string) (ActionResponse, error) {
 		PinAuth: token,
 	}
 
-	b, err := json.Marshal(data)
-
-	var req *http.Request
-	if err == nil {
-		req, err = v.request(http.MethodPost, uri, bytes.NewReader(b))
-	}
+	req, err := v.request(http.MethodPost, uri, request.MarshalJSON(data))
 
 	if err == nil {
 		err = v.DoJSON(req, &res)
