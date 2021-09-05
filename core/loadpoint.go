@@ -1289,7 +1289,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		}
 
 	// target charging
-	case lp.socTimer.DemandActive():
+	case lp.socTimer.DemandActive() && false:
 		targetCurrent := lp.socTimer.Handle()
 		err = lp.setLimit(targetCurrent, true)
 
