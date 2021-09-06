@@ -61,5 +61,9 @@ func (v *API) Status(vin string) (StatusResponse, error) {
 	uri := fmt.Sprintf("%s/bs/vsr/v1/Audi/DE/vehicles/%s/status", DefaultBaseURI, vin)
 	err := v.getJSON(uri, &res)
 
+	if err != nil && res.Error.ErrorCode != "" {
+		err = fmt.Errorf("%w (%s: %s)", err, res.Error.ErrorCode, res.Error.Description)
+	}
+
 	return res, err
 }
