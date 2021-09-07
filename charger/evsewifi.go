@@ -164,7 +164,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 
 	params := res.List[0]
 	if !params.AlwaysActive {
-		evse.log.WARN.Println("evse should be configured to remote mode")
+		evse.log.Warnln("evse should be configured to remote mode")
 	}
 
 	evse.alwaysActive = params.AlwaysActive

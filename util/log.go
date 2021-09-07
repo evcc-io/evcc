@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/api"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -59,6 +60,9 @@ func NewLogger(area string) *Logger {
 	return logger
 }
 
+// implement api.Logger
+var _ api.Logger = (*Logger)(nil)
+
 func (l *Logger) Tracef(format string, v ...interface{}) {
 	l.TRACE.Printf(format, v...)
 }
@@ -81,6 +85,14 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 
 func (l *Logger) Infoln(v ...interface{}) {
 	l.INFO.Println(v...)
+}
+
+func (l *Logger) Warnf(format string, v ...interface{}) {
+	l.WARN.Printf(format, v...)
+}
+
+func (l *Logger) Warnln(v ...interface{}) {
+	l.WARN.Println(v...)
 }
 
 func (l *Logger) Errorf(format string, v ...interface{}) {

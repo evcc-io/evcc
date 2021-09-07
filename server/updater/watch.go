@@ -80,6 +80,6 @@ func (u *watch) fetchReleaseNotes(installed string) {
 			Val: notes,
 		}
 	} else {
-		u.log.WARN.Printf("couldn't download release notes: %v", err)
+		u.log.Warnf("couldn't download release notes: %v", err)
 	}
 }

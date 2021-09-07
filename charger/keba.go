@@ -166,7 +166,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	}
 
 	if kr.AuthON == 1 && c.rfid.Tag == "" {
-		c.log.WARN.Println("missing credentials for RFID authorization")
+		c.log.Warnln("missing credentials for RFID authorization")
 	}
 
 	if kr.Plug < 5 {

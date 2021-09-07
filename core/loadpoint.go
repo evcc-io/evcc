@@ -150,10 +150,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	switch lp.SoC.Poll.Mode = strings.ToLower(lp.SoC.Poll.Mode); lp.SoC.Poll.Mode {
 	case pollCharging:
 	case pollConnected, pollAlways:
-		log.WARN.Printf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)
+		log.Warnf("poll mode '%s' may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll)
 	default:
 		if lp.SoC.Poll.Mode != "" {
-			log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
+			log.Warnf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
 		lp.SoC.Poll.Mode = pollConnected
 	}
@@ -163,7 +163,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		if lp.SoC.Poll.Interval == 0 {
 			lp.SoC.Poll.Interval = pollInterval
 		} else {
-			log.WARN.Printf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll.Interval, pollInterval)
+			log.Warnf("poll interval '%v' is lower than %v and may deplete your battery or lead to API misuse. USE AT YOUR OWN RISK.", lp.SoC.Poll.Interval, pollInterval)
 		}
 	}
 
@@ -175,11 +175,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.MinCurrent == 0 {
-		log.WARN.Println("minCurrent must not be zero")
+		log.Warnln("minCurrent must not be zero")
 	}
 
 	if lp.MaxCurrent <= lp.MinCurrent {
-		log.WARN.Println("maxCurrent must be larger than minCurrent")
+		log.Warnln("maxCurrent must be larger than minCurrent")
 	}
 
 	if lp.Meters.ChargeMeterRef != "" {
@@ -207,9 +207,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	// allow target charge handler to access loadpoint
 	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
 	if lp.Enable.Threshold > lp.Disable.Threshold {
-		log.WARN.Printf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
+		log.Warnf("PV mode enable threshold (%.0fW) is larger than disable threshold (%.0fW)", lp.Enable.Threshold, lp.Disable.Threshold)
 	} else if lp.Enable.Threshold > 0 {
-		log.WARN.Printf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
+		log.Warnf("PV mode enable threshold %.0fW > 0 will start PV charging on grid power consumption. Did you mean -%.0f?", lp.Enable.Threshold, lp.Enable.Threshold)
 	}
 
 	return lp, nil
@@ -468,12 +468,12 @@ func (lp *LoadPoint) syncCharger() {
 	enabled, err := lp.charger.Enabled()
 	if err == nil {
 		if enabled != lp.enabled {
-			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
+			lp.log.Warnf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
 			err = lp.charger.Enable(lp.enabled)
 		}
 
 		if !enabled && lp.GetStatus() == api.StatusC {
-			lp.log.WARN.Println("charger logic error: disabled but charging")
+			lp.log.Warnln("charger logic error: disabled but charging")
 		}
 	}
 
@@ -872,7 +872,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
 	if phases < lp.activePhases {
-		lp.log.WARN.Printf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
+		lp.log.Warnf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
 	}
 
 	lp.log.Debugf("!!pvScalePhases available power %.0f for target current %.1f @ %dp/%dp", availablePower, targetCurrent, lp.activePhases, phases)

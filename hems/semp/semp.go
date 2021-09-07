@@ -187,7 +187,7 @@ func (s *SEMP) callbackURI() string {
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
+	s.log.Warnf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
 
 	return uri
 }

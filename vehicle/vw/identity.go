@@ -119,7 +119,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				v.log.WARN.Println("accepting updated", u)
+				v.log.Warnln("accepting updated", u)
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
 				}

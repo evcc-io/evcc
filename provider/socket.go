@@ -55,7 +55,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	url := util.DefaultScheme(cc.URI, "ws")
 	if url != cc.URI {
-		log.WARN.Printf("missing scheme for %s, assuming ws", cc.URI)
+		log.Warnf("missing scheme for %s, assuming ws", cc.URI)
 	}
 
 	p := &Socket{

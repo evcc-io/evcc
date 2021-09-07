@@ -52,7 +52,7 @@ func (lp *Timer) DemandActive() bool {
 
 	se := lp.SocEstimator()
 	if se == nil {
-		lp.log.WARN.Printf("target charging: not possible")
+		lp.log.Warnf("target charging: not possible")
 		return false
 	}
 

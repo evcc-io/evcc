@@ -81,7 +81,7 @@ func AsFloat(value interface{}) float64 {
 	case nil:
 		return 0
 	default:
-		util.NewLogger("sma").WARN.Printf("unknown value type: %T", value)
+		util.NewLogger("sma").Warnf("unknown value type: %T", value)
 		return 0
 	}
 }

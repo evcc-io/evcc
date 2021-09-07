@@ -96,7 +96,7 @@ func NewNRGKickConnect(uri, mac, password string) (*NRGKickConnect, error) {
 		password: password,
 	}
 
-	nrg.log.WARN.Println("-- experimental --")
+	nrg.log.Warnln("-- experimental --")
 
 	return nrg, nil
 }
