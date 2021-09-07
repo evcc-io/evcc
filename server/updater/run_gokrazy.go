@@ -1,3 +1,4 @@
+//go:build gokrazy
 // +build gokrazy
 
 package updater
@@ -54,7 +55,7 @@ func (u *watch) updateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := u.execute(assetID, size); err != nil {
-		u.log.ERROR.Printf("could not find release image: %v", err)
+		u.log.Errorf("could not find release image: %v", err)
 
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "update failed: %v", err)

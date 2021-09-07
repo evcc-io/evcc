@@ -53,7 +53,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
+		log.Tracef(
 			"%s\t%s\t%s",
 			r.Method,
 			r.RequestURI,
@@ -82,7 +82,7 @@ func indexHandler(site site.API) http.HandlerFunc {
 			"Commit":     Commit,
 			"Configured": len(site.LoadPoints()),
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page:", err.Error())
+			log.Errorln("httpd: failed to render main page:", err.Error())
 		}
 	})
 }
@@ -98,7 +98,7 @@ func jsonHandler(h http.Handler) http.Handler {
 func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(content); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		log.Errorf("httpd: failed to encode JSON: %v", err)
 	}
 }
 

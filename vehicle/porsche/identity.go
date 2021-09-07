@@ -235,7 +235,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 		}
 
 		if foundVehicle.VIN != "" {
-			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
+			v.log.Debugf("found vehicle: %v", foundVehicle.VIN)
 
 			if accessTokens.EmobilityToken.AccessToken != "" {
 				foundEmobilityVehicle = true

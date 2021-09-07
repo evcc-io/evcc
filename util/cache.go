@@ -22,7 +22,7 @@ func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
-		log.DEBUG.Printf("%s: %v", p.Key, p.Val)
+		log.Debugf("%s: %v", p.Key, p.Val)
 		c.Add(p.UniqueID(), p)
 	}
 }

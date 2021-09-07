@@ -170,7 +170,7 @@ func (v *API) refreshRequest(vid string) error {
 		go func() {
 			var resp StatusResponse
 			if err := v.DoJSON(req, &resp); err == nil && resp.RetCode != resOK {
-				v.log.ERROR.Printf("unexpected response: %s", resp.RetCode)
+				v.log.Errorf("unexpected response: %s", resp.RetCode)
 			}
 		}()
 	}

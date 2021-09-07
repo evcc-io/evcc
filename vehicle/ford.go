@@ -82,7 +82,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if err == nil && cc.VIN == "" {
 		v.vin, err = findVehicle(v.vehicles())
 		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", v.vin)
+			log.Debugf("found vehicle: %v", v.vin)
 		}
 	}
 
@@ -218,7 +218,7 @@ func (v *Ford) status() (res fordVehicleStatus, err error) {
 		lastUpdate, err = time.Parse(fordTimeFormat, res.VehicleStatus.LastRefresh)
 
 		if elapsed := time.Since(lastUpdate); err == nil && elapsed > fordStatusExpiry {
-			v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordStatusExpiry)
+			v.log.Debugf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, fordStatusExpiry)
 
 			if err = v.refreshRequest(); err == nil {
 				err = api.ErrMustRetry

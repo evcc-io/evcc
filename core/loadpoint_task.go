@@ -35,7 +35,7 @@ func (lp *LoadPoint) odometer() error {
 		lp.publish("vehicleOdometer", odo)
 	case api.ErrMustRetry:
 	default:
-		lp.log.ERROR.Printf("vehicle odometer: %v", err)
+		lp.log.Errorf("vehicle odometer: %v", err)
 	}
 	return err
 }

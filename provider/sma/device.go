@@ -43,7 +43,7 @@ func (d *Device) updateValues() {
 	}
 
 	if err != nil {
-		d.log.ERROR.Println(err)
+		d.log.Errorln(err)
 	}
 }
 

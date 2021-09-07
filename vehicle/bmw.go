@@ -51,7 +51,7 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	if cc.VIN == "" {
 		cc.VIN, err = findVehicle(api.Vehicles())
 		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+			log.Debugf("found vehicle: %v", cc.VIN)
 		}
 	}
 

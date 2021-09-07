@@ -81,12 +81,12 @@ func (l *Listener) listen() {
 	for {
 		read, addr, err := l.conn.ReadFrom(b)
 		if err != nil {
-			l.log.TRACE.Printf("listener: %v", err)
+			l.log.Tracef("listener: %v", err)
 			continue
 		}
 
 		body := strings.TrimSpace(string(b[:read]))
-		l.log.TRACE.Printf("recv from %s %v", addr.String(), body)
+		l.log.Tracef("recv from %s %v", addr.String(), body)
 
 		msg := UDPMsg{
 			Addr:    addr.String(),
@@ -143,7 +143,7 @@ func (l *Listener) send(msg UDPMsg) {
 			select {
 			case client <- msg:
 			default:
-				l.log.TRACE.Println("recv: listener blocked")
+				l.log.Traceln("recv: listener blocked")
 			}
 			break
 		}

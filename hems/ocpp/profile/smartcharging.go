@@ -17,18 +17,18 @@ func NewSmartCharging(log *util.Logger) *SmartCharging {
 
 // OnSetChargingProfile handles the CS message
 func (s *SmartCharging) OnSetChargingProfile(request *sc.SetChargingProfileRequest) (confirmation *sc.SetChargingProfileConfirmation, err error) {
-	s.log.TRACE.Printf("recv: %s %+v", request.GetFeatureName(), request)
+	s.log.Tracef("recv: %s %+v", request.GetFeatureName(), request)
 	return sc.NewSetChargingProfileConfirmation(sc.ChargingProfileStatusRejected), nil
 }
 
 // OnClearChargingProfile handles the CS message
 func (s *SmartCharging) OnClearChargingProfile(request *sc.ClearChargingProfileRequest) (confirmation *sc.ClearChargingProfileConfirmation, err error) {
-	s.log.TRACE.Printf("recv: %s %+v", request.GetFeatureName(), request)
+	s.log.Tracef("recv: %s %+v", request.GetFeatureName(), request)
 	return sc.NewClearChargingProfileConfirmation(sc.ClearChargingProfileStatusUnknown), nil
 }
 
 // OnGetCompositeSchedule handles the CS message
 func (s *SmartCharging) OnGetCompositeSchedule(request *sc.GetCompositeScheduleRequest) (confirmation *sc.GetCompositeScheduleConfirmation, err error) {
-	s.log.TRACE.Printf("recv: %s %+v", request.GetFeatureName(), request)
+	s.log.Tracef("recv: %s %+v", request.GetFeatureName(), request)
 	return sc.NewGetCompositeScheduleConfirmation(sc.GetCompositeScheduleStatusRejected), nil
 }

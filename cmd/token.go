@@ -25,7 +25,7 @@ func init() {
 
 func runToken(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.Infof("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
 	conf, err := loadConfigFile(cfgFile)
@@ -54,7 +54,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	default:
-		log.FATAL.Fatalf("vehicle type '%s' does not support token authentication", vehicleConf.Type)
+		log.Fatalf("vehicle type '%s' does not support token authentication", vehicleConf.Type)
 	}
 
 	if err != nil {

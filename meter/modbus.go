@@ -152,7 +152,7 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 	}
 
 	if err == nil {
-		m.log.TRACE.Printf("%+v", res)
+		m.log.Tracef("%+v", res)
 	}
 
 	return res.Value, err

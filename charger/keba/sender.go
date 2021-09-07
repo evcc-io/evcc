@@ -36,7 +36,7 @@ func NewSender(log *util.Logger, addr string) (*Sender, error) {
 
 // Send msg to receiver
 func (c *Sender) Send(msg string) error {
-	c.log.TRACE.Printf("send to %s %v", c.addr, msg)
+	c.log.Tracef("send to %s %v", c.addr, msg)
 	_, err := io.Copy(c.conn, strings.NewReader(msg))
 	return err
 }

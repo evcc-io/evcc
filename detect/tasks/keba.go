@@ -40,7 +40,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	if h.listener == nil {
 		var err error
 		if h.listener, err = keba.New(log); err != nil {
-			log.ERROR.Println("keba:", err)
+			log.Errorln("keba:", err)
 		}
 
 		h.mux.Unlock()
@@ -54,7 +54,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 
 	sender, err := keba.NewSender(log, in.IP)
 	if err != nil {
-		log.ERROR.Println("keba:", err)
+		log.Errorln("keba:", err)
 		return nil
 	}
 
@@ -67,7 +67,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 
 		select {
 		case t := <-resC:
-			log.INFO.Println(t)
+			log.Infoln(t)
 			if t.Report == nil {
 				continue
 			}

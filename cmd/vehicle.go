@@ -25,7 +25,7 @@ func init() {
 
 func runVehicle(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.Infof("evcc %s (%s)", server.Version, server.Commit)
 
 	// load config
 	conf, err := loadConfigFile(cfgFile)
@@ -57,7 +57,7 @@ NEXT:
 		// wait up to 1m for the vehicle to wakeup
 		for {
 			if time.Since(start) > time.Minute {
-				log.ERROR.Println(api.ErrTimeout)
+				log.Errorln(api.ErrTimeout)
 				continue NEXT
 			}
 
@@ -68,7 +68,7 @@ NEXT:
 					continue WAIT
 				}
 
-				log.ERROR.Println(err)
+				log.Errorln(err)
 				continue NEXT
 			}
 

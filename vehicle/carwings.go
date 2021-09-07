@@ -91,7 +91,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.wg.Add(1)
 	go func() {
 		if err := v.session.Connect(v.user, v.password); err != nil {
-			log.ERROR.Println("login failed:", err)
+			log.Errorln("login failed:", err)
 		}
 		v.wg.Done()
 	}()

@@ -61,7 +61,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
+		mux:     util.NewWaiter(cc.Timeout, func() { log.Debugln("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
@@ -102,7 +102,7 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
 		if err != nil {
-			p.log.ERROR.Println(err)
+			p.log.Errorln(err)
 			time.Sleep(retryDelay)
 			continue
 		}
@@ -110,12 +110,12 @@ func (p *Socket) listen() {
 		for {
 			_, b, err := client.ReadMessage()
 			if err != nil {
-				p.log.TRACE.Println("read:", err)
+				p.log.Traceln("read:", err)
 				_ = client.Close()
 				break
 			}
 
-			p.log.TRACE.Printf("recv: %s", b)
+			p.log.Tracef("recv: %s", b)
 
 			p.mux.Lock()
 			if p.jq != nil {

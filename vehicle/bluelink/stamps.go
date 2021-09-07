@@ -44,7 +44,7 @@ func download(log *util.Logger, id, brand string) {
 
 	err := client.GetJSON(uri, &res)
 	if err != nil {
-		log.ERROR.Println(err)
+		log.Errorln(err)
 		return
 	}
 

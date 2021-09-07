@@ -59,6 +59,46 @@ func NewLogger(area string) *Logger {
 	return logger
 }
 
+func (l *Logger) Tracef(format string, v ...interface{}) {
+	l.TRACE.Printf(format, v...)
+}
+
+func (l *Logger) Traceln(v ...interface{}) {
+	l.TRACE.Println(v...)
+}
+
+func (l *Logger) Debugf(format string, v ...interface{}) {
+	l.DEBUG.Printf(format, v...)
+}
+
+func (l *Logger) Debugln(v ...interface{}) {
+	l.DEBUG.Println(v...)
+}
+
+func (l *Logger) Infof(format string, v ...interface{}) {
+	l.INFO.Printf(format, v...)
+}
+
+func (l *Logger) Infoln(v ...interface{}) {
+	l.INFO.Println(v...)
+}
+
+func (l *Logger) Errorf(format string, v ...interface{}) {
+	l.ERROR.Printf(format, v...)
+}
+
+func (l *Logger) Errorln(v ...interface{}) {
+	l.ERROR.Println(v...)
+}
+
+func (l *Logger) Fatalf(format string, v ...interface{}) {
+	l.FATAL.Fatalf(format, v...)
+}
+
+func (l *Logger) Fatalln(v ...interface{}) {
+	l.FATAL.Fatalln(v...)
+}
+
 // Name returns the loggers name
 func (l *Logger) Name() string {
 	return l.name

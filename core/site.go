@@ -132,8 +132,8 @@ func meterCapabilities(name string, meter interface{}) string {
 func (site *Site) DumpConfig() {
 	site.publish("siteTitle", site.Title)
 
-	site.log.INFO.Println("site config:")
-	site.log.INFO.Printf("  meters:    grid %s pv %s battery %s",
+	site.log.Infoln("site config:")
+	site.log.Infof("  meters:    grid %s pv %s battery %s",
 		presence[site.gridMeter != nil],
 		presence[site.pvMeter != nil],
 		presence[site.batteryMeter != nil],
@@ -141,18 +141,18 @@ func (site *Site) DumpConfig() {
 
 	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
-		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
+		site.log.Infoln(meterCapabilities("grid", site.gridMeter))
 	}
 
 	site.publish("pvConfigured", site.pvMeter != nil)
 	if site.pvMeter != nil {
-		site.log.INFO.Println(meterCapabilities("pv", site.pvMeter))
+		site.log.Infoln(meterCapabilities("pv", site.pvMeter))
 	}
 
 	site.publish("batteryConfigured", site.batteryMeter != nil)
 	if site.batteryMeter != nil {
 		_, ok := site.batteryMeter.(api.Battery)
-		site.log.INFO.Println(
+		site.log.Infoln(
 			meterCapabilities("battery", site.batteryMeter),
 			fmt.Sprintf("soc %s", presence[ok]),
 		)
@@ -163,37 +163,37 @@ func (site *Site) DumpConfig() {
 	}
 
 	for i, lp := range site.loadpoints {
-		lp.log.INFO.Printf("loadpoint %d:", i+1)
+		lp.log.Infof("loadpoint %d:", i+1)
 
-		lp.log.INFO.Printf("  mode:      %s", lp.GetMode())
+		lp.log.Infof("  mode:      %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
 		_, timer := lp.charger.(api.ChargeTimer)
 
-		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s timer %s",
+		lp.log.Infof("  charger:   power %s energy %s currents %s timer %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
 			presence[timer],
 		)
 
-		lp.log.INFO.Printf("  meters:    charge %s", presence[lp.HasChargeMeter()])
+		lp.log.Infof("  meters:    charge %s", presence[lp.HasChargeMeter()])
 
 		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
-			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
+			lp.log.Infof(meterCapabilities("charge", lp.chargeMeter))
 		}
 
-		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
+		lp.log.Infof("  vehicles:  %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
 			_, rng := v.(api.VehicleRange)
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
-			lp.log.INFO.Printf("    car %d:   range %s finish %s status %s climate %s",
+			lp.log.Infof("    car %d:   range %s finish %s status %s climate %s",
 				i, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
@@ -222,7 +222,7 @@ func (site *Site) updateMeter(name string, meter api.Meter, power *float64) erro
 
 	*power = value // update value if no error
 
-	site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
+	site.log.Debugf("%s power: %.0fW", name, *power)
 	site.publish(name+"Power", *power)
 
 	return nil
@@ -241,7 +241,7 @@ func (site *Site) updateMeters() error {
 
 		if err != nil {
 			err = fmt.Errorf("updating %s meter: %v", s, err)
-			site.log.ERROR.Println(err)
+			site.log.Errorln(err)
 		}
 
 		return err
@@ -259,7 +259,7 @@ func (site *Site) updateMeters() error {
 	if phaseMeter, ok := site.gridMeter.(api.MeterCurrent); err == nil && ok {
 		i1, i2, i3, err := phaseMeter.Currents()
 		if err == nil {
-			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
+			site.log.Debugf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
 		}
 	}
@@ -293,9 +293,9 @@ func (site *Site) sitePower() (float64, error) {
 	if battery, ok := site.batteryMeter.(api.Battery); ok {
 		soc, err := battery.SoC()
 		if err != nil {
-			site.log.ERROR.Printf("updating battery soc: %v", err)
+			site.log.Errorf("updating battery soc: %v", err)
 		} else {
-			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
+			site.log.Debugf("battery soc: %.0f%%", soc)
 			site.publish("batterySoC", math.Trunc(soc))
 
 			site.Lock()
@@ -303,20 +303,20 @@ func (site *Site) sitePower() (float64, error) {
 
 			// if battery is charging give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
-				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
+				site.log.Debugf("giving priority to battery at soc: %.0f", soc)
 				batteryPower = 0
 			}
 		}
 	}
 
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
-	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
+	site.log.Debugf("site power: %.0fW", sitePower)
 
 	return sitePower, nil
 }
 
 func (site *Site) update(lp Updater) {
-	site.log.DEBUG.Println("----")
+	site.log.Debugln("----")
 
 	var cheap bool
 	if site.tariff != nil {

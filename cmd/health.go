@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package cmd
@@ -30,7 +31,7 @@ func init() {
 
 func runHealth(cmd *cobra.Command, args []string) {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
-	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
+	log.Infof("evcc %s (%s)", server.Version, server.Commit)
 
 	u := &httpunix.Transport{
 		DialTimeout:           100 * time.Millisecond,
@@ -51,13 +52,13 @@ func runHealth(cmd *cobra.Command, args []string) {
 		resp.Body.Close()
 
 		if resp.StatusCode == http.StatusOK {
-			log.INFO.Printf("health check ok")
+			log.Infof("health check ok")
 			ok = true
 		}
 	}
 
 	if !ok {
-		log.ERROR.Printf("health check failed")
+		log.Errorf("health check failed")
 		os.Exit(1)
 	}
 }

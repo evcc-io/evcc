@@ -51,7 +51,7 @@ func (t *Awattar) Run() {
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
 		if err := client.GetJSON(t.uri, &res); err != nil {
-			t.log.ERROR.Println(err)
+			t.log.Errorln(err)
 			continue
 		}
 

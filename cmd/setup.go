@@ -34,9 +34,9 @@ var cp = &ConfigProvider{}
 
 func loadConfigFile(cfgFile string) (conf config, err error) {
 	if cfgFile != "" {
-		log.INFO.Println("using config file", cfgFile)
+		log.Infoln("using config file", cfgFile)
 		if err := viper.UnmarshalExact(&conf); err != nil {
-			log.FATAL.Fatalf("failed parsing config file %s: %v", cfgFile, err)
+			log.Fatalf("failed parsing config file %s: %v", cfgFile, err)
 		}
 	} else {
 		err = errors.New("missing evcc config")
@@ -149,7 +149,7 @@ func configureJavascript(conf map[string]interface{}) error {
 func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
 	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, cache, httpd)
 	if err != nil {
-		log.FATAL.Fatalf("failed configuring hems: %v", err)
+		log.Fatalf("failed configuring hems: %v", err)
 	}
 	return hems
 }
@@ -173,7 +173,7 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
 		if err != nil {
 			log.FATAL.Fatal(err)
-			log.FATAL.Fatalf("failed configuring messenger %s: %v", service.Type, err)
+			log.Fatalf("failed configuring messenger %s: %v", service.Type, err)
 		}
 		notificationHub.Add(impl)
 	}

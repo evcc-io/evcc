@@ -75,7 +75,7 @@ func (lp *Timer) DemandActive() bool {
 	// timer charging is already active- only deactivate once charging has stopped
 	if lp.active {
 		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC {
-			lp.log.TRACE.Printf("target charging: deactivating")
+			lp.log.Tracef("target charging: deactivating")
 			lp.active = false
 		}
 
@@ -85,7 +85,7 @@ func (lp *Timer) DemandActive() bool {
 	// check if charging need be activated
 	if lp.active = lp.finishAt.After(lp.Time); lp.active {
 		lp.current = lp.GetMaxCurrent()
-		lp.log.DEBUG.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+		lp.log.Debugf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
 	}
 
 	return lp.active
@@ -106,7 +106,7 @@ func (lp *Timer) Handle() float64 {
 	}
 
 	lp.current = math.Max(math.Min(lp.current, lp.GetMaxCurrent()), lp.GetMinCurrent())
-	lp.log.DEBUG.Printf("target charging: %s (%.3gA)", action, lp.current)
+	lp.log.Debugf("target charging: %s (%.3gA)", action, lp.current)
 
 	return lp.current
 }

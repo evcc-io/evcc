@@ -31,12 +31,12 @@ func (u *watch) watchReleases(installed string, out chan *github.RepositoryRelea
 	for range time.NewTicker(6 * time.Hour).C {
 		rel, err := u.findReleaseUpdate(installed)
 		if err != nil {
-			u.log.ERROR.Printf("version check failed: %v", err)
+			u.log.Errorf("version check failed: %v", err)
 			continue
 		}
 
 		if rel != nil {
-			u.log.INFO.Printf("new version available: %s", *rel.TagName)
+			u.log.Infof("new version available: %s", *rel.TagName)
 			out <- rel
 		}
 	}

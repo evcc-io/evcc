@@ -36,7 +36,7 @@ func Work(log *util.Logger, num int, hosts []string) []tasks.Result {
 	hits := make(chan []tasks.Result)
 	done := make(chan struct{})
 
-	// log.INFO.Println(
+	// log.Infoln(
 	// 	"\n" +
 	// 		strings.Join(
 	// 			funk.Map(taskList.tasks, func(t tasks.Task) string {

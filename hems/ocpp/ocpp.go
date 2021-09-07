@@ -47,7 +47,7 @@ func New(conf map[string]interface{}, site site.API, cache *util.Cache) (*OCPP, 
 		} else {
 			cc.StationID = fmt.Sprintf("evcc-%d", rand.Int31())
 		}
-		log.DEBUG.Println("station id:", cc.StationID)
+		log.Debugln("station id:", cc.StationID)
 	}
 
 	ws := ws.NewClient()
@@ -75,7 +75,7 @@ func New(conf map[string]interface{}, site site.API, cache *util.Cache) (*OCPP, 
 // errorHandler logs error channel
 func (s *OCPP) errorHandler(errC <-chan error) {
 	for err := range errC {
-		s.log.ERROR.Println(err)
+		s.log.Errorln(err)
 	}
 }
 
@@ -90,9 +90,9 @@ func (s *OCPP) Run() {
 				status = ocppcore.ChargePointStatusCharging
 			}
 
-			s.log.DEBUG.Printf("send: lp-%d status: %+v", connector, status)
+			s.log.Debugf("send: lp-%d status: %+v", connector, status)
 			if _, err := s.cp.StatusNotification(connector, ocppcore.NoError, status); err != nil {
-				s.log.ERROR.Printf("lp-%d: %v", connector, err)
+				s.log.Errorf("lp-%d: %v", connector, err)
 			}
 		}
 

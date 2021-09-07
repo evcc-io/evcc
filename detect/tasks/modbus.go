@@ -136,7 +136,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 			mr.Point = h.Point
 			mr.Value = res.Value()
 
-			log.DEBUG.Printf("model %d point %s: %v", model, mr.Point, mr.Value)
+			log.Debugf("model %d point %s: %v", model, mr.Point, mr.Value)
 
 			if len(h.Invalid) == 0 {
 				return true
@@ -162,7 +162,7 @@ func (h *ModbusHandler) testSunSpec(log *util.Logger, conn meters.Connection, de
 				}
 			}
 		} else {
-			log.DEBUG.Printf("model %d: %v", model, err)
+			log.Debugf("model %d: %v", model, err)
 		}
 	}
 
@@ -199,10 +199,10 @@ func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDe
 
 		var ok bool
 		if h.op.OpCode > 0 {
-			// log.DEBUG.Printf("slave id: %d op: %v", slaveID, h.op)
+			// log.Debugf("slave id: %d op: %v", slaveID, h.op)
 			ok = h.testRegister(log, conn.ModbusClient())
 		} else {
-			// log.DEBUG.Printf("slave id: %d models: %v", slaveID, h.Models)
+			// log.Debugf("slave id: %d models: %v", slaveID, h.Models)
 			ok = h.testSunSpec(log, conn, dev, &mr)
 		}
 

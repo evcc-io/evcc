@@ -68,7 +68,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var vehicle bluelink.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
 		vehicle = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+		log.Debugf("found vehicle: %v", cc.VIN)
 	} else {
 		for _, v := range vehicles {
 			if v.VIN == strings.ToUpper(cc.VIN) {

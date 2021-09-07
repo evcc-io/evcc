@@ -104,11 +104,11 @@ func (e *Script) exec(script string) (string, error) {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 
-		e.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
+		e.log.Errorf("%s: %s", strings.Join(args, " "), s)
 		return "", err
 	}
 
-	e.log.DEBUG.Printf("%s: %s", strings.Join(args, " "), s)
+	e.log.Debugf("%s: %s", strings.Join(args, " "), s)
 
 	return s, nil
 }

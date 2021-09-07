@@ -162,7 +162,7 @@ func (c *Easee) syncSmartCharging() error {
 	}
 
 	if c.lp.GetMode() != c.lastChargeMode {
-		c.log.DEBUG.Printf("charge mode changed by loadpoint: %v -> %v", c.lastChargeMode, c.lp.GetMode())
+		c.log.Debugf("charge mode changed by loadpoint: %v -> %v", c.lastChargeMode, c.lp.GetMode())
 		newSmartCharging := false
 		if c.lp.GetMode() == api.ModePV {
 			newSmartCharging = true
@@ -187,7 +187,7 @@ func (c *Easee) syncSmartCharging() error {
 	}
 
 	if c.lastSmartCharging != c.status.SmartCharging {
-		c.log.DEBUG.Printf("smart status changed by charger: %v -> %v", c.lastSmartCharging, c.status.SmartCharging)
+		c.log.Debugf("smart status changed by charger: %v -> %v", c.lastSmartCharging, c.status.SmartCharging)
 		if c.status.SmartCharging {
 			c.lp.SetMode(api.ModePV)
 		} else {
