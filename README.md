@@ -523,7 +523,7 @@ All possible values can be found as const [here](https://gitlab.com/bboehmke/sun
 
 ### Javascript (read/write)
 
-EVCC includes a bundled Javascript interpreter with Underscore.js library installed. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
+EVCC includes a bundled Javascript interpreter with Underscore.js library installed, which is directly accessible via `_.` e.g. `_.random(0,5)`. The `js` plugin is able to execute Javascript code from the `script` tag. Useful for quick prototyping:
 
 ```yaml
 source: js
