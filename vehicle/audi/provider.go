@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // Provider implements the evcc vehicle api
@@ -28,8 +29,8 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		fd := res.ServiceByID(StatusOdometer).FieldByID(StatusOdometer)
+	if res, ok := res.(vw.StatusResponse); err == nil && ok {
+		fd := res.ServiceByID(vw.ServiceOdometer).FieldByID(vw.ServiceOdometer)
 		if fd != nil {
 			return strconv.ParseFloat(fd.Value, 64)
 		}

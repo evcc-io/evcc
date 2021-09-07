@@ -6,13 +6,12 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vw"
 	"golang.org/x/oauth2"
 )
 
 // DefaultBaseURI is the Audi api base URI
 const DefaultBaseURI = "https://msg.audi.de/fs-car"
-
-const StatusOdometer = "0x0101010002"
 
 // API is the VW api client
 type API struct {
@@ -55,10 +54,11 @@ func (v *API) getJSON(uri string, res interface{}) error {
 }
 
 // Status returns the /vehicles/<vin>/status response
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var res StatusResponse
+func (v *API) Status(vin string) (vw.StatusResponse, error) {
+	var res vw.StatusResponse
 
 	uri := fmt.Sprintf("%s/bs/vsr/v1/Audi/DE/vehicles/%s/status", DefaultBaseURI, vin)
+	// uri := fmt.Sprintf("https://mal-3a.prd.eu.dp.vwg-connect.com/api/bs/vsr/v1/vehicles/%s/status", vin)
 	err := v.getJSON(uri, &res)
 
 	if err != nil && res.Error.ErrorCode != "" {
