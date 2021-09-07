@@ -30,7 +30,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	// load config
 	conf, err := loadConfigFile(cfgFile)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	var vehicleConf qualifiedConfig
@@ -43,7 +43,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	if vehicleConf.Name == "" {
-		log.FATAL.Fatal("vehicle not found")
+		log.Fatalln("vehicle not found")
 	}
 
 	var token *oauth2.Token
@@ -58,7 +58,7 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	fmt.Println()

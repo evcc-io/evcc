@@ -155,13 +155,13 @@ func run(cmd *cobra.Command, args []string) {
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	// setup loadpoints
 	site, err := configureSiteAndLoadpoints(conf)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	// start broadcasting values

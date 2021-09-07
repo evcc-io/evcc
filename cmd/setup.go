@@ -172,7 +172,6 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	for _, service := range conf.Services {
 		impl, err := push.NewMessengerFromConfig(service.Type, service.Other)
 		if err != nil {
-			log.FATAL.Fatal(err)
 			log.Fatalf("failed configuring messenger %s: %v", service.Type, err)
 		}
 		notificationHub.Add(impl)

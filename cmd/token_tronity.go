@@ -85,7 +85,7 @@ func tronityAuthorize(addr string, oc *oauth2.Config) (*oauth2.Token, error) {
 	wg.Add(1)
 	go func() {
 		if err := s.ListenAndServe(); err != http.ErrServerClosed {
-			log.FATAL.Fatal(err)
+			log.Fatalln(err)
 		}
 		wg.Done()
 	}()

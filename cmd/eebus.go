@@ -52,12 +52,12 @@ func generateEEBUSCert() {
 
 	cert, err := certhelper.CreateCertificate(true, subject)
 	if err != nil {
-		log.FATAL.Fatal("could not create certificate")
+		log.Fatalln("could not create certificate")
 	}
 
 	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
 	if err != nil {
-		log.FATAL.Fatal("could not process generated certificate")
+		log.Fatalln("could not process generated certificate")
 	}
 
 	t := template.Must(template.New("out").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl))
@@ -65,7 +65,7 @@ func generateEEBUSCert() {
 		"public":  pubKey,
 		"private": privKey,
 	}); err != nil {
-		log.FATAL.Fatal("rendering failed", err)
+		log.Fatalln("rendering failed", err)
 	}
 }
 

@@ -68,13 +68,13 @@ func indexHandler(site site.API) http.HandlerFunc {
 
 		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
-			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
-			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
+			log.Errorln("httpd: failed to load embedded template:", err.Error())
+			log.Fatalln("Make sure templates are included using the `release` build tag or use `make build`")
 		}
 
 		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
+			log.Fatalln("httpd: failed to create main page template:", err.Error())
 		}
 
 		if err := t.Execute(w, map[string]interface{}{

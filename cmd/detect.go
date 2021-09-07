@@ -36,7 +36,7 @@ func init() {
 func IPsFromSubnet(arg string) (res []string) {
 	gen, err := ipnetgen.New(arg)
 	if err != nil {
-		log.FATAL.Fatal("could not create iterator")
+		log.Fatalln("could not create iterator")
 	}
 
 	for ip := gen.Next(); ip != nil; ip = gen.Next() {
@@ -124,7 +124,7 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 	if len(hosts) == 0 {
 		ips := util.LocalIPs()
 		if len(ips) == 0 {
-			log.FATAL.Fatal("could not find ip")
+			log.Fatalln("could not find ip")
 		}
 
 		myIP := ips[0]

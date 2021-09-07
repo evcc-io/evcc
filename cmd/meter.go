@@ -26,16 +26,16 @@ func runMeter(cmd *cobra.Command, args []string) {
 	// load config
 	conf, err := loadConfigFile(cfgFile)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	if err := cp.configureMeters(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	meters := cp.meters

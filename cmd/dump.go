@@ -28,17 +28,17 @@ func runDump(cmd *cobra.Command, args []string) {
 	// load config
 	conf, err := loadConfigFile(cfgFile)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	// setup environment
 	if err := configureEnvironment(conf); err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	site, err := configureSiteAndLoadpoints(conf)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	d := dumper{len: 2}

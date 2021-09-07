@@ -22,7 +22,7 @@ func remoteIfExists(file string) {
 	}
 
 	if err != nil && !os.IsNotExist(err) {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 }
 
@@ -32,7 +32,7 @@ func HealthListener(site site.API) {
 
 	l, err := net.Listen("unix", SocketPath)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		log.Fatalln(err)
 	}
 	defer l.Close()
 
