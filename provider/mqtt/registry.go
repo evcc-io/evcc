@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 )
 
 type clientRegistry map[string]*Client
@@ -28,8 +28,8 @@ func (r clientRegistry) Get(broker string) (*Client, error) {
 var registry clientRegistry = make(map[string]*Client)
 
 // RegisteredClient reuses an registered Mqtt publisher or creates a new one
-func RegisteredClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
-	key := fmt.Sprintf("%s.%s", broker, log.Name())
+func RegisteredClient(log api.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
+	key := fmt.Sprintf("%s.%s", broker, user)
 	client, err := registry.Get(key)
 
 	if err != nil {
@@ -43,7 +43,7 @@ func RegisteredClient(log *util.Logger, broker, user, password, clientID string,
 
 // RegisteredClientOrDefault reuses an registered Mqtt publisher or creates a new one.
 // If no publisher is configured, it uses the default instance.
-func RegisteredClientOrDefault(log *util.Logger, cc Config) (*Client, error) {
+func RegisteredClientOrDefault(log api.Logger, cc Config) (*Client, error) {
 	var err error
 	client := Instance
 

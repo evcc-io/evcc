@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
@@ -19,7 +20,7 @@ const retryDelay = 5 * time.Second
 // Socket implements websocket request provider
 type Socket struct {
 	*request.Helper
-	log     *util.Logger
+	log     api.Logger
 	mux     *util.Waiter
 	url     string
 	headers map[string]string

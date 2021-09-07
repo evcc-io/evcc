@@ -22,7 +22,7 @@ const nrgTimeout = 10 * time.Second
 
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
-	log           *util.Logger
+	log           api.Logger
 	timer         *time.Timer
 	adapter       *adapter.Adapter1
 	agent         *agent.SimpleAgent

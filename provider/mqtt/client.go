@@ -35,7 +35,7 @@ type Config struct {
 
 // Client encapsulates mqtt publish/subscribe functions
 type Client struct {
-	log      *util.Logger
+	log      api.Logger
 	mux      sync.Mutex
 	Client   paho.Client
 	broker   string
@@ -46,7 +46,7 @@ type Client struct {
 type Option func(*paho.ClientOptions)
 
 // NewClient creates new Mqtt publisher
-func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
+func NewClient(log api.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
 	broker = util.DefaultPort(broker, 1883)
 	log.Infof("connecting %s at %s", clientID, broker)
 

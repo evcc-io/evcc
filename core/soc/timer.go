@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 const (
@@ -15,7 +14,7 @@ const (
 // Timer is the target charging handler
 type Timer struct {
 	Adapter
-	log      *util.Logger
+	log      api.Logger
 	current  float64
 	SoC      int
 	Time     time.Time
@@ -24,7 +23,7 @@ type Timer struct {
 }
 
 // NewTimer creates a Timer
-func NewTimer(log *util.Logger, api Adapter) *Timer {
+func NewTimer(log api.Logger, api Adapter) *Timer {
 	lp := &Timer{
 		log:     log,
 		Adapter: api,

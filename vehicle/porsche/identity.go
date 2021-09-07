@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -34,13 +34,13 @@ type AccessTokens struct {
 
 // Identity is the Porsche Identity client
 type Identity struct {
-	log *util.Logger
+	log api.Logger
 	*request.Helper
 	user, password string
 }
 
 // NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log api.Logger, user, password string) *Identity {
 	v := &Identity{
 		log:      log,
 		Helper:   request.NewHelper(log),

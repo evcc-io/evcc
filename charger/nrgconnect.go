@@ -65,7 +65,7 @@ type NRGDeviceMetadata struct {
 // NRGKickConnect charger implementation
 type NRGKickConnect struct {
 	*request.Helper
-	log      *util.Logger
+	log      api.Logger
 	uri      string
 	mac      string
 	password string

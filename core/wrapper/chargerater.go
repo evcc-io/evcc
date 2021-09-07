@@ -7,7 +7,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 // ChargeRater is responsible for providing charged energy amount
@@ -15,7 +14,7 @@ import (
 // keeps track of consumed energy by regularly updating consumed power.
 type ChargeRater struct {
 	sync.Mutex
-	log           *util.Logger
+	log           api.Logger
 	clck          clock.Clock
 	meter         api.Meter
 	charging      bool
@@ -25,7 +24,7 @@ type ChargeRater struct {
 }
 
 // NewChargeRater creates charge rater and initializes realtime clock
-func NewChargeRater(log *util.Logger, meter api.Meter) *ChargeRater {
+func NewChargeRater(log api.Logger, meter api.Meter) *ChargeRater {
 	return &ChargeRater{
 		log:   log,
 		clck:  clock.New(),

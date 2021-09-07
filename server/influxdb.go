@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
@@ -25,7 +26,7 @@ type InfluxConfig struct {
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log      *util.Logger
+	log      api.Logger
 	client   influxdb2.Client
 	org      string
 	database string

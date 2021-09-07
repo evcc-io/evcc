@@ -3,6 +3,7 @@ package provider
 import (
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
@@ -10,7 +11,7 @@ import (
 
 // Javascript implements Javascript request provider
 type Javascript struct {
-	log    *util.Logger
+	log    api.Logger
 	vm     *otto.Otto
 	script string
 }

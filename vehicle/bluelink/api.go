@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -32,14 +31,14 @@ var ErrAuthFail = errors.New("authorization failed")
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
-	log         *util.Logger
+	log         api.Logger
 	identity    *Identity
 	refresh     bool
 	refreshTime time.Time
 }
 
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, identity *Identity, cache time.Duration) *API {
+func NewAPI(log api.Logger, identity *Identity, cache time.Duration) *API {
 	v := &API{
 		log:      log,
 		identity: identity,

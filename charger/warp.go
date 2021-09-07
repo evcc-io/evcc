@@ -53,7 +53,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // Warp configures generic charger and charge meter for an Warp loadpoint
 type Warp struct {
-	log         *util.Logger
+	log         api.Logger
 	root        string
 	client      *mqtt.Client
 	enabledG    func() (string, error)

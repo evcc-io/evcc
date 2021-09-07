@@ -50,7 +50,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewOpenWB creates a new configurable charger
-func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p3 bool, timeout time.Duration) (api.Charger, error) {
+func NewOpenWB(log api.Logger, mqttconf mqtt.Config, id int, topic string, p1p3 bool, timeout time.Duration) (api.Charger, error) {
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {
 		return nil, err

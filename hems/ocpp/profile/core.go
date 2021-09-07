@@ -1,17 +1,17 @@
 package profile
 
 import (
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 type Core struct {
-	log           *util.Logger
+	log           api.Logger
 	configuration ConfigMap
 }
 
-func NewCore(log *util.Logger, config ConfigMap) *Core {
+func NewCore(log api.Logger, config ConfigMap) *Core {
 	return &Core{
 		log:           log,
 		configuration: config,

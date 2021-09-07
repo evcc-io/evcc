@@ -1,15 +1,15 @@
 package profile
 
 import (
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	sc "github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 )
 
 type SmartCharging struct {
-	log *util.Logger
+	log api.Logger
 }
 
-func NewSmartCharging(log *util.Logger) *SmartCharging {
+func NewSmartCharging(log api.Logger) *SmartCharging {
 	return &SmartCharging{
 		log: log,
 	}

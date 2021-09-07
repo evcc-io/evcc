@@ -39,7 +39,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
-	log   *util.Logger
+	log   api.Logger
 	oc    *oauth2.Config
 	vid   string
 	bulkG func() (interface{}, error)

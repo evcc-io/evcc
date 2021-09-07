@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 const chargeEfficiency = 0.9 // assume charge 90% efficiency
@@ -14,7 +13,7 @@ const chargeEfficiency = 0.9 // assume charge 90% efficiency
 // Estimator provides vehicle soc and charge duration
 // Vehicle SoC can be estimated to provide more granularity
 type Estimator struct {
-	log      *util.Logger
+	log      api.Logger
 	charger  api.Charger
 	vehicle  api.Vehicle
 	estimate bool
@@ -28,7 +27,7 @@ type Estimator struct {
 }
 
 // NewEstimator creates new estimator
-func NewEstimator(log *util.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
+func NewEstimator(log api.Logger, charger api.Charger, vehicle api.Vehicle, estimate bool) *Estimator {
 	s := &Estimator{
 		log:      log,
 		charger:  charger,

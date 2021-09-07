@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -38,7 +39,7 @@ var (
 	}
 )
 
-func download(log *util.Logger, id, brand string) {
+func download(log api.Logger, id, brand string) {
 	var res []string
 	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s.json", brand)
 
@@ -58,7 +59,7 @@ func download(log *util.Logger, id, brand string) {
 }
 
 // updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
-func updateStamps(log *util.Logger, id string) {
+func updateStamps(log api.Logger, id string) {
 	if _, ok := updater[id]; ok {
 		return
 	}

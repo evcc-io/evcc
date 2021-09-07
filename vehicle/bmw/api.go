@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -39,7 +39,7 @@ type API struct {
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log api.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

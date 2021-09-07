@@ -17,7 +17,7 @@ import (
 
 // TPLink charger implementation
 type TPLink struct {
-	log          *util.Logger
+	log          api.Logger
 	uri          string
 	standbypower float64
 }

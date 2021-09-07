@@ -7,6 +7,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -16,7 +17,7 @@ import (
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log    *util.Logger
+	log    api.Logger
 	conn   *modbus.Connection
 	device meters.Device
 	op     modbus.Operation

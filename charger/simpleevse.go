@@ -11,7 +11,7 @@ import (
 
 // SimpleEVSE charger implementation
 type SimpleEVSE struct {
-	log     *util.Logger
+	log     api.Logger
 	conn    *modbus.Connection
 	current int64
 }

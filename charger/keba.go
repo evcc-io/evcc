@@ -25,7 +25,7 @@ type RFID struct {
 
 // Keba is an api.Charger implementation with configurable getters and setters.
 type Keba struct {
-	log     *util.Logger
+	log     api.Logger
 	conn    string
 	rfid    RFID
 	timeout time.Duration

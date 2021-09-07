@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"gitlab.com/bboehmke/sunny"
 )
@@ -54,7 +55,7 @@ func GetDiscoverer(iface string) (*Discoverer, error) {
 
 // Discoverer discovers SMA devicesBySerial in background while providing already found devicesBySerial
 type Discoverer struct {
-	log     *util.Logger
+	log     api.Logger
 	conn    *sunny.Connection
 	devices map[uint32]*Device
 	mux     sync.RWMutex

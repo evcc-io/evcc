@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -68,7 +67,7 @@ type EmobilityResponse struct {
 
 // EMobilityProvider is an api.Vehicle implementation for Porsche Taycan cars
 type EMobilityProvider struct {
-	log *util.Logger
+	log api.Logger
 	*request.Helper
 	token    oauth2.Token
 	identity *Identity
@@ -77,7 +76,7 @@ type EMobilityProvider struct {
 }
 
 // NewEMobilityProvider creates a new vehicle
-func NewEMobilityProvider(log *util.Logger, identity *Identity, token oauth2.Token, vin string, cache time.Duration) *EMobilityProvider {
+func NewEMobilityProvider(log api.Logger, identity *Identity, token oauth2.Token, vin string, cache time.Duration) *EMobilityProvider {
 	impl := &EMobilityProvider{
 		log:      log,
 		token:    token,

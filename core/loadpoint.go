@@ -78,7 +78,7 @@ type LoadPoint struct {
 	pushChan chan<- push.Event // notifications
 	uiChan   chan<- util.Param // client push messages
 	lpChan   chan<- *LoadPoint // update requests
-	log      *util.Logger
+	log      api.Logger
 
 	// exposed public configuration
 	sync.Mutex                // guard status
@@ -140,7 +140,7 @@ type LoadPoint struct {
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
-func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[string]interface{}) (*LoadPoint, error) {
+func NewLoadPointFromConfig(log api.Logger, cp configProvider, other map[string]interface{}) (*LoadPoint, error) {
 	lp := NewLoadPoint(log)
 	if err := util.DecodeOther(other, &lp); err != nil {
 		return nil, err
@@ -216,7 +216,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 }
 
 // NewLoadPoint creates a LoadPoint with sane defaults
-func NewLoadPoint(log *util.Logger) *LoadPoint {
+func NewLoadPoint(log api.Logger) *LoadPoint {
 	clock := clock.New()
 	bus := evbus.New()
 

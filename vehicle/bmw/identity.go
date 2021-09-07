@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -18,13 +18,13 @@ const AuthURI = "https://customer.bmwgroup.com/gcdm/oauth/authenticate"
 
 type Identity struct {
 	*request.Helper
-	log *util.Logger
+	log api.Logger
 	oauth2.TokenSource
 	user, password string
 }
 
 // NewIdentity creates BMW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log api.Logger) *Identity {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),

@@ -29,7 +29,7 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
-	log     *util.Logger
+	log     api.Logger
 	conn    *modbus.Connection
 	current uint16
 }

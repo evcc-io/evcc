@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -26,7 +27,7 @@ type API struct {
 	*request.Helper
 }
 
-func NewAPI(log *util.Logger, identity *Identity) *API {
+func NewAPI(log api.Logger, identity *Identity) *API {
 	api := &API{
 		identity: identity,
 		Helper:   request.NewHelper(log),

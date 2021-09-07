@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type roundTripper struct {
-	log  *util.Logger
+	log  api.Logger
 	base http.RoundTripper
 }
 
@@ -50,7 +50,7 @@ func init() {
 }
 
 // NewTripper creates a logging roundtrip handler
-func NewTripper(log *util.Logger, base http.RoundTripper) http.RoundTripper {
+func NewTripper(log api.Logger, base http.RoundTripper) http.RoundTripper {
 	tripper := &roundTripper{
 		log:  log,
 		base: base,

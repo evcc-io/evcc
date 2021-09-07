@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -36,13 +37,13 @@ const (
 
 // Identity provides the identity.vwgroup.io login token source
 type Identity struct {
-	log *util.Logger
+	log api.Logger
 	*request.Helper
 	oauth2.TokenSource
 }
 
 // NewIdentity creates VW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log api.Logger) *Identity {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/google/go-github/v32/github"
 	"github.com/gorilla/mux"
@@ -15,7 +16,7 @@ type webServer interface {
 }
 
 type watch struct {
-	log     *util.Logger
+	log     api.Logger
 	outChan chan<- util.Param
 	repo    *Repo
 }

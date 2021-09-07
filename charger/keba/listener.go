@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 )
 
 const (
@@ -37,14 +37,14 @@ type UDPMsg struct {
 // Listener singleton listens for KEBA UDP messages
 type Listener struct {
 	mux     sync.Mutex
-	log     *util.Logger
+	log     api.Logger
 	conn    *net.UDPConn
 	clients map[string]chan<- UDPMsg
 	cache   map[string]string
 }
 
 // New creates a UDP listener that clients can subscribe to
-func New(log *util.Logger) (*Listener, error) {
+func New(log api.Logger) (*Listener, error) {
 	laddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%d", Port))
 	if err != nil {
 		return nil, err

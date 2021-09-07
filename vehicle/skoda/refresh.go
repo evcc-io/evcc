@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -16,7 +16,7 @@ type tokenRefresher struct {
 	login func() (oauth.Token, error)
 }
 
-func Refresher(log *util.Logger, login func() (oauth.Token, error)) oauth.TokenRefresher {
+func Refresher(log api.Logger, login func() (oauth.Token, error)) oauth.TokenRefresher {
 	return &tokenRefresher{
 		Helper: request.NewHelper(log),
 		login:  login,

@@ -29,7 +29,7 @@ const (
 type Ford struct {
 	*embed
 	*request.Helper
-	log                 *util.Logger
+	log                 api.Logger
 	user, password, vin string
 	tokenSource         oauth2.TokenSource
 	statusG             func() (interface{}, error)

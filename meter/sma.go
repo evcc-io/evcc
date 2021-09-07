@@ -15,7 +15,7 @@ import (
 
 // SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
-	log    *util.Logger
+	log    api.Logger
 	uri    string
 	scale  float64
 	device *sma.Device

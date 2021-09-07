@@ -40,7 +40,7 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log          *util.Logger
+	log          api.Logger
 	cache        *util.Cache
 	closeC       chan struct{}
 	doneC        chan struct{}

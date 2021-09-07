@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -33,7 +34,7 @@ type Identity struct {
 }
 
 // NewIdentity creates Fiat identity
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log api.Logger, user, password string) *Identity {
 	return &Identity{
 		Helper:   request.NewHelper(log),
 		user:     user,

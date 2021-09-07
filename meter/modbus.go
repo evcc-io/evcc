@@ -15,7 +15,7 @@ import (
 
 // Modbus is an api.Meter implementation with configurable getters and setters.
 type Modbus struct {
-	log      *util.Logger
+	log      api.Logger
 	conn     *modbus.Connection
 	device   meters.Device
 	opPower  modbus.Operation

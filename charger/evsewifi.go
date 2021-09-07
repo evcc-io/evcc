@@ -50,7 +50,7 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*request.Helper
-	log          *util.Logger
+	log          api.Logger
 	uri          string
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API

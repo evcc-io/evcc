@@ -14,7 +14,7 @@ import (
 
 type Awattar struct {
 	mux   sync.Mutex
-	log   *util.Logger
+	log   api.Logger
 	uri   string
 	cheap float64
 	data  []awattar.PriceInfo

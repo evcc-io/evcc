@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/itchyny/gojq"
@@ -18,7 +19,7 @@ import (
 
 // Script implements shell script-based providers and setters
 type Script struct {
-	log     *util.Logger
+	log     api.Logger
 	script  string
 	timeout time.Duration
 	cache   time.Duration

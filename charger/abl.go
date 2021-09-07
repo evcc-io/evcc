@@ -29,7 +29,7 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	log  *util.Logger
+	log  api.Logger
 	conn *modbus.Connection
 }
 

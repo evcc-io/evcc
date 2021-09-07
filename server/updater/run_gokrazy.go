@@ -17,7 +17,7 @@ var (
 )
 
 // Run regularly checks version
-func Run(log *util.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {
+func Run(log api.Logger, httpd webServer, tee util.TeeAttacher, outChan chan<- util.Param) {
 	u := &watch{
 		log:     log,
 		outChan: outChan,

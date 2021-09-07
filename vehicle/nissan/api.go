@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -24,7 +23,7 @@ type API struct {
 	refreshTime time.Time
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource, vin string) *API {
+func NewAPI(log api.Logger, identity oauth2.TokenSource, vin string) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 		VIN:    vin,

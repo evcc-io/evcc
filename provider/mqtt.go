@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
@@ -15,7 +16,7 @@ import (
 
 // Mqtt provider
 type Mqtt struct {
-	log     *util.Logger
+	log     api.Logger
 	client  *mqtt.Client
 	topic   string
 	payload string
@@ -73,7 +74,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 }
 
 // NewMqtt creates mqtt provider for given topic
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
+func NewMqtt(log api.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,

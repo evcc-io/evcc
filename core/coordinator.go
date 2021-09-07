@@ -2,7 +2,6 @@ package core
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
 )
 
 type vehicleCoordinator struct {
@@ -40,7 +39,7 @@ func (lp *vehicleCoordinator) availableVehicles(owner interface{}, vehicles []ap
 }
 
 // find active vehicle by charge state
-func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
+func (lp *vehicleCoordinator) identifyVehicleByStatus(log api.Logger, owner interface{}, vehicles []api.Vehicle) api.Vehicle {
 	available := lp.availableVehicles(owner, vehicles)
 
 	var res api.Vehicle

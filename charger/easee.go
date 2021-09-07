@@ -43,7 +43,7 @@ type Easee struct {
 	lp            loadpoint.API
 	//lastSmartCharging bool
 	//lastChargeMode api.ChargeMode
-	log     *util.Logger
+	log     api.Logger
 	phases  int
 	current float64
 }

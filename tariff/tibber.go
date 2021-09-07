@@ -16,7 +16,7 @@ import (
 
 type Tibber struct {
 	mux    sync.Mutex
-	log    *util.Logger
+	log    api.Logger
 	Token  string
 	HomeID string
 	Cheap  float64

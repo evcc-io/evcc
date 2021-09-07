@@ -29,7 +29,7 @@ type Site struct {
 	*Health
 
 	sync.Mutex
-	log *util.Logger
+	log api.Logger
 
 	// configuration
 	Title         string       `mapstructure:"title"`         // UI title
@@ -61,7 +61,7 @@ type MetersConfig struct {
 
 // NewSiteFromConfig creates a new site
 func NewSiteFromConfig(
-	log *util.Logger,
+	log api.Logger,
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,

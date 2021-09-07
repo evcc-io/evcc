@@ -19,7 +19,7 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log   *util.Logger
+	log   api.Logger
 	cache *util.Cache
 	site  site.API
 	cp    ocpp16.ChargePoint
