@@ -3,6 +3,7 @@ package javascript
 import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
+	_ "github.com/robertkrimen/otto/underscore"
 )
 
 // Configure initializes JS VMs
