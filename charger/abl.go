@@ -102,7 +102,7 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(r), nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %v", r)
+		return api.StatusNone, fmt.Errorf("invalid status: %s", string(r))
 	}
 }
 
