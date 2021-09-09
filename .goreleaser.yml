@@ -1,7 +1,7 @@
 dist: release
 release:
   github:
-    owner: andig
+    owner: evcc-io
     name: evcc
   extra_files:
   - glob: evcc_*.image.gz
