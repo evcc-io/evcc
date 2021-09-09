@@ -17,12 +17,11 @@ import (
 const (
 	wbSlaveID = 255
 
-	wbRegStatus        = 100 // Input
-	wbRegChargeTime    = 102 // Input
-	wbRegActualCurrent = 300 // Holding
-	wbRegEnable        = 400 // Coil
-	wbRegMaxCurrent    = 528 // Holding
-	wbRegFirmware      = 149 // Firmware
+	wbRegStatus     = 100 // Input
+	wbRegChargeTime = 102 // Input
+	wbRegEnable     = 400 // Coil
+	wbRegMaxCurrent = 528 // Holding
+	wbRegFirmware   = 149 // Firmware
 
 	wbRegPower          = 120 // power reading
 	wbRegEnergy         = 128 // energy reading
