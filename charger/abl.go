@@ -47,6 +47,8 @@ const (
 	ablModeDisable  uint16 = 0xE0E0
 )
 
+const ablStatusOutletDisabled = 0xE0
+
 var ablStatus = map[byte]string{
 	0xB1: "EV is asking for charging",
 	0xB2: "EV has the permission to charge",
@@ -125,10 +127,16 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(r), nil
 	default:
+		// treat outlet disabled as vehicle disconnected
+		if b[1] == ablStatusOutletDisabled {
+			return api.StatusA, nil
+		}
+
 		status, ok := ablStatus[b[1]]
 		if !ok {
 			status = string(r)
 		}
+
 		return api.StatusNone, fmt.Errorf("invalid status: %s", status)
 	}
 }
