@@ -16,7 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const maxIdRequestAttempts = 20
+const maxIdRequestAttempts = 10
 
 type EEBus struct {
 	log           *util.Logger
