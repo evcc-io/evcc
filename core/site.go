@@ -13,8 +13,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/evcc-io/evcc/core Updater
-
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
 	Update(availbalePower float64, cheapRate bool, batteryBuffered bool)
