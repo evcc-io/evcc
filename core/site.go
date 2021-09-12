@@ -17,7 +17,7 @@ import (
 
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(float64, bool)
+	Update(availbalePower float64, cheapRate bool, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -47,9 +47,10 @@ type Site struct {
 	loadpoints []*LoadPoint // Loadpoints
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
+	gridPower       float64 // Grid power
+	pvPower         float64 // PV power
+	batteryPower    float64 // Battery charge power
+	batteryBuffered bool    // Battery buffer active
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -308,10 +309,7 @@ func (site *Site) sitePower() (float64, error) {
 			}
 
 			// if battery is discharging above bufferSoC ignore it
-			if soc > site.BufferSoC && batteryPower > 0 && site.BufferSoC > 0 {
-				site.log.DEBUG.Printf("ignoring battery discharge at soc: %.0f", soc)
-				batteryPower = 0
-			}
+			site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && soc > site.BufferSoC
 		}
 	}
 
@@ -330,7 +328,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(); err == nil {
-		lp.Update(sitePower, cheap)
+		lp.Update(sitePower, cheap, site.batteryBuffered)
 		site.Health.Update()
 	}
 }
