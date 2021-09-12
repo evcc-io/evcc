@@ -287,7 +287,7 @@ Available vehicle remote interface implementations are:
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
 - `citroen`, `ds`, `opel`, `peugeot`: All PSA brands
-- `fiat`: Fiat (Neuer 500)
+- `fiat`: Fiat (500e, Neuer 500)
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Soul and other Bluelink models)
 - `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
