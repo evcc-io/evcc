@@ -16,7 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-const maxIdRequestAttempts = 10
+const maxIdRequestTimespan = time.Second * 120
 
 type EEBus struct {
 	log           *util.Logger
@@ -32,7 +32,7 @@ type EEBus struct {
 	connected           bool
 	expectedEnableState bool
 
-	idRequestCounter int
+	timestampEVConnected time.Time
 }
 
 func init() {
@@ -208,10 +208,10 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnknown:
-		c.idRequestCounter = 0 // reset counter
+		c.timestampEVConnected = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
-		c.idRequestCounter = 0 // reset counter
+		c.timestampEVConnected = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
@@ -500,9 +500,8 @@ func (c *EEBus) Identify() (string, error) {
 		return "", nil
 	}
 
-	if c.idRequestCounter < maxIdRequestAttempts {
+	if time.Since(c.timestampEVConnected) < maxIdRequestTimespan {
 		c.log.TRACE.Printf("!! identify: returning nothing, retry")
-		c.idRequestCounter++
 		return "", api.ErrMustRetry
 	}
 
