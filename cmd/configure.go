@@ -314,6 +314,10 @@ func fetchElements(class, filter string) []test.ConfigTemplate {
 	var items []test.ConfigTemplate
 
 	for _, tmpl := range test.ConfigTemplates(class) {
+		if len(tmpl.Params) == 0 {
+			continue
+		}
+
 		if len(filter) == 0 || strings.Contains(tmpl.Name, filter) {
 			items = append(items, tmpl)
 		}
