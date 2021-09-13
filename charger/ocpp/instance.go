@@ -24,7 +24,7 @@ func Instance() *CS {
 		cs.SetChargePointDisconnectedHandler(instance.ChargePointDisconnected)
 
 		go Instance().errorHandler(cs.Errors())
-		go cs.Start(8887, "/ocpp")
+		go cs.Start(8887, "/{ws}")
 
 		time.Sleep(time.Second)
 	}

@@ -21,21 +21,21 @@ func init() {
 // NewOCPPFromConfig creates a OCPP charger from generic config
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		ChargePoint string
+		StationId string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOCPP(cc.ChargePoint)
+	return NewOCPP(cc.StationId)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(cp string) (*OCPP, error) {
+func NewOCPP(stationId string) (*OCPP, error) {
 	c := &OCPP{
-		log: util.NewLogger("ocpp-" + cp),
-		cp:  ocpp.Instance().Register(cp),
+		log: util.NewLogger("ocpp-" + stationId),
+		cp:  ocpp.Instance().Register(stationId),
 	}
 
 	return c, nil

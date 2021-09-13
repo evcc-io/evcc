@@ -17,7 +17,8 @@ type CS struct {
 
 func (cs *CS) Register(id string) *CP {
 	cp := &CP{
-		id: id,
+		id:  id,
+		log: util.NewLogger("ocpp"),
 	}
 
 	cs.mu.Lock()
