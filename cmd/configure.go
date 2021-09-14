@@ -143,7 +143,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your loadpoints")
 
-	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle)
+	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle, "")
 	loadpoint := Loadpoint{
 		Title: loadpointTitle,
 	}
@@ -158,7 +158,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your site")
 
-	siteTitle := askValue("Site title", defaultSiteTitle)
+	siteTitle := askValue("Site title", defaultSiteTitle, "")
 	configuration.Site.Title = siteTitle
 	if gridItem.Config["name"] != nil {
 		configuration.Site.Meters.Grid = gridItem.Config["name"].(string)
@@ -426,7 +426,7 @@ func askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func askValue(label, defaultValue string) string {
+func askValue(label, defaultValue, hint string) string {
 	templates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -452,6 +452,10 @@ func askValue(label, defaultValue string) string {
 	// default:
 	// 	log.FATAL.Fatalf("unsupported type: %s", defaultValue)
 	// }
+
+	if hint != "" {
+		fmt.Println(hint)
+	}
 
 	prompt := promptui.Prompt{
 		Label:     label,
@@ -490,12 +494,11 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 	fmt.Println("Enter the configuration values:")
 
 	for index, param := range paramItems {
-		paramItems[index].Value = askValue(param.Name, param.Value)
+		paramItems[index].Value = askValue(param.Name, param.Value, param.Hint)
 	}
 
 	fmt.Println()
-	fmt.Println("Provide a name for this device:")
-	deviceName := askValue("Name", defaultName)
+	deviceName := askValue("Name", defaultName, "Give the device a name")
 
 	return paramItems, deviceName
 }
