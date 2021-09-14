@@ -128,7 +128,7 @@ func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 		v.carModel = cr.CarModel
 	}
 
-	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE//%s/%s?timezone=Europe/Berlin", v.carModel, vin)
+	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
