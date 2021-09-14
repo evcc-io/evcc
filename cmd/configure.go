@@ -5,6 +5,7 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -181,6 +182,23 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println(string(yaml[:]))
 }
 
+func removeLineWithSubstring(src string, substr []string) string {
+	for _, s := range substr {
+		re := regexp.MustCompile(".*" + s + ".*[\r\n]*")
+		src = re.ReplaceAllString(src, "")
+	}
+	return src
+}
+
+func hasTypeModbus(params []registry.TemplateParam) bool {
+	for _, param := range params {
+		if param.Type == "modbus" {
+			return true
+		}
+	}
+	return false
+}
+
 // let the user select a device item from a list defined by class and filter
 func processClass(title, class, filter, defaultName string) (test.ConfigTemplate, error) {
 	var repeat bool = true
@@ -197,11 +215,23 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 
 		configItem.PlainSample = strings.TrimRight(configItem.Sample, "\r\n")
 
-		params, deviceName := processConfig(configItem.Params, defaultName)
+		params, deviceName, additionalConfig := processConfig(configItem.Params, defaultName)
 		configItem.Params = params
 
+		if len(additionalConfig) > 0 {
+			if hasTypeModbus(configItem.Params) {
+				// remove all modbus key/value pairs from Sample
+				substrings := []string{"id:", "device:", "baudrate:", "comset:", "uri:", "rtu:"}
+				configItem.Sample = removeLineWithSubstring(configItem.Sample, substrings)
+			}
+
+			// add additional config to Sample
+			for key, value := range additionalConfig {
+				configItem.Sample += key + ": " + value + "\r\n"
+			}
+		}
+
 		configItem = renderTemplateSample(configItem)
-		// check for parameters the user has to provide
 		var conf map[string]interface{}
 		if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
 			// silently ignore errors here
@@ -414,6 +444,30 @@ func selectItem(title, class, filter string) registry.Template {
 	return items[index]
 }
 
+// PromptUI: select item from list
+func askChoice(label string, choices []string) (int, string) {
+	templates := &promptui.SelectTemplates{
+		Label:    "{{ . }}",
+		Active:   "-> {{ . }}",
+		Inactive: "   {{ . }}",
+		Selected: "   {{ . }}",
+	}
+
+	prompt := promptui.Select{
+		Label:     label,
+		Items:     choices,
+		Templates: templates,
+		Size:      10,
+	}
+
+	index, result, err := prompt.Run()
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
+
+	return index, result
+}
+
 // PromptUI: ask yes/no question, return true if yes is selected
 func askYesNo(label string) bool {
 	prompt := promptui.Prompt{
@@ -490,18 +544,64 @@ func askValue(label, defaultValue, hint string) string {
 }
 
 // Process an EVCC configuration item
-// Returns processed params and their user values and the user entered name of the device
-func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string) {
+// Returns
+//   processed params and their user values
+//   the user entered name of the device
+//   a list of additional key/value pairs the need to be added to the configuration
+func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string, map[string]string) {
+	additionalConfig := make(map[string]string)
+
 	fmt.Println("Enter the configuration values:")
 
 	for index, param := range paramItems {
-		paramItems[index].Value = askValue(param.Name, param.Value, param.Hint)
+		if param.Type == "modbus" {
+			choices := []string{}
+			for _, choice := range param.Choice {
+				switch choice {
+				case "serial":
+					choices = append(choices, "Serial (USB-RS485 Adapter)")
+				case "tcprtu":
+					choices = append(choices, "Serial (Ethernet-RS485 Adapter)")
+				case "tcp":
+					choices = append(choices, "TCP/IP")
+				}
+			}
+
+			if len(choices) > 0 {
+				// ask for modbus address
+				id := askValue("ID", "1", "Modbus ID")
+				additionalConfig["id"] = id
+
+				// ask for modbus interface type
+				index, _ := askChoice("Select the Modbus interface", choices)
+				selectedType := param.Choice[index]
+				fmt.Println("Selected Type:", selectedType)
+				switch selectedType {
+				case "serial":
+					device := askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address")
+					additionalConfig["device"] = device
+					baudrate := askValue("Baudrate", "9600", "")
+					additionalConfig["baudrate"] = baudrate
+					comset := askValue("ComSet", "8N1", "")
+					additionalConfig["comset"] = comset
+				case "tcprtu", "tcp":
+					if selectedType == "tcprtu" {
+						additionalConfig["rtu"] = "true"
+					}
+					uri := askValue("Host", "192.0.2.2", "IP address or hostname")
+					port := askValue("Port", "502", "Port address")
+					additionalConfig["uri"] = uri + ":" + port
+				}
+			}
+		} else {
+			paramItems[index].Value = askValue(param.Name, param.Value, param.Hint)
+		}
 	}
 
 	fmt.Println()
 	deviceName := askValue("Name", defaultName, "Give the device a name")
 
-	return paramItems, deviceName
+	return paramItems, deviceName, additionalConfig
 }
 
 // return a usable EVCC configuration
