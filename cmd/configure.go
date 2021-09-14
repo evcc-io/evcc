@@ -5,12 +5,12 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
-	"reflect"
 	"sort"
-	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
+	"github.com/evcc-io/config/registry"
 	certhelper "github.com/evcc-io/eebus/cert"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/evcc/api"
@@ -34,13 +34,6 @@ const defaultSiteTitle = "My Home"
 const itemNotPresent string = "My item is not in this list"
 
 var ErrItemNotPresent = errors.New("item not present")
-
-var uriMapping = map[string]string{
-	"192.0.2.2": "",
-	"192.0.2.3": "",
-	"192.0.2.4": "",
-	"192.0.2.5": "",
-}
 
 type Loadpoint struct {
 	Title   string `yaml:"title,omitempty"`
@@ -152,7 +145,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle)
 	loadpoint := Loadpoint{
-		Title: loadpointTitle.(string),
+		Title: loadpointTitle,
 	}
 	if chargerItem.Config["name"] != nil {
 		loadpoint.Charger = chargerItem.Config["name"].(string)
@@ -166,7 +159,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println("- Configure your site")
 
 	siteTitle := askValue("Site title", defaultSiteTitle)
-	configuration.Site.Title = siteTitle.(string)
+	configuration.Site.Title = siteTitle
 	if gridItem.Config["name"] != nil {
 		configuration.Site.Meters.Grid = gridItem.Config["name"].(string)
 	}
@@ -191,7 +184,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 // let the user select a device item from a list defined by class and filter
 func processClass(title, class, filter, defaultName string) (test.ConfigTemplate, error) {
 	var repeat bool = true
-	var classConfiguration test.ConfigTemplate
+	var deviceConfiguration test.ConfigTemplate
 
 	for ok := true; ok; ok = repeat {
 		var localConfiguration Config
@@ -199,29 +192,46 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 		fmt.Println()
 		configItem := selectItem(title, class, filter)
 		if configItem.Name == itemNotPresent {
-			return classConfiguration, ErrItemNotPresent
+			return deviceConfiguration, ErrItemNotPresent
 		}
 
-		classConfiguration = processConfig(configItem, defaultName)
+		configItem.PlainSample = strings.TrimRight(configItem.Sample, "\r\n")
+
+		params, deviceName := processConfig(configItem.Params, defaultName)
+		configItem.Params = params
+
+		configItem = renderTemplateSample(configItem)
+		// check for parameters the user has to provide
+		var conf map[string]interface{}
+		if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
+			// silently ignore errors here
+			panic("unable to parse sample: %s" + err.Error())
+		}
+		deviceConfiguration = test.ConfigTemplate{
+			Template: configItem,
+			Config:   conf,
+		}
+		deviceConfiguration.Config["name"] = deviceName
+		deviceConfiguration.Config["type"] = configItem.Type
 
 		switch class {
 		case "charger":
-			localConfiguration.Chargers = append(localConfiguration.Chargers, classConfiguration.Config)
+			localConfiguration.Chargers = append(localConfiguration.Chargers, deviceConfiguration.Config)
 		case "meter":
-			localConfiguration.Meters = append(localConfiguration.Meters, classConfiguration.Config)
+			localConfiguration.Meters = append(localConfiguration.Meters, deviceConfiguration.Config)
 		case "vehicle":
-			localConfiguration.Vehicles = append(localConfiguration.Vehicles, classConfiguration.Config)
+			localConfiguration.Vehicles = append(localConfiguration.Vehicles, deviceConfiguration.Config)
 		default:
-			return classConfiguration, fmt.Errorf("unknown class: %s", class)
+			return deviceConfiguration, fmt.Errorf("unknown class: %s", class)
 		}
 
 		// check if we need to setup an EEBUS hems
-		if class == "charger" && classConfiguration.Config["type"].(string) == "eebus" {
+		if class == "charger" && configItem.Type == "eebus" {
 			var err error
 			err = setupEEBUSConfig()
 
 			if err != nil {
-				return classConfiguration, fmt.Errorf("error creating EEBUS cert: %s", err)
+				return deviceConfiguration, fmt.Errorf("error creating EEBUS cert: %s", err)
 			}
 
 			localConfiguration.EEBUS = map[string]interface{}{
@@ -230,7 +240,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 
 			err = configureEEBus(localConfiguration.EEBUS)
 			if err != nil {
-				return classConfiguration, err
+				return deviceConfiguration, err
 			}
 
 			fmt.Println()
@@ -240,10 +250,9 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 			fmt.Scanln()
 		}
 
-		fmt.Println(localConfiguration)
 		yaml, err := yaml.Marshal(localConfiguration)
 		if err != nil {
-			return classConfiguration, err
+			return deviceConfiguration, err
 		}
 
 		fmt.Println()
@@ -264,12 +273,56 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 			fmt.Println()
 			if !askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()
-				return classConfiguration, ErrItemNotPresent
+				return deviceConfiguration, ErrItemNotPresent
 			}
 		}
 	}
 
-	return classConfiguration, nil
+	return deviceConfiguration, nil
+}
+
+func renderTemplateSample(tmpl registry.Template) registry.Template {
+	if len(tmpl.Params) == 0 {
+		return tmpl
+	}
+
+	sampleTmpl, err := template.New("sample").Parse(tmpl.Sample)
+	if err != nil {
+		panic(err)
+	}
+
+	paramItems := make(map[string]interface{})
+
+	for _, item := range tmpl.Params {
+		paramItem := make(map[string]string)
+
+		if item.Name == "" {
+			panic("params name is required")
+		}
+		if item.Value == "" && item.Type == "" {
+			panic("params value or type is required")
+		}
+		if item.Type != "" && len(item.Choice) == 0 {
+			panic("params choice is required with type")
+		}
+
+		if item.Value != "" {
+			paramItem["value"] = item.Value
+		}
+		if item.Hint != "" {
+			paramItem["hint"] = item.Hint
+		}
+		paramItems[item.Name] = paramItem
+	}
+
+	var tpl bytes.Buffer
+	if err = sampleTmpl.Execute(&tpl, paramItems); err != nil {
+		panic(err)
+	}
+
+	tmpl.Sample = tpl.String()
+
+	return tmpl
 }
 
 // setup EEBUS certificate
@@ -310,10 +363,10 @@ func setupEEBUSConfig() error {
 }
 
 // return EVCC configuration items of a given class
-func fetchElements(class, filter string) []test.ConfigTemplate {
-	var items []test.ConfigTemplate
+func fetchElements(class, filter string) []registry.Template {
+	var items []registry.Template
 
-	for _, tmpl := range test.ConfigTemplates(class) {
+	for _, tmpl := range registry.TemplatesByClass(class) {
 		if len(tmpl.Params) == 0 {
 			continue
 		}
@@ -331,7 +384,7 @@ func fetchElements(class, filter string) []test.ConfigTemplate {
 }
 
 // PromptUI: select item from list
-func selectItem(title, class, filter string) test.ConfigTemplate {
+func selectItem(title, class, filter string) registry.Template {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
 		Active:   "-> {{ .Name }}",
@@ -339,7 +392,7 @@ func selectItem(title, class, filter string) test.ConfigTemplate {
 		Selected: fmt.Sprintf("%s: {{ .Name }}", class),
 	}
 
-	var emptyItem test.ConfigTemplate
+	var emptyItem registry.Template
 	emptyItem.Name = itemNotPresent
 
 	items := fetchElements(class, filter)
@@ -373,7 +426,7 @@ func askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func askValue(label string, defaultValue interface{}) interface{} {
+func askValue(label, defaultValue string) string {
 	templates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -384,26 +437,26 @@ func askValue(label string, defaultValue interface{}) interface{} {
 	validate := func(input string) error {
 		return nil
 	}
-	var defValue string
-	switch v := defaultValue.(type) {
-	case nil:
-		defValue = ""
-	case string:
-		defValue = v
-	case int:
-		defValue = strconv.Itoa(v)
-		validate = func(input string) error {
-			_, err := strconv.ParseInt(input, 10, 64)
-			return err
-		}
-	default:
-		log.FATAL.Fatalf("unsupported type: %s", defaultValue)
-	}
+	// var defValue string
+	// switch v := defaultValue.(type) {
+	// case nil:
+	// 	defValue = ""
+	// case string:
+	// 	defValue = v
+	// case int:
+	// 	defValue = strconv.Itoa(v)
+	// 	validate = func(input string) error {
+	// 		_, err := strconv.ParseInt(input, 10, 64)
+	// 		return err
+	// 	}
+	// default:
+	// 	log.FATAL.Fatalf("unsupported type: %s", defaultValue)
+	// }
 
 	prompt := promptui.Prompt{
 		Label:     label,
 		Templates: templates,
-		Default:   defValue,
+		Default:   defaultValue,
 		Validate:  validate,
 		AllowEdit: true,
 	}
@@ -413,128 +466,38 @@ func askValue(label string, defaultValue interface{}) interface{} {
 		log.FATAL.Fatal(err)
 	}
 
-	var returnValue interface{}
-	switch defaultValue.(type) {
-	case nil:
-		returnValue = result
-	case string:
-		returnValue = result
-	case int:
-		returnValue, err = strconv.Atoi(result)
-		if err != nil {
-			log.FATAL.Fatal("entered invalid int value")
-		}
-	default:
-		log.FATAL.Fatalf("unsupported type: %s", defaultValue)
-	}
-	return returnValue
+	return result
+	// var returnValue interface{}
+	// switch defaultValue.(type) {
+	// case nil:
+	// 	returnValue = result
+	// case string:
+	// 	returnValue = result
+	// case int:
+	// 	returnValue, err = strconv.Atoi(result)
+	// 	if err != nil {
+	// 		log.FATAL.Fatal("entered invalid int value")
+	// 	}
+	// default:
+	// 	log.FATAL.Fatalf("unsupported type: %s", defaultValue)
+	// }
+	// return returnValue
 }
 
 // Process an EVCC configuration item
-func processConfig(configItem test.ConfigTemplate, defaultName string) test.ConfigTemplate {
-	// check for parameters the user has to provide
-	var conf map[string]interface{}
-	if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
-		// silently ignore errors here
-		log.WARN.Printf("unable to parse sample: %s", err)
-	}
+// Returns processed params and their user values and the user entered name of the device
+func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string) {
+	fmt.Println("Enter the configuration values:")
 
-	parsed := test.ConfigTemplate{
-		Template: configItem.Template,
-		Config:   conf,
+	for index, param := range paramItems {
+		paramItems[index].Value = askValue(param.Name, param.Value)
 	}
-
-	if len(conf) > 0 {
-		fmt.Println()
-		fmt.Println("Enter the configuration values:")
-		parsed.Config = processConfigLevel(parsed.Config)
-	}
-
-	parsed.Config["type"] = configItem.Template.Type
 
 	fmt.Println()
 	fmt.Println("Provide a name for this device:")
-	parsed.Config["name"] = askValue("Name", defaultName).(string)
+	deviceName := askValue("Name", defaultName)
 
-	return parsed
-}
-
-func processConfigLevel(config map[string]interface{}) map[string]interface{} {
-	if len(config) > 0 {
-		for param, value := range config {
-			var prompt string
-			valueType := reflect.ValueOf(value)
-
-			switch param {
-			case "user":
-				prompt = "Username"
-			case "password":
-				prompt = "Password"
-			case "meter":
-				// e.g. Discovery meter
-				prompt = "Identifier"
-			case "device":
-				// Serial modbus devices
-				prompt = "Serial port"
-			case "baudrate":
-				// Serial modbus devices
-				prompt = "Serial baudrate"
-			case "ain":
-				// Fritzbox Dect devices
-				prompt = "AIN (printed on the device)"
-			case "token":
-				// Tokens, e.g. go-e Charger
-				prompt = "Token"
-			case "mac":
-				// MAC Address, e.g. NRGKick Charger
-				prompt = "MAC address"
-			case "pin":
-				// PIN Number, e.g. NRGKick Charger
-				prompt = "PIN number"
-			case "charger":
-				// Charger Identifier, e.g. Easee
-				prompt = "Charger identifier"
-			case "title":
-				// device title, e.g. vehicle title
-				prompt = "Title"
-			case "capacity":
-				// device capacitiy, e.g. vehicle battery
-				prompt = "Battery capacity"
-			case "vin":
-				// Vehicle VIN
-				prompt = "Vehicle VIN"
-			case "ski":
-				// EEBUS Wallbox identifier
-				prompt = "Wallbox SKI"
-			default:
-				if valueType.Kind() == reflect.Map {
-					value = processConfigLevel(value.(map[string]interface{}))
-				} else if valueType.Kind() == reflect.Slice {
-					sliceValue := value.([]interface{})
-					for i := range sliceValue {
-						value = processConfigLevel(sliceValue[i].(map[string]interface{}))
-					}
-				} else if valueType.Kind() == reflect.String {
-					for k := range uriMapping {
-						if strings.Contains(value.(string), k) {
-							if len(uriMapping[k]) == 0 {
-								uriMapping[k] = askValue("Address:", k).(string)
-							}
-							value = strings.Replace(value.(string), k, uriMapping[k], -1)
-						}
-					}
-				}
-			}
-
-			if len(prompt) > 0 {
-				value = askValue(prompt, value)
-			}
-
-			config[param] = value
-		}
-	}
-
-	return config
+	return paramItems, deviceName
 }
 
 // return a usable EVCC configuration
