@@ -32,7 +32,7 @@ type EEBus struct {
 	connected           bool
 	expectedEnableState bool
 
-	timestampEVConnected time.Time
+	evConnectedTime time.Time
 }
 
 func init() {
@@ -208,10 +208,10 @@ func (c *EEBus) Status() (api.ChargeStatus, error) {
 
 	switch currentState {
 	case communication.EVChargeStateEnumTypeUnknown:
-		c.timestampEVConnected = time.Now()
+		c.evConnectedTime = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeUnplugged: // Unplugged
-		c.timestampEVConnected = time.Now()
+		c.evConnectedTime = time.Now()
 		return api.StatusA, nil
 	case communication.EVChargeStateEnumTypeFinished, communication.EVChargeStateEnumTypePaused: // Finished, Paused
 		return api.StatusB, nil
@@ -500,7 +500,7 @@ func (c *EEBus) Identify() (string, error) {
 		return "", nil
 	}
 
-	if time.Since(c.timestampEVConnected) < maxIdRequestTimespan {
+	if time.Since(c.evConnectedTime) < maxIdRequestTimespan {
 		c.log.TRACE.Printf("!! identify: returning nothing, retry")
 		return "", api.ErrMustRetry
 	}
