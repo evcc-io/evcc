@@ -112,7 +112,7 @@ func (v *EMobilityProvider) request(uri string) (*http.Request, error) {
 // Status implements the vehicle status response
 func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 	if v.carModel == "" {
-		uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/vcs/capabilities/%s", vin)
+		uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
 		req, err := v.request(uri)
 		if err != nil {
 			return 0, err
@@ -128,7 +128,7 @@ func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 		v.carModel = cr.CarModel
 	}
 
-	uri := fmt.Sprintf("https://api.porsche.com/service-vehicle/de/de_DE/e-mobility/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
+	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
 	req, err := v.request(uri)
 	if err != nil {
 		return 0, err
