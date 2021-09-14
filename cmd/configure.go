@@ -371,7 +371,8 @@ func fetchElements(class, filter string) []registry.Template {
 			continue
 		}
 
-		if len(filter) == 0 || strings.Contains(tmpl.Name, filter) {
+		if len(filter) == 0 || strings.Contains(tmpl.Name, filter) ||
+			(class == "meter" && !strings.Contains(tmpl.Name, "(") && !strings.Contains(tmpl.Name, ")")) {
 			items = append(items, tmpl)
 		}
 	}
