@@ -100,8 +100,14 @@ func (v *API) Battery() (Response, error) {
 			err = api.ErrTimeout
 		}
 	} else {
-		// wait for refresh, irrespective of a previous error
-		err = api.ErrMustRetry
+		if len(res.Errors) > 0 {
+			// extract error code
+			e := res.Errors[0]
+			err = fmt.Errorf("%s: %s", e.Code, e.Detail)
+		} else {
+			// wait for refresh, irrespective of a previous error
+			err = api.ErrMustRetry
+		}
 	}
 
 	return res, err

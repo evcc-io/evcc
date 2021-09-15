@@ -65,6 +65,11 @@ type Response struct {
 		Type, ID   string     // battery refresh
 		Attributes attributes `json:"attributes"`
 	} `json:"data"`
+	Errors []Error
+}
+
+type Error struct {
+	Status, Code, Detail string
 }
 
 type attributes struct {

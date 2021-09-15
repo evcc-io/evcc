@@ -168,6 +168,9 @@ func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 	}
 
 	authCode := query.Get("code")
+	if authCode == "" {
+		return pr, errors.New("no auth code")
+	}
 
 	codeVerifier := CodeVerifier.CodeChallengePlain()
 
