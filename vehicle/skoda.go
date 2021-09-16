@@ -50,9 +50,9 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	query := url.Values(map[string][]string{
 		"response_type": {"code id_token"},
-		"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
+		"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
 		"redirect_uri":  {"skodaconnect://oidc.login/"},
-		"scope":         {"openid profile phone address cars email birthdate badge dealers driversLicense mbb"},
+		"scope":         {"openid mbb profile"},
 	})
 
 	err := identity.LoginVAG("28cd30c6-dee7-4529-a0e6-b1e07ff90b79", query, cc.User, cc.Password)
