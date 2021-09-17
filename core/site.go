@@ -40,7 +40,7 @@ type Site struct {
 
 	// meters
 	gridMeter    api.Meter   // Grid usage meter
-	pvMeters     []api.Meter // PV generation meter
+	pvMeters     []api.Meter // PV generation meters
 	batteryMeter api.Meter   // Battery charging meter
 
 	tariff     api.Tariff   // Tariff
