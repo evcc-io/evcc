@@ -263,10 +263,10 @@ func (site *Site) updateMeters() error {
 		return err
 	}
 
-	// pv meter is not critical for operation
 	site.pvPower = 0
 	for _, pv := range site.pvMeters {
 		var power float64
+		// pv meter is not critical for operation
 		if err := retryMeter("pv", pv, &power); err != nil {
 			site.pvPower += power
 		}
