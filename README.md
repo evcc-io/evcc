@@ -94,7 +94,8 @@ Use the following `systemd` unit description to configure EVCC as service (put i
 ```none
 [Unit]
 Description=evcc
-After=syslog.target network.target
+After=syslog.target network-online.target
+Wants=network-online.target
 [Service]
 ExecStart=/usr/local/bin/evcc --log error
 Restart=always

@@ -147,6 +147,7 @@ export default {
 			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
 			// horizontal scroll detected - revert slider change
 			if (yDiff > 40) {
+				e.preventDefault();
 				e.target.value = this.targetSoC;
 				this.selectedTargetSoC = this.targetSoC;
 				return false;
