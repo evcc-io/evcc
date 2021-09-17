@@ -282,33 +282,11 @@ Configuration examples are documented at [evcc-io/config#meters](https://github.
 
 Vehicle represents a specific EV vehicle and its battery. If vehicle is configured and assigned to the charger, charge status and remaining charge duration become available in the user interface.
 
-Available vehicle remote interface implementations are:
+Available vehicle remote interface implementations and templates can be found at: [evcc-io/config#vehicles](https://github.com/evcc-io/config#vehicles)
 
-- `audi`: Audi (eTron, Q55)
-- `bmw`: BMW (i3)
-- `carwings`: Nissan (Leaf pre 2019)
-- `citroen`, `ds`, `opel`, `peugeot`: All PSA brands
-- `fiat`: Fiat (500e, Neuer 500)
-- `ford`: Ford (Kuga, Mustang)
-- `kia`: Kia (Soul and other Bluelink models)
-- `hyundai`: Hyundai (Bluelink vehicles like Kona or Ioniq)
-- `mini`: Mini (Cooper SE)
-- `nissan`: Nissan (Leaf)
-- `niu`: Niu Scooter
-- `tesla`: Tesla (any model)
-- `renault`: Renault (all ZE models: Zoe, Twingo Electric, Master, Kangoo)
-- `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
-- `porsche`: Porsche (Taycan, Cayenne E-Hybrid)
-- `seat`: Seat (Cupra, Mii)
-- `skoda`: Skoda (Citigo)
-- `enyaq`: Skoda (Enyaq)
-- `vw`: Volkswagen (eGolf, eUp)
-- `id`: Volkswagen (ID.3, ID.4)
-- `volvo`: Volvo
+Note:
 - `tronity`: Tronity ([sponsors only](#sponsorship))
 - `custom`: default vehicle implementation using configurable [plugins](#plugins) for integrating any type of vehicle
-
-Configuration examples are documented at [evcc-io/config#vehicles](https://github.com/evcc-io/config#vehicles)
 
 ### Home Energy Management System
 
