@@ -143,10 +143,17 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
+			// compare ChargeState of vehicle and charger
 			csmatch := true
 			if vs, ok := s.vehicle.(api.ChargeState); ok {
-				vcs, _ := vs.Status()
-				ccs, _ := s.charger.Status()
+				ccs, err := s.charger.Status()
+				if err != nil {
+					return 0, err
+				}
+				vcs, err := vs.Status()
+				if err != nil {
+					vcs = ccs // sanitize vehicle errors
+				}
 				csmatch = vcs == ccs
 			}
 
