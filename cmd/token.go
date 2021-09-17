@@ -43,7 +43,10 @@ func runToken(cmd *cobra.Command, args []string) {
 	}
 
 	if vehicleConf.Name == "" {
-		log.FATAL.Fatal("vehicle not found")
+		vehicles := funk.Map(conf.Vehicles, func(v qualifiedConfig) string {
+			return v.Name
+		}).([]string)
+		log.FATAL.Fatalf("vehicle not found, have %v", vehicles)
 	}
 
 	var token *oauth2.Token
