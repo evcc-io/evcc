@@ -55,7 +55,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid mbb profile"},
 	})
 
-	err := identity.LoginVAG("28cd30c6-dee7-4529-a0e6-b1e07ff90b79", query, cc.User, cc.Password)
+	err := identity.LoginVAG("afb0473b-6d82-42b8-bfea-cead338c46ef", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
