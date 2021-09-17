@@ -157,8 +157,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/config v0.0.0-20210821100131-47523461441a h1:0M3bEilYf3Ns9QLzXsFXWRMCySptggaQVMVn/NoLT7E=
 github.com/evcc-io/config v0.0.0-20210821100131-47523461441a/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
-github.com/evcc-io/eebus v0.0.0-20210820160836-f112bdfd2960 h1:zq1vblI2P6LN9vs8tQ9mFvFWEyytp49IE8ZPtr0vPas=
-github.com/evcc-io/eebus v0.0.0-20210820160836-f112bdfd2960/go.mod h1:AeXkioPy1hPdVuo5ESEPBcOHyzHJBl/gd5X/P7qlAQs=
+github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e h1:trxYqEB+LXMjWMnwf5BOmhupaohYknhc3raXlPC5PT4=
+github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.6.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
@@ -658,7 +658,6 @@ github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69
 github.com/tcnksm/go-latest v0.0.0-20170313132115-e3007ae9052e/go.mod h1:d7u6HkTYKSv5m6MCKkOQlHwaShTMl3HjqSGW3XtVhXM=
 github.com/tebeka/strftime v0.1.3/go.mod h1:7wJm3dZlpr4l/oVK0t1HYIc4rMzQ2XJlOMIUJUJH6XQ=
 github.com/technoweenie/multipartstreamer v1.0.1/go.mod h1:jNVxdtShOxzAsukZwTSw6MDx5eUJoiEBsSvzDU9uzog=
-github.com/thoas/go-funk v0.8.0/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
 github.com/thoas/go-funk v0.9.0 h1:Yzu8aTjTb1sqHZzSZLBt4qaZrFfjNizhA7IfnefjEzo=
 github.com/thoas/go-funk v0.9.0/go.mod h1:+IWnUfUmFO1+WVYQWQtIJHeRRdaIyyYglZN7xzUPe4Q=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
