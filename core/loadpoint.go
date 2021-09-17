@@ -194,6 +194,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// single vehicle
 	if lp.VehicleRef != "" {
+		if len(lp.vehicles) > 0 {
+			return nil, errors.New("cannot have vehicle and vehicles both")
+		}
 		vehicle := cp.Vehicle(lp.VehicleRef)
 		lp.vehicles = append(lp.vehicles, vehicle)
 	}

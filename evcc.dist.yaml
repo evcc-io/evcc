@@ -58,7 +58,8 @@ site:
   title: Home # display name for UI
   meters:
     grid: grid # grid meter
-    pv: pv # pv meter
+    pvs:
+    - pv # list of pv inverters/ meters
     battery: battery # battery meter
   prioritySoC: 60 # give home battery priority up to this soc (0 to disable)
 
