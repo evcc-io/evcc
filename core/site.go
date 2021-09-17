@@ -160,8 +160,8 @@ func (site *Site) DumpConfig() {
 
 	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	if len(site.pvMeters) > 0 {
-		for _, pv := range site.pvMeters {
-			site.log.INFO.Println(meterCapabilities("pv", pv))
+		for i, pv := range site.pvMeters {
+			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i), pv))
 		}
 	}
 
