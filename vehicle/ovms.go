@@ -81,7 +81,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 }
 
 func (v *Ovms) loginToServer() (err error) {
-	uri := fmt.Sprintf("http://%s:6868/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
+	uri := fmt.Sprintf("https://%s:6869/api/cookie?username=%s&password=%s", v.server, v.user, v.password)
 
 	var resp *http.Response
 	if resp, err = v.Get(uri); err == nil {
@@ -89,6 +89,27 @@ func (v *Ovms) loginToServer() (err error) {
 	}
 
 	return err
+}
+
+func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
+	uri := fmt.Sprintf("https://%s:6869/api/vehicle/%s", v.server, v.vehicleId)
+	var res ovmsConnectResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
+	uri := fmt.Sprintf("https://%s:6869/api/charge/%s", v.server, v.vehicleId)
+	var res ovmsChargeResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
+
+func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
+	uri := fmt.Sprintf("https://%s:6869/api/status/%s", v.server, v.vehicleId)
+	var res ovmsStatusResponse
+	err := v.GetJSON(uri, &res)
+	return res, err
 }
 
 func (v *Ovms) authFlow() error {
@@ -101,27 +122,6 @@ func (v *Ovms) authFlow() error {
 		}
 	}
 	return err
-}
-
-func (v *Ovms) connectRequest() (ovmsConnectResponse, error) {
-	uri := fmt.Sprintf("http://%s:6868/api/vehicle/%s", v.server, v.vehicleId)
-	var res ovmsConnectResponse
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
-func (v *Ovms) chargeRequest() (ovmsChargeResponse, error) {
-	uri := fmt.Sprintf("http://%s:6868/api/charge/%s", v.server, v.vehicleId)
-	var res ovmsChargeResponse
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
-func (v *Ovms) statusRequest() (ovmsStatusResponse, error) {
-	uri := fmt.Sprintf("http://%s:6868/api/status/%s", v.server, v.vehicleId)
-	var res ovmsStatusResponse
-	err := v.GetJSON(uri, &res)
-	return res, err
 }
 
 // batteryAPI provides battery-status api response
