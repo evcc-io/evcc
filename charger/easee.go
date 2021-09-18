@@ -18,8 +18,11 @@ package charger
 // SOFTWARE.
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -27,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/philippseith/signalr"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
@@ -126,7 +130,87 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.circuit = site.Circuits[0].ID
 	}
 
+	conn, err := signalr.NewHTTPConnection(context.Background(), "https://api.easee.cloud/hubs/chargers",
+		signalr.WithHTTPHeadersOption(func() http.Header {
+			tok, _ := ts.Token()
+			return http.Header{
+				"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
+			}
+		}),
+	)
+	if err != nil {
+		return c, err
+	}
+
+	client, err := signalr.NewClient(context.Background(), conn,
+		signalr.Receiver(c),
+		signalr.Logger(c, false),
+	)
+	if err != nil {
+		return c, err
+	}
+
+	if err := client.Start(); err != nil {
+		return c, err
+	}
+
+	if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
+		return c, err
+	}
+
+	done := make(chan bool)
+	<-done
+
 	return c, err
+}
+
+func (c *Easee) Log(keyVals ...interface{}) error {
+	s := &strings.Builder{}
+	for i, v := range keyVals {
+		if i%2 == 0 {
+			if s.Len() > 0 {
+				s.WriteRune(' ')
+			}
+			s.WriteString(fmt.Sprintf("%v", v))
+			s.WriteRune('=')
+		} else {
+			s.WriteString(fmt.Sprintf("%v", v))
+		}
+	}
+
+	c.log.TRACE.Println(s.String())
+
+	return nil
+}
+
+func (c *Easee) ChargerUpdate(i json.RawMessage) {
+	type chargerUpdate struct {
+		Mid       string
+		DataType  int
+		ID        int
+		Timestamp time.Time
+		Value     string
+	}
+
+	var res chargerUpdate
+	if err := json.Unmarshal(i, &res); err == nil {
+		c.log.TRACE.Printf("ChargerUpdate %+v", res)
+	}
+}
+
+func (c *Easee) ProductUpdate(i json.RawMessage) {
+	type productUpdate struct {
+		Mid       string
+		DataType  int
+		ID        int
+		Timestamp time.Time
+		Value     string
+	}
+
+	var res productUpdate
+	if err := json.Unmarshal(i, &res); err == nil {
+		c.log.TRACE.Printf("ProductUpdate %+v", res)
+	}
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
