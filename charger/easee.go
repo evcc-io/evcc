@@ -183,34 +183,21 @@ func (c *Easee) Log(keyVals ...interface{}) error {
 	return nil
 }
 
-func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	type chargerUpdate struct {
-		Mid       string
-		DataType  int
-		ID        int
-		Timestamp time.Time
-		Value     string
-	}
-
-	var res chargerUpdate
+func (c *Easee) observe(typ string, i json.RawMessage) {
+	var res easee.Observation
 	if err := json.Unmarshal(i, &res); err == nil {
-		c.log.TRACE.Printf("ChargerUpdate %+v", res)
+		c.log.TRACE.Printf("%s: %+v", typ, res)
+	} else {
+		c.log.ERROR.Printf("%s: %v", typ, err)
 	}
 }
 
-func (c *Easee) ProductUpdate(i json.RawMessage) {
-	type productUpdate struct {
-		Mid       string
-		DataType  int
-		ID        int
-		Timestamp time.Time
-		Value     string
-	}
+func (c *Easee) ChargerUpdate(i json.RawMessage) {
+	c.observe("ChargerUpdate", i)
+}
 
-	var res productUpdate
-	if err := json.Unmarshal(i, &res); err == nil {
-		c.log.TRACE.Printf("ProductUpdate %+v", res)
-	}
+func (c *Easee) ProductUpdate(i json.RawMessage) {
+	c.observe("ProductUpdate", i)
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
