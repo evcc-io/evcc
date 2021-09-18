@@ -207,6 +207,11 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.charger = cp.Charger(lp.ChargerRef)
 	lp.configureChargerType(lp.charger)
 
+	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
+	if _, ok := lp.charger.(api.ChargePhases); ok {
+		lp.setPhases(1)
+	}
+
 	// allow target charge handler to access loadpoint
 	lp.socTimer = soc.NewTimer(lp.log, &adapter{LoadPoint: lp})
 	if lp.Enable.Threshold > lp.Disable.Threshold {
@@ -826,6 +831,17 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	return err
 }
 
+// setPhases sets the number of enabled phases without modifying the charger
+func (lp *LoadPoint) setPhases(phases int) {
+	lp.Lock()
+	defer lp.Unlock()
+
+	if lp.Phases != phases {
+		lp.Phases = phases
+		lp.publish("phases", lp.Phases)
+	}
+}
+
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
 // Returns api.ErrNotAvailable if api.ChargePhases is not available.
 func (lp *LoadPoint) scalePhases(phases int) error {
@@ -838,10 +854,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 		return api.ErrNotAvailable
 	}
 
-	lp.Lock()
-	if lp.Phases != phases {
-		lp.Unlock()
-
+	if lp.GetPhases() != phases {
 		// disable charger - this will also stop the car charging using the api if available
 		if err := lp.setLimit(0, true); err != nil {
 			return err
@@ -852,9 +865,8 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 			return fmt.Errorf("switch phases: %w", err)
 		}
 
-		lp.Lock()
-		lp.Phases = phases
-		lp.publish("phases", lp.Phases)
+		// update setting
+		lp.setPhases(phases)
 
 		// disable phase timer
 		lp.phaseTimer = time.Time{}
@@ -862,27 +874,20 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 		// allow pv mode to re-enable charger right away
 		lp.elapsePVTimer()
 	}
-	lp.Unlock()
 
 	return nil
 }
 
-// pvScalePhases switches phases if necessary and returns if switch occured
+// pvScalePhases switches phases if necessary and returns if switch occurred
 func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
 	var waiting bool
 
 	phases := lp.GetPhases()
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
-	if phases < lp.activePhases {
-		lp.log.WARN.Printf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
-	}
-
-	lp.log.DEBUG.Printf("!!pvScalePhases available power %.0f for target current %.1f @ %dp/%dp", availablePower, targetCurrent, lp.activePhases, phases)
-	if lp.phaseTimer.IsZero() {
-		lp.log.DEBUG.Printf("!!pvScalePhases timer empty")
-	} else {
-		lp.log.DEBUG.Printf("!!pvScalePhases timer remaining: %v", lp.clock.Since(lp.phaseTimer).Truncate(time.Second))
+	// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
+	if _, ok := lp.charger.(api.ChargePhases); !ok && phases < lp.activePhases {
+		lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
 	}
 
 	// scale down phases
