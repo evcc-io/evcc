@@ -714,6 +714,11 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("hasVehicle", true)
 		lp.publish("socTitle", lp.vehicle.Title())
 		lp.publish("socCapacity", lp.vehicle.Capacity())
+
+		if action, ok := lp.OnIdentify[lp.vehicle.Identify()]; ok {
+			lp.log.DEBUG.Println("running vehicle action:", action)
+			lp.applyAction(action)
+		}
 	} else {
 		lp.socEstimator = nil
 
