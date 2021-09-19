@@ -196,12 +196,19 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	}
 }
 
+// ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
 	c.observe("ChargerUpdate", i)
 }
 
+// ProductUpdate implements the signalr receiver
 func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.observe("ProductUpdate", i)
+}
+
+// CommandResponse implements the signalr receiver
+func (c *Easee) CommandResponse(i json.RawMessage) {
+	c.observe("CommandResponse", i)
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
