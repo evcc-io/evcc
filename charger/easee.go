@@ -95,14 +95,6 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		Base:   c.Client.Transport,
 	}
 
-	// find site
-	site, err := c.chargerDetails()
-	if err != nil {
-		return c, err
-	}
-
-	c.site = site.ID
-
 	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
@@ -117,6 +109,14 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.charger = chargers[0].ID
 	}
 
+	// find site
+	site, err := c.chargerDetails()
+	if err != nil {
+		return c, err
+	}
+
+	c.site = site.ID
+
 	// find circuit
 	if circuit == 0 {
 		if len(site.Circuits) != 1 {
@@ -126,11 +126,28 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.circuit = site.Circuits[0].ID
 	}
 
+	// verify charger config
+	config, err := c.chargerConfig()
+	if err == nil && config.PhaseMode != 2 {
+		c.log.WARN.Println("expected PhaseMode auto- switching phases will NOT work")
+	}
+
 	return c, err
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
 	uri := fmt.Sprintf("%s/chargers", easee.API)
+
+	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
+	if err == nil {
+		err = c.DoJSON(req, &res)
+	}
+
+	return res, err
+}
+
+func (c *Easee) chargerConfig() (res easee.ChargerConfig, err error) {
+	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, c.charger)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {

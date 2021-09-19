@@ -16,102 +16,108 @@ const (
 
 // Charger is the charger type
 type Charger struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID   string
+	Name string
+}
+
+type ChargerConfig struct {
+	IsEnabled                    bool
+	LockCablePermanently         bool
+	AuthorizationRequired        bool
+	RemoteStartRequired          bool
+	SmartButtonEnabled           bool
+	WiFiSSID                     string
+	DetectedPowerGridType        int
+	OfflineChargingMode          int
+	CircuitMaxCurrentP1          int
+	CircuitMaxCurrentP2          int
+	CircuitMaxCurrentP3          int
+	EnableIdleCurrent            bool
+	LimitToSinglePhaseCharging   bool
+	PhaseMode                    int
+	LocalNodeType                int
+	LocalAuthorizationRequired   bool
+	LocalRadioChannel            int
+	LocalShortAddress            int
+	LocalParentAddrOrNumOfNodes  int
+	LocalPreAuthorizeEnabled     bool
+	LocalAuthorizeOfflineEnabled bool
+	AllowOfflineTxForUnknownId   bool
+	MaxChargerCurrent            int
+	LedStripBrightness           int
 }
 
 // Site is the site type
 type Site struct {
-	ID       int       `json:"id"`
-	SiteKey  string    `json:"siteKey"`
-	Name     string    `json:"name"`
-	Circuits []Circuit `json:"circuits"`
+	ID       int
+	SiteKey  string
+	Name     string
+	Circuits []Circuit
 }
 
 // Circuit is the circuit type
 type Circuit struct {
-	ID               int     `json:"id"`
-	SiteID           int     `json:"siteId"`
-	CircuitPanelID   int     `json:"circuitPanelId"`
-	PanelName        string  `json:"panelName"`
-	RatedCurrent     float64 `json:"ratedCurrent"`
-	UseDynamicMaster bool    `json:"useDynamicMaster"`
-	ParentCircuitID  int     `json:"parentCircuitId"`
-	// "chargers": [{
-	// 	"id": "string",
-	// 	"name": "string",
-	// 	"color": 1,
-	// 	"createdOn": "2021-01-19T12:39:10.359Z",
-	// 	"updatedOn": "2021-01-19T12:39:10.359Z",
-	// 	"backPlate": {
-	// 		"id": "string",
-	// 		"masterBackPlateId": "string",
-	// 		"name": "string"
-	// 	},
-	// 	"levelOfAccess": 1,
-	// 	"productCode": 1,
-	// 	"userRole": 1,
-	// 	"isTemporary": true
-	// }],
-	// "masterBackplate": {
-	// 	"id": "string",
-	// 	"masterBackPlateId": "string",
-	// 	"name": "string"
-	// },
+	ID               int
+	SiteID           int
+	CircuitPanelID   int
+	PanelName        string
+	RatedCurrent     float64
+	UseDynamicMaster bool
+	ParentCircuitID  int
 }
 
 // ChargerStatus is the charger status type
 type ChargerStatus struct {
-	SmartCharging                                bool    `json:"smartCharging"`
-	CableLocked                                  bool    `json:"cableLocked"`
-	ChargerOpMode                                int     `json:"chargerOpMode"`
-	TotalPower                                   float64 `json:"totalPower"`
-	SessionEnergy                                float64 `json:"sessionEnergy"`
-	EnergyPerHour                                float64 `json:"energyPerHour"`
-	WiFiRSSI                                     int     `json:"wiFiRSSI"`
-	CellRSSI                                     int     `json:"cellRSSI"`
-	LocalRSSI                                    int     `json:"localRSSI"`
-	OutputPhase                                  int     `json:"outputPhase"`
-	DynamicCircuitCurrentP1                      float64 `json:"dynamicCircuitCurrentP1"`
-	DynamicCircuitCurrentP2                      float64 `json:"dynamicCircuitCurrentP2"`
-	DynamicCircuitCurrentP3                      float64 `json:"dynamicCircuitCurrentP3"`
-	LatestPulse                                  string  `json:"latestPulse"`
-	ChargerFirmware                              int     `json:"chargerFirmware"`
-	LatestFirmware                               int     `json:"latestFirmware"`
-	Voltage                                      float64 `json:"voltage"`
-	ChargerRAT                                   int     `json:"chargerRAT"`
-	LockCablePermanently                         bool    `json:"lockCablePermanently"`
-	InCurrentT2                                  float64 `json:"inCurrentT2"`
-	InCurrentT3                                  float64 `json:"inCurrentT3"`
-	InCurrentT4                                  float64 `json:"inCurrentT4"`
-	InCurrentT5                                  float64 `json:"inCurrentT5"`
-	OutputCurrent                                float64 `json:"outputCurrent"`
-	IsOnline                                     bool    `json:"isOnline"`
-	InVoltageT1T2                                float64 `json:"inVoltageT1T2"`
-	InVoltageT1T3                                float64 `json:"inVoltageT1T3"`
-	InVoltageT1T4                                float64 `json:"inVoltageT1T4"`
-	InVoltageT1T5                                float64 `json:"inVoltageT1T5"`
-	InVoltageT2T3                                float64 `json:"inVoltageT2T3"`
-	InVoltageT2T4                                float64 `json:"inVoltageT2T4"`
-	InVoltageT2T5                                float64 `json:"inVoltageT2T5"`
-	InVoltageT3T4                                float64 `json:"inVoltageT3T4"`
-	InVoltageT3T5                                float64 `json:"inVoltageT3T5"`
-	InVoltageT4T5                                float64 `json:"inVoltageT4T5"`
-	LedMode                                      int     `json:"ledMode"`
-	CableRating                                  float64 `json:"cableRating"`
-	DynamicChargerCurrent                        float64 `json:"dynamicChargerCurrent"`
-	CircuitTotalAllocatedPhaseConductorCurrentL1 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL1"`
-	CircuitTotalAllocatedPhaseConductorCurrentL2 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL2"`
-	CircuitTotalAllocatedPhaseConductorCurrentL3 float64 `json:"circuitTotalAllocatedPhaseConductorCurrentL3"`
-	CircuitTotalPhaseConductorCurrentL1          float64 `json:"circuitTotalPhaseConductorCurrentL1"`
-	CircuitTotalPhaseConductorCurrentL2          float64 `json:"circuitTotalPhaseConductorCurrentL2"`
-	CircuitTotalPhaseConductorCurrentL3          float64 `json:"circuitTotalPhaseConductorCurrentL3"`
-	ReasonForNoCurrent                           int     `json:"reasonForNoCurrent"`
-	WiFiAPEnabled                                bool    `json:"wiFiAPEnabled"`
-	LifetimeEnergy                               float64 `json:"lifetimeEnergy"`
-	OfflineMaxCircuitCurrentP1                   int     `json:"offlineMaxCircuitCurrentP1"`
-	OfflineMaxCircuitCurrentP2                   int     `json:"offlineMaxCircuitCurrentP2"`
-	OfflineMaxCircuitCurrentP3                   int     `json:"offlineMaxCircuitCurrentP3"`
+	SmartCharging                                bool
+	CableLocked                                  bool
+	ChargerOpMode                                int
+	TotalPower                                   float64
+	SessionEnergy                                float64
+	EnergyPerHour                                float64
+	WiFiRSSI                                     int
+	CellRSSI                                     int
+	LocalRSSI                                    int
+	OutputPhase                                  int
+	DynamicCircuitCurrentP1                      float64
+	DynamicCircuitCurrentP2                      float64
+	DynamicCircuitCurrentP3                      float64
+	LatestPulse                                  string
+	ChargerFirmware                              int
+	LatestFirmware                               int
+	Voltage                                      float64
+	ChargerRAT                                   int
+	LockCablePermanently                         bool
+	InCurrentT2                                  float64
+	InCurrentT3                                  float64
+	InCurrentT4                                  float64
+	InCurrentT5                                  float64
+	OutputCurrent                                float64
+	IsOnline                                     bool
+	InVoltageT1T2                                float64
+	InVoltageT1T3                                float64
+	InVoltageT1T4                                float64
+	InVoltageT1T5                                float64
+	InVoltageT2T3                                float64
+	InVoltageT2T4                                float64
+	InVoltageT2T5                                float64
+	InVoltageT3T4                                float64
+	InVoltageT3T5                                float64
+	InVoltageT4T5                                float64
+	LedMode                                      int
+	CableRating                                  float64
+	DynamicChargerCurrent                        float64
+	CircuitTotalAllocatedPhaseConductorCurrentL1 float64
+	CircuitTotalAllocatedPhaseConductorCurrentL2 float64
+	CircuitTotalAllocatedPhaseConductorCurrentL3 float64
+	CircuitTotalPhaseConductorCurrentL1          float64
+	CircuitTotalPhaseConductorCurrentL2          float64
+	CircuitTotalPhaseConductorCurrentL3          float64
+	ReasonForNoCurrent                           int
+	WiFiAPEnabled                                bool
+	LifetimeEnergy                               float64
+	OfflineMaxCircuitCurrentP1                   int
+	OfflineMaxCircuitCurrentP2                   int
+	OfflineMaxCircuitCurrentP3                   int
 }
 
 // ChargerSettings is the charger settings type
