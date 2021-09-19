@@ -61,7 +61,8 @@ site:
     pvs:
     - pv # list of pv inverters/ meters
     battery: battery # battery meter
-  prioritySoC: 60 # give home battery priority up to this soc (0 to disable)
+  prioritySoC: # give home battery priority up to this soc (empty to disable)
+  bufferSoC: # ignore home battery discharge above soc (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:

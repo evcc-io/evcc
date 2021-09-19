@@ -14,11 +14,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-//go:generate mockgen -package mock -destination ../mock/mock_loadpoint.go github.com/evcc-io/evcc/core Updater
-
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
-	Update(float64, bool)
+	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -37,6 +35,7 @@ type Site struct {
 	ResidualPower float64      `mapstructure:"residualPower"` // PV meter only: household usage. Grid meter: household safety margin
 	Meters        MetersConfig // Meter references
 	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
+	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
 
 	// meters
 	gridMeter    api.Meter   // Grid usage meter
@@ -47,9 +46,10 @@ type Site struct {
 	loadpoints []*LoadPoint // Loadpoints
 
 	// cached state
-	gridPower    float64 // Grid power
-	pvPower      float64 // PV power
-	batteryPower float64 // Battery charge power
+	gridPower       float64 // Grid power
+	pvPower         float64 // PV power
+	batteryPower    float64 // Battery charge power
+	batteryBuffered bool    // Battery buffer active
 }
 
 // MetersConfig contains the loadpoint's meter configuration
@@ -323,11 +323,14 @@ func (site *Site) sitePower() (float64, error) {
 			site.Lock()
 			defer site.Unlock()
 
-			// if battery is charging give it priority
+			// if battery is charging below prioritySoC give it priority
 			if soc < site.PrioritySoC && batteryPower < 0 {
-				site.log.DEBUG.Printf("giving priority to battery at soc: %.0f", soc)
+				site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", soc)
 				batteryPower = 0
 			}
+
+			// if battery is discharging above bufferSoC ignore it
+			site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && soc > site.BufferSoC
 		}
 	}
 
@@ -346,7 +349,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	if sitePower, err := site.sitePower(); err == nil {
-		lp.Update(sitePower, cheap)
+		lp.Update(sitePower, cheap, site.batteryBuffered)
 		site.Health.Update()
 	}
 }

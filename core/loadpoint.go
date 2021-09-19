@@ -953,7 +953,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float64 {
+func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
@@ -976,7 +976,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	}
 
 	// in MinPV mode return at least minCurrent
-	if mode == api.ModeMinPV && targetCurrent < minCurrent {
+	if (mode == api.ModeMinPV || batteryBuffered) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
@@ -1206,7 +1206,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
+func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
@@ -1302,7 +1302,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		err = lp.setLimit(targetCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 		lp.log.DEBUG.Printf("pv max charge current: %.3gA", targetCurrent)
 
 		var required bool // false
