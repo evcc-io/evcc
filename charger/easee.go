@@ -169,7 +169,7 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 	go func(closed <-chan struct{}) {
 		<-closed
 
-		retry.Do(func() error {
+		_ = retry.Do(func() error {
 			err := c.subscribe(ts)
 			if err != nil {
 				c.log.ERROR.Println(err)
