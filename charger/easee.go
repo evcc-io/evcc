@@ -130,16 +130,27 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.circuit = site.Circuits[0].ID
 	}
 
+	if err := c.subscribe(ts); err != nil {
+		return c, err
+	}
+
+	return c, err
+}
+
+// subscribe connects to the signalR hub
+func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 	conn, err := signalr.NewHTTPConnection(context.Background(), "https://api.easee.cloud/hubs/chargers",
-		signalr.WithHTTPHeadersOption(func() http.Header {
-			tok, _ := ts.Token()
-			return http.Header{
-				"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
+		signalr.WithHTTPHeadersOption(func() (res http.Header) {
+			if tok, err := ts.Token(); err == nil {
+				res = http.Header{
+					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
+				}
 			}
+			return res
 		}),
 	)
 	if err != nil {
-		return c, err
+		return err
 	}
 
 	client, err := signalr.NewClient(context.Background(), conn,
@@ -147,18 +158,14 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		signalr.Logger(c, false),
 	)
 	if err != nil {
-		return c, err
+		return err
 	}
 
 	if err := client.Start(); err != nil {
-		return c, err
+		return err
 	}
 
-	if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
-		return c, err
-	}
-
-	return c, err
+	return <-client.Send("SubscribeWithCurrentState", c.charger, true)
 }
 
 func (c *Easee) Log(keyVals ...interface{}) error {
