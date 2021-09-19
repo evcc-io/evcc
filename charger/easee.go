@@ -127,8 +127,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	// verify charger config
-	config, err := c.chargerConfig()
-	if err == nil && config.PhaseMode != 2 {
+	if config, err := c.chargerConfig(); err == nil && config.PhaseMode != 2 {
 		c.log.WARN.Println("expected PhaseMode auto- switching phases will NOT work")
 	}
 
