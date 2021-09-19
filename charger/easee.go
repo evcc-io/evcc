@@ -158,9 +158,6 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		return c, err
 	}
 
-	done := make(chan bool)
-	<-done
-
 	return c, err
 }
 
