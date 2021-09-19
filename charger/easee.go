@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
@@ -163,6 +164,19 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 	if err := client.Start(); err != nil {
 		return err
 	}
+
+	// retry connection
+	go func(closed <-chan struct{}) {
+		<-closed
+
+		retry.Do(func() error {
+			err := c.subscribe(ts)
+			if err != nil {
+				c.log.ERROR.Println(err)
+			}
+			return err
+		}, retry.Attempts(256))
+	}(client.Closed())
 
 	return <-client.Send("SubscribeWithCurrentState", c.charger, true)
 }
