@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -155,7 +154,7 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 
 	client, err := signalr.NewClient(context.Background(), conn,
 		signalr.Receiver(c),
-		signalr.Logger(c, false),
+		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
 	if err != nil {
 		return err
@@ -166,25 +165,6 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 	}
 
 	return <-client.Send("SubscribeWithCurrentState", c.charger, true)
-}
-
-func (c *Easee) Log(keyVals ...interface{}) error {
-	s := &strings.Builder{}
-	for i, v := range keyVals {
-		if i%2 == 0 {
-			if s.Len() > 0 {
-				s.WriteRune(' ')
-			}
-			s.WriteString(fmt.Sprintf("%v", v))
-			s.WriteRune('=')
-		} else {
-			s.WriteString(fmt.Sprintf("%v", v))
-		}
-	}
-
-	c.log.TRACE.Println(s.String())
-
-	return nil
 }
 
 func (c *Easee) observe(typ string, i json.RawMessage) {
