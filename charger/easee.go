@@ -130,9 +130,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.circuit = site.Circuits[0].ID
 	}
 
-	if err := c.subscribe(ts); err != nil {
-		return c, err
-	}
+	err = c.subscribe(ts)
 
 	return c, err
 }
