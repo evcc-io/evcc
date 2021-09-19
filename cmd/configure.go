@@ -97,7 +97,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your grid meter")
 
-	gridItem, err := processClass("grid meter", "meter", "Grid Meter", defaultGridMeterName)
+	gridItem, err := processClass("grid meter", "meter", registry.UsageTypeGrid, defaultGridMeterName)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your PV inverter or PV meter")
 
-	pvItem, err := processClass("pv meter", "meter", "PV Meter", defaultPVInverterMeter)
+	pvItem, err := processClass("pv meter", "meter", registry.UsageTypePV, defaultPVInverterMeter)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	if askYesNo("Do you have a home battery system?") {
 		fmt.Println("- Configure your Battery inverter or Battery meter")
 
-		batteryItem, err = processClass("battery meter", "meter", "Battery Meter", defaultHomeBatteryMeter)
+		batteryItem, err = processClass("battery meter", "meter", registry.UsageTypeBattery, defaultHomeBatteryMeter)
 		if err != nil && err != ErrItemNotPresent {
 			log.FATAL.Fatal(err)
 		}
@@ -200,7 +200,7 @@ func hasTypeModbus(params []registry.TemplateParam) bool {
 }
 
 // let the user select a device item from a list defined by class and filter
-func processClass(title, class, filter, defaultName string) (test.ConfigTemplate, error) {
+func processClass(title, class, usageFilter, defaultName string) (test.ConfigTemplate, error) {
 	var repeat bool = true
 	var deviceConfiguration test.ConfigTemplate
 
@@ -208,7 +208,7 @@ func processClass(title, class, filter, defaultName string) (test.ConfigTemplate
 		var localConfiguration Config
 
 		fmt.Println()
-		configItem := selectItem(title, class, filter)
+		configItem := selectItem(title, class, usageFilter)
 		if configItem.Name == itemNotPresent {
 			return deviceConfiguration, ErrItemNotPresent
 		}
@@ -392,8 +392,17 @@ func setupEEBUSConfig() error {
 	return nil
 }
 
+func arrayContains(slice []string, element string) bool {
+	for _, value := range slice {
+		if value == element {
+			return true
+		}
+	}
+	return false
+}
+
 // return EVCC configuration items of a given class
-func fetchElements(class, filter string) []registry.Template {
+func fetchElements(class, usageFilter string) []registry.Template {
 	var items []registry.Template
 
 	for _, tmpl := range registry.TemplatesByClass(class) {
@@ -401,8 +410,9 @@ func fetchElements(class, filter string) []registry.Template {
 			continue
 		}
 
-		if len(filter) == 0 || strings.Contains(tmpl.Name, filter) ||
-			(class == "meter" && !strings.Contains(tmpl.Name, "(") && !strings.Contains(tmpl.Name, ")")) {
+		if len(usageFilter) == 0 ||
+			len(tmpl.Usage) == 0 ||
+			arrayContains(tmpl.Usage, usageFilter) {
 			items = append(items, tmpl)
 		}
 	}
@@ -415,7 +425,7 @@ func fetchElements(class, filter string) []registry.Template {
 }
 
 // PromptUI: select item from list
-func selectItem(title, class, filter string) registry.Template {
+func selectItem(title, class, usageFilter string) registry.Template {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
 		Active:   "-> {{ .Name }}",
@@ -426,7 +436,7 @@ func selectItem(title, class, filter string) registry.Template {
 	var emptyItem registry.Template
 	emptyItem.Name = itemNotPresent
 
-	items := fetchElements(class, filter)
+	items := fetchElements(class, usageFilter)
 	items = append(items, emptyItem)
 
 	prompt := promptui.Select{
