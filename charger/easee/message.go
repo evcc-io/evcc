@@ -29,9 +29,9 @@ type ChargerConfig struct {
 	WiFiSSID                     string
 	DetectedPowerGridType        int
 	OfflineChargingMode          int
-	CircuitMaxCurrentP1          int
-	CircuitMaxCurrentP2          int
-	CircuitMaxCurrentP3          int
+	CircuitMaxCurrentP1          float64
+	CircuitMaxCurrentP2          float64
+	CircuitMaxCurrentP3          float64
 	EnableIdleCurrent            bool
 	LimitToSinglePhaseCharging   bool
 	PhaseMode                    int
@@ -43,7 +43,7 @@ type ChargerConfig struct {
 	LocalPreAuthorizeEnabled     bool
 	LocalAuthorizeOfflineEnabled bool
 	AllowOfflineTxForUnknownId   bool
-	MaxChargerCurrent            int
+	MaxChargerCurrent            float64
 	LedStripBrightness           int
 }
 
