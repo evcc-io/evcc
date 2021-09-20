@@ -3,7 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -41,6 +41,8 @@ func init() {
 func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI          string
+		User         string
+		Password     string
 		Channel      int
 		StandbyPower float64
 	}{}
@@ -53,14 +55,19 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("missing uri")
 	}
 
-	return NewShelly(cc.URI, cc.Channel, cc.StandbyPower)
+	return NewShelly(cc.URI, cc.User, cc.Password, cc.Channel, cc.StandbyPower)
 }
 
 // NewShelly creates Shelly charger
-func NewShelly(uri string, channel int, standbypower float64) (*Shelly, error) {
+func NewShelly(uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
+	u, _ := url.Parse(uri)
+	if u.Host != "" {
+		uri = u.Host
+	}
+
 	c := &Shelly{
 		Helper:       request.NewHelper(util.NewLogger("shelly")),
-		uri:          strings.TrimRight(uri, "/"),
+		uri:          fmt.Sprintf("http://%s:%s@%s", user, password, uri),
 		channel:      channel,
 		standbypower: standbypower,
 	}
