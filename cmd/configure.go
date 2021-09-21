@@ -144,7 +144,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your loadpoints")
 
-	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle, "")
+	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle, "", false)
 	loadpoint := Loadpoint{
 		Title: loadpointTitle,
 	}
@@ -159,7 +159,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your site")
 
-	siteTitle := askValue("Site title", defaultSiteTitle, "")
+	siteTitle := askValue("Site title", defaultSiteTitle, "", false)
 	configuration.Site.Title = siteTitle
 	if gridItem.Config["name"] != nil {
 		configuration.Site.Meters.Grid = gridItem.Config["name"].(string)
@@ -491,7 +491,7 @@ func askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func askValue(label, defaultValue, hint string) string {
+func askValue(label, defaultValue, hint string, optional bool) string {
 	templates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -505,6 +505,9 @@ func askValue(label, defaultValue, hint string) string {
 
 	if hint != "" {
 		fmt.Println(hint)
+	}
+	if optional {
+		fmt.Println("(optional, can be ignored)")
 	}
 
 	prompt := promptui.Prompt{
@@ -549,7 +552,7 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 
 			if len(choices) > 0 {
 				// ask for modbus address
-				id := askValue("ID", "1", "Modbus ID")
+				id := askValue("ID", "1", "Modbus ID", false)
 				additionalConfig["id"] = id
 
 				// ask for modbus interface type
@@ -558,28 +561,32 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 				fmt.Println("Selected Type:", selectedType)
 				switch selectedType {
 				case "serial":
-					device := askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address")
+					device := askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address", false)
 					additionalConfig["device"] = device
-					baudrate := askValue("Baudrate", "9600", "")
+					baudrate := askValue("Baudrate", "9600", "", false)
 					additionalConfig["baudrate"] = baudrate
-					comset := askValue("ComSet", "8N1", "")
+					comset := askValue("ComSet", "8N1", "", false)
 					additionalConfig["comset"] = comset
 				case "tcprtu", "tcp":
 					if selectedType == "tcprtu" {
 						additionalConfig["rtu"] = "true"
 					}
-					uri := askValue("Host", "192.0.2.2", "IP address or hostname")
-					port := askValue("Port", "502", "Port address")
+					uri := askValue("Host", "192.0.2.2", "IP address or hostname", false)
+					port := askValue("Port", "502", "Port address", false)
 					additionalConfig["uri"] = uri + ":" + port
 				}
 			}
 		} else {
-			paramItems[index].Value = askValue(param.Name, param.Value, param.Hint)
+			value := askValue(param.Name, param.Value, param.Hint, param.Optional)
+			// if value is optional and the user retunred the default value, skip this parameter
+			if !param.Optional || value != param.Value {
+				paramItems[index].Value = value
+			}
 		}
 	}
 
 	fmt.Println()
-	deviceName := askValue("Name", defaultName, "Give the device a name")
+	deviceName := askValue("Name", defaultName, "Give the device a name", false)
 
 	return paramItems, deviceName, additionalConfig
 }
