@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 const (
@@ -47,8 +46,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {
-			// wrap any created errors to prevent fatals
-			v, err = wrapper.New(v, err)
+			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
 		}
 	} else {
 		err = fmt.Errorf("invalid vehicle type: %s", typ)
