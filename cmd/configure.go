@@ -502,21 +502,6 @@ func askValue(label, defaultValue, hint string) string {
 	validate := func(input string) error {
 		return nil
 	}
-	// var defValue string
-	// switch v := defaultValue.(type) {
-	// case nil:
-	// 	defValue = ""
-	// case string:
-	// 	defValue = v
-	// case int:
-	// 	defValue = strconv.Itoa(v)
-	// 	validate = func(input string) error {
-	// 		_, err := strconv.ParseInt(input, 10, 64)
-	// 		return err
-	// 	}
-	// default:
-	// 	log.FATAL.Fatalf("unsupported type: %s", defaultValue)
-	// }
 
 	if hint != "" {
 		fmt.Println(hint)
@@ -536,21 +521,6 @@ func askValue(label, defaultValue, hint string) string {
 	}
 
 	return result
-	// var returnValue interface{}
-	// switch defaultValue.(type) {
-	// case nil:
-	// 	returnValue = result
-	// case string:
-	// 	returnValue = result
-	// case int:
-	// 	returnValue, err = strconv.Atoi(result)
-	// 	if err != nil {
-	// 		log.FATAL.Fatal("entered invalid int value")
-	// 	}
-	// default:
-	// 	log.FATAL.Fatalf("unsupported type: %s", defaultValue)
-	// }
-	// return returnValue
 }
 
 // Process an EVCC configuration item
