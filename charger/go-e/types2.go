@@ -7,7 +7,7 @@ type StatusResponse2 struct {
 	Alw   bool      // allow charging
 	Amp   int       // current [A]
 	Err   int       // error
-	Eto   uint64    // energy total  Wh
+	Eto   uint64    // energy total Wh
 	Psm   int       // phase switching
 	Stp   int       // stop state
 	Tmp   int       // temperature [°C]
