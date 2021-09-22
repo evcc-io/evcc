@@ -147,7 +147,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	return p, nil
 }
 
-// request executes the configured request or is returns the cached value
+// request executes the configured request or returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
 
 	if time.Since(p.updated) > p.cache {
