@@ -3,11 +3,13 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	goe "github.com/evcc-io/evcc/charger/go-e"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // https://go-e.co/app/api.pdf
@@ -39,10 +41,10 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if cc.URI != "" && cc.Token != "" {
-		return nil, errors.New("go-e config: should only have one of uri/token")
+		return nil, errors.New("should only have one of uri/token")
 	}
 	if cc.URI == "" && cc.Token == "" {
-		return nil, errors.New("go-e config: must have one of uri/token")
+		return nil, errors.New("must have one of uri/token")
 	}
 
 	return NewGoE(cc.URI, cc.Token, cc.V2, cc.Cache)
@@ -56,11 +58,19 @@ func NewGoE(uri, token string, v2 bool, cache time.Duration) (api.Charger, error
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
 	} else {
-		c.api = goe.NewLocal(log, uri)
+		uri = strings.TrimRight(uri, "/")
+		c.api = goe.NewLocal(log, uri, v2)
 	}
 
 	if v2 {
-		return decorateGoE(c, c.totalEnergy, c.phases1p3p), nil
+		var phases func(int) error
+		if sponsor.IsAuthorized() {
+			phases = c.phases1p3p
+		} else {
+			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
+		}
+
+		return decorateGoE(c, c.totalEnergy, phases), nil
 	}
 
 	return c, nil
@@ -164,7 +174,12 @@ func (c *GoE) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return resp.TotalEnergy(), err
+	var val float64
+	if res, ok := resp.(*goe.StatusResponse2); ok {
+		val = res.TotalEnergy()
+	}
+
+	return val, err
 }
 
 // phases1p3p implements the api.ChargePhases interface

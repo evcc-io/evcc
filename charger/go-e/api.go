@@ -3,6 +3,7 @@ package goe
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -29,25 +30,41 @@ type API interface {
 type local struct {
 	*request.Helper
 	uri string
+	v2  bool
 }
 
-func NewLocal(log *util.Logger, uri string) API {
+func NewLocal(log *util.Logger, uri string, v2 bool) API {
+	uri = strings.TrimSuffix(uri, "/api")
+	if v2 {
+		uri = uri + "api"
+	}
+
 	return &local{
 		Helper: request.NewHelper(log),
 		uri:    uri,
+		v2:     v2,
 	}
 }
 
 func (c *local) Response(function, payload string) (Response, error) {
-	var status StatusResponse
+	var status Response
+	if c.v2 {
+		status = &StatusResponse2{}
+	} else {
+		status = &StatusResponse{}
+	}
 
 	url := fmt.Sprintf("%s/%s", c.uri, function)
 	if payload != "" {
-		url += "?payload=" + payload
+		if c.v2 {
+			url += "set?" + payload
+		} else {
+			url += "?payload=" + payload
+		}
 	}
 
 	err := c.GetJSON(url, &status)
-	return &status, err
+	return status, err
 }
 
 func (c *local) Status() (Response, error) {
