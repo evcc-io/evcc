@@ -67,7 +67,6 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 	}{
 		Headers: make(map[string]string),
 		Timeout: request.Timeout,
-		Cache:   0,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -148,20 +147,26 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	return p, nil
 }
 
-// request executed the configured request
+// request executes the configured request or is returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
-	var b io.Reader
-	if len(body) == 1 {
-		b = strings.NewReader(body[0])
+
+	if time.Since(p.updated) > p.cache {
+		var b io.Reader
+		if len(body) == 1 {
+			b = strings.NewReader(body[0])
+		}
+
+		// empty method becomes GET
+		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		p.val, p.err = p.DoBody(req)
+		p.updated = time.Now()
 	}
 
-	// empty method becomes GET
-	req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return p.DoBody(req)
+	return p.val, p.err
 }
 
 // FloatGetter parses float from request
@@ -196,28 +201,24 @@ func (p *HTTP) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *HTTP) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		if time.Since(p.updated) > p.cache {
-			p.val, p.err = p.request()
-			p.updated = time.Now()
-		}
-
-		if p.err != nil {
-			return string(p.val), p.err
+		b, err := p.request()
+		if err != nil {
+			return string(b), err
 		}
 
 		if p.re != nil {
-			m := p.re.FindSubmatch(p.val)
+			m := p.re.FindSubmatch(b)
 			if len(m) > 1 {
-				p.val = m[1] // first submatch
+				b = m[1] // first submatch
 			}
 		}
 
 		if p.jq != nil {
-			v, err := jq.Query(p.jq, p.val)
-			p.err = err
-			return fmt.Sprintf("%v", v), p.err
+			v, err := jq.Query(p.jq, b)
+			return fmt.Sprintf("%v", v), err
 		}
-		return string(p.val), p.err
+
+		return string(b), err
 	}
 }
 

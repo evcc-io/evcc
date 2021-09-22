@@ -34,7 +34,6 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Cache    time.Duration
 	}{
 		Scale: 1,
-		Cache: 0,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -81,7 +80,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, "", ".values.power", 0.001*cc.Scale, cc.Cache)
+	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, "", ".values.power", 0.001*cc.Scale, 0)
 	if err != nil {
 		return nil, err
 	}
