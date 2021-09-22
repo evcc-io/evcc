@@ -1,7 +1,9 @@
 package bmw
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -69,6 +71,20 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	resp, err := v.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		var desc struct {
+			Error            string
+			ErrorDescription string `json:"error_description"`
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&desc); err != nil {
+			return nil, fmt.Errorf("could not obtain token")
+		}
+
+		return nil, fmt.Errorf("%s:%s", desc.Error, desc.ErrorDescription)
 	}
 
 	uri := resp.Header.Get("Location")

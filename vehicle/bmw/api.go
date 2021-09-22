@@ -10,6 +10,7 @@ import (
 )
 
 // https://github.com/bimmerconnected/bimmer_connected
+// https://github.com/TA2k/ioBroker.bmw
 
 const ApiURI = "https://b2vapi.bmwgroup.com/webapi/v1"
 
