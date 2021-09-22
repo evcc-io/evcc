@@ -3,7 +3,6 @@ package meter
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
@@ -31,7 +30,6 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Password string
 		Meter    string
 		Scale    float64
-		Cache    time.Duration
 	}{
 		Scale: 1,
 	}
