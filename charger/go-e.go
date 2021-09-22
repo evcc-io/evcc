@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -32,7 +31,6 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		Token string
 		URI   string
-		V2    bool
 		Cache time.Duration
 	}{}
 
@@ -47,19 +45,21 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, errors.New("must have one of uri/token")
 	}
 
-	return NewGoE(cc.URI, cc.Token, cc.V2, cc.Cache)
+	return NewGoE(cc.URI, cc.Token, cc.Cache)
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, v2 bool, cache time.Duration) (api.Charger, error) {
+func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 	c := &GoE{}
 
 	log := util.NewLogger("go-e")
+
+	var v2 bool
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
 	} else {
-		uri = strings.TrimRight(uri, "/")
-		c.api = goe.NewLocal(log, uri, v2)
+		c.api = goe.NewLocal(log, uri)
+		v2 = c.api.IsV2()
 	}
 
 	if v2 {

@@ -33,17 +33,26 @@ type local struct {
 	v2  bool
 }
 
-func NewLocal(log *util.Logger, uri string, v2 bool) API {
+func NewLocal(log *util.Logger, uri string) API {
+	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
-	if v2 {
-		uri = uri + "api"
-	}
 
-	return &local{
+	api := &local{
 		Helper: request.NewHelper(log),
 		uri:    uri,
-		v2:     v2,
 	}
+
+	if api.IsV2() {
+		api.v2 = true
+		api.uri = api.uri + "/api"
+	}
+
+	return api
+}
+
+func (c *local) IsV2() bool {
+	_, err := c.Response("/api/status", "")
+	return err == nil
 }
 
 func (c *local) Response(function, payload string) (Response, error) {
