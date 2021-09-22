@@ -18,6 +18,7 @@ import (
 // GoE charger implementation
 type GoE struct {
 	api goe.API
+	v2  bool
 }
 
 func init() {
@@ -54,15 +55,15 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 
 	log := util.NewLogger("go-e")
 
-	var v2 bool
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
 	} else {
-		c.api = goe.NewLocal(log, uri)
-		v2 = c.api.IsV2()
+		local := goe.NewLocal(log, uri)
+		c.api = local
+		c.v2 = local.IsV2()
 	}
 
-	if v2 {
+	if c.v2 {
 		var phases func(int) error
 		if sponsor.IsAuthorized() {
 			phases = c.phases1p3p
@@ -111,7 +112,14 @@ func (c *GoE) Enable(enable bool) error {
 	if enable {
 		b = 1
 	}
-	_, err := c.api.Update(fmt.Sprintf("alw=%d", b))
+
+	param := "alw"
+	if c.v2 {
+		param = "frc"
+		b += 1
+	}
+
+	_, err := c.api.Update(fmt.Sprintf("%s=%d", param, b))
 	return err
 }
 

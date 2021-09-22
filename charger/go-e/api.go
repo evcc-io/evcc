@@ -27,17 +27,17 @@ type API interface {
 	Update(payload string) (Response, error)
 }
 
-type local struct {
+type LocalAPI struct {
 	*request.Helper
 	uri string
 	v2  bool
 }
 
-func NewLocal(log *util.Logger, uri string) API {
+func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
 
-	api := &local{
+	api := &LocalAPI{
 		Helper: request.NewHelper(log),
 		uri:    uri,
 	}
@@ -50,12 +50,12 @@ func NewLocal(log *util.Logger, uri string) API {
 	return api
 }
 
-func (c *local) IsV2() bool {
+func (c *LocalAPI) IsV2() bool {
 	_, err := c.Response("/api/status", "")
 	return err == nil
 }
 
-func (c *local) Response(function, payload string) (Response, error) {
+func (c *LocalAPI) Response(function, payload string) (Response, error) {
 	var status Response
 	if c.v2 {
 		status = &StatusResponse2{}
@@ -76,11 +76,11 @@ func (c *local) Response(function, payload string) (Response, error) {
 	return status, err
 }
 
-func (c *local) Status() (Response, error) {
+func (c *LocalAPI) Status() (Response, error) {
 	return c.Response("status", "")
 }
 
-func (c *local) Update(payload string) (Response, error) {
+func (c *LocalAPI) Update(payload string) (Response, error) {
 	return c.Response("mqtt", payload)
 }
 
