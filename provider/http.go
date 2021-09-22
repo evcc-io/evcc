@@ -199,23 +199,23 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		if time.Since(p.updated) > p.cache {
 			p.val, p.err = p.request()
 			p.updated = time.Now()
+		}
 
-			if p.err != nil {
-				return string(p.val), p.err
-			}
+		if p.err != nil {
+			return string(p.val), p.err
+		}
 
-			if p.re != nil {
-				m := p.re.FindSubmatch(p.val)
-				if len(m) > 1 {
-					p.val = m[1] // first submatch
-				}
+		if p.re != nil {
+			m := p.re.FindSubmatch(p.val)
+			if len(m) > 1 {
+				p.val = m[1] // first submatch
 			}
+		}
 
-			if p.jq != nil {
-				v, err := jq.Query(p.jq, p.val)
-				p.err = err
-				return fmt.Sprintf("%v", v), p.err
-			}
+		if p.jq != nil {
+			v, err := jq.Query(p.jq, p.val)
+			p.err = err
+			return fmt.Sprintf("%v", v), p.err
 		}
 		return string(p.val), p.err
 	}
