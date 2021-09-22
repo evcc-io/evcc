@@ -51,7 +51,7 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 }
 
 func (c *LocalAPI) IsV2() bool {
-	_, err := c.Response("/api/status", "")
+	_, err := c.Response("/api/status?filter=alw", "")
 	return err == nil
 }
 
@@ -77,10 +77,18 @@ func (c *LocalAPI) Response(function, payload string) (Response, error) {
 }
 
 func (c *LocalAPI) Status() (Response, error) {
+	if c.v2 {
+		return c.Response("status?filter=alw,car,eto,wh,nrg,trx,cards", "")
+	}
+
 	return c.Response("status", "")
 }
 
 func (c *LocalAPI) Update(payload string) (Response, error) {
+	if c.v2 {
+		return c.Response("status", payload)
+	}
+
 	return c.Response("mqtt", payload)
 }
 
