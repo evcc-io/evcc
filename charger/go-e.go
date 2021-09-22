@@ -190,7 +190,7 @@ func (c *GoE) totalEnergy() (float64, error) {
 	return val, err
 }
 
-// phases1p3p implements the api.ChargePhases interface
+// phases1p3p implements the api.ChargePhases interface - v2 only
 func (c *GoE) phases1p3p(phases int) error {
 	p := phases
 	if phases == 3 {
