@@ -25,6 +25,10 @@ type HTTP struct {
 	scale       float64
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	cache       time.Duration
+	updated     time.Time
+	val         []byte // Cached http response value
+	err         error  // Cached http response error
 }
 
 func init() {
@@ -59,9 +63,11 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Insecure    bool
 		Auth        Auth
 		Timeout     time.Duration
+		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
 		Timeout: request.Timeout,
+		Cache:   0,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -86,6 +92,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Regex,
 		cc.Jq,
 		cc.Scale,
+		cc.Cache,
 	)
 	if err != nil {
 		return nil, err
@@ -99,7 +106,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64, cache time.Duration) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -112,6 +119,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		headers: headers,
 		body:    body,
 		scale:   scale,
+		cache:   cache,
 	}
 
 	// ignore the self signed certificate
@@ -188,24 +196,28 @@ func (p *HTTP) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *HTTP) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.request()
-		if err != nil {
-			return string(b), err
-		}
+		if time.Since(p.updated) > p.cache {
+			p.val, p.err = p.request()
+			p.updated = time.Now()
 
-		if p.re != nil {
-			m := p.re.FindSubmatch(b)
-			if len(m) > 1 {
-				b = m[1] // first submatch
+			if p.err != nil {
+				return string(p.val), p.err
+			}
+
+			if p.re != nil {
+				m := p.re.FindSubmatch(p.val)
+				if len(m) > 1 {
+					p.val = m[1] // first submatch
+				}
+			}
+
+			if p.jq != nil {
+				v, err := jq.Query(p.jq, p.val)
+				p.err = err
+				return fmt.Sprintf("%v", v), p.err
 			}
 		}
-
-		if p.jq != nil {
-			v, err := jq.Query(p.jq, b)
-			return fmt.Sprintf("%v", v), err
-		}
-
-		return string(b), err
+		return string(p.val), p.err
 	}
 }
 
