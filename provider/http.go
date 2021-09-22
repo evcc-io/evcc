@@ -25,6 +25,10 @@ type HTTP struct {
 	scale       float64
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	cache       time.Duration
+	updated     time.Time
+	val         []byte // Cached http response value
+	err         error  // Cached http response error
 }
 
 func init() {
@@ -59,6 +63,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Insecure    bool
 		Auth        Auth
 		Timeout     time.Duration
+		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
 		Timeout: request.Timeout,
@@ -86,6 +91,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Regex,
 		cc.Jq,
 		cc.Scale,
+		cc.Cache,
 	)
 	if err != nil {
 		return nil, err
@@ -99,7 +105,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64, cache time.Duration) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -112,6 +118,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		headers: headers,
 		body:    body,
 		scale:   scale,
+		cache:   cache,
 	}
 
 	// ignore the self signed certificate
@@ -140,20 +147,25 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	return p, nil
 }
 
-// request executed the configured request
+// request executes the configured request or returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
-	var b io.Reader
-	if len(body) == 1 {
-		b = strings.NewReader(body[0])
+	if time.Since(p.updated) >= p.cache {
+		var b io.Reader
+		if len(body) == 1 {
+			b = strings.NewReader(body[0])
+		}
+
+		// empty method becomes GET
+		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		p.val, p.err = p.DoBody(req)
+		p.updated = time.Now()
 	}
 
-	// empty method becomes GET
-	req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return p.DoBody(req)
+	return p.val, p.err
 }
 
 // FloatGetter parses float from request
