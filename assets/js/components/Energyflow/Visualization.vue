@@ -2,11 +2,11 @@
 	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
 		<div class="label-scale">
 			<div class="d-flex justify-content-end">
-				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
-					<fa-icon icon="sun"></fa-icon>
-				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
 					<BatteryIcon :soc="batterySoC" discharge />
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
+					<fa-icon icon="sun"></fa-icon>
 				</LabelBar>
 			</div>
 		</div>
@@ -169,7 +169,7 @@ export default {
 		},
 		isLabel(position, name, last) {
 			const labels = {
-				top: ["pvProduction", "batteryDischarge"],
+				top: ["batteryDischarge", "pvProduction"],
 				bottom: ["houseConsumption", "loadpoints", "batteryCharge"],
 			};
 			const entries = [...labels[position]];
