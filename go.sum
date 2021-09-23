@@ -157,6 +157,10 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/config v0.0.0-20210821100131-47523461441a h1:0M3bEilYf3Ns9QLzXsFXWRMCySptggaQVMVn/NoLT7E=
 github.com/evcc-io/config v0.0.0-20210821100131-47523461441a/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
+github.com/evcc-io/config v0.0.0-20210922093841-81b2e026884e h1:m0X5JgDTEMp2mZ3sZb41pzNAO6rRj/qIxKQkqiKopvw=
+github.com/evcc-io/config v0.0.0-20210922093841-81b2e026884e/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
+github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16 h1:IY+V/bY7mWlZ0CmAxNai0bCV26yMZyPoe1JyY+QHKbE=
+github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
 github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e h1:trxYqEB+LXMjWMnwf5BOmhupaohYknhc3raXlPC5PT4=
 github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=
