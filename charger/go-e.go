@@ -162,9 +162,9 @@ func (c *GoE) Currents() (float64, float64, float64, error) {
 		return 0, 0, 0, err
 	}
 
-	cur0, cur1, cur2 := resp.Currents()
+	i1, i2, i3 := resp.Currents()
 
-	return cur0, cur1, cur2, err
+	return i1, i2, i3, err
 }
 
 var _ api.Identifier = (*GoE)(nil)
