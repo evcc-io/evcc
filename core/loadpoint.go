@@ -209,6 +209,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
 	if _, ok := lp.charger.(api.ChargePhases); ok {
+		log.WARN.Printf("!!startup set 1p")
 		lp.setPhases(1)
 	}
 
@@ -884,6 +885,17 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	phases := lp.GetPhases()
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
+
+	if phases < lp.activePhases {
+		lp.log.WARN.Printf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
+	}
+
+	lp.log.DEBUG.Printf("!!pvScalePhases available power %.0f for target current %.1f @ %dp/%dp", availablePower, targetCurrent, lp.activePhases, phases)
+	if lp.phaseTimer.IsZero() {
+		lp.log.DEBUG.Printf("!!pvScalePhases timer empty")
+	} else {
+		lp.log.DEBUG.Printf("!!pvScalePhases timer remaining: %v", lp.clock.Since(lp.phaseTimer).Truncate(time.Second))
+	}
 
 	// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
 	if _, ok := lp.charger.(api.ChargePhases); !ok && phases < lp.activePhases {
