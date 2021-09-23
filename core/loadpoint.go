@@ -895,7 +895,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	if phases < lp.activePhases {
 		if _, ok := lp.charger.(api.ChargePhases); ok {
-			lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
+			lp.log.WARN.Printf("!!charger out of sync: %dp active @ %dp configured, setting 3p", lp.activePhases, phases)
 			// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
 			lp.setPhases(3)
 		} else {
