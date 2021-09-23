@@ -111,9 +111,8 @@ func (c *GoE) Enable(enable bool) error {
 		b = 1
 	}
 
-	param := "alw"
+	param := map[bool]string{false: "alw", true: "frc"}[c.v2]
 	if c.v2 {
-		param = "frc"
 		b += 1
 	}
 
@@ -123,7 +122,8 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	_, err := c.api.Update(fmt.Sprintf("amx=%d", current))
+	param := map[bool]string{false: "amx", true: "amp"}[c.v2]
+	_, err := c.api.Update(fmt.Sprintf("%s=%d", param, current))
 	return err
 }
 
