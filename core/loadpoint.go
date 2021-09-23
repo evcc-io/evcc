@@ -209,7 +209,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
 	if _, ok := lp.charger.(api.ChargePhases); ok {
-		log.WARN.Printf("!!startup set 1p")
 		lp.setPhases(1)
 	}
 
