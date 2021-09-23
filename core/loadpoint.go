@@ -886,10 +886,6 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	phases := lp.GetPhases()
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
-	if phases < lp.activePhases {
-		lp.log.WARN.Printf("invalid status: %dp active @ %dp configured", lp.activePhases, phases)
-	}
-
 	lp.log.DEBUG.Printf("!!pvScalePhases available power %.0f for target current %.1f @ %dp/%dp", availablePower, targetCurrent, lp.activePhases, phases)
 	if lp.phaseTimer.IsZero() {
 		lp.log.DEBUG.Printf("!!pvScalePhases timer empty")
@@ -897,9 +893,10 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.DEBUG.Printf("!!pvScalePhases timer remaining: %v", lp.clock.Since(lp.phaseTimer).Truncate(time.Second))
 	}
 
-	// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
 	if phases < lp.activePhases {
 		if _, ok := lp.charger.(api.ChargePhases); ok {
+			lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
+			// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
 			lp.setPhases(3)
 		} else {
 			lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
