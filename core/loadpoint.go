@@ -804,14 +804,14 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
+	if lp.GetStatus() != api.StatusC {
+		return 0
+	}
+
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
 		cur := lp.chargeCurrents[0]
 		return math.Min(cur+2.0, lp.chargeCurrent)
-	}
-
-	if lp.GetStatus() != api.StatusC {
-		return 0
 	}
 
 	return lp.chargeCurrent
@@ -898,8 +898,12 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	}
 
 	// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
-	if _, ok := lp.charger.(api.ChargePhases); !ok && phases < lp.activePhases {
-		lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
+	if phases < lp.activePhases {
+		if _, ok := lp.charger.(api.ChargePhases); ok {
+			lp.setPhases(3)
+		} else {
+			lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
+		}
 	}
 
 	// scale down phases
