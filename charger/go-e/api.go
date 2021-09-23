@@ -42,6 +42,8 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 		uri:    uri,
 	}
 
+	api.UpgradeV2()
+
 	return api
 }
 
@@ -49,10 +51,10 @@ func (c *LocalAPI) UpgradeV2() bool {
 	c.v2 = true // use v2 response struct
 	_, err := c.Response("api/status?filter=alw")
 
-	if err != nil {
-		c.v2 = false
-	} else {
+	if err == nil {
 		c.uri = c.uri + "/api"
+	} else {
+		c.v2 = false
 	}
 
 	return err == nil

@@ -58,9 +58,7 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
 	} else {
-		local := goe.NewLocal(log, uri)
-		local.IsV2()
-		c.api = local
+		c.api = goe.NewLocal(log, uri)
 	}
 
 	if c.v2 {
