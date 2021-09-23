@@ -115,15 +115,13 @@ func (c *GoE) Enable(enable bool) error {
 		b += 1
 	}
 
-	_, err := c.api.Update(fmt.Sprintf("%s=%d", param, b))
-	return err
+	return c.api.Update(fmt.Sprintf("%s=%d", param, b))
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
 	param := map[bool]string{false: "amx", true: "amp"}[c.api.IsV2()]
-	_, err := c.api.Update(fmt.Sprintf("%s=%d", param, current))
-	return err
+	return c.api.Update(fmt.Sprintf("%s=%d", param, current))
 }
 
 var _ api.Meter = (*GoE)(nil)
@@ -193,7 +191,5 @@ func (c *GoE) phases1p3p(phases int) error {
 		phases = 2
 	}
 
-	_, err := c.api.Update(fmt.Sprintf("psm=%d", phases))
-
-	return err
+	return c.api.Update(fmt.Sprintf("psm=%d", phases))
 }

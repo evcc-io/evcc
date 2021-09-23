@@ -45,7 +45,7 @@ func TestLocalV1(t *testing.T) {
 	}
 
 	h.expect("/mqtt?payload=foo=bar")
-	if _, err := local.Update("foo=bar"); err != nil {
+	if err := local.Update("foo=bar"); err != nil {
 		t.Error(err)
 	}
 }
@@ -62,7 +62,7 @@ func TestLocalV2(t *testing.T) {
 	}
 
 	h.expect("/api/set?foo=bar")
-	if _, err := local.Update("foo=bar"); err != nil {
+	if err := local.Update("foo=bar"); err != nil {
 		t.Error(err)
 	}
 }

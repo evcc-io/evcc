@@ -22,10 +22,12 @@ type Response interface {
 	Identify() string
 }
 
+type UpdateResponse map[string]interface{}
+
 type API interface {
 	IsV2() bool
 	Status() (Response, error)
-	Update(payload string) (Response, error)
+	Update(payload string) error
 }
 
 type LocalAPI struct {
@@ -33,6 +35,8 @@ type LocalAPI struct {
 	uri string
 	v2  bool
 }
+
+var _ API = (*LocalAPI)(nil)
 
 func NewLocal(log *util.Logger, uri string) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
@@ -51,7 +55,9 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 // upgradeV2 will switch to use the v2 api and revert if not available
 func (c *LocalAPI) upgradeV2() {
 	c.v2 = true // use v2 response struct
-	_, err := c.Response("api/status?filter=alw")
+
+	res := new(StatusResponse2)
+	err := c.response("api/status?filter=alw", &res)
 
 	if err == nil {
 		c.uri = c.uri + "/api"
@@ -64,37 +70,36 @@ func (c *LocalAPI) IsV2() bool {
 	return c.v2
 }
 
-// Response returns a v1/v2 api response
-func (c *LocalAPI) Response(partial string) (Response, error) {
-	var status Response
-	if c.v2 {
-		status = &StatusResponse2{}
-	} else {
-		status = &StatusResponse{}
-	}
-
+// response returns a v1/v2 api response
+func (c *LocalAPI) response(partial string, res interface{}) error {
 	url := fmt.Sprintf("%s/%s", c.uri, partial)
-	err := c.GetJSON(url, &status)
-
-	return status, err
+	return c.GetJSON(url, &res)
 }
 
 // Status reads a v1/v2 api response
 func (c *LocalAPI) Status() (Response, error) {
 	if c.v2 {
-		return c.Response("status?filter=alw,car,eto,nrg,wh,trx,cards")
+		res := new(StatusResponse2)
+		err := c.response("status?filter=alw,car,eto,nrg,wh,trx,cards", &res)
+		return res, err
 	}
 
-	return c.Response("status")
+	res := new(StatusResponse)
+	err := c.response("status", &res)
+	return res, err
 }
 
 // Update executes a v1/v2 api update and returns the response
-func (c *LocalAPI) Update(payload string) (Response, error) {
+func (c *LocalAPI) Update(payload string) error {
+	res := new(UpdateResponse)
+
 	if c.v2 {
-		return c.Response(fmt.Sprintf("set?%s", payload))
+		err := c.response(fmt.Sprintf("set?%s", payload), &res)
+		return err
 	}
 
-	return c.Response(fmt.Sprintf("mqtt?payload=%s", payload))
+	err := c.response(fmt.Sprintf("mqtt?payload=%s", payload), &res)
+	return err
 }
 
 type cloud struct {
@@ -104,6 +109,8 @@ type cloud struct {
 	updated time.Time
 	status  Response
 }
+
+var _ API = (*cloud)(nil)
 
 func NewCloud(log *util.Logger, token string, cache time.Duration) API {
 	return &cloud{
@@ -117,7 +124,7 @@ func (c *cloud) IsV2() bool {
 	return false
 }
 
-func (c *cloud) Response(function, payload string) (Response, error) {
+func (c *cloud) response(function, payload string) (*StatusResponse, error) {
 	var status CloudResponse
 
 	url := fmt.Sprintf("%s/%s?token=%s", CloudURI, function, c.token)
@@ -135,7 +142,7 @@ func (c *cloud) Response(function, payload string) (Response, error) {
 
 func (c *cloud) Status() (status Response, err error) {
 	if time.Since(c.updated) >= c.cache {
-		status, err = c.Response("api_status", "")
+		status, err = c.response("api_status", "")
 		if err == nil {
 			c.updated = time.Now()
 			c.status = status
@@ -145,7 +152,8 @@ func (c *cloud) Status() (status Response, err error) {
 	return c.status, err
 }
 
-func (c *cloud) Update(payload string) (Response, error) {
+func (c *cloud) Update(payload string) error {
 	c.updated = time.Time{}
-	return c.Response("api", payload)
+	_, err := c.response("api", payload)
+	return err
 }
