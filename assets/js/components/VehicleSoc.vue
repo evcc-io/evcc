@@ -243,6 +243,7 @@ export default {
 	border: none;
 	opacity: 1;
 	transition: opacity 0.2s ease 1s;
+	box-shadow: none;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
