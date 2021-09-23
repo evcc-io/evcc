@@ -51,11 +51,11 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 }
 
 func (c *LocalAPI) IsV2() bool {
-	_, err := c.Response("/api/status?filter=alw", "")
+	_, err := c.Response("api/status?filter=alw")
 	return err == nil
 }
 
-func (c *LocalAPI) Response(function, payload string) (Response, error) {
+func (c *LocalAPI) Response(partial string) (Response, error) {
 	var status Response
 	if c.v2 {
 		status = &StatusResponse2{}
@@ -63,33 +63,26 @@ func (c *LocalAPI) Response(function, payload string) (Response, error) {
 		status = &StatusResponse{}
 	}
 
-	url := fmt.Sprintf("%s/%s", c.uri, function)
-	if payload != "" {
-		if c.v2 {
-			url += "set?" + payload
-		} else {
-			url += "?payload=" + payload
-		}
-	}
-
+	url := fmt.Sprintf("%s/%s", c.uri, partial)
 	err := c.GetJSON(url, &status)
+
 	return status, err
 }
 
 func (c *LocalAPI) Status() (Response, error) {
 	if c.v2 {
-		return c.Response("status?filter=alw,car,eto,wh,nrg,trx,cards", "")
+		return c.Response("status?filter=alw,car,eto,nrg,wh,trx,cards")
 	}
 
-	return c.Response("status", "")
+	return c.Response("status")
 }
 
 func (c *LocalAPI) Update(payload string) (Response, error) {
 	if c.v2 {
-		return c.Response("status", payload)
+		return c.Response(fmt.Sprintf("set?%s", payload))
 	}
 
-	return c.Response("mqtt", payload)
+	return c.Response(fmt.Sprintf("mqtt?payload=%s", payload))
 }
 
 type cloud struct {
