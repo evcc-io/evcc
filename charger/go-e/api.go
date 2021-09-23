@@ -42,12 +42,13 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 		uri:    uri,
 	}
 
-	api.UpgradeV2()
+	api.upgradeV2()
 
 	return api
 }
 
-func (c *LocalAPI) UpgradeV2() bool {
+// upgradeV2 will switch to use the v2 api and revert if not available
+func (c *LocalAPI) upgradeV2() bool {
 	c.v2 = true // use v2 response struct
 	_, err := c.Response("api/status?filter=alw")
 
@@ -60,6 +61,7 @@ func (c *LocalAPI) UpgradeV2() bool {
 	return err == nil
 }
 
+// Response returns a v1/v2 api response
 func (c *LocalAPI) Response(partial string) (Response, error) {
 	var status Response
 	if c.v2 {
@@ -74,6 +76,7 @@ func (c *LocalAPI) Response(partial string) (Response, error) {
 	return status, err
 }
 
+// Status reads a v1/v2 api response
 func (c *LocalAPI) Status() (Response, error) {
 	if c.v2 {
 		return c.Response("status?filter=alw,car,eto,nrg,wh,trx,cards")
@@ -82,6 +85,7 @@ func (c *LocalAPI) Status() (Response, error) {
 	return c.Response("status")
 }
 
+// Update executes a v1/v2 api update and returns the response
 func (c *LocalAPI) Update(payload string) (Response, error) {
 	if c.v2 {
 		return c.Response(fmt.Sprintf("set?%s", payload))
