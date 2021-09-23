@@ -48,7 +48,7 @@ func NewLocal(log *util.Logger, uri string) *LocalAPI {
 }
 
 // upgradeV2 will switch to use the v2 api and revert if not available
-func (c *LocalAPI) upgradeV2() bool {
+func (c *LocalAPI) upgradeV2() {
 	c.v2 = true // use v2 response struct
 	_, err := c.Response("api/status?filter=alw")
 
@@ -57,8 +57,6 @@ func (c *LocalAPI) upgradeV2() bool {
 	} else {
 		c.v2 = false
 	}
-
-	return err == nil
 }
 
 // Response returns a v1/v2 api response
