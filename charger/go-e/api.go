@@ -23,6 +23,7 @@ type Response interface {
 }
 
 type API interface {
+	IsV2() bool
 	Status() (Response, error)
 	Update(payload string) (Response, error)
 }
@@ -57,6 +58,10 @@ func (c *LocalAPI) upgradeV2() {
 	} else {
 		c.v2 = false
 	}
+}
+
+func (c *LocalAPI) IsV2() bool {
+	return c.v2
 }
 
 // Response returns a v1/v2 api response
@@ -106,6 +111,10 @@ func NewCloud(log *util.Logger, token string, cache time.Duration) API {
 		token:  token,
 		cache:  cache,
 	}
+}
+
+func (c *cloud) IsV2() bool {
+	return false
 }
 
 func (c *cloud) Response(function, payload string) (Response, error) {

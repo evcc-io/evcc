@@ -18,7 +18,6 @@ import (
 // GoE charger implementation
 type GoE struct {
 	api goe.API
-	v2  bool
 }
 
 func init() {
@@ -61,7 +60,7 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 		c.api = goe.NewLocal(log, uri)
 	}
 
-	if c.v2 {
+	if c.api.IsV2() {
 		var phases func(int) error
 		if sponsor.IsAuthorized() {
 			phases = c.phases1p3p
@@ -111,8 +110,8 @@ func (c *GoE) Enable(enable bool) error {
 		b = 1
 	}
 
-	param := map[bool]string{false: "alw", true: "frc"}[c.v2]
-	if c.v2 {
+	param := map[bool]string{false: "alw", true: "frc"}[c.api.IsV2()]
+	if c.api.IsV2() {
 		b += 1
 	}
 
@@ -122,7 +121,7 @@ func (c *GoE) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	param := map[bool]string{false: "amx", true: "amp"}[c.v2]
+	param := map[bool]string{false: "amx", true: "amp"}[c.api.IsV2()]
 	_, err := c.api.Update(fmt.Sprintf("%s=%d", param, current))
 	return err
 }
