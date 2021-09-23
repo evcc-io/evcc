@@ -192,12 +192,11 @@ func (c *GoE) totalEnergy() (float64, error) {
 
 // phases1p3p implements the api.ChargePhases interface - v2 only
 func (c *GoE) phases1p3p(phases int) error {
-	p := phases
 	if phases == 3 {
-		p = 2
+		phases = 2
 	}
 
-	_, err := c.api.Update(fmt.Sprintf("psm=%d", p))
+	_, err := c.api.Update(fmt.Sprintf("psm=%d", phases))
 
 	return err
 }
