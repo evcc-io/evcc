@@ -882,7 +882,16 @@ func TestScalePhases(t *testing.T) {
 		{"3/3->1, timer elapsed", 3, 3, 1 * Voltage * maxA, 1, true, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
-		{"3/3->1, switch executed", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
+
+		// error states from 1p/3p misconfig
+		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 3, false, nil},
+		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
+			lp.phaseTimer = time.Time{}
+		}},
+		{"1/3->1, timer running, correct phase setting", 1, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
+			lp.phaseTimer = lp.clock.Now()
+		}},
+		{"1/3->1, switch executed", 1, 3, 1 * Voltage * maxA, 1, true, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 	}
