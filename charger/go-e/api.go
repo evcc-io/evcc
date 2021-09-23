@@ -66,6 +66,7 @@ func (c *LocalAPI) upgradeV2() {
 	}
 }
 
+// IsV2 returns v2 api usage
 func (c *LocalAPI) IsV2() bool {
 	return c.v2
 }
