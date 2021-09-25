@@ -37,7 +37,7 @@ func (g *StatusResponse) Status() int {
 }
 
 func (g *StatusResponse) Enabled() bool {
-	return g.Alw == 0
+	return g.Alw == 1
 }
 
 func (g *StatusResponse) CurrentPower() float64 {
