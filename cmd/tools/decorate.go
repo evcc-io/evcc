@@ -92,26 +92,17 @@ func generate(out io.Writer, packageName, functionName string, baseTypes []baseT
 		combos = append(combos, dt.typ)
 	}
 
-	// returnType := *ret
-	// if returnType == "" {
-	// 	returnType = baseTypes[0].Type
-	// }
-
-	fmt.Printf("%d %+v\n", len(baseTypes), baseTypes)
-
 	vars := struct {
 		API               string
 		Package, Function string
 		BaseTypes         []baseType
-		// ReturnType        string
-		Types        map[string]typeStruct
-		Combinations [][]string
+		Types             map[string]typeStruct
+		Combinations      [][]string
 	}{
-		API:       "github.com/evcc-io/evcc/api",
-		Package:   packageName,
-		Function:  functionName,
-		BaseTypes: baseTypes,
-		// ReturnType:   returnType,
+		API:          "github.com/evcc-io/evcc/api",
+		Package:      packageName,
+		Function:     functionName,
+		BaseTypes:    baseTypes,
 		Types:        types,
 		Combinations: combinations.All(combos),
 	}
@@ -124,8 +115,7 @@ var (
 	pkg      = pflag.StringP("package", "p", "", "package name")
 	function = pflag.StringP("function", "f", "decorate", "function name")
 	base     = pflag.StringP("base", "b", "", "base type")
-	// ret      = pflag.StringP("return", "r", "", "return type")
-	types = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
+	types    = pflag.StringArrayP("type", "t", nil, "comma-separated list of type definitions")
 )
 
 // Usage prints flags usage

@@ -1,0 +1,16 @@
+package main
+
+import (
+	"github.com/evcc-io/evcc/core/storage"
+	"github.com/evcc-io/evcc/util"
+)
+
+func main() {
+	util.LogLevel("trace", nil)
+
+	if err := storage.Open(); err != nil {
+		panic(err)
+	}
+
+	storage.Test()
+}

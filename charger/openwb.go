@@ -24,7 +24,7 @@ type OpenWB struct {
 	phasesS       func(int64) error
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {

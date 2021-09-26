@@ -6,21 +6,21 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateSMA(sMA *SMA, battery func() (float64, error)) api.Meter {
+func decorateSMA(meter api.Meter, battery func() (float64, error)) api.Meter {
 	switch {
 	case battery == nil:
 		return &struct {
-			*SMA
+			api.Meter
 		}{
-			SMA: sMA,
+			Meter: meter,
 		}
 
 	case battery != nil:
 		return &struct {
-			*SMA
+			api.Meter
 			api.Battery
 		}{
-			SMA: sMA,
+			Meter: meter,
 			Battery: &decorateSMABatteryImpl{
 				battery: battery,
 			},

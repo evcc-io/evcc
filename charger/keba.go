@@ -37,7 +37,7 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {

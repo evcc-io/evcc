@@ -6,21 +6,21 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWarp(warp *Warp, meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
+func decorateWarp(charger api.Charger, meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
 	switch {
 	case meter == nil && meterEnergy == nil:
 		return &struct {
-			*Warp
+			api.Charger
 		}{
-			Warp: warp,
+			Charger: charger,
 		}
 
 	case meter != nil && meterEnergy == nil:
 		return &struct {
-			*Warp
+			api.Charger
 			api.Meter
 		}{
-			Warp: warp,
+			Charger: charger,
 			Meter: &decorateWarpMeterImpl{
 				meter: meter,
 			},
@@ -28,10 +28,10 @@ func decorateWarp(warp *Warp, meter func() (float64, error), meterEnergy func() 
 
 	case meter == nil && meterEnergy != nil:
 		return &struct {
-			*Warp
+			api.Charger
 			api.MeterEnergy
 		}{
-			Warp: warp,
+			Charger: charger,
 			MeterEnergy: &decorateWarpMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -39,11 +39,11 @@ func decorateWarp(warp *Warp, meter func() (float64, error), meterEnergy func() 
 
 	case meter != nil && meterEnergy != nil:
 		return &struct {
-			*Warp
+			api.Charger
 			api.Meter
 			api.MeterEnergy
 		}{
-			Warp: warp,
+			Charger: charger,
 			Meter: &decorateWarpMeterImpl{
 				meter: meter,
 			},
