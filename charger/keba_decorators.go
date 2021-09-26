@@ -6,21 +6,33 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), chargeRater func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateKeba(charger api.Charger, chargerEx api.ChargerEx, identifier api.Identifier, diagnosis api.Diagnosis, meter func() (float64, error), meterEnergy func() (float64, error), chargeRater func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case chargeRater == nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 		}
 
 	case chargeRater == nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.Meter
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -29,9 +41,15 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			MeterEnergy: &decorateKebaMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -40,10 +58,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -55,9 +79,15 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -66,10 +96,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.Meter
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -81,10 +117,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -96,11 +138,17 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -115,9 +163,15 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			MeterCurrent: &decorateKebaMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -126,10 +180,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -141,10 +201,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			MeterCurrent: &decorateKebaMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -156,11 +222,17 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater == nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			Meter: &decorateKebaMeterImpl{
 				meter: meter,
 			},
@@ -175,10 +247,16 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -190,11 +268,17 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -209,11 +293,17 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},
@@ -228,12 +318,18 @@ func decorateKeba(charger api.Charger, meter func() (float64, error), meterEnerg
 	case chargeRater != nil && meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargerEx
+			api.Identifier
+			api.Diagnosis
 			api.ChargeRater
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:    charger,
+			ChargerEx:  chargerEx,
+			Identifier: identifier,
+			Diagnosis:  diagnosis,
 			ChargeRater: &decorateKebaChargeRaterImpl{
 				chargeRater: chargeRater,
 			},

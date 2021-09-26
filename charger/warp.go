@@ -20,6 +20,8 @@ const (
 	warpTimeout   = 30 * time.Second
 )
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+
 // NewWarpFromConfig creates a new configurable charger
 func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -63,8 +65,6 @@ type Warp struct {
 	maxcurrentS func(int64) error
 	enabled     bool // cache
 }
-
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {

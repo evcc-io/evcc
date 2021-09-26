@@ -37,7 +37,7 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b api.Charger,api.ChargerEx,api.Identifier,api.Diagnosis -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -54,21 +54,21 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	k, err := NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	wb, err := NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
 
-	energy, err := k.totalEnergy()
+	energy, err := wb.totalEnergy()
 	if err != nil {
 		return nil, err
 	}
 
 	if energy > 0 {
-		return decorateKeba(k, k.currentPower, k.totalEnergy, k.chargedEnergy, k.currents), nil
+		return decorateKeba(wb, wb, wb, wb, wb.currentPower, wb.totalEnergy, wb.chargedEnergy, wb.currents), nil
 	}
 
-	return k, err
+	return wb, err
 }
 
 // NewKeba creates a new charger

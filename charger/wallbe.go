@@ -46,7 +46,7 @@ func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b api.Charger,api.ChargeTimer,api.Diagnosis -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -98,7 +98,7 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		wb.encoding = encodingSDM
 	}
 
-	return decorateWallbe(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
+	return decorateWallbe(wb, wb, wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
 }
 
 // NewWallbe creates a Wallbe charger

@@ -61,7 +61,7 @@ func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b api.Charger,api.ChargeTimer -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -128,7 +128,7 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		identify = evse.identify
 	}
 
-	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
+	return decorateEVSE(evse, evse, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger

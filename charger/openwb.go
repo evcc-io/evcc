@@ -24,7 +24,7 @@ type OpenWB struct {
 	phasesS       func(int64) error
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b api.Charger,api.Meter,api.MeterEnergy,api.MeterCurrent -t "api.ChargePhases,Phases1p3p,func(int) (error)"
 
 // NewOpenWBFromConfig creates a new configurable charger
 func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -136,7 +136,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		phases = c.phases
 	}
 
-	return decorateOpenWB(c, phases), nil
+	return decorateOpenWB(c, c, c, c, phases), nil
 }
 
 var _ api.Meter = (*OpenWB)(nil)

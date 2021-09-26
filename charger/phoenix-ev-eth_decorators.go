@@ -6,21 +6,25 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePhoenixEVEth(charger api.Charger, chargeTimer api.ChargeTimer, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
 	case meter == nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 		}
 
 	case meter != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.Meter
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
 			},
@@ -29,9 +33,11 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			MeterEnergy: &decoratePhoenixEVEthMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
@@ -40,10 +46,12 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.Meter
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
 			},
@@ -55,9 +63,11 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter == nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			MeterCurrent: &decoratePhoenixEVEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -66,10 +76,12 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter != nil && meterCurrent != nil && meterEnergy == nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.Meter
 			api.MeterCurrent
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
 			},
@@ -81,10 +93,12 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter == nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			MeterCurrent: &decoratePhoenixEVEthMeterCurrentImpl{
 				meterCurrent: meterCurrent,
 			},
@@ -96,11 +110,13 @@ func decoratePhoenixEVEth(charger api.Charger, meter func() (float64, error), me
 	case meter != nil && meterCurrent != nil && meterEnergy != nil:
 		return &struct {
 			api.Charger
+			api.ChargeTimer
 			api.Meter
 			api.MeterCurrent
 			api.MeterEnergy
 		}{
-			Charger: charger,
+			Charger:     charger,
+			ChargeTimer: chargeTimer,
 			Meter: &decoratePhoenixEVEthMeterImpl{
 				meter: meter,
 			},
