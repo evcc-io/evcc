@@ -3,89 +3,28 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	goe "github.com/evcc-io/evcc/charger/go-e"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 // https://go-e.co/app/api.pdf
-
-const goeCloud = "https://api.go-e.co"
-
-// goeCloudResponse is the cloud API response
-type goeCloudResponse struct {
-	Success *bool             `json:"success"` // only valid for cloud payload commands
-	Age     int               `json:"age"`
-	Error   string            `json:"error"` // only valid for cloud payload commands
-	Data    goeStatusResponse `json:"data"`
-}
-
-// goeStatusResponse is the API response if status not OK
-type goeStatusResponse struct {
-	Fwv string `json:"fwv"`        // firmware version - indicates local response
-	Car int    `json:"car,string"` // car status
-	Alw int    `json:"alw,string"` // allow charging
-	Amp int    `json:"amp,string"` // current [A]
-	Err int    `json:"err,string"` // error
-	Stp int    `json:"stp,string"` // stop state
-	Tmp int    `json:"tmp,string"` // temperature [°C]
-	Dws int    `json:"dws,string"` // energy [Ws]
-	Nrg []int  `json:"nrg"`        // voltage, current, power
-	Uby int    `json:"uby,string"` // unlocked_by
-	Rna string `json:"rna"`        // RFID 1
-	Rnm string `json:"rnm"`        // RFID 2
-	Rne string `json:"rne"`        // RFID 3
-	Rn4 string `json:"rn4"`        // RFID 4
-	Rn5 string `json:"rn5"`        // RFID 5
-	Rn6 string `json:"rn6"`        // RFID 6
-	Rn7 string `json:"rn7"`        // RFID 7
-	Rn8 string `json:"rn8"`        // RFID 8
-	Rn9 string `json:"rn9"`        // RFID 9
-	Rn1 string `json:"rn1"`        // RFID 10
-}
-
-func (g *goeStatusResponse) RFIDName() string {
-	switch g.Uby {
-	case 1:
-		return g.Rna
-	case 2:
-		return g.Rnm
-	case 3:
-		return g.Rne
-	case 4:
-		return g.Rn4
-	case 5:
-		return g.Rn5
-	case 6:
-		return g.Rn6
-	case 7:
-		return g.Rn7
-	case 8:
-		return g.Rn8
-	case 9:
-		return g.Rn9
-	case 10:
-		return g.Rn1
-	default:
-		return ""
-	}
-}
+// https://github.com/goecharger/go-eCharger-API-v1/
+// https://github.com/goecharger/go-eCharger-API-v2/
 
 // GoE charger implementation
 type GoE struct {
-	*request.Helper
-	uri, token string
-	cache      time.Duration
-	updated    time.Time
-	status     goeStatusResponse
+	api goe.API
 }
 
 func init() {
 	registry.Add("go-e", NewGoEFromConfig)
 }
+
+// go:generate go run ../cmd/tools/decorate.go -f decorateGoE -b *GoE -r api.Charger -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargePhases,Phases1p3p,func(int) (error)"
 
 // NewGoEFromConfig creates a go-e charger from generic config
 func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -94,99 +33,55 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 		URI   string
 		Cache time.Duration
 	}{}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	if cc.URI != "" && cc.Token != "" {
-		return nil, errors.New("go-e config: should only have one of uri/token")
+		return nil, errors.New("should only have one of uri/token")
 	}
 	if cc.URI == "" && cc.Token == "" {
-		return nil, errors.New("go-e config: must have one of uri/token")
+		return nil, errors.New("must have one of uri/token")
 	}
 
 	return NewGoE(cc.URI, cc.Token, cc.Cache)
 }
 
 // NewGoE creates GoE charger
-func NewGoE(uri, token string, cache time.Duration) (*GoE, error) {
-	c := &GoE{
-		Helper: request.NewHelper(util.NewLogger("go-e")),
-		uri:    strings.TrimRight(uri, "/"),
-		token:  strings.TrimSpace(token),
+func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
+	c := &GoE{}
+
+	log := util.NewLogger("go-e")
+
+	if token != "" {
+		c.api = goe.NewCloud(log, token, cache)
+	} else {
+		c.api = goe.NewLocal(log, uri)
+	}
+
+	if c.api.IsV2() {
+		var phases func(int) error
+		if sponsor.IsAuthorized() {
+			phases = c.phases1p3p
+		} else {
+			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
+		}
+
+		return decorateGoE(c, c.totalEnergy, phases), nil
 	}
 
 	return c, nil
 }
 
-func (c *GoE) localResponse(function, payload string) (goeStatusResponse, error) {
-	var status goeStatusResponse
-
-	url := fmt.Sprintf("%s/%s", c.uri, function)
-	if payload != "" {
-		url += "?payload=" + payload
-	}
-
-	err := c.GetJSON(url, &status)
-	return status, err
-}
-
-func (c *GoE) cloudResponse(function, payload string) (goeStatusResponse, error) {
-	var status goeCloudResponse
-
-	url := fmt.Sprintf("%s/%s?token=%s", goeCloud, function, c.token)
-	if payload != "" {
-		url += "&payload=" + payload
-	}
-
-	err := c.GetJSON(url, &status)
-	if err == nil && status.Success != nil && !*status.Success {
-		err = errors.New(status.Error)
-	}
-
-	return status.Data, err
-}
-
-func (c *GoE) apiStatus() (status goeStatusResponse, err error) {
-	if c.token == "" {
-		return c.localResponse("status", "")
-	}
-
-	if time.Since(c.updated) >= c.cache {
-		status, err = c.cloudResponse("api_status", "")
-		if err == nil {
-			c.updated = time.Now()
-			c.status = status
-		}
-	}
-
-	return c.status, err
-}
-
-// apiUpdate invokes either cloud or local api
-// goeStatusResponse is only valid for local api. Use Fwv if valid.
-func (c *GoE) apiUpdate(payload string) (goeStatusResponse, error) {
-	if c.token == "" {
-		return c.localResponse("mqtt", payload)
-	}
-
-	status, err := c.cloudResponse("api", payload)
-	if err == nil {
-		// cloud api sends partial response, don't store it as status
-		c.updated = time.Time{}
-	}
-
-	return status, err
-}
-
 // Status implements the api.Charger interface
 func (c *GoE) Status() (api.ChargeStatus, error) {
-	status, err := c.apiStatus()
+	resp, err := c.api.Status()
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	switch status.Car {
+	switch car := resp.Status(); car {
 	case 1:
 		return api.StatusA, nil
 	case 2:
@@ -194,25 +89,18 @@ func (c *GoE) Status() (api.ChargeStatus, error) {
 	case 3, 4:
 		return api.StatusB, nil
 	default:
-		return api.StatusNone, fmt.Errorf("car unknown result: %d", status.Car)
+		return api.StatusNone, fmt.Errorf("car unknown result: %d", car)
 	}
 }
 
 // Enabled implements the api.Charger interface
 func (c *GoE) Enabled() (bool, error) {
-	status, err := c.apiStatus()
+	resp, err := c.api.Status()
 	if err != nil {
 		return false, err
 	}
 
-	switch status.Alw {
-	case 0:
-		return false, nil
-	case 1:
-		return true, nil
-	default:
-		return false, fmt.Errorf("alw unknown result: %d", status.Alw)
-	}
+	return resp.Enabled(), nil
 }
 
 // Enable implements the api.Charger interface
@@ -221,52 +109,87 @@ func (c *GoE) Enable(enable bool) error {
 	if enable {
 		b = 1
 	}
-	_, err := c.apiUpdate(fmt.Sprintf("alw=%d", b))
-	return err
+
+	param := map[bool]string{false: "alw", true: "frc"}[c.api.IsV2()]
+	if c.api.IsV2() {
+		b += 1
+	}
+
+	return c.api.Update(fmt.Sprintf("%s=%d", param, b))
 }
 
 // MaxCurrent implements the api.Charger interface
 func (c *GoE) MaxCurrent(current int64) error {
-	_, err := c.apiUpdate(fmt.Sprintf("amx=%d", current))
-	return err
+	param := map[bool]string{false: "amx", true: "amp"}[c.api.IsV2()]
+	return c.api.Update(fmt.Sprintf("%s=%d", param, current))
 }
 
 var _ api.Meter = (*GoE)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *GoE) CurrentPower() (float64, error) {
-	status, err := c.apiStatus()
-	var power float64
-	if len(status.Nrg) == 16 {
-		power = float64(status.Nrg[11]) * 10
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, err
 	}
-	return power, err
+
+	return resp.CurrentPower(), err
 }
 
 var _ api.ChargeRater = (*GoE)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *GoE) ChargedEnergy() (float64, error) {
-	status, err := c.apiStatus()
-	energy := float64(status.Dws) / 3.6e5 // Deka-Watt-Seconds to kWh (100.000 == 0,277kWh)
-	return energy, err
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.ChargedEnergy(), err
 }
 
 var _ api.MeterCurrent = (*GoE)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *GoE) Currents() (float64, float64, float64, error) {
-	status, err := c.apiStatus()
-	if len(status.Nrg) == 16 {
-		return float64(status.Nrg[4]) / 10, float64(status.Nrg[5]) / 10, float64(status.Nrg[6]) / 10, nil
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, 0, 0, err
 	}
-	return 0, 0, 0, err
+
+	i1, i2, i3 := resp.Currents()
+
+	return i1, i2, i3, err
 }
 
 var _ api.Identifier = (*GoE)(nil)
 
 // Identify implements the api.Identifier interface
 func (c *GoE) Identify() (string, error) {
-	status, err := c.apiStatus()
-	return status.RFIDName(), err
+	resp, err := c.api.Status()
+	return resp.Identify(), err
+}
+
+// totalEnergy implements the api.MeterEnergy interface - v2 only
+func (c *GoE) totalEnergy() (float64, error) {
+	resp, err := c.api.Status()
+	if err != nil {
+		return 0, err
+	}
+
+	var val float64
+	if res, ok := resp.(*goe.StatusResponse2); ok {
+		val = res.TotalEnergy()
+	}
+
+	return val, err
+}
+
+// phases1p3p implements the api.ChargePhases interface - v2 only
+func (c *GoE) phases1p3p(phases int) error {
+	if phases == 3 {
+		phases = 2
+	}
+
+	return c.api.Update(fmt.Sprintf("psm=%d", phases))
 }
