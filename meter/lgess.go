@@ -49,7 +49,7 @@ func init() {
 	registry.Add("lgess", NewLgEssFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateLgEss -b *LgEss -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewLgEssFromConfig creates an LgEss Meter from generic config
 func NewLgEssFromConfig(other map[string]interface{}) (api.Meter, error) {
