@@ -12,21 +12,12 @@ func TestWallbeLegacy(t *testing.T) {
 		t.Error(err)
 	}
 
-	wb, ok := wbc.(*Wallbe)
-	if !ok {
-		t.Error("unexpected type")
+	if _, ok := wbc.(api.ChargeTimer); !ok {
+		t.Error("missing ChargeTimer api")
 	}
 
-	if wb.factor != 1 {
-		t.Errorf("invalid factor: %d", wb.factor)
-	}
-
-	if _, ok = wbc.(api.ChargeTimer); !ok {
-		t.Error("missing charge timer api")
-	}
-
-	if _, ok = wbc.(api.Diagnosis); !ok {
-		t.Error("missing diagnosis api")
+	if _, ok := wbc.(api.Diagnosis); !ok {
+		t.Error("missing Diagnosis api")
 	}
 }
 
