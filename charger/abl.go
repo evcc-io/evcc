@@ -44,6 +44,7 @@ const (
 )
 
 var ablStatus = map[byte]string{
+	0xA1: "Waiting for EV",
 	0xB1: "EV is asking for charging",
 	0xB2: "EV has the permission to charge",
 	0xC2: "EV is charged",
