@@ -4,8 +4,8 @@ import "time"
 
 type Observation struct {
 	Mid       string
-	DataType  int
-	ID        int
+	DataType  DataType
+	ID        ObservationID
 	Timestamp time.Time
 	Value     string
 }

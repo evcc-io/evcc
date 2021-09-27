@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/avast/retry-go/v3"
@@ -40,12 +41,15 @@ type Easee struct {
 	*request.Helper
 	charger       string
 	site, circuit int
-	status        easee.ChargerStatus
-	updated       time.Time
+	chargeStatus  api.ChargeStatus
 	cache         time.Duration
 	log           *util.Logger
 	phases        int
-	current       float64
+	enabled       bool
+	current, currentPower, sessionEnergy,
+	circuitTotalPhaseConductorCurrentL1,
+	circuitTotalPhaseConductorCurrentL2,
+	circuitTotalPhaseConductorCurrentL3 float64
 }
 
 func init() {
@@ -60,9 +64,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Charger  string
 		Circuit  int
 		Cache    time.Duration
-	}{
-		Cache: 10 * time.Second,
-	}
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -86,6 +88,10 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		cache:   cache,
 		log:     log,
 		phases:  3,
+	}
+
+	if cache > 0 {
+		c.log.ERROR.Println("easee cache property is deprecated, please remove from you configuration")
 	}
 
 	ts, err := easee.TokenSource(log, user, password)
@@ -190,15 +196,60 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 func (c *Easee) observe(typ string, i json.RawMessage) {
 	var res easee.Observation
 	if err := json.Unmarshal(i, &res); err == nil {
+		var floatValue float64
+		var intValue int
+		switch res.DataType {
+		case easee.Double:
+			floatValue, err = strconv.ParseFloat(res.Value, 64)
+			if err != nil {
+				c.log.ERROR.Printf("float conversion failed [%s]", res.Value)
+				return
+			}
+		case easee.Integer:
+			intValue, err = strconv.Atoi(res.Value)
+			if err != nil {
+				c.log.ERROR.Printf("int conversion failed [%s]", res.Value)
+				return
+			}
+		}
+
+		switch res.ID {
+		case easee.TOTAL_POWER:
+			c.currentPower = 1e3 * floatValue
+		case easee.SESSION_ENERGY:
+			c.sessionEnergy = floatValue
+		case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L1:
+			c.circuitTotalPhaseConductorCurrentL1 = floatValue
+		case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L2:
+			c.circuitTotalPhaseConductorCurrentL2 = floatValue
+		case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L3:
+			c.circuitTotalPhaseConductorCurrentL3 = floatValue
+		case easee.CHARGER_OP_MODE:
+			switch intValue {
+			case easee.ModeDisconnected:
+				c.chargeStatus = api.StatusA
+			case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
+				c.chargeStatus = api.StatusB
+			case easee.ModeCharging:
+				c.chargeStatus = api.StatusC
+			case easee.ModeError:
+				c.chargeStatus = api.StatusF
+			default:
+				fmt.Errorf("unknown opmode: %d", intValue)
+				c.chargeStatus = api.StatusNone
+			}
+			c.enabled = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
+		}
+
 		c.log.TRACE.Printf("%s: %+v", typ, res)
 	} else {
-		c.log.ERROR.Printf("%s: %v", typ, err)
+		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
 	}
 }
 
 // ChargerUpdate implements the signalr receiver
 func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	c.observe("ChargerUpdate", i)
+	//c.observe("ChargerUpdate", i)
 }
 
 // ProductUpdate implements the signalr receiver
@@ -208,7 +259,7 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
-	c.observe("CommandResponse", i)
+	//c.observe("CommandResponse", i)
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
@@ -245,46 +296,24 @@ func (c *Easee) chargerDetails(charger string) (res easee.Site, err error) {
 }
 
 func (c *Easee) state() (easee.ChargerStatus, error) {
-	if time.Since(c.updated) < c.cache {
-		return c.status, nil
-	}
-
+	var result easee.ChargerStatus
 	uri := fmt.Sprintf("%s/chargers/%s/state", easee.API, c.charger)
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
-		if err = c.DoJSON(req, &c.status); err == nil {
-			c.updated = time.Now()
-		}
+		c.DoJSON(req, &result)
 	}
 
-	return c.status, err
+	return result, err
 }
 
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
-	res, err := c.state()
-	if err != nil {
-		return api.StatusNone, err
-	}
-
-	switch res.ChargerOpMode {
-	case easee.ModeDisconnected:
-		return api.StatusA, nil
-	case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
-		return api.StatusB, nil
-	case easee.ModeCharging:
-		return api.StatusC, nil
-	case easee.ModeError:
-		return api.StatusF, nil
-	default:
-		return api.StatusNone, fmt.Errorf("unknown opmode: %d", res.ChargerOpMode)
-	}
+	return c.chargeStatus, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
-	res, err := c.state()
-	return res.ChargerOpMode == easee.ModeCharging || res.ChargerOpMode == easee.ModeReadyToCharge, err
+	return c.enabled, nil
 }
 
 // Enable implements the api.Charger interface
@@ -306,8 +335,6 @@ func (c *Easee) Enable(enable bool) error {
 			resp.Body.Close()
 		}
 
-		c.updated = time.Time{} // clear cache
-
 		return err
 	}
 
@@ -319,7 +346,6 @@ func (c *Easee) Enable(enable bool) error {
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err = c.Post(uri, request.JSONContent, nil)
-	c.updated = time.Time{} // clear cache
 
 	return err
 }
@@ -348,8 +374,6 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
 		resp.Body.Close()
-
-		c.updated = time.Time{} // clear cache
 		c.current = current
 	}
 
@@ -368,25 +392,22 @@ var _ api.Meter = (*Easee)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Easee) CurrentPower() (float64, error) {
-	res, err := c.state()
-	return 1e3 * res.TotalPower, err
+	return c.currentPower, nil
 }
 
 var _ api.ChargeRater = (*Easee)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
-	res, err := c.state()
-	return res.SessionEnergy, err
+	return c.sessionEnergy, nil
 }
 
 var _ api.MeterCurrent = (*Easee)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
-	res, err := c.state()
-	return res.CircuitTotalPhaseConductorCurrentL1,
-		res.CircuitTotalPhaseConductorCurrentL2,
-		res.CircuitTotalPhaseConductorCurrentL3,
-		err
+	return c.circuitTotalPhaseConductorCurrentL1,
+		c.circuitTotalPhaseConductorCurrentL2,
+		c.circuitTotalPhaseConductorCurrentL3,
+		nil
 }
