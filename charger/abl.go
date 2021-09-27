@@ -43,8 +43,6 @@ const (
 	ablAmpsDisabled uint16 = 0x03E8
 )
 
-const ablStatusOutletDisabled = 0xE0
-
 var ablStatus = map[byte]string{
 	0xB1: "EV is asking for charging",
 	0xB2: "EV has the permission to charge",
