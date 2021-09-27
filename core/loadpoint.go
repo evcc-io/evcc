@@ -502,9 +502,9 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		}
 
 		if err == nil {
+			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 			lp.chargeCurrent = chargeCurrent
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 		} else {
 			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
 		}
@@ -525,8 +525,8 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			}
 		}
 
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		if err = lp.charger.Enable(enabled); err == nil {
+			lp.log.DEBUG.Printf("charger %s", status[enabled])
 			lp.enabled = enabled
 			lp.guardUpdated = lp.clock.Now()
 
