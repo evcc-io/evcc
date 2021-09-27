@@ -502,9 +502,9 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		}
 
 		if err == nil {
+			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 			lp.chargeCurrent = chargeCurrent
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 		} else {
 			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
 		}
@@ -525,8 +525,8 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			}
 		}
 
-		lp.log.DEBUG.Printf("charger %s", status[enabled])
 		if err = lp.charger.Enable(enabled); err == nil {
+			lp.log.DEBUG.Printf("charger %s", status[enabled])
 			lp.enabled = enabled
 			lp.guardUpdated = lp.clock.Now()
 
@@ -803,14 +803,14 @@ func (lp *LoadPoint) updateChargerStatus() error {
 
 // effectiveCurrent returns the currently effective charging current
 func (lp *LoadPoint) effectiveCurrent() float64 {
+	if lp.GetStatus() != api.StatusC {
+		return 0
+	}
+
 	// adjust actual current for vehicles like Zoe where it remains below target
 	if lp.chargeCurrents != nil {
 		cur := lp.chargeCurrents[0]
 		return math.Min(cur+2.0, lp.chargeCurrent)
-	}
-
-	if lp.GetStatus() != api.StatusC {
-		return 0
 	}
 
 	return lp.chargeCurrent
@@ -880,15 +880,16 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
 func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
-	var waiting bool
-
+	// correct charger state inconsistency (https://github.com/evcc-io/evcc/issues/1572)
 	phases := lp.GetPhases()
-	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
-	// ignore charger state inconsistency if switchable (https://github.com/evcc-io/evcc/issues/1572)
-	if _, ok := lp.charger.(api.ChargePhases); !ok && phases < lp.activePhases {
-		lp.log.WARN.Printf("charger out of sync: %dp active @ %dp configured", lp.activePhases, phases)
+	if phases < lp.activePhases {
+		phases = 3
+		lp.setPhases(3)
 	}
+
+	var waiting bool
+	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
 	// scale down phases
 	if targetCurrent < minCurrent && phases > 1 && lp.activePhases > 1 {
@@ -953,7 +954,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
-func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float64 {
+func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batteryBuffered bool) float64 {
 	// read only once to simplify testing
 	minCurrent := lp.GetMinCurrent()
 	maxCurrent := lp.GetMaxCurrent()
@@ -976,7 +977,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64) float6
 	}
 
 	// in MinPV mode return at least minCurrent
-	if mode == api.ModeMinPV && targetCurrent < minCurrent {
+	if (mode == api.ModeMinPV || batteryBuffered) && targetCurrent < minCurrent {
 		return minCurrent
 	}
 
@@ -1206,7 +1207,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 }
 
 // Update is the main control function. It reevaluates meters and charger state
-func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
+func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
 	mode := lp.GetMode()
 	lp.publish("mode", mode)
 
@@ -1302,7 +1303,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool) {
 		err = lp.setLimit(targetCurrent, true)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		targetCurrent := lp.pvMaxCurrent(mode, sitePower)
+		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 		lp.log.DEBUG.Printf("pv max charge current: %.3gA", targetCurrent)
 
 		var required bool // false

@@ -113,8 +113,8 @@ github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGX
 github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/udpa/go v0.0.0-20201120205902-5459f2c99403/go.mod h1:WmhPx2Nbnhtbo57+VJT5O0JRkEi1Wbu0z5j0R8u5Hbk=
 github.com/cncf/xds/go v0.0.0-20210312221358-fbca930ec8ed/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
-github.com/containrrr/shoutrrr v0.5.0 h1:befKPRMqSvEsHYgxYJq4nuGmSWYvjbhVvb0nNk5OR5Q=
-github.com/containrrr/shoutrrr v0.5.0/go.mod h1:XSU8tOIZ1JG8m6OuPozfGLpj6Ed+S8ZrRJaEodQhbzw=
+github.com/containrrr/shoutrrr v0.5.1 h1:who87ACg0spQdbImaFMsOSh3g2FWyeN5nmO8tCg3llQ=
+github.com/containrrr/shoutrrr v0.5.1/go.mod h1:XSU8tOIZ1JG8m6OuPozfGLpj6Ed+S8ZrRJaEodQhbzw=
 github.com/coreos/bbolt v1.3.2/go.mod h1:iRUV2dpdMOn7Bo10OQBFzIJO9kkE559Wcmn+qkEiiKk=
 github.com/coreos/etcd v3.3.10+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
 github.com/coreos/etcd v3.3.13+incompatible/go.mod h1:uF7uidLiAD3TWHmW31ZFd/JWoc32PjwdhPthX9715RE=
@@ -157,8 +157,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20201210154907-fd9021fe5dad/go.m
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.mod h1:cXg6YxExXjJnVBQHBLXeUAgxn2UodCpnH306RInaBQk=
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.mod h1:hliV/p42l8fGbc6Y9bQ70uLwIvmJyVE5k4iMKlh8wCQ=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/evcc-io/config v0.0.0-20210821100131-47523461441a h1:0M3bEilYf3Ns9QLzXsFXWRMCySptggaQVMVn/NoLT7E=
-github.com/evcc-io/config v0.0.0-20210821100131-47523461441a/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
+github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16 h1:IY+V/bY7mWlZ0CmAxNai0bCV26yMZyPoe1JyY+QHKbE=
+github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16/go.mod h1:9JePxOisXuzfzlTlThm2eFd0xtIf2l0MSYENv6PnizU=
 github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e h1:trxYqEB+LXMjWMnwf5BOmhupaohYknhc3raXlPC5PT4=
 github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239/go.mod h1:Gdwt2ce0yfBxPvZrHkprdPPTTS3N5rwmLE8T22KBXlw=

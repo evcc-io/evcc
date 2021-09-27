@@ -10,12 +10,12 @@ require (
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2
-	github.com/containrrr/shoutrrr v0.5.0
+	github.com/containrrr/shoutrrr v0.5.1
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/config v0.0.0-20210821100131-47523461441a
+	github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16
 	github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0

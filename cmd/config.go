@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/vehicle"
+	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 type config struct {
@@ -167,7 +168,8 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			return fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
+			// wrap any created errors to prevent fatals
+			v, _ = wrapper.New(v, err)
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
