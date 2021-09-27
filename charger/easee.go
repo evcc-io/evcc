@@ -41,6 +41,7 @@ type Easee struct {
 	*request.Helper
 	charger       string
 	site, circuit int
+	updated       time.Time
 	chargeStatus  api.ChargeStatus
 	cache         time.Duration
 	log           *util.Logger
@@ -235,12 +236,12 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			case easee.ModeError:
 				c.chargeStatus = api.StatusF
 			default:
-				fmt.Errorf("unknown opmode: %d", intValue)
+				c.log.ERROR.Printf("unknown opmode: %d", intValue)
 				c.chargeStatus = api.StatusNone
 			}
 			c.enabled = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
 		}
-
+		c.updated = time.Time{}
 		c.log.TRACE.Printf("%s: %+v", typ, res)
 	} else {
 		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
@@ -300,7 +301,7 @@ func (c *Easee) state() (easee.ChargerStatus, error) {
 	uri := fmt.Sprintf("%s/chargers/%s/state", easee.API, c.charger)
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
-		c.DoJSON(req, &result)
+		err = c.DoJSON(req, &result)
 	}
 
 	return result, err
