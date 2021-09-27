@@ -140,13 +140,14 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
 	if err != nil {
 		return false, err
 	}
 
-	return binary.BigEndian.Uint16(b) != ablAmpsDisabled, nil
+	u := binary.BigEndian.Uint16(b[2:]) & 0x0FFF
+	return u != ablAmpsDisabled, nil
 }
 
 // Enable implements the api.Charger interface
