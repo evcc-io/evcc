@@ -158,7 +158,7 @@ export default {
 			}
 		},
 		movedTargetSoC: function (e) {
-			const minTargetSoC = 40;
+			const minTargetSoC = 20;
 			if (e.target.value < minTargetSoC) {
 				e.target.value = minTargetSoC;
 				this.selectedTargetSoC = e.target.value;
