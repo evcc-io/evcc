@@ -31,20 +31,16 @@ import (
 type ABLeMH struct {
 	log  *util.Logger
 	conn *modbus.Connection
+	curr uint16
 }
 
 const (
 	ablRegFirmware   = 0x01
 	ablRegStatus     = 0x04
-	ablRegMode       = 0x05
 	ablRegAmpsConfig = 0x14
 	ablRegStatusLong = 0x2E
 
-	ablStatusDisabled = 0xE0
-
 	ablAmpsDisabled uint16 = 0x03E8
-	ablModeEnable   uint16 = 0xA1A1
-	ablModeDisable  uint16 = 0xE0E0
 )
 
 const ablStatusOutletDisabled = 0xE0
@@ -108,6 +104,7 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	wb := &ABLeMH{
 		log:  log,
 		conn: conn,
+		curr: uint16(6 / 0.06),
 	}
 
 	return wb, nil
@@ -143,29 +140,27 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegStatus, 1)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegAmpsConfig, 1)
 	if err != nil {
 		return false, err
 	}
 
-	enabled := b[1] != ablStatusDisabled
-
-	return enabled, nil
+	return binary.BigEndian.Uint16(b) != ablAmpsDisabled, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *ABLeMH) Enable(enable bool) error {
-	u := ablModeDisable
+	u := ablAmpsDisabled
 	if enable {
-		u = ablModeEnable
+		u = wb.curr
 	}
 
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, u)
 
-	_, _ = wb.conn.WriteMultipleRegisters(ablRegMode, 1, b)
-	_, err := wb.conn.WriteMultipleRegisters(ablRegMode, 1, b)
+	_, _ = wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
+	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
 
 	return err
 }
@@ -180,10 +175,10 @@ var _ api.ChargerEx = (*ABLeMH)(nil)
 // MaxCurrent implements the api.ChargerEx interface
 func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	// calculate duty cycle according to https://www.goingelectric.de/forum/viewtopic.php?p=1575287#p1575287
-	u := uint16(current / 0.06)
+	wb.curr = uint16(current / 0.06)
 
 	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, u)
+	binary.BigEndian.PutUint16(b, wb.curr)
 
 	_, _ = wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
 	_, err := wb.conn.WriteMultipleRegisters(ablRegAmpsConfig, 1, b)
