@@ -124,11 +124,6 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 	case 'A', 'B', 'C':
 		return api.ChargeStatus(r), nil
 	default:
-		// treat outlet disabled as vehicle disconnected
-		if b[1] == ablStatusOutletDisabled {
-			return api.StatusA, nil
-		}
-
 		status, ok := ablStatus[b[1]]
 		if !ok {
 			status = string(r)
