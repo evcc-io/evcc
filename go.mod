@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2
-	github.com/containrrr/shoutrrr v0.5.0
+	github.com/containrrr/shoutrrr v0.5.1
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
