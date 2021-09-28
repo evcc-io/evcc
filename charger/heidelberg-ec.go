@@ -42,6 +42,8 @@ const (
 	hecRegEnergy        = 17  // Input
 	hecRegStandby       = 258 // Holding
 	hecRegAmpsConfig    = 261 // Holding
+
+	hecStandbyDisabled = 4 // disable standby
 )
 
 var hecRegCurrents = []uint16{6, 7, 8}
@@ -77,7 +79,7 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("hec")
+	log := util.NewLogger("heidel")
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
@@ -86,7 +88,19 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 		current: 60, // assume min current
 	}
 
-	return wb, nil
+	// disable standby
+	err = wb.set(hecRegStandby, hecStandbyDisabled)
+
+	return wb, err
+}
+
+func (wb *HeidelbergEC) set(reg, val uint16) error {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, val)
+
+	_, err := wb.conn.WriteMultipleRegisters(reg, 1, b)
+
+	return err
 }
 
 // Status implements the api.Charger interface
