@@ -154,6 +154,8 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 				vcs, err := vs.Status()
 				if err != nil {
 					vcs = ccs // sanitize vehicle errors
+				} else {
+					s.log.DEBUG.Printf("vehicle status: %s", vcs)
 				}
 				invalid = vcs != ccs
 			}
