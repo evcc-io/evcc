@@ -1,6 +1,8 @@
 package semp
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"net"
@@ -10,10 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/denisbrodbeck/machineid"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -23,7 +27,7 @@ const (
 	sempController   = "Sunny Home Manager"
 	sempBaseURLEnv   = "SEMP_BASE_URL"
 	sempGateway      = "urn:schemas-simple-energy-management-protocol:device:Gateway:1"
-	sempLocalDevice  = "F-28081973-%s-%.02d"
+	sempDeviceId     = "F-%s-%.12x-00" // 6 bytes
 	sempSerialNumber = "%s-%d"
 	sempCharger      = "EVCharger"
 	basePath         = "/semp"
@@ -41,17 +45,23 @@ type SEMP struct {
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
+	vid          string
+	did          []byte
 	uid          string
 	hostURI      string
 	port         int
-	site         core.SiteAPI
+	site         site.API
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(conf map[string]interface{}, site site.API, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
 	cc := struct {
+		VendorID     string
+		DeviceID     string
 		AllowControl bool
-	}{}
+	}{
+		VendorID: "28081973",
+	}
 
 	if err := util.DecodeOther(conf, &cc); err != nil {
 		return nil, err
@@ -62,12 +72,30 @@ func New(conf map[string]interface{}, site core.SiteAPI, cache *util.Cache, http
 		return nil, err
 	}
 
+	if len(cc.VendorID) != 8 {
+		return nil, fmt.Errorf("invalid vendor id: %v", cc.VendorID)
+	}
+
+	var did []byte
+	if cc.DeviceID == "" {
+		did, err = uniqueDeviceID()
+	} else {
+		did, err = hex.DecodeString(cc.DeviceID)
+
+	}
+
+	if err != nil || len(did) != 6 {
+		return nil, fmt.Errorf("invalid device id: %v", cc.DeviceID)
+	}
+
 	s := &SEMP{
 		doneC:        make(chan struct{}),
 		log:          util.NewLogger("semp"),
 		cache:        cache,
 		site:         site,
 		uid:          uid.String(),
+		vid:          cc.VendorID,
+		did:          did,
 		controllable: cc.AllowControl,
 	}
 
@@ -203,7 +231,7 @@ func (s *SEMP) gatewayDescription(w http.ResponseWriter, r *http.Request) {
 		Device: Device{
 			DeviceType:      sempGateway,
 			FriendlyName:    "evcc",
-			Manufacturer:    "github.com/andig/evcc",
+			Manufacturer:    "github.com/evcc-io/evcc",
 			ModelName:       serverName,
 			PresentationURL: s.hostURI,
 			UDN:             uid,
@@ -301,16 +329,42 @@ func (s *SEMP) devicePlanningQuery(w http.ResponseWriter, r *http.Request) {
 	s.writeXML(w, msg)
 }
 
-func (s *SEMP) serialNumber() string {
+func (s *SEMP) serialNumber(id int) string {
 	uidParts := strings.SplitN(s.uid, "-", 5)
-	return uidParts[len(uidParts)-1]
+	ser := uidParts[len(uidParts)-1]
+
+	return fmt.Sprintf(sempSerialNumber, ser, id)
 }
 
+// uniqueDeviceID creates a 6-bytes base device id from machine id
+func uniqueDeviceID() ([]byte, error) {
+	bytes := 6
+
+	mid, err := machineid.ProtectedID("evcc-semp")
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := hex.DecodeString(mid)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, v := range b {
+		b[i%bytes] += v
+	}
+
+	return b[:bytes], nil
+}
+
+// deviceID combines base device id with device number
 func (s *SEMP) deviceID(id int) string {
-	return fmt.Sprintf(sempLocalDevice, s.serialNumber(), id)
+	// numerically add device number
+	did := append([]byte{0, 0}, s.did...)
+	return fmt.Sprintf(sempDeviceId, s.vid, ^uint64(0xffff<<48)&(binary.BigEndian.Uint64(did)+uint64(id)))
 }
 
-func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
+func (s *SEMP) deviceInfo(id int, lp loadpoint.API) DeviceInfo {
 	method := MethodEstimation
 	if lp.HasChargeMeter() {
 		method = MethodMeasurement
@@ -321,8 +375,8 @@ func (s *SEMP) deviceInfo(id int, lp core.LoadPointAPI) DeviceInfo {
 			DeviceID:     s.deviceID(id),
 			DeviceName:   lp.Name(),
 			DeviceType:   sempCharger,
-			DeviceSerial: fmt.Sprintf(sempSerialNumber, s.serialNumber(), id),
-			DeviceVendor: "github.com/andig/evcc",
+			DeviceSerial: s.serialNumber(id),
+			DeviceVendor: "github.com/evcc-io/evcc",
 		},
 		Capabilities: Capabilities{
 			CurrentPowerMethod:   method,
@@ -346,39 +400,28 @@ func (s *SEMP) allDeviceInfo() (res []DeviceInfo) {
 	return res
 }
 
-func (s *SEMP) deviceStatus(id int, lp core.LoadPointAPI) DeviceStatus {
-	var chargePower float64
-	if chargePowerP, err := s.cache.GetChecked(id, "chargePower"); err == nil {
-		chargePower = chargePowerP.Val.(float64)
+func (s *SEMP) deviceStatus(id int, lp loadpoint.API) DeviceStatus {
+	chargePower := lp.GetChargePower()
+
+	status := lp.GetStatus()
+	mode := lp.GetMode()
+	isPV := mode == api.ModeMinPV || mode == api.ModePV
+
+	deviceStatus := StatusOff
+	if status == api.StatusC {
+		deviceStatus = StatusOn
 	}
 
-	isPV := false
-	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		if mode, ok := modeP.Val.(api.ChargeMode); ok && (mode == api.ModeMinPV || mode == api.ModePV) {
-			isPV = true
-		}
-	}
-
-	status := StatusOff
-	if statusP, err := s.cache.GetChecked(id, "charging"); err == nil {
-		if statusP.Val.(bool) {
-			status = StatusOn
-		}
-	}
-
-	var hasVehicle bool
-	if hasVehicleP, err := s.cache.GetChecked(id, "hasVehicle"); err == nil {
-		hasVehicle = hasVehicleP.Val.(bool)
-	}
+	connected := status == api.StatusB || status == api.StatusC
 
 	res := DeviceStatus{
 		DeviceID:          s.deviceID(id),
-		EMSignalsAccepted: s.controllable && isPV && hasVehicle,
+		EMSignalsAccepted: s.controllable && isPV && connected,
 		PowerInfo: PowerInfo{
 			AveragePower:      int(chargePower),
 			AveragingInterval: 60,
 		},
-		Status: status,
+		Status: deviceStatus,
 	}
 
 	return res
@@ -392,36 +435,21 @@ func (s *SEMP) allDeviceStatus() (res []DeviceStatus) {
 	return res
 }
 
-func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningRequest) {
-	mode := api.ModeOff
-	if modeP, err := s.cache.GetChecked(id, "mode"); err == nil {
-		mode = modeP.Val.(api.ChargeMode)
-	}
+func (s *SEMP) planningRequest(id int, lp loadpoint.API) (res PlanningRequest) {
+	mode := lp.GetMode()
+	charging := lp.GetStatus() == api.StatusC
+	connected := charging || lp.GetStatus() == api.StatusB
 
-	var connected bool
-	if connectedP, err := s.cache.GetChecked(id, "connected"); err == nil {
-		connected = connectedP.Val.(bool)
-	}
-
-	var charging bool
-	if chargingP, err := s.cache.GetChecked(id, "charging"); err == nil {
-		charging = chargingP.Val.(bool)
-	}
-
-	chargeEstimate := time.Duration(-1)
-	if chargeEstimateP, err := s.cache.GetChecked(id, "chargeEstimate"); err == nil {
-		chargeEstimate = chargeEstimateP.Val.(time.Duration)
-	}
-
-	latestEnd := int(chargeEstimate / time.Second)
+	// remaining max demand duration in seconds
+	chargeRemainingDuration := lp.GetRemainingDuration()
+	latestEnd := int(chargeRemainingDuration / time.Second)
 	if mode == api.ModeMinPV || mode == api.ModePV || latestEnd <= 0 {
 		latestEnd = 24 * 3600
 	}
 
-	var maxEnergy int
-	if chargeRemainingEnergyP, err := s.cache.GetChecked(id, "chargeRemainingEnergy"); err == nil {
-		maxEnergy = int(chargeRemainingEnergyP.Val.(float64))
-	}
+	// remaining max energy demand in Wh
+	chargeRemainingEnergy := lp.GetRemainingEnergy()
+	maxEnergy := int(chargeRemainingEnergy)
 
 	// add 1kWh in case we're charging but battery claims full
 	if charging && maxEnergy == 0 {
@@ -439,7 +467,7 @@ func (s *SEMP) planningRequest(id int, lp core.LoadPointAPI) (res PlanningReques
 		minPowerConsumption = maxPowerConsumption
 	}
 
-	if connected && maxEnergy > 0 {
+	if mode != api.ModeOff && connected && maxEnergy > 0 {
 		res = PlanningRequest{
 			Timeframe: []Timeframe{{
 				DeviceID:            s.deviceID(id),
@@ -496,9 +524,9 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			demand := core.RemoteSoftDisable
+			demand := loadpoint.RemoteSoftDisable
 			if dev.On {
-				demand = core.RemoteEnable
+				demand = loadpoint.RemoteEnable
 			}
 
 			lp.RemoteControl(sempController, demand)

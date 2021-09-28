@@ -3,10 +3,12 @@ package vehicle
 import (
 	"testing"
 
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/util/test"
 )
 
 func TestVehicles(t *testing.T) {
+	test.SkipCI(t)
+
 	acceptable := []string{
 		"invalid plugin type: ...",
 		"missing mqtt broker configuration",
@@ -15,6 +17,8 @@ func TestVehicles(t *testing.T) {
 		"401 Unauthorized",
 		"unexpected length",
 		"i/o timeout",
+		"no such host",
+		"network is unreachable",
 		"Missing required parameter", // Renault
 		"error connecting: Network Error",
 		"unexpected status: 401",

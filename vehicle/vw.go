@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect
@@ -27,12 +28,13 @@ func init() {
 // NewVWFromConfig creates a new vehicle
 func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,11 +42,11 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &VW{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("vw")
-	identity := vw.NewIdentity(log, "38761134-34d0-41f3-9a73-c4be88d7d337")
+	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{
 		"response_type": {"id_token token"},
@@ -53,12 +55,13 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile mbb cars birthdate nickname address phone"},
 	})
 
-	err := identity.Login(query, cc.User, cc.Password)
+	err := identity.LoginVAG("38761134-34d0-41f3-9a73-c4be88d7d337", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := vw.NewAPI(log, identity, "VW", "DE")
+	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
 		cc.VIN, err = findVehicle(api.Vehicles())
@@ -67,7 +70,11 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		}
+	}
 
 	return v, err
 }

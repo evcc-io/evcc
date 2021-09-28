@@ -1,0 +1,260 @@
+<template>
+	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
+		<div class="label-scale">
+			<div class="d-flex justify-content-start">
+				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
+					<fa-icon icon="sun"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
+					<BatteryIcon :soc="batterySoC" discharge />
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
+					<GridIcon import />
+				</LabelBar>
+			</div>
+		</div>
+		<div class="site-progress" ref="site_progress">
+			<div
+				class="site-progress-bar self-consumption"
+				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
+			>
+				<span class="power" v-if="powerLabelEnoughSpace(selfConsumption)">
+					{{ kw(selfConsumption) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(selfConsumption)">
+					{{ kwNoUnit(selfConsumption) }}
+				</span>
+			</div>
+			<div
+				class="site-progress-bar grid-import"
+				:style="{ width: widthTotal(gridImportAdjusted) }"
+			>
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
+					{{ kw(gridImport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+					{{ kwNoUnit(gridImport) }}
+				</span>
+			</div>
+			<div
+				class="site-progress-bar pv-export"
+				:style="{ width: widthTotal(pvExportAdjusted) }"
+			>
+				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
+					{{ kw(pvExport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
+					{{ kwNoUnit(pvExport) }}
+				</span>
+			</div>
+			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
+				<span>{{ $t("main.energyflow.noEnergy") }}</span>
+			</div>
+		</div>
+		<div class="label-scale">
+			<div class="d-flex justify-content-start">
+				<LabelBar v-bind="labelBarProps('bottom', 'houseConsumption')">
+					<fa-icon icon="home"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
+					<fa-icon icon="car"></fa-icon>
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
+					<BatteryIcon :soc="batterySoC" charge />
+				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
+					<GridIcon export />
+				</LabelBar>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+import "../../icons";
+import formatter from "../../mixins/formatter";
+import BatteryIcon from "./BatteryIcon.vue";
+import GridIcon from "./GridIcon.vue";
+import LabelBar from "./LabelBar.vue";
+
+export default {
+	name: "Visualization",
+	components: { BatteryIcon, LabelBar, GridIcon },
+	props: {
+		showDetails: Boolean,
+		gridImport: { type: Number, default: 0 },
+		selfConsumption: { type: Number, default: 0 },
+		pvExport: { type: Number, default: 0 },
+		loadpoints: { type: Number, default: 0 },
+		batteryCharge: { type: Number, default: 0 },
+		batteryDischarge: { type: Number, default: 0 },
+		pvProduction: { type: Number, default: 0 },
+		houseConsumption: { type: Number, default: 0 },
+		batterySoC: { type: Number, default: 0 },
+		valuesInKw: { type: Boolean, default: false },
+	},
+	data: function () {
+		return { width: 0, visualizationReady: false };
+	},
+	mounted: function () {
+		this.$nextTick(function () {
+			window.addEventListener("resize", this.updateElementWidth);
+			this.updateElementWidth();
+		});
+	},
+	beforeDestroy() {
+		window.removeEventListener("resize", this.updateElementWidth);
+	},
+	mixins: [formatter],
+	computed: {
+		gridExport: function () {
+			return this.pvExport;
+		},
+		totalRaw: function () {
+			return this.gridImport + this.selfConsumption + this.pvExport;
+		},
+		gridImportAdjusted: function () {
+			return this.applyThreshold(this.gridImport);
+		},
+		selfConsumptionAdjusted: function () {
+			return this.applyThreshold(this.selfConsumption);
+		},
+		pvExportAdjusted: function () {
+			return this.applyThreshold(this.pvExport);
+		},
+		totalAdjusted: function () {
+			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
+		},
+	},
+	watch: {
+		showDetails: function () {
+			this.$nextTick(() => this.updateElementWidth());
+		},
+		totalAdjusted: function () {
+			if (!this.visualizationReady && this.totalAdjusted > 0)
+				setTimeout(() => {
+					this.visualizationReady = true;
+				}, 500);
+		},
+	},
+	methods: {
+		widthTotal: function (power) {
+			if (this.totalAdjusted === 0) return "0%";
+			return (100 / this.totalAdjusted) * power + "%";
+		},
+		kw: function (watt) {
+			return this.fmtKw(watt, this.valuesInKw, true);
+		},
+		kwNoUnit: function (watt) {
+			return this.fmtKw(watt, this.valuesInKw, false);
+		},
+		powerLabelAvailableSpace(power) {
+			if (this.totalAdjusted === 0) return 0;
+			const percent = (100 / this.totalAdjusted) * power;
+			return (this.width / 100) * percent;
+		},
+		powerLabelEnoughSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 60;
+		},
+		powerLabelSomeSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 35;
+		},
+		hideLabelIcon(power, minWidth = 32) {
+			if (this.totalAdjusted === 0) return true;
+			const percent = (100 / this.totalAdjusted) * power;
+			return (this.width / 100) * percent < minWidth;
+		},
+		applyThreshold(power) {
+			const percent = (100 / this.totalRaw) * power;
+			return percent < 2 ? 0 : power;
+		},
+		updateElementWidth() {
+			this.width = this.$refs.site_progress.getBoundingClientRect().width;
+		},
+		isLabelFirst(position, name) {
+			return this.isLabel(position, name, false);
+		},
+		isLabelLast(position, name) {
+			return this.isLabel(position, name, true);
+		},
+		isLabel(position, name, last) {
+			const labels = {
+				top: ["pvProduction", "batteryDischarge", "gridImport"],
+				bottom: ["houseConsumption", "loadpoints", "batteryCharge", "gridExport"],
+			};
+			const entries = [...labels[position]];
+			if (last) {
+				entries.reverse();
+			}
+			for (let i = 0; i < entries.length; i++) {
+				const entry = entries[i];
+				if (this[entry] > 0) {
+					return entry === name;
+				}
+			}
+			return false;
+		},
+		labelBarProps(position, name) {
+			const value = this[name];
+			const minWidth = name.startsWith("battery") || name.startsWith("grid") ? 44 : 32;
+			return {
+				value,
+				hideIcon: this.hideLabelIcon(value, minWidth),
+				style: { width: this.widthTotal(value) },
+				first: this.isLabelFirst(position, name),
+				last: this.isLabelLast(position, name),
+				[position]: true,
+			};
+		},
+	},
+};
+</script>
+<style scoped>
+.site-progress {
+	--height: 38px;
+	height: var(--height);
+	margin: 0.25rem 0;
+	border-radius: 5px;
+	display: flex;
+	overflow: hidden;
+}
+.site-progress-bar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: hidden;
+	position: relative;
+	width: 0;
+}
+.visualization--ready .site-progress-bar {
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
+}
+.grid-import {
+	background-color: var(--evcc-grid);
+	color: var(--bs-white);
+}
+.self-consumption {
+	background-color: var(--evcc-self);
+	color: var(--bs-white);
+}
+.pv-export {
+	background-color: var(--evcc-export);
+	color: var(--bs-dark);
+}
+.power {
+	display: block;
+	margin: 0 0.2rem;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.visualization--ready >>> .label-bar {
+	transition-property: width, opacity;
+	transition-duration: 500ms, 250ms;
+	transition-timing-function: linear, ease;
+}
+.visualization--ready >>> .label-bar-icon {
+	transition: opacity 250ms ease-in;
+}
+</style>

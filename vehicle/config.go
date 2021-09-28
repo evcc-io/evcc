@@ -5,10 +5,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
-const interval = 15 * time.Minute
+const (
+	expiry   = 5 * time.Minute  // maximum response age before refresh
+	interval = 15 * time.Minute // refresh interval when charging
+)
 
 type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
 
@@ -29,12 +32,21 @@ func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Veh
 
 var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
 
+// Types returns the list of vehicle types
+func Types() []string {
+	var res []string
+	for typ := range registry {
+		res = append(res, typ)
+	}
+	return res
+}
+
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
+			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
 		}
 	} else {
 		err = fmt.Errorf("invalid vehicle type: %s", typ)

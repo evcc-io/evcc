@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/util"
 )
 
 func TestLimiter(t *testing.T) {

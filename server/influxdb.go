@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
@@ -73,7 +73,7 @@ func (m *Influx) supportedType(p util.Param) bool {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
+func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	writer := m.client.WriteAPI(m.org, m.database)
 
 	// log errors
@@ -83,8 +83,19 @@ func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 		}
 	}()
 
+	// track active vehicle per loadpoint
+	vehicles := make(map[int]string)
+
 	// add points to batch for async writing
 	for param := range in {
+		// vehicle name
+		if param.LoadPoint != nil {
+			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
+				vehicles[*param.LoadPoint] = name
+				continue
+			}
+		}
+
 		if !m.supportedType(param) {
 			continue
 		}
@@ -92,6 +103,7 @@ func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 		tags := map[string]string{}
 		if param.LoadPoint != nil {
 			tags["loadpoint"] = loadPoints[*param.LoadPoint].Name()
+			tags["vehicle"] = vehicles[*param.LoadPoint]
 		}
 
 		fields := map[string]interface{}{}

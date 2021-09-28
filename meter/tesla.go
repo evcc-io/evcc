@@ -8,10 +8,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/powerwall"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/meter/powerwall"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // credits to https://github.com/vloschiavo/powerwall2
@@ -26,7 +26,7 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateTesla -b api.Meter -o tesla_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateTesla -b *Tesla -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -115,7 +115,9 @@ func (m *Tesla) Login() error {
 	return err
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+var _ api.Meter = (*Tesla)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (m *Tesla) CurrentPower() (float64, error) {
 	var res powerwall.MeterResponse
 	if err := m.GetJSON(m.uri+powerwall.MeterURI, &res); err != nil {

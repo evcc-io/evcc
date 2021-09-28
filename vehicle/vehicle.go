@@ -4,48 +4,53 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
 )
 
 type embed struct {
-	title    string
-	capacity int64
+	Title_      string `mapstructure:"title"`
+	Capacity_   int64  `mapstructure:"capacity"`
+	Identifier_ string `mapstructure:"identifier"`
 }
 
-// Title implements the Vehicle.Title interface
-func (m *embed) Title() string {
-	return m.title
+// Title implements the api.Vehicle interface
+func (v *embed) Title() string {
+	return v.Title_
 }
 
-// Capacity implements the Vehicle.Capacity interface
-func (m *embed) Capacity() int64 {
-	return m.capacity
+// Capacity implements the api.Vehicle interface
+func (v *embed) Capacity() int64 {
+	return v.Capacity_
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p vehicle -f decorateVehicle -b api.Vehicle -o vehicle_decorators -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)"
+// Identify implements the api.Identifier interface
+func (v *embed) Identify() (string, error) {
+	return v.Identifier_, nil
+}
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
 	*embed
 	chargeG func() (float64, error)
 	statusG func() (string, error)
-	rangeG  func() (int64, error)
 }
 
 func init() {
-	registry.Add("default", NewConfigurableFromConfig)
+	registry.Add(api.Custom, NewConfigurableFromConfig)
 }
 
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title    string
-		Capacity int64
+		embed    `mapstructure:",squash"`
 		Charge   provider.Config
 		Status   *provider.Config
 		Range    *provider.Config
+		Odometer *provider.Config
 		Cache    time.Duration
 	}{
 		Cache: interval,
@@ -53,12 +58,6 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
-	}
-
-	for k, v := range map[string]string{"charge": cc.Charge.Type} {
-		if v == "" {
-			return nil, fmt.Errorf("default vehicle config: %s required", k)
-		}
 	}
 
 	getter, err := provider.NewFloatGetterFromConfig(cc.Charge)
@@ -71,7 +70,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	}
 
 	v := &Vehicle{
-		embed:   &embed{cc.Title, cc.Capacity},
+		embed:   &cc.embed,
 		chargeG: getter,
 	}
 
@@ -88,36 +87,41 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	// decorate vehicle with Range
 	var rng func() (int64, error)
 	if cc.Range != nil {
-		v.rangeG, err = provider.NewIntGetterFromConfig(*cc.Range)
+		rangeG, err := provider.NewIntGetterFromConfig(*cc.Range)
 		if err != nil {
 			return nil, fmt.Errorf("range: %w", err)
 		}
-		rng = v.rng
+		rng = rangeG
 	}
 
-	res := decorateVehicle(v, status, rng)
+	// decorate vehicle with Range
+	var odo func() (float64, error)
+	if cc.Odometer != nil {
+		odoG, err := provider.NewFloatGetterFromConfig(*cc.Odometer)
+		if err != nil {
+			return nil, fmt.Errorf("odometer: %w", err)
+		}
+		odo = odoG
+	}
+
+	res := decorateVehicle(v, status, rng, odo)
 
 	return res, nil
 }
 
 // SoC implements the api.Vehicle interface
-func (m *Vehicle) SoC() (float64, error) {
-	return m.chargeG()
+func (v *Vehicle) SoC() (float64, error) {
+	return v.chargeG()
 }
 
-// SoC implements the api.Vehicle interface
-func (m *Vehicle) status() (api.ChargeStatus, error) {
+// SoC implements the api.ChargeState interface
+func (v *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
-	statusS, err := m.statusG()
+	statusS, err := v.statusG()
 	if err == nil {
 		status = api.ChargeStatus(statusS)
 	}
 
 	return status, err
-}
-
-// rng implements the api.VehicleRange interface
-func (m *Vehicle) rng() (int64, error) {
-	return m.rangeG()
 }

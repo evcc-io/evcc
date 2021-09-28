@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/nrgble"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/nrgble"
+	"github.com/evcc-io/evcc/util"
 	"github.com/godbus/dbus/v5"
 	"github.com/lunixbochs/struc"
 	"github.com/muka/go-bluetooth/bluez/profile/adapter"
@@ -28,7 +28,7 @@ type NRGKickBLE struct {
 	agent         *agent.SimpleAgent
 	dev           *device.Device1
 	device        string
-	macaddress    string
+	mac           string
 	pin           int
 	pauseCharging bool
 	current       int
@@ -40,7 +40,7 @@ func init() {
 
 // NewNRGKickBLEFromConfig creates a NRGKickBLE charger from generic config
 func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) {
-	cc := struct{ Device, MacAddress, PIN string }{
+	cc := struct{ Device, Mac, PIN string }{
 		Device: "hci0",
 	}
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -53,21 +53,26 @@ func NewNRGKickBLEFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return nil, fmt.Errorf("invalid pin: %s", cc.PIN)
 	}
 
-	return NewNRGKickBLE(cc.Device, cc.MacAddress, pin)
+	return NewNRGKickBLE(cc.Device, cc.Mac, pin)
 }
 
 // NewNRGKickBLE creates NRGKickBLE charger
-func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
+func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 	logger := util.NewLogger("nrg-bt")
 
+	ainfo, err := hw.GetAdapter(device)
+	if err != nil {
+		return nil, err
+	}
+
 	// set LE mode
-	btmgmt := hw.NewBtMgmt(device)
+	btmgmt := hw.NewBtMgmt(ainfo.AdapterID)
 
 	if len(os.Getenv("DOCKER")) > 0 {
 		btmgmt.BinPath = "./docker-btmgmt"
 	}
 
-	err := btmgmt.SetPowered(false)
+	err = btmgmt.SetPowered(false)
 	if err == nil {
 		err = btmgmt.SetLe(true)
 		if err == nil {
@@ -82,7 +87,7 @@ func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
 		return nil, err
 	}
 
-	adapt, err := adapter.NewAdapter1FromAdapterID(device)
+	adapt, err := adapter.NewAdapter1FromAdapterID(ainfo.AdapterID)
 	if err != nil {
 		return nil, err
 	}
@@ -103,20 +108,20 @@ func NewNRGKickBLE(device, macaddress string, pin int) (*NRGKickBLE, error) {
 	}
 
 	nrg := &NRGKickBLE{
-		log:        logger,
-		timer:      time.NewTimer(1),
-		device:     device,
-		macaddress: macaddress,
-		pin:        pin,
-		adapter:    adapt,
-		agent:      ag,
+		log:     logger,
+		timer:   time.NewTimer(1),
+		device:  ainfo.AdapterID,
+		mac:     mac,
+		pin:     pin,
+		adapter: adapt,
+		agent:   ag,
 	}
 
 	return nrg, nil
 }
 
 func (nrg *NRGKickBLE) connect() (*device.Device1, error) {
-	dev, err := nrgble.FindDevice(nrg.adapter, nrg.macaddress, nrgTimeout)
+	dev, err := nrgble.FindDevice(nrg.adapter, nrg.mac, nrgTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("find device: %s", err)
 	}
@@ -218,7 +223,7 @@ func (nrg *NRGKickBLE) mergeSettings(info nrgble.Info) nrgble.Settings {
 	}
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	res := nrgble.Power{}
 	if err := nrg.read(nrgble.PowerService, &res); err != nil {
@@ -239,22 +244,21 @@ func (nrg *NRGKickBLE) Status() (api.ChargeStatus, error) {
 	return api.StatusA, fmt.Errorf("unexpected cp signal: %d", res.CPSignal)
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (nrg *NRGKickBLE) Enabled() (bool, error) {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
-		nrg.log.TRACE.Println(err)
 		return false, err
 	}
 
 	nrg.log.TRACE.Printf("read info: %+v", res)
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/evcc-io/evcc/pull/274
 	return !res.PauseCharging || res.ChargingActive, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (nrg *NRGKickBLE) Enable(enable bool) error {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
@@ -262,7 +266,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	}
 
 	// workaround internal NRGkick state change after connecting
-	// https://github.com/andig/evcc/pull/274
+	// https://github.com/evcc-io/evcc/pull/274
 	if !enable && res.PauseCharging {
 		nrg.pauseCharging = false
 		settings := nrg.mergeSettings(res)
@@ -281,7 +285,7 @@ func (nrg *NRGKickBLE) Enable(enable bool) error {
 	return nrg.write(nrgble.SettingsService, &settings)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	res := nrgble.Info{}
 	if err := nrg.read(nrgble.InfoService, &res); err != nil {
@@ -296,7 +300,9 @@ func (nrg *NRGKickBLE) MaxCurrent(current int64) error {
 	return nrg.write(nrgble.SettingsService, &settings)
 }
 
-// CurrentPower implements the Meter interface.
+var _ api.Meter = (*NRGKickBLE)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 	res := nrgble.Power{}
 	if err := nrg.read(nrgble.PowerService, &res); err != nil {
@@ -308,7 +314,9 @@ func (nrg *NRGKickBLE) CurrentPower() (float64, error) {
 	return float64(res.TotalPower) * 10, nil
 }
 
-// TotalEnergy implements the MeterEnergy interface.
+var _ api.MeterEnergy = (*NRGKickBLE)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
 func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 	res := nrgble.Energy{}
 	if err := nrg.read(nrgble.EnergyService, &res); err != nil {
@@ -320,7 +328,9 @@ func (nrg *NRGKickBLE) TotalEnergy() (float64, error) {
 	return float64(res.TotalEnergy) / 1000, nil
 }
 
-// Currents implements the MeterCurrent interface.
+var _ api.MeterCurrent = (*NRGKickBLE)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 	res := nrgble.VoltageCurrent{}
 	if err := nrg.read(nrgble.VoltageCurrentService, &res); err != nil {
@@ -335,7 +345,7 @@ func (nrg *NRGKickBLE) Currents() (float64, float64, float64, error) {
 		nil
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+// ChargedEnergy implements the ChargeRater interface
 // NOTE: apparently shows energy of a stopped charging session, hence substituted by TotalEnergy
 // func (nrg *NRGKickBLE) ChargedEnergy() (float64, error) {
 // 	res := nrgble.Energy{}

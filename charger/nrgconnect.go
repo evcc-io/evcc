@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 // https://www.nrgkick.com/wp-content/uploads/2019/08/20190814_API-Dokumentation_04.pdf
@@ -123,19 +123,19 @@ func (nrg *NRGKickConnect) putJSON(url string, data interface{}) error {
 	return err
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (nrg *NRGKickConnect) Status() (api.ChargeStatus, error) {
 	return api.StatusC, nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	var res NRGSettings
 	err := nrg.GetJSON(nrg.apiURL(nrgSettings), &res)
 	if err != nil {
 		if res.Message != "" {
-		err = errors.New(res.Message)
-	}
+			err = errors.New(res.Message)
+		}
 
 		return false, err
 	}
@@ -143,7 +143,7 @@ func (nrg *NRGKickConnect) Enabled() (bool, error) {
 	return *res.Values.ChargingStatus.Charging, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (nrg *NRGKickConnect) Enable(enable bool) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.password
@@ -152,7 +152,7 @@ func (nrg *NRGKickConnect) Enable(enable bool) error {
 	return nrg.putJSON(nrg.apiURL(nrgSettings), settings)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	settings := NRGSettings{}
 	settings.Values.DeviceMetadata.Password = nrg.password
@@ -161,7 +161,9 @@ func (nrg *NRGKickConnect) MaxCurrent(current int64) error {
 	return nrg.putJSON(nrg.apiURL(nrgSettings), settings)
 }
 
-// CurrentPower implements the Meter interface
+var _ api.Meter = (*NRGKickConnect)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	var res NRGMeasurements
 	err := nrg.GetJSON(nrg.apiURL(nrgMeasurements), &res)
@@ -172,7 +174,9 @@ func (nrg *NRGKickConnect) CurrentPower() (float64, error) {
 	return 1000 * res.ChargingPower, err
 }
 
-// TotalEnergy implements the MeterEnergy interface
+var _ api.MeterEnergy = (*NRGKickConnect)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
 func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
 	var res NRGMeasurements
 	err := nrg.GetJSON(nrg.apiURL(nrgMeasurements), &res)
@@ -183,7 +187,9 @@ func (nrg *NRGKickConnect) TotalEnergy() (float64, error) {
 	return res.ChargingEnergyOverAll, err
 }
 
-// Currents implements the MeterCurrent interface
+var _ api.MeterCurrent = (*NRGKickConnect)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (nrg *NRGKickConnect) Currents() (float64, float64, float64, error) {
 	var res NRGMeasurements
 	err := nrg.GetJSON(nrg.apiURL(nrgMeasurements), &res)

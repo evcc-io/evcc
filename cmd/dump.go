@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,15 +31,12 @@ func runDump(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
-	// setup mqtt
-	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt)
+	// setup environment
+	if err := configureEnvironment(conf); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
-	// setup javascript VMs
-	configureJavascript(conf.Javascript)
-
-	site, err := loadConfig(conf)
+	site, err := configureSiteAndLoadpoints(conf)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}

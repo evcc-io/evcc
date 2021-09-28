@@ -6,41 +6,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
 	"github.com/bogosj/tesla"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
 
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
 	*embed
-	vehicle        *tesla.Vehicle
-	chargeStateG   func() (float64, error)
-	chargedEnergyG func() (float64, error)
-}
-
-// teslaTokens contains access and refresh tokens
-type teslaTokens struct {
-	Access, Refresh string
+	vehicle       *tesla.Vehicle
+	chargeStateG  func() (interface{}, error)
+	vehicleStateG func() (interface{}, error)
 }
 
 func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-// NewTeslaFromConfig creates a new Tesla vehicle
+// NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                  string
-		Capacity               int64
-		ClientID, ClientSecret string
-		User, Password         string
-		Tokens                 teslaTokens
-		VIN                    string
-		Cache                  time.Duration
+		embed  `mapstructure:",squash"`
+		Tokens Tokens
+		VIN    string
+		Cache  time.Duration
 	}{
 		Cache: interval,
 	}
@@ -49,28 +41,23 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" && cc.Tokens.Access == "" {
-		return nil, errors.New("missing credentials")
+	if err := cc.Tokens.Error(); err != nil {
+		return nil, err
 	}
 
 	v := &Tesla{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	// authenticated http client with logging injected to the Tesla client
 	log := util.NewLogger("tesla")
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
-	var options []tesla.ClientOption
-	if cc.Tokens.Access != "" {
-		options = append(options, tesla.WithToken(&oauth2.Token{
-			AccessToken:  cc.Tokens.Access,
-			RefreshToken: cc.Tokens.Refresh,
-			Expiry:       time.Now(),
-		}))
-	} else {
-		options = append(options, tesla.WithCredentials(cc.User, cc.Password))
-	}
+	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
+		AccessToken:  cc.Tokens.Access,
+		RefreshToken: cc.Tokens.Refresh,
+		Expiry:       time.Now(),
+	})}
 
 	client, err := tesla.NewClient(ctx, options...)
 	if err != nil {
@@ -96,36 +83,150 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).FloatGetter()
-	v.chargedEnergyG = provider.NewCached(v.chargedEnergy, cc.Cache).FloatGetter()
+	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
+	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
 
-// chargeState implements the api.Vehicle interface
-func (v *Tesla) chargeState() (float64, error) {
-	state, err := v.vehicle.ChargeState()
-	if err != nil {
-		return 0, err
-	}
-	return float64(state.BatteryLevel), nil
+// chargeState implements the charge state api
+func (v *Tesla) chargeState() (interface{}, error) {
+	return v.vehicle.ChargeState()
+}
+
+// vehicleState implements the climater api
+func (v *Tesla) vehicleState() (interface{}, error) {
+	return v.vehicle.VehicleState()
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Tesla) SoC() (float64, error) {
-	return v.chargeStateG()
-}
+	res, err := v.chargeStateG()
 
-// chargedEnergy implements the ChargeRater.ChargedEnergy interface
-func (v *Tesla) chargedEnergy() (float64, error) {
-	state, err := v.vehicle.ChargeState()
-	if err != nil {
-		return 0, err
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.BatteryLevel), nil
 	}
-	return state.ChargeEnergyAdded, nil
+
+	return 0, err
 }
 
-// ChargedEnergy implements the ChargeRater.ChargedEnergy interface
+var _ api.ChargeState = (*Tesla)(nil)
+
+// Status implements the api.ChargeState interface
+func (v *Tesla) Status() (api.ChargeStatus, error) {
+	status := api.StatusA // disconnected
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		if res.ChargingState == "Stopped" || res.ChargingState == "NoPower" || res.ChargingState == "Complete" {
+			status = api.StatusB
+		}
+		if res.ChargingState == "Charging" {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
+var _ api.ChargeRater = (*Tesla)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
 func (v *Tesla) ChargedEnergy() (float64, error) {
-	return v.chargedEnergyG()
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		return float64(res.ChargeEnergyAdded), nil
+	}
+
+	return 0, err
+}
+
+const kmPerMile = 1.609344
+
+var _ api.VehicleRange = (*Tesla)(nil)
+
+// Range implements the api.VehicleRange interface
+func (v *Tesla) Range() (int64, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		// miles to km
+		return int64(kmPerMile * res.EstBatteryRange), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleOdometer = (*Tesla)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Tesla) Odometer() (float64, error) {
+	res, err := v.vehicleStateG()
+
+	if res, ok := res.(*tesla.VehicleState); err == nil && ok {
+		// miles to km
+		return kmPerMile * res.Odometer, nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleFinishTimer = (*Tesla)(nil)
+
+// FinishTime implements the api.VehicleFinishTimer interface
+func (v *Tesla) FinishTime() (time.Time, error) {
+	res, err := v.chargeStateG()
+
+	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
+		t := time.Now()
+		return t.Add(time.Duration(res.MinutesToFullCharge) * time.Minute), err
+	}
+
+	return time.Time{}, err
+}
+
+// TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
+
+var _ api.VehicleStartCharge = (*Tesla)(nil)
+
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Tesla) StartCharge() error {
+	err := v.vehicle.StartCharging()
+
+	if err != nil && err.Error() == "408 Request Timeout" {
+		if _, err := v.vehicle.Wakeup(); err != nil {
+			return err
+		}
+
+		timer := time.NewTimer(90 * time.Second)
+
+		for {
+			select {
+			case <-timer.C:
+				return api.ErrTimeout
+			default:
+				time.Sleep(2 * time.Second)
+				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
+					return err
+				}
+			}
+		}
+	}
+
+	return err
+}
+
+var _ api.VehicleStopCharge = (*Tesla)(nil)
+
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Tesla) StopCharge() error {
+	err := v.vehicle.StopCharging()
+
+	// ignore sleeping vehicle
+	if err != nil && err.Error() == "408 Request Timeout" {
+		err = nil
+	}
+
+	return err
 }

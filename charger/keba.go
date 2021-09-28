@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger/keba"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/keba"
+	"github.com/evcc-io/evcc/util"
 )
 
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
@@ -37,6 +37,8 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -47,15 +49,30 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Timeout: udpTimeout,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	k, err := NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	energy, err := k.totalEnergy()
+	if err != nil {
+		return nil, err
+	}
+
+	if energy > 0 {
+		return decorateKeba(k, k.currentPower, k.totalEnergy, k.chargedEnergy, k.currents), nil
+	}
+
+	return k, err
 }
 
 // NewKeba creates a new charger
-func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
+func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (*Keba, error) {
 	log := util.NewLogger("keba")
 
 	if keba.Instance == nil {
@@ -157,7 +174,7 @@ func (c *Keba) roundtrip(msg string, report int, res interface{}) error {
 	}
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (c *Keba) Status() (api.ChargeStatus, error) {
 	var kr keba.Report2
 	err := c.roundtrip("report", 2, &kr)
@@ -182,7 +199,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	return api.StatusA, fmt.Errorf("unexpected status: %+v", kr)
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (c *Keba) Enabled() (bool, error) {
 	var kr keba.Report2
 	err := c.roundtrip("report", 2, &kr)
@@ -213,7 +230,7 @@ func (c *Keba) enableRFID() error {
 	return nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (c *Keba) Enable(enable bool) error {
 	if enable && c.rfid.Tag != "" {
 		if err := c.enableRFID(); err != nil {
@@ -235,7 +252,7 @@ func (c *Keba) Enable(enable bool) error {
 	return nil
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (c *Keba) MaxCurrent(current int64) error {
 	d := 1000 * current
 
@@ -247,7 +264,9 @@ func (c *Keba) MaxCurrent(current int64) error {
 	return nil
 }
 
-// MaxCurrentMillis implements the ChargerEx interface
+var _ api.ChargerEx = (*Keba)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (c *Keba) MaxCurrentMillis(current float64) error {
 	d := int(1000 * current)
 
@@ -262,8 +281,8 @@ func (c *Keba) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
-// CurrentPower implements the Meter interface
-func (c *Keba) CurrentPower() (float64, error) {
+// currentPower implements the api.Meter interface
+func (c *Keba) currentPower() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -271,8 +290,8 @@ func (c *Keba) CurrentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
-// TotalEnergy implements the MeterEnergy interface
-func (c *Keba) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (c *Keba) totalEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -280,8 +299,8 @@ func (c *Keba) TotalEnergy() (float64, error) {
 	return float64(kr.ETotal) / 1e4, err
 }
 
-// ChargedEnergy implements the ChargeRater interface
-func (c *Keba) ChargedEnergy() (float64, error) {
+// chargedEnergy implements the ChargeRater interface
+func (c *Keba) chargedEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -289,8 +308,8 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 	return float64(kr.EPres) / 1e4, err
 }
 
-// Currents implements the MeterCurrents interface
-func (c *Keba) Currents() (float64, float64, float64, error) {
+// currents implements the api.MeterCurrent interface
+func (c *Keba) currents() (float64, float64, float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -298,7 +317,18 @@ func (c *Keba) Currents() (float64, float64, float64, error) {
 	return float64(kr.I1) / 1e3, float64(kr.I2) / 1e3, float64(kr.I3) / 1e3, err
 }
 
-// Diagnose implements the Diagnosis interface
+var _ api.Identifier = (*Keba)(nil)
+
+// Identify implements the api.Identifier interface
+func (c *Keba) Identify() (string, error) {
+	var kr keba.Report100
+	err := c.roundtrip("report", 100, &kr)
+	return kr.RFIDTag, err
+}
+
+var _ api.Diagnosis = (*Keba)(nil)
+
+// Diagnose implements the api.Diagnosis interface
 func (c *Keba) Diagnose() {
 	var kr keba.Report100
 	if err := c.roundtrip("report", 100, &kr); err == nil {

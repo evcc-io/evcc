@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/util"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -19,10 +20,6 @@ type MQTT struct {
 
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
-	if root == "" {
-		root = "evcc"
-	}
-
 	return &MQTT{
 		Handler: mqtt.Instance,
 		root:    root,
@@ -68,7 +65,7 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
+func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
 	m.Handler.Listen(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
@@ -84,10 +81,20 @@ func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
 			_ = apiHandler.SetTargetSoC(soc)
 		}
 	})
+	m.Handler.Listen(topic+"/phases/set", func(payload string) {
+		phases, err := strconv.Atoi(payload)
+		if err == nil {
+			_ = apiHandler.SetPhases(phases)
+		}
+	})
 }
 
 // Run starts the MQTT publisher for the MQTT API
-func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
+func (m *MQTT) Run(site site.API, in <-chan util.Param) {
+	// alive
+	topic := fmt.Sprintf("%s/status", m.root)
+	m.publish(topic, true, "online")
+
 	// site setters
 	m.Handler.Listen(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		soc, err := strconv.Atoi(payload)
@@ -97,7 +104,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	})
 
 	// number of loadpoints
-	topic := fmt.Sprintf("%s/loadpoints", m.root)
+	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	// loadpoint setters

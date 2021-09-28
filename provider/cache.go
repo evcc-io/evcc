@@ -1,15 +1,30 @@
 package provider
 
 import (
+	"errors"
+	"sync"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/asaskevich/EventBus"
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 )
+
+var (
+	bus = EventBus.New()
+	log = util.NewLogger("cache")
+)
+
+const reset = "reset"
+
+func ResetCached() {
+	bus.Publish(reset)
+}
 
 // Cached wraps a getter with a cache
 type Cached struct {
-	log     *util.Logger
+	mux     sync.Mutex
 	clock   clock.Clock
 	updated time.Time
 	cache   time.Duration
@@ -20,23 +35,39 @@ type Cached struct {
 
 // NewCached wraps a getter with a cache
 func NewCached(getter interface{}, cache time.Duration) *Cached {
-	return &Cached{
-		log:    util.NewLogger("cache"),
+	c := &Cached{
 		clock:  clock.New(),
 		getter: getter,
 		cache:  cache,
 	}
+
+	_ = bus.Subscribe(reset, c.reset)
+
+	return c
+}
+
+func (c *Cached) reset() {
+	c.mux.Lock()
+	c.updated = time.Time{}
+	c.mux.Unlock()
+}
+
+func (c *Cached) mustUpdate() bool {
+	return c.clock.Since(c.updated) > c.cache || errors.Is(c.err, api.ErrMustRetry)
 }
 
 // FloatGetter gets float value
 func (c *Cached) FloatGetter() func() (float64, error) {
 	g, ok := c.getter.(func() (float64, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (float64, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -49,11 +80,14 @@ func (c *Cached) FloatGetter() func() (float64, error) {
 func (c *Cached) IntGetter() func() (int64, error) {
 	g, ok := c.getter.(func() (int64, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (int64, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -66,11 +100,14 @@ func (c *Cached) IntGetter() func() (int64, error) {
 func (c *Cached) StringGetter() func() (string, error) {
 	g, ok := c.getter.(func() (string, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (string, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -83,11 +120,14 @@ func (c *Cached) StringGetter() func() (string, error) {
 func (c *Cached) BoolGetter() func() (bool, error) {
 	g, ok := c.getter.(func() (bool, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (bool, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -100,11 +140,14 @@ func (c *Cached) BoolGetter() func() (bool, error) {
 func (c *Cached) DurationGetter() func() (time.Duration, error) {
 	g, ok := c.getter.(func() (time.Duration, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (time.Duration, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -117,11 +160,14 @@ func (c *Cached) DurationGetter() func() (time.Duration, error) {
 func (c *Cached) TimeGetter() func() (time.Time, error) {
 	g, ok := c.getter.(func() (time.Time, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (time.Time, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}
@@ -134,11 +180,14 @@ func (c *Cached) TimeGetter() func() (time.Time, error) {
 func (c *Cached) InterfaceGetter() func() (interface{}, error) {
 	g, ok := c.getter.(func() (interface{}, error))
 	if !ok {
-		c.log.FATAL.Fatalf("invalid type: %T", c.getter)
+		log.FATAL.Fatalf("invalid type: %T", c.getter)
 	}
 
 	return func() (interface{}, error) {
-		if c.clock.Since(c.updated) > c.cache {
+		c.mux.Lock()
+		defer c.mux.Unlock()
+
+		if c.mustUpdate() {
 			c.val, c.err = g()
 			c.updated = c.clock.Now()
 		}

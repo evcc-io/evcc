@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/thoas/go-funk"
 )
 
@@ -92,6 +92,8 @@ type attributes struct {
 	// hvac-status
 	ExternalTemperature float64 `json:"externalTemperature"`
 	HvacStatus          string  `json:"hvacStatus"`
+	// cockpit
+	TotalMileage float64 `json:"totalMileage"`
 }
 
 // Renault is an api.Vehicle implementation for Renault cars
@@ -103,6 +105,7 @@ type Renault struct {
 	gigyaJwtToken       string
 	accountID           string
 	batteryG            func() (interface{}, error)
+	cockpitG            func() (interface{}, error)
 	hvacG               func() (interface{}, error)
 }
 
@@ -113,8 +116,7 @@ func init() {
 // NewRenaultFromConfig creates a new vehicle
 func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title                       string
-		Capacity                    int64
+		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
 		Cache                       time.Duration
 	}{
@@ -129,7 +131,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("renault")
 
 	v := &Renault{
-		embed:    &embed{cc.Title, cc.Capacity},
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
@@ -149,6 +151,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
 	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
 
 	return v, err
@@ -338,6 +341,21 @@ func (v *Renault) hvacAPI() (interface{}, error) {
 	return res, err
 }
 
+// cockpitAPI provides cockpit api response
+func (v *Renault) cockpitAPI() (interface{}, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/cockpit", v.kamereon.Target, v.accountID, v.vin)
+	res, err := v.kamereonRequest(uri)
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			res, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return res, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Renault) SoC() (float64, error) {
 	res, err := v.batteryG()
@@ -349,7 +367,9 @@ func (v *Renault) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the Vehicle.Status interface
+var _ api.ChargeState = (*Renault)(nil)
+
+// Status implements the api.ChargeState interface
 func (v *Renault) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
@@ -366,6 +386,8 @@ func (v *Renault) Status() (api.ChargeStatus, error) {
 	return status, err
 }
 
+var _ api.VehicleRange = (*Renault)(nil)
+
 // Range implements the api.VehicleRange interface
 func (v *Renault) Range() (int64, error) {
 	res, err := v.batteryG()
@@ -376,6 +398,21 @@ func (v *Renault) Range() (int64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleOdometer = (*Renault)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Renault) Odometer() (float64, error) {
+	res, err := v.cockpitG()
+
+	if res, ok := res.(kamereonResponse); err == nil && ok {
+		return res.Data.Attributes.TotalMileage, nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleFinishTimer = (*Renault)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Renault) FinishTime() (time.Time, error) {
@@ -394,7 +431,9 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-// Climater implements the api.Vehicle.Climater interface
+var _ api.VehicleClimater = (*Renault)(nil)
+
+// Climater implements the api.VehicleClimater interface
 func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 

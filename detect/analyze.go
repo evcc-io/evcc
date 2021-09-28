@@ -1,8 +1,10 @@
 package detect
 
+import "github.com/evcc-io/evcc/detect/tasks"
+
 type Criteria map[string]interface{}
 
-func filter(list []Result, criteria []Criteria) (match []Result) {
+func filter(list []tasks.Result, criteria []Criteria) (match []tasks.Result) {
 	for _, res := range list {
 		for _, criterium := range criteria {
 			ok := true
@@ -24,7 +26,7 @@ func filter(list []Result, criteria []Criteria) (match []Result) {
 }
 
 type TypeSummary struct {
-	Results       []Result
+	Results       []tasks.Result
 	Found, Unique bool
 }
 
@@ -32,7 +34,7 @@ type Summary struct {
 	Charger, Grid, PV, Charge, Battery, Meter TypeSummary
 }
 
-func summarize(res []Result) TypeSummary {
+func summarize(res []tasks.Result) TypeSummary {
 	return TypeSummary{
 		Results: res,
 		Found:   len(res) > 0,
@@ -45,7 +47,7 @@ const (
 	smaHttp = "details.http"
 )
 
-func Consolidate(res []Result) Summary {
+func Consolidate(res []tasks.Result) Summary {
 	grid := filter(res, []Criteria{
 		{tid: taskOpenwb},
 		{tid: taskSMA, smaHttp: false},

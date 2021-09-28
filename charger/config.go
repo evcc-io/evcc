@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
 )
 
 type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
@@ -31,7 +31,7 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {
-			err = fmt.Errorf("cannot create type '%s': %w", typ, err)
+			err = fmt.Errorf("cannot create charger '%s': %w", typ, err)
 		}
 	} else {
 		err = fmt.Errorf("invalid charger type: %s", typ)

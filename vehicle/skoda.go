@@ -1,13 +1,15 @@
 package vehicle
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/trocotronic/weconnect
@@ -26,12 +28,13 @@ func init() {
 // NewSkodaFromConfig creates a new vehicle
 func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -39,31 +42,38 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Skoda{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("skoda")
-	identity := vw.NewIdentity(log, "28cd30c6-dee7-4529-a0e6-b1e07ff90b79")
+	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{
 		"response_type": {"code id_token"},
-		"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
+		"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
 		"redirect_uri":  {"skodaconnect://oidc.login/"},
-		"scope":         {"openid profile phone address cars email birthdate badge dealers driversLicense mbb"},
+		"scope":         {"openid mbb profile"},
 	})
 
-	err := identity.Login(query, cc.User, cc.Password)
-	if err == nil {
-		api := vw.NewAPI(log, identity, "VW", "CZ")
+	err := identity.LoginVAG("afb0473b-6d82-42b8-bfea-cead338c46ef", query, cc.User, cc.Password)
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
 
-		if cc.VIN == "" {
-			cc.VIN, err = findVehicle(api.Vehicles())
-			if err == nil {
-				log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-			}
+	api := vw.NewAPI(log, identity, "VW", "CZ")
+	api.Client.Timeout = cc.Timeout
+
+	if cc.VIN == "" {
+		cc.VIN, err = findVehicle(api.Vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 		}
+	}
 
-		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		}
 	}
 
 	return v, err

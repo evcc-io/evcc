@@ -1,12 +1,12 @@
 package test
 
 import (
-	"github.com/andig/evcc-config/registry"
-	_ "github.com/andig/evcc-config/templates" // import all config templates
+	"github.com/evcc-io/config/registry"
+	_ "github.com/evcc-io/config/templates" // import all config templates
 	"gopkg.in/yaml.v3"
 )
 
-// ConfigTemplate is a configuration template from https://github.com/andig/evcc-config
+// ConfigTemplate is a configuration template from https://github.com/evcc-io/config
 type ConfigTemplate struct {
 	registry.Template
 	Config map[string]interface{}

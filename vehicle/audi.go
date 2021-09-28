@@ -6,9 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/davidgiga1993/AudiAPI
@@ -18,6 +19,7 @@ import (
 type Audi struct {
 	*embed
 	*vw.Provider // provides the api implementations
+	// audiProvider *audi.Provider
 }
 
 func init() {
@@ -27,12 +29,13 @@ func init() {
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,11 +43,11 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Audi{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("audi")
-	identity := vw.NewIdentity(log, "77869e21-e30a-4a92-b016-48ab7d3db1d8")
+	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{
 		"response_type": {"id_token token"},
@@ -55,12 +58,13 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"ui_locales":    {"de-DE"},
 	})
 
-	err := identity.Login(query, cc.User, cc.Password)
+	err := identity.LoginVAG("77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := vw.NewAPI(log, identity, "Audi", "DE")
+	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
 		cc.VIN, err = findVehicle(api.Vehicles())
@@ -69,9 +73,20 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
-		v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
+			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		}
 	}
+
+	// audiApi := audi.NewAPI(log, identity, "Audi", "DE")
+	// v.audiProvider = audi.NewProvider(audiApi, cc.VIN, cc.Cache)
 
 	return v, err
 }
+
+// var _ api.VehicleOdometer = (*Audi)(nil)
+
+// func (v *Audi) Odometer() (float64, error) {
+// 	return v.audiProvider.Odometer()
+// }

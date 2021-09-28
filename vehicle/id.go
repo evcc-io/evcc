@@ -6,10 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/vehicle/id"
-	"github.com/andig/evcc/vehicle/vw"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/id"
+	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -27,12 +28,13 @@ func init() {
 // NewIDFromConfig creates a new vehicle
 func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
+		Timeout             time.Duration
 	}{
-		Cache: interval,
+		Cache:   interval,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -40,11 +42,11 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &ID{
-		embed: &embed{cc.Title, cc.Capacity},
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("id")
-	identity := vw.NewIdentity(log, "")
+	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{
 		"response_type": {"code id_token token"},
@@ -53,12 +55,13 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile badge cars dealers vin"},
 	})
 
-	err := identity.Login(query, cc.User, cc.Password)
+	err := identity.LoginID(query, cc.User, cc.Password)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := id.NewAPI(log, identity)
+	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
 		cc.VIN, err = findVehicle(api.Vehicles())

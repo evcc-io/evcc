@@ -4,37 +4,49 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/charger"
-	"github.com/andig/evcc/meter"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/vehicle"
+	"github.com/dustin/go-humanize"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/vehicle"
+	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 type config struct {
-	URI        string
-	Log        string
-	Metrics    bool
-	Profile    bool
-	Levels     map[string]string
-	Interval   time.Duration
-	Mqtt       mqttConfig
-	Javascript map[string]interface{}
-	Influx     server.InfluxConfig
-	HEMS       typedConfig
-	Messaging  messagingConfig
-	Meters     []qualifiedConfig
-	Chargers   []qualifiedConfig
-	Vehicles   []qualifiedConfig
-	Site       map[string]interface{}
-	LoadPoints []map[string]interface{}
+	URI          string
+	Log          string
+	SponsorToken string
+	Metrics      bool
+	Profile      bool
+	Levels       map[string]string
+	Interval     time.Duration
+	Mqtt         mqttConfig
+	Javascript   map[string]interface{}
+	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
+	HEMS         typedConfig
+	Messaging    messagingConfig
+	Meters       []qualifiedConfig
+	Chargers     []qualifiedConfig
+	Vehicles     []qualifiedConfig
+	Tariffs      tariffConfig
+	Site         map[string]interface{}
+	LoadPoints   []map[string]interface{}
 }
 
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
+}
+
+func (conf *mqttConfig) RootTopic() string {
+	if conf.Topic != "" {
+		return conf.Topic
+	}
+	return "evcc"
 }
 
 type qualifiedConfig struct {
@@ -50,6 +62,10 @@ type typedConfig struct {
 type messagingConfig struct {
 	Events   map[string]push.EventTemplate
 	Services []typedConfig
+}
+
+type tariffConfig struct {
+	Grid typedConfig
 }
 
 // ConfigProvider provides configuration items
@@ -99,7 +115,11 @@ func (cp *ConfigProvider) configure(conf config) error {
 
 func (cp *ConfigProvider) configureMeters(conf config) error {
 	cp.meters = make(map[string]api.Meter)
-	for _, cc := range conf.Meters {
+	for id, cc := range conf.Meters {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
+		}
+
 		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
@@ -118,7 +138,11 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
 	cp.chargers = make(map[string]api.Charger)
-	for _, cc := range conf.Chargers {
+	for id, cc := range conf.Chargers {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
+		}
+
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
@@ -137,11 +161,15 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
 	cp.vehicles = make(map[string]api.Vehicle)
-	for _, cc := range conf.Vehicles {
+	for id, cc := range conf.Vehicles {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
-			return err
+			// wrap any created errors to prevent fatals
+			v, _ = wrapper.New(v, err)
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {

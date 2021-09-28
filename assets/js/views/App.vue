@@ -1,47 +1,50 @@
 <template>
-	<div class="app d-flex flex-column justify-content-between">
-		<div>
+	<div class="app d-flex flex-column justify-content-between overflow-hidden">
+		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="/">
-						<Logo class="logo" />
+					<a class="navbar-brand" href="https://github.com/evcc-io/evcc">
+						<Logo class="logo"></Logo>
 					</a>
-					<button
-						class="navbar-toggler"
-						type="button"
-						data-toggle="collapse"
-						data-target="#navbarNavAltMarkup"
-						aria-controls="navbarNavAltMarkup"
-						aria-expanded="false"
-						aria-label="Toggle navigation"
-					>
-						<span class="navbar-toggler-icon"></span>
-					</button>
-					<div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-						<div class="navbar-nav mr-auto"></div>
-						<div class="navbar-nav">
-							<a
-								class="nav-item nav-link"
-								href="https://github.com/andig/evcc/discussions"
-								target="_blank"
+					<div class="d-flex">
+						<div class="d-flex">
+							<Notifications :notifications="notifications" />
+							<button
+								class="navbar-toggler"
+								type="button"
+								data-bs-toggle="collapse"
+								data-bs-target="#navbarNavAltMarkup"
+								aria-controls="navbarNavAltMarkup"
+								aria-expanded="false"
+								aria-label="Toggle navigation"
 							>
-								Community Support
-							</a>
-							<a
-								class="nav-item nav-link"
-								href="https://github.com/sponsors/andig"
-								target="_blank"
-							>
-								Projekt unterstützen
-							</a>
+								<span class="navbar-toggler-icon"></span>
+							</button>
+						</div>
+						<div
+							class="collapse navbar-collapse flex-lg-grow-0"
+							id="navbarNavAltMarkup"
+						>
+							<ul class="navbar-nav">
+								<li class="nav-item">
+									<a
+										class="nav-link"
+										href="https://github.com/evcc-io/evcc/discussions"
+										target="_blank"
+									>
+										{{ $t("header.support") }}
+									</a>
+								</li>
+							</ul>
 						</div>
 					</div>
 				</div>
 			</nav>
-
-			<router-view></router-view>
+			<router-view
+				class="flex-grow-1 d-flex flex-column justify-content-stretch"
+			></router-view>
 		</div>
-		<Footer :version="version" />
+		<Footer :version="version" :sponsor="sponsor"></Footer>
 	</div>
 </template>
 
@@ -49,11 +52,13 @@
 import "../icons";
 import Logo from "../components/Logo";
 import Footer from "../components/Footer";
+import Notifications from "../components/Notifications";
+
 import store from "../store";
 
 export default {
 	name: "App",
-	components: { Logo, Footer },
+	components: { Logo, Footer, Notifications },
 	data: function () {
 		return {
 			compact: false,
@@ -85,10 +90,18 @@ export default {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
 				} catch (e) {
-					window.toasts.error(e, evt.data);
+					window.app.error(e, evt.data);
 				}
 			};
 		},
+		reload() {
+			window.location.reload();
+		},
+	},
+	metaInfo() {
+		return {
+			title: this.title ? `evcc | ${this.title}` : "evcc",
+		};
 	},
 	computed: {
 		version: function () {
@@ -101,6 +114,15 @@ export default {
 				uploadProgress: this.store.state.uploadProgress,
 			};
 		},
+		title: function () {
+			return this.store.state.siteTitle;
+		},
+		sponsor: function () {
+			return this.store.state.sponsor;
+		},
+	},
+	props: {
+		notifications: Array,
 	},
 	created: function () {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -115,5 +137,9 @@ export default {
 }
 .app {
 	min-height: 100vh;
+}
+.title {
+	position: relative;
+	top: 0.1rem;
 }
 </style>

@@ -10,16 +10,21 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/test"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/test"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 // Assets is the embedded assets file system
 var Assets fs.FS
+
+type errorJSON struct {
+	Error string `json:"error"`
+}
 
 type chargeModeJSON struct {
 	Mode api.ChargeMode `json:"mode"`
@@ -31,6 +36,10 @@ type targetSoCJSON struct {
 
 type minSoCJSON struct {
 	MinSoC int `json:"minSoC"`
+}
+
+type phasesJSON struct {
+	Phases int `json:"phases"`
 }
 
 type route struct {
@@ -53,7 +62,7 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	}
 }
 
-func indexHandler(site core.SiteAPI) http.HandlerFunc {
+func indexHandler(site site.API) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 
@@ -94,7 +103,7 @@ func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
 }
 
 // HealthHandler returns current charge mode
-func HealthHandler(site core.SiteAPI) http.HandlerFunc {
+func HealthHandler(site site.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !site.Healthy() {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -147,94 +156,129 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 }
 
 // CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func CurrentChargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := chargeModeJSON{Mode: loadpoint.GetMode()}
+		res := chargeModeJSON{Mode: lp.GetMode()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // ChargeModeHandler updates charge mode
-func ChargeModeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func ChargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		modeS, ok := vars["mode"]
-		mode := api.ChargeModeString(modeS)
-		if mode == "" || string(mode) != modeS || !ok {
+		modeS := vars["mode"]
+
+		mode, err := api.ChargeModeString(modeS)
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
-		loadpoint.SetMode(mode)
+		lp.SetMode(mode)
 
-		res := chargeModeJSON{Mode: loadpoint.GetMode()}
+		res := chargeModeJSON{Mode: lp.GetMode()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // CurrentTargetSoCHandler returns current target soc
-func CurrentTargetSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func CurrentTargetSoCHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
+		res := targetSoCJSON{TargetSoC: lp.GetTargetSoC()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // TargetSoCHandler updates target soc
-func TargetSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func TargetSoCHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		socS, ok := vars["soc"]
+		socS := vars["soc"]
 		soc, err := strconv.ParseInt(socS, 10, 32)
 
-		if ok && err == nil {
-			err = loadpoint.SetTargetSoC(int(soc))
+		if err == nil {
+			err = lp.SetTargetSoC(int(soc))
 		}
 
-		if !ok || err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
-		res := targetSoCJSON{TargetSoC: loadpoint.GetTargetSoC()}
+		res := targetSoCJSON{TargetSoC: lp.GetTargetSoC()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // CurrentMinSoCHandler returns current minimum soc
-func CurrentMinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func CurrentMinSoCHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
+		res := minSoCJSON{MinSoC: lp.GetMinSoC()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // MinSoCHandler updates minimum soc
-func MinSoCHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func MinSoCHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		socS, ok := vars["soc"]
+		socS := vars["soc"]
 		soc, err := strconv.ParseInt(socS, 10, 32)
 
-		if ok && err == nil {
-			err = loadpoint.SetMinSoC(int(soc))
+		if err == nil {
+			err = lp.SetMinSoC(int(soc))
 		}
 
-		if !ok || err != nil {
+		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
-		res := minSoCJSON{MinSoC: loadpoint.GetMinSoC()}
+		res := minSoCJSON{MinSoC: lp.GetMinSoC()}
+		jsonResponse(w, r, res)
+	}
+}
+
+// CurrentPhasesHandler returns current minimum soc
+func CurrentPhasesHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := phasesJSON{Phases: lp.GetPhases()}
+		jsonResponse(w, r, res)
+	}
+}
+
+// PhasesHandler updates minimum soc
+func PhasesHandler(lp loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		phasesS := vars["phases"]
+		phases, err := strconv.ParseInt(phasesS, 10, 32)
+
+		if err == nil {
+			err = lp.SetPhases(int(phases))
+		}
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
+			return
+		}
+
+		res := phasesJSON{Phases: lp.GetPhases()}
 		jsonResponse(w, r, res)
 	}
 }
 
 // RemoteDemandHandler updates minimum soc
-func RemoteDemandHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func RemoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -245,18 +289,19 @@ func RemoteDemandHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 			source, ok = vars["source"]
 		}
 
-		demand, err := core.RemoteDemandString(demandS)
+		demand, err := loadpoint.RemoteDemandString(demandS)
 
 		if !ok || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
-		loadpoint.RemoteControl(source, demand)
+		lp.RemoteControl(source, demand)
 
 		res := struct {
-			Demand core.RemoteDemand `json:"demand"`
-			Source string            `json:"source"`
+			Demand loadpoint.RemoteDemand `json:"demand"`
+			Source string                 `json:"source"`
 		}{
 			Source: source,
 			Demand: demand,
@@ -277,7 +322,7 @@ func timezone() *time.Location {
 }
 
 // TargetChargeHandler updates target soc
-func TargetChargeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
+func TargetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
@@ -292,9 +337,9 @@ func TargetChargeHandler(loadpoint core.LoadPointAPI) http.HandlerFunc {
 		timeS, ok := vars["time"]
 		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
 
-		if !ok || err != nil || timeV.Before(time.Now()) {
-			log.DEBUG.Printf("parse time: %v", err)
+		if !ok || err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			jsonResponse(w, r, errorJSON{Error: err.Error()})
 			return
 		}
 
@@ -325,7 +370,7 @@ type HTTPd struct {
 }
 
 // NewHTTPd creates HTTP server with configured routes for loadpoint
-func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) *HTTPd {
+func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTTPd {
 	routes := map[string]route{
 		"health":    {[]string{"GET"}, "/health", HealthHandler(site)},
 		"state":     {[]string{"GET"}, "/state", StateHandler(cache)},
@@ -372,8 +417,10 @@ func NewHTTPd(url string, site core.SiteAPI, hub *SocketHub, cache *util.Cache) 
 			"settargetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{soc:[0-9]+}", TargetSoCHandler(lp)},
 			"getminsoc":       {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
 			"setminsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{soc:[0-9]+}", MinSoCHandler(lp)},
+			"getphases":       {[]string{"GET"}, "/phases", CurrentPhasesHandler(lp)},
+			"setphases":       {[]string{"POST", "OPTIONS"}, "/phases/{phases:[0-9]+}", PhasesHandler(lp)},
 			"settargetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
-			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source}", RemoteDemandHandler(lp)},
+			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", RemoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {

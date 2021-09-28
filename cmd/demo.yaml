@@ -22,21 +22,21 @@ javascript:
 
 meters:
 - name: grid
-  type: default
+  type: custom
   power:
     type: js
     vm: shared
     script: state.gridpower = state.pvpower + state.chargepower + state.residualpower + state.batterypower;
 
 - name: pv
-  type: default
+  type: custom
   power:
     type: js
     vm: shared
     script: state.pvpower += 100*Math.random();
 
 - name: battery
-  type: default
+  type: custom
   power:
     type: js
     vm: shared
@@ -46,7 +46,7 @@ meters:
     vm: shared
     script: "30"
 - name: charge
-  type: default
+  type: custom
   power:
     type: js
     vm: shared
@@ -58,7 +58,7 @@ meters:
 
 chargers:
 - name: demo
-  type: default
+  type: custom
   enable:
     type: js
     vm: shared
@@ -87,7 +87,7 @@ chargers:
 vehicles:
 - name: demo
   title: e-Golf
-  type: default
+  type: custom
   charge:
     type: js
     vm: shared

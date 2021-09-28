@@ -1,6 +1,9 @@
 uri: 0.0.0.0:7070 # uri for ui
 interval: 10s # control cycle interval
 
+# sponsor token enables optional features (request at https://cloud.evcc.io)
+# sponsortoken:
+
 # log settings
 log: error
 levels:
@@ -10,7 +13,7 @@ levels:
 
 # meter definitions
 # name can be freely chosen and is used as reference when assigning meters to site and loadpoints
-# for examples see https://github.com/andig/evcc-config#meters
+# for examples see https://github.com/evcc-io/config#meters
 meters:
 - name: grid
   type: modbus
@@ -29,7 +32,7 @@ meters:
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
-# for examples see https://github.com/andig/evcc-config#chargers
+# for examples see https://github.com/evcc-io/config#chargers
 chargers:
 - name: wallbe
   type: wallbe # Wallbe charger
@@ -39,7 +42,7 @@ chargers:
 
 # vehicle definitions
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
-# for examples see https://github.com/andig/evcc-config#vehicles
+# for examples see https://github.com/evcc-io/config#vehicles
 vehicles:
 - name: renault
   type: renault
@@ -55,9 +58,11 @@ site:
   title: Home # display name for UI
   meters:
     grid: grid # grid meter
-    pv: pv # pv meter
+    pvs:
+    - pv # list of pv inverters/ meters
     battery: battery # battery meter
-  prioritySoC: 60 # give home battery priority up to this soc (0 to disable)
+  prioritySoC: # give home battery priority up to this soc (empty to disable)
+  bufferSoC: # ignore home battery discharge above soc (empty to disable)
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
@@ -78,31 +83,45 @@ loadpoints:
       # poll mode defines under which condition the vehicle API is called:
       #   charging: update vehicle ONLY when charging (this is the recommended default)
       #   connected: update vehicle when connected (not only charging), interval defines how often
-      #   always: always update vehicle regardless of connection state, interval defines how often
+      #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
       mode: charging
       # poll interval defines how often the vehicle API may be polled if NOT charging
       interval: 60m
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
     estimate: false # set true to interpolate between api updates
-    levels: # target soc levels for UI
-    - 30
-    - 50
-    - 80
-    - 100
   onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
+  onIdentify: # set defaults when vehicle is identified
+  - e-Up:
+      mode: pv # switch back to pv mode
+      targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long
-    threshold: 0 # minimum export power (W). If zero, export must exceed minimum charge power to enable
+    threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
   disable: # pv mode disable behavior
-    delay: 5m # threshold must be exceeded for this long
+    delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
   guardduration: 5m # switch charger contactor not more often than this (default 10m)
   mincurrent: 6 # minimum charge current (default 6A)
   maxcurrent: 16 # maximum charge current (default 16A)
+
+# tariffs are the fixed or variable tariffs
+# cheap can be used to define a tariff rate considered cheap enough for charging
+tariffs:
+  grid:
+    # # either
+    # type: tibber
+    # cheap: 20 # ct/kWh
+    # token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
+    # homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
+
+    # # or
+    # type: awattar
+    # cheap: 20 # ct/kWh
+    # region: de # optional, choose at for Austria
 
 # mqtt message broker
 mqtt:
@@ -117,6 +136,12 @@ influx:
   # database: evcc
   # user:
   # password:
+
+# eebus credentials
+eebus:
+  # uri: # :4712
+  # public: # public key
+  # private: # private key
 
 # push messages
 messaging:

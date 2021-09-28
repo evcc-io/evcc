@@ -3,7 +3,7 @@ package push
 import (
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Event is a notification event
@@ -37,7 +37,7 @@ func (h *Hub) Add(sender Sender) {
 func (h *Hub) apply(ev Event, template string) (string, error) {
 	attr := make(map[string]interface{})
 
-	// let cache catch up, refs reverted https://github.com/andig/evcc/pull/445
+	// let cache catch up, refs reverted https://github.com/evcc-io/evcc/pull/445
 	time.Sleep(100 * time.Millisecond)
 
 	// get all values from cache
@@ -62,14 +62,20 @@ func (h *Hub) Run(events <-chan Event) {
 			continue
 		}
 
+		title, err := h.apply(ev, definition.Title)
+		if err != nil {
+			log.ERROR.Printf("invalid title template for %s: %v", ev.Event, err)
+			continue
+		}
+
 		msg, err := h.apply(ev, definition.Msg)
 		if err != nil {
-			log.ERROR.Printf("invalid template for %s: %v", ev.Event, err)
+			log.ERROR.Printf("invalid message template for %s: %v", ev.Event, err)
 			continue
 		}
 
 		for _, sender := range h.sender {
-			go sender.Send(definition.Title, msg)
+			go sender.Send(title, msg)
 		}
 	}
 }

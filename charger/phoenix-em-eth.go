@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
@@ -32,7 +32,7 @@ func init() {
 	registry.Add("phoenix-em-eth", NewPhoenixEMEthFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratePhoenixEMEth -o phoenix-em-eth_decorators -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePhoenixEMEth -b *PhoenixEMEth -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPhoenixEMEthFromConfig creates a Phoenix charger from generic config
 func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -73,7 +73,7 @@ func NewPhoenixEMEthFromConfig(other map[string]interface{}) (api.Charger, error
 
 // NewPhoenixEMEth creates a Phoenix charger
 func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func NewPhoenixEMEth(uri string, id uint8) (*PhoenixEMEth, error) {
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegStatus, 1)
 	if err != nil {
@@ -98,7 +98,7 @@ func (wb *PhoenixEMEth) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(string(b[1])), nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (wb *PhoenixEMEth) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(phxEMEthRegEnable, 1)
 	if err != nil {
@@ -108,7 +108,7 @@ func (wb *PhoenixEMEth) Enabled() (bool, error) {
 	return b[0] == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (wb *PhoenixEMEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -120,7 +120,7 @@ func (wb *PhoenixEMEth) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
@@ -131,7 +131,9 @@ func (wb *PhoenixEMEth) MaxCurrent(current int64) error {
 	return err
 }
 
-// ChargingTime yields current charge run duration
+var _ api.ChargeTimer = (*PhoenixEMEth)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
 func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegChargeTime, 2)
 	if err != nil {
@@ -143,7 +145,7 @@ func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (wb *PhoenixEMEth) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegPower, 2)
 	if err != nil {
@@ -153,7 +155,7 @@ func (wb *PhoenixEMEth) currentPower() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) * 10, err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(phxEMEthRegEnergy, 2)
 	if err != nil {
@@ -163,7 +165,7 @@ func (wb *PhoenixEMEth) totalEnergy() (float64, error) {
 	return rs485.RTUUint32ToFloat64Swapped(b) / 100, err
 }
 
-// currents implements the Meter.Currents interface
+// currents implements the api.MeterCurrent interface
 func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range phxEMEthRegCurrents {
@@ -172,7 +174,7 @@ func (wb *PhoenixEMEth) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b) / 1000)
+		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b)/1000)
 	}
 
 	return currents[0], currents[1], currents[2], nil

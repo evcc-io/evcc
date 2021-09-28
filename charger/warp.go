@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/util"
 )
 
 func init() {
@@ -61,9 +61,10 @@ type Warp struct {
 	meterG      func() (string, error)
 	enableS     func(bool) error
 	maxcurrentS func(int64) error
+	enabled     bool // cache
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWarp -o warp_decorators -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {
@@ -82,11 +83,11 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 
 	// timeout handler
 	timer := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/state", topic), "", 1, timeout,
+		fmt.Sprintf("%s/evse/state", topic), 1, timeout,
 	).StringGetter()
 
 	stringG := func(topic string) func() (string, error) {
-		g := provider.NewMqtt(log, client, topic, "", 1, 0).StringGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).StringGetter()
 		return func() (val string, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -100,14 +101,14 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
 
 	m.enableS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/auto_start_charging_update", topic),
-		`{ "auto_start_charging": ${enable} }`, 1, 0,
-	).BoolSetter("enable")
+		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 1, 0).
+		WithPayload(`{ "auto_start_charging": ${enable} }`).
+		BoolSetter("enable")
 
 	m.maxcurrentS = provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/evse/current_limit", topic),
-		`{ "current": ${maxcurrent} }`, 1, 0,
-	).IntSetter("maxcurrent")
+		fmt.Sprintf("%s/evse/current_limit", topic), 1, 0).
+		WithPayload(`{ "current": ${maxcurrent} }`).
+		IntSetter("maxcurrent")
 
 	return m, nil
 }
@@ -140,7 +141,12 @@ func (m *Warp) Enable(enable bool) error {
 
 	topic := fmt.Sprintf("%s/%s/%s", m.root, "evse", action)
 
-	return m.client.Publish(topic, true, "null")
+	err := m.client.Publish(topic, false, "null")
+	if err == nil {
+		m.enabled = enable
+	}
+
+	return err
 }
 
 func (m *Warp) status() (warpStatus, error) {
@@ -154,6 +160,8 @@ func (m *Warp) status() (warpStatus, error) {
 	return res, err
 }
 
+// autostart reads the enabled state from charger
+// use function instead of jq to honor evse/state updates
 func (m *Warp) autostart() (bool, error) {
 	var res struct {
 		AutoStartCharging bool `json:"auto_start_charging"`
@@ -167,8 +175,8 @@ func (m *Warp) autostart() (bool, error) {
 	return res.AutoStartCharging, err
 }
 
-// Enabled implements the api.Charger interface
-func (m *Warp) Enabled() (bool, error) {
+// isEnabled reads enabled status from mqtt
+func (m *Warp) isEnabled() (bool, error) {
 	enabled, err := m.autostart()
 
 	var status warpStatus
@@ -182,6 +190,30 @@ func (m *Warp) Enabled() (bool, error) {
 	} else {
 		// check that vehicle is really not charging
 		enabled = status.VehicleState == 2
+	}
+
+	return enabled, err
+}
+
+// Enabled implements the api.Charger interface
+func (m *Warp) Enabled() (bool, error) {
+	enabled, err := m.isEnabled()
+
+	if err == nil && enabled != m.enabled {
+		start := time.Now()
+
+		// retry to avoid out of sync errors in case of slow warp updates
+		for time.Since(start) <= 2*time.Second {
+			if enabled, err = m.isEnabled(); err != nil {
+				break
+			}
+
+			if enabled == m.enabled {
+				break
+			}
+
+			time.Sleep(50 * time.Millisecond)
+		}
 	}
 
 	return enabled, err
@@ -218,6 +250,8 @@ func (m *Warp) MaxCurrent(current int64) error {
 	return m.maxcurrentS(1000 * current)
 }
 
+var _ api.ChargerEx = (*Warp)(nil)
+
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (m *Warp) MaxCurrentMillis(current float64) error {
 	return m.maxcurrentS(int64(1000 * current))
@@ -229,7 +263,7 @@ type powerStatus struct {
 	EnergyAbs float64 `json:"energy_abs"`
 }
 
-// currentPower implements the Meter.CurrentPower interface
+// currentPower implements the api.Meter interface
 func (m *Warp) currentPower() (float64, error) {
 	var res powerStatus
 
@@ -241,7 +275,7 @@ func (m *Warp) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (m *Warp) totalEnergy() (float64, error) {
 	var res powerStatus
 

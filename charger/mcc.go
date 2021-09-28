@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -58,8 +58,7 @@ type MobileConnect struct {
 	uri              string
 	password         string
 	token            string
-	tokenValid       time.Time
-	tokenRefresh     time.Time
+	tokenExpiry      time.Time
 	cableInformation MCCCurrentCableInformation
 }
 
@@ -108,11 +107,9 @@ func (mcc *MobileConnect) fetchToken(request *http.Request) error {
 		}
 
 		mcc.token = tr.Token
-		// According to the Web Interface, the token is valid for 2 minutes
-		mcc.tokenValid = time.Now().Add(2 * time.Minute)
-
-		// the web interface updates the token every 2 minutes, so lets do the same here
-		mcc.tokenRefresh = time.Now().Add(2 * time.Minute)
+		// According to tests, the token is valid for 10 minutes
+		// but the web interface updates the token every 2 minutes, so let's enforce this
+		mcc.tokenExpiry = time.Now().Add(2 * time.Minute)
 	}
 
 	return err
@@ -147,6 +144,7 @@ func (mcc *MobileConnect) refresh() error {
 		return err
 	}
 
+	req.Header.Set("Referer", fmt.Sprintf("%s/login", mcc.uri))
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
 
 	return mcc.fetchToken(req)
@@ -154,16 +152,23 @@ func (mcc *MobileConnect) refresh() error {
 
 // creates a http request that contains the auth token
 func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
-	// do we need to login?
-	if mcc.token == "" || time.Since(mcc.tokenValid) > 0 {
-		if err := mcc.login(mcc.password); err != nil {
-			return nil, err
+
+	// do we need a token refresh?
+	if mcc.token != "" {
+		// is it time to refresh the token?
+		if time.Until(mcc.tokenExpiry) < 10*time.Second {
+			if err := mcc.refresh(); err != nil {
+				// if refreshing the token fails it most likely is expired
+				// hence a new login is required, so let's enforce this
+				// and ignore this error
+				mcc.token = ""
+			}
 		}
 	}
 
-	// is it time to refresh the token?
-	if time.Since(mcc.tokenRefresh) > 0 {
-		if err := mcc.refresh(); err != nil {
+	// do we need to login?
+	if mcc.token == "" {
+		if err := mcc.login(mcc.password); err != nil {
 			return nil, err
 		}
 	}
@@ -214,7 +219,7 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 	return json.Unmarshal([]byte(s), &result)
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
 	if err != nil {
@@ -240,7 +245,7 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (mcc *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
 	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
@@ -261,13 +266,13 @@ func (mcc *MobileConnect) Enabled() (bool, error) {
 	return false, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (mcc *MobileConnect) Enable(enable bool) error {
 	// As we don't know of the API to disable charging this for now always returns an error
 	return nil
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	// The device doesn't return an error if we set a value greater than the
 	// current allowed max or smaller than the allowed min
@@ -309,7 +314,9 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 	return nil
 }
 
-// CurrentPower implements the Meter interface.
+var _ api.Meter = (*MobileConnect)(nil)
+
+// CurrentPower implements the api.Meter interface
 func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
@@ -317,7 +324,9 @@ func (mcc *MobileConnect) CurrentPower() (float64, error) {
 	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
 }
 
-// ChargedEnergy implements the ChargeRater interface.
+var _ api.ChargeRater = (*MobileConnect)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
 func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
@@ -327,7 +336,9 @@ func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
 	return currentSession.EnergySumKwh, nil
 }
 
-// ChargingTime yields current charge run duration
+var _ api.ChargeTimer = (*MobileConnect)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
 func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	var currentSession MCCCurrentSession
 	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
@@ -337,7 +348,9 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 	return time.Duration(currentSession.Duration * time.Second), nil
 }
 
-// Currents implements the MeterCurrent interface
+var _ api.MeterCurrent = (*MobileConnect)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
 	var energy MCCEnergy
 	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)

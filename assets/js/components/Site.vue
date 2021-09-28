@@ -1,37 +1,26 @@
 <template>
-	<div>
-		<div class="row">
-			<div class="d-none d-md-flex col-12 col-md-4 mt-md-4 align-items-end">
-				<p class="h1">{{ title || "Home" }}</p>
-			</div>
-			<div class="col-12 col-md-8 mt-md-4" v-if="multi">
-				<SiteDetails v-bind="details"></SiteDetails>
-			</div>
+	<div class="flex-grow-1 d-flex flex-column">
+		<h3 class="d-none d-md-block my-4">
+			{{ siteTitle || "Home" }}
+		</h3>
+		<Energyflow v-bind="energyflow" />
+		<hr class="w-100 my-4" />
+		<div class="flex-grow-1 d-flex justify-content-around flex-column">
+			<template v-for="(loadpoint, id) in loadpoints">
+				<hr class="w-100 my-4" v-if="id > 0" :key="id + '_hr'" />
+				<Loadpoint
+					:key="id"
+					v-bind="loadpoint"
+					:single="loadpoints.length === 1"
+					:id="id"
+				/>
+			</template>
 		</div>
-
-		<div class="row d-none d-md-flex border-bottom"></div>
-
-		<div class="row" v-if="!multi">
-			<div class="d-none d-md-block col-md-4"></div>
-			<div class="col-12 col-md-8">
-				<SiteDetails v-bind="details"></SiteDetails>
-			</div>
-		</div>
-
-		<Loadpoint
-			v-for="(loadpoint, id) in loadpoints"
-			v-bind="loadpoint"
-			:id="id"
-			:key="id"
-			:multi="multi"
-			:pvConfigured="pvConfigured"
-		>
-		</Loadpoint>
 	</div>
 </template>
 
 <script>
-import SiteDetails from "./SiteDetails";
+import Energyflow from "./Energyflow";
 import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
 import collector from "../mixins/collector";
@@ -39,7 +28,6 @@ import collector from "../mixins/collector";
 export default {
 	name: "Site",
 	props: {
-		title: String,
 		loadpoints: Array,
 
 		// details
@@ -50,16 +38,24 @@ export default {
 		batteryConfigured: Boolean,
 		batteryPower: Number,
 		batterySoC: Number,
+		gridCurrents: Array,
+		prioritySoC: Number,
+		siteTitle: String,
 	},
-	components: { SiteDetails, Loadpoint },
+	components: { Loadpoint, Energyflow },
 	mixins: [formatter, collector],
 	computed: {
-		details: function () {
-			return this.collectProps(SiteDetails);
+		energyflow: function () {
+			return this.collectProps(Energyflow);
 		},
-		multi: function () {
-			// TODO fix compact
-			return this.loadpoints.length > 1 /* || app.compact*/;
+		activeLoadpointsCount: function () {
+			return this.loadpoints.filter((lp) => lp.chargePower > 0).length;
+		},
+		loadpointsPower: function () {
+			return this.loadpoints.reduce((sum, lp) => {
+				sum += lp.chargePower || 0;
+				return sum;
+			}, 0);
 		},
 	},
 };

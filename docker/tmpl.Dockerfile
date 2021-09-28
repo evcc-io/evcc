@@ -50,6 +50,8 @@ RUN GOARCH={{ .GoARCH }} GOARM={{ .GoARM }} make build
 # STEP 3 build a small image including module support
 FROM {{ .RuntimeImage }}
 
+WORKDIR /app
+
 ENV TZ=Europe/Berlin
 
 # Import from builder
@@ -57,11 +59,16 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /build/evcc /usr/local/bin/evcc
 
-COPY docker/bin/* /evcc/
+COPY docker/bin/* /app/
 
-EXPOSE 7070
+# UI and /api
+EXPOSE 7070/tcp
+# KEBA charger
+EXPOSE 7090/udp
+# SMA Energy Manager
+EXPOSE 9522/udp
 
 HEALTHCHECK --interval=60s --start-period=60s --timeout=30s --retries=3 CMD [ "evcc", "health" ]
 
-ENTRYPOINT [ "/evcc/entrypoint.sh" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
 CMD [ "evcc" ]

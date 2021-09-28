@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -27,22 +27,24 @@ type EVSEParameterResponse struct {
 
 // EVSEListEntry is EVSEParameterResponse.List
 type EVSEListEntry struct {
-	VehicleState   int64   `json:"vehicleState"`
-	EvseState      bool    `json:"evseState"`
-	MaxCurrent     int64   `json:"maxCurrent"`
-	ActualCurrent  int64   `json:"actualCurrent"`
-	ActualPower    float64 `json:"actualPower"`
-	Duration       int64   `json:"duration"`
-	AlwaysActive   bool    `json:"alwaysActive"`
-	UseMeter       bool    `json:"useMeter"`
-	LastActionUser string  `json:"lastActionUser"`
-	LastActionUID  string  `json:"lastActionUID"`
-	Energy         float64 `json:"energy"`
-	Mileage        float64 `json:"mileage"`
-	MeterReading   float64 `json:"meterReading"`
-	CurrentP1      float64 `json:"currentP1"`
-	CurrentP2      float64 `json:"currentP2"`
-	CurrentP3      float64 `json:"currentP3"`
+	VehicleState    int64   `json:"vehicleState"`
+	EvseState       bool    `json:"evseState"`
+	MaxCurrent      int64   `json:"maxCurrent"`
+	ActualCurrent   int64   `json:"actualCurrent"`
+	ActualCurrentMA *int64  `json:"actualCurrentMA"` // 1/100 A
+	ActualPower     float64 `json:"actualPower"`
+	Duration        int64   `json:"duration"`
+	AlwaysActive    bool    `json:"alwaysActive"`
+	UseMeter        bool    `json:"useMeter"`
+	LastActionUser  string  `json:"lastActionUser"`
+	LastActionUID   string  `json:"lastActionUID"`
+	Energy          float64 `json:"energy"`
+	Mileage         float64 `json:"mileage"`
+	MeterReading    float64 `json:"meterReading"`
+	CurrentP1       float64 `json:"currentP1"`
+	CurrentP2       float64 `json:"currentP2"`
+	CurrentP3       float64 `json:"currentP3"`
+	RFIDUID         *string `json:"RFIDUID"`
 }
 
 // EVSEWifi charger implementation
@@ -51,14 +53,15 @@ type EVSEWifi struct {
 	log          *util.Logger
 	uri          string
 	alwaysActive bool
-	current      int64
+	current      int64 // current will always be the physical value sent to the API
+	hires        bool
 }
 
 func init() {
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decorateEVSE -o evsewifi_decorators -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *EVSEWifi -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewEVSEWifiFromConfig creates a EVSEWifi charger from generic config
 func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -78,11 +81,20 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return evse, err
 	}
 
-	// auto-detect EVSE meter
-	if meter, err := evse.HasMeter(); meter && err == nil {
+	// auto-detect capabilities
+	params, err := evse.getParameters()
+	if err != nil {
+		return evse, err
+	}
+
+	if params.UseMeter {
 		cc.Meter.Energy = true
 		cc.Meter.Energy = true
 		cc.Meter.Currents = true
+	}
+
+	if params.ActualCurrentMA != nil {
+		evse.hires = true
 	}
 
 	// decorate Charger with Meter
@@ -103,7 +115,20 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		currents = evse.currents
 	}
 
-	return decorateEVSE(evse, currentPower, totalEnergy, currents), nil
+	// decorate Charger with MaxCurrentEx
+	var maxCurrentEx func(float64) error
+	if evse.hires {
+		maxCurrentEx = evse.maxCurrentEx
+		evse.current = 100 * evse.current
+	}
+
+	// decorate Charger with Identifier
+	var identify func() (string, error)
+	if params.RFIDUID != nil {
+		identify = evse.identify
+	}
+
+	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
@@ -146,13 +171,7 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	return params, nil
 }
 
-// HasMeter returns the useMeter api response
-func (evse *EVSEWifi) HasMeter() (bool, error) {
-	params, err := evse.getParameters()
-	return params.UseMeter, err
-}
-
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	params, err := evse.getParameters()
 	if err != nil {
@@ -175,21 +194,22 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (evse *EVSEWifi) Enabled() (bool, error) {
 	params, err := evse.getParameters()
 	return params.EvseState, err
 }
 
-// checkError checks for EVSE error response with HTTP 200 status
-func (evse *EVSEWifi) checkError(b []byte, err error) error {
+// get executes GET request and checks for EVSE error response
+func (evse *EVSEWifi) get(uri string) error {
+	b, err := evse.GetBody(uri)
 	if err == nil && !strings.HasPrefix(string(b), evseSuccess) {
 		err = errors.New(string(b))
 	}
 	return err
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (evse *EVSEWifi) Enable(enable bool) error {
 	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
 
@@ -200,38 +220,61 @@ func (evse *EVSEWifi) Enable(enable bool) error {
 		}
 		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
 	}
-	return evse.checkError(evse.GetBody(url))
+	return evse.get(url)
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (evse *EVSEWifi) MaxCurrent(current int64) error {
+	if evse.hires {
+		current = 100 * current
+	}
 	evse.current = current
 	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
-	return evse.checkError(evse.GetBody(url))
+	return evse.get(url)
 }
 
-// ChargingTime yields current charge run duration
+// maxCurrentEx implements the api.ChargerEx interface
+func (evse *EVSEWifi) maxCurrentEx(current float64) error {
+	evse.current = int64(100 * current)
+	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), evse.current)
+	return evse.get(url)
+}
+
+var _ api.ChargeTimer = (*EVSEWifi)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
 func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
 	params, err := evse.getParameters()
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
-// CurrentPower implements the Meter interface
+// CurrentPower implements the api.Meter interface
 func (evse *EVSEWifi) currentPower() (float64, error) {
 	params, err := evse.getParameters()
 	return 1000 * params.ActualPower, err
 }
 
-// TotalEnergy implements the MeterEnergy interface
+// TotalEnergy implements the api.MeterEnergy interface
 func (evse *EVSEWifi) totalEnergy() (float64, error) {
 	params, err := evse.getParameters()
 	return params.MeterReading, err
 }
 
-// Currents implements the MeterCurrents interface
+// Currents implements the api.MeterCurrents interface
 func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	params, err := evse.getParameters()
 	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+}
+
+// Identify implements the api.Identifier interface
+func (evse *EVSEWifi) identify() (string, error) {
+	params, err := evse.getParameters()
+	if err != nil {
+		return "", err
+	}
+
+	// we can rely on RFIDUID != nil here since identify() is only exposed if the EVSE API supports that property
+	return *params.RFIDUID, nil
 }
 
 // // ChargedEnergy implements the ChargeRater interface

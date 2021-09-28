@@ -1,11 +1,4 @@
 issues:
   exclude:
-  - "func `..Wallbe..showIO` is unused"
-  - "func `..Wallbe..showIOs` is unused"
   - .regActualCurrent. is unused
-  - .regOverchargeProtect. is unused
-  - .regReset. is unused
   - "`routeLogger` is unused"
-  - field `connectedTime` is unused
-  - func `..LoadPoint..evVehicleConnectHandler` is unused
-  - func `..LoadPoint..evVehicleDisconnectHandler` is unused

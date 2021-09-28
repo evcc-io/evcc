@@ -7,24 +7,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 const (
 	wbSlaveID = 255
 
-	wbRegStatus        = 100 // Input
-	wbRegChargeTime    = 102 // Input
-	wbRegActualCurrent = 300 // Holding
-	wbRegEnable        = 400 // Coil
-	wbRegMaxCurrent    = 528 // Holding
-	wbRegFirmware      = 149 // Firmware
+	wbRegStatus     = 100 // Input
+	wbRegChargeTime = 102 // Input
+	wbRegEnable     = 400 // Coil
+	wbRegMaxCurrent = 528 // Holding
+	wbRegFirmware   = 149 // Firmware
 
-	wbRegPower  = 120 // power reading
-	wbRegEnergy = 128 // energy reading
+	wbRegPower          = 120 // power reading
+	wbRegEnergy         = 128 // energy reading
+	wbRegEnergyDecimals = 904 // energy reading decimals
 
 	encodingSDM = "sdm"
 )
@@ -45,7 +46,7 @@ func init() {
 	registry.Add("wallbe", NewWallbeFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -p charger -f decorateWallbe -o wallbe_decorators -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
+// go:generate go run ../cmd/tools/decorate.go -f decorateWallbe -b *Wallbe -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
 
 // NewWallbeFromConfig creates a Wallbe charger from generic config
 func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -102,7 +103,7 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWallbe creates a Wallbe charger
 func NewWallbe(uri string) (*Wallbe, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, false, wbSlaveID)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, wbSlaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ func NewWallbe(uri string) (*Wallbe, error) {
 	return wb, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
 	if err != nil {
@@ -128,7 +129,7 @@ func (wb *Wallbe) Status() (api.ChargeStatus, error) {
 	return api.ChargeStatus(string(b[1])), nil
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (wb *Wallbe) Enabled() (bool, error) {
 	b, err := wb.conn.ReadCoils(wbRegEnable, 1)
 	if err != nil {
@@ -138,7 +139,7 @@ func (wb *Wallbe) Enabled() (bool, error) {
 	return b[0] == 1, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (wb *Wallbe) Enable(enable bool) error {
 	var u uint16
 	if enable {
@@ -150,7 +151,7 @@ func (wb *Wallbe) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (wb *Wallbe) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
@@ -162,7 +163,7 @@ func (wb *Wallbe) MaxCurrent(current int64) error {
 	return err
 }
 
-// maxCurrentMillis implements the ChargerEx interface
+// maxCurrentMillis implements the api.ChargerEx interface
 func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
@@ -174,7 +175,9 @@ func (wb *Wallbe) maxCurrentMillis(current float64) error {
 	return err
 }
 
-// ChargingTime yields current charge run duration
+var _ api.ChargeTimer = (*Wallbe)(nil)
+
+// ChargingTime implements the api.ChargeTimer interface
 func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
 	if err != nil {
@@ -182,44 +185,55 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	}
 
 	// 2 words, least significant word first
-	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
+	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
 func (wb *Wallbe) decodeReading(b []byte) float64 {
-	v := binary.BigEndian.Uint32(b)
+	switch wb.encoding {
+	case encodingSDM:
+		// high word first
+		bits := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
+		return float64(math.Float32frombits(bits))
 
-	// assuming high register first
-	if wb.encoding == encodingSDM {
-		bits := uint32(b[3])<<0 | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
-		f := math.Float32frombits(bits)
-		return float64(f)
+	default:
+		// low word first
+		return rs485.RTUUint32ToFloat64Swapped(b)
 	}
-
-	return float64(v)
 }
 
-// currentPower implements the Meter.CurrentPower interface
+// currentPower implements the api.Meter interface
 func (wb *Wallbe) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return wb.decodeReading(b), nil
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (wb *Wallbe) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	res := wb.decodeReading(b)
+
+	if wb.encoding != encodingSDM {
+		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
+		if err != nil {
+			return 0, err
+		}
+
+		res += float64(binary.BigEndian.Uint16(b)) / 1e3
+	}
+
+	return res, nil
 }
 
-// currents implements the Meter.Currents interface
+// currents implements the api.MeterCurrent interface
 func (wb *Wallbe) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range wbRegCurrents {
@@ -233,6 +247,8 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 
 	return currents[0], currents[1], currents[2], nil
 }
+
+var _ api.Diagnosis = (*Wallbe)(nil)
 
 // Diagnose implements the Diagnosis interface
 func (wb *Wallbe) Diagnose() {

@@ -3,180 +3,159 @@ package meter
 import (
 	"errors"
 	"fmt"
-	"time"
+	"os"
+	"sort"
+	"text/tabwriter"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/meter/sma"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider/sma"
+	"github.com/evcc-io/evcc/util"
+	"gitlab.com/bboehmke/sunny"
 )
 
-const udpTimeout = 10 * time.Second
-
-// values bundles SMA readings
-type values struct {
-	power     float64
-	energy    float64
-	currentL1 float64
-	currentL2 float64
-	currentL3 float64
-}
-
-// SMA supporting SMA Home Manager 2.0 and SMA Energy Meter 30
+// SMA supporting SMA Home Manager 2.0, SMA Energy Meter 30 and SMA inverter
 type SMA struct {
-	log     *util.Logger
-	mux     *util.Waiter
-	uri     string
-	serial  string
-	values  values
-	powerO  sma.Obis
-	energyO sma.Obis
-	recv    chan sma.Telegram
+	log    *util.Logger
+	uri    string
+	scale  float64
+	device *sma.Device
 }
 
 func init() {
 	registry.Add("sma", NewSMAFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateSMA -b api.Meter -o sma_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateSMA -b *SMA -r api.Meter -t "api.Battery,SoC,func() (float64, error)"
 
 // NewSMAFromConfig creates a SMA Meter from generic config
 func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 	cc := struct {
-		URI, Serial, Power, Energy string
-	}{}
+		URI, Password, Interface string
+		Serial                   uint32
+		Scale                    float64 // power only
+	}{
+		Password: "0000",
+		Scale:    1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewSMA(cc.URI, cc.Serial, cc.Power, cc.Energy)
+	return NewSMA(cc.URI, cc.Password, cc.Interface, cc.Serial, cc.Scale)
 }
 
 // NewSMA creates a SMA Meter
-func NewSMA(uri, serial, power, energy string) (api.Meter, error) {
-	log := util.NewLogger("sma")
-
+func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	sm := &SMA{
-		mux:     util.NewWaiter(udpTimeout, func() { log.TRACE.Println("wait for initial value") }),
-		log:     log,
-		uri:     uri,
-		serial:  serial,
-		powerO:  sma.Obis(power),
-		energyO: sma.Obis(energy),
-		recv:    make(chan sma.Telegram),
+		log:   util.NewLogger("sma"),
+		uri:   uri,
+		scale: scale,
 	}
 
-	if sma.Instance == nil {
-		instance, err := sma.New(log)
+	discoverer, err := sma.GetDiscoverer(iface)
+	if err != nil {
+		return nil, fmt.Errorf("discoverer: %w", err)
+	}
+
+	switch {
+	case uri != "":
+		sm.device, err = discoverer.DeviceByIP(uri, password)
 		if err != nil {
 			return nil, err
 		}
-		sma.Instance = instance
-	}
 
-	// we only need to subscribe to one of the two possible identifiers
-	if uri != "" {
-		sma.Instance.Subscribe(uri, sm.recv)
-	} else if serial != "" {
-		sma.Instance.Subscribe(serial, sm.recv)
-	} else {
+	case serial > 0:
+		sm.device = discoverer.DeviceBySerial(serial, password)
+		if sm.device == nil {
+			return nil, fmt.Errorf("device not found: %d", serial)
+		}
+
+	default:
 		return nil, errors.New("missing uri or serial")
 	}
+	// start update loop manually to get values as fast as possible
+	sm.device.StartUpdateLoop()
 
-	// decorate api.MeterEnergy
-	var totalEnergy func() (float64, error)
-	if energy != "" {
-		totalEnergy = sm.totalEnergy
-	}
-
-	go sm.receive()
-
-	return decorateSMA(sm, totalEnergy), nil
-}
-
-// update the actual meter data
-func (sm *SMA) updateMeterValues(msg sma.Telegram) {
-	sm.mux.Lock()
-	defer sm.mux.Unlock()
-
-	if sm.powerO != "" {
-		// use user-defined obis
-		if power, ok := msg.Values[sm.powerO]; ok {
-			sm.values.power = power
-			sm.mux.Update()
+	// decorate api.Battery in case of inverter
+	var soc func() (float64, error)
+	if !sm.device.IsEnergyMeter() {
+		vals, err := sm.device.Values()
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		sm.values.power = msg.Values[sma.ImportPower] - msg.Values[sma.ExportPower]
-		sm.mux.Update()
-	}
 
-	if sm.energyO != "" {
-		if energy, ok := msg.Values[sm.energyO]; ok {
-			sm.values.energy = energy
-			sm.mux.Update()
-		} else {
-			sm.log.WARN.Println("missing obis for energy")
+		if _, ok := vals[sunny.BatteryCharge]; ok {
+			soc = sm.soc
 		}
 	}
 
-	if currentL1, ok := msg.Values[sma.CurrentL1]; ok {
-		sm.values.currentL1 = currentL1
-		sm.mux.Update()
-	} else {
-		sm.log.WARN.Println("missing obis for currentL1")
-	}
-
-	if currentL2, ok := msg.Values[sma.CurrentL2]; ok {
-		sm.values.currentL2 = currentL2
-		sm.mux.Update()
-	} else {
-		sm.log.WARN.Println("missing obis for currentL2")
-	}
-
-	if currentL3, ok := msg.Values[sma.CurrentL3]; ok {
-		sm.values.currentL3 = currentL3
-		sm.mux.Update()
-	} else {
-		sm.log.WARN.Println("missing obis for currentL3")
-	}
+	return decorateSMA(sm, soc), nil
 }
 
-// receive processes the channel message containing the multicast data
-func (sm *SMA) receive() {
-	for msg := range sm.recv {
-		if msg.Values == nil {
-			continue
-		}
-
-		sm.updateMeterValues(msg)
-	}
-}
-
-func (sm *SMA) hasValue() (values, error) {
-	elapsed := sm.mux.LockWithTimeout()
-	defer sm.mux.Unlock()
-
-	if elapsed > 0 {
-		return values{}, fmt.Errorf("recv timeout: %v", elapsed.Truncate(time.Second))
-	}
-
-	return sm.values, nil
-}
-
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (sm *SMA) CurrentPower() (float64, error) {
-	values, err := sm.hasValue()
-	return values.power, err
+	values, err := sm.device.Values()
+	return sm.scale * (sma.AsFloat(values[sunny.ActivePowerPlus]) - sma.AsFloat(values[sunny.ActivePowerMinus])), err
 }
 
-// Currents implements the MeterCurrent interface
+var _ api.MeterEnergy = (*SMA)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (sm *SMA) TotalEnergy() (float64, error) {
+	values, err := sm.device.Values()
+	return sma.AsFloat(values[sunny.ActiveEnergyPlus]) / 3600000, err
+}
+
+var _ api.MeterCurrent = (*SMA)(nil)
+
+// Currents implements the api.MeterCurrent interface
 func (sm *SMA) Currents() (float64, float64, float64, error) {
-	values, err := sm.hasValue()
-	return values.currentL1, sm.values.currentL2, sm.values.currentL3, err
+	values, err := sm.device.Values()
+
+	var currents [3]float64
+	for i, id := range []sunny.ValueID{sunny.CurrentL1, sunny.CurrentL2, sunny.CurrentL3} {
+		currents[i] = sma.AsFloat(values[id])
+	}
+
+	return currents[0], currents[1], currents[2], err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (sm *SMA) totalEnergy() (float64, error) {
-	values, err := sm.hasValue()
-	return values.energy, err
+// soc implements the api.Battery interface
+func (sm *SMA) soc() (float64, error) {
+	values, err := sm.device.Values()
+	return sma.AsFloat(values[sunny.BatteryCharge]), err
+}
+
+var _ api.Diagnosis = (*SMA)(nil)
+
+// Diagnose implements the api.Diagnosis interface
+func (sm *SMA) Diagnose() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+
+	fmt.Fprintf(w, "  IP:\t%s\n", sm.device.Address())
+	fmt.Fprintf(w, "  Serial:\t%d\n", sm.device.SerialNumber())
+	fmt.Fprintf(w, "  EnergyMeter:\t%v\n", sm.device.IsEnergyMeter())
+	fmt.Fprintln(w)
+
+	if values, err := sm.device.Values(); err == nil {
+		ids := make([]sunny.ValueID, 0, len(values))
+		for k := range values {
+			ids = append(ids, k)
+		}
+
+		sort.Slice(ids, func(i, j int) bool {
+			return ids[i].String() < ids[j].String()
+		})
+
+		for _, id := range ids {
+			switch values[id].(type) {
+			case float64:
+				fmt.Fprintf(w, "  %s:\t%f %s\n", id.String(), values[id], sunny.GetValueInfo(id).Unit)
+			default:
+				fmt.Fprintf(w, "  %s:\t%v %s\n", id.String(), values[id], sunny.GetValueInfo(id).Unit)
+			}
+		}
+	}
+	w.Flush()
 }

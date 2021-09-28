@@ -4,9 +4,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 // SimpleEVSE charger implementation
@@ -45,7 +45,7 @@ func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) 
 func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
 	log := util.NewLogger("evse")
 
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, rtu, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	return evse, nil
 }
 
-// Status implements the Charger.Status interface
+// Status implements the api.Charger interface
 func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegVehicleStatus, 1)
 	if err != nil {
@@ -85,7 +85,7 @@ func (evse *SimpleEVSE) Status() (api.ChargeStatus, error) {
 	}
 }
 
-// Enabled implements the Charger.Enabled interface
+// Enabled implements the api.Charger interface
 func (evse *SimpleEVSE) Enabled() (bool, error) {
 	b, err := evse.conn.ReadHoldingRegisters(evseRegAmpsConfig, 1)
 	if err != nil {
@@ -100,7 +100,7 @@ func (evse *SimpleEVSE) Enabled() (bool, error) {
 	return enabled, nil
 }
 
-// Enable implements the Charger.Enable interface
+// Enable implements the api.Charger interface
 func (evse *SimpleEVSE) Enable(enable bool) error {
 	b := []byte{0, 0}
 
@@ -113,7 +113,7 @@ func (evse *SimpleEVSE) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the Charger.MaxCurrent interface
+// MaxCurrent implements the api.Charger interface
 func (evse *SimpleEVSE) MaxCurrent(current int64) error {
 	b := []byte{0, byte(current)}
 

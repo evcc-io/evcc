@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -27,7 +27,7 @@ func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p meter -f decorateModbus -b api.Meter -o modbus_decorators -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -38,6 +38,9 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Timeout            time.Duration
 	}{
 		Power: "Power",
+		Settings: modbus.Settings{
+			ID: 1,
+		},
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -50,9 +53,12 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		cc.RTU = &b
 	}
 
-	log := util.NewLogger("modbus")
+	format := modbus.TcpFormat
+	if cc.RTU != nil && *cc.RTU {
+		format = modbus.RtuFormat
+	}
 
-	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, *cc.RTU, cc.ID)
+	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,10 +68,11 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		conn.Timeout(cc.Timeout)
 	}
 
+	log := util.NewLogger("modbus")
 	conn.Logger(log.TRACE)
 
 	// prepare device
-	device, err := modbus.NewDevice(cc.Model, cc.SubDevice, *cc.RTU)
+	device, err := modbus.NewDevice(cc.Model, cc.SubDevice)
 
 	if err == nil {
 		err = device.Initialize(conn)
@@ -102,7 +109,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
-	// decorate energy reading
+	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
 		cc.SoC = modbus.ReadingName(cc.SoC)
@@ -151,17 +158,17 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 	return res.Value, err
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
+// CurrentPower implements the api.Meter interface
 func (m *Modbus) CurrentPower() (float64, error) {
 	return m.floatGetter(m.opPower)
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
+// totalEnergy implements the api.MeterEnergy interface
 func (m *Modbus) totalEnergy() (float64, error) {
 	return m.floatGetter(m.opEnergy)
 }
 
-// soc implements the Battery.SoC interface
+// soc implements the api.Battery interface
 func (m *Modbus) soc() (float64, error) {
 	return m.floatGetter(m.opSoC)
 }

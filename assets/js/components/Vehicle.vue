@@ -1,80 +1,56 @@
 <template>
 	<div>
-		<div class="mb-2">{{ socTitle || "Fahrzeug" }}</div>
-		<div class="progress" style="height: 24px; font-size: 100%; margin-top: 16px">
-			<div
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					'bg-light': !connected,
-					'text-secondary': !connected,
-					'bg-warning': connected && minSoCActive,
-				}"
-				:style="{ width: socChargeDisplayWidth + '%' }"
-			>
-				{{ socChargeDisplayValue }}
-			</div>
-			<div
-				class="progress-bar"
-				role="progressbar"
-				:class="{
-					'progress-bar-striped': charging,
-					'progress-bar-animated': charging,
-					'bg-warning': true,
-					'bg-muted': true,
-				}"
-				:style="{ width: minSoCRemainingDisplayWidth + '%' }"
-				v-if="minSoCActive && socChargeDisplayWidth < 100"
-			></div>
+		<div class="mb-3">
+			{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 		</div>
+		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
+		<VehicleSubline
+			v-bind="vehicleSubline"
+			@target-time-updated="targetTimeUpdated"
+			class="my-1"
+		/>
 	</div>
 </template>
 
 <script>
+import collector from "../mixins/collector";
+
+import VehicleSoc from "./VehicleSoc";
+import VehicleSubline from "./VehicleSubline";
+
 export default {
 	name: "Vehicle",
+	components: { VehicleSoc, VehicleSubline },
 	props: {
-		socTitle: String,
+		id: Number,
 		connected: Boolean,
+		vehiclePresent: Boolean,
+		vehicleSoC: Number,
+		enabled: Boolean,
 		charging: Boolean,
-		hasVehicle: Boolean,
-		socCharge: Number,
 		minSoC: Number,
+		vehicleTitle: String,
+		timerActive: Boolean,
+		timerSet: Boolean,
+		targetTime: String,
+		targetSoC: Number,
 	},
 	computed: {
-		socChargeDisplayWidth: function () {
-			if (this.hasVehicle && this.socCharge >= 0) {
-				return this.socCharge;
-			}
-			return 100;
+		vehicleSocProps: function () {
+			return this.collectProps(VehicleSoc);
 		},
-		socChargeDisplayValue: function () {
-			// no soc or no soc value
-			if (!this.hasVehicle || this.socCharge < 0) {
-				let chargeStatus = "getrennt";
-				if (this.charging) {
-					chargeStatus = "laden";
-				} else if (this.connected) {
-					chargeStatus = "verbunden";
-				}
-				return chargeStatus;
-			}
-
-			// percent value if enough space
-			let socCharge = this.socCharge;
-			if (socCharge >= 10) {
-				socCharge += "%";
-			}
-			return socCharge;
-		},
-		minSoCActive: function () {
-			return this.minSoC > 0 && this.socCharge < this.minSoC;
-		},
-		minSoCRemainingDisplayWidth: function () {
-			return this.minSoC - this.socCharge;
+		vehicleSubline: function () {
+			return this.collectProps(VehicleSubline);
 		},
 	},
+	methods: {
+		targetSocUpdated: function (targetSoC) {
+			this.$emit("target-soc-updated", targetSoC);
+		},
+		targetTimeUpdated: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
+		},
+	},
+	mixins: [collector],
 };
 </script>

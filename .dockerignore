@@ -7,7 +7,6 @@
 *.sh
 *.yaml
 Dockerfile
-dist
 node_modules
 release
 !entrypoint.sh

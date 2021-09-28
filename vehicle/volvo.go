@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/provider"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 )
 
 const (
@@ -66,20 +66,20 @@ type volvoStatus struct {
 		TimeToHVBatteryFullyCharged           int    `json:"timeToHVBatteryFullyCharged"`
 		TimeToHVBatteryFullyChargedTimestamp  string `json:"timeToHVBatteryFullyChargedTimestamp"`
 	} `json:"hvBattery"`
-	Odometer                           int    `json:"odometer"`
-	OdometerTimestamp                  string `json:"odometerTimestamp"`
-	PrivacyPolicyEnabled               bool   `json:"privacyPolicyEnabled"`
-	PrivacyPolicyEnabledTimestamp      string `json:"privacyPolicyEnabledTimestamp"`
-	RemoteClimatizationStatus          string `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
-	RemoteClimatizationStatusTimestamp string `json:"remoteClimatizationStatusTimestamp"`
-	ServiceWarningStatus               string `json:"serviceWarningStatus"`
-	ServiceWarningStatusTimestamp      string `json:"serviceWarningStatusTimestamp"`
-	TimeFullyAccessibleUntil           string `json:"timeFullyAccessibleUntil"`
-	TimePartiallyAccessibleUntil       string `json:"timePartiallyAccessibleUntil"`
-	TripMeter1                         int    `json:"tripMeter1"`
-	TripMeter1Timestamp                string `json:"tripMeter1Timestamp"`
-	TripMeter2                         int    `json:"tripMeter2"`
-	TripMeter2Timestamp                string `json:"tripMeter2Timestamp"`
+	Odometer                           float64 `json:"odometer"`
+	OdometerTimestamp                  string  `json:"odometerTimestamp"`
+	PrivacyPolicyEnabled               bool    `json:"privacyPolicyEnabled"`
+	PrivacyPolicyEnabledTimestamp      string  `json:"privacyPolicyEnabledTimestamp"`
+	RemoteClimatizationStatus          string  `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
+	RemoteClimatizationStatusTimestamp string  `json:"remoteClimatizationStatusTimestamp"`
+	ServiceWarningStatus               string  `json:"serviceWarningStatus"`
+	ServiceWarningStatusTimestamp      string  `json:"serviceWarningStatusTimestamp"`
+	TimeFullyAccessibleUntil           string  `json:"timeFullyAccessibleUntil"`
+	TimePartiallyAccessibleUntil       string  `json:"timePartiallyAccessibleUntil"`
+	TripMeter1                         int     `json:"tripMeter1"`
+	TripMeter1Timestamp                string  `json:"tripMeter1Timestamp"`
+	TripMeter2                         int     `json:"tripMeter2"`
+	TripMeter2Timestamp                string  `json:"tripMeter2Timestamp"`
 }
 
 // Volvo is an api.Vehicle implementation for Volvo cars
@@ -97,8 +97,7 @@ func init() {
 // NewVolvoFromConfig creates a new vehicle
 func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Title               string
-		Capacity            int64
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Cache               time.Duration
 	}{
@@ -112,7 +111,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("volvo")
 
 	v := &Volvo{
-		embed:    &embed{cc.Title, cc.Capacity},
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
@@ -190,7 +189,9 @@ func (v *Volvo) SoC() (float64, error) {
 	return 0, err
 }
 
-// Status implements the VehicleStatus interface
+var _ api.ChargeState = (*Volvo)(nil)
+
+// Status implements the api.ChargeState interface
 func (v *Volvo) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
@@ -207,8 +208,10 @@ func (v *Volvo) Status() (api.ChargeStatus, error) {
 	return api.StatusNone, err
 }
 
-// VehicleRange implements the VehicleRange interface
-func (v *Volvo) VehicleRange() (int64, error) {
+var _ api.VehicleRange = (*Volvo)(nil)
+
+// VehicleRange implements the api.VehicleRange interface
+func (v *Volvo) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvoStatus); err == nil && ok {
 		return int64(res.HvBattery.DistanceToHVBatteryEmpty), nil
@@ -216,6 +219,20 @@ func (v *Volvo) VehicleRange() (int64, error) {
 
 	return 0, err
 }
+
+var _ api.VehicleOdometer = (*Volvo)(nil)
+
+// VehicleOdometer implements the api.VehicleOdometer interface
+func (v *Volvo) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(volvoStatus); err == nil && ok {
+		return float64(res.Odometer), nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehicleFinishTimer = (*Volvo)(nil)
 
 // FinishTime implements the VehicleFinishTimer interface
 func (v *Volvo) FinishTime() (time.Time, error) {

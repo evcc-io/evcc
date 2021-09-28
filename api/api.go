@@ -2,13 +2,14 @@ package api
 
 import "time"
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,Meter,MeterEnergy,Vehicle,ChargeRater
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
 
 // Charge modes
 const (
+	ModeEmpty ChargeMode = ""
 	ModeOff   ChargeMode = "off"
 	ModeNow   ChargeMode = "now"
 	ModeMinPV ChargeMode = "minpv"
@@ -64,7 +65,7 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// Charger is able to provide current charging status and to enable/disabler charging
+// Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
@@ -75,6 +76,11 @@ type Charger interface {
 // ChargerEx provides milli-amp precision charger current control
 type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
+}
+
+// ChargePhases provides 1p3p switching
+type ChargePhases interface {
+	Phases1p3p(phases int) error
 }
 
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
@@ -92,11 +98,17 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
+// Identifier identifies a vehicle and is implemented by the charger
+type Identifier interface {
+	Identify() (string, error)
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
+	Battery
+	Identifier
 	Title() string
 	Capacity() int64
-	SoC() (float64, error)
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time
@@ -114,7 +126,21 @@ type VehicleClimater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
 
+// VehicleOdometer returns the vehicles milage
+type VehicleOdometer interface {
+	Odometer() (float64, error)
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
+}
+
+// VehicleStopCharge stops the charging session on the vehicle side
+type VehicleStopCharge interface {
+	StopCharge() error
+}
+
+type Tariff interface {
+	IsCheap() bool
 }

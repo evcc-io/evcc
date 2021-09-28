@@ -9,10 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/server/updater"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/pipe"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -152,13 +153,16 @@ func run(cmd *cobra.Command, args []string) {
 	uri := viper.GetString("uri")
 	log.INFO.Println("listening at", uri)
 
-	// setup mqtt client listener
-	if conf.Mqtt.Broker != "" {
-		configureMQTT(conf.Mqtt)
+	// setup environment
+	if err := configureEnvironment(conf); err != nil {
+		log.FATAL.Fatal(err)
 	}
 
-	// setup javascript VMs
-	configureJavascript(conf.Javascript)
+	// setup loadpoints
+	site, err := configureSiteAndLoadpoints(conf)
+	if err != nil {
+		log.FATAL.Fatal(err)
+	}
 
 	// start broadcasting values
 	tee := &util.Tee{}
@@ -167,12 +171,6 @@ func run(cmd *cobra.Command, args []string) {
 	cache := util.NewCache()
 	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
 
-	// setup loadpoints
-	site, err := loadConfig(conf)
-	if err != nil {
-		log.FATAL.Fatal(err)
-	}
-
 	// setup database
 	if conf.Influx.URL != "" {
 		configureDatabase(conf.Influx, site.LoadPoints(), tee.Attach())
@@ -180,7 +178,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.Topic)
+		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
@@ -210,6 +208,11 @@ func run(cmd *cobra.Command, args []string) {
 	// setup values channel
 	valueChan := make(chan util.Param)
 	go tee.Run(valueChan)
+
+	// expose sponsor to UI
+	if sponsor.Subject != "" {
+		valueChan <- util.Param{Key: "sponsor", Val: sponsor.Subject}
+	}
 
 	// version check
 	go updater.Run(log, httpd, tee, valueChan)

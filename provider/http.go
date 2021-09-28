@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 )
 
@@ -21,7 +23,12 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	scale       float64
+	re          *regexp.Regexp
 	jq          *gojq.Query
+	cache       time.Duration
+	updated     time.Time
+	val         []byte // Cached http response value
+	err         error  // Cached http response error
 }
 
 func init() {
@@ -50,12 +57,16 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		URI, Method string
 		Headers     map[string]string
 		Body        string
+		Regex       string
 		Jq          string
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
+		Timeout     time.Duration
+		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,19 +82,30 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		}
 	}
 
-	return NewHTTP(log,
+	http, err := NewHTTP(log,
 		cc.Method,
 		cc.URI,
 		cc.Headers,
 		cc.Body,
 		cc.Insecure,
+		cc.Regex,
 		cc.Jq,
 		cc.Scale,
+		cc.Cache,
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if err == nil {
+		http.Client.Timeout = cc.Timeout
+	}
+
+	return http, err
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64, cache time.Duration) (*HTTP, error) {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
@@ -96,6 +118,7 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		headers: headers,
 		body:    body,
 		scale:   scale,
+		cache:   cache,
 	}
 
 	// ignore the self signed certificate
@@ -103,10 +126,19 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	}
 
+	if regex != "" {
+		re, err := regexp.Compile(regex)
+		if err != nil {
+			return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
+		}
+
+		p.re = re
+	}
+
 	if jq != "" {
 		op, err := gojq.Parse(jq)
 		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
+			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
 		}
 
 		p.jq = op
@@ -115,20 +147,25 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	return p, nil
 }
 
-// request executed the configured request
+// request executes the configured request or returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
-	var b io.Reader
-	if len(body) == 1 {
-		b = strings.NewReader(body[0])
+	if time.Since(p.updated) >= p.cache {
+		var b io.Reader
+		if len(body) == 1 {
+			b = strings.NewReader(body[0])
+		}
+
+		// empty method becomes GET
+		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		p.val, p.err = p.DoBody(req)
+		p.updated = time.Now()
 	}
 
-	// empty method becomes GET
-	req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return p.DoBody(req)
+	return p.val, p.err
 }
 
 // FloatGetter parses float from request
@@ -166,6 +203,13 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		b, err := p.request()
 		if err != nil {
 			return string(b), err
+		}
+
+		if p.re != nil {
+			m := p.re.FindSubmatch(b)
+			if len(m) > 1 {
+				b = m[1] // first submatch
+			}
 		}
 
 		if p.jq != nil {
