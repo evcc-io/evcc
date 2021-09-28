@@ -9,9 +9,9 @@
 					'progress-bar-animated': charging,
 					[progressColor]: true,
 				}"
-				:style="{ width: `${vehicleSocDisplayWidth}%` }"
+				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
 			>
-				{{ vehicleSocDisplayValue }}
+				{{ vehicleSoCDisplayValue }}
 			</div>
 			<div
 				v-if="remainingSoCWidth > 0 && enabled"
@@ -58,7 +58,7 @@ export default {
 	props: {
 		connected: Boolean,
 		vehiclePresent: Boolean,
-		vehicleSoc: Number,
+		vehicleSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
@@ -82,32 +82,32 @@ export default {
 		},
 	},
 	computed: {
-		vehicleSocDisplayWidth: function () {
-			if (this.vehiclePresent && this.vehicleSoc >= 0) {
-				return this.vehicleSoc;
+		vehicleSoCDisplayWidth: function () {
+			if (this.vehiclePresent && this.vehicleSoC >= 0) {
+				return this.vehicleSoC;
 			}
 			return 100;
 		},
-		vehicleSocDisplayValue: function () {
+		vehicleSoCDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.vehiclePresent || !this.vehicleSoc || this.vehicleSoc < 0) {
-				let chargeStatus = this.$t("main.vehicleSoc.disconnected");
+			if (!this.vehiclePresent || !this.vehicleSoC || this.vehicleSoC < 0) {
+				let chargeStatus = this.$t("main.vehicleSoC.disconnected");
 				if (this.charging) {
-					chargeStatus = this.$t("main.vehicleSoc.charging");
+					chargeStatus = this.$t("main.vehicleSoC.charging");
 				} else if (this.enabled) {
-					chargeStatus = this.$t("main.vehicleSoc.ready");
+					chargeStatus = this.$t("main.vehicleSoC.ready");
 				} else if (this.connected) {
-					chargeStatus = this.$t("main.vehicleSoc.connected");
+					chargeStatus = this.$t("main.vehicleSoC.connected");
 				}
 				return chargeStatus;
 			}
 
 			// percent value if enough space
-			let vehicleSoc = this.vehicleSoc;
-			if (vehicleSoc >= 10) {
-				vehicleSoc += "%";
+			let vehicleSoC = this.vehicleSoC;
+			if (vehicleSoC >= 10) {
+				vehicleSoC += "%";
 			}
-			return vehicleSoc;
+			return vehicleSoC;
 		},
 		progressColor: function () {
 			if (!this.connected) {
@@ -119,17 +119,17 @@ export default {
 			return "bg-primary";
 		},
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.vehicleSoc < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.vehicleSocDisplayWidth === 100) {
+			if (this.vehicleSoCDisplayWidth === 100) {
 				return null;
 			}
 			if (this.minSoCActive) {
-				return this.minSoC - this.vehicleSoc;
+				return this.minSoC - this.vehicleSoC;
 			}
-			if (this.visibleTargetSoC > this.vehicleSoc) {
-				return this.visibleTargetSoC - this.vehicleSoc;
+			if (this.visibleTargetSoC > this.vehicleSoC) {
+				return this.visibleTargetSoC - this.vehicleSoC;
 			}
 			return null;
 		},

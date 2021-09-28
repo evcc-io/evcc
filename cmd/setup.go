@@ -107,7 +107,7 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 	)
 
 	// eliminate duplicate values
-	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleSoc")
+	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleSoC")
 	in = dedupe.Pipe(in)
 
 	// reduce number of values written to influx
