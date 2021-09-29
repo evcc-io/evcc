@@ -190,7 +190,7 @@ func removeLineWithSubstring(src string, substr []string) string {
 	return src
 }
 
-func hasTypeModbus(params []registry.TemplateParam) bool {
+func paramsHasTypeModbus(params []registry.TemplateParam) bool {
 	for _, param := range params {
 		if param.Type == "modbus" {
 			return true
@@ -219,7 +219,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		configItem.Params = params
 
 		if len(additionalConfig) > 0 {
-			if hasTypeModbus(configItem.Params) {
+			if paramsHasTypeModbus(configItem.Params) {
 				// remove all modbus key/value pairs from Sample
 				substrings := []string{"id:", "device:", "baudrate:", "comset:", "uri:", "rtu:"}
 				configItem.Sample = removeLineWithSubstring(configItem.Sample, substrings)
