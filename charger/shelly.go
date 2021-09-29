@@ -1,10 +1,16 @@
 package charger
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
@@ -56,12 +62,12 @@ type shellyGetStatusResponse struct {
 // Shelly charger implementation
 type Shelly struct {
 	*request.Helper
+	log          *util.Logger
 	uri          string
 	gen          int // Shelly api generation
 	authon       bool
 	user         string
 	password     string
-	ah1          map[string]string
 	channel      int
 	standbypower float64
 }
@@ -105,6 +111,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 	log := util.NewLogger("shelly")
 	c := &Shelly{
 		Helper:       request.NewHelper(log),
+		log:          log,
 		gen:          1,
 		user:         user,
 		password:     password,
@@ -159,18 +166,6 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 	}
 
 	c.authon = resp.Auth || resp.AuthEn
-
-	if c.gen == 1 && c.authon {
-		ah1 := make(map[string]string)
-		if err := provider.AuthHeaders(log, provider.Auth{
-			Type:     "Basic",
-			User:     user,
-			Password: password,
-		}, ah1); err != nil {
-			return c, err
-		}
-		c.ah1 = ah1
-	}
 
 	return c, nil
 }
@@ -269,9 +264,140 @@ func (c *Shelly) CurrentPower() (float64, error) {
 
 // execCmd executes a shelly api gen1/gen2 command and provides the response
 func (c *Shelly) execCmd(cmd string, res interface{}) error {
-	req, err := request.New(http.MethodGet, cmd, nil, c.ah1)
-	if err != nil {
-		return err
+
+	if c.gen == 1 || (c.gen == 2 && !c.authon) {
+		hab := make(map[string]string)
+		if c.gen == 1 && c.authon {
+			if err := provider.AuthHeaders(c.log, provider.Auth{
+				Type:     "Basic",
+				User:     c.user,
+				Password: c.password,
+			}, hab); err != nil {
+				return err
+			}
+		}
+		req, err := request.New(http.MethodGet, cmd, nil, hab)
+		if err != nil {
+			return err
+		}
+		return c.DoJSON(req, res)
 	}
-	return c.DoJSON(req, res)
+
+	if c.gen == 2 && c.authon {
+
+		data := url.Values{
+			"id": []string{"1"},
+		}
+		req, err := request.New(http.MethodPost, cmd, strings.NewReader(data.Encode()), request.URLEncoding)
+		if err != nil {
+			return err
+		}
+		c.log.TRACE.Printf("cmd: %s", cmd)
+
+		resp, err := c.Do(req)
+		if err != nil {
+			return err
+		}
+		// read the whole body and then close it to reuse the http connection
+		// otherwise it *could* fail in certain environments (behind proxy for instance)
+		io.Copy(ioutil.Discard, resp.Body)
+		resp.Body.Close()
+
+		if resp.StatusCode == http.StatusUnauthorized {
+			var authorization map[string]string = digestAuthParams(resp)
+			realmHeader := authorization["realm"]
+			qopHeader := authorization["qop"]
+			nonceHeader := authorization["nonce"]
+			opaqueHeader := authorization["opaque"]
+			algorithm := authorization["algorithm"]
+			realm := realmHeader
+			c.log.TRACE.Printf("qop: %s", authorization["qop"])
+			c.log.TRACE.Printf("realm: %s", authorization["realm"])
+			c.log.TRACE.Printf("nonce: %s", authorization["nonce"])
+			c.log.TRACE.Printf("algorithm: %s", authorization["algorithm"])
+			// a1
+			a1 := fmt.Sprintf("%s:%s:%s", c.user, realm, c.password)
+			c.log.TRACE.Printf("a1: %s", a1)
+			h := sha256.New()
+			h.Reset()
+			fmt.Fprint(h, a1)
+			ha1 := hex.EncodeToString(h.Sum(nil))
+
+			// a2
+			a2 := fmt.Sprintf("%s:%s", req.Method, req.URL.RequestURI())
+			c.log.TRACE.Printf("a2: %s", a2)
+			h.Reset()
+			fmt.Fprint(h, a2)
+			ha2 := hex.EncodeToString(h.Sum(nil))
+
+			// response
+			cnonce := randomKey()
+			response := strings.Join([]string{ha1, nonceHeader, "00000001" /* nc */, cnonce, qopHeader, ha2}, ":")
+			c.log.TRACE.Printf("response: %s", response)
+			h.Reset()
+			fmt.Fprint(h, response)
+			response = hex.EncodeToString(h.Sum(nil))
+
+			// auth header
+			AuthHeader := fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", response="%s", qop=%s, nc=%s, cnonce="%s", opaque="%s", algorithm="%s"`,
+				c.user, realmHeader, nonceHeader, req.URL.RequestURI(), response, qopHeader, "00000001" /* nc */, cnonce, opaqueHeader, algorithm)
+
+			headers := http.Header{
+				"User-Agent":      []string{"evcc"},
+				"Accept":          []string{"*/*"},
+				"Accept-Encoding": []string{"identity"},
+				"Connection":      []string{"Keep-Alive"},
+				"Host":            []string{req.Host},
+				"Authorization":   []string{AuthHeader},
+			}
+
+			req, err = request.New(http.MethodPost, cmd, strings.NewReader(data.Encode()), request.URLEncoding)
+			if err != nil {
+				return err
+			}
+			req.Header = headers
+			resp, err = c.Do(req)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode == http.StatusOK {
+				bodyBytes, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					return err
+				}
+
+				return fmt.Errorf("##: %s", string(bodyBytes))
+			} else {
+				return fmt.Errorf("## Status: %s", resp.Status)
+			}
+		}
+	}
+	return nil
+}
+
+//  Parse Authorization header from the http.Request. Returns a map of
+//  auth parameters or nil if the header is not a valid parsable Digest
+//  auth header.
+func digestAuthParams(r *http.Response) map[string]string {
+	s := strings.SplitN(r.Header.Get("Www-Authenticate"), " ", 2)
+	if len(s) != 2 || s[0] != "Digest" {
+		return nil
+	}
+
+	result := map[string]string{}
+	for _, kv := range strings.Split(s[1], ",") {
+		parts := strings.SplitN(kv, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		result[strings.Trim(parts[0], "\" ")] = strings.Trim(parts[1], "\" ")
+	}
+	return result
+}
+
+func randomKey() string {
+	b := make([]byte, 16)
+	io.ReadFull(rand.Reader, b)
+	return hex.EncodeToString(b)
 }
