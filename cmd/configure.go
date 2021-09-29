@@ -97,7 +97,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your grid meter")
 
-	gridItem, err := processClass("grid meter", "meter", registry.UsageTypeGrid, defaultGridMeterName)
+	gridItem, err := processClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println()
 	fmt.Println("- Configure your PV inverter or PV meter")
 
-	pvItem, err := processClass("pv meter", "meter", registry.UsageTypePV, defaultPVInverterMeter)
+	pvItem, err := processClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	if askYesNo("Do you have a home battery system?") {
 		fmt.Println("- Configure your Battery inverter or Battery meter")
 
-		batteryItem, err = processClass("battery meter", "meter", registry.UsageTypeBattery, defaultHomeBatteryMeter)
+		batteryItem, err = processClass("battery meter", "meter", registry.UsageChoiceBattery, defaultHomeBatteryMeter)
 		if err != nil && err != ErrItemNotPresent {
 			log.FATAL.Fatal(err)
 		}
@@ -192,7 +192,7 @@ func removeLineWithSubstring(src string, substr []string) string {
 
 func paramsHasTypeModbus(params []registry.TemplateParam) bool {
 	for _, param := range params {
-		if param.Type == "modbus" {
+		if param.Name == "modbus" {
 			return true
 		}
 	}
@@ -218,6 +218,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		params, deviceName, additionalConfig := processConfig(configItem.Params, defaultName)
 		configItem.Params = params
 
+		// patch the configuration sample text with modbus configuration data
 		if len(additionalConfig) > 0 {
 			if paramsHasTypeModbus(configItem.Params) {
 				// remove all modbus key/value pairs from Sample
@@ -230,8 +231,9 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 				configItem.Sample += key + ": " + value + "\r\n"
 			}
 		}
-
 		configItem = renderTemplateSample(configItem, usageFilter)
+
+		// create the configuration data structure
 		var conf map[string]interface{}
 		if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
 			// silently ignore errors here
@@ -329,11 +331,22 @@ func renderTemplateSample(tmpl registry.Template, usageFilter string) registry.T
 		if item.Name == "" {
 			panic("params name is required")
 		}
-		if item.Value == "" && item.Type == "" {
-			panic("params value or type is required")
+		if item.Value == "" && !item.Optional && item.Choice == nil {
+			panic("params value or choice is required")
 		}
-		if item.Type != "" && len(item.Choice) == 0 {
-			panic("params choice is required with type")
+
+		if item.Name == "usage" {
+			if len(item.Choice) == 0 {
+				panic("params choice is required with usage")
+			}
+
+			if usageFilter != "" {
+				for _, usage := range item.Choice {
+					if usage == usageFilter {
+						paramItem[usage] = "true"
+					}
+				}
+			}
 		}
 
 		if item.Value != "" {
@@ -343,18 +356,6 @@ func renderTemplateSample(tmpl registry.Template, usageFilter string) registry.T
 			paramItem["hint"] = item.Hint
 		}
 		paramItems[item.Name] = paramItem
-	}
-
-	if usageFilter != "" {
-		paramUsage := make(map[string]interface{})
-		for _, usage := range tmpl.Usage {
-			if usage == usageFilter {
-				paramUsage[usage] = true
-			}
-		}
-		if len(paramUsage) > 0 {
-			paramItems["usage"] = paramUsage
-		}
 	}
 
 	var tpl bytes.Buffer
@@ -404,15 +405,6 @@ func setupEEBUSConfig() error {
 	return nil
 }
 
-func arrayContains(slice []string, element string) bool {
-	for _, value := range slice {
-		if value == element {
-			return true
-		}
-	}
-	return false
-}
-
 // return EVCC configuration items of a given class
 func fetchElements(class, usageFilter string) []registry.Template {
 	var items []registry.Template
@@ -423,8 +415,7 @@ func fetchElements(class, usageFilter string) []registry.Template {
 		}
 
 		if len(usageFilter) == 0 ||
-			len(tmpl.Usage) == 0 ||
-			arrayContains(tmpl.Usage, usageFilter) {
+			paramChoiceContains(tmpl.Params, "usage", usageFilter) {
 			items = append(items, tmpl)
 		}
 	}
@@ -434,6 +425,26 @@ func fetchElements(class, usageFilter string) []registry.Template {
 	})
 
 	return items
+}
+
+func paramChoiceContains(params []registry.TemplateParam, name, filter string) bool {
+	for _, item := range params {
+		if item.Name != name {
+			continue
+		}
+
+		if item.Choice == nil || len(item.Choice) == 0 {
+			return true
+		}
+
+		for _, choice := range item.Choice {
+			if choice == filter {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // PromptUI: select item from list
@@ -549,7 +560,7 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 	fmt.Println("Enter the configuration values:")
 
 	for index, param := range paramItems {
-		if param.Type == "modbus" {
+		if param.Name == "modbus" {
 			choices := []string{}
 			for _, choice := range param.Choice {
 				switch choice {
@@ -588,7 +599,7 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 					additionalConfig["uri"] = uri + ":" + port
 				}
 			}
-		} else {
+		} else if param.Name != "usage" {
 			value := askValue(param.Name, param.Value, param.Hint, param.Optional)
 			// if value is optional and the user retunred the default value, skip this parameter
 			if !param.Optional || value != param.Value {
