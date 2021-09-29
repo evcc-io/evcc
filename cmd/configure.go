@@ -231,7 +231,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 			}
 		}
 
-		configItem = renderTemplateSample(configItem)
+		configItem = renderTemplateSample(configItem, usageFilter)
 		var conf map[string]interface{}
 		if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
 			// silently ignore errors here
@@ -311,7 +311,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 	return deviceConfiguration, nil
 }
 
-func renderTemplateSample(tmpl registry.Template) registry.Template {
+func renderTemplateSample(tmpl registry.Template, usageFilter string) registry.Template {
 	if len(tmpl.Params) == 0 {
 		return tmpl
 	}
@@ -343,6 +343,18 @@ func renderTemplateSample(tmpl registry.Template) registry.Template {
 			paramItem["hint"] = item.Hint
 		}
 		paramItems[item.Name] = paramItem
+	}
+
+	if usageFilter != "" {
+		paramUsage := make(map[string]interface{})
+		for _, usage := range tmpl.Usage {
+			if usage == usageFilter {
+				paramUsage[usage] = true
+			}
+		}
+		if len(paramUsage) > 0 {
+			paramItems["usage"] = paramUsage
+		}
 	}
 
 	var tpl bytes.Buffer
