@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -132,6 +133,11 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 	}
 	c.gen = resp.Gen
 
+	c.authon = resp.Auth || resp.AuthEn
+	if c.authon && (user == "" || password == "") {
+		return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
+	}
+
 	if resp.Model == "" {
 		resp.Model = resp.Type
 	}
@@ -141,31 +147,20 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		u.Scheme = "http"
-		switch {
-		case resp.NumMeters == 0:
+		c.uri = u.String()
+		if resp.NumMeters == 0 {
 			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
-		case resp.Auth && (user == "" || password == ""):
-			return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
-		default:
-			c.uri = u.String()
 		}
 	case c.gen == 2:
 		// Shelly GEN 2 API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		switch {
-		case resp.AuthEn && (user == "" || password == ""):
-			return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
-		default:
-			if u.Scheme == "https" {
-				c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
-			}
-			c.uri = u.String() + "/rpc"
+		if u.Scheme == "https" {
+			c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 		}
+		c.uri = u.String() + "/rpc"
 	default:
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, resp.Gen)
 	}
-
-	c.authon = resp.Auth || resp.AuthEn
 
 	return c, nil
 }
@@ -285,10 +280,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 
 	if c.gen == 2 && c.authon {
 
-		data := url.Values{
-			"id": []string{"1"},
-		}
-		req, err := request.New(http.MethodPost, cmd, strings.NewReader(data.Encode()), request.URLEncoding)
+		req, err := request.New(http.MethodPost, cmd, nil, request.URLEncoding)
 		if err != nil {
 			return err
 		}
@@ -305,24 +297,13 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 
 		if resp.StatusCode == http.StatusUnauthorized {
 			var authorization map[string]string = digestAuthParams(resp)
-			realmHeader := authorization["realm"]
-			qopHeader := authorization["qop"]
-			nonceHeader := authorization["nonce"]
-			opaqueHeader := authorization["opaque"]
-			algorithm := authorization["algorithm"]
-			realm := realmHeader
-			c.log.TRACE.Printf("qop: %s", authorization["qop"])
-			c.log.TRACE.Printf("realm: %s", authorization["realm"])
-			c.log.TRACE.Printf("nonce: %s", authorization["nonce"])
-			c.log.TRACE.Printf("algorithm: %s", authorization["algorithm"])
 			// a1
-			a1 := fmt.Sprintf("%s:%s:%s", c.user, realm, c.password)
+			a1 := fmt.Sprintf("%s:%s:%s", c.user, authorization["realm"], c.password)
 			c.log.TRACE.Printf("a1: %s", a1)
 			h := sha256.New()
 			h.Reset()
 			fmt.Fprint(h, a1)
 			ha1 := hex.EncodeToString(h.Sum(nil))
-
 			// a2
 			a2 := fmt.Sprintf("%s:%s", req.Method, req.URL.RequestURI())
 			c.log.TRACE.Printf("a2: %s", a2)
@@ -331,8 +312,8 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 			ha2 := hex.EncodeToString(h.Sum(nil))
 
 			// response
-			cnonce := randomKey()
-			response := strings.Join([]string{ha1, nonceHeader, "00000001" /* nc */, cnonce, qopHeader, ha2}, ":")
+			cnonce := randCnonce()
+			response := strings.Join([]string{ha1, authorization["nonce"], "00000001" /* nc */, cnonce, authorization["qop"], ha2}, ":")
 			c.log.TRACE.Printf("response: %s", response)
 			h.Reset()
 			fmt.Fprint(h, response)
@@ -340,51 +321,51 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 
 			// auth header
 			AuthHeader := fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", response="%s", qop=%s, nc=%s, cnonce="%s", opaque="%s", algorithm="%s"`,
-				c.user, realmHeader, nonceHeader, req.URL.RequestURI(), response, qopHeader, "00000001" /* nc */, cnonce, opaqueHeader, algorithm)
+				c.user, authorization["realm"], authorization["nonce"], req.URL.RequestURI(), response, authorization["qop"], "00000001" /* nc */, cnonce, authorization["opaque"], authorization["algorithm"])
 
-			headers := http.Header{
-				"User-Agent":      []string{"evcc"},
-				"Accept":          []string{"*/*"},
-				"Accept-Encoding": []string{"identity"},
-				"Connection":      []string{"Keep-Alive"},
-				"Host":            []string{req.Host},
-				"Authorization":   []string{AuthHeader},
+			// post json
+			data := struct {
+				Id     string `json:"id"`
+				Src    string `json:"src"`
+				Method string `json:"method"`
+			}{
+				Id:     fmt.Sprint(c.channel),
+				Src:    "evcc",
+				Method: req.URL.RequestURI(),
 			}
-
-			req, err = request.New(http.MethodPost, cmd, strings.NewReader(data.Encode()), request.URLEncoding)
+			req, err = request.New(http.MethodPost, cmd, request.MarshalJSON(data), request.JSONEncoding)
 			if err != nil {
 				return err
 			}
-			req.Header = headers
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", AuthHeader)
+
 			resp, err = c.Do(req)
 			if err != nil {
 				return err
 			}
 			defer resp.Body.Close()
+
 			if resp.StatusCode == http.StatusOK {
 				bodyBytes, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
 					return err
 				}
-
-				return fmt.Errorf("##: %s", string(bodyBytes))
+				return json.Unmarshal(bodyBytes, res)
 			} else {
-				return fmt.Errorf("## Status: %s", resp.Status)
+				return fmt.Errorf("unknown auth status code: %d", resp.StatusCode)
 			}
 		}
 	}
 	return nil
 }
 
-//  Parse Authorization header from the http.Request. Returns a map of
-//  auth parameters or nil if the header is not a valid parsable Digest
-//  auth header.
+// parse Shelly authorization header
 func digestAuthParams(r *http.Response) map[string]string {
 	s := strings.SplitN(r.Header.Get("Www-Authenticate"), " ", 2)
 	if len(s) != 2 || s[0] != "Digest" {
 		return nil
 	}
-
 	result := map[string]string{}
 	for _, kv := range strings.Split(s[1], ",") {
 		parts := strings.SplitN(kv, "=", 2)
@@ -396,7 +377,8 @@ func digestAuthParams(r *http.Response) map[string]string {
 	return result
 }
 
-func randomKey() string {
+// create random client nonce
+func randCnonce() string {
 	b := make([]byte, 16)
 	io.ReadFull(rand.Reader, b)
 	return hex.EncodeToString(b)
