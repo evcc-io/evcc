@@ -93,8 +93,8 @@ func (c *CmdConfigure) Run() {
 	var chargerItem, gridItem, pvItem, batteryItem test.ConfigTemplate
 	var err error
 
-	// chargerItem = c.configureClass("wallbox", "charger", "", defaultChargerName)
-	// gridItem = c.configureClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
+	chargerItem = c.configureClass("wallbox", "charger", "", defaultChargerName)
+	gridItem = c.configureClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
 	pvItem = c.configureClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
 
 	fmt.Println()
