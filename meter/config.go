@@ -35,14 +35,20 @@ func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err e
 		template, err := public.TemplateByPublic("meter", strings.ToLower(typ), strings.ToLower(other["public"].(string)))
 		if err == nil {
 			// insert all param values into the template Params section
-			for key, value := range other {
-				if key == "public" {
-					continue
-				}
-				for index, param := range template.Params {
+			for index, param := range template.Params {
+				paramFound := false
+				for key, value := range other {
+					if key == "public" {
+						continue
+					}
 					if param.Name == key {
 						template.Params[index].Value = value.(string)
+						paramFound = true
+						break
 					}
+				}
+				if !paramFound {
+					return nil, fmt.Errorf("param '%s' is missing!", param.Name)
 				}
 			}
 		}

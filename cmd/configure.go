@@ -183,7 +183,7 @@ func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName strin
 
 		configItem.PlainSample = strings.TrimRight(configItem.Sample, "\r\n")
 
-		params, deviceName, additionalConfig := c.processConfig(configItem.Params, defaultName)
+		params, deviceName, additionalConfig := c.processConfig(configItem.Params, defaultName, usageFilter)
 		configItem.Params = params
 
 		// patch the configuration sample text with modbus configuration data
@@ -539,7 +539,7 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, optional bool)
 //   processed params and their user values
 //   the user entered name of the device
 //   a list of additional key/value pairs the need to be added to the configuration
-func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string, map[string]string) {
+func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaultName, usageFilter string) ([]registry.TemplateParam, string, map[string]string) {
 	additionalConfig := make(map[string]string)
 
 	fmt.Println("Enter the configuration values:")
@@ -589,6 +589,10 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 			// if value is optional and the user retunred the default value, skip this parameter
 			if !param.Optional || value != param.Value {
 				paramItems[index].Value = value
+			}
+		} else if param.Name == registry.ParamNameValueUsage {
+			if usageFilter != "" {
+				paramItems[index].Value = usageFilter
 			}
 		}
 	}
