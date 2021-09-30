@@ -90,64 +90,19 @@ func (c *CmdConfigure) Run() {
 	fmt.Println()
 	fmt.Println("Let's start:")
 
+	var chargerItem, gridItem, pvItem, batteryItem test.ConfigTemplate
 	var err error
 
-	fmt.Println()
-	fmt.Println("- Configure your wallbox")
-	chargerItem, err := c.processClass("wallbox", "charger", "", defaultChargerName)
-	if err != nil && err != ErrItemNotPresent {
-		log.FATAL.Fatal(err)
-	}
-	if err != ErrItemNotPresent {
-		c.configuration.Chargers = append(c.configuration.Chargers, chargerItem.Config)
-	}
+	chargerItem = c.configureClass("wallbox", "charger", "", defaultChargerName)
+	gridItem = c.configureClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
+	pvItem = c.configureClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
 
 	fmt.Println()
-	fmt.Println("- Configure your grid meter")
-
-	gridItem, err := c.processClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
-	if err != nil && err != ErrItemNotPresent {
-		log.FATAL.Fatal(err)
-	}
-	if err != ErrItemNotPresent {
-		c.configuration.Meters = append(c.configuration.Meters, gridItem.Config)
+	if c.askYesNo("Do you have a home battery") {
+		batteryItem = c.configureClass("battery meter", "meter", registry.UsageChoiceBattery, defaultHomeBatteryMeter)
 	}
 
-	fmt.Println()
-	fmt.Println("- Configure your PV inverter or PV meter")
-
-	pvItem, err := c.processClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
-	if err != nil && err != ErrItemNotPresent {
-		log.FATAL.Fatal(err)
-	}
-	if err != ErrItemNotPresent {
-		c.configuration.Meters = append(c.configuration.Meters, pvItem.Config)
-	}
-
-	var batteryItem test.ConfigTemplate
-	fmt.Println()
-	if c.askYesNo("Do you have a home battery system?") {
-		fmt.Println("- Configure your Battery inverter or Battery meter")
-
-		batteryItem, err = c.processClass("battery meter", "meter", registry.UsageChoiceBattery, defaultHomeBatteryMeter)
-		if err != nil && err != ErrItemNotPresent {
-			log.FATAL.Fatal(err)
-		}
-		if err != ErrItemNotPresent {
-			c.configuration.Meters = append(c.configuration.Meters, batteryItem.Config)
-		}
-	}
-
-	fmt.Println()
-	fmt.Println("- Configure your vehicle")
-
-	vehicleItem, err := c.processClass("vehicle", "vehicle", "", defaultEVTitle)
-	if err != nil && err != ErrItemNotPresent {
-		log.FATAL.Fatal(err)
-	}
-	if err != ErrItemNotPresent {
-		c.configuration.Vehicles = append(c.configuration.Vehicles, vehicleItem.Config)
-	}
+	vehicleItem := c.configureClass("vehicle", "vehicle", "", defaultEVTitle)
 
 	fmt.Println()
 	fmt.Println("- Configure your loadpoints")
@@ -190,21 +145,26 @@ func (c *CmdConfigure) Run() {
 	fmt.Println(string(yaml[:]))
 }
 
-func (c *CmdConfigure) removeLineWithSubstring(src string, substr []string) string {
-	for _, s := range substr {
-		re := regexp.MustCompile(".*" + s + ".*[\r\n]*")
-		src = re.ReplaceAllString(src, "")
-	}
-	return src
-}
+func (c *CmdConfigure) configureClass(title, class, usageFilter, defaultName string) test.ConfigTemplate {
+	fmt.Println()
+	fmt.Printf("- Configure your %s\n", title)
 
-func (c *CmdConfigure) paramsHasTypeModbus(params []registry.TemplateParam) bool {
-	for _, param := range params {
-		if param.Name == "modbus" {
-			return true
+	classItem, err := c.processClass(title, class, usageFilter, defaultName)
+	if err != nil && err != ErrItemNotPresent {
+		log.FATAL.Fatal(err)
+	}
+	if err != ErrItemNotPresent {
+		switch class {
+		case "charger":
+			c.configuration.Chargers = append(c.configuration.Chargers, classItem.Config)
+		case "meter":
+			c.configuration.Meters = append(c.configuration.Meters, classItem.Config)
+		case "vehicle":
+			c.configuration.Vehicles = append(c.configuration.Vehicles, classItem.Config)
 		}
 	}
-	return false
+
+	return classItem
 }
 
 // let the user select a device item from a list defined by class and filter
@@ -319,6 +279,23 @@ func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName strin
 	}
 
 	return deviceConfiguration, nil
+}
+
+func (c *CmdConfigure) removeLineWithSubstring(src string, substr []string) string {
+	for _, s := range substr {
+		re := regexp.MustCompile(".*" + s + ".*[\r\n]*")
+		src = re.ReplaceAllString(src, "")
+	}
+	return src
+}
+
+func (c *CmdConfigure) paramsHasTypeModbus(params []registry.TemplateParam) bool {
+	for _, param := range params {
+		if param.Name == "modbus" {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter string) registry.Template {
