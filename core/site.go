@@ -230,13 +230,15 @@ func (site *Site) publish(key string, val interface{}) {
 }
 
 // updateMeter updates and publishes single meter
-func (site *Site) updateMeter(meter api.Meter, power *float64) error {
-	value, err := meter.CurrentPower()
-	if err == nil {
-		*power = value // update value if no error
-	}
+func (site *Site) updateMeter(meter api.Meter, power *float64) func() error {
+	return func() error {
+		value, err := meter.CurrentPower()
+		if err == nil {
+			*power = value // update value if no error
+		}
 
-	return err
+		return err
+	}
 }
 
 // updateMeter updates and publishes single meter
@@ -246,9 +248,7 @@ func (site *Site) updateMeters() error {
 			return nil
 		}
 
-		err := retry.Do(func() error {
-			return site.updateMeter(meter, power)
-		}, retryOptions...)
+		err := retry.Do(site.updateMeter(meter, power), retryOptions...)
 
 		if err == nil {
 			site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
@@ -266,9 +266,7 @@ func (site *Site) updateMeters() error {
 
 		for id, meter := range site.pvMeters {
 			var power float64
-			err := retry.Do(func() error {
-				return site.updateMeter(meter, &power)
-			}, retryOptions...)
+			err := retry.Do(site.updateMeter(meter, &power), retryOptions...)
 
 			if err == nil {
 				site.pvPower += power
@@ -307,11 +305,6 @@ func (site *Site) updateMeters() error {
 
 	return err
 }
-
-// consumedPower estimates how much power the charger might have consumed given it was the only load
-// func (site *Site) consumedPower() float64 {
-// 	return consumedPower(lp.pvPower, lp.batteryPower, lp.gridPower)
-// }
 
 // sitePower returns the net power exported by the site minus a residual margin.
 // negative values mean grid: export, battery: charging
