@@ -5,7 +5,6 @@ import (
 	"crypto/x509/pkix"
 	"errors"
 	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -279,23 +278,6 @@ func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName strin
 	}
 
 	return deviceConfiguration, nil
-}
-
-func (c *CmdConfigure) removeLineWithSubstring(src string, substr []string) string {
-	for _, s := range substr {
-		re := regexp.MustCompile(".*" + s + ".*[\r\n]*")
-		src = re.ReplaceAllString(src, "")
-	}
-	return src
-}
-
-func (c *CmdConfigure) paramsHasTypeModbus(params []registry.TemplateParam) bool {
-	for _, param := range params {
-		if param.Name == "modbus" {
-			return true
-		}
-	}
-	return false
 }
 
 func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter, modbusKey string) registry.Template {
