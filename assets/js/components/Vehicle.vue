@@ -25,7 +25,7 @@ export default {
 		id: Number,
 		connected: Boolean,
 		vehiclePresent: Boolean,
-		vehicleSoc: Number,
+		vehicleSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,

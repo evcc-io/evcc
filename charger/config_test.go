@@ -21,9 +21,11 @@ func TestChargers(t *testing.T) {
 		"connect: connection refused",
 		"error connecting: Network Error",
 		"i/o timeout",
+		"recv timeout",
 		"(Client.Timeout exceeded while awaiting headers)",
 		"can only have either uri or device", // modbus
 		"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
+		"eebus not configured",
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {
