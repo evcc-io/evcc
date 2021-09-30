@@ -158,6 +158,17 @@ func (c *CmdConfigure) configureClass(title, class, usageFilter, defaultName str
 		case "charger":
 			c.configuration.Chargers = append(c.configuration.Chargers, classItem.Config)
 		case "meter":
+			// shorten the configuration if this is a device with a public entry
+			if classItem.Public != "" && len(classItem.Params) > 0 {
+				for _, param := range classItem.Params {
+					if param.Name == registry.ParamNameValueModbus {
+						continue
+					}
+					classItem.Config[param.Name] = param.Value
+				}
+				classItem.Config["public"] = classItem.Public
+				delete(classItem.Config, "power")
+			}
 			c.configuration.Meters = append(c.configuration.Meters, classItem.Config)
 		case "vehicle":
 			c.configuration.Vehicles = append(c.configuration.Vehicles, classItem.Config)
