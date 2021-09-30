@@ -411,7 +411,7 @@ func (c *CmdConfigure) fetchElements(class, usageFilter string) []registry.Templ
 		}
 
 		if len(usageFilter) == 0 ||
-			c.paramChoiceContains(tmpl.Params, registry.ParamNameValueUsage, usageFilter) {
+			c.paramChoiceContains(tmpl.Params, registry.ParamNameValueUsage, usageFilter, true) {
 			items = append(items, tmpl)
 		}
 	}
@@ -423,12 +423,14 @@ func (c *CmdConfigure) fetchElements(class, usageFilter string) []registry.Templ
 	return items
 }
 
-func (c *CmdConfigure) paramChoiceContains(params []registry.TemplateParam, name, filter string) bool {
+func (c *CmdConfigure) paramChoiceContains(params []registry.TemplateParam, name, filter string, considerEmptyAsTrue bool) bool {
+	filterFound := false
 	for _, item := range params {
 		if item.Name != name {
 			continue
 		}
 
+		filterFound = true
 		if item.Choice == nil || len(item.Choice) == 0 {
 			return true
 		}
@@ -438,6 +440,10 @@ func (c *CmdConfigure) paramChoiceContains(params []registry.TemplateParam, name
 				return true
 			}
 		}
+	}
+
+	if !filterFound && considerEmptyAsTrue {
+		return true
 	}
 
 	return false
