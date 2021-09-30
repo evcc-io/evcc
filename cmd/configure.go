@@ -320,7 +320,7 @@ func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter 
 			panic("params value or choice is required")
 		}
 
-		if item.Name == "usage" {
+		if item.Name == registry.ParamNameValueUsage {
 			if len(item.Choice) == 0 {
 				panic("params choice is required with usage")
 			}
@@ -400,7 +400,7 @@ func (c *CmdConfigure) fetchElements(class, usageFilter string) []registry.Templ
 		}
 
 		if len(usageFilter) == 0 ||
-			c.paramChoiceContains(tmpl.Params, "usage", usageFilter) {
+			c.paramChoiceContains(tmpl.Params, registry.ParamNameValueUsage, usageFilter) {
 			items = append(items, tmpl)
 		}
 	}
@@ -584,7 +584,7 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 					additionalConfig["uri"] = uri + ":" + port
 				}
 			}
-		} else if param.Name != "usage" {
+		} else if param.Name != registry.ParamNameValueUsage {
 			value := c.askValue(param.Name, param.Value, param.Hint, param.Optional)
 			// if value is optional and the user retunred the default value, skip this parameter
 			if !param.Optional || value != param.Value {

@@ -37,7 +37,7 @@ func ProcessSampleTemplate(tmpl registry.Template) registry.Template {
 			// silently ignore errors here
 			return tmpl
 		}
-		if (item.Name == "usage" || item.Name == "modbus") && len(item.Choice) == 0 {
+		if (item.Name == registry.ParamNameValueUsage || item.Name == registry.ParamNameValueModbus) && len(item.Choice) == 0 {
 			// params choice is required with usage or modbus
 			// silently ignore errors here
 			return tmpl
