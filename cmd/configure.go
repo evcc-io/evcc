@@ -58,7 +58,10 @@ type Config struct {
 	} `yaml:"site,omitempty"`
 }
 
-var configuration Config
+// var configuration Config
+type CmdConfigure struct {
+	configuration Config
+}
 
 // configureCmd represents the configure command
 var configureCmd = &cobra.Command{
@@ -72,6 +75,11 @@ func init() {
 }
 
 func runConfigure(cmd *cobra.Command, args []string) {
+	impl := &CmdConfigure{}
+	impl.Run()
+}
+
+func (c *CmdConfigure) Run() {
 	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
 	log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
@@ -86,65 +94,65 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	fmt.Println()
 	fmt.Println("- Configure your wallbox")
-	chargerItem, err := processClass("wallbox", "charger", "", defaultChargerName)
+	chargerItem, err := c.processClass("wallbox", "charger", "", defaultChargerName)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
 	if err != ErrItemNotPresent {
-		configuration.Chargers = append(configuration.Chargers, chargerItem.Config)
+		c.configuration.Chargers = append(c.configuration.Chargers, chargerItem.Config)
 	}
 
 	fmt.Println()
 	fmt.Println("- Configure your grid meter")
 
-	gridItem, err := processClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
+	gridItem, err := c.processClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
 	if err != ErrItemNotPresent {
-		configuration.Meters = append(configuration.Meters, gridItem.Config)
+		c.configuration.Meters = append(c.configuration.Meters, gridItem.Config)
 	}
 
 	fmt.Println()
 	fmt.Println("- Configure your PV inverter or PV meter")
 
-	pvItem, err := processClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
+	pvItem, err := c.processClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
 	if err != ErrItemNotPresent {
-		configuration.Meters = append(configuration.Meters, pvItem.Config)
+		c.configuration.Meters = append(c.configuration.Meters, pvItem.Config)
 	}
 
 	var batteryItem test.ConfigTemplate
 	fmt.Println()
-	if askYesNo("Do you have a home battery system?") {
+	if c.askYesNo("Do you have a home battery system?") {
 		fmt.Println("- Configure your Battery inverter or Battery meter")
 
-		batteryItem, err = processClass("battery meter", "meter", registry.UsageChoiceBattery, defaultHomeBatteryMeter)
+		batteryItem, err = c.processClass("battery meter", "meter", registry.UsageChoiceBattery, defaultHomeBatteryMeter)
 		if err != nil && err != ErrItemNotPresent {
 			log.FATAL.Fatal(err)
 		}
 		if err != ErrItemNotPresent {
-			configuration.Meters = append(configuration.Meters, batteryItem.Config)
+			c.configuration.Meters = append(c.configuration.Meters, batteryItem.Config)
 		}
 	}
 
 	fmt.Println()
 	fmt.Println("- Configure your vehicle")
 
-	vehicleItem, err := processClass("vehicle", "vehicle", "", defaultEVTitle)
+	vehicleItem, err := c.processClass("vehicle", "vehicle", "", defaultEVTitle)
 	if err != nil && err != ErrItemNotPresent {
 		log.FATAL.Fatal(err)
 	}
 	if err != ErrItemNotPresent {
-		configuration.Vehicles = append(configuration.Vehicles, vehicleItem.Config)
+		c.configuration.Vehicles = append(c.configuration.Vehicles, vehicleItem.Config)
 	}
 
 	fmt.Println()
 	fmt.Println("- Configure your loadpoints")
 
-	loadpointTitle := askValue("Loadpoint title", defaultLoadpointTitle, "", false)
+	loadpointTitle := c.askValue("Loadpoint title", defaultLoadpointTitle, "", false)
 	loadpoint := Loadpoint{
 		Title: loadpointTitle,
 	}
@@ -154,24 +162,24 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	if vehicleItem.Config["name"] != nil {
 		loadpoint.Vehicle = vehicleItem.Config["name"].(string)
 	}
-	configuration.Loadpoints = append(configuration.Loadpoints, loadpoint)
+	c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
 
 	fmt.Println()
 	fmt.Println("- Configure your site")
 
-	siteTitle := askValue("Site title", defaultSiteTitle, "", false)
-	configuration.Site.Title = siteTitle
+	siteTitle := c.askValue("Site title", defaultSiteTitle, "", false)
+	c.configuration.Site.Title = siteTitle
 	if gridItem.Config["name"] != nil {
-		configuration.Site.Meters.Grid = gridItem.Config["name"].(string)
+		c.configuration.Site.Meters.Grid = gridItem.Config["name"].(string)
 	}
 	if pvItem.Config["name"] != nil {
-		configuration.Site.Meters.Pv = pvItem.Config["name"].(string)
+		c.configuration.Site.Meters.Pv = pvItem.Config["name"].(string)
 	}
 	if batteryItem.Config["name"] != nil {
-		configuration.Site.Meters.Battery = batteryItem.Config["name"].(string)
+		c.configuration.Site.Meters.Battery = batteryItem.Config["name"].(string)
 	}
 
-	yaml, err := yaml.Marshal(configuration)
+	yaml, err := yaml.Marshal(c.configuration)
 	if err != nil {
 		log.FATAL.Fatal(err)
 	}
@@ -182,7 +190,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 	fmt.Println(string(yaml[:]))
 }
 
-func removeLineWithSubstring(src string, substr []string) string {
+func (c *CmdConfigure) removeLineWithSubstring(src string, substr []string) string {
 	for _, s := range substr {
 		re := regexp.MustCompile(".*" + s + ".*[\r\n]*")
 		src = re.ReplaceAllString(src, "")
@@ -190,7 +198,7 @@ func removeLineWithSubstring(src string, substr []string) string {
 	return src
 }
 
-func paramsHasTypeModbus(params []registry.TemplateParam) bool {
+func (c *CmdConfigure) paramsHasTypeModbus(params []registry.TemplateParam) bool {
 	for _, param := range params {
 		if param.Name == "modbus" {
 			return true
@@ -200,7 +208,7 @@ func paramsHasTypeModbus(params []registry.TemplateParam) bool {
 }
 
 // let the user select a device item from a list defined by class and filter
-func processClass(title, class, usageFilter, defaultName string) (test.ConfigTemplate, error) {
+func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName string) (test.ConfigTemplate, error) {
 	var repeat bool = true
 	var deviceConfiguration test.ConfigTemplate
 
@@ -208,22 +216,22 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		var localConfiguration Config
 
 		fmt.Println()
-		configItem := selectItem(title, class, usageFilter)
+		configItem := c.selectItem(title, class, usageFilter)
 		if configItem.Name == itemNotPresent {
 			return deviceConfiguration, ErrItemNotPresent
 		}
 
 		configItem.PlainSample = strings.TrimRight(configItem.Sample, "\r\n")
 
-		params, deviceName, additionalConfig := processConfig(configItem.Params, defaultName)
+		params, deviceName, additionalConfig := c.processConfig(configItem.Params, defaultName)
 		configItem.Params = params
 
 		// patch the configuration sample text with modbus configuration data
 		if len(additionalConfig) > 0 {
-			if paramsHasTypeModbus(configItem.Params) {
+			if c.paramsHasTypeModbus(configItem.Params) {
 				// remove all modbus key/value pairs from Sample
 				substrings := []string{"id:", "device:", "baudrate:", "comset:", "uri:", "rtu:"}
-				configItem.Sample = removeLineWithSubstring(configItem.Sample, substrings)
+				configItem.Sample = c.removeLineWithSubstring(configItem.Sample, substrings)
 			}
 
 			// add additional config to Sample
@@ -231,7 +239,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 				configItem.Sample += key + ": " + value + "\r\n"
 			}
 		}
-		configItem = renderTemplateSample(configItem, usageFilter)
+		configItem = c.renderTemplateSample(configItem, usageFilter)
 
 		// create the configuration data structure
 		var conf map[string]interface{}
@@ -260,14 +268,14 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		// check if we need to setup an EEBUS hems
 		if class == "charger" && configItem.Type == "eebus" {
 			var err error
-			err = setupEEBUSConfig()
+			err = c.setupEEBUSConfig()
 
 			if err != nil {
 				return deviceConfiguration, fmt.Errorf("error creating EEBUS cert: %s", err)
 			}
 
 			localConfiguration.EEBUS = map[string]interface{}{
-				"certificate": configuration.EEBUS["certificate"],
+				"certificate": c.configuration.EEBUS["certificate"],
 			}
 
 			err = configureEEBus(localConfiguration.EEBUS)
@@ -291,11 +299,11 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		fmt.Println("Testing configuration...")
 		fmt.Println()
 
-		err = testDeviceConfig(class, yaml)
+		err = c.testDeviceConfig(class, yaml)
 		if err == nil {
 			// Do we see proper values?
 			fmt.Println()
-			if askYesNo("Does the test data above show proper values?") {
+			if c.askYesNo("Does the test data above show proper values?") {
 				repeat = false
 			}
 		}
@@ -303,7 +311,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 		if err != nil || repeat {
 			fmt.Println("Error: ", err)
 			fmt.Println()
-			if !askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
+			if !c.askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()
 				return deviceConfiguration, ErrItemNotPresent
 			}
@@ -313,7 +321,7 @@ func processClass(title, class, usageFilter, defaultName string) (test.ConfigTem
 	return deviceConfiguration, nil
 }
 
-func renderTemplateSample(tmpl registry.Template, usageFilter string) registry.Template {
+func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter string) registry.Template {
 	if len(tmpl.Params) == 0 {
 		return tmpl
 	}
@@ -370,7 +378,7 @@ func renderTemplateSample(tmpl registry.Template, usageFilter string) registry.T
 
 // setup EEBUS certificate
 // this id nearly identical to eebus.go
-func setupEEBUSConfig() error {
+func (c *CmdConfigure) setupEEBUSConfig() error {
 	details := communication.ManufacturerDetails{
 		DeviceName:    "EVCC",
 		DeviceCode:    "EVCC_HEMS_01",
@@ -398,7 +406,7 @@ func setupEEBUSConfig() error {
 		"public":  pubKey,
 		"private": privKey,
 	}
-	configuration.EEBUS = map[string]interface{}{
+	c.configuration.EEBUS = map[string]interface{}{
 		"certificate": certificate,
 	}
 
@@ -406,7 +414,7 @@ func setupEEBUSConfig() error {
 }
 
 // return EVCC configuration items of a given class
-func fetchElements(class, usageFilter string) []registry.Template {
+func (c *CmdConfigure) fetchElements(class, usageFilter string) []registry.Template {
 	var items []registry.Template
 
 	for _, tmpl := range registry.TemplatesByClass(class) {
@@ -415,7 +423,7 @@ func fetchElements(class, usageFilter string) []registry.Template {
 		}
 
 		if len(usageFilter) == 0 ||
-			paramChoiceContains(tmpl.Params, "usage", usageFilter) {
+			c.paramChoiceContains(tmpl.Params, "usage", usageFilter) {
 			items = append(items, tmpl)
 		}
 	}
@@ -427,7 +435,7 @@ func fetchElements(class, usageFilter string) []registry.Template {
 	return items
 }
 
-func paramChoiceContains(params []registry.TemplateParam, name, filter string) bool {
+func (c *CmdConfigure) paramChoiceContains(params []registry.TemplateParam, name, filter string) bool {
 	for _, item := range params {
 		if item.Name != name {
 			continue
@@ -448,7 +456,7 @@ func paramChoiceContains(params []registry.TemplateParam, name, filter string) b
 }
 
 // PromptUI: select item from list
-func selectItem(title, class, usageFilter string) registry.Template {
+func (c *CmdConfigure) selectItem(title, class, usageFilter string) registry.Template {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
 		Active:   "-> {{ .Name }}",
@@ -459,7 +467,7 @@ func selectItem(title, class, usageFilter string) registry.Template {
 	var emptyItem registry.Template
 	emptyItem.Name = itemNotPresent
 
-	items := fetchElements(class, usageFilter)
+	items := c.fetchElements(class, usageFilter)
 	items = append(items, emptyItem)
 
 	prompt := promptui.Select{
@@ -478,7 +486,7 @@ func selectItem(title, class, usageFilter string) registry.Template {
 }
 
 // PromptUI: select item from list
-func askChoice(label string, choices []string) (int, string) {
+func (c *CmdConfigure) askChoice(label string, choices []string) (int, string) {
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
 		Active:   "-> {{ . }}",
@@ -502,7 +510,7 @@ func askChoice(label string, choices []string) (int, string) {
 }
 
 // PromptUI: ask yes/no question, return true if yes is selected
-func askYesNo(label string) bool {
+func (c *CmdConfigure) askYesNo(label string) bool {
 	prompt := promptui.Prompt{
 		Label:     label,
 		IsConfirm: true,
@@ -514,7 +522,7 @@ func askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func askValue(label, defaultValue, hint string, optional bool) string {
+func (c *CmdConfigure) askValue(label, defaultValue, hint string, optional bool) string {
 	templates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -554,7 +562,7 @@ func askValue(label, defaultValue, hint string, optional bool) string {
 //   processed params and their user values
 //   the user entered name of the device
 //   a list of additional key/value pairs the need to be added to the configuration
-func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string, map[string]string) {
+func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaultName string) ([]registry.TemplateParam, string, map[string]string) {
 	additionalConfig := make(map[string]string)
 
 	fmt.Println("Enter the configuration values:")
@@ -575,32 +583,32 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 
 			if len(choices) > 0 {
 				// ask for modbus address
-				id := askValue("ID", "1", "Modbus ID", false)
+				id := c.askValue("ID", "1", "Modbus ID", false)
 				additionalConfig["id"] = id
 
 				// ask for modbus interface type
-				index, _ := askChoice("Select the Modbus interface", choices)
+				index, _ := c.askChoice("Select the Modbus interface", choices)
 				selectedType := param.Choice[index]
 				fmt.Println("Selected Type:", selectedType)
 				switch selectedType {
 				case "serial":
-					device := askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address", false)
+					device := c.askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address", false)
 					additionalConfig["device"] = device
-					baudrate := askValue("Baudrate", "9600", "", false)
+					baudrate := c.askValue("Baudrate", "9600", "", false)
 					additionalConfig["baudrate"] = baudrate
-					comset := askValue("ComSet", "8N1", "", false)
+					comset := c.askValue("ComSet", "8N1", "", false)
 					additionalConfig["comset"] = comset
 				case "tcprtu", "tcp":
 					if selectedType == "tcprtu" {
 						additionalConfig["rtu"] = "true"
 					}
-					uri := askValue("Host", "192.0.2.2", "IP address or hostname", false)
-					port := askValue("Port", "502", "Port address", false)
+					uri := c.askValue("Host", "192.0.2.2", "IP address or hostname", false)
+					port := c.askValue("Port", "502", "Port address", false)
 					additionalConfig["uri"] = uri + ":" + port
 				}
 			}
 		} else if param.Name != "usage" {
-			value := askValue(param.Name, param.Value, param.Hint, param.Optional)
+			value := c.askValue(param.Name, param.Value, param.Hint, param.Optional)
 			// if value is optional and the user retunred the default value, skip this parameter
 			if !param.Optional || value != param.Value {
 				paramItems[index].Value = value
@@ -609,13 +617,13 @@ func processConfig(paramItems []registry.TemplateParam, defaultName string) ([]r
 	}
 
 	fmt.Println()
-	deviceName := askValue("Name", defaultName, "Give the device a name", false)
+	deviceName := c.askValue("Name", defaultName, "Give the device a name", false)
 
 	return paramItems, deviceName, additionalConfig
 }
 
 // return a usable EVCC configuration
-func readConfiguration(configuration []byte) (conf config, err error) {
+func (c *CmdConfigure) readConfiguration(configuration []byte) (conf config, err error) {
 	if err := viper.ReadConfig(bytes.NewBuffer(configuration)); err != nil {
 		return conf, err
 	}
@@ -628,19 +636,19 @@ func readConfiguration(configuration []byte) (conf config, err error) {
 }
 
 // test a device configuration
-func testDeviceConfig(class string, configuration []byte) error {
-	conf, err := readConfiguration(configuration)
+func (c *CmdConfigure) testDeviceConfig(class string, configuration []byte) error {
+	conf, err := c.readConfiguration(configuration)
 	if err != nil {
 		return err
 	}
 
 	switch class {
 	case "charger":
-		return testChargerConfig(conf)
+		return c.testChargerConfig(conf)
 	case "meter":
-		return testMeterConfig(conf)
+		return c.testMeterConfig(conf)
 	case "vehicle":
-		return testVehicleConfig(conf)
+		return c.testVehicleConfig(conf)
 	}
 
 	return fmt.Errorf("invalid class %s provided", class)
@@ -648,7 +656,7 @@ func testDeviceConfig(class string, configuration []byte) error {
 
 // test a charger configuration
 // almost identical to charger.go implementation
-func testChargerConfig(conf config) error {
+func (c *CmdConfigure) testChargerConfig(conf config) error {
 	if err := cp.configureChargers(conf); err != nil {
 		return err
 	}
@@ -663,7 +671,7 @@ func testChargerConfig(conf config) error {
 
 // test a meter configuration
 // almost identical to meter.go implementation
-func testMeterConfig(conf config) error {
+func (c *CmdConfigure) testMeterConfig(conf config) error {
 	if err := cp.configureMeters(conf); err != nil {
 		return err
 	}
@@ -678,7 +686,7 @@ func testMeterConfig(conf config) error {
 
 // test a meter configuration
 // almost identical to vehicle.go implementation
-func testVehicleConfig(conf config) error {
+func (c *CmdConfigure) testVehicleConfig(conf config) error {
 	if err := cp.configureVehicles(conf); err != nil {
 		return err
 	}
