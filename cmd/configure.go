@@ -93,8 +93,8 @@ func (c *CmdConfigure) Run() {
 	var chargerItem, gridItem, pvItem, batteryItem test.ConfigTemplate
 	var err error
 
-	chargerItem = c.configureClass("wallbox", "charger", "", defaultChargerName)
-	gridItem = c.configureClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
+	// chargerItem = c.configureClass("wallbox", "charger", "", defaultChargerName)
+	// gridItem = c.configureClass("grid meter", "meter", registry.UsageChoiceGrid, defaultGridMeterName)
 	pvItem = c.configureClass("pv meter", "meter", registry.UsageChoicePV, defaultPVInverterMeter)
 
 	fmt.Println()
@@ -201,7 +201,14 @@ func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName strin
 		if len(additionalConfig) > 0 {
 			if c.paramsHasTypeModbus(configItem.Params) {
 				// remove all modbus key/value pairs from Sample
-				substrings := []string{"id:", "device:", "baudrate:", "comset:", "uri:", "rtu:"}
+				substrings := []string{
+					registry.ModbusParamNameId + ":",
+					registry.ModbusParamNameDevice + ":",
+					registry.ModbusParamNameBaudrate + ":",
+					registry.ModbusParamNameComset + ":",
+					registry.ModbusParamNameURI + ":",
+					registry.ModbusParamNameRTU + ":",
+				}
 				configItem.Sample = c.removeLineWithSubstring(configItem.Sample, substrings)
 			}
 
@@ -564,41 +571,43 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 	for index, param := range paramItems {
 		if param.Name == "modbus" {
 			choices := []string{}
+			choiceKeys := []string{}
 			for _, choice := range param.Choice {
 				switch choice {
-				case "serial":
+				case registry.ModbusChoiceRS485:
 					choices = append(choices, "Serial (USB-RS485 Adapter)")
-				case "tcprtu":
+					choiceKeys = append(choiceKeys, registry.ModbusKeyRS485Serial)
 					choices = append(choices, "Serial (Ethernet-RS485 Adapter)")
-				case "tcp":
+					choiceKeys = append(choiceKeys, registry.ModbusKeyRS485TCPIP)
+				case registry.ModbusChoiceTCPIP:
 					choices = append(choices, "TCP/IP")
+					choiceKeys = append(choiceKeys, registry.ModbusKeyTCPIP)
 				}
 			}
 
 			if len(choices) > 0 {
 				// ask for modbus address
 				id := c.askValue("ID", "1", "Modbus ID", false)
-				additionalConfig["id"] = id
+				additionalConfig[registry.ModbusParamNameId] = id
 
 				// ask for modbus interface type
 				index, _ := c.askChoice("Select the Modbus interface", choices)
-				selectedType := param.Choice[index]
-				fmt.Println("Selected Type:", selectedType)
+				selectedType := choiceKeys[index]
 				switch selectedType {
-				case "serial":
-					device := c.askValue("Device", "/dev/ttyUSB0", "USB-RS485 Adapter address", false)
-					additionalConfig["device"] = device
-					baudrate := c.askValue("Baudrate", "9600", "", false)
-					additionalConfig["baudrate"] = baudrate
-					comset := c.askValue("ComSet", "8N1", "", false)
-					additionalConfig["comset"] = comset
-				case "tcprtu", "tcp":
-					if selectedType == "tcprtu" {
-						additionalConfig["rtu"] = "true"
+				case registry.ModbusKeyRS485Serial:
+					device := c.askValue("Device", registry.ModbusParamValueDevice, "USB-RS485 Adapter address", false)
+					additionalConfig[registry.ModbusParamNameDevice] = device
+					baudrate := c.askValue("Baudrate", registry.ModbusParamValueBaudrate, "", false)
+					additionalConfig[registry.ModbusParamNameBaudrate] = baudrate
+					comset := c.askValue("ComSet", registry.ModbusParamValueComset, "", false)
+					additionalConfig[registry.ModbusParamNameComset] = comset
+				case registry.ModbusKeyRS485TCPIP, registry.ModbusKeyTCPIP:
+					if selectedType == registry.ModbusKeyRS485TCPIP {
+						additionalConfig[registry.ModbusParamNameRTU] = "true"
 					}
-					uri := c.askValue("Host", "192.0.2.2", "IP address or hostname", false)
-					port := c.askValue("Port", "502", "Port address", false)
-					additionalConfig["uri"] = uri + ":" + port
+					uri := c.askValue("Host", registry.ModbusParamValueURI, "IP address or hostname", false)
+					port := c.askValue("Port", registry.ModbusParamValuePort, "Port address", false)
+					additionalConfig[registry.ModbusParamNameURI] = uri + ":" + port
 				}
 			}
 		} else if param.Name != registry.ParamNameValueUsage {
