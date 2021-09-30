@@ -230,46 +230,56 @@ func (site *Site) publish(key string, val interface{}) {
 }
 
 // updateMeter updates and publishes single meter
-func (site *Site) updateMeter(name string, meter api.Meter, power *float64) error {
+func (site *Site) updateMeter(meter api.Meter, power *float64) error {
 	value, err := meter.CurrentPower()
-	if err != nil {
-		return err
+	if err == nil {
+		*power = value // update value if no error
 	}
 
-	*power = value // update value if no error
-
-	site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
-	site.publish(name+"Power", *power)
-
-	return nil
+	return err
 }
 
 // updateMeter updates and publishes single meter
 func (site *Site) updateMeters() error {
-	retryMeter := func(s string, m api.Meter, f *float64) error {
-		if m == nil {
+	retryMeter := func(name string, meter api.Meter, power *float64) error {
+		if meter == nil {
 			return nil
 		}
 
 		err := retry.Do(func() error {
-			return site.updateMeter(s, m, f)
+			return site.updateMeter(meter, power)
 		}, retryOptions...)
 
-		if err != nil {
-			err = fmt.Errorf("updating %s meter: %v", s, err)
+		if err == nil {
+			site.log.DEBUG.Printf("%s power: %.0fW", name, *power)
+			site.publish(name+"Power", *power)
+		} else {
+			err = fmt.Errorf("updating %s meter: %v", name, err)
 			site.log.ERROR.Println(err)
 		}
 
 		return err
 	}
 
-	site.pvPower = 0
-	for _, pv := range site.pvMeters {
-		var power float64
-		// pv meter is not critical for operation
-		if err := retryMeter("pv", pv, &power); err != nil {
-			site.pvPower += power
+	if len(site.pvMeters) > 0 {
+		site.pvPower = 0
+
+		for id, meter := range site.pvMeters {
+			var power float64
+			err := retry.Do(func() error {
+				return site.updateMeter(meter, &power)
+			}, retryOptions...)
+
+			if err == nil {
+				site.pvPower += power
+			} else {
+				err = fmt.Errorf("updating pv meter %d: %v", id, err)
+				site.log.ERROR.Println(err)
+			}
 		}
+
+		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
+		site.publish("pvPower", site.pvPower)
 	}
 
 	err := retryMeter("grid", site.gridMeter, &site.gridPower)
