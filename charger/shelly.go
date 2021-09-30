@@ -100,15 +100,6 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewShelly creates Shelly charger
 func NewShelly(uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
-	u, err := url.Parse(uri)
-	if err != nil || u.Host == "" {
-		u.Host = uri
-	}
-
-	if u.Scheme == "" {
-		u.Scheme = "http"
-	}
-
 	log := util.NewLogger("shelly")
 	c := &Shelly{
 		Helper:       request.NewHelper(log),
@@ -120,9 +111,22 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		standbypower: standbypower,
 	}
 
+	u, err := url.Parse(uri)
+	if err != nil {
+		return c, err
+	}
+
+	if u.Path != "" {
+		u.Host = u.Path
+		u.Path = ""
+	}
+
+	if u.Scheme == "" {
+		u.Scheme = "http"
+	}
+
 	var resp shellyDeviceInfo
-	// All shellies from both Gen1 and Gen2 families expose the /shelly endpoint,
-	// useful for discovery of devices and their features and capabilities.
+	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
 	err = c.GetJSON(fmt.Sprintf("%s/shelly", u.String()), &resp)
 	if err != nil {
 		return c, err
@@ -159,7 +163,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		}
 		c.uri = u.String() + "/rpc"
 	default:
-		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, resp.Gen)
+		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
 
 	return c, nil
@@ -262,6 +266,8 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 
 	if c.gen == 1 || (c.gen == 2 && !c.authon) {
 		hab := make(map[string]string)
+		// Shelly gen 1 basic authentication
+		// https://shelly-api-docs.shelly.cloud/gen1/#http-dialect
 		if c.gen == 1 && c.authon {
 			if err := provider.AuthHeaders(c.log, provider.Auth{
 				Type:     "Basic",
@@ -277,7 +283,9 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		}
 		return c.DoJSON(req, res)
 	}
-
+	// Shelly gen 2 rfc7616 authentication
+	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
+	// https://datatracker.ietf.org/doc/html/rfc7616
 	if c.gen == 2 && c.authon {
 
 		req, err := request.New(http.MethodPost, cmd, nil, request.URLEncoding)
@@ -292,7 +300,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		}
 		// read the whole body and then close it to reuse the http connection
 		// otherwise it *could* fail in certain environments (behind proxy for instance)
-		io.Copy(ioutil.Discard, resp.Body)
+		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
 		if resp.StatusCode == http.StatusUnauthorized {
@@ -326,6 +334,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 			// post json
 			data := struct {
 				Id     string `json:"id"`
+				On     bool   `json:"on"`
 				Src    string `json:"src"`
 				Method string `json:"method"`
 			}{
@@ -352,12 +361,12 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 					return err
 				}
 				return json.Unmarshal(bodyBytes, res)
-			} else {
-				return fmt.Errorf("unknown auth status code: %d", resp.StatusCode)
 			}
+			return fmt.Errorf("unknown auth status code: %d", resp.StatusCode)
 		}
+		return fmt.Errorf("authentication credetials status code <> 401: %d", resp.StatusCode)
 	}
-	return nil
+	return fmt.Errorf("unknown api generation (%d)", c.gen)
 }
 
 // parse Shelly authorization header
