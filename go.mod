@@ -15,7 +15,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8
+	github.com/evcc-io/config v0.0.0-20210930150730-367382c6eb91
 	github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
