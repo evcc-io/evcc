@@ -194,36 +194,18 @@ func (c *CmdConfigure) processClass(title, class, usageFilter, defaultName strin
 
 		configItem.PlainSample = strings.TrimRight(configItem.Sample, "\r\n")
 
-		params, deviceName, additionalConfig := c.processConfig(configItem.Params, defaultName, usageFilter)
+		params, deviceName, modbusKey := c.processConfig(configItem.Params, defaultName, usageFilter)
 		configItem.Params = params
 
-		// patch the configuration sample text with modbus configuration data
-		if len(additionalConfig) > 0 {
-			if c.paramsHasTypeModbus(configItem.Params) {
-				// remove all modbus key/value pairs from Sample
-				substrings := []string{
-					registry.ModbusParamNameId + ":",
-					registry.ModbusParamNameDevice + ":",
-					registry.ModbusParamNameBaudrate + ":",
-					registry.ModbusParamNameComset + ":",
-					registry.ModbusParamNameURI + ":",
-					registry.ModbusParamNameRTU + ":",
-				}
-				configItem.Sample = c.removeLineWithSubstring(configItem.Sample, substrings)
-			}
-
-			// add additional config to Sample
-			for key, value := range additionalConfig {
-				configItem.Sample += key + ": " + value + "\r\n"
-			}
-		}
-		configItem = c.renderTemplateSample(configItem, usageFilter)
+		configItem = c.renderTemplateSample(configItem, usageFilter, modbusKey)
 
 		// create the configuration data structure
 		var conf map[string]interface{}
 		if err := yaml.Unmarshal([]byte(configItem.Sample), &conf); err != nil {
 			// silently ignore errors here
-			panic("unable to parse sample: %s" + err.Error())
+			fmt.Println("unable to parse sample:")
+			fmt.Println(configItem.Sample)
+			panic("error: " + err.Error())
 		}
 		deviceConfiguration = test.ConfigTemplate{
 			Template: configItem,
@@ -316,9 +298,20 @@ func (c *CmdConfigure) paramsHasTypeModbus(params []registry.TemplateParam) bool
 	return false
 }
 
-func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter string) registry.Template {
+func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter, modbusKey string) registry.Template {
 	if len(tmpl.Params) == 0 {
 		return tmpl
+	}
+
+	hasModbus := false
+	for _, item := range tmpl.Params {
+		if item.Name == registry.ParamNameValueModbus {
+			hasModbus = true
+		}
+	}
+
+	if hasModbus {
+		tmpl.Sample = tmpl.RenderModbus([]string{modbusKey})
 	}
 
 	sampleTmpl, err := template.New("sample").Parse(tmpl.Sample)
@@ -327,7 +320,6 @@ func (c *CmdConfigure) renderTemplateSample(tmpl registry.Template, usageFilter 
 	}
 
 	paramItems := make(map[string]interface{})
-
 	for _, item := range tmpl.Params {
 		paramItem := make(map[string]string)
 
@@ -562,9 +554,10 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, optional bool)
 // Returns
 //   processed params and their user values
 //   the user entered name of the device
-//   a list of additional key/value pairs the need to be added to the configuration
-func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaultName, usageFilter string) ([]registry.TemplateParam, string, map[string]string) {
+//   selected modbus key or empty
+func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaultName, usageFilter string) ([]registry.TemplateParam, string, string) {
 	additionalConfig := make(map[string]string)
+	selectedModbusKey := ""
 
 	fmt.Println("Enter the configuration values:")
 
@@ -591,9 +584,12 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 				additionalConfig[registry.ModbusParamNameId] = id
 
 				// ask for modbus interface type
-				index, _ := c.askChoice("Select the Modbus interface", choices)
-				selectedType := choiceKeys[index]
-				switch selectedType {
+				index := 0
+				if len(choices) > 1 {
+					index, _ = c.askChoice("Select the Modbus interface", choices)
+				}
+				selectedModbusKey = choiceKeys[index]
+				switch selectedModbusKey {
 				case registry.ModbusKeyRS485Serial:
 					device := c.askValue("Device", registry.ModbusParamValueDevice, "USB-RS485 Adapter address", false)
 					additionalConfig[registry.ModbusParamNameDevice] = device
@@ -602,12 +598,13 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 					comset := c.askValue("ComSet", registry.ModbusParamValueComset, "", false)
 					additionalConfig[registry.ModbusParamNameComset] = comset
 				case registry.ModbusKeyRS485TCPIP, registry.ModbusKeyTCPIP:
-					if selectedType == registry.ModbusKeyRS485TCPIP {
+					if selectedModbusKey == registry.ModbusKeyRS485TCPIP {
 						additionalConfig[registry.ModbusParamNameRTU] = "true"
 					}
-					uri := c.askValue("Host", registry.ModbusParamValueURI, "IP address or hostname", false)
+					host := c.askValue("Host", registry.ModbusParamValueHost, "IP address or hostname", false)
+					additionalConfig[registry.ModbusParamNameHost] = host
 					port := c.askValue("Port", registry.ModbusParamValuePort, "Port address", false)
-					additionalConfig[registry.ModbusParamNameURI] = uri + ":" + port
+					additionalConfig[registry.ModbusParamNamePort] = port
 				}
 			}
 		} else if param.Name != registry.ParamNameValueUsage {
@@ -623,10 +620,18 @@ func (c *CmdConfigure) processConfig(paramItems []registry.TemplateParam, defaul
 		}
 	}
 
+	for key, value := range additionalConfig {
+		paramItem := registry.TemplateParam{
+			Name:  key,
+			Value: value,
+		}
+		paramItems = append(paramItems, paramItem)
+	}
+
 	fmt.Println()
 	deviceName := c.askValue("Name", defaultName, "Give the device a name", false)
 
-	return paramItems, deviceName, additionalConfig
+	return paramItems, deviceName, selectedModbusKey
 }
 
 // return a usable EVCC configuration

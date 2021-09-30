@@ -150,8 +150,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20201210154907-fd9021fe5dad/go.m
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d/go.mod h1:cXg6YxExXjJnVBQHBLXeUAgxn2UodCpnH306RInaBQk=
 github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.mod h1:hliV/p42l8fGbc6Y9bQ70uLwIvmJyVE5k4iMKlh8wCQ=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
-github.com/evcc-io/config v0.0.0-20210930150730-367382c6eb91 h1:e4T7o57XdGzqb6XFH3fw1rIil1iZQgW4QHb6zZB0w8Y=
-github.com/evcc-io/config v0.0.0-20210930150730-367382c6eb91/go.mod h1:xgRBC+z4FDcVXLgCOXRlbl0VwYcWFaTbH2tqfW0edrE=
+github.com/evcc-io/config v0.0.0-20210930204101-743faa35839f h1:q1g6pgX5F4cTCZ7mnJbcsqxmHry7M5QpMAKGeNfMQtw=
+github.com/evcc-io/config v0.0.0-20210930204101-743faa35839f/go.mod h1:xgRBC+z4FDcVXLgCOXRlbl0VwYcWFaTbH2tqfW0edrE=
 github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f h1:jORYK0uKT+jJtpUxOZ8+cVLXKPASXioUPS9bnHNQfoA=
 github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
