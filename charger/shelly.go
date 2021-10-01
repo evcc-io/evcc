@@ -14,51 +14,11 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/shelly"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
-
-// Shelly api homepage
-// https://shelly-api-docs.shelly.cloud/#common-http-api
-
-// shellyshellyDeviceInfo provides the evcc shelly features and capabilities
-type shellyDeviceInfo struct {
-	Gen       int    `json:"gen,omitempty"`
-	Id        string `json:"id,omitempty"`
-	Model     string `json:"model,omitempty"`
-	Type      string `json:"type,omitempty"`
-	Mac       string `json:"mac,omitempty"`
-	Auth      bool   `json:"auth,omitempty"`
-	AuthEn    bool   `json:"auth_en,omitempty"`
-	NumMeters int    `json:"num_meters,omitempty"`
-}
-
-// shellyRelayResponse provides the evcc shelly charger enabled information
-type switchGetStatusResponse struct {
-	// Shelly Gen1 relay response
-	Ison bool `json:"ison,omitempty"`
-	// Shelly Gen2 Switch.GetStatus response
-	Output bool `json:"output,omitempty"`
-}
-
-// shellyStatusResponse provides the evcc shelly charger current power information
-type shellyGetStatusResponse struct {
-	// Shelly Gen1 status response
-	Meters []struct {
-		Power float64 `json:"power,omitempty"`
-	} `json:"meters,omitempty"`
-	// Shelly Gen2 Get.Status response
-	Switch0 struct {
-		Apower float64 `json:"apower,omitempty"`
-	} `json:"switch:0,omitempty"`
-	Switch1 struct {
-		Apower float64 `json:"apower,omitempty"`
-	} `json:"switch:1,omitempty"`
-	Switch2 struct {
-		Apower float64 `json:"apower,omitempty"`
-	} `json:"switch:2,omitempty"`
-}
 
 // Shelly charger implementation
 type Shelly struct {
@@ -125,7 +85,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		u.Scheme = "http"
 	}
 
-	var resp shellyDeviceInfo
+	var resp shelly.DeviceInfo
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
 	err = c.GetJSON(fmt.Sprintf("%s/shelly", u.String()), &resp)
 	if err != nil {
@@ -171,42 +131,54 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
-	var resp switchGetStatusResponse
-	cmd := map[int]string{1: "%s/relay/%d", 2: "%s/Switch.GetStatus?id=%d"}
-	err := c.execCmd(fmt.Sprintf(cmd[c.gen], c.uri, c.channel), &resp)
-	if err != nil {
-		return false, err
-	}
-	if c.gen == 1 {
+	switch c.gen {
+	case 1:
+		var resp shelly.Gen1SwitchResponse
+		cmd := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
+		err := c.execCmd(cmd, &resp)
+		if err != nil {
+			return false, err
+		}
 		return resp.Ison, err
+	default:
+		var resp shelly.Gen2SwitchResponse
+		cmd := fmt.Sprintf("%s/Switch.GetStatus?id=%d", c.uri, c.channel)
+		err := c.execCmd(cmd, &resp)
+		if err != nil {
+			return false, err
+		}
+		return resp.Output, err
 	}
-	return resp.Output, err
 }
 
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
 	var err error
-	var resp switchGetStatusResponse
-	cmd := map[int]string{1: "%s/relay/%d?turn=%s", 2: "%s/Switch.Set?id=%d&on=%t"}
-
 	switch c.gen {
 	case 1:
+		var resp shelly.Gen1SwitchResponse
 		onoff := map[bool]string{true: "on", false: "off"}
-		err = c.execCmd(fmt.Sprintf(cmd[c.gen], c.uri, c.channel, onoff[enable]), resp)
-	default:
-		err = c.execCmd(fmt.Sprintf(cmd[c.gen], c.uri, c.channel, enable), resp)
+		cmd := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
+		err = c.execCmd(cmd, &resp)
 		if err != nil {
 			return err
 		}
-		resp.Ison, err = c.Enabled()
+	default:
+		var resp shelly.Gen2SwitchResponse
+		cmd := fmt.Sprintf("%s/Switch.Set?id=%d&on=%t", c.uri, c.channel, resp)
+		err = c.execCmd(cmd, &resp)
+		if err != nil {
+			return err
+		}
 	}
 
+	enabled, err := c.Enabled()
 	switch {
 	case err != nil:
 		return err
-	case enable && !resp.Ison:
+	case enable && !enabled:
 		return errors.New("switchOn failed")
-	case !enable && resp.Ison:
+	case !enable && enabled:
 		return errors.New("switchOff failed")
 	default:
 		return nil
@@ -231,20 +203,29 @@ var _ api.Meter = (*Shelly)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Shelly) CurrentPower() (float64, error) {
-	var resp shellyGetStatusResponse
-	cmd := map[int]string{1: "status", 2: "Shelly.GetStatus"}
-	err := c.execCmd(fmt.Sprintf("%s/%s", c.uri, cmd[c.gen]), &resp)
-	if err != nil {
-		return 0, err
-	}
 	var power float64
-	if c.gen == 1 {
+	switch c.gen {
+	case 1:
+		var resp shelly.Gen1StatusResponse
+		cmd := fmt.Sprintf("%s/status", c.uri)
+		err := c.execCmd(cmd, &resp)
+		if err != nil {
+			return 0, err
+		}
+
+		c.log.TRACE.Printf("%d: %f", len(resp.Meters), resp.Meters[0].Power)
+
 		if c.channel >= len(resp.Meters) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
 		power = resp.Meters[c.channel].Power
-	}
-	if c.gen == 2 {
+	default:
+		var resp shelly.Gen2StatusResponse
+		cmd := fmt.Sprintf("%s/Shelly.GetStatus", c.uri)
+		err := c.execCmd(cmd, &resp)
+		if err != nil {
+			return 0, err
+		}
 		switch c.channel {
 		case 1:
 			power = resp.Switch1.Apower
@@ -258,7 +239,7 @@ func (c *Shelly) CurrentPower() (float64, error) {
 	if power < c.standbypower {
 		power = 0
 	}
-	return power, err
+	return power, nil
 }
 
 // execCmd executes a shelly api gen1/gen2 command and provides the response
@@ -281,7 +262,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		if err != nil {
 			return err
 		}
-		return c.DoJSON(req, res)
+		return c.DoJSON(req, &res)
 	}
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
@@ -346,7 +327,6 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 			if err != nil {
 				return err
 			}
-			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("Authorization", AuthHeader)
 
 			resp, err = c.Do(req)
@@ -360,7 +340,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 				if err != nil {
 					return err
 				}
-				return json.Unmarshal(bodyBytes, res)
+				return json.Unmarshal(bodyBytes, &res)
 			}
 			return fmt.Errorf("unknown auth status code: %d", resp.StatusCode)
 		}
