@@ -63,15 +63,17 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
+	log := util.NewLogger("shelly")
+	client := request.NewHelper(log)
+
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
 	var resp shelly.DeviceInfo
-	if err := c.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
-		return c, err
+	if err := client.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
+		return nil, err
 	}
 
-	log := util.NewLogger("shelly")
 	c := &Shelly{
-		Helper:       request.NewHelper(log),
+		Helper:       client,
 		log:          log,
 		user:         user,
 		password:     password,
@@ -132,10 +134,10 @@ func (c *Shelly) Enable(enable bool) error {
 		var resp shelly.Gen1SwitchResponse
 		cmd := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
 		err = c.execGen1Cmd(cmd, &resp)
+
 	default:
 		var resp shelly.Gen2SwitchResponse
 		err = c.execGen2Cmd("Switch.Set", fmt.Sprintf(`"on":%t`, enable), &resp)
-
 	}
 
 	if err != nil {
