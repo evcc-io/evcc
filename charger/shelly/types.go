@@ -15,7 +15,7 @@ type DeviceInfo struct {
 
 type Gen2RpcPost struct {
 	Id     int    `json:"id"`
-	On     bool   `json:"on,omitempty"`
+	On     bool   `json:"on"`
 	Src    string `json:"src"`
 	Method string `json:"method"`
 }
