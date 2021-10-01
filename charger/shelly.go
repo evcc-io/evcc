@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -71,57 +70,35 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		standbypower: standbypower,
 	}
 
-	u, err := url.Parse(uri)
-	if err != nil {
-		return c, err
-	}
+	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
-	if u.Path != "" {
-		u.Host = u.Path
-		u.Path = ""
-	}
-
-	if u.Scheme == "" {
-		u.Scheme = "http"
+	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
+		uri = strings.TrimSuffix(uri, suffix)
 	}
 
 	var resp shelly.DeviceInfo
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
-	err = c.GetJSON(fmt.Sprintf("http://%s/shelly", u.Host), &resp)
-	if err != nil {
+	if err := c.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
 		return c, err
-	}
-
-	if resp.Gen == 0 {
-		resp.Gen = 1
 	}
 	c.gen = resp.Gen
 
-	c.authon = resp.Auth || resp.AuthEn
-	if c.authon && (user == "" || password == "") {
+	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
 		return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
-	if resp.Model == "" {
-		resp.Model = resp.Type
-	}
-
-	switch {
-	case c.gen == 1:
+	switch c.gen {
+	case 0, 1:
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
-		u.Scheme = "http"
-		c.uri = u.String()
+		c.uri = util.DefaultScheme(uri, "http")
 		if resp.NumMeters == 0 {
 			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
 		}
-	case c.gen == 2:
+	case 2:
 		// Shelly GEN 2 API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		if u.Scheme == "https" {
-			c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
-		}
-		c.uri = u.String() + "/rpc"
+		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "https"))
 	default:
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
