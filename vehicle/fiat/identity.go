@@ -195,7 +195,7 @@ func (v *Identity) UID() string {
 // Sign signs an AWS request using identity's credentials
 func (v *Identity) Sign(req *http.Request, body io.ReadSeeker) error {
 	// refresh credentials
-	if v.creds.Expiration.After(time.Now().Add(-time.Minute)) {
+	if v.creds.Expiration.Before(time.Now().Add(-time.Minute)) {
 		if err := v.Login(); err != nil {
 			return fmt.Errorf("login failed: %w", err)
 		}

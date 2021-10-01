@@ -24,7 +24,6 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
-	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -40,12 +39,9 @@ type Easee struct {
 	status        easee.ChargerStatus
 	updated       time.Time
 	cache         time.Duration
-	lp            loadpoint.API
-	//lastSmartCharging bool
-	//lastChargeMode api.ChargeMode
-	log     *util.Logger
-	phases  int
-	current float64
+	log           *util.Logger
+	phases        int
+	current       float64
 }
 
 func init() {
@@ -99,14 +95,6 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		Base:   c.Client.Transport,
 	}
 
-	// find site
-	site, err := c.chargerDetails()
-	if err != nil {
-		return c, err
-	}
-
-	c.site = site.ID
-
 	// find charger
 	if charger == "" {
 		chargers, err := c.chargers()
@@ -121,6 +109,14 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.charger = chargers[0].ID
 	}
 
+	// find site
+	site, err := c.chargerDetails(c.charger)
+	if err != nil {
+		return c, err
+	}
+
+	c.site = site.ID
+
 	// find circuit
 	if circuit == 0 {
 		if len(site.Circuits) != 1 {
@@ -128,6 +124,12 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		}
 
 		c.circuit = site.Circuits[0].ID
+	}
+
+	// verify charger config
+	config, err := c.chargerConfig(c.charger)
+	if err == nil && config.PhaseMode != 2 {
+		c.log.WARN.Println("expected PhaseMode auto- switching phases will NOT work")
 	}
 
 	return c, err
@@ -144,8 +146,8 @@ func (c *Easee) chargers() (res []easee.Charger, err error) {
 	return res, err
 }
 
-func (c *Easee) chargerDetails() (res easee.Site, err error) {
-	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, c.charger)
+func (c *Easee) chargerConfig(charger string) (res easee.ChargerConfig, err error) {
+	uri := fmt.Sprintf("%s/chargers/%s/config", easee.API, charger)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
@@ -155,50 +157,16 @@ func (c *Easee) chargerDetails() (res easee.Site, err error) {
 	return res, err
 }
 
-/*
-func (c *Easee) syncSmartCharging() error {
-	if c.lp == nil {
-		return nil
+func (c *Easee) chargerDetails(charger string) (res easee.Site, err error) {
+	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
+
+	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
+	if err == nil {
+		err = c.DoJSON(req, &res)
 	}
 
-	if c.lp.GetMode() != c.lastChargeMode {
-		c.log.DEBUG.Printf("charge mode changed by loadpoint: %v -> %v", c.lastChargeMode, c.lp.GetMode())
-		newSmartCharging := false
-		if c.lp.GetMode() == api.ModePV {
-			newSmartCharging = true
-		}
-
-		data := easee.ChargerSettings{
-			SmartCharging: &newSmartCharging,
-		}
-
-		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-		if err == nil {
-			resp.Body.Close()
-		}
-
-		c.updated = time.Time{} // clear cache
-
-		c.lastChargeMode = c.lp.GetMode()
-		c.lastSmartCharging = newSmartCharging
-
-		return err
-	}
-
-	if c.lastSmartCharging != c.status.SmartCharging {
-		c.log.DEBUG.Printf("smart status changed by charger: %v -> %v", c.lastSmartCharging, c.status.SmartCharging)
-		if c.status.SmartCharging {
-			c.lp.SetMode(api.ModePV)
-		} else {
-			c.lp.SetMode(api.ModeNow)
-		}
-		c.lastSmartCharging = c.status.SmartCharging
-		c.lastChargeMode = c.lp.GetMode()
-	}
-	return nil
+	return res, err
 }
-*/
 
 func (c *Easee) state() (easee.ChargerStatus, error) {
 	if time.Since(c.updated) < c.cache {
@@ -209,7 +177,6 @@ func (c *Easee) state() (easee.ChargerStatus, error) {
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
 		if err = c.DoJSON(req, &c.status); err == nil {
-			// err = c.syncSmartCharging()
 			c.updated = time.Now()
 		}
 	}
@@ -346,11 +313,4 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 		res.CircuitTotalPhaseConductorCurrentL2,
 		res.CircuitTotalPhaseConductorCurrentL3,
 		err
-}
-
-var _ loadpoint.Controller = (*Easee)(nil)
-
-// LoadpointControl implements loadpoint.Controller
-func (c *Easee) LoadpointControl(lp loadpoint.API) {
-	c.lp = lp
 }

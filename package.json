@@ -55,7 +55,7 @@
     "node": ">=14.0.0"
   },
   "license": "MIT",
-  "repository": "github:andig/evcc",
+  "repository": "github:evcc-io/evcc",
   "resolutions": {
     "node-forge": "0.10.0"
   }

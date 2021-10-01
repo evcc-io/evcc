@@ -1,27 +1,19 @@
 <template>
 	<div class="visualization" :class="{ 'visualization--ready': visualizationReady }">
 		<div class="label-scale">
-			<div class="d-flex justify-content-end">
+			<div class="d-flex justify-content-start">
+				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
+					<fa-icon icon="sun"></fa-icon>
+				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
 					<BatteryIcon :soc="batterySoC" discharge />
 				</LabelBar>
-				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
-					<fa-icon icon="sun"></fa-icon>
+				<LabelBar v-bind="labelBarProps('top', 'gridImport')">
+					<GridIcon import />
 				</LabelBar>
 			</div>
 		</div>
 		<div class="site-progress" ref="site_progress">
-			<div
-				class="site-progress-bar grid-import"
-				:style="{ width: widthTotal(gridImportAdjusted) }"
-			>
-				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
-					{{ kw(gridImport) }}
-				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
-					{{ kwNoUnit(gridImport) }}
-				</span>
-			</div>
 			<div
 				class="site-progress-bar self-consumption"
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
@@ -31,6 +23,17 @@
 				</span>
 				<span class="power" v-else-if="powerLabelSomeSpace(selfConsumption)">
 					{{ kwNoUnit(selfConsumption) }}
+				</span>
+			</div>
+			<div
+				class="site-progress-bar grid-import"
+				:style="{ width: widthTotal(gridImportAdjusted) }"
+			>
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
+					{{ kw(gridImport) }}
+				</span>
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+					{{ kwNoUnit(gridImport) }}
 				</span>
 			</div>
 			<div
@@ -59,6 +62,9 @@
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoC" charge />
 				</LabelBar>
+				<LabelBar v-bind="labelBarProps('bottom', 'gridExport')">
+					<GridIcon export />
+				</LabelBar>
 			</div>
 		</div>
 	</div>
@@ -68,11 +74,12 @@
 import "../../icons";
 import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
+import GridIcon from "./GridIcon.vue";
 import LabelBar from "./LabelBar.vue";
 
 export default {
 	name: "Visualization",
-	components: { BatteryIcon, LabelBar },
+	components: { BatteryIcon, LabelBar, GridIcon },
 	props: {
 		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
@@ -100,6 +107,9 @@ export default {
 	},
 	mixins: [formatter],
 	computed: {
+		gridExport: function () {
+			return this.pvExport;
+		},
 		totalRaw: function () {
 			return this.gridImport + this.selfConsumption + this.pvExport;
 		},
@@ -169,8 +179,8 @@ export default {
 		},
 		isLabel(position, name, last) {
 			const labels = {
-				top: ["batteryDischarge", "pvProduction"],
-				bottom: ["houseConsumption", "loadpoints", "batteryCharge"],
+				top: ["pvProduction", "batteryDischarge", "gridImport"],
+				bottom: ["houseConsumption", "loadpoints", "batteryCharge", "gridExport"],
 			};
 			const entries = [...labels[position]];
 			if (last) {
@@ -186,7 +196,7 @@ export default {
 		},
 		labelBarProps(position, name) {
 			const value = this[name];
-			const minWidth = name.startsWith("battery") ? 44 : 32;
+			const minWidth = name.startsWith("battery") || name.startsWith("grid") ? 44 : 32;
 			return {
 				value,
 				hideIcon: this.hideLabelIcon(value, minWidth),

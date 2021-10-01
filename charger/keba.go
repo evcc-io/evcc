@@ -37,6 +37,8 @@ func init() {
 	registry.Add("keba", NewKebaFromConfig)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateKeba -b *Keba -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.ChargeRater,ChargedEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewKebaFromConfig creates a new configurable charger
 func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -47,15 +49,30 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		Timeout: udpTimeout,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	k, err := NewKeba(cc.URI, cc.Serial, cc.RFID, cc.Timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	energy, err := k.totalEnergy()
+	if err != nil {
+		return nil, err
+	}
+
+	if energy > 0 {
+		return decorateKeba(k, k.currentPower, k.totalEnergy, k.chargedEnergy, k.currents), nil
+	}
+
+	return k, err
 }
 
 // NewKeba creates a new charger
-func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (api.Charger, error) {
+func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (*Keba, error) {
 	log := util.NewLogger("keba")
 
 	if keba.Instance == nil {
@@ -264,10 +281,8 @@ func (c *Keba) MaxCurrentMillis(current float64) error {
 	return nil
 }
 
-var _ api.Meter = (*Keba)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (c *Keba) CurrentPower() (float64, error) {
+// currentPower implements the api.Meter interface
+func (c *Keba) currentPower() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -275,10 +290,8 @@ func (c *Keba) CurrentPower() (float64, error) {
 	return float64(kr.P) / 1e3, err
 }
 
-var _ api.MeterEnergy = (*Keba)(nil)
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (c *Keba) TotalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (c *Keba) totalEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -286,10 +299,8 @@ func (c *Keba) TotalEnergy() (float64, error) {
 	return float64(kr.ETotal) / 1e4, err
 }
 
-var _ api.ChargeRater = (*Keba)(nil)
-
-// ChargedEnergy implements the ChargeRater interface
-func (c *Keba) ChargedEnergy() (float64, error) {
+// chargedEnergy implements the ChargeRater interface
+func (c *Keba) chargedEnergy() (float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 
@@ -297,10 +308,8 @@ func (c *Keba) ChargedEnergy() (float64, error) {
 	return float64(kr.EPres) / 1e4, err
 }
 
-var _ api.MeterCurrent = (*Keba)(nil)
-
-// Currents implements the api.MeterCurrent interface
-func (c *Keba) Currents() (float64, float64, float64, error) {
+// currents implements the api.MeterCurrent interface
+func (c *Keba) currents() (float64, float64, float64, error) {
 	var kr keba.Report3
 	err := c.roundtrip("report", 3, &kr)
 

@@ -213,9 +213,10 @@ type VehicleResponse struct {
 }
 
 func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
-	uri := "https://connect-portal.porsche.com/core/api/v3/de/de_DE/vehicles"
+	uri := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+		"apikey":        EmobilityClientID,
 	})
 
 	var vehicles []VehicleResponse
