@@ -279,10 +279,7 @@ func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error
 	if err != nil {
 		return err
 	}
-	// read the whole body and then close it to reuse the http connection
-	// otherwise it *could* fail in certain environments (behind proxy for instance)
-	io.Copy(io.Discard, resp.Body)
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		var authorization map[string]string = digestAuthParams(resp)
