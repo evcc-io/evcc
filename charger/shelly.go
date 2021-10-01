@@ -87,7 +87,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 
 	var resp shelly.DeviceInfo
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
-	err = c.GetJSON(fmt.Sprintf("%s/shelly", u.String()), &resp)
+	err = c.GetJSON(fmt.Sprintf("http://%s/shelly", u.Host), &resp)
 	if err != nil {
 		return c, err
 	}
