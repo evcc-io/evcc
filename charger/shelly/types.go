@@ -13,18 +13,25 @@ type DeviceInfo struct {
 	NumMeters int    `json:"num_meters"`
 }
 
-type Gen2SwitchResponse struct {
-	Output bool `json:"output,omitempty"`
+type Gen2RpcPost struct {
+	Id     int    `json:"id"`
+	On     bool   `json:"on,omitempty"`
+	Src    string `json:"src"`
+	Method string `json:"method"`
 }
 
-type Switch struct {
+type Gen2SwitchResponse struct {
+	Output bool `json:"output"`
+}
+
+type Gen2Switch struct {
 	Apower float64
 }
 
 type Gen2StatusResponse struct {
-	Switch0 Switch `json:"switch:0"`
-	Switch1 Switch `json:"switch:1"`
-	Switch2 Switch `json:"switch:2"`
+	Switch0 Gen2Switch `json:"switch:0"`
+	Switch1 Gen2Switch `json:"switch:1"`
+	Switch2 Gen2Switch `json:"switch:2"`
 }
 
 type Gen1SwitchResponse struct {

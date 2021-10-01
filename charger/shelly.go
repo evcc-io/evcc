@@ -119,7 +119,7 @@ func (c *Shelly) Enabled() (bool, error) {
 
 	default:
 		var resp shelly.Gen2SwitchResponse
-		err := c.execGen2Cmd("Switch.GetStatus", "", &resp)
+		err := c.execGen2Cmd("Switch.GetStatus", false, &resp)
 		return resp.Output, err
 	}
 }
@@ -137,7 +137,7 @@ func (c *Shelly) Enable(enable bool) error {
 
 	default:
 		var resp shelly.Gen2SwitchResponse
-		err = c.execGen2Cmd("Switch.Set", fmt.Sprintf(`"on":%t`, enable), &resp)
+		err = c.execGen2Cmd("Switch.Set", enable, &resp)
 	}
 
 	if err != nil {
@@ -191,7 +191,7 @@ func (c *Shelly) CurrentPower() (float64, error) {
 
 	default:
 		var resp shelly.Gen2StatusResponse
-		if err := c.execGen2Cmd("Shelly.GetStatus", "", &resp); err != nil {
+		if err := c.execGen2Cmd("Shelly.GetStatus", false, &resp); err != nil {
 			return 0, err
 		}
 
@@ -237,23 +237,20 @@ func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
 }
 
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
-func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error {
+func (c *Shelly) execGen2Cmd(method string, enable bool, res interface{}) error {
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
 	// post
 
-	// TODO remove
-	c.log.TRACE.Printf(`{"method":"%s" , "src":"evcc" , %s}`, method, param)
-
-	var postjson string
-	if param == "" {
-		postjson = fmt.Sprintf(`{"id":%d, "src":"evcc", "method":"%s"}`, c.channel, method)
-	} else {
-		postjson = fmt.Sprintf(`{"id":%d, %s, "src":"evcc", "method":"%s"}`, c.channel, param, method)
+	postjson := &shelly.Gen2RpcPost{
+		Id:     c.channel,
+		On:     enable,
+		Src:    "evcc",
+		Method: method,
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), strings.NewReader(postjson), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(postjson), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
@@ -289,7 +286,7 @@ func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error
 		AuthHeader := fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", response="%s", qop=%s, nc=%s, cnonce="%s", opaque="%s", algorithm="%s"`,
 			c.user, authorization["realm"], authorization["nonce"], req.URL.RequestURI(), response, authorization["qop"], "00000001" /* nc */, cnonce, authorization["opaque"], authorization["algorithm"])
 
-		req, err = request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), strings.NewReader(postjson), request.JSONEncoding)
+		req, err = request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(postjson), request.JSONEncoding)
 		if err != nil {
 			return err
 		}
