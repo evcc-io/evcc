@@ -142,8 +142,7 @@ func (c *Shelly) Enabled() (bool, error) {
 		return resp.Ison, err
 	default:
 		var resp shelly.Gen2SwitchResponse
-		cmd := fmt.Sprintf("%s/Switch.GetStatus?id=%d", c.uri, c.channel)
-		err := c.execCmd(cmd, &resp)
+		err := c.execGen2Cmd("Switch.GetStatus", "", &resp)
 		if err != nil {
 			return false, err
 		}
@@ -165,8 +164,7 @@ func (c *Shelly) Enable(enable bool) error {
 		}
 	default:
 		var resp shelly.Gen2SwitchResponse
-		cmd := fmt.Sprintf("%s/Switch.Set?id=%d&on=%t", c.uri, c.channel, resp)
-		err = c.execCmd(cmd, &resp)
+		err := c.execGen2Cmd("Switch.Set", fmt.Sprintf(`"on":%t`, enable), &resp)
 		if err != nil {
 			return err
 		}
@@ -218,8 +216,7 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		power = resp.Meters[c.channel].Power
 	default:
 		var resp shelly.Gen2StatusResponse
-		cmd := fmt.Sprintf("%s/Shelly.GetStatus", c.uri)
-		err := c.execCmd(cmd, &resp)
+		err := c.execGen2Cmd("Shelly.GetStatus", "", &resp)
 		if err != nil {
 			return 0, err
 		}
@@ -260,19 +257,24 @@ func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
 	return c.DoJSON(req, &res)
 }
 
-// execCmd executes a shelly api gen1/gen2 command and provides the response
-func (c *Shelly) execCmd(cmd string, res interface{}) error {
+// execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
+func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error {
 
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
-
-	req, err := request.New(http.MethodPost, cmd, nil, request.URLEncoding)
+	// post
+	c.log.TRACE.Printf(`{"method":"%s" , "src":"evcc" , %s}`, method, param)
+	var postjson string
+	if param == "" {
+		postjson = fmt.Sprintf(`{"id":%d, "src":"evcc", "method":"%s"}`, c.channel, method)
+	} else {
+		postjson = fmt.Sprintf(`{"id":%d, %s, "src":"evcc", "method":"%s"}`, c.channel, param, method)
+	}
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), strings.NewReader(postjson), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
-	c.log.TRACE.Printf("cmd: %s", cmd)
-
 	resp, err := c.Do(req)
 	if err != nil {
 		return err
@@ -286,14 +288,12 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		var authorization map[string]string = digestAuthParams(resp)
 		// a1
 		a1 := fmt.Sprintf("%s:%s:%s", c.user, authorization["realm"], c.password)
-		c.log.TRACE.Printf("a1: %s", a1)
 		h := sha256.New()
 		h.Reset()
 		fmt.Fprint(h, a1)
 		ha1 := hex.EncodeToString(h.Sum(nil))
 		// a2
 		a2 := fmt.Sprintf("%s:%s", req.Method, req.URL.RequestURI())
-		c.log.TRACE.Printf("a2: %s", a2)
 		h.Reset()
 		fmt.Fprint(h, a2)
 		ha2 := hex.EncodeToString(h.Sum(nil))
@@ -301,7 +301,6 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		// response
 		cnonce := randCnonce()
 		response := strings.Join([]string{ha1, authorization["nonce"], "00000001" /* nc */, cnonce, authorization["qop"], ha2}, ":")
-		c.log.TRACE.Printf("response: %s", response)
 		h.Reset()
 		fmt.Fprint(h, response)
 		response = hex.EncodeToString(h.Sum(nil))
@@ -310,18 +309,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		AuthHeader := fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", response="%s", qop=%s, nc=%s, cnonce="%s", opaque="%s", algorithm="%s"`,
 			c.user, authorization["realm"], authorization["nonce"], req.URL.RequestURI(), response, authorization["qop"], "00000001" /* nc */, cnonce, authorization["opaque"], authorization["algorithm"])
 
-		// post json
-		data := struct {
-			Id     string `json:"id"`
-			On     bool   `json:"on"`
-			Src    string `json:"src"`
-			Method string `json:"method"`
-		}{
-			Id:     fmt.Sprint(c.channel),
-			Src:    "evcc",
-			Method: req.URL.RequestURI(),
-		}
-		req, err = request.New(http.MethodPost, cmd, request.MarshalJSON(data), request.JSONEncoding)
+		req, err = request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), strings.NewReader(postjson), request.JSONEncoding)
 		if err != nil {
 			return err
 		}
@@ -332,7 +320,6 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 			return err
 		}
 		defer resp.Body.Close()
-
 	}
 
 	if resp.StatusCode == http.StatusOK {
@@ -343,7 +330,7 @@ func (c *Shelly) execCmd(cmd string, res interface{}) error {
 		return json.Unmarshal(bodyBytes, &res)
 	}
 
-	return fmt.Errorf("unknown auth status code: %d", resp.StatusCode)
+	return fmt.Errorf("unhandeled hhtp status code: %d", resp.StatusCode)
 }
 
 // parse Shelly authorization header
