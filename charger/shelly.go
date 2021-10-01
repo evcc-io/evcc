@@ -212,9 +212,6 @@ func (c *Shelly) CurrentPower() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-
-		c.log.TRACE.Printf("%d: %f", len(resp.Meters), resp.Meters[0].Power)
-
 		if c.channel >= len(resp.Meters) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
