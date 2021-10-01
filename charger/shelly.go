@@ -113,16 +113,11 @@ func (c *Shelly) Enabled() (bool, error) {
 		var resp shelly.Gen1SwitchResponse
 		cmd := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
 		err := c.execGen1Cmd(cmd, &resp)
-		if err != nil {
-			return false, err
-		}
 		return resp.Ison, err
+
 	default:
 		var resp shelly.Gen2SwitchResponse
 		err := c.execGen2Cmd("Switch.GetStatus", "", &resp)
-		if err != nil {
-			return false, err
-		}
 		return resp.Output, err
 	}
 }
@@ -130,31 +125,29 @@ func (c *Shelly) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *Shelly) Enable(enable bool) error {
 	var err error
+	onoff := map[bool]string{true: "on", false: "off"}
+
 	switch c.gen {
 	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
-		onoff := map[bool]string{true: "on", false: "off"}
 		cmd := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
 		err = c.execGen1Cmd(cmd, &resp)
-		if err != nil {
-			return err
-		}
 	default:
 		var resp shelly.Gen2SwitchResponse
-		err := c.execGen2Cmd("Switch.Set", fmt.Sprintf(`"on":%t`, enable), &resp)
-		if err != nil {
-			return err
-		}
+		err = c.execGen2Cmd("Switch.Set", fmt.Sprintf(`"on":%t`, enable), &resp)
+
+	}
+
+	if err != nil {
+		return err
 	}
 
 	enabled, err := c.Enabled()
 	switch {
 	case err != nil:
 		return err
-	case enable && !enabled:
-		return errors.New("switchOn failed")
-	case !enable && enabled:
-		return errors.New("switchOff failed")
+	case enable != enabled:
+		return fmt.Errorf("switch %s failed", onoff[enable])
 	default:
 		return nil
 	}
@@ -168,9 +161,10 @@ func (c *Shelly) MaxCurrent(current int64) error {
 // Status implements the api.Charger interface
 func (c *Shelly) Status() (api.ChargeStatus, error) {
 	power, err := c.CurrentPower()
-	if power > 0 {
+	if power > c.standbypower {
 		return api.StatusC, err
 	}
+
 	return api.StatusB, err
 }
 
@@ -183,20 +177,22 @@ func (c *Shelly) CurrentPower() (float64, error) {
 	case 0, 1:
 		var resp shelly.Gen1StatusResponse
 		cmd := fmt.Sprintf("%s/status", c.uri)
-		err := c.execGen1Cmd(cmd, &resp)
-		if err != nil {
+		if err := c.execGen1Cmd(cmd, &resp); err != nil {
 			return 0, err
 		}
+
 		if c.channel >= len(resp.Meters) {
 			return 0, errors.New("invalid channel, missing power meter")
 		}
+
 		power = resp.Meters[c.channel].Power
+
 	default:
 		var resp shelly.Gen2StatusResponse
-		err := c.execGen2Cmd("Shelly.GetStatus", "", &resp)
-		if err != nil {
+		if err := c.execGen2Cmd("Shelly.GetStatus", "", &resp); err != nil {
 			return 0, err
 		}
+
 		switch c.channel {
 		case 1:
 			power = resp.Switch1.Apower
@@ -206,10 +202,12 @@ func (c *Shelly) CurrentPower() (float64, error) {
 			power = resp.Switch0.Apower
 		}
 	}
+
 	// ignore standby power
-	if power < c.standbypower {
+	if power <= c.standbypower {
 		power = 0
 	}
+
 	return power, nil
 }
 
@@ -227,10 +225,12 @@ func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
 			return err
 		}
 	}
+
 	req, err := request.New(http.MethodGet, cmd, nil, hab)
 	if err != nil {
 		return err
 	}
+
 	return c.DoJSON(req, &res)
 }
 
@@ -240,17 +240,22 @@ func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
 	// post
+
+	// TODO remove
 	c.log.TRACE.Printf(`{"method":"%s" , "src":"evcc" , %s}`, method, param)
+
 	var postjson string
 	if param == "" {
 		postjson = fmt.Sprintf(`{"id":%d, "src":"evcc", "method":"%s"}`, c.channel, method)
 	} else {
 		postjson = fmt.Sprintf(`{"id":%d, %s, "src":"evcc", "method":"%s"}`, c.channel, param, method)
 	}
+
 	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), strings.NewReader(postjson), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
+
 	resp, err := c.Do(req)
 	if err != nil {
 		return err
