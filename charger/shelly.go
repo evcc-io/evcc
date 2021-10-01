@@ -25,7 +25,7 @@ type Shelly struct {
 	log          *util.Logger
 	uri          string
 	gen          int // Shelly api generation
-	authon       bool
+	authRequired bool
 	user         string
 	password     string
 	channel      int
@@ -59,31 +59,31 @@ func NewShellyFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewShelly creates Shelly charger
 func NewShelly(uri, user, password string, channel int, standbypower float64) (*Shelly, error) {
-	log := util.NewLogger("shelly")
-	c := &Shelly{
-		Helper:       request.NewHelper(log),
-		log:          log,
-		gen:          1,
-		user:         user,
-		password:     password,
-		channel:      channel,
-		standbypower: standbypower,
-	}
-
-	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
-
 	for _, suffix := range []string{"/", "/rcp", "/shelly"} {
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
-	var resp shelly.DeviceInfo
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
+	var resp shelly.DeviceInfo
 	if err := c.GetJSON(fmt.Sprintf("%s/shelly", util.DefaultScheme(uri, "http")), &resp); err != nil {
 		return c, err
 	}
-	c.gen = resp.Gen
 
-	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
+	log := util.NewLogger("shelly")
+	c := &Shelly{
+		Helper:       request.NewHelper(log),
+		log:          log,
+		user:         user,
+		password:     password,
+		channel:      channel,
+		standbypower: standbypower,
+		gen:          resp.Gen,
+		authRequired: resp.Auth || resp.AuthEn,
+	}
+
+	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+
+	if c.authRequired && (user == "" || password == "") {
 		return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
@@ -109,7 +109,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 // Enabled implements the api.Charger interface
 func (c *Shelly) Enabled() (bool, error) {
 	switch c.gen {
-	case 1:
+	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
 		cmd := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
 		err := c.execGen1Cmd(cmd, &resp)
@@ -131,7 +131,7 @@ func (c *Shelly) Enabled() (bool, error) {
 func (c *Shelly) Enable(enable bool) error {
 	var err error
 	switch c.gen {
-	case 1:
+	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
 		onoff := map[bool]string{true: "on", false: "off"}
 		cmd := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
@@ -180,7 +180,7 @@ var _ api.Meter = (*Shelly)(nil)
 func (c *Shelly) CurrentPower() (float64, error) {
 	var power float64
 	switch c.gen {
-	case 1:
+	case 0, 1:
 		var resp shelly.Gen1StatusResponse
 		cmd := fmt.Sprintf("%s/status", c.uri)
 		err := c.execGen1Cmd(cmd, &resp)
@@ -218,7 +218,7 @@ func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
 	hab := make(map[string]string)
 	// Shelly gen 1 basic authentication
 	// https://shelly-api-docs.shelly.cloud/gen1/#http-dialect
-	if c.authon {
+	if c.authRequired {
 		if err := provider.AuthHeaders(c.log, provider.Auth{
 			Type:     "Basic",
 			User:     c.user,
@@ -236,7 +236,6 @@ func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
 
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
 func (c *Shelly) execGen2Cmd(method string, param string, res interface{}) error {
-
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
@@ -313,6 +312,7 @@ func digestAuthParams(r *http.Response) map[string]string {
 	if len(s) != 2 || s[0] != "Digest" {
 		return nil
 	}
+
 	result := map[string]string{}
 	for _, kv := range strings.Split(s[1], ",") {
 		parts := strings.SplitN(kv, "=", 2)
