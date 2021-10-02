@@ -10,7 +10,7 @@ params:
 #   type: sunspec
 #   usage: {{ .usage }} # {{ .Params.Usage.Hint }}
 #   uri: {{ .uri }}
-#   uri: {{ .id }}
+#   id: {{ .id }}
 render: |
   type: modbus
   model: sunspec
