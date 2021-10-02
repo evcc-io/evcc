@@ -1,14 +1,8 @@
 package charger
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -17,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // Shelly charger implementation
@@ -101,6 +96,9 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// Shelly GEN 2 API
 		// https://shelly-api-docs.shelly.cloud/gen2/
 		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "https"))
+		if user != "" {
+			c.Client.Transport = digest.NewTransport(user, password, request.NewTripper(log, request.InsecureTransport()))
+		}
 	default:
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
@@ -241,96 +239,18 @@ func (c *Shelly) execGen2Cmd(method string, enable bool, res interface{}) error 
 	// Shelly gen 2 rfc7616 authentication
 	// https://shelly-api-docs.shelly.cloud/gen2/Overview/CommonDeviceTraits#authentication
 	// https://datatracker.ietf.org/doc/html/rfc7616
-	// post
 
-	postjson := &shelly.Gen2RpcPost{
+	data := &shelly.Gen2RpcPost{
 		Id:     c.channel,
 		On:     enable,
 		Src:    "evcc",
 		Method: method,
 	}
 
-	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(postjson), request.JSONEncoding)
+	req, err := request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(data), request.JSONEncoding)
 	if err != nil {
 		return err
 	}
 
-	resp, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusUnauthorized {
-		var authorization map[string]string = digestAuthParams(resp)
-		// a1
-		a1 := fmt.Sprintf("%s:%s:%s", c.user, authorization["realm"], c.password)
-		h := sha256.New()
-		h.Reset()
-		fmt.Fprint(h, a1)
-		ha1 := hex.EncodeToString(h.Sum(nil))
-		// a2
-		a2 := fmt.Sprintf("%s:%s", req.Method, req.URL.RequestURI())
-		h.Reset()
-		fmt.Fprint(h, a2)
-		ha2 := hex.EncodeToString(h.Sum(nil))
-
-		// response
-		cnonce := randCnonce()
-		response := strings.Join([]string{ha1, authorization["nonce"], "00000001" /* nc */, cnonce, authorization["qop"], ha2}, ":")
-		h.Reset()
-		fmt.Fprint(h, response)
-		response = hex.EncodeToString(h.Sum(nil))
-
-		// auth header
-		AuthHeader := fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", response="%s", qop=%s, nc=%s, cnonce="%s", opaque="%s", algorithm="%s"`,
-			c.user, authorization["realm"], authorization["nonce"], req.URL.RequestURI(), response, authorization["qop"], "00000001" /* nc */, cnonce, authorization["opaque"], authorization["algorithm"])
-
-		req, err = request.New(http.MethodPost, fmt.Sprintf("%s/%s", c.uri, method), request.MarshalJSON(postjson), request.JSONEncoding)
-		if err != nil {
-			return err
-		}
-		req.Header.Set("Authorization", AuthHeader)
-
-		resp, err = c.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-	}
-
-	if resp.StatusCode == http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		return json.Unmarshal(bodyBytes, &res)
-	}
-
-	return fmt.Errorf("unhandeled hhtp status code: %d", resp.StatusCode)
-}
-
-// parse Shelly authorization header
-func digestAuthParams(r *http.Response) map[string]string {
-	s := strings.SplitN(r.Header.Get("Www-Authenticate"), " ", 2)
-	if len(s) != 2 || s[0] != "Digest" {
-		return nil
-	}
-
-	result := map[string]string{}
-	for _, kv := range strings.Split(s[1], ",") {
-		parts := strings.SplitN(kv, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		result[strings.Trim(parts[0], "\" ")] = strings.Trim(parts[1], "\" ")
-	}
-	return result
-}
-
-// create random client nonce
-func randCnonce() string {
-	b := make([]byte, 16)
-	io.ReadFull(rand.Reader, b)
-	return hex.EncodeToString(b)
+	return c.DoJSON(req, &res)
 }
