@@ -19,7 +19,7 @@ export default {
 	components: { TargetCharge },
 	props: {
 		id: Number,
-		vehicleSoc: Number,
+		vehicleSoC: Number,
 		minSoC: Number,
 		timerActive: Boolean,
 		timerSet: Boolean,
@@ -28,7 +28,7 @@ export default {
 	},
 	computed: {
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.vehicleSoc < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
 		targetCharge: function () {
 			return this.collectProps(TargetCharge);

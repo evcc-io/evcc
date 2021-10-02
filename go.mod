@@ -10,13 +10,13 @@ require (
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2
-	github.com/containrrr/shoutrrr v0.5.0
+	github.com/containrrr/shoutrrr v0.5.1
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/config v0.0.0-20210923171147-949ba16f7a16
-	github.com/evcc-io/eebus v0.0.0-20210917123446-6ca07b1ccb0e
+	github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8
+	github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
@@ -51,6 +51,7 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
+	github.com/mlnoga/rct v0.0.0-20210927211248-455af36ba3ad
 	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
@@ -63,6 +64,7 @@ require (
 	github.com/shurcooL/graphql v0.0.0-20200928012149-18c5c3165e3a
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/jwalterweatherman v1.1.0
 	github.com/spf13/pflag v1.0.5

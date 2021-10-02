@@ -26,7 +26,7 @@ func init() {
 	registry.Add("tesla", NewTeslaFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateTesla -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateTesla -b *Tesla -r api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewTeslaFromConfig creates a Tesla Powerwall Meter from generic config
 func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -114,6 +114,8 @@ func (m *Tesla) Login() error {
 
 	return err
 }
+
+var _ api.Meter = (*Tesla)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (m *Tesla) CurrentPower() (float64, error) {
