@@ -1,23 +1,24 @@
 type: sunspec
 params:
-- name: uri
 - name: usage
   choice: [ "grid", "pv", "battery" ]
   hint: how is the meter installed
+- name: uri
 - name: id
   default: 1
 # render: |
 #   type: sunspec
 #   usage: {{ .usage }} # {{ .Params.Usage.Hint }}
 #   uri: {{ .uri }}
+#   uri: {{ .id }}
 sample: |
   type: modbus
   model: sunspec
   uri: {{ .uri }}
   id: {{ .id }}
-  {{- if eq .usage "grid"}}
+  {{- if eq .usage "grid" }}
   power: 203:W # sunspec model 203 meter
   {{ end -}}
-  {{- if eq .usage "battery"}}
+  {{- if eq .usage "battery" }}
   soc: ChargeState
   {{ end -}}
