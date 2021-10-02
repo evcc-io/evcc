@@ -8,8 +8,8 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/shelly"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
@@ -20,9 +20,6 @@ type Shelly struct {
 	log          *util.Logger
 	uri          string
 	gen          int // Shelly api generation
-	authRequired bool
-	user         string
-	password     string
 	channel      int
 	standbypower float64
 }
@@ -70,17 +67,14 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 	c := &Shelly{
 		Helper:       client,
 		log:          log,
-		user:         user,
-		password:     password,
 		channel:      channel,
 		standbypower: standbypower,
 		gen:          resp.Gen,
-		authRequired: resp.Auth || resp.AuthEn,
 	}
 
 	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 
-	if c.authRequired && (user == "" || password == "") {
+	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
 		return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
 	}
 
@@ -89,16 +83,22 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// Shelly GEN 1 API
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		c.uri = util.DefaultScheme(uri, "http")
+		if user != "" {
+			c.Client.Transport = basicauth.NewTransport(user, password, c.Client.Transport)
+		}
+
 		if resp.NumMeters == 0 {
 			return c, fmt.Errorf("%s (%s) gen1 missing power meter ", resp.Model, resp.Mac)
 		}
+
 	case 2:
 		// Shelly GEN 2 API
 		// https://shelly-api-docs.shelly.cloud/gen2/
 		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "https"))
 		if user != "" {
-			c.Client.Transport = digest.NewTransport(user, password, request.NewTripper(log, request.InsecureTransport()))
+			c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 		}
+
 	default:
 		return c, fmt.Errorf("%s (%s) unknown api generation (%d)", resp.Type, resp.Model, c.gen)
 	}
@@ -111,8 +111,8 @@ func (c *Shelly) Enabled() (bool, error) {
 	switch c.gen {
 	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
-		cmd := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
-		err := c.execGen1Cmd(cmd, &resp)
+		uri := fmt.Sprintf("%s/relay/%d", c.uri, c.channel)
+		err := c.GetJSON(uri, &resp)
 		return resp.Ison, err
 
 	default:
@@ -130,8 +130,8 @@ func (c *Shelly) Enable(enable bool) error {
 	switch c.gen {
 	case 0, 1:
 		var resp shelly.Gen1SwitchResponse
-		cmd := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
-		err = c.execGen1Cmd(cmd, &resp)
+		uri := fmt.Sprintf("%s/relay/%d?turn=%s", c.uri, c.channel, onoff[enable])
+		err = c.GetJSON(uri, &resp)
 
 	default:
 		var resp shelly.Gen2SwitchResponse
@@ -176,8 +176,8 @@ func (c *Shelly) CurrentPower() (float64, error) {
 	switch c.gen {
 	case 0, 1:
 		var resp shelly.Gen1StatusResponse
-		cmd := fmt.Sprintf("%s/status", c.uri)
-		if err := c.execGen1Cmd(cmd, &resp); err != nil {
+		uri := fmt.Sprintf("%s/status", c.uri)
+		if err := c.GetJSON(uri, &resp); err != nil {
 			return 0, err
 		}
 
@@ -209,29 +209,6 @@ func (c *Shelly) CurrentPower() (float64, error) {
 	}
 
 	return power, nil
-}
-
-// executes a shelly gen1 command and provides the response
-func (c *Shelly) execGen1Cmd(cmd string, res interface{}) error {
-	hab := make(map[string]string)
-	// Shelly gen 1 basic authentication
-	// https://shelly-api-docs.shelly.cloud/gen1/#http-dialect
-	if c.authRequired {
-		if err := provider.AuthHeaders(c.log, provider.Auth{
-			Type:     "Basic",
-			User:     c.user,
-			Password: c.password,
-		}, hab); err != nil {
-			return err
-		}
-	}
-
-	req, err := request.New(http.MethodGet, cmd, nil, hab)
-	if err != nil {
-		return err
-	}
-
-	return c.DoJSON(req, &res)
 }
 
 // execGen2Cmd executes a shelly api gen1/gen2 command and provides the response
