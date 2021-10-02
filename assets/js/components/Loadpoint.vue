@@ -51,7 +51,7 @@ export default {
 		// charging: Boolean,
 		enabled: Boolean,
 		vehicleTitle: String,
-		vehicleSoc: Number,
+		vehicleSoC: Number,
 		minSoC: Number,
 		timerSet: Boolean,
 		timerActive: Boolean,

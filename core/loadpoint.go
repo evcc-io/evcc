@@ -1168,7 +1168,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		if err == nil {
 			lp.vehicleSoc = math.Trunc(f)
 			lp.log.DEBUG.Printf("vehicle soc: %.0f%%", lp.vehicleSoc)
-			lp.publish("vehicleSoc", lp.vehicleSoc)
+			lp.publish("vehicleSoC", lp.vehicleSoc)
 
 			if lp.charging() {
 				lp.setRemainingDuration(lp.socEstimator.RemainingChargeDuration(lp.chargePower, lp.SoC.Target))
@@ -1198,7 +1198,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 
 	// reset if poll: connected/charging and not connected
 	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
-		lp.publish("vehicleSoc", -1)
+		lp.publish("vehicleSoC", -1)
 		lp.publish("chargeRemainingDuration", time.Duration(-1))
 
 		// range

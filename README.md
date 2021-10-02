@@ -1,10 +1,10 @@
 # evcc <!-- omit in toc -->
 
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/andig/evcc)
+[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/evcc-io/evcc)
 [![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
-[![Latest Version](https://img.shields.io/github/release/andig/evcc.svg)](https://github.com/evcc-io/evcc/releases)
-[![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
+[![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
+[![Pulls from Docker Hub](https://img.shields.io/docker/pulls/evcc-io/evcc.svg)](https://hub.docker.com/r/evcc-io/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
@@ -601,6 +601,8 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
+Loadpoint ids for REST API are starting at `0:
+
 - `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
@@ -611,7 +613,7 @@ Note: to modify writable settings perform a `POST` request appending the value a
 
 ### MQTT API
 
-The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
+The MQTT API follows the REST API's structure, with loadpoint ids starting at `1`:
 
 - `evcc`: root topic
 - `evcc/status`: status (`online`/`offline`)

@@ -58,7 +58,7 @@ export default {
     vehicle: {
       fallbackName: "Vehicle",
     },
-    vehicleSoc: {
+    vehicleSoC: {
       disconnected: "disconnected",
       charging: "charging",
       ready: "ready",
