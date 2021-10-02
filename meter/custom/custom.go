@@ -15,19 +15,6 @@ type Registry interface {
 	Add(name string, factory func(map[string]interface{}) (api.Meter, error))
 }
 
-type Param struct {
-	Name    string
-	Default string
-	Hint    string
-	Choice  []string
-}
-
-type Template struct {
-	Type   string
-	Params []Param
-	Sample string
-}
-
 type InstatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter, err error)
 
 func Register(registry Registry, instantiator InstatiatorFunc) {
@@ -59,7 +46,7 @@ func templateFactory(tmpl Template, instantiator InstatiatorFunc) func(map[strin
 			return nil, err
 		}
 
-		t, err := template.New("yaml").Parse(tmpl.Sample)
+		t, err := template.New("yaml").Parse(tmpl.Render)
 		// .Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Sample)
 		if err != nil {
 			return nil, err

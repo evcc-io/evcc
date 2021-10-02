@@ -6,12 +6,12 @@ params:
 - name: uri
 - name: id
   default: 1
-# render: |
+# sample: |
 #   type: sunspec
 #   usage: {{ .usage }} # {{ .Params.Usage.Hint }}
 #   uri: {{ .uri }}
 #   uri: {{ .id }}
-sample: |
+render: |
   type: modbus
   model: sunspec
   uri: {{ .uri }}
