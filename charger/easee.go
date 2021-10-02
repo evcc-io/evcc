@@ -66,7 +66,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Password string
 		Charger  string
 		Circuit  int
-		Cache    time.Duration
+		Cache    time.Duration // deprecated
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -94,7 +94,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	if cache > 0 {
-		c.log.ERROR.Println("easee cache property is deprecated, please remove from you configuration")
+		c.log.WARN.Println("easee cache property is deprecated, please remove from you configuration")
 	}
 
 	ts, err := easee.TokenSource(log, user, password)
@@ -171,7 +171,7 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 
 	client, err := signalr.NewClient(context.Background(), conn,
 		signalr.Receiver(c),
-		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
+		// signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
 	if err != nil {
 		return err
@@ -205,18 +205,20 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		case easee.Double:
 			floatValue, err = strconv.ParseFloat(res.Value, 64)
 			if err != nil {
-				c.log.ERROR.Printf("float conversion failed [%s]", res.Value)
+				c.log.ERROR.Printf("float conversion: %s", res.Value)
 				return
 			}
 		case easee.Integer:
 			intValue, err = strconv.Atoi(res.Value)
 			if err != nil {
-				c.log.ERROR.Printf("int conversion failed [%s]", res.Value)
+				c.log.ERROR.Printf("int conversion: %s", res.Value)
 				return
 			}
 		}
 
 		c.mux.Lock()
+		defer c.mux.Unlock()
+
 		switch res.ID {
 		case easee.TOTAL_POWER:
 			c.currentPower = 1e3 * floatValue
@@ -244,17 +246,11 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			}
 			c.enabled = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
 		}
-		c.updated = time.Time{}
-		c.mux.Unlock()
+		c.updated = time.Now()
 		c.log.TRACE.Printf("%s: %+v", typ, res)
 	} else {
 		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
 	}
-}
-
-// ChargerUpdate implements the signalr receiver
-func (c *Easee) ChargerUpdate(i json.RawMessage) {
-	//c.observe("ChargerUpdate", i)
 }
 
 // ProductUpdate implements the signalr receiver
@@ -262,9 +258,14 @@ func (c *Easee) ProductUpdate(i json.RawMessage) {
 	c.observe("ProductUpdate", i)
 }
 
+// ChargerUpdate implements the signalr receiver
+func (c *Easee) ChargerUpdate(i json.RawMessage) {
+	// c.observe("ChargerUpdate", i)
+}
+
 // CommandResponse implements the signalr receiver
 func (c *Easee) CommandResponse(i json.RawMessage) {
-	//c.observe("CommandResponse", i)
+	// c.observe("CommandResponse", i)
 }
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
