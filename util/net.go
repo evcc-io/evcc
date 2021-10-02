@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 )
 
 // DefaultPort appends given port to connection if not specified
@@ -19,6 +20,9 @@ func DefaultPort(conn string, port int) string {
 func DefaultScheme(uri string, scheme string) string {
 	u, err := url.Parse(uri)
 	if err != nil {
+		if strings.HasSuffix(err.Error(), "first path segment in URL cannot contain colon") {
+			return fmt.Sprintf("%s://%s", scheme, uri)
+		}
 		return uri
 	}
 

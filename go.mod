@@ -85,4 +85,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
 
-replace github.com/jpfielding/go-http-digest => github.com/andig/go-http-digest v0.0.0-20211002134759-f36c1d1c071f
+replace github.com/jpfielding/go-http-digest => github.com/andig/go-http-digest v0.0.0-20211002213627-2c506d79719e
