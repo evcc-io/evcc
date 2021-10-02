@@ -41,6 +41,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 	cc := struct {
 		Uri         string
 		ShipID      string
+		Interfaces  []string
 		Certificate struct {
 			Public, Private []byte
 		}
@@ -75,6 +76,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 		Path:        "/ship/",
 		Certificate: cert,
 		ID:          id,
+		Interfaces:  cc.Interfaces,
 		Brand:       details.BrandName,
 		Model:       details.DeviceCode,
 		Type:        string(model.DeviceTypeEnumTypeEnergyManagementSystem),
