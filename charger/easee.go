@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/avast/retry-go/v3"
@@ -45,6 +46,7 @@ type Easee struct {
 	chargeStatus  api.ChargeStatus
 	cache         time.Duration
 	log           *util.Logger
+	mux           sync.Mutex
 	phases        int
 	enabled       bool
 	current, currentPower, sessionEnergy,
@@ -214,6 +216,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			}
 		}
 
+		c.mux.Lock()
 		switch res.ID {
 		case easee.TOTAL_POWER:
 			c.currentPower = 1e3 * floatValue
@@ -242,6 +245,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			c.enabled = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
 		}
 		c.updated = time.Time{}
+		c.mux.Unlock()
 		c.log.TRACE.Printf("%s: %+v", typ, res)
 	} else {
 		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
@@ -309,11 +313,17 @@ func (c *Easee) state() (easee.ChargerStatus, error) {
 
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	return c.chargeStatus, nil
 }
 
 // Enabled implements the api.Charger interface
 func (c *Easee) Enabled() (bool, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	return c.enabled, nil
 }
 
@@ -393,6 +403,9 @@ var _ api.Meter = (*Easee)(nil)
 
 // CurrentPower implements the api.Meter interface
 func (c *Easee) CurrentPower() (float64, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	return c.currentPower, nil
 }
 
@@ -400,6 +413,9 @@ var _ api.ChargeRater = (*Easee)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
 func (c *Easee) ChargedEnergy() (float64, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	return c.sessionEnergy, nil
 }
 
@@ -407,6 +423,9 @@ var _ api.MeterCurrent = (*Easee)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (c *Easee) Currents() (float64, float64, float64, error) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
 	return c.circuitTotalPhaseConductorCurrentL1,
 		c.circuitTotalPhaseConductorCurrentL2,
 		c.circuitTotalPhaseConductorCurrentL3,
