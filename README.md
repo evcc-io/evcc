@@ -601,6 +601,8 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
+Loadpoint ids for REST API are starting at `0:
+
 - `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
@@ -611,7 +613,7 @@ Note: to modify writable settings perform a `POST` request appending the value a
 
 ### MQTT API
 
-The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
+The MQTT API follows the REST API's structure, with loadpoint ids starting at `1`:
 
 - `evcc`: root topic
 - `evcc/status`: status (`online`/`offline`)
