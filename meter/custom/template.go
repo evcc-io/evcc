@@ -10,6 +10,6 @@ type Param struct {
 type Template struct {
 	Type   string
 	Params []Param
-	Sample string // yaml sample for README
-	Render string // final redered yaml for config
+	// Sample string // yaml sample for README
+	Render string // yaml rendering template
 }

@@ -4,6 +4,7 @@ params:
   choice: [ "grid", "pv", "battery" ]
   hint: how is the meter installed
 - name: uri
+  default: 192.0.2.2
 - name: id
   default: 1
 # sample: |

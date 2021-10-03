@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
@@ -19,19 +20,39 @@ type InstatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter
 
 func Register(registry Registry, instantiator InstatiatorFunc) {
 	for _, tmpl := range templates {
-		factory := templateFactory(tmpl, instantiator)
+		println("")
+		println(strings.ToUpper(tmpl.Type))
+		buildSample(tmpl)
+
+		factory := renderFactory(tmpl, instantiator)
 		registry.Add(tmpl.Type, factory)
 	}
 }
 
-func templateFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
-	params := make(map[string]Param)
+var sampleTmpl = `
+{{- range . -}}
+{{ .Name }}:
+	{{- if len .Choice }} {{ join "|" .Choice }} {{- else }} {{ .Default }} {{- end }}
+	{{- if .Hint }} # {{ .Hint }} {{- end }}
+{{ end -}}
+`
 
-	for _, p := range tmpl.Params {
-		// add params to template for use as .Params.<ParamName>.<ParamAttribute>
-		params[strings.Title(p.Name)] = p
+func buildSample(tmpl Template) {
+	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(sampleTmpl)
+	if err != nil {
+		panic(err)
 	}
 
+	out := new(bytes.Buffer)
+	if err := t.Execute(out, tmpl.Params); err != nil {
+		panic(err)
+	}
+
+	println("sample:")
+	println(out.String())
+}
+
+func renderFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
 		values := make(map[string]interface{})
 
@@ -46,14 +67,10 @@ func templateFactory(tmpl Template, instantiator InstatiatorFunc) func(map[strin
 			return nil, err
 		}
 
-		t, err := template.New("yaml").Parse(tmpl.Render)
-		// .Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Sample)
+		t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Render)
 		if err != nil {
 			return nil, err
 		}
-
-		// make params available
-		values["Params"] = params
 
 		out := new(bytes.Buffer)
 		if err := t.Execute(out, values); err != nil {
