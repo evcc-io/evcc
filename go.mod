@@ -3,8 +3,6 @@ module github.com/evcc-io/evcc
 go 1.16
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
