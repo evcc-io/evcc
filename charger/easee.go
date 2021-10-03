@@ -40,15 +40,16 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger       string
-	site, circuit int
-	updated       time.Time
-	chargeStatus  api.ChargeStatus
-	cache         time.Duration
-	log           *util.Logger
-	mux           sync.Mutex
-	phases        int
-	enabled       bool
+	charger        string
+	site, circuit  int
+	updated        time.Time
+	chargeStatus   api.ChargeStatus
+	cache          time.Duration
+	log            *util.Logger
+	mux            sync.Mutex
+	phases         int
+	chargerEnabled bool
+	enabledStatus  bool
 	current, currentPower, sessionEnergy,
 	circuitTotalPhaseConductorCurrentL1,
 	circuitTotalPhaseConductorCurrentL2,
@@ -200,8 +201,11 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	var res easee.Observation
 	if err := json.Unmarshal(i, &res); err == nil {
 		var floatValue float64
+		var boolValue bool
 		var intValue int
 		switch res.DataType {
+		case easee.Boolean:
+			boolValue = res.Value == "1"
 		case easee.Double:
 			floatValue, err = strconv.ParseFloat(res.Value, 64)
 			if err != nil {
@@ -220,6 +224,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		defer c.mux.Unlock()
 
 		switch res.ID {
+		case easee.IS_ENABLED:
+			c.chargerEnabled = boolValue
 		case easee.TOTAL_POWER:
 			c.currentPower = 1e3 * floatValue
 		case easee.SESSION_ENERGY:
@@ -244,7 +250,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 				c.log.ERROR.Printf("unknown opmode: %d", intValue)
 				c.chargeStatus = api.StatusNone
 			}
-			c.enabled = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
+			c.enabledStatus = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
 		}
 		c.updated = time.Now()
 		c.log.TRACE.Printf("%s: %+v", typ, res)
@@ -301,17 +307,6 @@ func (c *Easee) chargerDetails(charger string) (res easee.Site, err error) {
 	return res, err
 }
 
-func (c *Easee) state() (easee.ChargerStatus, error) {
-	var result easee.ChargerStatus
-	uri := fmt.Sprintf("%s/chargers/%s/state", easee.API, c.charger)
-	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err == nil {
-		err = c.DoJSON(req, &result)
-	}
-
-	return result, err
-}
-
 // Status implements the api.Charger interface
 func (c *Easee) Status() (api.ChargeStatus, error) {
 	c.mux.Lock()
@@ -325,18 +320,16 @@ func (c *Easee) Enabled() (bool, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.enabled, nil
+	return c.enabledStatus, nil
 }
 
 // Enable implements the api.Charger interface
 func (c *Easee) Enable(enable bool) error {
-	res, err := c.state()
-	if err != nil {
-		return err
-	}
-
-	// enable charger once
-	if enable && !res.IsOnline {
+	// enable charger once if it's switched off
+	c.mux.Lock()
+	enablingRequired := enable && !c.chargerEnabled
+	c.mux.Unlock()
+	if enablingRequired {
 		data := easee.ChargerSettings{
 			Enabled: &enable,
 		}
@@ -345,9 +338,8 @@ func (c *Easee) Enable(enable bool) error {
 		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 		if err == nil {
 			resp.Body.Close()
+			return err
 		}
-
-		return err
 	}
 
 	// resume/stop charger
@@ -357,7 +349,7 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err = c.Post(uri, request.JSONContent, nil)
+	_, err := c.Post(uri, request.JSONContent, nil)
 
 	return err
 }

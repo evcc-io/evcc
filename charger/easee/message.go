@@ -66,60 +66,6 @@ type Circuit struct {
 	ParentCircuitID  int
 }
 
-// ChargerStatus is the charger status type
-type ChargerStatus struct {
-	SmartCharging                                bool
-	CableLocked                                  bool
-	ChargerOpMode                                int
-	TotalPower                                   float64
-	SessionEnergy                                float64
-	EnergyPerHour                                float64
-	WiFiRSSI                                     int
-	CellRSSI                                     int
-	LocalRSSI                                    int
-	OutputPhase                                  int
-	DynamicCircuitCurrentP1                      float64
-	DynamicCircuitCurrentP2                      float64
-	DynamicCircuitCurrentP3                      float64
-	LatestPulse                                  string
-	ChargerFirmware                              int
-	LatestFirmware                               int
-	Voltage                                      float64
-	ChargerRAT                                   int
-	LockCablePermanently                         bool
-	InCurrentT2                                  float64
-	InCurrentT3                                  float64
-	InCurrentT4                                  float64
-	InCurrentT5                                  float64
-	OutputCurrent                                float64
-	IsOnline                                     bool
-	InVoltageT1T2                                float64
-	InVoltageT1T3                                float64
-	InVoltageT1T4                                float64
-	InVoltageT1T5                                float64
-	InVoltageT2T3                                float64
-	InVoltageT2T4                                float64
-	InVoltageT2T5                                float64
-	InVoltageT3T4                                float64
-	InVoltageT3T5                                float64
-	InVoltageT4T5                                float64
-	LedMode                                      int
-	CableRating                                  float64
-	DynamicChargerCurrent                        float64
-	CircuitTotalAllocatedPhaseConductorCurrentL1 float64
-	CircuitTotalAllocatedPhaseConductorCurrentL2 float64
-	CircuitTotalAllocatedPhaseConductorCurrentL3 float64
-	CircuitTotalPhaseConductorCurrentL1          float64
-	CircuitTotalPhaseConductorCurrentL2          float64
-	CircuitTotalPhaseConductorCurrentL3          float64
-	ReasonForNoCurrent                           int
-	WiFiAPEnabled                                bool
-	LifetimeEnergy                               float64
-	OfflineMaxCircuitCurrentP1                   int
-	OfflineMaxCircuitCurrentP2                   int
-	OfflineMaxCircuitCurrentP3                   int
-}
-
 // ChargerSettings is the charger settings type
 type ChargerSettings struct {
 	Enabled                      *bool `json:"enabled,omitempty"`
