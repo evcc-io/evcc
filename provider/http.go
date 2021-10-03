@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
