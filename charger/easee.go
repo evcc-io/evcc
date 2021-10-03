@@ -94,7 +94,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	if cache > 0 {
-		c.log.WARN.Println("easee cache property is deprecated, please remove from you configuration")
+		c.log.WARN.Println("cache is deprecated and will be removed in a future release")
 	}
 
 	ts, err := easee.TokenSource(log, user, password)
