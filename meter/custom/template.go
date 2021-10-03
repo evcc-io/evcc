@@ -14,8 +14,18 @@ type Param struct {
 type Template struct {
 	Type   string
 	Params []Param
-	// Sample string // yaml sample for README
 	Render string // yaml rendering template
+}
+
+func (t *Template) Defaults() map[string]interface{} {
+	values := make(map[string]interface{})
+	for _, p := range t.Params {
+		if p.Default != "" {
+			values[p.Name] = p.Default
+		}
+	}
+
+	return values
 }
 
 func (t *Template) Usages() []string {

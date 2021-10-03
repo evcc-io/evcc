@@ -12,21 +12,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Registry interface {
+type registry interface {
 	Add(name string, factory func(map[string]interface{}) (api.Meter, error))
 }
 
-type InstatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter, err error)
+type instatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter, err error)
 
-func Register(registry Registry, instantiator InstatiatorFunc) {
+func Register(registry registry, instantiator instatiatorFunc) {
 	for _, tmpl := range templates {
 		println(strings.ToUpper(tmpl.Type))
 		println("")
 
 		buildSample(tmpl)
 
-		renderFunc := renderFunction(tmpl, instantiator)
-		registry.Add(tmpl.Type, renderFunc)
+		instantiateFunc := instantiateFunction(tmpl, instantiator)
+		registry.Add(tmpl.Type, instantiateFunc)
 
 		// render all usages
 		for _, usage := range tmpl.Usages() {
@@ -75,15 +75,7 @@ func buildSample(tmpl Template) {
 }
 
 func renderTemplate(tmpl Template, other map[string]interface{}) ([]byte, error) {
-	values := make(map[string]interface{})
-
-	// set default values
-	for _, p := range tmpl.Params {
-		if p.Default != "" {
-			values[p.Name] = p.Default
-		}
-	}
-
+	values := tmpl.Defaults()
 	if err := util.DecodeOther(other, &values); err != nil {
 		return nil, err
 	}
@@ -101,7 +93,7 @@ func renderTemplate(tmpl Template, other map[string]interface{}) ([]byte, error)
 	return bytes.TrimSpace(out.Bytes()), nil
 }
 
-func renderFunction(tmpl Template, instantiator InstatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
+func instantiateFunction(tmpl Template, instantiator instatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
 		b, err := renderTemplate(tmpl, other)
 		if err != nil {
