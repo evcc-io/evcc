@@ -7,11 +7,6 @@ params:
   default: 192.0.2.2
 - name: id
   default: 1
-# sample: |
-#   type: sunspec
-#   usage: {{ .usage }} # {{ .Params.Usage.Hint }}
-#   uri: {{ .uri }}
-#   id: {{ .id }}
 render: |
   type: modbus
   model: sunspec
