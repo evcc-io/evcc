@@ -22,10 +22,10 @@ render: |
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336 # PV Eigenverbrauch
       jq: .dxsEntries[0].value
-  {{- end }}
+  {{- end -}}
   {{- if eq .usage "pv" }}
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
     jq: .dxsEntries[0].value
-  {{- end }}
+  {{- end -}}

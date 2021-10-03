@@ -25,8 +25,23 @@ func Register(registry Registry, instantiator InstatiatorFunc) {
 
 		buildSample(tmpl)
 
-		factory := renderFactory(tmpl, instantiator)
-		registry.Add(tmpl.Type, factory)
+		renderFunc := renderFunction(tmpl, instantiator)
+		registry.Add(tmpl.Type, renderFunc)
+
+		// render all usages
+		for _, usage := range tmpl.Usages() {
+			println("--", usage, "--")
+
+			b, err := renderTemplate(tmpl, map[string]interface{}{
+				"usage": usage,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			println(string(b))
+			println("")
+		}
 	}
 }
 
@@ -59,33 +74,42 @@ func buildSample(tmpl Template) {
 	println(out.String())
 }
 
-func renderFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
+func renderTemplate(tmpl Template, other map[string]interface{}) ([]byte, error) {
+	values := make(map[string]interface{})
+
+	// set default values
+	for _, p := range tmpl.Params {
+		if p.Default != "" {
+			values[p.Name] = p.Default
+		}
+	}
+
+	if err := util.DecodeOther(other, &values); err != nil {
+		return nil, err
+	}
+
+	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Render)
+	if err != nil {
+		return nil, err
+	}
+
+	out := new(bytes.Buffer)
+	if err := t.Execute(out, values); err != nil {
+		return nil, err
+	}
+
+	return bytes.TrimSpace(out.Bytes()), nil
+}
+
+func renderFunction(tmpl Template, instantiator InstatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
-		values := make(map[string]interface{})
-
-		// set default values
-		for _, p := range tmpl.Params {
-			if p.Default != "" {
-				values[p.Name] = p.Default
-			}
-		}
-
-		if err := util.DecodeOther(other, &values); err != nil {
-			return nil, err
-		}
-
-		t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Render)
+		b, err := renderTemplate(tmpl, other)
 		if err != nil {
 			return nil, err
 		}
 
-		out := new(bytes.Buffer)
-		if err := t.Execute(out, values); err != nil {
-			return nil, err
-		}
-
-		fmt.Println("-- rendered --")
-		println(out.String())
+		fmt.Println("-- instantiated --")
+		println(string(b))
 		println("")
 
 		var instantiated struct {
@@ -93,7 +117,7 @@ func renderFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]
 			Other map[string]interface{} `yaml:",inline"`
 		}
 
-		if err := yaml.Unmarshal(out.Bytes(), &instantiated); err != nil {
+		if err := yaml.Unmarshal(b, &instantiated); err != nil {
 			return nil, err
 		}
 

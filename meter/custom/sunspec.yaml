@@ -13,8 +13,8 @@ render: |
   uri: {{ .uri }}
   id: {{ .id }}
   {{- if eq .usage "grid" }}
-  power: 203:W # sunspec model 203 meter
-  {{ end -}}
+  power: 203:W # sunspec 3-phase meter power reading
+  {{- end -}}
   {{- if eq .usage "battery" }}
   soc: ChargeState
-  {{ end -}}
+  {{- end -}}
