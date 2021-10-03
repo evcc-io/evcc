@@ -40,7 +40,8 @@ const (
 	ablRegAmpsConfig = 0x14
 	ablRegStatusLong = 0x2E
 
-	ablAmpsDisabled uint16 = 0x03E8
+	ablAmpsDisabled  uint16 = 0x03E8
+	ablSensorPresent        = 1 << 5
 )
 
 var ablStatus = map[byte]string{
@@ -86,6 +87,8 @@ func NewABLeMHFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewABLeMH(cc.URI, cc.Device, cc.Comset, cc.Baudrate, cc.ID)
 }
 
+//go:generate go run ../cmd/tools/decorate.go -f decorateABLeMH -b *ABLeMH -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+
 // NewABLeMH creates ABLeMH charger
 func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.AsciiFormat, slaveID)
@@ -106,7 +109,15 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		curr: uint16(6 / 0.06),
 	}
 
-	return wb, nil
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegFirmware, 2)
+
+	// check presence of current sensor
+	if err == nil && (b[3]&ablSensorPresent != 0) {
+		return decorateABLeMH(wb, wb.currentPower, wb.currents), nil
+	}
+
+	return wb, err
 }
 
 // Status implements the api.Charger interface
@@ -181,18 +192,14 @@ func (wb *ABLeMH) MaxCurrentMillis(current float64) error {
 	return err
 }
 
-var _ api.Meter = (*ABLeMH)(nil)
-
-// CurrentPower implements the api.Meter interface
-func (wb *ABLeMH) CurrentPower() (float64, error) {
-	l1, l2, l3, err := wb.Currents()
+// currentPower implements the api.Meter interface
+func (wb *ABLeMH) currentPower() (float64, error) {
+	l1, l2, l3, err := wb.currents()
 	return 230 * (l1 + l2 + l3), err
 }
 
-var _ api.MeterCurrent = (*ABLeMH)(nil)
-
 // Currents implements the api.MeterCurrent interface
-func (wb *ABLeMH) Currents() (float64, float64, float64, error) {
+func (wb *ABLeMH) currents() (float64, float64, float64, error) {
 	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
 	b, err := wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
 	if err != nil {
