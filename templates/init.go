@@ -1,0 +1,57 @@
+package templates
+
+import (
+	"embed"
+	"fmt"
+	"io/fs"
+	"path"
+
+	"gopkg.in/yaml.v3"
+)
+
+var (
+	//go:embed meter/*.yaml
+	yamlTemplates embed.FS
+
+	templates = make(map[string][]Template)
+)
+
+const (
+	Charger = "charger"
+	Meter   = "meter"
+	Vehicle = "vehicle"
+)
+
+func init() {
+	err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+
+		b, err := fs.ReadFile(yamlTemplates, filepath)
+		if err != nil {
+			return err
+		}
+
+		var tmpl Template
+		if err = yaml.Unmarshal(b, &tmpl); err != nil {
+			panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
+		}
+
+		path := path.Dir(filepath)
+		templates[path] = append(templates[path], tmpl)
+
+		return nil
+	})
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+func ByClass(class string) []Template {
+	return templates[class]
+}

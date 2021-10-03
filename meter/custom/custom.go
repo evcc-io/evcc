@@ -1,14 +1,11 @@
 package custom
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
-	"text/template"
 
-	"github.com/Masterminds/sprig"
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/templates"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,18 +16,19 @@ type registry interface {
 type instatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter, err error)
 
 func Register(registry registry, instantiator instatiatorFunc) {
-	for _, tmpl := range templates {
+	for _, tmpl := range templates.ByClass(templates.Meter) {
 		println(strings.ToUpper(tmpl.Type))
 		println("")
 
 		// render the proxy
-		sample, err := renderProxy(tmpl)
+		sample, err := tmpl.RenderProxy()
 		if err != nil {
 			panic(err)
 		}
 
 		println("-- proxy --")
 		println(string(sample))
+		println("")
 
 		instantiateFunc := instantiateFunction(tmpl, instantiator)
 		registry.Add(tmpl.Type, instantiateFunc)
@@ -39,7 +37,7 @@ func Register(registry registry, instantiator instatiatorFunc) {
 		for _, usage := range tmpl.Usages() {
 			println("--", usage, "--")
 
-			b, err := renderTemplate(tmpl, map[string]interface{}{
+			b, err := tmpl.RenderResult(map[string]interface{}{
 				"usage": usage,
 			})
 			if err != nil {
@@ -52,54 +50,9 @@ func Register(registry registry, instantiator instatiatorFunc) {
 	}
 }
 
-var proxyTmpl = `type: {{ .Type }}
-{{ range .Params -}}
-{{ .Name }}:
-	{{- if len .Choice }} {{ join "|" .Choice }} {{- else }} {{ .Default }} {{- end }}
-	{{- if len .Choice }} # <- choose one {{ .Name }} value {{- end }}
-	{{- if .Hint }} # {{ .Hint }} {{- end }}
-{{ end -}}
-`
-
-func renderProxy(tmpl Template) ([]byte, error) {
-	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
-	if err != nil {
-		panic(err)
-	}
-
-	vars := map[string]interface{}{
-		"Type":   tmpl.Type,
-		"Params": tmpl.Params,
-	}
-
-	out := new(bytes.Buffer)
-	err = t.Execute(out, vars)
-
-	return bytes.TrimSpace(out.Bytes()), err
-}
-
-func renderTemplate(tmpl Template, other map[string]interface{}) ([]byte, error) {
-	values := tmpl.Defaults()
-	if err := util.DecodeOther(other, &values); err != nil {
-		return nil, err
-	}
-
-	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(tmpl.Render)
-	if err != nil {
-		return nil, err
-	}
-
-	out := new(bytes.Buffer)
-	if err := t.Execute(out, values); err != nil {
-		return nil, err
-	}
-
-	return bytes.TrimSpace(out.Bytes()), nil
-}
-
-func instantiateFunction(tmpl Template, instantiator instatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
+func instantiateFunction(tmpl templates.Template, instantiator instatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
-		b, err := renderTemplate(tmpl, other)
+		b, err := tmpl.RenderResult(other)
 		if err != nil {
 			return nil, err
 		}
