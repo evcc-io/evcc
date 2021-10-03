@@ -23,7 +23,14 @@ func Register(registry registry, instantiator instatiatorFunc) {
 		println(strings.ToUpper(tmpl.Type))
 		println("")
 
-		buildSample(tmpl)
+		// render the proxy
+		sample, err := renderProxy(tmpl)
+		if err != nil {
+			panic(err)
+		}
+
+		println("-- proxy --")
+		println(string(sample))
 
 		instantiateFunc := instantiateFunction(tmpl, instantiator)
 		registry.Add(tmpl.Type, instantiateFunc)
@@ -45,7 +52,7 @@ func Register(registry registry, instantiator instatiatorFunc) {
 	}
 }
 
-var sampleTmpl = `type: {{ .Type }}
+var proxyTmpl = `type: {{ .Type }}
 {{ range .Params -}}
 {{ .Name }}:
 	{{- if len .Choice }} {{ join "|" .Choice }} {{- else }} {{ .Default }} {{- end }}
@@ -54,8 +61,8 @@ var sampleTmpl = `type: {{ .Type }}
 {{ end -}}
 `
 
-func buildSample(tmpl Template) {
-	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(sampleTmpl)
+func renderProxy(tmpl Template) ([]byte, error) {
+	t, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}
@@ -66,12 +73,9 @@ func buildSample(tmpl Template) {
 	}
 
 	out := new(bytes.Buffer)
-	if err := t.Execute(out, vars); err != nil {
-		panic(err)
-	}
+	err = t.Execute(out, vars)
 
-	println("-- sample --")
-	println(out.String())
+	return bytes.TrimSpace(out.Bytes()), err
 }
 
 func renderTemplate(tmpl Template, other map[string]interface{}) ([]byte, error) {
