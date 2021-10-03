@@ -57,8 +57,6 @@ github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/alvaroloes/enumer v1.1.2/go.mod h1:FxrjvuXoDAx9isTJrv4c+T410zFi0DtXIT0m65DJ+Wo=
-github.com/andig/go-http-digest v0.0.0-20211002213627-2c506d79719e h1:3Z5Ec+mZ4Ngt/31FAsbG5ow5KaS0LbDKOwVrkRgQL7U=
-github.com/andig/go-http-digest v0.0.0-20211002213627-2c506d79719e/go.mod h1:oLt6zF2euTyCg2Cxz01B3VC5SJcPpKpYnOAqvO+480s=
 github.com/andig/gosunspec v0.0.0-20210511114617-aa30cf9b7a3f h1:X0eQydQuoC/R1ALXgDs9v+1UKWlgGbuMg+h8flc2BJk=
 github.com/andig/gosunspec v0.0.0-20210511114617-aa30cf9b7a3f/go.mod h1:YkshK8WMzYn1iXAZzHUO75gIqhMSan2ctgBVtBkRIyA=
 github.com/andybalholm/cascadia v1.2.0 h1:vuRCkM5Ozh/BfmsaTm26kbjm0mIOM3yS5Ek/F5h18aE=
@@ -150,8 +148,8 @@ github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0/go.m
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8 h1:kfrzL89jpU+1fQ8Kyd3r9UI6wJ1KAABsFI0DrIR++/Q=
 github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8/go.mod h1:aN5D6PVnoFvfZSMScvAQAIYRXwWOZ9lde3J0lsNRIOM=
-github.com/evcc-io/eebus v0.0.0-20211002143419-1336d099b84c h1:8G209dbZPMz79/A0oocEXqIqx9IN3VwE9oHCKUEJ2Rw=
-github.com/evcc-io/eebus v0.0.0-20211002143419-1336d099b84c/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
+github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f h1:jORYK0uKT+jJtpUxOZ8+cVLXKPASXioUPS9bnHNQfoA=
+github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
 github.com/fatih/color v1.6.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
@@ -376,7 +374,6 @@ github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfC
 github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73 h1:sSgFj1KNmZrvKid5G5333eZRRSsCNBPPSstz9mzcSoI=
 github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73/go.mod h1:tB0OlpicmRVTL1Vksc5XRiYo+wkK2kl/GI7eGMIl6Rs=
 github.com/jonboulle/clockwork v0.1.0/go.mod h1:Ii8DK3G1RaLaWxj9trq07+26W01tbo22gdxWY5EU2bo=
-github.com/jpfielding/gowirelog v0.0.0-20200123170752-df8f8dccb721/go.mod h1:R8b6Hefiy6MSxbJ8dbF9Gkaa/LwFh9meFV0i9hkR5i8=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
@@ -764,9 +761,8 @@ golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4/go.mod h1:RBQZq4jEuRlivfhVLd
 golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4/go.mod h1:p54w0d4576C0XHj96bSt6lcn1PtDYWL6XObtHCRCNQM=
 golang.org/x/net v0.0.0-20210525063256-abc453219eb5/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210614182718-04defd469f4e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 h1:4CSI6oo7cOjJKajidEljs9h+uP0rRZBPPPhcCbj5mw8=
 golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
-golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d h1:20cMwl2fHAzkJMEA+8J4JgqBQcQGzbisXo31MIeenXI=
-golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=

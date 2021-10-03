@@ -39,6 +39,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.2
 	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
+	github.com/jpfielding/go-http-digest v0.0.0-20210817193807-9eb61c7a606e
 	github.com/juju/ansiterm v0.0.0-20210706145210-9283cdf370b5 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
@@ -73,7 +74,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20210808132733-8235dc7d1327
 	gitlab.com/bboehmke/sunny v0.15.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
+	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/text v0.3.6
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect
@@ -83,3 +84,5 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
+
+replace github.com/jpfielding/go-http-digest => github.com/andig/go-http-digest v0.0.0-20211002213627-2c506d79719e
