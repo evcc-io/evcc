@@ -2,9 +2,9 @@ type: kostalpiko
 params:
 - name: usage
   choice: [ "grid", "pv" ]
-  hint: how is the meter installed
 - name: host
   default: 192.0.2.2
+  hint: host name
 render: |
   type: custom
   power:

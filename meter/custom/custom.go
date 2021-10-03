@@ -20,8 +20,9 @@ type InstatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter
 
 func Register(registry Registry, instantiator InstatiatorFunc) {
 	for _, tmpl := range templates {
-		println("")
 		println(strings.ToUpper(tmpl.Type))
+		println("")
+
 		buildSample(tmpl)
 
 		factory := renderFactory(tmpl, instantiator)
@@ -29,10 +30,11 @@ func Register(registry Registry, instantiator InstatiatorFunc) {
 	}
 }
 
-var sampleTmpl = `
-{{- range . -}}
+var sampleTmpl = `type: {{ .Type }}
+{{ range .Params -}}
 {{ .Name }}:
 	{{- if len .Choice }} {{ join "|" .Choice }} {{- else }} {{ .Default }} {{- end }}
+	{{- if len .Choice }} # <- choose one {{ .Name }} value {{- end }}
 	{{- if .Hint }} # {{ .Hint }} {{- end }}
 {{ end -}}
 `
@@ -43,12 +45,17 @@ func buildSample(tmpl Template) {
 		panic(err)
 	}
 
+	vars := map[string]interface{}{
+		"Type":   tmpl.Type,
+		"Params": tmpl.Params,
+	}
+
 	out := new(bytes.Buffer)
-	if err := t.Execute(out, tmpl.Params); err != nil {
+	if err := t.Execute(out, vars); err != nil {
 		panic(err)
 	}
 
-	println("sample:")
+	println("-- sample --")
 	println(out.String())
 }
 
@@ -77,7 +84,9 @@ func renderFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]
 			return nil, err
 		}
 
-		fmt.Println("compiled template:\n", out.String())
+		fmt.Println("-- rendered --")
+		println(out.String())
+		println("")
 
 		var instantiated struct {
 			Type  string
@@ -87,8 +96,6 @@ func renderFactory(tmpl Template, instantiator InstatiatorFunc) func(map[string]
 		if err := yaml.Unmarshal(out.Bytes(), &instantiated); err != nil {
 			return nil, err
 		}
-
-		fmt.Println("parsed compilation:\n", instantiated)
 
 		return instantiator(instantiated.Type, instantiated.Other)
 	}

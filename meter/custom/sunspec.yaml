@@ -2,11 +2,11 @@ type: sunspec
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]
-  hint: how is the meter installed
 - name: uri
   default: 192.0.2.2
 - name: id
   default: 1
+  hint: modbus id
 render: |
   type: modbus
   model: sunspec
