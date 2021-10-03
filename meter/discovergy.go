@@ -2,16 +2,19 @@ package meter
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/thoas/go-funk"
 )
 
 const discovergyAPI = "https://api.discovergy.com/public/v1"
+
+type Discovergy struct {
+	*request.Helper
+}
 
 func init() {
 	registry.Add("discovergy", NewDiscovergyFromConfig)
@@ -21,6 +24,12 @@ type discovergyMeter struct {
 	MeterID          string `json:"meterId"`
 	SerialNumber     string `json:"serialNumber"`
 	FullSerialNumber string `json:"fullSerialNumber"`
+}
+
+type discovergyLastReading struct {
+	Values struct {
+		Power float64 `json:"power"`
+	} `json:"values"`
 }
 
 // NewDiscovergyFromConfig creates a new configurable meter
@@ -38,24 +47,16 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("discgy")
+	client := request.NewHelper(util.NewLogger("discgy"))
 
-	headers := make(map[string]string)
-	if err := provider.AuthHeaders(log, provider.Auth{
-		Type:     "Basic",
-		User:     cc.User,
-		Password: cc.Password,
-	}, headers); err != nil {
-		return nil, err
+	c := &Discovergy{
+		Helper: client,
 	}
 
-	req, err := request.New(http.MethodGet, fmt.Sprintf("%s/meters", discovergyAPI), nil, headers)
-	if err != nil {
-		return nil, err
-	}
+	c.Client.Transport = basicauth.NewTransport(cc.User, cc.Password, c.Client.Transport)
 
 	var meters []discovergyMeter
-	if err := request.NewHelper(log).DoJSON(req, &meters); err != nil {
+	if err := c.GetJSON(fmt.Sprintf("%s/meters", discovergyAPI), &meters); err != nil {
 		return nil, err
 	}
 
@@ -77,13 +78,14 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		}))
 	}
 
-	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, "", ".values.power", 0.001*cc.Scale, 0)
-	if err != nil {
+	var lastreading discovergyLastReading
+	if err := c.GetJSON(fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID), &lastreading); err != nil {
 		return nil, err
 	}
 
-	return NewConfigurable(power.FloatGetter())
+	// return lastreading.Values.Power, nil
+
+	// return NewConfigurable(power.FloatGetter()), nil)
 }
 
 func matchesIdentifier(id string, m discovergyMeter) bool {
