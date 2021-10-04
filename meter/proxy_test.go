@@ -4,9 +4,14 @@ import (
 	"testing"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/test"
 )
 
 func TestProxies(t *testing.T) {
+	acceptable := []string{
+		`parsing "<no value>": invalid syntax`,
+	}
+
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		usages := tmpl.Usages()
 
@@ -15,6 +20,10 @@ func TestProxies(t *testing.T) {
 				b, err := tmpl.RenderResult(nil)
 				if err != nil {
 					t.Log(string(b))
+					t.Error(err)
+				}
+
+				if _, err := NewFromConfig(tmpl.Type, nil); err != nil && !test.Acceptable(err, acceptable) {
 					t.Error(err)
 				}
 			})
@@ -33,6 +42,10 @@ func TestProxies(t *testing.T) {
 
 				if err != nil {
 					t.Log(string(b))
+					t.Error(err)
+				}
+
+				if _, err := NewFromConfig(tmpl.Type, nil); err != nil && !test.Acceptable(err, acceptable) {
 					t.Error(err)
 				}
 			})
