@@ -1,4 +1,4 @@
-package custom
+package meter
 
 import (
 	"fmt"
@@ -9,13 +9,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type registry interface {
-	Add(name string, factory func(map[string]interface{}) (api.Meter, error))
-}
-
-type instatiatorFunc func(typ string, other map[string]interface{}) (v api.Meter, err error)
-
-func Register(registry registry, instantiator instatiatorFunc) {
+func init() {
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		println(strings.ToUpper(tmpl.Type))
 		println("")
@@ -30,7 +24,7 @@ func Register(registry registry, instantiator instatiatorFunc) {
 		println(string(sample))
 		println("")
 
-		instantiateFunc := instantiateFunction(tmpl, instantiator)
+		instantiateFunc := instantiateFunction(tmpl)
 		registry.Add(tmpl.Type, instantiateFunc)
 
 		// render all usages
@@ -50,7 +44,7 @@ func Register(registry registry, instantiator instatiatorFunc) {
 	}
 }
 
-func instantiateFunction(tmpl templates.Template, instantiator instatiatorFunc) func(map[string]interface{}) (api.Meter, error) {
+func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
 		b, err := tmpl.RenderResult(other)
 		if err != nil {
@@ -61,15 +55,15 @@ func instantiateFunction(tmpl templates.Template, instantiator instatiatorFunc) 
 		println(string(b))
 		println("")
 
-		var instantiated struct {
+		var instance struct {
 			Type  string
 			Other map[string]interface{} `yaml:",inline"`
 		}
 
-		if err := yaml.Unmarshal(b, &instantiated); err != nil {
+		if err := yaml.Unmarshal(b, &instance); err != nil {
 			return nil, err
 		}
 
-		return instantiator(instantiated.Type, instantiated.Other)
+		return NewFromConfig(instance.Type, instance.Other)
 	}
 }

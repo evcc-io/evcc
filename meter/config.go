@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/meter/custom"
 )
 
 type meterRegistry map[string]func(map[string]interface{}) (api.Meter, error)
@@ -26,10 +25,6 @@ func (r meterRegistry) Get(name string) (func(map[string]interface{}) (api.Meter
 }
 
 var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.Meter, error))
-
-func init() {
-	custom.Register(registry, NewFromConfig)
-}
 
 // NewFromConfig creates meter from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {

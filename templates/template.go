@@ -56,13 +56,11 @@ func (t *Template) RenderProxy() ([]byte, error) {
 		panic(err)
 	}
 
-	vars := map[string]interface{}{
+	out := new(bytes.Buffer)
+	err = tmpl.Execute(out, map[string]interface{}{
 		"Type":   t.Type,
 		"Params": t.Params,
-	}
-
-	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, vars)
+	})
 
 	return bytes.TrimSpace(out.Bytes()), err
 }
@@ -79,9 +77,7 @@ func (t *Template) RenderResult(other map[string]interface{}) ([]byte, error) {
 	}
 
 	out := new(bytes.Buffer)
-	if err := tmpl.Execute(out, values); err != nil {
-		return nil, err
-	}
+	err = tmpl.Execute(out, values)
 
-	return bytes.TrimSpace(out.Bytes()), nil
+	return bytes.TrimSpace(out.Bytes()), err
 }
