@@ -120,6 +120,16 @@ func (m *Client) Listen(topic string, callback func(string)) {
 	m.listen(topic)
 }
 
+// ListenSetter creates a /set listener that resets the payload after handling
+func (m *Client) ListenSetter(topic string, callback func(string)) {
+	m.Listen(topic, func(payload string) {
+		callback(payload)
+		if err := m.Publish(topic, false, nil); err != nil {
+			m.log.ERROR.Printf("clear: %v", err)
+		}
+	})
+}
+
 // listen attaches listener to topic
 func (m *Client) listen(topic string) {
 	token := m.Client.Subscribe(topic, m.Qos, func(c paho.Client, msg paho.Message) {

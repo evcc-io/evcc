@@ -66,24 +66,31 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 }
 
 func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
-	m.Handler.Listen(topic+"/mode/set", func(payload string) {
+	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
-	m.Handler.Listen(topic+"/minSoC/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
+	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
 			_ = apiHandler.SetMinSoC(soc)
 		}
 	})
-	m.Handler.Listen(topic+"/targetSoC/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
+	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
 			_ = apiHandler.SetTargetSoC(soc)
 		}
 	})
-	m.Handler.Listen(topic+"/phases/set", func(payload string) {
-		phases, err := strconv.Atoi(payload)
-		if err == nil {
+	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
+		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+			apiHandler.SetMinCurrent(current)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
+		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+			apiHandler.SetMaxCurrent(current)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
+		if phases, err := strconv.Atoi(payload); err == nil {
 			_ = apiHandler.SetPhases(phases)
 		}
 	})

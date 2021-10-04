@@ -59,11 +59,11 @@ type API interface {
 	GetChargePower() float64
 	// GetMinCurrent returns the min charging current
 	GetMinCurrent() float64
-	// SetMinCurrent returns the min charging current
+	// SetMinCurrent sets the min charging current
 	SetMinCurrent(float64)
 	// GetMaxCurrent returns the max charging current
 	GetMaxCurrent() float64
-	// SetMaxCurrent returns the max charging current
+	// SetMaxCurrent sets the max charging current
 	SetMaxCurrent(float64)
 	// GetMinPower returns the min charging power for a single phase
 	GetMinPower() float64
