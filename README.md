@@ -607,6 +607,8 @@ Loadpoint ids for REST API are starting at `0:
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
 - `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
+- `/api/loadpoints/<id>/mincurrent`: loadpoint minimum current (writable)
+- `/api/loadpoints/<id>/maxcurrent`: loadpoint maximum current (writable)
 - `/api/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings perform a `POST` request appending the value as path segment.
