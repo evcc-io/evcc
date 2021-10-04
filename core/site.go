@@ -44,6 +44,7 @@ type Site struct {
 
 	tariff     api.Tariff   // Tariff
 	loadpoints []*LoadPoint // Loadpoints
+	savings    Savings      // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -76,6 +77,7 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.tariff = tariff
 	site.loadpoints = loadpoints
+	site.savings = *NewSavings()
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -355,6 +357,15 @@ func (site *Site) update(lp Updater) {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 		site.Health.Update()
 	}
+
+	// update savings
+	site.Lock()
+	var totalChargePower = 0.0
+	for _, lp := range site.loadpoints {
+		totalChargePower += lp.chargePower
+	}
+	site.savings.Update(site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+	site.Unlock()
 }
 
 // Prepare attaches communication channels to site and loadpoints
