@@ -23,9 +23,9 @@ type HTTP struct {
 	url, method string
 	headers     map[string]string
 	body        string
-	scale       float64
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	scale       float64
 	cache       time.Duration
 	updated     time.Time
 	val         []byte // Cached http response value
@@ -56,6 +56,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
+		Scale:   1,
 		Timeout: request.Timeout,
 	}
 
@@ -177,7 +178,7 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		}
 
 		f, err := strconv.ParseFloat(s, 64)
-		if err == nil && p.scale != 0 {
+		if err == nil {
 			f *= p.scale
 		}
 
