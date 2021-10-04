@@ -1,0 +1,11 @@
+type: sma-meter
+name: SMA Sunny Home Manager 2.0 / Energy Meter
+params:
+- name: usage
+  choice: ["grid", "pv", "battery"]
+- name: host
+  default: 192.0.2.2
+  hint: ip address or host name
+render: |
+  type: sma
+  uri: {{ .host }}

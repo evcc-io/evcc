@@ -1,10 +1,11 @@
 type: kostalpiko
+name: Kostal Piko + Piko BA
 params:
 - name: usage
   choice: [ "grid", "pv" ]
 - name: host
   default: 192.0.2.2
-  hint: host name
+  hint: ip address or host name
 render: |
   type: custom
   power:

@@ -1,0 +1,17 @@
+type: sma-inverter
+name: SMA Speedwire Inverter
+params:
+- name: usage
+  choice: ["pv", "battery"]
+- name: host
+  default: 192.0.2.2
+  hint: ip address or host name
+- name: password
+  default: " "
+  optional: true
+render: |
+  type: sma
+  uri: {{ .host }} # IP address or hostname
+  {{- if ne (len .password) 0 }}
+  password: {{ .password }} # optional
+  {{- end }}
