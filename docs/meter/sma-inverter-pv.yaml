@@ -1,0 +1,3 @@
+type: sma
+uri: 192.0.2.2 # IP address or hostname
+password:   # optional

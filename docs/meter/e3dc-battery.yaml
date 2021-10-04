@@ -1,0 +1,16 @@
+type: custom
+power:
+  source: modbus
+  uri: 192.0.2.2:502
+  register: # manual register configuration for E3/DC "Simple-Mode"
+    type: holding
+    decode: int32s
+    address: 40069 # Batterie-Leistung in Watt
+  scale: -1 # reverse direction
+soc:
+  source: modbus
+  uri: 192.0.2.2:502
+  register: # manual register configuration for E3/DC "Simple-Mode"
+    address: 40082 # Batterie-SOC in Prozent
+    type: holding
+    decode: uint16

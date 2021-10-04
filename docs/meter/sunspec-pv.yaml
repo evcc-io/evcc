@@ -1,0 +1,4 @@
+type: modbus
+model: sunspec
+uri: 192.0.2.2
+id: 1
