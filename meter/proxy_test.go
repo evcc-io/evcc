@@ -17,10 +17,6 @@ func TestProxies(t *testing.T) {
 					t.Log(string(b))
 					t.Error(err)
 				}
-
-				if _, err := NewFromConfig(tmpl.Type, nil); err != nil {
-					t.Error(err)
-				}
 			})
 		}
 
@@ -37,10 +33,6 @@ func TestProxies(t *testing.T) {
 
 				if err != nil {
 					t.Log(string(b))
-					t.Error(err)
-				}
-
-				if _, err := NewFromConfig(tmpl.Type, nil); err != nil {
 					t.Error(err)
 				}
 			})
