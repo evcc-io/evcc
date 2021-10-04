@@ -627,6 +627,8 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `1
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `evcc/loadpoints/<id>/minSoC`: loadpoint minimum SoC (writable)
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
+- `evcc/loadpoints/<id>/minCurrent`: loadpoint minimum current (writable)
+- `evcc/loadpoints/<id>/maxCurrent`: loadpoint maximum current (writable)
 - `evcc/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.
