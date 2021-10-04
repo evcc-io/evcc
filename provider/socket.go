@@ -98,8 +98,13 @@ func (p *Socket) listen() {
 		headers.Set(k, v)
 	}
 
+	dialer := &websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: request.Timeout,
+	}
+
 	for {
-		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
+		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
