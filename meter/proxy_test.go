@@ -17,18 +17,30 @@ func TestProxies(t *testing.T) {
 					t.Log(string(b))
 					t.Error(err)
 				}
+
+				if _, err := NewFromConfig(tmpl.Type, nil); err != nil {
+					t.Error(err)
+				}
 			})
 		}
 
 		// render all usages
 		for _, usage := range usages {
+			usage := usage
+
 			t.Run(tmpl.Type+" "+usage, func(t *testing.T) {
+				t.Parallel()
+
 				b, err := tmpl.RenderResult(map[string]interface{}{
 					"usage": usage,
 				})
 
 				if err != nil {
 					t.Log(string(b))
+					t.Error(err)
+				}
+
+				if _, err := NewFromConfig(tmpl.Type, nil); err != nil {
 					t.Error(err)
 				}
 			})
