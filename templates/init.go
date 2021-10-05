@@ -22,7 +22,7 @@ const (
 	Vehicle = "vehicle"
 )
 
-//go:generate go run templates/generate/generate.go
+//go:generate go run generate/generate.go
 func init() {
 	err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {

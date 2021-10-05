@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/templates"
 )
 
-const basePath = "docs"
+const basePath = "../docs"
 
 func main() {
 	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
