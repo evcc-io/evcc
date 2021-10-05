@@ -205,11 +205,11 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentPower = 1e3 * floatValue
 	case easee.SESSION_ENERGY:
 		c.sessionEnergy = floatValue
-	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L1:
+	case easee.IN_CURRENT_T3:
 		c.currentL1 = floatValue
-	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L2:
+	case easee.IN_CURRENT_T4:
 		c.currentL2 = floatValue
-	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L3:
+	case easee.IN_CURRENT_T5:
 		c.currentL3 = floatValue
 	case easee.CHARGER_OP_MODE:
 		switch intValue {
