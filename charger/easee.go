@@ -41,7 +41,6 @@ import (
 type Easee struct {
 	*request.Helper
 	charger        string
-	site, circuit  int
 	updated        time.Time
 	chargeStatus   api.ChargeStatus
 	cache          time.Duration
@@ -85,7 +84,6 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	c := &Easee{
 		Helper:  request.NewHelper(log),
 		charger: charger,
-		circuit: circuit,
 		cache:   cache,
 		log:     log,
 	}
@@ -117,23 +115,6 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		}
 
 		c.charger = chargers[0].ID
-	}
-
-	// find site
-	site, err := c.chargerDetails(c.charger)
-	if err != nil {
-		return c, err
-	}
-
-	c.site = site.ID
-
-	// find circuit
-	if circuit == 0 {
-		if len(site.Circuits) != 1 {
-			return c, fmt.Errorf("cannot determine circuit id, found: %v", funk.Map(site.Circuits, func(c easee.Circuit) int { return c.ID }))
-		}
-
-		c.circuit = site.Circuits[0].ID
 	}
 
 	// subscribe for updates
@@ -268,17 +249,6 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 
 func (c *Easee) chargers() (res []easee.Charger, err error) {
 	uri := fmt.Sprintf("%s/chargers", easee.API)
-
-	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err == nil {
-		err = c.DoJSON(req, &res)
-	}
-
-	return res, err
-}
-
-func (c *Easee) chargerDetails(charger string) (res easee.Site, err error) {
-	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
 
 	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
 	if err == nil {
