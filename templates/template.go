@@ -38,10 +38,8 @@ func (t *Template) Defaults() map[string]interface{} {
 	for _, p := range t.Params {
 		if p.Test != "" {
 			values[p.Name] = p.Test
-		} else if p.Default != "" {
-			values[p.Name] = p.Default
 		} else {
-			values[p.Name] = ""
+			values[p.Name] = p.Default // may be empty
 		}
 	}
 
