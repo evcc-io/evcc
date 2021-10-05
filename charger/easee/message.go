@@ -122,22 +122,22 @@ type ChargerStatus struct {
 
 // ChargerSettings is the charger settings type
 type ChargerSettings struct {
-	Enabled                      *bool `json:"enabled,omitempty"`
-	EnableIdleCurrent            *bool `json:"enableIdleCurrent,omitempty"`
-	LimitToSinglePhaseCharging   *bool `json:"limitToSinglePhaseCharging,omitempty"`
-	LockCablePermanently         *bool `json:"lockCablePermanently,omitempty"`
-	SmartButtonEnabled           *bool `json:"smartButtonEnabled,omitempty"`
-	PhaseMode                    *int  `json:"phaseMode,omitempty"`
-	SmartCharging                *bool `json:"smartCharging,omitempty"`
-	LocalPreAuthorizeEnabled     *bool `json:"localPreAuthorizeEnabled,omitempty"`
-	LocalAuthorizeOfflineEnabled *bool `json:"localAuthorizeOfflineEnabled,omitempty"`
-	AllowOfflineTxForUnknownID   *bool `json:"allowOfflineTxForUnknownId,omitempty"`
-	OfflineChargingMode          *int  `json:"offlineChargingMode,omitempty"`
-	AuthorizationRequired        *bool `json:"authorizationRequired,omitempty"`
-	RemoteStartRequired          *bool `json:"remoteStartRequired,omitempty"`
-	LedStripBrightness           *int  `json:"ledStripBrightness,omitempty"`
-	MaxChargerCurrent            *int  `json:"maxChargerCurrent,omitempty"`
-	DynamicChargerCurrent        *int  `json:"dynamicChargerCurrent,omitempty"`
+	Enabled                      *bool    `json:"enabled,omitempty"`
+	EnableIdleCurrent            *bool    `json:"enableIdleCurrent,omitempty"`
+	LimitToSinglePhaseCharging   *bool    `json:"limitToSinglePhaseCharging,omitempty"`
+	LockCablePermanently         *bool    `json:"lockCablePermanently,omitempty"`
+	SmartButtonEnabled           *bool    `json:"smartButtonEnabled,omitempty"`
+	PhaseMode                    *int     `json:"phaseMode,omitempty"`
+	SmartCharging                *bool    `json:"smartCharging,omitempty"`
+	LocalPreAuthorizeEnabled     *bool    `json:"localPreAuthorizeEnabled,omitempty"`
+	LocalAuthorizeOfflineEnabled *bool    `json:"localAuthorizeOfflineEnabled,omitempty"`
+	AllowOfflineTxForUnknownID   *bool    `json:"allowOfflineTxForUnknownId,omitempty"`
+	OfflineChargingMode          *int     `json:"offlineChargingMode,omitempty"`
+	AuthorizationRequired        *bool    `json:"authorizationRequired,omitempty"`
+	RemoteStartRequired          *bool    `json:"remoteStartRequired,omitempty"`
+	LedStripBrightness           *int     `json:"ledStripBrightness,omitempty"`
+	MaxChargerCurrent            *int     `json:"maxChargerCurrent,omitempty"`
+	DynamicChargerCurrent        *float64 `json:"dynamicChargerCurrent,omitempty"`
 }
 
 // CircuitSettings is the circuit settings type
