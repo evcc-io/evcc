@@ -40,7 +40,6 @@ type Site struct {
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
-	batteryMeter  api.Meter   // Battery charging meter
 	batteryMeters []api.Meter // Battery charging meters
 
 	tariff     api.Tariff   // Tariff
@@ -346,26 +345,32 @@ func (site *Site) sitePower() (float64, error) {
 
 	// honour battery priority
 	batteryPower := site.batteryPower
-	if battery, ok := site.batteryMeter.(api.Battery); ok {
-		soc, err := battery.SoC()
-		if err != nil {
-			site.log.ERROR.Printf("updating battery soc: %v", err)
-		} else {
-			site.log.DEBUG.Printf("battery soc: %.0f%%", soc)
-			site.publish("batterySoC", math.Trunc(soc))
 
-			site.Lock()
-			defer site.Unlock()
-
-			// if battery is charging below prioritySoC give it priority
-			if soc < site.PrioritySoC && batteryPower < 0 {
-				site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", soc)
-				batteryPower = 0
+	if len(site.batteryMeters) > 0 {
+		var socs float64
+		for id, battery := range site.batteryMeters {
+			soc, err := battery.(api.Battery).SoC()
+			if err != nil {
+				err = fmt.Errorf("updating battery soc %d: %v", id, err)
+				site.log.ERROR.Println(err)
+			} else {
+				site.log.DEBUG.Printf("battery soc %d: %.0f%%", id, soc)
+				socs += soc / float64(len(site.batteryMeters))
 			}
-
-			// if battery is discharging above bufferSoC ignore it
-			site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && soc > site.BufferSoC
 		}
+		site.publish("batterySoC", math.Trunc(socs))
+
+		site.Lock()
+		defer site.Unlock()
+
+		// if battery is charging below prioritySoC give it priority
+		if socs < site.PrioritySoC && batteryPower < 0 {
+			site.log.DEBUG.Printf("giving priority to battery charging at soc: %.0f", socs)
+			batteryPower = 0
+		}
+
+		// if battery is discharging above bufferSoC ignore it
+		site.batteryBuffered = batteryPower > 0 && site.BufferSoC > 0 && socs > site.BufferSoC
 	}
 
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
