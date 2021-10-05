@@ -17,40 +17,50 @@ func main() {
 			panic(err)
 		}
 
-		for _, tmpl := range templates.ByClass(class) {
-			usages := tmpl.Usages()
+		if err := generateClass(class); err != nil {
+			panic(err)
+		}
+	}
+}
 
-			if len(usages) == 0 {
-				b, err := tmpl.RenderResult(nil)
-				if err != nil {
-					println(string(b))
-					panic(err)
-				}
+func generateClass(class string) error {
+	for _, tmpl := range templates.ByClass(class) {
+		usages := tmpl.Usages()
 
-				filename := fmt.Sprintf("%s/%s/%s.yaml", basePath, class, tmpl.Type)
-				if err := os.WriteFile(filename, b, 0644); err != nil {
-					panic(err)
-				}
+		fmt.Println(tmpl.Type)
+
+		if len(usages) == 0 {
+			b, err := tmpl.RenderResult(nil)
+			if err != nil {
+				println(string(b))
+				return err
 			}
 
-			// render all usages
-			for _, usage := range usages {
-				b, err := tmpl.RenderResult(map[string]interface{}{
-					"usage": usage,
-				})
+			filename := fmt.Sprintf("%s/%s/%s.yaml", basePath, class, tmpl.Type)
+			if err := os.WriteFile(filename, b, 0644); err != nil {
+				return err
+			}
+		}
 
-				if err != nil {
-					println(string(b))
-					panic(err)
-				}
+		// render all usages
+		for _, usage := range usages {
+			b, err := tmpl.RenderResult(map[string]interface{}{
+				"usage": usage,
+			})
 
-				filename := fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Type, usage)
-				if err := os.WriteFile(filename, b, 0644); err != nil {
-					panic(err)
-				}
+			if err != nil {
+				println(string(b))
+				return err
+			}
+
+			filename := fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Type, usage)
+			if err := os.WriteFile(filename, b, 0644); err != nil {
+				return err
 			}
 		}
 	}
+
+	return nil
 }
 
 func clearDir(dir string) error {
@@ -58,10 +68,12 @@ func clearDir(dir string) error {
 	if err != nil {
 		return err
 	}
-	for _, entery := range names {
-		if err := os.RemoveAll(path.Join([]string{dir, entery.Name()}...)); err != nil {
+
+	for _, entry := range names {
+		if err := os.RemoveAll(path.Join([]string{dir, entry.Name()}...)); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

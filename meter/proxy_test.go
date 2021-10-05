@@ -9,7 +9,7 @@ import (
 
 func TestProxies(t *testing.T) {
 	acceptable := []string{
-		`parsing "<no value>": invalid syntax`,
+		// `parsing "<no value>": invalid syntax`,
 	}
 
 	for _, tmpl := range templates.ByClass(templates.Meter) {

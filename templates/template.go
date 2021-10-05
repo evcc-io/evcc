@@ -22,6 +22,7 @@ const (
 type Param struct {
 	Name    string
 	Default string
+	Test    string
 	Hint    string
 	Choice  []string
 	Usages  []string
@@ -36,7 +37,9 @@ type Template struct {
 func (t *Template) Defaults() map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
-		if p.Default != "" {
+		if p.Test != "" {
+			values[p.Name] = p.Test
+		} else if p.Default != "" {
 			values[p.Name] = p.Default
 		}
 	}
