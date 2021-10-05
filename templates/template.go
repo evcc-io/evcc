@@ -3,14 +3,10 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"errors"
-	"regexp"
-	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
-	"github.com/thoas/go-funk"
 )
 
 const (
@@ -19,21 +15,24 @@ const (
 	ModbusMagicComment = "# ::modbus-setup::"
 )
 
-type Param struct {
-	Name    string
-	Default string
-	Test    string
-	Hint    string
-	Choice  []string
-	Usages  []string
-}
-
+// Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	Type   string
 	Params []Param
 	Render string // rendering template
 }
 
+// Param is a proxy template parameter
+type Param struct {
+	Name    string
+	Default string // cli configuration default value
+	Hint    string // cli configuration hint
+	Test    string // testing default value
+	Choice  []string
+	Usages  []string
+}
+
+// Defaults returns a map of default values for the template
 func (t *Template) Defaults() map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
@@ -41,12 +40,15 @@ func (t *Template) Defaults() map[string]interface{} {
 			values[p.Name] = p.Test
 		} else if p.Default != "" {
 			values[p.Name] = p.Default
+		} else {
+			values[p.Name] = ""
 		}
 	}
 
 	return values
 }
 
+// Usages returns the list of supported usages
 func (t *Template) Usages() []string {
 	for _, p := range t.Params {
 		if p.Name == ParamUsage {
@@ -70,6 +72,7 @@ func (t *Template) ModbusChoices() []string {
 //go:embed proxy.tpl
 var proxyTmpl string
 
+// RenderProxy renders the proxy template for inclusion in documentation
 func (t *Template) RenderProxy() ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
@@ -85,95 +88,7 @@ func (t *Template) RenderProxy() ([]byte, error) {
 	return bytes.TrimSpace(out.Bytes()), err
 }
 
-//go:embed modbus.tpl
-var modbusTmpl string
-
-func (t Template) RenderModbusTemplate(values map[string]interface{}, indentlength int) (string, error) {
-	// indent the template
-	lines := strings.Split(modbusTmpl, "\n")
-	for i, line := range lines {
-		lines[i] = strings.Repeat(" ", indentlength) + line
-	}
-	indentedTemplate := strings.Join(lines, "\n")
-
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(indentedTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	// either modbus param is defined or defaults for all modbus choices need to be set
-	hasModbusValues := false
-	for k, v := range values {
-		if k != ParamModbus {
-			continue
-		}
-
-		hasModbusValues = true
-		switch v.(string) {
-		case "rs485serial":
-			values["modbusrs485serial"] = true
-		case "rs485tcpip":
-			values["modbusrs485tcpip"] = true
-		case "tcpip":
-			values["modbustcpip"] = true
-		default:
-			return "", errors.New("Invalid modbus value: " + v.(string))
-		}
-		break
-	}
-
-	// modbus defaults
-	if !hasModbusValues {
-		values["id"] = 1
-		values["host"] = "192.0.2.2"
-		values["port"] = 502
-		values["device"] = "/dev/ttyUSB0"
-		values["baudrate"] = 9600
-		values["comset"] = "8N1"
-		for _, p := range t.Params {
-			if p.Name != ParamModbus {
-				continue
-			}
-			for _, choice := range p.Choice {
-				if !funk.ContainsString([]string{"rs485", "tcpip"}, choice) {
-					return "", errors.New("Invalid modbus choice: " + choice)
-				}
-			}
-
-			if funk.ContainsString(p.Choice, "rs485") {
-				values["modbusrs485serial"] = true
-				values["modbusrs485tcpip"] = true
-			}
-			if funk.ContainsString(p.Choice, "tcpip") {
-				values["modbustcpip"] = true
-			}
-		}
-	}
-
-	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, values)
-
-	return out.String(), err
-}
-
-func (t *Template) RenderModbus(values map[string]interface{}) error {
-	// search for ModbusMagicComment and replace it with the correct indentation
-	r := regexp.MustCompile(`.*` + ModbusMagicComment + `.*`)
-	matches := r.FindAllString(t.Render, -1)
-	for _, match := range matches {
-		indentation := strings.Repeat(" ", strings.Index(match, ModbusMagicComment))
-		result, err := t.RenderModbusTemplate(values, len(indentation))
-		if err != nil {
-			return err
-		}
-		if result != "" {
-			t.Render = strings.ReplaceAll(t.Render, match, result)
-		}
-	}
-
-	return nil
-}
-
+// RenderResult renders the result template to instantiate the proxy
 func (t *Template) RenderResult(other map[string]interface{}) ([]byte, error) {
 	values := t.Defaults()
 	if err := util.DecodeOther(other, &values); err != nil {
