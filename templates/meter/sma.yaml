@@ -5,7 +5,6 @@ params:
   choice: ["grid", "pv", "battery"]
 - name: host
   default: 192.0.2.2
-  hint: ip address or host name
 render: |
   type: sma
   uri: {{ .host }}
