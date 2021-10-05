@@ -5,10 +5,8 @@ params:
   choice: [ "grid", "pv", "battery" ]
 - name: host
   default: 192.0.2.2
-  hint: ip address or host name
 - name: id
   default: 1
-  hint: modbus id
 render: |
   type: modbus
   model: sunspec
