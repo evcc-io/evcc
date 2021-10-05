@@ -10,6 +10,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
+	"github.com/thoas/go-funk"
 )
 
 const (
@@ -131,16 +132,16 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 				continue
 			}
 			for _, choice := range p.Choice {
-				if !t.contains([]string{"rs485", "tcpip"}, choice) {
+				if !funk.ContainsString([]string{"rs485", "tcpip"}, choice) {
 					return "", errors.New("Invalid modbus choice: " + choice)
 				}
 			}
 
-			if t.contains(p.Choice, "rs485") {
+			if funk.ContainsString(p.Choice, "rs485") {
 				values["modbusrs485serial"] = true
 				values["modbusrs485tcpip"] = true
 			}
-			if t.contains(p.Choice, "tcpip") {
+			if funk.ContainsString(p.Choice, "tcpip") {
 				values["modbustcpip"] = true
 			}
 		}
@@ -168,15 +169,6 @@ func (t *Template) RenderModbus(values map[string]interface{}) error {
 	}
 
 	return nil
-}
-
-func (t Template) contains(slice []string, element string) bool {
-	for _, value := range slice {
-		if value == element {
-			return true
-		}
-	}
-	return false
 }
 
 func (t *Template) RenderResult(other map[string]interface{}) ([]byte, error) {
