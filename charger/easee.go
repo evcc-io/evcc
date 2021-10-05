@@ -141,7 +141,7 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 
 	client, err := signalr.NewClient(context.Background(), conn,
 		signalr.Receiver(c),
-		// signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
+		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
 	if err != nil {
 		return err
