@@ -320,10 +320,10 @@ func (c *Easee) Enable(enable bool) error {
 
 		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 		resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-		if err == nil {
-			resp.Body.Close()
+		if err != nil {
+			return err
 		}
-		return err
+		resp.Body.Close()
 	}
 
 	// resume/stop charger
