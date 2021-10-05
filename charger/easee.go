@@ -49,10 +49,8 @@ type Easee struct {
 	mux            sync.Mutex
 	chargerEnabled bool
 	enabledStatus  bool
-	current, currentPower, sessionEnergy,
-	circuitTotalPhaseConductorCurrentL1,
-	circuitTotalPhaseConductorCurrentL2,
-	circuitTotalPhaseConductorCurrentL3 float64
+	currentPower, sessionEnergy,
+	currentL1, currentL2, currentL3 float64
 }
 
 func init() {
@@ -229,11 +227,11 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	case easee.SESSION_ENERGY:
 		c.sessionEnergy = floatValue
 	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L1:
-		c.circuitTotalPhaseConductorCurrentL1 = floatValue
+		c.currentL1 = floatValue
 	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L2:
-		c.circuitTotalPhaseConductorCurrentL2 = floatValue
+		c.currentL2 = floatValue
 	case easee.CIRCUIT_TOTAL_PHASE_CONDUCTOR_CURRENT_L3:
-		c.circuitTotalPhaseConductorCurrentL3 = floatValue
+		c.currentL3 = floatValue
 	case easee.CHARGER_OP_MODE:
 		switch intValue {
 		case easee.ModeDisconnected:
@@ -357,7 +355,6 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
 		resp.Body.Close()
-		c.current = current
 	}
 
 	return err
@@ -411,8 +408,5 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.circuitTotalPhaseConductorCurrentL1,
-		c.circuitTotalPhaseConductorCurrentL2,
-		c.circuitTotalPhaseConductorCurrentL3,
-		nil
+	return c.currentL1, c.currentL2, c.currentL3, nil
 }
