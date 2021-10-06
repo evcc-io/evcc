@@ -31,9 +31,20 @@ func init() {
 		for _, usage := range tmpl.Usages() {
 			println("--", usage, "--")
 
-			b, err := tmpl.RenderResult(map[string]interface{}{
+			modbusChoices := tmpl.ModbusChoices()
+			values := map[string]interface{}{
 				"usage": usage,
-			})
+			}
+			for _, modbusChoice := range modbusChoices {
+				switch modbusChoice {
+				case "rs485":
+					values["modbusrs485serial"] = true
+					values["modbusrs485tcpip"] = true
+				case "tcpip":
+					values["modbustcpip"] = true
+				}
+			}
+			b, err := tmpl.RenderResult(values)
 			if err != nil {
 				panic(err)
 			}

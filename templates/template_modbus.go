@@ -30,23 +30,25 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 
 	// either modbus param is defined or defaults for all modbus choices need to be set
 	hasModbusValues := false
-	for k, v := range values {
-		if k != ParamModbus {
-			continue
-		}
+	if values["modbusrs485serial"] == nil && values["modbusrs485tcpip"] == nil && values["modbustcpip"] == nil {
+		for k, v := range values {
+			if k != ParamModbus {
+				continue
+			}
 
-		hasModbusValues = true
-		switch v.(string) {
-		case "rs485serial":
-			values["modbusrs485serial"] = true
-		case "rs485tcpip":
-			values["modbusrs485tcpip"] = true
-		case "tcpip":
-			values["modbustcpip"] = true
-		default:
-			return "", errors.New("Invalid modbus value: " + v.(string))
+			hasModbusValues = true
+			switch v.(string) {
+			case "rs485serial":
+				values["modbusrs485serial"] = true
+			case "rs485tcpip":
+				values["modbusrs485tcpip"] = true
+			case "tcpip":
+				values["modbustcpip"] = true
+			default:
+				return "", errors.New("Invalid modbus value: " + v.(string))
+			}
+			break
 		}
-		break
 	}
 
 	// modbus defaults

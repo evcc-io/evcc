@@ -26,6 +26,7 @@ func main() {
 func generateClass(class string) error {
 	for _, tmpl := range templates.ByClass(class) {
 		usages := tmpl.Usages()
+		modbusChoices := tmpl.ModbusChoices()
 
 		fmt.Println(tmpl.Type)
 
@@ -44,9 +45,19 @@ func generateClass(class string) error {
 
 		// render all usages
 		for _, usage := range usages {
-			b, err := tmpl.RenderResult(map[string]interface{}{
+			values := map[string]interface{}{
 				"usage": usage,
-			})
+			}
+			for _, modbusChoice := range modbusChoices {
+				switch modbusChoice {
+				case "rs485":
+					values["modbusrs485serial"] = true
+					values["modbusrs485tcpip"] = true
+				case "tcpip":
+					values["modbustcpip"] = true
+				}
+			}
+			b, err := tmpl.RenderResult(values)
 
 			if err != nil {
 				println(string(b))
