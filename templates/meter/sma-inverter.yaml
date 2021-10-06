@@ -9,6 +9,4 @@ params:
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
-  {{- if ne (len .password) 0 }}
   password: {{ .password }} # optional
-  {{- end }}
