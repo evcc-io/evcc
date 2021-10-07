@@ -47,9 +47,11 @@ func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 		return eebusConfig, fmt.Errorf("could not process generated certificate")
 	}
 
-	eebusConfig["certificate"] = map[string]interface{}{
-		"public":  pubKey,
-		"private": privKey,
+	eebusConfig = map[string]interface{}{
+		"certificate": map[string]string{
+			"public":  pubKey,
+			"private": privKey,
+		},
 	}
 
 	return eebusConfig, nil

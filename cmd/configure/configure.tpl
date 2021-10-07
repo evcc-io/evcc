@@ -54,3 +54,8 @@ site:
 {{- if .Site.Battery }}
     battery: {{ .Site.Battery }}
 {{- end }}
+{{- if ne (len .EEBUS) 0 }}
+
+eebus:
+{{ .EEBUS | indent 2 }}
+{{- end }}

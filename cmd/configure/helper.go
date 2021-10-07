@@ -80,7 +80,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string) (device, err
 
 		// check if we need to setup an EEBUS hems
 		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Type == "eebus" {
-			if c.configuration.EEBUS == nil {
+			if c.configuration.EEBUS == "" {
 				eebusConfig, err := c.eebusCertificate()
 
 				if err != nil {
@@ -92,7 +92,11 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string) (device, err
 					return device, err
 				}
 
-				c.configuration.EEBUS = eebusConfig
+				eebusYaml, err := yaml.Marshal(eebusConfig)
+				if err != nil {
+					return device, err
+				}
+				c.configuration.EEBUS = string(eebusYaml)
 			}
 
 			fmt.Println()

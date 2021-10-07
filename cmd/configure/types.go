@@ -112,5 +112,5 @@ type config struct {
 		PVs     []string
 		Battery string
 	}
-	EEBUS map[string]interface{}
+	EEBUS string
 }
