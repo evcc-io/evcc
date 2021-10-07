@@ -3,7 +3,6 @@ package core
 import (
 	"errors"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/site"
 )
 
@@ -21,7 +20,7 @@ func (site *Site) SetPrioritySoC(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	if _, ok := site.batteryMeter.(api.Battery); !ok {
+	if len(site.batteryMeters) == 0 {
 		return errors.New("battery not configured")
 	}
 
