@@ -1,5 +1,5 @@
 type: fronius-gen24
-name: Fronius Symo GEN24 Plus
+description: Fronius Symo GEN24 Plus
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]

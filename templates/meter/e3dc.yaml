@@ -1,5 +1,5 @@
 type: e3dc
-name: E3DC
+description: E3DC
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]

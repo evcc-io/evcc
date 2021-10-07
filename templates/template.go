@@ -17,9 +17,10 @@ const (
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
-	Type   string
-	Params []Param
-	Render string // rendering template
+	Type        string
+	Description string // user friendly description of the device this template describes
+	Params      []Param
+	Render      string // rendering template
 }
 
 // Param is a proxy template parameter
@@ -28,6 +29,7 @@ type Param struct {
 	Default string // cli configuration default value
 	Hint    string // cli configuration hint
 	Test    string // testing default value
+	Value   string // user provided value via cli configuration
 	Choice  []string
 	Usages  []string
 }
@@ -72,9 +74,21 @@ var proxyTmpl string
 
 // RenderProxy renders the proxy template for inclusion in documentation
 func (t *Template) RenderProxy() ([]byte, error) {
+	return t.RenderProxyWithValues(nil)
+}
+
+func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
+	}
+
+	for index, p := range t.Params {
+		for k, v := range values {
+			if p.Name == k {
+				t.Params[index].Value = v.(string)
+			}
+		}
 	}
 
 	out := new(bytes.Buffer)

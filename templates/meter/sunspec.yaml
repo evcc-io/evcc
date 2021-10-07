@@ -1,5 +1,5 @@
 type: sunspec
-name: SunSpec compliant inverter
+description: SunSpec compliant inverter
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]

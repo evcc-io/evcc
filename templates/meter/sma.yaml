@@ -1,5 +1,5 @@
 type: sma-meter
-name: SMA Sunny Home Manager 2.0 / Energy Meter
+description: SMA Sunny Home Manager 2.0 / Energy Meter
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]

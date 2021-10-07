@@ -1,5 +1,5 @@
 type: sma-inverter
-name: SMA Speedwire Inverter
+description: SMA Speedwire Inverter
 params:
 - name: usage
   choice: ["pv", "battery"]

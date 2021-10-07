@@ -1,5 +1,5 @@
 type: solarlog
-name: Solarlog
+description: Solarlog
 params:
 - name: usage
   choice: [ "grid", "pv" ]
