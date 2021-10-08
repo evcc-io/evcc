@@ -1,4 +1,4 @@
-package config
+package builtin
 
 type labelAndUnit struct{ label, unit string }
 
