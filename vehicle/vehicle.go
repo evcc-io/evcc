@@ -9,6 +9,22 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+type defaultConfig struct {
+	Title      string
+	Identifier string
+	Capacity   int64
+	User       string `validate:"required"`
+	Password   string `validate:"required" ui:",mask"`
+	VIN        string
+	Cache      time.Duration
+}
+
+func configDefaults() defaultConfig {
+	return defaultConfig{
+		Cache: interval,
+	}
+}
+
 type embed struct {
 	Title_      string `mapstructure:"title"`
 	Capacity_   int64  `mapstructure:"capacity"`
