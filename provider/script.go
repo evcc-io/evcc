@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
 )
@@ -27,6 +29,7 @@ type Script struct {
 	err     error
 	re      *regexp.Regexp
 	jq      *gojq.Query
+	scale   float64
 }
 
 func init() {
@@ -41,24 +44,27 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		Cache   time.Duration
 		Regex   string
 		Jq      string
+		Scale   float64
 	}{
-		Timeout: 5 * time.Second,
+		Timeout: request.Timeout,
+		Scale:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Regex, cc.Jq, cc.Cache)
+	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Regex, cc.Jq, cc.Scale, cc.Cache)
 }
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, regex, jq string, cache time.Duration) (*Script, error) {
+func NewScriptProvider(script string, timeout time.Duration, regex, jq string, scale float64, cache time.Duration) (*Script, error) {
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
+		scale:   scale,
 		cache:   cache,
 	}
 
@@ -139,20 +145,6 @@ func (e *Script) StringGetter() func() (string, error) {
 	}
 }
 
-// IntGetter parses int64 from exec result
-func (e *Script) IntGetter() func() (int64, error) {
-	g := e.StringGetter()
-
-	return func() (int64, error) {
-		s, err := g()
-		if err != nil {
-			return 0, err
-		}
-
-		return strconv.ParseInt(s, 10, 64)
-	}
-}
-
 // FloatGetter parses float from exec result
 func (e *Script) FloatGetter() func() (float64, error) {
 	g := e.StringGetter()
@@ -163,7 +155,22 @@ func (e *Script) FloatGetter() func() (float64, error) {
 			return 0, err
 		}
 
-		return strconv.ParseFloat(s, 64)
+		f, err := strconv.ParseFloat(s, 64)
+		if err == nil {
+			f *= e.scale
+		}
+
+		return f, err
+	}
+}
+
+// IntGetter parses int64 from exec result
+func (e *Script) IntGetter() func() (int64, error) {
+	g := e.FloatGetter()
+
+	return func() (int64, error) {
+		f, err := g()
+		return int64(math.Round(f)), err
 	}
 }
 

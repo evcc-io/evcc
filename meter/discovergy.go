@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/thoas/go-funk"
 )
@@ -39,23 +40,11 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	log := util.NewLogger("discgy")
-
-	headers := make(map[string]string)
-	if err := provider.AuthHeaders(log, provider.Auth{
-		Type:     "Basic",
-		User:     cc.User,
-		Password: cc.Password,
-	}, headers); err != nil {
-		return nil, err
-	}
-
-	req, err := request.New(http.MethodGet, fmt.Sprintf("%s/meters", discovergyAPI), nil, headers)
-	if err != nil {
-		return nil, err
-	}
+	client := request.NewHelper(log)
+	client.Transport = basicauth.NewTransport(cc.User, cc.Password, client.Transport)
 
 	var meters []discovergyMeter
-	if err := request.NewHelper(log).DoJSON(req, &meters); err != nil {
+	if err := client.GetJSON(fmt.Sprintf("%s/meters", discovergyAPI), &meters); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +67,10 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
-	power, err := provider.NewHTTP(log, http.MethodGet, uri, headers, "", false, "", ".values.power", 0.001*cc.Scale, 0)
+	power, err := provider.NewHTTP(log, http.MethodGet, uri, nil, "", false, "", ".values.power", 0.001*cc.Scale, 0)
+	if err == nil {
+		_, err = power.WithAuth("basic", cc.User, cc.Password)
+	}
 	if err != nil {
 		return nil, err
 	}

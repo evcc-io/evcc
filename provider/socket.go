@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/gorilla/websocket"
@@ -69,9 +70,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if err := AuthHeaders(log, cc.Auth, p.headers); err != nil {
-			return nil, fmt.Errorf("socket auth: %w", err)
-		}
+		p.headers["Authorization"] = basicauth.Header(cc.Auth.User, cc.Auth.Password)
 	}
 
 	// ignore the self signed certificate
@@ -99,8 +98,13 @@ func (p *Socket) listen() {
 		headers.Set(k, v)
 	}
 
+	dialer := &websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: request.Timeout,
+	}
+
 	for {
-		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
+		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)

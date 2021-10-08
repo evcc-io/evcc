@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
@@ -11,9 +10,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
@@ -22,9 +23,9 @@ type HTTP struct {
 	url, method string
 	headers     map[string]string
 	body        string
-	scale       float64
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	scale       float64
 	cache       time.Duration
 	updated     time.Time
 	val         []byte // Cached http response value
@@ -38,17 +39,6 @@ func init() {
 // Auth is the authorization config
 type Auth struct {
 	Type, User, Password string
-}
-
-// AuthHeaders creates authorization headers from config
-func AuthHeaders(log *util.Logger, auth Auth, headers map[string]string) error {
-	if strings.ToLower(auth.Type) != "basic" {
-		return fmt.Errorf("unsupported auth type: %s", auth.Type)
-	}
-
-	basicAuth := auth.User + ":" + auth.Password
-	headers["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth))
-	return nil
 }
 
 // NewHTTPProviderFromConfig creates a HTTP provider
@@ -66,6 +56,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
+		Scale:   1,
 		Timeout: request.Timeout,
 	}
 
@@ -74,13 +65,6 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 	}
 
 	log := util.NewLogger("http")
-
-	// handle basic auth
-	if cc.Auth.Type != "" {
-		if err := AuthHeaders(log, cc.Auth, cc.Headers); err != nil {
-			return nil, fmt.Errorf("http auth: %w", err)
-		}
-	}
 
 	http, err := NewHTTP(log,
 		cc.Method,
@@ -93,8 +77,9 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		cc.Scale,
 		cc.Cache,
 	)
-	if err != nil {
-		return nil, err
+
+	if err == nil && cc.Auth.Type != "" {
+		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
 	}
 
 	if err == nil {
@@ -147,6 +132,20 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 	return p, nil
 }
 
+// WithAuth adds authorized transport
+func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
+	switch strings.ToLower(typ) {
+	case "basic":
+		p.Client.Transport = basicauth.NewTransport(user, password, p.Client.Transport)
+	case "digest":
+		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
+	default:
+		return nil, fmt.Errorf("unknown auth type '%s'", typ)
+	}
+
+	return p, nil
+}
+
 // request executes the configured request or returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
 	if time.Since(p.updated) >= p.cache {
@@ -179,7 +178,7 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		}
 
 		f, err := strconv.ParseFloat(s, 64)
-		if err == nil && p.scale != 0 {
+		if err == nil {
 			f *= p.scale
 		}
 

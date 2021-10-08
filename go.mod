@@ -16,7 +16,7 @@ require (
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8
-	github.com/evcc-io/eebus v0.0.0-20210928080925-1829ea71928f
+	github.com/evcc-io/eebus v0.0.0-20211004203943-949a5847f2ea
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
@@ -39,6 +39,7 @@ require (
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.2
 	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
+	github.com/jpfielding/go-http-digest v0.0.0-20211006141426-fbc93758452e
 	github.com/juju/ansiterm v0.0.0-20210706145210-9283cdf370b5 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
@@ -56,6 +57,7 @@ require (
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4 // indirect
+	github.com/philippseith/signalr v0.3.1-0.20210919120731-d0f92ed220f8
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
@@ -73,7 +75,7 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20210808132733-8235dc7d1327
 	gitlab.com/bboehmke/sunny v0.15.0
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
+	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/text v0.3.6
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect

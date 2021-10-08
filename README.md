@@ -601,17 +601,21 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
+Loadpoint ids for REST API are starting at `0:
+
 - `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
 - `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
+- `/api/loadpoints/<id>/mincurrent`: loadpoint minimum current (writable)
+- `/api/loadpoints/<id>/maxcurrent`: loadpoint maximum current (writable)
 - `/api/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings perform a `POST` request appending the value as path segment.
 
 ### MQTT API
 
-The MQTT API follows the REST API's structure, with loadpoint ids starting at `0`:
+The MQTT API follows the REST API's structure, with loadpoint ids starting at `1`:
 
 - `evcc`: root topic
 - `evcc/status`: status (`online`/`offline`)
@@ -623,6 +627,8 @@ The MQTT API follows the REST API's structure, with loadpoint ids starting at `0
 - `evcc/loadpoints/<id>/mode`: loadpoint charge mode (writable)
 - `evcc/loadpoints/<id>/minSoC`: loadpoint minimum SoC (writable)
 - `evcc/loadpoints/<id>/targetSoC`: loadpoint target SoC (writable)
+- `evcc/loadpoints/<id>/minCurrent`: loadpoint minimum current (writable)
+- `evcc/loadpoints/<id>/maxCurrent`: loadpoint maximum current (writable)
 - `evcc/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
 
 Note: to modify writable settings append `/set` to the topic for writing.

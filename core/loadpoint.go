@@ -33,6 +33,7 @@ const (
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
 	vehicleDetectInterval = 3 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
+	settleDuration        = 100 * time.Millisecond
 )
 
 // PollConfig defines the vehicle polling mode and interval
@@ -1334,7 +1335,12 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.publish("remoteDisabled", remoteDisabled)
 	}
 
-	if err != nil {
+	// read and publish meters after settings are applied
+	if err == nil {
+		time.Sleep(settleDuration)
+		lp.updateChargePower()
+		lp.updateChargeCurrents()
+	} else {
 		lp.log.ERROR.Println(err)
 	}
 }
