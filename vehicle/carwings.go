@@ -32,19 +32,12 @@ type CarWings struct {
 }
 
 func init() {
-	registry.Add("carwings", NewCarWingsFromConfig)
+	registry.Add("carwings", NewCarWingsFromConfig, defaults())
 }
 
 // NewCarWingsFromConfig creates a new vehicle
 func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed                       `mapstructure:",squash"`
-		User, Password, Region, VIN string
-		Cache                       time.Duration
-	}{
-		Region: carwings.RegionEurope,
-		Cache:  interval,
-	}
+	cc := defaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -81,7 +74,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		user:     cc.User,
 		password: cc.Password,
 		session: &carwings.Session{
-			Region: cc.Region,
+			Region: carwings.RegionEurope,
 			VIN:    cc.VIN,
 		},
 	}

@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -16,19 +15,13 @@ type BMW struct {
 }
 
 func init() {
-	registry.Add("bmw", NewBMWFromConfig)
-	registry.Add("mini", NewBMWFromConfig)
+	registry.Add("bmw", NewBMWFromConfig, defaults())
+	registry.Add("mini", NewBMWFromConfig, defaults())
 }
 
 // NewBMWFromConfig creates a new vehicle
 func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := defaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

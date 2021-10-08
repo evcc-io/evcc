@@ -46,7 +46,7 @@ type Tronity struct {
 }
 
 func init() {
-	registry.Add("tronity", NewTronityFromConfig)
+	registry.Add("tronity", NewTronityFromConfig, nil)
 }
 
 // NewTronityFromConfig creates a new vehicle

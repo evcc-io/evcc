@@ -38,18 +38,12 @@ type Ford struct {
 }
 
 func init() {
-	registry.Add("ford", NewFordFromConfig)
+	registry.Add("ford", NewFordFromConfig, defaults())
 }
 
 // NewFordFromConfig creates a new vehicle
 func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := defaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

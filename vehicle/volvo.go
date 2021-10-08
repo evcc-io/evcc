@@ -91,18 +91,12 @@ type Volvo struct {
 }
 
 func init() {
-	registry.Add("volvo", NewVolvoFromConfig)
+	registry.Add("volvo", NewVolvoFromConfig, defaults())
 }
 
 // NewVolvoFromConfig creates a new vehicle
 func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := defaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

@@ -110,7 +110,7 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("renault", NewRenaultFromConfig)
+	registry.Add("renault", NewRenaultFromConfig, nil)
 }
 
 // NewRenaultFromConfig creates a new vehicle

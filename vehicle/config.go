@@ -13,24 +13,29 @@ const (
 	interval = 15 * time.Minute // refresh interval when charging
 )
 
-type vehicleRegistry map[string]func(map[string]interface{}) (api.Vehicle, error)
+type vehicleRegistry map[string]*meta
 
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error)) {
+type meta struct {
+	factory func(map[string]interface{}) (api.Vehicle, error)
+	config  interface{}
+}
+
+func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error), config interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
 	}
-	r[name] = factory
+	r[name] = &meta{factory, config}
 }
 
-func (r vehicleRegistry) Get(name string) (func(map[string]interface{}) (api.Vehicle, error), error) {
-	factory, exists := r[name]
+func (r vehicleRegistry) Get(name string) (*meta, error) {
+	meta, exists := r[name]
 	if !exists {
 		return nil, fmt.Errorf("vehicle type not registered: %s", name)
 	}
-	return factory, nil
+	return meta, nil
 }
 
-var registry vehicleRegistry = make(map[string]func(map[string]interface{}) (api.Vehicle, error))
+var registry vehicleRegistry = make(map[string]*meta)
 
 // Types returns the list of vehicle types
 func Types() []string {
@@ -43,9 +48,9 @@ func Types() []string {
 
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
-	factory, err := registry.Get(strings.ToLower(typ))
+	meta, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
-		if v, err = factory(other); err != nil {
+		if v, err = meta.factory(other); err != nil {
 			err = fmt.Errorf("cannot create vehicle '%s': %w", typ, err)
 		}
 	} else {

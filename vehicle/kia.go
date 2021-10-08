@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -18,19 +17,12 @@ type Kia struct {
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig)
+	registry.Add("kia", NewKiaFromConfig, defaults())
 }
 
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed          `mapstructure:",squash"`
-		User, Password string
-		VIN            string
-		Cache          time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := defaults()
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err

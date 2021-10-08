@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -21,18 +20,12 @@ type Porsche struct {
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig)
+	registry.Add("porsche", NewPorscheFromConfig, defaults())
 }
 
 // NewPorscheFromConfig creates a new vehicle
 func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := struct {
-		embed               `mapstructure:",squash"`
-		User, Password, VIN string
-		Cache               time.Duration
-	}{
-		Cache: interval,
-	}
+	cc := defaults()
 
 	log := util.NewLogger("porsche")
 

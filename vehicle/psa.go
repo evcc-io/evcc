@@ -14,10 +14,10 @@ import (
 // https://github.com/TA2k/ioBroker.psa
 
 func init() {
-	registry.Add("citroen", NewCitroenFromConfig)
-	registry.Add("ds", NewDSFromConfig)
-	registry.Add("opel", NewOpelFromConfig)
-	registry.Add("peugeot", NewPeugeotFromConfig)
+	registry.Add("citroen", NewCitroenFromConfig, nil)
+	registry.Add("ds", NewDSFromConfig, nil)
+	registry.Add("opel", NewOpelFromConfig, nil)
+	registry.Add("peugeot", NewPeugeotFromConfig, nil)
 }
 
 // NewCitroenFromConfig creates a new vehicle
