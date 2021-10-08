@@ -13,8 +13,8 @@ type Savings struct {
 
 	startupTime            time.Time // Boot time
 	lastUpdateTime         time.Time // Time of last charged value update
-	chargedTotal           int64     // Energy charged since startup (Wh)
-	chargedSelfConsumption int64     // Self-produced energy charged since startup (Wh)
+	chargedTotal           float64   // Energy charged since startup (Wh)
+	chargedSelfConsumption float64   // Self-produced energy charged since startup (Wh)
 }
 
 // NewSite creates a Site with sane defaults
@@ -28,6 +28,10 @@ func NewSavings() *Savings {
 	return savings
 }
 
+func (s *Savings) Since() int {
+	return int(time.Since(s.startupTime).Seconds())
+}
+
 func (s *Savings) SelfPercentage() float64 {
 	if s.chargedTotal == 0 || s.chargedSelfConsumption == 0 {
 		return 0
@@ -35,12 +39,12 @@ func (s *Savings) SelfPercentage() float64 {
 	return 100 / float64(s.chargedTotal) * float64(s.chargedSelfConsumption)
 }
 
-func (s *Savings) ChargedTotal() int64 {
-	return s.chargedTotal
+func (s *Savings) ChargedTotal() int {
+	return int(s.chargedTotal)
 }
 
-func (s *Savings) ChargedSelfConsumption() int64 {
-	return s.chargedSelfConsumption
+func (s *Savings) ChargedSelfConsumption() int {
+	return int(s.chargedSelfConsumption)
 }
 
 func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, batteryPower float64) float64 {
@@ -73,9 +77,10 @@ func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float6
 	// assuming the charge power was constant over the duration -> rough estimate
 	addedEnergy := updateDuration.Hours() * chargePower
 
-	s.chargedTotal += int64(addedEnergy)
-	s.chargedSelfConsumption += int64(addedEnergy * (selfPercentage / 100))
+	s.chargedTotal += addedEnergy
+	s.chargedSelfConsumption += addedEnergy * (selfPercentage / 100)
 	s.lastUpdateTime = now
 
-	s.log.DEBUG.Printf("savings %d%% own energy, %dkWh grid import saved since %s", int(s.SelfPercentage()), int(s.chargedSelfConsumption/1000), time.Since(s.startupTime))
+	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal/1000, time.Since(s.startupTime).Round(time.Second))
+	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption/1000, s.SelfPercentage())
 }

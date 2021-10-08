@@ -3,7 +3,7 @@ export default {
   footer: {
     version: {
       version: "version",
-      availableShort: "available",
+      availableShort: "update",
       availableLong: "update available",
       modalTitle: "Update available",
       modalUpdateStarted: "Evcc will restart after the update..",
@@ -16,6 +16,10 @@ export default {
       modalDownload: "Download",
       modalUpdateStatusStart: "Update started: ",
       modalUpdateStatusFailed: "Update failed: ",
+    },
+    savings: {
+      footerShort: "{percent}%",
+      footerLong: "{percent}% solar power charged",
     },
     sponsor: {
       sponsoredShort: "thanks",

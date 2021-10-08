@@ -2,8 +2,9 @@ export default {
   header: { support: "Support" },
   footer: {
     version: {
-      version: "Version",
-      availableShort: "verfügbar",
+      versionShort: "v{installed}",
+      versionLong: "Version {installed}",
+      availableShort: "Update",
       availableLong: "Update verfügbar",
       modalTitle: "Update verfügbar",
       modalUpdateStarted: "Nach der Aktualisierung wird evcc neu gestartet.",
@@ -17,10 +18,19 @@ export default {
       modalUpdateStatusStart: "Aktualisierung gestartet: ",
       modalUpdateStatusFailed: "Aktualisierung nicht möglich: ",
     },
+    savings: {
+      footerShort: "{percent}%",
+      footerLong: "{percent}% Sonnenstrom geladen",
+      modalTitle: "{percent}% geladener Sonnenstrom",
+      modalText:
+        "<strong>{self} von {total} geladenen kWh</strong> in den {since} waren Sonnenstrom. Das entspricht einer <strong>Ersparnis von {savingEuro}</strong>.",
+      modalExplaination:
+        "Annahme: Hausstrompreis {gridPrice} ct, Einspeisevergütung {feedinPrice} ct",
+    },
     sponsor: {
       sponsoredShort: "Danke",
       sponsoredLong: "Danke {sponsor}",
-      supportProjectShort: "unterstützen",
+      supportProjectShort: "helfen",
       supportProjectLong: "Projekt unterstützen",
     },
   },

@@ -44,7 +44,7 @@
 				class="flex-grow-1 d-flex flex-column justify-content-stretch"
 			></router-view>
 		</div>
-		<Footer :version="version" :sponsor="sponsor"></Footer>
+		<Footer :version="version" :sponsor="sponsor" :savings="savings"></Footer>
 	</div>
 </template>
 
@@ -119,6 +119,14 @@ export default {
 		},
 		sponsor: function () {
 			return this.store.state.sponsor;
+		},
+		savings: function () {
+			return {
+				since: this.store.state.savingsSince,
+				chargedTotal: this.store.state.savingsChargedTotal,
+				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
+				selfPercentage: this.store.state.savingsSelfPercentage,
+			};
 		},
 	},
 	props: {

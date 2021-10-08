@@ -37,7 +37,7 @@
 								class="d-flex justify-content-end mt-3"
 								:title="fmtAbsoluteDate(msg.time)"
 							>
-								{{ fmtTimeAgo(msg.time) }}
+								{{ fmtTimeAgo(msg.time - new Date()) }}
 							</small>
 							<p class="d-flex align-items-baseline">
 								<fa-icon

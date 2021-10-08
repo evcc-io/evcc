@@ -67,7 +67,7 @@ export default {
 
 <style scoped>
 .icon {
-	color: #0fdd42;
+	color: var(--evcc-dark-green);
 	display: inline-block;
 }
 .sponsor-button {

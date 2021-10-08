@@ -342,6 +342,11 @@ func (site *Site) sitePower() (float64, error) {
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
+	site.publish("savingsChargedTotal", site.savings.ChargedTotal())
+	site.publish("savingsChargedSelfConsumption", site.savings.ChargedSelfConsumption())
+	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
+	site.publish("savingsSince", site.savings.Since())
+
 	return sitePower, nil
 }
 

@@ -7,10 +7,13 @@
 			v-if="newVersionAvailable"
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
-			<fa-icon icon="gift" class="icon me-1"></fa-icon>
-			<span class="d-none d-sm-inline"> {{ $t("footer.version.availableLong") }}: </span>
-			<span class="d-inline d-sm-none"> {{ $t("footer.version.availableShort") }}: </span>
-			{{ available }}
+			<fa-icon icon="gift" class="icon me-2"></fa-icon>v{{ installed }}
+			<span class="d-none d-xs-inline d-sm-none text-muted text-decoration-underline">
+				{{ $t("footer.version.availableShort") }}
+			</span>
+			<span class="d-none d-sm-inline text-muted text-decoration-underline">
+				{{ $t("footer.version.availableLong") }}
+			</span>
 		</button>
 		<a
 			:href="releaseNotesUrl(installed)"
@@ -18,7 +21,12 @@
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 			v-else
 		>
-			{{ $t("footer.version.version") }} {{ installed }}
+			<span class="d-inline d-xs-none d-sm-none">{{
+				$t("footer.version.versionShort", { installed })
+			}}</span>
+			<span class="d-none d-xs-inline d-sm-inline">{{
+				$t("footer.version.versionLong", { installed })
+			}}</span>
 		</a>
 
 		<div id="updateModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
@@ -147,6 +155,6 @@ export default {
 
 <style scoped>
 .icon {
-	color: #0fdd42;
+	color: var(--evcc-dark-green);
 }
 </style>

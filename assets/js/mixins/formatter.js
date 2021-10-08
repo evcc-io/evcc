@@ -87,7 +87,7 @@ export default {
         minute: "numeric",
       }).format(date);
     },
-    fmtTimeAgo: function (date) {
+    fmtTimeAgo: function (elapsed) {
       const units = {
         year: 24 * 60 * 60 * 1000 * 365,
         month: (24 * 60 * 60 * 1000 * 365) / 12,
@@ -98,7 +98,6 @@ export default {
       };
 
       const rtf = new Intl.RelativeTimeFormat("default", { numeric: "auto" });
-      const elapsed = date - new Date();
 
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)

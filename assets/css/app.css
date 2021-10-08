@@ -35,3 +35,15 @@ a {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
+.text-evcc {
+	color: var(--evcc-dark-green);
+}
+
+@media screen and (min-width: 400px) and (max-width: 574px) {
+	.d-xs-none {
+		display: none !important;
+	}
+	.d-xs-inline {
+		display: inline !important;
+	}
+}
