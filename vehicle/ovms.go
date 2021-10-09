@@ -70,7 +70,6 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		vehicleId: cc.VehicleID,
 		server:    cc.Server,
 		cache:     cc.Cache,
-		isOnline:  false,
 	}
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
@@ -122,7 +121,7 @@ func (v *Ovms) authFlow() error {
 	if err == nil {
 		resp, err = v.connectRequest()
 		if err == nil {
-			v.isOnline = (resp.NetConnected == 1)
+			v.isOnline = resp.NetConnected == 1
 		}
 	}
 	return err
