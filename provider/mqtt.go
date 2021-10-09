@@ -53,16 +53,14 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout)
+	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout).WithPayload(cc.Payload)
 
-	if cc.Payload != "" {
-		m = m.WithPayload(cc.Payload)
-	}
 	if cc.Regex != "" {
 		if m, err = m.WithRegex(cc.Regex); err != nil {
 			return nil, err
 		}
 	}
+
 	if cc.Jq != "" {
 		if m, err = m.WithJq(cc.Jq); err != nil {
 			return nil, err
