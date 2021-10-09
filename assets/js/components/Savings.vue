@@ -1,5 +1,5 @@
 <template>
-	<div v-if="selfPercentage > 1">
+	<div v-if="chargedTotal > 1000">
 		<div class="button-wrap position-absolute top-50 start-50 translate-middle">
 			<button
 				class="
@@ -52,28 +52,72 @@
 								})
 							"
 						/>
-						<div v-if="sponsor" class="d-flex justify-content-center my-4">
-							<button class="btn btn-outline-success">
-								<fa-icon :icon="['far', 'heart']" class="icon me-1"></fa-icon>
-								Weiterentwicklung untersützen
-							</button>
-						</div>
-						<div class="d-flex flex-column align-items-center my-4">
-							<button class="btn btn-success mb-2">
+						<div v-if="sponsor" class="d-flex flex-column align-items-center my-4">
+							<button
+								class="btn btn-success mb-2 confetti-button"
+								@click="surprise"
+								ref="confetti"
+							>
 								<fa-icon :icon="['fas', 'heart']" class="icon me-1"></fa-icon>
-								Danke naltatis! Lust auf Konfetti?
+
+								{{ $t("footer.savings.modalButtonConfetti", { sponsor }) }}
 							</button>
-							<a href="#" class="small text-muted text-decoration-none"
-								>...oder evcc Sticker?</a
+							<a
+								href="https://evcc.io/sticker"
+								target="_blank"
+								class="small text-muted text-decoration-none"
+								>{{ $t("footer.savings.modalSticker") }}</a
 							>
 						</div>
-						<p>
-							<small class="text-muted">{{
+						<div v-else>
+							<p>
+								{{ $t("footer.savings.modalSupportUs") }}
+							</p>
+							<div class="d-flex justify-content-center my-4">
+								<a
+									target="_blank"
+									href="https://github.com/sponsors/andig"
+									class="btn btn-outline-success"
+								>
+									<fa-icon :icon="['far', 'heart']" class="icon me-1"></fa-icon>
+									{{ $t("footer.savings.modalButtonBecomeSponsor") }}
+								</a>
+							</div>
+						</div>
+
+						<p class="small text-muted">
+							{{
 								$t("footer.savings.modalExplaination", {
 									gridPrice: gridPrice * 100,
 									feedinPrice: feedinPrice * 100,
 								})
-							}}</small>
+							}}
+							<span class="text-nowrap">
+								{{
+									$t("footer.savings.modalExplainationGrid", {
+										gridPrice: gridPrice * 100,
+									})
+								}},
+							</span>
+							<span class="text-nowrap">
+								{{
+									$t("footer.savings.modalExplainationFeedin", {
+										feedinPrice: feedinPrice * 100,
+									})
+								}}
+								<a
+									href="https://github.com/evcc-io/evcc#flexible-energy-tariffs"
+									target="_blank"
+									class="text-muted"
+									>{{ $t("footer.savings.modalExplainationAdjust") }}</a
+								>
+							</span>
+							<br />
+							{{
+								$t("footer.savings.modalExplainationSince", {
+									since: fmtTimeAgo(since * -1000),
+								})
+							}}
 						</p>
 					</div>
 				</div>
@@ -84,10 +128,11 @@
 
 <script>
 import formatter from "../mixins/formatter";
+import confetti from "../mixins/confetti";
 
 export default {
 	name: "Savings",
-	mixins: [formatter],
+	mixins: [formatter, confetti],
 	props: {
 		selfPercentage: Number,
 		since: Number,
@@ -107,6 +152,17 @@ export default {
 			return Math.round(this.selfPercentage);
 		},
 	},
-	methods: {},
+	methods: {
+		surprise() {
+			this.confetti(this.$refs.confetti, "up");
+		},
+	},
 };
 </script>
+<style scoped>
+.confetti-button {
+	/* prevent double-tap zoom */
+	touch-action: none;
+	user-select: none;
+}
+</style>

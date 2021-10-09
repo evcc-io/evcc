@@ -25,41 +25,17 @@
 </template>
 
 <script>
-import confetti from "canvas-confetti";
+import confetti from "../mixins/confetti";
 
 export default {
 	name: "sponsor",
 	props: {
 		sponsor: String,
 	},
+	mixins: [confetti],
 	methods: {
 		surprise: function () {
-			console.log(this.$refs.sponsor);
-			const { top, height, left, width } = this.$refs.sponsor.getBoundingClientRect();
-			const x = (left + width / 2) / window.innerWidth;
-			const y = (top + height / 2) / window.innerHeight;
-			const origin = { x, y };
-
-			confetti({
-				origin,
-				angle: 90 + Math.random() * 35,
-				particleCount: 75 + Math.random() * 50,
-				spread: 50 + Math.random() * 50,
-				drift: -0.5,
-				scalar: 1.3,
-				colors: [
-					"#0d6efd",
-					"#0fdd42",
-					"#408458",
-					"#4923BA",
-					"#5BC8EC",
-					"#C54482",
-					"#CC444A",
-					"#EE8437",
-					"#F7C144",
-					"#FFFD54",
-				],
-			});
+			this.confetti(this.$refs.sponsor, "upLeft");
 		},
 	},
 };

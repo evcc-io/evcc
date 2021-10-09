@@ -6,7 +6,7 @@
 				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->
 				<Sponsor :sponsor="sponsor" />
 			</div>
-			<Savings v-bind="savings" />
+			<Savings v-bind="savings" :sponsor="sponsor" />
 		</div>
 	</footer>
 </template>
