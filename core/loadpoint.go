@@ -493,6 +493,8 @@ func (lp *LoadPoint) syncCharger() {
 
 // setLimit applies charger current limits and enables/disables accordingly
 func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
+	chargeCurrent = circuit.Limit(lp, chargeCurrent, lp.enabled)
+
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
@@ -505,7 +507,9 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		if err == nil {
 			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
 			lp.chargeCurrent = chargeCurrent
+
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+			circuit.Update(lp, chargeCurrent, lp.enabled)
 		} else {
 			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
 		}
@@ -515,6 +519,13 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled && err == nil {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
+			return nil
+		}
+
+		// check if enabling is allowed
+		chargeCurrent := circuit.Limit(lp, chargeCurrent, enabled)
+		if chargeCurrent < lp.GetMinCurrent() {
+			lp.log.DEBUG.Printf("charger disabled by limiter: %.3gA < %.3gA", chargeCurrent, lp.GetMinCurrent())
 			return nil
 		}
 
@@ -532,6 +543,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			lp.guardUpdated = lp.clock.Now()
 
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
+			circuit.Update(lp, chargeCurrent, lp.enabled)
 
 			// wake up vehicle
 			if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
