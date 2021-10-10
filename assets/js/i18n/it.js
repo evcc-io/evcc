@@ -68,7 +68,7 @@ export default {
     },
     loadpointDetails: {
       power: "Potenza",
-      range: "Autonomia",
+      vehicleRange: "Autonomia",
       charged: "Ricaricato",
       duration: "Duarata",
       remaining: "Rimanenti",

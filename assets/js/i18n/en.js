@@ -88,7 +88,7 @@ export default {
     },
     loadpointDetails: {
       power: "Power",
-      range: "Range",
+      vehicleRange: "Range",
       charged: "Charged",
       duration: "Duration",
       remaining: "Remaining",

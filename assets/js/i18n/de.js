@@ -88,7 +88,7 @@ export default {
     },
     loadpointDetails: {
       power: "Leistung",
-      range: "Reichweite",
+      vehicleRange: "Reichweite",
       charged: "Geladen",
       duration: "Dauer",
       remaining: "Restzeit",

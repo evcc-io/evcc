@@ -1190,7 +1190,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
 			if rng, err := vs.Range(); err == nil {
 				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-				lp.publish("range", rng)
+				lp.publish("vehicleRange", rng)
 			}
 		}
 
@@ -1203,7 +1203,7 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		lp.publish("chargeRemainingDuration", time.Duration(-1))
 
 		// range
-		lp.publish("range", -1)
+		lp.publish("vehicleRange", -1)
 	}
 }
 

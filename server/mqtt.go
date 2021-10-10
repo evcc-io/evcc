@@ -124,6 +124,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
 
+	// remove deprecated topics
+	for id := range site.LoadPoints() {
+		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
+		for _, dep := range []string{"range", "socCharge", "vehicleSoc"} {
+			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, nil)
+		}
+	}
+
 	// publish
 	for p := range in {
 		topic := fmt.Sprintf("%s/site", m.root)

@@ -30,7 +30,7 @@ Base.args = {
   enabled: true,
   connected: true,
   charging: true,
-  vehicleSoc: 66,
+  vehicleSoC: 66,
   targetSoC: 90,
 };
 
@@ -45,6 +45,6 @@ Disabled.args = {
   enabled: true,
   connected: true,
   charging: false,
-  vehicleSoc: 66,
+  vehicleSoC: 66,
   targetSoC: 100,
 };
