@@ -15,7 +15,7 @@ import (
 
 // ID is an api.Vehicle implementation for ID cars
 type ID struct {
-	*embed
+	*Embed
 	*id.Provider // provides the api implementations
 }
 
@@ -32,7 +32,7 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &ID{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("id")

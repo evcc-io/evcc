@@ -33,7 +33,7 @@ type ovmsConnectResponse struct {
 
 // OVMS is an api.Vehicle implementation for dexters-web server requests
 type Ovms struct {
-	*embed
+	*Embed
 	*request.Helper
 	user, password, vehicleId, server string
 	chargeG                           func() (interface{}, error)
@@ -47,7 +47,7 @@ func init() {
 // NewOVMSFromConfig creates a new vehicle
 func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                             `mapstructure:",squash"`
+		Embed                             `mapstructure:",squash"`
 		User, Password, VehicleID, Server string
 		Cache                             time.Duration
 	}{
@@ -61,7 +61,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("ovms")
 
 	v := &Ovms{
-		embed:     &cc.embed,
+		Embed:     &cc.Embed,
 		Helper:    request.NewHelper(log),
 		user:      cc.User,
 		password:  cc.Password,

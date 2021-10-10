@@ -14,6 +14,10 @@ const (
 	typePlugin   = "plugin"
 	typePassword = "password"
 	typeText     = "text"
+
+	tagMapstructure = "mapstructure" // used to get external field names
+	tagUi           = "ui"           // used to get additional display properties
+	tagValidate     = "validate"     // used to get required fields information
 )
 
 // description is the Fieldmetadata container describing a single type
@@ -71,12 +75,12 @@ func enum(list []string) (enum []interface{}) {
 
 // label is the exported field label
 func label(f *structs.Field) string {
-	val := tagKey(f, "ui", "de")
+	val := tagKey(f, tagUi, "de")
 	if val == "" {
 		val = translate(f.Name())
 	}
 	if val == "" {
-		val = f.Name()
+		val = name(f)
 	}
 
 	return val
@@ -84,12 +88,19 @@ func label(f *structs.Field) string {
 
 // unit is the exported field unit
 func unit(f *structs.Field) string {
-	val := tagKey(f, "ui", "unit")
+	val := tagKey(f, tagUi, "unit")
 	if val == "" {
 		val = translateUnit(f.Name())
 	}
 
 	return val
+}
+
+func name(f *structs.Field) string {
+	if name := f.Tag(tagMapstructure); name != "" {
+		return strings.Title(name)
+	}
+	return f.Name()
 }
 
 // kind is the exported data type
@@ -103,10 +114,10 @@ func kind(f *structs.Field) string {
 	case f.Kind() == reflect.Struct && reflect.TypeOf(val).String() == "provider.Config":
 		return typePlugin
 
-	case hasTagKey(f, "ui", "mask"):
+	case hasTagKey(f, tagUi, "mask"):
 		return typePassword
 
-	case hasTagKey(f, "ui", "text"):
+	case hasTagKey(f, tagUi, "text"):
 		return typeText
 
 	default:
@@ -150,10 +161,10 @@ func Annotate(s interface{}) (ds []FieldMetadata) {
 
 		// normal fields including structs
 		d := FieldMetadata{
-			Name:     f.Name(),
+			Name:     name(f),
 			Type:     kind(f),
-			Required: hasTagKey(f, "validate", "required"),
-			Hidden:   hasTagKey(f, "ui", "hide"),
+			Required: hasTagKey(f, tagValidate, "required"),
+			Hidden:   hasTagKey(f, tagUi, "hide"),
 		}
 
 		if !d.Hidden {
@@ -162,7 +173,7 @@ func Annotate(s interface{}) (ds []FieldMetadata) {
 			d.Unit = unit(f)
 
 			// enums
-			if oneof := tagKey(f, "validate", "oneof"); oneof != "" {
+			if oneof := tagKey(f, tagValidate, "oneof"); oneof != "" {
 				d.Enum = enum(strings.Split(oneof, " "))
 			}
 		}
@@ -189,9 +200,9 @@ func Annotate(s interface{}) (ds []FieldMetadata) {
 				continue
 			}
 			d.SubType = typePlugin
-			if hasTagKey(f, "validate", "lte") {
+			if hasTagKey(f, tagValidate, "lte") {
 				var err error
-				if d.Length, err = strconv.Atoi(tagKey(f, "validate", "lte")); err != nil {
+				if d.Length, err = strconv.Atoi(tagKey(f, tagValidate, "lte")); err != nil {
 					panic(err)
 				}
 			}

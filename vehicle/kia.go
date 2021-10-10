@@ -12,7 +12,7 @@ import (
 
 // Kia is an api.Vehicle implementation
 type Kia struct {
-	*embed
+	*Embed
 	*bluelink.Provider // provides the api implementations
 }
 
@@ -74,7 +74,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Kia{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
 	}
 

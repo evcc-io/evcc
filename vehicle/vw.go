@@ -15,7 +15,7 @@ import (
 
 // VW is an api.Vehicle implementation for VW cars
 type VW struct {
-	*embed
+	*Embed
 	*vw.Provider // provides the api implementations
 }
 
@@ -32,7 +32,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &VW{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("vw")

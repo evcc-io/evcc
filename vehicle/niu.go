@@ -18,7 +18,7 @@ import (
 
 // Niu is an api.Vehicle implementation for Niu vehicles
 type Niu struct {
-	*embed
+	*Embed
 	*request.Helper
 	user, password string
 	serial         string
@@ -33,7 +33,7 @@ func init() {
 // NewFordFromConfig creates a new vehicle
 func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed                  `mapstructure:",squash"`
+		Embed                  `mapstructure:",squash"`
 		User, Password, Serial string
 		Cache                  time.Duration
 	}{
@@ -51,7 +51,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("niu")
 
 	v := &Niu{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

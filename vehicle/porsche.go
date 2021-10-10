@@ -15,7 +15,7 @@ type porscheProvider interface {
 
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
-	*embed
+	*Embed
 	porscheProvider // provides the api implementations
 }
 
@@ -53,7 +53,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Porsche{
-		embed:           &cc.embed,
+		Embed:           &cc.Embed,
 		porscheProvider: provider,
 	}
 

@@ -22,7 +22,7 @@ const (
 
 // CarWings is an api.Vehicle implementation for CarWings cars
 type CarWings struct {
-	*embed
+	*Embed
 	user, password string
 	session        *carwings.Session
 	statusG        func() (interface{}, error)
@@ -70,7 +70,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &CarWings{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		user:     cc.User,
 		password: cc.Password,
 		session: &carwings.Session{

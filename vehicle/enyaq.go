@@ -15,7 +15,7 @@ import (
 
 // Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
-	*embed
+	*Embed
 	*skoda.Provider // provides the api implementations
 }
 
@@ -32,7 +32,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Enyaq{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	var err error

@@ -10,7 +10,7 @@ import (
 
 // BMW is an api.Vehicle implementation for BMW and Mini cars
 type BMW struct {
-	*embed
+	*Embed
 	*bmw.Provider // provides the api implementations
 }
 
@@ -28,7 +28,7 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &BMW{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("bmw")

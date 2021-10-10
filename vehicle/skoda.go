@@ -15,7 +15,7 @@ import (
 
 // Skoda is an api.Vehicle implementation for Skoda cars
 type Skoda struct {
-	*embed
+	*Embed
 	*vw.Provider // provides the api implementations
 }
 
@@ -32,7 +32,7 @@ func NewSkodaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Skoda{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("skoda")

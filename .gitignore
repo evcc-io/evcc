@@ -6,6 +6,7 @@ __debug_bin
 *.json
 /*.yaml
 cfg/*.yaml
+docs/**/*.yaml
 !package*.json
 !evcc.dist.yaml
 evcc

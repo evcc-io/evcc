@@ -11,7 +11,7 @@ var translations = map[string]labelAndUnit{
 	"Scale":    {label: "Multiplikator"},
 	"Serial":   {label: "Seriennummer"},
 	"Title":    {label: "Titel"},
-	"VIN":      {label: "Fahrgestellnummer"},
+	"VIN":      {label: "Fahrzeugidentnummer"},
 	"Power":    {label: "Leistung", unit: "W"},
 	"Energy":   {label: "Energie", unit: "kWh"},
 	"SoC":      {label: "Ladezustand", unit: "%"},

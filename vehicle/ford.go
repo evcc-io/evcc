@@ -27,7 +27,7 @@ const (
 
 // Ford is an api.Vehicle implementation for Ford cars
 type Ford struct {
-	*embed
+	*Embed
 	*request.Helper
 	log                 *util.Logger
 	user, password, vin string
@@ -56,7 +56,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("ford")
 
 	v := &Ford{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		Helper:   request.NewHelper(log),
 		log:      log,
 		user:     cc.User,

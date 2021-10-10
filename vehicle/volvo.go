@@ -84,7 +84,7 @@ type volvoStatus struct {
 
 // Volvo is an api.Vehicle implementation for Volvo cars
 type Volvo struct {
-	*embed
+	*Embed
 	*request.Helper
 	user, password, vin string
 	statusG             func() (interface{}, error)
@@ -105,7 +105,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("volvo")
 
 	v := &Volvo{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

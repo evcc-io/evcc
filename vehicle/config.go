@@ -17,14 +17,14 @@ type vehicleRegistry map[string]*meta
 
 type meta struct {
 	factory func(map[string]interface{}) (api.Vehicle, error)
-	config  interface{}
+	Config  interface{}
 }
 
-func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error), config interface{}) {
+func (r vehicleRegistry) Add(name string, factory func(map[string]interface{}) (api.Vehicle, error), Config interface{}) {
 	if _, exists := r[name]; exists {
 		panic(fmt.Sprintf("cannot register duplicate vehicle type: %s", name))
 	}
-	r[name] = &meta{factory, config}
+	r[name] = &meta{factory, Config}
 }
 
 func (r vehicleRegistry) Get(name string) (*meta, error) {
@@ -36,6 +36,7 @@ func (r vehicleRegistry) Get(name string) (*meta, error) {
 }
 
 var registry vehicleRegistry = make(map[string]*meta)
+var Registry = registry
 
 // Types returns the list of vehicle types
 func Types() []string {

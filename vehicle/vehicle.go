@@ -13,7 +13,7 @@ import (
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.
 type Vehicle struct {
-	*embed
+	*Embed
 	chargeG func() (float64, error)
 	statusG func() (string, error)
 }
@@ -25,7 +25,7 @@ func init() {
 // NewConfigurableFromConfig creates a new Vehicle
 func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed    `mapstructure:",squash"`
+		Embed    `mapstructure:",squash"`
 		Charge   provider.Config
 		Status   *provider.Config
 		Range    *provider.Config
@@ -49,7 +49,7 @@ func NewConfigurableFromConfig(other map[string]interface{}) (api.Vehicle, error
 	}
 
 	v := &Vehicle{
-		embed:   &cc.embed,
+		Embed:   &cc.Embed,
 		chargeG: getter,
 	}
 

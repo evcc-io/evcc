@@ -37,7 +37,7 @@ import (
 
 // Tronity is an api.Vehicle implementation for the Tronity api
 type Tronity struct {
-	*embed
+	*Embed
 	*request.Helper
 	log   *util.Logger
 	oc    *oauth2.Config
@@ -52,7 +52,7 @@ func init() {
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed       `mapstructure:",squash"`
+		Embed       `mapstructure:",squash"`
 		Credentials ClientCredentials
 		Tokens      Tokens
 		VIN         string
@@ -83,7 +83,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Tronity{
 		log:    log,
-		embed:  &cc.embed,
+		Embed:  &cc.Embed,
 		Helper: request.NewHelper(log),
 		oc:     oc,
 	}

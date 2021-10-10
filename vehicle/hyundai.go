@@ -12,7 +12,7 @@ import (
 
 // Hyundai is an api.Vehicle implementation
 type Hyundai struct {
-	*embed
+	*Embed
 	*bluelink.Provider
 }
 
@@ -74,7 +74,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Hyundai{
-		embed:    &cc.embed,
+		Embed:    &cc.Embed,
 		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
 	}
 

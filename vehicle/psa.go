@@ -58,14 +58,14 @@ func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // PSA is an api.Vehicle implementation for PSA cars
 type PSA struct {
-	*embed
+	*Embed
 	*psa.Provider // provides the api implementations
 }
 
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		embed               `mapstructure:",squash"`
+		Embed               `mapstructure:",squash"`
 		Credentials         ClientCredentials
 		User, Password, VIN string
 		Cache               time.Duration
@@ -82,7 +82,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 	}
 
 	v := &PSA{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	identity := psa.NewIdentity(log, brand, cc.Credentials.ID, cc.Credentials.Secret)

@@ -19,7 +19,7 @@ import (
 
 // Nissan is an api.Vehicle implementation for Nissan cars
 type Nissan struct {
-	*embed
+	*Embed
 	*nissan.Provider
 }
 
@@ -36,7 +36,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Nissan{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("nissan")

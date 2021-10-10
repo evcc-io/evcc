@@ -15,7 +15,7 @@ import (
 
 // Seat is an api.Vehicle implementation for Seat cars
 type Seat struct {
-	*embed
+	*Embed
 	*vw.Provider // provides the api implementations
 }
 
@@ -32,7 +32,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Seat{
-		embed: &cc.embed,
+		Embed: &cc.Embed,
 	}
 
 	log := util.NewLogger("seat")
