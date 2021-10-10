@@ -22,32 +22,10 @@ import (
 // Assets is the embedded assets file system
 var Assets fs.FS
 
+const result = "result"
+
 type errorJSON struct {
 	Error string `json:"error"`
-}
-
-type chargeModeJSON struct {
-	Mode api.ChargeMode `json:"mode"`
-}
-
-type targetSoCJSON struct {
-	TargetSoC int `json:"targetSoC"`
-}
-
-type minSoCJSON struct {
-	MinSoC int `json:"minSoC"`
-}
-
-type minCurrentJSON struct {
-	MinCurrent float64 `json:"minCurrent"`
-}
-
-type maxCurrentJSON struct {
-	MaxCurrent float64 `json:"maxCurrent"`
-}
-
-type phasesJSON struct {
-	Phases int `json:"phases"`
 }
 
 type route struct {
@@ -163,14 +141,6 @@ func StateHandler(cache *util.Cache) http.HandlerFunc {
 	}
 }
 
-// CurrentChargeModeHandler returns current charge mode
-func CurrentChargeModeHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := chargeModeJSON{Mode: lp.GetMode()}
-		jsonResponse(w, r, res)
-	}
-}
-
 // ChargeModeHandler updates charge mode
 func ChargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -185,16 +155,7 @@ func ChargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 
 		lp.SetMode(mode)
 
-		res := chargeModeJSON{Mode: lp.GetMode()}
-		jsonResponse(w, r, res)
-	}
-}
-
-// CurrentTargetSoCHandler returns current target soc
-func CurrentTargetSoCHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := targetSoCJSON{TargetSoC: lp.GetTargetSoC()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetMode()})
 	}
 }
 
@@ -214,16 +175,7 @@ func TargetSoCHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := targetSoCJSON{TargetSoC: lp.GetTargetSoC()}
-		jsonResponse(w, r, res)
-	}
-}
-
-// CurrentMinSoCHandler returns current minimum soc
-func CurrentMinSoCHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := minSoCJSON{MinSoC: lp.GetMinSoC()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetTargetSoC()})
 	}
 }
 
@@ -243,16 +195,7 @@ func MinSoCHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := minSoCJSON{MinSoC: lp.GetMinSoC()}
-		jsonResponse(w, r, res)
-	}
-}
-
-// CurrentMinCurrentHandler returns current minimum current
-func CurrentMinCurrentHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := minCurrentJSON{MinCurrent: lp.GetMinCurrent()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetMinSoC()})
 	}
 }
 
@@ -270,16 +213,7 @@ func MinCurrentHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := minCurrentJSON{MinCurrent: lp.GetMinCurrent()}
-		jsonResponse(w, r, res)
-	}
-}
-
-// CurrentMaxCurrentHandler returns current maximum current
-func CurrentMaxCurrentHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := maxCurrentJSON{MaxCurrent: lp.GetMaxCurrent()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetMinCurrent()})
 	}
 }
 
@@ -297,16 +231,7 @@ func MaxCurrentHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := maxCurrentJSON{MaxCurrent: lp.GetMaxCurrent()}
-		jsonResponse(w, r, res)
-	}
-}
-
-// CurrentPhasesHandler returns current minimum soc
-func CurrentPhasesHandler(lp loadpoint.API) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		res := phasesJSON{Phases: lp.GetPhases()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetMaxCurrent()})
 	}
 }
 
@@ -326,8 +251,7 @@ func PhasesHandler(lp loadpoint.API) http.HandlerFunc {
 			return
 		}
 
-		res := phasesJSON{Phases: lp.GetPhases()}
-		jsonResponse(w, r, res)
+		jsonResponse(w, r, map[string]interface{}{result: lp.GetPhases()})
 	}
 }
 
@@ -465,20 +389,14 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
 
 		routes := map[string]route{
-			"getmode":         {[]string{"GET"}, "/mode", CurrentChargeModeHandler(lp)},
-			"setmode":         {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", ChargeModeHandler(lp)},
-			"gettargetsoc":    {[]string{"GET"}, "/targetsoc", CurrentTargetSoCHandler(lp)},
-			"settargetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", TargetSoCHandler(lp)},
-			"getminsoc":       {[]string{"GET"}, "/minsoc", CurrentMinSoCHandler(lp)},
-			"setminsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", MinSoCHandler(lp)},
-			"getmincurrent":   {[]string{"GET"}, "/mincurrent", CurrentMinCurrentHandler(lp)},
-			"setmincurrent":   {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", MinCurrentHandler(lp)},
-			"getmaxcurrent":   {[]string{"GET"}, "/maxcurrent", CurrentMaxCurrentHandler(lp)},
-			"setmaxcurrent":   {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", MaxCurrentHandler(lp)},
-			"getphases":       {[]string{"GET"}, "/phases", CurrentPhasesHandler(lp)},
-			"setphases":       {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", PhasesHandler(lp)},
-			"settargetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
-			"remotedemand":    {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", RemoteDemandHandler(lp)},
+			"mode":         {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", ChargeModeHandler(lp)},
+			"targetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", TargetSoCHandler(lp)},
+			"minsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", MinSoCHandler(lp)},
+			"mincurrent":   {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", MinCurrentHandler(lp)},
+			"maxcurrent":   {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", MaxCurrentHandler(lp)},
+			"phases":       {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", PhasesHandler(lp)},
+			"targetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", TargetChargeHandler(lp)},
+			"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", RemoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {
