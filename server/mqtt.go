@@ -103,7 +103,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.publish(topic, true, "online")
 
 	// site setters
-	m.Handler.Listen(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {
 			_ = site.SetPrioritySoC(float64(soc))
@@ -128,7 +128,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	for id := range site.LoadPoints() {
 		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
 		for _, dep := range []string{"range", "socCharge", "vehicleSoc"} {
-			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, nil)
+			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
 		}
 	}
 
