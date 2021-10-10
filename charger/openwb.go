@@ -63,7 +63,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	// getters
 	boolG := func(topic string) func() (bool, error) {
-		g := provider.NewMqtt(log, client, topic, 1, timeout).BoolGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).BoolGetter()
 		return func() (val bool, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
@@ -73,7 +73,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	floatG := func(topic string) func() (float64, error) {
-		g := provider.NewMqtt(log, client, topic, 1, timeout).FloatGetter()
+		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
 		return func() (val float64, err error) {
 			if val, err = g(); err == nil {
 				_, err = timer()
