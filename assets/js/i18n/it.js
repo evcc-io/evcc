@@ -31,7 +31,7 @@ export default {
   main: {
     energyflow: {
       noEnergy: "No Energyflow",
-      houseConsumption: "Consumption",
+      homePower: "Consumption",
       pvProduction: "Produzione",
       battery: "Batteria",
       batteryCharge: "Battery charge",
