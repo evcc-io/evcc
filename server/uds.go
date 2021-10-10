@@ -38,7 +38,7 @@ func HealthListener(site site.API) {
 
 	mux := http.NewServeMux()
 	httpd := http.Server{Handler: mux}
-	mux.HandleFunc("/health", HealthHandler(site))
+	mux.HandleFunc("/health", healthHandler(site))
 
 	_ = httpd.Serve(l)
 }
