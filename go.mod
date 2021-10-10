@@ -19,6 +19,7 @@ require (
 	github.com/evcc-io/eebus v0.0.0-20211004203943-949a5847f2ea
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
+	github.com/gin-gonic/gin v1.7.4 // indirect
 	github.com/go-ping/ping v0.0.0-20210506233800-ff8be3320020
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.0.2-0.20210820200834-309d612d7095
 	github.com/godbus/dbus/v5 v5.0.4
