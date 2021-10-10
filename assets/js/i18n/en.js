@@ -31,7 +31,7 @@ export default {
   main: {
     energyflow: {
       noEnergy: "No Energyflow",
-      houseConsumption: "Consumption",
+      homePower: "Consumption",
       loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       pvProduction: "Production",
       battery: "Battery",
