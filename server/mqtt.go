@@ -140,6 +140,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 		// value
 		topic += "/" + p.Key
-		m.publish(topic, false, p.Val)
+		m.publish(topic, true, p.Val)
 	}
 }
