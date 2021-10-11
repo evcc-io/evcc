@@ -1,10 +1,18 @@
 <template>
 	<div>
+		<a
+			v-if="isUnreleasedBuild"
+			:href="githubHashUrl"
+			target="_blank"
+			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
+		>
+			<span>#{{ commit }}</span>
+		</a>
 		<button
 			href="#"
 			data-bs-toggle="modal"
 			data-bs-target="#updateModal"
-			v-if="newVersionAvailable"
+			v-else-if="newVersionAvailable"
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"
 		>
 			<fa-icon icon="gift" class="icon me-2"></fa-icon>v{{ installed }}
@@ -116,6 +124,7 @@ export default {
 		installed: String,
 		available: String,
 		releaseNotes: String,
+		commit: String,
 		hasUpdater: Boolean,
 		uploadMessage: String,
 		uploadProgress: Number,
@@ -141,11 +150,19 @@ export default {
 		},
 	},
 	computed: {
+		githubHashUrl: function () {
+			return `https://github.com/evcc-io/evcc/commit/${this.commit}`;
+		},
+		isUnreleasedBuild() {
+			return (
+				this.installed == "[[.Version]]" || // go template parsed?
+				this.installed == "0.0.1-alpha" // make used?
+			);
+		},
 		newVersionAvailable: function () {
 			return (
 				this.available && // available version already computed?
-				this.installed != "[[.Version]]" && // go template parsed?
-				this.installed != "0.0.1-alpha" && // make used?
+				!this.isUnreleasedBuild &&
 				this.available != this.installed
 			);
 		},

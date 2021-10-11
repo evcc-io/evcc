@@ -63,9 +63,10 @@
 								{{ $t("footer.savings.modalButtonConfetti", { sponsor }) }}
 							</button>
 							<a
+								v-if="false"
 								href="https://evcc.io/sticker"
 								target="_blank"
-								class="small text-muted text-decoration-none"
+								class="small text-muted"
 								>{{ $t("footer.savings.modalSticker") }}</a
 							>
 						</div>

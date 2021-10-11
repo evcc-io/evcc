@@ -64,6 +64,7 @@ export default {
 			compact: false,
 			store: this.$root.$data.store,
 			installedVersion: window.evcc.version,
+			commit: window.evcc.commit,
 		};
 	},
 	methods: {
@@ -107,6 +108,7 @@ export default {
 		version: function () {
 			return {
 				installed: this.installedVersion,
+				commit: this.commit,
 				available: this.store.state.availableVersion,
 				releaseNotes: this.store.state.releaseNotes,
 				hasUpdater: this.store.state.hasUpdater,
