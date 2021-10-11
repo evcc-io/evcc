@@ -30,9 +30,10 @@ export default {
       modalButtonConfetti: "Danke {sponsor}! Lust auf Konfetti?",
       modalSticker: "...oder evcc Sticker?",
       modalExplaination: "Annahmen:",
-      modalExplainationGrid: "Netzstrom {gridPrice} ct (fest)",
-      modalExplainationFeedin: "Einspeisevergütung {feedinPrice} ct",
-      modalExplainationAdjust: "anpassen",
+      modalExplainationGrid: "Strompreis {gridPrice}ct (fest)",
+      modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
+      modalExplainationAdjust: "Tarifdaten anpassen",
+      modalExplainationCalculation: "Berechnungsmethode",
       modalExplainationSince: "Zeitraum: ab Serverstart {since}",
     },
     sponsor: {
@@ -46,6 +47,7 @@ export default {
     modalTitle: "Meldungen",
     dismissAll: "Meldungen entfernen",
   },
+
   main: {
     energyflow: {
       noEnergy: "Kein Energiefluss",

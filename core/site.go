@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -42,9 +43,9 @@ type Site struct {
 	pvMeters     []api.Meter // PV generation meters
 	batteryMeter api.Meter   // Battery charging meter
 
-	tariff     api.Tariff   // Tariff
-	loadpoints []*LoadPoint // Loadpoints
-	savings    Savings      // Savings
+	tariffs    tariff.Tariffs // Tariff
+	loadpoints []*LoadPoint   // Loadpoints
+	savings    Savings        // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -67,7 +68,7 @@ func NewSiteFromConfig(
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,
-	tariff api.Tariff,
+	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, &site); err != nil {
@@ -75,7 +76,7 @@ func NewSiteFromConfig(
 	}
 
 	Voltage = site.Voltage
-	site.tariff = tariff
+	site.tariffs = tariffs
 	site.loadpoints = loadpoints
 	site.savings = *NewSavings()
 
@@ -347,6 +348,17 @@ func (site *Site) sitePower() (float64, error) {
 	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
 	site.publish("savingsSince", site.savings.Since())
 
+	if site.tariffs.Grid != nil {
+		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
+			site.publish("tariffGrid", gridPrice)
+		}
+	}
+	if site.tariffs.Feedin != nil {
+		if feedinPrice, err := site.tariffs.Feedin.CurrentPrice(); err == nil {
+			site.publish("tariffFeedin", feedinPrice)
+		}
+	}
+
 	return sitePower, nil
 }
 
@@ -354,8 +366,8 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	var cheap bool
-	if site.tariff != nil {
-		cheap = site.tariff.IsCheap()
+	if site.tariffs.Grid != nil {
+		cheap = site.tariffs.Grid.IsCheap()
 	}
 
 	if sitePower, err := site.sitePower(); err == nil {

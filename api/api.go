@@ -143,4 +143,5 @@ type VehicleStopCharge interface {
 
 type Tariff interface {
 	IsCheap() bool
+	CurrentPrice() (float64, error)
 }

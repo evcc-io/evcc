@@ -1,6 +1,6 @@
 <template>
-	<footer class="container position-relative">
-		<div class="py-3 py-md-5 mt-3 mt-md-5 border-top">
+	<footer class="container">
+		<div class="py-3 py-md-5 mt-3 mt-md-5 border-top position-relative">
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
 				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->

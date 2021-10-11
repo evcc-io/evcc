@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<a
-			v-if="isUnreleasedBuild"
+			v-if="isUnreleasedBuild && false"
 			:href="githubHashUrl"
 			target="_blank"
 			class="btn btn-link ps-0 text-decoration-none link-dark text-nowrap"

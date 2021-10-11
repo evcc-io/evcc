@@ -128,6 +128,8 @@ export default {
 				chargedTotal: this.store.state.savingsChargedTotal,
 				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
 				selfPercentage: this.store.state.savingsSelfPercentage,
+				gridPrice: this.store.state.tariffGrid,
+				feedinPrice: this.store.state.tariffFeedin,
 			};
 		},
 	},

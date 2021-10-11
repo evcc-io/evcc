@@ -324,9 +324,30 @@ to the configuration. The EVCC loadpoints can then be added to the SHM configura
 Sunny-Portal via the "Optional energy demand" slider. When the amount of configured PV is not available, charging suspends like in **PV** mode. So, pushing the slider completely
 to the left makes **Min+PV** behave as described above. Pushing completely to the right makes **Min+PV** mode behave like **PV** mode.
 
+### Energy Tariffs & Savings Estimate
+
+You can specify your energy tariffs and grid feedin rates. Evcc uses these values for a rough savings calculation shown in the web UI.
+
+```yaml
+tariffs:
+  grid:
+    # static grid price
+    type: fixed
+    price: 29 # ct/kWh
+
+  feedin:
+    # rate for feeding excess (pv) energy to the grid
+    type: fixed
+    price: 8 # ct/kWh
+```
+
+For the savings estimate calculation evcc roughly records the total amount of energy charged and the used energy sources (grid, battery, pv). PV direct usage and energy provided by the battery system are treated equally in this calculation. Battery losses due to conversion are not taken into account. The algorithm distinguishes between grid energy and self-produced solar energy (pv, battery). The cost advantage of your solar energy is the difference between you grid import price (e.g. 29ct/kWh) and your feedin rate (e.g. 8ct/kWh). If you are not compensated for feedin energy to the grid you can set the feedin price to 0.
+If at one time your pulling energy from multiple sources (e.g. 50% grid, 50% pv) the algorithm will distribute the energy sources evenly. It assumes that your house consumption and your active loadpoints are each using a 50/50 energy mix.
+At the moment the algorithm only uses the current energy price. Flexible prices (see below) or day/night-tariffs are not taken into account. The energy amounts and savings are currently not persistant and will be reset after a service restart.
+
 ### Flexible Energy Tariffs
 
-EVCC supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+EVCC also supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
 
 ```yaml
 tariffs:

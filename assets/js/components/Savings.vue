@@ -1,5 +1,5 @@
 <template>
-	<div v-if="chargedTotal > 1000">
+	<div v-if="chargedTotal > 100">
 		<div class="button-wrap position-absolute top-50 start-50 translate-middle">
 			<button
 				class="
@@ -88,37 +88,30 @@
 
 						<p class="small text-muted">
 							{{
-								$t("footer.savings.modalExplaination", {
-									gridPrice: gridPrice * 100,
-									feedinPrice: feedinPrice * 100,
-								})
-							}}
-							<span class="text-nowrap">
-								{{
-									$t("footer.savings.modalExplainationGrid", {
-										gridPrice: gridPrice * 100,
-									})
-								}},
-							</span>
-							<span class="text-nowrap">
-								{{
-									$t("footer.savings.modalExplainationFeedin", {
-										feedinPrice: feedinPrice * 100,
-									})
-								}}
-								<a
-									href="https://github.com/evcc-io/evcc#flexible-energy-tariffs"
-									target="_blank"
-									class="text-muted"
-									>{{ $t("footer.savings.modalExplainationAdjust") }}</a
-								>
-							</span>
-							<br />
-							{{
 								$t("footer.savings.modalExplainationSince", {
 									since: fmtTimeAgo(since * -1000),
 								})
-							}}
+							}}<br />
+							{{ $t("footer.savings.modalExplaination") }}
+							<span class="text-nowrap">
+								{{ $t("footer.savings.modalExplainationGrid", { gridPrice }) }},
+							</span>
+							<span class="text-nowrap">
+								{{
+									$t("footer.savings.modalExplainationFeedin", { feedinPrice })
+								}} </span
+							><br />
+							<a
+								href="https://github.com/evcc-io/evcc#flexible-energy-tariffs"
+								target="_blank"
+								class="text-muted"
+								><span v-if="defaultPrices">{{
+									$t("footer.savings.modalExplainationAdjust")
+								}}</span
+								><span v-else>{{
+									$t("footer.savings.modalExplainationCalculation")
+								}}</span></a
+							>
 						</p>
 					</div>
 				</div>
@@ -140,13 +133,17 @@ export default {
 		sponsor: String,
 		chargedTotal: Number,
 		chargedSelfConsumption: Number,
-		gridPrice: { type: Number, default: 0.3 },
-		feedinPrice: { type: Number, default: 0.08 },
+		gridPrice: { type: Number, default: 30 },
+		feedinPrice: { type: Number, default: 8 },
 	},
 	computed: {
+		defaultPrices() {
+			const { gridPrice, feedinPrice } = this.$options.propsData;
+			return gridPrice === undefined || feedinPrice === undefined;
+		},
 		savingEuro() {
-			const priceDiff = this.gridPrice - this.feedinPrice;
-			const saving = (this.chargedSelfConsumption / 1000) * priceDiff;
+			const priceDiffEuro = (this.gridPrice - this.feedinPrice) / 100;
+			const saving = (this.chargedSelfConsumption / 1000) * priceDiffEuro;
 			return this.$n(saving, { style: "currency", currency: "EUR" });
 		},
 		percent() {
