@@ -29,7 +29,7 @@ export default {
       modalButtonBecomeSponsor: "Werde GitHub Sponsor",
       modalButtonConfetti: "Danke {sponsor}! Lust auf Konfetti?",
       modalSticker: "...oder evcc Sticker?",
-      modalExplaination: "*Annahme:",
+      modalExplaination: "*Annahme  :",
       modalExplainationGrid: "Netzstrom {gridPrice}ct",
       modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
       modalExplainationAdjust: "Tarifdaten anpassen",

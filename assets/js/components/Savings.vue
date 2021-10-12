@@ -1,5 +1,5 @@
 <template>
-	<div v-if="chargedTotal > 100">
+	<div v-if="chargedTotal > 0">
 		<div class="button-wrap position-absolute top-50 start-50 translate-middle">
 			<button
 				class="
@@ -86,32 +86,39 @@
 							</div>
 						</div>
 
-						<p class="small text-muted">
+						<p class="small text-muted text-center">
+							{{ $t("footer.savings.modalExplaination") }}
+							<span class="text-nowrap">
+								{{
+									$t("footer.savings.modalExplainationGrid", { gridPrice })
+								}}</span
+							>,
+							<span class="text-nowrap">
+								{{ $t("footer.savings.modalExplainationFeedin", { feedinPrice }) }}
+							</span>
+							<a
+								href="https://github.com/evcc-io/evcc/blob/master/README.md#energy-tariffs--savings-estimate"
+								target="_blank"
+								class="text-muted"
+								><fa-icon
+									v-if="defaultPrices"
+									:title="$t('footer.savings.modalExplainationAdjust')"
+									icon="wrench"
+									class="icon ms-1"
+								></fa-icon
+								><fa-icon
+									v-else
+									:title="$t('footer.savings.modalExplainationCalculation')"
+									icon="info-circle"
+									class="icon ms-1"
+								></fa-icon
+							></a>
+							<br />
 							{{
 								$t("footer.savings.modalExplainationSince", {
 									since: fmtTimeAgo(since * -1000),
 								})
-							}}<br />
-							{{ $t("footer.savings.modalExplaination") }}
-							<span class="text-nowrap">
-								{{ $t("footer.savings.modalExplainationGrid", { gridPrice }) }},
-							</span>
-							<span class="text-nowrap">
-								{{
-									$t("footer.savings.modalExplainationFeedin", { feedinPrice })
-								}} </span
-							><br />
-							<a
-								href="https://github.com/evcc-io/evcc#flexible-energy-tariffs"
-								target="_blank"
-								class="text-muted"
-								><span v-if="defaultPrices">{{
-									$t("footer.savings.modalExplainationAdjust")
-								}}</span
-								><span v-else>{{
-									$t("footer.savings.modalExplainationCalculation")
-								}}</span></a
-							>
+							}}
 						</p>
 					</div>
 				</div>
@@ -162,5 +169,25 @@ export default {
 	/* prevent double-tap zoom */
 	touch-action: none;
 	user-select: none;
+}
+
+/* make modal a bottom drawer on small screens */
+@media (max-width: 575px) {
+	.modal-dialog.modal-dialog-centered {
+		align-items: flex-end;
+	}
+	.modal.fade .modal-dialog {
+		transition: transform 0.4s ease;
+		transform: translate(0, 150px);
+	}
+	.modal.show .modal-dialog {
+		transform: none;
+	}
+	.modal-dialog-scrollable {
+		height: calc(100% - 0.5rem);
+	}
+	.modal-content {
+		border-radius: 1rem 1rem 0 0;
+	}
 }
 </style>
