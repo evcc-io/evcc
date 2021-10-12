@@ -23,18 +23,18 @@ export default {
       footerLong: "{percent}% Sonnenstrom geladen",
       modalTitle: "{percent}% Sonnenstrom geladen",
       modalText:
-        "<strong>{self} kWh (von {total} kWh)</strong> waren eigener Sonnenstrom. Das entspricht einer <strong>Ersparnis von ~{savingEuro}</strong>.",
+        "<strong>{self} kWh (von {total} kWh)</strong> waren eigener Sonnenstrom. Das entspricht einer <strong>Ersparnis von ~{savingEuro}*</strong>.",
       modalSupportUs:
         "Wir möchten, das effizientes Zuhause Laden für möglichst viele Menschen zum Standard wird. Unterstütze uns auf dem Weg indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
       modalButtonBecomeSponsor: "Werde GitHub Sponsor",
       modalButtonConfetti: "Danke {sponsor}! Lust auf Konfetti?",
       modalSticker: "...oder evcc Sticker?",
-      modalExplaination: "Annahmen:",
-      modalExplainationGrid: "Strompreis {gridPrice}ct (fest)",
+      modalExplaination: "*Annahme:",
+      modalExplainationGrid: "Netzstrom {gridPrice}ct",
       modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
       modalExplainationAdjust: "Tarifdaten anpassen",
       modalExplainationCalculation: "Berechnungsmethode",
-      modalExplainationSince: "Zeitraum: ab Serverstart {since}",
+      modalExplainationSince: "ab Serverstart {since}",
     },
     sponsor: {
       sponsoredShort: "Danke",
