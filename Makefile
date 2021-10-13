@@ -30,8 +30,7 @@ clean:
 	rm -rf dist/
 
 install:
-	go install github.com/golang/mock/mockgen
-	go install github.com/alvaroloes/enumer
+	go install $$(go list -f '{{join .Imports " "}}' tools.go)
 
 install-ui:
 	npm ci
