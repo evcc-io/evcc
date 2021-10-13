@@ -31,6 +31,7 @@ clean:
 
 install:
 	go install github.com/golang/mock/mockgen
+	go install github.com/alvaroloes/enumer
 
 install-ui:
 	npm ci

@@ -174,23 +174,21 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		return
 	}
 
-	var floatValue float64
-	var boolValue bool
-	var intValue int
+	var value interface{}
 
 	switch res.DataType {
 	case easee.Boolean:
-		boolValue = res.Value == "1"
+		value = res.Value == "1"
 	case easee.Double:
-		floatValue, err = strconv.ParseFloat(res.Value, 64)
+		value, err = strconv.ParseFloat(res.Value, 64)
 		if err != nil {
-			c.log.ERROR.Printf("float conversion: %s", res.Value)
+			c.log.ERROR.Println(err)
 			return
 		}
 	case easee.Integer:
-		intValue, err = strconv.Atoi(res.Value)
+		value, err = strconv.Atoi(res.Value)
 		if err != nil {
-			c.log.ERROR.Printf("int conversion: %s", res.Value)
+			c.log.ERROR.Println(err)
 			return
 		}
 	}
@@ -200,19 +198,19 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 
 	switch res.ID {
 	case easee.IS_ENABLED:
-		c.chargerEnabled = boolValue
+		c.chargerEnabled = value.(bool)
 	case easee.TOTAL_POWER:
-		c.currentPower = 1e3 * floatValue
+		c.currentPower = 1e3 * value.(float64)
 	case easee.SESSION_ENERGY:
-		c.sessionEnergy = floatValue
+		c.sessionEnergy = value.(float64)
 	case easee.IN_CURRENT_T3:
-		c.currentL1 = floatValue
+		c.currentL1 = value.(float64)
 	case easee.IN_CURRENT_T4:
-		c.currentL2 = floatValue
+		c.currentL2 = value.(float64)
 	case easee.IN_CURRENT_T5:
-		c.currentL3 = floatValue
+		c.currentL3 = value.(float64)
 	case easee.CHARGER_OP_MODE:
-		switch intValue {
+		switch value.(int) {
 		case easee.ModeDisconnected:
 			c.chargeStatus = api.StatusA
 		case easee.ModeAwaitingStart, easee.ModeCompleted, easee.ModeReadyToCharge:
@@ -223,12 +221,12 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			c.chargeStatus = api.StatusF
 		default:
 			c.chargeStatus = api.StatusNone
-			c.log.ERROR.Printf("unknown opmode: %d", intValue)
+			c.log.ERROR.Printf("unknown opmode: %d", value.(int))
 		}
-		c.enabledStatus = intValue == easee.ModeCharging || intValue == easee.ModeReadyToCharge
+		c.enabledStatus = value.(int) == easee.ModeCharging || value.(int) == easee.ModeReadyToCharge
 	}
 
-	c.log.TRACE.Printf("%s: %+v", typ, res)
+	c.log.TRACE.Printf("%s %s: %s %.4v", typ, res.Mid, res.ID, value)
 	c.updated = time.Now()
 }
 
