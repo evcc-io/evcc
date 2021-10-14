@@ -4,6 +4,11 @@
 .PHONY: soc stamps
 
 # build vars
+MIN_GO_VERSION_MAJOR := 1
+MIN_GO_VERSION_MINOR := 16
+GO_VERSION_MAJOR := $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
+GO_VESION_MINOR := $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
+GO_VERSION_VALIDATION_ERR_MSG := "Go version must ${MIN_GO_VERSION_MAJOR}.${MIN_GO_VERSION_MINOR} or newer. You have ${GO_VERSION_MAJOR}.${GO_VESION_MINOR} installed."
 TAG_NAME := $(shell test -d .git && git describe --abbrev=0 --tags)
 SHA := $(shell test -d .git && git rev-parse --short HEAD)
 VERSION := $(if $(TAG_NAME),$(TAG_NAME),$(SHA))
@@ -22,7 +27,16 @@ IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
 
-default: build
+go-validate: ## Validates the installed version of go against evcc minimum requirement.
+	@if [ $(GO_VERSION_MAJOR) -lt $(MIN_GO_VERSION_MAJOR) ]; then \
+ 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+ 		exit 1; \
+ 	elif [ $(GO_VESION_MINOR) -lt $(MIN_GO_VERSION_MINOR) ] ; then \
+ 		echo '$(GO_VERSION_VALIDATION_ERR_MSG)';\
+ 		exit 1; \
+ 	fi
+	
+default: go-validate build
 
 all: clean install install-ui ui assets lint test-ui lint-ui test build
 
