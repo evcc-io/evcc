@@ -7,6 +7,8 @@ import (
 	"log"
 
 	"github.com/evcc-io/evcc/cmd"
+	// require minimum go version
+	_ "github.com/evcc-io/evcc/goversion"
 	"github.com/evcc-io/evcc/server"
 )
 
