@@ -346,37 +346,45 @@ tariffs:
 
 ### Notifications
 
-EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events (start, stop, connect, disconnect) and to setup the used notification service:
+EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events and to setup the used notification service(s):
 
 ```yaml
 messaging:
   events:
+    [...]
+  services:
+    [...]
+```
+
+#### Notification Events
+
+The available events are:
+
+- `start`: Charge start
+- `stop`: Charge stop
+- `connect`: Vehicle connect
+- `disconnect`: Vehicle disconnect
+
+And they are configured according to the scheme of following example for the charge start event:
+
+```yaml
     start: # charge start event
       title: Charge started
       msg: Started charging in "${mode}" mode
-    stop: # charge stop event
-      title: Charge finished
-      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
-    connect: # vehicle connect event
-      title: Car connected
-      msg: "Car connected at ${pvPower:%.1fk}kW PV"
-    disconnect: # vehicle connected event
-      title: Car disconnected
-      msg: Car disconnected after ${connectedDuration}
-  services:
-  # - type: pushover
-  #   app: # app id
-  #   recipients:
-  #   - # list of recipient ids
-  # - type: telegram
-  #   token: # bot id
-  #   chats:
-  #   - # list of chat ids
-  # - type: email
-  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
 ```
 
-In addition to the provided service examples, all other notification services supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library can be configured (type: shout). For example, a [Gotify](https://gotify.net/) server can be used as follows:
+#### Notification Services
+
+Following types of notification services can be configured:
+
+- `pushover`: [Pushover](https://pushover.net/)
+- `telegram`: [Telegram Messenger](https://telegram.org/)
+- `email`: E-mail
+- `shout`: Any service supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library
+
+Configuration examples can be found in `evcc.dist.yaml`.
+
+Any Shoutrrr service is configured according to the following example of a [Gotify](https://gotify.net/) server:
 
 ```yaml
   - type: shout
