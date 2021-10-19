@@ -346,7 +346,7 @@ tariffs:
 
 ### Notifications
 
-EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events (start, stop, connect, disconnect) and to setup the used configuration service:
+EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events (start, stop, connect, disconnect) and to setup the used notification service:
 
 ```yaml
 messaging:
