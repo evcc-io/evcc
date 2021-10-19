@@ -53,7 +53,7 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/mlnoga/rct v0.0.0-20210927211248-455af36ba3ad
+	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
 	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da

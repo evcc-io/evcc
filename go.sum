@@ -492,8 +492,8 @@ github.com/mitchellh/mapstructure v1.4.1 h1:CpVNEelQCZBooIPDn+AR3NpivK/TIKU8bDxd
 github.com/mitchellh/mapstructure v1.4.1/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/reflectwalk v1.0.0 h1:9D+8oIskB4VJBN5SFlmc27fSlIBZaov1Wpk/IfikLNY=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/mlnoga/rct v0.0.0-20210927211248-455af36ba3ad h1:Day8m/hpA40ofm/cYfJU9ac8onwWDtm+XlaWSFBm9WM=
-github.com/mlnoga/rct v0.0.0-20210927211248-455af36ba3ad/go.mod h1:vHVb62/NOw0QkfTMCNxRSxMqvm4+4WQ8HkZQ4Z540GE=
+github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592 h1:DoktTtd7tefYr+fw66NHvubp+uS9m5EkqPISTzXofVI=
+github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592/go.mod h1:0lfd2mmBnBzIvuzYtdhG+2371u+cUfIxsYErm4P9KRI=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
