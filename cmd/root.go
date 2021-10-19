@@ -245,7 +245,11 @@ func run(cmd *cobra.Command, args []string) {
 
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
-		<-exitC      // wait for loop to end
+
+		select {
+		case <-exitC: // wait for loop to end
+		case <-time.NewTimer(conf.Interval).C: // wait max 1 period
+		}
 
 		os.Exit(1)
 	}()
