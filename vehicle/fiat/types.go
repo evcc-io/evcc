@@ -31,11 +31,11 @@ type StatusResponse struct {
 				Value int
 				Unit  string
 			}
-			PlugInStatus        bool // true
-			StateOfCharge       int  // 75
-			TimeToFullyChargeL1 int  // 0
-			TimeToFullyChargeL2 int  // 540
-			TotalRange          int  // 17
+			PlugInStatus        bool    // true
+			StateOfCharge       float64 // 75
+			TimeToFullyChargeL1 int     // 0
+			TimeToFullyChargeL2 int     // 540
+			TotalRange          int     // 17
 		}
 		Timestamp TimeMillis
 	}
