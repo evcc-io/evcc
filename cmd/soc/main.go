@@ -72,25 +72,23 @@ func main() {
 		}
 
 	case "soc":
+		var soc float64
+		var err error
+
 		start := time.Now()
-		for {
+		for soc, err = v.SoC(); err != nil && errors.Is(err, api.ErrMustRetry); {
 			if time.Since(start) > time.Minute {
-				log.Fatal(api.ErrTimeout)
+				err = api.ErrTimeout
+			} else {
+				time.Sleep(5 * time.Second)
 			}
-
-			soc, err := v.SoC()
-			if err != nil {
-				if errors.Is(err, api.ErrMustRetry) {
-					time.Sleep(5 * time.Second)
-					continue
-				}
-
-				log.Fatal(err)
-			}
-
-			fmt.Println(int(math.Round(soc)))
-			break
 		}
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(int(math.Round(soc)))
 
 	default:
 		log.Fatal("invalid action:", action)
