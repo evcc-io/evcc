@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -21,6 +20,11 @@ soc
 Usage:
   soc brand [--log level] [--param value [...]]
 `)
+}
+
+// matchesError replaces errors.Is for errors returned from GRPC
+func matchesError(err, match error) bool {
+	return strings.Contains(err.Error(), match.Error())
 }
 
 func main() {
@@ -76,7 +80,7 @@ func main() {
 		var err error
 
 		start := time.Now()
-		for soc, err = v.SoC(); err != nil && errors.Is(err, api.ErrMustRetry); {
+		for soc, err = v.SoC(); err != nil && matchesError(err, api.ErrMustRetry); {
 			if time.Since(start) > time.Minute {
 				err = api.ErrTimeout
 			} else {
