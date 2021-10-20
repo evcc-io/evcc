@@ -379,12 +379,12 @@ Following types of notification services can be configured:
 
 - `pushover`: [Pushover](https://pushover.net/)
 - `telegram`: [Telegram Messenger](https://telegram.org/)
-- `email`: E-mail
-- `shout`: Any service supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library
+- `email`: Email (by using [shoutrrr](https://containrrr.dev/shoutrrr) service url: `smtp://username:password@host:port/?fromAddress=fromAddress&toAddresses=recipient1[,recipient2,...]`)
+- `shout`: Any service supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library (see below)
 
 Configuration examples can be found in `evcc.dist.yaml`.
 
-Any Shoutrrr service is configured according to the following example of a [Gotify](https://gotify.net/) server:
+Any [shoutrrr](https://containrrr.dev/shoutrrr) service is configured according to the following example for a [Gotify](https://gotify.net/) server:
 
 ```yaml
   - type: shout
