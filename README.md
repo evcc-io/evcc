@@ -20,7 +20,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME
 - wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
-- status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
+- status [notifications](#notifications) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
 - REST and MQTT [APIs](#api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
@@ -39,6 +39,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
   - [Flexible Energy Tariffs](#flexible-energy-tariffs)
+  - [Notifications](#notifications)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
@@ -342,6 +343,55 @@ tariffs:
     cheap: 20 # ct/kWh
     region: de # optional, choose at for Austria
 ```
+
+### Notifications
+
+EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events and to setup the used notification service(s):
+
+```yaml
+messaging:
+  events:
+    [...]
+  services:
+    [...]
+```
+
+#### Notification Events
+
+The available events are:
+
+- `start`: Charge start
+- `stop`: Charge stop
+- `connect`: Vehicle connect
+- `disconnect`: Vehicle disconnect
+
+Configuration is done according to the scheme of following example for the `start` event:
+
+```yaml
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+```
+
+#### Notification Services
+
+Following types of notification services can be configured:
+
+- `pushover`: [Pushover](https://pushover.net/)
+- `telegram`: [Telegram Messenger](https://telegram.org/)
+- `email`: Email (by using [shoutrrr](https://containrrr.dev/shoutrrr) service url: `smtp://username:password@host:port/?fromAddress=fromAddress&toAddresses=recipient1[,recipient2,...]`)
+- `shout`: Any service supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library (see below)
+
+Configuration examples can be found in `evcc.dist.yaml`.
+
+Any [shoutrrr](https://containrrr.dev/shoutrrr) service is configured according to the following example for a [Gotify](https://gotify.net/) server:
+
+```yaml
+  - type: shout
+    uri: gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1
+```
+
+Please refer to the [shoutrrr](https://containrrr.dev/shoutrrr) documentation for [supported services](https://containrrr.dev/shoutrrr/v0.5/services/overview/) and further details.
 
 ## Plugins
 
