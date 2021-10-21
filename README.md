@@ -365,7 +365,7 @@ The available events are:
 - `connect`: Vehicle connect
 - `disconnect`: Vehicle disconnect
 
-And they are configured according to the scheme of following example for the charge start event:
+Configuration is done according to the scheme of following example for the `start` event:
 
 ```yaml
     start: # charge start event
