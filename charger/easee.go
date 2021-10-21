@@ -26,7 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/avast/retry-go/v3"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
@@ -117,14 +116,25 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.charger = chargers[0].ID
 	}
 
-	// subscribe for updates
-	err = c.subscribe(ts)
+	// subscribe for updates and retry when connection fails
+	var client signalr.Client
+	if client, err = c.subscribe(ts); err == nil {
+		go func(signalr.Client) {
+			for {
+				<-client.Closed()
+				for client, err = c.subscribe(ts); err != nil; {
+					c.log.ERROR.Println("connect:", err)
+					time.Sleep(5 * time.Second)
+				}
+			}
+		}(client)
+	}
 
 	return c, err
 }
 
 // subscribe connects to the signalR hub
-func (c *Easee) subscribe(ts oauth2.TokenSource) error {
+func (c *Easee) subscribe(ts oauth2.TokenSource) (signalr.Client, error) {
 	conn, err := signalr.NewHTTPConnection(context.Background(), "https://api.easee.cloud/hubs/chargers",
 		signalr.WithHTTPHeadersOption(func() (res http.Header) {
 			if tok, err := ts.Token(); err == nil {
@@ -136,7 +146,7 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 		}),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	client, err := signalr.NewClient(context.Background(), conn,
@@ -144,26 +154,14 @@ func (c *Easee) subscribe(ts oauth2.TokenSource) error {
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err := client.Start(); err != nil {
-		return err
+		return nil, err
 	}
 
-	// retry connection
-	go func(closed <-chan struct{}) {
-		<-closed
-		_ = retry.Do(func() error {
-			err := c.subscribe(ts)
-			if err != nil {
-				c.log.ERROR.Println("connect:", err)
-			}
-			return err
-		}, retry.Attempts(256))
-	}(client.Closed())
-
-	return <-client.Send("SubscribeWithCurrentState", c.charger, true)
+	return client, <-client.Send("SubscribeWithCurrentState", c.charger, true)
 }
 
 func (c *Easee) observe(typ string, i json.RawMessage) {
