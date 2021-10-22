@@ -136,8 +136,6 @@ type LoadPoint struct {
 	chargedEnergy           float64       // Charged energy while connected in Wh
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
-
-	tasks []func() error // task list for repeated execution
 }
 
 // NewLoadPointFromConfig creates a new loadpoint
