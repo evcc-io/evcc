@@ -708,8 +708,7 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
-
-		lp.task(lp.odometer)
+		lp.publish("vehicleOdometer", 0.0)
 	} else {
 		lp.socEstimator = nil
 
@@ -1182,19 +1181,27 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			}
 
 			lp.setRemainingEnergy(1e3 * lp.socEstimator.RemainingChargeEnergy(lp.SoC.Target))
+
+			// range
+			if vs, ok := lp.vehicle.(api.VehicleRange); ok {
+				if rng, err := vs.Range(); err == nil {
+					lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
+					lp.publish("vehicleRange", rng)
+				}
+			}
+
+			// odometer
+			if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
+				if odo, err := vs.Odometer(); err == nil {
+					lp.log.DEBUG.Printf("vehicle odometer: %vkm", odo)
+					lp.publish("vehicleOdometer", odo)
+				}
+			}
 		} else {
 			if errors.Is(err, api.ErrMustRetry) {
 				lp.socUpdated = time.Time{}
 			} else {
 				lp.log.ERROR.Printf("vehicle soc: %v", err)
-			}
-		}
-
-		// range
-		if vs, ok := lp.vehicle.(api.VehicleRange); ok {
-			if rng, err := vs.Range(); err == nil {
-				lp.log.DEBUG.Printf("vehicle range: %vkm", rng)
-				lp.publish("vehicleRange", rng)
 			}
 		}
 
@@ -1247,9 +1254,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 			lp.identifyVehicleByStatus()
 		}
 	}
-
-	// odometer etc, if active
-	lp.runTasks()
 
 	// publish soc after updating charger status to make sure
 	// initial update of connected state matches charger status
