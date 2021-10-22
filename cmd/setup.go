@@ -30,7 +30,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var cp = &ConfigProvider{}
+var cp = new(ConfigProvider)
 
 func loadConfigFile(cfgFile string) (conf config, err error) {
 	if cfgFile != "" {
