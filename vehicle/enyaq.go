@@ -81,7 +81,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			"response_type": {"code id_token"},
 			"redirect_uri":  {"skodaconnect://oidc.login/"},
 			"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
-			"scope":         {"openid profile phone address cars email birthdate badge dealers driversLicense mbb"},
+			"scope":         {"openid profile mbb"}, // phone address cars email birthdate badge dealers driversLicense
 		})
 
 		err := identity.LoginSkoda(query, cc.User, cc.Password)
