@@ -18,7 +18,7 @@ import (
 
 const (
 	ClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
-	EmobilityClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
+	EmobilityClientID = "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq"
 )
 
 type tokenResponse struct {
@@ -130,7 +130,7 @@ func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 
 	if emobility {
 		actualClientID = EmobilityClientID
-		redirectURI = "https://connect-portal.porsche.com/myservices/auth/auth.html"
+		redirectURI = "https://my.porsche.com/myservices/auth/auth.html"
 	}
 
 	var CodeVerifier, _ = cv.CreateCodeVerifier()
