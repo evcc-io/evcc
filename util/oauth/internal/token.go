@@ -31,6 +31,7 @@ func (t *Token) UnmarshalJSON(data []byte) error {
 			t.Expiry = time.Now().Add(time.Second * time.Duration(s.ExpiresIn))
 		}
 
+		// TODO handle error in DoJSON
 		if s.Error != nil && s.ErrorDescription != nil {
 			err = fmt.Errorf("%s: %s", *s.Error, *s.ErrorDescription)
 		}
