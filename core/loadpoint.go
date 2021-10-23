@@ -706,15 +706,16 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
-		lp.publish("vehicleOdometer", 0.0)
 	} else {
 		lp.socEstimator = nil
 
 		lp.publish("vehiclePresent", false)
 		lp.publish("vehicleTitle", "")
 		lp.publish("vehicleCapacity", int64(0))
-		lp.publish("vehicleOdometer", 0.0)
 	}
+
+	lp.publish("vehicleRange", int64(0))
+	lp.publish("vehicleOdometer", 0.0)
 }
 
 // startVehicleDetection resets connection timer and starts api refresh timer
@@ -1189,9 +1190,10 @@ func (lp *LoadPoint) publishSoCAndRange() {
 			}
 
 			// odometer
+			// TODO read only once after connect
 			if vs, ok := lp.vehicle.(api.VehicleOdometer); ok {
 				if odo, err := vs.Odometer(); err == nil {
-					lp.log.DEBUG.Printf("vehicle odometer: %vkm", odo)
+					lp.log.DEBUG.Printf("vehicle odometer: %.0fkm", odo)
 					lp.publish("vehicleOdometer", odo)
 				}
 			}
@@ -1204,15 +1206,6 @@ func (lp *LoadPoint) publishSoCAndRange() {
 		}
 
 		return
-	}
-
-	// reset if poll: connected/charging and not connected
-	if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
-		lp.publish("vehicleSoC", -1)
-		lp.publish("chargeRemainingDuration", time.Duration(-1))
-
-		// range
-		lp.publish("vehicleRange", -1)
 	}
 }
 
