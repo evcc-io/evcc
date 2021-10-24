@@ -118,6 +118,7 @@ UnknownVehicleConnected.args = {
   enabled: false,
   connected: true,
   vehiclePresent: false,
+  targetSoC: 90,
   id: 0,
 };
 
@@ -128,6 +129,7 @@ UnknownVehicleReadyToCharge.args = {
   connected: true,
   vehiclePresent: false,
   charging: false,
+  targetSoC: 100,
   id: 0,
 };
 
@@ -138,6 +140,7 @@ UnknownVehicleCharging.args = {
   connected: true,
   vehiclePresent: false,
   charging: true,
+  targetSoC: 90,
   id: 0,
 };
 
@@ -146,6 +149,7 @@ Disconnected.args = {
   vehicleTitle: "Mein Auto",
   connected: false,
   vehiclePresent: false,
+  targetSoC: 75,
   id: 0,
 };
 
