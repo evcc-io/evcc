@@ -915,6 +915,13 @@ func TestScalePhases(t *testing.T) {
 			},
 		}
 
+		if _, ok := lp.charger.(api.ChargePhases); ok {
+			lp.switch1p3p = lp.charger.(api.ChargePhases)
+		} else {
+			// individual switch or mock switch can be set in prepare
+			lp.switch1p3p = nil
+		}
+
 		if tc.prepare != nil {
 			tc.prepare(lp)
 		}

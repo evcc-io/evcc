@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/switch1p3p"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
@@ -31,6 +32,7 @@ type config struct {
 	Messaging    messagingConfig
 	Meters       []qualifiedConfig
 	Chargers     []qualifiedConfig
+	Switches1p3p []qualifiedConfig
 	Vehicles     []qualifiedConfig
 	Tariffs      tariffConfig
 	Site         map[string]interface{}
@@ -72,10 +74,11 @@ type tariffConfig struct {
 
 // ConfigProvider provides configuration items
 type ConfigProvider struct {
-	meters   map[string]api.Meter
-	chargers map[string]api.Charger
-	vehicles map[string]api.Vehicle
-	visited  map[string]bool
+	meters       map[string]api.Meter
+	chargers     map[string]api.Charger
+	switches1p3p map[string]api.ChargePhases
+	vehicles     map[string]api.Vehicle
+	visited      map[string]bool
 }
 
 func (cp *ConfigProvider) TrackVisitors() {
@@ -108,6 +111,15 @@ func (cp *ConfigProvider) Charger(name string) api.Charger {
 	return nil
 }
 
+// Switch1p3p provides 1p3p switches by name
+func (cp *ConfigProvider) Switch1p3p(name string) api.ChargePhases {
+	if switch1p3p, ok := cp.switches1p3p[name]; ok {
+		return switch1p3p
+	}
+	log.FATAL.Fatalf("invalid switch1p3p: %s", name)
+	return nil
+}
+
 // Vehicle provides vehicles by name
 func (cp *ConfigProvider) Vehicle(name string) api.Vehicle {
 	if vehicle, ok := cp.vehicles[name]; ok {
@@ -121,6 +133,9 @@ func (cp *ConfigProvider) configure(conf config) error {
 	err := cp.configureMeters(conf)
 	if err == nil {
 		err = cp.configureChargers(conf)
+	}
+	if err == nil {
+		err = cp.configureSwitches1p3p(conf)
 	}
 	if err == nil {
 		err = cp.configureVehicles(conf)
@@ -169,6 +184,29 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 		}
 
 		cp.chargers[cc.Name] = c
+	}
+
+	return nil
+}
+
+func (cp *ConfigProvider) configureSwitches1p3p(conf config) error {
+	cp.switches1p3p = make(map[string]api.ChargePhases)
+	for id, cc := range conf.Switches1p3p {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s switch1p3p: missing name", humanize.Ordinal(id+1))
+		}
+
+		c, err := switch1p3p.NewFromConfig(cc.Type, cc.Other)
+		if err != nil {
+			err = fmt.Errorf("cannot create switch '%s': %w", cc.Name, err)
+			return err
+		}
+
+		if _, exists := cp.switches1p3p[cc.Name]; exists {
+			return fmt.Errorf("duplicate switch1p3p name: %s already defined and must be unique", cc.Name)
+		}
+
+		cp.switches1p3p[cc.Name] = c
 	}
 
 	return nil

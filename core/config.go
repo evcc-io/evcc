@@ -6,5 +6,6 @@ import "github.com/evcc-io/evcc/api"
 type configProvider interface {
 	Meter(string) api.Meter
 	Charger(string) api.Charger
+	Switch1p3p(string) api.ChargePhases
 	Vehicle(string) api.Vehicle
 }
