@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -56,7 +56,8 @@ func (v *Identity) Login(user, password string) error {
 
 		// https://github.com/Tobiaswk/dartnissanconnect/commit/7d28dd5461aaed3e46b5be0c9fd58887e1e0cd0b
 		if err == nil {
-			for attempt := 1; attempt <= 10 && (err == nil || nToken.SessionExpired()); attempt++ {
+			err = api.ErrNotAvailable // not nil
+			for attempt := 1; attempt <= 10 && err != nil; attempt++ {
 				req, err = request.New(http.MethodPost, uri, request.MarshalJSON(res), map[string]string{
 					"Accept-Api-Version": APIVersion,
 					"X-Username":         "anonymous",
@@ -65,8 +66,8 @@ func (v *Identity) Login(user, password string) error {
 					"Accept":             "application/json",
 				})
 				if err == nil {
-					if err = v.DoJSON(req, &nToken); err != nil && nToken.SessionExpired() && attempt < 10 {
-						time.Sleep(3 * time.Second)
+					if err = v.DoJSON(req, &nToken); err != nil && !nToken.SessionExpired() {
+						break
 					}
 				}
 			}
