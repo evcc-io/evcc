@@ -788,8 +788,8 @@ func (lp *LoadPoint) updateChargerStatus() error {
 			lp.bus.Publish(evChargeStop)
 		}
 
-		// changed to A - disconnected
-		if status == api.StatusA {
+		// changed to A - disconnected - don't send on startup
+		if status == api.StatusA && prevStatus != api.StatusNone {
 			lp.bus.Publish(evVehicleDisconnect)
 		}
 
