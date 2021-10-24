@@ -31,6 +31,7 @@ WORKDIR /build
 COPY Makefile .
 COPY go.mod .
 COPY go.sum .
+COPY tools.go .
 RUN make install
 RUN go mod download
 

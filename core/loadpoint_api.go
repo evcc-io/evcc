@@ -29,6 +29,11 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	if _, err := api.ChargeModeString(mode.String()); err != nil {
+		lp.log.WARN.Printf("invalid charge mode: %s", string(mode))
+		return
+	}
+
 	lp.log.INFO.Printf("set charge mode: %s", string(mode))
 
 	// apply immediately

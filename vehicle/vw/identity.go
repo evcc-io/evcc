@@ -119,7 +119,7 @@ func (v *Identity) login(uri, user, password string) (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				v.log.WARN.Println("accepting updated", u)
+				v.log.WARN.Println("accepting updated tos", u)
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
 				}
@@ -170,14 +170,21 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 
 	login := func() (oauth.Token, error) {
 		var token oauth.Token
+		var idtoken string
 		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 		q, err := v.login(uri, user, password)
 		if err == nil {
+			if idtoken = q.Get("id_token"); idtoken == "" {
+				err = errors.New("missing id_token")
+			}
+		}
+
+		if err == nil {
 			data := url.Values(map[string][]string{
 				"grant_type": {"id_token"},
 				"scope":      {"sc2:fal"},
-				"token":      {q.Get("id_token")},
+				"token":      {idtoken},
 			})
 
 			var req *http.Request

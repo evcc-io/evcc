@@ -143,9 +143,25 @@ func (s *Estimator) SoC(chargedEnergy float64) (float64, error) {
 		energyDelta := math.Max(chargedEnergy, 0) - s.prevChargedEnergy
 
 		if socDelta != 0 || energyDelta < 0 { // soc value change or unexpected energy reset
+			// compare ChargeState of vehicle and charger
+			var invalid bool
+
+			if vs, ok := s.vehicle.(api.ChargeState); ok {
+				ccs, err := s.charger.Status()
+				if err != nil {
+					return 0, err
+				}
+				vcs, err := vs.Status()
+				if err != nil {
+					vcs = ccs // sanitize vehicle errors
+				} else {
+					s.log.DEBUG.Printf("vehicle status: %s", vcs)
+				}
+				invalid = vcs != ccs
+			}
+
 			// calculate gradient, wh per soc %
-			// TODO: drop samples with unmatching state of evse and vehicle
-			if socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
+			if !invalid && socDelta > 2 && energyDelta > 0 && s.prevSoC > 0 {
 				s.energyPerSocStep = energyDelta / socDelta
 				s.virtualCapacity = s.energyPerSocStep * 100
 				s.log.DEBUG.Printf("soc gradient updated: energyPerSocStep: %0.0fWh, virtualCapacity: %0.0fWh", s.energyPerSocStep, s.virtualCapacity)

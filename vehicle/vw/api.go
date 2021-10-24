@@ -101,64 +101,15 @@ func (v *API) RolesRights(vin string) (string, error) {
 	return string(res), err
 }
 
-// ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
-type ChargerResponse struct {
-	Charger struct {
-		Status struct {
-			BatteryStatusData struct {
-				StateOfCharge         TimedInt
-				RemainingChargingTime TimedInt
-			}
-			ChargingStatusData struct {
-				ChargingState            TimedString // off, charging
-				ChargingMode             TimedString // invalid, AC
-				ChargingReason           TimedString // invalid, immediate
-				ExternalPowerSupplyState TimedString // unavailable, available
-				EnergyFlow               TimedString // on, off
-			}
-			PlugStatusData struct {
-				PlugState TimedString // connected
-			}
-			CruisingRangeStatusData struct {
-				EngineTypeFirstEngine  TimedString // typeIsElectric, petrolGasoline
-				EngineTypeSecondEngine TimedString // typeIsElectric, petrolGasoline
-				PrimaryEngineRange     TimedInt
-				SecondaryEngineRange   TimedInt
-				HybridRange            TimedInt
-			}
-		}
-	}
-}
-
 // Charger implements the /charger response
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
 	err := v.getJSON(uri, &res)
-	return res, err
-}
-
-// ClimaterResponse is the /bs/climatisation/v1/%s/%s/vehicles/%s/climater api
-type ClimaterResponse struct {
-	Climater struct {
-		Settings struct {
-			TargetTemperature TimedTemperature
-			HeaterSource      TimedString
-		}
-		Status struct {
-			ClimatisationStatusData struct {
-				ClimatisationState         TimedString
-				ClimatisationReason        TimedString
-				RemainingClimatisationTime TimedInt
-			}
-			TemperatureStatusData struct {
-				OutdoorTemperature TimedTemperature
-			}
-			VehicleParkingClockStatusData struct {
-				VehicleParkingClock TimedString
-			}
-		}
+	if err != nil && res.Error != nil {
+		err = res.Error.Error()
 	}
+	return res, err
 }
 
 // Climater implements the /climater response
@@ -166,6 +117,9 @@ func (v *API) Climater(vin string) (ClimaterResponse, error) {
 	var res ClimaterResponse
 	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
 	err := v.getJSON(uri, &res)
+	if err != nil && res.Error != nil {
+		err = res.Error.Error()
+	}
 	return res, err
 }
 

@@ -12,6 +12,7 @@ RUN apk update && apk add --no-cache git ca-certificates tzdata alpine-sdk && up
 COPY Makefile .
 COPY go.mod .
 COPY go.sum .
+COPY tools.go .
 RUN make install
 RUN go mod download
 

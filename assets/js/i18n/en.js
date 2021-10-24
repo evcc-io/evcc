@@ -35,7 +35,7 @@ export default {
   main: {
     energyflow: {
       noEnergy: "No Energyflow",
-      houseConsumption: "Consumption",
+      homePower: "Consumption",
       loadpoints: "Loadpoint | Loadpoint | {count} Loadpoints",
       pvProduction: "Production",
       battery: "Battery",
@@ -92,7 +92,7 @@ export default {
     },
     loadpointDetails: {
       power: "Power",
-      range: "Range",
+      vehicleRange: "Range",
       charged: "Charged",
       duration: "Duration",
       remaining: "Remaining",

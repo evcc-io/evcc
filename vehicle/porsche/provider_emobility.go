@@ -1,6 +1,7 @@
 package porsche
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -64,6 +65,7 @@ type EmobilityResponse struct {
 		ClimatisationState         string
 		RemainingClimatisationTime int64
 	}
+	PcckErrorMessage string
 }
 
 // EMobilityProvider is an api.Vehicle implementation for Porsche Taycan cars
@@ -136,6 +138,10 @@ func (v *EMobilityProvider) status(vin string) (interface{}, error) {
 
 	var pr EmobilityResponse
 	err = v.DoJSON(req, &pr)
+
+	if err != nil && pr.PcckErrorMessage != "" {
+		err = errors.New(pr.PcckErrorMessage)
+	}
 
 	return pr, err
 }
