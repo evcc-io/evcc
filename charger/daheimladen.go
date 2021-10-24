@@ -82,7 +82,7 @@ func (c *DaheimLaden) Enable(enable bool) error {
 		}
 
 		var res daheimladen.RemoteStartResponse
-		if err = c.DoJSON(req, &res); err != nil && res.Status != string(daheimladen.REMOTE_START_ACCEPTED) {
+		if err = c.DoJSON(req, &res); err == nil && res.Status != string(daheimladen.REMOTE_START_ACCEPTED) {
 			err = fmt.Errorf("charging station refused to start transaction")
 		}
 
