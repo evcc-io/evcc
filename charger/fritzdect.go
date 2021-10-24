@@ -5,21 +5,18 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/charger/fritzdect"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/fritzbox"
-	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/fritzdect"
 )
 
 // AVM FritzBox AHA interface specifications:
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 
 // FritzDECT charger implementation
-type fritzDECT struct {
-	conn         *fritzbox.Connection
+type FritzDECT struct {
+	fritzdect    *fritzdect.Connection
 	standbypower float64
 }
 
@@ -36,52 +33,33 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Password     string
 		SID          string
 		StandbyPower float64
-		Updated      time.Time
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	if cc.URI == "" {
-		cc.URI = "https://fritz.box"
-	}
-
-	if cc.AIN == "" {
-		return nil, errors.New("missing ain")
-	}
-
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower, cc.Updated)
+	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower)
 }
 
-// NewFritzDECT creates FritzDECT charger
-func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, updated time.Time) (*fritzDECT, error) {
-	log := util.NewLogger("fritzdect")
-
-	conn := &fritzbox.Connection{
-		Helper:   request.NewHelper(log),
-		URI:      strings.TrimRight(uri, "/"),
-		AIN:      ain,
-		User:     user,
-		Password: password,
-		SID:      sid,
+// NewFritzDECT creates FritzDECT connection with standbypower for charger
+func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64) (*FritzDECT, error) {
+	fritzdect, err := fritzdect.NewFritzDECT(uri, ain, user, password, sid)
+	if err != nil {
+		return nil, err
 	}
-
-	c := &fritzDECT{
-		conn:         conn,
+	fd := &FritzDECT{
+		fritzdect:    fritzdect,
 		standbypower: standbypower,
 	}
-
-	c.conn.Client.Transport = request.NewTripper(log, request.InsecureTransport())
-
-	return c, nil
+	return fd, nil
 }
 
 // Status implements the api.Charger interface
-func (c *fritzDECT) Status() (api.ChargeStatus, error) {
+func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
-	resp, err := c.conn.ExecFritzDectCmd("getswitchpresent")
+	resp, err := c.fritzdect.ExecCmd("getswitchpresent")
 	if err == nil {
 		present, err = strconv.ParseInt(resp, 10, 64)
 		if err != nil {
@@ -89,7 +67,7 @@ func (c *fritzDECT) Status() (api.ChargeStatus, error) {
 		}
 	}
 
-	power, err := c.conn.CurrentPower()
+	power, err := c.fritzdect.CurrentPower()
 
 	switch {
 	case present == 1 && power <= c.standbypower:
@@ -102,9 +80,9 @@ func (c *fritzDECT) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (c *fritzDECT) Enabled() (bool, error) {
+func (c *FritzDECT) Enabled() (bool, error) {
 	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
-	resp, err := c.conn.ExecFritzDectCmd("getswitchstate")
+	resp, err := c.fritzdect.ExecCmd("getswitchstate")
 	if err != nil {
 		return false, err
 	}
@@ -119,14 +97,14 @@ func (c *fritzDECT) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (c *fritzDECT) Enable(enable bool) error {
+func (c *FritzDECT) Enable(enable bool) error {
 	cmd := "setswitchoff"
 	if enable {
 		cmd = "setswitchon"
 	}
 
 	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
-	resp, err := c.conn.ExecFritzDectCmd(cmd)
+	resp, err := c.fritzdect.ExecCmd(cmd)
 
 	var state int64
 	if err == nil {
@@ -146,15 +124,15 @@ func (c *fritzDECT) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (c *fritzDECT) MaxCurrent(current int64) error {
+func (c *FritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
-var _ api.Meter = (*fritzDECT)(nil)
+var _ api.Meter = (*FritzDECT)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (c *fritzDECT) CurrentPower() (float64, error) {
-	power, err := c.conn.CurrentPower()
+func (c *FritzDECT) CurrentPower() (float64, error) {
+	power, err := c.fritzdect.CurrentPower()
 	if power < c.standbypower {
 		power = 0
 	}
@@ -162,12 +140,12 @@ func (c *fritzDECT) CurrentPower() (float64, error) {
 	return power, err
 }
 
-var _ api.ChargeRater = (*fritzDECT)(nil)
+var _ api.ChargeRater = (*FritzDECT)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (c *fritzDECT) ChargedEnergy() (float64, error) {
+func (c *FritzDECT) ChargedEnergy() (float64, error) {
 	// fetch basicdevicestats
-	resp, err := c.conn.ExecFritzDectCmd("getbasicdevicestats")
+	resp, err := c.fritzdect.ExecCmd("getbasicdevicestats")
 	if err != nil {
 		return 0, err
 	}

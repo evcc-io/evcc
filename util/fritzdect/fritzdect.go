@@ -1,4 +1,4 @@
-package fritzbox
+package fritzdect
 
 import (
 	"crypto/md5"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/text/encoding/unicode"
 )
@@ -20,39 +21,51 @@ import (
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
-// FritzBox connection
+// FritzDECT connection
 type Connection struct {
 	*request.Helper
 	URI, AIN, User, Password, SID string
 	Updated                       time.Time
 }
 
-func (fb *Connection) ExecFritzDectCmd(function string) (string, error) {
+// Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
+type Devicestats struct {
+	XMLName xml.Name `xml:"devicestats"`
+	Energy  Energy   `xml:"energy"`
+}
+
+// Energy structures getbasicdevicesstats command energy response (AHA-HTTP-Interface)
+type Energy struct {
+	XMLName xml.Name `xml:"energy"`
+	Values  []string `xml:"stats"`
+}
+
+func (fd *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(fb.Updated).Minutes() >= 10 {
-		err := fb.getSessionID()
+	if time.Since(fd.Updated).Minutes() >= 10 {
+		err := fd.getSessionID()
 		if err != nil {
 			return "", err
 		}
 		// update session timestamp
-		fb.Updated = time.Now()
+		fd.Updated = time.Now()
 	}
 
 	parameters := url.Values{
-		"sid":       []string{fb.SID},
-		"ain":       []string{fb.AIN},
+		"sid":       []string{fd.SID},
+		"ain":       []string{fd.AIN},
 		"switchcmd": []string{function},
 	}
 
-	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", fb.URI)
-	response, err := fb.GetBody(uri + "?" + parameters.Encode())
+	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", fd.URI)
+	response, err := fd.GetBody(uri + "?" + parameters.Encode())
 	return strings.TrimSpace(string(response)), err
 }
 
 // CurrentPower implements the api interface
-func (fb *Connection) CurrentPower() (float64, error) {
+func (fd *Connection) CurrentPower() (float64, error) {
 	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
-	resp, err := fb.ExecFritzDectCmd("getswitchpower")
+	resp, err := fd.ExecCmd("getswitchpower")
 	if err != nil {
 		return 0, err
 	}
@@ -61,17 +74,42 @@ func (fb *Connection) CurrentPower() (float64, error) {
 		return 0, api.ErrNotAvailable
 	}
 	power, err := strconv.ParseFloat(resp, 64)
-	power = power / 1000 // mW ==> W
 
-	return power, err
+	return power / 1000, err // mW ==> W
+}
+
+// NewFritzDECT creates FritzDECT connection
+func NewFritzDECT(uri, ain, user, password, sid string) (*Connection, error) {
+	if uri == "" {
+		uri = "https://fritz.box"
+	}
+
+	if ain == "" {
+		return nil, errors.New("missing ain")
+	}
+
+	log := util.NewLogger("fritzdect")
+
+	fritzdect := &Connection{
+		Helper:   request.NewHelper(log),
+		URI:      strings.TrimRight(uri, "/"),
+		AIN:      ain,
+		User:     user,
+		Password: password,
+		SID:      sid,
+	}
+
+	fritzdect.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+
+	return fritzdect, nil
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
 
 // getSessionID fetches a session-id based on the username and password in the connection struct
-func (fb *Connection) getSessionID() error {
-	uri := fmt.Sprintf("%s/login_sid.lua", fb.URI)
-	body, err := fb.GetBody(uri)
+func (fd *Connection) getSessionID() error {
+	uri := fmt.Sprintf("%s/login_sid.lua", fd.URI)
+	body, err := fd.GetBody(uri)
 	if err != nil {
 		return err
 	}
@@ -84,18 +122,18 @@ func (fb *Connection) getSessionID() error {
 
 	if err = xml.Unmarshal(body, &v); err == nil && v.SID == "0000000000000000" {
 		var challresp string
-		if challresp, err = createChallengeResponse(v.Challenge, fb.Password); err == nil {
+		if challresp, err = createChallengeResponse(v.Challenge, fd.Password); err == nil {
 			params := url.Values{
-				"username": []string{fb.User},
+				"username": []string{fd.User},
 				"response": []string{challresp},
 			}
 
-			if body, err = fb.GetBody(uri + "?" + params.Encode()); err == nil {
+			if body, err = fd.GetBody(uri + "?" + params.Encode()); err == nil {
 				err = xml.Unmarshal(body, &v)
 				if v.SID == "0000000000000000" {
-					return errors.New("invalid username (" + fb.User + ") or password")
+					return errors.New("invalid username (" + fd.User + ") or password")
 				}
-				fb.SID = v.SID
+				fd.SID = v.SID
 			}
 		}
 	}
