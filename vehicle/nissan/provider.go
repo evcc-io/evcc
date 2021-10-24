@@ -19,23 +19,26 @@ type Provider struct {
 }
 
 // NewProvider returns a kamereon provider
-func NewProvider(api *API, expiry, cache time.Duration) *Provider {
+func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 	impl := &Provider{
 		action: func(value Action) error {
-			_, err := api.ChargingAction(value)
+			_, err := api.ChargingAction(vin, value)
 			return err
 		},
 		expiry: expiry,
 	}
 
 	impl.statusG = provider.NewCached(func() (interface{}, error) {
-		return impl.status(api.BatteryStatus, api.RefreshRequest)
+		return impl.status(
+			func() (Response, error) { return api.BatteryStatus(vin) },
+			func() (Response, error) { return api.RefreshRequest(vin, "RefreshBatteryStatus") },
+		)
 	}, cache).InterfaceGetter()
 
 	return impl
 }
 
-func (v *Provider) status(battery func() (Response, error), refresh func(string) (Response, error)) (Response, error) {
+func (v *Provider) status(battery func() (Response, error), refresh func() (Response, error)) (Response, error) {
 	res, err := battery()
 
 	var ts time.Time
@@ -52,7 +55,7 @@ func (v *Provider) status(battery func() (Response, error), refresh func(string)
 	// request a refresh, irrespective of a previous error
 	if v.refreshID == "" {
 		var refreshRes Response
-		if refreshRes, err = refresh("RefreshBatteryStatus"); err == nil {
+		if refreshRes, err = refresh(); err == nil {
 			err = api.ErrMustRetry
 
 			v.refreshID = refreshRes.Data.ID

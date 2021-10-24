@@ -16,13 +16,11 @@ const (
 
 type API struct {
 	*request.Helper
-	VIN string
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource, vin string) *API {
+func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
-		VIN:    vin,
 	}
 
 	// api is unbelievably slow when retrieving status
@@ -61,8 +59,8 @@ func (v *API) Vehicles() ([]string, error) {
 const timeFormat = "2006-01-02T15:04:05Z"
 
 // Battery provides battery api response
-func (v *API) BatteryStatus() (Response, error) {
-	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, v.VIN)
+func (v *API) BatteryStatus(vin string) (Response, error) {
+	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, vin)
 
 	var res Response
 	err := v.GetJSON(uri, &res)
@@ -71,9 +69,9 @@ func (v *API) BatteryStatus() (Response, error) {
 }
 
 // RefreshRequest requests  battery status refresh
-func (v *API) RefreshRequest(typ string) (Response, error) {
+func (v *API) RefreshRequest(vin string, typ string) (Response, error) {
 	var res Response
-	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, v.VIN)
+	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, vin)
 
 	data := Request{
 		Data: Payload{
@@ -100,8 +98,8 @@ const (
 )
 
 // ChargingAction provides actions/charging-start api response
-func (v *API) ChargingAction(action Action) (Response, error) {
-	uri := fmt.Sprintf("%s/v1/cars/%s/actions/charging-start", CarAdapterBaseURL, v.VIN)
+func (v *API) ChargingAction(vin string, action Action) (Response, error) {
+	uri := fmt.Sprintf("%s/v1/cars/%s/actions/charging-start", CarAdapterBaseURL, vin)
 
 	data := Request{
 		Data: Payload{
