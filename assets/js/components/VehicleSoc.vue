@@ -25,7 +25,6 @@
 			></div>
 		</div>
 		<div
-			v-if="connected && vehiclePresent && visibleTargetSoC"
 			class="target"
 			:class="{ 'target--slider-hidden': allowSliderHiding && visibleTargetSoC === 100 }"
 		>
@@ -146,7 +145,7 @@ export default {
 			const screenY = e.screenY || e.changedTouches[0].screenY;
 			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
 			// horizontal scroll detected - revert slider change
-			if (yDiff > 40) {
+			if (yDiff > 80) {
 				e.preventDefault();
 				e.target.value = this.targetSoC;
 				this.selectedTargetSoC = this.targetSoC;
