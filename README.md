@@ -651,7 +651,7 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
-Loadpoint ids for REST API are starting at `0:
+Loadpoint ids for REST API are starting at `0`:
 
 - `/api/state`: EVCC state (static configuration and dynamic state)
 - `/api/loadpoints/<id>/mode`: set loadpoint charge mode
