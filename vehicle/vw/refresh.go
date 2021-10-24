@@ -8,16 +8,17 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/oauth2"
 )
 
 type tokenRefresher struct {
 	*request.Helper
-	login    func() (oauth.Token, error)
+	login    func() (vag.Token, error)
 	clientID string
 }
 
-func Refresher(log *util.Logger, login func() (oauth.Token, error), clientID string) oauth.TokenRefresher {
+func Refresher(log *util.Logger, login func() (vag.Token, error), clientID string) oauth.TokenRefresher {
 	return &tokenRefresher{
 		Helper:   request.NewHelper(log),
 		login:    login,
@@ -38,7 +39,7 @@ func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, erro
 		"X-Client-Id":  tr.clientID,
 	})
 
-	var res oauth.Token
+	var res vag.Token
 	if err == nil {
 		err = tr.DoJSON(req, &res)
 	}
@@ -47,5 +48,5 @@ func (tr *tokenRefresher) RefreshToken(token *oauth2.Token) (*oauth2.Token, erro
 		res, err = tr.login()
 	}
 
-	return (*oauth2.Token)(&res), err
+	return &res.Token, err
 }

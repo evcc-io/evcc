@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/id"
 	"github.com/evcc-io/evcc/vehicle/skoda"
+	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -168,8 +169,8 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 		return errors.New("missing credentials")
 	}
 
-	login := func() (oauth.Token, error) {
-		var token oauth.Token
+	login := func() (vag.Token, error) {
+		var token vag.Token
 		var idtoken string
 		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
@@ -196,6 +197,11 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 			if err == nil {
 				err = v.DoJSON(req, &token)
 			}
+
+			// check if token response contained error
+			if errT := token.Error(); err != nil && errT != nil {
+				err = fmt.Errorf("token exchange: %w", errT)
+			}
 		}
 
 		return token, err
@@ -203,7 +209,7 @@ func (v *Identity) LoginVAG(clientID string, query url.Values, user, password st
 
 	token, err := login()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), Refresher(v.log, login, clientID))
+		v.TokenSource = oauth.RefreshTokenSource(&token.Token, Refresher(v.log, login, clientID))
 	}
 
 	return err
@@ -215,8 +221,8 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 		return errors.New("missing credentials")
 	}
 
-	login := func() (oauth.Token, error) {
-		var token oauth.Token
+	login := func() (vag.Token, error) {
+		var token vag.Token
 		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 		q, err := v.login(uri, user, password)
@@ -234,6 +240,11 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 			if err == nil {
 				err = v.DoJSON(req, &token)
 			}
+
+			// check if token response contained error
+			if errT := token.Error(); err != nil && errT != nil {
+				err = fmt.Errorf("token exchange: %w", errT)
+			}
 		}
 
 		return token, err
@@ -241,7 +252,7 @@ func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
 
 	token, err := login()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), skoda.Refresher(v.log, login))
+		v.TokenSource = oauth.RefreshTokenSource(&token.Token, skoda.Refresher(v.log, login))
 	}
 
 	return err
