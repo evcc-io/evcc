@@ -69,6 +69,25 @@ type ClimaterResponse struct {
 	Error *Error // optional error
 }
 
+// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
+type VehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+	Error *Error // optional error
+}
+
+// HomeRegion is the home region API response
+type HomeRegion struct {
+	HomeRegion struct {
+		BaseURI struct {
+			SystemID string
+			Content  string // api url
+		}
+	}
+	Error *Error // optional error
+}
+
 // TimedInt is an int value with timestamp
 type TimedInt struct {
 	Content   int

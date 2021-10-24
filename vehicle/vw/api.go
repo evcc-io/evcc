@@ -51,29 +51,15 @@ func (v *API) getJSON(uri string, res interface{}) error {
 	return err
 }
 
-// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
-type VehiclesResponse struct {
-	UserVehicles struct {
-		Vehicle []string
-	}
-}
-
 // Vehicles implements the /vehicles response
 func (v *API) Vehicles() ([]string, error) {
 	var res VehiclesResponse
 	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", v.baseURI, v.brand, v.country)
 	err := v.getJSON(uri, &res)
-	return res.UserVehicles.Vehicle, err
-}
-
-// HomeRegion is the home region API response
-type HomeRegion struct {
-	HomeRegion struct {
-		BaseURI struct {
-			SystemID string
-			Content  string // api url
-		}
+	if err != nil && res.Error != nil {
+		err = res.Error.Error()
 	}
+	return res.UserVehicles.Vehicle, err
 }
 
 // HomeRegion updates the home region for the given vehicle
@@ -88,6 +74,8 @@ func (v *API) HomeRegion(vin string) error {
 			api = strings.TrimSuffix(api, "/api") + "/fs-car"
 			v.baseURI = api
 		}
+	} else if res.Error != nil {
+		err = res.Error.Error()
 	}
 
 	return err
