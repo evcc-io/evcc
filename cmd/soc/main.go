@@ -80,11 +80,13 @@ func main() {
 		var err error
 
 		start := time.Now()
-		for soc, err = v.SoC(); err != nil && matchesError(err, api.ErrMustRetry); {
-			if time.Since(start) > time.Minute {
-				err = api.ErrTimeout
-			} else {
-				time.Sleep(5 * time.Second)
+		for err = api.ErrMustRetry; err != nil && matchesError(err, api.ErrMustRetry); {
+			if soc, err = v.SoC(); err != nil {
+				if time.Since(start) > time.Minute {
+					err = api.ErrTimeout
+				} else {
+					time.Sleep(5 * time.Second)
+				}
 			}
 		}
 
