@@ -33,9 +33,11 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Expiry              time.Duration
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -63,7 +65,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	v.Provider = nissan.NewProvider(api, cc.Cache)
+	v.Provider = nissan.NewProvider(api, cc.Expiry, cc.Cache)
 
 	return v, err
 }

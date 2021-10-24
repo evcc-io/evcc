@@ -1,12 +1,10 @@
 package nissan
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -14,14 +12,11 @@ import (
 
 const (
 	refreshTimeout = 5 * time.Minute
-	statusExpiry   = time.Minute
 )
 
 type API struct {
 	*request.Helper
-	VIN         string
-	refreshID   string
-	refreshTime time.Time
+	VIN string
 }
 
 func NewAPI(log *util.Logger, identity oauth2.TokenSource, vin string) *API {
@@ -66,60 +61,23 @@ func (v *API) Vehicles() ([]string, error) {
 const timeFormat = "2006-01-02T15:04:05Z"
 
 // Battery provides battery api response
-func (v *API) Battery() (Response, error) {
-	// request battery status
+func (v *API) BatteryStatus() (Response, error) {
 	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, v.VIN)
 
 	var res Response
 	err := v.GetJSON(uri, &res)
 
-	var ts time.Time
-	if err == nil {
-		ts, err = time.Parse(timeFormat, res.Data.Attributes.LastUpdateTime)
-
-		// return the current value
-		if time.Since(ts) <= statusExpiry {
-			v.refreshID = ""
-			return res, err
-		}
-	}
-
-	// request a refresh, irrespective of a previous error
-	if v.refreshID == "" {
-		if err = v.refreshRequest(); err == nil {
-			err = api.ErrMustRetry
-		}
-
-		return res, err
-	}
-
-	// refresh finally expired
-	if time.Since(v.refreshTime) > refreshTimeout {
-		v.refreshID = ""
-		if err == nil {
-			err = api.ErrTimeout
-		}
-	} else {
-		if len(res.Errors) > 0 {
-			// extract error code
-			e := res.Errors[0]
-			err = fmt.Errorf("%s: %s", e.Code, e.Detail)
-		} else {
-			// wait for refresh, irrespective of a previous error
-			err = api.ErrMustRetry
-		}
-	}
-
 	return res, err
 }
 
-// refreshRequest requests  battery status refresh
-func (v *API) refreshRequest() error {
+// RefreshRequest requests  battery status refresh
+func (v *API) RefreshRequest(typ string) (Response, error) {
+	var res Response
 	uri := fmt.Sprintf("%s/v1/cars/%s/actions/refresh-battery-status", CarAdapterBaseURL, v.VIN)
 
 	data := Request{
 		Data: Payload{
-			Type: "RefreshBatteryStatus",
+			Type: typ,
 		},
 	}
 
@@ -127,21 +85,11 @@ func (v *API) refreshRequest() error {
 		"Content-Type": "application/vnd.api+json",
 	})
 
-	var res Response
 	if err == nil {
 		err = v.DoJSON(req, &res)
 	}
 
-	if err == nil {
-		v.refreshID = res.Data.ID
-		v.refreshTime = time.Now()
-
-		if v.refreshID == "" {
-			err = errors.New("refresh failed")
-		}
-	}
-
-	return err
+	return res, err
 }
 
 type Action string
