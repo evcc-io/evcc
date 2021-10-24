@@ -8,7 +8,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Token is an OAuth token that supports the expires_in attribute
+// Token is an OAuth2-compatible token that supports the expires_in attribute
 type Token struct {
 	oauth2.Token
 	err error
