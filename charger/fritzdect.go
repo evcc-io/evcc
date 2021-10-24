@@ -14,12 +14,11 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-// AVM FritzBox AHA interface and authentification specifications:
+// AVM FritzBox AHA interface specifications:
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
-// https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
 // FritzDECT charger implementation
-type FritzDECT struct {
+type fritzDECT struct {
 	conn         *fritzbox.Connection
 	standbypower float64
 }
@@ -56,7 +55,7 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewFritzDECT creates FritzDECT charger
-func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, updated time.Time) (*FritzDECT, error) {
+func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, updated time.Time) (*fritzDECT, error) {
 	log := util.NewLogger("fritzdect")
 
 	conn := &fritzbox.Connection{
@@ -68,7 +67,7 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, up
 		SID:      sid,
 	}
 
-	c := &FritzDECT{
+	c := &fritzDECT{
 		conn:         conn,
 		standbypower: standbypower,
 	}
@@ -79,23 +78,19 @@ func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64, up
 }
 
 // Status implements the api.Charger interface
-func (c *FritzDECT) Status() (api.ChargeStatus, error) {
+func (c *fritzDECT) Status() (api.ChargeStatus, error) {
 	// present 0/1 - DECT Switch connected to fritzbox (no/yes)
 	var present int64
 	resp, err := c.conn.ExecFritzDectCmd("getswitchpresent")
 	if err == nil {
 		present, err = strconv.ParseInt(resp, 10, 64)
-	}
-
-	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
-	var power float64
-	if err == nil {
-		if resp, err = c.conn.ExecFritzDectCmd("getswitchpower"); err == nil {
-			power, err = strconv.ParseFloat(resp, 64)
+		if err != nil {
+			return api.StatusNone, err
 		}
 	}
 
-	power = power / 1000 // mW ==> W
+	power, err := c.conn.CurrentPower()
+
 	switch {
 	case present == 1 && power <= c.standbypower:
 		return api.StatusB, err
@@ -107,7 +102,7 @@ func (c *FritzDECT) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (c *FritzDECT) Enabled() (bool, error) {
+func (c *fritzDECT) Enabled() (bool, error) {
 	// state 0/1 - DECT Switch state off/on (empty if unknown or error)
 	resp, err := c.conn.ExecFritzDectCmd("getswitchstate")
 	if err != nil {
@@ -124,7 +119,7 @@ func (c *FritzDECT) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (c *FritzDECT) Enable(enable bool) error {
+func (c *fritzDECT) Enable(enable bool) error {
 	cmd := "setswitchoff"
 	if enable {
 		cmd = "setswitchon"
@@ -151,28 +146,15 @@ func (c *FritzDECT) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the api.Charger interface
-func (c *FritzDECT) MaxCurrent(current int64) error {
+func (c *fritzDECT) MaxCurrent(current int64) error {
 	return nil
 }
 
-var _ api.Meter = (*FritzDECT)(nil)
+var _ api.Meter = (*fritzDECT)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (c *FritzDECT) CurrentPower() (float64, error) {
-	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
-	resp, err := c.conn.ExecFritzDectCmd("getswitchpower")
-	if err != nil {
-		return 0, err
-	}
-
-	if resp == "inval" {
-		return 0, api.ErrNotAvailable
-	}
-
-	power, err := strconv.ParseFloat(resp, 64)
-
-	// ignore standby power
-	power = power / 1000 // mW ==> W
+func (c *fritzDECT) CurrentPower() (float64, error) {
+	power, err := c.conn.CurrentPower()
 	if power < c.standbypower {
 		power = 0
 	}
@@ -180,10 +162,10 @@ func (c *FritzDECT) CurrentPower() (float64, error) {
 	return power, err
 }
 
-var _ api.ChargeRater = (*FritzDECT)(nil)
+var _ api.ChargeRater = (*fritzDECT)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (c *FritzDECT) ChargedEnergy() (float64, error) {
+func (c *fritzDECT) ChargedEnergy() (float64, error) {
 	// fetch basicdevicestats
 	resp, err := c.conn.ExecFritzDectCmd("getbasicdevicestats")
 	if err != nil {

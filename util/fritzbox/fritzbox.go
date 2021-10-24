@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/text/encoding/unicode"
 )
@@ -45,6 +47,23 @@ func (fb *Connection) ExecFritzDectCmd(function string) (string, error) {
 	uri := fmt.Sprintf("%s/webservices/homeautoswitch.lua", fb.URI)
 	response, err := fb.GetBody(uri + "?" + parameters.Encode())
 	return strings.TrimSpace(string(response)), err
+}
+
+// CurrentPower implements the api interface
+func (fb *Connection) CurrentPower() (float64, error) {
+	// power value in 0,001 W (current switch power, refresh approximately every 2 minutes)
+	resp, err := fb.ExecFritzDectCmd("getswitchpower")
+	if err != nil {
+		return 0, err
+	}
+
+	if resp == "inval" {
+		return 0, api.ErrNotAvailable
+	}
+	power, err := strconv.ParseFloat(resp, 64)
+	power = power / 1000 // mW ==> W
+
+	return power, err
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
