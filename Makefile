@@ -48,7 +48,7 @@ lint-ui:
 	npm run lint
 
 test-ui:
-	npm run test
+	npm test
 
 test:
 	@echo "Running testsuite"

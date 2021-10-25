@@ -17,6 +17,7 @@ describe("Energyflow.vue", () => {
     gridPower: 0,
     pvConfigured: true,
     pvPower: 0,
+    homePower: 0,
     batteryConfigured: false,
     batteryPower: 0,
     batterySoC: 0,
@@ -25,7 +26,13 @@ describe("Energyflow.vue", () => {
   it("using pv and grid power", async () => {
     const wrapper = shallowMount(Energyflow, {
       mocks,
-      propsData: { ...defaultProps, gridPower: 1000, pvPower: 4000, loadpointsPower: 3700 },
+      propsData: {
+        ...defaultProps,
+        gridPower: 1000,
+        pvPower: 4000,
+        homePower: 1300,
+        loadpointsPower: 3700,
+      },
     });
     await wrapper.find(".energyflow").trigger("click");
 
@@ -33,7 +40,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("4.0 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("1.3 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("1.3 kW");
     expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("3.7 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("4.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
@@ -42,18 +49,18 @@ describe("Energyflow.vue", () => {
   it("exporting all pv power, no usage", async () => {
     const wrapper = shallowMount(Energyflow, {
       mocks,
-      propsData: { ...defaultProps, gridPower: -4000, pvPower: 4000, loadpointsPower: 1000 },
+      propsData: { ...defaultProps, gridPower: -4000, pvPower: 5000, loadpointsPower: 1000 },
     });
 
     await wrapper.find(".energyflow").trigger("click");
 
     expect(wrapper.find("[data-test-grid-import]").text()).toMatch("0.0 kW");
-    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("1.0 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("4.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("1.0 kW");
-    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("4.0 kW");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("5.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
   });
 
@@ -69,7 +76,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("4.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("3.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
@@ -87,7 +94,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-loadpoints]").text()).toMatch("7.0 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
     expect(wrapper.find("[data-test-battery]").exists()).toBe(false);
@@ -102,6 +109,7 @@ describe("Energyflow.vue", () => {
         pvPower: 0,
         batteryConfigured: true,
         batteryPower: 0,
+        homePower: 360,
       },
     });
 
@@ -111,7 +119,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0 W");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0 W");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("360 W");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("360 W");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0 W");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.battery");
   });
@@ -126,6 +134,7 @@ describe("Energyflow.vue", () => {
         batteryPower: 234,
         batterySoC: 77,
         pvPower: 0,
+        homePower: 534,
       },
     });
 
@@ -135,7 +144,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("234 W");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0 W");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("534 W");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("534 W");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0 W");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("234 W");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("77%");
@@ -151,6 +160,7 @@ describe("Energyflow.vue", () => {
         batteryConfigured: true,
         batteryPower: -1700,
         pvPower: 9000,
+        homePower: 4800,
       },
     });
 
@@ -160,7 +170,7 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("6.5 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("2.5 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("4.8 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("4.8 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("9.0 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("1.7 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryCharge");
@@ -175,6 +185,7 @@ describe("Energyflow.vue", () => {
         batteryConfigured: true,
         batteryPower: 1234,
         pvPower: 378,
+        homePower: 7200,
       },
     });
 
@@ -184,9 +195,34 @@ describe("Energyflow.vue", () => {
     expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("1.6 kW");
     expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
 
-    expect(wrapper.find("[data-test-house-consumption]").text()).toMatch("7.2 kW");
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("7.2 kW");
     expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.4 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("1.2 kW");
     expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryDischarge");
+  });
+
+  it("battery charge, grid import", async () => {
+    const wrapper = shallowMount(Energyflow, {
+      mocks,
+      propsData: {
+        ...defaultProps,
+        gridPower: 1500,
+        batteryConfigured: true,
+        batteryPower: -1000,
+        homePower: 500,
+        pvPower: 0,
+      },
+    });
+
+    await wrapper.find(".energyflow").trigger("click");
+
+    expect(wrapper.find("[data-test-grid-import]").text()).toMatch("1.5 kW");
+    expect(wrapper.find("[data-test-self-consumption]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-pv-export]").text()).toMatch("0.0 kW");
+
+    expect(wrapper.find("[data-test-home-power]").text()).toMatch("0.5 kW");
+    expect(wrapper.find("[data-test-pv-production]").text()).toMatch("0.0 kW");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("1.0 kW");
+    expect(wrapper.find("[data-test-battery]").text()).toMatch("main.energyflow.batteryCharge");
   });
 });

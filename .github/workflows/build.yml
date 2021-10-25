@@ -78,6 +78,9 @@ jobs:
     - name: Lint
       run: make lint-ui
 
+    - name: Test
+      run: make test-ui
+
     - name: Porcelain
       run: |
         test -z "$(git status --porcelain)" || (git status; git diff; false)
