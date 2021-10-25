@@ -9,11 +9,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
-	"github.com/evcc-io/evcc/vehicle/id"
-	"github.com/evcc-io/evcc/vehicle/skoda"
-	"github.com/evcc-io/evcc/vehicle/vag"
 	"golang.org/x/net/publicsuffix"
 	"golang.org/x/oauth2"
 )
@@ -35,6 +31,18 @@ const (
 	TokenServiceURI = "https://tokenrefreshservice.apps.emea.vwapps.io"
 )
 
+var _ PlatformLogin = (*Identity)(nil)
+
+// PlatformLogin provides the user login to identity.vwgroup.io. It does not handle the token exchange.
+type PlatformLogin interface {
+	UserLogin(uri, user, password string) (url.Values, error)
+}
+
+// TokenSourceProvider provides the token source by exchanging the platform token for specific service tokens
+type TokenSourceProvider interface {
+	TokenSource() (oauth2.TokenSource, error)
+}
+
 // Identity provides the identity.vwgroup.io login token source
 type Identity struct {
 	log *util.Logger
@@ -52,8 +60,12 @@ func NewIdentity(log *util.Logger) *Identity {
 	return v
 }
 
-// Login performs the identity.vwgroup.io login
-func (v *Identity) login(uri, user, password string) (url.Values, error) {
+// UserLogin performs the identity.vwgroup.io login
+func (v *Identity) UserLogin(uri, user, password string) (url.Values, error) {
+	if user == "" || password == "" {
+		return nil, errors.New("missing credentials")
+	}
+
 	// track cookies and don't follow redirects
 	jar, _ := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -163,138 +175,11 @@ func (v *Identity) postTos(uri string) (*http.Response, error) {
 	return resp, err
 }
 
-// LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
-func (v *Identity) LoginVAG(clientID string, query url.Values, user, password string) error {
-	if user == "" || password == "" {
-		return errors.New("missing credentials")
-	}
-
-	login := func() (vag.Token, error) {
-		var token vag.Token
-		var idtoken string
-		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
-
-		q, err := v.login(uri, user, password)
-		if err == nil {
-			if idtoken = q.Get("id_token"); idtoken == "" {
-				err = errors.New("missing id_token")
-			}
-		}
-
-		if err == nil {
-			data := url.Values(map[string][]string{
-				"grant_type": {"id_token"},
-				"scope":      {"sc2:fal"},
-				"token":      {idtoken},
-			})
-
-			var req *http.Request
-			req, err = request.New(http.MethodPost, OauthTokenURI, strings.NewReader(data.Encode()), map[string]string{
-				"Content-Type": "application/x-www-form-urlencoded",
-				"X-Client-Id":  clientID,
-			})
-
-			if err == nil {
-				err = v.DoJSON(req, &token)
-			}
-
-			// check if token response contained error
-			if errT := token.Error(); err != nil && errT != nil {
-				err = fmt.Errorf("token exchange: %w", errT)
-			}
-		}
-
-		return token, err
-	}
-
-	token, err := login()
+// Login executes the login flow by obtaining the oauth token source from the provider
+func (v *Identity) Login(prov TokenSourceProvider) error {
+	ts, err := prov.TokenSource()
 	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(&token.Token, Refresher(v.log, login, clientID))
+		v.TokenSource = ts
 	}
-
-	return err
-}
-
-// LoginSkoda performs Skoda login and finally exchanges code and id token for access and refresh tokens
-func (v *Identity) LoginSkoda(query url.Values, user, password string) error {
-	if user == "" || password == "" {
-		return errors.New("missing credentials")
-	}
-
-	login := func() (vag.Token, error) {
-		var token vag.Token
-		uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
-
-		q, err := v.login(uri, user, password)
-		if err == nil {
-			data := url.Values(map[string][]string{
-				"auth_code": {q.Get("code")},
-				"id_token":  {q.Get("id_token")},
-				"brand":     {"skoda"},
-			})
-
-			var req *http.Request
-			uri = fmt.Sprintf("%s/exchangeAuthCode", TokenServiceURI)
-			req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
-
-			if err == nil {
-				err = v.DoJSON(req, &token)
-			}
-
-			// check if token response contained error
-			if errT := token.Error(); err != nil && errT != nil {
-				err = fmt.Errorf("token exchange: %w", errT)
-			}
-		}
-
-		return token, err
-	}
-
-	token, err := login()
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource(&token.Token, skoda.Refresher(v.log, login))
-	}
-
-	return err
-}
-
-// LoginID performs ID login and finally exchanges state and id token for access and refresh tokens
-func (v *Identity) LoginID(query url.Values, user, password string) error {
-	if user == "" || password == "" {
-		return errors.New("missing credentials")
-	}
-
-	login := func() (id.Token, error) {
-		var token id.Token
-		uri := fmt.Sprintf("%s/authorize?%s", AppsURI, query.Encode())
-
-		q, err := v.login(uri, user, password)
-		if err == nil {
-			data := map[string]string{
-				"state":             q.Get("state"),
-				"id_token":          q.Get("id_token"),
-				"redirect_uri":      "weconnect://authenticated",
-				"region":            "emea",
-				"access_token":      q.Get("access_token"),
-				"authorizationCode": q.Get("code"),
-			}
-
-			var req *http.Request
-			uri = fmt.Sprintf("%s/login/v1", AppsURI)
-			req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-
-			if err == nil {
-				err = v.DoJSON(req, &token)
-			}
-		}
-
-		return token, err
-	}
-
-	token, err := login()
-	if err == nil {
-		v.TokenSource = oauth.RefreshTokenSource((*oauth2.Token)(&token), id.Refresher(v.log, login))
-	}
-
 	return err
 }

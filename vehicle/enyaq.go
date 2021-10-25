@@ -59,8 +59,8 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			"scope":         {"openid profile mbb"},
 		})
 
-		err = identity.LoginSkoda(query, cc.User, cc.Password)
-		if err != nil {
+		ts := skoda.NewTokenSource(log, identity, query, cc.User, cc.Password)
+		if err = identity.Login(ts); err != nil {
 			return v, fmt.Errorf("login failed: %w", err)
 		}
 
@@ -84,8 +84,8 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			"scope":         {"openid profile mbb"}, // phone address cars email birthdate badge dealers driversLicense
 		})
 
-		err := identity.LoginSkoda(query, cc.User, cc.Password)
-		if err != nil {
+		ts := skoda.NewTokenSource(log, identity, query, cc.User, cc.Password)
+		if err = identity.Login(ts); err != nil {
 			return v, fmt.Errorf("login failed: %w", err)
 		}
 

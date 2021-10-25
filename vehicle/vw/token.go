@@ -1,4 +1,4 @@
-package vag
+package vw
 
 import (
 	"encoding/json"
