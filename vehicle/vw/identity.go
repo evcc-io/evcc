@@ -140,7 +140,7 @@ func (v *Identity) UserLogin(uri, user, password string) (url.Values, error) {
 
 	var location *url.URL
 	if err == nil {
-		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") //  convert to parseable url
+		loc := strings.ReplaceAll(resp.Header.Get("Location"), "#", "?") // convert to parseable url
 		if location, err = url.Parse(loc); err == nil {
 			return location.Query(), nil
 		}
