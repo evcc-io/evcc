@@ -46,8 +46,8 @@ type Energy struct {
 	Values  []string `xml:"stats"`
 }
 
-// NewFritzDECT creates FritzDECT connection
-func NewFritzDECT(uri, ain, user, password string) (*Connection, error) {
+// NewConnection creates FritzDECT connection
+func NewConnection(uri, ain, user, password string) (*Connection, error) {
 	if uri == "" {
 		uri = "https://fritz.box"
 	}

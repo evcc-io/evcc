@@ -39,9 +39,9 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
 }
 
-// NewFritzDECT creates FritzDECT connection with standbypower for charger
+// NewFritzDECT creates a new connection with standbypower for charger
 func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
-	fritzdect, err := fritzdect.NewFritzDECT(uri, ain, user, password)
+	fritzdect, err := fritzdect.NewConnection(uri, ain, user, password)
 	if err != nil {
 		return nil, err
 	}
