@@ -55,7 +55,7 @@ func (v *TokenSource) login() (Token, error) {
 
 	if err == nil {
 		for _, k := range []string{"state", "id_token", "access_token", "code"} {
-			if !q.Has(k) {
+			if q.Get(k) == "" {
 				err = errors.New("missing " + k)
 				break
 			}

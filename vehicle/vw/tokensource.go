@@ -51,7 +51,7 @@ func (v *TokenSource) login() (Token, error) {
 
 	q, err := v.identity.UserLogin(uri, v.user, v.password)
 
-	if err == nil && !q.Has("id_token") {
+	if err == nil && q.Get("id_token") == "" {
 		err = errors.New("missing id_token")
 	}
 
