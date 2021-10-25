@@ -1,4 +1,4 @@
-package internal
+package vw
 
 import (
 	"encoding/json"
@@ -35,11 +35,15 @@ func TestUnmarshalJSONError(t *testing.T) {
 	data := `{"error":"invalid_request","error_description":"Id token is invalid."}`
 
 	err := json.Unmarshal([]byte(data), &tok)
-	if err == nil {
+	if err != nil {
+		t.Error(err)
+	}
+
+	if err := tok.Error(); err == nil {
 		t.Error("missing error")
 	}
 
-	if err.Error() != "invalid_request: Id token is invalid." {
+	if err := tok.Error(); err.Error() != "invalid_request: Id token is invalid." {
 		t.Errorf("unexpected error: %s", err.Error())
 	}
 }

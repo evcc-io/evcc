@@ -70,12 +70,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 		// wait up to 1m for the vehicle to wakeup
 		start := time.Now()
-		for soc, err = v.SoC(); err != nil && errors.Is(err, api.ErrMustRetry); {
-			if time.Since(start) > time.Minute {
-				err = api.ErrTimeout
-			} else {
-				fmt.Fprint(w, ".")
-				time.Sleep(3 * time.Second)
+		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
+			if soc, err = v.SoC(); err != nil {
+				if time.Since(start) > time.Minute {
+					err = api.ErrTimeout
+				} else {
+					fmt.Fprint(w, ".")
+					time.Sleep(3 * time.Second)
+				}
 			}
 		}
 

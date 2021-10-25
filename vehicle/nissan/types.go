@@ -1,5 +1,10 @@
 package nissan
 
+import (
+	"fmt"
+	"strings"
+)
+
 // api constants
 const (
 	APIVersion         = "protocol=1.0,resource=2.1"
@@ -37,6 +42,20 @@ type Token struct {
 	TokenID    string `json:"tokenId"`
 	SuccessURL string `json:"successUrl"`
 	Realm      string `json:"realm"`
+	Code       int    `json:"code"`    // error response
+	Reason     string `json:"reason"`  // error response
+	Message    string `json:"message"` // error response
+}
+
+func (t *Token) SessionExpired() bool {
+	return strings.EqualFold(t.Message, "Session has timed out")
+}
+
+func (t *Token) Error() error {
+	if t.Code == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s", t.Reason, t.Message)
 }
 
 type Vehicles struct {

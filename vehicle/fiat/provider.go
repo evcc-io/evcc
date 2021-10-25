@@ -31,12 +31,10 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 
 	// use pin for refreshing
 	if pin != "" {
-		statusG := func() (StatusResponse, error) {
-			return api.Status(vin)
-		}
-
 		impl.statusG = provider.NewCached(func() (interface{}, error) {
-			return impl.status(statusG)
+			return impl.status(
+				func() (StatusResponse, error) { return api.Status(vin) },
+			)
 		}, cache).InterfaceGetter()
 	}
 

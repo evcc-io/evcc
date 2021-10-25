@@ -45,6 +45,7 @@ type Easee struct {
 	cache          time.Duration
 	log            *util.Logger
 	mux            sync.Mutex
+	current        float64
 	chargerEnabled bool
 	enabledStatus  bool
 	currentPower, sessionEnergy,
@@ -85,6 +86,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		charger: charger,
 		cache:   cache,
 		log:     log,
+		current: 6, // default current
 	}
 
 	if cache > 0 {
@@ -291,13 +293,18 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	// resume/stop charger
-	action := "pause_charging"
+	action := easee.ChargePause
 	if enable {
-		action = "resume_charging"
+		action = easee.ChargeResume
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
+
+	if err == nil && action == easee.ChargeResume {
+		// restore current after enabling https://github.com/evcc-io/evcc/pull/1786
+		err = c.MaxCurrentMillis(c.current)
+	}
 
 	return err
 }
@@ -318,6 +325,7 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
+		c.current = current
 		resp.Body.Close()
 	}
 

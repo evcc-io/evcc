@@ -55,7 +55,8 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile badge cars dealers vin"},
 	})
 
-	err := identity.LoginID(query, cc.User, cc.Password)
+	ts := id.NewTokenSource(log, identity, query, cc.User, cc.Password)
+	err := identity.Login(ts)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
