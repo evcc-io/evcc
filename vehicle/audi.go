@@ -58,7 +58,8 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"ui_locales":    {"de-DE"},
 	})
 
-	err := identity.LoginVAG("77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
+	ts := vw.NewTokenSource(log, identity, "77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
+	err := identity.Login(ts)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
@@ -79,14 +80,5 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	// audiApi := audi.NewAPI(log, identity, "Audi", "DE")
-	// v.audiProvider = audi.NewProvider(audiApi, cc.VIN, cc.Cache)
-
 	return v, err
 }
-
-// var _ api.VehicleOdometer = (*Audi)(nil)
-
-// func (v *Audi) Odometer() (float64, error) {
-// 	return v.audiProvider.Odometer()
-// }

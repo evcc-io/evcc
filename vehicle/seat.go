@@ -55,7 +55,8 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"scope":         {"openid profile mbb"}, // cars birthdate nickname address phone
 	})
 
-	err := identity.LoginVAG("9dcc70f0-8e79-423a-a3fa-4065d99088b4", query, cc.User, cc.Password)
+	ts := vw.NewTokenSource(log, identity, "9dcc70f0-8e79-423a-a3fa-4065d99088b4", query, cc.User, cc.Password)
+	err := identity.Login(ts)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
