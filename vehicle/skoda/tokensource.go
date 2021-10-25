@@ -13,6 +13,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	// OauthTokenURI is the token service uri for Skoda Enyaq vehicles
+	OauthTokenURI = "https://tokenrefreshservice.apps.emea.vwapps.io"
+)
+
 type TokenSource struct {
 	*request.Helper
 	identity vw.PlatformLogin
@@ -55,7 +60,7 @@ func (v *TokenSource) login() (vw.Token, error) {
 		})
 
 		var req *http.Request
-		uri = fmt.Sprintf("%s/exchangeAuthCode", vw.TokenServiceURI)
+		uri = fmt.Sprintf("%s/exchangeAuthCode", OauthTokenURI)
 		req, err = request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
 
 		if err == nil {
@@ -73,7 +78,7 @@ func (v *TokenSource) login() (vw.Token, error) {
 
 // RefreshToken implements oauth.TokenRefresher
 func (v *TokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	uri := "https://tokenrefreshservice.apps.emea.vwapps.io/refreshTokens"
+	uri := fmt.Sprintf("%s/refreshTokens", OauthTokenURI)
 
 	data := url.Values(map[string][]string{
 		"grant_type":    {"refresh_token"},

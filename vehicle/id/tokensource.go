@@ -12,6 +12,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	// OauthTokenURI is the login uri for ID vehicles
+	OauthTokenURI = "https://login.apps.emea.vwapps.io"
+)
+
 type TokenSource struct {
 	*request.Helper
 	identity vw.PlatformLogin
@@ -43,7 +48,7 @@ func (v *TokenSource) TokenSource() (oauth2.TokenSource, error) {
 
 func (v *TokenSource) login() (Token, error) {
 	var token Token
-	uri := fmt.Sprintf("%s/authorize?%s", vw.AppsURI, v.query.Encode())
+	uri := fmt.Sprintf("%s/authorize?%s", OauthTokenURI, v.query.Encode())
 
 	q, err := v.identity.UserLogin(uri, v.user, v.password)
 	if err == nil {
@@ -57,7 +62,7 @@ func (v *TokenSource) login() (Token, error) {
 		}
 
 		var req *http.Request
-		uri = fmt.Sprintf("%s/login/v1", vw.AppsURI)
+		uri = fmt.Sprintf("%s/login/v1", OauthTokenURI)
 		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 
 		if err == nil {
@@ -69,7 +74,7 @@ func (v *TokenSource) login() (Token, error) {
 }
 
 func (v *TokenSource) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	uri := "https://login.apps.emea.vwapps.io/refresh/v1"
+	uri := fmt.Sprintf("%s/refresh/v1", OauthTokenURI)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Accept":        "application/json",

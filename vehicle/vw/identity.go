@@ -23,12 +23,6 @@ const (
 
 	// OauthRevokeURI is used for revoking tokens
 	OauthRevokeURI = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth/mobile/oauth2/v1/revoke"
-
-	// AppsURI is the login uri for ID vehicles
-	AppsURI = "https://login.apps.emea.vwapps.io"
-
-	// TokenServiceURI is the token service uri (used for Skoda Enyaq vehicles)
-	TokenServiceURI = "https://tokenrefreshservice.apps.emea.vwapps.io"
 )
 
 var _ PlatformLogin = (*Identity)(nil)
