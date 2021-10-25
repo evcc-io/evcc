@@ -293,15 +293,16 @@ func (c *Easee) Enable(enable bool) error {
 	}
 
 	// resume/stop charger
-	action := "pause_charging"
+	action := easee.ChargePause
 	if enable {
-		action = "resume_charging"
+		action = easee.ChargeResume
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
 
-	if err == nil {
+	if err == nil && action == easee.ChargeResume {
+		// restore current after enabling https://github.com/evcc-io/evcc/pull/1786
 		err = c.MaxCurrentMillis(c.current)
 	}
 
