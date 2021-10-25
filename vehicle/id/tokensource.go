@@ -1,6 +1,7 @@
 package id
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -51,6 +52,16 @@ func (v *TokenSource) login() (Token, error) {
 	uri := fmt.Sprintf("%s/authorize?%s", OauthTokenURI, v.query.Encode())
 
 	q, err := v.identity.UserLogin(uri, v.user, v.password)
+
+	if err == nil {
+		for _, k := range []string{"state", "id_token", "access_token", "code"} {
+			if !q.Has(k) {
+				err = errors.New("missing " + k)
+				break
+			}
+		}
+	}
+
 	if err == nil {
 		data := map[string]string{
 			"state":             q.Get("state"),

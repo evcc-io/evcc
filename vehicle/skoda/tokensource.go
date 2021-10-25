@@ -1,6 +1,7 @@
 package skoda
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -52,6 +53,16 @@ func (v *TokenSource) login() (vw.Token, error) {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", vw.IdentityURI, v.query.Encode())
 
 	q, err := v.identity.UserLogin(uri, v.user, v.password)
+
+	if err == nil {
+		for _, k := range []string{"id_token", "code"} {
+			if !q.Has(k) {
+				err = errors.New("missing " + k)
+				break
+			}
+		}
+	}
+
 	if err == nil {
 		data := url.Values(map[string][]string{
 			"auth_code": {q.Get("code")},

@@ -47,21 +47,19 @@ func (v *TokenSource) TokenSource() (oauth2.TokenSource, error) {
 // LoginVAG performs VAG login and finally exchanges id token for access and refresh tokens
 func (v *TokenSource) login() (Token, error) {
 	var token Token
-	var idtoken string
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, v.query.Encode())
 
 	q, err := v.identity.UserLogin(uri, v.user, v.password)
-	if err == nil {
-		if idtoken = q.Get("id_token"); idtoken == "" {
-			err = errors.New("missing id_token")
-		}
+
+	if err == nil && !q.Has("id_token") {
+		err = errors.New("missing id_token")
 	}
 
 	if err == nil {
 		data := url.Values(map[string][]string{
 			"grant_type": {"id_token"},
 			"scope":      {"sc2:fal"},
-			"token":      {idtoken},
+			"token":      {q.Get("id_token")},
 		})
 
 		var req *http.Request
