@@ -31,20 +31,17 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Charger, error) {
 		AIN          string
 		User         string
 		Password     string
-		SID          string
 		StandbyPower float64
 	}{}
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
-
-	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.SID, cc.StandbyPower)
+	return NewFritzDECT(cc.URI, cc.AIN, cc.User, cc.Password, cc.StandbyPower)
 }
 
 // NewFritzDECT creates FritzDECT connection with standbypower for charger
-func NewFritzDECT(uri, ain, user, password, sid string, standbypower float64) (*FritzDECT, error) {
-	fritzdect, err := fritzdect.NewFritzDECT(uri, ain, user, password, sid)
+func NewFritzDECT(uri, ain, user, password string, standbypower float64) (*FritzDECT, error) {
+	fritzdect, err := fritzdect.NewFritzDECT(uri, ain, user, password)
 	if err != nil {
 		return nil, err
 	}

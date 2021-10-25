@@ -21,11 +21,17 @@ import (
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AHA-HTTP-Interface.pdf
 // https://avm.de/fileadmin/user_upload/Global/Service/Schnittstellen/AVM_Technical_Note_-_Session_ID.pdf
 
+// FritzDECT settings
+type Settings struct {
+	URI, AIN, User, Password string
+}
+
 // FritzDECT connection
 type Connection struct {
 	*request.Helper
-	URI, AIN, User, Password, SID string
-	Updated                       time.Time
+	*Settings
+	SID     string
+	Updated time.Time
 }
 
 // Devicestats structures getbasicdevicesstats command response (AHA-HTTP-Interface)
@@ -40,9 +46,39 @@ type Energy struct {
 	Values  []string `xml:"stats"`
 }
 
+// NewFritzDECT creates FritzDECT connection
+func NewFritzDECT(uri, ain, user, password string) (*Connection, error) {
+	if uri == "" {
+		uri = "https://fritz.box"
+	}
+
+	if ain == "" {
+		return nil, errors.New("missing ain")
+	}
+
+	settings := &Settings{
+		URI:      strings.TrimRight(uri, "/"),
+		AIN:      ain,
+		User:     user,
+		Password: password,
+	}
+
+	log := util.NewLogger("fritzdect")
+
+	fritzdect := &Connection{
+		Helper:   request.NewHelper(log),
+		Settings: settings,
+	}
+
+	fritzdect.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+
+	return fritzdect, nil
+}
+
+// ExecCmd execautes an FritzDECT AHA-HTTP-Interface command
 func (fd *Connection) ExecCmd(function string) (string, error) {
 	// refresh Fritzbox session id
-	if time.Since(fd.Updated).Minutes() >= 10 {
+	if time.Since(fd.Updated) >= 10*time.Minute {
 		err := fd.getSessionID()
 		if err != nil {
 			return "", err
@@ -76,32 +112,6 @@ func (fd *Connection) CurrentPower() (float64, error) {
 	power, err := strconv.ParseFloat(resp, 64)
 
 	return power / 1000, err // mW ==> W
-}
-
-// NewFritzDECT creates FritzDECT connection
-func NewFritzDECT(uri, ain, user, password, sid string) (*Connection, error) {
-	if uri == "" {
-		uri = "https://fritz.box"
-	}
-
-	if ain == "" {
-		return nil, errors.New("missing ain")
-	}
-
-	log := util.NewLogger("fritzdect")
-
-	fritzdect := &Connection{
-		Helper:   request.NewHelper(log),
-		URI:      strings.TrimRight(uri, "/"),
-		AIN:      ain,
-		User:     user,
-		Password: password,
-		SID:      sid,
-	}
-
-	fritzdect.Client.Transport = request.NewTripper(log, request.InsecureTransport())
-
-	return fritzdect, nil
 }
 
 // Fritzbox helpers (credits to https://github.com/rsdk/ahago)
