@@ -390,7 +390,9 @@ func (site *Site) update(lp Updater) {
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
-		homePower := site.gridPower + site.pvPower + site.batteryPower
+		gridImport := math.Max(0, site.gridPower)
+
+		homePower := gridImport + site.pvPower + site.batteryPower
 		for _, lp := range site.loadpoints {
 			homePower -= lp.GetChargePower()
 		}
