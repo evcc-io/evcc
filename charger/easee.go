@@ -292,21 +292,11 @@ func (c *Easee) Enable(enable bool) error {
 		resp.Body.Close()
 	}
 
-	// resume/stop charger
-	action := easee.ChargePause
 	if enable {
-		action = easee.ChargeResume
+		return c.MaxCurrentMillis(c.current)
 	}
 
-	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
-	_, err := c.Post(uri, request.JSONContent, nil)
-
-	if err == nil && action == easee.ChargeResume {
-		// restore current after enabling https://github.com/evcc-io/evcc/pull/1786
-		err = c.MaxCurrentMillis(c.current)
-	}
-
-	return err
+	return c.MaxCurrentMillis(0)
 }
 
 // MaxCurrent implements the api.Charger interface
