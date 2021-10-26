@@ -114,5 +114,5 @@ soc:
 
 stamps:
 	docker pull hacksore/hks
-	docker run --rm hacksore/hks hyundai list 99cfff84-f4e2-4be8-a5ed-e5b755eb6581 | head -n 101 | tail -n 100 > vehicle/bluelink/99cfff84-f4e2-4be8-a5ed-e5b755eb6581
-	docker run --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
+	docker run --platform linux/amd64 --rm hacksore/hks hyundai list 014d2225-8495-4735-812d-2616334fd15d | head -n 101 | tail -n 100 > vehicle/bluelink/014d2225-8495-4735-812d-2616334fd15d
+	docker run --platform linux/amd64 --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417

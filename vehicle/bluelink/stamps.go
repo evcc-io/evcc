@@ -16,15 +16,15 @@ import (
 //go:embed 693a33fa-c117-43f2-ae3b-61a02d24f417
 var kia string
 
-//go:embed 99cfff84-f4e2-4be8-a5ed-e5b755eb6581
+//go:embed 014d2225-8495-4735-812d-2616334fd15d
 var hyundai string
 
-// Stamps collects stamps for a single brand
-type Stamps map[string][]string
+// StampsRegistry collects stamps for a single brand
+type StampsRegistry map[string][]string
 
-var stamps = Stamps{
+var Stamps = StampsRegistry{
 	"693a33fa-c117-43f2-ae3b-61a02d24f417": unpack(kia),
-	"99cfff84-f4e2-4be8-a5ed-e5b755eb6581": unpack(hyundai),
+	"014d2225-8495-4735-812d-2616334fd15d": unpack(hyundai),
 }
 
 var (
@@ -53,7 +53,7 @@ func download(log *util.Logger, id, brand string) {
 	}
 
 	mu.Lock()
-	stamps[id] = res
+	Stamps[id] = res
 	mu.Unlock()
 }
 
@@ -85,7 +85,7 @@ func unpack(source string) (res []string) {
 }
 
 // New creates a new stamp
-func (s Stamps) New(id string) string {
+func (s StampsRegistry) New(id string) string {
 	mu.Lock()
 	defer mu.Unlock()
 

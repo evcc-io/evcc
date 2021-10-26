@@ -21,6 +21,16 @@ func init() {
 	registry.Add("kia", NewKiaFromConfig)
 }
 
+func kiaConfig() bluelink.Config {
+	return bluelink.Config{
+		URI:               "https://prd.eu-ccapi.kia.com:8080",
+		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
+		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
+		CCSPApplicationID: "693a33fa-c117-43f2-ae3b-61a02d24f417",
+		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=572e0304-5f8d-4b4c-9dd5-41aa84eed160&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+	}
+}
+
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
@@ -40,16 +50,8 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	settings := bluelink.Config{
-		URI:               "https://prd.eu-ccapi.kia.com:8080",
-		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
-		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
-		CCSPApplicationID: "693a33fa-c117-43f2-ae3b-61a02d24f417",
-		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=572e0304-5f8d-4b4c-9dd5-41aa84eed160&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
-	}
-
 	log := util.NewLogger("kia")
-	identity, err := bluelink.NewIdentity(log, settings)
+	identity, err := bluelink.NewIdentity(log, kiaConfig())
 	if err != nil {
 		return nil, err
 	}
