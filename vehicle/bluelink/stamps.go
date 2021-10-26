@@ -22,9 +22,14 @@ var hyundai string
 // StampsRegistry collects stamps for a single brand
 type StampsRegistry map[string][]string
 
+const (
+	KiaAppID     = "693a33fa-c117-43f2-ae3b-61a02d24f417"
+	HyundaiAppID = "014d2225-8495-4735-812d-2616334fd15d"
+)
+
 var Stamps = StampsRegistry{
-	"693a33fa-c117-43f2-ae3b-61a02d24f417": unpack(kia),
-	"014d2225-8495-4735-812d-2616334fd15d": unpack(hyundai),
+	KiaAppID:     unpack(kia),
+	HyundaiAppID: unpack(hyundai),
 }
 
 var (
@@ -33,8 +38,8 @@ var (
 
 	client = request.NewHelper(util.NewLogger("http"))
 	brands = map[string]string{
-		"693a33fa-c117-43f2-ae3b-61a02d24f417": "kia",
-		"99cfff84-f4e2-4be8-a5ed-e5b755eb6581": "hyundai",
+		KiaAppID:     "kia",
+		HyundaiAppID: "hyundai",
 	}
 )
 
