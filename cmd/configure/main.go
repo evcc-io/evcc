@@ -57,7 +57,7 @@ func (c *CmdConfigure) configureDevices() {
 				break
 			}
 
-			if category == DeviceCategoryGridMeter || category == DeviceCategoryBatteryMeter {
+			if category == DeviceCategoryGridMeter {
 				break
 			}
 			if !c.askYesNo("Do you want to add another " + DeviceCategories[category].title + "?") {

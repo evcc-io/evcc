@@ -107,10 +107,10 @@ type config struct {
 	Vehicles   []device
 	Loadpoints []loadpoint
 	Site       struct {
-		Title   string
-		Grid    string
-		PVs     []string
-		Battery string
+		Title     string
+		Grid      string
+		PVs       []string
+		Batteries []string
 	}
 	EEBUS string
 }

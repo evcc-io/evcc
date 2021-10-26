@@ -46,13 +46,16 @@ site:
     grid: {{ .Site.Grid }}
 {{- end }}
 {{- if len .Site.PVs }}
-    pvs: 
+    pvs:
 {{-   range .Site.PVs }}
       - {{ . }}
 {{-   end }}
 {{- end }}
-{{- if .Site.Battery }}
-    battery: {{ .Site.Battery }}
+{{- if len .Site.Batteries }}
+    batteries:
+{{-   range .Site.Batteries }}
+      - {{ . }}
+{{-   end }}
 {{- end }}
 {{- if ne (len .EEBUS) 0 }}
 

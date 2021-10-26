@@ -52,7 +52,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) error {
 			case UsageChoicePV:
 				c.configuration.Site.PVs = append(c.configuration.Site.PVs, device.Name)
 			case UsageChoiceBattery:
-				c.configuration.Site.Battery = device.Name
+				c.configuration.Site.Batteries = append(c.configuration.Site.Batteries, device.Name)
 			}
 		case DeviceClassVehicle:
 			c.configuration.Vehicles = append(c.configuration.Vehicles, device)
@@ -63,7 +63,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) error {
 }
 
 // let the user select a device item from a list defined by class and filter
-func (c *CmdConfigure) processDeviceCategory(deviceCategory string) (device, error) {
+func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
 	var repeat bool = true
 
 	device := device{
