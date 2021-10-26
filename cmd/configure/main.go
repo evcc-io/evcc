@@ -44,7 +44,7 @@ func (c *CmdConfigure) Run(log *util.Logger) {
 
 // ask devuce specfic questions
 func (c *CmdConfigure) configureDevices() {
-	categoriesOrder := []string{DeviceCategoryCharger, DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryVehicle}
+	categoriesOrder := []string{DeviceCategoryCharger, DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryVehicle}
 	for _, category := range categoriesOrder {
 		fmt.Println()
 		if !c.askYesNo("Do you want to add a " + DeviceCategories[category].title + "?") {
