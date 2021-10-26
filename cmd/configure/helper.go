@@ -31,11 +31,11 @@ func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
 	return bytes.TrimSpace(out.Bytes()), err
 }
 
-func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) error {
+func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) error {
 	fmt.Println()
 	fmt.Printf("- Configure your %s\n", DeviceCategories[deviceCategory].title)
 
-	device, err := c.processDeviceCategory(deviceCategory)
+	device, err := c.processDeviceCategory(deviceCategory, deviceIndex)
 	if err != nil && err != ErrItemNotPresent {
 		c.log.FATAL.Fatal(err)
 	}
@@ -107,7 +107,8 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		}
 
 		var values map[string]interface{}
-		values, device.Name = c.processConfig(templateItem.Params, deviceCategory, c.enteredNames())
+		values = c.processConfig(templateItem.Params, deviceCategory)
+		device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
 
 		v, err := c.configureDevice(deviceCategory, templateItem, values)
 		if err == nil {
@@ -320,7 +321,7 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues 
 
 	validate := func(input string) error {
 		if invalidValues != nil && funk.ContainsString(invalidValues, input) {
-			return errors.New("Name '" + input + "' is already used")
+			return errors.New("Value '" + input + "' is already used")
 		}
 
 		return nil
@@ -349,10 +350,8 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues 
 // Process an EVCC configuration item
 // Returns
 //   a map with param name and values
-//   the user entered name of the device
-func (c *CmdConfigure) processConfig(paramItems []templates.Param, title string, invalidNames []string) (map[string]interface{}, string) {
-	defaultName := DeviceCategories[title].defaultName
-	usageFilter := DeviceCategories[title].usageFilter
+func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory string) map[string]interface{} {
+	usageFilter := DeviceCategories[deviceCategory].usageFilter
 
 	additionalConfig := make(map[string]interface{})
 	selectedModbusKey := ""
@@ -415,8 +414,5 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, title string,
 		}
 	}
 
-	fmt.Println()
-	deviceName := c.askValue("Name", defaultName, "Give the device a name", invalidNames)
-
-	return additionalConfig, deviceName
+	return additionalConfig
 }

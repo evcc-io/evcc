@@ -51,8 +51,12 @@ func (c *CmdConfigure) configureDevices() {
 			continue
 		}
 
+		var deviceInCategoryIndex int = 0
+
 		for ok := true; ok; {
-			err := c.configureDeviceCategory(category)
+			deviceInCategoryIndex++
+
+			err := c.configureDeviceCategory(category, deviceInCategoryIndex)
 			if err != nil {
 				break
 			}

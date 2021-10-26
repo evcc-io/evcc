@@ -64,9 +64,12 @@ const (
 	defaultNameGridMeter    = "grid"
 	defaultNamePVMeter      = "pv"
 	defaultNameBatteryMeter = "battery"
-	defaultNameVehicle      = "EV"
-	defaultTitleLoadpoint   = "Garage"
-	defaultTitleSite        = "My Home"
+	defaultNameVehicle      = "ev"
+)
+
+const (
+	defaultTitleLoadpoint = "Garage"
+	defaultTitleSite      = "My Home"
 )
 
 type DeviceCategoryData struct {
