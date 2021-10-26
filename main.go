@@ -7,9 +7,8 @@ import (
 	"log"
 
 	"github.com/evcc-io/evcc/cmd"
-	// require minimum go version
 	"github.com/evcc-io/evcc/server"
-	_ "github.com/evcc-io/evcc/util/goversion"
+	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
 )
 
 //go:embed dist
