@@ -17,10 +17,16 @@ const (
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
-	Type        string
-	Description string // user friendly description of the device this template describes
-	Params      []Param
-	Render      string // rendering template
+	Type         string
+	Description  string // user friendly description of the device this template describes
+	Requirements Requirements
+	Params       []Param
+	Render       string // rendering template
+}
+
+// Requirements
+type Requirements struct {
+	Eebus bool // EEBUS Setup is required
 }
 
 // Param is a proxy template parameter
@@ -93,8 +99,8 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte,
 
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, map[string]interface{}{
-		"Type":   t.Type,
-		"Params": t.Params,
+		"Template": t.Type,
+		"Params":   t.Params,
 	})
 
 	return bytes.TrimSpace(out.Bytes()), err

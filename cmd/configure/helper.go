@@ -79,7 +79,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		}
 
 		// check if we need to setup an EEBUS hems
-		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Type == "eebus" {
+		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Requirements.Eebus == true {
 			if c.configuration.EEBUS == "" {
 				eebusConfig, err := c.eebusCertificate()
 
