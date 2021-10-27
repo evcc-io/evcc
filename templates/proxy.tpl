@@ -1,4 +1,4 @@
-type: {{ .Type }}
+type: {{ .Template }}
 {{ range .Params -}}
 {{ .Name }}:
   {{- if len .Value }} {{ .Value }} {{ else }}
