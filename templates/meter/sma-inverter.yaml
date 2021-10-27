@@ -4,9 +4,14 @@ params:
 - name: usage
   choice: ["pv", "battery"]
 - name: host
-  default: 192.0.2.2
+  example: 192.0.2.2
+  required: true
 - name: password
+  mask: true
+  hint: Only needed if the password was changed from the default password
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
+  {{- if ne .password "" }}
   password: {{ .password }} # optional
+  {{- end }}
