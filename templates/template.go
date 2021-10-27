@@ -101,6 +101,16 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte,
 		}
 	}
 
+	// remove params with no values and no defaults
+	var newParams []Param
+	for _, param := range t.Params {
+		if param.Value == "" && param.Default == "" && !param.Required {
+			continue
+		}
+		newParams = append(newParams, param)
+	}
+	t.Params = newParams
+
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, map[string]interface{}{
 		"Template": t.Type,
