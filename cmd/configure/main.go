@@ -84,7 +84,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		fmt.Println()
 		fmt.Printf("- Configure a loadpoint for the wallbox named %s\n", charger.Name)
 
-		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil)
+		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil, false, true)
 		loadpoint := loadpoint{
 			Title:   loadpointTitle,
 			Charger: charger.Name,
@@ -109,5 +109,5 @@ func (c *CmdConfigure) configureSite() {
 	fmt.Println()
 	fmt.Println("- Configure your site")
 
-	c.configuration.Site.Title = c.askValue("Site title", defaultTitleSite, "", nil)
+	c.configuration.Site.Title = c.askValue("Site title", defaultTitleSite, "", nil, false, true)
 }

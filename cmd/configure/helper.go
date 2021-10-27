@@ -78,7 +78,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 			return device, ErrItemNotPresent
 		}
 
-		// check if we need to setup an EEBUS hems
+		// check if we need to setup an EEBUS HEMS
 		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Requirements.Eebus == true {
 			if c.configuration.EEBUS == "" {
 				eebusConfig, err := c.eebusCertificate()
@@ -107,7 +107,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		}
 
 		var values map[string]interface{}
-		values = c.processConfig(templateItem.Params, deviceCategory)
+		values = c.processConfig(templateItem.Params, deviceCategory, false)
 		device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
 
 		v, err := c.configureDevice(deviceCategory, templateItem, values)
@@ -311,7 +311,7 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues []string) string {
+func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues []string, mask, required bool) string {
 	promptuiTemplates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -324,6 +324,10 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues 
 			return errors.New("Value '" + input + "' is already used")
 		}
 
+		if required && len(input) == 0 {
+			return errors.New("Value may not be empty")
+		}
+
 		return nil
 	}
 
@@ -334,9 +338,13 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues 
 	prompt := promptui.Prompt{
 		Label:     label,
 		Templates: promptuiTemplates,
-		Default:   defaultValue,
+		Default:   exampleValue,
 		Validate:  validate,
 		AllowEdit: true,
+	}
+
+	if mask {
+		prompt.Mask = '*'
 	}
 
 	result, err := prompt.Run()
@@ -350,7 +358,7 @@ func (c *CmdConfigure) askValue(label, defaultValue, hint string, invalidValues 
 // Process an EVCC configuration item
 // Returns
 //   a map with param name and values
-func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory string) map[string]interface{} {
+func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory string, includeAdvanced bool) map[string]interface{} {
 	usageFilter := DeviceCategories[deviceCategory].usageFilter
 
 	additionalConfig := make(map[string]interface{})
@@ -377,7 +385,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 
 			if len(choices) > 0 {
 				// ask for modbus address
-				id := c.askValue("ID", "1", "Modbus ID", nil)
+				id := c.askValue("ID", "1", "Modbus ID", nil, false, true)
 				additionalConfig[ModbusParamNameId] = id
 
 				// ask for modbus interface type
@@ -388,24 +396,31 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				selectedModbusKey = choiceKeys[index]
 				switch selectedModbusKey {
 				case ModbusKeyRS485Serial:
-					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter address", nil)
+					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter address", nil, false, true)
 					additionalConfig[ModbusParamNameDevice] = device
-					baudrate := c.askValue("Baudrate", ModbusParamValueBaudrate, "", nil)
+					baudrate := c.askValue("Baudrate", ModbusParamValueBaudrate, "", nil, false, true)
 					additionalConfig[ModbusParamNameBaudrate] = baudrate
-					comset := c.askValue("ComSet", ModbusParamValueComset, "", nil)
+					comset := c.askValue("ComSet", ModbusParamValueComset, "", nil, false, true)
 					additionalConfig[ModbusParamNameComset] = comset
 				case ModbusKeyRS485TCPIP, ModbusKeyTCPIP:
 					if selectedModbusKey == ModbusKeyRS485TCPIP {
 						additionalConfig[ModbusParamNameRTU] = "true"
 					}
-					host := c.askValue("Host", ModbusParamValueHost, "IP address or hostname", nil)
+					host := c.askValue("Host", ModbusParamValueHost, "IP address or hostname", nil, false, true)
 					additionalConfig[ModbusParamNameHost] = host
-					port := c.askValue("Port", ModbusParamValuePort, "Port address", nil)
+					port := c.askValue("Port", ModbusParamValuePort, "Port address", nil, false, true)
 					additionalConfig[ModbusParamNamePort] = port
 				}
 			}
 		} else if param.Name != templates.ParamUsage {
-			value := c.askValue(param.Name, param.Default, param.Hint, nil)
+			if !includeAdvanced && param.Advanced {
+				continue
+			}
+			exampleValue := param.Example
+			if exampleValue == "" && param.Default != "" {
+				exampleValue = param.Default
+			}
+			value := c.askValue(param.Name, exampleValue, param.Hint, nil, param.Mask, param.Required)
 			additionalConfig[param.Name] = value
 		} else if param.Name == templates.ParamUsage {
 			if usageFilter != "" {
