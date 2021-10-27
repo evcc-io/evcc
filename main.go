@@ -8,6 +8,7 @@ import (
 
 	"github.com/evcc-io/evcc/cmd"
 	"github.com/evcc-io/evcc/server"
+	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
 )
 
 //go:embed dist
