@@ -2,6 +2,17 @@ package tronity
 
 // https://app.platform.tronity.io/docs#operation
 
+const (
+	ReadBattery          = "read_battery"            // Read EV battery's capacity and state of charge
+	ReadCharge           = "read_charge"             // Know whether vehicle is charging
+	ReadLocation         = "read_location"           // Access location
+	ReadOdometer         = "read_odometer"           // Retrieve total distance traveled
+	ReadVehicleInfo      = "read_vehicle_info"       // Know make, model, and year
+	ReadVIN              = "read_vin"                // Read VIN
+	WriteChargeStartStop = "write_charge_start_stop" // Start or stop your vehicle's charging
+	WriteWakeUp          = "write_wake_up"           // Wake up car. Only valid for Tesla
+)
+
 type Vehicles struct {
 	Data []Vehicle
 }
@@ -11,6 +22,7 @@ type Vehicle struct {
 	VIN         string
 	DisplayName string
 	Manufacture string
+	Scopes      []string
 }
 
 type Bulk struct {

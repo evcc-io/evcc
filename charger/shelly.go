@@ -94,7 +94,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 	case 2:
 		// Shelly GEN 2 API
 		// https://shelly-api-docs.shelly.cloud/gen2/
-		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "https"))
+		c.uri = fmt.Sprintf("%s/rpc", util.DefaultScheme(uri, "http"))
 		if user != "" {
 			c.Client.Transport = digest.NewTransport(user, password, c.Client.Transport)
 		}

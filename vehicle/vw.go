@@ -42,10 +42,11 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"response_type": {"id_token token"},
 		"client_id":     {"9496332b-ea03-4091-a224-8c746b885068@apps_vw-dilab_com"},
 		"redirect_uri":  {"carnet://identity-kit/login"},
-		"scope":         {"openid profile mbb cars birthdate nickname address phone"},
+		"scope":         {"openid profile mbb"}, // cars birthdate nickname address phone
 	})
 
-	err := identity.LoginVAG("38761134-34d0-41f3-9a73-c4be88d7d337", query, cc.User, cc.Password)
+	ts := vw.NewTokenSource(log, identity, "38761134-34d0-41f3-9a73-c4be88d7d337", query, cc.User, cc.Password)
+	err := identity.Login(ts)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}

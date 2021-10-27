@@ -1,4 +1,4 @@
-package internal
+package oauth
 
 import (
 	"encoding/json"
@@ -7,9 +7,9 @@ import (
 
 func TestUnmarshalJSON(t *testing.T) {
 	var tok Token
-	str := `{"access_token":"access","refresh_token":"refresh","token_type":"bearer","expires_in":3600}`
+	data := `{"access_token":"access","refresh_token":"refresh","token_type":"bearer","expires_in":3600}`
 
-	if err := json.Unmarshal([]byte(str), &tok); err != nil {
+	if err := json.Unmarshal([]byte(data), &tok); err != nil {
 		t.Error(err)
 	}
 

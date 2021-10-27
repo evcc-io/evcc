@@ -42,12 +42,13 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		"response_type": {"id_token token"},
 		"client_id":     {"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com"},
 		"redirect_uri":  {"myaudi:///"},
-		"scope":         {"openid profile mbb vin badge birthdate nickname email address phone name picture"},
+		"scope":         {"openid profile mbb"}, // vin badge birthdate nickname email address phone name picture
 		"prompt":        {"login"},
 		"ui_locales":    {"de-DE"},
 	})
 
-	err := identity.LoginVAG("77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
+	ts := vw.NewTokenSource(log, identity, "77869e21-e30a-4a92-b016-48ab7d3db1d8", query, cc.User, cc.Password)
+	err := identity.Login(ts)
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
@@ -68,14 +69,5 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	// audiApi := audi.NewAPI(log, identity, "Audi", "DE")
-	// v.audiProvider = audi.NewProvider(audiApi, cc.VIN, cc.Cache)
-
 	return v, err
 }
-
-// var _ api.VehicleOdometer = (*Audi)(nil)
-
-// func (v *Audi) Odometer() (float64, error) {
-// 	return v.audiProvider.Odometer()
-// }

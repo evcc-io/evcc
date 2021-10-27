@@ -62,7 +62,7 @@ func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 
 func (v *Identity) stamp() string {
-	return stamps.New(v.config.CCSPApplicationID)
+	return Stamps.New(v.config.CCSPApplicationID)
 }
 
 func (v *Identity) getDeviceID() (string, error) {

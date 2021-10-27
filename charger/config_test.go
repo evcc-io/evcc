@@ -29,7 +29,11 @@ func TestChargers(t *testing.T) {
 	}
 
 	for _, tmpl := range test.ConfigTemplates("charger") {
+		tmpl := tmpl
+
 		t.Run(tmpl.Name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := NewFromConfig(tmpl.Type, tmpl.Config)
 			if err != nil && !test.Acceptable(err, acceptable) {
 				t.Logf("%s: %+v", tmpl.Name, tmpl.Config)

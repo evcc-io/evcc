@@ -23,9 +23,9 @@ type HTTP struct {
 	url, method string
 	headers     map[string]string
 	body        string
-	scale       float64
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	scale       float64
 	cache       time.Duration
 	updated     time.Time
 	val         []byte // Cached http response value
@@ -56,6 +56,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Cache       time.Duration
 	}{
 		Headers: make(map[string]string),
+		Scale:   1,
 		Timeout: request.Timeout,
 	}
 
@@ -63,46 +64,45 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
-	log := util.NewLogger("http")
-
-	http, err := NewHTTP(log,
+	http := NewHTTP(
+		util.NewLogger("http"),
 		cc.Method,
 		cc.URI,
-		cc.Headers,
-		cc.Body,
 		cc.Insecure,
-		cc.Regex,
-		cc.Jq,
 		cc.Scale,
 		cc.Cache,
-	)
+	).WithHeaders(cc.Headers).WithBody(cc.Body)
+	http.Client.Timeout = cc.Timeout
+
+	var err error
+	if err == nil && cc.Regex != "" {
+		_, err = http.WithRegex(cc.Regex)
+	}
+
+	if err == nil && cc.Jq != "" {
+		_, err = http.WithJq(cc.Jq)
+	}
 
 	if err == nil && cc.Auth.Type != "" {
 		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
-	}
-
-	if err == nil {
-		http.Client.Timeout = cc.Timeout
 	}
 
 	return http, err
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64, cache time.Duration) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
 	p := &HTTP{
-		Helper:  request.NewHelper(log),
-		url:     url,
-		method:  method,
-		headers: headers,
-		body:    body,
-		scale:   scale,
-		cache:   cache,
+		Helper: request.NewHelper(log),
+		url:    url,
+		method: method,
+		scale:  scale,
+		cache:  cache,
 	}
 
 	// ignore the self signed certificate
@@ -110,23 +110,41 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
 	}
 
-	if regex != "" {
-		re, err := regexp.Compile(regex)
-		if err != nil {
-			return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
-		}
+	return p
+}
 
-		p.re = re
+// WithBody adds request body
+func (p *HTTP) WithBody(body string) *HTTP {
+	p.body = body
+	return p
+}
+
+// WithHeaders adds request headers
+func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
+	p.headers = headers
+	return p
+}
+
+// WithRegex adds a regex query applied to the mqtt listener payload
+func (p *HTTP) WithRegex(regex string) (*HTTP, error) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
 	}
 
-	if jq != "" {
-		op, err := gojq.Parse(jq)
-		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
-		}
+	p.re = re
 
-		p.jq = op
+	return p, nil
+}
+
+// WithJq adds a jq query applied to the mqtt listener payload
+func (p *HTTP) WithJq(jq string) (*HTTP, error) {
+	op, err := gojq.Parse(jq)
+	if err != nil {
+		return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
 	}
+
+	p.jq = op
 
 	return p, nil
 }
@@ -177,7 +195,7 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		}
 
 		f, err := strconv.ParseFloat(s, 64)
-		if err == nil && p.scale != 0 {
+		if err == nil {
 			f *= p.scale
 		}
 

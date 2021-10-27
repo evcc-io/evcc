@@ -2,9 +2,91 @@ package vw
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 )
+
+type Error struct {
+	ErrorCode, Description string
+}
+
+func (e *Error) Error() error {
+	return fmt.Errorf("%s: %s", e.ErrorCode, e.Description)
+}
+
+// ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
+type ChargerResponse struct {
+	Charger struct {
+		Status struct {
+			BatteryStatusData struct {
+				StateOfCharge         TimedInt
+				RemainingChargingTime TimedInt
+			}
+			ChargingStatusData struct {
+				ChargingState            TimedString // off, charging
+				ChargingMode             TimedString // invalid, AC
+				ChargingReason           TimedString // invalid, immediate
+				ExternalPowerSupplyState TimedString // unavailable, available
+				EnergyFlow               TimedString // on, off
+			}
+			PlugStatusData struct {
+				PlugState TimedString // connected
+			}
+			CruisingRangeStatusData struct {
+				EngineTypeFirstEngine  TimedString // typeIsElectric, petrolGasoline
+				EngineTypeSecondEngine TimedString // typeIsElectric, petrolGasoline
+				PrimaryEngineRange     TimedInt
+				SecondaryEngineRange   TimedInt
+				HybridRange            TimedInt
+			}
+		}
+	}
+	Error *Error // optional error
+}
+
+// ClimaterResponse is the /bs/climatisation/v1/%s/%s/vehicles/%s/climater api
+type ClimaterResponse struct {
+	Climater struct {
+		Settings struct {
+			TargetTemperature TimedTemperature
+			HeaterSource      TimedString
+		}
+		Status struct {
+			ClimatisationStatusData struct {
+				ClimatisationState         TimedString
+				ClimatisationReason        TimedString
+				RemainingClimatisationTime TimedInt
+			}
+			TemperatureStatusData struct {
+				OutdoorTemperature TimedTemperature
+			}
+			VehicleParkingClockStatusData struct {
+				VehicleParkingClock TimedString
+			}
+		}
+	}
+	Error *Error // optional error
+}
+
+// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
+type VehiclesResponse struct {
+	UserVehicles struct {
+		Vehicle []string
+	}
+	Error *Error // optional error
+}
+
+// HomeRegion is the home region API response
+type HomeRegion struct {
+	HomeRegion struct {
+		BaseURI struct {
+			SystemID string
+			Content  string // api url
+		}
+	}
+	Error *Error // optional error
+}
 
 // TimedInt is an int value with timestamp
 type TimedInt struct {
