@@ -1,0 +1,8 @@
+type: t_abl
+description: ABL eMH / SENEC.Wallbox pro
+params:
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: abl
+  # ::modbus-setup::

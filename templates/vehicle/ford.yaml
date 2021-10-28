@@ -1,0 +1,24 @@
+type: t_ford
+description: Ford
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: WF0FXX...
+- name: capacity
+  default: 10
+render: |
+  type: ford
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

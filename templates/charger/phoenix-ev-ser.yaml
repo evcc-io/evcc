@@ -1,0 +1,8 @@
+type: t_phoenix-ev-ser
+description: Phoenix EV-SER Controller (Modbus RTU)
+params:
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: phoenix-ev-ser
+  # ::modbus-setup::

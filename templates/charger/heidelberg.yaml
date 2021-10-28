@@ -1,0 +1,8 @@
+type: t_heidelberg
+description: Heidelberg Energy Control (Modbus RTU)
+params:
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: heidelberg
+  # ::modbus-setup::

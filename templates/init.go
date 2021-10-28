@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	//go:embed meter/*.yaml
+	//go:embed charger/*.yaml meter/*.yaml vehicle/*.yaml
 	yamlTemplates embed.FS
 
 	templates = make(map[string][]Template)

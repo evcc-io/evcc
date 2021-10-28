@@ -1,0 +1,16 @@
+type: t_wallbe_pre2019_meter
+description: Wallbe (Eco, Pro) (pre ~2019) with Meter
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 1883
+render: |
+  type: warp
+  uri: {{ .host }}:{{ .port }}
+  legacy: true # set only for older Wallbe devices (pre ~2019, old controller firmware)  
+  meter: # only if a charge meter is connected to the controller
+    power: true
+    energy: true
+    currents: true

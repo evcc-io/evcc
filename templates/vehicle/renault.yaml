@@ -1,0 +1,24 @@
+type: t_renault
+description: Renault
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: WREN...
+- name: capacity
+  default: 60
+render: |
+  type: renault
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

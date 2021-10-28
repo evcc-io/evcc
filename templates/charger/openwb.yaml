@@ -1,0 +1,12 @@
+type: t_openwb
+description: openWB (MQTT)
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: loadpointid
+  default: 1
+render: |
+  type: openwb
+  broker: {{ .host }}
+  id: {{ .loadpointid }} # loadpoint id

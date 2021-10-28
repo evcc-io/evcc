@@ -1,0 +1,27 @@
+type: t_porsche
+description: Porsche
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: WP0...
+- name: capacity
+  default: 83
+- name: identifier
+render: |
+  type: porsche
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if .capacity }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if .vin }}
+  vin: {{ .vin }}
+  {{- end }}

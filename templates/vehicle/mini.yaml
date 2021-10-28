@@ -1,0 +1,24 @@
+type: t_mini
+description: Mini
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: WBMW...
+- name: capacity
+  default: 32
+render: |
+  type: mini
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

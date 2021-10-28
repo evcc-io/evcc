@@ -1,0 +1,12 @@
+type: t_pmcp
+description: Porsche Mobile Charger Plus
+requirements:
+  eebus: true
+params:
+- name: ski
+  required: true
+  hint: The SKI of the wallbox which can usually be found in the wallbox web interface
+render: |
+  type: eebus
+  ski: {{ .ski }}
+  forcePVLimits: false

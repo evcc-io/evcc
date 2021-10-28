@@ -1,0 +1,24 @@
+type: t_tesla
+description: Tesla
+params:
+- name: title
+- name: access-token
+  required: true
+- name: refresh-token
+  required: true
+- name: vin
+  example: W...
+- name: capacity
+  default: 90
+render: |
+  type: tesla
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  tokens:
+    access: {{ .access-token }}
+    refresh: {{ .refresh-token }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

@@ -1,0 +1,9 @@
+type: t_go-e
+description: go-eCharger
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+render: |
+  type: go-e
+  uri: http://{{ .host }}

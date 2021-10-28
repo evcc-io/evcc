@@ -1,0 +1,24 @@
+type: t_citroen
+description: Citroen
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: W...
+- name: capacity
+  default: 50
+render: |
+  type: citroen
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

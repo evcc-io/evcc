@@ -1,0 +1,19 @@
+type: t_nissan
+description: Nissan
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: capacity
+  default: 60
+render: |
+  type: nissan
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}

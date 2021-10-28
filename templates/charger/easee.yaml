@@ -1,0 +1,16 @@
+type: t_easee
+description: Easee Home (Cloud API)
+params:
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: charger
+  required: true
+  example: EH______
+render: |
+  type: easee
+  user: {{ .user }}
+  password: {{ .password }}
+  charger: {{ .charger }}

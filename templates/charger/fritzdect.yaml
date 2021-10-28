@@ -1,0 +1,19 @@
+type: t_fritzdect
+description: FritzDECT
+params:
+- name: uri
+  default: https://fritz.box
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: ain
+  required: true
+render: |
+  type: fritzdect
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  ain: '{{ .ain }}' # switch actor identification number without blanks (see AIN number on switch sticker)
+  standbypower: 15 # treat as charging above this power

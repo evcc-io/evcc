@@ -1,0 +1,18 @@
+type: t_tinkerforge_warp_pro
+description: TinkerForge WARP Charger
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 1883
+- name: topic
+  default: warp
+- name: timeout
+  default: 30s
+render: |
+  type: warp
+  broker: {{ .host }}:{{ .port }}
+  topic: {{ .topic }}
+  useMeter: true
+  timeout: {{ .timeout }}

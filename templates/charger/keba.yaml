@@ -1,0 +1,14 @@
+type: t_keba
+description: KEBA Connect
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: rfid
+render: |
+  type: keba
+  uri: {{ .host }}
+  {{ if ne .rfid }}
+  rfid:
+    tag: {{ .rfid }}
+  {{ end }}

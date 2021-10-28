@@ -1,0 +1,24 @@
+type: t_tasmota
+description: Tasmota
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: user
+  hint: (optional) in case user + password are defined
+- name: password
+  mask: true
+  hint: (optional) in case user + password are defined
+- name: standbypower
+  default: 15
+  hint: treat as charging above this power (W)
+render: |
+  type: tasmota
+  uri: http://{{ .host }}  # shelly device ip address (local)
+  {{ if ne .user }}
+  user: {{ .user }}
+  {{ end }}
+  {{ if ne .password }}
+  password: {{ .password }}
+  {{ end }}
+  standbypower: {{ .standbypower }}  # treat as charging above this power

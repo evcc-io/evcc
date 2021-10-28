@@ -1,0 +1,12 @@
+type: t_wallbe
+description: Wallbe (Eco, Pro)
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 1883
+render: |
+  type: warp
+  uri: {{ .host }}:{{ .port }}
+  legacy: false # set only for older Wallbe devices (pre ~2019, old controller firmware)  

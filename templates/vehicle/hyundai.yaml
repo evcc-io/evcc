@@ -1,0 +1,19 @@
+type: t_hyundai
+description: Hyundai
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: capacity
+  default: 64
+render: |
+  type: hyundai
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}

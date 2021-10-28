@@ -1,0 +1,26 @@
+type: t_id
+description: Volkswagen ID (but also e-Golf, e-Up)
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vin
+  example: WVWZZZ...
+- name: capacity
+  default: 50
+render: |
+  type: id
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}
