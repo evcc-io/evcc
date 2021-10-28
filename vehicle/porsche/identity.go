@@ -247,7 +247,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, e
 	}
 
 	if _, err = v.DoBody(req); err != nil {
-		return "", errors.New("vehicle does not provide any required data")
+		return "", errors.New("vehicle is not capable of providing data")
 	}
 
 	return foundVehicle.VIN, err
