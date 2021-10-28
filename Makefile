@@ -110,7 +110,7 @@ image-update:
 
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
+	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 stamps:
 	docker pull hacksore/hks
