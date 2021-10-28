@@ -181,62 +181,67 @@ func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
 	return pr, err
 }
 
-type Vehicle struct {
-	VIN              string
-	EmobilityVehicle bool
-}
-
-type VehicleResponse struct {
-	VIN              string
-	ModelDescription string
-	Pictures         []struct {
-		URL         string
-		View        string
-		Size        int
-		Width       int
-		Height      int
-		Transparent bool
-	}
-}
-
 func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
-	uri := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	vehicle := Vehicle{}
+
+	vehiclesURL := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
+	req, err := request.New(http.MethodGet, vehiclesURL, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
 		"apikey":        ClientID,
 	})
 
+	if err != nil {
+		return vehicle, err
+	}
+
 	var vehicles []VehicleResponse
-	if err == nil {
-		err = v.DoJSON(req, &vehicles)
+	if err = v.DoJSON(req, &vehicles); err != nil {
+		return vehicle, err
 	}
 
 	var foundVehicle VehicleResponse
 	var foundEmobilityVehicle bool
 
-	if err == nil {
-		if vin == "" && len(vehicles) == 1 {
-			foundVehicle = vehicles[0]
-		} else {
-			for _, vehicleItem := range vehicles {
-				if vehicleItem.VIN == strings.ToUpper(vin) {
-					foundVehicle = vehicleItem
-				}
+	if vin == "" && len(vehicles) == 1 {
+		foundVehicle = vehicles[0]
+	} else {
+		for _, vehicleItem := range vehicles {
+			if vehicleItem.VIN == strings.ToUpper(vin) {
+				foundVehicle = vehicleItem
 			}
-		}
-
-		if foundVehicle.VIN != "" {
-			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
-
-			if accessTokens.EmobilityToken.AccessToken != "" {
-				foundEmobilityVehicle = true
-			}
-		} else {
-			err = errors.New("vin not found")
 		}
 	}
+	if foundVehicle.VIN == "" {
+		return vehicle, errors.New("vin not found")
+	}
 
-	vehicle := Vehicle{
+	v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
+
+	if accessTokens.EmobilityToken.AccessToken != "" {
+		foundEmobilityVehicle = true
+	}
+
+	// check if vehicle is paired
+	uri := fmt.Sprintf("%s/%s/pairing", vehiclesURL, foundVehicle.VIN)
+	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+		"apikey":        ClientID,
+	})
+
+	if err != nil {
+		return vehicle, err
+	}
+
+	var pairing VehiclePairingResponse
+	if err = v.DoJSON(req, &pairing); err != nil {
+		return vehicle, err
+	}
+
+	if pairing.Status != "PAIRINGCOMPLETE" {
+		return vehicle, errors.New("vehicle is not paired with the My Porsche account")
+	}
+
+	vehicle = Vehicle{
 		VIN:              foundVehicle.VIN,
 		EmobilityVehicle: foundEmobilityVehicle,
 	}

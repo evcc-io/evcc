@@ -1,5 +1,30 @@
 package porsche
 
+type Vehicle struct {
+	VIN              string
+	EmobilityVehicle bool
+}
+
+type VehicleResponse struct {
+	VIN              string
+	ModelDescription string
+	Pictures         []struct {
+		URL         string
+		View        string
+		Size        int
+		Width       int
+		Height      int
+		Transparent bool
+	}
+}
+
+type VehiclePairingResponse struct {
+	VIN                string
+	PairingCode        string
+	Status             string
+	canSendPairingCode bool
+}
+
 type StatusResponse struct {
 	BatteryLevel struct {
 		Unit  string
