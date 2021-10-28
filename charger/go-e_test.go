@@ -23,7 +23,6 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.RawQuery != "" {
 		path += "?" + r.URL.RawQuery
 	}
-	fmt.Println(path)
 
 	if path == h.uri {
 		fmt.Fprint(w, "{}")

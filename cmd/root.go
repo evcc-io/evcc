@@ -236,7 +236,7 @@ func run(cmd *cobra.Command, args []string) {
 	}()
 
 	// uds health check listener
-	go server.HealthListener(site)
+	go server.HealthListener(site, exitC)
 
 	// catch signals
 	go func() {

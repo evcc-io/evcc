@@ -14,8 +14,8 @@ import (
 // SocketPath is the unix domain socket path
 const SocketPath = "/tmp/evcc"
 
-// remoteIfExists deletes file if it exists or fails
-func remoteIfExists(file string) {
+// removeIfExists deletes file if it exists or fails
+func removeIfExists(file string) {
 	_, err := os.Stat(file)
 	if err == nil {
 		err = os.Remove(file)
@@ -27,8 +27,8 @@ func remoteIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API) {
-	remoteIfExists(SocketPath)
+func HealthListener(site site.API, existC <-chan struct{}) {
+	removeIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)
 	if err != nil {
@@ -40,5 +40,8 @@ func HealthListener(site site.API) {
 	httpd := http.Server{Handler: mux}
 	mux.HandleFunc("/health", healthHandler(site))
 
-	_ = httpd.Serve(l)
+	go func() { _ = httpd.Serve(l) }()
+
+	<-existC
+	removeIfExists(SocketPath) // cleanup
 }
