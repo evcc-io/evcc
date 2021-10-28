@@ -17,7 +17,7 @@ type VehiclePairingResponse struct {
 	VIN                string
 	PairingCode        string
 	Status             string
-	canSendPairingCode bool
+	CanSendPairingCode bool
 }
 
 type StatusResponse struct {
