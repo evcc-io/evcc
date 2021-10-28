@@ -1,4 +1,4 @@
-type: fronius-gen24
+type: t_fronius-gen24
 description: Fronius Symo GEN24 Plus
 params:
 - name: usage

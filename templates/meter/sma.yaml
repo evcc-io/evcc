@@ -1,4 +1,4 @@
-type: sma-meter
+type: t_sma-meter
 description: SMA Sunny Home Manager 2.0 / Energy Meter
 params:
 - name: usage

@@ -1,4 +1,4 @@
-type: eastron
+type: t_eastron
 description: Eastron SDM Modbus Meter
 params:
 - name: usage

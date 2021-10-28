@@ -1,4 +1,4 @@
-type: sunspec
+type: t_sunspec
 description: SunSpec compliant inverter
 params:
 - name: usage

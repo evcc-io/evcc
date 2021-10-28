@@ -1,4 +1,4 @@
-type: solarlog
+type: t_solarlog
 description: Solarlog
 params:
 - name: usage
