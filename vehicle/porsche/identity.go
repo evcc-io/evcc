@@ -181,9 +181,7 @@ func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
 	return pr, err
 }
 
-func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
-	vehicle := Vehicle{}
-
+func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, error) {
 	vehiclesURL := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
 	req, err := request.New(http.MethodGet, vehiclesURL, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
@@ -191,16 +189,15 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 	})
 
 	if err != nil {
-		return vehicle, err
+		return "", err
 	}
 
 	var vehicles []VehicleResponse
 	if err = v.DoJSON(req, &vehicles); err != nil {
-		return vehicle, err
+		return "", err
 	}
 
 	var foundVehicle VehicleResponse
-	var foundEmobilityVehicle bool
 
 	if vin == "" && len(vehicles) == 1 {
 		foundVehicle = vehicles[0]
@@ -212,14 +209,10 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 		}
 	}
 	if foundVehicle.VIN == "" {
-		return vehicle, errors.New("vin not found")
+		return "", errors.New("vin not found")
 	}
 
 	v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
-
-	if accessTokens.EmobilityToken.AccessToken != "" {
-		foundEmobilityVehicle = true
-	}
 
 	// check if vehicle is paired
 	uri := fmt.Sprintf("%s/%s/pairing", vehiclesURL, foundVehicle.VIN)
@@ -229,22 +222,17 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, 
 	})
 
 	if err != nil {
-		return vehicle, err
+		return "", err
 	}
 
 	var pairing VehiclePairingResponse
 	if err = v.DoJSON(req, &pairing); err != nil {
-		return vehicle, err
+		return "", err
 	}
 
 	if pairing.Status != "PAIRINGCOMPLETE" {
-		return vehicle, errors.New("vehicle is not paired with the My Porsche account")
+		return "", errors.New("vehicle is not paired with the My Porsche account")
 	}
 
-	vehicle = Vehicle{
-		VIN:              foundVehicle.VIN,
-		EmobilityVehicle: foundEmobilityVehicle,
-	}
-
-	return vehicle, err
+	return foundVehicle.VIN, err
 }

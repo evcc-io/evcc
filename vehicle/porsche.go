@@ -51,12 +51,12 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vehicle, err := identity.FindVehicle(accessTokens, cc.VIN)
+	vin, err := identity.FindVehicle(accessTokens, cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, identity, accessTokens, vehicle.VIN, cc.Cache)
+	provider := porsche.NewProvider(log, identity, accessTokens, vin, cc.Cache)
 
 	v := &Porsche{
 		embed:           &cc.embed,

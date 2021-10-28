@@ -17,11 +17,12 @@ import (
 type Provider struct {
 	log *util.Logger
 	*request.Helper
-	accessTokens     AccessTokens
-	identity         *Identity
-	carModel         string
-	statusG          func() (interface{}, error)
-	statusEmobilityG func() (interface{}, error)
+	accessTokens             AccessTokens
+	identity                 *Identity
+	carModel                 string
+	vehicleSupportsEmobility bool
+	statusG                  func() (interface{}, error)
+	statusEmobilityG         func() (interface{}, error)
 }
 
 // NewProvider creates a new vehicle
@@ -42,6 +43,10 @@ func NewProvider(log *util.Logger, identity *Identity, accessTokens AccessTokens
 	impl.statusEmobilityG = provider.NewCached(func() (interface{}, error) {
 		return impl.statusEmobility(vin)
 	}, cache).InterfaceGetter()
+
+	if accessTokens.EmobilityToken.AccessToken != "" {
+		impl.vehicleSupportsEmobility = true
+	}
 
 	return impl
 }
@@ -78,11 +83,20 @@ func (v *Provider) status(vin string) (interface{}, error) {
 
 // Status implements the vehicle status response
 func (v *Provider) statusEmobility(vin string) (interface{}, error) {
+	if !v.vehicleSupportsEmobility {
+		return nil, errors.New("vehicle does not support emobility")
+	}
+
 	if v.carModel == "" {
-		// Note: As of 27.10.21 this API needs to be called AFTER status()
-		//   as it otherwise returns an HTTP 502 error.
+		// Note: As of 27.10.21 the capabilities API needs to be called AFTER a
+		//   call to status() as it otherwise returns an HTTP 502 error.
 		//   The reason is unknown, even when tested with 100% identical Headers.
 		//   It seems to be a new backend related issue.
+
+		if _, err := v.status(vin); err != nil {
+			return 0, err
+		}
+
 		uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
 
 		req, err := v.request(v.accessTokens.EmobilityToken, uri)
@@ -118,58 +132,48 @@ var _ api.Battery = (*Provider)(nil)
 
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
-	var result float64
+	if v.vehicleSupportsEmobility {
+		res, err := v.statusEmobilityG()
+		if res, ok := res.(EmobilityResponse); err == nil && ok {
+			return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
+		}
+	}
 
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		result = res.BatteryLevel.Value
+		return res.BatteryLevel.Value, nil
 	}
 
-	if err != nil {
-		return 0, err
-	}
-
-	// Emobility more often provides more accurate data
-	// but we treat it purely optional
-	// Also call it after status() to get around HTTP 502 errors
-	res, err = v.statusEmobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		result = float64(res.BatteryChargeStatus.StateOfChargeInPercentage)
-	}
-
-	return result, nil
+	return 0, err
 }
 
 var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	var result int64
+	if v.vehicleSupportsEmobility {
+		res, err := v.statusEmobilityG()
+		if res, ok := res.(EmobilityResponse); err == nil && ok {
+			return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
+		}
+	}
 
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		result = int64(res.RemainingRanges.ElectricalRange.Distance.Value)
+		return int64(res.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
 
-	if err != nil {
-		return 0, err
-	}
-
-	// Emobility more often provides more accurate data
-	// but we treat it purely optional
-	// Also call it after status() to get around HTTP 502 errors
-	res, err = v.statusEmobilityG()
-	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		result = int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers)
-	}
-
-	return result, nil
+	return 0, err
 }
 
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
+	if !v.vehicleSupportsEmobility {
+		return time.Time{}, api.ErrNotAvailable
+	}
+
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(*EmobilityResponse); err == nil && ok {
 		t := time.Now()
@@ -183,6 +187,10 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
+	if !v.vehicleSupportsEmobility {
+		return api.StatusNone, api.ErrNotAvailable
+	}
+
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		switch res.BatteryChargeStatus.PlugState {
@@ -209,6 +217,10 @@ var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+	if !v.vehicleSupportsEmobility {
+		return active, outsideTemp, targetTemp, api.ErrNotAvailable
+	}
+
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		switch res.DirectClimatisation.ClimatisationState {

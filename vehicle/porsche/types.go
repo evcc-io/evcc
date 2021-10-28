@@ -1,10 +1,5 @@
 package porsche
 
-type Vehicle struct {
-	VIN              string
-	EmobilityVehicle bool
-}
-
 type VehicleResponse struct {
 	VIN              string
 	ModelDescription string
