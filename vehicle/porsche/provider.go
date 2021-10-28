@@ -181,6 +181,8 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 				return api.StatusA, nil
 			}
 			switch res.BatteryChargeStatus.ChargingState {
+			case "ERROR":
+				return api.StatusF, nil
 			case "OFF", "COMPLETED":
 				return api.StatusB, nil
 			case "ON":
