@@ -97,14 +97,17 @@ func (v *Identity) Login() (AccessTokens, error) {
 
 	// get the token for the generic API
 	var token oauth.Token
-	if token, err = v.fetchToken(false); err == nil {
-		accessTokens.Token = (oauth2.Token)(token)
-
-		// we don't need to return this error, because we simply won't use the emobility API in this case
-		if token, err := v.fetchToken(true); err == nil {
-			accessTokens.EmobilityToken = (oauth2.Token)(token)
-		}
+	token, err = v.fetchToken(false)
+	if err != nil {
+		return accessTokens, err
 	}
+	accessTokens.Token = (oauth2.Token)(token)
+
+	token, err = v.fetchToken(true)
+	if err != nil {
+		return accessTokens, err
+	}
+	accessTokens.EmobilityToken = (oauth2.Token)(token)
 
 	return accessTokens, err
 }

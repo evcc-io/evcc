@@ -17,12 +17,11 @@ import (
 type Provider struct {
 	log *util.Logger
 	*request.Helper
-	accessTokens             AccessTokens
-	identity                 *Identity
-	carModel                 string
-	vehicleSupportsEmobility bool
-	statusG                  func() (interface{}, error)
-	statusEmobilityG         func() (interface{}, error)
+	accessTokens     AccessTokens
+	identity         *Identity
+	carModel         string
+	statusG          func() (interface{}, error)
+	statusEmobilityG func() (interface{}, error)
 }
 
 // NewProvider creates a new vehicle
@@ -43,10 +42,6 @@ func NewProvider(log *util.Logger, identity *Identity, accessTokens AccessTokens
 	impl.statusEmobilityG = provider.NewCached(func() (interface{}, error) {
 		return impl.statusEmobility(vin)
 	}, cache).InterfaceGetter()
-
-	if accessTokens.EmobilityToken.AccessToken != "" {
-		impl.vehicleSupportsEmobility = true
-	}
 
 	return impl
 }
@@ -85,10 +80,6 @@ func (v *Provider) status(vin string) (StatusResponse, error) {
 // Status implements the vehicle status response
 func (v *Provider) statusEmobility(vin string) (EmobilityResponse, error) {
 	var res EmobilityResponse
-
-	if !v.vehicleSupportsEmobility {
-		return res, errors.New("vehicle does not support emobility")
-	}
 
 	if v.carModel == "" {
 		// Note: As of 27.10.21 the capabilities API needs to be called AFTER a
@@ -133,14 +124,12 @@ var _ api.Battery = (*Provider)(nil)
 
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
-	if v.vehicleSupportsEmobility {
-		res, err := v.statusEmobilityG()
-		if res, ok := res.(EmobilityResponse); err == nil && ok {
-			return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
-		}
+	res, err := v.statusEmobilityG()
+	if res, ok := res.(EmobilityResponse); err == nil && ok {
+		return float64(res.BatteryChargeStatus.StateOfChargeInPercentage), nil
 	}
 
-	res, err := v.statusG()
+	res, err = v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
 		return res.BatteryLevel.Value, nil
 	}
@@ -152,14 +141,12 @@ var _ api.VehicleRange = (*Provider)(nil)
 
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
-	if v.vehicleSupportsEmobility {
-		res, err := v.statusEmobilityG()
-		if res, ok := res.(EmobilityResponse); err == nil && ok {
-			return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
-		}
+	res, err := v.statusEmobilityG()
+	if res, ok := res.(EmobilityResponse); err == nil && ok {
+		return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
 	}
 
-	res, err := v.statusG()
+	res, err = v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
 		return int64(res.RemainingRanges.ElectricalRange.Distance.Value), nil
 	}
@@ -171,10 +158,6 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
 func (v *Provider) FinishTime() (time.Time, error) {
-	if !v.vehicleSupportsEmobility {
-		return time.Time{}, api.ErrNotAvailable
-	}
-
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		return time.Now().Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
@@ -187,10 +170,6 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	if !v.vehicleSupportsEmobility {
-		return api.StatusNone, api.ErrNotAvailable
-	}
-
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		switch res.BatteryChargeStatus.PlugState {
@@ -217,10 +196,6 @@ var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
 func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
-	if !v.vehicleSupportsEmobility {
-		return active, outsideTemp, targetTemp, api.ErrNotAvailable
-	}
-
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		switch res.DirectClimatisation.ClimatisationState {
