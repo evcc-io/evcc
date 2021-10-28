@@ -7,9 +7,9 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -20,13 +20,6 @@ const (
 	ClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
 	EmobilityClientID = "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq"
 )
-
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	IDToken     string `json:"id_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-}
 
 type AccessTokens struct {
 	Token, EmobilityToken oauth2.Token
@@ -103,27 +96,21 @@ func (v *Identity) Login() (AccessTokens, error) {
 	resp.Body.Close()
 
 	// get the token for the generic API
-	var pr tokenResponse
-	if pr, err = v.fetchToken(false); err != nil {
-		return accessTokens, err
-	}
+	var token oauth.Token
+	if token, err = v.fetchToken(false); err == nil {
+		accessTokens.Token = (oauth2.Token)(token)
 
-	accessTokens.Token.AccessToken = pr.AccessToken
-	accessTokens.Token.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	if pr, err = v.fetchToken(true); err != nil {
 		// we don't need to return this error, because we simply won't use the emobility API in this case
-		return accessTokens, nil
+		if token, err := v.fetchToken(true); err == nil {
+			accessTokens.EmobilityToken = (oauth2.Token)(token)
+		}
 	}
 
-	accessTokens.EmobilityToken.AccessToken = pr.AccessToken
-	accessTokens.EmobilityToken.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	return accessTokens, nil
+	return accessTokens, err
 }
 
-func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
-	var pr tokenResponse
+func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
+	var pr oauth.Token
 
 	actualClientID := ClientID
 	redirectURI := "https://my.porsche.com/core/de/de_DE/"
@@ -187,7 +174,7 @@ func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 		err = v.DoJSON(req, &pr)
 	}
 
-	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
+	if pr.AccessToken == "" {
 		return pr, errors.New("could not obtain token")
 	}
 
