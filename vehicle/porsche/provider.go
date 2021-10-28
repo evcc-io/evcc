@@ -10,7 +10,6 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
-	"golang.org/x/oauth2"
 )
 
 // Provider is an api.Vehicle implementation for Porsche PHEV cars
@@ -46,7 +45,14 @@ func NewProvider(log *util.Logger, identity *Identity, accessTokens AccessTokens
 	return impl
 }
 
-func (v *Provider) request(token oauth2.Token, uri string) (*http.Request, error) {
+func (v *Provider) request(emobility bool, uri string) (*http.Request, error) {
+	token := v.accessTokens.Token
+	apiKey := ClientID
+	if emobility {
+		token = v.accessTokens.EmobilityToken
+		apiKey = EmobilityClientID
+	}
+
 	if token.AccessToken == "" || time.Since(token.Expiry) > 0 {
 		accessTokens, err := v.identity.Login()
 		if err != nil {
@@ -57,6 +63,7 @@ func (v *Provider) request(token oauth2.Token, uri string) (*http.Request, error
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", token.AccessToken),
+		"apikey":        apiKey,
 	})
 
 	return req, err
@@ -67,7 +74,7 @@ func (v *Provider) status(vin string) (StatusResponse, error) {
 	var res StatusResponse
 
 	uri := fmt.Sprintf("https://api.porsche.com/vehicle-data/de/de_DE/status/%s", vin)
-	req, err := v.request(v.accessTokens.Token, uri)
+	req, err := v.request(false, uri)
 	if err != nil {
 		return res, err
 	}
@@ -93,7 +100,7 @@ func (v *Provider) statusEmobility(vin string) (EmobilityResponse, error) {
 
 		uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
 
-		req, err := v.request(v.accessTokens.EmobilityToken, uri)
+		req, err := v.request(true, uri)
 		if err != nil {
 			return res, err
 		}
@@ -107,7 +114,7 @@ func (v *Provider) statusEmobility(vin string) (EmobilityResponse, error) {
 	}
 
 	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
-	req, err := v.request(v.accessTokens.EmobilityToken, uri)
+	req, err := v.request(true, uri)
 	if err != nil {
 		return res, err
 	}
