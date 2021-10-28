@@ -234,5 +234,21 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, e
 		return "", errors.New("vehicle is not paired with the My Porsche account")
 	}
 
+	// now check if we get any response at all for a status request
+	// there are PHEV which do not provide any data, even thought they are PHEV
+	uri = fmt.Sprintf("https://api.porsche.com/vehicle-data/de/de_DE/status/%s", foundVehicle.VIN)
+	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+		"apikey":        ClientID,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = v.DoBody(req); err != nil {
+		return "", errors.New("vehicle does not provide any required data")
+	}
+
 	return foundVehicle.VIN, err
 }
