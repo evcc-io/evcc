@@ -68,23 +68,26 @@ func (v *Provider) request(token oauth2.Token, uri string) (*http.Request, error
 }
 
 // Status implements the vehicle status response
-func (v *Provider) status(vin string) (interface{}, error) {
+func (v *Provider) status(vin string) (StatusResponse, error) {
+	var res StatusResponse
+
 	uri := fmt.Sprintf("https://api.porsche.com/vehicle-data/de/de_DE/status/%s", vin)
 	req, err := v.request(v.accessTokens.Token, uri)
 	if err != nil {
-		return 0, err
+		return res, err
 	}
 
-	var pr StatusResponse
-	err = v.DoJSON(req, &pr)
+	err = v.DoJSON(req, &res)
 
-	return pr, err
+	return res, err
 }
 
 // Status implements the vehicle status response
-func (v *Provider) statusEmobility(vin string) (interface{}, error) {
+func (v *Provider) statusEmobility(vin string) (EmobilityResponse, error) {
+	var res EmobilityResponse
+
 	if !v.vehicleSupportsEmobility {
-		return nil, errors.New("vehicle does not support emobility")
+		return res, errors.New("vehicle does not support emobility")
 	}
 
 	if v.carModel == "" {
@@ -94,20 +97,20 @@ func (v *Provider) statusEmobility(vin string) (interface{}, error) {
 		//   It seems to be a new backend related issue.
 
 		if _, err := v.status(vin); err != nil {
-			return 0, err
+			return res, err
 		}
 
 		uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
 
 		req, err := v.request(v.accessTokens.EmobilityToken, uri)
 		if err != nil {
-			return 0, err
+			return res, err
 		}
 
 		var cr CapabilitiesResponse
 		err = v.DoJSON(req, &cr)
 		if err != nil {
-			return 0, err
+			return res, err
 		}
 		v.carModel = cr.CarModel
 	}
@@ -115,17 +118,15 @@ func (v *Provider) statusEmobility(vin string) (interface{}, error) {
 	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/de/de_DE/%s/%s?timezone=Europe/Berlin", v.carModel, vin)
 	req, err := v.request(v.accessTokens.EmobilityToken, uri)
 	if err != nil {
-		return 0, err
+		return res, err
 	}
 
-	var pr EmobilityResponse
-	err = v.DoJSON(req, &pr)
-
-	if err != nil && pr.PcckErrorMessage != "" {
-		err = errors.New(pr.PcckErrorMessage)
+	err = v.DoJSON(req, &res)
+	if err != nil && res.PcckErrorMessage != "" {
+		err = errors.New(res.PcckErrorMessage)
 	}
 
-	return pr, err
+	return res, err
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -175,9 +176,8 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	}
 
 	res, err := v.statusEmobilityG()
-	if res, ok := res.(*EmobilityResponse); err == nil && ok {
-		t := time.Now()
-		return t.Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
+	if res, ok := res.(EmobilityResponse); err == nil && ok {
+		return time.Now().Add(time.Duration(res.BatteryChargeStatus.RemainingChargeTimeUntil100PercentInMinutes) * time.Minute), err
 	}
 
 	return time.Time{}, err
@@ -225,9 +225,9 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
 		switch res.DirectClimatisation.ClimatisationState {
 		case "OFF":
-			return false, 0, 0, nil
+			return false, 20, 20, nil
 		case "ON":
-			return true, 0, 0, nil
+			return true, 20, 20, nil
 		}
 	}
 
