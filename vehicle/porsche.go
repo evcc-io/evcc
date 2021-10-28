@@ -11,7 +11,11 @@ import (
 
 type porscheProvider interface {
 	api.Battery
+	api.ChargeState
 	api.VehicleRange
+	api.VehicleClimater
+	api.VehicleFinishTimer
+	api.VehicleOdometer
 }
 
 // Porsche is an api.Vehicle implementation for Porsche cars
@@ -47,17 +51,12 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vehicle, err := identity.FindVehicle(accessTokens, cc.VIN)
+	vin, err := identity.FindVehicle(accessTokens, cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	var provider porscheProvider
-	if vehicle.EmobilityVehicle {
-		provider = porsche.NewEMobilityProvider(log, identity, accessTokens.EmobilityToken, vehicle.VIN, cc.Cache)
-	} else {
-		provider = porsche.NewProvider(log, identity, accessTokens.Token, vehicle.VIN, cc.Cache)
-	}
+	provider := porsche.NewProvider(log, identity, accessTokens, vin, cc.Cache)
 
 	v := &Porsche{
 		embed:           &cc.embed,
