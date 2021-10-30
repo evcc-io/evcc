@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -58,6 +59,10 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 
 	log := util.NewLogger("cfos")
 	conn.Logger(log.TRACE)
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	wb := &CfosPowerBrain{
 		conn: conn,
