@@ -3,11 +3,10 @@ package charger
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/modbus"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/modbus"
 )
 
 const (
@@ -21,20 +20,20 @@ const (
 
 var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
-// cFosPowerBrain is an api.ChargeController implementation for cFosPowerBrain wallboxes.
+// CfosPowerBrain is an api.ChargeController implementation for CfosPowerBrain wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 1 and power meters at id 2 and 3.
-type cFosPowerBrain struct {
+type CfosPowerBrain struct {
 	conn *modbus.Connection
 }
 
 func init() {
-	registry.Add("cfos", NewcFosPowerBrainFromConfig)
+	registry.Add("cfos", NewCfosPowerBrainFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -p charger -f decoratecFosPowerBrain -o cfos_decorators -b *cFosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratecFosPowerBrain -o cfos_decorators -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
-// NewcFosPowerBrainFromConfig creates a cFos charger from generic config
-func NewcFosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
+// NewCfosPowerBrainFromConfig creates a cFos charger from generic config
+func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		URI   string
 		ID    uint8
@@ -42,8 +41,7 @@ func NewcFosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 			Power, Energy, Currents bool
 		}
 	}{
-		URI: "192.168.2.2:4701", // default
-		ID:  1,                  // default
+		ID: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -71,8 +69,10 @@ func NewcFosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 }
 
 // NewcFosPowerBrain creates a cFos charger
-func NewcFosPowerBrain(uri string, id uint8) (*cFosPowerBrain, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, false, id)
+func NewcFosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
+	uri = util.DefaultPort(uri, 4701)
+
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.RtuFormat, id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func NewcFosPowerBrain(uri string, id uint8) (*cFosPowerBrain, error) {
 	log := util.NewLogger("cfos")
 	conn.Logger(log.TRACE)
 
-	wb := &cFosPowerBrain{
+	wb := &CfosPowerBrain{
 		conn: conn,
 	}
 
@@ -88,7 +88,7 @@ func NewcFosPowerBrain(uri string, id uint8) (*cFosPowerBrain, error) {
 }
 
 // Status implements the Charger.Status interface
-func (wb *cFosPowerBrain) Status() (api.ChargeStatus, error) {
+func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
@@ -113,7 +113,7 @@ func (wb *cFosPowerBrain) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the Charger.Enabled interface
-func (wb *cFosPowerBrain) Enabled() (bool, error) {
+func (wb *CfosPowerBrain) Enabled() (bool, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnable, 1)
 	if err != nil {
 		return false, err
@@ -123,7 +123,7 @@ func (wb *cFosPowerBrain) Enabled() (bool, error) {
 }
 
 // Enable implements the Charger.Enable interface
-func (wb *cFosPowerBrain) Enable(enable bool) error {
+func (wb *CfosPowerBrain) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = 1
@@ -135,18 +135,20 @@ func (wb *cFosPowerBrain) Enable(enable bool) error {
 }
 
 // MaxCurrent implements the Charger.MaxCurrent interface
-func (wb *cFosPowerBrain) MaxCurrent(current int64) error {
-	if current < 6 {
-		return fmt.Errorf("invalid current %d", current)
-	}
+func (wb *CfosPowerBrain) MaxCurrent(current int64) error {
+	return wb.MaxCurrentMillis(float64(current))
+}
 
+var _ api.ChargerEx = (*CfosPowerBrain)(nil)
+
+// MaxCurrentMillis implements the api.ChargerEx interface
+func (wb *CfosPowerBrain) MaxCurrentMillis(current float64) error {
 	_, err := wb.conn.WriteSingleRegister(cfosRegMaxCurrent, uint16(current*10))
-
 	return err
 }
 
-// CurrentPower implements the Meter.CurrentPower interface
-func (wb *cFosPowerBrain) currentPower() (float64, error) {
+// CurrentPower implements the api.Meter interface
+func (wb *CfosPowerBrain) currentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegPower, 2)
 	if err != nil {
 		return 0, err
@@ -155,8 +157,8 @@ func (wb *cFosPowerBrain) currentPower() (float64, error) {
 	return float64(binary.BigEndian.Uint32(b)) / 10, err
 }
 
-// totalEnergy implements the Meter.TotalEnergy interface
-func (wb *cFosPowerBrain) totalEnergy() (float64, error) {
+// totalEnergy implements the api.MeterEnergy interface
+func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(cfosRegEnergy, 4)
 	if err != nil {
 		return 0, err
@@ -165,8 +167,8 @@ func (wb *cFosPowerBrain) totalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint64(b)), err
 }
 
-// currents implements the Meter.Currents interface
-func (wb *cFosPowerBrain) currents() (float64, float64, float64, error) {
+// currents implements the api.MeterCurrent interface
+func (wb *CfosPowerBrain) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range cfosRegCurrents {
 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
