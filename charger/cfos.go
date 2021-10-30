@@ -2,7 +2,6 @@ package charger
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -14,12 +13,7 @@ const (
 	cfosRegStatus     = 8092 // Input
 	cfosRegMaxCurrent = 8093 // Holding
 	cfosRegEnable     = 8094 // Coil
-	cfosRegEnergy     = 8058 // energy reading
-	cfosRegPower      = 8062 // power reading
-	cfosRegMeter      = 8096 // has meter
 )
-
-var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
 // CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
@@ -69,15 +63,6 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	}
 
 	return wb, nil
-}
-
-func (wb *CfosPowerBrain) hasMeter() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1)
-	if err != nil {
-		return false, err
-	}
-	fmt.Printf("hasMeter % x\n", b)
-	return b[0] == 1, nil
 }
 
 // Status implements the Charger.Status interface

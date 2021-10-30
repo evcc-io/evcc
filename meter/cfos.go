@@ -9,12 +9,8 @@ import (
 )
 
 const (
-	cfosRegStatus     = 8092 // Input
-	cfosRegMaxCurrent = 8093 // Holding
-	cfosRegEnable     = 8094 // Coil
-	cfosRegEnergy     = 8058 // energy reading
-	cfosRegPower      = 8062 // power reading
-	cfosRegMeter      = 8096 // has meter
+	cfosRegEnergy = 8058 // energy reading
+	cfosRegPower  = 8062 // power reading
 )
 
 var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
