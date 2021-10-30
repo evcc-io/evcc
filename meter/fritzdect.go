@@ -19,5 +19,6 @@ func NewFritzDECTFromConfig(other map[string]interface{}) (api.Meter, error) {
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
+
 	return fritzdect.NewConnection(cc.URI, cc.AIN, cc.User, cc.Password)
 }

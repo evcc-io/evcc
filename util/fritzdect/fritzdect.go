@@ -63,7 +63,7 @@ func NewConnection(uri, ain, user, password string) (*Connection, error) {
 		Password: password,
 	}
 
-	log := util.NewLogger("fritzdect")
+	log := util.NewLogger("fritzdect").Redact(password)
 
 	fritzdect := &Connection{
 		Helper:   request.NewHelper(log),
