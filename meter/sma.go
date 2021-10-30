@@ -48,7 +48,7 @@ func NewSMAFromConfig(other map[string]interface{}) (api.Meter, error) {
 // NewSMA creates a SMA Meter
 func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Meter, error) {
 	sm := &SMA{
-		log:   util.NewLogger("sma"),
+		log:   util.NewLogger("sma").Redact(password),
 		uri:   uri,
 		scale: scale,
 	}
