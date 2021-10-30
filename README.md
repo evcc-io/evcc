@@ -187,6 +187,7 @@ Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
 - `abl`: ABL eMH1 (requires Modbus adapter; [sponsors only](#sponsorship))
+- `cfos`: cFos PowerBrain charger (meters must configured separately, [sponsors only](#sponsorship))
 - `easee`: Easee Home charger ([sponsors only](#sponsorship))
 - `eebus`: EEBUS compatible chargers (experimental)
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
