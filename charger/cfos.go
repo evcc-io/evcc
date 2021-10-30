@@ -20,7 +20,7 @@ const (
 
 var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
-// CfosPowerBrain is an api.ChargeController implementation for cFos PowerBrain wallboxes.
+// CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
 // https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {

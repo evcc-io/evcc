@@ -19,7 +19,7 @@ const (
 
 var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
-// CfosPowerBrain is an api.ChargeController implementation for cFos PowerBrain wallboxes.
+// CfosPowerBrain is a meter implementation for cFos PowerBrain wallboxes.
 // It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
 // https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {
@@ -83,18 +83,19 @@ func (wb *CfosPowerBrain) TotalEnergy() (float64, error) {
 	return float64(binary.BigEndian.Uint64(b)), err
 }
 
-// currents implements the api.MeterCurrent interface
-// not used as currents are only calculated from S0 meter
-// func (wb *CfosPowerBrain) currents() (float64, float64, float64, error) {
-// 	var currents []float64
-// 	for _, regCurrent := range cfosRegCurrents {
-// 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
-// 		if err != nil {
-// 			return 0, 0, 0, err
-// 		}
+var _ api.MeterCurrent = (*CfosPowerBrain)(nil)
 
-// 		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
-// 	}
+// Currents implements the api.MeterCurrent interface
+func (wb *CfosPowerBrain) Currents() (float64, float64, float64, error) {
+	var currents []float64
+	for _, regCurrent := range cfosRegCurrents {
+		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
+		if err != nil {
+			return 0, 0, 0, err
+		}
 
-// 	return currents[0], currents[1], currents[2], nil
-// }
+		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
+	}
+
+	return currents[0], currents[1], currents[2], nil
+}
