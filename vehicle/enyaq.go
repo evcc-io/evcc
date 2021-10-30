@@ -46,7 +46,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	var err error
-	log := util.NewLogger("enyaq")
+	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
 	if cc.VIN == "" {
 		identity := vw.NewIdentity(log)

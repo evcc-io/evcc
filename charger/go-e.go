@@ -69,7 +69,7 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 	c := &GoE{}
 
-	log := util.NewLogger("go-e")
+	log := util.NewLogger("go-e").Redact(token)
 
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
