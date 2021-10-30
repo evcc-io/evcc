@@ -72,7 +72,7 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 func NewcFosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	uri = util.DefaultPort(uri, 4701)
 
-	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.RtuFormat, id)
+	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
 	if err != nil {
 		return nil, err
 	}
