@@ -13,15 +13,16 @@ const (
 	cfosRegStatus     = 8092 // Input
 	cfosRegMaxCurrent = 8093 // Holding
 	cfosRegEnable     = 8094 // Coil
-
-	cfosRegPower  = 8062 // power reading
-	cfosRegEnergy = 8058 // energy reading
+	cfosRegEnergy     = 8058 // energy reading
+	cfosRegPower      = 8062 // power reading
+	cfosRegMeter      = 8096 // has meter
 )
 
 var cfosRegCurrents = []uint16{8064, 8066, 8068} // current readings
 
-// CfosPowerBrain is an api.ChargeController implementation for CfosPowerBrain wallboxes.
-// It uses Modbus TCP to communicate with the wallbox at modbus client id 1 and power meters at id 2 and 3.
+// CfosPowerBrain is an api.ChargeController implementation for cFos PowerBrain wallboxes.
+// It uses Modbus TCP to communicate at modbus client id 1 and power meters at id 2 and 3.
+// https://www.cfos-emobility.de/en-gb/cfos-power-brain/modbus-registers.htm
 type CfosPowerBrain struct {
 	conn *modbus.Connection
 }
@@ -30,7 +31,7 @@ func init() {
 	registry.Add("cfos", NewCfosPowerBrainFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratecFosPowerBrain -o cfos_decorators -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateCfosPowerBrain -o cfos_decorators -b *CfosPowerBrain -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
 
 // NewCfosPowerBrainFromConfig creates a cFos charger from generic config
 func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -48,28 +49,37 @@ func NewCfosPowerBrainFromConfig(other map[string]interface{}) (api.Charger, err
 		return nil, err
 	}
 
-	wb, err := NewcFosPowerBrain(cc.URI, cc.ID)
-
-	var currentPower func() (float64, error)
-	if cc.Meter.Power {
-		currentPower = wb.currentPower
+	wb, err := NewCfosPowerBrain(cc.URI, cc.ID)
+	if err != nil {
+		return wb, err
 	}
 
-	var totalEnergy func() (float64, error)
-	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+	ok, err := wb.hasMeter()
+	if ok && err == nil {
+		// var currentPower func() (float64, error)
+		// if cc.Meter.Power {
+		// 	currentPower = wb.currentPower
+		// }
+
+		// var totalEnergy func() (float64, error)
+		// if cc.Meter.Energy {
+		// 	totalEnergy = wb.totalEnergy
+		// }
+
+		// var currents func() (float64, float64, float64, error)
+		// if cc.Meter.Currents {
+		// 	currents = wb.currents
+		// }
+
+		// return decorateCfosPowerBrain(wb, wb.currentPower, wb.totalEnergy, wb.currents), err
+		return decorateCfosPowerBrain(wb, wb.currentPower, wb.totalEnergy), err
 	}
 
-	var currents func() (float64, float64, float64, error)
-	if cc.Meter.Currents {
-		currents = wb.currents
-	}
-
-	return decoratecFosPowerBrain(wb, currentPower, totalEnergy, currents), err
+	return wb, err
 }
 
-// NewcFosPowerBrain creates a cFos charger
-func NewcFosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
+// NewCfosPowerBrain creates a cFos charger
+func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	uri = util.DefaultPort(uri, 4701)
 
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
@@ -85,6 +95,14 @@ func NewcFosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 	}
 
 	return wb, nil
+}
+
+func (wb *CfosPowerBrain) hasMeter() (bool, error) {
+	b, err := wb.conn.ReadHoldingRegisters(cfosRegMeter, 1)
+	if err != nil {
+		return false, err
+	}
+	return b[0] == 1, nil
 }
 
 // Status implements the Charger.Status interface
@@ -168,16 +186,17 @@ func (wb *CfosPowerBrain) totalEnergy() (float64, error) {
 }
 
 // currents implements the api.MeterCurrent interface
-func (wb *CfosPowerBrain) currents() (float64, float64, float64, error) {
-	var currents []float64
-	for _, regCurrent := range cfosRegCurrents {
-		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
-		if err != nil {
-			return 0, 0, 0, err
-		}
+// not used as currents are only calculated from S0 meter
+// func (wb *CfosPowerBrain) currents() (float64, float64, float64, error) {
+// 	var currents []float64
+// 	for _, regCurrent := range cfosRegCurrents {
+// 		b, err := wb.conn.ReadHoldingRegisters(regCurrent, 2)
+// 		if err != nil {
+// 			return 0, 0, 0, err
+// 		}
 
-		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
-	}
+// 		currents = append(currents, float64(binary.BigEndian.Uint32(b))/10)
+// 	}
 
-	return currents[0], currents[1], currents[2], nil
-}
+// 	return currents[0], currents[1], currents[2], nil
+// }

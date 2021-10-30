@@ -6,104 +6,44 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratecFosPowerBrain(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decorateCfosPowerBrain(base *CfosPowerBrain, meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && meterEnergy == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil:
+	case meter != nil && meterEnergy == nil:
 		return &struct {
 			*CfosPowerBrain
 			api.Meter
 		}{
 			CfosPowerBrain: base,
-			Meter: &decoratecFosPowerBrainMeterImpl{
+			Meter: &decorateCfosPowerBrainMeterImpl{
 				meter: meter,
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil:
+	case meter == nil && meterEnergy != nil:
 		return &struct {
 			*CfosPowerBrain
 			api.MeterEnergy
 		}{
 			CfosPowerBrain: base,
-			MeterEnergy: &decoratecFosPowerBrainMeterEnergyImpl{
+			MeterEnergy: &decorateCfosPowerBrainMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
 
-	case meter != nil && meterCurrent == nil && meterEnergy != nil:
+	case meter != nil && meterEnergy != nil:
 		return &struct {
 			*CfosPowerBrain
 			api.Meter
 			api.MeterEnergy
 		}{
 			CfosPowerBrain: base,
-			Meter: &decoratecFosPowerBrainMeterImpl{
+			Meter: &decorateCfosPowerBrainMeterImpl{
 				meter: meter,
 			},
-			MeterEnergy: &decoratecFosPowerBrainMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter == nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterCurrent
-		}{
-			CfosPowerBrain: base,
-			MeterCurrent: &decoratecFosPowerBrainMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-		}
-
-	case meter != nil && meterCurrent != nil && meterEnergy == nil:
-		return &struct {
-			*CfosPowerBrain
-			api.Meter
-			api.MeterCurrent
-		}{
-			CfosPowerBrain: base,
-			Meter: &decoratecFosPowerBrainMeterImpl{
-				meter: meter,
-			},
-			MeterCurrent: &decoratecFosPowerBrainMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-		}
-
-	case meter == nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*CfosPowerBrain
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			CfosPowerBrain: base,
-			MeterCurrent: &decoratecFosPowerBrainMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decoratecFosPowerBrainMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter != nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*CfosPowerBrain
-			api.Meter
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			CfosPowerBrain: base,
-			Meter: &decoratecFosPowerBrainMeterImpl{
-				meter: meter,
-			},
-			MeterCurrent: &decoratecFosPowerBrainMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decoratecFosPowerBrainMeterEnergyImpl{
+			MeterEnergy: &decorateCfosPowerBrainMeterEnergyImpl{
 				meterEnergy: meterEnergy,
 			},
 		}
@@ -112,26 +52,18 @@ func decoratecFosPowerBrain(base *CfosPowerBrain, meter func() (float64, error),
 	return nil
 }
 
-type decoratecFosPowerBrainMeterImpl struct {
+type decorateCfosPowerBrainMeterImpl struct {
 	meter func() (float64, error)
 }
 
-func (impl *decoratecFosPowerBrainMeterImpl) CurrentPower() (float64, error) {
+func (impl *decorateCfosPowerBrainMeterImpl) CurrentPower() (float64, error) {
 	return impl.meter()
 }
 
-type decoratecFosPowerBrainMeterCurrentImpl struct {
-	meterCurrent func() (float64, float64, float64, error)
-}
-
-func (impl *decoratecFosPowerBrainMeterCurrentImpl) Currents() (float64, float64, float64, error) {
-	return impl.meterCurrent()
-}
-
-type decoratecFosPowerBrainMeterEnergyImpl struct {
+type decorateCfosPowerBrainMeterEnergyImpl struct {
 	meterEnergy func() (float64, error)
 }
 
-func (impl *decoratecFosPowerBrainMeterEnergyImpl) TotalEnergy() (float64, error) {
+func (impl *decorateCfosPowerBrainMeterEnergyImpl) TotalEnergy() (float64, error) {
 	return impl.meterEnergy()
 }
