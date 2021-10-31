@@ -48,7 +48,7 @@ func NewNiuFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing user, password or serial")
 	}
 
-	log := util.NewLogger("niu")
+	log := util.NewLogger("niu").Redact(cc.User, cc.Password)
 
 	v := &Niu{
 		embed:    &cc.embed,

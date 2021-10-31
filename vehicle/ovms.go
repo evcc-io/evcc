@@ -60,7 +60,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ovms")
+	log := util.NewLogger("ovms").Redact(cc.User, cc.Password, cc.VehicleID)
 
 	v := &Ovms{
 		embed:     &cc.embed,

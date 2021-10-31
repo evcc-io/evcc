@@ -85,6 +85,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 		embed: &cc.embed,
 	}
 
+	log.Redact(cc.User, cc.Password, cc.VIN)
 	identity := psa.NewIdentity(log, brand, cc.Credentials.ID, cc.Credentials.Secret)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {

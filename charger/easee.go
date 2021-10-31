@@ -75,7 +75,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEasee creates Easee charger
 func NewEasee(user, password, charger string, circuit int, cache time.Duration) (*Easee, error) {
-	log := util.NewLogger("easee")
+	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
