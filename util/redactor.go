@@ -6,10 +6,16 @@ import (
 	"os"
 )
 
-const redactReplacement = "***"
+var (
+	// RedactReplacement is the default replacement string
+	RedactReplacement = "***"
 
-var RedactHook = Hook
+	// RedactHook is the hook for expanding different representations of
+	// redaction items
+	RedactHook = RedactDefaultHook
+)
 
+// Redactor implements a redacting io.Writer
 type Redactor struct {
 	redact []string
 }
@@ -25,11 +31,12 @@ func (l *Redactor) Redact(redact ...string) {
 
 func (l *Redactor) Write(p []byte) (n int, err error) {
 	for _, s := range l.redact {
-		p = bytes.ReplaceAll(p, []byte(s), []byte(redactReplacement))
+		p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
 	}
 	return os.Stdout.Write(p)
 }
 
-func Hook(s string) []string {
+// RedactDefaultHook expands a redaction item to include URL encoding
+func RedactDefaultHook(s string) []string {
 	return []string{s, url.QueryEscape(s)}
 }

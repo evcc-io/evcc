@@ -54,8 +54,8 @@ func NewLogger(area string) *Logger {
 
 	logger := &Logger{
 		Notepad:  notepad,
-		name:     area,
 		Redactor: redactor,
+		name:     area,
 	}
 
 	loggers[area] = logger
