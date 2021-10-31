@@ -128,7 +128,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("renault")
+	log := util.NewLogger("renault").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{
 		embed:    &cc.embed,

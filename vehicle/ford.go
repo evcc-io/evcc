@@ -59,7 +59,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("missing credentials")
 	}
 
-	log := util.NewLogger("ford")
+	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Ford{
 		embed:    &cc.embed,
