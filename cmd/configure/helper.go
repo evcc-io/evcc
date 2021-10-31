@@ -67,8 +67,9 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 	var repeat bool = true
 
 	device := device{
-		Name: DeviceCategories[deviceCategory].defaultName,
-		Yaml: "",
+		Name:  DeviceCategories[deviceCategory].defaultName,
+		Title: "",
+		Yaml:  "",
 	}
 
 	for ok := true; ok; ok = repeat {
@@ -109,17 +110,34 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		var values map[string]interface{}
 		values = c.processConfig(templateItem.Params, deviceCategory, false)
 		device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
+		device.Title = templateItem.Description
+		for _, param := range templateItem.Params {
+			if param.Name != "title" {
+				continue
+			}
+			if len(param.Value) > 0 {
+				device.Title = param.Value
+			}
+		}
 
+		deviceIsValid := false
 		v, err := c.configureDevice(deviceCategory, templateItem, values)
 		if err == nil {
 			fmt.Println()
 			fmt.Println("Testing configuration...")
 			fmt.Println()
-			err = c.testDevice(deviceCategory, v)
+			deviceIsValid, err = c.testDevice(deviceCategory, v)
+			if deviceCategory == DeviceCategoryCharger {
+				if deviceIsValid && err == nil {
+					device.ChargerHasMeter = true
+				}
+			}
 		}
 
-		if err != nil {
-			fmt.Println("Error: ", err)
+		if !deviceIsValid {
+			if err != nil {
+				fmt.Println("Error: ", err)
+			}
 			fmt.Println()
 			if !c.askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
 				fmt.Println()

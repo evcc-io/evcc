@@ -6,8 +6,8 @@ meters:
 - {{ .Yaml  | indent 2 | trim }}
 {{-   end }}
 {{- end }}
-{{- if ne (len .Chargers) 0 }}
 
+{{- if ne (len .Chargers) 0 }}
 chargers:
 {{-   range .Chargers }}
 - {{ .Yaml  | indent 2 | trim }}
@@ -26,9 +26,9 @@ loadpoints:
 {{-   range .Loadpoints }}
 - title: {{ .Title }}
   charger: {{ .Charger }}
-{{-     if .Meter }}
+{{-     if .ChargeMeter }}
   meters:
-    charge: {{ .Meter }}
+    charge: {{ .ChargeMeter }}
 {{-     end }}
 {{-     if ne (len .Vehicles) 0 }}
   vehicles:
@@ -36,6 +36,10 @@ loadpoints:
   - {{ . }}
 {{-       end }}
 {{-     end }}
+  mode: {{ .Mode }}
+  phases: {{ .Phases }}
+  mincurrent: {{ .MinCurrent }}
+  maxcurrent: {{ .MaxCurrent }}
 {{-   end }}
 {{- end }}
 

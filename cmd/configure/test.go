@@ -7,7 +7,9 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func (c *CmdConfigure) testDevice(deviceCategory string, v interface{}) error {
+var ErrChargerHasNoMeter = errors.New("charger has no meter")
+
+func (c *CmdConfigure) testDevice(deviceCategory string, v interface{}) (bool, error) {
 	switch DeviceCategories[deviceCategory].class {
 	case DeviceClassCharger:
 		return c.testCharger(deviceCategory, v)
@@ -17,25 +19,31 @@ func (c *CmdConfigure) testDevice(deviceCategory string, v interface{}) error {
 		return c.testVehicle(deviceCategory, v)
 	}
 
-	return errors.New("testDevice not implemented for this device class")
+	return false, errors.New("testDevice not implemented for this device class")
 }
 
-func (c *CmdConfigure) testCharger(deviceCategory string, v interface{}) error {
+func (c *CmdConfigure) testCharger(deviceCategory string, v interface{}) (bool, error) {
 	if v, ok := v.(api.Charger); ok {
 		if _, err := v.Status(); err != nil {
-			return err
+			return false, err
 		}
 	} else {
-		return errors.New("Selected device is not a charger!")
+		return false, errors.New("Selected device is not a wallbox!")
 	}
 
-	return nil
-}
-
-func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) error {
 	if v, ok := v.(api.Meter); ok {
 		if _, err := v.CurrentPower(); err != nil {
-			return err
+			return true, ErrChargerHasNoMeter
+		}
+	}
+
+	return true, nil
+}
+
+func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) (bool, error) {
+	if v, ok := v.(api.Meter); ok {
+		if _, err := v.CurrentPower(); err != nil {
+			return false, err
 		}
 
 		if deviceCategory == DeviceCategoryBatteryMeter {
@@ -48,23 +56,23 @@ func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) error {
 				}
 
 				if err != nil {
-					return err
+					return false, err
 				}
 			} else {
-				return errors.New("Selected device is not a battery meter!")
+				return false, errors.New("Selected device is not a battery meter!")
 			}
 		}
 	} else {
-		return errors.New("Selected device is not a meter!")
+		return false, errors.New("Selected device is not a meter!")
 	}
 
-	return nil
+	return true, nil
 }
 
-func (c *CmdConfigure) testVehicle(deviceCategory string, v interface{}) error {
+func (c *CmdConfigure) testVehicle(deviceCategory string, v interface{}) (bool, error) {
 	if _, ok := v.(api.Vehicle); !ok {
-		return errors.New("Selected device is not a charger!")
+		return false, errors.New("Selected device is not a vehicle!")
 	}
 
-	return nil
+	return true, nil
 }

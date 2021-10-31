@@ -56,6 +56,7 @@ const (
 	DeviceCategoryGridMeter    = "grid"
 	DeviceCategoryPVMeter      = "pv"
 	DeviceCategoryBatteryMeter = "battery"
+	DeviceCategoryChargeMeter  = "charge"
 	DeviceCategoryVehicle      = "vehicle"
 )
 
@@ -64,6 +65,7 @@ const (
 	defaultNameGridMeter    = "grid"
 	defaultNamePVMeter      = "pv"
 	defaultNameBatteryMeter = "battery"
+	defaultNameChargeMeter  = "charge"
 	defaultNameVehicle      = "ev"
 )
 
@@ -82,6 +84,7 @@ var DeviceCategories map[string]DeviceCategoryData = map[string]DeviceCategoryDa
 	DeviceCategoryPVMeter:      {title: "pv meter", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
 	DeviceCategoryBatteryMeter: {title: "battery meter", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
 	DeviceCategoryVehicle:      {title: "vehicle", class: DeviceClassVehicle, defaultName: defaultNameVehicle},
+	DeviceCategoryChargeMeter:  {title: "charge meter", class: DeviceClassMeter, usageFilter: UsageChoiceCharge, defaultName: defaultNameChargeMeter},
 }
 
 const itemNotPresent string = "My item is not in this list"
@@ -93,15 +96,20 @@ var configTmpl string
 
 type device struct {
 	Name            string
+	Title           string
 	Yaml            string
 	ChargerHasMeter bool // only used with chargers to detect if we need to ask for a charge meter
 }
 
 type loadpoint struct {
-	Title    string
-	Charger  string
-	Meter    string
-	Vehicles []string
+	Title       string
+	Charger     string
+	ChargeMeter string
+	Vehicles    []string
+	Mode        string
+	MinCurrent  int
+	MaxCurrent  int
+	Phases      int
 }
 
 type config struct {
