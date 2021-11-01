@@ -15,6 +15,13 @@ const (
 	ModbusMagicComment = "# ::modbus-setup::"
 )
 
+const (
+	ParamValueTypeString = "string"
+	ParamValueTypeInt    = "int"
+)
+
+var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeInt}
+
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	Type         string
@@ -31,17 +38,18 @@ type Requirements struct {
 
 // Param is a proxy template parameter
 type Param struct {
-	Name     string
-	Required bool   // cli if the user has to provide a non empty value
-	Mask     bool   // cli if the value should be masked, e.g. for passwords
-	Advanced bool   // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Default  string // default value if no user value is provided in the configuration
-	Example  string // cli default value
-	Hint     string // cli configuration hint
-	Test     string // testing default value
-	Value    string // user provided value via cli configuration
-	Choice   []string
-	Usages   []string
+	Name      string
+	Required  bool   // cli if the user has to provide a non empty value
+	Mask      bool   // cli if the value should be masked, e.g. for passwords
+	Advanced  bool   // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Default   string // default value if no user value is provided in the configuration
+	Example   string // cli default value
+	Hint      string // cli configuration hint
+	Test      string // testing default value
+	Value     string // user provided value via cli configuration
+	ValueType string // string representation of the value type, "string" is default
+	Choice    []string
+	Usages    []string
 }
 
 // Defaults returns a map of default values for the template

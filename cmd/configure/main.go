@@ -3,9 +3,11 @@ package configure
 import (
 	_ "embed"
 	"fmt"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/viper"
 )
@@ -87,7 +89,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 	for ok := true; ok; {
 
-		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil, false, true)
+		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil, templates.ParamValueTypeString, false, true)
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
 			Phases:     3,
@@ -125,7 +127,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		powerChoices := []string{"3,6kW", "11kW", "22kW"}
+		powerChoices := []string{"3,6kW", "11kW", "22kW", "Other"}
 		powerIndex, _ := c.askChoice("What is the maximum power the wallbox installation can provide?", powerChoices)
 		switch powerIndex {
 		case 0:
@@ -135,6 +137,13 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.MaxCurrent = 16
 		case 2:
 			loadpoint.MaxCurrent = 32
+		case 3:
+			amperage := c.askValue("What is the maximum amperage the wallbox installation can provide on a single phase?", "", "", nil, templates.ParamValueTypeInt, false, true)
+			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
+
+			phaseChoices := []string{"1", "2", "3"}
+			phaseIndex, _ := c.askChoice("With how many phases is the wallbox connected?", phaseChoices)
+			loadpoint.Phases = phaseIndex + 1
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
@@ -154,5 +163,5 @@ func (c *CmdConfigure) configureSite() {
 	fmt.Println()
 	fmt.Println("- Configure your site")
 
-	c.configuration.Site.Title = c.askValue("Site title", defaultTitleSite, "", nil, false, true)
+	c.configuration.Site.Title = c.askValue("Site title", defaultTitleSite, "", nil, templates.ParamValueTypeString, false, true)
 }

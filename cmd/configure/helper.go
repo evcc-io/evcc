@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -329,7 +330,7 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 }
 
 // PromputUI: ask for input
-func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues []string, mask, required bool) string {
+func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues []string, dataType string, mask, required bool) string {
 	promptuiTemplates := &promptui.PromptTemplates{
 		Prompt:  "{{ . }} ",
 		Valid:   "{{ . | green }} ",
@@ -344,6 +345,13 @@ func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues 
 
 		if required && len(input) == 0 {
 			return errors.New("Value may not be empty")
+		}
+
+		if dataType == templates.ParamValueTypeInt {
+			_, err := strconv.Atoi(input)
+			if err != nil {
+				return errors.New("Value must be an integer")
+			}
 		}
 
 		return nil
@@ -403,7 +411,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 
 			if len(choices) > 0 {
 				// ask for modbus address
-				id := c.askValue("ID", "1", "Modbus ID", nil, false, true)
+				id := c.askValue("ID", "1", "Modbus ID", nil, templates.ParamValueTypeInt, false, true)
 				additionalConfig[ModbusParamNameId] = id
 
 				// ask for modbus interface type
@@ -414,19 +422,19 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				selectedModbusKey = choiceKeys[index]
 				switch selectedModbusKey {
 				case ModbusKeyRS485Serial:
-					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter address", nil, false, true)
+					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter address", nil, templates.ParamValueTypeString, false, true)
 					additionalConfig[ModbusParamNameDevice] = device
-					baudrate := c.askValue("Baudrate", ModbusParamValueBaudrate, "", nil, false, true)
+					baudrate := c.askValue("Baudrate", ModbusParamValueBaudrate, "", nil, templates.ParamValueTypeInt, false, true)
 					additionalConfig[ModbusParamNameBaudrate] = baudrate
-					comset := c.askValue("ComSet", ModbusParamValueComset, "", nil, false, true)
+					comset := c.askValue("ComSet", ModbusParamValueComset, "", nil, templates.ParamValueTypeString, false, true)
 					additionalConfig[ModbusParamNameComset] = comset
 				case ModbusKeyRS485TCPIP, ModbusKeyTCPIP:
 					if selectedModbusKey == ModbusKeyRS485TCPIP {
 						additionalConfig[ModbusParamNameRTU] = "true"
 					}
-					host := c.askValue("Host", ModbusParamValueHost, "IP address or hostname", nil, false, true)
+					host := c.askValue("Host", ModbusParamValueHost, "IP address or hostname", nil, templates.ParamValueTypeString, false, true)
 					additionalConfig[ModbusParamNameHost] = host
-					port := c.askValue("Port", ModbusParamValuePort, "Port address", nil, false, true)
+					port := c.askValue("Port", ModbusParamValuePort, "Port address", nil, templates.ParamValueTypeInt, false, true)
 					additionalConfig[ModbusParamNamePort] = port
 				}
 			}
@@ -438,7 +446,11 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 			if exampleValue == "" && param.Default != "" {
 				exampleValue = param.Default
 			}
-			value := c.askValue(param.Name, exampleValue, param.Hint, nil, param.Mask, param.Required)
+			valueType := templates.ParamValueTypeString
+			if param.ValueType != "" && funk.ContainsString(templates.ParamValueTypes, param.ValueType) {
+				valueType = param.ValueType
+			}
+			value := c.askValue(param.Name, exampleValue, param.Hint, nil, valueType, param.Mask, param.Required)
 			additionalConfig[param.Name] = value
 		} else if param.Name == templates.ParamUsage {
 			if usageFilter != "" {
