@@ -31,7 +31,7 @@ func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
 	return bytes.TrimSpace(out.Bytes()), err
 }
 
-func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) error {
+func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
 	fmt.Println()
 	fmt.Printf("- Configure your %s\n", DeviceCategories[deviceCategory].title)
 
@@ -59,7 +59,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceInde
 		}
 	}
 
-	return err
+	return device, err
 }
 
 // let the user select a device item from a list defined by class and filter

@@ -28,7 +28,10 @@ func (c *CmdConfigure) Run(log *util.Logger) {
 	fmt.Println()
 	fmt.Println("Let's start:")
 
-	c.configureDevices()
+	c.configureDevices(DeviceCategoryGridMeter, false)
+	c.configureDevices(DeviceCategoryPVMeter, true)
+	c.configureDevices(DeviceCategoryBatteryMeter, true)
+	c.configureDevices(DeviceCategoryVehicle, true)
 	c.configureLoadpoints()
 	c.configureSite()
 
@@ -44,72 +47,70 @@ func (c *CmdConfigure) Run(log *util.Logger) {
 }
 
 // ask devuce specfic questions
-func (c *CmdConfigure) configureDevices() {
-	categoriesOrder := []string{DeviceCategoryCharger, DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryVehicle}
-	for _, category := range categoriesOrder {
-		fmt.Println()
-		if !c.askYesNo("Do you want to add a " + DeviceCategories[category].title + "?") {
-			continue
+func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
+	fmt.Println()
+	if !c.askYesNo("Do you want to add a " + DeviceCategories[deviceCategory].title + "?") {
+		return nil
+	}
+
+	var devices []device
+	var deviceInCategoryIndex int = 0
+
+	for ok := true; ok; {
+		deviceInCategoryIndex++
+
+		device, err := c.configureDeviceCategory(deviceCategory, deviceInCategoryIndex)
+		if err != nil {
+			break
+		}
+		devices = append(devices, device)
+
+		if !askMultiple {
+			break
 		}
 
-		var deviceInCategoryIndex int = 0
-
-		for ok := true; ok; {
-			deviceInCategoryIndex++
-
-			err := c.configureDeviceCategory(category, deviceInCategoryIndex)
-			if err != nil {
-				break
-			}
-
-			if category == DeviceCategoryGridMeter {
-				break
-			}
-			if !c.askYesNo("Do you want to add another " + DeviceCategories[category].title + "?") {
-				break
-			}
+		if !c.askYesNo("Do you want to add another " + DeviceCategories[deviceCategory].title + "?") {
+			break
 		}
 	}
+
+	return devices
 }
 
 // ask loadpoint specific questions
 func (c *CmdConfigure) configureLoadpoints() {
-	if len(c.configuration.Chargers) == 0 {
-		return
-	}
-
-	chargeMeterIndex := 0
-
 	fmt.Println()
 	fmt.Println("- Configure your loadpoint(s)")
 
-	for index, charger := range c.configuration.Chargers {
-		fmt.Println()
-		fmt.Printf("%#v\n", charger)
-		fmt.Printf("- Configure a loadpoint for the %d. wallbox %s (%s)\n", (index + 1), charger.Title, charger.Name)
+	chargerIndex := 0
+	chargeMeterIndex := 0
+
+	for ok := true; ok; {
 
 		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil, false, true)
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
-			Charger:    charger.Name,
 			Phases:     3,
 			MinCurrent: 6,
 		}
 
+		chargerIndex++
+		charger, err := c.configureDeviceCategory(DeviceCategoryCharger, chargerIndex)
+		if err != nil {
+			break
+		}
+
+		loadpoint.Charger = charger.Name
+
 		if !charger.ChargerHasMeter {
-			if c.askYesNo("The charger does not provide charging power. Do you have a meter installed that can be used instead?") {
+			if c.askYesNo("The wallbox does not provide charging power information. Do you have a meter installed that can be used instead?") {
 				chargeMeterIndex++
-				err := c.configureDeviceCategory(DeviceCategoryChargeMeter, chargeMeterIndex)
+				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter, chargeMeterIndex)
 				if err != nil {
 					break
 				}
 
-				for _, device := range c.configuration.Meters {
-					if device.Name == fmt.Sprintf("%s%d", defaultNameChargeMeter, chargeMeterIndex) {
-						loadpoint.ChargeMeter = device.Name
-						break
-					}
-				}
+				loadpoint.ChargeMeter = chargeMeter.Name
 			}
 		}
 
@@ -118,7 +119,6 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.Vehicles = append(loadpoint.Vehicles, c.configuration.Vehicles[0].Name)
 		} else if vehicleAmount > 1 {
 			for _, vehicle := range c.configuration.Vehicles {
-				fmt.Printf("%#v\n", vehicle)
 				if c.askYesNo("Will the vehicle " + vehicle.Title + " charge here?") {
 					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
 				}
@@ -126,7 +126,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		powerChoices := []string{"3,6kW", "11kW", "22kW"}
-		powerIndex, _ := c.askChoice("What is the maximum power the wallbox can provide?", powerChoices)
+		powerIndex, _ := c.askChoice("What is the maximum power the wallbox installation can provide?", powerChoices)
 		switch powerIndex {
 		case 0:
 			loadpoint.MaxCurrent = 16
@@ -142,6 +142,10 @@ func (c *CmdConfigure) configureLoadpoints() {
 		loadpoint.Mode = modeChoice
 
 		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
+
+		if !c.askYesNo("Do you want to add another loadpoint?") {
+			break
+		}
 	}
 }
 
