@@ -126,7 +126,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	)
 
 	if err == nil {
-		client.Start()
+		err = <-client.Start()
 
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
@@ -152,8 +152,8 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 		// defer cancel()
 
 		return signalr.NewHTTPConnection(ctx, "https://api.easee.cloud/hubs/chargers",
-			signalr.WithHTTPClientOption(c.Client),
-			signalr.WithHTTPHeadersOption(func() (res http.Header) {
+			signalr.WithHTTPClient(c.Client),
+			signalr.WithHTTPHeaders(func() (res http.Header) {
 				return http.Header{
 					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
 				}
