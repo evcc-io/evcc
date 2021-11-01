@@ -1,9 +1,6 @@
 package meter
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/templates"
 	"gopkg.in/yaml.v3"
@@ -11,18 +8,18 @@ import (
 
 func init() {
 	for _, tmpl := range templates.ByClass(templates.Meter) {
-		println(strings.ToUpper(tmpl.Type))
-		println("")
+		// println(strings.ToUpper(tmpl.Type))
+		// println("")
 
 		// render the proxy
-		sample, err := tmpl.RenderProxy()
+		_, err := tmpl.RenderProxy()
 		if err != nil {
 			panic(err)
 		}
 
-		println("-- proxy --")
-		println(string(sample))
-		println("")
+		// println("-- proxy --")
+		// println(string(sample))
+		// println("")
 
 		instantiateFunc := instantiateFunction(tmpl)
 		registry.Add(tmpl.Type, instantiateFunc)
@@ -44,13 +41,13 @@ func init() {
 					values["modbustcpip"] = true
 				}
 			}
-			b, err := tmpl.RenderResult(values)
+			_, err := tmpl.RenderResult(values)
 			if err != nil {
 				panic(err)
 			}
 
-			println(string(b))
-			println("")
+			// println(string(b))
+			// println("")
 		}
 	}
 }
@@ -62,9 +59,9 @@ func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (
 			return nil, err
 		}
 
-		fmt.Println("-- instantiated --")
-		println(string(b))
-		println("")
+		// fmt.Println("-- instantiated --")
+		// println(string(b))
+		// println("")
 
 		var instance struct {
 			Type  string
