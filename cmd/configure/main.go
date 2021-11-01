@@ -7,11 +7,18 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/BurntSushi/toml"
+	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
 )
+
+//go:embed localization/de.toml
+var lang_de string
 
 type CmdConfigure struct {
 	configuration Configure
@@ -19,7 +26,7 @@ type CmdConfigure struct {
 }
 
 // start the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
+func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 	c.log = log
 
 	defaultLevel := "error"
@@ -29,23 +36,28 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	util.LogLevel(defaultLevel, map[string]string{})
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
-	fmt.Println()
-	fmt.Println("Die nächsten Schritte führen durch die Einrichtung einer Konfigurationsdatei für evcc.")
-	fmt.Println("Beachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.")
-	fmt.Println("Durch Drücken von CTRL-C kann der Prozess abgebrochen werden.")
-	fmt.Println()
-	fmt.Println("ACHTUNG: Diese Funktionalität hat experimentellen Status!")
-	fmt.Println("  D.h. es kann möglich sein, dass die hiermit erstellen Konfigurationsdatei")
-	fmt.Println("  in einem Update nicht mehr funktionieren könnten und neu erzeugt werden müsste.")
-	fmt.Println("  Wir freuen uns auf euer Feedback auf https://github.com/evcc-io/evcc/discussions/")
-	fmt.Println()
-	fmt.Println("Auf geht`s:")
+	bundle := i18n.NewBundle(language.German)
+	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
+	_, err := bundle.ParseMessageFileBytes([]byte(lang_de), "localization/de.toml")
+	if err != nil {
+		panic(err)
+	}
+
+	lang := "de"
+	systemLanguage, err := jibber_jabber.DetectLanguage()
+	if err == nil {
+		lang = systemLanguage
+	}
+	if flagLang != "" {
+		lang = flagLang
+	}
+
+	localizer = i18n.NewLocalizer(bundle, lang)
 
 	fmt.Println()
-	fmt.Println("- Hausinstallation einrichten")
-
+	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Intro"}))
 	fmt.Println()
-	fmt.Println("Wähle eines der folgenden PV Komplettsysteme aus, oder '" + itemNotPresent + "' falls keines dieser Geräte vorhanden ist")
+	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Meters_Guide_Select"}))
 	c.configureDeviceGuidedSetup()
 
 	c.configureDevices(DeviceCategoryGridMeter, false)

@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/BurntSushi/toml v0.4.1
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/alvaroloes/enumer v1.1.2
@@ -12,6 +13,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.7
 	github.com/benbjohnson/clock v1.1.0
 	github.com/bogosj/tesla v1.0.2
+	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.5.2
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dustin/go-humanize v1.0.0
@@ -55,6 +57,7 @@ require (
 	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
 	github.com/muka/go-bluetooth v0.0.0-20210508070623-03c23c62f181
 	github.com/mxschmitt/golang-combinations v1.1.0
+	github.com/nicksnyder/go-i18n/v2 v2.1.2
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4 // indirect

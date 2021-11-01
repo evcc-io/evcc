@@ -16,10 +16,17 @@ var configureCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configureCmd)
+	configureCmd.Flags().String("lang", "", "Define the localization to be used (en, de)")
 }
 
 func runConfigure(cmd *cobra.Command, args []string) {
 	impl := &configure.CmdConfigure{}
+
+	lang := ""
+	langFlag, err := cmd.Flags().GetString("lang")
+	if err == nil {
+		lang = langFlag
+	}
 
 	logLevel := ""
 	logLevelFlag, err := cmd.Flags().GetString("log")
@@ -27,5 +34,5 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		logLevel = logLevelFlag
 	}
 
-	impl.Run(log, logLevel)
+	impl.Run(log, logLevel, lang)
 }

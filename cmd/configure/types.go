@@ -2,6 +2,8 @@ package configure
 
 import (
 	"errors"
+
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const (
@@ -139,6 +141,8 @@ var ErrItemNotPresent = errors.New("Gerät nicht vorhanden")
 var ErrDeviceNotValid = errors.New("Das Gerät funktioniert nicht")
 
 var addedDeviceIndex int = 0
+
+var localizer *i18n.Localizer
 
 type device struct {
 	Name            string
