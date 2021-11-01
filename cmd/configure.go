@@ -20,5 +20,12 @@ func init() {
 
 func runConfigure(cmd *cobra.Command, args []string) {
 	impl := &configure.CmdConfigure{}
-	impl.Run(log)
+
+	logLevel := ""
+	logLevelFlag, err := cmd.Flags().GetString("log")
+	if err == nil {
+		logLevel = logLevelFlag
+	}
+
+	impl.Run(log, logLevel)
 }

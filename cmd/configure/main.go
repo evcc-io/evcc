@@ -9,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util"
-	"github.com/spf13/viper"
 )
 
 type CmdConfigure struct {
@@ -18,9 +17,14 @@ type CmdConfigure struct {
 }
 
 // start the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger) {
+func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	c.log = log
-	util.LogLevel(viper.GetString("log"), viper.GetStringMapString("levels"))
+
+	defaultLevel := "error"
+	if logLevel != "" {
+		defaultLevel = logLevel
+	}
+	util.LogLevel(defaultLevel, map[string]string{})
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	fmt.Println()
