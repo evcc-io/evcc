@@ -126,11 +126,11 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	)
 
 	if err == nil {
-		err = <-client.Start()
+		client.Start()
 
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
-		err = client.WaitConnected(ctx)
+		err = <-signalr.WaitForClientState(ctx, client, signalr.ClientConnected)
 	}
 
 	if err == nil {

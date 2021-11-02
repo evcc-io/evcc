@@ -540,6 +540,8 @@ github.com/philippseith/signalr v0.4.2-0.20211027072659-e2e1e25d99ea h1:JDDWAUJt
 github.com/philippseith/signalr v0.4.2-0.20211027072659-e2e1e25d99ea/go.mod h1:qRINY6ciWK+sZXvVrtYup5u0nPXClEFzGnD4SvfwYxI=
 github.com/philippseith/signalr v0.4.2-0.20211101104955-1089a45250a0 h1:aj1qDjBYOeYCZA7Y2pEN2aBcBdlfbxqFqMTXbVayfR4=
 github.com/philippseith/signalr v0.4.2-0.20211101104955-1089a45250a0/go.mod h1:qRINY6ciWK+sZXvVrtYup5u0nPXClEFzGnD4SvfwYxI=
+github.com/philippseith/signalr v0.4.2-0.20211102070039-20ad0466a677 h1:B4u4pZvazLNHZlXm4xDYUs9yK5MMVbGQCZUEA0SbnVE=
+github.com/philippseith/signalr v0.4.2-0.20211102070039-20ad0466a677/go.mod h1:qRINY6ciWK+sZXvVrtYup5u0nPXClEFzGnD4SvfwYxI=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
