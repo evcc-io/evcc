@@ -212,6 +212,10 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentL3 = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
+		// ensure that charger current matches evcc's expectation
+		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
+			c.MaxCurrentMillis(c.current)
+		}
 	case easee.CHARGER_OP_MODE:
 		switch value.(int) {
 		case easee.ModeDisconnected:
@@ -306,13 +310,6 @@ func (c *Easee) Enable(enable bool) error {
 
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
-
-	if err == nil && action == easee.ChargeResume {
-		// resume will async adjust charger current, wait for this to happen
-		time.Sleep(1 * time.Second)
-		// restore current after enabling https://github.com/evcc-io/evcc/pull/1786
-		err = c.MaxCurrentMillis(c.current)
-	}
 
 	return err
 }
