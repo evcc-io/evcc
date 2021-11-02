@@ -39,15 +39,16 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger        string
-	updated        time.Time
-	chargeStatus   api.ChargeStatus
-	cache          time.Duration
-	log            *util.Logger
-	mux            sync.Mutex
-	current        float64
-	chargerEnabled bool
-	enabledStatus  bool
+	charger               string
+	updated               time.Time
+	chargeStatus          api.ChargeStatus
+	cache                 time.Duration
+	log                   *util.Logger
+	mux                   sync.Mutex
+	dynamicChargerCurrent float64
+	current               float64
+	chargerEnabled        bool
+	enabledStatus         bool
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 }
@@ -209,6 +210,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentL2 = value.(float64)
 	case easee.IN_CURRENT_T5:
 		c.currentL3 = value.(float64)
+	case easee.DYNAMIC_CHARGER_CURRENT:
+		c.dynamicChargerCurrent = value.(float64)
 	case easee.CHARGER_OP_MODE:
 		switch value.(int) {
 		case easee.ModeDisconnected:
@@ -223,7 +226,10 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			c.chargeStatus = api.StatusNone
 			c.log.ERROR.Printf("unknown opmode: %d", value.(int))
 		}
-		c.enabledStatus = value.(int) == easee.ModeCharging || value.(int) == easee.ModeReadyToCharge
+		c.enabledStatus = value.(int) == easee.ModeCharging ||
+			value.(int) == easee.ModeAwaitingStart ||
+			value.(int) == easee.ModeCompleted ||
+			value.(int) == easee.ModeReadyToCharge
 	}
 
 	c.log.TRACE.Printf("%s %s: %s %.4v", typ, res.Mid, res.ID, value)
@@ -269,7 +275,7 @@ func (c *Easee) Enabled() (bool, error) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.enabledStatus, nil
+	return c.enabledStatus && c.dynamicChargerCurrent > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -301,6 +307,9 @@ func (c *Easee) Enable(enable bool) error {
 	uri := fmt.Sprintf("%s/chargers/%s/commands/%s", easee.API, c.charger, action)
 	_, err := c.Post(uri, request.JSONContent, nil)
 
+	// pause/resume will async adjust charger current, wait for this to happen
+	time.Sleep(5 * time.Second)
+
 	if err == nil && action == easee.ChargeResume {
 		// restore current after enabling https://github.com/evcc-io/evcc/pull/1786
 		err = c.MaxCurrentMillis(c.current)
@@ -325,7 +334,9 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		c.current = current
+		if current > 0 {
+			c.current = current
+		}
 		resp.Body.Close()
 	}
 
