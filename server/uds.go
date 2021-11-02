@@ -27,7 +27,7 @@ func removeIfExists(file string) {
 }
 
 // HealthListener attaches listener to unix domain socket and runs listener
-func HealthListener(site site.API, existC <-chan struct{}) {
+func HealthListener(site site.API, exitC <-chan struct{}) {
 	removeIfExists(SocketPath)
 
 	l, err := net.Listen("unix", SocketPath)
@@ -42,6 +42,6 @@ func HealthListener(site site.API, existC <-chan struct{}) {
 
 	go func() { _ = httpd.Serve(l) }()
 
-	<-existC
+	<-exitC
 	removeIfExists(SocketPath) // cleanup
 }
