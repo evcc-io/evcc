@@ -35,6 +35,8 @@ jobs:
       with:
         version: latest
         skip-go-installation: true
+        skip-pkg-cache: true
+        skip-build-cache: true
 
     - name: Install tools
       run: make install
