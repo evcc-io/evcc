@@ -30,14 +30,6 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Lint
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: latest
-        skip-go-installation: true
-        skip-pkg-cache: true
-        skip-build-cache: true
-
     - name: Install tools
       run: make install
 
@@ -48,6 +40,14 @@ jobs:
       run: |
         go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: latest
+        skip-go-installation: true
+        skip-pkg-cache: true
+        skip-build-cache: true
 
     - name: Build
       run: make build
