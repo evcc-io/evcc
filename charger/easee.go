@@ -334,9 +334,7 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		if current > 0 {
-			c.current = current
-		}
+		c.current = current
 		resp.Body.Close()
 	}
 
