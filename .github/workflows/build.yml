@@ -30,6 +30,12 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: latest
+        skip-go-installation: true
+
     - name: Install tools
       run: make install
 
@@ -43,11 +49,6 @@ jobs:
 
     - name: Build
       run: make build
-
-    - name: Lint
-      uses: golangci/golangci-lint-action@v2
-      with:
-        version: v1.37
 
     - name: Test
       run: make test
