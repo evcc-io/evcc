@@ -214,7 +214,10 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 		// ensure that charger current matches evcc's expectation
 		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
-			c.MaxCurrentMillis(c.current)
+			err = c.MaxCurrentMillis(c.current)
+			if err != nil {
+				c.log.ERROR.Println(err)
+			}
 		}
 	case easee.CHARGER_OP_MODE:
 		switch value.(int) {
