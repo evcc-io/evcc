@@ -41,6 +41,9 @@ jobs:
         go mod tidy
         test -z "$(git status --porcelain)" || (git status; git diff; false)
 
+    - name: Build
+      run: make build
+
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
@@ -48,9 +51,6 @@ jobs:
         skip-go-installation: true
         skip-pkg-cache: true
         skip-build-cache: true
-
-    - name: Build
-      run: make build
 
     - name: Test
       run: make test
