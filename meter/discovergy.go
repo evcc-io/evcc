@@ -39,7 +39,8 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("discgy")
+	log := util.NewLogger("discgy").Redact(cc.User, cc.Password, cc.Meter)
+
 	client := request.NewHelper(log)
 	client.Transport = basicauth.NewTransport(cc.User, cc.Password, client.Transport)
 

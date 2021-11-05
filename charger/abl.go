@@ -37,6 +37,7 @@ type ABLeMH struct {
 const (
 	ablRegFirmware   = 0x01
 	ablRegStatus     = 0x04
+	ablRegEnabled    = 0x0F
 	ablRegAmpsConfig = 0x14
 	ablRegStatusLong = 0x2E
 
@@ -145,13 +146,13 @@ func (wb *ABLeMH) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *ABLeMH) Enabled() (bool, error) {
-	_, _ = wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
-	b, err := wb.conn.ReadHoldingRegisters(ablRegStatusLong, 5)
+	_, _ = wb.conn.ReadHoldingRegisters(ablRegEnabled, 5)
+	b, err := wb.conn.ReadHoldingRegisters(ablRegEnabled, 5)
 	if err != nil {
 		return false, err
 	}
 
-	u := binary.BigEndian.Uint16(b[2:]) & 0x0FFF
+	u := binary.BigEndian.Uint16(b[6:]) & 0x0FFF
 	return u != ablAmpsDisabled, nil
 }
 

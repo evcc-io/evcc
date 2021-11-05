@@ -47,7 +47,10 @@ jobs:
     - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.37
+        version: latest
+        skip-go-installation: true
+        skip-pkg-cache: true
+        skip-build-cache: true
 
     - name: Test
       run: make test
@@ -77,6 +80,9 @@ jobs:
 
     - name: Lint
       run: make lint-ui
+
+    - name: Test
+      run: make test-ui
 
     - name: Porcelain
       run: |
