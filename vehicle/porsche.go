@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -19,17 +20,23 @@ type porscheProvider interface {
 
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
-	*Embed
+	*embed
 	porscheProvider // provides the api implementations
 }
 
 func init() {
-	registry.Add("porsche", NewPorscheFromConfig, defaults())
+	registry.Add("porsche", NewPorscheFromConfig)
 }
 
 // NewPorscheFromConfig creates a new vehicle
 func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -51,7 +58,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	provider := porsche.NewProvider(log, identity, accessTokens, vin, cc.Cache)
 
 	v := &Porsche{
-		Embed:           &cc.Embed,
+		embed:           &cc.embed,
 		porscheProvider: provider,
 	}
 

@@ -2,6 +2,7 @@ package vehicle
 
 import (
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -10,25 +11,31 @@ import (
 
 // BMW is an api.Vehicle implementation for BMW and Mini cars
 type BMW struct {
-	*Embed
+	*embed
 	*bmw.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("bmw", NewBMWFromConfig, defaults())
-	registry.Add("mini", NewBMWFromConfig, defaults())
+	registry.Add("bmw", NewBMWFromConfig)
+	registry.Add("mini", NewBMWFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle
 func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	v := &BMW{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("bmw").Redact(cc.User, cc.Password, cc.VIN)

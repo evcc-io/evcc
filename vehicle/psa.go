@@ -14,10 +14,10 @@ import (
 // https://github.com/TA2k/ioBroker.psa
 
 func init() {
-	registry.Add("citroen", NewCitroenFromConfig, nil)
-	registry.Add("ds", NewDSFromConfig, nil)
-	registry.Add("opel", NewOpelFromConfig, nil)
-	registry.Add("peugeot", NewPeugeotFromConfig, nil)
+	registry.Add("citroen", NewCitroenFromConfig)
+	registry.Add("ds", NewDSFromConfig)
+	registry.Add("opel", NewOpelFromConfig)
+	registry.Add("peugeot", NewPeugeotFromConfig)
 }
 
 // NewCitroenFromConfig creates a new vehicle
@@ -58,14 +58,14 @@ func NewPeugeotFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 // PSA is an api.Vehicle implementation for PSA cars
 type PSA struct {
-	*Embed
+	*embed
 	*psa.Provider // provides the api implementations
 }
 
 // newPSA creates a new vehicle
 func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Embed               `mapstructure:",squash"`
+		embed               `mapstructure:",squash"`
 		Credentials         ClientCredentials
 		User, Password, VIN string
 		Cache               time.Duration
@@ -82,7 +82,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 	}
 
 	v := &PSA{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log.Redact(cc.User, cc.Password, cc.VIN)

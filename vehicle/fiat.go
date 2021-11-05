@@ -15,18 +15,18 @@ import (
 
 // Fiat is an api.Vehicle implementation for Fiat cars
 type Fiat struct {
-	*Embed
+	*embed
 	*fiat.Provider
 }
 
 func init() {
-	registry.Add("fiat", NewFiatFromConfig, nil)
+	registry.Add("fiat", NewFiatFromConfig)
 }
 
 // NewFiatFromConfig creates a new vehicle
 func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Embed                    `mapstructure:",squash"`
+		embed                    `mapstructure:",squash"`
 		User, Password, VIN, PIN string
 		Expiry                   time.Duration
 		Cache                    time.Duration
@@ -44,7 +44,7 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Fiat{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("fiat").Redact(cc.User, cc.Password, cc.VIN)

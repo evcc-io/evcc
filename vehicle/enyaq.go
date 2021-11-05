@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
@@ -15,24 +17,32 @@ import (
 
 // Enyaq is an api.Vehicle implementation for Skoda Enyaq cars
 type Enyaq struct {
-	*Embed
+	*embed
 	*skoda.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("enyaq", NewEnyaqFromConfig, defaults().WithTimeout())
+	registry.Add("enyaq", NewEnyaqFromConfig)
 }
 
 // NewEnyaqFromConfig creates a new vehicle
 func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults().WithTimeout()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+		Timeout             time.Duration
+	}{
+		Cache:   interval,
+		Timeout: request.Timeout,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	v := &Enyaq{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	var err error

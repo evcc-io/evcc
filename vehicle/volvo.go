@@ -84,19 +84,25 @@ type volvoStatus struct {
 
 // Volvo is an api.Vehicle implementation for Volvo cars
 type Volvo struct {
-	*Embed
+	*embed
 	*request.Helper
 	user, password, vin string
 	statusG             func() (interface{}, error)
 }
 
 func init() {
-	registry.Add("volvo", NewVolvoFromConfig, defaults())
+	registry.Add("volvo", NewVolvoFromConfig)
 }
 
 // NewVolvoFromConfig creates a new vehicle
 func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -105,7 +111,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Volvo{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

@@ -98,7 +98,7 @@ type attributes struct {
 
 // Renault is an api.Vehicle implementation for Renault cars
 type Renault struct {
-	*Embed
+	*embed
 	*request.Helper
 	user, password, vin string
 	gigya, kamereon     configServer
@@ -110,13 +110,13 @@ type Renault struct {
 }
 
 func init() {
-	registry.Add("renault", NewRenaultFromConfig, nil)
+	registry.Add("renault", NewRenaultFromConfig)
 }
 
 // NewRenaultFromConfig creates a new vehicle
 func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Embed                       `mapstructure:",squash"`
+		embed                       `mapstructure:",squash"`
 		User, Password, Region, VIN string
 		Cache                       time.Duration
 	}{
@@ -131,7 +131,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("renault").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,

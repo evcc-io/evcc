@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -12,17 +13,24 @@ import (
 
 // Hyundai is an api.Vehicle implementation
 type Hyundai struct {
-	*Embed
+	*embed
 	*bluelink.Provider
 }
 
 func init() {
-	registry.Add("hyundai", NewHyundaiFromConfig, defaults())
+	registry.Add("hyundai", NewHyundaiFromConfig)
 }
 
 // NewHyundaiFromConfig creates a new Vehicle
 func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed          `mapstructure:",squash"`
+		User, Password string
+		VIN            string
+		Cache          time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -75,7 +83,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Hyundai{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
 	}
 

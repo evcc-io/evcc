@@ -20,18 +20,18 @@ import (
 
 // Nissan is an api.Vehicle implementation for Nissan cars
 type Nissan struct {
-	*Embed
+	*embed
 	*nissan.Provider
 }
 
 func init() {
-	registry.Add("nissan", NewNissanFromConfig, defaults())
+	registry.Add("nissan", NewNissanFromConfig)
 }
 
 // NewNissanFromConfig creates a new vehicle
 func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Embed               `mapstructure:",squash"`
+		embed               `mapstructure:",squash"`
 		User, Password, VIN string
 		Expiry              time.Duration
 		Cache               time.Duration
@@ -45,7 +45,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Nissan{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)

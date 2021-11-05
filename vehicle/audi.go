@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
@@ -15,24 +17,33 @@ import (
 
 // Audi is an api.Vehicle implementation for Audi cars
 type Audi struct {
-	*Embed
+	*embed
 	*vw.Provider // provides the api implementations
+	// audiProvider *audi.Provider
 }
 
 func init() {
-	registry.Add("audi", NewAudiFromConfig, defaults().WithTimeout())
+	registry.Add("audi", NewAudiFromConfig)
 }
 
 // NewAudiFromConfig creates a new vehicle
 func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults().WithTimeout()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+		Timeout             time.Duration
+	}{
+		Cache:   interval,
+		Timeout: request.Timeout,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	v := &Audi{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)

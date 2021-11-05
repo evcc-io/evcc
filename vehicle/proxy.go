@@ -22,7 +22,7 @@ func init() {
 		// println("")
 
 		instantiateFunc := instantiateFunction(tmpl)
-		registry.Add(tmpl.Type, instantiateFunc, nil)
+		registry.Add(tmpl.Type, instantiateFunc)
 	}
 }
 

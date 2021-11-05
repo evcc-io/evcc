@@ -16,7 +16,7 @@ import (
 
 // Cloud is an api.Vehicle implementation
 type Cloud struct {
-	*Embed
+	*embed
 	token        string
 	brand        string
 	config       map[string]string
@@ -26,14 +26,14 @@ type Cloud struct {
 }
 
 func init() {
-	registry.Add("cloud", NewCloudFromConfig, nil)
+	registry.Add("cloud", NewCloudFromConfig)
 }
 
 // NewCloudFromConfig creates a new vehicle
 func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		Token string
-		Embed `mapstructure:",squash"`
+		embed `mapstructure:",squash"`
 		Brand string
 		Other map[string]string `mapstructure:",remain"`
 		Cache time.Duration
@@ -56,7 +56,7 @@ func NewCloudFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Cloud{
-		Embed:  &cc.Embed,
+		embed:  &cc.embed,
 		token:  cc.Token,
 		brand:  cc.Brand,
 		config: cc.Other,

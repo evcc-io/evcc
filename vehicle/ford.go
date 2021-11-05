@@ -27,7 +27,7 @@ const (
 
 // Ford is an api.Vehicle implementation for Ford cars
 type Ford struct {
-	*Embed
+	*embed
 	*request.Helper
 	log                 *util.Logger
 	user, password, vin string
@@ -38,12 +38,18 @@ type Ford struct {
 }
 
 func init() {
-	registry.Add("ford", NewFordFromConfig, defaults())
+	registry.Add("ford", NewFordFromConfig)
 }
 
 // NewFordFromConfig creates a new vehicle
 func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -56,7 +62,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Ford{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		Helper:   request.NewHelper(log),
 		log:      log,
 		user:     cc.User,

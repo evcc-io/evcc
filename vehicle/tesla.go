@@ -16,20 +16,20 @@ import (
 
 // Tesla is an api.Vehicle implementation for Tesla cars
 type Tesla struct {
-	*Embed
+	*embed
 	vehicle       *tesla.Vehicle
 	chargeStateG  func() (interface{}, error)
 	vehicleStateG func() (interface{}, error)
 }
 
 func init() {
-	registry.Add("tesla", NewTeslaFromConfig, nil)
+	registry.Add("tesla", NewTeslaFromConfig)
 }
 
 // NewTeslaFromConfig creates a new vehicle
 func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
-		Embed  `mapstructure:",squash"`
+		embed  `mapstructure:",squash"`
 		Tokens Tokens
 		VIN    string
 		Cache  time.Duration
@@ -46,7 +46,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Tesla{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	// authenticated http client with logging injected to the Tesla client

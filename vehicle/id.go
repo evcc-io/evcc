@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/id"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
@@ -15,24 +17,32 @@ import (
 
 // ID is an api.Vehicle implementation for ID cars
 type ID struct {
-	*Embed
+	*embed
 	*id.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("id", NewIDFromConfig, defaults().WithTimeout())
+	registry.Add("id", NewIDFromConfig)
 }
 
 // NewIDFromConfig creates a new vehicle
 func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults().WithTimeout()
+	cc := struct {
+		embed               `mapstructure:",squash"`
+		User, Password, VIN string
+		Cache               time.Duration
+		Timeout             time.Duration
+	}{
+		Cache:   interval,
+		Timeout: request.Timeout,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
 	v := &ID{
-		Embed: &cc.Embed,
+		embed: &cc.embed,
 	}
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)

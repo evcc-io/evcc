@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -12,17 +13,24 @@ import (
 
 // Kia is an api.Vehicle implementation
 type Kia struct {
-	*Embed
+	*embed
 	*bluelink.Provider // provides the api implementations
 }
 
 func init() {
-	registry.Add("kia", NewKiaFromConfig, defaults())
+	registry.Add("kia", NewKiaFromConfig)
 }
 
 // NewKiaFromConfig creates a new Vehicle
 func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed          `mapstructure:",squash"`
+		User, Password string
+		VIN            string
+		Cache          time.Duration
+	}{
+		Cache: interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -75,7 +83,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &Kia{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
 	}
 

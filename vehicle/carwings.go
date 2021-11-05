@@ -23,7 +23,7 @@ const (
 
 // CarWings is an api.Vehicle implementation for CarWings cars
 type CarWings struct {
-	*Embed
+	*embed
 	user, password string
 	session        *carwings.Session
 	statusG        func() (interface{}, error)
@@ -33,12 +33,19 @@ type CarWings struct {
 }
 
 func init() {
-	registry.Add("carwings", NewCarWingsFromConfig, defaults())
+	registry.Add("carwings", NewCarWingsFromConfig)
 }
 
 // NewCarWingsFromConfig creates a new vehicle
 func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
-	cc := defaults()
+	cc := struct {
+		embed                       `mapstructure:",squash"`
+		User, Password, Region, VIN string
+		Cache                       time.Duration
+	}{
+		Region: carwings.RegionEurope,
+		Cache:  interval,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -70,11 +77,11 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	v := &CarWings{
-		Embed:    &cc.Embed,
+		embed:    &cc.embed,
 		user:     cc.User,
 		password: cc.Password,
 		session: &carwings.Session{
-			Region: carwings.RegionEurope,
+			Region: cc.Region,
 			VIN:    cc.VIN,
 		},
 	}
