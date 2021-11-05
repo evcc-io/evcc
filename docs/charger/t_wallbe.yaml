@@ -1,0 +1,3 @@
+type: warp
+uri: 192.0.2.2:1883
+legacy: false # set only for older Wallbe devices (pre ~2019, old controller firmware)

@@ -1,0 +1,6 @@
+type: phoenix-ev-eth
+uri: 192.0.2.2:502
+meter: # only if a charge meter is connected to the controller
+  power: true
+  energy: true
+  currents: true

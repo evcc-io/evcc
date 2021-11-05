@@ -1,0 +1,10 @@
+type: modbus
+model: sdm # specific non-sunspec meter
+id: 1
+# RS485 via adapter:
+device: /dev/ttyUSB0
+baudrate: 9600
+comset: 8N1
+# RS485 via TCPIP:
+uri: 192.0.2.2:502
+rtu: true # serial modbus rtu (rs485) device connected using simple ethernet adapter

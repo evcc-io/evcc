@@ -1,0 +1,5 @@
+type: porsche
+user:  # NIU app user
+password:  # NIU app password
+serial:  # NIU E-Scooter serial number like shown in app
+capacity: 4

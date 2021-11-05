@@ -1,0 +1,5 @@
+type: warp
+broker: 192.0.2.2:1883
+topic: warp
+useMeter: false
+timeout: 30s

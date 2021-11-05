@@ -1,0 +1,6 @@
+type: tesla
+tokens:
+  access: 12345
+  refresh: 12345
+capacity: 90
+vin: W...
