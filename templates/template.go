@@ -53,27 +53,15 @@ type Param struct {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults() map[string]interface{} {
+func (t *Template) Defaults(docs bool) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		if p.Test != "" {
 			values[p.Name] = p.Test
+		} else if p.Example != "" && docs {
+			values[p.Name] = p.Example
 		} else {
 			values[p.Name] = p.Default // may be empty
-		}
-	}
-
-	return values
-}
-
-// Examples returns a map of example values for the template
-func (t *Template) Examples() map[string]interface{} {
-	values := make(map[string]interface{})
-	for _, p := range t.Params {
-		if p.Test != "" {
-			values[p.Name] = p.Test
-		} else {
-			values[p.Name] = p.Example // may be empty
 		}
 	}
 
@@ -143,8 +131,8 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte,
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(other map[string]interface{}) ([]byte, error) {
-	values := t.Defaults()
+func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte, error) {
+	values := t.Defaults(docs)
 	if err := util.DecodeOther(other, &values); err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ func init() {
 					values["modbustcpip"] = true
 				}
 			}
-			_, err := tmpl.RenderResult(values)
+			_, err := tmpl.RenderResult(false, values)
 			if err != nil {
 				panic(err)
 			}
@@ -54,7 +54,7 @@ func init() {
 
 func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (api.Meter, error) {
 	return func(other map[string]interface{}) (api.Meter, error) {
-		b, err := tmpl.RenderResult(other)
+		b, err := tmpl.RenderResult(false, other)
 		if err != nil {
 			return nil, err
 		}

@@ -28,7 +28,7 @@ func init() {
 
 func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (api.Charger, error) {
 	return func(other map[string]interface{}) (api.Charger, error) {
-		b, err := tmpl.RenderResult(other)
+		b, err := tmpl.RenderResult(false, other)
 		if err != nil {
 			return nil, err
 		}

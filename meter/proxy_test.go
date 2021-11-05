@@ -17,7 +17,7 @@ func TestProxies(t *testing.T) {
 
 		if len(usages) == 0 {
 			t.Run(tmpl.Type, func(t *testing.T) {
-				b, err := tmpl.RenderResult(nil)
+				b, err := tmpl.RenderResult(false, nil)
 				if err != nil {
 					t.Log(string(b))
 					t.Error(err)
@@ -36,7 +36,7 @@ func TestProxies(t *testing.T) {
 			t.Run(tmpl.Type+" "+usage, func(t *testing.T) {
 				t.Parallel()
 
-				b, err := tmpl.RenderResult(map[string]interface{}{
+				b, err := tmpl.RenderResult(false, map[string]interface{}{
 					"usage": usage,
 				})
 

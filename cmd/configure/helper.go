@@ -183,7 +183,7 @@ func (c *CmdConfigure) enteredNames() []string {
 
 // create a configured device from a template so we can test it
 func (c *CmdConfigure) configureDevice(deviceCategory string, device templates.Template, values map[string]interface{}) (interface{}, error) {
-	b, err := device.RenderResult(values)
+	b, err := device.RenderResult(false, values)
 	if err != nil {
 		return nil, err
 	}

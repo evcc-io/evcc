@@ -7,7 +7,6 @@ import (
 	"path"
 
 	"github.com/evcc-io/evcc/templates"
-	"github.com/evcc-io/evcc/util"
 )
 
 const basePath = "../docs"
@@ -42,11 +41,7 @@ func generateClass(class string) error {
 					values["modbustcpip"] = true
 				}
 			}
-			examples := tmpl.Examples()
-			if err := util.DecodeOther(examples, &values); err != nil {
-				return err
-			}
-			b, err := tmpl.RenderResult(values)
+			b, err := tmpl.RenderResult(true, values)
 			if err != nil {
 				println(string(b))
 				return err
@@ -72,11 +67,7 @@ func generateClass(class string) error {
 					values["modbustcpip"] = true
 				}
 			}
-			examples := tmpl.Examples()
-			if err := util.DecodeOther(examples, &values); err != nil {
-				return err
-			}
-			b, err := tmpl.RenderResult(values)
+			b, err := tmpl.RenderResult(true, values)
 
 			if err != nil {
 				println(string(b))
