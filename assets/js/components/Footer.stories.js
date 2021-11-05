@@ -1,5 +1,6 @@
 import Footer from "./Footer.vue";
 import i18n from "../i18n";
+import "../plugins";
 
 export default {
   title: "Main/Footer",

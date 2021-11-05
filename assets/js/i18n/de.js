@@ -19,22 +19,21 @@ export default {
       modalUpdateStatusFailed: "Aktualisierung nicht möglich: ",
     },
     savings: {
-      footerShort: "{percent}%",
-      footerLong: "{percent}% Sonnenstrom geladen",
+      footerShort: "{percent}% Sonne",
+      footerLong: "{percent}% Sonnenstrom",
       modalTitle: "{percent}% Sonnenstrom geladen",
       modalText:
-        "<strong>{self} kWh (von {total} kWh)</strong> waren eigener Sonnenstrom. Das entspricht einer <strong>Ersparnis von ~{savingEuro}*</strong>.",
+        "Seit Serverstart {since} wurden <strong>{total} kWh</strong> über evcc geladen. Davon waren <strong>{percent}% selbst erzeugter Strom</strong>. Das entspricht einer <strong>Ersparnis von ungefähr {savingEuro}</strong> verglichen mit vollem Netzbezug.",
       modalSupportUs:
         "Wir möchten, das effizientes Zuhause Laden für möglichst viele Menschen zum Standard wird. Unterstütze uns auf dem Weg indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
       modalButtonBecomeSponsor: "Werde GitHub Sponsor",
       modalButtonConfetti: "Danke {sponsor}! Lust auf Konfetti?",
       modalSticker: "...oder evcc Sticker?",
-      modalExplaination: "*Annahme  :",
+      modalExplaination: "Annahme:",
       modalExplainationGrid: "Netzstrom {gridPrice}ct",
       modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
       modalExplainationAdjust: "Tarifdaten anpassen",
       modalExplainationCalculation: "Berechnungsmethode",
-      modalExplainationSince: "ab Serverstart {since}",
     },
     sponsor: {
       sponsoredShort: "Danke",

@@ -8,6 +8,7 @@ import App from "./views/App";
 import router from "./router";
 import i18n from "./i18n";
 import store from "./store";
+import "./plugins";
 
 Vue.use(VueMeta);
 

@@ -1,32 +1,18 @@
 <template>
-	<div v-if="chargedTotal > 0">
-		<div class="button-wrap position-absolute top-50 start-50 translate-middle">
-			<button
-				class="
-					px-2
-					py-1
-					d-flex d-lg-none
-					bg-primary
-					rounded-pill
-					border-0
-					align-items-center
-					text-white
-				"
-				data-bs-toggle="modal"
-				data-bs-target="#savingsModal"
-			>
-				<fa-icon icon="sun" class="icon me-1"></fa-icon>
-				<span> {{ $t("footer.savings.footerShort", { percent }) }}</span>
-			</button>
-			<button
-				class="d-none d-lg-flex px-2 py-1 bg-white rounded-pill border-0 align-items-center"
-				data-bs-toggle="modal"
-				data-bs-target="#savingsModal"
-			>
-				<fa-icon icon="sun" class="icon me-2 text-evcc"></fa-icon>
-				<span class="text-dark">{{ $t("footer.savings.footerLong", { percent }) }}</span>
-			</button>
-		</div>
+	<div>
+		<button
+			class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap"
+			data-bs-toggle="modal"
+			data-bs-target="#savingsModal"
+		>
+			<span class="d-inline d-sm-none">{{
+				$t("footer.savings.footerShort", { percent })
+			}}</span
+			><span class="d-none d-sm-inline">{{
+				$t("footer.savings.footerLong", { percent })
+			}}</span
+			><fa-icon icon="sun" class="icon ms-2 text-evcc"></fa-icon>
+		</button>
 		<div id="savingsModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
@@ -45,13 +31,42 @@
 						<p
 							v-html="
 								$t('footer.savings.modalText', {
-									since: fmtTimeAgo(since * 1000),
+									percent,
 									total: fmtKw(chargedTotal, true, false),
-									self: fmtKw(chargedSelfConsumption, true, false),
 									savingEuro,
+									since: fmtTimeAgo(since * -1000),
 								})
 							"
 						/>
+						<vc-donut
+							class="m-4"
+							:sections="[
+								{
+									label: `Eigenstrom: ${fmtKw(
+										chargedSelfConsumption,
+										true,
+										false
+									)} kWh`,
+									value: this.chargedSelfConsumption,
+									color: '#3aba2c',
+								},
+								{
+									label: `Netzstrom: ${fmtKw(
+										chargedTotal - chargedSelfConsumption,
+										true,
+										false
+									)} kWh`,
+									value: this.chargedTotal - this.chargedSelfConsumption,
+									color: '#343a40',
+								},
+							]"
+							:total="chargedTotal"
+							has-legend
+							:size="110"
+							:thickness="100"
+							legend-placement="right"
+							:auto-adjust-text-size="false"
+						></vc-donut>
 						<div v-if="sponsor" class="d-flex flex-column align-items-center my-4">
 							<button
 								class="btn btn-success mb-2 confetti-button"
@@ -113,12 +128,6 @@
 									class="icon ms-1"
 								></fa-icon
 							></a>
-							<br />
-							{{
-								$t("footer.savings.modalExplainationSince", {
-									since: fmtTimeAgo(since * -1000),
-								})
-							}}
 						</p>
 					</div>
 				</div>
