@@ -8,7 +8,7 @@ params:
 render: |
   type: keba
   uri: {{ .host }}
-  {{ if ne .rfid }}
+  {{ if ne .rfid "" }}
   rfid:
     tag: {{ .rfid }}
   {{ end }}

@@ -1,8 +1,0 @@
-type: custom
-power:
-  source: modbus
-  uri: 192.0.2.2:502
-  register: # manual register configuration for E3/DC "Simple-Mode"
-    type: holding
-    decode: int32s
-    address: 40067 # Photovoltaikleistung in Watt

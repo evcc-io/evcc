@@ -66,6 +66,20 @@ func (t *Template) Defaults() map[string]interface{} {
 	return values
 }
 
+// Examples returns a map of example values for the template
+func (t *Template) Examples() map[string]interface{} {
+	values := make(map[string]interface{})
+	for _, p := range t.Params {
+		if p.Test != "" {
+			values[p.Name] = p.Test
+		} else {
+			values[p.Name] = p.Example // may be empty
+		}
+	}
+
+	return values
+}
+
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
 	for _, p := range t.Params {
@@ -109,10 +123,10 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte,
 		}
 	}
 
-	// remove params with no values and no defaults
+	// remove params with no values, no defaults and no example
 	var newParams []Param
 	for _, param := range t.Params {
-		if param.Value == "" && param.Default == "" && !param.Required {
+		if param.Value == "" && param.Default == "" && param.Example == "" && !param.Required {
 			continue
 		}
 		newParams = append(newParams, param)

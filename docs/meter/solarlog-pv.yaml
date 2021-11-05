@@ -1,9 +1,0 @@
-type: custom
-power:
-  source: modbus
-  uri: 192.0.2.2:502
-  id: 1
-  register:
-    address: 3502 # Pac
-    type: input
-    decode: uint32s

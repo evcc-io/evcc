@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util"
 )
 
 const basePath = "../docs"
@@ -31,7 +32,21 @@ func generateClass(class string) error {
 		fmt.Println(tmpl.Type)
 
 		if len(usages) == 0 {
-			b, err := tmpl.RenderResult(nil)
+			values := make(map[string]interface{})
+			for _, modbusChoice := range modbusChoices {
+				switch modbusChoice {
+				case "rs485":
+					values["modbusrs485serial"] = true
+					values["modbusrs485tcpip"] = true
+				case "tcpip":
+					values["modbustcpip"] = true
+				}
+			}
+			examples := tmpl.Examples()
+			if err := util.DecodeOther(examples, &values); err != nil {
+				return err
+			}
+			b, err := tmpl.RenderResult(values)
 			if err != nil {
 				println(string(b))
 				return err
@@ -56,6 +71,10 @@ func generateClass(class string) error {
 				case "tcpip":
 					values["modbustcpip"] = true
 				}
+			}
+			examples := tmpl.Examples()
+			if err := util.DecodeOther(examples, &values); err != nil {
+				return err
 			}
 			b, err := tmpl.RenderResult(values)
 

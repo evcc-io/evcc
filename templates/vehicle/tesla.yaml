@@ -2,10 +2,12 @@ type: t_tesla
 description: Tesla
 params:
 - name: title
-- name: access-token
+- name: accessToken
   required: true
-- name: refresh-token
+  example: 12345
+- name: refreshToken
   required: true
+  example: 12345
 - name: vin
   example: W...
 - name: capacity
@@ -16,8 +18,8 @@ render: |
   title: {{ .title }}
   {{- end }}
   tokens:
-    access: {{ .access-token }}
-    refresh: {{ .refresh-token }}
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
   {{- if ne .vin "" }}
   vin: {{ .vin }}

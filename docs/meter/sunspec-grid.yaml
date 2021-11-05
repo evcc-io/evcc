@@ -1,5 +1,0 @@
-type: modbus
-model: sunspec
-uri: 192.0.2.2
-id: 1
-power: 203:W # sunspec 3-phase meter power reading
