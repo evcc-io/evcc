@@ -35,7 +35,7 @@ func NewAudiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Embed: &cc.Embed,
 	}
 
-	log := util.NewLogger("audi")
+	log := util.NewLogger("audi").Redact(cc.User, cc.Password, cc.VIN)
 	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{

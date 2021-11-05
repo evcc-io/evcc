@@ -35,7 +35,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Embed: &cc.Embed,
 	}
 
-	log := util.NewLogger("seat")
+	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
 	identity := vw.NewIdentity(log)
 
 	query := url.Values(map[string][]string{

@@ -31,7 +31,7 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Embed: &cc.Embed,
 	}
 
-	log := util.NewLogger("bmw")
+	log := util.NewLogger("bmw").Redact(cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {

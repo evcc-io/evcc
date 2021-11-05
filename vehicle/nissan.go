@@ -48,7 +48,7 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Embed: &cc.Embed,
 	}
 
-	log := util.NewLogger("nissan")
+	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
 	identity := nissan.NewIdentity(log)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {

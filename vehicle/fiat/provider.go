@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 )
 
-const refreshTimeout = time.Minute
+const refreshTimeout = 2 * time.Minute
 
 type Provider struct {
 	statusG     func() (interface{}, error)

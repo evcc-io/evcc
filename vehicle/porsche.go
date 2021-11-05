@@ -31,12 +31,11 @@ func init() {
 func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := defaults()
 
-	log := util.NewLogger("porsche")
-
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
 	identity := porsche.NewIdentity(log, cc.User, cc.Password)
 
 	accessTokens, err := identity.Login()
