@@ -59,7 +59,7 @@ require (
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/philippseith/signalr v0.4.2-0.20211105081818-e7b6db33ef38
+	github.com/philippseith/signalr v0.4.2-0.20211106123930-932aa7c31034
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
