@@ -284,6 +284,9 @@ func (site *Site) updateMeters() error {
 
 			if err == nil {
 				site.pvPower += power
+				if power < -1000 {
+					site.log.WARN.Printf("pv %d power: %.0fW is negative - check configuration if sign is correct", id, power)
+				}
 			} else {
 				err = fmt.Errorf("updating pv meter %d: %v", id, err)
 				site.log.ERROR.Println(err)
