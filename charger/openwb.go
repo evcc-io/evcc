@@ -21,8 +21,6 @@ type OpenWB struct {
 	currentPowerG func() (float64, error)
 	totalEnergyG  func() (float64, error)
 	currentsG     []func() (float64, error)
-	phasesS       func(int64) error
-	socG          func() (float64, error)
 }
 
 // go:generate go run ../cmd/tools/decorate.go -f decorateOpenWB -b *OpenWB -r api.Charger -t "api.ChargePhases,Phases1p3p,func(int) (error)" -t "api.Battery,SoC,func() (float64, error)"
@@ -131,18 +129,18 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 	var phases func(int) error
 	if p1p3 {
-		c.phasesS = provider.NewMqtt(log, client,
+		phasesS := provider.NewMqtt(log, client,
 			fmt.Sprintf("%s/set/isss/%s", topic, openwb.PhasesTopic),
 			1, timeout).IntSetter("phases")
 
-		phases = c.phases
+		phases = func(phases int) error {
+			return phasesS(int64(phases))
+		}
 	}
 
 	var soc func() (float64, error)
 	if dc {
-		c.socG = floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.VehicleSoCTopic))
-
-		soc = c.socG
+		soc = floatG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.VehicleSoCTopic))
 	}
 
 	return decorateOpenWB(c, phases, soc), nil
@@ -177,14 +175,4 @@ func (m *OpenWB) Currents() (float64, float64, float64, error) {
 	}
 
 	return currents[0], currents[1], currents[2], nil
-}
-
-// phases implements the api.ChargePhases interface
-func (c *OpenWB) phases(phases int) error {
-	return c.phasesS(int64(phases))
-}
-
-// soc implements the api.Battery interface
-func (c *OpenWB) soc() (float64, error) {
-	return c.socG()
 }
