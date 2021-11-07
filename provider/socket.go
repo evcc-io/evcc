@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gorilla/websocket"
 	"github.com/itchyny/gojq"
 )
@@ -75,7 +76,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	if cc.Jq != "" {

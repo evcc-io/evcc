@@ -1,9 +1,7 @@
 package vehicle
 
 import (
-	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -17,8 +15,8 @@ import (
 type Volvo struct {
 	*embed
 	*request.Helper
-	user, password, vin string
-	statusG             func() (interface{}, error)
+	vin     string
+	statusG func() (interface{}, error)
 }
 
 func init() {
@@ -42,11 +40,21 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Volvo{
-		embed:    &cc.embed,
-		Helper:   request.NewHelper(log),
-		user:     cc.User,
-		password: cc.Password,
-		vin:      cc.VIN,
+		embed:  &cc.embed,
+		Helper: request.NewHelper(log),
+		vin:    cc.VIN,
+	}
+
+	v.Client.Transport = &transport.Decorator{
+		Base: v.Client.Transport,
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization":     transport.BasicAuthHeader(cc.User, cc.Password),
+			"Content-Type":      "application/json",
+			"X-Device-Id":       "Device",
+			"X-OS-Type":         "Android",
+			"X-Originator-Type": "App",
+			"X-OS-Version":      "22",
+		}),
 	}
 
 	v.statusG = provider.NewCached(v.status, cc.Cache).InterfaceGetter()
@@ -60,19 +68,6 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	return v, err
-}
-
-func (v *Volvo) request(uri string) (*http.Request, error) {
-	basicAuth := base64.StdEncoding.EncodeToString([]byte(v.user + ":" + v.password))
-
-	return request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization":     fmt.Sprintf("Basic %s", basicAuth),
-		"Content-Type":      "application/json",
-		"X-Device-Id":       "Device",
-		"X-OS-Type":         "Android",
-		"X-Originator-Type": "App",
-		"X-OS-Version":      "22",
-	})
 }
 
 // vehicles implements returns the list of user vehicles
@@ -91,9 +86,13 @@ func (v *Volvo) vehicles() ([]string, error) {
 					return vehicles, err
 				}
 
-				vehicles = append(vehicles, vehicle.VehicleID)
-			}
+	for _, rel := range res.VehicleRelations {
+		var vehicle volvoVehicleRelation
+		if err = v.GetJSON(rel, &vehicle); err != nil {
+			return vehicles, err
 		}
+
+		vehicles = append(vehicles, vehicle.VehicleID)
 	}
 
 	return vehicles, err
@@ -129,7 +128,7 @@ func (v *Volvo) Status() (api.ChargeStatus, error) {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
 			return api.StatusA, nil
-		case "CablePluggedInCar":
+		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged":
 			return api.StatusB, nil
 		case "Charging":
 			return api.StatusC, nil
