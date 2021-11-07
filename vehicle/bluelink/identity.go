@@ -255,15 +255,19 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 		return "", err
 	}
 
-	var redirect struct {
+	var res struct {
 		RedirectURL string `json:"redirectUrl"`
+		ErrCode     string `json:"errCode"`
+		ErrMsg      string `json:"errMsg"`
 	}
 
 	var accCode string
-	if err = cookieClient.DoJSON(req, &redirect); err == nil {
-		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
+	if err = cookieClient.DoJSON(req, &res); err == nil {
+		if parsed, err := url.Parse(res.RedirectURL); err == nil {
 			accCode = parsed.Query().Get("code")
 		}
+	} else if res.ErrCode != "" {
+		err = fmt.Errorf("%w: %s (%s)", err, res.ErrMsg, res.ErrCode)
 	}
 
 	return accCode, err
@@ -333,10 +337,6 @@ func (v *Identity) Login(user, password string) (err error) {
 		// try new login first, then fallback
 		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
 			code, err = v.bluelinkLogin(cookieClient, user, password)
-		}
-
-		if err != nil {
-			err = fmt.Errorf("login failed: %w", err)
 		}
 	}
 
