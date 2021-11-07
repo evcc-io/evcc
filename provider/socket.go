@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -71,7 +70,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		p.headers["Authorization"] = basicauth.Header(cc.Auth.User, cc.Auth.Password)
+		p.headers["Authorization"] = transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
 	}
 
 	// ignore the self signed certificate
