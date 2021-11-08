@@ -47,6 +47,7 @@ type Easee struct {
 	current        float64
 	chargerEnabled bool
 	enabledStatus  bool
+	dynamicChargerCurrent,
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 }
