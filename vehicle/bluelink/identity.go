@@ -29,6 +29,7 @@ const (
 // Config is the bluelink API configuration
 type Config struct {
 	URI               string
+	AuthClientID      string // v2
 	BrandAuthUrl      string // v2
 	BasicToken        string
 	CCSPServiceID     string
@@ -150,7 +151,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var resp *http.Response
 
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.URI, "en", info.ServiceId, info.UserId)
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {

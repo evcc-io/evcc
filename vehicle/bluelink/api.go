@@ -21,7 +21,7 @@ const (
 	resOK          = "S"                    // auth fail: F
 	timeFormat     = "20060102150405 -0700" // Note: must add timeOffset
 	timeOffset     = " +0100"
-	refreshTimeout = time.Minute
+	refreshTimeout = 2 * time.Minute
 	statusExpiry   = 5 * time.Minute
 )
 
