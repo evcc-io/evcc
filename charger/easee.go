@@ -39,16 +39,14 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger               string
-	updated               time.Time
-	chargeStatus          api.ChargeStatus
-	cache                 time.Duration
-	log                   *util.Logger
-	mux                   sync.Mutex
-	dynamicChargerCurrent float64
-	current               float64
-	chargerEnabled        bool
-	enabledStatus         bool
+	charger        string
+	updated        time.Time
+	chargeStatus   api.ChargeStatus
+	log            *util.Logger
+	mux            sync.Mutex
+	current        float64
+	chargerEnabled bool
+	enabledStatus  bool
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 }
@@ -85,13 +83,8 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	c := &Easee{
 		Helper:  request.NewHelper(log),
 		charger: charger,
-		cache:   cache,
 		log:     log,
 		current: 6, // default current
-	}
-
-	if cache > 0 {
-		c.log.WARN.Println("cache is deprecated and will be removed in a future release")
 	}
 
 	ts, err := easee.TokenSource(log, user, password)
