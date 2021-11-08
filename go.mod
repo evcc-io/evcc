@@ -34,7 +34,6 @@ require (
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/gregdel/pushover v1.1.0
 	github.com/grid-x/modbus v0.0.0-20210714071042-7af2b65ec03b
-	github.com/grid-x/serial v0.0.0-20211107191517-583c7356b3aa // indirect
 	github.com/hashicorp/go-version v1.3.0
 	github.com/imdario/mergo v0.3.12
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0
@@ -75,7 +74,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/thoas/go-funk v0.9.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20210808132733-8235dc7d1327
+	github.com/volkszaehler/mbmd v0.0.0-20211108155358-6a45861346c4
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
