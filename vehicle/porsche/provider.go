@@ -46,23 +46,30 @@ func NewProvider(log *util.Logger, identity *Identity, accessTokens AccessTokens
 }
 
 func (v *Provider) request(emobility bool, uri string) (*http.Request, error) {
-	token := v.accessTokens.Token
-	apiKey := ClientID
-	if emobility {
-		token = v.accessTokens.EmobilityToken
-		apiKey = EmobilityClientID
-	}
+	defaultToken := v.accessTokens.Token
+	emobilityToken := v.accessTokens.EmobilityToken
 
-	if token.AccessToken == "" || time.Since(token.Expiry) > 0 {
-		accessTokens, err := v.identity.Login()
+	// if any of the two Tokens are empty or expired, login again
+	if defaultToken.AccessToken == "" ||
+		time.Since(defaultToken.Expiry) > 0 ||
+		emobilityToken.AccessToken == "" ||
+		time.Since(emobilityToken.Expiry) > 0 {
+		newAccessTokens, err := v.identity.Login()
 		if err != nil {
 			return nil, err
 		}
-		v.accessTokens = accessTokens
+		v.accessTokens = newAccessTokens
+	}
+
+	apiKey := ClientID
+	apiAccessToken := v.accessTokens.Token.AccessToken
+	if emobility {
+		apiKey = EmobilityClientID
+		apiAccessToken = v.accessTokens.EmobilityToken.AccessToken
 	}
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization": fmt.Sprintf("Bearer %s", token.AccessToken),
+		"Authorization": fmt.Sprintf("Bearer %s", apiAccessToken),
 		"apikey":        apiKey,
 	})
 
