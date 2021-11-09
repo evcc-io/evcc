@@ -2,7 +2,9 @@ package configure
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/evcc-io/evcc/api"
@@ -47,15 +49,35 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	}
 
 	fmt.Println()
-	fmt.Println("Deine Konfiguration:")
-	fmt.Println()
-	fmt.Println(string(yaml))
+
+	filename := "evcc.yaml"
+
+	for ok := true; ok; {
+		_, err := os.Open(filename)
+		if errors.Is(err, os.ErrNotExist) {
+			break
+		}
+
+		fmt.Printf("Die Datei %s existiert bereits.\n", filename)
+		if c.askYesNo("Soll die Datei überschrieben werden") {
+			break
+		}
+
+		filename = c.askValue("Gib einen neuen Dateinamen an", "", "", nil, "string", false, true)
+	}
+
+	err = os.WriteFile(filename, yaml, 0755)
+	if err != nil {
+		fmt.Printf("Die Konfiguration konnte nicht in die Datei %s gespeicher werden", filename)
+		c.log.FATAL.Fatal(err)
+	}
+	fmt.Printf("Deine Konfiguration wurde erfolgreich in die Datei %s gespeichert.\n", filename)
 }
 
 // ask devuce specfic questions
 func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
 	fmt.Println()
-	if !c.askYesNo("Möchtest du " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen?") {
+	if !c.askYesNo("Möchtest du " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
 		return nil
 	}
 
@@ -75,7 +97,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 			break
 		}
 
-		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + "hinzufügen?") {
+		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + "hinzufügen") {
 			break
 		}
 	}
@@ -109,7 +131,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		loadpoint.Charger = charger.Name
 
 		if !charger.ChargerHasMeter {
-			if c.askYesNo("Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert der verwendet werden kann?") {
+			if c.askYesNo("Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert der verwendet werden kann") {
 				chargeMeterIndex++
 				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter, chargeMeterIndex)
 				if err != nil {
@@ -156,7 +178,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
 
-		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen?") {
+		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen") {
 			break
 		}
 	}
