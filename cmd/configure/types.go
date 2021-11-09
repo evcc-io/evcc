@@ -71,25 +71,25 @@ const (
 
 const (
 	defaultTitleLoadpoint = "Garage"
-	defaultTitleSite      = "My Home"
+	defaultTitleSite      = "Mein Zuhause"
 )
 
 type DeviceCategoryData struct {
-	title, class, usageFilter, defaultName string
+	title, article, class, usageFilter, defaultName string
 }
 
 var DeviceCategories map[string]DeviceCategoryData = map[string]DeviceCategoryData{
-	DeviceCategoryCharger:      {title: "wallbox", class: DeviceClassCharger, defaultName: defaultNameCharger},
-	DeviceCategoryGridMeter:    {title: "grid meter", class: DeviceClassMeter, usageFilter: UsageChoiceGrid, defaultName: defaultNameGridMeter},
-	DeviceCategoryPVMeter:      {title: "pv meter", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
-	DeviceCategoryBatteryMeter: {title: "battery meter", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
-	DeviceCategoryVehicle:      {title: "vehicle", class: DeviceClassVehicle, defaultName: defaultNameVehicle},
-	DeviceCategoryChargeMeter:  {title: "charge meter", class: DeviceClassMeter, usageFilter: UsageChoiceCharge, defaultName: defaultNameChargeMeter},
+	DeviceCategoryCharger:      {title: "Wallbox", article: "eine", class: DeviceClassCharger, defaultName: defaultNameCharger},
+	DeviceCategoryGridMeter:    {title: "Netz-Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceGrid, defaultName: defaultNameGridMeter},
+	DeviceCategoryPVMeter:      {title: "PV Wechselrichter oder Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
+	DeviceCategoryBatteryMeter: {title: "Battery Wechselrichter oder Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
+	DeviceCategoryVehicle:      {title: "Fahrzeug", article: "ein", class: DeviceClassVehicle, defaultName: defaultNameVehicle},
+	DeviceCategoryChargeMeter:  {title: "Ladestromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceCharge, defaultName: defaultNameChargeMeter},
 }
 
-const itemNotPresent string = "My item is not in this list"
+const itemNotPresent string = "Mein Gerät ist nicht in der Liste"
 
-var ErrItemNotPresent = errors.New("item not present")
+var ErrItemNotPresent = errors.New("Gerät nicht vorhanden")
 
 //go:embed configure.tpl
 var configTmpl string

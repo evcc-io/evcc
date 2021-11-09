@@ -34,7 +34,7 @@ func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
 
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
 	fmt.Println()
-	fmt.Printf("- Configure your %s\n", DeviceCategories[deviceCategory].title)
+	fmt.Printf("- %s konfigurieren\n", DeviceCategories[deviceCategory].title)
 
 	device, err := c.processDeviceCategory(deviceCategory, deviceIndex)
 	if err != nil && err != ErrItemNotPresent {
@@ -86,7 +86,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 				eebusConfig, err := c.eebusCertificate()
 
 				if err != nil {
-					return device, fmt.Errorf("error creating EEBUS cert: %s", err)
+					return device, fmt.Errorf("Fehler: Das EEBUS Zertifikat konnte nicht erstellt werden: %s", err)
 				}
 
 				err = c.configureEEBus(eebusConfig)
@@ -102,9 +102,9 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 			}
 
 			fmt.Println()
-			fmt.Println("You have selected an EEBUS wallbox.")
-			fmt.Println("Please pair your wallbox with EVCC in the wallbox web interface")
-			fmt.Println("When done, press enter to continue.")
+			fmt.Println("Du hast eine Wallbox ausgewählt, welche über das EEBUS Protokoll angesprochen wird.")
+			fmt.Println("Dazu muss die Wallbox nun mit evcc verbunden werden. Dies geschieht üblicherweise auf der Webseite der Wallbox.")
+			fmt.Println("Drücke die Enter-Taste, wenn dies abgeschlossen ist.")
 			fmt.Scanln()
 		}
 
@@ -125,7 +125,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		v, err := c.configureDevice(deviceCategory, templateItem, values)
 		if err == nil {
 			fmt.Println()
-			fmt.Println("Testing configuration...")
+			fmt.Println("Teste die Einstellungen ...")
 			fmt.Println()
 			deviceIsValid, err = c.testDevice(deviceCategory, v)
 			if deviceCategory == DeviceCategoryCharger {
@@ -137,17 +137,17 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 
 		if !deviceIsValid {
 			if err != nil {
-				fmt.Println("Error: ", err)
+				fmt.Println("Fehler: ", err)
 			}
 			fmt.Println()
-			if !c.askYesNo("This device configuration does not work and can not be selected. Do you want to restart the device selection?") {
+			if !c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
 				fmt.Println()
 				return device, err
 			}
 			continue
 		}
 
-		fmt.Println("Success.")
+		fmt.Println("Erfolg.")
 
 		templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 		b, err := templateItem.RenderProxyWithValues(values)
@@ -279,7 +279,7 @@ func (c *CmdConfigure) selectItem(deviceCategory string) templates.Template {
 	items = append(items, emptyItem)
 
 	prompt := promptui.Select{
-		Label:     fmt.Sprintf("Select your %s", DeviceCategories[deviceCategory].title),
+		Label:     fmt.Sprintf("Wähle %s %s", DeviceCategories[deviceCategory].article, DeviceCategories[deviceCategory].title),
 		Items:     items,
 		Templates: promptuiTemplates,
 		Size:      10,
@@ -340,17 +340,17 @@ func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues 
 
 	validate := func(input string) error {
 		if invalidValues != nil && funk.ContainsString(invalidValues, input) {
-			return errors.New("Value '" + input + "' is already used")
+			return errors.New("Der Wert '" + input + "' wurde bereits verwendet.")
 		}
 
 		if required && len(input) == 0 {
-			return errors.New("Value may not be empty")
+			return errors.New("Der Wert darf nicht leer sein")
 		}
 
 		if dataType == templates.ParamValueTypeInt {
 			_, err := strconv.Atoi(input)
 			if err != nil {
-				return errors.New("Value must be an integer")
+				return errors.New("Der Wert muss eine Zahl sein.")
 			}
 		}
 
@@ -390,7 +390,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	additionalConfig := make(map[string]interface{})
 	selectedModbusKey := ""
 
-	fmt.Println("Enter the configuration values:")
+	fmt.Println("Trage die Einstellungen ein:")
 
 	for _, param := range paramItems {
 		if param.Name == "modbus" {
@@ -417,12 +417,12 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				// ask for modbus interface type
 				index := 0
 				if len(choices) > 1 {
-					index, _ = c.askChoice("Select the Modbus interface", choices)
+					index, _ = c.askChoice("Wähle die ModBus Schnittstelle aus", choices)
 				}
 				selectedModbusKey = choiceKeys[index]
 				switch selectedModbusKey {
 				case ModbusKeyRS485Serial:
-					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter address", nil, templates.ParamValueTypeString, false, true)
+					device := c.askValue("Device", ModbusParamValueDevice, "USB-RS485 Adapter Adresse", nil, templates.ParamValueTypeString, false, true)
 					additionalConfig[ModbusParamNameDevice] = device
 					baudrate := c.askValue("Baudrate", ModbusParamValueBaudrate, "", nil, templates.ParamValueTypeInt, false, true)
 					additionalConfig[ModbusParamNameBaudrate] = baudrate
@@ -432,9 +432,9 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					if selectedModbusKey == ModbusKeyRS485TCPIP {
 						additionalConfig[ModbusParamNameRTU] = "true"
 					}
-					host := c.askValue("Host", ModbusParamValueHost, "IP address or hostname", nil, templates.ParamValueTypeString, false, true)
+					host := c.askValue("Host", ModbusParamValueHost, "IP Adresse oder den Namen", nil, templates.ParamValueTypeString, false, true)
 					additionalConfig[ModbusParamNameHost] = host
-					port := c.askValue("Port", ModbusParamValuePort, "Port address", nil, templates.ParamValueTypeInt, false, true)
+					port := c.askValue("Port", ModbusParamValuePort, "Port Adresse", nil, templates.ParamValueTypeInt, false, true)
 					additionalConfig[ModbusParamNamePort] = port
 				}
 			}

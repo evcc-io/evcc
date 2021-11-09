@@ -28,11 +28,11 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	fmt.Println()
-	fmt.Println("The next steps will guide throught the creation of a EVCC configuration file.")
-	fmt.Println("Please be aware that this process does not cover all possible scenarios.")
-	fmt.Println("You can stop the process by pressing ctrl-c.")
+	fmt.Println("Die nächsten Schritte führen durch die Einrichtung einer Konfigurationsdatei für evcc.")
+	fmt.Println("Beachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.")
+	fmt.Println("Durch Drücken von CTRL-C kann der Prozess abgebrochen werden.")
 	fmt.Println()
-	fmt.Println("Let's start:")
+	fmt.Println("Auf geht`s:")
 
 	c.configureDevices(DeviceCategoryGridMeter, false)
 	c.configureDevices(DeviceCategoryPVMeter, true)
@@ -47,7 +47,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	}
 
 	fmt.Println()
-	fmt.Println("Your configuration:")
+	fmt.Println("Deine Konfiguration:")
 	fmt.Println()
 	fmt.Println(string(yaml))
 }
@@ -55,7 +55,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 // ask devuce specfic questions
 func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
 	fmt.Println()
-	if !c.askYesNo("Do you want to add a " + DeviceCategories[deviceCategory].title + "?") {
+	if !c.askYesNo("Möchtest du " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen?") {
 		return nil
 	}
 
@@ -75,7 +75,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 			break
 		}
 
-		if !c.askYesNo("Do you want to add another " + DeviceCategories[deviceCategory].title + "?") {
+		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + "hinzufügen?") {
 			break
 		}
 	}
@@ -86,14 +86,14 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 // ask loadpoint specific questions
 func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
-	fmt.Println("- Configure your loadpoint(s)")
+	fmt.Println("- Ladepunkt(e) einrichten")
 
 	chargerIndex := 0
 	chargeMeterIndex := 0
 
 	for ok := true; ok; {
 
-		loadpointTitle := c.askValue("Loadpoint title", defaultTitleLoadpoint, "", nil, templates.ParamValueTypeString, false, true)
+		loadpointTitle := c.askValue("Titel des Ladepunktes", defaultTitleLoadpoint, "", nil, templates.ParamValueTypeString, false, true)
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
 			Phases:     3,
@@ -109,7 +109,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		loadpoint.Charger = charger.Name
 
 		if !charger.ChargerHasMeter {
-			if c.askYesNo("The wallbox does not provide charging power information. Do you have a meter installed that can be used instead?") {
+			if c.askYesNo("Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert der verwendet werden kann?") {
 				chargeMeterIndex++
 				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter, chargeMeterIndex)
 				if err != nil {
@@ -125,14 +125,14 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.Vehicles = append(loadpoint.Vehicles, c.configuration.Vehicles[0].Name)
 		} else if vehicleAmount > 1 {
 			for _, vehicle := range c.configuration.Vehicles {
-				if c.askYesNo("Will the vehicle " + vehicle.Title + " charge here?") {
+				if c.askYesNo("Wird das Fahrzeug " + vehicle.Title + " hier laden?") {
 					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
 				}
 			}
 		}
 
 		powerChoices := []string{"3,6kW", "11kW", "22kW", "Other"}
-		powerIndex, _ := c.askChoice("What is the maximum power the wallbox installation can provide?", powerChoices)
+		powerIndex, _ := c.askChoice("Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?", powerChoices)
 		switch powerIndex {
 		case 0:
 			loadpoint.MaxCurrent = 16
@@ -142,21 +142,21 @@ func (c *CmdConfigure) configureLoadpoints() {
 		case 2:
 			loadpoint.MaxCurrent = 32
 		case 3:
-			amperage := c.askValue("What is the maximum amperage the wallbox installation can provide on a single phase?", "", "", nil, templates.ParamValueTypeInt, false, true)
+			amperage := c.askValue("Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?", "", "", nil, templates.ParamValueTypeInt, false, true)
 			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
 			phaseChoices := []string{"1", "2", "3"}
-			phaseIndex, _ := c.askChoice("With how many phases is the wallbox connected?", phaseChoices)
+			phaseIndex, _ := c.askChoice("Mit wievielen Phasen ist die Wallbox angeschlossen?", phaseChoices)
 			loadpoint.Phases = phaseIndex + 1
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
-		_, modeChoice := c.askChoice("What should be the default charging mode when an EV is connected?", chargingModes)
+		_, modeChoice := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", chargingModes)
 		loadpoint.Mode = modeChoice
 
 		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
 
-		if !c.askYesNo("Do you want to add another loadpoint?") {
+		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen?") {
 			break
 		}
 	}
@@ -165,7 +165,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 // ask site specific questions
 func (c *CmdConfigure) configureSite() {
 	fmt.Println()
-	fmt.Println("- Configure your site")
+	fmt.Println("- Richte deinen Standort ein")
 
-	c.configuration.Site.Title = c.askValue("Site title", defaultTitleSite, "", nil, templates.ParamValueTypeString, false, true)
+	c.configuration.Site.Title = c.askValue("Titel des Standortes", defaultTitleSite, "", nil, templates.ParamValueTypeString, false, true)
 }
