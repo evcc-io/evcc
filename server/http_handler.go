@@ -17,11 +17,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	result  = "result"
-	failure = "error"
-)
-
 func indexHandler(site site.API) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=UTF-8")
@@ -55,11 +50,20 @@ func jsonHandler(h http.Handler) http.Handler {
 	})
 }
 
-func jsonResponse(w http.ResponseWriter, r *http.Request, content interface{}) {
-	w.WriteHeader(http.StatusOK)
+func jsonWrite(w http.ResponseWriter, content interface{}) {
 	if err := json.NewEncoder(w).Encode(content); err != nil {
 		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
 	}
+}
+
+func jsonResult(w http.ResponseWriter, res interface{}) {
+	w.WriteHeader(http.StatusOK)
+	jsonWrite(w, map[string]interface{}{"result": res})
+}
+
+func jsonError(w http.ResponseWriter, status int, err error) {
+	w.WriteHeader(status)
+	jsonWrite(w, map[string]interface{}{"error": err.Error()})
 }
 
 // healthHandler returns current charge mode
@@ -82,7 +86,7 @@ func stateHandler(cache *util.Cache) http.HandlerFunc {
 		for _, k := range []string{"availableVersion", "releaseNotes"} {
 			delete(res, k)
 		}
-		jsonResponse(w, r, res)
+		jsonResult(w, res)
 	}
 }
 
@@ -93,14 +97,13 @@ func chargeModeHandler(lp loadpoint.API) http.HandlerFunc {
 
 		mode, err := api.ChargeModeString(vars["value"])
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
 		lp.SetMode(mode)
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetMode()})
+		jsonResult(w, lp.GetMode())
 	}
 }
 
@@ -115,12 +118,11 @@ func targetSoCHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetTargetSoC()})
+		jsonResult(w, lp.GetTargetSoC())
 	}
 }
 
@@ -135,12 +137,11 @@ func minSoCHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetMinSoC()})
+		jsonResult(w, lp.GetMinSoC())
 	}
 }
 
@@ -153,12 +154,11 @@ func minCurrentHandler(lp loadpoint.API) http.HandlerFunc {
 		if err == nil {
 			lp.SetMinCurrent(current)
 		} else {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetMinCurrent()})
+		jsonResult(w, lp.GetMinCurrent())
 	}
 }
 
@@ -171,12 +171,11 @@ func maxCurrentHandler(lp loadpoint.API) http.HandlerFunc {
 		if err == nil {
 			lp.SetMaxCurrent(current)
 		} else {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetMaxCurrent()})
+		jsonResult(w, lp.GetMaxCurrent())
 	}
 }
 
@@ -191,12 +190,11 @@ func phasesHandler(lp loadpoint.API) http.HandlerFunc {
 		}
 
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		jsonResponse(w, r, map[string]interface{}{result: lp.GetPhases()})
+		jsonResult(w, lp.GetPhases())
 	}
 }
 
@@ -205,18 +203,10 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		demandS, ok := vars["demand"]
-
-		var source string
-		if ok {
-			source, ok = vars["source"]
-		}
-
-		demand, err := loadpoint.RemoteDemandString(demandS)
-
-		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+		source := vars["source"]
+		demand, err := loadpoint.RemoteDemandString(vars["demand"])
+		if err != nil {
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -230,7 +220,7 @@ func remoteDemandHandler(lp loadpoint.API) http.HandlerFunc {
 			Demand: demand,
 		}
 
-		jsonResponse(w, r, res)
+		jsonResult(w, res)
 	}
 }
 
@@ -261,8 +251,7 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 		timeV, err := time.ParseInLocation("2006-01-02T15:04:05", timeS, timezone())
 
 		if !ok || err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			jsonResponse(w, r, map[string]interface{}{failure: err.Error()})
+			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
 
@@ -276,7 +265,7 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 			Time: timeV,
 		}
 
-		jsonResponse(w, r, res)
+		jsonResult(w, res)
 	}
 }
 
