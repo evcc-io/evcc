@@ -67,39 +67,8 @@
 							legend-placement="right"
 							:auto-adjust-text-size="false"
 						></vc-donut>
-						<div v-if="sponsor" class="d-flex flex-column align-items-center my-4">
-							<button
-								class="btn btn-success mb-2 confetti-button"
-								@click="surprise"
-								ref="confetti"
-							>
-								<fa-icon :icon="['fas', 'heart']" class="icon me-1"></fa-icon>
 
-								{{ $t("footer.savings.modalButtonConfetti", { sponsor }) }}
-							</button>
-							<a
-								v-if="false"
-								href="https://evcc.io/sticker"
-								target="_blank"
-								class="small text-muted"
-								>{{ $t("footer.savings.modalSticker") }}</a
-							>
-						</div>
-						<div v-else>
-							<p>
-								{{ $t("footer.savings.modalSupportUs") }}
-							</p>
-							<div class="d-flex justify-content-center my-4">
-								<a
-									target="_blank"
-									href="https://github.com/sponsors/andig"
-									class="btn btn-outline-success"
-								>
-									<fa-icon :icon="['far', 'heart']" class="icon me-1"></fa-icon>
-									{{ $t("footer.savings.modalButtonBecomeSponsor") }}
-								</a>
-							</div>
-						</div>
+						<Sponsor :sponsor="sponsor" />
 
 						<p class="small text-muted text-center">
 							{{ $t("footer.savings.modalExplaination") }}
@@ -138,11 +107,12 @@
 
 <script>
 import formatter from "../mixins/formatter";
-import confetti from "../mixins/confetti";
+import Sponsor from "./Sponsor.vue";
 
 export default {
 	name: "Savings",
-	mixins: [formatter, confetti],
+	mixins: [formatter],
+	components: { Sponsor },
 	props: {
 		selfPercentage: Number,
 		since: Number,
@@ -166,24 +136,14 @@ export default {
 			return Math.round(this.selfPercentage);
 		},
 	},
-	methods: {
-		surprise() {
-			this.confetti(this.$refs.confetti, "up");
-		},
-	},
 };
 </script>
 <style scoped>
-.confetti-button {
-	/* prevent double-tap zoom */
-	touch-action: none;
-	user-select: none;
-}
-
 /* make modal a bottom drawer on small screens */
 @media (max-width: 575px) {
 	.modal-dialog.modal-dialog-centered {
 		align-items: flex-end;
+		margin-bottom: 0;
 	}
 	.modal.fade .modal-dialog {
 		transition: transform 0.4s ease;

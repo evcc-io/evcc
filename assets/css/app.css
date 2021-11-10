@@ -35,6 +35,14 @@ a {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
+.btn-outline-primary {
+	color: var(--bs-gray-dark);
+	border-color: var(--bs-gray-dark);
+}
+.btn-outline-primary:hover {
+	background-color: var(--evcc-dark-green);
+	border-color: var(--evcc-dark-green);
+}
 .text-evcc {
 	color: var(--evcc-dark-green);
 }
