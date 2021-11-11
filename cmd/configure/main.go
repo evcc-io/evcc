@@ -97,7 +97,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 			break
 		}
 
-		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + "hinzufügen") {
+		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
 			break
 		}
 	}
