@@ -1,5 +1,7 @@
 type: t_easee
 description: Easee Home (Cloud API)
+requirements:
+  sponsorship: true
 params:
 - name: user
   required: true

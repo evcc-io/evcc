@@ -123,5 +123,6 @@ type config struct {
 		PVs       []string
 		Batteries []string
 	}
-	EEBUS string
+	EEBUS        string
+	Sponsortoken string
 }

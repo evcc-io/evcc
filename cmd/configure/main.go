@@ -63,7 +63,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 			break
 		}
 
-		filename = c.askValue("Gib einen neuen Dateinamen an", "", "", nil, "string", false, true)
+		filename = c.askValue("Gib einen neuen Dateinamen an", "evcc_neu.yaml", "", nil, "string", false, true)
 	}
 
 	err = os.WriteFile(filename, yaml, 0755)

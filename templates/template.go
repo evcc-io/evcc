@@ -33,7 +33,8 @@ type Template struct {
 
 // Requirements
 type Requirements struct {
-	Eebus bool // EEBUS Setup is required
+	Eebus       bool // EEBUS Setup is required
+	Sponsorship bool // Sponsorship is required
 }
 
 // Param is a proxy template parameter

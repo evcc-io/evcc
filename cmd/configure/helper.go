@@ -80,6 +80,18 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 			return device, ErrItemNotPresent
 		}
 
+		// check if sponsorship is required
+		if templateItem.Requirements.Sponsorship == true && c.configuration.Sponsortoken == "" {
+			fmt.Println()
+			fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
+			fmt.Println()
+			if !c.askYesNo("Bist du ein Sponsor und möchtest das Sponsortoken eintragen") {
+				return device, ErrItemNotPresent
+			}
+			sponsortoken := c.askValue("Bitte gib das Sponsortoken ein", "", "", nil, "string", false, true)
+			c.configuration.Sponsortoken = sponsortoken
+		}
+
 		// check if we need to setup an EEBUS HEMS
 		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Requirements.Eebus == true {
 			if c.configuration.EEBUS == "" {
@@ -267,8 +279,8 @@ func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filte
 func (c *CmdConfigure) selectItem(deviceCategory string) templates.Template {
 	promptuiTemplates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   "-> {{ .Description }}",
-		Inactive: "   {{ .Description }}",
+		Active:   "-> {{ .Description }} {{ if .Requirements.Sponsorship }}(Sponsorship benötigt){{ end }}",
+		Inactive: "   {{ .Description }} {{ if .Requirements.Sponsorship }}(Sponsorship benötigt){{ end }}",
 		Selected: fmt.Sprintf("%s: {{ .Description }}", DeviceCategories[deviceCategory].class),
 	}
 

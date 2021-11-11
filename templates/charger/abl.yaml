@@ -1,5 +1,7 @@
 type: t_abl
 description: ABL eMH / SENEC.Wallbox pro
+requirements:
+  sponsorship: true
 params:
 - name: modbus
   choice: ["rs485"]
