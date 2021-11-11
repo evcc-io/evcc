@@ -45,7 +45,7 @@ type Param struct {
 	Advanced  bool   // cli if the user does not need to be asked. Requires a "Default" to be defined.
 	Default   string // default value if no user value is provided in the configuration
 	Example   string // cli default value
-	Hint      string // cli configuration hint
+	Help      string // cli configuration help
 	Test      string // testing default value
 	Value     string // user provided value via cli configuration
 	ValueType string // string representation of the value type, "string" is default

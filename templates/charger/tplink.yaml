@@ -6,7 +6,6 @@ params:
   example: 192.0.2.2
 - name: standbypower
   default: 15
-  hint: treat as charging above this power (W)
 render: |
   type: tasmota
   uri: {{ .host }}

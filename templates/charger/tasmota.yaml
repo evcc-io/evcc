@@ -5,13 +5,12 @@ params:
   required: true
   example: 192.0.2.2
 - name: user
-  hint: (optional) in case user + password are defined
+  help: (optional) in case user + password are defined
 - name: password
   mask: true
-  hint: (optional) in case user + password are defined
+  help: (optional) in case user + password are defined
 - name: standbypower
   default: 15
-  hint: treat as charging above this power (W)
 render: |
   type: tasmota
   uri: http://{{ .host }}  # shelly device ip address (local)

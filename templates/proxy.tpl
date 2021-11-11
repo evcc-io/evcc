@@ -5,5 +5,5 @@ type: {{ .Template }}
 	{{- if len .Choice }} {{ join "|" .Choice }} {{- else }} {{ .Default }} {{- end }}
 	{{- if len .Choice }} # <- choose one {{ .Name }} value {{- end }}
 	{{- end }}
-	{{- if .Hint }} # {{ .Hint }} {{- end }}
+	{{- if .Help }} # {{ .Help }} {{- end }}
 {{ end -}}

@@ -4,10 +4,10 @@ params:
 - name: title
 - name: accessToken
   required: true
-  example: 12345
+  help: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
 - name: refreshToken
   required: true
-  example: 12345
+  help: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
 - name: vin
   example: W...
 - name: capacity

@@ -5,10 +5,10 @@ requirements:
 params:
 - name: ski
   required: true
-  hint: The SKI of the wallbox which can usually be found in the wallbox web interface
+  help: The SKI of the wallbox which can usually be found in the wallbox web interface
 - name: forcePVLimits
   default: true
-  hint: use Overload Protection to limit PV charging, if false PV surplus is sent as recommended charging levels to the EV, but this is currently unreliable
+  help: use Overload Protection to limit PV charging, if false PV surplus is sent as recommended charging levels to the EV, but this is currently unreliable
 render: |
   type: eebus
   ski: '{{ .ski }}'

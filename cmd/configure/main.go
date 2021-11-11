@@ -63,7 +63,10 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 			break
 		}
 
-		filename = c.askValue("Gib einen neuen Dateinamen an", "evcc_neu.yaml", "", nil, "string", false, true)
+		filename = c.askValue(question{
+			label:        "Gib einen neuen Dateinamen an",
+			exampleValue: "evcc_neu.yaml",
+			required:     true})
 	}
 
 	err = os.WriteFile(filename, yaml, 0755)
@@ -115,7 +118,10 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 	for ok := true; ok; {
 
-		loadpointTitle := c.askValue("Titel des Ladepunktes", defaultTitleLoadpoint, "", nil, templates.ParamValueTypeString, false, true)
+		loadpointTitle := c.askValue(question{
+			label:        "Titel des Ladepunktes",
+			defaultValue: defaultTitleLoadpoint,
+			required:     true})
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
 			Phases:     3,
@@ -164,7 +170,10 @@ func (c *CmdConfigure) configureLoadpoints() {
 		case 2:
 			loadpoint.MaxCurrent = 32
 		case 3:
-			amperage := c.askValue("Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?", "", "", nil, templates.ParamValueTypeInt, false, true)
+			amperage := c.askValue(question{
+				label:    "Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?",
+				dataType: templates.ParamValueTypeInt,
+				required: true})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
 			phaseChoices := []string{"1", "2", "3"}
@@ -189,5 +198,8 @@ func (c *CmdConfigure) configureSite() {
 	fmt.Println()
 	fmt.Println("- Richte deinen Standort ein")
 
-	c.configuration.Site.Title = c.askValue("Titel des Standortes", defaultTitleSite, "", nil, templates.ParamValueTypeString, false, true)
+	c.configuration.Site.Title = c.askValue(question{
+		label:        "Titel des Standortes",
+		defaultValue: defaultTitleSite,
+		required:     true})
 }

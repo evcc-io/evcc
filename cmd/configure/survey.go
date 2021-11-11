@@ -104,22 +104,30 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 	return confirmation
 }
 
+type question struct {
+	label, help                string
+	defaultValue, exampleValue interface{}
+	invalidValues              []string
+	dataType                   string
+	mask, required             bool
+}
+
 // Survey: ask for input
-func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues []string, dataType string, mask, required bool) string {
+func (c *CmdConfigure) askValue(q question) string {
 	input := ""
 
 	var err error
 
 	validate := func(val interface{}) error {
-		if invalidValues != nil && funk.ContainsString(invalidValues, input) {
+		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, input) {
 			return errors.New("Der Wert '" + input + "' wurde bereits verwendet.")
 		}
 
-		if required && len(input) == 0 {
+		if q.required && len(input) == 0 {
 			return errors.New("Der Wert darf nicht leer sein")
 		}
 
-		if dataType == templates.ParamValueTypeInt {
+		if q.dataType == templates.ParamValueTypeInt {
 			_, err := strconv.Atoi(input)
 			if err != nil {
 				return errors.New("Der Wert muss eine Zahl sein.")
@@ -129,17 +137,30 @@ func (c *CmdConfigure) askValue(label, exampleValue, hint string, invalidValues 
 		return nil
 	}
 
-	if mask {
+	help := q.help
+	if q.required {
+		help += " (erforderlich)"
+	} else {
+		help += " (optional)"
+	}
+	if q.exampleValue != "" {
+		help += fmt.Sprintf(" (Beispiel: %s)", q.exampleValue)
+	}
+
+	if q.mask {
 		prompt := &survey.Password{
-			Message: label,
-			Help:    hint,
+			Message: q.label,
+			Help:    help,
 		}
 		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 
 	} else {
 		prompt := &survey.Input{
-			Message: label,
-			Help:    hint,
+			Message: q.label,
+			Help:    help,
+		}
+		if q.defaultValue != "" {
+			prompt.Default = q.defaultValue.(string)
 		}
 		err = c.surveyAskOne(prompt, &input)
 

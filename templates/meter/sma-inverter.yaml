@@ -8,7 +8,7 @@ params:
   required: true
 - name: password
   mask: true
-  hint: Only needed if the password was changed from the default password
+  help: Only needed if the password was changed from the default password
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname

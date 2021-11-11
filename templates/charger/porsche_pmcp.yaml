@@ -5,7 +5,7 @@ requirements:
 params:
 - name: ski
   required: true
-  hint: The SKI of the wallbox which can usually be found in the wallbox web interface
+  help: The SKI of the wallbox which can usually be found in the wallbox web interface
 render: |
   type: eebus
   ski: '{{ .ski }}'
