@@ -10,4 +10,4 @@ params:
 render: |
   type: mcc
   uri: https://{{ .host }}
-  password: {{ .password }}
+  password: '{{ .password }}'

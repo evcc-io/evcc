@@ -8,5 +8,5 @@ params:
   hint: The SKI of the wallbox which can usually be found in the wallbox web interface
 render: |
   type: eebus
-  ski: {{ .ski }}
+  ski: '{{ .ski }}'
   forcePVLimits: false

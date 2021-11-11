@@ -19,6 +19,6 @@ render: |
   user: {{ .user }}
   {{ end }}
   {{ if ne .password "" }}
-  password: {{ .password }}
+  password: '{{ .password }}'
   {{ end }}
   standbypower: {{ .standbypower }}  # treat as charging above this power

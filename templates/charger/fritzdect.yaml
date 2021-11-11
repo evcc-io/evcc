@@ -13,7 +13,7 @@ params:
 render: |
   type: fritzdect
   uri: {{ .uri }}
-  user: {{ .user }}
-  password: {{ .password }}
+  user: '{{ .user }}'
+  password: '{{ .password }}'
   ain: '{{ .ain }}' # switch actor identification number without blanks (see AIN number on switch sticker)
   standbypower: 15 # treat as charging above this power

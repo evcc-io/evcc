@@ -11,5 +11,5 @@ params:
   hint: use Overload Protection to limit PV charging, if false PV surplus is sent as recommended charging levels to the EV, but this is currently unreliable
 render: |
   type: eebus
-  ski: {{ .ski }}
+  ski: '{{ .ski }}'
   forcePVLimits: {{ .forcePVLimits }}
