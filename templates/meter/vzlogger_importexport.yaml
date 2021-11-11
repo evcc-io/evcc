@@ -12,13 +12,13 @@ params:
   required: true
 render: |
   type: custom
-    power:
-      source: calc # use calc plugin
-      add:
-      - source: http # import channel
-        uri: http://{{ .host }}/api/data/{{ .importuuid }}.json?from=now
-        jq: .data.tuples[0][1] # parse response json
-      - source: http # export channel
-        uri: http://{{ .host }}/api/data/{{ .exportuuid }}.json?from=now
-        jq: .data.tuples[0][1] # parse response json
-        scale: -1 # export must result in negative values
+  power:
+    source: calc # use calc plugin
+    add:
+    - source: http # import channel
+      uri: http://{{ .host }}/api/data/{{ .importuuid }}.json?from=now
+      jq: .data.tuples[0][1] # parse response json
+    - source: http # export channel
+      uri: http://{{ .host }}/api/data/{{ .exportuuid }}.json?from=now
+      jq: .data.tuples[0][1] # parse response json
+      scale: -1 # export must result in negative values
