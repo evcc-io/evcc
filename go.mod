@@ -42,15 +42,13 @@ require (
 	github.com/jinzhu/copier v0.3.2
 	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
 	github.com/jpfielding/go-http-digest v0.0.0-20211006141426-fbc93758452e
-	github.com/juju/ansiterm v0.0.0-20210706145210-9283cdf370b5 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/koron/go-ssdp v0.0.2
 	github.com/korylprince/ipnetgen v1.0.1
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/lorenzodonini/ocpp-go v0.15.0
 	github.com/lunixbochs/struc v0.0.0-20200707160740-784aaebc1d40
-	github.com/lunixbochs/vtclean v1.0.0 // indirect
-	github.com/manifoldco/promptui v0.8.0
+	github.com/manifoldco/promptui v0.9.0
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
