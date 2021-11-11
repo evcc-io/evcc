@@ -21,6 +21,7 @@ const (
 	EnabledTopic    = "ChargePointEnabled"
 	MaxCurrentTopic = "DirectChargeAmps"
 	PhasesTopic     = "U1p3p"
+	RfidTopic       = "rfid"
 
 	// charge power
 	ChargePowerTopic       = "W"
