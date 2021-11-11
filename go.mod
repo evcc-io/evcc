@@ -3,6 +3,7 @@ module github.com/evcc-io/evcc
 go 1.16
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.2
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/PuerkitoBio/goquery v1.7.1
 	github.com/alvaroloes/enumer v1.1.2
