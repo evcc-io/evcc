@@ -124,5 +124,5 @@ type config struct {
 		Batteries []string
 	}
 	EEBUS        string
-	Sponsortoken string
+	SponsorToken string
 }

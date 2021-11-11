@@ -66,7 +66,7 @@ site:
 eebus:
 {{ .EEBUS | indent 2 }}
 {{- end }}
-{{- if ne (len .Sponsortoken) 0 }}
+{{- if ne (len .SponsorToken) 0 }}
 
-sponsortoken: {{ . Sponsortoken }}
+sponsortoken: {{ .SponsorToken }}
 {{- end}}

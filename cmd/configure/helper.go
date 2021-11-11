@@ -81,7 +81,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 		}
 
 		// check if sponsorship is required
-		if templateItem.Requirements.Sponsorship == true && c.configuration.Sponsortoken == "" {
+		if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
 			fmt.Println()
 			fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
 			fmt.Println()
@@ -89,7 +89,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 				return device, ErrItemNotPresent
 			}
 			sponsortoken := c.askValue("Bitte gib das Sponsortoken ein", "", "", nil, "string", false, true)
-			c.configuration.Sponsortoken = sponsortoken
+			c.configuration.SponsorToken = sponsortoken
 		}
 
 		// check if we need to setup an EEBUS HEMS
