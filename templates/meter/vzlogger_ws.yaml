@@ -1,0 +1,18 @@
+type: t_vzlogger_ws
+description: vzlogger (Websocket)
+params:
+- name: usage
+  choice: [ "grid" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: uuid
+  required: true
+render: |
+  type: custom
+    power: # power reading
+      source: ws # use websocket plugin
+      uri: ws://{{ .host }}:8082/socket
+      jq: .data | select(.uuid=="{{ .uuid }}") .tuples[0][1] # parse response json
+      timeout: 30s
+      scale: 1
