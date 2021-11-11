@@ -21,6 +21,9 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 	if err != nil {
 		if err == terminal.InterruptErr {
 			fmt.Println("Konfiguration wurde abgebrochen.")
+			fmt.Println()
+			fmt.Println("Falls diese Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/installation/configuration")
+			fmt.Println()
 			os.Exit(0)
 		}
 		fmt.Println("Es ist bei der Eingabe ein Fehler aufgetreten: ", err)
