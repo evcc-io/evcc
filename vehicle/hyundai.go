@@ -27,9 +27,11 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
+		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -85,7 +87,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Hyundai{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

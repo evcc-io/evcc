@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 )
@@ -18,11 +17,9 @@ const (
 )
 
 const (
-	resOK          = "S"                    // auth fail: F
-	timeFormat     = "20060102150405 -0700" // Note: must add timeOffset
-	timeOffset     = " +0100"
-	refreshTimeout = 2 * time.Minute
-	statusExpiry   = 5 * time.Minute
+	resOK      = "S"                    // auth fail: F
+	timeFormat = "20060102150405 -0700" // Note: must add timeOffset
+	timeOffset = " +0100"
 )
 
 // ErrAuthFail indicates authorization failure
@@ -32,10 +29,8 @@ var ErrAuthFail = errors.New("authorization failed")
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
-	log         *util.Logger
-	identity    *Identity
-	refresh     bool
-	refreshTime time.Time
+	log      *util.Logger
+	identity *Identity
 }
 
 // New creates a new BlueLink API
@@ -116,64 +111,29 @@ type DrivingDistance struct {
 	}
 }
 
-func (v *API) Status(vid string) (StatusData, error) {
-	var resp StatusLatestResponse
+func (v *API) Status(vid string) (StatusLatestResponse, error) {
+	var res StatusLatestResponse
 
 	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusLatestURL, vid))
 	if err == nil {
-		if err = v.DoJSON(req, &resp); err == nil && resp.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", resp.RetCode)
-		}
-
-		var ts time.Time
-		if err == nil {
-			ts, err = resp.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
-
-			// return the current value
-			if time.Since(ts) <= statusExpiry {
-				v.refresh = false
-				return resp.ResMsg.VehicleStatusInfo.VehicleStatus, err
-			}
+		if err = v.DoJSON(req, &res); err == nil && res.RetCode != resOK {
+			err = fmt.Errorf("unexpected response: %s", res.RetCode)
 		}
 	}
 
-	// request a refresh, irrespective of a previous error
-	if !v.refresh {
-		if err = v.refreshRequest(vid); err == nil {
-			err = api.ErrMustRetry
-		}
-
-		return StatusData{}, err
-	}
-
-	// refresh finally expired
-	if time.Since(v.refreshTime) > refreshTimeout {
-		v.refresh = false
-		if err == nil {
-			err = api.ErrTimeout
-		}
-	} else {
-		// wait for refresh, irrespective of a previous error
-		err = api.ErrMustRetry
-	}
-
-	return resp.ResMsg.VehicleStatusInfo.VehicleStatus, err
+	return res, err
 }
 
-func (v *API) refreshRequest(vid string) error {
+// StatusPartial refreshes the status from the bluelink api
+func (v *API) StatusPartial(vid string) (StatusResponse, error) {
+	var res StatusResponse
+
 	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusURL, vid))
 	if err == nil {
-		v.refresh = true
-		v.refreshTime = time.Now()
-
-		// run the actual update asynchronously
-		go func() {
-			var resp StatusResponse
-			if err := v.DoJSON(req, &resp); err == nil && resp.RetCode != resOK {
-				v.log.ERROR.Printf("unexpected response: %s", resp.RetCode)
-			}
-		}()
+		if err = v.DoJSON(req, &res); err == nil && res.RetCode != resOK {
+			err = fmt.Errorf("unexpected response: %s", res.RetCode)
+		}
 	}
 
-	return err
+	return res, err
 }
