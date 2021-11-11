@@ -5,7 +5,7 @@ params:
   required: true
   example: 192.0.2.2
 - name: port
-  default: 1883
+  default: 502
 render: |
   type: warp
   uri: {{ .host }}:{{ .port }}
