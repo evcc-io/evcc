@@ -1,5 +1,7 @@
 type: t_cfos_meter
 description: cFos PowerBrain
+requirements:
+  sponsorship: true
 params:
 - name: usage
   choice: [ "charger" ]

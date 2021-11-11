@@ -1,5 +1,7 @@
 type: t_cfos_charger
 description: cFos PowerBrain
+requirements:
+  sponsorship: true
 params:
 - name: modbus
   choice: ["tcpip"]
