@@ -159,8 +159,12 @@ func (c *CmdConfigure) askValue(q question) string {
 			Message: q.label,
 			Help:    help,
 		}
-		if q.defaultValue != "" {
-			prompt.Default = q.defaultValue.(string)
+		if q.defaultValue != nil {
+			if q.dataType == templates.ParamValueTypeInt {
+				prompt.Default = strconv.Itoa(q.defaultValue.(int))
+			} else {
+				prompt.Default = q.defaultValue.(string)
+			}
 		}
 		err = c.surveyAskOne(prompt, &input)
 

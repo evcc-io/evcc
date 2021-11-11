@@ -1,0 +1,20 @@
+type: t_kostal_energy_meter_inverter
+description: Kostal Energy Meter via Wechselrichter
+params:
+- name: usage
+  choice: [ "grid" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: port
+  default: 1502
+render: |
+  type: custom
+  power:
+    source: modbus # use ModBus plugin
+    uri: {{ .host }}:{{ .port }} # inverter port
+    id: 71
+    register: # manual non-sunspec register configuration
+      address: 252 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
+      type: holding
+      decode: float32s # may be float32 on specific firmware/devices

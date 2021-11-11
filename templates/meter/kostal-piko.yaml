@@ -1,4 +1,4 @@
-type: t_kostalpiko
+type: t_kostal_piko
 description: Kostal Piko + Piko BA
 params:
 - name: usage
