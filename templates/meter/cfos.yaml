@@ -1,0 +1,10 @@
+type: t_cfos_meter
+description: cFos PowerBrain
+params:
+- name: usage
+  choice: [ "charger" ]
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: cfos
+  # ::modbus-setup::

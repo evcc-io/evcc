@@ -1,0 +1,8 @@
+type: t_cfos_charger
+description: cFos PowerBrain
+params:
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: cfos
+  # ::modbus-setup::
