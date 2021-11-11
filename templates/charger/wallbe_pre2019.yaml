@@ -7,6 +7,6 @@ params:
 - name: port
   default: 502
 render: |
-  type: warp
+  type: wallbe
   uri: {{ .host }}:{{ .port }}
   legacy: true # set only for older Wallbe devices (pre ~2019, old controller firmware)  

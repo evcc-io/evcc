@@ -7,7 +7,7 @@ params:
 - name: port
   default: 502
 render: |
-  type: warp
+  type: wallbe
   uri: {{ .host }}:{{ .port }}
   legacy: false # set only for older Wallbe devices (pre ~2019, old controller firmware)  
   meter: # only if a charge meter is connected to the controller
