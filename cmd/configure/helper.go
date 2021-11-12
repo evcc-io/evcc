@@ -29,6 +29,86 @@ func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
 	return bytes.TrimSpace(out.Bytes()), err
 }
 
+func (c *CmdConfigure) configureDeviceSingleSetup() {
+	var repeat bool = true
+	var err error
+
+	var values map[string]interface{}
+	var deviceCategory string
+	var deviceIndex int
+	var supportedDeviceCategories []string
+	var templateItem templates.Template
+
+	device := device{}
+
+	for ok := true; ok; ok = repeat {
+		fmt.Println()
+
+		templateItem, err = c.handleDeviceSelection(DeviceCategorySingleSetup)
+		if err != nil {
+			return
+		}
+
+		usageFound, usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
+		if !usageFound {
+			fmt.Println("error")
+			return
+		}
+		if len(usageChoices) == 0 {
+			usageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery}
+		}
+
+		supportedDeviceCategories = []string{}
+
+		for _, usage := range usageChoices {
+			switch usage {
+			case UsageChoiceGrid:
+				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
+			case UsageChoicePV:
+				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
+			case UsageChoiceBattery:
+				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
+			}
+		}
+
+		// we only ask for the configuration for the first usage
+		deviceCategory = supportedDeviceCategories[0]
+		deviceIndex = 1
+
+		values := c.processConfig(templateItem.Params, deviceCategory, false)
+
+		device, err = c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
+		if err != nil {
+			if err != ErrDeviceNotValid {
+				fmt.Println("Fehler: ", err)
+			}
+			fmt.Println()
+			if !c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
+				fmt.Println()
+				return
+			}
+			continue
+		}
+
+		repeat = false
+	}
+
+	c.addDeviceToConfiguration(device, deviceCategory)
+
+	for _, deviceCategory = range supportedDeviceCategories[1:] {
+		deviceIndex++
+		device, err := c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
+		if err != nil {
+			deviceIndex--
+			continue
+		}
+
+		c.addDeviceToConfiguration(device, deviceCategory)
+	}
+
+	fmt.Println("Erfolg.")
+}
+
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
 	fmt.Println()
 	fmt.Printf("- %s konfigurieren\n", DeviceCategories[deviceCategory].title)
@@ -39,28 +119,40 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceInde
 	}
 
 	if err != ErrItemNotPresent {
-		switch DeviceCategories[deviceCategory].class {
-		case DeviceClassCharger:
-			c.configuration.Chargers = append(c.configuration.Chargers, device)
-		case DeviceClassMeter:
-			c.configuration.Meters = append(c.configuration.Meters, device)
-			switch DeviceCategories[deviceCategory].usageFilter {
-			case UsageChoiceGrid:
-				c.configuration.Site.Grid = device.Name
-			case UsageChoicePV:
-				c.configuration.Site.PVs = append(c.configuration.Site.PVs, device.Name)
-			case UsageChoiceBattery:
-				c.configuration.Site.Batteries = append(c.configuration.Site.Batteries, device.Name)
-			}
-		case DeviceClassVehicle:
-			c.configuration.Vehicles = append(c.configuration.Vehicles, device)
-		}
+		return device, err
 	}
 
-	return device, err
+	c.addDeviceToConfiguration(device, deviceCategory)
+
+	return device, nil
+}
+
+func (c *CmdConfigure) addDeviceToConfiguration(device device, deviceCategory string) {
+	switch DeviceCategories[deviceCategory].class {
+	case DeviceClassCharger:
+		c.configuration.Chargers = append(c.configuration.Chargers, device)
+	case DeviceClassMeter:
+		c.configuration.Meters = append(c.configuration.Meters, device)
+		switch DeviceCategories[deviceCategory].usageFilter {
+		case UsageChoiceGrid:
+			c.configuration.Site.Grid = device.Name
+		case UsageChoicePV:
+			c.configuration.Site.PVs = append(c.configuration.Site.PVs, device.Name)
+		case UsageChoiceBattery:
+			c.configuration.Site.Batteries = append(c.configuration.Site.Batteries, device.Name)
+		}
+	case DeviceClassVehicle:
+		c.configuration.Vehicles = append(c.configuration.Vehicles, device)
+	}
 }
 
 // let the user select a device item from a list defined by class and filter
+// takes:
+// - deviceCategory
+// - deviceIndex: used for creating a name
+// returns:
+// - a device
+// - an error
 func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
 	var repeat bool = true
 
@@ -72,83 +164,17 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
-		templateItem := c.selectItem(deviceCategory)
-		if templateItem.Description == itemNotPresent {
+
+		templateItem, err := c.handleDeviceSelection(deviceCategory)
+		if err != nil {
 			return device, ErrItemNotPresent
 		}
 
-		// check if sponsorship is required
-		if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
-			fmt.Println()
-			fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
-			fmt.Println()
-			if !c.askYesNo("Bist du ein Sponsor und möchtest das Sponsortoken eintragen") {
-				return device, ErrItemNotPresent
-			}
-			sponsortoken := c.askValue(question{
-				label:    "Bitte gib das Sponsortoken ein",
-				help:     "",
-				required: true})
-			c.configuration.SponsorToken = sponsortoken
-		}
+		values := c.processConfig(templateItem.Params, deviceCategory, false)
 
-		// check if we need to setup an EEBUS HEMS
-		if DeviceCategories[deviceCategory].class == DeviceClassCharger && templateItem.Requirements.Eebus == true {
-			if c.configuration.EEBUS == "" {
-				eebusConfig, err := c.eebusCertificate()
-
-				if err != nil {
-					return device, fmt.Errorf("Fehler: Das EEBUS Zertifikat konnte nicht erstellt werden: %s", err)
-				}
-
-				err = c.configureEEBus(eebusConfig)
-				if err != nil {
-					return device, err
-				}
-
-				eebusYaml, err := yaml.Marshal(eebusConfig)
-				if err != nil {
-					return device, err
-				}
-				c.configuration.EEBUS = string(eebusYaml)
-			}
-
-			fmt.Println()
-			fmt.Println("Du hast eine Wallbox ausgewählt, welche über das EEBUS Protokoll angesprochen wird.")
-			fmt.Println("Dazu muss die Wallbox nun mit evcc verbunden werden. Dies geschieht üblicherweise auf der Webseite der Wallbox.")
-			fmt.Println("Drücke die Enter-Taste, wenn dies abgeschlossen ist.")
-			fmt.Scanln()
-		}
-
-		var values map[string]interface{}
-		values = c.processConfig(templateItem.Params, deviceCategory, false)
-		device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
-		device.Title = templateItem.Description
-		for _, param := range templateItem.Params {
-			if param.Name != "title" {
-				continue
-			}
-			if len(param.Value) > 0 {
-				device.Title = param.Value
-			}
-		}
-
-		deviceIsValid := false
-		v, err := c.configureDevice(deviceCategory, templateItem, values)
-		if err == nil {
-			fmt.Println()
-			fmt.Println("Teste die Einstellungen ...")
-			fmt.Println()
-			deviceIsValid, err = c.testDevice(deviceCategory, v)
-			if deviceCategory == DeviceCategoryCharger {
-				if deviceIsValid && err == nil {
-					device.ChargerHasMeter = true
-				}
-			}
-		}
-
-		if !deviceIsValid {
-			if err != nil {
+		device, err := c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
+		if err != nil {
+			if err != ErrDeviceNotValid {
 				fmt.Println("Fehler: ", err)
 			}
 			fmt.Println()
@@ -161,17 +187,114 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 
 		fmt.Println("Erfolg.")
 
-		templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
-		b, err := templateItem.RenderProxyWithValues(values)
-		if err != nil {
-			return device, err
-		}
-
-		device.Yaml = string(b)
 		repeat = false
 	}
 
 	return device, nil
+}
+
+func (c *CmdConfigure) handleDeviceSelection(deviceCategory string) (templates.Template, error) {
+	templateItem := c.selectItem(DeviceCategorySingleSetup)
+
+	if templateItem.Description == itemNotPresent {
+		return templateItem, ErrItemNotPresent
+	}
+
+	err := c.handleDeviceRequirements(templateItem)
+	if err != nil {
+		return templateItem, err
+	}
+
+	return templateItem, nil
+}
+
+func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceIndex int, deviceCategory string) (device, error) {
+	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
+	device.Title = templateItem.Description
+	for _, param := range templateItem.Params {
+		if param.Name != "title" {
+			continue
+		}
+		if len(param.Value) > 0 {
+			device.Title = param.Value
+		}
+	}
+
+	deviceIsValid := false
+	v, err := c.configureDevice(deviceCategory, templateItem, values)
+	if err == nil {
+		fmt.Println()
+		fmt.Println("Teste die " + DeviceCategories[deviceCategory].title + " Konfiguration ...")
+		fmt.Println()
+		deviceIsValid, err = c.testDevice(deviceCategory, v)
+		if deviceCategory == DeviceCategoryCharger {
+			if deviceIsValid && err == nil {
+				device.ChargerHasMeter = true
+			}
+		}
+	}
+
+	if !deviceIsValid {
+		return device, ErrDeviceNotValid
+	}
+
+	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
+	b, err := templateItem.RenderProxyWithValues(values)
+	if err != nil {
+		return device, err
+	}
+
+	device.Yaml = string(b)
+
+	return device, nil
+}
+
+// handle device requirements
+func (c *CmdConfigure) handleDeviceRequirements(templateItem templates.Template) error {
+	// check if sponsorship is required
+	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
+		fmt.Println()
+		fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
+		fmt.Println()
+		if !c.askYesNo("Bist du ein Sponsor und möchtest das Sponsortoken eintragen") {
+			return ErrItemNotPresent
+		}
+		sponsortoken := c.askValue(question{
+			label:    "Bitte gib das Sponsortoken ein",
+			help:     "",
+			required: true})
+		c.configuration.SponsorToken = sponsortoken
+	}
+
+	// check if we need to setup an EEBUS HEMS
+	if templateItem.Requirements.Eebus == true {
+		if c.configuration.EEBUS == "" {
+			eebusConfig, err := c.eebusCertificate()
+
+			if err != nil {
+				return fmt.Errorf("Fehler: Das EEBUS Zertifikat konnte nicht erstellt werden: %s", err)
+			}
+
+			err = c.configureEEBus(eebusConfig)
+			if err != nil {
+				return err
+			}
+
+			eebusYaml, err := yaml.Marshal(eebusConfig)
+			if err != nil {
+				return err
+			}
+			c.configuration.EEBUS = string(eebusYaml)
+		}
+
+		fmt.Println()
+		fmt.Println("Du hast eine Wallbox ausgewählt, welche über das EEBUS Protokoll angesprochen wird.")
+		fmt.Println("Dazu muss die Wallbox nun mit evcc verbunden werden. Dies geschieht üblicherweise auf der Webseite der Wallbox.")
+		fmt.Println("Drücke die Enter-Taste, wenn dies abgeschlossen ist.")
+		fmt.Scanln()
+	}
+
+	return nil
 }
 
 // provide all entered name values
@@ -235,9 +358,15 @@ func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template
 			continue
 		}
 
-		if len(DeviceCategories[deviceCategory].usageFilter) == 0 ||
-			c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].usageFilter, true) {
-			items = append(items, tmpl)
+		if deviceCategory == DeviceCategorySingleSetup {
+			if c.paramUsageSingleSetup(tmpl.Params) {
+				items = append(items, tmpl)
+			}
+		} else {
+			if len(DeviceCategories[deviceCategory].usageFilter) == 0 ||
+				c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].usageFilter) {
+				items = append(items, tmpl)
+			}
 		}
 	}
 
@@ -248,31 +377,80 @@ func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template
 	return items
 }
 
+func (c *CmdConfigure) paramUsageSingleSetup(params []templates.Param) bool {
+	for _, item := range params {
+		if item.Name != templates.ParamUsage {
+			continue
+		}
+
+		if item.SingleSetup {
+			return true
+		}
+	}
+
+	return false
+}
+
 // helper function to check if a param choice contains a given value
-func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filter string, considerEmptyAsTrue bool) bool {
-	filterFound := false
+func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filter string) bool {
+	nameFound, choices := c.paramChoiceValues(params, name)
+
+	if !nameFound {
+		return false
+	}
+
+	for _, choice := range choices {
+		if choice == filter {
+			return true
+		}
+	}
+
+	return false
+
+	/*
+		for _, item := range params {
+			if item.Name != name {
+				continue
+			}
+
+			filterFound = true
+			if item.Choice == nil || len(item.Choice) == 0 {
+				return true
+			}
+
+			for _, choice := range item.Choice {
+				if choice == filter {
+					return true
+				}
+			}
+		}
+
+		if !filterFound && considerEmptyAsTrue {
+			return true
+		}
+
+		return false
+	*/
+}
+
+func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) (bool, []string) {
+	nameFound := false
+
+	choices := []string{}
+
 	for _, item := range params {
 		if item.Name != name {
 			continue
 		}
 
-		filterFound = true
-		if item.Choice == nil || len(item.Choice) == 0 {
-			return true
-		}
+		nameFound = true
 
 		for _, choice := range item.Choice {
-			if choice == filter {
-				return true
-			}
+			choices = append(choices, choice)
 		}
 	}
 
-	if !filterFound && considerEmptyAsTrue {
-		return true
-	}
-
-	return false
+	return nameFound, choices
 }
 
 // Process an EVCC configuration item

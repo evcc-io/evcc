@@ -3,6 +3,7 @@ description: Fronius Solar API V1
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]
+  singlesetup: true
 - name: host
   example: 192.0.2.2
   required: true

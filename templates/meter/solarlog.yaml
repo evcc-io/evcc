@@ -3,6 +3,7 @@ description: Solarlog
 params:
 - name: usage
   choice: [ "grid", "pv" ]
+  singlesetup: true
 - name: host
   example: 192.0.2.2
   required: true

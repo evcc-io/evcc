@@ -36,6 +36,10 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	fmt.Println()
 	fmt.Println("Auf geht`s:")
 
+	fmt.Println()
+	fmt.Println("Wähle eines der folgenden Komplettsysteme aus, oder '" + itemNotPresent + "' falls keines dieser Geräte vorhanden ist")
+	c.configureDeviceSingleSetup()
+
 	c.configureDevices(DeviceCategoryGridMeter, false)
 	c.configureDevices(DeviceCategoryPVMeter, true)
 	c.configureDevices(DeviceCategoryBatteryMeter, true)
@@ -77,10 +81,22 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	fmt.Printf("Deine Konfiguration wurde erfolgreich in die Datei %s gespeichert.\n", filename)
 }
 
-// ask devuce specfic questions
+// ask device specfic questions
 func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
+	if deviceCategory == DeviceCategoryGridMeter && c.configuration.Site.Grid != "" {
+		return nil
+	}
+
+	additionalMeter := ""
+	if deviceCategory == DeviceCategoryPVMeter && len(c.configuration.Site.PVs) > 0 {
+		additionalMeter = "noch "
+	}
+	if deviceCategory == DeviceCategoryBatteryMeter && len(c.configuration.Site.Batteries) > 0 {
+		additionalMeter = "noch "
+	}
+
 	fmt.Println()
-	if !c.askYesNo("Möchtest du " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
+	if !c.askYesNo("Möchtest du " + additionalMeter + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
 		return nil
 	}
 
