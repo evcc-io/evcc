@@ -56,3 +56,13 @@ func init() {
 func ByClass(class string) []Template {
 	return templates[class]
 }
+
+func ByType(t, class string) Template {
+	for _, tmpl := range templates[class] {
+		if tmpl.Type == t {
+			return tmpl
+		}
+	}
+
+	return Template{}
+}

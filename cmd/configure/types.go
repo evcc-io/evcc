@@ -83,8 +83,8 @@ var DeviceCategories map[string]DeviceCategoryData = map[string]DeviceCategoryDa
 	DeviceCategoryCharger:      {title: "Wallbox", article: "eine", class: DeviceClassCharger, defaultName: defaultNameCharger},
 	DeviceCategorySingleSetup:  {title: "Komplettsystem", article: "ein", class: DeviceClassMeter},
 	DeviceCategoryGridMeter:    {title: "Netz-Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceGrid, defaultName: defaultNameGridMeter},
-	DeviceCategoryPVMeter:      {title: "PV Wechselrichter oder Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
-	DeviceCategoryBatteryMeter: {title: "Battery Wechselrichter oder Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
+	DeviceCategoryPVMeter:      {title: "PV Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
+	DeviceCategoryBatteryMeter: {title: "Battery Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
 	DeviceCategoryVehicle:      {title: "Fahrzeug", article: "ein", class: DeviceClassVehicle, defaultName: defaultNameVehicle},
 	DeviceCategoryChargeMeter:  {title: "Ladestromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceCharge, defaultName: defaultNameChargeMeter},
 }

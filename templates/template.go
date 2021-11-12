@@ -37,21 +37,27 @@ type Requirements struct {
 	Sponsorship bool // Sponsorship is required
 }
 
+// Linked Template
+type LinkedTemplate struct {
+	Type  string
+	Usage string // usage: "grid", "pv", "battery"
+}
+
 // Param is a proxy template parameter
 type Param struct {
 	Name        string
-	Required    bool     // cli if the user has to provide a non empty value
-	Mask        bool     // cli if the value should be masked, e.g. for passwords
-	Advanced    bool     // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Default     string   // default value if no user value is provided in the configuration
-	Example     string   // cli example value
-	Help        string   // cli configuration help
-	Test        string   // testing default value
-	Value       string   // user provided value via cli configuration
-	ValueType   string   // string representation of the value type, "string" is default
-	Choice      []string // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
-	SingleSetup bool     // cli defines if all possible usage choices are on a single device
-	LinkedType  string   // cli the type that links another device config which is typically used in combination with this one
+	Required    bool             // cli if the user has to provide a non empty value
+	Mask        bool             // cli if the value should be masked, e.g. for passwords
+	Advanced    bool             // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Default     string           // default value if no user value is provided in the configuration
+	Example     string           // cli example value
+	Help        string           // cli configuration help
+	Test        string           // testing default value
+	Value       string           // user provided value via cli configuration
+	ValueType   string           // string representation of the value type, "string" is default
+	Choice      []string         // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
+	SingleSetup bool             // cli defines if all possible usage choices are on a single device
+	Linked      []LinkedTemplate // cli the linked template of another device config which is typically used in combination with this one
 	Usages      []string
 }
 

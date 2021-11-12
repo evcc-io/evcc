@@ -4,7 +4,9 @@ params:
 - name: usage
   choice: [ "pv", "battery" ]
   singlesetup: true
-  linkedtype: t_kostal_smart_energy_meter
+  linked: 
+  - type: t_kostal_smart_energy_meter
+    usage: grid
 - name: host
   example: 192.0.2.2
   required: true

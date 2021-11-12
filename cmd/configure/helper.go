@@ -39,7 +39,7 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 	var supportedDeviceCategories []string
 	var templateItem templates.Template
 
-	device := device{}
+	deviceItem := device{}
 
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
@@ -77,7 +77,7 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 
 		values := c.processConfig(templateItem.Params, deviceCategory, false)
 
-		device, err = c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
+		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceIndex, deviceCategory)
 		if err != nil {
 			if err != ErrDeviceNotValid {
 				fmt.Println("Fehler: ", err)
@@ -93,20 +93,69 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 		repeat = false
 	}
 
-	c.addDeviceToConfiguration(device, deviceCategory)
+	c.addDeviceToConfiguration(deviceItem, deviceCategory)
 
 	for _, deviceCategory = range supportedDeviceCategories[1:] {
 		deviceIndex++
-		device, err := c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
+		deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, deviceIndex, deviceCategory)
 		if err != nil {
 			deviceIndex--
 			continue
 		}
 
-		c.addDeviceToConfiguration(device, deviceCategory)
+		c.addDeviceToConfiguration(deviceItem, deviceCategory)
 	}
 
-	fmt.Println("Erfolg.")
+	fmt.Println("Erfolgreich hinzugefügt.")
+
+	c.handleLinkedTypes(templateItem, deviceIndex)
+}
+
+func (c *CmdConfigure) handleLinkedTypes(templateItem templates.Template, deviceIndex int) {
+	var repeat bool = true
+
+	linkedTemplates := c.paramUsageLinkedType(templateItem.Params)
+
+	if linkedTemplates == nil {
+		return
+	}
+
+	for _, linkedTemplate := range linkedTemplates {
+		deviceIndex++
+		for ok := true; ok; ok = repeat {
+			deviceItem := device{}
+
+			linkedTemplateItem := templates.ByType(linkedTemplate.Type, DeviceClassMeter)
+			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
+				return
+			}
+
+			if !c.askYesNo("Möchtest du " + DeviceCategories[linkedTemplate.Usage].article + " " + linkedTemplateItem.Description + " " + DeviceCategories[linkedTemplate.Usage].title + " hinzufügen") {
+				repeat = false
+				continue
+			}
+
+			values := c.processConfig(linkedTemplateItem.Params, linkedTemplate.Usage, false)
+			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, deviceIndex, linkedTemplate.Usage)
+			if err != nil {
+				deviceIndex--
+				if err != ErrDeviceNotValid {
+					fmt.Println("Fehler: ", err)
+				}
+				fmt.Println()
+				if c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
+					continue
+				}
+
+			} else {
+				c.addDeviceToConfiguration(deviceItem, linkedTemplate.Usage)
+
+				fmt.Println("Erfolgreich hinzugefügt.")
+			}
+			repeat = false
+		}
+		repeat = true
+	}
 }
 
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
@@ -194,7 +243,7 @@ func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex 
 }
 
 func (c *CmdConfigure) handleDeviceSelection(deviceCategory string) (templates.Template, error) {
-	templateItem := c.selectItem(DeviceCategorySingleSetup)
+	templateItem := c.selectItem(deviceCategory)
 
 	if templateItem.Description == itemNotPresent {
 		return templateItem, ErrItemNotPresent
@@ -389,6 +438,18 @@ func (c *CmdConfigure) paramUsageSingleSetup(params []templates.Param) bool {
 	}
 
 	return false
+}
+
+func (c *CmdConfigure) paramUsageLinkedType(params []templates.Param) []templates.LinkedTemplate {
+	for _, item := range params {
+		if item.Name != templates.ParamUsage {
+			continue
+		}
+
+		return item.Linked
+	}
+
+	return nil
 }
 
 // helper function to check if a param choice contains a given value
