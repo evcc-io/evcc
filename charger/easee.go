@@ -139,11 +139,14 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 // subscribe connects to the signalR hub
 func (c *Easee) subscribe(ts oauth2.TokenSource) (signalr.Client, error) {
 	conn, err := signalr.NewHTTPConnection(context.Background(), "https://api.easee.cloud/hubs/chargers",
+		signalr.WithHTTPClientOption(c.Client),
 		signalr.WithHTTPHeadersOption(func() (res http.Header) {
 			if tok, err := ts.Token(); err == nil {
 				res = http.Header{
 					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
 				}
+			} else {
+				c.log.ERROR.Println("token:", err)
 			}
 			return res
 		}),
