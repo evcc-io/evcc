@@ -34,6 +34,11 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	fmt.Println("Beachte dass dieser Prozess nicht alle möglichen Szenarien berücksichtigen kann.")
 	fmt.Println("Durch Drücken von CTRL-C kann der Prozess abgebrochen werden.")
 	fmt.Println()
+	fmt.Println("ACHTUNG: Diese Funktionalität hat experimentellen Status!")
+	fmt.Println("  D.h. es kann möglich sein, dass die hiermit erstellen Konfigurationsdateien")
+	fmt.Println("  in einem Update nicht mehr funktionieren könnten und neu erzeugt werden müsste.")
+	fmt.Println("  Wir freuen uns auf euer Feedback auf https://github.com/evcc-io/evcc/discussions/")
+	fmt.Println()
 	fmt.Println("Auf geht`s:")
 
 	fmt.Println()
