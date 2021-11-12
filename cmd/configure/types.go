@@ -94,6 +94,8 @@ const itemNotPresent string = "Mein Gerät ist nicht in der Liste"
 var ErrItemNotPresent = errors.New("Gerät nicht vorhanden")
 var ErrDeviceNotValid = errors.New("Das Gerät funktioniert nicht")
 
+var addedDeviceIndex int = 0
+
 //go:embed configure.tpl
 var configTmpl string
 

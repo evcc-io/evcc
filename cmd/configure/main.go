@@ -83,6 +83,8 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 
 // ask device specfic questions
 func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
+	var devices []device
+
 	if deviceCategory == DeviceCategoryGridMeter && c.configuration.Site.Grid != "" {
 		return nil
 	}
@@ -100,13 +102,8 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 		return nil
 	}
 
-	var devices []device
-	var deviceInCategoryIndex int = 0
-
 	for ok := true; ok; {
-		deviceInCategoryIndex++
-
-		device, err := c.configureDeviceCategory(deviceCategory, deviceInCategoryIndex)
+		device, err := c.configureDeviceCategory(deviceCategory)
 		if err != nil {
 			break
 		}
@@ -129,9 +126,6 @@ func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
 	fmt.Println("- Ladepunkt(e) einrichten")
 
-	chargerIndex := 0
-	chargeMeterIndex := 0
-
 	for ok := true; ok; {
 
 		loadpointTitle := c.askValue(question{
@@ -144,8 +138,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			MinCurrent: 6,
 		}
 
-		chargerIndex++
-		charger, err := c.configureDeviceCategory(DeviceCategoryCharger, chargerIndex)
+		charger, err := c.configureDeviceCategory(DeviceCategoryCharger)
 		if err != nil {
 			break
 		}
@@ -154,8 +147,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 		if !charger.ChargerHasMeter {
 			if c.askYesNo("Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert der verwendet werden kann") {
-				chargeMeterIndex++
-				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter, chargeMeterIndex)
+				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter)
 				if err != nil {
 					break
 				}

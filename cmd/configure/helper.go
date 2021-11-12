@@ -8,10 +8,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/templates"
-	"github.com/evcc-io/evcc/vehicle"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
@@ -27,153 +24,6 @@ func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
 	err = tmpl.Execute(out, c.configuration)
 
 	return bytes.TrimSpace(out.Bytes()), err
-}
-
-func (c *CmdConfigure) configureDeviceSingleSetup() {
-	var repeat bool = true
-	var err error
-
-	var values map[string]interface{}
-	var deviceCategory string
-	var deviceIndex int
-	var supportedDeviceCategories []string
-	var templateItem templates.Template
-
-	deviceItem := device{}
-
-	for ok := true; ok; ok = repeat {
-		fmt.Println()
-
-		templateItem, err = c.handleDeviceSelection(DeviceCategorySingleSetup)
-		if err != nil {
-			return
-		}
-
-		usageFound, usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
-		if !usageFound {
-			fmt.Println("error")
-			return
-		}
-		if len(usageChoices) == 0 {
-			usageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery}
-		}
-
-		supportedDeviceCategories = []string{}
-
-		for _, usage := range usageChoices {
-			switch usage {
-			case UsageChoiceGrid:
-				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case UsageChoicePV:
-				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
-			case UsageChoiceBattery:
-				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
-			}
-		}
-
-		// we only ask for the configuration for the first usage
-		deviceCategory = supportedDeviceCategories[0]
-		deviceIndex = 1
-
-		values := c.processConfig(templateItem.Params, deviceCategory, false)
-
-		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceIndex, deviceCategory)
-		if err != nil {
-			if err != ErrDeviceNotValid {
-				fmt.Println("Fehler: ", err)
-			}
-			fmt.Println()
-			if !c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
-				fmt.Println()
-				return
-			}
-			continue
-		}
-
-		repeat = false
-	}
-
-	c.addDeviceToConfiguration(deviceItem, deviceCategory)
-
-	for _, deviceCategory = range supportedDeviceCategories[1:] {
-		deviceIndex++
-		deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, deviceIndex, deviceCategory)
-		if err != nil {
-			deviceIndex--
-			continue
-		}
-
-		c.addDeviceToConfiguration(deviceItem, deviceCategory)
-	}
-
-	fmt.Println("Erfolgreich hinzugefügt.")
-
-	c.handleLinkedTypes(templateItem, deviceIndex)
-}
-
-func (c *CmdConfigure) handleLinkedTypes(templateItem templates.Template, deviceIndex int) {
-	var repeat bool = true
-
-	linkedTemplates := c.paramUsageLinkedType(templateItem.Params)
-
-	if linkedTemplates == nil {
-		return
-	}
-
-	for _, linkedTemplate := range linkedTemplates {
-		deviceIndex++
-		for ok := true; ok; ok = repeat {
-			deviceItem := device{}
-
-			linkedTemplateItem := templates.ByType(linkedTemplate.Type, DeviceClassMeter)
-			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
-				return
-			}
-
-			if !c.askYesNo("Möchtest du " + DeviceCategories[linkedTemplate.Usage].article + " " + linkedTemplateItem.Description + " " + DeviceCategories[linkedTemplate.Usage].title + " hinzufügen") {
-				repeat = false
-				continue
-			}
-
-			values := c.processConfig(linkedTemplateItem.Params, linkedTemplate.Usage, false)
-			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, deviceIndex, linkedTemplate.Usage)
-			if err != nil {
-				deviceIndex--
-				if err != ErrDeviceNotValid {
-					fmt.Println("Fehler: ", err)
-				}
-				fmt.Println()
-				if c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
-					continue
-				}
-
-			} else {
-				c.addDeviceToConfiguration(deviceItem, linkedTemplate.Usage)
-
-				fmt.Println("Erfolgreich hinzugefügt.")
-			}
-			repeat = false
-		}
-		repeat = true
-	}
-}
-
-func (c *CmdConfigure) configureDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
-	fmt.Println()
-	fmt.Printf("- %s konfigurieren\n", DeviceCategories[deviceCategory].title)
-
-	device, err := c.processDeviceCategory(deviceCategory, deviceIndex)
-	if err != nil && err != ErrItemNotPresent {
-		c.log.FATAL.Fatal(err)
-	}
-
-	if err != ErrItemNotPresent {
-		return device, err
-	}
-
-	c.addDeviceToConfiguration(device, deviceCategory)
-
-	return device, nil
 }
 
 func (c *CmdConfigure) addDeviceToConfiguration(device device, deviceCategory string) {
@@ -195,53 +45,6 @@ func (c *CmdConfigure) addDeviceToConfiguration(device device, deviceCategory st
 	}
 }
 
-// let the user select a device item from a list defined by class and filter
-// takes:
-// - deviceCategory
-// - deviceIndex: used for creating a name
-// returns:
-// - a device
-// - an error
-func (c *CmdConfigure) processDeviceCategory(deviceCategory string, deviceIndex int) (device, error) {
-	var repeat bool = true
-
-	device := device{
-		Name:  DeviceCategories[deviceCategory].defaultName,
-		Title: "",
-		Yaml:  "",
-	}
-
-	for ok := true; ok; ok = repeat {
-		fmt.Println()
-
-		templateItem, err := c.handleDeviceSelection(deviceCategory)
-		if err != nil {
-			return device, ErrItemNotPresent
-		}
-
-		values := c.processConfig(templateItem.Params, deviceCategory, false)
-
-		device, err := c.processDeviceValues(values, templateItem, device, deviceIndex, deviceCategory)
-		if err != nil {
-			if err != ErrDeviceNotValid {
-				fmt.Println("Fehler: ", err)
-			}
-			fmt.Println()
-			if !c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?") {
-				fmt.Println()
-				return device, err
-			}
-			continue
-		}
-
-		fmt.Println("Erfolg.")
-
-		repeat = false
-	}
-
-	return device, nil
-}
-
 func (c *CmdConfigure) handleDeviceSelection(deviceCategory string) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
@@ -257,8 +60,10 @@ func (c *CmdConfigure) handleDeviceSelection(deviceCategory string) (templates.T
 	return templateItem, nil
 }
 
-func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceIndex int, deviceCategory string) (device, error) {
-	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, deviceIndex)
+func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory string) (device, error) {
+	addedDeviceIndex++
+
+	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, addedDeviceIndex)
 	device.Title = templateItem.Description
 	for _, param := range templateItem.Params {
 		if param.Name != "title" {
@@ -284,12 +89,14 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	}
 
 	if !deviceIsValid {
+		addedDeviceIndex--
 		return device, ErrDeviceNotValid
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	b, err := templateItem.RenderProxyWithValues(values)
 	if err != nil {
+		addedDeviceIndex--
 		return device, err
 	}
 
@@ -363,39 +170,6 @@ func (c *CmdConfigure) enteredNames() []string {
 	}
 
 	return names
-}
-
-// create a configured device from a template so we can test it
-func (c *CmdConfigure) configureDevice(deviceCategory string, device templates.Template, values map[string]interface{}) (interface{}, error) {
-	b, err := device.RenderResult(false, values)
-	if err != nil {
-		return nil, err
-	}
-
-	var instance struct {
-		Type  string
-		Other map[string]interface{} `yaml:",inline"`
-	}
-
-	if err := yaml.Unmarshal(b, &instance); err != nil {
-		return nil, err
-	}
-
-	var v interface{}
-
-	switch DeviceCategories[deviceCategory].class {
-	case DeviceClassMeter:
-		v, err = meter.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassCharger:
-		v, err = charger.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassVehicle:
-		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return v, nil
 }
 
 // return template items of a given class
@@ -629,46 +403,4 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	}
 
 	return additionalConfig
-}
-
-func (c *CmdConfigure) userFriendlyLabelHelp(label, help string) (string, string) {
-	switch strings.ToLower(label) {
-	case "title":
-		label = "Titel"
-		if help == "" {
-			help = "Eine Text welcher in der Benutzeroberfläche angezeigt wird"
-		}
-	case "device":
-		label = "Gerätadresse"
-	case "baudrate":
-		label = "Baudrate"
-	case "comset":
-		label = "ComSet"
-	case "host":
-		label = "IP Adresse oder den Namen"
-	case "port":
-		label = "Port Adresse"
-	case "user":
-		label = "Benutzername"
-	case "password":
-		label = "Passwort"
-	case "capacity":
-		label = "Akku-Kapazität in kWh"
-	case "vin":
-		label = "FIN"
-		if help == "" {
-			help = "FIN (Fahrzeugidentifikationsnummer)"
-		}
-	case "identifier":
-		label = "Identifikationsnummer"
-		if help == "" {
-			help = "Kann meist erst später eingetagen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
-		}
-	case "standbypower":
-		label = "Standby-Leistung in W"
-		if help == "" {
-			help = "Leistung oberhalb des angegebenen Wertes, wird als Ladeleistung gewertet"
-		}
-	}
-	return label, help
 }

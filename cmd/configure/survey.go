@@ -32,6 +32,10 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 	return err
 }
 
+func (c *CmdConfigure) askConfigFailureNextStep() bool {
+	return c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?")
+}
+
 // Survey: select item from list
 func (c *CmdConfigure) askSelection(message string, items []string) (error, string, int) {
 	selection := ""
