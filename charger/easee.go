@@ -140,6 +140,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	return c, err
 }
 
+// subscribe connects to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	return func() (signalr.Connection, error) {
 		tok, err := ts.Token()
@@ -147,9 +148,8 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 			return nil, err
 		}
 
-		ctx := context.Background()
-		// ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
-		// defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		defer cancel()
 
 		return signalr.NewHTTPConnection(ctx, "https://api.easee.cloud/hubs/chargers",
 			signalr.WithHTTPClient(c.Client),
