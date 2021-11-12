@@ -70,7 +70,13 @@ func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) (bool, er
 }
 
 func (c *CmdConfigure) testVehicle(deviceCategory string, v interface{}) (bool, error) {
-	if _, ok := v.(api.Vehicle); !ok {
+	if _, ok := v.(api.Vehicle); ok {
+		if v, ok := v.(api.Battery); ok {
+			if _, err := v.SoC(); err != nil {
+				return false, err
+			}
+		}
+	} else {
 		return false, errors.New("Selected device is not a vehicle!")
 	}
 
