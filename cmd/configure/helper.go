@@ -45,14 +45,14 @@ func (c *CmdConfigure) addDeviceToConfiguration(device device, deviceCategory st
 	}
 }
 
-func (c *CmdConfigure) handleDeviceSelection(deviceCategory string) (templates.Template, error) {
+func (c *CmdConfigure) processDeviceSelection(deviceCategory string) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
 	if templateItem.Description == itemNotPresent {
 		return templateItem, ErrItemNotPresent
 	}
 
-	err := c.handleDeviceRequirements(templateItem)
+	err := c.processDeviceRequirements(templateItem)
 	if err != nil {
 		return templateItem, err
 	}
@@ -106,7 +106,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 }
 
 // handle device requirements
-func (c *CmdConfigure) handleDeviceRequirements(templateItem templates.Template) error {
+func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
 		fmt.Println()

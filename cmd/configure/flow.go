@@ -24,7 +24,7 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
 
-		templateItem, err = c.handleDeviceSelection(DeviceCategorySingleSetup)
+		templateItem, err = c.processDeviceSelection(DeviceCategorySingleSetup)
 		if err != nil {
 			return
 		}
@@ -85,10 +85,10 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 
 	fmt.Println("Erfolgreich hinzugefügt.")
 
-	c.handleLinkedTypes(templateItem)
+	c.configureLinkedTypes(templateItem)
 }
 
-func (c *CmdConfigure) handleLinkedTypes(templateItem templates.Template) {
+func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	var repeat bool = true
 
 	linkedTemplates := c.paramUsageLinkedType(templateItem.Params)
@@ -148,7 +148,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) (device, e
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
 
-		templateItem, err := c.handleDeviceSelection(deviceCategory)
+		templateItem, err := c.processDeviceSelection(deviceCategory)
 		if err != nil {
 			return device, ErrItemNotPresent
 		}
