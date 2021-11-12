@@ -43,6 +43,9 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (StatusD
 	var ts time.Time
 	if err == nil {
 		ts, err = res.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
+		if err != nil {
+			return res.ResMsg.VehicleStatusInfo.VehicleStatus, err
+		}
 
 		// return the current value
 		if time.Since(ts) <= v.expiry {
@@ -56,7 +59,8 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (StatusD
 		v.refreshTime = time.Now()
 
 		// TODO async refresh
-		if res, err := v.refreshG(); err == nil {
+		res, err := v.refreshG()
+		if err == nil {
 			if ts, err = res.ResMsg.Updated(); err == nil && time.Since(ts) <= v.expiry {
 				v.refreshTime = time.Time{}
 				return res.ResMsg, nil
