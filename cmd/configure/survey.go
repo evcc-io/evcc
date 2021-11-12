@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -164,7 +165,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			Help:    help,
 		}
 		if q.defaultValue != nil {
-			if q.dataType == templates.ParamValueTypeInt {
+			if q.dataType == templates.ParamValueTypeInt && reflect.TypeOf(q.defaultValue).Kind() == reflect.Int {
 				prompt.Default = strconv.Itoa(q.defaultValue.(int))
 			} else {
 				prompt.Default = q.defaultValue.(string)
