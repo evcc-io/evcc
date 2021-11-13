@@ -198,9 +198,10 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
+		ladeModi := []string{"Aus", "Sofort (mit größtmöglicher Leistung)", "Min+PV (mit der kleinstmöglichen Leistung, schneller wenn genügend PV Überschuss vorhanden ist)", "PV (Nur mit PV Überschuß)"}
 		fmt.Println()
-		_, modeChoice := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", chargingModes)
-		loadpoint.Mode = modeChoice
+		modeChoice, _ := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", ladeModi)
+		loadpoint.Mode = chargingModes[modeChoice]
 
 		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
 
