@@ -72,6 +72,27 @@ func (lp *Timer) DemandActive() bool {
 	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
+	if !lp.Time.IsZero() {
+		lp.log.DEBUG.Printf("chartetimer, now: %v", time.Now())
+		lp.log.DEBUG.Printf("estimated charge power: %vW", power)
+		lp.log.DEBUG.Printf("estimated charge duration: %v", remainingDuration.Round(time.Minute))
+		lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
+		if lp.active {
+			lp.log.DEBUG.Printf("projected end (when now starting): %v", lp.finishAt)
+			lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
+		}
+		lp.log.DEBUG.Printf("- now in UTC")
+		lp.log.DEBUG.Printf("chartetimer, now: %v", time.Now().UTC())
+		lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration).UTC())
+		lp.log.DEBUG.Printf("starting in: %v", time.Until(lp.Time.Add(-remainingDuration)).Round(time.Second))
+		if lp.active {
+			lp.log.DEBUG.Printf("projected end: %v", lp.finishAt.UTC())
+		}
+		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time.UTC())
+		lp.log.DEBUG.Printf("chargetimer active: %v", lp.active)
+		lp.log.DEBUG.Printf("----- timer.go-------")
+	}
+
 	// timer charging is already active- only deactivate once charging has stopped
 	if lp.active {
 		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC {
@@ -83,9 +104,11 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	// check if charging need be activated
-	if lp.active = lp.finishAt.After(lp.Time); lp.active {
-		lp.current = lp.GetMaxCurrent()
-		lp.log.DEBUG.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+	if !lp.Time.IsZero() {
+		if lp.active = lp.finishAt.After(lp.Time); lp.active {
+			lp.current = lp.GetMaxCurrent()
+			lp.log.WARN.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+		}
 	}
 
 	return lp.active
