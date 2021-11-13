@@ -1,9 +1,10 @@
 type: t_fronius-gen24
 description: Fronius Symo GEN24 Plus
+guidedsetup:
+  enable: true
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]
-  singlesetup: true
 - name: host
   example: 192.0.2.2
   required: true

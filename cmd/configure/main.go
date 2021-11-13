@@ -42,8 +42,8 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	fmt.Println("Auf geht`s:")
 
 	fmt.Println()
-	fmt.Println("Wähle eines der folgenden Komplettsysteme aus, oder '" + itemNotPresent + "' falls keines dieser Geräte vorhanden ist")
-	c.configureDeviceSingleSetup()
+	fmt.Println("Wähle eines der folgenden PV Komplettsysteme aus, oder '" + itemNotPresent + "' falls keines dieser Geräte vorhanden ist")
+	c.configureDeviceGuidedSetup()
 
 	c.configureDevices(DeviceCategoryGridMeter, false)
 	c.configureDevices(DeviceCategoryPVMeter, true)
@@ -118,7 +118,8 @@ func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool)
 			break
 		}
 
-		if !c.askYesNo("Möchstest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
+		fmt.Println()
+		if !c.askYesNo("Möchtest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
 			break
 		}
 	}
@@ -173,6 +174,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		powerChoices := []string{"3,6kW", "11kW", "22kW", "Other"}
+		fmt.Println()
 		powerIndex, _ := c.askChoice("Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?", powerChoices)
 		switch powerIndex {
 		case 0:
@@ -184,22 +186,25 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.MaxCurrent = 32
 		case 3:
 			amperage := c.askValue(question{
-				label:    "Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?",
-				dataType: templates.ParamValueTypeInt,
-				required: true})
+				label:     "Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?",
+				valueType: templates.ParamValueTypeInt,
+				required:  true})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
 			phaseChoices := []string{"1", "2", "3"}
+			fmt.Println()
 			phaseIndex, _ := c.askChoice("Mit wievielen Phasen ist die Wallbox angeschlossen?", phaseChoices)
 			loadpoint.Phases = phaseIndex + 1
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
+		fmt.Println()
 		_, modeChoice := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", chargingModes)
 		loadpoint.Mode = modeChoice
 
 		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
 
+		fmt.Println()
 		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen") {
 			break
 		}

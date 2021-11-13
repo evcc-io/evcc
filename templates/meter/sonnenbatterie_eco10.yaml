@@ -1,9 +1,10 @@
 type: t_sonnenbatterie_eco10
 description: Sonnenbatterie Eco/10
+guidedsetup:
+  enable: true
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]
-  singlesetup: true
 - name: host
   required: true
   example: 192.0.2.2

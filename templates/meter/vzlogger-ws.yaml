@@ -1,5 +1,6 @@
 type: t_vzlogger_ws
 description: vzlogger (Websocket)
+generic: true
 params:
 - name: usage
   choice: [ "grid" ]

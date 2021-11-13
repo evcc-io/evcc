@@ -5,8 +5,8 @@ requirements:
 params:
 - name: ski
   required: true
-  help: The SKI of the wallbox which can usually be found in the wallbox web interface
+  help: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 render: |
   type: eebus
   ski: '{{ .ski }}'
-  forcePVLimits: false
+  forcePVLimits: true

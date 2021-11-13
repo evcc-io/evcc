@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (c *CmdConfigure) configureDeviceSingleSetup() {
+func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	var repeat bool = true
 	var err error
 
@@ -24,7 +24,7 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
 
-		templateItem, err = c.processDeviceSelection(DeviceCategorySingleSetup)
+		templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
 		if err != nil {
 			return
 		}
@@ -59,11 +59,11 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
 		if err != nil {
 			if err != ErrDeviceNotValid {
+				fmt.Println()
 				fmt.Println("Fehler: ", err)
 			}
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
-				fmt.Println()
 				return
 			}
 			continue
@@ -83,7 +83,8 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 		c.addDeviceToConfiguration(deviceItem, deviceCategory)
 	}
 
-	fmt.Println("Erfolgreich hinzugefügt.")
+	fmt.Println()
+	fmt.Println(templateItem.Description + " wurde erfolgreich hinzugefügt.")
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -91,7 +92,7 @@ func (c *CmdConfigure) configureDeviceSingleSetup() {
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	var repeat bool = true
 
-	linkedTemplates := c.paramUsageLinkedType(templateItem.Params)
+	linkedTemplates := templateItem.GuidedSetup.Linked
 
 	if linkedTemplates == nil {
 		return
@@ -106,7 +107,8 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 				return
 			}
 
-			if !c.askYesNo("Möchtest du " + DeviceCategories[linkedTemplate.Usage].article + " " + linkedTemplateItem.Description + " " + DeviceCategories[linkedTemplate.Usage].title + " hinzufügen") {
+			fmt.Println()
+			if !c.askYesNo("Möchtest du " + DeviceCategories[linkedTemplate.Usage].article + " " + linkedTemplateItem.Description + " als " + DeviceCategories[linkedTemplate.Usage].title + " hinzufügen") {
 				repeat = false
 				continue
 			}
@@ -115,6 +117,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, linkedTemplate.Usage)
 			if err != nil {
 				if err != ErrDeviceNotValid {
+					fmt.Println()
 					fmt.Println("Fehler: ", err)
 				}
 				fmt.Println()
@@ -125,7 +128,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			} else {
 				c.addDeviceToConfiguration(deviceItem, linkedTemplate.Usage)
 
-				fmt.Println("Erfolgreich hinzugefügt.")
+				fmt.Println(linkedTemplateItem.Description + " wurde erfolgreich hinzugefügt.")
 			}
 			repeat = false
 		}
@@ -145,6 +148,8 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) (device, e
 		Yaml:  "",
 	}
 
+	deviceDescription := ""
+
 	for ok := true; ok; ok = repeat {
 		fmt.Println()
 
@@ -153,16 +158,17 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) (device, e
 			return device, ErrItemNotPresent
 		}
 
+		deviceDescription = templateItem.Description
 		values := c.processConfig(templateItem.Params, deviceCategory, false)
 
 		device, err := c.processDeviceValues(values, templateItem, device, deviceCategory)
 		if err != nil {
 			if err != ErrDeviceNotValid {
+				fmt.Println()
 				fmt.Println("Fehler: ", err)
 			}
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
-				fmt.Println()
 				return device, err
 			}
 			continue
@@ -173,7 +179,12 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) (device, e
 
 	c.addDeviceToConfiguration(device, deviceCategory)
 
-	fmt.Println("Erfolgreich hinzugefügt.")
+	deviceTitle := ""
+	if device.Title != "" {
+		deviceTitle = " " + device.Title
+	}
+
+	fmt.Println(deviceDescription + deviceTitle + " wurde erfolgreich hinzugefügt.")
 
 	return device, nil
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -15,9 +16,10 @@ import (
 
 // Survey: ask the user for input
 func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
-	err := survey.AskOne(p, response, survey.WithIcons(func(icons *survey.IconSet) {
+	opts = append(opts, survey.WithIcons(func(icons *survey.IconSet) {
 		icons.Question.Text = ""
 	}))
+	err := survey.AskOne(p, response, opts...)
 
 	if err != nil {
 		if err == terminal.InterruptErr {
@@ -34,6 +36,7 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 }
 
 func (c *CmdConfigure) askConfigFailureNextStep() bool {
+	fmt.Println()
 	return c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?")
 }
 
@@ -113,7 +116,7 @@ type question struct {
 	label, help                string
 	defaultValue, exampleValue interface{}
 	invalidValues              []string
-	dataType                   string
+	valueType                  string
 	mask, required             bool
 }
 
@@ -132,7 +135,13 @@ func (c *CmdConfigure) askValue(q question) string {
 			return errors.New("Der Wert darf nicht leer sein")
 		}
 
-		if q.dataType == templates.ParamValueTypeInt {
+		if q.valueType == templates.ParamValueTypeBool {
+			if strings.ToLower(input) != "true" && strings.ToLower(input) != "false" {
+				return errors.New("Der Wert muss 'true' (für ja) oder 'false' (für nein) sein.")
+			}
+		}
+
+		if q.valueType == templates.ParamValueTypeInt {
 			_, err := strconv.Atoi(input)
 			if err != nil {
 				return errors.New("Der Wert muss eine Zahl sein.")
@@ -151,6 +160,9 @@ func (c *CmdConfigure) askValue(q question) string {
 	if q.exampleValue != "" {
 		help += fmt.Sprintf(" (Beispiel: %s)", q.exampleValue)
 	}
+	if q.valueType == templates.ParamValueTypeBool {
+		help += " ('true' für ja oder 'false' für nein)"
+	}
 
 	if q.mask {
 		prompt := &survey.Password{
@@ -165,14 +177,13 @@ func (c *CmdConfigure) askValue(q question) string {
 			Help:    help,
 		}
 		if q.defaultValue != nil {
-			if q.dataType == templates.ParamValueTypeInt && reflect.TypeOf(q.defaultValue).Kind() == reflect.Int {
+			if q.valueType == templates.ParamValueTypeInt && reflect.TypeOf(q.defaultValue).Kind() == reflect.Int {
 				prompt.Default = strconv.Itoa(q.defaultValue.(int))
 			} else {
 				prompt.Default = q.defaultValue.(string)
 			}
 		}
-		err = c.surveyAskOne(prompt, &input)
-
+		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}
 
 	if err != nil {

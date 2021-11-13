@@ -1,9 +1,10 @@
 type: t_solaredge
 description: Solaredge
+guidedsetup:
+  enable: true
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]
-  singlesetup: true
 - name: host
   required: true
   example: 192.0.2.2

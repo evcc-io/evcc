@@ -1,5 +1,7 @@
 type: t_powerdog
 description: Powerdog
+guidedsetup:
+  enable: true
 params:
 - name: usage
   choice: [ "grid", "pv" ]

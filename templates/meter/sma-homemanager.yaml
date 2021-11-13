@@ -1,0 +1,20 @@
+type: t_sma-home-manager
+description: SMA Sunny Home Manager 2.0
+guidedsetup:
+  enable: true
+  linked: 
+  - type: t_sma-energy-meter
+    usage: pv
+  - type: t_sma-inverter
+    usage: pv
+  - type: t_sma-inverter
+    usage: battery
+params:
+- name: usage
+  choice: ["grid"]
+- name: host
+  example: 192.0.2.2
+  required: true
+render: |
+  type: sma
+  uri: {{ .host }}

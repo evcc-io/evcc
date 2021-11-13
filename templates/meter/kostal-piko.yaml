@@ -1,5 +1,7 @@
 type: t_kostal_piko
 description: Kostal Piko + Piko BA
+guidedsetup:
+  enable: true
 params:
 - name: usage
   choice: [ "grid", "pv" ]

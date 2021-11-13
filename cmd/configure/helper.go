@@ -78,8 +78,11 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	v, err := c.configureDevice(deviceCategory, templateItem, values)
 	if err == nil {
 		fmt.Println()
-		fmt.Println("Teste die " + DeviceCategories[deviceCategory].title + " Konfiguration ...")
-		fmt.Println()
+		categoryTitle := ""
+		if deviceCategory == DeviceCategoryPVMeter || deviceCategory == DeviceCategoryBatteryMeter || deviceCategory == DeviceCategoryGridMeter {
+			categoryTitle = "als " + DeviceCategories[deviceCategory].title
+		}
+		fmt.Println("Teste die " + templateItem.Description + " Konfiguration " + categoryTitle + " ...")
 		deviceIsValid, err = c.testDevice(deviceCategory, v)
 		if deviceCategory == DeviceCategoryCharger {
 			if deviceIsValid && err == nil {
@@ -107,6 +110,15 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 // handle device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
+	if len(templateItem.Requirements.Description) > 0 {
+		fmt.Println()
+		fmt.Println("Das Gerät muss die folgenden Voraussetzungen erfüllen:")
+		fmt.Println("  " + templateItem.Requirements.Description)
+		if len(templateItem.Requirements.URI) > 0 {
+			fmt.Println("  Weitere Informationen: " + templateItem.Requirements.URI)
+		}
+	}
+
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
 		fmt.Println()
@@ -181,8 +193,8 @@ func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template
 			continue
 		}
 
-		if deviceCategory == DeviceCategorySingleSetup {
-			if c.paramUsageSingleSetup(tmpl.Params) {
+		if deviceCategory == DeviceCategoryGuidedSetup {
+			if tmpl.GuidedSetup.Enable {
 				items = append(items, tmpl)
 			}
 		} else {
@@ -194,36 +206,17 @@ func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template
 	}
 
 	sort.Slice(items[:], func(i, j int) bool {
+		// sort generic templates to the bottom
+		if items[i].Generic && !items[j].Generic {
+			return false
+		}
+		if !items[i].Generic && items[j].Generic {
+			return true
+		}
 		return strings.ToLower(items[i].Description) < strings.ToLower(items[j].Description)
 	})
 
 	return items
-}
-
-func (c *CmdConfigure) paramUsageSingleSetup(params []templates.Param) bool {
-	for _, item := range params {
-		if item.Name != templates.ParamUsage {
-			continue
-		}
-
-		if item.SingleSetup {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (c *CmdConfigure) paramUsageLinkedType(params []templates.Param) []templates.LinkedTemplate {
-	for _, item := range params {
-		if item.Name != templates.ParamUsage {
-			continue
-		}
-
-		return item.Linked
-	}
-
-	return nil
 }
 
 // helper function to check if a param choice contains a given value
@@ -324,7 +317,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					label:        "ID",
 					help:         "Modbus ID",
 					defaultValue: 1,
-					dataType:     templates.ParamValueTypeInt,
+					valueType:    templates.ParamValueTypeInt,
 					required:     true})
 				additionalConfig[ModbusParamNameId] = id
 
@@ -346,7 +339,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					baudrate := c.askValue(question{
 						label:        "Baudrate",
 						defaultValue: ModbusParamValueBaudrate,
-						dataType:     templates.ParamValueTypeInt,
+						valueType:    templates.ParamValueTypeInt,
 						required:     true})
 					additionalConfig[ModbusParamNameBaudrate] = baudrate
 
@@ -369,7 +362,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					port := c.askValue(question{
 						label:        "Port",
 						defaultValue: ModbusParamValuePort,
-						dataType:     templates.ParamValueTypeInt,
+						valueType:    templates.ParamValueTypeInt,
 						required:     true})
 					additionalConfig[ModbusParamNamePort] = port
 				}
@@ -391,7 +384,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				defaultValue: param.Default,
 				exampleValue: param.Example,
 				help:         help,
-				dataType:     valueType,
+				valueType:    valueType,
 				mask:         param.Mask,
 				required:     param.Required})
 			additionalConfig[param.Name] = value

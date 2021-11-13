@@ -5,12 +5,12 @@ requirements:
 params:
 - name: ski
   required: true
-  help: The SKI of the wallbox which can usually be found in the wallbox web interface
-- name: forcePVLimits
-  advanced: true
+  help: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
+- name: enforcePVLimits
   default: true
-  help: use Overload Protection to limit PV charging, if false PV surplus is sent as recommended charging levels to the EV, but this is currently unreliable
+  valuetype: bool
+  help: Verwende PV Laden über eine Ladebegrenzung (wie herkömmliche Wallboxen) bei Fahrzeugen mit Unterstützung von ISO15118
 render: |
   type: eebus
   ski: '{{ .ski }}'
-  forcePVLimits: {{ .forcePVLimits }}
+  forcePVLimits: {{ .enforcePVLimits }}

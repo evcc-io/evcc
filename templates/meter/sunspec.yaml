@@ -1,5 +1,6 @@
 type: t_sunspec
 description: SunSpec compliant inverter
+generic: true
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]

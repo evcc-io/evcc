@@ -53,7 +53,7 @@ const (
 
 const (
 	DeviceCategoryCharger      = "wallbox"
-	DeviceCategorySingleSetup  = "single"
+	DeviceCategoryGuidedSetup  = "guided"
 	DeviceCategoryGridMeter    = "grid"
 	DeviceCategoryPVMeter      = "pv"
 	DeviceCategoryBatteryMeter = "battery"
@@ -81,7 +81,7 @@ type DeviceCategoryData struct {
 
 var DeviceCategories map[string]DeviceCategoryData = map[string]DeviceCategoryData{
 	DeviceCategoryCharger:      {title: "Wallbox", article: "eine", class: DeviceClassCharger, defaultName: defaultNameCharger},
-	DeviceCategorySingleSetup:  {title: "Komplettsystem", article: "ein", class: DeviceClassMeter},
+	DeviceCategoryGuidedSetup:  {title: "PV System", article: "ein", class: DeviceClassMeter},
 	DeviceCategoryGridMeter:    {title: "Netz-Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceGrid, defaultName: defaultNameGridMeter},
 	DeviceCategoryPVMeter:      {title: "PV Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
 	DeviceCategoryBatteryMeter: {title: "Battery Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},

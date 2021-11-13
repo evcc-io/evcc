@@ -1,5 +1,8 @@
 type: t_wallbe_meter
 description: Wallbe (Eco, Pro) with Meter
+requirements:
+  description: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+  uri: https://docs.evcc.io/docs/devices/chargers#wallbe-ecopro
 params:
 - name: host
   required: true

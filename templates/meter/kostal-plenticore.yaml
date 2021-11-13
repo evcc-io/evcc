@@ -1,12 +1,13 @@
 type: t_kostal_plenticore
 description: Kostal Plenticore Hybrid Wechselrichter
+guidedsetup:
+  enable: true
+  linked:
+  - type: t_kostal_smart_energy_meter
+    usage: grid
 params:
 - name: usage
   choice: [ "pv", "battery" ]
-  singlesetup: true
-  linked: 
-  - type: t_kostal_smart_energy_meter
-    usage: grid
 - name: host
   example: 192.0.2.2
   required: true

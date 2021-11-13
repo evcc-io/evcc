@@ -1,5 +1,5 @@
 type: t_sma-inverter
-description: SMA Speedwire Inverter
+description: SMA Wechselrichter
 params:
 - name: usage
   choice: ["pv", "battery"]
@@ -8,7 +8,7 @@ params:
   required: true
 - name: password
   mask: true
-  help: Only needed if the password was changed from the default password
+  help: Wird nur benötigt, wenn das Standardpasswort geändert wurde
 render: |
   type: sma
   uri: {{ .host }} # IP address or hostname
