@@ -1,49 +1,14 @@
 package configure
 
 import (
-	"bytes"
 	"fmt"
 	"sort"
 	"strings"
-	"text/template"
 
-	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/templates"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
-
-// create a yaml configuration
-func (c *CmdConfigure) renderConfiguration() ([]byte, error) {
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(configTmpl)
-	if err != nil {
-		panic(err)
-	}
-
-	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, c.configuration)
-
-	return bytes.TrimSpace(out.Bytes()), err
-}
-
-func (c *CmdConfigure) addDeviceToConfiguration(device device, deviceCategory string) {
-	switch DeviceCategories[deviceCategory].class {
-	case DeviceClassCharger:
-		c.configuration.Chargers = append(c.configuration.Chargers, device)
-	case DeviceClassMeter:
-		c.configuration.Meters = append(c.configuration.Meters, device)
-		switch DeviceCategories[deviceCategory].usageFilter {
-		case UsageChoiceGrid:
-			c.configuration.Site.Grid = device.Name
-		case UsageChoicePV:
-			c.configuration.Site.PVs = append(c.configuration.Site.PVs, device.Name)
-		case UsageChoiceBattery:
-			c.configuration.Site.Batteries = append(c.configuration.Site.Batteries, device.Name)
-		}
-	case DeviceClassVehicle:
-		c.configuration.Vehicles = append(c.configuration.Vehicles, device)
-	}
-}
 
 func (c *CmdConfigure) processDeviceSelection(deviceCategory string) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
@@ -120,7 +85,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if sponsorship is required
-	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken == "" {
+	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken() == "" {
 		fmt.Println()
 		fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
 		fmt.Println()
@@ -131,12 +96,12 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			label:    "Bitte gib das Sponsortoken ein",
 			help:     "",
 			required: true})
-		c.configuration.SponsorToken = sponsortoken
+		c.configuration.SetSponsorToken(sponsortoken)
 	}
 
 	// check if we need to setup an EEBUS HEMS
 	if templateItem.Requirements.Eebus == true {
-		if c.configuration.EEBUS == "" {
+		if c.configuration.EEBUS() == "" {
 			eebusConfig, err := c.eebusCertificate()
 
 			if err != nil {
@@ -152,7 +117,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			if err != nil {
 				return err
 			}
-			c.configuration.EEBUS = string(eebusYaml)
+			c.configuration.SetEEBUS(string(eebusYaml))
 		}
 
 		fmt.Println()
@@ -163,25 +128,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	return nil
-}
-
-// provide all entered name values
-func (c *CmdConfigure) enteredNames() []string {
-	var names []string
-
-	for _, v := range c.configuration.Chargers {
-		names = append(names, v.Name)
-	}
-
-	for _, v := range c.configuration.Meters {
-		names = append(names, v.Name)
-	}
-
-	for _, v := range c.configuration.Vehicles {
-		names = append(names, v.Name)
-	}
-
-	return names
 }
 
 // return template items of a given class

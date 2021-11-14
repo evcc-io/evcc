@@ -14,7 +14,7 @@ import (
 )
 
 type CmdConfigure struct {
-	configuration config
+	configuration Configure
 	log           *util.Logger
 }
 
@@ -52,7 +52,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	c.configureLoadpoints()
 	c.configureSite()
 
-	yaml, err := c.renderConfiguration()
+	yaml, err := c.configuration.RenderConfiguration()
 	if err != nil {
 		c.log.FATAL.Fatal(err)
 	}
@@ -90,15 +90,12 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
 	var devices []device
 
-	if deviceCategory == DeviceCategoryGridMeter && c.configuration.Site.Grid != "" {
+	if deviceCategory == DeviceCategoryGridMeter && c.configuration.MetersOfCategory(deviceCategory) > 0 {
 		return nil
 	}
 
 	additionalMeter := ""
-	if deviceCategory == DeviceCategoryPVMeter && len(c.configuration.Site.PVs) > 0 {
-		additionalMeter = "noch "
-	}
-	if deviceCategory == DeviceCategoryBatteryMeter && len(c.configuration.Site.Batteries) > 0 {
+	if c.configuration.MetersOfCategory(deviceCategory) > 0 {
 		additionalMeter = "noch "
 	}
 
@@ -162,11 +159,11 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		vehicleAmount := len(c.configuration.Vehicles)
-		if vehicleAmount == 1 {
-			loadpoint.Vehicles = append(loadpoint.Vehicles, c.configuration.Vehicles[0].Name)
-		} else if vehicleAmount > 1 {
-			for _, vehicle := range c.configuration.Vehicles {
+		vehicles := c.configuration.DevicesOfClass(DeviceClassVehicle)
+		if len(vehicles) == 1 {
+			loadpoint.Vehicles = append(loadpoint.Vehicles, vehicles[0].Name)
+		} else if len(vehicles) > 1 {
+			for _, vehicle := range vehicles {
 				if c.askYesNo("Wird das Fahrzeug " + vehicle.Title + " hier laden?") {
 					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
 				}
@@ -203,7 +200,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		modeChoice, _ := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", ladeModi)
 		loadpoint.Mode = chargingModes[modeChoice]
 
-		c.configuration.Loadpoints = append(c.configuration.Loadpoints, loadpoint)
+		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
 		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen") {
@@ -217,8 +214,9 @@ func (c *CmdConfigure) configureSite() {
 	fmt.Println()
 	fmt.Println("- Richte deinen Standort ein")
 
-	c.configuration.Site.Title = c.askValue(question{
+	siteTitle := c.askValue(question{
 		label:        "Titel des Standortes",
 		defaultValue: defaultTitleSite,
 		required:     true})
+	c.configuration.SetSiteTitle(siteTitle)
 }

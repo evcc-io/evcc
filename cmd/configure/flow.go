@@ -72,7 +72,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 		repeat = false
 	}
 
-	c.addDeviceToConfiguration(deviceItem, deviceCategory)
+	c.configuration.AddDevice(deviceItem, deviceCategory)
 
 	for _, deviceCategory = range supportedDeviceCategories[1:] {
 		deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
@@ -80,7 +80,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			continue
 		}
 
-		c.addDeviceToConfiguration(deviceItem, deviceCategory)
+		c.configuration.AddDevice(deviceItem, deviceCategory)
 	}
 
 	fmt.Println()
@@ -126,7 +126,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 				}
 
 			} else {
-				c.addDeviceToConfiguration(deviceItem, linkedTemplate.Usage)
+				c.configuration.AddDevice(deviceItem, linkedTemplate.Usage)
 
 				fmt.Println(linkedTemplateItem.Description + " wurde erfolgreich hinzugefügt.")
 			}
@@ -177,7 +177,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory string) (device, e
 		repeat = false
 	}
 
-	c.addDeviceToConfiguration(device, deviceCategory)
+	c.configuration.AddDevice(device, deviceCategory)
 
 	deviceTitle := ""
 	if device.Title != "" {
