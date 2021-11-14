@@ -3,6 +3,7 @@ package bmw
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -14,30 +15,9 @@ import (
 
 const (
 	ApiURI     = "https://b2vapi.bmwgroup.com/webapi/v1"
-	BaseURI    = "https://b2vapi.bmwgroup.com/api/vehicle"
-	ApiURIv2   = "https://b2vapi.bmwgroup.com/api/vehicle/v2"
 	CocoApiURI = "https://cocoapi.bmwgroup.com"
+	XUserAgent = "android(v1.07_20200330);bmw;1.7.0(11152)"
 )
-
-type StatusResponse struct {
-	VehicleStatus struct {
-		ConnectionStatus       string // CONNECTED
-		ChargingStatus         string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING, COMPLETED
-		ChargingLevelHv        int
-		RemainingRangeElectric int
-		Mileage                int
-		// UpdateTime             time.Time // 2021-08-12T12:00:08+0000
-	}
-}
-
-type VehiclesResponse struct {
-	Vehicles []Vehicle
-}
-
-type Vehicle struct {
-	VIN   string
-	Model string
-}
 
 // API is an api.Vehicle implementation for BMW cars
 type API struct {
@@ -79,20 +59,20 @@ func (v *API) Vehicles() ([]string, error) {
 }
 
 // Status implements the /user/vehicles/<vin>/status api
-func (v *API) Status(vin string) (StatusResponse, error) {
-	var resp StatusResponse
-	// uri := fmt.Sprintf("%s/eadrax-chs/v1/charging-sessions?vin=%s", CocoApiURI, vin)
-	uri := fmt.Sprintf("%s/efficiency/v1/%s", BaseURI, vin)
+func (v *API) Status(vin string) (VehicleStatus, error) {
+	var resp VehiclesStatusResponse
+	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d&vin=%s", CocoApiURI, time.Now().Unix(), vin)
 
-	// uri := fmt.Sprintf("%s/charging-sessions?vin=%s&maxResults=40&include_date_picker=true", CocoApiURI, vin)
-	// date := time.Now().Format("2006-01-02")
-	// uri := fmt.Sprintf("%s/charging-statistics?vin=%s&currentDate=%s", CocoApiURI, vin, date)
-	// uri := fmt.Sprintf("%s/%s/status", ApiURIv2, vin)
-
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"X-User-Agent": XUserAgent,
+	})
 	if err == nil {
 		err = v.DoJSON(req, &resp)
 	}
 
-	return resp, err
+	if l := len(resp); l != 1 {
+		return VehicleStatus{}, fmt.Errorf("unexpected length: %d", l)
+	}
+
+	return resp[0], err
 }
