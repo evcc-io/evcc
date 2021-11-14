@@ -131,7 +131,7 @@ func (c *Tasmota) ChargedEnergy() (float64, error) {
 	var resp tasmota.StatusSNSResponse
 	err := c.GetJSON(c.cmdUri("Status 8"), &resp)
 
-	return float64(resp.StatusSNS.Energy.Today), err
+	return resp.StatusSNS.Energy.Today, err
 }
 
 // cmdUri creates the Tasmota command web request

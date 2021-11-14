@@ -93,7 +93,7 @@ func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 
 	if res, ok := res.(StatusData); err == nil && ok {
-		return float64(res.EvStatus.BatteryStatus), nil
+		return res.EvStatus.BatteryStatus, nil
 	}
 
 	return 0, err

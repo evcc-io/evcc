@@ -263,7 +263,7 @@ func (evse *EVSEWifi) totalEnergy() (float64, error) {
 // Currents implements the api.MeterCurrents interface
 func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	params, err := evse.getParameters()
-	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+	return params.CurrentP1, params.CurrentP2, params.CurrentP3, err
 }
 
 // Identify implements the api.Identifier interface
