@@ -157,7 +157,7 @@ var _ api.VehicleOdometer = (*Volvo)(nil)
 func (v *Volvo) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvo.Status); err == nil && ok {
-		return float64(res.Odometer), nil
+		return res.Odometer, nil
 	}
 
 	return 0, err

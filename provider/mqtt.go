@@ -135,7 +135,7 @@ var _ IntProvider = (*Mqtt)(nil)
 func (m *Mqtt) IntGetter() func() (int64, error) {
 	h := &msgHandler{
 		topic: m.topic,
-		scale: float64(m.scale),
+		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		re:    m.re,
 		jq:    m.jq,

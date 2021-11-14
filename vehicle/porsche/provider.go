@@ -157,7 +157,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusEmobilityG()
 	if res, ok := res.(EmobilityResponse); err == nil && ok {
-		return int64(res.BatteryChargeStatus.RemainingERange.ValueInKilometers), nil
+		return res.BatteryChargeStatus.RemainingERange.ValueInKilometers, nil
 	}
 
 	res, err = v.statusG()
