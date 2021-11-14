@@ -28,7 +28,7 @@ func (c *CmdConfigure) userFriendlyLabelHelp(label, help string) (string, string
 	case "vin":
 		label = "FIN"
 		if help == "" {
-			help = "FIN (Fahrzeugidentifikationsnummer)"
+			help = "FIN (Fahrzeugidentifikationsnummer), notwendig wenn mehrere Fahrzeuge des Herstellers vorhanden sind"
 		}
 	case "identifier":
 		label = "Identifikationsnummer"
