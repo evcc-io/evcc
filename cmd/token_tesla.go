@@ -81,7 +81,6 @@ func codePrompt(ctx context.Context, devices []tesla.Device) (tesla.Device, stri
 }
 
 func captchaPrompt(ctx context.Context, svg io.Reader) (string, error) {
-	// tmpFile, err := ioutil.TempFile(os.TempDir(), "evcc-*.svg")
 	tmpFile, err := os.CreateTemp(os.TempDir(), "evcc-*.svg")
 	if err != nil {
 		return "", fmt.Errorf("cannot create temp file: %w", err)
