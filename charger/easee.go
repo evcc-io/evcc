@@ -39,15 +39,15 @@ import (
 // Easee charger implementation
 type Easee struct {
 	*request.Helper
-	charger        string
-	updated        time.Time
-	chargeStatus   api.ChargeStatus
-	log            *util.Logger
-	mux            sync.Mutex
-	current        float64
-	chargerEnabled bool
-	enabledStatus  bool
-	dynamicChargerCurrent,
+	charger               string
+	updated               time.Time
+	chargeStatus          api.ChargeStatus
+	log                   *util.Logger
+	mux                   sync.Mutex
+	dynamicChargerCurrent float64
+	current               float64
+	chargerEnabled        bool
+	enabledStatus         bool
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 }
