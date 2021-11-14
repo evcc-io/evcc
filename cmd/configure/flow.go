@@ -132,6 +132,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			} else {
 				c.configuration.AddDevice(deviceItem, category)
 
+				fmt.Println()
 				fmt.Println(linkedTemplateItem.Description + " wurde erfolgreich hinzugefügt.")
 			}
 			repeat = false
@@ -188,6 +189,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 		deviceTitle = " " + device.Title
 	}
 
+	fmt.Println()
 	fmt.Println(deviceDescription + deviceTitle + " wurde erfolgreich hinzugefügt.")
 
 	return device, nil
