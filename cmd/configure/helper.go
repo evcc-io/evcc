@@ -238,7 +238,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					label:        "ID",
 					help:         "Modbus ID",
 					defaultValue: 1,
-					valueType:    templates.ParamValueTypeInt,
+					valueType:    templates.ParamValueTypeNumber,
 					required:     true})
 				additionalConfig[ModbusParamNameId] = id
 
@@ -260,7 +260,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					baudrate := c.askValue(question{
 						label:        "Baudrate",
 						defaultValue: ModbusParamValueBaudrate,
-						valueType:    templates.ParamValueTypeInt,
+						valueType:    templates.ParamValueTypeNumber,
 						required:     true})
 					additionalConfig[ModbusParamNameBaudrate] = baudrate
 
@@ -283,7 +283,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					port := c.askValue(question{
 						label:        "Port",
 						defaultValue: ModbusParamValuePort,
-						valueType:    templates.ParamValueTypeInt,
+						valueType:    templates.ParamValueTypeNumber,
 						required:     true})
 					additionalConfig[ModbusParamNamePort] = port
 				}
@@ -293,12 +293,13 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				continue
 			}
 
-			valueType := templates.ParamValueTypeString
+			var valueType string
+			label, help, defaultValueType := c.userFriendlyLabelHelpValueType(param.Name, param.Help)
 			if param.ValueType != "" && funk.ContainsString(templates.ParamValueTypes, param.ValueType) {
 				valueType = param.ValueType
+			} else {
+				valueType = defaultValueType
 			}
-
-			label, help := c.userFriendlyLabelHelp(param.Name, param.Help)
 
 			value := c.askValue(question{
 				label:        label,

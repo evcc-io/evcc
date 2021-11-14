@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -127,28 +126,25 @@ func (c *CmdConfigure) askValue(q question) string {
 	var err error
 
 	validate := func(val interface{}) error {
-		switch val.(type) {
-		case string:
-			value := val.(string)
-			if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
-				return errors.New("Der Wert '" + value + "' wurde bereits verwendet.")
-			}
+		value := val.(string)
+		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
+			return errors.New("Der Wert '" + value + "' wurde bereits verwendet.")
+		}
 
-			if q.required && len(value) == 0 {
-				return errors.New("Der Wert darf nicht leer sein")
-			}
+		if q.required && len(value) == 0 {
+			return errors.New("Der Wert darf nicht leer sein")
+		}
 
-			if q.valueType == templates.ParamValueTypeBool {
-				if strings.ToLower(value) != "true" && strings.ToLower(value) != "false" {
-					return errors.New("Der Wert muss 'true' (für ja) oder 'false' (für nein) sein.")
-				}
+		if q.valueType == templates.ParamValueTypeBool {
+			if strings.ToLower(value) != "true" && strings.ToLower(value) != "false" {
+				return errors.New("Der Wert muss 'true' (für ja) oder 'false' (für nein) sein.")
 			}
+		}
 
-			if q.valueType == templates.ParamValueTypeInt {
-				_, err := strconv.Atoi(value)
-				if err != nil {
-					return errors.New("Der Wert muss eine Zahl sein.")
-				}
+		if q.valueType == templates.ParamValueTypeNumber {
+			_, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return errors.New("Der Wert muss eine Zahl sein.")
 			}
 		}
 
@@ -181,11 +177,7 @@ func (c *CmdConfigure) askValue(q question) string {
 			Help:    help,
 		}
 		if q.defaultValue != nil {
-			if q.valueType == templates.ParamValueTypeInt && reflect.TypeOf(q.defaultValue).Kind() == reflect.Int {
-				prompt.Default = strconv.Itoa(q.defaultValue.(int))
-			} else {
-				prompt.Default = q.defaultValue.(string)
-			}
+			prompt.Default = q.defaultValue.(string)
 		}
 		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}

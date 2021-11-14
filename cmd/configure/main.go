@@ -184,7 +184,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		case 3:
 			amperage := c.askValue(question{
 				label:     "Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?",
-				valueType: templates.ParamValueTypeInt,
+				valueType: templates.ParamValueTypeNumber,
 				required:  true})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 

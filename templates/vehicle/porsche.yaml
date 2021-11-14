@@ -11,7 +11,6 @@ params:
   example: WP0...
 - name: capacity
   default: 83
-  valuetype: int
 - name: identifier
 render: |
   type: porsche

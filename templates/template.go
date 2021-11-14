@@ -17,11 +17,11 @@ const (
 
 const (
 	ParamValueTypeString = "string"
-	ParamValueTypeInt    = "int"
+	ParamValueTypeNumber = "number"
 	ParamValueTypeBool   = "bool"
 )
 
-var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeInt, ParamValueTypeBool}
+var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {

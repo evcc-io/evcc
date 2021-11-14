@@ -1,8 +1,14 @@
 package configure
 
-import "strings"
+import (
+	"strings"
 
-func (c *CmdConfigure) userFriendlyLabelHelp(label, help string) (string, string) {
+	"github.com/evcc-io/evcc/templates"
+)
+
+func (c *CmdConfigure) userFriendlyLabelHelpValueType(label, help string) (string, string, string) {
+	valueType := templates.ParamValueTypeString
+
 	switch strings.ToLower(label) {
 	case "title":
 		label = "Titel"
@@ -19,12 +25,14 @@ func (c *CmdConfigure) userFriendlyLabelHelp(label, help string) (string, string
 		label = "IP Adresse oder den Namen"
 	case "port":
 		label = "Port Adresse"
+		valueType = templates.ParamValueTypeNumber
 	case "user":
 		label = "Benutzername"
 	case "password":
 		label = "Passwort"
 	case "capacity":
 		label = "Akku-Kapazität in kWh"
+		valueType = templates.ParamValueTypeNumber
 	case "vin":
 		label = "FIN"
 		if help == "" {
@@ -40,6 +48,7 @@ func (c *CmdConfigure) userFriendlyLabelHelp(label, help string) (string, string
 		if help == "" {
 			help = "Leistung oberhalb des angegebenen Wertes, wird als Ladeleistung gewertet"
 		}
+		valueType = templates.ParamValueTypeNumber
 	}
-	return label, help
+	return label, help, valueType
 }

@@ -9,6 +9,7 @@ params:
   required: true
 - name: id
   default: 1
+  valuetype: number
 render: |
   type: modbus
   model: sunspec
