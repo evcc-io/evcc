@@ -42,6 +42,9 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 	fmt.Println("Auf geht`s:")
 
 	fmt.Println()
+	fmt.Println("- Hausinstallation einrichten")
+
+	fmt.Println()
 	fmt.Println("Wähle eines der folgenden PV Komplettsysteme aus, oder '" + itemNotPresent + "' falls keines dieser Geräte vorhanden ist")
 	c.configureDeviceGuidedSetup()
 
