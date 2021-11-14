@@ -28,38 +28,49 @@ const (
 	ModbusParamNameRTU       string = "rtu"
 )
 
-const (
-	UsageChoiceGrid    = "grid"
-	UsageChoicePV      = "pv"
-	UsageChoiceBattery = "battery"
-	UsageChoiceCharge  = "charge"
-)
+type UsageChoice string
 
-var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
-var UsageChoiceDescriptions = map[string]string{
-	UsageChoiceGrid:    "Grid Meter",
-	UsageChoicePV:      "PV Meter",
-	UsageChoiceBattery: "Battery Meter",
-	UsageChoiceCharge:  "Charge Meter",
+func (u UsageChoice) String() string {
+	return string(u)
 }
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 
-const (
-	DeviceClassCharger = "charger"
-	DeviceClassMeter   = "meter"
-	DeviceClassVehicle = "vehicle"
-)
+type DeviceClass string
+
+func (c DeviceClass) String() string {
+	return string(c)
+}
 
 const (
-	DeviceCategoryCharger      = "wallbox"
-	DeviceCategoryGuidedSetup  = "guided"
-	DeviceCategoryGridMeter    = "grid"
-	DeviceCategoryPVMeter      = "pv"
-	DeviceCategoryBatteryMeter = "battery"
-	DeviceCategoryChargeMeter  = "charge"
-	DeviceCategoryVehicle      = "vehicle"
+	DeviceClassCharger DeviceClass = "charger"
+	DeviceClassMeter               = "meter"
+	DeviceClassVehicle             = "vehicle"
 )
+
+type DeviceCategory string
+
+func (c DeviceCategory) String() string {
+	return string(c)
+}
+
+const (
+	DeviceCategoryCharger      DeviceCategory = "wallbox"
+	DeviceCategoryGridMeter                   = "grid"
+	DeviceCategoryPVMeter                     = "pv"
+	DeviceCategoryBatteryMeter                = "battery"
+	DeviceCategoryChargeMeter                 = "charge"
+	DeviceCategoryVehicle                     = "vehicle"
+	DeviceCategoryGuidedSetup                 = "guided"
+)
+
+var ValidUsageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryChargeMeter}
+var UsageChoiceDescriptions = map[DeviceCategory]string{
+	DeviceCategoryGridMeter:    "Grid Meter",
+	DeviceCategoryPVMeter:      "PV Meter",
+	DeviceCategoryBatteryMeter: "Battery Meter",
+	DeviceCategoryChargeMeter:  "Charge Meter",
+}
 
 const (
 	defaultNameCharger      = "wallbox"
@@ -76,17 +87,51 @@ const (
 )
 
 type DeviceCategoryData struct {
-	title, article, class, usageFilter, defaultName string
+	title, article string
+	class          DeviceClass
+	categoryFilter DeviceCategory
+	defaultName    string
 }
 
-var DeviceCategories map[string]DeviceCategoryData = map[string]DeviceCategoryData{
-	DeviceCategoryCharger:      {title: "Wallbox", article: "eine", class: DeviceClassCharger, defaultName: defaultNameCharger},
-	DeviceCategoryGuidedSetup:  {title: "PV System", article: "ein", class: DeviceClassMeter},
-	DeviceCategoryGridMeter:    {title: "Netz-Stromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceGrid, defaultName: defaultNameGridMeter},
-	DeviceCategoryPVMeter:      {title: "PV Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoicePV, defaultName: defaultNamePVMeter},
-	DeviceCategoryBatteryMeter: {title: "Battery Wechselrichter (oder entsprechenden Stromzähler)", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceBattery, defaultName: defaultNameBatteryMeter},
-	DeviceCategoryVehicle:      {title: "Fahrzeug", article: "ein", class: DeviceClassVehicle, defaultName: defaultNameVehicle},
-	DeviceCategoryChargeMeter:  {title: "Ladestromzähler", article: "einen", class: DeviceClassMeter, usageFilter: UsageChoiceCharge, defaultName: defaultNameChargeMeter},
+var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]DeviceCategoryData{
+	DeviceCategoryCharger: {
+		title:       "Wallbox",
+		article:     "eine",
+		class:       DeviceClassCharger,
+		defaultName: defaultNameCharger},
+	DeviceCategoryGuidedSetup: {
+		title:   "PV System",
+		article: "ein",
+		class:   DeviceClassMeter},
+	DeviceCategoryGridMeter: {
+		title:          "Netz-Stromzähler",
+		article:        "einen",
+		class:          DeviceClassMeter,
+		categoryFilter: DeviceCategoryGridMeter,
+		defaultName:    defaultNameGridMeter},
+	DeviceCategoryPVMeter: {
+		title:          "PV Wechselrichter (oder entsprechenden Stromzähler)",
+		article:        "einen",
+		class:          DeviceClassMeter,
+		categoryFilter: DeviceCategoryPVMeter,
+		defaultName:    defaultNamePVMeter},
+	DeviceCategoryBatteryMeter: {
+		title:          "Battery Wechselrichter (oder entsprechenden Stromzähler)",
+		article:        "einen",
+		class:          DeviceClassMeter,
+		categoryFilter: DeviceCategoryBatteryMeter,
+		defaultName:    defaultNameBatteryMeter},
+	DeviceCategoryVehicle: {
+		title:       "Fahrzeug",
+		article:     "ein",
+		class:       DeviceClassVehicle,
+		defaultName: defaultNameVehicle},
+	DeviceCategoryChargeMeter: {
+		title:          "Ladestromzähler",
+		article:        "einen",
+		class:          DeviceClassMeter,
+		categoryFilter: DeviceCategoryChargeMeter,
+		defaultName:    defaultNameChargeMeter},
 }
 
 const itemNotPresent string = "Mein Gerät ist nicht in der Liste"

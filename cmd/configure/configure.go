@@ -11,18 +11,18 @@ type Configure struct {
 	config config
 }
 
-func (c *Configure) AddDevice(d device, category string) {
+func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
 	case DeviceClassCharger:
 		c.config.Chargers = append(c.config.Chargers, d)
 	case DeviceClassMeter:
 		c.config.Meters = append(c.config.Meters, d)
-		switch DeviceCategories[category].usageFilter {
-		case UsageChoiceGrid:
+		switch DeviceCategories[category].categoryFilter {
+		case DeviceCategoryGridMeter:
 			c.config.Site.Grid = d.Name
-		case UsageChoicePV:
+		case DeviceCategoryPVMeter:
 			c.config.Site.PVs = append(c.config.Site.PVs, d.Name)
-		case UsageChoiceBattery:
+		case DeviceCategoryBatteryMeter:
 			c.config.Site.Batteries = append(c.config.Site.Batteries, d.Name)
 		}
 	case DeviceClassVehicle:
@@ -30,7 +30,7 @@ func (c *Configure) AddDevice(d device, category string) {
 	}
 }
 
-func (c *Configure) DevicesOfClass(class string) []device {
+func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 	switch class {
 	case DeviceClassCharger:
 		return c.config.Chargers
@@ -46,7 +46,7 @@ func (c *Configure) AddLoadpoint(l loadpoint) {
 	c.config.Loadpoints = append(c.config.Loadpoints, l)
 }
 
-func (c *Configure) MetersOfCategory(category string) int {
+func (c *Configure) MetersOfCategory(category DeviceCategory) int {
 	switch category {
 	case DeviceCategoryGridMeter:
 		if c.config.Site.Grid != "" {

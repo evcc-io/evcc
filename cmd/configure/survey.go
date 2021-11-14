@@ -65,7 +65,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (error, stri
 }
 
 // Survey: select item from list
-func (c *CmdConfigure) selectItem(deviceCategory string) templates.Template {
+func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
 	var emptyItem templates.Template
 	emptyItem.Description = itemNotPresent
 

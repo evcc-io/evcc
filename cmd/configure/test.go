@@ -9,20 +9,20 @@ import (
 
 var ErrChargerHasNoMeter = errors.New("charger has no meter")
 
-func (c *CmdConfigure) testDevice(deviceCategory string, v interface{}) (bool, error) {
+func (c *CmdConfigure) testDevice(deviceCategory DeviceCategory, v interface{}) (bool, error) {
 	switch DeviceCategories[deviceCategory].class {
 	case DeviceClassCharger:
-		return c.testCharger(deviceCategory, v)
+		return c.testCharger(v)
 	case DeviceClassMeter:
 		return c.testMeter(deviceCategory, v)
 	case DeviceClassVehicle:
-		return c.testVehicle(deviceCategory, v)
+		return c.testVehicle(v)
 	}
 
 	return false, errors.New("testDevice not implemented for this device class")
 }
 
-func (c *CmdConfigure) testCharger(deviceCategory string, v interface{}) (bool, error) {
+func (c *CmdConfigure) testCharger(v interface{}) (bool, error) {
 	if v, ok := v.(api.Charger); ok {
 		if _, err := v.Status(); err != nil {
 			return false, err
@@ -40,7 +40,7 @@ func (c *CmdConfigure) testCharger(deviceCategory string, v interface{}) (bool, 
 	return true, nil
 }
 
-func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) (bool, error) {
+func (c *CmdConfigure) testMeter(deviceCategory DeviceCategory, v interface{}) (bool, error) {
 	if v, ok := v.(api.Meter); ok {
 		if _, err := v.CurrentPower(); err != nil {
 			return false, err
@@ -69,7 +69,7 @@ func (c *CmdConfigure) testMeter(deviceCategory string, v interface{}) (bool, er
 	return true, nil
 }
 
-func (c *CmdConfigure) testVehicle(deviceCategory string, v interface{}) (bool, error) {
+func (c *CmdConfigure) testVehicle(v interface{}) (bool, error) {
 	if _, ok := v.(api.Vehicle); ok {
 		if v, ok := v.(api.Battery); ok {
 			if _, err := v.SoC(); err != nil {

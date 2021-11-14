@@ -87,7 +87,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel string) {
 }
 
 // ask device specfic questions
-func (c *CmdConfigure) configureDevices(deviceCategory string, askMultiple bool) []device {
+func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultiple bool) []device {
 	var devices []device
 
 	if deviceCategory == DeviceCategoryGridMeter && c.configuration.MetersOfCategory(deviceCategory) > 0 {

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (c *CmdConfigure) processDeviceSelection(deviceCategory string) (templates.Template, error) {
+func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
 	if templateItem.Description == itemNotPresent {
@@ -25,7 +25,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory string) (templates.
 	return templateItem, nil
 }
 
-func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory string) (device, error) {
+func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
 	addedDeviceIndex++
 
 	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, addedDeviceIndex)
@@ -131,10 +131,10 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 }
 
 // return template items of a given class
-func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template {
+func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.Template {
 	var items []templates.Template
 
-	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class) {
+	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class.String()) {
 		if len(tmpl.Params) == 0 || len(tmpl.Description) == 0 {
 			continue
 		}
@@ -144,8 +144,8 @@ func (c *CmdConfigure) fetchElements(deviceCategory string) []templates.Template
 				items = append(items, tmpl)
 			}
 		} else {
-			if len(DeviceCategories[deviceCategory].usageFilter) == 0 ||
-				c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].usageFilter) {
+			if len(DeviceCategories[deviceCategory].categoryFilter) == 0 ||
+				c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].categoryFilter.String()) {
 				items = append(items, tmpl)
 			}
 		}
@@ -180,31 +180,6 @@ func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filte
 	}
 
 	return false
-
-	/*
-		for _, item := range params {
-			if item.Name != name {
-				continue
-			}
-
-			filterFound = true
-			if item.Choice == nil || len(item.Choice) == 0 {
-				return true
-			}
-
-			for _, choice := range item.Choice {
-				if choice == filter {
-					return true
-				}
-			}
-		}
-
-		if !filterFound && considerEmptyAsTrue {
-			return true
-		}
-
-		return false
-	*/
 }
 
 func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) (bool, []string) {
@@ -230,8 +205,8 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 // Process an EVCC configuration item
 // Returns
 //   a map with param name and values
-func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory string, includeAdvanced bool) map[string]interface{} {
-	usageFilter := DeviceCategories[deviceCategory].usageFilter
+func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory DeviceCategory, includeAdvanced bool) map[string]interface{} {
+	usageFilter := DeviceCategories[deviceCategory].categoryFilter
 
 	additionalConfig := make(map[string]interface{})
 	selectedModbusKey := ""
@@ -336,7 +311,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 			additionalConfig[param.Name] = value
 		} else if param.Name == templates.ParamUsage {
 			if usageFilter != "" {
-				additionalConfig[param.Name] = usageFilter
+				additionalConfig[param.Name] = usageFilter.String()
 			}
 		}
 	}
