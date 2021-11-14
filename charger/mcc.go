@@ -32,7 +32,7 @@ type MCCTokenResponse struct {
 
 // MCCCurrentSession is the apiCurrentSession response
 type MCCCurrentSession struct {
-	Duration     time.Duration
+	Duration     int64
 	EnergySumKwh float64
 }
 
@@ -345,7 +345,7 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(currentSession.Duration * time.Second), nil
+	return time.Duration(currentSession.Duration) * time.Second, nil
 }
 
 var _ api.MeterCurrent = (*MobileConnect)(nil)
