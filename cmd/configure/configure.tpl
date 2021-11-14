@@ -1,3 +1,6 @@
+uri: 0.0.0.0:7070 # uri for ui
+interval: 10s # control cycle interval
+
 log: info
 {{- if ne (len .Meters) 0 }}
 
@@ -6,8 +9,8 @@ meters:
 - {{ .Yaml | indent 2 | trim }}
 {{-   end }}
 {{- end }}
-
 {{- if ne (len .Chargers) 0 }}
+
 chargers:
 {{-   range .Chargers }}
 - {{ .Yaml | indent 2 | trim }}
