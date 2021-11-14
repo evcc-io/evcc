@@ -163,7 +163,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 		deviceDescription = templateItem.Description
 		values := c.processConfig(templateItem.Params, deviceCategory, false)
 
-		device, err := c.processDeviceValues(values, templateItem, device, deviceCategory)
+		device, err = c.processDeviceValues(values, templateItem, device, deviceCategory)
 		if err != nil {
 			if err != ErrDeviceNotValid {
 				fmt.Println()
