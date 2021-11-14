@@ -12,12 +12,17 @@ import (
 // https://github.com/bimmerconnected/bimmer_connected
 // https://github.com/TA2k/ioBroker.bmw
 
-const ApiURI = "https://b2vapi.bmwgroup.com/webapi/v1"
+const (
+	ApiURI     = "https://b2vapi.bmwgroup.com/webapi/v1"
+	BaseURI    = "https://b2vapi.bmwgroup.com/api/vehicle"
+	ApiURIv2   = "https://b2vapi.bmwgroup.com/api/vehicle/v2"
+	CocoApiURI = "https://cocoapi.bmwgroup.com"
+)
 
 type StatusResponse struct {
 	VehicleStatus struct {
 		ConnectionStatus       string // CONNECTED
-		ChargingStatus         string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING
+		ChargingStatus         string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING, COMPLETED
 		ChargingLevelHv        int
 		RemainingRangeElectric int
 		Mileage                int
@@ -58,6 +63,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
 	uri := fmt.Sprintf("%s/user/vehicles", ApiURI)
+	// uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles", CocoApiURI, vin)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err == nil {
@@ -75,7 +81,13 @@ func (v *API) Vehicles() ([]string, error) {
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var resp StatusResponse
-	uri := fmt.Sprintf("%s/user/vehicles/%s/status", ApiURI, vin)
+	// uri := fmt.Sprintf("%s/eadrax-chs/v1/charging-sessions?vin=%s", CocoApiURI, vin)
+	uri := fmt.Sprintf("%s/efficiency/v1/%s", BaseURI, vin)
+
+	// uri := fmt.Sprintf("%s/charging-sessions?vin=%s&maxResults=40&include_date_picker=true", CocoApiURI, vin)
+	// date := time.Now().Format("2006-01-02")
+	// uri := fmt.Sprintf("%s/charging-statistics?vin=%s&currentDate=%s", CocoApiURI, vin, date)
+	// uri := fmt.Sprintf("%s/%s/status", ApiURIv2, vin)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err == nil {
