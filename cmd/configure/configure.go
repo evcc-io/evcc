@@ -2,7 +2,8 @@ package configure
 
 import (
 	"bytes"
-	"html/template"
+	_ "embed"
+	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 )
@@ -80,6 +81,9 @@ func (c *Configure) EEBUS() string {
 func (c *Configure) SetEEBUS(eebus string) {
 	c.config.EEBUS = eebus
 }
+
+//go:embed configure.tpl
+var configTmpl string
 
 // create a yaml configuration
 func (c *Configure) RenderConfiguration() ([]byte, error) {

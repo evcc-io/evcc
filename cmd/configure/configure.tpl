@@ -3,21 +3,21 @@ log: info
 
 meters:
 {{-   range .Meters }}
-- {{ .Yaml  | indent 2 | trim }}
+- {{ .Yaml | indent 2 | trim }}
 {{-   end }}
 {{- end }}
 
 {{- if ne (len .Chargers) 0 }}
 chargers:
 {{-   range .Chargers }}
-- {{ .Yaml  | indent 2 | trim }}
+- {{ .Yaml | indent 2 | trim }}
 {{-   end }}
 {{- end }}
 {{- if ne (len .Vehicles) 0 }}
 
 vehicles:
 {{-   range .Vehicles }}
-- {{ .Yaml  | indent 2 | trim }}
+- {{ .Yaml | indent 2 | trim }}
 {{-   end }}
 {{- end }}
 {{- if ne (len .Chargers) 0 }}

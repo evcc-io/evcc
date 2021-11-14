@@ -3,7 +3,7 @@ id: {{ .id }}
 # RS485 via adapter:
 device: {{ .device }}
 baudrate: {{ .baudrate }}
-comset: {{ .comset }}
+comset: "{{ .comset }}"
 {{- end }}
 {{- if or (eq .modbus "rs485tcpip") .modbusrs485tcpip }}
 # RS485 via TCPIP:
