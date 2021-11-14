@@ -54,7 +54,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 		// we only ask for the configuration for the first usage
 		deviceCategory = supportedDeviceCategories[0]
 
-		values := c.processConfig(templateItem.Params, deviceCategory, false)
+		values = c.processConfig(templateItem.Params, deviceCategory, false)
 
 		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
 		if err != nil {
@@ -74,13 +74,15 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 	c.configuration.AddDevice(deviceItem, deviceCategory)
 
-	for _, deviceCategory = range supportedDeviceCategories[1:] {
-		deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
-		if err != nil {
-			continue
-		}
+	if len(supportedDeviceCategories) > 1 {
+		for _, additionalCategory := range supportedDeviceCategories[1:] {
+			deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, additionalCategory)
+			if err != nil {
+				continue
+			}
 
-		c.configuration.AddDevice(deviceItem, deviceCategory)
+			c.configuration.AddDevice(deviceItem, additionalCategory)
+		}
 	}
 
 	fmt.Println()
