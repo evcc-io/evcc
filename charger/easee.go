@@ -42,7 +42,6 @@ type Easee struct {
 	charger               string
 	updated               time.Time
 	chargeStatus          api.ChargeStatus
-	cache                 time.Duration
 	log                   *util.Logger
 	mux                   sync.Mutex
 	dynamicChargerCurrent float64
@@ -85,13 +84,8 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	c := &Easee{
 		Helper:  request.NewHelper(log),
 		charger: charger,
-		cache:   cache,
 		log:     log,
 		current: 6, // default current
-	}
-
-	if cache > 0 {
-		c.log.WARN.Println("cache is deprecated and will be removed in a future release")
 	}
 
 	ts, err := easee.TokenSource(log, user, password)
@@ -119,55 +113,47 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.charger = chargers[0].ID
 	}
 
-	// subscribe for updates and retry when connection fails
-	var client signalr.Client
-	if client, err = c.subscribe(ts); err == nil {
-		go func(signalr.Client) {
-			for {
-				<-client.Closed()
-				for client, err = c.subscribe(ts); err != nil; {
-					c.log.ERROR.Println("connect:", err)
-					time.Sleep(5 * time.Second)
-				}
-			}
-		}(client)
+	client, err := signalr.NewClient(context.Background(),
+		signalr.WithAutoReconnect(c.connect(ts)),
+		signalr.WithReceiver(c),
+		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
+	)
+
+	if err == nil {
+		client.Start()
+
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		defer cancel()
+		err = <-client.WaitForState(ctx, signalr.ClientConnected)
+	}
+
+	if err == nil {
+		err = <-client.Send("SubscribeWithCurrentState", c.charger, true)
 	}
 
 	return c, err
 }
 
 // subscribe connects to the signalR hub
-func (c *Easee) subscribe(ts oauth2.TokenSource) (signalr.Client, error) {
-	conn, err := signalr.NewHTTPConnection(context.Background(), "https://api.easee.cloud/hubs/chargers",
-		signalr.WithHTTPClientOption(c.Client),
-		signalr.WithHTTPHeadersOption(func() (res http.Header) {
-			if tok, err := ts.Token(); err == nil {
-				res = http.Header{
+func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
+	return func() (signalr.Connection, error) {
+		tok, err := ts.Token()
+		if err != nil {
+			return nil, err
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
+		defer cancel()
+
+		return signalr.NewHTTPConnection(ctx, "https://api.easee.cloud/hubs/chargers",
+			signalr.WithHTTPClient(c.Client),
+			signalr.WithHTTPHeaders(func() (res http.Header) {
+				return http.Header{
 					"Authorization": []string{fmt.Sprintf("Bearer %s", tok.AccessToken)},
 				}
-			} else {
-				c.log.ERROR.Println("token:", err)
-			}
-			return res
-		}),
-	)
-	if err != nil {
-		return nil, err
+			}),
+		)
 	}
-
-	client, err := signalr.NewClient(context.Background(), conn,
-		signalr.Receiver(c),
-		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := client.Start(); err != nil {
-		return nil, err
-	}
-
-	return client, <-client.Send("SubscribeWithCurrentState", c.charger, true)
 }
 
 func (c *Easee) observe(typ string, i json.RawMessage) {

@@ -59,7 +59,7 @@ require (
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/philippseith/signalr v0.3.1-0.20210919120731-d0f92ed220f8
+	github.com/philippseith/signalr v0.5.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
@@ -77,9 +77,9 @@ require (
 	github.com/volkszaehler/mbmd v0.0.0-20211108155358-6a45861346c4
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.7
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect
 	google.golang.org/grpc v1.39.0
 	google.golang.org/protobuf v1.27.1
