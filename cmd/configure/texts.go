@@ -10,9 +10,7 @@ import (
 func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
 	result := param
 
-	if result.ValueType != "" && funk.ContainsString(templates.ParamValueTypes, result.ValueType) {
-		result.ValueType = result.ValueType
-	} else {
+	if result.ValueType == "" || (result.ValueType != "" && !funk.ContainsString(templates.ParamValueTypes, result.ValueType)) {
 		result.ValueType = templates.ParamValueTypeString
 	}
 
