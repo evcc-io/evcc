@@ -18,6 +18,7 @@ const (
 const (
 	ParamValueTypeString = "string"
 	ParamValueTypeNumber = "number"
+	ParamValueTypeFloat  = "float"
 	ParamValueTypeBool   = "bool"
 )
 

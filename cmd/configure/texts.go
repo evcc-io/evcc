@@ -4,51 +4,61 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/thoas/go-funk"
 )
 
-func (c *CmdConfigure) userFriendlyLabelHelpValueType(label, help string) (string, string, string) {
-	valueType := templates.ParamValueTypeString
+func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
+	result := param
 
-	switch strings.ToLower(label) {
+	if result.ValueType != "" && funk.ContainsString(templates.ParamValueTypes, result.ValueType) {
+		result.ValueType = result.ValueType
+	} else {
+		result.ValueType = templates.ParamValueTypeString
+	}
+
+	switch strings.ToLower(result.Name) {
 	case "title":
-		label = "Titel"
-		if help == "" {
-			help = "Eine Text welcher in der Benutzeroberfläche angezeigt wird"
+		result.Name = "Titel"
+		if result.Help == "" {
+			result.Help = "Eine Text welcher in der Benutzeroberfläche angezeigt wird"
 		}
 	case "device":
-		label = "Gerätadresse"
+		result.Name = "Gerätadresse"
 	case "baudrate":
-		label = "Baudrate"
+		result.Name = "Baudrate"
 	case "comset":
-		label = "ComSet"
+		result.Name = "ComSet"
 	case "host":
-		label = "IP Adresse oder den Namen"
+		result.Name = "IP-Adresse oder Hostname"
 	case "port":
-		label = "Port Adresse"
-		valueType = templates.ParamValueTypeNumber
+		result.Name = "Port"
+		result.ValueType = templates.ParamValueTypeNumber
 	case "user":
-		label = "Benutzername"
+		result.Name = "Benutzername"
 	case "password":
-		label = "Passwort"
+		result.Name = "Passwort"
 	case "capacity":
-		label = "Akku-Kapazität in kWh"
-		valueType = templates.ParamValueTypeNumber
+		result.Name = "Akku-Kapazität in kWh"
+		if result.Example == "" {
+			result.Example = "41.5"
+		}
+		result.ValueType = templates.ParamValueTypeFloat
 	case "vin":
-		label = "FIN"
-		if help == "" {
-			help = "FIN (Fahrzeugidentifikationsnummer), notwendig wenn mehrere Fahrzeuge des Herstellers vorhanden sind"
+		result.Name = "Fahrzeugidentifikationsnummer"
+		if result.Help == "" {
+			result.Help = "Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind"
 		}
 	case "identifier":
-		label = "Identifikationsnummer"
-		if help == "" {
-			help = "Kann meist erst später eingetagen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+		result.Name = "Identifikationsnummer"
+		if result.Help == "" {
+			result.Help = "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
 		}
 	case "standbypower":
-		label = "Standby-Leistung in W"
-		if help == "" {
-			help = "Leistung oberhalb des angegebenen Wertes, wird als Ladeleistung gewertet"
+		result.Name = "Standby-Leistung in W"
+		if result.Help == "" {
+			result.Help = "Leistung oberhalb des angegebenen Wertes, wird als Ladeleistung gewertet"
 		}
-		valueType = templates.ParamValueTypeNumber
+		result.ValueType = templates.ParamValueTypeNumber
 	}
-	return label, help, valueType
+	return result
 }

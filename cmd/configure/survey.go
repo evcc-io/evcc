@@ -141,6 +141,13 @@ func (c *CmdConfigure) askValue(q question) string {
 			}
 		}
 
+		if q.valueType == templates.ParamValueTypeFloat {
+			_, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return errors.New("Der Wert muss eine Zahl sein. Nachkommastellen mit . anstatt mit , getrennt!")
+			}
+		}
+
 		if q.valueType == templates.ParamValueTypeNumber {
 			_, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {

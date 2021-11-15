@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/templates"
-	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -293,22 +292,15 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				continue
 			}
 
-			var valueType string
-			label, help, defaultValueType := c.userFriendlyLabelHelpValueType(param.Name, param.Help)
-			if param.ValueType != "" && funk.ContainsString(templates.ParamValueTypes, param.ValueType) {
-				valueType = param.ValueType
-			} else {
-				valueType = defaultValueType
-			}
-
+			userFriendly := c.userFriendlyTexts(param)
 			value := c.askValue(question{
-				label:        label,
-				defaultValue: param.Default,
-				exampleValue: param.Example,
-				help:         help,
-				valueType:    valueType,
-				mask:         param.Mask,
-				required:     param.Required})
+				label:        userFriendly.Name,
+				defaultValue: userFriendly.Default,
+				exampleValue: userFriendly.Example,
+				help:         userFriendly.Help,
+				valueType:    userFriendly.ValueType,
+				mask:         userFriendly.Mask,
+				required:     userFriendly.Required})
 			additionalConfig[param.Name] = value
 		} else if param.Name == templates.ParamUsage {
 			if usageFilter != "" {
