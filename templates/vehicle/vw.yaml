@@ -1,5 +1,5 @@
 type: t_vw
-description: Volkswagen (e-Up, e-Golf, etc.)
+description: Volkswagen (We Connect Account)
 params:
 - name: title
 - name: user
