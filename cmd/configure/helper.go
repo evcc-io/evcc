@@ -84,7 +84,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if sponsorship is required
-	if templateItem.Requirements.Sponsorship == true && c.configuration.SponsorToken() == "" {
+	if templateItem.Requirements.Sponsorship && c.configuration.SponsorToken() == "" {
 		fmt.Println()
 		fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
 		fmt.Println()
@@ -99,7 +99,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if we need to setup an EEBUS HEMS
-	if templateItem.Requirements.Eebus == true {
+	if templateItem.Requirements.Eebus {
 		if c.configuration.EEBUS() == "" {
 			eebusConfig, err := c.eebusCertificate()
 
@@ -193,9 +193,7 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 
 		nameFound = true
 
-		for _, choice := range item.Choice {
-			choices = append(choices, choice)
-		}
+		choices = append(choices, item.Choice...)
 	}
 
 	return nameFound, choices

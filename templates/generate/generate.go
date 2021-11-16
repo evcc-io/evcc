@@ -1,15 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
-
-	"github.com/evcc-io/evcc/templates"
-)
-
-const basePath = "../docs"
+// const basePath = "../docs"
 
 func main() {
 	// 	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
@@ -23,6 +14,7 @@ func main() {
 	// 	}
 }
 
+/*
 func generateClass(class string) error {
 	for _, tmpl := range templates.ByClass(class) {
 		usages := tmpl.Usages()
@@ -98,3 +90,4 @@ func clearDir(dir string) error {
 
 	return nil
 }
+*/

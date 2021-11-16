@@ -35,18 +35,18 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			return
 		}
 		if len(usageChoices) == 0 {
-			usageChoices = []string{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter}
+			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter)}
 		}
 
 		supportedDeviceCategories = []DeviceCategory{}
 
 		for _, usage := range usageChoices {
 			switch usage {
-			case DeviceCategoryGridMeter:
+			case string(DeviceCategoryGridMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case DeviceCategoryPVMeter:
+			case string(DeviceCategoryPVMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
-			case DeviceCategoryBatteryMeter:
+			case string(DeviceCategoryBatteryMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
 			}
 		}
@@ -104,7 +104,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 		for ok := true; ok; ok = repeat {
 			deviceItem := device{}
 
-			linkedTemplateItem := templates.ByType(linkedTemplate.Type, DeviceClassMeter)
+			linkedTemplateItem := templates.ByType(linkedTemplate.Type, string(DeviceClassMeter))
 			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
 				return
 			}

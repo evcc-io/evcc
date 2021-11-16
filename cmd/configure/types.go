@@ -43,8 +43,8 @@ func (c DeviceClass) String() string {
 
 const (
 	DeviceClassCharger DeviceClass = "charger"
-	DeviceClassMeter               = "meter"
-	DeviceClassVehicle             = "vehicle"
+	DeviceClassMeter   DeviceClass = "meter"
+	DeviceClassVehicle DeviceClass = "vehicle"
 )
 
 type DeviceCategory string
@@ -55,12 +55,12 @@ func (c DeviceCategory) String() string {
 
 const (
 	DeviceCategoryCharger      DeviceCategory = "wallbox"
-	DeviceCategoryGridMeter                   = "grid"
-	DeviceCategoryPVMeter                     = "pv"
-	DeviceCategoryBatteryMeter                = "battery"
-	DeviceCategoryChargeMeter                 = "charge"
-	DeviceCategoryVehicle                     = "vehicle"
-	DeviceCategoryGuidedSetup                 = "guided"
+	DeviceCategoryGridMeter    DeviceCategory = "grid"
+	DeviceCategoryPVMeter      DeviceCategory = "pv"
+	DeviceCategoryBatteryMeter DeviceCategory = "battery"
+	DeviceCategoryChargeMeter  DeviceCategory = "charge"
+	DeviceCategoryVehicle      DeviceCategory = "vehicle"
+	DeviceCategoryGuidedSetup  DeviceCategory = "guided"
 )
 
 var ValidUsageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryChargeMeter}
