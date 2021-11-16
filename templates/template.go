@@ -71,12 +71,12 @@ type Param struct {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(docs bool) map[string]interface{} {
+func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		if p.Test != "" {
 			values[p.Name] = p.Test
-		} else if p.Example != "" && docs {
+		} else if p.Example != "" && docsOrTests {
 			values[p.Name] = p.Example
 		} else {
 			values[p.Name] = p.Default // may be empty

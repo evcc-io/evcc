@@ -10,6 +10,7 @@ params:
   mask: true
 - name: ain
   required: true
+  example: '007788992233'
 render: |
   type: fritzdect
   uri: {{ .uri }}

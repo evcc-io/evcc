@@ -10,7 +10,7 @@ params:
 - name: serial
   required: true
 render: |
-  type: porsche
+  type: niu
   {{- if ne .title "" }}
   title: {{ .title }}
   {{- end }}

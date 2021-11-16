@@ -3,30 +3,38 @@ package vehicle
 import (
 	"testing"
 
+	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 
-func TestVehicles(t *testing.T) {
-	test.SkipCI(t)
+var acceptable = []string{
+	"invalid plugin type: ...",
+	"missing mqtt broker configuration",
+	"received status code 404 (INVALID PARAMS)", // Nissan
+	"missing personID",
+	"401 Unauthorized",
+	"unexpected length",
+	"i/o timeout",
+	"no such host",
+	"network is unreachable",
+	"Missing required parameter", // Renault
+	"error connecting: Network Error",
+	"unexpected status: 401",
+	"could not obtain token", // Porsche
+	"missing credentials",    // Tesla
+	"invalid vehicle type: hyundai",
+	"invalid vehicle type: kia",
+	"missing user, password or serial", // Niu
+	"missing credentials id",           // Tronity
+	"missing access and/or refresh token, use `evcc token` to create", // Tesla
+	"login failed: Unauthorized: Authentication Failed",               // Nissan
+	"login failed: no auth code",                                      // Porsche
+	"invalid_client:Client authentication failed (e.g., login failure, unknown client, no client authentication included or unsupported authentication method)",   // BMW, Mini
+	"login failed: oauth2: cannot fetch token: 400 Bad Request Response: {\"error\":\"invalid_request\",\"error_description\":\"Missing parameter, 'username'\"}", // Opel, DS, Citroen, PSA
+}
 
-	acceptable := []string{
-		"invalid plugin type: ...",
-		"missing mqtt broker configuration",
-		"received status code 404 (INVALID PARAMS)", // Nissan
-		"missing personID",
-		"401 Unauthorized",
-		"unexpected length",
-		"i/o timeout",
-		"no such host",
-		"network is unreachable",
-		"Missing required parameter", // Renault
-		"error connecting: Network Error",
-		"unexpected status: 401",
-		"could not obtain token", // Porsche
-		"missing credentials",    // Tesla
-		"invalid vehicle type: hyundai",
-		"invalid vehicle type: kia",
-	}
+func TestConfigVehicles(t *testing.T) {
+	test.SkipCI(t)
 
 	for _, tmpl := range test.ConfigTemplates("vehicle") {
 		tmpl := tmpl
@@ -37,6 +45,32 @@ func TestVehicles(t *testing.T) {
 			_, err := NewFromConfig(tmpl.Type, tmpl.Config)
 			if err != nil && !test.Acceptable(err, acceptable) {
 				t.Logf("%s: %+v", tmpl.Name, tmpl.Config)
+				t.Error(err)
+			}
+		})
+	}
+}
+
+func TestProxyVehicles(t *testing.T) {
+	test.SkipCI(t)
+
+	for _, tmpl := range templates.ByClass(templates.Vehicle) {
+		tmpl := tmpl
+
+		values := tmpl.Defaults(true)
+
+		t.Run(tmpl.Type, func(t *testing.T) {
+			t.Parallel()
+
+			b, err := tmpl.RenderResult(true, values)
+			if err != nil {
+				t.Logf("%s: %s", tmpl.Type, b)
+				t.Error(err)
+			}
+
+			_, err = NewFromConfig(tmpl.Type, values)
+			if err != nil && !test.Acceptable(err, acceptable) {
+				t.Logf("%s", tmpl.Type)
 				t.Error(err)
 			}
 		})
