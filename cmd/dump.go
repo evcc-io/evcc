@@ -46,9 +46,6 @@ func runDump(cmd *cobra.Command, args []string) {
 	d.Header("config", "=")
 	fmt.Println("")
 
-	// allow duplicate requests to meters
-	cp.resetVisitors()
-
 	if name := site.Meters.GridMeterRef; name != "" {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), cp.Meter(name))
 	}
