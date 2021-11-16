@@ -13,6 +13,7 @@ params:
 render: |
   type: custom
   power:
+    source: script
     timeout: 5s
     cmd: >
   {{- if eq .usage "grid" }}
