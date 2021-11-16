@@ -16,18 +16,19 @@ import (
 const (
 	ApiURI     = "https://b2vapi.bmwgroup.com/webapi/v1"
 	CocoApiURI = "https://cocoapi.bmwgroup.com"
-	XUserAgent = "android(v1.07_20200330);bmw;1.7.0(11152)"
 )
 
 // API is an api.Vehicle implementation for BMW cars
 type API struct {
 	*request.Helper
+	xUserAgent string
 }
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log *util.Logger, brand string, identity oauth2.TokenSource) *API {
 	v := &API{
-		Helper: request.NewHelper(log),
+		Helper:     request.NewHelper(log),
+		xUserAgent: fmt.Sprintf("android(v1.07_20200330);%s;1.7.0(11152)", brand),
 	}
 
 	// replace client transport with authenticated transport
@@ -64,7 +65,7 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d&vin=%s", CocoApiURI, time.Now().Unix(), vin)
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"X-User-Agent": XUserAgent,
+		"X-User-Agent": v.xUserAgent,
 	})
 	if err == nil {
 		err = v.DoJSON(req, &resp)
