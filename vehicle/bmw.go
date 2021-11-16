@@ -17,11 +17,21 @@ type BMW struct {
 
 func init() {
 	registry.Add("bmw", NewBMWFromConfig)
-	registry.Add("mini", NewBMWFromConfig)
+	registry.Add("mini", NewMiniFromConfig)
 }
 
 // NewBMWFromConfig creates a new vehicle
 func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	return NewBMWMiniFromConfig("bmw", other)
+}
+
+// NewMiniFromConfig creates a new vehicle
+func NewMiniFromConfig(other map[string]interface{}) (api.Vehicle, error) {
+	return NewBMWMiniFromConfig("mini", other)
+}
+
+// NewBMWMiniFromConfig creates a new vehicle
+func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
@@ -38,14 +48,14 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("bmw").Redact(cc.User, cc.Password, cc.VIN)
+	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, err
 	}
 
-	api := bmw.NewAPI(log, identity)
+	api := bmw.NewAPI(log, brand, identity)
 
 	var err error
 	if cc.VIN == "" {

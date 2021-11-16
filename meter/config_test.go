@@ -19,6 +19,7 @@ func TestMeters(t *testing.T) {
 		"connect: connection refused",
 		"i/o timeout",
 		"no ping response for 192.0.2.2", // SMA
+		"network is unreachable",
 		"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
 		"can only have either uri or device",               // modbus
 		"(Client.Timeout exceeded while awaiting headers)", // http
