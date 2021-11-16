@@ -30,6 +30,11 @@ func (v *embed) Identifiers() ([]string, error) {
 	return v.Identifiers_, nil
 }
 
+// AddIdentifier adds an identifier
+func (v *embed) AddIdentifier(identifier string) {
+	v.Identifiers_ = append(v.Identifiers_, identifier)
+}
+
 //go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.

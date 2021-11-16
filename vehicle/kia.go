@@ -90,5 +90,8 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
+	// make vehicle identifyable using its VIN
+	v.AddIdentifier(strings.ToUpper(vehicle.VIN))
+
 	return v, nil
 }

@@ -86,6 +86,9 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
+	// make vehicle identifyable using its VIN
+	v.AddIdentifier(strings.ToUpper(cc.VIN))
+
 	return v, err
 }
 

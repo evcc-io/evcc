@@ -116,5 +116,9 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	v.Provider = psa.NewProvider(api, vid, cc.Cache)
 
+	// make vehicle identifyable using its VIN
+	// TODO FIX
+	v.AddIdentifier(strings.ToUpper(cc.VIN))
+
 	return v, err
 }

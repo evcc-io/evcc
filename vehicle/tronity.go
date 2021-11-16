@@ -133,6 +133,9 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
+	// make vehicle identifyable using its VIN
+	v.AddIdentifier(strings.ToUpper(vehicle.VIN))
+
 	v.vid = vehicle.ID
 	v.bulkG = provider.NewCached(v.bulk, cc.Cache).InterfaceGetter()
 

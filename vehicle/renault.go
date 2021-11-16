@@ -150,6 +150,9 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
+	// make vehicle identifyable using its VIN
+	v.AddIdentifier(strings.ToUpper(v.vin))
+
 	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
 	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
 	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()

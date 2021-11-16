@@ -65,6 +65,9 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
+	// make vehicle identifyable using its VIN
+	v.AddIdentifier(strings.ToUpper(cc.VIN))
+
 	v.Provider = nissan.NewProvider(api, strings.ToUpper(cc.VIN), cc.Expiry, cc.Cache)
 
 	return v, err

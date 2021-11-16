@@ -74,6 +74,9 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
+		// make vehicle identifyable using its VIN
+		v.AddIdentifier(strings.ToUpper(cc.VIN))
+
 		identity := vw.NewIdentity(log)
 
 		// Skoda connect api
