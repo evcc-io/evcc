@@ -1,11 +1,11 @@
 dist: release
-release:
-  github:
-    owner: evcc-io
-    name: evcc
-  extra_files:
-  - glob: evcc_*.image.gz
-  - glob: evcc_*.rootfs.gz
+# release:
+#   github:
+#     owner: evcc-io
+#     name: evcc
+#   extra_files:
+#   - glob: evcc_*.image.gz
+#   - glob: evcc_*.rootfs.gz
 builds:
 - id: evcc
   main: main.go
@@ -48,3 +48,25 @@ changelog:
     - '^bump'
     - '^docs:'
     - '^test:'
+nfpms:
+  - id: default
+    package_name: evcc
+    file_name_template: '{{ .ConventionalFileName }}'
+
+    homepage:  https://evcc.io
+    description: EV Charge Controller
+    maintainer: andig <cpuidle@gmx.de>
+    license: MIT
+    vendor: evcc.io
+
+    formats:
+    - deb
+
+    contents:
+      - src: ./packaging/init/evcc.service
+        dst: /lib/systemd/system/evcc.service
+
+    scripts:
+      postinstall: ./packaging/scripts/postinstall.sh
+      preremove: ./packaging/scripts/preremove.sh
+      postremove: ./packaging/scripts/postremove.sh

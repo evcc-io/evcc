@@ -1,0 +1,15 @@
+# evcc.service
+#
+
+[Unit]
+Description=evcc
+Requires=network-online.target
+After=syslog.target network.target network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/evcc --log error
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
