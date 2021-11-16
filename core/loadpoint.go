@@ -981,7 +981,7 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 	}
 
 	lp.publish(name+"Action", action)
-	lp.publish(name+"Timer", remaining)
+	lp.publish(name+"Remaining", remaining)
 
 	if action == timerInactive {
 		lp.log.DEBUG.Printf("%s action: %s", name, action)
