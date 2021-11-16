@@ -76,6 +76,10 @@ type ConfigProvider struct {
 	visited  map[string]bool
 }
 
+func (cp *ConfigProvider) resetVisitors() {
+	cp.visited = nil
+}
+
 // Meter provides meters by name
 func (cp *ConfigProvider) Meter(name string) api.Meter {
 	if meter, ok := cp.meters[name]; ok {
