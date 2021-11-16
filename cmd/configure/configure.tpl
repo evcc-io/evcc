@@ -59,7 +59,7 @@ site:
 {{-   end }}
 {{- end }}
 {{- if len .Site.Batteries }}
-    batterys:
+    batteries:
 {{-   range .Site.Batteries }}
       - {{ . }}
 {{-   end }}
