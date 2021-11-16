@@ -35,18 +35,18 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			return
 		}
 		if len(usageChoices) == 0 {
-			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter)}
+			usageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter}
 		}
 
 		supportedDeviceCategories = []DeviceCategory{}
 
 		for _, usage := range usageChoices {
 			switch usage {
-			case string(DeviceCategoryGridMeter):
+			case DeviceCategoryGridMeter:
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case string(DeviceCategoryPVMeter):
+			case DeviceCategoryPVMeter:
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
-			case string(DeviceCategoryBatteryMeter):
+			case DeviceCategoryBatteryMeter:
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
 			}
 		}

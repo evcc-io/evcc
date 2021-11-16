@@ -173,7 +173,7 @@ func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filte
 	}
 
 	for _, choice := range choices {
-		if choice == filter {
+		if string(choice) == filter {
 			return true
 		}
 	}
@@ -181,10 +181,10 @@ func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filte
 	return false
 }
 
-func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) (bool, []string) {
+func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) (bool, []DeviceCategory) {
 	nameFound := false
 
-	choices := []string{}
+	choices := []DeviceCategory{}
 
 	for _, item := range params {
 		if item.Name != name {
@@ -193,7 +193,9 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 
 		nameFound = true
 
-		choices = append(choices, item.Choice...)
+		for _, choice := range item.Choice {
+			choices = append(choices, DeviceCategory(choice))
+		}
 	}
 
 	return nameFound, choices
