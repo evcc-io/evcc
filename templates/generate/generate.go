@@ -12,15 +12,15 @@ import (
 const basePath = "../docs"
 
 func main() {
-	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
-		if err := clearDir(fmt.Sprintf("%s/%s", basePath, class)); err != nil {
-			panic(err)
-		}
+	// 	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
+	// 		if err := clearDir(fmt.Sprintf("%s/%s", basePath, class)); err != nil {
+	// 			panic(err)
+	// 		}
 
-		if err := generateClass(class); err != nil {
-			panic(err)
-		}
-	}
+	// 		if err := generateClass(class); err != nil {
+	// 			panic(err)
+	// 		}
+	// 	}
 }
 
 func generateClass(class string) error {
