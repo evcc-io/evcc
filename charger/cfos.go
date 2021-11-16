@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	cfosRegStatus     = 8092 // Input
+	cfosRegStatus     = 8092 // Holding
 	cfosRegMaxCurrent = 8093 // Holding
-	cfosRegEnable     = 8094 // Coil
+	cfosRegEnable     = 8094 // Holding
 )
 
 // CfosPowerBrain is an charger implementation for cFos PowerBrain wallboxes.
@@ -72,7 +72,7 @@ func (wb *CfosPowerBrain) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch b[0] {
+	switch b[1] {
 	case 0: // warten
 		return api.StatusA, nil
 	case 1: // Fahrzeug erkannt
@@ -97,7 +97,7 @@ func (wb *CfosPowerBrain) Enabled() (bool, error) {
 		return false, err
 	}
 
-	return b[0] == 1, nil
+	return b[1] == 1, nil
 }
 
 // Enable implements the Charger.Enable interface
@@ -107,7 +107,7 @@ func (wb *CfosPowerBrain) Enable(enable bool) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleCoil(cfosRegEnable, u)
+	_, err := wb.conn.WriteSingleRegister(cfosRegEnable, u)
 
 	return err
 }

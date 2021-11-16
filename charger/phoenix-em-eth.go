@@ -142,7 +142,7 @@ func (wb *PhoenixEMEth) ChargingTime() (time.Duration, error) {
 
 	// 2 words, least significant word first
 	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
-	return time.Duration(time.Duration(secs) * time.Second), nil
+	return time.Duration(secs) * time.Second, nil
 }
 
 // CurrentPower implements the api.Meter interface

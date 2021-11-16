@@ -186,7 +186,7 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 
 	// 2 words, least significant word first
 	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
-	return time.Duration(time.Duration(secs) * time.Second), nil
+	return time.Duration(secs) * time.Second, nil
 }
 
 func (wb *Wallbe) decodeReading(b []byte) float64 {

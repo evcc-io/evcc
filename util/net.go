@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
 // DefaultPort appends given port to connection if not specified
 func DefaultPort(conn string, port int) string {
 	if _, _, err := net.SplitHostPort(conn); err != nil {
-		conn = fmt.Sprintf("%s:%d", conn, port)
+		conn = net.JoinHostPort(conn, strconv.Itoa(port))
 	}
 
 	return conn

@@ -103,6 +103,11 @@ type Identifier interface {
 	Identify() (string, error)
 }
 
+// Authorizer authorizes a charging session by supplying RFID credentials
+type Authorizer interface {
+	Authorize(key string) error
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery

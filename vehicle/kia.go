@@ -27,9 +27,11 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
+		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,7 +49,8 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
 		CCSPApplicationID: bluelink.KiaAppID,
-		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=572e0304-5f8d-4b4c-9dd5-41aa84eed160&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		AuthClientID:      "572e0304-5f8d-4b4c-9dd5-41aa84eed160",
+		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
 	identity, err := bluelink.NewIdentity(log, settings)
@@ -84,7 +87,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Kia{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

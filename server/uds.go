@@ -4,6 +4,7 @@
 package server
 
 import (
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -21,7 +22,7 @@ func removeIfExists(file string) {
 		err = os.Remove(file)
 	}
 
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.FATAL.Fatal(err)
 	}
 }

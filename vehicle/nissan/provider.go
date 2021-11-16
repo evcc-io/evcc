@@ -1,7 +1,6 @@
 package nissan
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -14,7 +13,6 @@ type Provider struct {
 	statusG     func() (interface{}, error)
 	action      func(value Action) error
 	expiry      time.Duration
-	refreshID   string
 	refreshTime time.Time
 }
 
@@ -47,23 +45,16 @@ func (v *Provider) status(battery func() (Response, error), refresh func() (Resp
 
 		// return the current value
 		if time.Since(ts) <= v.expiry {
-			v.refreshID = ""
+			v.refreshTime = time.Time{}
 			return res, err
 		}
 	}
 
 	// request a refresh, irrespective of a previous error
-	if v.refreshID == "" {
-		var refreshRes Response
-		if refreshRes, err = refresh(); err == nil {
-			err = api.ErrMustRetry
-
-			v.refreshID = refreshRes.Data.ID
+	if v.refreshTime.IsZero() {
+		if _, err = refresh(); err == nil {
 			v.refreshTime = time.Now()
-
-			if v.refreshID == "" {
-				err = errors.New("refresh failed")
-			}
+			err = api.ErrMustRetry
 		}
 
 		return res, err
@@ -71,7 +62,7 @@ func (v *Provider) status(battery func() (Response, error), refresh func() (Resp
 
 	// refresh finally expired
 	if time.Since(v.refreshTime) > refreshTimeout {
-		v.refreshID = ""
+		v.refreshTime = time.Time{}
 		if err == nil {
 			err = api.ErrTimeout
 		}
