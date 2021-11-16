@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/thoas/go-funk"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
@@ -659,22 +660,24 @@ func (lp *LoadPoint) identifyVehicle() {
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find exact match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid == id {
+		if identifiers, err := vehicle.Identifiers(); err == nil && funk.ContainsString(identifiers, id) {
 			return vehicle
 		}
 	}
 
 	// find placeholder match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid != "" {
-			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
-			if err != nil {
-				lp.log.ERROR.Printf("vehicle id: %v", err)
-				continue
-			}
+		if identifiers, err := vehicle.Identifiers(); err == nil {
+			for _, vid := range identifiers {
+				re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
+				if err != nil {
+					lp.log.ERROR.Printf("vehicle id: %v", err)
+					continue
+				}
 
-			if re.MatchString(id) {
-				return vehicle
+				if re.MatchString(id) {
+					return vehicle
+				}
 			}
 		}
 	}

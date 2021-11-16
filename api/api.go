@@ -111,9 +111,9 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	Identifier
 	Title() string
 	Capacity() int64
+	Identifiers() ([]string, error)
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time

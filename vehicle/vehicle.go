@@ -10,9 +10,9 @@ import (
 )
 
 type embed struct {
-	Title_      string `mapstructure:"title"`
-	Capacity_   int64  `mapstructure:"capacity"`
-	Identifier_ string `mapstructure:"identifier"`
+	Title_       string   `mapstructure:"title"`
+	Capacity_    int64    `mapstructure:"capacity"`
+	Identifiers_ []string `mapstructure:"identifiers"`
 }
 
 // Title implements the api.Vehicle interface
@@ -25,9 +25,9 @@ func (v *embed) Capacity() int64 {
 	return v.Capacity_
 }
 
-// Identify implements the api.Identifier interface
-func (v *embed) Identify() (string, error) {
-	return v.Identifier_, nil
+// Identifiers implements the api.Identifier interface
+func (v *embed) Identifiers() ([]string, error) {
+	return v.Identifiers_, nil
 }
 
 //go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
