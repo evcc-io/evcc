@@ -1,7 +1,0 @@
-type: warp
-uri: 192.0.2.2:1883
-legacy: false # set only for older Wallbe devices (pre ~2019, old controller firmware)  
-meter: # only if a charge meter is connected to the controller
-  power: true
-  energy: true
-  currents: true

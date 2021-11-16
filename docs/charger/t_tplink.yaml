@@ -1,3 +1,0 @@
-type: tasmota
-uri: 192.0.2.2
-standbypower: 15  # treat as charging above this power

@@ -1,5 +1,0 @@
-type: tasmota
-uri: http://192.0.2.2  # shelly device ip address (local)
-
-
-standbypower: 15  # treat as charging above this power

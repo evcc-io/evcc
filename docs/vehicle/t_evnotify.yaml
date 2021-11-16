@@ -1,7 +1,0 @@
-type: custom
-capacity: 64
-charge:
-  type: http
-  uri: https://app.evnotify.de/soc?akey=&token= # evNotify Server + AKEY
-  method: GET
-  jq: .soc_display
