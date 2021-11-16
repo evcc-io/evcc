@@ -13,7 +13,14 @@
 			}}</span
 			><fa-icon icon="sun" class="icon ms-2 text-evcc"></fa-icon>
 		</button>
-		<div id="savingsModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+		<div
+			id="savingsModal"
+			class="modal fade"
+			tabindex="-1"
+			role="dialog"
+			aria-hidden="true"
+			ref="modal"
+		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -28,45 +35,85 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<p
-							v-html="
-								$t('footer.savings.modalText', {
-									percent,
-									total: fmtKw(chargedTotal, true, false),
-									savingEuro,
-									since: fmtTimeAgo(since * -1000),
-								})
-							"
-						/>
-						<vc-donut
-							class="m-4"
-							:sections="[
-								{
-									label: `Eigenstrom: ${fmtKw(
-										chargedSelfConsumption,
-										true,
-										false
-									)} kWh`,
-									value: this.chargedSelfConsumption,
-									color: '#3aba2c',
-								},
-								{
-									label: `Netzstrom: ${fmtKw(
-										chargedTotal - chargedSelfConsumption,
-										true,
-										false
-									)} kWh`,
-									value: this.chargedTotal - this.chargedSelfConsumption,
-									color: '#343a40',
-								},
-							]"
-							:total="chargedTotal"
-							has-legend
-							:size="110"
-							:thickness="100"
-							legend-placement="right"
-							:auto-adjust-text-size="false"
-						></vc-donut>
+						<div class="container">
+							<div class="row">
+								<div class="col-12 col-sm-4">
+									<div class="row mb-2">
+										<div class="d-block d-sm-none col-1"></div>
+										<div class="position-relative col-5 col-sm-12">
+											<chartist
+												v-if="modalVisible"
+												ratio="ct-square"
+												type="Pie"
+												:data="{
+													series: [
+														{
+															value:
+																this.chargedTotal -
+																this.chargedSelfConsumption,
+															name: 'Netzstrom',
+															className: 'ct-series-grid',
+														},
+														{
+															value: this.chargedSelfConsumption,
+															name: 'Sonnenstrom',
+															className: 'ct-series-self',
+														},
+													],
+												}"
+												:options="{
+													donut: true,
+													donutWidth: 15,
+													showLabel: false,
+												}"
+											>
+											</chartist>
+											<strong
+												class="
+													position-absolute
+													top-50
+													start-50
+													translate-middle
+													text-evcc
+													fs-4
+												"
+											>
+												{{ percent }}%
+											</strong>
+										</div>
+										<div
+											class="
+												col-6 col-sm-12
+												d-flex
+												align-start
+												justify-content-center
+												flex-column
+											"
+										>
+											<div class="text-nowrap">
+												<fa-icon icon="square" class="text-grid"></fa-icon>
+												Netzstrom
+											</div>
+											<div class="text-nowrap">
+												<fa-icon icon="square" class="text-evcc"></fa-icon>
+												Sonnenstrom
+											</div>
+										</div>
+									</div>
+								</div>
+								<p
+									class="col-12 col-sm-8"
+									v-html="
+										$t('footer.savings.modalText', {
+											percent,
+											total: fmtKw(chargedTotal, true, false),
+											savingEuro,
+											since: fmtTimeAgo(since * -1000),
+										})
+									"
+								/>
+							</div>
+						</div>
 
 						<Sponsor :sponsor="sponsor" />
 
@@ -115,12 +162,23 @@ export default {
 	components: { Sponsor },
 	props: {
 		selfPercentage: Number,
-		since: Number,
+		since: { type: Number, default: 0 },
 		sponsor: String,
 		chargedTotal: Number,
 		chargedSelfConsumption: Number,
 		gridPrice: { type: Number, default: 30 },
 		feedinPrice: { type: Number, default: 8 },
+	},
+	data() {
+		return { modalVisible: false };
+	},
+	mounted() {
+		this.$refs.modal.addEventListener("shown.bs.modal", this.modalShown);
+		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalHidden);
+	},
+	destroyed() {
+		this.$refs.modal.removeEventListener("shown.bs.modal", this.modalShown);
+		this.$refs.modal.removeEventListener("hidden.bs.modal", this.modalHidden);
 	},
 	computed: {
 		defaultPrices() {
@@ -134,6 +192,14 @@ export default {
 		},
 		percent() {
 			return Math.round(this.selfPercentage);
+		},
+	},
+	methods: {
+		modalShown() {
+			this.modalVisible = true;
+		},
+		modalHidden() {
+			this.modalVisible = false;
 		},
 	},
 };
@@ -158,5 +224,12 @@ export default {
 	.modal-content {
 		border-radius: 1rem 1rem 0 0;
 	}
+}
+
+.modal-content >>> .ct-series-grid .ct-slice-donut {
+	stroke: var(--evcc-grid);
+}
+.modal-content >>> .ct-series-self .ct-slice-donut {
+	stroke: var(--evcc-self);
 }
 </style>

@@ -47,6 +47,10 @@ a {
 	color: var(--evcc-dark-green);
 }
 
+.text-grid {
+	color: var(--evcc-grid);
+}
+
 @media screen and (min-width: 400px) and (max-width: 574px) {
 	.d-xs-none {
 		display: none !important;

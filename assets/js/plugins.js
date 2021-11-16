@@ -1,5 +1,5 @@
 import Vue from "vue";
-import Donut from "vue-css-donut-chart";
-import "vue-css-donut-chart/dist/vcdonut.css";
+import "chartist/dist/chartist.min.css";
+import VueChartist from "vue-chartist";
 
-Vue.use(Donut);
+Vue.use(VueChartist);
