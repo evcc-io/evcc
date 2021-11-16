@@ -29,6 +29,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Index <!-- omit in toc -->
 
+- [Deutsche Dokumentation](#dokumentation)
 - [Getting started](#getting-started)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -56,6 +57,9 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [Sponsorship](#sponsorship)
 - [Background](#background)
 
+## Dokumentation
+
+Die offizielle und detaillierte Dokumentation in deutscher Sprache ist unter https://docs.evcc.io/ verfügbar.
 
 ## Getting started
 

@@ -159,6 +159,8 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// setup loadpoints
+	cp.TrackVisitors() // track duplicate usage
+
 	site, err := configureSiteAndLoadpoints(conf)
 	if err != nil {
 		log.FATAL.Fatal(err)

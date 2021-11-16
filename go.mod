@@ -16,8 +16,8 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/config v0.0.0-20210930111050-37df6f7e52b8
-	github.com/evcc-io/eebus v0.0.0-20211004203943-949a5847f2ea
+	github.com/evcc-io/config v0.0.0-20211116174948-89807a2a9695
+	github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1
 	github.com/fatih/color v1.12.0 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/gin-gonic/gin v1.7.4 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.4 // indirect
-	github.com/philippseith/signalr v0.3.1-0.20210919120731-d0f92ed220f8
+	github.com/philippseith/signalr v0.5.0
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.29.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
@@ -74,12 +74,12 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/thoas/go-funk v0.9.0
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20210808132733-8235dc7d1327
+	github.com/volkszaehler/mbmd v0.0.0-20211108155358-6a45861346c4
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
+	golang.org/x/net v0.0.0-20211111160137-58aab5ef257a
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
-	golang.org/x/text v0.3.6
+	golang.org/x/text v0.3.7
 	google.golang.org/genproto v0.0.0-20210722135532-667f2b7c528f // indirect
 	google.golang.org/grpc v1.39.0
 	google.golang.org/protobuf v1.27.1

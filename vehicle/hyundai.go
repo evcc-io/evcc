@@ -27,9 +27,11 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
+		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -47,7 +49,8 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
 		CCSPApplicationID: bluelink.HyundaiAppID,
-		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=97516a3c-2060-48b4-98cd-8e7dcd3c47b2&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
+		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
 	identity, err := bluelink.NewIdentity(log, settings)
@@ -84,7 +87,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Hyundai{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

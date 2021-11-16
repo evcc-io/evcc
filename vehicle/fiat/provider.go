@@ -14,7 +14,6 @@ type Provider struct {
 	statusG     func() (interface{}, error)
 	action      func(action, cmd string) (ActionResponse, error)
 	expiry      time.Duration
-	refreshId   string
 	refreshTime time.Time
 }
 
@@ -41,12 +40,12 @@ func NewProvider(api *API, vin, pin string, expiry, cache time.Duration) *Provid
 	return impl
 }
 
-func (v *Provider) deepRefresh() (string, error) {
+func (v *Provider) deepRefresh() error {
 	res, err := v.action("ev", "DEEPREFRESH")
 	if err == nil && res.ResponseStatus != "pending" {
 		err = fmt.Errorf("invalid response status: %s", res.ResponseStatus)
 	}
-	return res.CorrelationId, err
+	return err
 }
 
 func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusResponse, error) {
@@ -57,9 +56,8 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 		// result expired?
 		if res.Timestamp.Add(v.expiry).Before(time.Now()) {
 			// start refresh
-			if v.refreshId == "" {
-				v.refreshId, err = v.deepRefresh()
-				if err != nil {
+			if v.refreshTime.IsZero() {
+				if err = v.deepRefresh(); err != nil {
 					return res, err
 				}
 
@@ -69,7 +67,7 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 
 			// wait for refresh
 			if time.Since(v.refreshTime) > refreshTimeout {
-				v.refreshId = ""
+				v.refreshTime = time.Time{}
 				return res, api.ErrTimeout
 			}
 
@@ -77,7 +75,7 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 		}
 
 		// refresh done
-		v.refreshId = ""
+		v.refreshTime = time.Time{}
 	}
 
 	return res, err

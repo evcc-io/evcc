@@ -136,7 +136,7 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	res, err := v.chargeStateG()
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		return float64(res.ChargeEnergyAdded), nil
+		return res.ChargeEnergyAdded, nil
 	}
 
 	return 0, err

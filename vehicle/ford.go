@@ -288,7 +288,7 @@ var _ api.Battery = (*Ford)(nil)
 func (v *Ford) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(fordVehicleStatus); err == nil && ok {
-		return float64(res.VehicleStatus.BatteryFillLevel.Value), nil
+		return res.VehicleStatus.BatteryFillLevel.Value, nil
 	}
 
 	return 0, err

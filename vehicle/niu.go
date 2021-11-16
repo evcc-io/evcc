@@ -164,7 +164,7 @@ func (v *Niu) Range() (int64, error) {
 	res, err := v.apiG()
 
 	if res, ok := res.(niu.Response); err == nil && ok {
-		return int64(res.Data.EstimatedMileage), nil
+		return res.Data.EstimatedMileage, nil
 	}
 
 	return 0, err

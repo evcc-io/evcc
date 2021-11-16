@@ -1,3 +1,4 @@
+//go:build gokrazy
 // +build gokrazy
 
 package updater
@@ -29,7 +30,7 @@ var (
 // unzipReader transparently unpacks zip files
 func unzipReader(file io.ReadCloser) (io.ReadCloser, error) {
 	if unzipped, err := gzip.NewReader(file); err == nil {
-		return unzipped, err
+		return unzipped, nil
 	}
 
 	return file, nil

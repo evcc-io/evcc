@@ -2,8 +2,8 @@ package tasks
 
 import (
 	"errors"
-	"fmt"
 	"net"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -37,7 +37,7 @@ type TcpHandler struct {
 
 func (h *TcpHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
 	for _, port := range h.Ports {
-		addr := fmt.Sprintf("%s:%d", in.IP, port)
+		addr := net.JoinHostPort(in.IP, strconv.Itoa(port))
 		conn, err := h.dialer.Dial("tcp", addr)
 		if err == nil {
 			defer conn.Close()

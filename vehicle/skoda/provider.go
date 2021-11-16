@@ -87,7 +87,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
-		rng = int64(res.Battery.CruisingRangeElectricInMeters) / 1e3
+		rng = res.Battery.CruisingRangeElectricInMeters / 1e3
 	}
 
 	return rng, err

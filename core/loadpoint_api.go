@@ -109,7 +109,7 @@ func (lp *LoadPoint) GetPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
 
-	return int(lp.Phases)
+	return lp.Phases
 }
 
 // SetPhases sets loadpoint enabled phases
