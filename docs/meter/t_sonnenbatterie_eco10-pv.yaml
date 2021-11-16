@@ -1,0 +1,4 @@
+type: t_sonnenbatterie_eco10
+usage: "pv" 
+host: "192.0.2.2" 
+port: "8080"

@@ -1,0 +1,4 @@
+type: t_sunspec
+usage: "pv" 
+host: "192.0.2.2" 
+id: 1

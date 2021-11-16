@@ -1,0 +1,5 @@
+type: t_tinkerforge_warp
+host: "192.0.2.2" 
+port: "1883" 
+topic: "warp" 
+timeout: "30s"

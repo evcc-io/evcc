@@ -1,0 +1,3 @@
+type: t_wallbe_meter
+host: "192.0.2.2" 
+port: "502"

@@ -1,0 +1,4 @@
+type: t_lg_ess_home_8_10
+usage: "grid" 
+host: "192.0.2.2" 
+registration: "DE200..."  # Registration number of the LG ESS HOME inverter.

@@ -1,0 +1,4 @@
+type: t_e3dc
+usage: "battery" 
+host: "192.0.2.2" 
+port: "502"

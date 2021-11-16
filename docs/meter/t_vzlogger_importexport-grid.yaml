@@ -1,0 +1,6 @@
+type: t_vzlogger_importexport
+usage: "grid" 
+host: "192.0.2.2" 
+port: "80" 
+importuuid:
+exportuuid:

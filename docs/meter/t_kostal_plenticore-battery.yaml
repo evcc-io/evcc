@@ -1,0 +1,4 @@
+type: t_kostal_plenticore
+usage: "battery" 
+host: "192.0.2.2" 
+port: "1502"
