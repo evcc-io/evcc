@@ -54,11 +54,11 @@ type Site struct {
 
 // MetersConfig contains the loadpoint's meter configuration
 type MetersConfig struct {
-	GridMeterRef     string   `mapstructure:"grid"`     // Grid usage meter
-	PVMeterRef       string   `mapstructure:"pv"`       // PV meter
-	PVMetersRef      []string `mapstructure:"pvs"`      // Multiple PV meters
-	BatteryMeterRef  string   `mapstructure:"battery"`  // Battery charging meter
-	BatteryMetersRef []string `mapstructure:"batterys"` // Multiple Battery charging meters
+	GridMeterRef     string   `mapstructure:"grid"`      // Grid usage meter
+	PVMeterRef       string   `mapstructure:"pv"`        // PV meter
+	PVMetersRef      []string `mapstructure:"pvs"`       // Multiple PV meters
+	BatteryMeterRef  string   `mapstructure:"battery"`   // Battery charging meter
+	BatteryMetersRef []string `mapstructure:"batteries"` // Multiple Battery charging meters
 }
 
 // NewSiteFromConfig creates a new site
