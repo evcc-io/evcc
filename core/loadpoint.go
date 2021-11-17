@@ -727,7 +727,8 @@ func (lp *LoadPoint) startVehicleDetection() {
 
 // vehicleUnidentified checks if loadpoint has multiple vehicles associated and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.vehicles) > 1 && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+	res := len(lp.vehicles) > 1 && lp.vehicle == nil &&
+		lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
 	if res {
