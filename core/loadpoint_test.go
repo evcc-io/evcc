@@ -456,13 +456,15 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
-		OnDisconnect: api.ActionConfig{
-			Mode:      api.ModeOff,
-			TargetSoC: 70,
+		Mode:        api.ModeOff,
+		SoC: SoCConfig{
+			Target: 70,
 		},
+		ResetOnDisconnect: true,
 	}
 
 	attachListeners(t, lp)
+	lp.collectDefaults()
 
 	lp.enabled = true
 	lp.chargeCurrent = float64(minA)

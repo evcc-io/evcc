@@ -88,10 +88,12 @@ type LoadPoint struct {
 	Meters      struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC             SoCConfig
-	OnDisconnect    api.ActionConfig `mapstructure:"onDisconnect"`
-	OnIdentify      interface{}      `mapstructure:"onIdentify"`
-	Enable, Disable ThresholdConfig
+	SoC               SoCConfig
+	OnDisconnect_     interface{} `mapstructure:"onDisconnect"`
+	OnIdentify_       interface{} `mapstructure:"onIdentify"`
+	Enable, Disable   ThresholdConfig
+	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
+	onDisconnect      api.ActionConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -152,8 +154,12 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.SoC.Poll.Mode = pollConnected
 	}
 
-	if lp.OnIdentify != nil {
+	if lp.OnIdentify_ != nil {
 		lp.log.WARN.Printf("loadpoint.onIdentify is deprecated and will be removed in a future release. Use vehicle.onIdentify instead.")
+	}
+
+	if lp.OnDisconnect_ != nil {
+		lp.log.WARN.Printf("loadpoint.onDisconnect is deprecated and will be removed in a future release. Use loadpoint.resetOnDisconnect instead.")
 	}
 
 	// set vehicle polling interval
@@ -166,7 +172,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.SoC.Target == 0 {
-		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
+		lp.SoC.Target = lp.onDisconnect.TargetSoC // use disconnect value as default soc
 		if lp.SoC.Target == 0 {
 			lp.SoC.Target = 100
 		}
@@ -179,6 +185,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.MaxCurrent <= lp.MinCurrent {
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
+
+	// store defaults
+	lp.collectDefaults()
 
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
@@ -239,6 +248,17 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
+}
+
+// collectDefaults collects default values for use on disconnect
+func (lp *LoadPoint) collectDefaults() {
+	lp.onDisconnect = api.ActionConfig{
+		Mode:       lp.GetMode(),
+		MinCurrent: lp.GetMinCurrent(),
+		MaxCurrent: lp.GetMaxCurrent(),
+		MinSoC:     lp.GetMinSoC(),
+		TargetSoC:  lp.GetTargetSoC(),
+	}
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -366,7 +386,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 
 	// set default mode on disconnect
-	lp.applyAction(lp.OnDisconnect)
+	if lp.ResetOnDisconnect {
+		lp.applyAction(lp.onDisconnect)
+	}
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -399,7 +421,7 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(action api.ActionConfig) {
-	if action.Mode != "" && lp.GetMode() != api.ModeEmpty {
+	if action.Mode != api.ModeEmpty {
 		lp.SetMode(action.Mode)
 	}
 	if action.MinCurrent > 0 {
