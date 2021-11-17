@@ -35,6 +35,11 @@ func (v *Wrapper) Identifiers() ([]string, error) {
 	return nil, v.err
 }
 
+// OnIdentified returns the identify action
+func (v *Wrapper) OnIdentified() api.ActionConfig {
+	return api.ActionConfig{}
+}
+
 var _ api.Battery = (*Wrapper)(nil)
 
 // SoC implements the api.Battery interface

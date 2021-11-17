@@ -44,14 +44,16 @@ chargers:
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
 # for examples see https://github.com/evcc-io/config#vehicles
 vehicles:
-- name: renault
+- name: car1
   type: renault
   title: Zoe
   capacity: 60 # kWh
   user: # user
   password: # password
   vin: WREN...
-  cache: 5m
+  onIdentify: # set defaults when vehicle is identified
+    minSoC: 20 # charge to at least 20% independent of charge mode
+    targetSoC: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -93,10 +95,6 @@ loadpoints:
   onDisconnect: # set defaults when vehicle disconnects
     mode: pv # switch back to pv mode
     targetSoC: 100 # charge to 100%
-  onIdentify: # set defaults when vehicle is identified
-  - e-Up:
-      mode: pv # switch back to pv mode
-      targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long

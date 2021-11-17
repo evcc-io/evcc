@@ -333,6 +333,20 @@ func (mr *MockVehicleMockRecorder) Identifiers() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identifiers", reflect.TypeOf((*MockVehicle)(nil).Identifiers))
 }
 
+// OnIdentified mocks base method.
+func (m *MockVehicle) OnIdentified() api.ActionConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnIdentified")
+	ret0, _ := ret[0].(api.ActionConfig)
+	return ret0
+}
+
+// OnIdentified indicates an expected call of OnIdentified.
+func (mr *MockVehicleMockRecorder) OnIdentified() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnIdentified", reflect.TypeOf((*MockVehicle)(nil).OnIdentified))
+}
+
 // SoC mocks base method.
 func (m *MockVehicle) SoC() (float64, error) {
 	m.ctrl.T.Helper()

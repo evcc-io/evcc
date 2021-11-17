@@ -66,12 +66,6 @@ type ThresholdConfig struct {
 	Threshold float64
 }
 
-// ActionConfig defines an action to take on event
-type ActionConfig struct {
-	Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-	TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-}
-
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -95,8 +89,8 @@ type LoadPoint struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
 	SoC             SoCConfig
-	OnDisconnect    ActionConfig            `mapstructure:"onDisconnect"`
-	OnIdentify      map[string]ActionConfig `mapstructure:"onIdentify"`
+	OnDisconnect    api.ActionConfig `mapstructure:"onDisconnect"`
+	OnIdentify      interface{}      `mapstructure:"onIdentify"`
 	Enable, Disable ThresholdConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
@@ -156,6 +150,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 			lp.log.WARN.Printf("invalid poll mode: %s", lp.SoC.Poll.Mode)
 		}
 		lp.SoC.Poll.Mode = pollConnected
+	}
+
+	if lp.OnIdentify != nil {
+		lp.log.WARN.Printf("loadpoint.onIdentify is deprecated and will be removed in a future release. Use vehicle.onIdentify instead.")
 	}
 
 	// set vehicle polling interval
@@ -400,9 +398,12 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 }
 
 // applyAction executes the action
-func (lp *LoadPoint) applyAction(action ActionConfig) {
+func (lp *LoadPoint) applyAction(action api.ActionConfig) {
 	if action.Mode != "" && lp.GetMode() != api.ModeEmpty {
 		lp.SetMode(action.Mode)
+	}
+	if action.MinSoC != 0 {
+		_ = lp.SetMinSoC(action.MinSoC)
 	}
 	if action.TargetSoC != 0 {
 		_ = lp.SetTargetSoC(action.TargetSoC)
@@ -648,11 +649,6 @@ func (lp *LoadPoint) identifyVehicle() {
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.setActiveVehicle(vehicle)
 		}
-
-		if action, ok := lp.OnIdentify[id]; ok {
-			lp.log.DEBUG.Println("running vehicle action:", action)
-			lp.applyAction(action)
-		}
 	}
 }
 
@@ -709,6 +705,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
+
+		lp.applyAction(vehicle.OnIdentified())
 	} else {
 		lp.socEstimator = nil
 

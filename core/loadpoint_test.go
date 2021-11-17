@@ -456,10 +456,7 @@ func TestSetModeAndSocAtDisconnect(t *testing.T) {
 		MinCurrent:  minA,
 		MaxCurrent:  maxA,
 		status:      api.StatusC,
-		OnDisconnect: struct {
-			Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-			TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-		}{
+		OnDisconnect: api.ActionConfig{
 			Mode:      api.ModeOff,
 			TargetSoC: 70,
 		},
