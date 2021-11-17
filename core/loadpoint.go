@@ -402,6 +402,12 @@ func (lp *LoadPoint) applyAction(action api.ActionConfig) {
 	if action.Mode != "" && lp.GetMode() != api.ModeEmpty {
 		lp.SetMode(action.Mode)
 	}
+	if action.MinCurrent > 0 {
+		lp.SetMinCurrent(action.MinCurrent)
+	}
+	if action.MaxCurrent > 0 {
+		lp.SetMaxCurrent(action.MaxCurrent)
+	}
 	if action.MinSoC != 0 {
 		_ = lp.SetMinSoC(action.MinSoC)
 	}
