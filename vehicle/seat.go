@@ -71,9 +71,6 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(cc.VIN))
-
 	if err == nil {
 		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
 			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)

@@ -73,8 +73,5 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v.Provider = id.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(cc.VIN))
-
 	return v, err
 }

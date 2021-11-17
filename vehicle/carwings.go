@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -86,9 +85,6 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			VIN:    cc.VIN,
 		},
 	}
-
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(cc.VIN))
 
 	// initial connect
 	if err := v.session.Connect(v.user, v.password); err != nil {

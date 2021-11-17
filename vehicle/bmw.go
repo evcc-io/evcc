@@ -55,9 +55,6 @@ func NewBMWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(cc.VIN))
-
 	v.Provider = bmw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
 
 	return v, err

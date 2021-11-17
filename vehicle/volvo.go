@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -59,9 +58,6 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 			log.DEBUG.Printf("found vehicle: %v", v.vin)
 		}
 	}
-
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(v.vin))
 
 	return v, err
 }

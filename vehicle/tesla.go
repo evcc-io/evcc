@@ -83,9 +83,6 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(v.vehicle.Vin))
-
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
 

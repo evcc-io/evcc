@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -62,9 +61,6 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed:           &cc.embed,
 		porscheProvider: provider,
 	}
-
-	// make vehicle identifyable using its VIN
-	v.AddIdentifier(strings.ToUpper(cc.VIN))
 
 	return v, err
 }
