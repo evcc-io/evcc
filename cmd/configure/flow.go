@@ -58,7 +58,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 		deviceItem, err = c.processDeviceValues(values, templateItem, deviceItem, deviceCategory)
 		if err != nil {
-			if err != ErrDeviceNotValid {
+			if err != errDeviceNotValid {
 				fmt.Println()
 				fmt.Println("Fehler: ", err)
 			}
@@ -120,7 +120,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			values := c.processConfig(linkedTemplateItem.Params, category, false)
 			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
 			if err != nil {
-				if err != ErrDeviceNotValid {
+				if err != errDeviceNotValid {
 					fmt.Println()
 					fmt.Println("Fehler: ", err)
 				}
@@ -160,7 +160,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 		templateItem, err := c.processDeviceSelection(deviceCategory)
 		if err != nil {
-			return device, ErrItemNotPresent
+			return device, errItemNotPresent
 		}
 
 		deviceDescription = templateItem.Description
@@ -168,7 +168,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 		device, err = c.processDeviceValues(values, templateItem, device, deviceCategory)
 		if err != nil {
-			if err != ErrDeviceNotValid {
+			if err != errDeviceNotValid {
 				fmt.Println()
 				fmt.Println("Fehler: ", err)
 			}

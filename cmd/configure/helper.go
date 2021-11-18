@@ -13,7 +13,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 	templateItem := c.selectItem(deviceCategory)
 
 	if templateItem.Description == itemNotPresent {
-		return templateItem, ErrItemNotPresent
+		return templateItem, errItemNotPresent
 	}
 
 	err := c.processDeviceRequirements(templateItem)
@@ -57,7 +57,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	if !deviceIsValid {
 		addedDeviceIndex--
-		return device, ErrDeviceNotValid
+		return device, errDeviceNotValid
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
@@ -89,7 +89,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
 		fmt.Println()
 		if !c.askYesNo("Bist du ein Sponsor und möchtest das Sponsortoken eintragen") {
-			return ErrItemNotPresent
+			return errItemNotPresent
 		}
 		sponsortoken := c.askValue(question{
 			label:    "Bitte gib das Sponsortoken ein",

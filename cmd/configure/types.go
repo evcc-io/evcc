@@ -1,8 +1,6 @@
 package configure
 
 import (
-	"errors"
-
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
@@ -135,14 +133,13 @@ var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]
 		defaultName:    defaultNameChargeMeter},
 }
 
-const itemNotPresent string = "Mein Gerät ist nicht in der Liste"
+var localizer *i18n.Localizer
 
-var ErrItemNotPresent = errors.New("Gerät nicht vorhanden")
-var ErrDeviceNotValid = errors.New("Das Gerät funktioniert nicht")
+var itemNotPresent string
+
+var errItemNotPresent, errDeviceNotValid error
 
 var addedDeviceIndex int = 0
-
-var localizer *i18n.Localizer
 
 type device struct {
 	Name            string

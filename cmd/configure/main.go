@@ -54,10 +54,15 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 
 	localizer = i18n.NewLocalizer(bundle, lang)
 
+	c.setDefaultTexts()
+
 	fmt.Println()
 	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Intro"}))
 	fmt.Println()
-	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Meters_Guide_Select"}))
+	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{
+		MessageID:    "Meters_Guide_Select",
+		TemplateData: map[string]interface{}{"ItemNotPresent": localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "ItemNotPresent"})},
+	}))
 	c.configureDeviceGuidedSetup()
 
 	c.configureDevices(DeviceCategoryGridMeter, false)

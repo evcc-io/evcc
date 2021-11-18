@@ -1,11 +1,20 @@
 package configure
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/thoas/go-funk"
 )
+
+func (c *CmdConfigure) setDefaultTexts() {
+	itemNotPresent = localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "ItemNotPresent"})
+
+	errItemNotPresent = errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Error_ItemNotPresent"}))
+	errDeviceNotValid = errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Error_DeviceNotValid"}))
+}
 
 func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
 	result := param
