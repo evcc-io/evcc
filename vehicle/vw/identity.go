@@ -1,13 +1,13 @@
 package vw
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
@@ -57,7 +57,7 @@ func NewIdentity(log *util.Logger) *Identity {
 // UserLogin performs the identity.vwgroup.io login
 func (v *Identity) UserLogin(uri, user, password string) (url.Values, error) {
 	if user == "" || password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
 	// track cookies and don't follow redirects

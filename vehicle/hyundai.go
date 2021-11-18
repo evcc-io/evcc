@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("hyundai").Redact(cc.User, cc.Password, cc.VIN)
