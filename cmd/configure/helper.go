@@ -105,7 +105,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			eebusConfig, err := c.eebusCertificate()
 
 			if err != nil {
-				return fmt.Errorf("%s %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
+				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
 			}
 
 			err = c.configureEEBus(eebusConfig)
