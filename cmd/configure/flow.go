@@ -76,6 +76,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 	if len(supportedDeviceCategories) > 1 {
 		for _, additionalCategory := range supportedDeviceCategories[1:] {
+			values[templates.ParamUsage] = additionalCategory.String()
 			deviceItem, err := c.processDeviceValues(values, templateItem, deviceItem, additionalCategory)
 			if err != nil {
 				continue
