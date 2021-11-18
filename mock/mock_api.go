@@ -319,12 +319,11 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 }
 
 // Identifiers mocks base method.
-func (m *MockVehicle) Identifiers() ([]string, error) {
+func (m *MockVehicle) Identifiers() []string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Identifiers")
 	ret0, _ := ret[0].([]string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	return ret0
 }
 
 // Identifiers indicates an expected call of Identifiers.

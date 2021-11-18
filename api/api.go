@@ -122,7 +122,7 @@ type Vehicle interface {
 	Battery
 	Title() string
 	Capacity() int64
-	Identifiers() ([]string, error)
+	Identifiers() []string
 	OnIdentified() ActionConfig
 }
 

@@ -20,8 +20,8 @@ func (v *embed) Capacity() int64 {
 }
 
 // Identifiers implements the api.Identifier interface
-func (v *embed) Identifiers() ([]string, error) {
-	return v.Identifiers_, nil
+func (v *embed) Identifiers() []string {
+	return v.Identifiers_
 }
 
 // OnIdentified returns the identify action

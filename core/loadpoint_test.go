@@ -763,35 +763,35 @@ func TestVehicleDetectByID(t *testing.T) {
 	}
 	tc := []testcase{
 		{"1/_/_->0", "1", "", "", nil, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return(nil, nil)
-			v2.EXPECT().Identifiers().Return(nil, nil)
-			v1.EXPECT().Identifiers().Return(nil, nil)
-			v2.EXPECT().Identifiers().Return(nil, nil)
+			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return(nil)
+			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return(nil)
 		}},
 		{"1/1/2->1", "1", "1", "2", v1, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
 		}},
 		{"2/1/2->2", "2", "1", "2", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 		{"11/1*/2->1", "11", "1*", "2", v1, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
-			// v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			// v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 		{"22/1*/2*->2", "22", "1*", "2*", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
-			v1.EXPECT().Identifiers().Return([]string{tc.i1}, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return([]string{tc.i1})
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 		{"2/_/*->2", "2", "", "*", v2, func(tc testcase) {
-			v1.EXPECT().Identifiers().Return(nil, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
-			v1.EXPECT().Identifiers().Return(nil, nil)
-			v2.EXPECT().Identifiers().Return([]string{tc.i2}, nil)
+			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
+			v1.EXPECT().Identifiers().Return(nil)
+			v2.EXPECT().Identifiers().Return([]string{tc.i2})
 		}},
 	}
 

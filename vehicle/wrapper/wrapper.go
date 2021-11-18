@@ -31,8 +31,8 @@ func (v *Wrapper) Capacity() int64 {
 }
 
 // Identifiers implements the api.Vehicle interface
-func (v *Wrapper) Identifiers() ([]string, error) {
-	return nil, v.err
+func (v *Wrapper) Identifiers() []string {
+	return nil
 }
 
 // OnIdentified returns the identify action
