@@ -102,7 +102,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 		fmt.Printf("%s: ", c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
 		c.log.FATAL.Fatal(err)
 	}
-	fmt.Println(c.localizedString("File_Success_Save", localizeMap{"FileName": filename}))
+	fmt.Println(c.localizedString("File_SaveSuccess", localizeMap{"FileName": filename}))
 }
 
 // ask device specfic questions
