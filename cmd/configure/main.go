@@ -99,7 +99,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 
 	err = os.WriteFile(filename, yaml, 0755)
 	if err != nil {
-		fmt.Printf(c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
+		fmt.Printf("%s: ", c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
 		c.log.FATAL.Fatal(err)
 	}
 	fmt.Println(c.localizedString("File_Success_Save", localizeMap{"FileName": filename}))
