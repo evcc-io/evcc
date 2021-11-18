@@ -1,3 +1,4 @@
 type: t_wallbe_sdm
+description: Wallbe (Eco, Pro) with SDM Meter
 host: "192.0.2.2" 
 port: "502"

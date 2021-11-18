@@ -1,4 +1,5 @@
 type: t_fritzdect
+description: FritzDECT
 uri: "https://fritz.box" 
 user:
 password:

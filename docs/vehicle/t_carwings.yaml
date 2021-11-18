@@ -1,4 +1,5 @@
 type: t_carwings
+description: Nissan Leaf (pre 2019)
 user:
 password:
 vin: "W..." 

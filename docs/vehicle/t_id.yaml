@@ -1,4 +1,5 @@
 type: t_id
+description: Volkswagen (We Connect ID Account)
 user:
 password:
 vin: "WVWZZZ..." 

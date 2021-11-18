@@ -1,4 +1,5 @@
 type: t_ovms
+description: Open Vehicle Monitoring System
 user:
 password:
 vehicleid:

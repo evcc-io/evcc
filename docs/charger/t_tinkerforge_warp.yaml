@@ -1,4 +1,5 @@
 type: t_tinkerforge_warp
+description: TinkerForge WARP Charger
 host: "192.0.2.2" 
 port: "1883" 
 topic: "warp" 

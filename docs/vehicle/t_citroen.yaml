@@ -1,4 +1,5 @@
 type: t_citroen
+description: Citroen
 user:
 password:
 vin: "W..." 

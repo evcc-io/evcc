@@ -1,4 +1,5 @@
 type: t_porsche
+description: Porsche
 user:
 password:
 vin: "WP0..." 

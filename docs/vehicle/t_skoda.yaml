@@ -1,4 +1,5 @@
 type: t_skoda
+description: Skoda (Citigo)
 user:
 password:
 vin: "W..." 

@@ -1,4 +1,5 @@
 type: t_peugeot
+description: Peugeot
 user:
 password:
 vin: "W..." 

@@ -1,4 +1,5 @@
 type: t_opel
+description: Opel
 user:
 password:
 vin: "WP0..." 

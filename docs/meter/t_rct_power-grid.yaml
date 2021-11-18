@@ -1,3 +1,4 @@
 type: t_rct_power
+description: RCT Power
 usage: "grid" 
 host: "192.0.2.2"

@@ -1,4 +1,5 @@
 type: t_ford
+description: Ford
 user:
 password:
 vin: "WF0FXX..." 

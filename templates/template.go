@@ -112,10 +112,10 @@ var proxyTmpl string
 
 // RenderProxy renders the proxy template for inclusion in documentation
 func (t *Template) RenderProxy() ([]byte, error) {
-	return t.RenderProxyWithValues(nil)
+	return t.RenderProxyWithValues(nil, false)
 }
 
-func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeDescription bool) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -140,10 +140,14 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}) ([]byte,
 	t.Params = newParams
 
 	out := new(bytes.Buffer)
-	err = tmpl.Execute(out, map[string]interface{}{
+	data := map[string]interface{}{
 		"Template": t.Type,
 		"Params":   t.Params,
-	})
+	}
+	if includeDescription {
+		data["Description"] = t.Description
+	}
+	err = tmpl.Execute(out, data)
 
 	return bytes.TrimSpace(out.Bytes()), err
 }

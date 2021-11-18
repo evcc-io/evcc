@@ -1,4 +1,5 @@
 type: t_tronity
+description: Tronity
 userid:
 secret:
 accessToken:

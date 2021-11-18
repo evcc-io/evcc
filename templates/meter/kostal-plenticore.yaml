@@ -1,5 +1,5 @@
 type: t_kostal_plenticore
-description: Kostal Plenticore Hybrid Wechselrichter
+description: Kostal Plenticore Hybrid
 guidedsetup:
   enable: true
   linked:

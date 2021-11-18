@@ -1,4 +1,5 @@
 type: t_kostal_energy_meter_inverter
+description: Kostal Energy Meter via Wechselrichter
 usage: "grid" 
 host: "192.0.2.2" 
 port: "1502"

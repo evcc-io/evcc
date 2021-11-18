@@ -73,7 +73,7 @@ func writeTemplate(class string, tmpl templates.Template, usage string) error {
 			values["modbustcpip"] = true
 		}
 	}
-	b, err := tmpl.RenderProxyWithValues(values)
+	b, err := tmpl.RenderProxyWithValues(values, true)
 
 	if err != nil {
 		println(string(b))
@@ -85,7 +85,6 @@ func writeTemplate(class string, tmpl templates.Template, usage string) error {
 		filename = fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Type, usage)
 	}
 	if err := os.WriteFile(filename, b, 0644); err != nil {
-		fmt.Println("hier 4")
 		return err
 	}
 

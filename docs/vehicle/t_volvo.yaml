@@ -1,4 +1,5 @@
 type: t_volvo
+description: Volvo
 user:
 password:
 vin: "W..." 

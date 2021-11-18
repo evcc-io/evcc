@@ -1,4 +1,5 @@
 type: t_nissan
+description: Nissan
 user:
 password:
 capacity: "60"

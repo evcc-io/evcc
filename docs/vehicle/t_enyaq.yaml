@@ -1,4 +1,5 @@
 type: t_enyaq
+description: Skoda (Enyaq)
 user:
 password:
 vin: "W..." 

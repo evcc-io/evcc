@@ -1,4 +1,5 @@
 type: t_powerfox_poweropti
+description: Powerfox Poweropti (Cloud)
 usage: "grid" 
 user:
 password:

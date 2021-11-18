@@ -1,4 +1,5 @@
 type: t_tesla_powerwall
+description: Tesla Powerwall
 usage: "pv" 
 host: "192.0.2.2" 
 password: # Passwort des Benutzers Kunde/Customer

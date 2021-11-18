@@ -1,4 +1,5 @@
 type: t_discovergy
+description: Discovergy Metering Service (Cloud)
 usage: "pv" 
 user:
 password:
