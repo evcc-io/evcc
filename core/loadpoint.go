@@ -431,10 +431,18 @@ func (lp *LoadPoint) applyAction(action api.ActionConfig) {
 		lp.SetMaxCurrent(action.MaxCurrent)
 	}
 	if action.MinSoC != 0 {
-		_ = lp.SetMinSoC(action.MinSoC)
+		// TODO deduplicate with SetMinSoC
+		lp.Lock()
+		lp.SoC.Min = action.MinSoC
+		lp.publish("minSoC", action.MinSoC)
+		lp.Unlock()
 	}
 	if action.TargetSoC != 0 {
-		_ = lp.SetTargetSoC(action.TargetSoC)
+		// TODO deduplicate with SetTargetSoC
+		lp.Lock()
+		lp.SoC.Target = action.TargetSoC
+		lp.publish("targetSoC", action.TargetSoC)
+		lp.Unlock()
 	}
 }
 
