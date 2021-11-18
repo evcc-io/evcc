@@ -1,9 +1,5 @@
 package configure
 
-import (
-	"github.com/nicksnyder/go-i18n/v2/i18n"
-)
-
 const (
 	ModbusMagicSetupComment  string = "# ::modbus-setup::"
 	ModbusChoiceRS485        string = "rs485"
@@ -64,12 +60,6 @@ const (
 )
 
 var ValidUsageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryChargeMeter}
-var UsageChoiceDescriptions = map[DeviceCategory]string{
-	DeviceCategoryGridMeter:    "Grid Meter",
-	DeviceCategoryPVMeter:      "PV Meter",
-	DeviceCategoryBatteryMeter: "Battery Meter",
-	DeviceCategoryChargeMeter:  "Charge Meter",
-}
 
 const (
 	defaultNameCharger      = "wallbox"
@@ -78,11 +68,6 @@ const (
 	defaultNameBatteryMeter = "battery"
 	defaultNameChargeMeter  = "charge"
 	defaultNameVehicle      = "ev"
-)
-
-const (
-	defaultTitleLoadpoint = "Garage"
-	defaultTitleSite      = "Mein Zuhause"
 )
 
 type DeviceCategoryData struct {
@@ -94,82 +79,33 @@ type DeviceCategoryData struct {
 
 var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]DeviceCategoryData{
 	DeviceCategoryCharger: {
-		title:       "Wallbox",
-		article:     "eine",
 		class:       DeviceClassCharger,
 		defaultName: defaultNameCharger},
 	DeviceCategoryGuidedSetup: {
-		title:   "PV System",
-		article: "ein",
-		class:   DeviceClassMeter},
+		class: DeviceClassMeter},
 	DeviceCategoryGridMeter: {
-		title:          "Netz-Stromzähler",
-		article:        "einen",
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryGridMeter,
 		defaultName:    defaultNameGridMeter},
 	DeviceCategoryPVMeter: {
-		title:          "PV Wechselrichter (oder entsprechenden Stromzähler)",
-		article:        "einen",
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryPVMeter,
 		defaultName:    defaultNamePVMeter},
 	DeviceCategoryBatteryMeter: {
-		title:          "Battery Wechselrichter (oder entsprechenden Stromzähler)",
-		article:        "einen",
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryBatteryMeter,
 		defaultName:    defaultNameBatteryMeter},
 	DeviceCategoryVehicle: {
-		title:       "Fahrzeug",
-		article:     "ein",
 		class:       DeviceClassVehicle,
 		defaultName: defaultNameVehicle},
 	DeviceCategoryChargeMeter: {
-		title:          "Ladestromzähler",
-		article:        "einen",
 		class:          DeviceClassMeter,
 		categoryFilter: DeviceCategoryChargeMeter,
 		defaultName:    defaultNameChargeMeter},
 }
 
-var localizer *i18n.Localizer
-
-var itemNotPresent string
+type localizeMap map[string]interface{}
 
 var errItemNotPresent, errDeviceNotValid error
 
 var addedDeviceIndex int = 0
-
-type device struct {
-	Name            string
-	Title           string
-	Yaml            string
-	ChargerHasMeter bool // only used with chargers to detect if we need to ask for a charge meter
-}
-
-type loadpoint struct {
-	Title       string
-	Charger     string
-	ChargeMeter string
-	Vehicles    []string
-	Mode        string
-	MinCurrent  int
-	MaxCurrent  int
-	Phases      int
-}
-
-type config struct {
-	Meters     []device
-	Chargers   []device
-	Vehicles   []device
-	Loadpoints []loadpoint
-	Site       struct {
-		Title     string
-		Grid      string
-		PVs       []string
-		Batteries []string
-	}
-	EEBUS        string
-	SponsorToken string
-}

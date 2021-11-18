@@ -10,10 +10,30 @@ import (
 )
 
 func (c *CmdConfigure) setDefaultTexts() {
-	itemNotPresent = localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "ItemNotPresent"})
+	errItemNotPresent = errors.New(c.localizedString("Error_ItemNotPresent", nil))
+	errDeviceNotValid = errors.New(c.localizedString("Error_DeviceNotValid", nil))
 
-	errItemNotPresent = errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Error_ItemNotPresent"}))
-	errDeviceNotValid = errors.New(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Error_DeviceNotValid"}))
+	c.updateDeviceCategoryTexts(DeviceCategoryCharger, "Category_ChargerTitle", "Category_ChargerArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryGuidedSetup, "Category_SystemTitle", "Category_SystemArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryGridMeter, "Category_GridMeterTitle", "Category_GridMeterArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryPVMeter, "Category_PVMeterTitle", "Category_PVMeterArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryBatteryMeter, "Category_BatteryMeter", "Category_BatteryMeterArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryChargeMeter, "Category_ChargeMeterTitle", "Category_ChargeMeterArticle")
+	c.updateDeviceCategoryTexts(DeviceCategoryVehicle, "Category_VehicleTitle", "Category_VehicleArticle")
+}
+
+func (c *CmdConfigure) updateDeviceCategoryTexts(category DeviceCategory, title, article string) {
+	data := DeviceCategories[category]
+	data.title = c.localizedString(title, nil)
+	data.article = c.localizedString(article, nil)
+	DeviceCategories[category] = data
+}
+
+func (c *CmdConfigure) localizedString(key string, templateData localizeMap) string {
+	return c.localizer.MustLocalize(&i18n.LocalizeConfig{
+		MessageID:    key,
+		TemplateData: templateData,
+	})
 }
 
 func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
@@ -25,45 +45,45 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 
 	switch strings.ToLower(result.Name) {
 	case "title":
-		result.Name = "Titel"
+		result.Name = c.localizedString("UserFriendly_Title_Name", nil)
 		if result.Help == "" {
-			result.Help = "Eine Text welcher in der Benutzeroberfläche angezeigt wird"
+			result.Help = c.localizedString("UserFriendly_Title_Help", nil)
 		}
 	case "device":
-		result.Name = "Gerätadresse"
+		result.Name = c.localizedString("UserFriendly_Device_Name", nil)
 	case "baudrate":
-		result.Name = "Baudrate"
+		result.Name = c.localizedString("UserFriendly_Baudrate_Name", nil)
 	case "comset":
-		result.Name = "ComSet"
+		result.Name = c.localizedString("UserFriendly_ComSet_Name", nil)
 	case "host":
-		result.Name = "IP-Adresse oder Hostname"
+		result.Name = c.localizedString("UserFriendly_Host_Name", nil)
 	case "port":
-		result.Name = "Port"
+		result.Name = c.localizedString("UserFriendly_Port_Name", nil)
 		result.ValueType = templates.ParamValueTypeNumber
 	case "user":
-		result.Name = "Benutzername"
+		result.Name = c.localizedString("UserFriendly_User_Name", nil)
 	case "password":
-		result.Name = "Passwort"
+		result.Name = c.localizedString("UserFriendly_Password_Name", nil)
 	case "capacity":
-		result.Name = "Akku-Kapazität in kWh"
+		result.Name = c.localizedString("UserFriendly_Capacity_Name", nil)
 		if result.Example == "" {
 			result.Example = "41.5"
 		}
 		result.ValueType = templates.ParamValueTypeFloat
 	case "vin":
-		result.Name = "Fahrzeugidentifikationsnummer"
+		result.Name = c.localizedString("UserFriendly_Vin_Name", nil)
 		if result.Help == "" {
-			result.Help = "Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind"
+			result.Help = c.localizedString("UserFriendly_Vin_Help", nil)
 		}
 	case "identifier":
-		result.Name = "Identifikationsnummer"
+		result.Name = c.localizedString("UserFriendly_Identifier_Name", nil)
 		if result.Help == "" {
-			result.Help = "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+			result.Help = c.localizedString("UserFriendly_Identifier_Help", nil)
 		}
 	case "standbypower":
-		result.Name = "Standby-Leistung in W"
+		result.Name = c.localizedString("UserFriendly_StandByPower_Name", nil)
 		if result.Help == "" {
-			result.Help = "Leistung oberhalb des angegebenen Wertes, wird als Ladeleistung gewertet"
+			result.Help = c.localizedString("UserFriendly_StandByPower_Help", nil)
 		}
 		result.ValueType = templates.ParamValueTypeNumber
 	}

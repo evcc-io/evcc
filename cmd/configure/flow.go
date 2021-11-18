@@ -31,7 +31,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 		usageFound, usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
 		if !usageFound {
-			fmt.Println("error")
+			fmt.Println("ERROR: Device template is missing valid usages!")
 			return
 		}
 		if len(usageChoices) == 0 {
@@ -60,7 +60,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 		if err != nil {
 			if err != errDeviceNotValid {
 				fmt.Println()
-				fmt.Println("Fehler: ", err)
+				fmt.Println(err)
 			}
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
@@ -86,7 +86,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	}
 
 	fmt.Println()
-	fmt.Println(templateItem.Description + " wurde erfolgreich hinzugefügt.")
+	fmt.Println(templateItem.Description + " " + c.localizedString("Device_Added", nil))
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -122,7 +122,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			if err != nil {
 				if err != errDeviceNotValid {
 					fmt.Println()
-					fmt.Println("Fehler: ", err)
+					fmt.Println(err)
 				}
 				fmt.Println()
 				if c.askConfigFailureNextStep() {
@@ -133,7 +133,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 				c.configuration.AddDevice(deviceItem, category)
 
 				fmt.Println()
-				fmt.Println(linkedTemplateItem.Description + " wurde erfolgreich hinzugefügt.")
+				fmt.Println(linkedTemplateItem.Description + " " + c.localizedString("Device_Added", nil))
 			}
 			repeat = false
 		}
@@ -143,7 +143,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, error) {
 	fmt.Println()
-	fmt.Printf("- %s konfigurieren\n", DeviceCategories[deviceCategory].title)
+	fmt.Printf("- %s %s\n", c.localizedString("Meters_Configure", nil), DeviceCategories[deviceCategory].title)
 
 	var repeat bool = true
 
@@ -170,7 +170,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 		if err != nil {
 			if err != errDeviceNotValid {
 				fmt.Println()
-				fmt.Println("Fehler: ", err)
+				fmt.Println(err)
 			}
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
@@ -190,7 +190,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	}
 
 	fmt.Println()
-	fmt.Println(deviceDescription + deviceTitle + " wurde erfolgreich hinzugefügt.")
+	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added", nil))
 
 	return device, nil
 }

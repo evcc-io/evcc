@@ -12,7 +12,7 @@ import (
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
-	if templateItem.Description == itemNotPresent {
+	if templateItem.Description == c.localizedString("ItemNotPresent", nil) {
 		return templateItem, errItemNotPresent
 	}
 
@@ -42,11 +42,12 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	v, err := c.configureDevice(deviceCategory, templateItem, values)
 	if err == nil {
 		fmt.Println()
-		categoryTitle := ""
 		if deviceCategory == DeviceCategoryPVMeter || deviceCategory == DeviceCategoryBatteryMeter || deviceCategory == DeviceCategoryGridMeter {
-			categoryTitle = "als " + DeviceCategories[deviceCategory].title
+			fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
+		} else {
+			fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description}))
 		}
-		fmt.Println("Teste die " + templateItem.Description + " Konfiguration " + categoryTitle + " ...")
+
 		deviceIsValid, err = c.testDevice(deviceCategory, v)
 		if deviceCategory == DeviceCategoryCharger {
 			if deviceIsValid && err == nil {
@@ -76,23 +77,23 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description) > 0 {
 		fmt.Println()
-		fmt.Println("Das Gerät muss die folgenden Voraussetzungen erfüllen:")
+		fmt.Println(c.localizedString("Requirements_Title", nil))
 		fmt.Println("  " + templateItem.Requirements.Description)
 		if len(templateItem.Requirements.URI) > 0 {
-			fmt.Println("  Weitere Informationen: " + templateItem.Requirements.URI)
+			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
 	}
 
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship && c.configuration.SponsorToken() == "" {
 		fmt.Println()
-		fmt.Println("Dieses Gerät benötigt ein Sponsorship von evcc. Wie das funktioniert und was ist, findest du hier: https://docs.evcc.io/docs/sponsorship")
+		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
 		fmt.Println()
-		if !c.askYesNo("Bist du ein Sponsor und möchtest das Sponsortoken eintragen") {
+		if !c.askYesNo(c.localizedString("Requirements_Sponsorship_Token", nil)) {
 			return errItemNotPresent
 		}
 		sponsortoken := c.askValue(question{
-			label:    "Bitte gib das Sponsortoken ein",
+			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
 			help:     "",
 			required: true})
 		c.configuration.SetSponsorToken(sponsortoken)
@@ -104,7 +105,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			eebusConfig, err := c.eebusCertificate()
 
 			if err != nil {
-				return fmt.Errorf("Fehler: Das EEBUS Zertifikat konnte nicht erstellt werden: %s", err)
+				return fmt.Errorf("%s %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
 			}
 
 			err = c.configureEEBus(eebusConfig)
@@ -120,9 +121,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 
 		fmt.Println()
-		fmt.Println("Du hast eine Wallbox ausgewählt, welche über das EEBUS Protokoll angesprochen wird.")
-		fmt.Println("Dazu muss die Wallbox nun mit evcc verbunden werden. Dies geschieht üblicherweise auf der Webseite der Wallbox.")
-		fmt.Println("Drücke die Enter-Taste, wenn dies abgeschlossen ist.")
+		fmt.Println(c.localizedString("Requirements_EEBUS_Pairing", nil))
 		fmt.Scanln()
 	}
 
@@ -211,7 +210,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	selectedModbusKey := ""
 
 	fmt.Println()
-	fmt.Println("Führe folgende Einstellungen durch:")
+	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
 	for _, param := range paramItems {
@@ -244,7 +243,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				// ask for modbus interface type
 				index := 0
 				if len(choices) > 1 {
-					index, _ = c.askChoice("Wähle die ModBus Schnittstelle aus", choices)
+					index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
 				}
 				selectedModbusKey = choiceKeys[index]
 				switch selectedModbusKey {

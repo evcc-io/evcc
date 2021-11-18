@@ -8,6 +8,39 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
+type device struct {
+	Name            string
+	Title           string
+	Yaml            string
+	ChargerHasMeter bool // only used with chargers to detect if we need to ask for a charge meter
+}
+
+type loadpoint struct {
+	Title       string
+	Charger     string
+	ChargeMeter string
+	Vehicles    []string
+	Mode        string
+	MinCurrent  int
+	MaxCurrent  int
+	Phases      int
+}
+
+type config struct {
+	Meters     []device
+	Chargers   []device
+	Vehicles   []device
+	Loadpoints []loadpoint
+	Site       struct {
+		Title     string
+		Grid      string
+		PVs       []string
+		Batteries []string
+	}
+	EEBUS        string
+	SponsorToken string
+}
+
 type Configure struct {
 	config config
 }

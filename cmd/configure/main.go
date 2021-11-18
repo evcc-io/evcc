@@ -22,6 +22,7 @@ var lang_de string
 
 type CmdConfigure struct {
 	configuration Configure
+	localizer     *i18n.Localizer
 	log           *util.Logger
 }
 
@@ -52,17 +53,16 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 		lang = flagLang
 	}
 
-	localizer = i18n.NewLocalizer(bundle, lang)
+	c.localizer = i18n.NewLocalizer(bundle, lang)
 
 	c.setDefaultTexts()
 
 	fmt.Println()
-	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "Intro"}))
+	fmt.Println(c.localizedString("Intro", nil))
 	fmt.Println()
-	fmt.Println(localizer.MustLocalize(&i18n.LocalizeConfig{
-		MessageID:    "Meters_Guide_Select",
-		TemplateData: map[string]interface{}{"ItemNotPresent": localizer.MustLocalize(&i18n.LocalizeConfig{MessageID: "ItemNotPresent"})},
-	}))
+	fmt.Println(c.localizedString("Meters_Setup", nil))
+	fmt.Println()
+	fmt.Println(c.localizedString("Meters_Guide_Select", localizeMap{"ItemNotPresent": c.localizedString("ItemNotPresent", nil)}))
 	c.configureDeviceGuidedSetup()
 
 	c.configureDevices(DeviceCategoryGridMeter, false)
@@ -87,23 +87,22 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 			break
 		}
 
-		fmt.Printf("Die Datei %s existiert bereits.\n", filename)
-		if c.askYesNo("Soll die Datei überschrieben werden") {
+		if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
 			break
 		}
 
 		filename = c.askValue(question{
-			label:        "Gib einen neuen Dateinamen an",
+			label:        c.localizedString("File_NewFilename", nil),
 			exampleValue: "evcc_neu.yaml",
 			required:     true})
 	}
 
 	err = os.WriteFile(filename, yaml, 0755)
 	if err != nil {
-		fmt.Printf("Die Konfiguration konnte nicht in die Datei %s gespeicher werden", filename)
+		fmt.Printf(c.localizedString("File_Error_SaveFailed", localizeMap{"FileName": filename}))
 		c.log.FATAL.Fatal(err)
 	}
-	fmt.Printf("Deine Konfiguration wurde erfolgreich in die Datei %s gespeichert.\n", filename)
+	fmt.Println(c.localizedString("File_Success_Save", localizeMap{"FileName": filename}))
 }
 
 // ask device specfic questions
@@ -114,13 +113,17 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 		return nil
 	}
 
-	additionalMeter := ""
+	localizeMap := localizeMap{
+		"Article":  DeviceCategories[deviceCategory].article,
+		"Category": DeviceCategories[deviceCategory].title,
+	}
+	addDeviceText := c.localizedString("AddDeviceInCategory", localizeMap)
 	if c.configuration.MetersOfCategory(deviceCategory) > 0 {
-		additionalMeter = "noch "
+		addDeviceText = c.localizedString("AddAnotherDeviceInCategory", localizeMap)
 	}
 
 	fmt.Println()
-	if !c.askYesNo("Möchtest du " + additionalMeter + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
+	if !c.askYesNo(addDeviceText) {
 		return nil
 	}
 
@@ -136,7 +139,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 		}
 
 		fmt.Println()
-		if !c.askYesNo("Möchtest du noch " + DeviceCategories[deviceCategory].article + " " + DeviceCategories[deviceCategory].title + " hinzufügen") {
+		if !c.askYesNo(c.localizedString("AddAnotherDeviceInCategory", localizeMap)) {
 			break
 		}
 	}
@@ -147,13 +150,13 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 // ask loadpoint specific questions
 func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
-	fmt.Println("- Ladepunkt(e) einrichten")
+	fmt.Println(c.localizedString("Loadpoint_Setup", nil))
 
 	for ok := true; ok; {
 
 		loadpointTitle := c.askValue(question{
-			label:        "Titel des Ladepunktes",
-			defaultValue: defaultTitleLoadpoint,
+			label:        c.localizedString("Loadpoint_Title", nil),
+			defaultValue: c.localizedString("Loadpoint_DefaultTitle", nil),
 			required:     true})
 		loadpoint := loadpoint{
 			Title:      loadpointTitle,
@@ -165,17 +168,17 @@ func (c *CmdConfigure) configureLoadpoints() {
 		if err != nil {
 			break
 		}
+		chargerHasMeter := charger.ChargerHasMeter
 
 		loadpoint.Charger = charger.Name
 
-		if !charger.ChargerHasMeter {
-			if c.askYesNo("Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert der verwendet werden kann") {
+		if !chargerHasMeter {
+			if c.askYesNo(c.localizedString("Loadpoint_WallboxWOMeter", nil)) {
 				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter)
-				if err != nil {
-					break
+				if err == nil {
+					loadpoint.ChargeMeter = chargeMeter.Name
+					chargerHasMeter = true
 				}
-
-				loadpoint.ChargeMeter = chargeMeter.Name
 			}
 		}
 
@@ -184,46 +187,66 @@ func (c *CmdConfigure) configureLoadpoints() {
 			loadpoint.Vehicles = append(loadpoint.Vehicles, vehicles[0].Name)
 		} else if len(vehicles) > 1 {
 			for _, vehicle := range vehicles {
-				if c.askYesNo("Wird das Fahrzeug " + vehicle.Title + " hier laden?") {
+				if c.askYesNo(c.localizedString("Loadpoint_VehicleChargeHere", localizeMap{"Vehicle": vehicle.Title})) {
 					loadpoint.Vehicles = append(loadpoint.Vehicles, vehicle.Name)
 				}
 			}
 		}
 
-		powerChoices := []string{"3,6kW", "11kW", "22kW", "Other"}
+		powerChoices := []string{
+			c.localizedString("Loadpoint_WallboxPower36kW", nil),
+			c.localizedString("Loadpoint_WallboxPower11kW", nil),
+			c.localizedString("Loadpoint_WallboxPower22kW", nil),
+			c.localizedString("Loadpoint_WallboxPowerOther", nil),
+		}
 		fmt.Println()
-		powerIndex, _ := c.askChoice("Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?", powerChoices)
+		powerIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), powerChoices)
 		switch powerIndex {
 		case 0:
 			loadpoint.MaxCurrent = 16
-			loadpoint.Phases = 1
+			if !chargerHasMeter {
+				loadpoint.Phases = 1
+			}
 		case 1:
 			loadpoint.MaxCurrent = 16
+			if !chargerHasMeter {
+				loadpoint.Phases = 3
+			}
 		case 2:
 			loadpoint.MaxCurrent = 32
+			if !chargerHasMeter {
+				loadpoint.Phases = 3
+			}
 		case 3:
 			amperage := c.askValue(question{
-				label:     "Was ist die maximale Stromstärke welche die Wallbox auf einer Phase zur Verfügung stellen kann?",
+				label:     c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 				valueType: templates.ParamValueTypeNumber,
 				required:  true})
 			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
 
-			phaseChoices := []string{"1", "2", "3"}
-			fmt.Println()
-			phaseIndex, _ := c.askChoice("Mit wievielen Phasen ist die Wallbox angeschlossen?", phaseChoices)
-			loadpoint.Phases = phaseIndex + 1
+			if !chargerHasMeter {
+				phaseChoices := []string{"1", "2", "3"}
+				fmt.Println()
+				phaseIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxPhases", nil), phaseChoices)
+				loadpoint.Phases = phaseIndex + 1
+			}
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
-		ladeModi := []string{"Aus", "Sofort (mit größtmöglicher Leistung)", "Min+PV (mit der kleinstmöglichen Leistung, schneller wenn genügend PV Überschuss vorhanden ist)", "PV (Nur mit PV Überschuß)"}
+		ladeModi := []string{
+			c.localizedString("Loadpoint_ChargeModeOff", nil),
+			c.localizedString("Loadpoint_ChargeModeNow", nil),
+			c.localizedString("Loadpoint_ChargeModeMinPV", nil),
+			c.localizedString("Loadpoint_ChargeModePV", nil),
+		}
 		fmt.Println()
-		modeChoice, _ := c.askChoice("Was sollte der Standard-Lademodus sein, wenn ein Fahrzeug angeschlossen wird?", ladeModi)
+		modeChoice, _ := c.askChoice(c.localizedString("Loadpoint_DefaultChargeMode", nil), ladeModi)
 		loadpoint.Mode = chargingModes[modeChoice]
 
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
-		if !c.askYesNo("Möchtest du einen weiteren Ladepunkt hinzufügen") {
+		if !c.askYesNo(c.localizedString("Loadpoint_AddAnother", nil)) {
 			break
 		}
 	}
@@ -232,11 +255,11 @@ func (c *CmdConfigure) configureLoadpoints() {
 // ask site specific questions
 func (c *CmdConfigure) configureSite() {
 	fmt.Println()
-	fmt.Println("- Richte deinen Standort ein")
+	fmt.Println(c.localizedString("Site_Setup", nil))
 
 	siteTitle := c.askValue(question{
-		label:        "Titel des Standortes",
-		defaultValue: defaultTitleSite,
+		label:        c.localizedString("Site_Title", nil),
+		defaultValue: c.localizedString("Site_DefaultTitle", nil),
 		required:     true})
 	c.configuration.SetSiteTitle(siteTitle)
 }

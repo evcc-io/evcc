@@ -22,13 +22,10 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 
 	if err != nil {
 		if err == terminal.InterruptErr {
-			fmt.Println("Konfiguration wurde abgebrochen.")
-			fmt.Println()
-			fmt.Println("Falls diese Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/installation/configuration")
-			fmt.Println()
+			fmt.Println(c.localizedString("Cancel", nil))
 			os.Exit(0)
 		}
-		fmt.Println("Es ist bei der Eingabe ein Fehler aufgetreten: ", err)
+		fmt.Printf("%s %s\n", c.localizedString("InputError", nil), err)
 	}
 
 	return err
@@ -36,7 +33,7 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 
 func (c *CmdConfigure) askConfigFailureNextStep() bool {
 	fmt.Println()
-	return c.askYesNo("Die Konfiguration funktioniert leider nicht und kann daher nicht verwendet werden. Möchtest du es nochmals versuchen?")
+	return c.askYesNo(c.localizedString("TestingDevice_Failure", nil))
 }
 
 // Survey: select item from list
@@ -66,7 +63,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (error, stri
 // Survey: select item from list
 func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
 	var emptyItem templates.Template
-	emptyItem.Description = itemNotPresent
+	emptyItem.Description = c.localizedString("ItemNotPresent", nil)
 
 	elements := c.fetchElements(deviceCategory)
 	elements = append(elements, emptyItem)
@@ -128,30 +125,30 @@ func (c *CmdConfigure) askValue(q question) string {
 	validate := func(val interface{}) error {
 		value := val.(string)
 		if q.invalidValues != nil && funk.ContainsString(q.invalidValues, value) {
-			return errors.New("Der Wert '" + value + "' wurde bereits verwendet.")
+			return errors.New(c.localizedString("ValueError_Used", nil))
 		}
 
 		if q.required && len(value) == 0 {
-			return errors.New("Der Wert darf nicht leer sein")
+			return errors.New(c.localizedString("ValueError_Empty", nil))
 		}
 
 		if q.valueType == templates.ParamValueTypeBool {
 			if strings.ToLower(value) != "true" && strings.ToLower(value) != "false" {
-				return errors.New("Der Wert muss 'true' (für ja) oder 'false' (für nein) sein.")
+				return errors.New(c.localizedString("ValueError_Bool", nil))
 			}
 		}
 
 		if q.valueType == templates.ParamValueTypeFloat {
 			_, err := strconv.ParseFloat(value, 64)
 			if err != nil {
-				return errors.New("Der Wert muss eine Zahl sein. Nachkommastellen mit . anstatt mit , getrennt!")
+				return errors.New(c.localizedString("ValueError_Float", nil))
 			}
 		}
 
 		if q.valueType == templates.ParamValueTypeNumber {
 			_, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
-				return errors.New("Der Wert muss eine Zahl sein.")
+				return errors.New(c.localizedString("ValueError_Number", nil))
 			}
 		}
 
@@ -160,15 +157,15 @@ func (c *CmdConfigure) askValue(q question) string {
 
 	help := q.help
 	if q.required {
-		help += " (erforderlich)"
+		help += " (" + c.localizedString("Value_Required", nil) + ")"
 	} else {
-		help += " (optional)"
+		help += " (" + c.localizedString("Value_Optional", nil) + ")"
 	}
 	if q.exampleValue != "" {
-		help += fmt.Sprintf(" (Beispiel: %s)", q.exampleValue)
+		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 	if q.valueType == templates.ParamValueTypeBool {
-		help += " ('true' für ja oder 'false' für nein)"
+		help += " (" + c.localizedString("Value_Bool", nil) + ")"
 	}
 
 	if q.mask {
