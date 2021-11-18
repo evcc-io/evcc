@@ -3,4 +3,5 @@ description: FritzDECT
 uri: "https://fritz.box" 
 user:
 password:
-ain: "007788992233"
+ain: "007788992233" 
+standbypower: "15"

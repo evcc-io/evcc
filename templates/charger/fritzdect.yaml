@@ -11,10 +11,12 @@ params:
 - name: ain
   required: true
   example: '007788992233'
+- name: standbypower
+  default: 15
 render: |
   type: fritzdect
   uri: {{ .uri }}
   user: '{{ .user }}'
   password: '{{ .password }}'
   ain: '{{ .ain }}' # switch actor identification number without blanks (see AIN number on switch sticker)
-  standbypower: 15 # treat as charging above this power
+  standbypower: {{ .standbypower }}  # treat as charging above this power
