@@ -34,13 +34,13 @@ const (
 )
 
 // NewAPI creates a new vehicle
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}
 
 	v.Client.Transport = &oauth2.Transport{
-		Source: identity,
+		Source: ts,
 		Base:   v.Client.Transport,
 	}
 

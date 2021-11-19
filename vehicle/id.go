@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/id"
-	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/TA2k/ioBroker.vw-connect
@@ -46,22 +44,14 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
-	identity := vw.NewIdentity(log)
 
-	query := url.Values(map[string][]string{
-		"response_type": {"code id_token token"},
-		"client_id":     {"a24fba63-34b3-4d43-b181-942111e6bda8@apps_vw-dilab_com"},
-		"redirect_uri":  {"weconnect://authenticated"},
-		"scope":         {"openid profile badge cars dealers vin"},
-	})
-
-	ts := id.NewTokenSource(log, identity, query, cc.User, cc.Password)
-	err := identity.Login(ts)
+	ts := id.NewIdentity(log, cc.User, cc.Password)
+	err := ts.Login()
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := id.NewAPI(log, identity)
+	api := id.NewAPI(log, ts)
 	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
