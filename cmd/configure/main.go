@@ -20,6 +20,9 @@ import (
 //go:embed localization/de.toml
 var lang_de string
 
+//go:embed localization/en.toml
+var lang_en string
+
 type CmdConfigure struct {
 	configuration Configure
 	localizer     *i18n.Localizer
@@ -44,6 +47,10 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 	_, err := bundle.ParseMessageFileBytes([]byte(lang_de), "localization/de.toml")
+	if err != nil {
+		panic(err)
+	}
+	_, err = bundle.ParseMessageFileBytes([]byte(lang_en), "localization/en.toml")
 	if err != nil {
 		panic(err)
 	}
