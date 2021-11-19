@@ -75,10 +75,10 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 // handle device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
-	if len(templateItem.Requirements.Description) > 0 {
+	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Title", nil))
-		fmt.Println("  ", templateItem.Requirements.Description)
+		fmt.Println("  ", templateItem.Requirements.Description.String(c.lang))
 		if len(templateItem.Requirements.URI) > 0 {
 			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
@@ -296,7 +296,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				label:        userFriendly.Name,
 				defaultValue: userFriendly.Default,
 				exampleValue: userFriendly.Example,
-				help:         userFriendly.Help,
+				help:         userFriendly.Help.String(c.lang),
 				valueType:    userFriendly.ValueType,
 				mask:         userFriendly.Mask,
 				required:     userFriendly.Required})

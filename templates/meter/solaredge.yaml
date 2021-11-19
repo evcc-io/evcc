@@ -10,7 +10,9 @@ params:
   example: 192.0.2.2
 - name: port
   default: 502
-  help: Port 502 (SetApp) oder 1502 (LCD)
+  help: 
+    en: Port 502 (SetApp) or 1502 (LCD)
+    de: Port 502 (SetApp) oder 1502 (LCD)
 render: |
   type: custom
   power:

@@ -25,6 +25,7 @@ type CmdConfigure struct {
 	localizer     *i18n.Localizer
 	log           *util.Logger
 
+	lang                                 string
 	addedDeviceIndex                     int
 	errItemNotPresent, errDeviceNotValid error
 }
@@ -47,16 +48,16 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 		panic(err)
 	}
 
-	lang := "de"
+	c.lang = "de"
 	systemLanguage, err := jibber_jabber.DetectLanguage()
 	if err == nil {
-		lang = systemLanguage
+		c.lang = systemLanguage
 	}
 	if flagLang != "" {
-		lang = flagLang
+		c.lang = flagLang
 	}
 
-	c.localizer = i18n.NewLocalizer(bundle, lang)
+	c.localizer = i18n.NewLocalizer(bundle, c.lang)
 
 	c.setDefaultTexts()
 

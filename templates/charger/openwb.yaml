@@ -1,7 +1,8 @@
 type: t_openwb
 description: openWB (MQTT)
 requirements:
-  description: Die Wallbox muss als Ladepunkt konfiguriert sein.
+  description:
+    de: Die Wallbox muss als Ladepunkt konfiguriert sein.
   uri: https://docs.evcc.io/docs/devices/chargers#openwb
 params:
 - name: host

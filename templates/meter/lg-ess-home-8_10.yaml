@@ -11,7 +11,9 @@ params:
 - name: registration
   required: true
   example: "DE200..."
-  help: "Registration number of the LG ESS HOME inverter."
+  help: 
+    de: Registriernummer des LG ESS HOME Wechselrichters.
+    en: Registration number of the LG ESS HOME inverter.
 render: |
   type: lgess
   usage: {{ .usage }}

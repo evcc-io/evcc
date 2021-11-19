@@ -11,7 +11,9 @@ params:
 - name: password
   required: true
   mask: true
-  help: Passwort des Benutzers Kunde/Customer
+  help: 
+    en: Password of the user customer
+    de: Passwort des Benutzers Kunde
 render: |
   type: tesla
   uri: https://{{ .host }}/

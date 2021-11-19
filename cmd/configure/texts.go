@@ -46,8 +46,8 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 	switch strings.ToLower(result.Name) {
 	case "title":
 		result.Name = c.localizedString("UserFriendly_Title_Name", nil)
-		if result.Help == "" {
-			result.Help = c.localizedString("UserFriendly_Title_Help", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Title_Help", nil))
 		}
 	case "device":
 		result.Name = c.localizedString("UserFriendly_Device_Name", nil)
@@ -72,18 +72,18 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 		result.ValueType = templates.ParamValueTypeFloat
 	case "vin":
 		result.Name = c.localizedString("UserFriendly_Vin_Name", nil)
-		if result.Help == "" {
-			result.Help = c.localizedString("UserFriendly_Vin_Help", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Vin_Help", nil))
 		}
 	case "identifier":
 		result.Name = c.localizedString("UserFriendly_Identifier_Name", nil)
-		if result.Help == "" {
-			result.Help = c.localizedString("UserFriendly_Identifier_Help", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Identifier_Help", nil))
 		}
 	case "standbypower":
 		result.Name = c.localizedString("UserFriendly_StandByPower_Name", nil)
-		if result.Help == "" {
-			result.Help = c.localizedString("UserFriendly_StandByPower_Help", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_StandByPower_Help", nil))
 		}
 		result.ValueType = templates.ParamValueTypeNumber
 	}

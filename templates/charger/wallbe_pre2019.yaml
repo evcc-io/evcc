@@ -1,7 +1,8 @@
 type: t_wallbe_pre2019
 description: Wallbe (Eco, Pro) (pre ~2019)
 requirements:
-  description: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+  description:
+    de: Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
   uri: https://docs.evcc.io/docs/devices/chargers#wallbe-ecopro
 params:
 - name: host

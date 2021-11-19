@@ -24,23 +24,39 @@ const (
 
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
 
-// Template describes is a proxy device for use with cli and automated testing
-type Template struct {
-	Type         string
-	Description  string // user friendly description of the device this template describes
-	Requirements Requirements
-	GuidedSetup  GuidedSetup
-	Generic      bool // if this describes a generic device type rather than a product
-	Params       []Param
-	Render       string // rendering template
+// language specific texts
+type TextLanguage struct {
+	de string // german text
+	en string // english text
+}
+
+func (t TextLanguage) String(lang string) string {
+	switch lang {
+	case "de":
+		return t.de
+	case "en":
+		return t.en
+	}
+	return t.de
+}
+
+func (t TextLanguage) SetString(lang, value string) {
+	switch lang {
+	case "de":
+		t.de = value
+	case "en":
+		t.en = value
+	default:
+		t.de = value
+	}
 }
 
 // Requirements
 type Requirements struct {
-	Eebus       bool   // EEBUS Setup is required
-	Sponsorship bool   // Sponsorship is required
-	Description string // Description of requirements, e.g. how the device needs to be prepared
-	URI         string // URI to a webpage with more details about the preparation requirements
+	Eebus       bool         // EEBUS Setup is required
+	Sponsorship bool         // Sponsorship is required
+	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
+	URI         string       // URI to a webpage with more details about the preparation requirements
 }
 
 type GuidedSetup struct {
@@ -57,17 +73,28 @@ type LinkedTemplate struct {
 // Param is a proxy template parameter
 type Param struct {
 	Name      string
-	Required  bool     // cli if the user has to provide a non empty value
-	Mask      bool     // cli if the value should be masked, e.g. for passwords
-	Advanced  bool     // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Default   string   // default value if no user value is provided in the configuration
-	Example   string   // cli example value
-	Help      string   // cli configuration help
-	Test      string   // testing default value
-	Value     string   // user provided value via cli configuration
-	ValueType string   // string representation of the value type, "string" is default
-	Choice    []string // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
+	Required  bool         // cli if the user has to provide a non empty value
+	Mask      bool         // cli if the value should be masked, e.g. for passwords
+	Advanced  bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Default   string       // default value if no user value is provided in the configuration
+	Example   string       // cli example value
+	Help      TextLanguage // cli configuration help
+	Test      string       // testing default value
+	Value     string       // user provided value via cli configuration
+	ValueType string       // string representation of the value type, "string" is default
+	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
 	Usages    []string
+}
+
+// Template describes is a proxy device for use with cli and automated testing
+type Template struct {
+	Type         string
+	Description  string // user friendly description of the device this template describes
+	Requirements Requirements
+	GuidedSetup  GuidedSetup
+	Generic      bool // if this describes a generic device type rather than a product
+	Params       []Param
+	Render       string // rendering template
 }
 
 // Defaults returns a map of default values for the template
