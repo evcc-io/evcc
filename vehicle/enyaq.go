@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/skoda"
-	"github.com/evcc-io/evcc/vehicle/vw"
 )
 
 // https://github.com/lendy007/skodaconnect
@@ -49,22 +47,12 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("enyaq").Redact(cc.User, cc.Password, cc.VIN)
 
 	if cc.VIN == "" {
-		identity := vw.NewIdentity(log)
-
-		// Skoda native api
-		query := url.Values(map[string][]string{
-			"response_type": {"code id_token"},
-			"redirect_uri":  {"skodaconnect://oidc.login/"},
-			"client_id":     {"f9a2359a-b776-46d9-bd0c-db1904343117@apps_vw-dilab_com"},
-			"scope":         {"openid profile mbb"},
-		})
-
-		ts := skoda.NewTokenSource(log, identity, query, cc.User, cc.Password)
-		if err = identity.Login(ts); err != nil {
+		ts := skoda.NewIdentity(log, skoda.AuthParams, cc.User, cc.Password)
+		if err = ts.Login(); err != nil {
 			return v, fmt.Errorf("login failed: %w", err)
 		}
 
-		api := skoda.NewAPI(log, identity)
+		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
 		cc.VIN, err = findVehicle(api.Vehicles())
@@ -74,22 +62,12 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if err == nil {
-		identity := vw.NewIdentity(log)
-
-		// Skoda connect api
-		query := url.Values(map[string][]string{
-			"response_type": {"code id_token"},
-			"redirect_uri":  {"skodaconnect://oidc.login/"},
-			"client_id":     {"7f045eee-7003-4379-9968-9355ed2adb06@apps_vw-dilab_com"},
-			"scope":         {"openid profile mbb"}, // phone address cars email birthdate badge dealers driversLicense
-		})
-
-		ts := skoda.NewTokenSource(log, identity, query, cc.User, cc.Password)
-		if err = identity.Login(ts); err != nil {
+		ts := skoda.NewIdentity(log, skoda.ConnectAuthParams, cc.User, cc.Password)
+		if err = ts.Login(); err != nil {
 			return v, fmt.Errorf("login failed: %w", err)
 		}
 
-		api := skoda.NewAPI(log, identity)
+		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
 		v.Provider = skoda.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
