@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/volvo"
 )
 
@@ -57,7 +58,9 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}),
 	}
 
-	v.statusG = provider.NewCached(v.status, cc.Cache).InterfaceGetter()
+	v.statusG = provider.NewCached(func() (interface{}, error) {
+		return v.status()
+	}, cc.Cache).InterfaceGetter()
 
 	var err error
 	if cc.VIN == "" {
@@ -74,37 +77,29 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 func (v *Volvo) vehicles() ([]string, error) {
 	var vehicles []string
 
-	req, err := v.request(fmt.Sprintf("%s/customeraccounts", volvo.ApiURI))
-	if err == nil {
-		var res volvo.AccountResponse
-		err = v.DoJSON(req, &res)
+	uri := fmt.Sprintf("%s/customeraccounts", volvo.ApiURI)
 
+	var res volvo.AccountResponse
+	err := v.GetJSON(uri, &res)
+	if err == nil {
 		for _, rel := range res.VehicleRelations {
 			var vehicle volvo.VehicleRelation
-			if req, err := v.request(rel); err == nil {
-				if err = v.DoJSON(req, &vehicle); err != nil {
-					return vehicles, err
-				}
+			if err := v.GetJSON(rel, &vehicle); err != nil {
+				return vehicles, err
+			}
 
-	for _, rel := range res.VehicleRelations {
-		var vehicle volvoVehicleRelation
-		if err = v.GetJSON(rel, &vehicle); err != nil {
-			return vehicles, err
+			vehicles = append(vehicles, vehicle.VehicleID)
 		}
-
-		vehicles = append(vehicles, vehicle.VehicleID)
 	}
 
 	return vehicles, err
 }
 
-func (v *Volvo) status() (interface{}, error) {
+func (v *Volvo) status() (volvo.Status, error) {
 	var res volvo.Status
 
-	req, err := v.request(fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin))
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
+	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin)
+	err := v.GetJSON(uri, &res)
 
 	return res, err
 }
