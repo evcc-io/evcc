@@ -8,9 +8,8 @@ type VehiclesResponse struct {
 	}
 }
 
-// VehicleStatus holds the relevant data extracted from JSON that the server sends
-// on vehicle status request
-type VehicleStatus struct {
+// StatusResponse is the response to the vehicle status request
+type StatusResponse struct {
 	VehicleStatus struct {
 		BatteryFillLevel struct {
 			Value     float64
