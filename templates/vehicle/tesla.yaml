@@ -4,11 +4,13 @@ params:
 - name: title
 - name: accessToken
   required: true
-  help: 
+  help:
+    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
     de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
 - name: refreshToken
   required: true
-  help: 
+  help:
+    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
     de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
 - name: vin
   example: W...

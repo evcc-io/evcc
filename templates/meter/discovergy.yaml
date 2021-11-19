@@ -1,5 +1,5 @@
 type: t_discovergy
-description: Discovergy Metering Service (Cloud)
+description: Discovergy (Cloud)
 params:
 - name: usage
   choice: ["grid", "pv"]

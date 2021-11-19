@@ -6,13 +6,13 @@ params:
   example: 192.0.2.2
 - name: user
   help: 
-    de: (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind
     en: (optional) in case user + password are defined
+    de: (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind
 - name: password
   mask: true
   help:
-    de: (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind
     en: (optional) in case user + password are defined
+    de: (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind
 - name: standbypower
   default: 15
 render: |

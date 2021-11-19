@@ -1,5 +1,5 @@
 type: t_id
-description: Volkswagen (We Connect ID Account)
+description: Volkswagen (We Connect ID)
 params:
 - name: title
 - name: user

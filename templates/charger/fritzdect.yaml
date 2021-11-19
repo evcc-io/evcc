@@ -13,6 +13,7 @@ params:
   mask: true
   example: '007788992233'
   help: 
+    en: The AIN is printed on the type label on the back of the device. 
     de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
 - name: standbypower
   default: 15
