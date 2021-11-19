@@ -10,8 +10,8 @@ import (
 )
 
 func (c *CmdConfigure) setDefaultTexts() {
-	errItemNotPresent = errors.New(c.localizedString("Error_ItemNotPresent", nil))
-	errDeviceNotValid = errors.New(c.localizedString("Error_DeviceNotValid", nil))
+	c.errItemNotPresent = errors.New(c.localizedString("Error_ItemNotPresent", nil))
+	c.errDeviceNotValid = errors.New(c.localizedString("Error_DeviceNotValid", nil))
 
 	c.updateDeviceCategoryTexts(DeviceCategoryCharger, "Category_ChargerTitle", "Category_ChargerArticle")
 	c.updateDeviceCategoryTexts(DeviceCategoryGuidedSetup, "Category_SystemTitle", "Category_SystemArticle")

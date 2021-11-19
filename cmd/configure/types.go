@@ -105,7 +105,3 @@ var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]
 }
 
 type localizeMap map[string]interface{}
-
-var errItemNotPresent, errDeviceNotValid error
-
-var addedDeviceIndex int = 0

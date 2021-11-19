@@ -13,7 +13,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 	templateItem := c.selectItem(deviceCategory)
 
 	if templateItem.Description == c.localizedString("ItemNotPresent", nil) {
-		return templateItem, errItemNotPresent
+		return templateItem, c.errItemNotPresent
 	}
 
 	err := c.processDeviceRequirements(templateItem)
@@ -25,9 +25,9 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 }
 
 func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
-	addedDeviceIndex++
+	c.addedDeviceIndex++
 
-	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, addedDeviceIndex)
+	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, c.addedDeviceIndex)
 	device.Title = templateItem.Description
 	for _, param := range templateItem.Params {
 		if param.Name != "title" {
@@ -57,14 +57,14 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	}
 
 	if !deviceIsValid {
-		addedDeviceIndex--
-		return device, errDeviceNotValid
+		c.addedDeviceIndex--
+		return device, c.errDeviceNotValid
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	b, err := templateItem.RenderProxyWithValues(values, false)
 	if err != nil {
-		addedDeviceIndex--
+		c.addedDeviceIndex--
 		return device, err
 	}
 
@@ -78,7 +78,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	if len(templateItem.Requirements.Description) > 0 {
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Title", nil))
-		fmt.Println("  " + templateItem.Requirements.Description)
+		fmt.Println("  ", templateItem.Requirements.Description)
 		if len(templateItem.Requirements.URI) > 0 {
 			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
@@ -90,7 +90,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
 		fmt.Println()
 		if !c.askYesNo(c.localizedString("Requirements_Sponsorship_Token", nil)) {
-			return errItemNotPresent
+			return c.errItemNotPresent
 		}
 		sponsortoken := c.askValue(question{
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),

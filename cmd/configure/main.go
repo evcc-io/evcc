@@ -24,6 +24,9 @@ type CmdConfigure struct {
 	configuration Configure
 	localizer     *i18n.Localizer
 	log           *util.Logger
+
+	addedDeviceIndex                     int
+	errItemNotPresent, errDeviceNotValid error
 }
 
 // start the interactive configuration
