@@ -26,28 +26,28 @@ var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, Param
 
 // language specific texts
 type TextLanguage struct {
-	de string // german text
-	en string // english text
+	DE string // german text
+	EN string // english text
 }
 
 func (t *TextLanguage) String(lang string) string {
 	switch lang {
 	case "de":
-		return t.de
+		return t.DE
 	case "en":
-		return t.en
+		return t.EN
 	}
-	return t.de
+	return t.DE
 }
 
 func (t *TextLanguage) SetString(lang, value string) {
 	switch lang {
 	case "de":
-		t.de = value
+		t.DE = value
 	case "en":
-		t.en = value
+		t.EN = value
 	default:
-		t.de = value
+		t.DE = value
 	}
 }
 
