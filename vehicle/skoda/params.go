@@ -2,7 +2,13 @@ package skoda
 
 import "net/url"
 
-const AuthClientID = "afb0473b-6d82-42b8-bfea-cead338c46ef"
+const (
+	Brand   = "VW"
+	Country = "CZ"
+
+	// Authorization ClientID
+	AuthClientID = "afb0473b-6d82-42b8-bfea-cead338c46ef"
+)
 
 // Skoda native api
 var AuthParams = url.Values(map[string][]string{

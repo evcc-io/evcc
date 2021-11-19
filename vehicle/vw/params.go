@@ -2,8 +2,13 @@ package vw
 
 import "net/url"
 
-// Authorization ClientID
-const AuthClientID = "38761134-34d0-41f3-9a73-c4be88d7d337"
+const (
+	Brand   = "VW"
+	Country = "DE"
+
+	// Authorization ClientID
+	AuthClientID = "38761134-34d0-41f3-9a73-c4be88d7d337"
+)
 
 // Authorization parameters
 var AuthParams = url.Values(map[string][]string{

@@ -52,7 +52,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := vw.NewAPI(log, identity, "VW", "DE")
+	api := vw.NewAPI(log, identity, vw.Brand, vw.Country)
 	api.Client.Timeout = cc.Timeout
 
 	if cc.VIN == "" {
