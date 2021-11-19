@@ -30,7 +30,7 @@ type TextLanguage struct {
 	en string // english text
 }
 
-func (t TextLanguage) String(lang string) string {
+func (t *TextLanguage) String(lang string) string {
 	switch lang {
 	case "de":
 		return t.de
@@ -40,7 +40,7 @@ func (t TextLanguage) String(lang string) string {
 	return t.de
 }
 
-func (t TextLanguage) SetString(lang, value string) {
+func (t *TextLanguage) SetString(lang, value string) {
 	switch lang {
 	case "de":
 		t.de = value
