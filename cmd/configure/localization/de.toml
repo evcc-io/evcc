@@ -11,6 +11,8 @@ File_NewFilename = "Bitte gib einen neuen Dateinamen an"
 File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileName }} gespeichert werden"
 File_SaveSuccess = "Die Konfiguration wurde erfolgreich in der Datei {{ .FileName }} gespeichert"
 
+Choose = "Wähle"
+
 UserFriendly_Title_Name = "Titel"
 UserFriendly_Title_Help = "Wird in der Benutzeroberfläche angezeigt"
 UserFriendly_Device_Name = "Geräteadresse"

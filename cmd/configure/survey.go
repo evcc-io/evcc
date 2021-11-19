@@ -75,7 +75,8 @@ func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Templ
 		}
 	}
 
-	err, _, selected := c.askSelection(fmt.Sprintf("Wähle %s %s:", DeviceCategories[deviceCategory].article, DeviceCategories[deviceCategory].title), items)
+	text := fmt.Sprintf("%s %s %s:", c.localizedString("Choose", nil), DeviceCategories[deviceCategory].article, DeviceCategories[deviceCategory].title)
+	err, _, selected := c.askSelection(text, items)
 	if err != nil {
 		c.log.FATAL.Fatal(err)
 	}
