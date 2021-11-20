@@ -11,6 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	ApiURI         = "https://usapi.cv.ford.com"
+	VehicleListURI = "https://api.mps.ford.com/api/users/vehicles"
+)
+
 // API is the VW api client
 type API struct {
 	*request.Helper
@@ -57,59 +62,22 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// Status performs a /status request to the Ford API and triggers a refresh if
-// the received status is too old
+// Status performs a /status request
 func (v *API) Status(vin string) (StatusResponse, error) {
-	// follow up requested refresh
-	// if v.refreshId != "" {
-	// 	return v.refreshResult()
-	// }
-
-	// otherwise start normal workflow
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/status", ApiURI, vin)
 
 	var res StatusResponse
 	err := v.GetJSON(uri, &res)
 
-	// if err == nil {
-	// 	var lastUpdate time.Time
-	// 	lastUpdate, err = time.Parse(TimeFormat, res.StatusResponse.LastRefresh)
-
-	// 	if elapsed := time.Since(lastUpdate); err == nil && elapsed > expiry {
-	// 		v.log.DEBUG.Printf("vehicle status is outdated (age %v > %v), requesting refresh", elapsed, expiry)
-
-	// 		if err = v.refreshRequest(); err == nil {
-	// 			err = api.ErrMustRetry
-	// 		}
-	// 	}
-	// }
-
 	return res, err
 }
 
-// RefreshResult triggers an update if not already in progress, otherwise gets result
+// RefreshResult retrieves a refresh result using /statusrefresh
 func (v *API) RefreshResult(vin, refreshId string) (StatusResponse, error) {
 	var res StatusResponse
 
 	uri := fmt.Sprintf("%s/api/vehicles/v3/%s/statusrefresh/%s", ApiURI, vin, refreshId)
 	err := v.GetJSON(uri, &res)
-
-	// // update successful and completed
-	// if err == nil && res.Status == 200 {
-	// 	v.refreshId = ""
-	// 	return res, nil
-	// }
-
-	// // update still in progress, keep retrying
-	// if time.Since(v.refreshTime) < RefreshTimeout {
-	// 	return res, api.ErrMustRetry
-	// }
-
-	// // give up
-	// v.refreshId = ""
-	// if err == nil {
-	// 	err = api.ErrTimeout
-	// }
 
 	return res, err
 }
@@ -126,13 +94,8 @@ func (v *API) RefreshRequest(vin string) (string, error) {
 		err = v.DoJSON(req, &resp)
 	}
 
-	if err == nil {
-		// 	v.refreshId = resp.CommandId
-		// 	v.refreshTime = time.Now()
-
-		if resp.CommandId == "" {
-			err = errors.New("refresh failed")
-		}
+	if err == nil && resp.CommandId == "" {
+		err = errors.New("refresh failed")
 	}
 
 	return resp.CommandId, err

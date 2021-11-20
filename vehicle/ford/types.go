@@ -1,5 +1,10 @@
 package ford
 
+import (
+	"strings"
+	"time"
+)
+
 type VehiclesResponse struct {
 	Vehicles struct {
 		Values []struct {
@@ -13,21 +18,40 @@ type StatusResponse struct {
 	VehicleStatus struct {
 		BatteryFillLevel struct {
 			Value     float64
-			Timestamp string
+			Timestamp Timestamp
 		}
 		ElVehDTE struct {
 			Value     float64
-			Timestamp string
+			Timestamp Timestamp
 		}
 		ChargingStatus struct {
 			Value     string
-			Timestamp string
+			Timestamp Timestamp
 		}
 		PlugStatus struct {
 			Value     int
-			Timestamp string
+			Timestamp Timestamp
 		}
-		LastRefresh string
+		LastRefresh Timestamp
 	}
 	Status int
+}
+
+const TimeFormat = "01-02-2006 15:04:05" // time format used by Ford API, time is in UTC
+
+// Timestamp implements JSON unmarshal
+type Timestamp struct {
+	time.Time
+}
+
+// UnmarshalJSON decodes string timestamp into time.Time
+func (ct *Timestamp) UnmarshalJSON(data []byte) error {
+	s := strings.Trim(string(data), "\"")
+
+	t, err := time.Parse(TimeFormat, s)
+	if err == nil {
+		(*ct).Time = t
+	}
+
+	return err
 }

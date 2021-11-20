@@ -11,6 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const (
+	AuthURI  = "https://sso.ci.ford.ca" // fcis.ice.ibmcloud.com
+	ClientID = "9fb503e0-715b-47e8-adfd-ad4b7770f73b"
+)
+
 type Identity struct {
 	*request.Helper
 	user, password string
@@ -38,7 +43,7 @@ func (v *Identity) Login() error {
 // login authenticates with username/password to get new token
 func (v *Identity) login() (oauth.Token, error) {
 	data := url.Values{
-		"client_id":  []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
+		"client_id":  []string{ClientID},
 		"grant_type": []string{"password"},
 		"username":   []string{v.user},
 		"password":   []string{v.password},
@@ -58,7 +63,7 @@ func (v *Identity) login() (oauth.Token, error) {
 // Refresh implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 	data := url.Values{
-		"client_id":     []string{"9fb503e0-715b-47e8-adfd-ad4b7770f73b"},
+		"client_id":     []string{ClientID},
 		"grant_type":    []string{"refresh_token"},
 		"refresh_token": []string{token.RefreshToken},
 	}
