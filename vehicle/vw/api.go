@@ -41,21 +41,11 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource, brand, country string) *API
 	return v
 }
 
-func (v *API) getJSON(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return err
-}
-
 // Vehicles implements the /vehicles response
 func (v *API) Vehicles() ([]string, error) {
 	var res VehiclesResponse
 	uri := fmt.Sprintf("%s/usermanagement/users/v1/%s/%s/vehicles", v.baseURI, v.brand, v.country)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	if err != nil && res.Error != nil {
 		err = res.Error.Error()
 	}
@@ -67,7 +57,7 @@ func (v *API) HomeRegion(vin string) error {
 	var res HomeRegion
 	uri := fmt.Sprintf("%s/cs/vds/v1/vehicles/%s/homeRegion", RegionAPI, vin)
 
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	if err == nil {
 		if api := res.HomeRegion.BaseURI.Content; strings.HasPrefix(api, "https://mal-3a.prd.eu.dp.vwg-connect.com") {
 			api = "https://fal" + strings.TrimPrefix(api, "https://mal")
@@ -85,7 +75,7 @@ func (v *API) HomeRegion(vin string) error {
 func (v *API) RolesRights(vin string) (string, error) {
 	var res json.RawMessage
 	uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	return string(res), err
 }
 
@@ -93,7 +83,7 @@ func (v *API) RolesRights(vin string) (string, error) {
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/bs/batterycharge/v1/%s/%s/vehicles/%s/charger", v.baseURI, v.brand, v.country, vin)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	if err != nil && res.Error != nil {
 		err = res.Error.Error()
 	}
@@ -104,7 +94,7 @@ func (v *API) Charger(vin string) (ChargerResponse, error) {
 func (v *API) Climater(vin string) (ClimaterResponse, error) {
 	var res ClimaterResponse
 	uri := fmt.Sprintf("%s/bs/climatisation/v1/%s/%s/vehicles/%s/climater", v.baseURI, v.brand, v.country, vin)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	if err != nil && res.Error != nil {
 		err = res.Error.Error()
 	}
@@ -154,6 +144,6 @@ func (v *API) Action(vin, action, value string) error {
 func (v *API) Any(base, vin string) (interface{}, error) {
 	var res interface{}
 	uri := fmt.Sprintf("%s/"+strings.TrimLeft(base, "/"), v.baseURI, v.brand, v.country, vin)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	return res, err
 }
