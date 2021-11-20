@@ -39,12 +39,9 @@ func NewProvider(api *API, vin string, expiry, cache time.Duration) *Provider {
 func (v *Provider) status(battery func() (Response, error), refresh func() (Response, error)) (Response, error) {
 	res, err := battery()
 
-	var ts time.Time
 	if err == nil {
-		ts, err = time.Parse(timeFormat, res.Data.Attributes.LastUpdateTime)
-
-		// return the current value
-		if time.Since(ts) <= v.expiry {
+		// result valid?
+		if res.Data.Attributes.LastUpdateTime.Add(v.expiry).After(time.Now()) {
 			v.refreshTime = time.Time{}
 			return res, err
 		}
@@ -132,13 +129,11 @@ func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 
 	if res, ok := res.(Response); err == nil && ok {
-		timestamp, err := time.Parse(time.RFC3339, res.Data.Attributes.Timestamp)
-
 		if res.Data.Attributes.RemainingTime == nil {
 			return time.Time{}, api.ErrNotAvailable
 		}
 
-		return timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
+		return res.Data.Attributes.Timestamp.Add(time.Duration(*res.Data.Attributes.RemainingTime) * time.Minute), err
 	}
 
 	return time.Time{}, err

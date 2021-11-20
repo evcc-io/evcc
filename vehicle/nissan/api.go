@@ -56,8 +56,6 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-const timeFormat = "2006-01-02T15:04:05Z"
-
 // Battery provides battery api response
 func (v *API) BatteryStatus(vin string) (Response, error) {
 	uri := fmt.Sprintf("%s/v1/cars/%s/battery-status", CarAdapterBaseURL, vin)
