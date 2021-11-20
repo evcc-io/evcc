@@ -151,7 +151,7 @@ var _ api.VehicleOdometer = (*Volvo)(nil)
 func (v *Volvo) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvo.Status); err == nil && ok {
-		return res.Odometer, nil
+		return res.Odometer / 1e3, nil
 	}
 
 	return 0, err
@@ -163,13 +163,9 @@ var _ api.VehicleFinishTimer = (*Volvo)(nil)
 func (v *Volvo) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 	if res, ok := res.(volvo.Status); err == nil && ok {
-		timestamp, err := time.Parse("2006-01-02T15:04:05-0700", res.HvBattery.TimeToHVBatteryFullyChargedTimestamp)
-
-		if err == nil {
-			timestamp = timestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
-			if timestamp.Before(time.Now()) {
-				return time.Time{}, api.ErrNotAvailable
-			}
+		timestamp := res.HvBattery.TimeToHVBatteryFullyChargedTimestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
+		if timestamp.Before(time.Now()) {
+			return time.Time{}, api.ErrNotAvailable
 		}
 
 		return timestamp, err
