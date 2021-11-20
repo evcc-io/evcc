@@ -61,7 +61,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
 	vehicles, err := api.Vehicles()
 	if err != nil {

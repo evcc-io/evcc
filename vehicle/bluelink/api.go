@@ -4,16 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 const (
-	VehiclesURL     = "/api/v1/spa/vehicles"
-	StatusURL       = "/api/v1/spa/vehicles/%s/status"
-	StatusLatestURL = "/api/v1/spa/vehicles/%s/status/latest"
+	VehiclesURL     = "vehicles"
+	StatusURL       = "vehicles/%s/status"
+	StatusLatestURL = "vehicles/%s/status/latest"
 )
 
 const (
@@ -29,20 +31,27 @@ var ErrAuthFail = errors.New("authorization failed")
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
-	log      *util.Logger
-	identity *Identity
+	baseURI string
+}
+
+type Requester interface {
+	Request(*http.Request) error
 }
 
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, identity *Identity, cache time.Duration) *API {
+func NewAPI(log *util.Logger, baseURI string, identity Requester, cache time.Duration) *API {
 	v := &API{
-		log:      log,
-		identity: identity,
-		Helper:   request.NewHelper(log),
+		Helper:  request.NewHelper(log),
+		baseURI: strings.TrimRight(baseURI, "/api/v1/spa") + "/api/v1/spa",
 	}
 
 	// api is unbelievably slow when retrieving status
-	v.Helper.Client.Timeout = 120 * time.Second
+	v.Client.Timeout = 120 * time.Second
+
+	v.Client.Transport = &transport.Decorator{
+		Decorator: identity.Request,
+		Base:      v.Client.Transport,
+	}
 
 	return v
 }
@@ -59,14 +68,12 @@ type Vehicle struct {
 }
 
 func (v *API) Vehicles() ([]Vehicle, error) {
-	req, err := v.identity.Request(http.MethodGet, VehiclesURL)
+	var res VehiclesResponse
 
-	var resp VehiclesResponse
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
+	uri := fmt.Sprintf("%s/%s", v.baseURI, VehiclesURL)
+	err := v.GetJSON(uri, &res)
 
-	return resp.ResMsg.Vehicles, err
+	return res.ResMsg.Vehicles, err
 }
 
 type StatusResponse struct {
@@ -114,11 +121,10 @@ type DrivingDistance struct {
 func (v *API) Status(vid string) (StatusLatestResponse, error) {
 	var res StatusLatestResponse
 
-	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusLatestURL, vid))
-	if err == nil {
-		if err = v.DoJSON(req, &res); err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 
 	return res, err
@@ -128,11 +134,10 @@ func (v *API) Status(vid string) (StatusLatestResponse, error) {
 func (v *API) StatusPartial(vid string) (StatusResponse, error) {
 	var res StatusResponse
 
-	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusURL, vid))
-	if err == nil {
-		if err = v.DoJSON(req, &res); err == nil && res.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", res.RetCode)
-		}
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 
 	return res, err
