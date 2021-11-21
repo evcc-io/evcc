@@ -25,7 +25,11 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
-							{{ $t("footer.savings.modalTitle", { percent }) }}
+							{{
+								$t("footer.savings.modalTitle", {
+									total: fmtKw(chargedTotal, true, false),
+								})
+							}}
 						</h5>
 						<button
 							type="button"
@@ -35,89 +39,64 @@
 						></button>
 					</div>
 					<div class="modal-body">
-						<div class="container">
-							<div class="row">
-								<div class="col-12 col-sm-4">
-									<div class="row mb-2">
-										<div class="d-block d-sm-none col-1"></div>
-										<div class="position-relative col-5 col-sm-12">
-											<chartist
-												v-if="modalVisible"
-												ratio="ct-square"
-												type="Pie"
-												:data="{
-													series: [
-														{
-															value:
-																this.chargedTotal -
-																this.chargedSelfConsumption,
-															name: 'Netzstrom',
-															className: 'ct-series-grid',
-														},
-														{
-															value: this.chargedSelfConsumption,
-															name: 'Sonnenstrom',
-															className: 'ct-series-self',
-														},
-													],
-												}"
-												:options="{
-													donut: true,
-													donutWidth: 15,
-													showLabel: false,
-												}"
-											>
-											</chartist>
-											<strong
-												class="
-													position-absolute
-													top-50
-													start-50
-													translate-middle
-													text-evcc
-													fs-4
-												"
-											>
-												{{ percent }}%
-											</strong>
-										</div>
-										<div
-											class="
-												col-6 col-sm-12
-												d-flex
-												align-start
-												justify-content-center
-												flex-column
-											"
-										>
-											<div class="text-nowrap">
-												<fa-icon icon="square" class="text-grid"></fa-icon>
-												Netzstrom
-											</div>
-											<div class="text-nowrap">
-												<fa-icon icon="square" class="text-evcc"></fa-icon>
-												Sonnenstrom
-											</div>
-										</div>
-									</div>
-								</div>
-								<p
-									class="col-12 col-sm-8"
-									v-html="
-										$t('footer.savings.modalText', {
-											percent,
-											total: fmtKw(chargedTotal, true, false),
-											savingEuro,
-											since: fmtTimeAgo(since * -1000),
-										})
+						<div class="chart-container mt-2 mb-3">
+							<div
+								class="
+									chart
+									d-flex
+									justify-content-stretch
+									mb-1
+									rounded
+									overflow-hidden
+								"
+							>
+								<div
+									class="
+										chart-item chart-item--self
+										d-flex
+										justify-content-center
+										text-white
+										flex-shrink-1
 									"
-								/>
+									:style="{ width: `${percent}%` }"
+								>
+									<span class="text-truncate"> {{ percent }}% </span>
+								</div>
+								<div
+									class="
+										chart-item chart-item--grid
+										d-flex
+										justify-content-center
+										text-white
+										flex-shrink-1
+									"
+									:style="{ width: `${100 - percent}%` }"
+								>
+									<span class="text-truncate"> {{ 100 - percent }}% </span>
+								</div>
+							</div>
+							<div class="chart-legend d-flex flex-wrap justify-content-between">
+								<div class="text-nowrap me-2">
+									<fa-icon icon="square" class="text-evcc"></fa-icon>
+									{{
+										$t("footer.savings.modalChartSelf", {
+											self: fmtKw(chargedSelfConsumption, true, false),
+										})
+									}}
+								</div>
+								<div class="text-nowrap me-2">
+									<fa-icon icon="square" class="text-grid"></fa-icon>
+									{{
+										$t("footer.savings.modalChartGrid", {
+											grid: fmtKw(chargedGrid, true, false),
+										})
+									}}
+								</div>
 							</div>
 						</div>
+						<p v-html="$t('footer.savings.modalSavingsText', { savingEuro })" />
 
-						<Sponsor :sponsor="sponsor" />
-
-						<p class="small text-muted text-center">
+						<p class="small text-muted">
 							{{ $t("footer.savings.modalExplaination") }}
 							<span class="text-nowrap">
 								{{
@@ -132,19 +111,22 @@
 								target="_blank"
 								class="text-muted"
 								><fa-icon
-									v-if="defaultPrices"
-									:title="$t('footer.savings.modalExplainationAdjust')"
+									:title="$t('footer.savings.modalExplainationCalculation')"
 									icon="wrench"
 									class="icon ms-1"
 								></fa-icon
-								><fa-icon
-									v-else
-									:title="$t('footer.savings.modalExplainationCalculation')"
-									icon="info-circle"
-									class="icon ms-1"
-								></fa-icon
 							></a>
+							<br />
+							{{
+								$t("footer.savings.modalServerStart", {
+									since: fmtTimeAgo(since * -1000),
+								})
+							}}
 						</p>
+
+						<hr />
+
+						<Sponsor :sponsor="sponsor" />
 					</div>
 				</div>
 			</div>
@@ -169,18 +151,10 @@ export default {
 		gridPrice: { type: Number, default: 30 },
 		feedinPrice: { type: Number, default: 8 },
 	},
-	data() {
-		return { modalVisible: false };
-	},
-	mounted() {
-		this.$refs.modal.addEventListener("shown.bs.modal", this.modalShown);
-		this.$refs.modal.addEventListener("hidden.bs.modal", this.modalHidden);
-	},
-	destroyed() {
-		this.$refs.modal.removeEventListener("shown.bs.modal", this.modalShown);
-		this.$refs.modal.removeEventListener("hidden.bs.modal", this.modalHidden);
-	},
 	computed: {
+		chargedGrid() {
+			return this.chargedTotal - this.chargedSelfConsumption;
+		},
 		defaultPrices() {
 			const { gridPrice, feedinPrice } = this.$options.propsData;
 			return gridPrice === undefined || feedinPrice === undefined;
@@ -192,14 +166,6 @@ export default {
 		},
 		percent() {
 			return Math.round(this.selfPercentage);
-		},
-	},
-	methods: {
-		modalShown() {
-			this.modalVisible = true;
-		},
-		modalHidden() {
-			this.modalVisible = false;
 		},
 	},
 };
@@ -226,10 +192,20 @@ export default {
 	}
 }
 
-.modal-content >>> .ct-series-grid .ct-slice-donut {
-	stroke: var(--evcc-grid);
+.chart {
+	height: 1.6rem;
 }
-.modal-content >>> .ct-series-self .ct-slice-donut {
-	stroke: var(--evcc-self);
+
+.chart-item--self {
+	background-color: var(--evcc-self);
+}
+.chart-item--grid {
+	background-color: var(--evcc-grid);
+}
+
+.chart-item {
+	transition-property: width;
+	transition-duration: 500ms;
+	transition-timing-function: linear;
 }
 </style>

@@ -21,20 +21,22 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenstrom",
-      modalTitle: "{percent}% Sonnenstrom geladen",
-      modalText:
-        "Seit Serverstart {since} wurden <strong>{total} kWh</strong> über evcc geladen. Davon waren <strong>{percent}% selbst erzeugter Strom</strong>. Das entspricht einer <strong>Ersparnis von ungefähr {savingEuro}</strong> verglichen mit vollem Netzbezug.",
-      modalExplaination: "Annahme:",
+      modalTitle: "{total} kWh Strom geladen",
+      modalChartGrid: "Netzstrom {grid} kWh",
+      modalChartSelf: "Sonnenstrom {self} kWh",
+      modalSavingsText:
+        "Durch den Eigenverbrauch hast du <strong>ungefähr {savingEuro} gespart.</strong>",
+      modalExplaination: "Berechnung:",
       modalExplainationGrid: "Netzstrom {gridPrice}ct",
       modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
-      modalExplainationAdjust: "Tarifdaten anpassen",
-      modalExplainationCalculation: "Berechnungsmethode",
+      modalExplainationCalculation: "Berechnungsgrundlage",
+      modalServerStart: "Seit Serverstart {since}.",
     },
     sponsor: {
-      thanks: "Danke {sponsor}! Wir wissen deine Unterstützung sehr zu schätzen.",
+      thanks: "Danke für deine Unterstützung {sponsor}! Das hilft uns bei der Weiterentwicklung.",
       confetti: "Lust auf etwas Danke-Konfetti?",
       supportUs:
-        "Wir möchten, das effizientes Zuhause Laden für möglichst viele Menschen zum Standard wird. Unterstütze uns auf dem Weg indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
+        "Wir möchten, dass effizientes Zuhause-Laden für möglichst viele Menschen zum Standard wird. Unterstütze uns auf dem Weg indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
       sticker: "...oder evcc Sticker?",
       becomeSponsor: "Werde GitHub Sponsor",
     },

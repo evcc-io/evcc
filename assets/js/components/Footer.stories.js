@@ -1,6 +1,5 @@
 import Footer from "./Footer.vue";
 import i18n from "../i18n";
-import "../plugins";
 
 export default {
   title: "Main/Footer",
@@ -51,7 +50,7 @@ UpdateVerfuegbar.args = {
     since: 82800,
     chargedTotal: 15231,
     chargedSelfConsumption: 15000,
-    selfPercentage: 99,
+    selfPercentage: 74,
   },
 };
 
