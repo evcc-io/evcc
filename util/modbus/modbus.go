@@ -8,13 +8,11 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
-
-// WriteSingleRegister 16-bit wise write access
-const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
 
 type WireFormat int
 
@@ -22,6 +20,8 @@ const (
 	TcpFormat WireFormat = iota
 	RtuFormat
 	AsciiFormat
+
+	CoilOn uint16 = 0xFF00
 )
 
 // Settings contains the ModBus settings
@@ -254,11 +254,11 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 
 	switch strings.ToLower(r.Type) {
 	case "holding":
-		op.FuncCode = rs485.ReadHoldingReg
+		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
 	case "input":
-		op.FuncCode = rs485.ReadInputReg
+		op.FuncCode = modbus.FuncCodeReadInputRegisters
 	case "writesingle":
-		op.FuncCode = WriteSingleRegister // modbus.FuncCodeWriteSingleRegister
+		op.FuncCode = modbus.FuncCodeWriteSingleRegister
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
 	}
