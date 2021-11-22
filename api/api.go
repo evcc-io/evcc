@@ -40,6 +40,15 @@ func (c ChargeStatus) String() string {
 	return string(c)
 }
 
+// ActionConfig defines an action to take on event
+type ActionConfig struct {
+	Mode       ChargeMode `mapstructure:"mode"`       // Charge mode
+	MinCurrent float64    `mapstructure:"minCurrent"` // Minimum Current
+	MaxCurrent float64    `mapstructure:"maxCurrent"` // Maximum Current
+	MinSoC     int        `mapstructure:"minSoC"`     // Minimum SoC
+	TargetSoC  int        `mapstructure:"targetSoC"`  // Target SoC
+}
+
 // Meter is able to provide current power in W
 type Meter interface {
 	CurrentPower() (float64, error)
@@ -111,9 +120,10 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	Identifier
 	Title() string
 	Capacity() int64
+	Identifiers() []string
+	OnIdentified() ActionConfig
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time

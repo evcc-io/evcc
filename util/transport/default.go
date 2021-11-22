@@ -1,12 +1,12 @@
-package request
+package transport
 
 import (
 	"crypto/tls"
 	"net/http"
 )
 
-// DefaultTransport returns http.DefaultTransport as http.Transport instead of http.RoundTripper
-func DefaultTransport() *http.Transport {
+// Default returns http.DefaultTransport as http.Transport instead of http.RoundTripper
+func Default() *http.Transport {
 	t, ok := http.DefaultTransport.(*http.Transport)
 	if !ok {
 		panic("http.DefaultTransport is not an http.Transport")
@@ -15,8 +15,8 @@ func DefaultTransport() *http.Transport {
 }
 
 // InsecureTransport is an http.Transport with TLSClientConfig.InsecureSkipVerify enabled
-func InsecureTransport() *http.Transport {
-	t := DefaultTransport()
+func Insecure() *http.Transport {
+	t := Default()
 	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	return t
 }

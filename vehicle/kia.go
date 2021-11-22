@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("kia").Redact(cc.User, cc.Password, cc.VIN)
@@ -62,7 +61,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
 	vehicles, err := api.Vehicles()
 	if err != nil {

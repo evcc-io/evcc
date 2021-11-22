@@ -9,27 +9,6 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-type embed struct {
-	Title_      string `mapstructure:"title"`
-	Capacity_   int64  `mapstructure:"capacity"`
-	Identifier_ string `mapstructure:"identifier"`
-}
-
-// Title implements the api.Vehicle interface
-func (v *embed) Title() string {
-	return v.Title_
-}
-
-// Capacity implements the api.Vehicle interface
-func (v *embed) Capacity() int64 {
-	return v.Capacity_
-}
-
-// Identify implements the api.Identifier interface
-func (v *embed) Identify() (string, error) {
-	return v.Identifier_, nil
-}
-
 //go:generate go run ../cmd/tools/decorate.go -f decorateVehicle -b api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleRange,Range,func() (int64, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)"
 
 // Vehicle is an api.Vehicle implementation with configurable getters and setters.

@@ -57,12 +57,12 @@ func (lp *LoadPoint) GetTargetSoC() int {
 
 // SetTargetSoC sets loadpoint charge target soc
 func (lp *LoadPoint) SetTargetSoC(soc int) error {
+	lp.Lock()
+	defer lp.Unlock()
+
 	if lp.vehicle == nil {
 		return api.ErrNotAvailable
 	}
-
-	lp.Lock()
-	defer lp.Unlock()
 
 	lp.log.INFO.Println("set target soc:", soc)
 
@@ -85,12 +85,12 @@ func (lp *LoadPoint) GetMinSoC() int {
 
 // SetMinSoC sets loadpoint charge minimum soc
 func (lp *LoadPoint) SetMinSoC(soc int) error {
+	lp.Lock()
+	defer lp.Unlock()
+
 	if lp.vehicle == nil {
 		return api.ErrNotAvailable
 	}
-
-	lp.Lock()
-	defer lp.Unlock()
 
 	lp.log.INFO.Println("set min soc:", soc)
 
@@ -108,7 +108,6 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 func (lp *LoadPoint) GetPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
-
 	return lp.Phases
 }
 
@@ -178,6 +177,8 @@ func (lp *LoadPoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	lp.log.INFO.Println("set min current:", current)
+
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
 		lp.publish("minCurrent", lp.MinCurrent)
@@ -195,6 +196,8 @@ func (lp *LoadPoint) GetMaxCurrent() float64 {
 func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
+
+	lp.log.INFO.Println("set max current:", current)
 
 	if current != lp.MaxCurrent {
 		lp.MaxCurrent = current

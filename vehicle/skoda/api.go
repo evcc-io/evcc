@@ -17,49 +17,25 @@ type API struct {
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}
 
 	v.Client.Transport = &oauth2.Transport{
-		Source: identity,
+		Source: ts,
 		Base:   v.Client.Transport,
 	}
 
 	return v
 }
 
-func (v *API) getJSON(uri string, res interface{}) error {
-	req, err := request.New(http.MethodGet, uri, nil, request.AcceptJSON)
-
-	if err == nil {
-		err = v.DoJSON(req, &res)
-	}
-
-	return err
-}
-
-// Vehicle is the /v2/garage/vehicles api
-type Vehicle struct {
-	ID, VIN       string
-	LastUpdatedAt string
-	Specification struct {
-		Title, Brand, Model string
-		Battery             struct {
-			CapacityInKWh int
-		}
-	}
-	// Connectivities
-	// Capabilities
-}
-
 // Vehicles implements the /vehicles response
 func (v *API) Vehicles() ([]string, error) {
-	var res []Vehicle
+	var res VehiclesResponse
 
 	uri := fmt.Sprintf("%s/v2/garage/vehicles", BaseURI)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 
 	var vehicles []string
 	if err == nil {
@@ -71,30 +47,36 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-// ChargerResponse is the /v1/charging/<vin>/status api
-type ChargerResponse struct {
-	Plug struct {
-		ConnectionState string // Connected
-		LockState       string // Unlocked
-	}
-	Charging struct {
-		State                           string // Error
-		RemainingToCompleteInSeconds    int64
-		ChargingPowerInWatts            float64
-		ChargingRateInKilometersPerHour float64
-		ChargingType                    string // Invalid
-		ChargeMode                      string // MANUAL
-	}
-	Battery struct {
-		CruisingRangeElectricInMeters int64
-		StateOfChargeInPercent        int
-	}
-}
-
 // Charger implements the /v1/charging/<vin>/status response
 func (v *API) Charger(vin string) (ChargerResponse, error) {
 	var res ChargerResponse
 	uri := fmt.Sprintf("%s/v1/charging/%s/status", BaseURI, vin)
-	err := v.getJSON(uri, &res)
+	err := v.GetJSON(uri, &res)
 	return res, err
+}
+
+const (
+	ActionCharge      = "charging"
+	ActionChargeStart = "Start"
+	ActionChargeStop  = "Stop"
+)
+
+// Action executes a vehicle action
+func (v *API) Action(vin, action, value string) error {
+	var res map[string]interface{}
+	uri := fmt.Sprintf("%s/v1/%s/operation-requests?vin=%s", BaseURI, action, vin)
+
+	data := struct {
+		Typ string `json:"type"`
+	}{
+		Typ: value,
+	}
+
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		// {"id":"61991908906fa40af9a5cba4","status":"InProgress","deeplink":""}
+		err = v.DoJSON(req, &res)
+	}
+
+	return err
 }
