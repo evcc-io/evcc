@@ -67,6 +67,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.ResMsg.Vehicles, err
 }
 
+// StatusPartial retrieves the latest server-side status
 func (v *API) Status(vid string) (StatusLatestResponse, error) {
 	var res StatusLatestResponse
 
@@ -79,7 +80,7 @@ func (v *API) Status(vid string) (StatusLatestResponse, error) {
 	return res, err
 }
 
-// StatusPartial refreshes the status from the bluelink api
+// StatusPartial refreshes the status
 func (v *API) StatusPartial(vid string) (StatusResponse, error) {
 	var res StatusResponse
 

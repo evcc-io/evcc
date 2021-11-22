@@ -12,7 +12,7 @@ type VehiclesResponse struct {
 type StatusResponse struct {
 	RetCode string
 	ResCode string
-	ResMsg  StatusData
+	ResMsg  VehicleStatus
 }
 
 type StatusLatestResponse struct {
@@ -20,15 +20,19 @@ type StatusLatestResponse struct {
 	ResCode string
 	ResMsg  struct {
 		VehicleStatusInfo struct {
-			VehicleStatus StatusData
+			VehicleStatus   VehicleStatus
+			VehicleLocation VehicleLocation
+			Odometer        Odometer
 		}
 	}
 }
 
-type StatusData struct {
+type VehicleStatus struct {
 	Time     string
 	EvStatus struct {
+		BatteryCharge bool
 		BatteryStatus float64
+		BatteryPlugin int
 		RemainTime2   struct {
 			Atc struct {
 				Value, Unit int
@@ -39,12 +43,24 @@ type StatusData struct {
 	Vehicles []Vehicle
 }
 
+type VehicleLocation struct {
+	Coord struct {
+		Lat, Lon, Alt float64
+	}
+	Time string // TODO convert to timestamp
+}
+
+type Odometer struct {
+	Value float64
+	Unit  int
+}
+
 const (
 	timeFormat = "20060102150405 -0700" // Note: must add timeOffset
 	timeOffset = " +0100"
 )
 
-func (d *StatusData) Updated() (time.Time, error) {
+func (d *VehicleStatus) Updated() (time.Time, error) {
 	return time.Parse(timeFormat, d.Time+timeOffset)
 }
 

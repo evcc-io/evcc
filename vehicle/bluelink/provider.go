@@ -37,7 +37,7 @@ func NewProvider(api *API, vid string, expiry, cache time.Duration) *Provider {
 }
 
 // status wraps the api status call and adds status refresh
-func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (StatusData, error) {
+func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (VehicleStatus, error) {
 	res, err := statusG()
 
 	var ts time.Time
@@ -69,7 +69,7 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (StatusD
 			err = api.ErrMustRetry
 		}
 
-		return StatusData{}, err
+		return VehicleStatus{}, err
 	}
 
 	// refresh finally expired
@@ -83,7 +83,7 @@ func (v *Provider) status(statusG func() (StatusLatestResponse, error)) (StatusD
 		err = api.ErrMustRetry
 	}
 
-	return StatusData{}, err
+	return VehicleStatus{}, err
 }
 
 var _ api.Battery = (*Provider)(nil)
@@ -92,7 +92,7 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if res, ok := res.(VehicleStatus); err == nil && ok {
 		return res.EvStatus.BatteryStatus, nil
 	}
 
@@ -105,7 +105,7 @@ var _ api.VehicleFinishTimer = (*Provider)(nil)
 func (v *Provider) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if res, ok := res.(VehicleStatus); err == nil && ok {
 		remaining := res.EvStatus.RemainTime2.Atc.Value
 
 		if remaining == 0 {
@@ -125,7 +125,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 
-	if res, ok := res.(StatusData); err == nil && ok {
+	if res, ok := res.(VehicleStatus); err == nil && ok {
 		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
 			return int64(dist[0].RangeByFuel.EvModeRange.Value), nil
 		}
@@ -135,3 +135,20 @@ func (v *Provider) Range() (int64, error) {
 
 	return 0, err
 }
+
+// var _ api.VehicleOdometer = (*Provider)(nil)
+
+// // Range implements the api.VehicleRange interface
+// func (v *Provider) Odometer() (float64, error) {
+// 	res, err := v.statusG()
+
+// 	if res, ok := res.(VehicleStatus); err == nil && ok {
+// 		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
+// 			return dist[0].RangeByFuel.EvModeRange.Value), nil
+// 		}
+
+// 		return 0, api.ErrNotAvailable
+// 	}
+
+// 	return 0, err
+// }
