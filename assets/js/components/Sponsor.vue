@@ -1,35 +1,43 @@
 <template>
-	<div v-if="sponsor" class="my-4">
-		<p>
-			<fa-icon :icon="['fas', 'heart']" class="icon me-1 solid text-evcc"></fa-icon>
+	<div v-if="sponsor">
+		<p class="mb-3">
 			{{ $t("footer.sponsor.thanks", { sponsor }) }}
 		</p>
-		<div class="d-flex justify-content-center">
+		<div class="d-flex justify-content-center flex-column">
 			<button
 				class="btn btn-primary mb-2 confetti-button bg-evcc"
 				@click="surprise"
 				ref="confetti"
 			>
+				<fa-icon :icon="['fas', 'heart']" class="icon me-1 solid"></fa-icon>
 				{{ $t("footer.sponsor.confetti") }}
 			</button>
+			<a
+				v-if="false"
+				href="https://evcc.io/sticker"
+				target="_blank"
+				class="small text-muted text-center"
+			>
+				{{ $t("footer.sponsor.sticker") }}
+			</a>
 		</div>
-		<a v-if="false" href="https://evcc.io/sticker" target="_blank" class="small text-muted">{{
-			$t("footer.sponsor.sticker")
-		}}</a>
 	</div>
-	<div v-else class="my-4">
-		<p>
+	<div v-else>
+		<p class="mb-3">
 			{{ $t("footer.sponsor.supportUs") }}
 		</p>
-		<div class="d-flex justify-content-center my-4">
+		<div class="d-flex justify-content-center flex-column">
 			<a
 				target="_blank"
 				href="https://github.com/sponsors/andig"
-				class="btn btn-outline-primary"
+				class="btn btn-outline-primary mb-2"
 			>
 				<fa-icon :icon="['far', 'heart']" class="icon me-1"></fa-icon>
 				{{ $t("footer.sponsor.becomeSponsor") }}
 			</a>
+			<div class="small text-muted text-center">
+				{{ $t("footer.sponsor.confettiPromise") }}
+			</div>
 		</div>
 	</div>
 </template>

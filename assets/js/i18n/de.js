@@ -24,8 +24,8 @@ export default {
       modalTitle: "{total} kWh Strom geladen",
       modalChartGrid: "Netzstrom {grid} kWh",
       modalChartSelf: "Sonnenstrom {self} kWh",
-      modalSavingsText:
-        "Durch den Eigenverbrauch hast du <strong>ungefähr {savingEuro} gespart.</strong>",
+      modalSavingsPrice: "Effektiver Strompreis",
+      modalSavingsTotal: "Ersparnis gegenüber Netzbezug",
       modalExplaination: "Berechnung:",
       modalExplainationGrid: "Netzstrom {gridPrice}ct",
       modalExplainationFeedin: "Einspeisung {feedinPrice}ct",
@@ -34,10 +34,11 @@ export default {
     },
     sponsor: {
       thanks: "Danke für deine Unterstützung {sponsor}! Das hilft uns bei der Weiterentwicklung.",
-      confetti: "Lust auf etwas Danke-Konfetti?",
+      confetti: "Danke! Lust auf etwas Konfetti?",
       supportUs:
         "Wir möchten, dass effizientes Zuhause-Laden für möglichst viele Menschen zum Standard wird. Unterstütze uns auf dem Weg indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
       sticker: "...oder evcc Sticker?",
+      confettiPromise: "es gibt auch Konfetti",
       becomeSponsor: "Werde GitHub Sponsor",
     },
   },

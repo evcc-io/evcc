@@ -38,8 +38,26 @@
 							aria-label="Close"
 						></button>
 					</div>
-					<div class="modal-body">
-						<div class="chart-container mt-2 mb-3">
+					<div class="modal-body py-4">
+						<div class="chart-container mb-3">
+							<div class="chart-legend d-flex flex-wrap justify-content-between mb-1">
+								<div class="text-nowrap">
+									<fa-icon icon="square" class="text-evcc"></fa-icon>
+									{{
+										$t("footer.savings.modalChartSelf", {
+											self: fmtKw(chargedSelfConsumption, true, false),
+										})
+									}}
+								</div>
+								<div class="text-nowrap">
+									<fa-icon icon="square" class="text-grid"></fa-icon>
+									{{
+										$t("footer.savings.modalChartGrid", {
+											grid: fmtKw(chargedGrid, true, false),
+										})
+									}}
+								</div>
+							</div>
 							<div
 								class="
 									chart
@@ -75,28 +93,16 @@
 									<span class="text-truncate"> {{ 100 - percent }}% </span>
 								</div>
 							</div>
-							<div class="chart-legend d-flex flex-wrap justify-content-between">
-								<div class="text-nowrap me-2">
-									<fa-icon icon="square" class="text-evcc"></fa-icon>
-									{{
-										$t("footer.savings.modalChartSelf", {
-											self: fmtKw(chargedSelfConsumption, true, false),
-										})
-									}}
-								</div>
-								<div class="text-nowrap me-2">
-									<fa-icon icon="square" class="text-grid"></fa-icon>
-									{{
-										$t("footer.savings.modalChartGrid", {
-											grid: fmtKw(chargedGrid, true, false),
-										})
-									}}
-								</div>
-							</div>
 						</div>
-						<p v-html="$t('footer.savings.modalSavingsText', { savingEuro })" />
+						<p class="mb-3">
+							{{ $t("footer.savings.modalSavingsPrice") }}:
+							<strong>{{ centPerKWh }}</strong>
+							<br />
+							{{ $t("footer.savings.modalSavingsTotal") }}:
+							<strong>{{ savingEuro }}</strong>
+						</p>
 
-						<p class="small text-muted">
+						<p class="small text-muted mb-3">
 							{{ $t("footer.savings.modalExplaination") }}
 							<span class="text-nowrap">
 								{{
@@ -112,7 +118,7 @@
 								class="text-muted"
 								><fa-icon
 									:title="$t('footer.savings.modalExplainationCalculation')"
-									icon="wrench"
+									icon="info-circle"
 									class="icon ms-1"
 								></fa-icon
 							></a>
@@ -124,7 +130,7 @@
 							}}
 						</p>
 
-						<hr />
+						<hr class="mb-4" />
 
 						<Sponsor :sponsor="sponsor" />
 					</div>
@@ -163,6 +169,12 @@ export default {
 			const priceDiffEuro = (this.gridPrice - this.feedinPrice) / 100;
 			const saving = (this.chargedSelfConsumption / 1000) * priceDiffEuro;
 			return this.$n(saving, { style: "currency", currency: "EUR" });
+		},
+		centPerKWh() {
+			const totalCent =
+				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedinPrice;
+			const euroPerKWh = totalCent / this.chargedTotal;
+			return `${Math.round(euroPerKWh || 0)} ct/kWh`;
 		},
 		percent() {
 			return Math.round(this.selfPercentage);
