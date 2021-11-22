@@ -99,6 +99,26 @@ func (v *Provider) SoC() (float64, error) {
 	return 0, err
 }
 
+var _ api.ChargeState = (*Provider)(nil)
+
+// Status implements the api.Battery interface
+func (v *Provider) Status() (api.ChargeStatus, error) {
+	res, err := v.statusG()
+
+	status := api.StatusNone
+	if res, ok := res.(VehicleStatus); err == nil && ok {
+		status = api.StatusA
+		if res.EvStatus.BatteryPlugin > 0 {
+			status = api.StatusB
+		}
+		if res.EvStatus.BatteryCharge {
+			status = api.StatusC
+		}
+	}
+
+	return status, err
+}
+
 var _ api.VehicleFinishTimer = (*Provider)(nil)
 
 // FinishTime implements the api.VehicleFinishTimer interface
