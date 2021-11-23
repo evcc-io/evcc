@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/util"
+	"github.com/thoas/go-funk"
 
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
@@ -65,12 +66,6 @@ type ThresholdConfig struct {
 	Threshold float64
 }
 
-// ActionConfig defines an action to take on event
-type ActionConfig struct {
-	Mode      api.ChargeMode `mapstructure:"mode"`      // Charge mode to apply when car disconnected
-	TargetSoC int            `mapstructure:"targetSoC"` // Target SoC to apply when car disconnected
-}
-
 // LoadPoint is responsible for controlling charge depending on
 // SoC needs and power availability.
 type LoadPoint struct {
@@ -93,10 +88,12 @@ type LoadPoint struct {
 	Meters      struct {
 		ChargeMeterRef string `mapstructure:"charge"` // Charge meter reference
 	}
-	SoC             SoCConfig
-	OnDisconnect    ActionConfig            `mapstructure:"onDisconnect"`
-	OnIdentify      map[string]ActionConfig `mapstructure:"onIdentify"`
-	Enable, Disable ThresholdConfig
+	SoC               SoCConfig
+	OnDisconnect_     interface{} `mapstructure:"onDisconnect"`
+	OnIdentify_       interface{} `mapstructure:"onIdentify"`
+	Enable, Disable   ThresholdConfig
+	ResetOnDisconnect bool `mapstructure:"resetOnDisconnect"`
+	onDisconnect      api.ActionConfig
 
 	MinCurrent    float64       // PV mode: start current	Min+PV mode: min current
 	MaxCurrent    float64       // Max allowed current. Physically ensured by the charger
@@ -157,6 +154,14 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.SoC.Poll.Mode = pollConnected
 	}
 
+	if lp.OnIdentify_ != nil {
+		lp.log.WARN.Printf("loadpoint.onIdentify is deprecated and will be removed in a future release. Use vehicle.onIdentify instead.")
+	}
+
+	if lp.OnDisconnect_ != nil {
+		lp.log.WARN.Printf("loadpoint.onDisconnect is deprecated and will be removed in a future release. Use loadpoint.resetOnDisconnect instead.")
+	}
+
 	// set vehicle polling interval
 	if lp.SoC.Poll.Interval < pollInterval {
 		if lp.SoC.Poll.Interval == 0 {
@@ -167,7 +172,7 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	}
 
 	if lp.SoC.Target == 0 {
-		lp.SoC.Target = lp.OnDisconnect.TargetSoC // use disconnect value as default soc
+		lp.SoC.Target = lp.onDisconnect.TargetSoC // use disconnect value as default soc
 		if lp.SoC.Target == 0 {
 			lp.SoC.Target = 100
 		}
@@ -180,6 +185,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	if lp.MaxCurrent <= lp.MinCurrent {
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
+
+	// store defaults
+	lp.collectDefaults()
 
 	if lp.Meters.ChargeMeterRef != "" {
 		lp.chargeMeter = cp.Meter(lp.Meters.ChargeMeterRef)
@@ -240,6 +248,17 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 	}
 
 	return lp
+}
+
+// collectDefaults collects default values for use on disconnect
+func (lp *LoadPoint) collectDefaults() {
+	lp.onDisconnect = api.ActionConfig{
+		Mode:       lp.GetMode(),
+		MinCurrent: lp.GetMinCurrent(),
+		MaxCurrent: lp.GetMaxCurrent(),
+		MinSoC:     lp.GetMinSoC(),
+		TargetSoC:  lp.GetTargetSoC(),
+	}
 }
 
 // requestUpdate requests site to update this loadpoint
@@ -367,7 +386,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	}
 
 	// set default mode on disconnect
-	lp.applyAction(lp.OnDisconnect)
+	if lp.ResetOnDisconnect {
+		lp.applyAction(lp.onDisconnect)
+	}
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
@@ -399,12 +420,29 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 }
 
 // applyAction executes the action
-func (lp *LoadPoint) applyAction(action ActionConfig) {
-	if action.Mode != "" && lp.GetMode() != api.ModeEmpty {
+func (lp *LoadPoint) applyAction(action api.ActionConfig) {
+	if action.Mode != api.ModeEmpty {
 		lp.SetMode(action.Mode)
 	}
+	if action.MinCurrent > 0 {
+		lp.SetMinCurrent(action.MinCurrent)
+	}
+	if action.MaxCurrent > 0 {
+		lp.SetMaxCurrent(action.MaxCurrent)
+	}
+	if action.MinSoC != 0 {
+		// TODO deduplicate with SetMinSoC
+		lp.Lock()
+		lp.SoC.Min = action.MinSoC
+		lp.publish("minSoC", action.MinSoC)
+		lp.Unlock()
+	}
 	if action.TargetSoC != 0 {
-		_ = lp.SetTargetSoC(action.TargetSoC)
+		// TODO deduplicate with SetTargetSoC
+		lp.Lock()
+		lp.SoC.Target = action.TargetSoC
+		lp.publish("targetSoC", action.TargetSoC)
+		lp.Unlock()
 	}
 }
 
@@ -647,11 +685,6 @@ func (lp *LoadPoint) identifyVehicle() {
 		if vehicle := lp.selectVehicleByID(id); vehicle != nil {
 			lp.setActiveVehicle(vehicle)
 		}
-
-		if action, ok := lp.OnIdentify[id]; ok {
-			lp.log.DEBUG.Println("running vehicle action:", action)
-			lp.applyAction(action)
-		}
 	}
 }
 
@@ -659,14 +692,14 @@ func (lp *LoadPoint) identifyVehicle() {
 func (lp *LoadPoint) selectVehicleByID(id string) api.Vehicle {
 	// find exact match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid == id {
+		if funk.ContainsString(vehicle.Identifiers(), id) {
 			return vehicle
 		}
 	}
 
 	// find placeholder match
 	for _, vehicle := range lp.vehicles {
-		if vid, err := vehicle.Identify(); err == nil && vid != "" {
+		for _, vid := range vehicle.Identifiers() {
 			re, err := regexp.Compile(strings.ReplaceAll(vid, "*", ".*?"))
 			if err != nil {
 				lp.log.ERROR.Printf("vehicle id: %v", err)
@@ -706,6 +739,8 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehiclePresent", true)
 		lp.publish("vehicleTitle", lp.vehicle.Title())
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
+
+		lp.applyAction(vehicle.OnIdentified())
 	} else {
 		lp.socEstimator = nil
 
@@ -726,7 +761,8 @@ func (lp *LoadPoint) startVehicleDetection() {
 
 // vehicleUnidentified checks if loadpoint has multiple vehicles associated and starts discovery period
 func (lp *LoadPoint) vehicleUnidentified() bool {
-	res := len(lp.vehicles) > 1 && lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
+	res := len(lp.vehicles) > 1 && lp.vehicle == nil &&
+		lp.clock.Since(lp.vehicleConnected) < vehicleDetectDuration
 
 	// request vehicle api refresh while waiting to identify
 	if res {

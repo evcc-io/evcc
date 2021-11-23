@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
@@ -35,6 +36,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		Register        modbus.Register
 		Value           string
 		Scale           float64
+		Timeout         time.Duration
 	}{
 		Scale: 1,
 	}
@@ -57,6 +59,11 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// set non-default timeout
+	if cc.Timeout > 0 {
+		conn.Timeout(cc.Timeout)
 	}
 
 	log := util.NewLogger("modbus")

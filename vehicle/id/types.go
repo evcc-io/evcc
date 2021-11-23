@@ -101,12 +101,12 @@ type MaintenanceStatus struct {
 	OilServiceDueKm      int       `json:"oilServiceDue_km"`
 }
 
-// Timestamp implements JSON unmarshal for RFC3339 string timestamp
+// Timestamp implements JSON unmarshal
 type Timestamp struct {
 	time.Time
 }
 
-// UnmarshalJSON decodes RFC3339 string timestamp into time.Time
+// UnmarshalJSON decodes string timestamp into time.Time
 func (ct *Timestamp) UnmarshalJSON(data []byte) error {
 	s := strings.Trim(string(data), "\"")
 

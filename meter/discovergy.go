@@ -7,8 +7,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/thoas/go-funk"
 )
 
@@ -42,7 +42,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	log := util.NewLogger("discgy").Redact(cc.User, cc.Password, cc.Meter)
 
 	client := request.NewHelper(log)
-	client.Transport = basicauth.NewTransport(cc.User, cc.Password, client.Transport)
+	client.Transport = transport.BasicAuth(cc.User, cc.Password, client.Transport)
 
 	var meters []discovergyMeter
 	if err := client.GetJSON(fmt.Sprintf("%s/meters", discovergyAPI), &meters); err != nil {

@@ -35,6 +35,7 @@ func (l *logger) Log(keyVals ...interface{}) error {
 	}
 
 	l.log.Println(l.b.String())
+	l.b.Reset()
 
 	return nil
 }

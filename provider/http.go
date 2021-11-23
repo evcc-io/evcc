@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/itchyny/gojq"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
@@ -107,7 +107,7 @@ func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64,
 
 	// ignore the self signed certificate
 	if insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	return p
@@ -153,7 +153,7 @@ func (p *HTTP) WithJq(jq string) (*HTTP, error) {
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
-		p.Client.Transport = basicauth.NewTransport(user, password, p.Client.Transport)
+		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
 	default:

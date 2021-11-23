@@ -8,7 +8,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-var acceptable = []string{
+acceptable := []string{
 	"invalid plugin type: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
@@ -17,13 +17,12 @@ var acceptable = []string{
 	"connect: no route to host",
 	"connect: connection refused",
 	"i/o timeout",
+	"connect: network is unreachable",
 	"no ping response for 192.0.2.2", // SMA
 	"network is unreachable",
-	"unexpected status: 401", // Discovergy
 	"[1ESY1161052714 1ESY1161229249 1EMH0008842285 1ESY1161978584 1EMH0004864048 1ESY1161979033 7ELS8135823805]", // Discovergy
-	"can only have either uri or device",                                          // modbus
-	"(Client.Timeout exceeded while awaiting headers)",                            // http
-	"login failed: Put \"https://192.0.2.2/v1/login\": context deadline exceeded", // LG ESS
+	"can only have either uri or device",               // modbus
+	"(Client.Timeout exceeded while awaiting headers)", // http
 }
 
 func TestConfigMeters(t *testing.T) {

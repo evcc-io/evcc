@@ -44,6 +44,10 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &BMW{
 		embed: &cc.embed,
 	}
