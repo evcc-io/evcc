@@ -8,7 +8,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-acceptable := []string{
+var acceptable = []string{
 	"invalid plugin type: ...",
 	"missing mqtt broker configuration",
 	"mqtt not configured",
