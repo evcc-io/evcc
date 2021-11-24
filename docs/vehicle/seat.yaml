@@ -1,0 +1,6 @@
+type: seat
+description: Seat (Cupra, Mii)
+user:
+password:
+vin: "W..." 
+capacity: "10"

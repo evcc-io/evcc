@@ -1,0 +1,6 @@
+type: ovms
+description: Open Vehicle Monitoring System
+user:
+password:
+vehicleid:
+capacity: "12"

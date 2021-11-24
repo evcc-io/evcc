@@ -1,4 +1,0 @@
-type: t_solarwatt_myreserve
-description: Solarwatt MyReserve
-usage: "battery" 
-host: "192.0.2.2"

@@ -1,0 +1,4 @@
+type: sma-energy-meter
+description: SMA Energy Meter
+usage: "grid" 
+host: "192.0.2.2"

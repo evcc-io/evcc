@@ -1,0 +1,6 @@
+type: fiat
+description: Fiat
+user:
+password:
+vin: "ZFAE..." 
+capacity: "42"

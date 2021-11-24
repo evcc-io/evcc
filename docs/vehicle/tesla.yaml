@@ -1,0 +1,6 @@
+type: tesla
+description: Tesla
+accessToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
+refreshToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
+vin: "W..." 
+capacity: "90"

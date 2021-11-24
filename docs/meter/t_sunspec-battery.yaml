@@ -1,5 +1,0 @@
-type: t_sunspec
-description: SunSpec compliant inverter
-usage: "battery" 
-host: "192.0.2.2" 
-id: 1

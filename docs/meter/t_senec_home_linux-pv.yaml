@@ -1,5 +1,0 @@
-type: t_senec_home_linux
-description: SENEC.Home (Linux)
-usage: "pv" 
-host: "192.0.2.2" 
-port: "8080"

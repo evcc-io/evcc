@@ -1,0 +1,4 @@
+type: sma-inverter
+description: SMA Wechselrichter
+usage: "pv" 
+host: "192.0.2.2"

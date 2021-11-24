@@ -1,4 +1,0 @@
-type: t_phoenix-em-eth
-description: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
-host: "192.0.2.2" 
-port: "502"

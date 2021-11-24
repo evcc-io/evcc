@@ -1,8 +1,0 @@
-type: t_tronity
-description: Tronity
-userid:
-secret:
-accessToken:
-refreshToken:
-vin: "W..." 
-capacity: "10"

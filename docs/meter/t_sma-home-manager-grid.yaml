@@ -1,4 +1,0 @@
-type: t_sma-home-manager
-description: SMA Sunny Home Manager 2.0
-usage: "grid" 
-host: "192.0.2.2"

@@ -1,0 +1,5 @@
+type: solarlog
+description: Solarlog
+usage: "grid" 
+host: "192.0.2.2" 
+port: "502"

@@ -1,0 +1,5 @@
+type: evnotify
+description: evNotify
+akey:
+token:
+capacity: "64"

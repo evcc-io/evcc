@@ -1,0 +1,4 @@
+type: shelly_3em
+description: Shelly 3EM
+usage: "grid" 
+host: "192.0.2.2"

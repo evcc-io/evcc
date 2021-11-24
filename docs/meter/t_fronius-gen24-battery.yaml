@@ -1,5 +1,0 @@
-type: t_fronius-gen24
-description: Fronius Symo GEN24 Plus
-usage: "battery" 
-host: "192.0.2.2" 
-port: "502"
