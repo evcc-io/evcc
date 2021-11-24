@@ -1,4 +1,4 @@
-type: t_phoenix-ev-ser
+template: phoenix-ev-ser
 description: Phoenix EV-SER Controller (Modbus RTU)
 generic: true
 params:

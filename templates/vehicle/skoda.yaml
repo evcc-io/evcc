@@ -1,4 +1,4 @@
-type: t_skoda
+template: skoda
 description: Skoda (Citigo)
 params:
 - name: title

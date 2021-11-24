@@ -1,4 +1,4 @@
-type: t_sunspec
+template: sunspec
 description: SunSpec compliant inverter
 generic: true
 params:

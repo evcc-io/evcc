@@ -1,4 +1,4 @@
-type: t_ovms
+template: ovms
 description: Open Vehicle Monitoring System
 params:
 - name: title

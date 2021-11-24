@@ -1,4 +1,4 @@
-type: t_sma-inverter
+template: sma-inverter
 description: SMA Wechselrichter
 params:
 - name: usage

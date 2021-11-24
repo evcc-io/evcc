@@ -1,4 +1,4 @@
-type: t_seat
+template: seat
 description: Seat (Cupra, Mii)
 params:
 - name: title

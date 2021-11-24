@@ -1,4 +1,4 @@
-type: t_huawei_sun2000_8ktl
+template: huawei_sun2000_8ktl
 description: Huawei SUN2000-8KTL
 params:
 - name: usage

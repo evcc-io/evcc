@@ -1,4 +1,4 @@
-type: t_discovergy
+template: discovergy
 description: Discovergy (Cloud)
 params:
 - name: usage

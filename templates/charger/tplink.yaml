@@ -1,4 +1,4 @@
-type: t_tplink
+template: tplink
 description: TP-LINK Smart Plug
 params:
 - name: host

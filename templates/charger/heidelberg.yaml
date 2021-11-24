@@ -1,4 +1,4 @@
-type: t_heidelberg
+template: heidelberg
 description: Heidelberg Energy Control (Modbus RTU)
 requirements:
   sponsorship: true

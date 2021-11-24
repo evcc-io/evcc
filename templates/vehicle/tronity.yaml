@@ -1,4 +1,4 @@
-type: t_tronity
+template: tronity
 description: Tronity
 requirements:
   sponsorship: true

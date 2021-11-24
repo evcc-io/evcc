@@ -1,4 +1,4 @@
-type: t_nissan
+template: nissan
 description: Nissan
 params:
 - name: title

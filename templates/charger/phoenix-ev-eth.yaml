@@ -1,4 +1,4 @@
-type: t_phoenix-ev-eth
+template: phoenix-ev-eth
 description: Phoenix EV-ETH Controller (Modbus TCP)
 generic: true
 requirements:

@@ -22,7 +22,7 @@ func init() {
 		// println("")
 
 		instantiateFunc := instantiateFunction(tmpl)
-		registry.Add(tmpl.Type, instantiateFunc)
+		registry.Add(tmpl.Type(), instantiateFunc)
 
 		// render all usages
 		for _, usage := range tmpl.Usages() {

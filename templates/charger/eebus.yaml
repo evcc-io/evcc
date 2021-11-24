@@ -1,4 +1,4 @@
-type: t_eebus
+template: eebus
 description: EEBUS kompatible Wallbox
 generic: true
 requirements:

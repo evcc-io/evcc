@@ -1,4 +1,4 @@
-type: t_pmcc_http
+template: pmcc_http
 description: Porsche Mobile Charger Connect (HTTP API)
 params:
 - name: host

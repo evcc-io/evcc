@@ -105,7 +105,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 		for ok := true; ok; ok = repeat {
 			deviceItem := device{}
 
-			linkedTemplateItem := templates.ByType(linkedTemplate.Type, string(DeviceClassMeter))
+			linkedTemplateItem := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
 			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
 				return
 			}

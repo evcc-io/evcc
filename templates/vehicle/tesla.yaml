@@ -1,4 +1,4 @@
-type: t_tesla
+template: tesla
 description: Tesla
 params:
 - name: title

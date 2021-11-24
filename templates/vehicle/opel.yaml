@@ -1,4 +1,4 @@
-type: t_opel
+template: opel
 description: Opel
 params:
 - name: title

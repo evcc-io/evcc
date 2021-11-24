@@ -1,4 +1,4 @@
-type: t_ds
+template: ds
 description: DS
 params:
 - name: title

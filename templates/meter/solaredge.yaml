@@ -1,4 +1,4 @@
-type: t_solaredge
+template: solaredge
 description: Solaredge
 guidedsetup:
   enable: true

@@ -1,4 +1,4 @@
-type: t_cfos_charger
+template: cfos_charger
 description: cFos PowerBrain
 requirements:
   sponsorship: true

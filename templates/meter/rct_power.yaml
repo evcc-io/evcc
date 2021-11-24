@@ -1,4 +1,4 @@
-type: t_rct_power
+template: rct_power
 description: RCT Power
 guidedsetup:
   enable: true

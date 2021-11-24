@@ -1,4 +1,4 @@
-type: t_mini
+template: mini
 description: Mini
 params:
 - name: title

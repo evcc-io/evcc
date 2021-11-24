@@ -1,4 +1,4 @@
-type: t_enyaq
+template: enyaq
 description: Skoda (Enyaq)
 params:
 - name: title

@@ -1,4 +1,4 @@
-type: t_wallbe
+template: wallbe
 description: Wallbe (Eco, Pro)
 requirements:
   description:

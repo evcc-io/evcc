@@ -1,4 +1,4 @@
-type: t_kia
+template: kia
 description: Kia
 params:
 - name: title

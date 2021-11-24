@@ -1,4 +1,4 @@
-type: t_tinkerforge_warp
+template: tinkerforge_warp
 description: TinkerForge WARP Charger
 requirements:
   description:

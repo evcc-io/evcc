@@ -1,4 +1,4 @@
-type: t_fritzdect
+template: fritzdect
 description: FritzDECT
 params:
 - name: uri

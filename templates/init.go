@@ -57,9 +57,9 @@ func ByClass(class string) []Template {
 	return templates[class]
 }
 
-func ByType(t, class string) Template {
+func ByTemplate(t, class string) Template {
 	for _, tmpl := range templates[class] {
-		if tmpl.Type == t {
+		if tmpl.Template == t {
 			return tmpl
 		}
 	}

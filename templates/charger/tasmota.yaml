@@ -1,4 +1,4 @@
-type: t_tasmota
+template: tasmota
 description: Tasmota
 params:
 - name: host

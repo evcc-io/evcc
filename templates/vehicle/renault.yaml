@@ -1,4 +1,4 @@
-type: t_renault
+template: renault
 description: Renault
 params:
 - name: title

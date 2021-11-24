@@ -1,4 +1,4 @@
-type: t_evse_din
+template: evse_din
 description: EVSE DIN
 params:
 - name: modbus

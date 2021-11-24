@@ -1,4 +1,4 @@
-type: t_porsche
+template: porsche
 description: Porsche
 params:
 - name: title

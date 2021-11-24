@@ -1,4 +1,4 @@
-type: t_openwb
+template: openwb
 description: openWB (MQTT)
 requirements:
   description:

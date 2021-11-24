@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -13,6 +14,7 @@ const (
 	ParamUsage         = "usage"
 	ParamModbus        = "modbus"
 	ModbusMagicComment = "# ::modbus-setup::"
+	TemplateTypePrefix = "t_"
 )
 
 const (
@@ -66,8 +68,8 @@ type GuidedSetup struct {
 
 // Linked Template
 type LinkedTemplate struct {
-	Type  string
-	Usage string // usage: "grid", "pv", "battery"
+	Template string
+	Usage    string // usage: "grid", "pv", "battery"
 }
 
 // Param is a proxy template parameter
@@ -88,7 +90,7 @@ type Param struct {
 
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
-	Type         string
+	Template     string
 	Description  string // user friendly description of the device this template describes
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
@@ -134,6 +136,14 @@ func (t *Template) ModbusChoices() []string {
 	return nil
 }
 
+func (t *Template) Type() string {
+	return TemplateTypeForName(t.Template)
+}
+
+func TemplateTypeForName(name string) string {
+	return fmt.Sprintf("%s%s", TemplateTypePrefix, name)
+}
+
 //go:embed proxy.tpl
 var proxyTmpl string
 
@@ -168,7 +178,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 
 	out := new(bytes.Buffer)
 	data := map[string]interface{}{
-		"Template": t.Type,
+		"Template": t.Template,
 		"Params":   t.Params,
 	}
 	if includeDescription {

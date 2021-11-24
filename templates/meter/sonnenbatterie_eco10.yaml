@@ -1,4 +1,4 @@
-type: t_sonnenbatterie_eco10
+template: sonnenbatterie_eco10
 description: Sonnenbatterie Eco/10
 guidedsetup:
   enable: true

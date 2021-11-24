@@ -1,4 +1,4 @@
-type: t_bmw
+template: bmw
 description: BMW
 params:
 - name: title

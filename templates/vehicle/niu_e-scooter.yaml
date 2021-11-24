@@ -1,4 +1,4 @@
-type: t_niu
+template: niu
 description: NIU E-Scooter
 params:
 - name: title

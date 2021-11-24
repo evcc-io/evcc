@@ -1,4 +1,4 @@
-type: t_id
+template: id
 description: Volkswagen (We Connect ID)
 params:
 - name: title

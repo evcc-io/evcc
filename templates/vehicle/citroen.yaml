@@ -1,4 +1,4 @@
-type: t_citroen
+template: citroen
 description: Citroen
 params:
 - name: title

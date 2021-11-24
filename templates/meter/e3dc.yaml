@@ -1,4 +1,4 @@
-type: t_e3dc
+template: e3dc
 description: E3DC
 guidedsetup:
   enable: true

@@ -1,4 +1,4 @@
-type: t_evsewifi
+template: evsewifi
 description: EVSE-Wifi
 params:
 - name: host

@@ -1,4 +1,4 @@
-type: t_wallbe_sdm
+template: wallbe_sdm
 description: Wallbe (Eco, Pro) with SDM Meter
 requirements:
   description:

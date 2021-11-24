@@ -1,4 +1,4 @@
-type: t_abl
+template: abl
 description: ABL eMH / SENEC.Wallbox pro
 requirements:
   sponsorship: true

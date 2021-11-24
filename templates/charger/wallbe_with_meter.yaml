@@ -1,4 +1,4 @@
-type: t_wallbe_meter
+template: wallbe_meter
 description: Wallbe (Eco, Pro) with Meter
 requirements:
   description:

@@ -1,4 +1,4 @@
-type: t_shelly
+template: shelly
 description: Shelly
 params:
 - name: host

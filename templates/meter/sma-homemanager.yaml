@@ -1,13 +1,13 @@
-type: t_sma-home-manager
+template: sma-home-manager
 description: SMA Sunny Home Manager 2.0
 guidedsetup:
   enable: true
   linked: 
-  - type: t_sma-energy-meter
+  - template: sma-energy-meter
     usage: pv
-  - type: t_sma-inverter
+  - template: sma-inverter
     usage: pv
-  - type: t_sma-inverter
+  - template: sma-inverter
     usage: battery
 params:
 - name: usage

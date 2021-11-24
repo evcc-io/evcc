@@ -1,4 +1,4 @@
-type: t_peugeot
+template: peugeot
 description: Peugeot
 params:
 - name: title

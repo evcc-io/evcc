@@ -1,4 +1,4 @@
-type: t_fronius-solarapi-v1
+template: fronius-solarapi-v1
 description: Fronius Solar API V1
 guidedsetup:
   enable: true

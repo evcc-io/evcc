@@ -1,4 +1,4 @@
-type: t_powerdog
+template: powerdog
 description: Powerdog
 guidedsetup:
   enable: true

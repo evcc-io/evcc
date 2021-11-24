@@ -1,4 +1,4 @@
-type: t_fiat
+template: fiat
 description: Fiat
 params:
 - name: title

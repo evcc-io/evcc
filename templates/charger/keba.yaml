@@ -1,4 +1,4 @@
-type: t_keba
+template: keba
 description: KEBA Connect
 requirements:
   description:

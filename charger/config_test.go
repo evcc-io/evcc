@@ -63,18 +63,18 @@ func TestProxyMeters(t *testing.T) {
 			}
 		}
 
-		t.Run(tmpl.Type, func(t *testing.T) {
+		t.Run(tmpl.Type(), func(t *testing.T) {
 			t.Parallel()
 
 			b, err := tmpl.RenderResult(true, values)
 			if err != nil {
-				t.Logf("%s: %s", tmpl.Type, b)
+				t.Logf("%s: %s", tmpl.Template, b)
 				t.Error(err)
 			}
 
-			_, err = NewFromConfig(tmpl.Type, values)
+			_, err = NewFromConfig(tmpl.Type(), values)
 			if err != nil && !test.Acceptable(err, acceptable) {
-				t.Logf("%s", tmpl.Type)
+				t.Logf("%s", tmpl.Template)
 				t.Error(err)
 			}
 		})

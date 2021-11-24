@@ -1,4 +1,4 @@
-type: t_lg_ess_home_8_10
+template: lg_ess_home_8_10
 description: LG ESS Home 8/10
 guidedsetup:
   enable: true

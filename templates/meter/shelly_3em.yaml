@@ -1,4 +1,4 @@
-type: t_shelly_3em
+template: shelly_3em
 description: Shelly 3EM
 params:
 - name: usage

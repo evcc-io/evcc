@@ -1,4 +1,4 @@
-type: t_phoenix-em-eth
+template: phoenix-em-eth
 description: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
 generic: true
 requirements:

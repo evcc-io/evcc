@@ -1,4 +1,4 @@
-type: t_nrgkick-bluetooth
+template: nrgkick-bluetooth
 description: NRGKick Bluetooth
 params:
 - name: mac

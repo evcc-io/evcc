@@ -1,4 +1,4 @@
-type: t_audi
+template: audi
 description: Audi
 params:
 - name: title

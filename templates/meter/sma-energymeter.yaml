@@ -1,4 +1,4 @@
-type: t_sma-energy-meter
+template: sma-energy-meter
 description: SMA Energy Meter
 params:
 - name: usage

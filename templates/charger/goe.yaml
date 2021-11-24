@@ -1,4 +1,4 @@
-type: t_go-e
+template: go-e
 description: go-eCharger Home/Pro/V3
 requirements:
   description:

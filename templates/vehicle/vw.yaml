@@ -1,4 +1,4 @@
-type: t_vw
+template: vw
 description: Volkswagen (We Connect)
 params:
 - name: title

@@ -1,4 +1,4 @@
-type: t_hyundai
+template: hyundai
 description: Hyundai
 params:
 - name: title

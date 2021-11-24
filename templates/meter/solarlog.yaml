@@ -1,4 +1,4 @@
-type: t_solarlog
+template: solarlog
 description: Solarlog
 guidedsetup:
   enable: true

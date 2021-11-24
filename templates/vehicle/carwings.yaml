@@ -1,4 +1,4 @@
-type: t_carwings
+template: carwings
 description: Nissan Leaf (pre 2019)
 params:
 - name: title

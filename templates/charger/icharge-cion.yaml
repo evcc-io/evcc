@@ -1,4 +1,4 @@
-type: t_ichargecion
+template: ichargecion
 description: i-CHARGE CION (Modbus RTU-over-TCP)
 params:
 - name: modbus

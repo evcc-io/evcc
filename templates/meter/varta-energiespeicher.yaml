@@ -1,4 +1,4 @@
-type: t_varta_energiespeicher
+template: varta_energiespeicher
 description: VARTA Energiespeicher
 guidedsetup:
   enable: true

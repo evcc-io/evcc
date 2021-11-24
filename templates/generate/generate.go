@@ -34,7 +34,7 @@ func generateClass(class string) error {
 	for _, tmpl := range templates.ByClass(class) {
 		usages := tmpl.Usages()
 
-		fmt.Println(tmpl.Type)
+		fmt.Println(tmpl.Template)
 
 		if len(usages) == 0 {
 			err := writeTemplate(class, tmpl, "")
@@ -80,9 +80,9 @@ func writeTemplate(class string, tmpl templates.Template, usage string) error {
 		return err
 	}
 
-	filename := fmt.Sprintf("%s/%s/%s.yaml", basePath, class, tmpl.Type)
+	filename := fmt.Sprintf("%s/%s/%s.yaml", basePath, class, tmpl.Template)
 	if usage != "" {
-		filename = fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Type, usage)
+		filename = fmt.Sprintf("%s/%s/%s-%s.yaml", basePath, class, tmpl.Template, usage)
 	}
 	if err := os.WriteFile(filename, b, 0644); err != nil {
 		return err

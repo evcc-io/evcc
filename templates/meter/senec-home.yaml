@@ -1,4 +1,4 @@
-type: t_senec_home_linux
+template: senec_home_linux
 description: SENEC.Home (Linux)
 guidedsetup:
   enable: true

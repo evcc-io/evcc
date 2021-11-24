@@ -1,4 +1,4 @@
-type: t_ford
+template: ford
 description: Ford
 params:
 - name: title

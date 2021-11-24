@@ -1,4 +1,4 @@
-type: t_solarwatt_myreserve
+template: solarwatt_myreserve
 description: Solarwatt MyReserve
 guidedsetup:
   enable: true

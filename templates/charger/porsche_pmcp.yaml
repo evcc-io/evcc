@@ -1,4 +1,4 @@
-type: t_pmcp
+template: pmcp
 description: Porsche Mobile Charger Plus
 requirements:
   eebus: true
