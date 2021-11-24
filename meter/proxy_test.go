@@ -47,7 +47,7 @@ func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{
 	t.Run(tmpl.Template, func(t *testing.T) {
 		t.Parallel()
 
-		b, values, err := tmpl.RenderResult(false, values)
+		b, values, err := tmpl.RenderResult(true, values)
 		if err != nil {
 			t.Logf("%s: %s", tmpl.Template, b)
 			t.Error(err)

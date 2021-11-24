@@ -223,8 +223,6 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 
 	values = t.ModbusValues(values)
 
-	// fmt.Printf("TEST:\n%s\n", t.Render)
-
 	tmpl := template.New("yaml")
 	var funcMap template.FuncMap = map[string]interface{}{}
 	// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
