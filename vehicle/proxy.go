@@ -8,19 +8,6 @@ import (
 
 func init() {
 	for _, tmpl := range templates.ByClass(templates.Vehicle) {
-		// println(strings.ToUpper(tmpl.Type))
-		// println("")
-
-		// render the proxy
-		_, err := tmpl.RenderProxy()
-		if err != nil {
-			panic(err)
-		}
-
-		// println("-- proxy --")
-		// println(string(sample))
-		// println("")
-
 		instantiateFunc := instantiateFunction(tmpl)
 		registry.Add(tmpl.Type(), instantiateFunc)
 	}
@@ -32,10 +19,6 @@ func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (
 		if err != nil {
 			return nil, err
 		}
-
-		// fmt.Println("-- instantiated --")
-		// println(string(b))
-		// println("")
 
 		var instance struct {
 			Type  string

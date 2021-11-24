@@ -1,6 +1,7 @@
 package configure
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/charger"
@@ -11,7 +12,7 @@ import (
 )
 
 func (c *CmdConfigure) configureDeviceGuidedSetup() {
-	var repeat bool = true
+	repeat := true
 	var err error
 
 	var values map[string]interface{}
@@ -31,8 +32,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 		usageFound, usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
 		if !usageFound {
-			fmt.Println("ERROR: Device template is missing valid usages!")
-			return
+			panic("ERROR: Device template is missing valid usages!")
 		}
 		if len(usageChoices) == 0 {
 			usageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter}
@@ -121,7 +121,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			values := c.processConfig(linkedTemplateItem.Params, category, false)
 			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
 			if err != nil {
-				if err != c.errDeviceNotValid {
+				if !errors.Is(err, c.errDeviceNotValid) {
 					fmt.Println()
 					fmt.Println(err)
 				}
@@ -222,9 +222,6 @@ func (c *CmdConfigure) configureDevice(deviceCategory DeviceCategory, device tem
 	case DeviceClassVehicle:
 		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
 	}
-	if err != nil {
-		return nil, err
-	}
 
-	return v, nil
+	return v, err
 }

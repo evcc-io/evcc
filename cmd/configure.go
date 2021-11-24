@@ -4,7 +4,9 @@ import (
 	_ "embed"
 
 	"github.com/evcc-io/evcc/cmd/configure"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // configureCmd represents the configure command
@@ -22,17 +24,13 @@ func init() {
 func runConfigure(cmd *cobra.Command, args []string) {
 	impl := &configure.CmdConfigure{}
 
-	lang := ""
+	var lang string
 	langFlag, err := cmd.Flags().GetString("lang")
 	if err == nil {
 		lang = langFlag
 	}
 
-	logLevel := ""
-	logLevelFlag, err := cmd.Flags().GetString("log")
-	if err == nil {
-		logLevel = logLevelFlag
-	}
+	util.LogLevel(viper.GetString("log"), nil)
 
-	impl.Run(log, logLevel, lang)
+	impl.Run(log, lang)
 }

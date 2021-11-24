@@ -1,26 +1,9 @@
 package configure
 
+import "github.com/evcc-io/evcc/templates"
+
 const (
-	ModbusMagicSetupComment  string = "# ::modbus-setup::"
-	ModbusChoiceRS485        string = "rs485"
-	ModbusChoiceTCPIP        string = "tcpip"
-	ModbusKeyRS485Serial     string = "rs485serial"
-	ModbusKeyRS485TCPIP      string = "rs485tcpip"
-	ModbusKeyTCPIP           string = "tcpip"
-	ModbusParamNameId        string = "id"
-	ModbusParamValueId       string = "1"
-	ModbusParamNameDevice    string = "device"
-	ModbusParamValueDevice   string = "/dev/ttyUSB0"
-	ModbusParamNameBaudrate  string = "baudrate"
-	ModbusParamValueBaudrate string = "9600"
-	ModbusParamNameComset    string = "comset"
-	ModbusParamValueComset   string = "8N1"
-	ModbusParamNameURI       string = "uri"
-	ModbusParamNameHost      string = "host"
-	ModbusParamValueHost     string = "192.0.2.2"
-	ModbusParamNamePort      string = "port"
-	ModbusParamValuePort     string = "502"
-	ModbusParamNameRTU       string = "rtu"
+	DefaultConfigFilename string = "evcc.yaml"
 )
 
 type UsageChoice string
@@ -29,7 +12,7 @@ func (u UsageChoice) String() string {
 	return string(u)
 }
 
-var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidModbusChoices = []string{templates.ModbusChoiceRS485, templates.ModbusChoiceTCPIP}
 
 type DeviceClass string
 

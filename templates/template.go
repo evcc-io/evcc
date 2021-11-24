@@ -11,9 +11,32 @@ import (
 )
 
 const (
-	ParamUsage         = "usage"
-	ParamModbus        = "modbus"
+	ParamUsage  = "usage"
+	ParamModbus = "modbus"
+
+	ModbusChoiceRS485    = "rs485"
+	ModbusChoiceTCPIP    = "tcpip"
+	ModbusKeyRS485Serial = "rs485serial"
+	ModbusKeyRS485TCPIP  = "rs485tcpip"
+	ModbusKeyTCPIP       = "tcpip"
+
+	ModbusParamNameId        = "id"
+	ModbusParamValueId       = 1
+	ModbusParamNameDevice    = "device"
+	ModbusParamValueDevice   = "/dev/ttyUSB0"
+	ModbusParamNameBaudrate  = "baudrate"
+	ModbusParamValueBaudrate = 9600
+	ModbusParamNameComset    = "comset"
+	ModbusParamValueComset   = "8N1"
+	ModbusParamNameURI       = "uri"
+	ModbusParamNameHost      = "host"
+	ModbusParamValueHost     = "192.0.2.2"
+	ModbusParamNamePort      = "port"
+	ModbusParamValuePort     = 502
+	ModbusParamNameRTU       = "rtu"
+
 	ModbusMagicComment = "# ::modbus-setup::"
+
 	TemplateTypePrefix = "t_"
 )
 

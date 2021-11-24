@@ -34,24 +34,17 @@ type CmdConfigure struct {
 }
 
 // start the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
+func (c *CmdConfigure) Run(log *util.Logger, flagLang string) {
 	c.log = log
 
-	defaultLevel := "error"
-	if logLevel != "" {
-		defaultLevel = logLevel
-	}
-	util.LogLevel(defaultLevel, map[string]string{})
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 
 	bundle := i18n.NewBundle(language.German)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	_, err := bundle.ParseMessageFileBytes([]byte(lang_de), "localization/de.toml")
-	if err != nil {
+	if _, err := bundle.ParseMessageFileBytes([]byte(lang_de), "localization/de.toml"); err != nil {
 		panic(err)
 	}
-	_, err = bundle.ParseMessageFileBytes([]byte(lang_en), "localization/en.toml")
-	if err != nil {
+	if _, err := bundle.ParseMessageFileBytes([]byte(lang_en), "localization/en.toml"); err != nil {
 		panic(err)
 	}
 
@@ -90,7 +83,7 @@ func (c *CmdConfigure) Run(log *util.Logger, logLevel, flagLang string) {
 
 	fmt.Println()
 
-	filename := "evcc.yaml"
+	filename := DefaultConfigFilename
 
 	for ok := true; ok; {
 		_, err := os.Open(filename)

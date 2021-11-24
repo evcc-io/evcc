@@ -53,12 +53,12 @@ func TestProxyMeters(t *testing.T) {
 		values := tmpl.Defaults(true)
 
 		// Modbus default test values
-		if values["modbus"] != nil {
+		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
-			if funk.ContainsString(modbusChoices, "tcpip") {
-				values["modbustcpip"] = true
+			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
+				values[templates.ModbusKeyTCPIP] = true
 			} else {
-				values["modbusrs485tcpip"] = true
+				values[templates.ModbusKeyRS485TCPIP] = true
 			}
 		}
 
@@ -71,7 +71,7 @@ func TestProxyMeters(t *testing.T) {
 		// test all usages
 		for _, usage := range usages {
 			if usage != "" {
-				values["usage"] = usage
+				values[templates.ParamUsage] = usage
 			}
 
 			runTest(t, tmpl, values)

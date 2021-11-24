@@ -219,14 +219,14 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 			choiceKeys := []string{}
 			for _, choice := range param.Choice {
 				switch choice {
-				case ModbusChoiceRS485:
+				case templates.ModbusChoiceRS485:
 					choices = append(choices, "Serial (USB-RS485 Adapter)")
-					choiceKeys = append(choiceKeys, ModbusKeyRS485Serial)
+					choiceKeys = append(choiceKeys, templates.ModbusKeyRS485Serial)
 					choices = append(choices, "Serial (Ethernet-RS485 Adapter)")
-					choiceKeys = append(choiceKeys, ModbusKeyRS485TCPIP)
-				case ModbusChoiceTCPIP:
+					choiceKeys = append(choiceKeys, templates.ModbusKeyRS485TCPIP)
+				case templates.ModbusChoiceTCPIP:
 					choices = append(choices, "TCP/IP")
-					choiceKeys = append(choiceKeys, ModbusKeyTCPIP)
+					choiceKeys = append(choiceKeys, templates.ModbusKeyTCPIP)
 				}
 			}
 
@@ -238,7 +238,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 					defaultValue: 1,
 					valueType:    templates.ParamValueTypeNumber,
 					required:     true})
-				additionalConfig[ModbusParamNameId] = id
+				additionalConfig[templates.ModbusParamNameId] = id
 
 				// ask for modbus interface type
 				index := 0
@@ -247,43 +247,43 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				}
 				selectedModbusKey = choiceKeys[index]
 				switch selectedModbusKey {
-				case ModbusKeyRS485Serial:
+				case templates.ModbusKeyRS485Serial:
 					device := c.askValue(question{
 						label:        "Device",
 						help:         "USB-RS485 Adapter Adresse",
-						exampleValue: ModbusParamValueDevice,
+						exampleValue: templates.ModbusParamValueDevice,
 						required:     true})
-					additionalConfig[ModbusParamNameDevice] = device
+					additionalConfig[templates.ModbusParamNameDevice] = device
 
 					baudrate := c.askValue(question{
 						label:        "Baudrate",
-						defaultValue: ModbusParamValueBaudrate,
+						defaultValue: templates.ModbusParamValueBaudrate,
 						valueType:    templates.ParamValueTypeNumber,
 						required:     true})
-					additionalConfig[ModbusParamNameBaudrate] = baudrate
+					additionalConfig[templates.ModbusParamNameBaudrate] = baudrate
 
 					comset := c.askValue(question{
 						label:        "ComSet",
-						defaultValue: ModbusParamValueComset,
+						defaultValue: templates.ModbusParamValueComset,
 						required:     true})
-					additionalConfig[ModbusParamNameComset] = comset
+					additionalConfig[templates.ModbusParamNameComset] = comset
 
-				case ModbusKeyRS485TCPIP, ModbusKeyTCPIP:
-					if selectedModbusKey == ModbusKeyRS485TCPIP {
-						additionalConfig[ModbusParamNameRTU] = "true"
+				case templates.ModbusKeyRS485TCPIP, templates.ModbusKeyTCPIP:
+					if selectedModbusKey == templates.ModbusKeyRS485TCPIP {
+						additionalConfig[templates.ModbusParamNameRTU] = "true"
 					}
 					host := c.askValue(question{
 						label:        "Host",
-						exampleValue: ModbusParamValueHost,
+						exampleValue: templates.ModbusParamValueHost,
 						required:     true})
-					additionalConfig[ModbusParamNameHost] = host
+					additionalConfig[templates.ModbusParamNameHost] = host
 
 					port := c.askValue(question{
 						label:        "Port",
-						defaultValue: ModbusParamValuePort,
+						defaultValue: templates.ModbusParamValuePort,
 						valueType:    templates.ParamValueTypeNumber,
 						required:     true})
-					additionalConfig[ModbusParamNamePort] = port
+					additionalConfig[templates.ModbusParamNamePort] = port
 				}
 			}
 		} else if param.Name != templates.ParamUsage {
