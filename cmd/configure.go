@@ -24,10 +24,9 @@ func init() {
 func runConfigure(cmd *cobra.Command, args []string) {
 	impl := &configure.CmdConfigure{}
 
-	var lang string
-	langFlag, err := cmd.Flags().GetString("lang")
-	if err == nil {
-		lang = langFlag
+	lang, err := cmd.Flags().GetString("lang")
+	if err != nil {
+		panic(err)
 	}
 
 	util.LogLevel(viper.GetString("log"), nil)
