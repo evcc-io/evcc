@@ -3,9 +3,7 @@ package meter
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util/test"
-	"github.com/thoas/go-funk"
 )
 
 var acceptable = []string{
@@ -42,56 +40,4 @@ func TestConfigMeters(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestProxyMeters(t *testing.T) {
-	test.SkipCI(t)
-
-	for _, tmpl := range templates.ByClass(templates.Meter) {
-		tmpl := tmpl
-
-		values := tmpl.Defaults(true)
-
-		// Modbus default test values
-		if values[templates.ParamModbus] != nil {
-			modbusChoices := tmpl.ModbusChoices()
-			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusKeyTCPIP] = true
-			} else {
-				values[templates.ModbusKeyRS485TCPIP] = true
-			}
-		}
-
-		usages := tmpl.Usages()
-
-		if len(usages) == 0 {
-			runTest(t, tmpl, values)
-		}
-
-		// test all usages
-		for _, usage := range usages {
-			if usage != "" {
-				values[templates.ParamUsage] = usage
-			}
-
-			runTest(t, tmpl, values)
-		}
-	}
-}
-
-func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{}) {
-	t.Run(tmpl.Type(), func(t *testing.T) {
-		t.Parallel()
-
-		b, err := tmpl.RenderResult(false, values)
-		if err != nil {
-			t.Logf("%s: %s", tmpl.Template, b)
-			t.Error(err)
-		}
-
-		if _, err := NewFromConfig(tmpl.Type(), values); err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("%s", tmpl.Template)
-			t.Error(err)
-		}
-	})
 }
