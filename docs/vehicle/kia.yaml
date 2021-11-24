@@ -1,4 +1,5 @@
-type: kia
+type: template
+template: kia
 description: Kia
 user:
 password:

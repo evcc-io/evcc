@@ -1,4 +1,5 @@
-type: solarlog
+type: template
+template: solarlog
 description: Solarlog
 usage: "pv" 
 host: "192.0.2.2" 

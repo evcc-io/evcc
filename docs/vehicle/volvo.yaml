@@ -1,4 +1,5 @@
-type: volvo
+type: template
+template: volvo
 description: Volvo
 user:
 password:

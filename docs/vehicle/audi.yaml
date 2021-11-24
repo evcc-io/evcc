@@ -1,4 +1,5 @@
-type: audi
+type: template
+template: audi
 description: Audi
 user:
 password:

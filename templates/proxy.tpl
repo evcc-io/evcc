@@ -1,4 +1,5 @@
-type: {{ .Template }}
+type: template
+template: {{ .Template }}
 {{- if .Description }}
 description: {{ .Description }}
 {{- end }}

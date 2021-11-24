@@ -1,4 +1,5 @@
-type: peugeot
+type: template
+template: peugeot
 description: Peugeot
 user:
 password:

@@ -1,4 +1,5 @@
-type: tesla_powerwall
+type: template
+template: tesla_powerwall
 description: Tesla Powerwall
 usage: "grid" 
 host: "192.0.2.2" 

@@ -1,4 +1,5 @@
-type: ds
+type: template
+template: ds
 description: DS
 user:
 password:

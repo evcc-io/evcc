@@ -1,4 +1,5 @@
-type: mini
+type: template
+template: mini
 description: Mini
 user:
 password:

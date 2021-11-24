@@ -1,3 +1,4 @@
-type: keba
+type: template
+template: keba
 description: KEBA Connect
 host: "192.0.2.2"

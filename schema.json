@@ -139,7 +139,8 @@
     "namedObject": {
       "type": "object",
       "required": [
-        "name"
+        "name",
+        "type"
       ],
       "properties": {
         "name": {
@@ -151,19 +152,7 @@
         "template": {
           "type": "string"
         }
-      },
-      "oneOf": [
-        {
-          "required": [
-            "type"
-          ]
-        },
-        {
-          "required": [
-            "template"
-          ]
-        }
-      ]
+      }
     },
     "loglevel": {
       "enum": [

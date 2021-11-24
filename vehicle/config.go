@@ -43,9 +43,9 @@ func Types() []string {
 }
 
 // NewFromConfig creates vehicle from configuration
-func NewFromConfig(typ, template string, other map[string]interface{}) (v api.Vehicle, err error) {
-	if template != "" {
-		typ = templates.TemplateTypeForName(template)
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
+	if typ == "template" {
+		typ = templates.TemplateTypeForName(other["template"].(string))
 	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {

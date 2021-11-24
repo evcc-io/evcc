@@ -1,4 +1,5 @@
-type: solarwatt_myreserve
+type: template
+template: solarwatt_myreserve
 description: Solarwatt MyReserve
 usage: "battery" 
 host: "192.0.2.2"

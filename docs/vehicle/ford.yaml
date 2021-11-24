@@ -1,4 +1,5 @@
-type: ford
+type: template
+template: ford
 description: Ford
 user:
 password:

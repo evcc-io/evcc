@@ -1,4 +1,5 @@
-type: hyundai
+type: template
+template: hyundai
 description: Hyundai
 user:
 password:

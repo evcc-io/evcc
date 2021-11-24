@@ -1,4 +1,5 @@
-type: e3dc
+type: template
+template: e3dc
 description: E3DC
 usage: "battery" 
 host: "192.0.2.2" 

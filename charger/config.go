@@ -28,9 +28,9 @@ func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Cha
 var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(typ, template string, other map[string]interface{}) (v api.Charger, err error) {
-	if template != "" {
-		typ = templates.TemplateTypeForName(template)
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
+	if typ == "template" {
+		typ = templates.TemplateTypeForName(other["template"].(string))
 	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {

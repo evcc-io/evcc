@@ -14,6 +14,7 @@ func TestProxyVehicles(t *testing.T) {
 		tmpl := tmpl
 
 		values := tmpl.Defaults(true)
+		values["template"] = tmpl.Template
 
 		t.Run(tmpl.Template, func(t *testing.T) {
 			t.Parallel()
@@ -24,7 +25,7 @@ func TestProxyVehicles(t *testing.T) {
 				t.Error(err)
 			}
 
-			_, err = NewFromConfig("", tmpl.Template, values)
+			_, err = NewFromConfig("template", values)
 			if err != nil && !test.Acceptable(err, acceptable) {
 				t.Logf("%s", tmpl.Template)
 				t.Error(err)

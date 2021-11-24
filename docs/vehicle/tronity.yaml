@@ -1,4 +1,5 @@
-type: tronity
+type: template
+template: tronity
 description: Tronity
 userid:
 secret:

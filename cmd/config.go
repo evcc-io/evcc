@@ -50,8 +50,8 @@ func (conf *mqttConfig) RootTopic() string {
 }
 
 type qualifiedConfig struct {
-	Name, Type, Template string
-	Other                map[string]interface{} `mapstructure:",remain"`
+	Name, Type string
+	Other      map[string]interface{} `mapstructure:",remain"`
 }
 
 type typedConfig struct {
@@ -133,7 +133,7 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
 		}
 
-		m, err := meter.NewFromConfig(cc.Type, cc.Template, cc.Other)
+		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 			return err
@@ -156,7 +156,7 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
 		}
 
-		c, err := charger.NewFromConfig(cc.Type, cc.Template, cc.Other)
+		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			return err
@@ -179,7 +179,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
-		v, err := vehicle.NewFromConfig(cc.Type, cc.Template, cc.Other)
+		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			// wrap any created errors to prevent fatals
 			v, _ = wrapper.New(v, err)

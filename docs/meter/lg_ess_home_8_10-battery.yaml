@@ -1,4 +1,5 @@
-type: lg_ess_home_8_10
+type: template
+template: lg_ess_home_8_10
 description: LG ESS Home 8/10
 usage: "battery" 
 host: "192.0.2.2" 

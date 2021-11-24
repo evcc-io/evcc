@@ -1,4 +1,5 @@
-type: citroen
+type: template
+template: citroen
 description: Citroen
 user:
 password:

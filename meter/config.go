@@ -28,9 +28,9 @@ func (r meterRegistry) Get(name string) (func(map[string]interface{}) (api.Meter
 var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.Meter, error))
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(typ, template string, other map[string]interface{}) (v api.Meter, err error) {
-	if template != "" {
-		typ = templates.TemplateTypeForName(template)
+func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {
+	if typ == "template" {
+		typ = templates.TemplateTypeForName(other["template"].(string))
 	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {

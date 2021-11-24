@@ -1,4 +1,5 @@
-type: enyaq
+type: template
+template: enyaq
 description: Skoda (Enyaq)
 user:
 password:

@@ -1,4 +1,5 @@
-type: skoda
+type: template
+template: skoda
 description: Skoda (Citigo)
 user:
 password:

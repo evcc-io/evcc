@@ -1,4 +1,5 @@
-type: varta_energiespeicher
+type: template
+template: varta_energiespeicher
 description: VARTA Energiespeicher
 usage: "grid" 
 host: "192.0.2.2" 

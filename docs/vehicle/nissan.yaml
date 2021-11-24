@@ -1,4 +1,5 @@
-type: nissan
+type: template
+template: nissan
 description: Nissan
 user:
 password:

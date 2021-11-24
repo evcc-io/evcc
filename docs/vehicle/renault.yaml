@@ -1,4 +1,5 @@
-type: renault
+type: template
+template: renault
 description: Renault
 user:
 password:

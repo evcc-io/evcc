@@ -1,4 +1,5 @@
-type: discovergy
+type: template
+template: discovergy
 description: Discovergy (Cloud)
 usage: "pv" 
 user:

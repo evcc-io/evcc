@@ -1,4 +1,5 @@
-type: pmcc_http
+type: template
+template: pmcc_http
 description: Porsche Mobile Charger Connect (HTTP API)
 host: "192.0.2.2" 
 password:

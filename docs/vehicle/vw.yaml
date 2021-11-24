@@ -1,4 +1,5 @@
-type: vw
+type: template
+template: vw
 description: Volkswagen (We Connect)
 user:
 password:

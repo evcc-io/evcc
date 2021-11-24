@@ -15,6 +15,7 @@ func TestProxyMeters(t *testing.T) {
 		tmpl := tmpl
 
 		values := tmpl.Defaults(true)
+		values["template"] = tmpl.Template
 
 		// Modbus default test values
 		if values[templates.ParamModbus] != nil {
@@ -53,7 +54,7 @@ func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{
 			t.Error(err)
 		}
 
-		if _, err := NewFromConfig("", tmpl.Template, values); err != nil && !test.Acceptable(err, acceptable) {
+		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
 			t.Logf("%s", tmpl.Template)
 			t.Error(err)
 		}

@@ -1,4 +1,5 @@
-type: id
+type: template
+template: id
 description: Volkswagen (We Connect ID)
 user:
 password:

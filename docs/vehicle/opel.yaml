@@ -1,4 +1,5 @@
-type: opel
+type: template
+template: opel
 description: Opel
 user:
 password:

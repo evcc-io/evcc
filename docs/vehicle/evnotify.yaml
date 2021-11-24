@@ -1,4 +1,5 @@
-type: evnotify
+type: template
+template: evnotify
 description: evNotify
 akey:
 token:

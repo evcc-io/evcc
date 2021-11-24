@@ -1,4 +1,5 @@
-type: easee
+type: template
+template: easee
 description: Easee Home (Cloud API)
 user:
 password:

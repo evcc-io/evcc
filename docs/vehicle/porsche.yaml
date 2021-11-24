@@ -1,4 +1,5 @@
-type: porsche
+type: template
+template: porsche
 description: Porsche
 user:
 password:

@@ -1,4 +1,5 @@
-type: fritzdect
+type: template
+template: fritzdect
 description: FritzDECT
 uri: "https://fritz.box" 
 user:
