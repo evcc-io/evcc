@@ -13,6 +13,7 @@ const refreshTimeout = 2 * time.Minute
 // Based on https://github.com/Hacksore/bluelinky.
 type Provider struct {
 	statusG     func() (interface{}, error)
+	statusLG    func() (interface{}, error)
 	refreshG    func() (StatusResponse, error)
 	expiry      time.Duration
 	refreshTime time.Time
@@ -29,8 +30,12 @@ func NewProvider(api *API, vid string, expiry, cache time.Duration) *Provider {
 
 	v.statusG = provider.NewCached(func() (interface{}, error) {
 		return v.status(
-			func() (StatusLatestResponse, error) { return api.Status(vid) },
+			func() (StatusLatestResponse, error) { return api.StatusLatest(vid) },
 		)
+	}, cache).InterfaceGetter()
+
+	v.statusLG = provider.NewCached(func() (interface{}, error) {
+		return api.StatusLatest(vid)
 	}, cache).InterfaceGetter()
 
 	return v
@@ -156,19 +161,15 @@ func (v *Provider) Range() (int64, error) {
 	return 0, err
 }
 
-// var _ api.VehicleOdometer = (*Provider)(nil)
+var _ api.VehicleOdometer = (*Provider)(nil)
 
-// // Range implements the api.VehicleRange interface
-// func (v *Provider) Odometer() (float64, error) {
-// 	res, err := v.statusG()
+// Range implements the api.VehicleRange interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusLG()
 
-// 	if res, ok := res.(VehicleStatus); err == nil && ok {
-// 		if dist := res.EvStatus.DrvDistance; len(dist) == 1 {
-// 			return dist[0].RangeByFuel.EvModeRange.Value), nil
-// 		}
+	if res, ok := res.(StatusLatestResponse); err == nil && ok {
+		return res.ResMsg.VehicleStatusInfo.Odometer.Value, nil
+	}
 
-// 		return 0, api.ErrNotAvailable
-// 	}
-
-// 	return 0, err
-// }
+	return 0, err
+}

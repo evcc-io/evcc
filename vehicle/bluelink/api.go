@@ -67,8 +67,8 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.ResMsg.Vehicles, err
 }
 
-// StatusPartial retrieves the latest server-side status
-func (v *API) Status(vid string) (StatusLatestResponse, error) {
+// StatusLatest retrieves the latest server-side status
+func (v *API) StatusLatest(vid string) (StatusLatestResponse, error) {
 	var res StatusLatestResponse
 
 	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
