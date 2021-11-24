@@ -1,5 +1,5 @@
 template: sma-inverter
-description: SMA Wechselrichter
+description: SMA Inverter/Wechselrichter
 params:
 - name: usage
   choice: ["pv", "battery"]

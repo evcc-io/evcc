@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,8 +17,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 		return templateItem, c.errItemNotPresent
 	}
 
-	err := c.processDeviceRequirements(templateItem)
-	if err != nil {
+	if err := c.processDeviceRequirements(templateItem); err != nil {
 		return templateItem, err
 	}
 
@@ -94,7 +94,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 		sponsortoken := c.askValue(question{
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
-			help:     "",
 			required: true})
 		c.configuration.SetSponsorToken(sponsortoken)
 	}
@@ -103,7 +102,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	if templateItem.Requirements.Eebus {
 		if c.configuration.EEBUS() == "" {
 			eebusConfig, err := c.eebusCertificate()
-
 			if err != nil {
 				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
 			}
@@ -165,39 +163,23 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 
 // helper function to check if a param choice contains a given value
 func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filter string) bool {
-	nameFound, choices := c.paramChoiceValues(params, name)
+	choices := c.paramChoiceValues(params, name)
 
-	if !nameFound {
-		return false
-	}
-
-	for _, choice := range choices {
-		if string(choice) == filter {
-			return true
-		}
-	}
-
-	return false
+	return funk.ContainsString(choices, filter)
 }
 
-func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) (bool, []DeviceCategory) {
-	nameFound := false
-
-	choices := []DeviceCategory{}
+func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) []string {
+	choices := []string{}
 
 	for _, item := range params {
 		if item.Name != name {
 			continue
 		}
 
-		nameFound = true
-
-		for _, choice := range item.Choice {
-			choices = append(choices, DeviceCategory(choice))
-		}
+		choices = append(choices, item.Choice...)
 	}
 
-	return nameFound, choices
+	return choices
 }
 
 // Process an EVCC configuration item

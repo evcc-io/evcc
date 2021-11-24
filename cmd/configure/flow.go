@@ -11,8 +11,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// let the user choose a device that is set to support guided setup
+// these are typically devices that
+// - contain multiple usages but have the same parameters like host, port, etc.
+// - devices that typically are installed with additional specific devices (e.g. SMA Home Manager with SMA Inverters)
 func (c *CmdConfigure) configureDeviceGuidedSetup() {
-	repeat := true
 	var err error
 
 	var values map[string]interface{}
@@ -22,7 +25,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 
 	deviceItem := device{}
 
-	for ok := true; ok; ok = repeat {
+	for ok := true; ok; {
 		fmt.Println()
 
 		templateItem, err = c.processDeviceSelection(DeviceCategoryGuidedSetup)
@@ -30,23 +33,23 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			return
 		}
 
-		usageFound, usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
-		if !usageFound {
+		usageChoices := c.paramChoiceValues(templateItem.Params, templates.ParamUsage)
+		if len(usageChoices) == 0 {
 			panic("ERROR: Device template is missing valid usages!")
 		}
 		if len(usageChoices) == 0 {
-			usageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter}
+			usageChoices = []string{string(DeviceCategoryGridMeter), string(DeviceCategoryPVMeter), string(DeviceCategoryBatteryMeter)}
 		}
 
 		supportedDeviceCategories = []DeviceCategory{}
 
 		for _, usage := range usageChoices {
 			switch usage {
-			case DeviceCategoryGridMeter:
+			case string(DeviceCategoryGridMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryGridMeter)
-			case DeviceCategoryPVMeter:
+			case string(DeviceCategoryPVMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryPVMeter)
-			case DeviceCategoryBatteryMeter:
+			case string(DeviceCategoryBatteryMeter):
 				supportedDeviceCategories = append(supportedDeviceCategories, DeviceCategoryBatteryMeter)
 			}
 		}
@@ -69,7 +72,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 			continue
 		}
 
-		repeat = false
+		break
 	}
 
 	c.configuration.AddDevice(deviceItem, deviceCategory)
@@ -92,9 +95,9 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	c.configureLinkedTypes(templateItem)
 }
 
+// let the user configure devices that are marked as being linked to a guided device
+// e.g. SMA Inverters, Energy Meter with SMA Home Manager
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
-	var repeat bool = true
-
 	linkedTemplates := templateItem.GuidedSetup.Linked
 
 	if linkedTemplates == nil {
@@ -102,7 +105,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	}
 
 	for _, linkedTemplate := range linkedTemplates {
-		for ok := true; ok; ok = repeat {
+		for ok := true; ok; {
 			deviceItem := device{}
 
 			linkedTemplateItem := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
@@ -114,8 +117,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 
 			fmt.Println()
 			if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap{"Linked": linkedTemplateItem.Description, "Article": DeviceCategories[category].article, "Category": DeviceCategories[category].title})) {
-				repeat = false
-				continue
+				break
 			}
 
 			values := c.processConfig(linkedTemplateItem.Params, category, false)
@@ -136,17 +138,15 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 				fmt.Println()
 				fmt.Println(linkedTemplateItem.Description + " " + c.localizedString("Device_Added", nil))
 			}
-			repeat = false
+			break
 		}
-		repeat = true
 	}
 }
 
+// let the user select and configure a device from a specific category
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, error) {
 	fmt.Println()
-	fmt.Printf("- %s %s\n", c.localizedString("Meters_Configure", nil), DeviceCategories[deviceCategory].title)
-
-	var repeat bool = true
+	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
 
 	device := device{
 		Name:  DeviceCategories[deviceCategory].defaultName,
@@ -156,7 +156,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 	deviceDescription := ""
 
-	for ok := true; ok; ok = repeat {
+	for ok := true; ok; {
 		fmt.Println()
 
 		templateItem, err := c.processDeviceSelection(deviceCategory)
@@ -180,7 +180,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 			continue
 		}
 
-		repeat = false
+		break
 	}
 
 	c.configuration.AddDevice(device, deviceCategory)
