@@ -113,7 +113,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			category := DeviceCategory(linkedTemplate.Usage)
 
 			fmt.Println()
-			if !c.askYesNo("Möchtest du " + DeviceCategories[category].article + " " + linkedTemplateItem.Description + " als " + DeviceCategories[category].title + " hinzufügen") {
+			if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap{"Linked": linkedTemplateItem.Description, "Article": DeviceCategories[category].article, "Category": DeviceCategories[category].title})) {
 				repeat = false
 				continue
 			}
