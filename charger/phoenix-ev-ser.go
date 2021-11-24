@@ -82,7 +82,7 @@ func (wb *PhoenixEVSer) Enabled() (bool, error) {
 func (wb *PhoenixEVSer) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(phxEVSerRegEnable, u)

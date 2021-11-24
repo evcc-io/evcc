@@ -143,7 +143,7 @@ func (wb *Wallbe) Enabled() (bool, error) {
 func (wb *Wallbe) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(wbRegEnable, u)

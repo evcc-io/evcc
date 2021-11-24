@@ -112,7 +112,7 @@ func (wb *PhoenixEMEth) Enabled() (bool, error) {
 func (wb *PhoenixEMEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(phxEMEthRegEnable, u)
