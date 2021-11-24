@@ -66,11 +66,11 @@ func writeTemplate(class string, tmpl templates.Template, usage string) error {
 
 	for _, modbusChoice := range modbusChoices {
 		switch modbusChoice {
-		case "rs485":
-			values["modbusrs485serial"] = true
-			values["modbusrs485tcpip"] = true
-		case "tcpip":
-			values["modbustcpip"] = true
+		case templates.ModbusChoiceRS485:
+			values[templates.ModbusRS485Serial] = true
+			values[templates.ModbusRS485TCPIP] = true
+		case templates.ModbusChoiceTCPIP:
+			values[templates.ModbusTCPIP] = true
 		}
 	}
 	b, err := tmpl.RenderProxyWithValues(values, true)

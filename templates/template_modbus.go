@@ -15,12 +15,6 @@ import (
 //go:embed modbus.tpl
 var modbusTmpl string
 
-const (
-	modbusRS485Serial string = "modbusrs485serial"
-	modbusRS485TCPIP  string = "modbusrs485tcpip"
-	modbusTCPIP       string = "modbustcpip"
-)
-
 func (t Template) RenderModbusTemplate(values map[string]interface{}, indentlength int) (string, error) {
 	// indent the template
 	lines := strings.Split(modbusTmpl, "\n")
@@ -36,7 +30,7 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 
 	// either modbus param is defined or defaults for all modbus choices need to be set
 	hasModbusValues := false
-	if values[modbusRS485Serial] == nil && values[modbusRS485TCPIP] == nil && values[modbusTCPIP] == nil {
+	if values[ModbusRS485Serial] == nil && values[ModbusRS485TCPIP] == nil && values[ModbusTCPIP] == nil {
 		for k, v := range values {
 			if k != ParamModbus {
 				continue
@@ -45,11 +39,11 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 			hasModbusValues = true
 			switch v.(string) {
 			case ModbusKeyRS485Serial:
-				values[modbusRS485Serial] = true
+				values[ModbusRS485Serial] = true
 			case ModbusKeyRS485TCPIP:
-				values[modbusRS485TCPIP] = true
+				values[ModbusRS485TCPIP] = true
 			case ModbusKeyTCPIP:
-				values[modbusTCPIP] = true
+				values[ModbusTCPIP] = true
 			default:
 				return "", errors.New("Invalid modbus value: " + v.(string))
 			}
@@ -76,11 +70,11 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 			}
 
 			if funk.ContainsString(p.Choice, ModbusChoiceRS485) {
-				values[modbusRS485Serial] = true
-				values[modbusRS485TCPIP] = true
+				values[ModbusRS485Serial] = true
+				values[ModbusRS485TCPIP] = true
 			}
 			if funk.ContainsString(p.Choice, ModbusChoiceTCPIP) {
-				values[modbusTCPIP] = true
+				values[ModbusTCPIP] = true
 			}
 		}
 	}

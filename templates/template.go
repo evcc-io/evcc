@@ -20,6 +20,10 @@ const (
 	ModbusKeyRS485TCPIP  = "rs485tcpip"
 	ModbusKeyTCPIP       = "tcpip"
 
+	ModbusRS485Serial = "modbusrs485serial"
+	ModbusRS485TCPIP  = "modbusrs485tcpip"
+	ModbusTCPIP       = "modbustcpip"
+
 	ModbusParamNameId        = "id"
 	ModbusParamValueId       = 1
 	ModbusParamNameDevice    = "device"
