@@ -11,7 +11,6 @@ import (
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/push"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
@@ -134,11 +133,7 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
 		}
 
-		// Support for template definitions
-		if cc.Template != "" {
-			cc.Type = templates.TemplateTypeForName(cc.Template)
-		}
-		m, err := meter.NewFromConfig(cc.Type, cc.Other)
+		m, err := meter.NewFromConfig(cc.Type, cc.Template, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
 			return err
@@ -161,11 +156,7 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
 		}
 
-		// Support for template definitions
-		if cc.Template != "" {
-			cc.Type = templates.TemplateTypeForName(cc.Template)
-		}
-		c, err := charger.NewFromConfig(cc.Type, cc.Other)
+		c, err := charger.NewFromConfig(cc.Type, cc.Template, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
 			return err
@@ -188,11 +179,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
 		}
 
-		// Support for template definitions
-		if cc.Template != "" {
-			cc.Type = templates.TemplateTypeForName(cc.Template)
-		}
-		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
+		v, err := vehicle.NewFromConfig(cc.Type, cc.Template, cc.Other)
 		if err != nil {
 			// wrap any created errors to prevent fatals
 			v, _ = wrapper.New(v, err)

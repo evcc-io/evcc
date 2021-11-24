@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/templates"
 )
 
 type meterRegistry map[string]func(map[string]interface{}) (api.Meter, error)
@@ -27,7 +28,10 @@ func (r meterRegistry) Get(name string) (func(map[string]interface{}) (api.Meter
 var registry meterRegistry = make(map[string]func(map[string]interface{}) (api.Meter, error))
 
 // NewFromConfig creates meter from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Meter, err error) {
+func NewFromConfig(typ, template string, other map[string]interface{}) (v api.Meter, err error) {
+	if template != "" {
+		typ = templates.TemplateTypeForName(template)
+	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {

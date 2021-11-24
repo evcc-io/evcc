@@ -34,7 +34,7 @@ func TestConfigChargers(t *testing.T) {
 		t.Run(tmpl.Name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := NewFromConfig(tmpl.Type, tmpl.Config)
+			_, err := NewFromConfig(tmpl.Type, "", tmpl.Config)
 			if err != nil && !test.Acceptable(err, acceptable) {
 				t.Logf("%s: %+v", tmpl.Name, tmpl.Config)
 				t.Error(err)

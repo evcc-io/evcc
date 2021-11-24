@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/templates"
 )
 
 type chargerRegistry map[string]func(map[string]interface{}) (api.Charger, error)
@@ -27,7 +28,10 @@ func (r chargerRegistry) Get(name string) (func(map[string]interface{}) (api.Cha
 var registry chargerRegistry = make(map[string]func(map[string]interface{}) (api.Charger, error))
 
 // NewFromConfig creates charger from configuration
-func NewFromConfig(typ string, other map[string]interface{}) (v api.Charger, err error) {
+func NewFromConfig(typ, template string, other map[string]interface{}) (v api.Charger, err error) {
+	if template != "" {
+		typ = templates.TemplateTypeForName(template)
+	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {

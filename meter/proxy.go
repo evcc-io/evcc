@@ -29,6 +29,6 @@ func instantiateFunction(tmpl templates.Template) func(map[string]interface{}) (
 			return nil, err
 		}
 
-		return NewFromConfig(instance.Type, instance.Other)
+		return NewFromConfig(instance.Type, "", instance.Other)
 	}
 }

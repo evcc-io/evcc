@@ -25,7 +25,7 @@ func NewMovingAverageFromConfig(other map[string]interface{}) (api.Meter, error)
 		return nil, err
 	}
 
-	m, err := NewFromConfig(cc.Meter.Type, cc.Meter.Other)
+	m, err := NewFromConfig(cc.Meter.Type, "", cc.Meter.Other)
 	if err != nil {
 		return nil, err
 	}

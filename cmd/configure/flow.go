@@ -216,11 +216,11 @@ func (c *CmdConfigure) configureDevice(deviceCategory DeviceCategory, device tem
 
 	switch DeviceCategories[deviceCategory].class {
 	case DeviceClassMeter:
-		v, err = meter.NewFromConfig(instance.Type, instance.Other)
+		v, err = meter.NewFromConfig(instance.Type, "", instance.Other)
 	case DeviceClassCharger:
-		v, err = charger.NewFromConfig(instance.Type, instance.Other)
+		v, err = charger.NewFromConfig(instance.Type, "", instance.Other)
 	case DeviceClassVehicle:
-		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
+		v, err = vehicle.NewFromConfig(instance.Type, "", instance.Other)
 	}
 
 	return v, err
