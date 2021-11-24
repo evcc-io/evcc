@@ -20,9 +20,9 @@ func TestProxyChargers(t *testing.T) {
 		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
 			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusKeyTCPIP] = true
+				values[templates.ModbusTCPIP] = true
 			} else {
-				values[templates.ModbusKeyRS485TCPIP] = true
+				values[templates.ModbusRS485TCPIP] = true
 			}
 		}
 
