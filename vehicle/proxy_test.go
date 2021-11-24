@@ -18,7 +18,7 @@ func TestProxyVehicles(t *testing.T) {
 		t.Run(tmpl.Template, func(t *testing.T) {
 			t.Parallel()
 
-			b, err := tmpl.RenderResult(true, values)
+			b, values, err := tmpl.RenderResult(true, values)
 			if err != nil {
 				t.Logf("%s: %s", tmpl.Template, b)
 				t.Error(err)

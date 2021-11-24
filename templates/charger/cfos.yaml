@@ -7,4 +7,4 @@ params:
   choice: ["tcpip"]
 render: |
   type: cfos
-  # ::modbus-setup::
+  {{include "modbus" .}}

@@ -198,7 +198,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 // create a configured device from a template so we can test it
 func (c *CmdConfigure) configureDevice(deviceCategory DeviceCategory, device templates.Template, values map[string]interface{}) (interface{}, error) {
-	b, err := device.RenderResult(false, values)
+	b, _, err := device.RenderResult(false, values)
 	if err != nil {
 		return nil, err
 	}

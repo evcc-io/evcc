@@ -39,8 +39,6 @@ const (
 	ModbusParamValuePort     = 502
 	ModbusParamNameRTU       = "rtu"
 
-	ModbusMagicComment = "# ::modbus-setup::"
-
 	TemplateTypePrefix = "t_"
 )
 
@@ -217,23 +215,34 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte, error) {
+func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
 	values := t.Defaults(docs)
 	if err := util.DecodeOther(other, &values); err != nil {
-		return nil, err
+		return nil, values, err
 	}
 
-	if err := t.RenderModbus(values); err != nil {
-		return nil, err
+	values = t.ModbusValues(values)
+
+	// fmt.Printf("TEST:\n%s\n", t.Render)
+
+	tmpl := template.New("yaml")
+	var funcMap template.FuncMap = map[string]interface{}{}
+	// copied from: https://github.com/helm/helm/blob/8648ccf5d35d682dcd5f7a9c2082f0aaf071e817/pkg/engine/engine.go#L147-L154
+	funcMap["include"] = func(name string, data interface{}) (string, error) {
+		buf := bytes.NewBuffer(nil)
+		if err := tmpl.ExecuteTemplate(buf, name, data); err != nil {
+			return "", err
+		}
+		return buf.String(), nil
 	}
 
-	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(t.Render)
+	tmpl, err := tmpl.Funcs(template.FuncMap(sprig.FuncMap())).Funcs(funcMap).Parse(t.Render)
 	if err != nil {
-		return nil, err
+		return nil, values, err
 	}
 
 	out := new(bytes.Buffer)
 	err = tmpl.Execute(out, values)
 
-	return bytes.TrimSpace(out.Bytes()), err
+	return bytes.TrimSpace(out.Bytes()), values, err
 }

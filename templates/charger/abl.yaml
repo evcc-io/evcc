@@ -7,4 +7,4 @@ params:
   choice: ["rs485"]
 render: |
   type: abl
-  # ::modbus-setup::
+  {{include "modbus" .}}

@@ -11,4 +11,4 @@ render: |
   {{- if eq .usage "charge" }}
   energy: Sum # only required for charge meter usage
   {{- end }}
-  # ::modbus-setup::
+  {{include "modbus" .}}

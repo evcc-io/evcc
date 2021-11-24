@@ -9,7 +9,7 @@ render: |
   type: custom
   power:
     source: modbus
-    # ::modbus-setup::
+    {{include "modbus" . | indent 2}}
     # register details
     register:
       address: 40525

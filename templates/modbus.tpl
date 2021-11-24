@@ -1,3 +1,4 @@
+{{define "modbus"}}
 id: {{ .id }}
 {{- if or (eq .modbus "rs485serial") .modbusrs485serial }}
 # RS485 via adapter:
@@ -14,3 +15,4 @@ rtu: true # serial modbus rtu (rs485) device connected using simple ethernet ada
 # TCPIP
 uri: {{ .host }}:{{ .port }}
 {{- end }}
+{{end}}

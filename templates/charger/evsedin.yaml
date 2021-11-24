@@ -5,4 +5,4 @@ params:
   choice: ["rs485"]
 render: |
   type: simpleevse
-  # ::modbus-setup::
+  {{include "modbus" .}}
