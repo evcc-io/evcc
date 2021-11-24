@@ -555,7 +555,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		}
 
 		// sleep vehicle
-		// TODO check if this causes issues like https://github.com/evcc-io/evcc/issues/971
+		// TODO https://github.com/evcc-io/evcc/discussions/1929
 		// if car, ok := lp.vehicle.(api.VehicleStopCharge); !enabled && ok {
 		// 	// log but don't propagate
 		// 	if err := car.StopCharge(); err != nil {
@@ -571,12 +571,13 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			lp.bus.Publish(evChargeCurrent, chargeCurrent)
 
 			// wake up vehicle
-			if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
-				// log but don't propagate
-				if err := car.StartCharge(); err != nil {
-					lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
-				}
-			}
+			// TODO https://github.com/evcc-io/evcc/discussions/1929
+			// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+			// 	// log but don't propagate
+			// 	if err := car.StartCharge(); err != nil {
+			// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
+			// 	}
+			// }
 		} else {
 			err = fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
