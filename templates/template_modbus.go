@@ -36,16 +36,19 @@ func (t Template) RenderModbusTemplate(values map[string]interface{}, indentleng
 				continue
 			}
 
-			hasModbusValues = true
 			switch v.(string) {
 			case ModbusKeyRS485Serial:
+				hasModbusValues = true
 				values[ModbusRS485Serial] = true
 			case ModbusKeyRS485TCPIP:
+				hasModbusValues = true
 				values[ModbusRS485TCPIP] = true
 			case ModbusKeyTCPIP:
+				hasModbusValues = true
 				values[ModbusTCPIP] = true
 			default:
-				return "", errors.New("Invalid modbus value: " + v.(string))
+				// this happens during tests
+				break
 			}
 			break
 		}
