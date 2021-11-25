@@ -199,7 +199,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	fmt.Println()
 
 	for _, param := range paramItems {
-		if param.Name == "modbus" {
+		if param.Name == templates.ParamModbus {
 			choices := []string{}
 			choiceKeys := []string{}
 			for _, choice := range param.Choice {
