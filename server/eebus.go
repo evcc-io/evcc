@@ -20,6 +20,13 @@ import (
 	"github.com/grandcat/zeroconf"
 )
 
+var EEBUSDetails = communication.ManufacturerDetails{
+	BrandName:     "EVCC",
+	DeviceName:    "EVCC",
+	DeviceCode:    "EVCC_HEMS_01",
+	DeviceAddress: "EVCC_HEMS",
+}
+
 type EEBusClientCBs struct {
 	onConnect    func(string, ship.Conn) error
 	onDisconnect func(string)
@@ -100,12 +107,7 @@ func NewEEBus(other map[string]interface{}) (*EEBus, error) {
 }
 
 func (c *EEBus) DeviceInfo() communication.ManufacturerDetails {
-	return communication.ManufacturerDetails{
-		BrandName:     "EVCC",
-		DeviceName:    "EVCC",
-		DeviceCode:    "EVCC_HEMS_01",
-		DeviceAddress: "EVCC_HEMS",
-	}
+	return EEBUSDetails
 }
 
 func (c *EEBus) Register(ski string, shipConnectHandler func(string, ship.Conn) error, shipDisconnectHandler func(string)) {

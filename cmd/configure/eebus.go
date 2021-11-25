@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	certhelper "github.com/evcc-io/eebus/cert"
-	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/evcc/server"
 )
 
@@ -22,12 +21,7 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 // setup EEBUS certificate
 // returns privagte key, public key and error
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
-	details := communication.ManufacturerDetails{
-		DeviceName:    "EVCC",
-		DeviceCode:    "EVCC_HEMS_01",
-		DeviceAddress: "EVCC_HEMS",
-		BrandName:     "EVCC",
-	}
+	details := server.EEBUSDetails
 
 	subject := pkix.Name{
 		CommonName:   details.DeviceCode,
