@@ -40,13 +40,21 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		}
 	}
 
+	categoryWithUsage := deviceCategory == DeviceCategoryPVMeter || deviceCategory == DeviceCategoryBatteryMeter || deviceCategory == DeviceCategoryGridMeter
+
+	fmt.Println()
+	if categoryWithUsage {
+		fmt.Println(c.localizedString("ConfiguringDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
+	} else {
+		fmt.Println(c.localizedString("ConfiguringDevice_Title", localizeMap{"Device": templateItem.Description}))
+	}
+
 	deviceIsValid := false
 	v, err := c.configureDevice(deviceCategory, templateItem, values)
-	fmt.Println()
 	if err != nil {
-		fmt.Println(c.localizedString("TestingDevice_NotPossible", localizeMap{"Device": templateItem.Description, "Error": err}))
+		fmt.Println("  ", c.localizedString("ConfiguringDevice_NotPossible", localizeMap{"Error": err}))
 	} else {
-		if deviceCategory == DeviceCategoryPVMeter || deviceCategory == DeviceCategoryBatteryMeter || deviceCategory == DeviceCategoryGridMeter {
+		if categoryWithUsage {
 			fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
 		} else {
 			fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description}))
@@ -62,7 +70,11 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	if !deviceIsValid {
 		fmt.Println()
-		if !c.askYesNo(c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description})) {
+		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description})
+		if categoryWithUsage {
+			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()})
+		}
+		if !c.askYesNo(question) {
 			c.addedDeviceIndex--
 			return device, c.errDeviceNotValid
 		}

@@ -46,11 +46,15 @@ Category_ChargeMeterArticle = "a"
 Category_VehicleTitle = "vehicles"
 Category_VehicleArticle = "a"
 
+ConfiguringDevice_Title = "Creating configuration for {{ .Device }} ..."
+ConfiguringDevice_TitleUsage = "Creating {{ .Usage }} configuration for {{ .Device }} ..."
+ConfiguringDevice_NotPossible = "Error: {{ .Error }}"
+
 TestingDevice_Title = "Testing the configuration of {{ .Device }} ..."
-TestingDevice_TitleUsage = "Testing the {{ .Usage}} configuration of {{ .Device }} ..."
-TestingDevice_NotPossible = "{{ .Device }} can not be tested. A configuration error occurred: {{ .Error }}"
+TestingDevice_TitleUsage = "Testing the {{ .Usage }} configuration of {{ .Device }} ..."
 TestingDevice_Failure = "Do you want to repeat choosing a device and configuring it?"
 TestingDevice_AddFailed = "Testing {{ .Device }} failed. Do you want to add it anyway?"
+TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add it anyway?"
 
 Requirements_Title = "The device needs to provide the following requirements:"
 Requirements_More = "Additional information:"
