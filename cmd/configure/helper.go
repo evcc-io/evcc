@@ -61,8 +61,11 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	}
 
 	if !deviceIsValid {
-		c.addedDeviceIndex--
-		return device, c.errDeviceNotValid
+		fmt.Println()
+		if !c.askYesNo(c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description})) {
+			c.addedDeviceIndex--
+			return device, c.errDeviceNotValid
+		}
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
