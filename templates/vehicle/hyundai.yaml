@@ -1,12 +1,7 @@
 template: hyundai
 description: Hyundai
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
 - name: capacity
   default: 64
 render: |

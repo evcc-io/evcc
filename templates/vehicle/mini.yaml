@@ -1,12 +1,7 @@
 template: mini
 description: Mini
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
 - name: vin
   example: WBMW...
 - name: capacity

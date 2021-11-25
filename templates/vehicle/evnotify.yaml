@@ -8,6 +8,7 @@ params:
   required: true
 - name: capacity
   default: 64
+  valuetype: float
 render: |
   type: custom
   {{- if ne .title "" }}

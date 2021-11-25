@@ -1,14 +1,7 @@
 template: citroen
 description: Citroen
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: vin
-  example: W...
 - name: capacity
   default: 50
 render: |

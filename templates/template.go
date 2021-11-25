@@ -118,9 +118,48 @@ type Template struct {
 	Description  string // user friendly description of the device this template describes
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
-	Generic      bool // if this describes a generic device type rather than a product
+	Generic      bool   // if this describes a generic device type rather than a product
+	ParamsBase   string // references a base param set to inherit from
 	Params       []Param
 	Render       string // rendering template
+}
+
+var paramBases = map[string][]Param{
+	"vehicle": {
+		{Name: "title"},
+		{Name: "user", Required: true},
+		{Name: "password", Required: true, Mask: true},
+		{Name: "vin", Example: "W..."},
+		{Name: "capacity", Default: "50", ValueType: ParamValueTypeFloat},
+	},
+}
+
+// add the referenced base Params and overwrite existing ones
+func (t *Template) ResolveParamBase() {
+	if t.ParamsBase == "" {
+		return
+	}
+
+	base, ok := paramBases[t.ParamsBase]
+	if !ok {
+		return
+	}
+
+	currentParams := t.Params
+	t.Params = base
+	for _, p := range currentParams {
+		if i, item := t.paramWithName(p.Name); item != nil {
+			// we only allow overwriting a few fields
+			if p.Default != "" {
+				t.Params[i].Default = p.Default
+			}
+			if p.Example != "" {
+				t.Params[i].Example = p.Example
+			}
+		} else {
+			t.Params = append(t.Params, p)
+		}
+	}
 }
 
 // Defaults returns a map of default values for the template
@@ -139,22 +178,28 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 	return values
 }
 
+// return the param with the given name
+func (t *Template) paramWithName(name string) (int, *Param) {
+	for i, p := range t.Params {
+		if p.Name == name {
+			return i, &p
+		}
+	}
+	return 0, nil
+}
+
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
-	for _, p := range t.Params {
-		if p.Name == ParamUsage {
-			return p.Choice
-		}
+	if _, p := t.paramWithName(ParamUsage); p != nil {
+		return p.Choice
 	}
 
 	return nil
 }
 
 func (t *Template) ModbusChoices() []string {
-	for _, p := range t.Params {
-		if p.Name == ParamModbus {
-			return p.Choice
-		}
+	if _, p := t.paramWithName(ParamModbus); p != nil {
+		return p.Choice
 	}
 
 	return nil

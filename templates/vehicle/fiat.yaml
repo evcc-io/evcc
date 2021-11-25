@@ -1,12 +1,7 @@
 template: fiat
 description: Fiat
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
 - name: pin
 - name: vin
   example: ZFAE...

@@ -1,14 +1,7 @@
 template: seat
 description: Seat (Cupra, Mii)
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: vin
-  example: W...
 - name: capacity
   default: 10
 render: |

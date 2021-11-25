@@ -1,17 +1,9 @@
 template: porsche
 description: Porsche
+paramsbase: vehicle
 params:
-- name: title
-- name: user
-  required: true
-- name: password
-  required: true
-  mask: true
-- name: vin
-  example: WP0...
 - name: capacity
-  default: 83
-- name: identifier
+  default: 83.4
 render: |
   type: porsche
   {{- if ne .title "" }}
