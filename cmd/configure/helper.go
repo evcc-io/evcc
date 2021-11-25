@@ -85,7 +85,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if sponsorship is required
-	if templateItem.Requirements.Sponsorship && c.configuration.SponsorToken() == "" {
+	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
 		fmt.Println()
@@ -95,12 +95,12 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		sponsortoken := c.askValue(question{
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
 			required: true})
-		c.configuration.SetSponsorToken(sponsortoken)
+		c.configuration.config.SponsorToken = sponsortoken
 	}
 
 	// check if we need to setup an EEBUS HEMS
 	if templateItem.Requirements.Eebus {
-		if c.configuration.EEBUS() == "" {
+		if c.configuration.config.EEBUS == "" {
 			eebusConfig, err := c.eebusCertificate()
 			if err != nil {
 				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
@@ -115,7 +115,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			if err != nil {
 				return err
 			}
-			c.configuration.SetEEBUS(string(eebusYaml))
+			c.configuration.config.EEBUS = string(eebusYaml)
 		}
 
 		fmt.Println()

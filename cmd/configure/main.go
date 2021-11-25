@@ -265,5 +265,5 @@ func (c *CmdConfigure) configureSite() {
 		label:        c.localizedString("Site_Title", nil),
 		defaultValue: c.localizedString("Site_DefaultTitle", nil),
 		required:     true})
-	c.configuration.SetSiteTitle(siteTitle)
+	c.configuration.config.Site.Title = siteTitle
 }

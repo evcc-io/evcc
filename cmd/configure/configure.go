@@ -95,26 +95,6 @@ func (c *Configure) MetersOfCategory(category DeviceCategory) int {
 	return 0
 }
 
-func (c *Configure) SetSiteTitle(title string) {
-	c.config.Site.Title = title
-}
-
-func (c *Configure) SponsorToken() string {
-	return c.config.SponsorToken
-}
-
-func (c *Configure) SetSponsorToken(token string) {
-	c.config.SponsorToken = token
-}
-
-func (c *Configure) EEBUS() string {
-	return c.config.EEBUS
-}
-
-func (c *Configure) SetEEBUS(eebus string) {
-	c.config.EEBUS = eebus
-}
-
 //go:embed configure.tpl
 var configTmpl string
 
