@@ -108,6 +108,8 @@ type Param struct {
 	ValueType string       // string representation of the value type, "string" is default
 	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
 	Usages    []string
+	Baudrate  int    // device specific default for modbus RS485 baudrate
+	Comset    string // device specific default for modbus RS485 comset
 }
 
 // Template describes is a proxy device for use with cli and automated testing

@@ -200,6 +200,16 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 
 	for _, param := range paramItems {
 		if param.Name == templates.ParamModbus {
+			// baudrate and comset defaults can be overwritten, as they are device specific
+			deviceDefaultBaudrate := templates.ModbusParamValueBaudrate
+			if param.Baudrate != 0 {
+				deviceDefaultBaudrate = param.Baudrate
+			}
+			deviceDefaultComset := templates.ModbusParamValueComset
+			if param.Comset != "" {
+				deviceDefaultBaudrate = param.Baudrate
+			}
+
 			choices := []string{}
 			choiceKeys := []string{}
 			for _, choice := range param.Choice {
@@ -242,14 +252,14 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 
 					baudrate := c.askValue(question{
 						label:        "Baudrate",
-						defaultValue: templates.ModbusParamValueBaudrate,
+						defaultValue: deviceDefaultBaudrate,
 						valueType:    templates.ParamValueTypeNumber,
 						required:     true})
 					additionalConfig[templates.ModbusParamNameBaudrate] = baudrate
 
 					comset := c.askValue(question{
 						label:        "ComSet",
-						defaultValue: templates.ModbusParamValueComset,
+						defaultValue: deviceDefaultComset,
 						required:     true})
 					additionalConfig[templates.ModbusParamNameComset] = comset
 
