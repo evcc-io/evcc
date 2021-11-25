@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,6 +15,8 @@ var (
 	yamlTemplates embed.FS
 
 	templates = make(map[string][]Template)
+
+	templatesOnce sync.Once
 )
 
 const (
@@ -24,33 +27,35 @@ const (
 
 //go:generate go run generate/generate.go
 func init() {
-	err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
+	templatesOnce.Do(func() {
+		err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+
+			b, err := fs.ReadFile(yamlTemplates, filepath)
+			if err != nil {
+				return err
+			}
+
+			var tmpl Template
+			if err = yaml.Unmarshal(b, &tmpl); err != nil {
+				panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
+			}
+
+			path := path.Dir(filepath)
+			templates[path] = append(templates[path], tmpl)
+
 			return nil
-		}
+		})
 
-		b, err := fs.ReadFile(yamlTemplates, filepath)
 		if err != nil {
-			return err
+			panic(err)
 		}
-
-		var tmpl Template
-		if err = yaml.Unmarshal(b, &tmpl); err != nil {
-			panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
-		}
-
-		path := path.Dir(filepath)
-		templates[path] = append(templates[path], tmpl)
-
-		return nil
 	})
-
-	if err != nil {
-		panic(err)
-	}
 }
 
 func ByClass(class string) []Template {
