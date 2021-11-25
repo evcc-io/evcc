@@ -108,7 +108,11 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 		for ok := true; ok; {
 			deviceItem := device{}
 
-			linkedTemplateItem := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
+			linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
+			if err != nil {
+				fmt.Println("Error: " + err.Error())
+				return
+			}
 			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
 				return
 			}
@@ -121,7 +125,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			}
 
 			values := c.processConfig(linkedTemplateItem.Params, category, false)
-			deviceItem, err := c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
+			deviceItem, err = c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
 			if err != nil {
 				if !errors.Is(err, c.errDeviceNotValid) {
 					fmt.Println()

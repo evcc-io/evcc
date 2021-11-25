@@ -57,12 +57,12 @@ func ByClass(class string) []Template {
 	return templates[class]
 }
 
-func ByTemplate(t, class string) Template {
+func ByTemplate(t, class string) (Template, error) {
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == t {
-			return tmpl
+			return tmpl, nil
 		}
 	}
 
-	return Template{}
+	return Template{}, fmt.Errorf("template not found: %s", t)
 }

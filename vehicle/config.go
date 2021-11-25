@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/templates"
 )
 
 const (
@@ -44,9 +43,6 @@ func Types() []string {
 
 // NewFromConfig creates vehicle from configuration
 func NewFromConfig(typ string, other map[string]interface{}) (v api.Vehicle, err error) {
-	if typ == "template" {
-		typ = templates.TemplateTypeForName(other["template"].(string))
-	}
 	factory, err := registry.Get(strings.ToLower(typ))
 	if err == nil {
 		if v, err = factory(other); err != nil {

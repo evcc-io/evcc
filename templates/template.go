@@ -3,7 +3,6 @@ package templates
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -38,8 +37,6 @@ const (
 	ModbusParamNamePort      = "port"
 	ModbusParamValuePort     = 502
 	ModbusParamNameRTU       = "rtu"
-
-	TemplateTypePrefix = "t_"
 )
 
 const (
@@ -159,14 +156,6 @@ func (t *Template) ModbusChoices() []string {
 	}
 
 	return nil
-}
-
-func (t *Template) Type() string {
-	return TemplateTypeForName(t.Template)
-}
-
-func TemplateTypeForName(name string) string {
-	return fmt.Sprintf("%s%s", TemplateTypePrefix, name)
 }
 
 //go:embed proxy.tpl
