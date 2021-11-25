@@ -25,44 +25,49 @@ const (
 	Vehicle = "vehicle"
 )
 
-//go:generate go run generate/generate.go
-func init() {
-	templatesOnce.Do(func() {
-		err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
+func loadTemplates(class string) {
+	if templates[class] != nil {
+		return
+	}
 
-			b, err := fs.ReadFile(yamlTemplates, filepath)
-			if err != nil {
-				return err
-			}
-
-			var tmpl Template
-			if err = yaml.Unmarshal(b, &tmpl); err != nil {
-				panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
-			}
-
-			path := path.Dir(filepath)
-			templates[path] = append(templates[path], tmpl)
-
-			return nil
-		})
-
+	err := fs.WalkDir(yamlTemplates, ".", func(filepath string, d fs.DirEntry, err error) error {
 		if err != nil {
-			panic(err)
+			return err
 		}
+		if d.IsDir() {
+			return nil
+		}
+
+		b, err := fs.ReadFile(yamlTemplates, filepath)
+		if err != nil {
+			return err
+		}
+
+		var tmpl Template
+		if err = yaml.Unmarshal(b, &tmpl); err != nil {
+			panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
+		}
+
+		path := path.Dir(filepath)
+		templates[path] = append(templates[path], tmpl)
+
+		return nil
 	})
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func ByClass(class string) []Template {
+	loadTemplates(class)
+
 	return templates[class]
 }
 
 func ByTemplate(t, class string) (Template, error) {
+	loadTemplates(class)
+
 	for _, tmpl := range templates[class] {
 		if tmpl.Template == t {
 			return tmpl, nil
