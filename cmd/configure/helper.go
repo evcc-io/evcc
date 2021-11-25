@@ -52,7 +52,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	deviceIsValid := false
 	v, err := c.configureDevice(deviceCategory, templateItem, values)
 	if err != nil {
-		fmt.Println("  ", c.localizedString("ConfiguringDevice_NotPossible", localizeMap{"Error": err}))
+		fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
 	} else {
 		if categoryWithUsage {
 			fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
@@ -61,10 +61,11 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		}
 
 		deviceIsValid, err = c.testDevice(deviceCategory, v)
-		if deviceCategory == DeviceCategoryCharger {
-			if deviceIsValid && err == nil {
-				device.ChargerHasMeter = true
-			}
+		if err != nil {
+			fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
+		}
+		if deviceCategory == DeviceCategoryCharger && deviceIsValid && err == nil {
+			device.ChargerHasMeter = true
 		}
 	}
 

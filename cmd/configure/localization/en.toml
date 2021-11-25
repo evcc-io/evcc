@@ -4,6 +4,7 @@ AddDeviceInCategory = "Do you want to add {{ .Article }} {{ .Category }}?"
 AddAnotherDeviceInCategory = "Do you want to add another {{ .Category }}?"
 AddLinkedDeviceInCategory = "Do you want to add '{{ .Linked }}' as {{ .Article }} {{ .Category }}?"
 
+Error = "Error: {{ .Error }}"
 Error_ItemNotPresent = "Device not present"
 Error_DeviceNotValid = "Device does not work"
 
@@ -48,11 +49,11 @@ Category_VehicleArticle = "a"
 
 ConfiguringDevice_Title = "Creating configuration for {{ .Device }} ..."
 ConfiguringDevice_TitleUsage = "Creating {{ .Usage }} configuration for {{ .Device }} ..."
-ConfiguringDevice_NotPossible = "Error: {{ .Error }}"
+ConfiguringDevice_Error = "Error: {{ .Error }}"
 
 TestingDevice_Title = "Testing the configuration of {{ .Device }} ..."
 TestingDevice_TitleUsage = "Testing the {{ .Usage }} configuration of {{ .Device }} ..."
-TestingDevice_Failure = "Do you want to repeat choosing a device and configuring it?"
+TestingDevice_RepeatStep = "Do you want to repeat choosing a device and configuring it?"
 TestingDevice_AddFailed = "Testing {{ .Device }} failed. Do you want to add it anyway?"
 TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add it anyway?"
 

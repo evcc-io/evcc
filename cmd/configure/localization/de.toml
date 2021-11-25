@@ -4,6 +4,7 @@ AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
 AddAnotherDeviceInCategory = "Möchtest du noch {{ .Article }} {{ .Category }} hinzufügen?"
 AddLinkedDeviceInCategory = "Möchtest du '{{ .Linked }}' als {{ .Article }} {{ .Category }} hinzufügen?"
 
+Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
 Error_DeviceNotValid = "Das Gerät funktioniert nicht"
 
@@ -48,11 +49,10 @@ Category_VehicleArticle = "ein"
 
 ConfiguringDevice_Title = "Richte die Konfiguration von {{ .Device }} ein ..."
 ConfiguringDevice_TitleUsage = "Richte die die {{ .Usage }} Konfiguration von {{ .Device }} ein ..."
-ConfiguringDevice_NotPossible = "Fehler: {{ .Error }}"
 
 TestingDevice_Title = "Teste die Konfiguration von {{ .Device }} ..."
 TestingDevice_TitleUsage = "Teste die {{ .Usage}} Konfiguration von {{ .Device }} ..."
-TestingDevice_Failure = "Möchtest du erneut ein Gerät aus der Liste auswählen und einrichten?"
+TestingDevice_RepeatStep = "Möchtest du erneut ein Gerät aus der Liste auswählen und einrichten?"
 TestingDevice_AddFailed = "Der Test von {{ .Device }} ist fehlgeschlagen. Soll es trotzdem in die Konfiguration aufgenommen werden?"
 TestingDevice_AddFailedUsage = "Der Test der {{ .Usage }} Konfiguration von {{ .Device }} ist fehlgeschlagen. Soll es trotzdem in die Konfiguration aufgenommen werden?"
 

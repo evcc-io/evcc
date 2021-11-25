@@ -33,7 +33,7 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 
 func (c *CmdConfigure) askConfigFailureNextStep() bool {
 	fmt.Println()
-	return c.askYesNo(c.localizedString("TestingDevice_Failure", nil))
+	return c.askYesNo(c.localizedString("TestingDevice_RepeatStep", nil))
 }
 
 // Survey: select item from list
