@@ -182,7 +182,14 @@ func (c *CmdConfigure) askValue(q question) string {
 			Help:    help,
 		}
 		if q.defaultValue != nil {
-			prompt.Default = q.defaultValue.(string)
+			switch q.defaultValue.(type) {
+			case string:
+				prompt.Default = q.defaultValue.(string)
+			case int:
+				prompt.Default = strconv.Itoa(q.defaultValue.(int))
+			case bool:
+				prompt.Default = strconv.FormatBool(q.defaultValue.(bool))
+			}
 		}
 		err = c.surveyAskOne(prompt, &input, survey.WithValidator(validate))
 	}
