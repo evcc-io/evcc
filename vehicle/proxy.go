@@ -1,10 +1,9 @@
 package vehicle
 
 import (
-	"fmt"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -13,11 +12,16 @@ func init() {
 }
 
 func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, error) {
-	name := other["template"].(string)
-	if name == "" {
-		return nil, fmt.Errorf("missing template name")
+	cc := struct {
+		Template string
+		Other    map[string]interface{} `mapstructure:",remain"`
+	}{}
+
+	if err := util.DecodeOther(other, &cc); err != nil {
+		return nil, err
 	}
-	tmpl, err := templates.ByTemplate(name, templates.Vehicle)
+
+	tmpl, err := templates.ByTemplate(cc.Template, templates.Vehicle)
 	if err != nil {
 		return nil, err
 	}
