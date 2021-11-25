@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
-	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -15,8 +14,6 @@ var (
 	yamlTemplates embed.FS
 
 	templates = make(map[string][]Template)
-
-	templatesOnce sync.Once
 )
 
 const (
