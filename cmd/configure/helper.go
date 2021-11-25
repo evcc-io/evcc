@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// process the the user selected device, check if it is an actual device and make sure the requirements are set
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
@@ -24,6 +25,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 	return templateItem, nil
 }
 
+// process the user provided values, create a device configuration and check if it is a valid device
 func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
 	c.addedDeviceIndex++
 
@@ -168,6 +170,7 @@ func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filte
 	return funk.ContainsString(choices, filter)
 }
 
+// provide a list of possible values for a param choice
 func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) []string {
 	choices := []string{}
 
