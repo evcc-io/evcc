@@ -42,8 +42,10 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	deviceIsValid := false
 	v, err := c.configureDevice(deviceCategory, templateItem, values)
-	if err == nil {
-		fmt.Println()
+	fmt.Println()
+	if err != nil {
+		fmt.Println(c.localizedString("TestingDevice_NotPossible", localizeMap{"Device": templateItem.Description, "Error": err}))
+	} else {
 		if deviceCategory == DeviceCategoryPVMeter || deviceCategory == DeviceCategoryBatteryMeter || deviceCategory == DeviceCategoryGridMeter {
 			fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
 		} else {

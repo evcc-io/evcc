@@ -5,7 +5,7 @@ AddAnotherDeviceInCategory = "Do you want to add another {{ .Category }}?"
 AddLinkedDeviceInCategory = "Do you want to add '{{ .Linked }}' as {{ .Article }} {{ .Category }}?"
 
 Error_ItemNotPresent = "Device not present"
-Error_DeviceNotValid = "Device doe not work"
+Error_DeviceNotValid = "Device does not work"
 
 File_Exists = "The file {{ .FileName }} alread exists. Do you want to replace it?"
 File_NewFilename = "Please provide a new filename"
@@ -48,6 +48,7 @@ Category_VehicleArticle = "a"
 
 TestingDevice_Title = "Testing the configuration of {{ .Device }} ..."
 TestingDevice_TitleUsage = "Testing the {{ .Usage}} configuration of {{ .Device }} ..."
+TestingDevice_NotPossible = "{{ .Device }} can not be tested. A configuration error occurred: {{ .Error }}"
 TestingDevice_Failure = "The configuration does not work. Do you want to repeat the setup steps?"
 
 Requirements_Title = "The device needs to provide the following requirements:"
