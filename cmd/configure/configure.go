@@ -16,7 +16,7 @@ type device struct {
 }
 
 type loadpoint struct {
-	Title       string
+	Title       string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 	Charger     string
 	ChargeMeter string
 	Vehicles    []string
@@ -31,7 +31,7 @@ type config struct {
 	Chargers   []device
 	Vehicles   []device
 	Loadpoints []loadpoint
-	Site       struct {
+	Site       struct { // TODO Perspektivisch können wir was aus core wiederverwenden, für später
 		Title     string
 		Grid      string
 		PVs       []string
