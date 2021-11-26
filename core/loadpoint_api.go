@@ -56,7 +56,7 @@ func (lp *LoadPoint) GetTargetSoC() int {
 }
 
 // SetTargetSoC sets loadpoint charge target soc
-func (lp *LoadPoint) SetTargetSoC(soc int) error {
+func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -68,8 +68,6 @@ func (lp *LoadPoint) SetTargetSoC(soc int) error {
 		lp.publish("targetSoC", soc)
 		lp.requestUpdate()
 	}
-
-	return nil
 }
 
 // GetMinSoC returns loadpoint charge minimum soc
@@ -80,7 +78,7 @@ func (lp *LoadPoint) GetMinSoC() int {
 }
 
 // SetMinSoC sets loadpoint charge minimum soc
-func (lp *LoadPoint) SetMinSoC(soc int) error {
+func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -92,8 +90,6 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 		lp.publish("minSoC", soc)
 		lp.requestUpdate()
 	}
-
-	return nil
 }
 
 // GetPhases returns loadpoint enabled phases
