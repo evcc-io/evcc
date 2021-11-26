@@ -68,19 +68,6 @@ func (v *API) HomeRegion(vin string) error {
 		err = res.Error.Error()
 	}
 
-	if sr, err := v.VehicleStatus(vin, map[string]string{
-		"Accept":        request.JSONContent,
-		"X-App-Name":    "myAudi",
-		"X-Country-Id":  "DE",
-		"X-Language-Id": "de",
-		"X-App-Version": "3.22.0",
-	}); err == nil {
-		if sd := sr.ServiceByID(StatusService); sd != nil {
-			fmt.Printf("%+v\n", sd)
-		}
-		panic(1)
-	}
-
 	return err
 }
 
@@ -92,17 +79,31 @@ func (v *API) RolesRights(vin string) (RolesRights, error) {
 	return res, err
 }
 
+// ServiceURI renders the service URI for the given vin and service
+func (v *API) ServiceURI(vin, service string, rr RolesRights) (uri string) {
+	if si := rr.ServiceByID(service); si != nil {
+		uri = si.InvocationUrl.Content
+		uri = strings.ReplaceAll(uri, "{vin}", vin)
+		uri = strings.ReplaceAll(uri, "{brand}", v.brand)
+		uri = strings.ReplaceAll(uri, "{country}", v.country)
+	}
+
+	return uri
+}
+
 // Status implements the /status response
 func (v *API) Status(vin string) (StatusResponse, error) {
 	var res StatusResponse
-	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s", RegionAPI, vin)
-	err := v.GetJSON(uri, &res)
-	return res, err
-}
-
-func (v *API) VehicleStatus(vin string, headers map[string]string) (StatusResponse, error) {
-	var res StatusResponse
 	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
+	if v.statusURI != "" {
+		uri = v.statusURI
+	}
+
+	headers := map[string]string{
+		"Accept":        request.JSONContent,
+		"X-App-Name":    "foo", // required
+		"X-App-Version": "foo", // required
+	}
 
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
@@ -113,26 +114,21 @@ func (v *API) VehicleStatus(vin string, headers map[string]string) (StatusRespon
 		var rr RolesRights
 		rr, err = v.RolesRights(vin)
 
-		var si *ServiceInfo
 		if err == nil {
-			if si = rr.ServiceByID(StatusService); si == nil {
+			if uri = v.ServiceURI(vin, StatusService, rr); uri == "" {
 				err = fmt.Errorf("%s not found", StatusService)
 			}
 		}
 
 		if err == nil {
-			uri := si.InvocationUrl.Content
-			uri = strings.ReplaceAll(uri, "{vin}", vin)
-			uri = strings.ReplaceAll(uri, "{brand}", v.brand)
-			uri = strings.ReplaceAll(uri, "{country}", v.country)
-
 			if strings.HasSuffix(uri, fmt.Sprintf("%s/", vin)) {
 				uri += "status"
 			}
 
-			req, err := request.New(http.MethodGet, uri, nil, headers)
-			if err == nil {
-				err = v.DoJSON(req, &res)
+			if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
+				if err = v.DoJSON(req, &res); err == nil {
+					v.statusURI = uri
+				}
 			}
 		}
 	}

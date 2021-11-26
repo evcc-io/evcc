@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -17,6 +18,7 @@ import (
 // Provider implements the evcc vehicle api
 type Provider struct {
 	chargerG func() (interface{}, error)
+	statusG  func() (interface{}, error)
 	climateG func() (interface{}, error)
 	action   func(action, value string) error
 	rr       func() (RolesRights, error)
@@ -27,6 +29,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 	impl := &Provider{
 		chargerG: provider.NewCached(func() (interface{}, error) {
 			return api.Charger(vin)
+		}, cache).InterfaceGetter(),
+		statusG: provider.NewCached(func() (interface{}, error) {
+			return api.Status(vin)
 		}, cache).InterfaceGetter(),
 		climateG: provider.NewCached(func() (interface{}, error) {
 			return api.Climater(vin)
@@ -108,6 +113,26 @@ func (v *Provider) Range() (rng int64, err error) {
 	return rng, err
 }
 
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		err = api.ErrNotAvailable
+
+		if sd := res.ServiceByID(ServiceOdometer); sd != nil {
+			if fd := sd.FieldByID(ServiceOdometer); fd != nil {
+				if val, err := strconv.ParseFloat(fd.Value, 64); err == nil {
+					return val, nil
+				}
+			}
+		}
+	}
+
+	return 0, err
+}
+
 var _ api.VehicleClimater = (*Provider)(nil)
 
 // Climater implements the api.VehicleClimater interface
@@ -145,8 +170,8 @@ func (v *Provider) StopCharge() error {
 
 // var _ api.Diagnosis = (*Provider)(nil)
 
-// Diagnose implements the api.Diagnosis interface
-func (v *Provider) Diagnose() {
+// diagnose implements the api.Diagnosis interface
+func (v *Provider) diagnose() {
 	rr, err := v.rr()
 	if err != nil {
 		return
