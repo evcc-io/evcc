@@ -121,6 +121,14 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		c.configuration.config.SponsorToken = sponsortoken
 	}
 
+	// check if we need to setup a HEMS
+	if templateItem.Requirements.Hems != "" && funk.ContainsString(templates.HemsValueTypes, templateItem.Requirements.Hems) {
+		switch templateItem.Requirements.Hems {
+		case templates.HemsTypeSMA:
+			c.configuration.config.Hems = "type: sma\nAllowControl: false\n"
+		}
+	}
+
 	// check if we need to setup an EEBUS HEMS
 	if templateItem.Requirements.Eebus {
 		if c.configuration.config.EEBUS == "" {

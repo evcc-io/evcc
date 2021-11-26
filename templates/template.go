@@ -13,6 +13,8 @@ const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
 
+	HemsTypeSMA = "sma"
+
 	ModbusChoiceRS485    = "rs485"
 	ModbusChoiceTCPIP    = "tcpip"
 	ModbusKeyRS485Serial = "rs485serial"
@@ -38,6 +40,8 @@ const (
 	ModbusParamValuePort     = 502
 	ModbusParamNameRTU       = "rtu"
 )
+
+var HemsValueTypes = []string{HemsTypeSMA}
 
 const (
 	ParamValueTypeString = "string"
@@ -77,6 +81,7 @@ func (t *TextLanguage) SetString(lang, value string) {
 
 // Requirements
 type Requirements struct {
+	Hems        string       // HEMS Type
 	Eebus       bool         // EEBUS Setup is required
 	Sponsorship bool         // Sponsorship is required
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared

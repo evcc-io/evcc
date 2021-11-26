@@ -64,6 +64,11 @@ site:
     - {{ . }}
 {{-   end }}
 {{- end }}
+{{- if ne (len .Hems) 0 }}
+
+hems:
+{{ .Hems | indent 2 }}
+{{- end }}
 {{- if ne (len .EEBUS) 0 }}
 
 eebus:

@@ -37,6 +37,7 @@ type config struct {
 		PVs       []string
 		Batteries []string
 	}
+	Hems         string
 	EEBUS        string
 	SponsorToken string
 }
