@@ -237,6 +237,11 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 		}
 		newParams = append(newParams, param)
 	}
+
+	for index, p := range newParams {
+		newParams[index].Value = yamlQuote(p.Value)
+	}
+
 	t.Params = newParams
 
 	out := new(bytes.Buffer)
@@ -260,6 +265,10 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 	}
 
 	values = t.ModbusValues(values)
+
+	for item, p := range values {
+		values[item] = yamlQuote(p.(string))
+	}
 
 	tmpl := template.New("yaml")
 	var funcMap template.FuncMap = map[string]interface{}{}
