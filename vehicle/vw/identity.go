@@ -26,9 +26,8 @@ const (
 
 type Identity struct {
 	*request.Helper
-	idtp       *IDTokenProvider
-	clientID   string
-	storageKey string
+	idtp     *IDTokenProvider
+	clientID string
 	oauth2.TokenSource
 }
 
@@ -36,19 +35,13 @@ func NewIdentity(log *util.Logger, clientID string, query url.Values, user, pass
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 	return &Identity{
-		Helper:     request.NewHelper(log),
-		idtp:       NewIDTokenProvider(log, uri, user, password),
-		clientID:   clientID,
-		storageKey: HashString(fmt.Sprintf("%s%s%s", uri, user, password)),
+		Helper:   request.NewHelper(log),
+		idtp:     NewIDTokenProvider(log, uri, user, password),
+		clientID: clientID,
 	}
 }
 
 func (v *Identity) Login() error {
-	if token := Restore(v.storageKey); token != nil {
-		v.TokenSource = oauth.RefreshTokenSource(token, v)
-		return nil
-	}
-
 	token, err := v.login()
 	if err != nil {
 		return err
@@ -92,10 +85,6 @@ func (v *Identity) login() (Token, error) {
 		}
 	}
 
-	if err == nil {
-		Persist(v.storageKey, &token.Token)
-	}
-
 	return token, err
 }
 
@@ -119,10 +108,6 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden) {
 		res, err = v.login()
-	}
-
-	if err == nil {
-		Persist(v.storageKey, &res.Token)
 	}
 
 	return &res.Token, err
