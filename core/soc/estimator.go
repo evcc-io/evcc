@@ -50,6 +50,18 @@ func (s *Estimator) Reset() {
 	s.energyPerSocStep = s.virtualCapacity / 100
 }
 
+// Estimate charge duration without using vehicle api
+func (s *Estimator) AssumedChargeDuration(targetSoC int, chargePower float64) time.Duration {
+	percentRemaining := float64(targetSoC) - s.vehicleSoc
+
+	if percentRemaining <= 0 {
+		return 0;
+	}
+
+	whRemaining := percentRemaining / 100 * s.virtualCapacity
+	return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
+}
+
 // RemainingChargeDuration returns the remaining duration estimate based on SoC, target and charge power
 func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) time.Duration {
 	if chargePower > 0 {
@@ -71,9 +83,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 			}
 		}
 
-		// estimate remaining time
-		whRemaining := percentRemaining / 100 * s.virtualCapacity
-		return time.Duration(float64(time.Hour) * whRemaining / chargePower).Round(time.Second)
+		return s.AssumedChargeDuration(targetSoC, chargePower)
 	}
 
 	return -1

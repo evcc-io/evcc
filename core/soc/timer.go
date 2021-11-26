@@ -69,7 +69,7 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	// time
-	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)
+	remainingDuration := se.AssumedChargeDuration(lp.SoC, power)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
 	if !lp.Time.IsZero() {
