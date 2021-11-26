@@ -110,7 +110,7 @@ Loadpoint_DefaultChargeMode = "Was sollte der Standard-Lademodus sein, wenn ein 
 Loadpoint_ChargeModeOff = "Aus"
 Loadpoint_ChargeModeNow = "Sofort (mit größtmöglicher Leistung)"
 Loadpoint_ChargeModeMinPV = "Min+PV (mit der kleinstmöglichen Leistung, schneller wenn genügend PV Überschuss vorhanden ist)"
-Loadpoint_ChargeModePV = "PV (Nur mit PV Überschuß)"
+Loadpoint_ChargeModePV = "PV (Nur mit PV Überschuss)"
 
 Site_Setup = "- Standort einrichten"
 Site_Title = "Titel des Standortes"
