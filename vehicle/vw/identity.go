@@ -1,10 +1,14 @@
 package vw
 
 import (
+	"crypto/sha256"
+	"encoding/gob"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
@@ -28,20 +32,31 @@ type Identity struct {
 	*request.Helper
 	idtp     *IDTokenProvider
 	clientID string
+	store    string
 	oauth2.TokenSource
 }
 
 func NewIdentity(log *util.Logger, clientID string, query url.Values, user, password string) *Identity {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
+	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s%s", uri, user, password)))
 
 	return &Identity{
 		Helper:   request.NewHelper(log),
 		idtp:     NewIDTokenProvider(log, uri, user, password),
 		clientID: clientID,
+		store:    hex.EncodeToString(hash[:]) + ".token",
 	}
 }
 
 func (v *Identity) Login() error {
+	if r, err := os.Open(v.store); err == nil {
+		var token oauth2.Token
+		if err := gob.NewDecoder(r).Decode(&token); err == nil && token.Valid() {
+			v.TokenSource = oauth.RefreshTokenSource(&token, v)
+			return nil
+		}
+	}
+
 	token, err := v.login()
 	if err != nil {
 		return err
@@ -85,7 +100,17 @@ func (v *Identity) login() (Token, error) {
 		}
 	}
 
+	if err == nil {
+		v.persistToken(&token.Token)
+	}
+
 	return token, err
+}
+
+func (v *Identity) persistToken(token *oauth2.Token) {
+	if w, err := os.OpenFile(v.store, os.O_CREATE|os.O_WRONLY, 0644); err == nil {
+		_ = gob.NewEncoder(w).Encode(token)
+	}
 }
 
 // RefreshToken implements oauth.TokenRefresher
@@ -108,6 +133,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	if se, ok := err.(request.StatusError); ok && se.HasStatus(http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden) {
 		res, err = v.login()
+	}
+
+	if err == nil {
+		v.persistToken(&res.Token)
 	}
 
 	return &res.Token, err

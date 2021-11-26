@@ -1,7 +1,6 @@
 package vw
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -69,14 +68,18 @@ func (v *API) HomeRegion(vin string) error {
 		err = res.Error.Error()
 	}
 
-	_, _ = v.Status(vin, map[string]string{
+	if sr, err := v.VehicleStatus(vin, map[string]string{
 		"Accept":        request.JSONContent,
 		"X-App-Name":    "myAudi",
 		"X-Country-Id":  "DE",
 		"X-Language-Id": "de",
 		"X-App-Version": "3.22.0",
-	})
-	panic(1)
+	}); err == nil {
+		if sd := sr.ServiceByID(StatusService); sd != nil {
+			fmt.Printf("%+v\n", sd)
+		}
+		panic(1)
+	}
 
 	return err
 }
@@ -90,17 +93,17 @@ func (v *API) RolesRights(vin string) (RolesRights, error) {
 }
 
 // Status implements the /status response
-func (v *API) Status2(vin string) (string, error) {
-	var res json.RawMessage
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
 	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s", RegionAPI, vin)
 	err := v.GetJSON(uri, &res)
-	return string(res), err
+	return res, err
 }
 
-func (v *API) Status(vin string, headers map[string]string) (StatusResponse, error) {
+func (v *API) VehicleStatus(vin string, headers map[string]string) (StatusResponse, error) {
 	var res StatusResponse
 	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
-	// TODO: add default headers
+
 	req, err := request.New(http.MethodGet, uri, nil, headers)
 	if err == nil {
 		err = v.DoJSON(req, &res)

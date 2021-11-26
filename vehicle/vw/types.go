@@ -12,6 +12,9 @@ type Error struct {
 }
 
 func (e *Error) Error() error {
+	if e == nil {
+		return nil
+	}
 	return fmt.Errorf("%s: %s", e.ErrorCode, e.Description)
 }
 
