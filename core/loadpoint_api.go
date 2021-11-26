@@ -60,10 +60,6 @@ func (lp *LoadPoint) SetTargetSoC(soc int) error {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if lp.vehicle == nil {
-		return api.ErrNotAvailable
-	}
-
 	lp.log.INFO.Println("set target soc:", soc)
 
 	// apply immediately
@@ -87,10 +83,6 @@ func (lp *LoadPoint) GetMinSoC() int {
 func (lp *LoadPoint) SetMinSoC(soc int) error {
 	lp.Lock()
 	defer lp.Unlock()
-
-	if lp.vehicle == nil {
-		return api.ErrNotAvailable
-	}
 
 	lp.log.INFO.Println("set min soc:", soc)
 
