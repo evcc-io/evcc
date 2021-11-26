@@ -55,13 +55,13 @@ site:
 {{- if len .Site.PVs }}
     pvs:
 {{-   range .Site.PVs }}
-      - {{ . }}
+    - {{ . }}
 {{-   end }}
 {{- end }}
 {{- if len .Site.Batteries }}
     batteries:
 {{-   range .Site.Batteries }}
-      - {{ . }}
+    - {{ . }}
 {{-   end }}
 {{- end }}
 {{- if ne (len .EEBUS) 0 }}
