@@ -31,12 +31,12 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, c.addedDeviceIndex)
 	device.Title = templateItem.Description
-	for _, param := range templateItem.Params {
-		if param.Name != "title" {
+	for item, value := range values {
+		if strings.ToLower(item) != "title" {
 			continue
 		}
-		if len(param.Value) > 0 {
-			device.Title = param.Value
+		if len(value.(string)) > 0 {
+			device.Title = value.(string)
 		}
 	}
 
