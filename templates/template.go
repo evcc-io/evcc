@@ -145,8 +145,10 @@ func (t *Template) ResolveParamBase() {
 		return
 	}
 
-	currentParams := t.Params
-	t.Params = base
+	currentParams := make([]Param, len(t.Params))
+	copy(currentParams, t.Params)
+	t.Params = make([]Param, len(base))
+	copy(t.Params, base)
 	for _, p := range currentParams {
 		if i, item := t.paramWithName(p.Name); item != nil {
 			// we only allow overwriting a few fields
