@@ -4,6 +4,9 @@ import "github.com/evcc-io/evcc/templates"
 
 const (
 	DefaultConfigFilename string = "evcc.yaml"
+
+	RenderingMode_Simple   string = "simple"
+	RenderingMode_Advanced string = "advanced"
 )
 
 type UsageChoice string

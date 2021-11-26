@@ -29,13 +29,15 @@ type CmdConfigure struct {
 	log           *util.Logger
 
 	lang                                 string
+	renderMode                           string
 	addedDeviceIndex                     int
 	errItemNotPresent, errDeviceNotValid error
 }
 
 // start the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, flagLang string) {
+func (c *CmdConfigure) Run(log *util.Logger, flagLang, renderMode string) {
 	c.log = log
+	c.renderMode = renderMode
 
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
 

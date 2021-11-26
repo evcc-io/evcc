@@ -75,13 +75,23 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
-	b, err := templateItem.RenderProxyWithValues(values, false)
-	if err != nil {
-		c.addedDeviceIndex--
-		return device, err
-	}
+	if c.renderMode == RenderingMode_Simple {
+		b, err := templateItem.RenderProxyWithValues(values, false)
+		if err != nil {
+			c.addedDeviceIndex--
+			return device, err
+		}
 
-	device.Yaml = string(b)
+		device.Yaml = string(b)
+	} else {
+		b, _, err := templateItem.RenderResult(false, values)
+		if err != nil {
+			c.addedDeviceIndex--
+			return device, err
+		}
+
+		device.Yaml = string(b)
+	}
 
 	return device, nil
 }

@@ -19,6 +19,7 @@ var configureCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(configureCmd)
 	configureCmd.Flags().String("lang", "", "Define the localization to be used (en, de)")
+	configureCmd.Flags().String("mode", configure.RenderingMode_Simple, "Define the rendering mode ("+configure.RenderingMode_Simple+", "+configure.RenderingMode_Advanced+")")
 }
 
 func runConfigure(cmd *cobra.Command, args []string) {
@@ -29,7 +30,12 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
+	mode, err := cmd.Flags().GetString("mode")
+	if err != nil {
+		panic(err)
+	}
+
 	util.LogLevel(viper.GetString("log"), nil)
 
-	impl.Run(log, lang)
+	impl.Run(log, lang, mode)
 }
