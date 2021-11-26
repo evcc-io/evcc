@@ -47,9 +47,6 @@ Category_ChargeMeterArticle = "einen"
 Category_VehicleTitle = "Fahrzeug"
 Category_VehicleArticle = "ein"
 
-ConfiguringDevice_Title = "Richte die Konfiguration von {{ .Device }} ein ..."
-ConfiguringDevice_TitleUsage = "Richte die die {{ .Usage }} Konfiguration von {{ .Device }} ein ..."
-
 TestingDevice_Title = "Teste die Konfiguration von {{ .Device }} ..."
 TestingDevice_TitleUsage = "Teste die {{ .Usage}} Konfiguration von {{ .Device }} ..."
 TestingDevice_RepeatStep = "Möchtest du erneut ein Gerät aus der Liste auswählen und einrichten?"

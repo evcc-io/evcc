@@ -44,33 +44,22 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	fmt.Println()
 	if categoryWithUsage {
-		fmt.Println(c.localizedString("ConfiguringDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
+		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
 	} else {
-		fmt.Println(c.localizedString("ConfiguringDevice_Title", localizeMap{"Device": templateItem.Description}))
+		fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description}))
 	}
 
-	deviceIsValid := false
-	v, err := c.configureDevice(deviceCategory, templateItem, values)
+	deviceTest := DeviceTest{
+		DeviceCategory: deviceCategory,
+		Template:       templateItem,
+		ConfigValues:   values,
+	}
+
+	testResult, err := deviceTest.Test()
 	if err != nil {
 		fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
-	} else {
-		if categoryWithUsage {
-			fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
-		} else {
-			fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description}))
-		}
-
-		deviceIsValid, err = c.testDevice(deviceCategory, v)
-		if err != nil {
-			fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
-		}
-		if deviceCategory == DeviceCategoryCharger && deviceIsValid && err == nil {
-			device.ChargerHasMeter = true
-		}
-	}
-
-	if !deviceIsValid {
 		fmt.Println()
+
 		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description})
 		if categoryWithUsage {
 			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()})
@@ -78,6 +67,10 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		if !c.askYesNo(question) {
 			c.addedDeviceIndex--
 			return device, c.errDeviceNotValid
+		}
+	} else {
+		if deviceCategory == DeviceCategoryCharger && testResult == DeviceTestResult_Valid {
+			device.ChargerHasMeter = true
 		}
 	}
 

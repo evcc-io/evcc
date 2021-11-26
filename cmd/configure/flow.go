@@ -4,11 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/charger"
-	"github.com/evcc-io/evcc/meter"
 	"github.com/evcc-io/evcc/templates"
-	"github.com/evcc-io/evcc/vehicle"
-	"gopkg.in/yaml.v3"
 )
 
 // let the user choose a device that is set to support guided setup
@@ -198,34 +194,4 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	fmt.Println(deviceDescription + deviceTitle + " " + c.localizedString("Device_Added", nil))
 
 	return device, nil
-}
-
-// create a configured device from a template so we can test it
-func (c *CmdConfigure) configureDevice(deviceCategory DeviceCategory, device templates.Template, values map[string]interface{}) (interface{}, error) {
-	b, _, err := device.RenderResult(false, values)
-	if err != nil {
-		return nil, err
-	}
-
-	var instance struct {
-		Type  string
-		Other map[string]interface{} `yaml:",inline"`
-	}
-
-	if err := yaml.Unmarshal(b, &instance); err != nil {
-		return nil, err
-	}
-
-	var v interface{}
-
-	switch DeviceCategories[deviceCategory].class {
-	case DeviceClassMeter:
-		v, err = meter.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassCharger:
-		v, err = charger.NewFromConfig(instance.Type, instance.Other)
-	case DeviceClassVehicle:
-		v, err = vehicle.NewFromConfig(instance.Type, instance.Other)
-	}
-
-	return v, err
 }

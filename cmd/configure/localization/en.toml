@@ -47,10 +47,6 @@ Category_ChargeMeterArticle = "a"
 Category_VehicleTitle = "vehicles"
 Category_VehicleArticle = "a"
 
-ConfiguringDevice_Title = "Creating configuration for {{ .Device }} ..."
-ConfiguringDevice_TitleUsage = "Creating {{ .Usage }} configuration for {{ .Device }} ..."
-ConfiguringDevice_Error = "Error: {{ .Error }}"
-
 TestingDevice_Title = "Testing the configuration of {{ .Device }} ..."
 TestingDevice_TitleUsage = "Testing the {{ .Usage }} configuration of {{ .Device }} ..."
 TestingDevice_RepeatStep = "Do you want to repeat choosing a device and configuring it?"
