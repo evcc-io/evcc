@@ -2,17 +2,18 @@ package vw
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"strconv"
 )
 
-// type Error struct {
-// 	ErrorCode, Description string
-// }
+type Error struct {
+	ErrorCode, Description string
+}
 
-// func (e *Error) Error() error {
-// 	return fmt.Errorf("%s: %s", e.ErrorCode, e.Description)
-// }
+func (e *Error) Error() error {
+	return fmt.Errorf("%s: %s", e.ErrorCode, e.Description)
+}
 
 // ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
 type ChargerResponse struct {
@@ -128,73 +129,4 @@ func (t *TimedTemperature) UnmarshalJSON(data []byte) error {
 // temp2Float converts api temp to float value
 func temp2Float(i int) float64 {
 	return float64(i)/10 - 273
-}
-
-// VehiclesResponse is the /usermanagement/users/v1/%s/%s/vehicles api
-type VehiclesResponse struct {
-	UserVehicles struct {
-		Vehicle []string
-	}
-}
-
-// HomeRegion is the home region API response
-type HomeRegion struct {
-	HomeRegion struct {
-		BaseURI struct {
-			SystemID string
-			Content  string // api url
-		}
-	}
-}
-
-// ChargerResponse is the /bs/batterycharge/v1/%s/%s/vehicles/%s/charger api
-type ChargerResponse struct {
-	Charger struct {
-		Status struct {
-			BatteryStatusData struct {
-				StateOfCharge         TimedInt
-				RemainingChargingTime TimedInt
-			}
-			ChargingStatusData struct {
-				ChargingState            TimedString // off, charging
-				ChargingMode             TimedString // invalid, AC
-				ChargingReason           TimedString // invalid, immediate
-				ExternalPowerSupplyState TimedString // unavailable, available
-				EnergyFlow               TimedString // on, off
-			}
-			PlugStatusData struct {
-				PlugState TimedString // connected
-			}
-			CruisingRangeStatusData struct {
-				EngineTypeFirstEngine  TimedString // typeIsElectric, petrolGasoline
-				EngineTypeSecondEngine TimedString // typeIsElectric, petrolGasoline
-				PrimaryEngineRange     TimedInt
-				SecondaryEngineRange   TimedInt
-				HybridRange            TimedInt
-			}
-		}
-	}
-}
-
-// ClimaterResponse is the /bs/climatisation/v1/%s/%s/vehicles/%s/climater api
-type ClimaterResponse struct {
-	Climater struct {
-		Settings struct {
-			TargetTemperature TimedTemperature
-			HeaterSource      TimedString
-		}
-		Status struct {
-			ClimatisationStatusData struct {
-				ClimatisationState         TimedString
-				ClimatisationReason        TimedString
-				RemainingClimatisationTime TimedInt
-			}
-			TemperatureStatusData struct {
-				OutdoorTemperature TimedTemperature
-			}
-			VehicleParkingClockStatusData struct {
-				VehicleParkingClock TimedString
-			}
-		}
-	}
 }

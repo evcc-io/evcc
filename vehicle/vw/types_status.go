@@ -9,12 +9,7 @@ type StatusResponse struct {
 			Data []ServiceDefinition
 		}
 	}
-	Error Error
-}
-
-type Error struct {
-	ErrorCode   string
-	Description string
+	Error *Error
 }
 
 func (s *StatusResponse) ServiceByID(id string) *ServiceDefinition {
