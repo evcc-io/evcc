@@ -170,8 +170,8 @@ func (v *Provider) StopCharge() error {
 
 // var _ api.Diagnosis = (*Provider)(nil)
 
-// diagnose implements the api.Diagnosis interface
-func (v *Provider) diagnose() {
+// Diagnose implements the api.Diagnosis interface
+func (v *Provider) Diagnose2() {
 	rr, err := v.rr()
 	if err != nil {
 		return
