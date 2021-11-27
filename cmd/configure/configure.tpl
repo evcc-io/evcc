@@ -2,6 +2,13 @@ uri: 0.0.0.0:7070 # uri for ui
 interval: 10s # control cycle interval
 
 log: info
+levels:
+  core: info
+{{- if ne (len .LogLevels) 0 }}
+{{-   range .LogLevels }}
+  {{ . }}: info
+{{-   end }}
+{{- end }}
 {{- if ne (len .Meters) 0 }}
 
 meters:

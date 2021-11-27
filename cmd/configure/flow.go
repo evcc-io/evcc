@@ -149,9 +149,10 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
 
 	device := device{
-		Name:  DeviceCategories[deviceCategory].defaultName,
-		Title: "",
-		Yaml:  "",
+		Name:     DeviceCategories[deviceCategory].defaultName,
+		Title:    "",
+		LogLevel: "",
+		Yaml:     "",
 	}
 
 	deviceDescription := ""

@@ -2,6 +2,7 @@ template: sma-home-manager
 description: SMA Sunny Home Manager 2.0
 requirements:
   hems: sma
+loglevel: sma
 guidedsetup:
   enable: true
   linked: 

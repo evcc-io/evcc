@@ -121,6 +121,7 @@ type Param struct {
 type Template struct {
 	Template     string
 	Description  string // user friendly description of the device this template describes
+	LogLevel     string // the implementation type of the device, equal to the type value under "Render"
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
 	Generic      bool   // if this describes a generic device type rather than a product
