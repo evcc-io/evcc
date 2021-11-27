@@ -76,7 +76,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	}
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
-	if c.renderMode == RenderingMode_Simple {
+	if !c.expandedMode {
 		b, err := templateItem.RenderProxyWithValues(values, false)
 		if err != nil {
 			c.addedDeviceIndex--
@@ -85,6 +85,12 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 		device.Yaml = string(b)
 	} else {
+		for _, p := range templateItem.Params {
+			if p.Name == "name" {
+				values["name"] = p.Value
+				templateItem.Render = fmt.Sprintf("name: {{ .name }}\n%s", templateItem.Render)
+			}
+		}
 		b, _, err := templateItem.RenderResult(false, values)
 		if err != nil {
 			c.addedDeviceIndex--
