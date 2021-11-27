@@ -249,7 +249,6 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.jq != nil {
-			b = []byte("{\"ENERGY\":{\"GUI_GRID_POW\":\"fl_C137BE76\"}}")
 			v, err := jq.Query(p.jq, b)
 			if err != nil {
 				fmt.Println(err)
