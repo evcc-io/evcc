@@ -120,8 +120,9 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 	}
 
 	localizeMap := localizeMap{
-		"Article":  DeviceCategories[deviceCategory].article,
-		"Category": DeviceCategories[deviceCategory].title,
+		"Article":    DeviceCategories[deviceCategory].article,
+		"Additional": DeviceCategories[deviceCategory].additional,
+		"Category":   DeviceCategories[deviceCategory].title,
 	}
 	addDeviceText := c.localizedString("AddDeviceInCategory", localizeMap)
 	if c.configuration.MetersOfCategory(deviceCategory) > 0 {

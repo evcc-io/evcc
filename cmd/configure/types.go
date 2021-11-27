@@ -54,10 +54,10 @@ const (
 )
 
 type DeviceCategoryData struct {
-	title, article string
-	class          DeviceClass
-	categoryFilter DeviceCategory
-	defaultName    string
+	title, article, additional string
+	class                      DeviceClass
+	categoryFilter             DeviceCategory
+	defaultName                string
 }
 
 var DeviceCategories map[DeviceCategory]DeviceCategoryData = map[DeviceCategory]DeviceCategoryData{
