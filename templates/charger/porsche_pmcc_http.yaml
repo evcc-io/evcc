@@ -1,5 +1,6 @@
 template: pmcc_http
 description: Porsche Mobile Charger Connect (HTTP API)
+loglevel: mcc
 params:
 - name: host
   required: true
