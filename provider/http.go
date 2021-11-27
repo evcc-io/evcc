@@ -9,12 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/itchyny/gojq"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/robertkrimen/otto"
 )
 
 // HTTP implements HTTP request provider
@@ -25,6 +27,8 @@ type HTTP struct {
 	body        string
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	vm          *otto.Otto
+	script      string
 	scale       float64
 	cache       time.Duration
 	updated     time.Time
@@ -49,6 +53,8 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Body        string
 		Regex       string
 		Jq          string
+		VM          string
+		Script      string
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
@@ -81,6 +87,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil && cc.Jq != "" {
 		_, err = http.WithJq(cc.Jq)
+	}
+
+	if err == nil && cc.Script != "" {
+		_, err = http.WithScript(cc.VM, cc.Script)
 	}
 
 	if err == nil && cc.Auth.Type != "" {
@@ -145,6 +155,16 @@ func (p *HTTP) WithJq(jq string) (*HTTP, error) {
 	}
 
 	p.jq = op
+
+	return p, nil
+}
+
+// WithScript adds a javascript script to process the response
+func (p *HTTP) WithScript(vm, script string) (*HTTP, error) {
+	regvm := javascript.RegisteredVM(strings.ToLower(vm))
+
+	p.vm = regvm
+	p.script = script
 
 	return p, nil
 }
@@ -229,8 +249,27 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.jq != nil {
+			b = []byte("{\"ENERGY\":{\"GUI_GRID_POW\":\"fl_C137BE76\"}}")
 			v, err := jq.Query(p.jq, b)
-			return fmt.Sprintf("%v", v), err
+			if err != nil {
+				fmt.Println(err)
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.vm != nil {
+			inputScript := fmt.Sprintf("var input = '" + string(b) + "';\n")
+			script := inputScript + p.script
+			v, err := p.vm.Eval(script)
+			if err != nil {
+				fmt.Println(err)
+				return string(b), err
+			}
+
+			s, err := v.ToString()
+			fmt.Println(err)
+			return string(s), err
 		}
 
 		return string(b), err
