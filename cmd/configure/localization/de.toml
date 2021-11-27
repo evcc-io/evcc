@@ -8,7 +8,7 @@ Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
 Error_DeviceNotValid = "Das Gerät funktioniert nicht"
 
-File_Exists = "Die Datei {{ .FileName }} existiert bereits. Soll die Date überschrieben werden?"
+File_Exists = "Die Datei {{ .FileName }} existiert bereits. Soll die Datei überschrieben werden?"
 File_NewFilename = "Bitte gib einen neuen Dateinamen an"
 File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileName }} gespeichert werden"
 File_SaveSuccess = "Die Konfiguration wurde erfolgreich in der Datei {{ .FileName }} gespeichert"
