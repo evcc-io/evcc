@@ -343,7 +343,11 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.vm != nil {
-			p.vm.Set("val", string(b))
+			err := p.vm.Set("val", string(b))
+			if err != nil {
+				return string(b), err
+			}
+
 			v, err := p.vm.Eval(p.script)
 			if err != nil {
 				return string(b), err
