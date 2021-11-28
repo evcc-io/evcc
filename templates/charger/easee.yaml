@@ -13,6 +13,6 @@ params:
   example: EH______
 render: |
   type: easee
-  user: '{{ .user }}'
-  password: '{{ .password }}'
+  user: {{ .user }}
+  password: {{ .password }}
   charger: {{ .charger }}

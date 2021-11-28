@@ -17,7 +17,7 @@ render: |
   title: {{ .title }}
   {{- end }}
   user: {{ .user }}
-  password: '{{ .password }}'
+  password: {{ .password }}
   vehicleid: {{ .vehicleid }} # vehicle id
   capacity: {{ .capacity }}
   server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]

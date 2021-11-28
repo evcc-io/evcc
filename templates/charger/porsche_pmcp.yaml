@@ -11,5 +11,5 @@ params:
     de: Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 render: |
   type: eebus
-  ski: '{{ .ski }}'
+  ski: {{ .ski }}
   forcePVLimits: true

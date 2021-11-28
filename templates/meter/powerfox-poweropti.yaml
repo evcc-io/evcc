@@ -15,5 +15,5 @@ render: |
     auth:
       type: basic
       user: {{ .user }}
-      password: '{{ .password }}'
+      password: {{ .password }}
     jq: .Watt

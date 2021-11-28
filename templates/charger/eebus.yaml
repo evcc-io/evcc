@@ -18,5 +18,5 @@ params:
     de: Verwende PV Laden über eine Ladebegrenzung (wie herkömmliche Wallboxen) bei Fahrzeugen mit Unterstützung von ISO15118
 render: |
   type: eebus
-  ski: '{{ .ski }}'
+  ski: {{ .ski }}
   forcePVLimits: {{ .enforcePVLimits }}

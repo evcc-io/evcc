@@ -13,7 +13,7 @@ render: |
   title: {{ .title }}
   {{- end }}
   user: {{ .user }}
-  password: '{{ .password }}'
+  password: {{ .password }}
   {{- if ne .capacity "" }}
   capacity: {{ .capacity }}
   {{- end }}

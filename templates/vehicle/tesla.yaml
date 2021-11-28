@@ -22,8 +22,8 @@ render: |
   title: {{ .title }}
   {{- end }}
   tokens:
-    access: '{{ .accessToken }}'
-    refresh: '{{ .refreshToken }}'
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
   {{- if ne .vin "" }}
   vin: {{ .vin }}

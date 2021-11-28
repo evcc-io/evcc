@@ -19,4 +19,4 @@ render: |
   usage: {{ .usage }}
   # uri and password are only required once if multiple lgess usages are defined
   uri: https://{{ .host }}
-  password: '{{ .registration }}'
+  password: {{ .registration }}

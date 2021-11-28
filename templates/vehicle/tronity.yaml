@@ -22,11 +22,11 @@ render: |
   title: {{ .title }}
   {{- end }}
   credentials:
-    id: '{{ .userid }}'
-    secret: '{{ .secret }}'
+    id: {{ .userid }}
+    secret: {{ .secret }}
   tokens:
-    access: '{{ .accessToken }}'
-    refresh: '{{ .refreshToken }}'
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
   capacity: {{ .capacity }}
   {{- if ne .vin "" }}
   vin: {{ .vin }}

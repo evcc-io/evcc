@@ -13,4 +13,4 @@ render: |
   type: nrgkick-connect
   uri: http://{{ .host }}
   mac: {{ .mac }} # BT device MAC address (sudo hcitool lescan)
-  password: '{{ .password }}'
+  password: {{ .password }}
