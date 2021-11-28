@@ -1,0 +1,7 @@
+type: template
+template: vzlogger_http
+description: vzlogger (HTTP)
+usage: grid 
+host: 192.0.2.2 
+port: 80 
+uuid:

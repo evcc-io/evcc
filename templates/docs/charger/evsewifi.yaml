@@ -1,0 +1,4 @@
+type: template
+template: evsewifi
+description: EVSE-Wifi
+host: 192.0.2.2

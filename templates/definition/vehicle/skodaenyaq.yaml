@@ -1,0 +1,19 @@
+template: enyaq
+description: Skoda (Enyaq)
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: enyaq
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

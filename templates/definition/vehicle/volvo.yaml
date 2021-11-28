@@ -1,0 +1,19 @@
+template: volvo
+description: Volvo
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: volvo
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}
