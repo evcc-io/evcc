@@ -246,6 +246,7 @@ func (p *HTTP) unpackValue(value []byte) (string, error) {
 }
 
 // decode a hex string to a proper value
+// TODO reuse similar code from Modbus
 func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
 	switch p.decode {
 	case "float32", "ieee754":
@@ -342,16 +343,13 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.vm != nil {
-			inputScript := fmt.Sprintf("var input = '" + string(b) + "';\n")
-			script := inputScript + p.script
-			v, err := p.vm.Eval(script)
+			p.vm.Set("val", string(b))
+			v, err := p.vm.Eval(p.script)
 			if err != nil {
-				fmt.Println(err)
 				return string(b), err
 			}
 
 			s, err := v.ToString()
-			fmt.Println(err)
 			return string(s), err
 		}
 
