@@ -361,8 +361,10 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
 
-	// identify active vehicle
-	lp.startVehicleDetection()
+	// start detection if we have multiple vehicles
+	if len(lp.vehicles) > 1 {
+		lp.startVehicleDetection()
+	}
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
