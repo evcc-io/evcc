@@ -1,9 +1,0 @@
-type: template
-template: tronity
-description: Tronity
-userid:
-secret:
-accessToken:
-refreshToken:
-vin: "W..." 
-capacity: "10"

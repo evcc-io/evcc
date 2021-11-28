@@ -1,7 +1,0 @@
-type: template
-template: vzlogger_ws
-description: vzlogger (Websocket)
-usage: "grid" 
-host: "192.0.2.2" 
-port: "8082" 
-uuid:

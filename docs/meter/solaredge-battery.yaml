@@ -1,6 +1,0 @@
-type: template
-template: solaredge
-description: Solaredge
-usage: "battery" 
-host: "192.0.2.2" 
-port: "502"  # Port 502 (SetApp) oder 1502 (LCD)

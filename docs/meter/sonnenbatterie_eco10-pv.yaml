@@ -1,6 +1,0 @@
-type: template
-template: sonnenbatterie_eco10
-description: Sonnenbatterie Eco/10
-usage: "pv" 
-host: "192.0.2.2" 
-port: "8080"

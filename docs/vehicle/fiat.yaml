@@ -1,7 +1,0 @@
-type: template
-template: fiat
-description: Fiat
-user:
-password:
-vin: "ZFAE..." 
-capacity: "42"

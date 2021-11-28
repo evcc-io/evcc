@@ -1,8 +1,0 @@
-template: evse_din
-description: EVSE DIN
-params:
-- name: modbus
-  choice: ["rs485"]
-render: |
-  type: simpleevse
-  {{include "modbus" .}}

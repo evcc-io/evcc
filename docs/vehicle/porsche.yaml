@@ -1,7 +1,0 @@
-type: template
-template: porsche
-description: Porsche
-user:
-password:
-vin: "WP0..." 
-capacity: "83"

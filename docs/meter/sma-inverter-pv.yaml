@@ -1,5 +1,0 @@
-type: template
-template: sma-inverter
-description: SMA Inverter/Wechselrichter
-usage: "pv" 
-host: "192.0.2.2"

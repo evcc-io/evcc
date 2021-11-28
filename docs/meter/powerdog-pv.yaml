@@ -1,6 +1,0 @@
-type: template
-template: powerdog
-description: Powerdog
-usage: "pv" 
-host: "192.0.2.2" 
-port: "502"

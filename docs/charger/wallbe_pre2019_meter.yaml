@@ -1,5 +1,0 @@
-type: template
-template: wallbe_pre2019_meter
-description: Wallbe (Eco, Pro) (pre ~2019) with Meter
-host: "192.0.2.2" 
-port: "502"

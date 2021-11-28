@@ -1,9 +1,0 @@
-template: phoenix-ev-ser
-description: Phoenix EV-SER Controller (Modbus RTU)
-generic: true
-params:
-- name: modbus
-  choice: ["rs485"]
-render: |
-  type: phoenix-ev-ser
-  {{include "modbus" .}}
