@@ -10,6 +10,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
@@ -256,7 +257,7 @@ func (m *Modbus) IntSetter(param string) func(int64) error {
 			uval := uint16(int64(m.scale) * val)
 
 			switch op.FuncCode {
-			case modbus.WriteSingleRegister:
+			case gridx.FuncCodeWriteSingleRegister:
 				_, err = m.conn.WriteSingleRegister(op.OpCode, uval)
 			default:
 				err = fmt.Errorf("unknown function code %d", op.FuncCode)

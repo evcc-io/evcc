@@ -1,0 +1,10 @@
+template: cfos_charger
+description: cFos PowerBrain
+requirements:
+  sponsorship: true
+params:
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: cfos
+  {{include "modbus" .}}

@@ -1,0 +1,48 @@
+template: varta_energiespeicher
+description: VARTA Energiespeicher
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 502
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+  {{- if eq .usage "grid" }}
+    id: 255
+    register:
+      address: 1078 # grid power
+      type: input
+      decode: int16
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    id: 255
+    register:
+      address: 1102 # PV-sensor power
+      type: input
+      decode: uint16
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    id: 1
+    register:
+      address: 1066 # active power
+      type: input
+      decode: int16
+    scale: -1
+  soc:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    register:
+      address: 1068 # SOC
+      type: input
+      decode: int16
+  {{- end }}

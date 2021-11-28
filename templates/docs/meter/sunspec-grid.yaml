@@ -1,0 +1,6 @@
+type: template
+template: sunspec
+description: SunSpec compliant inverter
+usage: grid 
+host: 192.0.2.2 
+id: 1

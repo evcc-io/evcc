@@ -1,0 +1,5 @@
+type: template
+template: rct_power
+description: RCT Power
+usage: battery 
+host: 192.0.2.2

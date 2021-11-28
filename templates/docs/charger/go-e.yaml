@@ -1,0 +1,4 @@
+type: template
+template: go-e
+description: go-eCharger Home/Pro/V3
+host: 192.0.2.2

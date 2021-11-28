@@ -1,0 +1,19 @@
+template: opel
+description: Opel
+paramsbase: vehicle
+params:
+- name: vin
+  example: WP0...
+- name: capacity
+  default: 50
+render: |
+  type: opel
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

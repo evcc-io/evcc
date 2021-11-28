@@ -1,0 +1,19 @@
+template: audi
+description: Audi
+paramsbase: vehicle
+params:
+- name: vin
+  example: WAUZZZ...
+- name: capacity
+  default: 60
+render: |
+  type: audi
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

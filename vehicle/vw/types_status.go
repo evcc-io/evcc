@@ -1,4 +1,6 @@
-package audi
+package vw
+
+const ServiceOdometer = "0x0101010002"
 
 type StatusResponse struct {
 	StoredVehicleDataResponse struct {
@@ -7,12 +9,7 @@ type StatusResponse struct {
 			Data []ServiceDefinition
 		}
 	}
-	Error Error
-}
-
-type Error struct {
-	ErrorCode   string
-	Description string
+	Error *Error
 }
 
 func (s *StatusResponse) ServiceByID(id string) *ServiceDefinition {

@@ -1,0 +1,21 @@
+template: vw
+description: Volkswagen (We Connect)
+paramsbase: vehicle
+params:
+- name: vin
+  example: WVWZZZ...
+- name: capacity
+  default: 10
+render: |
+  type: vw
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  {{- if ne .capacity "" }}
+  capacity: {{ .capacity }}
+  {{- end }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

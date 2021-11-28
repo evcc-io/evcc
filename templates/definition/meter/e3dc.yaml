@@ -1,0 +1,37 @@
+template: e3dc
+description: E3DC
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: port
+  default: 502
+render: |
+  type: custom
+  power:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register: # manual register configuration for E3/DC "Simple-Mode"
+      type: holding
+      decode: int32s
+  {{- if eq .usage "grid" }}
+      address: 40073 # Hausverbrauchs-Leistung in Watt
+  {{- end}}
+  {{- if eq .usage "pv" }}
+      address: 40067 # Photovoltaikleistung in Watt
+  {{- end}}
+  {{- if eq .usage "battery" }}
+      address: 40069 # Batterie-Leistung in Watt
+    scale: -1 # reverse direction
+  soc:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    register: # manual register configuration for E3/DC "Simple-Mode"
+      address: 40082 # Batterie-SOC in Prozent
+      type: holding
+      decode: uint16
+  {{- end}}
