@@ -17,6 +17,7 @@ import (
 	"github.com/itchyny/gojq"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 	"github.com/robertkrimen/otto"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // HTTP implements HTTP request provider
@@ -27,6 +28,7 @@ type HTTP struct {
 	body        string
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	decode      string
 	vm          *otto.Otto
 	script      string
 	scale       float64
@@ -53,6 +55,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Body        string
 		Regex       string
 		Jq          string
+		Decode      string
 		VM          string
 		Script      string
 		Scale       float64
@@ -87,6 +90,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil && cc.Jq != "" {
 		_, err = http.WithJq(cc.Jq)
+	}
+
+	if err == nil && cc.Decode != "" {
+		_, err = http.WithDecode(cc.Decode)
 	}
 
 	if err == nil && cc.Script != "" {
@@ -159,6 +166,13 @@ func (p *HTTP) WithJq(jq string) (*HTTP, error) {
 	return p, nil
 }
 
+// WithJq adds a jq query applied to the mqtt listener payload
+func (p *HTTP) WithDecode(decode string) (*HTTP, error) {
+	p.decode = strings.ToLower(decode)
+
+	return p, nil
+}
+
 // WithScript adds a javascript script to process the response
 func (p *HTTP) WithScript(vm, script string) (*HTTP, error) {
 	regvm := javascript.RegisteredVM(strings.ToLower(vm))
@@ -202,6 +216,33 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	return p.val, p.err
+}
+
+func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
+	switch p.decode {
+	case "float32", "ieee754":
+		return rs485.RTUIeee754ToFloat64(value), nil
+	case "float32s", "ieee754s":
+		return rs485.RTUIeee754ToFloat64Swapped(value), nil
+	case "float64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "uint16":
+		return rs485.RTUUint16ToFloat64(value), nil
+	case "uint32":
+		return rs485.RTUUint32ToFloat64(value), nil
+	case "uint32s":
+		return rs485.RTUUint32ToFloat64Swapped(value), nil
+	case "uint64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "int16":
+		return rs485.RTUInt16ToFloat64(value), nil
+	case "int32":
+		return rs485.RTUInt32ToFloat64(value), nil
+	case "int32s":
+		return rs485.RTUInt32ToFloat64Swapped(value), nil
+	}
+
+	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
 }
 
 // FloatGetter parses float from request
@@ -250,6 +291,14 @@ func (p *HTTP) StringGetter() func() (string, error) {
 
 		if p.jq != nil {
 			v, err := jq.Query(p.jq, b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.decode != "" {
+			v, err := p.decodeValue(b)
 			if err != nil {
 				return string(b), err
 			}
