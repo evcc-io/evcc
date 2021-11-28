@@ -251,7 +251,6 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		if p.jq != nil {
 			v, err := jq.Query(p.jq, b)
 			if err != nil {
-				fmt.Println(err)
 				return string(b), err
 			}
 			b = []byte(fmt.Sprintf("%v", v))
