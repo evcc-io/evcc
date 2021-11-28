@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
@@ -126,6 +127,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
 			required: true})
 		c.configuration.config.SponsorToken = sponsortoken
+		sponsor.Subject = sponsortoken
 	}
 
 	// check if we need to setup a HEMS
