@@ -271,7 +271,7 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 		return nil, values, err
 	}
 
-	values = t.ModbusValues(values)
+	t.ModbusValues(values)
 
 	for item, p := range values {
 		values[item] = yamlQuote(fmt.Sprintf("%v", p))

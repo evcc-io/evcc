@@ -13,9 +13,9 @@ import (
 var modbusTmpl string
 
 // set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(values map[string]interface{}) map[string]interface{} {
+func (t *Template) ModbusValues(values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {
-		return values
+		return
 	}
 
 	// either modbus param is defined or defaults for all modbus choices need to be set
@@ -26,19 +26,14 @@ func (t *Template) ModbusValues(values map[string]interface{}) map[string]interf
 				continue
 			}
 
-			switch v.(string) {
-			case ModbusKeyRS485Serial:
+			switch s := v.(string); s {
+			case ModbusKeyRS485Serial, ModbusKeyRS485TCPIP, ModbusKeyTCPIP:
 				hasModbusValues = true
-				values[ModbusRS485Serial] = true
-			case ModbusKeyRS485TCPIP:
-				hasModbusValues = true
-				values[ModbusRS485TCPIP] = true
-			case ModbusKeyTCPIP:
-				hasModbusValues = true
-				values[ModbusTCPIP] = true
+				values[s] = true
 			default:
 				// this happens during tests
 			}
+
 			break
 		}
 	}
@@ -49,20 +44,26 @@ func (t *Template) ModbusValues(values map[string]interface{}) map[string]interf
 	}
 
 	if hasModbusValues {
-		return values
+		return
 	}
 
 	// modbus defaults
-	values[ModbusParamNameId] = ModbusParamValueId
-	values[ModbusParamNameHost] = ModbusParamValueHost
-	values[ModbusParamNamePort] = ModbusParamValuePort
-	values[ModbusParamNameDevice] = ModbusParamValueDevice
-	values[ModbusParamNameBaudrate] = ModbusParamValueBaudrate
-	values[ModbusParamNameComset] = ModbusParamValueComset
+	for k, v := range map[string]interface{}{
+		ModbusParamNameId:       ModbusParamValueId,
+		ModbusParamNameHost:     ModbusParamValueHost,
+		ModbusParamNamePort:     ModbusParamValuePort,
+		ModbusParamNameDevice:   ModbusParamValueDevice,
+		ModbusParamNameBaudrate: ModbusParamValueBaudrate,
+		ModbusParamNameComset:   ModbusParamValueComset,
+	} {
+		values[k] = v
+	}
+
 	for _, p := range t.Params {
 		if p.Name != ParamModbus {
 			continue
 		}
+
 		for _, choice := range p.Choice {
 			if !funk.ContainsString([]string{ModbusChoiceRS485, ModbusChoiceTCPIP}, choice) {
 				panic(errors.New("Invalid modbus choice: " + choice))
@@ -73,10 +74,9 @@ func (t *Template) ModbusValues(values map[string]interface{}) map[string]interf
 			values[ModbusRS485Serial] = true
 			values[ModbusRS485TCPIP] = true
 		}
+
 		if funk.ContainsString(p.Choice, ModbusChoiceTCPIP) {
 			values[ModbusTCPIP] = true
 		}
 	}
-
-	return values
 }
