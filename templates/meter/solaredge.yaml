@@ -13,12 +13,15 @@ params:
   help: 
     en: Port 502 (SetApp) or 1502 (LCD)
     de: Port 502 (SetApp) oder 1502 (LCD)
+- name: timeout
+  default: 3s
 render: |
   type: custom
   power:
   {{- if eq .usage "grid" }}
     source: modbus
     model: sunspec
+    timeout: {{ .timeout }}
     uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
     id: 1
     subdevice: 1 # Metering device
@@ -30,10 +33,12 @@ render: |
     add:
     - source: modbus
       model: sunspec
+      timeout: {{ .timeout }}
       uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
       id: 1
       value: 103:DCW
     - source: modbus
+      timeout: {{ .timeout }}
       uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
       id: 1
       register:
@@ -43,6 +48,7 @@ render: |
   {{- end }}
   {{- if eq .usage "battery" }}
     source: modbus
+    timeout: {{ .timeout }}
     uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
     id: 1
     register:
@@ -52,6 +58,7 @@ render: |
     scale: -1
   soc:
     source: modbus
+    timeout: {{ .timeout }}
     uri: {{ .host }}:{{ .port }} # Port 502 (SetApp) or 1502 (LCD)
     id: 1
     register:
