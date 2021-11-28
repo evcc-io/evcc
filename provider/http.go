@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -218,28 +219,34 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	return p.val, p.err
 }
 
-func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
+// decode a hex string to a proper value
+func (p *HTTP) decodeValue(value string) (interface{}, error) {
+	b, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, err
+	}
+
 	switch p.decode {
 	case "float32", "ieee754":
-		return rs485.RTUIeee754ToFloat64(value), nil
+		return rs485.RTUIeee754ToFloat64(b), nil
 	case "float32s", "ieee754s":
-		return rs485.RTUIeee754ToFloat64Swapped(value), nil
+		return rs485.RTUIeee754ToFloat64Swapped(b), nil
 	case "float64":
-		return rs485.RTUUint64ToFloat64(value), nil
+		return rs485.RTUUint64ToFloat64(b), nil
 	case "uint16":
-		return rs485.RTUUint16ToFloat64(value), nil
+		return rs485.RTUUint16ToFloat64(b), nil
 	case "uint32":
-		return rs485.RTUUint32ToFloat64(value), nil
+		return rs485.RTUUint32ToFloat64(b), nil
 	case "uint32s":
-		return rs485.RTUUint32ToFloat64Swapped(value), nil
+		return rs485.RTUUint32ToFloat64Swapped(b), nil
 	case "uint64":
-		return rs485.RTUUint64ToFloat64(value), nil
+		return rs485.RTUUint64ToFloat64(b), nil
 	case "int16":
-		return rs485.RTUInt16ToFloat64(value), nil
+		return rs485.RTUInt16ToFloat64(b), nil
 	case "int32":
-		return rs485.RTUInt32ToFloat64(value), nil
+		return rs485.RTUInt32ToFloat64(b), nil
 	case "int32s":
-		return rs485.RTUInt32ToFloat64Swapped(value), nil
+		return rs485.RTUInt32ToFloat64Swapped(b), nil
 	}
 
 	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
@@ -298,7 +305,7 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.decode != "" {
-			v, err := p.decodeValue(b)
+			v, err := p.decodeValue(string(b))
 			if err != nil {
 				return string(b), err
 			}
