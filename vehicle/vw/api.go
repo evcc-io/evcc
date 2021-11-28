@@ -1,7 +1,6 @@
 package vw
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -22,6 +21,7 @@ type API struct {
 	*request.Helper
 	brand, country string
 	baseURI        string
+	statusURI      string
 }
 
 // NewAPI creates a new api client
@@ -71,12 +71,69 @@ func (v *API) HomeRegion(vin string) error {
 	return err
 }
 
-// RolesRights updates the home region for the given vehicle
-func (v *API) RolesRights(vin string) (string, error) {
-	var res json.RawMessage
+// RolesRights implements the /rolesrights/operationlist response
+func (v *API) RolesRights(vin string) (RolesRights, error) {
+	var res RolesRights
 	uri := fmt.Sprintf("%s/rolesrights/operationlist/v3/vehicles/%s", RegionAPI, vin)
 	err := v.GetJSON(uri, &res)
-	return string(res), err
+	return res, err
+}
+
+// ServiceURI renders the service URI for the given vin and service
+func (v *API) ServiceURI(vin, service string, rr RolesRights) (uri string) {
+	if si := rr.ServiceByID(service); si != nil {
+		uri = si.InvocationUrl.Content
+		uri = strings.ReplaceAll(uri, "{vin}", vin)
+		uri = strings.ReplaceAll(uri, "{brand}", v.brand)
+		uri = strings.ReplaceAll(uri, "{country}", v.country)
+	}
+
+	return uri
+}
+
+// Status implements the /status response
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
+	uri := fmt.Sprintf("%s/bs/vsr/v1/vehicles/%s/status", RegionAPI, vin)
+	if v.statusURI != "" {
+		uri = v.statusURI
+	}
+
+	headers := map[string]string{
+		"Accept":        request.JSONContent,
+		"X-App-Name":    "foo", // required
+		"X-App-Version": "foo", // required
+	}
+
+	req, err := request.New(http.MethodGet, uri, nil, headers)
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	if _, ok := err.(request.StatusError); ok {
+		var rr RolesRights
+		rr, err = v.RolesRights(vin)
+
+		if err == nil {
+			if uri = v.ServiceURI(vin, StatusService, rr); uri == "" {
+				err = fmt.Errorf("%s not found", StatusService)
+			}
+		}
+
+		if err == nil {
+			if strings.HasSuffix(uri, fmt.Sprintf("%s/", vin)) {
+				uri += "status"
+			}
+
+			if req, err = request.New(http.MethodGet, uri, nil, headers); err == nil {
+				if err = v.DoJSON(req, &res); err == nil {
+					v.statusURI = uri
+				}
+			}
+		}
+	}
+
+	return res, err
 }
 
 // Charger implements the /charger response
