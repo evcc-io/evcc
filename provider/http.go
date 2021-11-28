@@ -353,8 +353,7 @@ func (p *HTTP) StringGetter() func() (string, error) {
 				return string(b), err
 			}
 
-			s, err := v.ToString()
-			return string(s), err
+			return v.ToString()
 		}
 
 		return string(b), err
