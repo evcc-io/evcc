@@ -3,6 +3,7 @@ package templates
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -273,7 +274,7 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 	values = t.ModbusValues(values)
 
 	for item, p := range values {
-		values[item] = yamlQuote(p.(string))
+		values[item] = yamlQuote(fmt.Sprintf("%v", p))
 	}
 
 	tmpl := template.New("yaml")
