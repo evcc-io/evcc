@@ -11,6 +11,8 @@ import (
 
 const basePath = "../../../templates/docs"
 
+//go:generate go run generate.go
+
 func main() {
 	for _, class := range []string{templates.Meter, templates.Charger, templates.Vehicle} {
 		path := fmt.Sprintf("%s/%s", basePath, class)
