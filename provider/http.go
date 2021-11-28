@@ -29,6 +29,7 @@ type HTTP struct {
 	body        string
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	unpack      string
 	decode      string
 	vm          *otto.Otto
 	script      string
@@ -56,6 +57,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Body        string
 		Regex       string
 		Jq          string
+		Unpack      string
 		Decode      string
 		VM          string
 		Script      string
@@ -91,6 +93,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil && cc.Jq != "" {
 		_, err = http.WithJq(cc.Jq)
+	}
+
+	if err == nil && cc.Unpack != "" {
+		_, err = http.WithUnpack(cc.Unpack)
 	}
 
 	if err == nil && cc.Decode != "" {
@@ -167,7 +173,14 @@ func (p *HTTP) WithJq(jq string) (*HTTP, error) {
 	return p, nil
 }
 
-// WithJq adds a jq query applied to the mqtt listener payload
+// WithUnpack adds data unpacking
+func (p *HTTP) WithUnpack(unpack string) (*HTTP, error) {
+	p.unpack = strings.ToLower(unpack)
+
+	return p, nil
+}
+
+// WithDecode adds data decoding
 func (p *HTTP) WithDecode(decode string) (*HTTP, error) {
 	p.decode = strings.ToLower(decode)
 
@@ -219,34 +232,42 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	return p.val, p.err
 }
 
-// decode a hex string to a proper value
-func (p *HTTP) decodeValue(value string) (interface{}, error) {
-	b, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, err
+func (p *HTTP) unpackValue(value []byte) (string, error) {
+	switch p.unpack {
+	case "hex":
+		b, err := hex.DecodeString(string(value))
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
 	}
 
+	return "", fmt.Errorf("invalid unpack: %s", p.unpack)
+}
+
+// decode a hex string to a proper value
+func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
 	switch p.decode {
 	case "float32", "ieee754":
-		return rs485.RTUIeee754ToFloat64(b), nil
+		return rs485.RTUIeee754ToFloat64(value), nil
 	case "float32s", "ieee754s":
-		return rs485.RTUIeee754ToFloat64Swapped(b), nil
+		return rs485.RTUIeee754ToFloat64Swapped(value), nil
 	case "float64":
-		return rs485.RTUUint64ToFloat64(b), nil
+		return rs485.RTUUint64ToFloat64(value), nil
 	case "uint16":
-		return rs485.RTUUint16ToFloat64(b), nil
+		return rs485.RTUUint16ToFloat64(value), nil
 	case "uint32":
-		return rs485.RTUUint32ToFloat64(b), nil
+		return rs485.RTUUint32ToFloat64(value), nil
 	case "uint32s":
-		return rs485.RTUUint32ToFloat64Swapped(b), nil
+		return rs485.RTUUint32ToFloat64Swapped(value), nil
 	case "uint64":
-		return rs485.RTUUint64ToFloat64(b), nil
+		return rs485.RTUUint64ToFloat64(value), nil
 	case "int16":
-		return rs485.RTUInt16ToFloat64(b), nil
+		return rs485.RTUInt16ToFloat64(value), nil
 	case "int32":
-		return rs485.RTUInt32ToFloat64(b), nil
+		return rs485.RTUInt32ToFloat64(value), nil
 	case "int32s":
-		return rs485.RTUInt32ToFloat64Swapped(b), nil
+		return rs485.RTUInt32ToFloat64Swapped(value), nil
 	}
 
 	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
@@ -297,6 +318,7 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		}
 
 		if p.jq != nil {
+			b = []byte("{\"ENERGY\":{\"GUI_GRID_POW\":\"fl_42C80000\"}}")
 			v, err := jq.Query(p.jq, b)
 			if err != nil {
 				return string(b), err
@@ -304,8 +326,16 @@ func (p *HTTP) StringGetter() func() (string, error) {
 			b = []byte(fmt.Sprintf("%v", v))
 		}
 
+		if p.unpack != "" {
+			v, err := p.unpackValue(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
 		if p.decode != "" {
-			v, err := p.decodeValue(string(b))
+			v, err := p.decodeValue(b)
 			if err != nil {
 				return string(b), err
 			}
