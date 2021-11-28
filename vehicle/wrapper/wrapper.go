@@ -35,9 +35,9 @@ func (v *Wrapper) Identifiers() []string {
 	return nil
 }
 
-// OnIdentified returns the identify action
-func (v *Wrapper) OnIdentified() api.ActionConfig {
-	return api.ActionConfig{}
+// OnIdentified implements the api.Vehicle interface
+func (v *Wrapper) OnIdentified() *api.ActionConfig {
+	return nil
 }
 
 var _ api.Battery = (*Wrapper)(nil)

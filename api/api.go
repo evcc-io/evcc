@@ -123,7 +123,7 @@ type Vehicle interface {
 	Title() string
 	Capacity() int64
 	Identifiers() []string
-	OnIdentified() ActionConfig
+	OnIdentified() *ActionConfig
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time
