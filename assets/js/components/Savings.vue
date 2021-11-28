@@ -168,16 +168,16 @@ export default {
 		savingEuro() {
 			const priceDiffEuro = (this.gridPrice - this.feedinPrice) / 100;
 			const saving = (this.chargedSelfConsumption / 1000) * priceDiffEuro;
-			return this.$n(saving, { style: "currency", currency: "EUR" });
+			return this.$n(saving || 0, { style: "currency", currency: "EUR" });
 		},
 		centPerKWh() {
 			const totalCent =
 				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedinPrice;
 			const euroPerKWh = totalCent / this.chargedTotal;
-			return `${Math.round(euroPerKWh || 0)} ct/kWh`;
+			return `${Math.round(euroPerKWh || this.gridPrice)} ct/kWh`;
 		},
 		percent() {
-			return Math.round(this.selfPercentage);
+			return Math.round(this.selfPercentage) || 0;
 		},
 	},
 };

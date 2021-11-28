@@ -20,7 +20,7 @@ export default {
     },
     savings: {
       footerShort: "{percent}% Sonne",
-      footerLong: "{percent}% Sonnenstrom",
+      footerLong: "{percent}% Sonnenstrom ",
       modalTitle: "{total} kWh Strom geladen",
       modalChartGrid: "Netzstrom {grid} kWh",
       modalChartSelf: "Sonnenstrom {self} kWh",
