@@ -3,7 +3,7 @@ package vehicle
 import (
 	"testing"
 
-	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/util/test"
 )
 

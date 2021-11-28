@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )

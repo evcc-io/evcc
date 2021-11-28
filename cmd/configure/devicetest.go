@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger"
 	"github.com/evcc-io/evcc/meter"
-	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/evcc-io/evcc/vehicle"
 	"gopkg.in/yaml.v3"
 )

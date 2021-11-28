@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/templates"
 )
 
 // let the user choose a device that is set to support guided setup

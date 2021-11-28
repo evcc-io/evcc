@@ -9,7 +9,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
-	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
 )
 

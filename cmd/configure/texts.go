@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/evcc-io/evcc/templates"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/thoas/go-funk"
 )

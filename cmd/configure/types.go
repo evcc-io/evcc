@@ -1,6 +1,6 @@
 package configure
 
-import "github.com/evcc-io/evcc/templates"
+import "github.com/evcc-io/evcc/util/templates"
 
 const (
 	DefaultConfigFilename string = "evcc.yaml"

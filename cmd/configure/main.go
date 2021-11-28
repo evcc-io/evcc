@@ -11,8 +11,8 @@ import (
 	"github.com/cloudfoundry/jibber_jabber"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
-	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )

@@ -2,8 +2,8 @@ package vehicle
 
 import (
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/templates"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/templates"
 	"gopkg.in/yaml.v3"
 )
 
