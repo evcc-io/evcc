@@ -1,0 +1,34 @@
+template: kostal_piko
+description: Kostal Piko + Piko BA
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    # Grid
+    source: calc
+    add:
+    - source: http
+      uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
+      jq: .dxsEntries[0].value
+      scale: -1.0
+    - source: http
+      uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886848 # Netzbezug
+      jq: .dxsEntries[0].value
+    - source: http
+      uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336 # PV Eigenverbrauch
+      jq: .dxsEntries[0].value
+  {{- end -}}
+  {{- if eq .usage "pv" }}
+    # PV
+    source: http
+    uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
+    jq: .dxsEntries[0].value
+  {{- end -}}

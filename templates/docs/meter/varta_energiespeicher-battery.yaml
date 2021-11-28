@@ -1,0 +1,6 @@
+type: template
+template: varta_energiespeicher
+description: VARTA Energiespeicher
+usage: battery 
+host: 192.0.2.2 
+port: 502
