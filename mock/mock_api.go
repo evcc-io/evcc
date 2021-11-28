@@ -333,10 +333,10 @@ func (mr *MockVehicleMockRecorder) Identifiers() *gomock.Call {
 }
 
 // OnIdentified mocks base method.
-func (m *MockVehicle) OnIdentified() api.ActionConfig {
+func (m *MockVehicle) OnIdentified() *api.ActionConfig {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "OnIdentified")
-	ret0, _ := ret[0].(api.ActionConfig)
+	ret0, _ := ret[0].(*api.ActionConfig)
 	return ret0
 }
 
