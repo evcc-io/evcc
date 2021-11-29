@@ -389,12 +389,11 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// keep single vehicle to allow poll mode: always
 	if len(lp.vehicles) == 1 {
-		// if poll mode is connected/charging and not connected
-		if lp.SoC.Poll.Mode != pollAlways && !lp.connected() {
-			// reset published values
+		// but reset values if poll mode is not always (i.e. connected or charging)
+		if lp.SoC.Poll.Mode != pollAlways {
 			lp.publish("vehicleSoC", -1)
-			lp.publish("chargeRemainingDuration", time.Duration(-1))
 			lp.publish("vehicleRange", -1)
+			lp.setRemainingDuration(-1)
 		}
 	}
 
