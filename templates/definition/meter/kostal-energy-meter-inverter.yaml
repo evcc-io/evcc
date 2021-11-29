@@ -1,4 +1,4 @@
-template: kostal_piko_energy_meter
+template: kostal-piko-energy-meter
 description: Kostal Piko (BA) Energy Meter
 params:
 - name: usage

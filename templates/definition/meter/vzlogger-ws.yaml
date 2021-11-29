@@ -1,4 +1,4 @@
-template: vzlogger_ws
+template: vzlogger-ws
 description: vzlogger (Websocket)
 generic: true
 params:

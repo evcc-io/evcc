@@ -1,4 +1,4 @@
-template: vzlogger_importexport
+template: vzlogger-importexport
 description: vzlogger (Import & Export getrennt)
 generic: true
 params:

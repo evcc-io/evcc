@@ -1,4 +1,4 @@
-template: kostal_piko
+template: kostal-piko
 description: Kostal Piko + Piko BA
 guidedsetup:
   enable: true

@@ -1,4 +1,4 @@
-template: kostal_plenticore
+template: kostal-plenticore
 description: Kostal Plenticore Hybrid
 guidedsetup:
   enable: true

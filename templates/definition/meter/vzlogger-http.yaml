@@ -1,4 +1,4 @@
-template: vzlogger_http
+template: vzlogger-http
 description: vzlogger (HTTP)
 generic: true
 params:
