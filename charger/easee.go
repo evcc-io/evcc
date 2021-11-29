@@ -44,8 +44,8 @@ type Easee struct {
 	chargeStatus          api.ChargeStatus
 	log                   *util.Logger
 	mux                   sync.Mutex
-	dynamicChargerCurrent float64
-	current               float64
+	dynamicChargerCurrent int64
+	current               int64
 	chargerEnabled        bool
 	enabledStatus         bool
 	currentPower, sessionEnergy,
@@ -200,10 +200,10 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	case easee.IN_CURRENT_T5:
 		c.currentL3 = value.(float64)
 	case easee.DYNAMIC_CHARGER_CURRENT:
-		c.dynamicChargerCurrent = value.(float64)
+		c.dynamicChargerCurrent = int64(value.(float64))
 		// ensure that charger current matches evcc's expectation
 		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
-			if err = c.MaxCurrentMillis(c.current); err != nil {
+			if err = c.MaxCurrent(c.current); err != nil {
 				c.log.ERROR.Println(err)
 			}
 		}
@@ -321,7 +321,7 @@ func (c *Easee) MaxCurrentMillis(current float64) error {
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		c.current = current
+		c.current = int64(current)
 		resp.Body.Close()
 	}
 
