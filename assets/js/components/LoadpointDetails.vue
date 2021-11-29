@@ -4,6 +4,15 @@
 			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
 				<div class="mb-2 value">
 					{{ $t("main.loadpointDetails.power") }}
+					<div
+						class="badge bg-dark text-light"
+						:class="{ pulse: phaseTimerActive }"
+						v-tooltip="
+							'Umschaltung auf 1-phasig in ' + Math.round(Math.random() * 60) + 's'
+						"
+					>
+						3p
+					</div>
 					<fa-icon
 						class="text-primary ms-1"
 						icon="temperature-low"
@@ -79,5 +88,15 @@ export default {
 		vehicleRange: Number,
 	},
 	mixins: [formatter],
+	computed: {
+		phaseTimerActive() {
+			return true;
+		},
+	},
 };
 </script>
+<style scoped>
+.pulse {
+	animation: pulse 2s infinite ease-in-out;
+}
+</style>

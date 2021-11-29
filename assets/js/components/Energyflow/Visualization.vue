@@ -31,6 +31,15 @@
 			>
 				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
 					{{ kw(gridImport) }}
+					<fa-icon
+						icon="pause-circle"
+						class="pulse"
+						v-tooltip="
+							'Zu wenig Überschuss. Pausiere Ladung in ' +
+							Math.round(Math.random() * 60) +
+							's'
+						"
+					></fa-icon>
 				</span>
 				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
 					{{ kwNoUnit(gridImport) }}
@@ -42,6 +51,15 @@
 			>
 				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
 					{{ kw(pvExport) }}
+					<fa-icon
+						icon="play-circle"
+						class="pulse"
+						v-tooltip="
+							'Ausreichend Überschuss. Starte Ladung in ' +
+							Math.round(Math.random() * 60) +
+							's'
+						"
+					></fa-icon>
 				</span>
 				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
 					{{ kwNoUnit(pvExport) }}
@@ -256,5 +274,8 @@ export default {
 }
 .visualization--ready >>> .label-bar-icon {
 	transition: opacity 250ms ease-in;
+}
+.pulse {
+	animation: pulse 2s infinite ease-in-out;
 }
 </style>
