@@ -7,13 +7,16 @@ import (
 	"github.com/evcc-io/evcc/util/test"
 )
 
-func TestProxyVehicles(t *testing.T) {
+func TestVehicleTemplates(t *testing.T) {
 	test.SkipCI(t)
 
 	for _, tmpl := range templates.ByClass(templates.Vehicle) {
 		tmpl := tmpl
 
+		// set default values for all params
 		values := tmpl.Defaults(true)
+
+		// set the template value which is needed for rendering
 		values["template"] = tmpl.Template
 
 		t.Run(tmpl.Template, func(t *testing.T) {

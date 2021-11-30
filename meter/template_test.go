@@ -8,16 +8,19 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-func TestProxyMeters(t *testing.T) {
+func TestMeterTemplates(t *testing.T) {
 	test.SkipCI(t)
 
 	for _, tmpl := range templates.ByClass(templates.Meter) {
 		tmpl := tmpl
 
+		// set default values for all params
 		values := tmpl.Defaults(true)
+
+		// set the template value which is needed for rendering
 		values["template"] = tmpl.Template
 
-		// Modbus default test values
+		// set modbus default test values
 		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
 			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
@@ -28,18 +31,19 @@ func TestProxyMeters(t *testing.T) {
 		}
 
 		usages := tmpl.Usages()
-
 		if len(usages) == 0 {
 			runTest(t, tmpl, values)
-		}
+		} else {
+			// test all usages
+			for _, usage := range usages {
 
-		// test all usages
-		for _, usage := range usages {
-			if usage != "" {
-				values[templates.ParamUsage] = usage
+				// set the usage param value
+				if usage != "" {
+					values[templates.ParamUsage] = usage
+				}
+
+				runTest(t, tmpl, values)
 			}
-
-			runTest(t, tmpl, values)
 		}
 	}
 }
