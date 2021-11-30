@@ -107,22 +107,15 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 // processDeviceRequirements handles device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
-		fmt.Println()
-		fmt.Println("-- EEBUS -----------------------------------")
-		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Title", nil))
 		fmt.Println("  ", templateItem.Requirements.Description.String(c.lang))
 		if len(templateItem.Requirements.URI) > 0 {
 			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
-		fmt.Println()
-		fmt.Println("--------------------------------------------")
-		fmt.Println()
 	}
 
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
-		fmt.Println()
 		fmt.Println("-- Sponsorship -----------------------------")
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
@@ -137,7 +130,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		sponsor.Subject = sponsortoken
 		fmt.Println()
 		fmt.Println("--------------------------------------------")
-		fmt.Println()
 	}
 
 	// check if we need to setup a HEMS
@@ -151,6 +143,9 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	// check if we need to setup an EEBUS HEMS
 	if templateItem.Requirements.Eebus {
 		if c.configuration.config.EEBUS == "" {
+			fmt.Println()
+			fmt.Println("-- EEBUS -----------------------------------")
+			fmt.Println()
 			eebusConfig, err := c.eebusCertificate()
 			if err != nil {
 				return fmt.Errorf("%s: %s", c.localizedString("Requirements_EEBUS_Cert_Error", nil), err)
@@ -166,6 +161,8 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 				return err
 			}
 			c.configuration.config.EEBUS = string(eebusYaml)
+			fmt.Println()
+			fmt.Println("--------------------------------------------")
 		}
 
 		fmt.Println()
