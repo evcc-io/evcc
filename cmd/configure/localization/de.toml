@@ -8,6 +8,9 @@ Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
 Error_DeviceNotValid = "Das Gerät funktioniert nicht"
 
+Error_EEBUS_Certificate_Create = "Konnte das EEBUS Zertifikat nicht erstellen"
+Error_EEBUS_Certificate_Use = "Konnte das EEBUS Zertifikat nicht verwenden"
+
 File_Exists = "Die Datei {{ .FileName }} existiert bereits. Soll die Datei überschrieben werden?"
 File_NewFilename = "Bitte gib einen neuen Dateinamen an"
 File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileName }} gespeichert werden"

@@ -33,12 +33,12 @@ func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 
 	cert, err := certhelper.CreateCertificate(true, subject)
 	if err != nil {
-		return eebusConfig, fmt.Errorf("could not create certificate")
+		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Create", nil))
 	}
 
 	pubKey, privKey, err := certhelper.GetX509KeyPair(cert)
 	if err != nil {
-		return eebusConfig, fmt.Errorf("could not process generated certificate")
+		return eebusConfig, fmt.Errorf("%s", c.localizedString("Error_EEBUS_Certificate_Use", nil))
 	}
 
 	eebusConfig = map[string]interface{}{
