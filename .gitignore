@@ -4,8 +4,8 @@ __debug_bin
 *.py
 *.log
 *.json
-/*.yaml
-cfg/*.yaml
+*.yaml
+!templates/**/*.yaml
 !package*.json
 !evcc.dist.yaml
 evcc
