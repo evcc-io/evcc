@@ -34,7 +34,7 @@ type CmdConfigure struct {
 	errItemNotPresent, errDeviceNotValid error
 }
 
-// start the interactive configuration
+// Run starts the interactive configuration
 func (c *CmdConfigure) Run(log *util.Logger, flagLang string, expandedMode bool) {
 	c.log = log
 	c.expandedMode = expandedMode
@@ -111,7 +111,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, expandedMode bool)
 	fmt.Println(c.localizedString("File_SaveSuccess", localizeMap{"FileName": filename}))
 }
 
-// ask device specfic questions
+// configureDevices asks device specfic questions
 func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultiple bool) []device {
 	var devices []device
 
@@ -154,7 +154,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 	return devices
 }
 
-// ask loadpoint specific questions
+// configureLoadpoints asks loadpoint specific questions
 func (c *CmdConfigure) configureLoadpoints() {
 	fmt.Println()
 	fmt.Println(c.localizedString("Loadpoint_Setup", nil))
@@ -259,7 +259,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 	}
 }
 
-// ask site specific questions
+// configureSite asks site specific questions
 func (c *CmdConfigure) configureSite() {
 	fmt.Println()
 	fmt.Println(c.localizedString("Site_Setup", nil))

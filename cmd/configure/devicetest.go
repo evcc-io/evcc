@@ -26,9 +26,9 @@ type DeviceTest struct {
 	ConfigValues   map[string]interface{}
 }
 
-// returns
-// DeviceTestResult: Valid, Valid_MissingMeter, Invalid
-// error: != nil if the device is invalid and can not be configured with the provided settings
+// Test returns:
+// - DeviceTestResult: Valid, Valid_MissingMeter, Invalid
+// - error: != nil if the device is invalid and can not be configured with the provided settings
 func (d *DeviceTest) Test() (DeviceTestResult, error) {
 	v, err := d.configure()
 	if err != nil {
@@ -47,7 +47,7 @@ func (d *DeviceTest) Test() (DeviceTestResult, error) {
 	return DeviceTestResultInvalid, errors.New("testDevice not implemented for this device class")
 }
 
-// create a configured device from a template so we can test it
+// configure creates a configured device from a template so we can test it
 func (d *DeviceTest) configure() (interface{}, error) {
 	b, _, err := d.Template.RenderResult(false, d.ConfigValues)
 	if err != nil {
@@ -77,6 +77,7 @@ func (d *DeviceTest) configure() (interface{}, error) {
 	return v, err
 }
 
+// testCharger tests a charger device
 func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 	if v, ok := v.(api.Charger); ok {
 		if _, err := v.Status(); err != nil {
@@ -95,6 +96,7 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 	return DeviceTestResultValid, nil
 }
 
+// testMeter tests a meter device
 func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (DeviceTestResult, error) {
 	if v, ok := v.(api.Meter); ok {
 		if _, err := v.CurrentPower(); err != nil {
@@ -124,6 +126,7 @@ func (d *DeviceTest) testMeter(deviceCategory DeviceCategory, v interface{}) (De
 	return DeviceTestResultValid, nil
 }
 
+// testVehicle tests a vehicle device
 func (d *DeviceTest) testVehicle(v interface{}) (DeviceTestResult, error) {
 	if _, ok := v.(api.Vehicle); ok {
 		if v, ok := v.(api.Battery); ok {

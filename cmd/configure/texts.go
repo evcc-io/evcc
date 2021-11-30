@@ -9,6 +9,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
+// setDefaultTexts sets default language specific texts
 func (c *CmdConfigure) setDefaultTexts() {
 	c.errItemNotPresent = errors.New(c.localizedString("Error_ItemNotPresent", nil))
 	c.errDeviceNotValid = errors.New(c.localizedString("Error_DeviceNotValid", nil))
@@ -22,6 +23,7 @@ func (c *CmdConfigure) setDefaultTexts() {
 	c.updateDeviceCategoryTexts(DeviceCategoryVehicle, "Category_VehicleTitle", "Category_VehicleArticle", "Category_VehicleAdditional")
 }
 
+// updateDeviceCategoryTexts updates the texts for a device category
 func (c *CmdConfigure) updateDeviceCategoryTexts(category DeviceCategory, title, article, additional string) {
 	data := DeviceCategories[category]
 	data.title = c.localizedString(title, nil)
@@ -30,6 +32,7 @@ func (c *CmdConfigure) updateDeviceCategoryTexts(category DeviceCategory, title,
 	DeviceCategories[category] = data
 }
 
+// localizedString is a helper for getting a localized string
 func (c *CmdConfigure) localizedString(key string, templateData localizeMap) string {
 	return c.localizer.MustLocalize(&i18n.LocalizeConfig{
 		MessageID:    key,
@@ -37,6 +40,8 @@ func (c *CmdConfigure) localizedString(key string, templateData localizeMap) str
 	})
 }
 
+// userFriendlyTexts sets user friendly texts for a set of known param names and
+// returns them as a new set as we don't want to overwrite the template values
 func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
 	result := param
 

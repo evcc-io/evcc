@@ -8,7 +8,7 @@ import (
 	"github.com/evcc-io/evcc/server"
 )
 
-// setup EEBus
+// configureEEBus setup EEBus
 func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	var err error
 	if server.EEBusInstance, err = server.NewEEBus(conf); err == nil {
@@ -18,7 +18,7 @@ func (c *CmdConfigure) configureEEBus(conf map[string]interface{}) error {
 	return nil
 }
 
-// setup EEBUS certificate
+// eebusCertificate setup EEBUS certificate
 // returns privagte key, public key and error
 func (c *CmdConfigure) eebusCertificate() (map[string]interface{}, error) {
 	details := server.EEBUSDetails

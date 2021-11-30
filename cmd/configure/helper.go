@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// process the the user selected device, check if it is an actual device and make sure the requirements are set
+// processDeviceSelection processes the the user selected device, check if it is an actual device and make sure the requirements are set
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
@@ -26,7 +26,7 @@ func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (te
 	return templateItem, nil
 }
 
-// process the user provided values, create a device configuration and check if it is a valid device
+// processDeviceValues processes the user provided values, create a device configuration and check if it is a valid device
 func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templateItem templates.Template, device device, deviceCategory DeviceCategory) (device, error) {
 	c.addedDeviceIndex++
 
@@ -104,7 +104,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	return device, nil
 }
 
-// handles device requirements
+// processDeviceRequirements handles device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
 		fmt.Println()
@@ -166,7 +166,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	return nil
 }
 
-// return template items of a given class
+// fetchElements returns template items of a given class
 func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.Template {
 	var items []templates.Template
 
@@ -201,14 +201,14 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 	return items
 }
 
-// helper function to check if a param choice contains a given value
+// paramChoiceContains is a helper function to check if a param choice contains a given value
 func (c *CmdConfigure) paramChoiceContains(params []templates.Param, name, filter string) bool {
 	choices := c.paramChoiceValues(params, name)
 
 	return funk.ContainsString(choices, filter)
 }
 
-// provide a list of possible values for a param choice
+// paramChoiceValues provides a list of possible values for a param choice
 func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) []string {
 	choices := []string{}
 
@@ -223,8 +223,8 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 	return choices
 }
 
-// Process an EVCC configuration item
-// Returns
+// processConfig processes an EVCC configuration item
+// Returns:
 //   a map with param name and values
 func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory DeviceCategory, includeAdvanced bool) map[string]interface{} {
 	usageFilter := DeviceCategories[deviceCategory].categoryFilter

@@ -50,7 +50,7 @@ type Configure struct {
 	config config
 }
 
-// Add a log level for a specific device name to the configuration
+// AddLogLevel adds a log level for a specific device name to the configuration
 func (c *Configure) AddLogLevel(name string) {
 	if name == "" || funk.ContainsString(c.config.LogLevels, name) {
 		return
@@ -58,7 +58,7 @@ func (c *Configure) AddLogLevel(name string) {
 	c.config.LogLevels = append(c.config.LogLevels, name)
 }
 
-// add a device reference of a specific category to the configuration
+// AddDevice adds a device reference of a specific category to the configuration
 // e.g. a PV meter to site.PVs
 func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
@@ -85,7 +85,7 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	}
 }
 
-// return all configured devices of a given DeviceClass
+// DevicesOfClass returns all configured devices of a given DeviceClass
 func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 	switch class {
 	case DeviceClassCharger:
@@ -98,13 +98,13 @@ func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 	return nil
 }
 
-// add a loadpoint to the configuration
+// AddLoadpoint adds a loadpoint to the configuration
 func (c *Configure) AddLoadpoint(l loadpoint) {
 	c.config.Loadpoints = append(c.config.Loadpoints, l)
 	c.AddLogLevel(fmt.Sprintf("lp-%d", 1+len(c.config.Loadpoints)))
 }
 
-// return the number of configured meters of a given DeviceCategory
+// MetersOfCategory returns the number of configured meters of a given DeviceCategory
 func (c *Configure) MetersOfCategory(category DeviceCategory) int {
 	switch category {
 	case DeviceCategoryGridMeter:
@@ -123,7 +123,7 @@ func (c *Configure) MetersOfCategory(category DeviceCategory) int {
 //go:embed configure.tpl
 var configTmpl string
 
-// create a yaml configuration
+// RenderConfiguration creates a yaml configuration
 func (c *Configure) RenderConfiguration() ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(configTmpl)
 	if err != nil {

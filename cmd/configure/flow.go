@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-// lets the user choose a device that is set to support guided setup
+// configureDeviceGuidedSetup lets the user choose a device that is set to support guided setup
 // these are typically devices that
 // - contain multiple usages but have the same parameters like host, port, etc.
 // - devices that typically are installed with additional specific devices (e.g. SMA Home Manager with SMA Inverters)
@@ -91,7 +91,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	c.configureLinkedTypes(templateItem)
 }
 
-// let the user configure devices that are marked as being linked to a guided device
+// configureLinkedTypes lets the user configure devices that are marked as being linked to a guided device
 // e.g. SMA Inverters, Energy Meter with SMA Home Manager
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	linkedTemplates := templateItem.GuidedSetup.Linked
@@ -143,7 +143,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	}
 }
 
-// let the user select and configure a device from a specific category
+// configureDeviceCategory lets the user select and configure a device from a specific category
 func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, error) {
 	fmt.Println()
 	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
