@@ -71,7 +71,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 			return device, c.errDeviceNotValid
 		}
 	} else {
-		if deviceCategory == DeviceCategoryCharger && testResult == DeviceTestResult_Valid {
+		if deviceCategory == DeviceCategoryCharger && testResult == DeviceTestResultValid {
 			device.ChargerHasMeter = true
 		}
 	}
