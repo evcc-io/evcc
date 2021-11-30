@@ -27,7 +27,7 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	lang, err := cmd.Flags().GetString("lang")
 	if err != nil {
-		panic(err)
+		log.FATAL.Fatal(err)
 	}
 
 	expand, err := cmd.Flags().GetBool("expand")

@@ -13,7 +13,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-// Survey: ask the user for input
+// ask the user for input
 func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
 	opts = append(opts, survey.WithIcons(func(icons *survey.IconSet) {
 		icons.Question.Text = ""
@@ -31,12 +31,13 @@ func (c *CmdConfigure) surveyAskOne(p survey.Prompt, response interface{}, opts 
 	return err
 }
 
+// ask the user if he/she wants to select another device because the current does not work, or continue
 func (c *CmdConfigure) askConfigFailureNextStep() bool {
 	fmt.Println()
 	return c.askYesNo(c.localizedString("TestingDevice_RepeatStep", nil))
 }
 
-// Survey: select item from list
+// select item from list
 func (c *CmdConfigure) askSelection(message string, items []string) (error, string, int) {
 	selection := ""
 	prompt := &survey.Select{
@@ -60,7 +61,7 @@ func (c *CmdConfigure) askSelection(message string, items []string) (error, stri
 	return err, selection, selectedIndex
 }
 
-// Survey: select item from list
+// select item from list
 func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Template {
 	var emptyItem templates.Template
 	emptyItem.Description = c.localizedString("ItemNotPresent", nil)
@@ -84,7 +85,7 @@ func (c *CmdConfigure) selectItem(deviceCategory DeviceCategory) templates.Templ
 	return elements[selected]
 }
 
-// Survey: select item from list
+// select item from list
 func (c *CmdConfigure) askChoice(label string, choices []string) (int, string) {
 	err, selection, index := c.askSelection(label, choices)
 	if err != nil {
@@ -94,7 +95,7 @@ func (c *CmdConfigure) askChoice(label string, choices []string) (int, string) {
 	return index, selection
 }
 
-// Survey: ask yes/no question, return true if yes is selected
+// ask yes/no question, return true if yes is selected
 func (c *CmdConfigure) askYesNo(label string) bool {
 	confirmation := false
 	prompt := &survey.Confirm{
@@ -117,7 +118,7 @@ type question struct {
 	mask, required             bool
 }
 
-// Survey: ask for input
+// ask for value input for a given question (template param)
 func (c *CmdConfigure) askValue(q question) string {
 	input := ""
 

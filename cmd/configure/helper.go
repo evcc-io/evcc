@@ -104,7 +104,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	return device, nil
 }
 
-// handle device requirements
+// handles device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
 		fmt.Println()

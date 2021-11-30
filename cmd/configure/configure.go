@@ -82,6 +82,7 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	}
 }
 
+// return all configured devices of a given DeviceClass
 func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 	switch class {
 	case DeviceClassCharger:
@@ -94,11 +95,13 @@ func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 	return nil
 }
 
+// add a loadpoint to the configuration
 func (c *Configure) AddLoadpoint(l loadpoint) {
 	c.config.Loadpoints = append(c.config.Loadpoints, l)
 	c.AddLogLevel(fmt.Sprintf("lp-%d", 1+len(c.config.Loadpoints)))
 }
 
+// return the number of configured meters of a given DeviceCategory
 func (c *Configure) MetersOfCategory(category DeviceCategory) int {
 	switch category {
 	case DeviceCategoryGridMeter:

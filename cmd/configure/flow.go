@@ -7,7 +7,7 @@ import (
 	"github.com/evcc-io/evcc/util/templates"
 )
 
-// let the user choose a device that is set to support guided setup
+// lets the user choose a device that is set to support guided setup
 // these are typically devices that
 // - contain multiple usages but have the same parameters like host, port, etc.
 // - devices that typically are installed with additional specific devices (e.g. SMA Home Manager with SMA Inverters)
@@ -149,14 +149,12 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
 
 	device := device{
-		Name:     DeviceCategories[deviceCategory].defaultName,
-		Title:    "",
-		LogLevel: "",
-		Yaml:     "",
+		Name: DeviceCategories[deviceCategory].defaultName,
 	}
 
-	deviceDescription := ""
+	var deviceDescription string
 
+	// repeat until the device is added or the user chooses to continue without adding a device
 	for ok := true; ok; {
 		fmt.Println()
 
@@ -174,6 +172,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 				fmt.Println()
 				fmt.Println(err)
 			}
+			// ask if the user wants to add the
 			fmt.Println()
 			if !c.askConfigFailureNextStep() {
 				return device, err
@@ -186,7 +185,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 
 	c.configuration.AddDevice(device, deviceCategory)
 
-	deviceTitle := ""
+	var deviceTitle string
 	if device.Title != "" {
 		deviceTitle = " " + device.Title
 	}

@@ -240,14 +240,14 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
-		ladeModi := []string{
+		chargeModes := []string{
 			c.localizedString("Loadpoint_ChargeModeOff", nil),
 			c.localizedString("Loadpoint_ChargeModeNow", nil),
 			c.localizedString("Loadpoint_ChargeModeMinPV", nil),
 			c.localizedString("Loadpoint_ChargeModePV", nil),
 		}
 		fmt.Println()
-		modeChoice, _ := c.askChoice(c.localizedString("Loadpoint_DefaultChargeMode", nil), ladeModi)
+		modeChoice, _ := c.askChoice(c.localizedString("Loadpoint_DefaultChargeMode", nil), chargeModes)
 		loadpoint.Mode = chargingModes[modeChoice]
 
 		c.configuration.AddLoadpoint(loadpoint)
