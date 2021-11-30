@@ -21,7 +21,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"strconv"
 	"sync"
@@ -203,7 +202,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 		// ensure that charger current matches evcc's expectation
-		if c.dynamicChargerCurrent > 0 && math.Abs(c.dynamicChargerCurrent-c.current) > 0.1 {
+		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
 			if err = c.MaxCurrentMillis(c.current); err != nil {
 				c.log.ERROR.Println(err)
 			}
