@@ -171,11 +171,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		}
 	}
 
+	// set default SoC target to 100%, if not initialized
 	if lp.SoC.Target == 0 {
-		lp.SoC.Target = lp.onDisconnect.TargetSoC // use disconnect value as default soc
-		if lp.SoC.Target == 0 {
-			lp.SoC.Target = 100
-		}
+		lp.SoC.Target = 100
 	}
 
 	if lp.MinCurrent == 0 {
