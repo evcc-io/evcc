@@ -4,7 +4,8 @@ import "time"
 
 // predefined openWB topic names
 const (
-	Timeout = 15 * time.Second
+	Timeout           = 15 * time.Second
+	HeartbeatInterval = 10 * time.Second // loadpoint only client heartbeat
 
 	// root topic
 	RootTopic = "openWB"
@@ -38,4 +39,22 @@ const (
 	// configuration
 	PvConfigured      = "boolPVConfigured"
 	BatteryConfigured = "boolHouseBatteryConfigured"
+
+	// loadpoint only topics
+
+	// TODO cleanup after https://github.com/snaptec/openWB/issues/1757
+	// openWB/set/isss/heartbeat
+	// openWB/set/isss/ClearRfid
+	// openWB/set/isss/Cpulp1
+	// openWB/set/isss/Current
+	// openWB/set/isss/Lp2Current
+	// openWB/set/isss/U1p3p
+	// openWB/set/isss/U1p3pLp2
+
+	SlaveSetter = "set/isss"
+
+	SlaveHeartbeatTopic     = "heartbeat"
+	SlaveChargeCurrentTopic = "Current"
+	SlavePhasesTopic        = "U1p3p"
+	SlaveClearRfidTopic     = "ClearRfid"
 )
