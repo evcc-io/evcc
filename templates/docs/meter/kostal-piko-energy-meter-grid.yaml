@@ -1,5 +1,5 @@
 type: template
-template: kostal_piko_energy_meter
+template: kostal-piko-energy-meter
 description: Kostal Piko (BA) Energy Meter
 usage: grid 
 host: 192.0.2.2 

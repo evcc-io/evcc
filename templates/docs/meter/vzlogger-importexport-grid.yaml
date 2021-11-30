@@ -1,5 +1,5 @@
 type: template
-template: vzlogger_importexport
+template: vzlogger-importexport
 description: vzlogger (Import & Export getrennt)
 usage: grid 
 host: 192.0.2.2 

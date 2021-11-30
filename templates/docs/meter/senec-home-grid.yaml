@@ -1,0 +1,6 @@
+type: template
+template: senec-home
+description: SENEC.Home
+usage: grid 
+host: 192.0.2.2 
+port: 8080

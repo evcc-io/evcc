@@ -1,5 +1,5 @@
 type: template
-template: tesla_powerwall
+template: tesla-powerwall
 description: Tesla Powerwall
 usage: pv 
 host: 192.0.2.2 

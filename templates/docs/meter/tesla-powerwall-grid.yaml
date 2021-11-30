@@ -1,6 +1,6 @@
 type: template
-template: tesla_powerwall
+template: tesla-powerwall
 description: Tesla Powerwall
-usage: battery 
+usage: grid 
 host: 192.0.2.2 
 password: # Passwort des Benutzers Kunde
