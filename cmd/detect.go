@@ -95,13 +95,6 @@ func display(res []tasks.Result) {
 
 	fmt.Println("")
 	table.Render()
-
-	fmt.Println(`
-Please open https://github.com/evcc-io/evcc/issues/new in your browser and copy the
-results above into a new issue. Please tell us:
-
-	1. Is the scan result correct?
-	2. If not correct: please describe your hardware setup.`)
 }
 
 func runDetect(cmd *cobra.Command, args []string) {

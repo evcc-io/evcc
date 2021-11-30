@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/philippseith/signalr"
+	"github.com/thoas/go-funk"
 )
 
 // Logger is a simple logger interface
@@ -13,7 +14,6 @@ type Logger interface {
 }
 
 type logger struct {
-	b   strings.Builder
 	log Logger
 }
 
@@ -21,21 +21,36 @@ func SignalrLogger(log Logger) signalr.StructuredLogger {
 	return &logger{log: log}
 }
 
+var skipped = []string{"ts", "class", "hub", "protocol"}
+
 func (l *logger) Log(keyVals ...interface{}) error {
+	b := new(strings.Builder)
+
+	var skip bool
 	for i, v := range keyVals {
+		if skip {
+			skip = false
+			continue
+		}
+
 		if i%2 == 0 {
-			if l.b.Len() > 0 {
-				l.b.WriteRune(' ')
+			if funk.Contains(skipped, v) {
+				skip = true
+				continue
 			}
-			l.b.WriteString(fmt.Sprintf("%v", v))
-			l.b.WriteRune('=')
+
+			if b.Len() > 0 {
+				b.WriteRune(' ')
+			}
+
+			b.WriteString(fmt.Sprintf("%v", v))
+			b.WriteRune('=')
 		} else {
-			l.b.WriteString(fmt.Sprintf("%v", v))
+			b.WriteString(fmt.Sprintf("%v", v))
 		}
 	}
 
-	l.log.Println(l.b.String())
-	l.b.Reset()
+	l.log.Println(b.String())
 
 	return nil
 }
