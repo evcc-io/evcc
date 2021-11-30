@@ -129,6 +129,10 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
 
+	if err == nil {
+		err = <-client.Send("SubscribeWithCurrentState", c.charger, true)
+	}
+
 	return c, err
 }
 
