@@ -17,7 +17,10 @@ func init() {
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
-	api.Charger
+	current       int64
+	enabledG      func() (int64, error)
+	statusG       func() (string, error)
+	currentS      func(int64) error
 	currentPowerG func() (float64, error)
 	totalEnergyG  func() (float64, error)
 	currentsG     []func() (float64, error)
@@ -72,6 +75,16 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		}
 	}
 
+	intG := func(topic string) func() (int64, error) {
+		g := provider.NewMqtt(log, client, topic, 1, 0).IntGetter()
+		return func() (val int64, err error) {
+			if val, err = g(); err == nil {
+				_, err = timer()
+			}
+			return val, err
+		}
+	}
+
 	floatG := func(topic string) func() (float64, error) {
 		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
 		return func() (val float64, err error) {
@@ -93,16 +106,19 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	chargingG := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.ChargingTopic))
 	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
 
-	// remaining getters
-	enabledG := boolG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.EnabledTopic))
+	// getters
+	enabledG := intG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.MaxCurrentTopic))
 
 	// setters
-	enableS := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.EnabledTopic),
-		1, timeout).WithPayload("${enable:%d}").BoolSetter("enable")
-	maxcurrentS := provider.NewMqtt(log, client,
-		fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.MaxCurrentTopic),
-		1, timeout).IntSetter("maxcurrent")
+	currentTopic := openwb.SlaveChargeCurrentTopic
+	if id == 2 {
+		// TODO remove after openWB bugfix
+		currentTopic = "Lp2" + openwb.SlaveChargeCurrentTopic
+	}
+	currentS := provider.NewMqtt(log, client,
+		fmt.Sprintf("%s/set/isss/%s", topic, currentTopic),
+		1, timeout).IntSetter("current")
+
 	authS := provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/set/chargepoint/%d/get/%s", topic, id, openwb.RfidTopic),
 		1, timeout).StringSetter("rfid")
@@ -117,25 +133,40 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		currentsG = append(currentsG, current)
 	}
 
-	charger, err := NewConfigurable(statusG, enabledG, enableS, maxcurrentS)
-	if err != nil {
-		return nil, err
-	}
-
 	c := &OpenWB{
-		Charger:       charger,
+		currentS:      currentS,
+		enabledG:      enabledG,
+		statusG:       statusG,
 		currentPowerG: currentPowerG,
 		totalEnergyG:  totalEnergyG,
 		currentsG:     currentsG,
 		authS:         authS,
 	}
 
+	// heartbeat
+	go func() {
+		heartbeatS := provider.NewMqtt(log, client,
+			fmt.Sprintf("%s/set/lp%d/%s", topic, id, openwb.SlaveHeartbeatTopic),
+			1, timeout).IntSetter("heartbeat")
+
+		for range time.NewTicker(openwb.HeartbeatInterval).C {
+			if err := heartbeatS(1); err != nil {
+				log.ERROR.Printf("heartbeat: %v", err)
+			}
+		}
+	}()
+
 	// optional capabilities
 
 	var phases func(int) error
 	if p1p3 {
+		phasesTopic := openwb.SlavePhasesTopic
+		if id == 2 {
+			// TODO remove after openWB bugfix
+			phasesTopic += "Lp2"
+		}
 		phasesS := provider.NewMqtt(log, client,
-			fmt.Sprintf("%s/set/isss/%s", topic, openwb.PhasesTopic),
+			fmt.Sprintf("%s/set/isss/%s", topic, phasesTopic),
 			1, timeout).IntSetter("phases")
 
 		phases = func(phases int) error {
@@ -149,6 +180,36 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	return decorateOpenWB(c, phases, soc), nil
+}
+
+func (m *OpenWB) Enable(enable bool) error {
+	var current int64
+	if enable {
+		current = m.current
+	}
+
+	return m.currentS(current)
+}
+
+func (m *OpenWB) Enabled() (bool, error) {
+	current, err := m.enabledG()
+	return current > 0, err
+}
+
+func (m *OpenWB) Status() (api.ChargeStatus, error) {
+	status, err := m.statusG()
+	if err != nil {
+		return api.StatusNone, err
+	}
+	return api.ChargeStatus(status), nil
+}
+
+func (m *OpenWB) MaxCurrent(current int64) error {
+	err := m.currentS(current)
+	if err == nil {
+		m.current = current
+	}
+	return err
 }
 
 var _ api.Meter = (*OpenWB)(nil)
