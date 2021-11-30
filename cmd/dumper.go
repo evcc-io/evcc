@@ -183,7 +183,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}
 		if v.OnIdentified() != nil {
-			fmt.Fprintf(w, "OnIdentified:\t%v\n", v.OnIdentified())
+			fmt.Fprintf(w, "OnIdentified:\t%+v\n", *v.OnIdentified())
 		}
 	}
 
