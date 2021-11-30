@@ -27,43 +27,39 @@
 			</div>
 			<div
 				class="site-progress-bar grid-import"
+				v-tooltip="{
+					content: `Zu wenig Überschuss. Pausiere Ladung in ${Math.round(
+						Math.random() * 60
+					)}s`,
+					disabled: !disableTimerActive,
+				}"
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport, disableTimerActive)">
 					{{ kw(gridImport) }}
-					<fa-icon
-						icon="pause-circle"
-						class="pulse"
-						v-tooltip="
-							'Zu wenig Überschuss. Pausiere Ladung in ' +
-							Math.round(Math.random() * 60) +
-							's'
-						"
-					></fa-icon>
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport, disableTimerActive)">
 					{{ kwNoUnit(gridImport) }}
 				</span>
+				<fa-icon v-if="disableTimerActive" icon="pause-circle" class="pulse"></fa-icon>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
+				v-tooltip="{
+					content: `Ausreichend Überschuss. Starte Ladung in ${Math.round(
+						Math.random() * 60
+					)}s`,
+					disabled: !enableTimerActive,
+				}"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
+				<span class="power" v-if="powerLabelEnoughSpace(pvExport, enableTimerActive)">
 					{{ kw(pvExport) }}
-					<fa-icon
-						icon="play-circle"
-						class="pulse"
-						v-tooltip="
-							'Ausreichend Überschuss. Starte Ladung in ' +
-							Math.round(Math.random() * 60) +
-							's'
-						"
-					></fa-icon>
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
+				<span class="power" v-else-if="powerLabelSomeSpace(pvExport, enableTimerActive)">
 					{{ kwNoUnit(pvExport) }}
 				</span>
+				<fa-icon v-if="enableTimerActive" icon="play-circle" class="pulse"></fa-icon>
 			</div>
 			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
@@ -143,6 +139,12 @@ export default {
 		totalAdjusted: function () {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
+		enableTimerActive: function () {
+			return true;
+		},
+		disableTimerActive: function () {
+			return true;
+		},
 	},
 	watch: {
 		showDetails: function () {
@@ -171,11 +173,13 @@ export default {
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		powerLabelEnoughSpace(power) {
-			return this.powerLabelAvailableSpace(power) > 60;
+		powerLabelEnoughSpace(power, withIcon) {
+			const limit = withIcon ? 80 : 60;
+			return this.powerLabelAvailableSpace(power) > limit;
 		},
-		powerLabelSomeSpace(power) {
-			return this.powerLabelAvailableSpace(power) > 35;
+		powerLabelSomeSpace(power, withIcon) {
+			const limit = withIcon ? 55 : 35;
+			return this.powerLabelAvailableSpace(power) > limit;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
