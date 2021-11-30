@@ -163,6 +163,20 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.Vehicle); ok {
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		if v.Identifiers() != nil {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+		}
+		if v.OnIdentified() != nil {
+			if data, err := json.Marshal(v.OnIdentified()); err != nil {
+				fmt.Fprintf(w, "OnIdentified:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "OnIdentified:\t%s\n", data)
+			}
+		}
+	}
+
 	// Identity
 
 	if v, ok := v.(api.Identifier); ok {
@@ -176,20 +190,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnose()
-	}
-
-	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
-		if v.Identifiers() != nil {
-			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
-		}
-		if v.OnIdentified() != nil {
-			if data, err := json.Marshal(v.OnIdentified()); err != nil {
-				fmt.Fprintf(w, "OnIdentified:\t%v\n", err)
-			} else {
-				fmt.Fprintf(w, "OnIdentified:\t%s\n", data)
-			}
-		}
 	}
 
 	w.Flush()
