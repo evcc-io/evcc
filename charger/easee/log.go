@@ -21,7 +21,7 @@ func SignalrLogger(log Logger) signalr.StructuredLogger {
 	return &logger{log: log}
 }
 
-var skipped = []string{"ts", "class", "hub", "protocol"}
+var skipped = []string{"ts", "class", "hub", "protocol", "value"}
 
 func (l *logger) Log(keyVals ...interface{}) error {
 	b := new(strings.Builder)

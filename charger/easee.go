@@ -120,6 +120,8 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	)
 
 	if err == nil {
+		c.subscribe(client)
+
 		client.Start()
 
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
@@ -127,14 +129,10 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		err = <-client.WaitForState(ctx, signalr.ClientConnected)
 	}
 
-	if err == nil {
-		err = <-client.Send("SubscribeWithCurrentState", c.charger, true)
-	}
-
 	return c, err
 }
 
-// subscribe connects to the signalR hub
+// connect creates an HTTP connectionto the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	return func() (signalr.Connection, error) {
 		tok, err := ts.Token()
@@ -156,6 +154,23 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 	}
 }
 
+// subscribe listen to state changes and sends subscription requests when connection is established
+func (c *Easee) subscribe(client signalr.Client) {
+	stateC := make(chan struct{}, 1)
+	_ = client.ObserveStateChanged(stateC)
+
+	go func() {
+		for range stateC {
+			if client.State() == signalr.ClientConnected {
+				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
+					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
+				}
+			}
+		}
+	}()
+}
+
+// observe handles the subscription messages
 func (c *Easee) observe(typ string, i json.RawMessage) {
 	var res easee.Observation
 	err := json.Unmarshal(i, &res)
