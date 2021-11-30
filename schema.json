@@ -148,6 +148,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "template": {
+          "type": "string"
         }
       }
     },
