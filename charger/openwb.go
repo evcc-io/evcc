@@ -112,7 +112,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	// setters
 	currentTopic := openwb.SlaveChargeCurrentTopic
 	if id == 2 {
-		// TODO remove after openWB bugfix
+		// TODO remove after https://github.com/snaptec/openWB/issues/1757
 		currentTopic = "Lp2" + openwb.SlaveChargeCurrentTopic
 	}
 	currentS := provider.NewMqtt(log, client,
@@ -162,7 +162,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	if p1p3 {
 		phasesTopic := openwb.SlavePhasesTopic
 		if id == 2 {
-			// TODO remove after openWB bugfix
+			// TODO remove after https://github.com/snaptec/openWB/issues/1757
 			phasesTopic += "Lp2"
 		}
 		phasesS := provider.NewMqtt(log, client,

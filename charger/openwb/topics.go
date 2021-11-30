@@ -42,7 +42,7 @@ const (
 
 	// loadpoint only topics
 
-	// TODO cleanup after openWB bugfix
+	// TODO cleanup after https://github.com/snaptec/openWB/issues/1757
 	// openWB/set/isss/heartbeat
 	// openWB/set/isss/ClearRfid
 	// openWB/set/isss/Cpulp1
