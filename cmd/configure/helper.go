@@ -108,15 +108,22 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
 		fmt.Println()
+		fmt.Println("-- EEBUS -----------------------------------")
+		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Title", nil))
 		fmt.Println("  ", templateItem.Requirements.Description.String(c.lang))
 		if len(templateItem.Requirements.URI) > 0 {
 			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
+		fmt.Println()
+		fmt.Println("--------------------------------------------")
+		fmt.Println()
 	}
 
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
+		fmt.Println()
+		fmt.Println("-- Sponsorship -----------------------------")
 		fmt.Println()
 		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
 		fmt.Println()
@@ -128,6 +135,9 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 			required: true})
 		c.configuration.config.SponsorToken = sponsortoken
 		sponsor.Subject = sponsortoken
+		fmt.Println()
+		fmt.Println("--------------------------------------------")
+		fmt.Println()
 	}
 
 	// check if we need to setup a HEMS
