@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -183,7 +184,11 @@ func (d *dumper) Dump(name string, v interface{}) {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 		}
 		if v.OnIdentified() != nil {
-			fmt.Fprintf(w, "OnIdentified:\t%+v\n", *v.OnIdentified())
+			if data, err := json.Marshal(v.OnIdentified()); err != nil {
+				fmt.Fprintf(w, "OnIdentified:\t%v\n", err)
+			} else {
+				fmt.Fprintf(w, "OnIdentified:\t%s\n", data)
+			}
 		}
 	}
 

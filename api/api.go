@@ -42,11 +42,11 @@ func (c ChargeStatus) String() string {
 
 // ActionConfig defines an action to take on event
 type ActionConfig struct {
-	Mode       ChargeMode `mapstructure:"mode"`       // Charge mode
-	MinCurrent float64    `mapstructure:"minCurrent"` // Minimum Current
-	MaxCurrent float64    `mapstructure:"maxCurrent"` // Maximum Current
-	MinSoC     int        `mapstructure:"minSoC"`     // Minimum SoC
-	TargetSoC  int        `mapstructure:"targetSoC"`  // Target SoC
+	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
+	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
 }
 
 // Meter is able to provide current power in W

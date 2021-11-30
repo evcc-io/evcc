@@ -21,6 +21,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
+	"github.com/cjrd/allocate"
 )
 
 const (
@@ -250,12 +251,19 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 
 // collectDefaults collects default values for use on disconnect
 func (lp *LoadPoint) collectDefaults() {
-	lp.onDisconnect = api.ActionConfig{
-		Mode:       lp.GetMode(),
-		MinCurrent: lp.GetMinCurrent(),
-		MaxCurrent: lp.GetMaxCurrent(),
-		MinSoC:     lp.GetMinSoC(),
-		TargetSoC:  lp.GetTargetSoC(),
+	// get reference to action config
+	actionCfg := &lp.onDisconnect
+
+	// allocate action config such that all pointer fields are fully allocated
+	if err := allocate.Zero(actionCfg); err == nil {
+		// initialize with default values
+		*actionCfg.Mode = lp.GetMode()
+		*actionCfg.MinCurrent = lp.GetMinCurrent()
+		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
+		*actionCfg.MinSoC = lp.GetMinSoC()
+		*actionCfg.TargetSoC = lp.GetTargetSoC()
+	} else {
+		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
 }
 
@@ -420,20 +428,20 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 // applyAction executes the action
 func (lp *LoadPoint) applyAction(action *api.ActionConfig) {
 	if action != nil {
-		if action.Mode != api.ModeEmpty {
-			lp.SetMode(action.Mode)
+		if action.Mode != nil {
+			lp.SetMode(*action.Mode)
 		}
-		if action.MinCurrent > 0 {
-			lp.SetMinCurrent(action.MinCurrent)
+		if action.MinCurrent != nil {
+			lp.SetMinCurrent(*action.MinCurrent)
 		}
-		if action.MaxCurrent > 0 {
-			lp.SetMaxCurrent(action.MaxCurrent)
+		if action.MaxCurrent != nil {
+			lp.SetMaxCurrent(*action.MaxCurrent)
 		}
-		if action.MinSoC >= 0 {
-			lp.SetMinSoC(action.MinSoC)
+		if action.MinSoC != nil {
+			lp.SetMinSoC(*action.MinSoC)
 		}
-		if action.TargetSoC > 0 {
-			lp.SetTargetSoC(action.TargetSoC)
+		if action.TargetSoC != nil {
+			lp.SetTargetSoC(*action.TargetSoC)
 		}
 	}
 }
