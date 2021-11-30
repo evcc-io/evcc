@@ -1,0 +1,23 @@
+template: fiat
+description: Fiat
+paramsbase: vehicle
+params:
+- name: pin
+- name: vin
+  example: ZFAE...
+- name: capacity
+  default: 42
+render: |
+  type: fiat
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}
+  {{- if ne .pin "" }}
+  pin: {{ .pin }} #mandatory to deep refresh SoC
+  {{- end }}

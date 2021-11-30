@@ -1,0 +1,14 @@
+template: nissan
+description: Nissan
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 60
+render: |
+  type: nissan
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  capacity: {{ .capacity }}

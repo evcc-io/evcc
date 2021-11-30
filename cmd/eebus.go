@@ -7,7 +7,6 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	certhelper "github.com/evcc-io/eebus/cert"
-	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
@@ -37,12 +36,7 @@ eebus:
 `
 
 func generateEEBUSCert() {
-	details := communication.ManufacturerDetails{
-		DeviceName:    "EVCC",
-		DeviceCode:    "EVCC_HEMS_01",
-		DeviceAddress: "EVCC_HEMS",
-		BrandName:     "EVCC",
-	}
+	details := server.EEBUSDetails
 
 	subject := pkix.Name{
 		CommonName:   details.DeviceCode,

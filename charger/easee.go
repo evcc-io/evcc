@@ -203,7 +203,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.dynamicChargerCurrent = value.(float64)
 		// ensure that charger current matches evcc's expectation
 		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
-			if err = c.MaxCurrentMillis(c.current); err != nil {
+			if err = c.MaxCurrent(int64(c.current)); err != nil {
 				c.log.ERROR.Println(err)
 			}
 		}
@@ -307,21 +307,15 @@ func (c *Easee) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *Easee) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
-}
-
-var _ api.ChargerEx = (*Easee)(nil)
-
-// MaxCurrentMillis implements the api.ChargerEx interface
-func (c *Easee) MaxCurrentMillis(current float64) error {
+	cur := float64(current)
 	data := easee.ChargerSettings{
-		DynamicChargerCurrent: &current,
+		DynamicChargerCurrent: &cur,
 	}
 
 	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
 	if err == nil {
-		c.current = current
+		c.current = cur
 		resp.Body.Close()
 	}
 

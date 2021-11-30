@@ -1,0 +1,34 @@
+template: senec_home_linux
+description: SENEC.Home (Linux)
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 8080
+render: |
+  type: custom
+  power:
+    source: script
+    timeout: 5s
+    cmd: >
+  {{- if eq .usage "grid" }}
+      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_GRID_POW\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_GRID_POW | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_INVERTER_POWER\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_INVERTER_POWER | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+  {{- end }}
+  {{- if eq .usage "battery" }}
+      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_BAT_DATA_POWER\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_BAT_DATA_POWER | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    scale: -1
+  soc:
+    source: script
+    cmd: >
+      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_BAT_DATA_FUEL_CHARGE\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    timeout: 5s
+  {{- end }}

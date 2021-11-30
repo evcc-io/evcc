@@ -1,0 +1,22 @@
+template: lg_ess_home_8_10
+description: LG ESS Home 8/10
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: registration
+  required: true
+  example: "DE200..."
+  help: 
+    en: Registration number of the LG ESS HOME inverter.
+    de: Registriernummer des LG ESS HOME Wechselrichters.
+render: |
+  type: lgess
+  usage: {{ .usage }}
+  # uri and password are only required once if multiple lgess usages are defined
+  uri: https://{{ .host }}
+  password: {{ .registration }}
