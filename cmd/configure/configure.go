@@ -61,7 +61,7 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
 	case DeviceClassCharger:
 		c.AddLogLevel(d.LogLevel)
-		if c.config.EEBUS == "" {
+		if c.config.EEBUS != "" {
 			c.AddLogLevel("eebus")
 		}
 		c.config.Chargers = append(c.config.Chargers, d)
