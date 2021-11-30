@@ -50,6 +50,7 @@ type Configure struct {
 	config config
 }
 
+// Add a log level for a specific device name to the configuration
 func (c *Configure) AddLogLevel(name string) {
 	if name == "" || funk.ContainsString(c.config.LogLevels, name) {
 		return
@@ -57,6 +58,8 @@ func (c *Configure) AddLogLevel(name string) {
 	c.config.LogLevels = append(c.config.LogLevels, name)
 }
 
+// add a device reference of a specific category to the configuration
+// e.g. a PV meter to site.PVs
 func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
 	case DeviceClassCharger:
