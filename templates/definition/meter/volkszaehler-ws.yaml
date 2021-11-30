@@ -1,5 +1,5 @@
-template: vzlogger-ws
-description: vzlogger (Websocket)
+template: volkszaehler-ws
+description: Volkszähler (WebSocket API)
 generic: true
 params:
 - name: usage

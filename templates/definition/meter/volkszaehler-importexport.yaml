@@ -1,5 +1,5 @@
-template: vzlogger-importexport
-description: vzlogger (Import & Export getrennt)
+template: volkszaehler-importexport
+description: Volkszähler (HTTP API, Import & Export)
 generic: true
 params:
 - name: usage

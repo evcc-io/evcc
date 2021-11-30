@@ -1,5 +1,5 @@
-template: vzlogger-http
-description: vzlogger (HTTP)
+template: volkszaehler-http
+description: Volkszähler (HTTP API)
 generic: true
 params:
 - name: usage
