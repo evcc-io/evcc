@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
@@ -130,6 +131,9 @@ type Template struct {
 	Params       []Param
 	Render       string // rendering template
 }
+
+//go:embed renderbase-vehicle.tpl
+var renderbaseVehicleTmpl string
 
 var paramBases = map[string][]Param{
 	"vehicle": {
@@ -272,6 +276,11 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 	}
 
 	t.ModbusValues(values)
+
+	// add the renderbase templates
+	if !strings.Contains(t.Render, renderbaseVehicleTmpl) {
+		t.Render = fmt.Sprintf("%s\n%s", t.Render, renderbaseVehicleTmpl)
+	}
 
 	for item, p := range values {
 		values[item] = yamlQuote(fmt.Sprintf("%v", p))
