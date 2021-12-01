@@ -19,31 +19,28 @@ package charger
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // Alfen charger implementation
 type Alfen struct {
 	conn *modbus.Connection
-	// curr uint16
+	curr float64
 }
 
 const (
-	// alfenRegName         = 100
-	// alfenRegManufacturer = 117
-	// alfenRegFirmware     = 123
-	alfenRegPower        = 344
-	alfenRegAvailability = 1200
-	alfenRegStatus       = 1201 // 5 registers
-	alfenRegAmpsConfig   = 1210
-	alfenRegPhases       = 1215
+	alfenRegPower      = 344
+	alfenRegEnergy     = 390
+	alfenRegStatus     = 1201 // 5 registers
+	alfenRegAmpsConfig = 1210
+	alfenRegPhases     = 1215
 )
 
 var alfenRegCurrents = []uint16{320, 322, 324}
@@ -67,21 +64,21 @@ func NewAlfenFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewAlfen creates Alfen charger
 func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Charger, error) {
-	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.AsciiFormat, slaveID)
+	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.TcpFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}
 
-	// if !sponsor.IsAuthorized() {
-	// 	return nil, api.ErrSponsorRequired
-	// }
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
+	}
 
 	log := util.NewLogger("alfen")
 	conn.Logger(log.TRACE)
 
 	wb := &Alfen{
 		conn: conn,
-		// curr: uint16(6 / 0.06),
+		curr: 6,
 	}
 
 	return wb, err
@@ -93,38 +90,33 @@ func (wb *Alfen) Status() (api.ChargeStatus, error) {
 	if err != nil {
 		return api.StatusNone, err
 	}
-	_ = b
 
-	// r := rune(b[1]>>4-0x0A) + 'A'
-
-	// switch r {
-	// case 'A', 'B', 'C':
-	// 	return api.ChargeStatus(r), nil
-	// default:
-	// 	status, ok := ablStatus[b[1]]
-	// 	if !ok {
-	// 		status = string(r)
-	// 	}
-
-	// 	return api.StatusNone, fmt.Errorf("invalid status: %s", status)
-	// }
-
-	return api.StatusNone, fmt.Errorf("invalid status: %0x", b)
+	switch r := rune(b[0]); r {
+	case 'A', 'B', 'C', 'D', 'E', 'F':
+		return api.ChargeStatus(r), nil
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
+	}
 }
 
 // Enabled implements the api.Charger interface
 func (wb *Alfen) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(alfenRegAvailability, 1)
+	b, err := wb.conn.ReadHoldingRegisters(alfenRegAmpsConfig, 2)
 	if err != nil {
 		return false, err
 	}
 
-	return b[0] == 0xFF, nil
+	return math.Float32frombits(binary.BigEndian.Uint32(b)) > 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Alfen) Enable(enable bool) error {
-	return errors.New("not implemented")
+	var curr float64
+	if enable {
+		curr = wb.curr
+	}
+
+	return wb.MaxCurrentMillis(curr)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -140,6 +132,9 @@ func (wb *Alfen) MaxCurrentMillis(current float64) error {
 	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
 	_, err := wb.conn.WriteMultipleRegisters(alfenRegAmpsConfig, 2, b)
+	if err == nil {
+		wb.curr = current
+	}
 
 	return err
 }
@@ -149,7 +144,31 @@ var _ api.Meter = (*Alfen)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *Alfen) CurrentPower() (float64, error) {
 	b, err := wb.conn.ReadHoldingRegisters(alfenRegPower, 2)
+	if err != nil {
+		return 0, err
+	}
+
 	return rs485.RTUIeee754ToFloat64(b), err
+}
+
+var _ api.MeterEnergy = (*Alfen)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (wb *Alfen) TotalEnergy() (float64, error) {
+	b, err := wb.conn.ReadHoldingRegisters(366, 4)
+
+	if err != nil {
+		return 0, err
+	}
+
+	// u := binary.BigEndian.Uint64(b)
+	// fmt.Printf("%0x\n", u)
+	// u2 := u>>32 | (u&0xffffffff)<<32
+	// f := math.Float64frombits(u2)
+	// fmt.Printf("%0x\n", u2)
+	// return f / 1e3, err
+
+	return rs485.RTUUint64ToFloat64(b) / 1e3, err
 }
 
 var _ api.MeterCurrent = (*Alfen)(nil)
