@@ -233,7 +233,7 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 // processConfig processes an EVCC configuration item
 // Returns:
 //   a map with param name and values
-func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory DeviceCategory, includeAdvanced bool) map[string]interface{} {
+func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
 	usageFilter := DeviceCategories[deviceCategory].categoryFilter
 
 	additionalConfig := make(map[string]interface{})
@@ -327,7 +327,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 				}
 			}
 		} else if param.Name != templates.ParamUsage {
-			if !includeAdvanced && param.Advanced {
+			if !c.advancedMode && param.Advanced {
 				continue
 			}
 

@@ -29,14 +29,15 @@ type CmdConfigure struct {
 	log           *util.Logger
 
 	lang                                 string
-	expandedMode                         bool
+	advancedMode, expandedMode           bool
 	addedDeviceIndex                     int
 	errItemNotPresent, errDeviceNotValid error
 }
 
 // Run starts the interactive configuration
-func (c *CmdConfigure) Run(log *util.Logger, flagLang string, expandedMode bool) {
+func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expandedMode bool) {
 	c.log = log
+	c.advancedMode = advancedMode
 	c.expandedMode = expandedMode
 
 	c.log.INFO.Printf("evcc %s (%s)", server.Version, server.Commit)
