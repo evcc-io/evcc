@@ -24,9 +24,13 @@ type Device struct {
 func (d *Device) StartUpdateLoop() {
 	d.once.Do(func() {
 		go func() {
-			d.UpdateValues()
+			if err := d.UpdateValues(); err != nil {
+				d.log.ERROR.Println(err)
+			}
 			for range time.NewTicker(time.Second * 5).C {
-				d.UpdateValues()
+				if err := d.UpdateValues(); err != nil {
+					d.log.ERROR.Println(err)
+				}
 			}
 		}()
 	})
@@ -40,10 +44,6 @@ func (d *Device) UpdateValues() error {
 	if err == nil {
 		err = mergo.Merge(&d.values, values, mergo.WithOverride)
 		d.mux.Update()
-	}
-
-	if err != nil {
-		d.log.ERROR.Println(err)
 	}
 
 	return err
