@@ -256,6 +256,26 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 		}
 	}
 
+	// remove params with no values
+	var newParams []Param
+	for _, param := range t.Params {
+		if !param.Required {
+			switch param.ValueType {
+			case ParamValueTypeListString:
+				if len(param.Values) == 0 {
+					continue
+				}
+			default:
+				if param.Value == "" {
+					continue
+				}
+			}
+		}
+		newParams = append(newParams, param)
+	}
+
+	t.Params = newParams
+
 	out := new(bytes.Buffer)
 	data := map[string]interface{}{
 		"Template": t.Template,
