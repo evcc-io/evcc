@@ -76,10 +76,10 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	// call UpdateValues first to check if we get an error
 	if err = sm.device.UpdateValues(); err != nil {
 		return nil, err
-	} else {
-		// start update loop manually to get values as fast as possible
-		sm.device.StartUpdateLoop()
 	}
+
+	// start update loop manually to get values as fast as possible
+	sm.device.StartUpdateLoop()
 
 	// decorate api.Battery in case of inverter
 	var soc func() (float64, error)
