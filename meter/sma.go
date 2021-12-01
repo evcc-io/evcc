@@ -74,7 +74,7 @@ func NewSMA(uri, password, iface string, serial uint32, scale float64) (api.Mete
 	}
 
 	// call UpdateValues first to check if we get an error
-	if err = sm.device.UpdateValues(); err != nil {
+	if err := sm.device.UpdateValues(); err != nil {
 		return nil, err
 	}
 
