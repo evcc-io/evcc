@@ -1,6 +1,10 @@
 package api
 
-import "time"
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
@@ -47,6 +51,15 @@ type ActionConfig struct {
 	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
 	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
 	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+}
+
+// String implements Stringer
+func (a ActionConfig) String() string {
+	if data, err := json.Marshal(a); err != nil {
+		return fmt.Sprintf("%v\n", err)
+	} else {
+		return fmt.Sprintf("%s\n", data)
+	}
 }
 
 // Meter is able to provide current power in W

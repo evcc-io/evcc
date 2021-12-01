@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -166,11 +165,7 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 		fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
-		if data, err := json.Marshal(v.OnIdentified()); err != nil {
-			fmt.Fprintf(w, "OnIdentified:\t%v\n", err)
-		} else {
-			fmt.Fprintf(w, "OnIdentified:\t%s\n", data)
-		}
+		fmt.Fprintf(w, "OnIdentified:\t%v\n", v.OnIdentified())
 	}
 
 	// Identity
