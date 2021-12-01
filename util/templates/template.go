@@ -233,26 +233,20 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 
 	for index, p := range t.Params {
 		for k, v := range values {
-			if p.Name == k {
-				t.Params[index].Value = v.(string)
+			if p.Name != k {
+				continue
+			}
+
+			switch p.ValueType {
+			case ParamValueTypeListString:
+				for _, e := range v.([]string) {
+					t.Params[index].Values = append(p.Values, yamlQuote(e))
+				}
+			default:
+				t.Params[index].Value = yamlQuote(v.(string))
 			}
 		}
 	}
-
-	// remove params with no values, no defaults and no example
-	var newParams []Param
-	for _, param := range t.Params {
-		if param.Value == "" && param.Default == "" && param.Example == "" && !param.Required {
-			continue
-		}
-		newParams = append(newParams, param)
-	}
-
-	for index, p := range newParams {
-		newParams[index].Value = yamlQuote(p.Value)
-	}
-
-	t.Params = newParams
 
 	out := new(bytes.Buffer)
 	data := map[string]interface{}{
