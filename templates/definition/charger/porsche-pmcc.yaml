@@ -1,6 +1,5 @@
 template: pmcc
 description: Porsche Mobile Charger Connect
-loglevel: eebus
 requirements:
   eebus: true
 params:

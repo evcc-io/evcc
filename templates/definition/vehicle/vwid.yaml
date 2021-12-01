@@ -1,6 +1,5 @@
 template: id
 description: Volkswagen (We Connect ID)
-loglevel: id
 paramsbase: vehicle
 params:
 - name: vin
