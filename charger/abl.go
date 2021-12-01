@@ -29,7 +29,6 @@ import (
 
 // ABLeMH charger implementation
 type ABLeMH struct {
-	log  *util.Logger
 	conn *modbus.Connection
 	curr uint16
 }
@@ -105,7 +104,6 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 	conn.Logger(log.TRACE)
 
 	wb := &ABLeMH{
-		log:  log,
 		conn: conn,
 		curr: uint16(6 / 0.06),
 	}
