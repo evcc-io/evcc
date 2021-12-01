@@ -275,6 +275,10 @@ func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 		newValue := c.processInputConfig(param)
 		values = append(values, newValue)
 
+		if newValue == "" {
+			break
+		}
+
 		if !c.askYesNo("  " + c.localizedString("Config_AddAnotherValue", nil)) {
 			break
 		}
