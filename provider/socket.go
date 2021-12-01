@@ -70,7 +70,10 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		p.headers["Authorization"] = transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
+		basicAuth := transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
+		log.Redact(basicAuth)
+
+		p.headers["Authorization"] = basicAuth
 	}
 
 	// ignore the self signed certificate
