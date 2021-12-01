@@ -23,6 +23,7 @@ var acceptable = []string{
 	"can only have either uri or device", // modbus
 	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
 	"eebus not configured",
+	"unexpected status: 400", // easee
 }
 
 func TestConfigChargers(t *testing.T) {
