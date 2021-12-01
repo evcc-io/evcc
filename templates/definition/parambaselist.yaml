@@ -1,0 +1,36 @@
+vehicle:
+  params:
+  - name: title
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: vin
+    example: W...
+  - name: capacity
+    default: '50'
+    valueType: float
+  - name: identifiers
+    advanced: true
+    valueType: stringlist
+  render: |
+    {{define "vehicle-common"}}
+    {{- if ne .title "" }}
+    title: {{ .title }}
+    {{- end }}
+    user: {{ .user }}
+    password: {{ .password }}
+    {{- if ne .capacity "" }}
+    capacity: {{ .capacity }}
+    {{- end }}
+    {{- if ne .vin "" }}
+    vin: {{ .vin }}
+    {{- end }}
+    {{- if ne (len .identifiers) 0 }}
+    identifiers:
+    {{-   range .identifiers }}
+    - {{ . }}
+    {{-   end }}
+    {{- end }}
+    {{end}}

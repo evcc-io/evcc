@@ -8,6 +8,7 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/evcc-io/evcc/util"
 	"gopkg.in/yaml.v3"
 )
@@ -127,9 +128,6 @@ type ParamBase struct {
 	Render string
 }
 
-//go:embed parambaselist.yaml
-var paramBaseListDefinition string
-
 var paramBaseList map[string]ParamBase
 
 // Template describes is a proxy device for use with cli and automated testing
@@ -151,7 +149,7 @@ func (t *Template) ResolveParamBase() {
 	}
 
 	if paramBaseList == nil {
-		err := yaml.Unmarshal([]byte(paramBaseListDefinition), &paramBaseList)
+		err := yaml.Unmarshal([]byte(definition.ParamBaseListDefinition), &paramBaseList)
 		if err != nil {
 			fmt.Printf("Error: failed to parse paramBasesDefinition: %v\n", err)
 			return
