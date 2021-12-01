@@ -201,6 +201,9 @@ func (p *HTTP) WithScript(vm, script string) (*HTTP, error) {
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
+		basicAuth := transport.BasicAuthHeader(user, password)
+		log.Redact(basicAuth)
+
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)

@@ -38,7 +38,9 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN)
+	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
+
+	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)
 
 	v := &Volvo{
 		embed:  &cc.embed,
@@ -49,7 +51,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.Client.Transport = &transport.Decorator{
 		Base: v.Client.Transport,
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization":     transport.BasicAuthHeader(cc.User, cc.Password),
+			"Authorization":     basicAuth,
 			"Content-Type":      "application/json",
 			"X-Device-Id":       "Device",
 			"X-OS-Type":         "Android",
