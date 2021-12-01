@@ -172,11 +172,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		}
 	}
 
-	// set default SoC target to 100%, if not initialized
-	if lp.SoC.Target == 0 {
-		lp.SoC.Target = 100
-	}
-
 	if lp.MinCurrent == 0 {
 		lp.log.WARN.Println("minCurrent must not be zero")
 	}
@@ -241,8 +236,9 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Mode:          api.ModeOff,
 		Phases:        3,
 		status:        api.StatusNone,
-		MinCurrent:    6,  // A
-		MaxCurrent:    16, // A
+		MinCurrent:    6,                              // A
+		MaxCurrent:    16,                             // A
+		SoC:           SoCConfig{Min: 0, Target: 100}, // %
 		GuardDuration: 5 * time.Minute,
 	}
 
