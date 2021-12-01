@@ -11,7 +11,6 @@ import (
 type device struct {
 	Name            string
 	Title           string
-	LogLevel        string
 	Yaml            string
 	ChargerHasMeter bool // only used with chargers to detect if we need to ask for a charge meter
 }
