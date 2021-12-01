@@ -71,12 +71,12 @@ func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetMinSoC(soc)
+			apiHandler.SetMinSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetTargetSoC(soc)
+			apiHandler.SetTargetSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {

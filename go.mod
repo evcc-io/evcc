@@ -14,6 +14,7 @@ require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/bogosj/tesla v1.0.2
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cjrd/allocate v0.0.0-20191115010018-022b87fe59fc
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21
 	github.com/containrrr/shoutrrr v0.5.2
 	github.com/deepmap/oapi-codegen v1.9.0 // indirect

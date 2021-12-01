@@ -21,6 +21,7 @@ import (
 	evbus "github.com/asaskevich/EventBus"
 	"github.com/avast/retry-go/v3"
 	"github.com/benbjohnson/clock"
+	"github.com/cjrd/allocate"
 )
 
 const (
@@ -171,13 +172,6 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		}
 	}
 
-	if lp.SoC.Target == 0 {
-		lp.SoC.Target = lp.onDisconnect.TargetSoC // use disconnect value as default soc
-		if lp.SoC.Target == 0 {
-			lp.SoC.Target = 100
-		}
-	}
-
 	if lp.MinCurrent == 0 {
 		lp.log.WARN.Println("minCurrent must not be zero")
 	}
@@ -242,8 +236,9 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 		Mode:          api.ModeOff,
 		Phases:        3,
 		status:        api.StatusNone,
-		MinCurrent:    6,  // A
-		MaxCurrent:    16, // A
+		MinCurrent:    6,                              // A
+		MaxCurrent:    16,                             // A
+		SoC:           SoCConfig{Min: 0, Target: 100}, // %
 		GuardDuration: 5 * time.Minute,
 	}
 
@@ -252,12 +247,19 @@ func NewLoadPoint(log *util.Logger) *LoadPoint {
 
 // collectDefaults collects default values for use on disconnect
 func (lp *LoadPoint) collectDefaults() {
-	lp.onDisconnect = api.ActionConfig{
-		Mode:       lp.GetMode(),
-		MinCurrent: lp.GetMinCurrent(),
-		MaxCurrent: lp.GetMaxCurrent(),
-		MinSoC:     lp.GetMinSoC(),
-		TargetSoC:  lp.GetTargetSoC(),
+	// get reference to action config
+	actionCfg := &lp.onDisconnect
+
+	// allocate action config such that all pointer fields are fully allocated
+	if err := allocate.Zero(actionCfg); err == nil {
+		// initialize with default values
+		*actionCfg.Mode = lp.GetMode()
+		*actionCfg.MinCurrent = lp.GetMinCurrent()
+		*actionCfg.MaxCurrent = lp.GetMaxCurrent()
+		*actionCfg.MinSoC = lp.GetMinSoC()
+		*actionCfg.TargetSoC = lp.GetTargetSoC()
+	} else {
+		lp.log.ERROR.Printf("error allocating action config: %v", err)
 	}
 }
 
@@ -420,29 +422,21 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 }
 
 // applyAction executes the action
-func (lp *LoadPoint) applyAction(action api.ActionConfig) {
-	if action.Mode != api.ModeEmpty {
-		lp.SetMode(action.Mode)
+func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
+	if actionCfg.Mode != nil {
+		lp.SetMode(*actionCfg.Mode)
 	}
-	if action.MinCurrent > 0 {
-		lp.SetMinCurrent(action.MinCurrent)
+	if actionCfg.MinCurrent != nil {
+		lp.SetMinCurrent(*actionCfg.MinCurrent)
 	}
-	if action.MaxCurrent > 0 {
-		lp.SetMaxCurrent(action.MaxCurrent)
+	if actionCfg.MaxCurrent != nil {
+		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
 	}
-	if action.MinSoC != 0 {
-		// TODO deduplicate with SetMinSoC
-		lp.Lock()
-		lp.SoC.Min = action.MinSoC
-		lp.publish("minSoC", action.MinSoC)
-		lp.Unlock()
+	if actionCfg.MinSoC != nil {
+		lp.SetMinSoC(*actionCfg.MinSoC)
 	}
-	if action.TargetSoC != 0 {
-		// TODO deduplicate with SetTargetSoC
-		lp.Lock()
-		lp.SoC.Target = action.TargetSoC
-		lp.publish("targetSoC", action.TargetSoC)
-		lp.Unlock()
+	if actionCfg.TargetSoC != nil {
+		lp.SetTargetSoC(*actionCfg.TargetSoC)
 	}
 }
 

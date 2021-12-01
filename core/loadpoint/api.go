@@ -36,11 +36,11 @@ type API interface {
 	// GetTargetSoC returns the charge target soc
 	GetTargetSoC() int
 	// SetTargetSoC sets the charge target soc
-	SetTargetSoC(int) error
+	SetTargetSoC(int)
 	// GetMinSoC returns the charge minimum soc
 	GetMinSoC() int
 	// SetMinSoC sets the charge minimum soc
-	SetMinSoC(int) error
+	SetMinSoC(int)
 	// GetPhases returns the enabled phases
 	GetPhases() int
 	// SetPhases sets the enabled phases
