@@ -1,5 +1,5 @@
-template: senec_home_linux
-description: SENEC.Home (Linux)
+template: senec-home
+description: SENEC.Home
 guidedsetup:
   enable: true
 params:
@@ -13,22 +13,34 @@ params:
 render: |
   type: custom
   power:
-    source: script
-    timeout: 5s
-    cmd: >
+    source: http
+    unpack: hex
+    decode: float32
+    uri: http://{{ .host }}/lala.cgi
+    method: POST
+    headers:
+    - content-type: application/json
   {{- if eq .usage "grid" }}
-      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_GRID_POW\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_GRID_POW | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    body: '{"ENERGY":{"GUI_GRID_POW":""}}'
+    jq: .ENERGY.GUI_GRID_POW | sub("fl_"; "")
     scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
-      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_INVERTER_POWER\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_INVERTER_POWER | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    body: '{"ENERGY":{"GUI_INVERTER_POWER":""}}'
+    jq: .ENERGY.GUI_INVERTER_POWER | sub("fl_"; "")
   {{- end }}
   {{- if eq .usage "battery" }}
-      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_BAT_DATA_POWER\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_BAT_DATA_POWER | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
+    body: '{"ENERGY":{"GUI_BAT_DATA_POWER":""}}'
+    jq: .ENERGY.GUI_BAT_DATA_POWER | sub("fl_"; "")
     scale: -1
   soc:
-    source: script
-    cmd: >
-      /bin/bash -c "set +H; curl --data '{\"ENERGY\":{\"GUI_BAT_DATA_FUEL_CHARGE\":\"\"}}' --header \"Content-Type: application/json\" --request POST http://{{ .host }}/lala.cgi | jq .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | python3 -c 'import struct;print(struct.unpack(\"!f\",bytes.fromhex(input()[4:12]))[0])'"
-    timeout: 5s
+    source: http
+    uri: http://{{ .host }}/lala.cgi
+    method: POST
+    headers:
+    - content-type: application/json
+    body: '{"ENERGY":{"GUI_BAT_DATA_FUEL_CHARGE":""}}'
+    jq: .ENERGY.GUI_BAT_DATA_FUEL_CHARGE | sub("fl_"; "")
+    unpack: hex
+    decode: float32
   {{- end }}

@@ -3,11 +3,9 @@ package configure
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/thoas/go-funk"
 )
 
 type device struct {
@@ -40,7 +38,6 @@ type config struct {
 		PVs       []string
 		Batteries []string
 	}
-	LogLevels    []string
 	Hems         string
 	EEBUS        string
 	SponsorToken string
@@ -50,26 +47,13 @@ type Configure struct {
 	config config
 }
 
-// AddLogLevel adds a log level for a specific device name to the configuration
-func (c *Configure) AddLogLevel(name string) {
-	if name == "" || funk.ContainsString(c.config.LogLevels, name) {
-		return
-	}
-	c.config.LogLevels = append(c.config.LogLevels, name)
-}
-
 // AddDevice adds a device reference of a specific category to the configuration
 // e.g. a PV meter to site.PVs
 func (c *Configure) AddDevice(d device, category DeviceCategory) {
 	switch DeviceCategories[category].class {
 	case DeviceClassCharger:
-		c.AddLogLevel(d.LogLevel)
-		if c.config.EEBUS != "" {
-			c.AddLogLevel("eebus")
-		}
 		c.config.Chargers = append(c.config.Chargers, d)
 	case DeviceClassMeter:
-		c.AddLogLevel(d.LogLevel)
 		c.config.Meters = append(c.config.Meters, d)
 		switch DeviceCategories[category].categoryFilter {
 		case DeviceCategoryGridMeter:
@@ -80,7 +64,6 @@ func (c *Configure) AddDevice(d device, category DeviceCategory) {
 			c.config.Site.Batteries = append(c.config.Site.Batteries, d.Name)
 		}
 	case DeviceClassVehicle:
-		c.AddLogLevel(d.LogLevel)
 		c.config.Vehicles = append(c.config.Vehicles, d)
 	}
 }
@@ -101,7 +84,6 @@ func (c *Configure) DevicesOfClass(class DeviceClass) []device {
 // AddLoadpoint adds a loadpoint to the configuration
 func (c *Configure) AddLoadpoint(l loadpoint) {
 	c.config.Loadpoints = append(c.config.Loadpoints, l)
-	c.AddLogLevel(fmt.Sprintf("lp-%d", 1+len(c.config.Loadpoints)))
 }
 
 // MetersOfCategory returns the number of configured meters of a given DeviceCategory

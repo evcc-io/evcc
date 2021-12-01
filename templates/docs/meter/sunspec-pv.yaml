@@ -1,6 +1,6 @@
 type: template
 template: sunspec
-description: SunSpec compliant inverter
+description: Inverter / Wechselrichter (SunSpec)
 usage: pv 
 host: 192.0.2.2 
 id: 1

@@ -1,9 +1,9 @@
-template: kostal_plenticore
+template: kostal-plenticore
 description: Kostal Plenticore Hybrid
 guidedsetup:
   enable: true
   linked:
-  - template: kostal_smart_energy_meter
+  - template: kostal-smart-energy-meter
     usage: grid
 params:
 - name: usage

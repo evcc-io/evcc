@@ -1,8 +1,0 @@
-type: template
-template: vzlogger_importexport
-description: vzlogger (Import & Export getrennt)
-usage: grid 
-host: 192.0.2.2 
-port: 80 
-importuuid:
-exportuuid:

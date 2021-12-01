@@ -1,0 +1,6 @@
+type: template
+template: kostal-smart-energy-meter
+description: Kostal Smart Energy Meter
+usage: grid 
+host: 192.0.2.2 
+port: 502

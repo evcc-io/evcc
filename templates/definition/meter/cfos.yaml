@@ -1,4 +1,4 @@
-template: cfos_meter
+template: cfos-meter
 description: cFos PowerBrain
 requirements:
   sponsorship: true

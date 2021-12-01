@@ -1,4 +1,4 @@
-template: tesla_powerwall
+template: tesla-powerwall
 description: Tesla Powerwall
 guidedsetup:
   enable: true

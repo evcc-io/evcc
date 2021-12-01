@@ -1,5 +1,0 @@
-type: template
-template: solarwatt_myreserve
-description: Solarwatt MyReserve
-usage: grid 
-host: 192.0.2.2

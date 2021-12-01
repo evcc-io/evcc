@@ -1,4 +1,4 @@
-template: powerfox_poweropti
+template: powerfox-poweropti
 description: Powerfox Poweropti (Cloud)
 params:
 - name: usage
