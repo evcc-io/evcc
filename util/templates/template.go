@@ -46,10 +46,11 @@ const (
 var HemsValueTypes = []string{HemsTypeSMA}
 
 const (
-	ParamValueTypeString = "string"
-	ParamValueTypeNumber = "number"
-	ParamValueTypeFloat  = "float"
-	ParamValueTypeBool   = "bool"
+	ParamValueTypeString     = "string"
+	ParamValueTypeNumber     = "number"
+	ParamValueTypeFloat      = "float"
+	ParamValueTypeBool       = "bool"
+	ParamValueTypeListString = "liststring"
 )
 
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
@@ -112,6 +113,7 @@ type Param struct {
 	Help      TextLanguage // cli configuration help
 	Test      string       // testing default value
 	Value     string       // user provided value via cli configuration
+	Values    []string     // user provided list of values
 	ValueType string       // string representation of the value type, "string" is default
 	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
 	Usages    []string
@@ -141,6 +143,7 @@ var paramBases = map[string][]Param{
 		{Name: "password", Required: true, Mask: true},
 		{Name: "vin", Example: "W..."},
 		{Name: "capacity", Default: "50", ValueType: ParamValueTypeFloat},
+		{Name: "identifiers", Advanced: true, ValueType: ParamValueTypeListString},
 	},
 }
 
@@ -276,7 +279,16 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 	}
 
 	for item, p := range values {
-		values[item] = yamlQuote(fmt.Sprintf("%v", p))
+		switch p.(type) {
+		case []string:
+			var list []string
+			for _, v := range p.([]string) {
+				list = append(list, yamlQuote(v))
+			}
+			values[item] = list
+		default:
+			values[item] = yamlQuote(fmt.Sprintf("%v", p))
+		}
 	}
 
 	tmpl := template.New("yaml")

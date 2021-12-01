@@ -75,6 +75,7 @@ Requirements_EEBUS_Pairing = "You selected a wallbox, which will be access via t
 
 Config_Title = "Please provide the following settings:"
 Config_ModbusInterface = "Choose the ModBus interface"
+Config_AddAnotherValue = "Do you want to add another value?"
 
 Cancel = "The configuration was cancelled.\n\nIf this guided configuration process doesn't work for you yet, please try the manual configuration. You can find more details about that on our website: https://docs.evcc.io/docs/installation/configuration\n"
 InputError = "An input error occurred:"

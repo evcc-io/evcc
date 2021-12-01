@@ -10,4 +10,10 @@ capacity: {{ .capacity }}
 {{- if ne .vin "" }}
 vin: {{ .vin }}
 {{- end }}
+{{- if ne (len .identifiers) 0 }}
+identifiers:
+{{-   range .identifiers }}
+- {{ . }}
+{{-   end }}
+{{- end }}
 {{end}}

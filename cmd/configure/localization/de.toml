@@ -75,6 +75,7 @@ Requirements_EEBUS_Pairing = "Du hast eine Wallbox ausgewählt, welche über das
 
 Config_Title = "Führe folgende Einstellungen durch:"
 Config_ModbusInterface = "Wähle die ModBus Schnittstelle aus"
+Config_AddAnotherValue = "Möchtest du einen weiteren Wert hinzufügen?"
 
 Cancel = "Die Konfiguration wurde abgebrochen.\n\nFalls diese geführte Konfiguration für dich noch nicht funktioniert, versuche es doch mal mit der manuellen Konfiguration. Details findest du auf der folgenden Webseite: https://docs.evcc.io/docs/installation/configuration\n"
 InputError = "Bei der Eingabe ist ein Fehler aufgetreten:"

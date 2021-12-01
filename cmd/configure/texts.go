@@ -81,7 +81,7 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 		if result.Help.String(c.lang) == "" {
 			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Vin_Help", nil))
 		}
-	case "identifier":
+	case "identifiers":
 		result.Name = c.localizedString("UserFriendly_Identifier_Name", nil)
 		if result.Help.String(c.lang) == "" {
 			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Identifier_Help", nil))

@@ -242,26 +242,23 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	fmt.Println()
 
 	for _, param := range paramItems {
-		if param.Name == templates.ParamModbus {
+		switch param.Name {
+		case templates.ParamModbus:
 			c.processModbusConfig(param, deviceCategory, additionalConfig)
-		} else if param.Name != templates.ParamUsage {
+		case templates.ParamUsage:
+			if usageFilter != "" {
+				additionalConfig[param.Name] = usageFilter.String()
+			}
+		default:
 			if !c.advancedMode && param.Advanced {
 				continue
 			}
 
-			userFriendly := c.userFriendlyTexts(param)
-			value := c.askValue(question{
-				label:        userFriendly.Name,
-				defaultValue: userFriendly.Default,
-				exampleValue: userFriendly.Example,
-				help:         userFriendly.Help.String(c.lang),
-				valueType:    userFriendly.ValueType,
-				mask:         userFriendly.Mask,
-				required:     userFriendly.Required})
-			additionalConfig[param.Name] = value
-		} else if param.Name == templates.ParamUsage {
-			if usageFilter != "" {
-				additionalConfig[param.Name] = usageFilter.String()
+			switch param.ValueType {
+			case templates.ParamValueTypeListString:
+				additionalConfig[param.Name] = c.processListInputConfig(param)
+			default:
+				additionalConfig[param.Name] = c.processInputConfig(param)
 			}
 		}
 	}
@@ -269,6 +266,37 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	return additionalConfig
 }
 
+// handle user input of multiple items in a list
+func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
+	var values []string
+
+	// ask for values until the decides stops
+	for ok := true; ok; {
+		newValue := c.processInputConfig(param)
+		values = append(values, newValue)
+
+		if !c.askYesNo("  " + c.localizedString("Config_AddAnotherValue", nil)) {
+			break
+		}
+	}
+
+	return values
+}
+
+// handle user input for a simple one value input
+func (c *CmdConfigure) processInputConfig(param templates.Param) string {
+	userFriendly := c.userFriendlyTexts(param)
+	return c.askValue(question{
+		label:        userFriendly.Name,
+		defaultValue: userFriendly.Default,
+		exampleValue: userFriendly.Example,
+		help:         userFriendly.Help.String(c.lang),
+		valueType:    userFriendly.ValueType,
+		mask:         userFriendly.Mask,
+		required:     userFriendly.Required})
+}
+
+// handle user input for a device modbus configuration
 func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory DeviceCategory, additionalConfig map[string]interface{}) {
 	var selectedModbusKey string
 
