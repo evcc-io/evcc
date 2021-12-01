@@ -6,4 +6,4 @@ params:
   default: 50
 render: |
   type: citroen
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

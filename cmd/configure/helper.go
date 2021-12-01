@@ -255,7 +255,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 			}
 
 			switch param.ValueType {
-			case templates.ParamValueTypeListString:
+			case templates.ParamValueTypeStringList:
 				additionalConfig[param.Name] = c.processListInputConfig(param)
 			default:
 				additionalConfig[param.Name] = c.processInputConfig(param)

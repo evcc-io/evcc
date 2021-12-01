@@ -8,4 +8,4 @@ params:
   default: 60
 render: |
   type: audi
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

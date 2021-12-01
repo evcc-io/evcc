@@ -8,4 +8,4 @@ params:
   default: 10
 render: |
   type: vw
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

@@ -8,4 +8,4 @@ params:
   default: 10
 render: |
   type: ford
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

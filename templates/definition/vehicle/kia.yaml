@@ -6,4 +6,4 @@ params:
   default: 64
 render: |
   type: kia
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

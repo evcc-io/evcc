@@ -50,7 +50,7 @@ const (
 	ParamValueTypeNumber     = "number"
 	ParamValueTypeFloat      = "float"
 	ParamValueTypeBool       = "bool"
-	ParamValueTypeListString = "liststring"
+	ParamValueTypeStringList = "stringlist"
 )
 
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
@@ -133,8 +133,8 @@ type Template struct {
 	Render       string // rendering template
 }
 
-//go:embed renderbase-vehicle.tpl
-var renderbaseVehicleTmpl string
+//go:embed vehicle-common.tpl
+var vehicleCommonTmpl string
 
 var paramBases = map[string][]Param{
 	"vehicle": {
@@ -143,7 +143,7 @@ var paramBases = map[string][]Param{
 		{Name: "password", Required: true, Mask: true},
 		{Name: "vin", Example: "W..."},
 		{Name: "capacity", Default: "50", ValueType: ParamValueTypeFloat},
-		{Name: "identifiers", Advanced: true, ValueType: ParamValueTypeListString},
+		{Name: "identifiers", Advanced: true, ValueType: ParamValueTypeStringList},
 	},
 }
 
@@ -182,7 +182,7 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		switch p.ValueType {
-		case ParamValueTypeListString:
+		case ParamValueTypeStringList:
 			values[p.Name] = []string{}
 		default:
 			if p.Test != "" {
@@ -246,7 +246,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 			}
 
 			switch p.ValueType {
-			case ParamValueTypeListString:
+			case ParamValueTypeStringList:
 				for _, e := range v.([]string) {
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
@@ -261,7 +261,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 	for _, param := range t.Params {
 		if !param.Required {
 			switch param.ValueType {
-			case ParamValueTypeListString:
+			case ParamValueTypeStringList:
 				if len(param.Values) == 0 {
 					continue
 				}
@@ -298,9 +298,9 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 
 	t.ModbusValues(values)
 
-	// add the renderbase templates
-	if !strings.Contains(t.Render, renderbaseVehicleTmpl) {
-		t.Render = fmt.Sprintf("%s\n%s", t.Render, renderbaseVehicleTmpl)
+	// add the common templates
+	if !strings.Contains(t.Render, vehicleCommonTmpl) {
+		t.Render = fmt.Sprintf("%s\n%s", t.Render, vehicleCommonTmpl)
 	}
 
 	for item, p := range values {

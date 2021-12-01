@@ -6,4 +6,4 @@ params:
   default: 64
 render: |
   type: hyundai
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

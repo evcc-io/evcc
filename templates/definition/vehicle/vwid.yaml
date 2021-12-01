@@ -8,4 +8,4 @@ params:
   default: 50
 render: |
   type: id
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

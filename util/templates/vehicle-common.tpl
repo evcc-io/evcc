@@ -1,4 +1,4 @@
-{{define "renderbase-vehicle"}}
+{{define "vehicle-common"}}
 {{- if ne .title "" }}
 title: {{ .title }}
 {{- end }}

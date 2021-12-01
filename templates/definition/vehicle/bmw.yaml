@@ -8,4 +8,4 @@ params:
   default: 65
 render: |
   type: bmw
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

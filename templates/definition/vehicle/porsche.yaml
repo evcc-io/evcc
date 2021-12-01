@@ -6,4 +6,4 @@ params:
   default: 83.4
 render: |
   type: porsche
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

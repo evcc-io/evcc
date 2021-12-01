@@ -6,4 +6,4 @@ params:
   default: 10
 render: |
   type: seat
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

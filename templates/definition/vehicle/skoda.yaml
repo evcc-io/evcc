@@ -6,4 +6,4 @@ params:
   default: 10
 render: |
   type: skoda
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

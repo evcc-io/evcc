@@ -9,7 +9,7 @@ params:
   default: 42
 render: |
   type: fiat
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}
   {{- if ne .pin "" }}
   pin: {{ .pin }} #mandatory to deep refresh SoC
   {{- end }}

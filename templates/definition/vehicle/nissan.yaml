@@ -6,4 +6,4 @@ params:
   default: 60
 render: |
   type: nissan
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}

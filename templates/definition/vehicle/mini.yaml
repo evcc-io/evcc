@@ -8,4 +8,4 @@ params:
   default: 32
 render: |
   type: mini
-  {{include "renderbase-vehicle" .}}
+  {{include "vehicle-common" .}}
