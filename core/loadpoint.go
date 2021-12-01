@@ -393,7 +393,7 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// set default mode on disconnect
 	if lp.ResetOnDisconnect {
-		lp.applyAction(&lp.onDisconnect)
+		lp.applyAction(lp.onDisconnect)
 	}
 
 	// soc update reset
@@ -426,23 +426,21 @@ func (lp *LoadPoint) evChargeCurrentWrappedMeterHandler(current float64) {
 }
 
 // applyAction executes the action
-func (lp *LoadPoint) applyAction(action *api.ActionConfig) {
-	if action != nil {
-		if action.Mode != nil {
-			lp.SetMode(*action.Mode)
-		}
-		if action.MinCurrent != nil {
-			lp.SetMinCurrent(*action.MinCurrent)
-		}
-		if action.MaxCurrent != nil {
-			lp.SetMaxCurrent(*action.MaxCurrent)
-		}
-		if action.MinSoC != nil {
-			lp.SetMinSoC(*action.MinSoC)
-		}
-		if action.TargetSoC != nil {
-			lp.SetTargetSoC(*action.TargetSoC)
-		}
+func (lp *LoadPoint) applyAction(actionCfg api.ActionConfig) {
+	if actionCfg.Mode != nil {
+		lp.SetMode(*actionCfg.Mode)
+	}
+	if actionCfg.MinCurrent != nil {
+		lp.SetMinCurrent(*actionCfg.MinCurrent)
+	}
+	if actionCfg.MaxCurrent != nil {
+		lp.SetMaxCurrent(*actionCfg.MaxCurrent)
+	}
+	if actionCfg.MinSoC != nil {
+		lp.SetMinSoC(*actionCfg.MinSoC)
+	}
+	if actionCfg.TargetSoC != nil {
+		lp.SetTargetSoC(*actionCfg.TargetSoC)
 	}
 }
 

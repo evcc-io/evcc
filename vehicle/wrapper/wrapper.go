@@ -36,8 +36,8 @@ func (v *Wrapper) Identifiers() []string {
 }
 
 // OnIdentified implements the api.Vehicle interface
-func (v *Wrapper) OnIdentified() *api.ActionConfig {
-	return nil
+func (v *Wrapper) OnIdentified() api.ActionConfig {
+	return api.ActionConfig{}
 }
 
 var _ api.Battery = (*Wrapper)(nil)

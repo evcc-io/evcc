@@ -6,7 +6,7 @@ type embed struct {
 	Title_       string           `mapstructure:"title"`
 	Capacity_    int64            `mapstructure:"capacity"`
 	Identifiers_ []string         `mapstructure:"identifiers"`
-	OnIdentify   *api.ActionConfig `mapstructure:"onIdentify,omitempty"`
+	OnIdentify   api.ActionConfig `mapstructure:"onIdentify"`
 }
 
 // Title implements the api.Vehicle interface
@@ -25,6 +25,6 @@ func (v *embed) Identifiers() []string {
 }
 
 // OnIdentified returns the identify action
-func (v *embed) OnIdentified() *api.ActionConfig {
+func (v *embed) OnIdentified() api.ActionConfig {
 	return v.OnIdentify
 }
