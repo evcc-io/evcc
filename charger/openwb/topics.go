@@ -20,7 +20,7 @@ const (
 
 	// getter/setter
 	EnabledTopic    = "ChargePointEnabled"
-	MaxCurrentTopic = "DirectChargeAmps"
+	MaxCurrentTopic = "AConfigured" // was DirectChargeAmps
 	PhasesTopic     = "U1p3p"
 	RfidTopic       = "rfid"
 

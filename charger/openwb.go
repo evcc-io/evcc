@@ -17,8 +17,8 @@ func init() {
 
 // OpenWB configures generic charger and charge meter for an openWB loadpoint
 type OpenWB struct {
-	current       int64
-	enabledG      func() (int64, error)
+	current int64
+	// enabledG      func() (int64, error)
 	statusG       func() (string, error)
 	currentS      func(int64) error
 	currentPowerG func() (float64, error)
@@ -75,15 +75,15 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 		}
 	}
 
-	intG := func(topic string) func() (int64, error) {
-		g := provider.NewMqtt(log, client, topic, 1, 0).IntGetter()
-		return func() (val int64, err error) {
-			if val, err = g(); err == nil {
-				_, err = timer()
-			}
-			return val, err
-		}
-	}
+	// intG := func(topic string) func() (int64, error) {
+	// 	g := provider.NewMqtt(log, client, topic, 1, 0).IntGetter()
+	// 	return func() (val int64, err error) {
+	// 		if val, err = g(); err == nil {
+	// 			_, err = timer()
+	// 		}
+	// 		return val, err
+	// 	}
+	// }
 
 	floatG := func(topic string) func() (float64, error) {
 		g := provider.NewMqtt(log, client, topic, 1, 0).FloatGetter()
@@ -107,7 +107,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	statusG := provider.NewOpenWBStatusProvider(pluggedG, chargingG).StringGetter
 
 	// getters
-	enabledG := intG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.MaxCurrentTopic))
+	// enabledG := intG(fmt.Sprintf("%s/lp/%d/%s", topic, id, openwb.MaxCurrentTopic))
 
 	// setters
 	currentTopic := openwb.SlaveChargeCurrentTopic
@@ -134,8 +134,8 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 	}
 
 	c := &OpenWB{
-		currentS:      currentS,
-		enabledG:      enabledG,
+		currentS: currentS,
+		// enabledG:      enabledG,
 		statusG:       statusG,
 		currentPowerG: currentPowerG,
 		totalEnergyG:  totalEnergyG,
@@ -192,8 +192,8 @@ func (m *OpenWB) Enable(enable bool) error {
 }
 
 func (m *OpenWB) Enabled() (bool, error) {
-	current, err := m.enabledG()
-	return current > 0, err
+	// current, err := m.enabledG()
+	return m.current > 0, nil
 }
 
 func (m *OpenWB) Status() (api.ChargeStatus, error) {
