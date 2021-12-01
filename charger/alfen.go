@@ -36,6 +36,9 @@ type Alfen struct {
 }
 
 const (
+	// alfenRegName         = 100
+	// alfenRegManufacturer = 117
+	// alfenRegFirmware     = 123
 	alfenRegPower        = 344
 	alfenRegAvailability = 1200
 	alfenRegStatus       = 1201 // 5 registers
@@ -170,7 +173,7 @@ var _ api.ChargePhases = (*Alfen)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Alfen) Phases1p3p(phases int) error {
-	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases))
+	_, err := c.conn.WriteSingleRegister(alfenRegPhases, uint16(phases<<8))
 	return err
 }
 
