@@ -24,9 +24,6 @@ type Device struct {
 func (d *Device) StartUpdateLoop() {
 	d.once.Do(func() {
 		go func() {
-			if err := d.UpdateValues(); err != nil {
-				d.log.ERROR.Println(err)
-			}
 			for range time.NewTicker(time.Second * 5).C {
 				if err := d.UpdateValues(); err != nil {
 					d.log.ERROR.Println(err)
