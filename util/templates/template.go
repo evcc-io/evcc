@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -121,6 +122,16 @@ type Param struct {
 	Comset    string // device specific default for modbus RS485 comset
 }
 
+type ParamBase struct {
+	Params []Param
+	Render string
+}
+
+//go:embed parambaselist.yaml
+var paramBaseListDefinition string
+
+var paramBaseList map[string]ParamBase
+
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	Template     string
@@ -133,35 +144,30 @@ type Template struct {
 	Render       string // rendering template
 }
 
-//go:embed vehicle-common.tpl
-var vehicleCommonTmpl string
-
-var paramBases = map[string][]Param{
-	"vehicle": {
-		{Name: "title"},
-		{Name: "user", Required: true},
-		{Name: "password", Required: true, Mask: true},
-		{Name: "vin", Example: "W..."},
-		{Name: "capacity", Default: "50", ValueType: ParamValueTypeFloat},
-		{Name: "identifiers", Advanced: true, ValueType: ParamValueTypeStringList},
-	},
-}
-
 // add the referenced base Params and overwrite existing ones
 func (t *Template) ResolveParamBase() {
 	if t.ParamsBase == "" {
 		return
 	}
 
-	base, ok := paramBases[t.ParamsBase]
+	if paramBaseList == nil {
+		err := yaml.Unmarshal([]byte(paramBaseListDefinition), &paramBaseList)
+		if err != nil {
+			fmt.Printf("Error: failed to parse paramBasesDefinition: %v\n", err)
+			return
+		}
+	}
+
+	base, ok := paramBaseList[t.ParamsBase]
 	if !ok {
+		fmt.Printf("Error: Could not find parambase definition: %s\n", t.ParamsBase)
 		return
 	}
 
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
-	t.Params = make([]Param, len(base))
-	copy(t.Params, base)
+	t.Params = make([]Param, len(base.Params))
+	copy(t.Params, base.Params)
 	for _, p := range currentParams {
 		if i, item := t.paramWithName(p.Name); item != nil {
 			// we only allow overwriting a few fields
@@ -299,8 +305,10 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 	t.ModbusValues(values)
 
 	// add the common templates
-	if !strings.Contains(t.Render, vehicleCommonTmpl) {
-		t.Render = fmt.Sprintf("%s\n%s", t.Render, vehicleCommonTmpl)
+	for _, v := range paramBaseList {
+		if !strings.Contains(t.Render, v.Render) {
+			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
+		}
 	}
 
 	for item, p := range values {
