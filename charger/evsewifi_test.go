@@ -43,7 +43,7 @@ func TestEvseWifi(t *testing.T) {
 
 func TestEvseWifiEx(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprintln(w, `{"list":[{"actualCurrentMA":600}]}`)
+		_, _ = fmt.Fprintln(w, `{"list":[{"actualCurrentMA":600, "alwaysActive":true}]}`)
 	}))
 	defer ts.Close()
 
