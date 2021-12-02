@@ -6,9 +6,4 @@ params:
   default: 60
 render: |
   type: nissan
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  user: {{ .user }}
-  password: {{ .password }}
-  capacity: {{ .capacity }}
+  {{include "vehicle-common" .}}

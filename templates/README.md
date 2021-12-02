@@ -112,9 +112,14 @@ Allows to define a list of meter devices that are typically installed with this 
 **Possible values**:
 
 - `string`: for string values (default)
-- `bool`: for `true` and `false` values
+- `bool`: for `true` and `false` values. If `help` is provided, than that help text is presented as the question
 - `number`: for int values
 - `float`: for float values
+- `stringlist`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
+
+### `advanced`
+
+`advanced` allows to specify if the param should only be asked if the cli is run with `--advanced`. Mostly used for non required params that are meant for users with advanced needs and knowledge.
 
 ### `help`
 

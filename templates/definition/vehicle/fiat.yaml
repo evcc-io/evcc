@@ -9,15 +9,7 @@ params:
   default: 42
 render: |
   type: fiat
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  user: {{ .user }}
-  password: {{ .password }}
-  capacity: {{ .capacity }}
-  {{- if ne .vin "" }}
-  vin: {{ .vin }}
-  {{- end }}
+  {{include "vehicle-common" .}}
   {{- if ne .pin "" }}
   pin: {{ .pin }} #mandatory to deep refresh SoC
   {{- end }}

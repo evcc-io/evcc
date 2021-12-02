@@ -1,6 +1,5 @@
 template: id
 description: Volkswagen (We Connect ID)
-loglevel: id
 paramsbase: vehicle
 params:
 - name: vin
@@ -9,14 +8,4 @@ params:
   default: 50
 render: |
   type: id
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  user: {{ .user }}
-  password: {{ .password }}
-  {{- if ne .capacity "" }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if ne .vin "" }}
-  vin: {{ .vin }}
-  {{- end }}
+  {{include "vehicle-common" .}}

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
@@ -118,8 +117,26 @@ type question struct {
 	mask, required             bool
 }
 
+// askBoolValue asks for a boolean value selection for a given question
+func (c *CmdConfigure) askBoolValue(label string) string {
+	choices := []string{c.localizedString("Config_No", nil), c.localizedString("Config_Yes", nil)}
+	values := []string{"false", "true"}
+
+	index, _ := c.askChoice(label, choices)
+	return values[index]
+}
+
 // askValue asks for value input for a given question (template param)
 func (c *CmdConfigure) askValue(q question) string {
+	if q.valueType == templates.ParamValueTypeBool {
+		label := q.label
+		if q.help != "" {
+			label = q.help
+		}
+
+		return c.askBoolValue(label)
+	}
+
 	input := ""
 
 	var err error
@@ -132,12 +149,6 @@ func (c *CmdConfigure) askValue(q question) string {
 
 		if q.required && len(value) == 0 {
 			return errors.New(c.localizedString("ValueError_Empty", nil))
-		}
-
-		if q.valueType == templates.ParamValueTypeBool {
-			if strings.ToLower(value) != "true" && strings.ToLower(value) != "false" {
-				return errors.New(c.localizedString("ValueError_Bool", nil))
-			}
 		}
 
 		if q.valueType == templates.ParamValueTypeFloat {
@@ -165,9 +176,6 @@ func (c *CmdConfigure) askValue(q question) string {
 	}
 	if q.exampleValue != "" {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
-	}
-	if q.valueType == templates.ParamValueTypeBool {
-		help += " (" + c.localizedString("Value_Bool", nil) + ")"
 	}
 
 	if q.mask {

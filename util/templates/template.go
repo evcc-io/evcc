@@ -4,10 +4,13 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/evcc-io/evcc/util"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -45,10 +48,11 @@ const (
 var HemsValueTypes = []string{HemsTypeSMA}
 
 const (
-	ParamValueTypeString = "string"
-	ParamValueTypeNumber = "number"
-	ParamValueTypeFloat  = "float"
-	ParamValueTypeBool   = "bool"
+	ParamValueTypeString     = "string"
+	ParamValueTypeNumber     = "number"
+	ParamValueTypeFloat      = "float"
+	ParamValueTypeBool       = "bool"
+	ParamValueTypeStringList = "stringlist"
 )
 
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
@@ -111,6 +115,7 @@ type Param struct {
 	Help      TextLanguage // cli configuration help
 	Test      string       // testing default value
 	Value     string       // user provided value via cli configuration
+	Values    []string     // user provided list of values
 	ValueType string       // string representation of the value type, "string" is default
 	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
 	Usages    []string
@@ -118,11 +123,17 @@ type Param struct {
 	Comset    string // device specific default for modbus RS485 comset
 }
 
+type ParamBase struct {
+	Params []Param
+	Render string
+}
+
+var paramBaseList map[string]ParamBase
+
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	Template     string
 	Description  string // user friendly description of the device this template describes
-	LogLevel     string // the implementation type of the device, equal to the type value under "Render"
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
 	Generic      bool   // if this describes a generic device type rather than a product
@@ -131,31 +142,30 @@ type Template struct {
 	Render       string // rendering template
 }
 
-var paramBases = map[string][]Param{
-	"vehicle": {
-		{Name: "title"},
-		{Name: "user", Required: true},
-		{Name: "password", Required: true, Mask: true},
-		{Name: "vin", Example: "W..."},
-		{Name: "capacity", Default: "50", ValueType: ParamValueTypeFloat},
-	},
-}
-
 // add the referenced base Params and overwrite existing ones
 func (t *Template) ResolveParamBase() {
 	if t.ParamsBase == "" {
 		return
 	}
 
-	base, ok := paramBases[t.ParamsBase]
+	if paramBaseList == nil {
+		err := yaml.Unmarshal([]byte(definition.ParamBaseListDefinition), &paramBaseList)
+		if err != nil {
+			fmt.Printf("Error: failed to parse paramBasesDefinition: %v\n", err)
+			return
+		}
+	}
+
+	base, ok := paramBaseList[t.ParamsBase]
 	if !ok {
+		fmt.Printf("Error: Could not find parambase definition: %s\n", t.ParamsBase)
 		return
 	}
 
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
-	t.Params = make([]Param, len(base))
-	copy(t.Params, base)
+	t.Params = make([]Param, len(base.Params))
+	copy(t.Params, base.Params)
 	for _, p := range currentParams {
 		if i, item := t.paramWithName(p.Name); item != nil {
 			// we only allow overwriting a few fields
@@ -175,12 +185,17 @@ func (t *Template) ResolveParamBase() {
 func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
-		if p.Test != "" {
-			values[p.Name] = p.Test
-		} else if p.Example != "" && docsOrTests {
-			values[p.Name] = p.Example
-		} else {
-			values[p.Name] = p.Default // may be empty
+		switch p.ValueType {
+		case ParamValueTypeStringList:
+			values[p.Name] = []string{}
+		default:
+			if p.Test != "" {
+				values[p.Name] = p.Test
+			} else if p.Example != "" && docsOrTests {
+				values[p.Name] = p.Example
+			} else {
+				values[p.Name] = p.Default // may be empty
+			}
 		}
 	}
 
@@ -230,23 +245,37 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 
 	for index, p := range t.Params {
 		for k, v := range values {
-			if p.Name == k {
-				t.Params[index].Value = v.(string)
+			if p.Name != k {
+				continue
+			}
+
+			switch p.ValueType {
+			case ParamValueTypeStringList:
+				for _, e := range v.([]string) {
+					t.Params[index].Values = append(p.Values, yamlQuote(e))
+				}
+			default:
+				t.Params[index].Value = yamlQuote(v.(string))
 			}
 		}
 	}
 
-	// remove params with no values, no defaults and no example
+	// remove params with no values
 	var newParams []Param
 	for _, param := range t.Params {
-		if param.Value == "" && param.Default == "" && param.Example == "" && !param.Required {
-			continue
+		if !param.Required {
+			switch param.ValueType {
+			case ParamValueTypeStringList:
+				if len(param.Values) == 0 {
+					continue
+				}
+			default:
+				if param.Value == "" {
+					continue
+				}
+			}
 		}
 		newParams = append(newParams, param)
-	}
-
-	for index, p := range newParams {
-		newParams[index].Value = yamlQuote(p.Value)
 	}
 
 	t.Params = newParams
@@ -273,8 +302,24 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 
 	t.ModbusValues(values)
 
+	// add the common templates
+	for _, v := range paramBaseList {
+		if !strings.Contains(t.Render, v.Render) {
+			t.Render = fmt.Sprintf("%s\n%s", t.Render, v.Render)
+		}
+	}
+
 	for item, p := range values {
-		values[item] = yamlQuote(fmt.Sprintf("%v", p))
+		switch p := p.(type) {
+		case []string:
+			var list []string
+			for _, v := range p {
+				list = append(list, yamlQuote(v))
+			}
+			values[item] = list
+		default:
+			values[item] = yamlQuote(fmt.Sprintf("%v", p))
+		}
 	}
 
 	tmpl := template.New("yaml")

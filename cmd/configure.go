@@ -19,6 +19,7 @@ var configureCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(configureCmd)
 	configureCmd.Flags().String("lang", "", "Define the localization to be used (en, de)")
+	configureCmd.Flags().Bool("advanced", false, "Enables handling of advanced configuration options")
 	configureCmd.Flags().Bool("expand", false, "Enables rendering expanded configuration files")
 }
 
@@ -30,6 +31,11 @@ func runConfigure(cmd *cobra.Command, args []string) {
 		log.FATAL.Fatal(err)
 	}
 
+	advanced, err := cmd.Flags().GetBool("advanced")
+	if err != nil {
+		panic(err)
+	}
+
 	expand, err := cmd.Flags().GetBool("expand")
 	if err != nil {
 		panic(err)
@@ -37,5 +43,5 @@ func runConfigure(cmd *cobra.Command, args []string) {
 
 	util.LogLevel(viper.GetString("log"), nil)
 
-	impl.Run(log, lang, expand)
+	impl.Run(log, lang, advanced, expand)
 }

@@ -1,20 +1,9 @@
 template: porsche
 description: Porsche
-loglevel: porsche
 paramsbase: vehicle
 params:
 - name: capacity
   default: 83.4
 render: |
   type: porsche
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  user: {{ .user }}
-  password: {{ .password }}
-  {{- if .capacity }}
-  capacity: {{ .capacity }}
-  {{- end }}
-  {{- if .vin }}
-  vin: {{ .vin }}
-  {{- end }}
+  {{include "vehicle-common" .}}

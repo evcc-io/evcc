@@ -6,12 +6,4 @@ params:
   default: 50
 render: |
   type: carwings
-  {{- if ne .title "" }}
-  title: {{ .title }}
-  {{- end }}
-  user: {{ .user }}
-  password: {{ .password }}
-  capacity: {{ .capacity }}
-  {{- if ne .vin "" }}
-  vin: {{ .vin }}
-  {{- end }}
+  {{include "vehicle-common" .}}
