@@ -125,9 +125,9 @@ func (v *Volvo) Status() (api.ChargeStatus, error) {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
 			return api.StatusA, nil
-		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged":
+		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged", "CablePluggedInCar_ChargingPaused":
 			return api.StatusB, nil
-		case "Charging":
+		case "Charging", "CablePluggedInCar_Charging":
 			return api.StatusC, nil
 		}
 	}
