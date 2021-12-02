@@ -160,7 +160,7 @@ func (wb *Alfen) TotalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint64ToFloat64(b) / 1e3, err
+	return math.Float64frombits(binary.BigEndian.Uint64(b)) / 1e3, err
 }
 
 var _ api.MeterCurrent = (*Alfen)(nil)
