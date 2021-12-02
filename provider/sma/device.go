@@ -24,15 +24,16 @@ type Device struct {
 func (d *Device) StartUpdateLoop() {
 	d.once.Do(func() {
 		go func() {
-			d.updateValues()
 			for range time.NewTicker(time.Second * 5).C {
-				d.updateValues()
+				if err := d.UpdateValues(); err != nil {
+					d.log.ERROR.Println(err)
+				}
 			}
 		}()
 	})
 }
 
-func (d *Device) updateValues() {
+func (d *Device) UpdateValues() error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -42,9 +43,7 @@ func (d *Device) updateValues() {
 		d.mux.Update()
 	}
 
-	if err != nil {
-		d.log.ERROR.Println(err)
-	}
+	return err
 }
 
 func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
