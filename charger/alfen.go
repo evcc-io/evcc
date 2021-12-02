@@ -37,7 +37,7 @@ type Alfen struct {
 
 const (
 	alfenRegPower      = 344
-	alfenRegEnergy     = 390
+	alfenRegEnergy     = 374  // 390
 	alfenRegStatus     = 1201 // 5 registers
 	alfenRegAmpsConfig = 1210
 	alfenRegPhases     = 1215
@@ -155,18 +155,10 @@ var _ api.MeterEnergy = (*Alfen)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Alfen) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadHoldingRegisters(366, 4)
-
+	b, err := wb.conn.ReadHoldingRegisters(alfenRegEnergy, 4)
 	if err != nil {
 		return 0, err
 	}
-
-	// u := binary.BigEndian.Uint64(b)
-	// fmt.Printf("%0x\n", u)
-	// u2 := u>>32 | (u&0xffffffff)<<32
-	// f := math.Float64frombits(u2)
-	// fmt.Printf("%0x\n", u2)
-	// return f / 1e3, err
 
 	return rs485.RTUUint64ToFloat64(b) / 1e3, err
 }
