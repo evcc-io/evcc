@@ -14,7 +14,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Closed source: ABL eMH1, cFos PowerBrain, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
+  - Closed source: ABL eMH1, Alfen Eve, cFos PowerBrain, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
   - Build-your-own: Phoenix (includes ESL Walli), [SimpleEVSE](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME
@@ -29,7 +29,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Index <!-- omit in toc -->
 
-- [Deutsche Dokumentation](#dokumentation)
+- [Dokumentation](#dokumentation)
 - [Getting started](#getting-started)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -192,6 +192,7 @@ Charger is responsible for handling EV state and adjusting charge current.
 Available charger implementations are:
 
 - `abl`: ABL eMH1 (requires Modbus adapter; [sponsors only](#sponsorship))
+- `alfen`: Alfen Eve (Single and Double, NG platform, [sponsors only](#sponsorship))
 - `cfos`: cFos PowerBrain charger (meters must configured separately, [sponsors only](#sponsorship))
 - `easee`: Easee Home charger ([sponsors only](#sponsorship))
 - `eebus`: EEBUS compatible chargers (experimental)
@@ -361,7 +362,7 @@ messaging:
     [...]
 ```
 
-#### Notification Events
+#### Notification Events <!-- omit in toc -->
 
 The available events are:
 
@@ -378,7 +379,7 @@ Configuration is done according to the scheme of following example for the `star
       msg: Started charging in "${mode}" mode
 ```
 
-#### Notification Services
+#### Notification Services <!-- omit in toc -->
 
 Following types of notification services can be configured:
 
