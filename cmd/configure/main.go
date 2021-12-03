@@ -1,11 +1,13 @@
 package configure
 
 import (
+	"bufio"
 	_ "embed"
 	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
@@ -66,16 +68,74 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
+	flowChoices := []string{
+		c.localizedString("Flow_Type_NewConfiguration", nil),
+		c.localizedString("Flow_Type_SingleDevice", nil),
+	}
 	fmt.Println()
-	fmt.Println(c.localizedString("Meters_Setup", nil))
+	flowIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), flowChoices)
+	switch flowIndex {
+	case 0:
+		c.flowNewConfigFile()
+	case 1:
+		c.flowSingleDevice()
+	}
+}
+
+// configureSingleDevice implements the flow for getting a single device configuration
+func (c *CmdConfigure) flowSingleDevice() {
 	fmt.Println()
-	fmt.Println(c.localizedString("Meters_Guide_Select", localizeMap{"ItemNotPresent": c.localizedString("ItemNotPresent", nil)}))
+	fmt.Println(c.localizedString("Flow_SingleDevice_Setup", nil))
+	fmt.Println()
+	fmt.Println(c.localizedString("Flow_SingleDevice_Select", nil))
+
+	// only consider the device categories that are marked for this flow
+	categoryChoices := []string{
+		DeviceCategories[DeviceCategoryGridMeter].title,
+		DeviceCategories[DeviceCategoryPVMeter].title,
+		DeviceCategories[DeviceCategoryBatteryMeter].title,
+		DeviceCategories[DeviceCategoryChargeMeter].title,
+		DeviceCategories[DeviceCategoryCharger].title,
+		DeviceCategories[DeviceCategoryVehicle].title,
+	}
+
+	fmt.Println()
+	_, cagetoryTitle := c.askChoice(c.localizedString("Flow_SingleDevice_Select", nil), categoryChoices)
+
+	var selectedCategory DeviceCategory
+	for item, data := range DeviceCategories {
+		if data.title == cagetoryTitle {
+			selectedCategory = item
+			break
+		}
+	}
+
+	devices := c.configureDevices(selectedCategory, false, false)
+	for _, item := range devices {
+		fmt.Println()
+		fmt.Println(c.localizedString("Flow_SingleDevice_Config", localizeMap{}))
+		fmt.Println()
+
+		scanner := bufio.NewScanner(strings.NewReader(item.Yaml))
+		for scanner.Scan() {
+			fmt.Println("  " + scanner.Text())
+		}
+	}
+	fmt.Println()
+}
+
+// configureNewConfigFile implements the flow for creating a new configuration file
+func (c *CmdConfigure) flowNewConfigFile() {
+	fmt.Println()
+	fmt.Println(c.localizedString("Flow_NewConfiguration_Setup", nil))
+	fmt.Println()
+	fmt.Println(c.localizedString("Flow_NewConfiguration_Select", localizeMap{"ItemNotPresent": c.localizedString("ItemNotPresent", nil)}))
 	c.configureDeviceGuidedSetup()
 
-	c.configureDevices(DeviceCategoryGridMeter, false)
-	c.configureDevices(DeviceCategoryPVMeter, true)
-	c.configureDevices(DeviceCategoryBatteryMeter, true)
-	c.configureDevices(DeviceCategoryVehicle, true)
+	_ = c.configureDevices(DeviceCategoryGridMeter, true, false)
+	_ = c.configureDevices(DeviceCategoryPVMeter, true, true)
+	_ = c.configureDevices(DeviceCategoryBatteryMeter, true, true)
+	_ = c.configureDevices(DeviceCategoryVehicle, true, true)
 	c.configureLoadpoints()
 	c.configureSite()
 
@@ -113,7 +173,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 }
 
 // configureDevices asks device specfic questions
-func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultiple bool) []device {
+func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding, askMultiple bool) []device {
 	var devices []device
 
 	if deviceCategory == DeviceCategoryGridMeter && c.configuration.MetersOfCategory(deviceCategory) > 0 {
@@ -125,14 +185,16 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askMultip
 		"Additional": DeviceCategories[deviceCategory].additional,
 		"Category":   DeviceCategories[deviceCategory].title,
 	}
-	addDeviceText := c.localizedString("AddDeviceInCategory", localizeMap)
-	if c.configuration.MetersOfCategory(deviceCategory) > 0 {
-		addDeviceText = c.localizedString("AddAnotherDeviceInCategory", localizeMap)
-	}
+	if askAdding {
+		addDeviceText := c.localizedString("AddDeviceInCategory", localizeMap)
+		if c.configuration.MetersOfCategory(deviceCategory) > 0 {
+			addDeviceText = c.localizedString("AddAnotherDeviceInCategory", localizeMap)
+		}
 
-	fmt.Println()
-	if !c.askYesNo(addDeviceText) {
-		return nil
+		fmt.Println()
+		if !c.askYesNo(addDeviceText) {
+			return nil
+		}
 	}
 
 	for ok := true; ok; {

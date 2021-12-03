@@ -1,3 +1,16 @@
+Intro = "The next steps will guide you through the creation of a configuration file for evcc.\nPlease note that this process cannot cover all possible scenarios.\nYou can cancel the process by pressing CTRL-C anytime.\n\nNOTE: This functionality is in an experimental state!\n  This means that the created configuration file may not work\n  in a future update of evcc and would need to be recreated.\n  We are looking forward to your feedback at https://github.com/evcc-io/evcc/discussions/\n\nLet's go:"
+
+Flow_Type = "What do you want to do?"
+Flow_Type_NewConfiguration = "Create a new evcc configuration file"
+Flow_Type_SingleDevice = "Configure a single device"
+
+Flow_NewConfiguration_Setup = "- Setup meters (house installation)"
+Flow_NewConfiguration_Select = "Choose one of the following PV systems, or '{{ .ItemNotPresent }}' if you have none of them"
+
+Flow_SingleDevice_Setup = "- Setup a device"
+Flow_SingleDevice_Select = "Choose one of the following device categories"
+Flow_SingleDevice_Config = "The configuration:"
+
 ItemNotPresent = "My device is not in this list"
 
 AddDeviceInCategory = "Do you want to add {{ .Article }} {{ .Category }}?"
@@ -92,11 +105,6 @@ ValueError_Number = "The value has to be an integer."
 
 Device_Configure = "Configuration"
 Device_Added = "was successfully added."
-
-Intro = "The next steps will guide you through the creation of a configuration file for evcc.\nPlease note that this process cannot cover all possible scenarios.\nYou can cancel the process by pressing CTRL-C anytime.\n\nNOTE: This functionality is in an experimental state!\n  This means that the created configuration file may not work\n  in a future update of evcc and would need to be recreated.\n  We are looking forward to your feedback at https://github.com/evcc-io/evcc/discussions/\n\nLet's go:"
-
-Meters_Setup = "- Setup meters (house installation)"
-Meters_Guide_Select = "Choose one of the following PV systems, or '{{ .ItemNotPresent }}' if you have none of them"
 
 Loadpoint_Setup = "- Setup loadpoint(s)"
 Loadpoint_Title = "Loadpoint title"
