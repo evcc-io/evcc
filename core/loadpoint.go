@@ -363,8 +363,10 @@ func (lp *LoadPoint) evVehicleConnectHandler() {
 	lp.log.DEBUG.Println("vehicle api refresh")
 	provider.ResetCached()
 
-	// identify active vehicle
-	lp.startVehicleDetection()
+	// start detection if we have multiple vehicles
+	if len(lp.vehicles) > 1 {
+		lp.startVehicleDetection()
+	}
 
 	// immediately allow pv mode activity
 	lp.elapsePVTimer()
@@ -382,9 +384,19 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	lp.pushEvent(evVehicleDisconnect)
 
-	// remove active vehicle
+	// remove active vehicle if we have multiple vehicles
 	if len(lp.vehicles) > 1 {
 		lp.setActiveVehicle(nil)
+	}
+
+	// keep single vehicle to allow poll mode: always
+	if len(lp.vehicles) == 1 {
+		// but reset values if poll mode is not always (i.e. connected or charging)
+		if lp.SoC.Poll.Mode != pollAlways {
+			lp.publish("vehicleSoC", -1)
+			lp.publish("vehicleRange", -1)
+			lp.setRemainingDuration(-1)
+		}
 	}
 
 	// set default mode on disconnect
