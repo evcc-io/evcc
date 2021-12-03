@@ -21,6 +21,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"sync"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -31,8 +33,11 @@ import (
 
 // Alfen charger implementation
 type Alfen struct {
-	conn *modbus.Connection
-	curr float64
+	log     *util.Logger
+	conn    *modbus.Connection
+	mu      sync.Mutex
+	curr    float64
+	enabled bool
 }
 
 const (
@@ -77,11 +82,29 @@ func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Char
 	conn.Logger(log.TRACE)
 
 	wb := &Alfen{
+		log:  log,
 		conn: conn,
-		curr: 6,
 	}
 
+	go wb.heartbeat()
+
 	return wb, err
+}
+
+// heartbeat implements the api.ChargerEx interface
+func (wb *Alfen) heartbeat() {
+	for range time.NewTicker(time.Minute).C {
+		wb.mu.Lock()
+		var curr float64
+		if wb.enabled {
+			curr = wb.curr
+		}
+		wb.mu.Unlock()
+
+		if err := wb.setCurrent(curr); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
@@ -92,8 +115,14 @@ func (wb *Alfen) Status() (api.ChargeStatus, error) {
 	}
 
 	switch r := rune(b[0]); r {
-	case 'A', 'B', 'C', 'D', 'E', 'F':
+	case 'A', 'B', 'D', 'E', 'F':
 		return api.ChargeStatus(r), nil
+	case 'C':
+		// C1 is "connected"
+		if rune(b[1]) == '1' {
+			return api.StatusB, nil
+		}
+		return api.StatusC, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %0x", b[:1])
 	}
@@ -113,10 +142,19 @@ func (wb *Alfen) Enabled() (bool, error) {
 func (wb *Alfen) Enable(enable bool) error {
 	var curr float64
 	if enable {
+		wb.mu.Lock()
 		curr = wb.curr
+		wb.mu.Unlock()
 	}
 
-	return wb.MaxCurrentMillis(curr)
+	err := wb.setCurrent(curr)
+	if err == nil {
+		wb.mu.Lock()
+		wb.enabled = enable
+		wb.mu.Unlock()
+	}
+
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -126,14 +164,23 @@ func (wb *Alfen) MaxCurrent(current int64) error {
 
 var _ api.ChargerEx = (*Alfen)(nil)
 
-// MaxCurrent implements the api.ChargerEx interface
-func (wb *Alfen) MaxCurrentMillis(current float64) error {
+// setCurrent sets the current in milliamps without modifying the stored current value
+func (wb *Alfen) setCurrent(current float64) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
 	_, err := wb.conn.WriteMultipleRegisters(alfenRegAmpsConfig, 2, b)
+
+	return err
+}
+
+// MaxCurrent implements the api.ChargerEx interface
+func (wb *Alfen) MaxCurrentMillis(current float64) error {
+	err := wb.setCurrent(current)
 	if err == nil {
+		wb.mu.Lock()
 		wb.curr = current
+		wb.mu.Unlock()
 	}
 
 	return err
