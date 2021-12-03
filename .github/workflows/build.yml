@@ -212,12 +212,6 @@ jobs:
         CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
       run: |
         for filename in dist/*.deb; do
-          # armv6 and armv7 are both "armhf" so we can skip the duplicate
-          if [[ "$filename" == *"armv6"* ]]; then
-            echo "Skipping $filename"
-            continue
-          fi
-
           echo "Pushing $filename to 'stable'"
           cloudsmith push deb evcc/stable/any-distro/any-version $filename
         done
