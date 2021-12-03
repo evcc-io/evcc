@@ -180,18 +180,19 @@ jobs:
     - name: Install Cloudsmith CLI
       run: pip install --upgrade cloudsmith-cli
 
-    - name: Prepare Image
-      run: |
-        make prepare-image
-        sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
-        mkdir /home/runner/.config/gokrazy
-        echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
+    # gokrazy image
+    # - name: Prepare Image
+    #   run: |
+    #     make prepare-image
+    #     sed -i -e 's#-ld.*$#& -X github.com/evcc-io/evcc/server/updater.Password=${{ secrets.IMAGE_PASS }}#' buildflags/github.com/evcc-io/evcc/buildflags.txt
+    #     mkdir /home/runner/.config/gokrazy
+    #     echo ${{ secrets.IMAGE_PASS }}> /home/runner/.config/gokrazy/http-password.txt
 
-    - name: Build Image
-      run: make image
+    # - name: Build Image
+    #   run: make image
 
-    - name: Build Root Filesystem
-      run: make image-rootfs
+    # - name: Build Root Filesystem
+    #   run: make image-rootfs
 
     - name: Clean git
       run: |

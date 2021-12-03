@@ -3,9 +3,9 @@ release:
   github:
     owner: evcc-io
     name: evcc
-  extra_files:
-  - glob: evcc_*.image.gz
-  - glob: evcc_*.rootfs.gz
+#  extra_files:
+#  - glob: evcc_*.image.gz
+#  - glob: evcc_*.rootfs.gz
 builds:
 - id: evcc
   main: main.go
