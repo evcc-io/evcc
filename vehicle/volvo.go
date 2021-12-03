@@ -92,6 +92,8 @@ func (v *Volvo) vehicles() ([]string, error) {
 
 			vehicles = append(vehicles, vehicle.VehicleID)
 		}
+	} else if res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
 	}
 
 	return vehicles, err
@@ -102,6 +104,9 @@ func (v *Volvo) status() (volvo.Status, error) {
 
 	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin)
 	err := v.GetJSON(uri, &res)
+	if err != nil && res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
+	}
 
 	return res, err
 }

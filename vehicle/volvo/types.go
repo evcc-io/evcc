@@ -8,6 +8,8 @@ import (
 const ApiURI = "https://vocapi.wirelesscar.net/customerapi/rest/v3.0"
 
 type AccountResponse struct {
+	ErrorLabel       string   `json:"errorLabel"`
+	ErrorDescription string   `json:"errorDescription"`
 	FirstName        string   `json:"firstName"`
 	LastName         string   `json:"lastName"`
 	VehicleRelations []string `json:"accountVehicleRelations"`
@@ -25,6 +27,8 @@ type VehicleRelation struct {
 }
 
 type Status struct {
+	ErrorLabel                      string    `json:"errorLabel"`
+	ErrorDescription                string    `json:"errorDescription"`
 	AverageFuelConsumption          float32   `json:"averageFuelConsumption"`
 	AverageFuelConsumptionTimestamp Timestamp `json:"averageFuelConsumptionTimestamp"`
 	AverageSpeed                    int       `json:"averageSpeed"`
