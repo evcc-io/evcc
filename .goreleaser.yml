@@ -63,8 +63,8 @@ nfpms:
     - deb
 
     contents:
-      - src: ./packaging/init/evcc.service
-        dst: /lib/systemd/system/evcc.service
+    - src: ./packaging/init/evcc.service
+      dst: /lib/systemd/system/evcc.service
 
     scripts:
       postinstall: ./packaging/scripts/postinstall.sh
