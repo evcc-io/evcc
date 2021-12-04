@@ -131,17 +131,21 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	// wait for first update
-	c.mux.L.Lock()
-	c.mux.Wait()
-	for c.updated.IsZero() {
-		c.mux.Wait()
+	timer := time.NewTimer(request.Timeout)
+	done := make(chan struct{})
+
+	go c.waitForInitialUpdate(done)
+
+	select {
+	case <-done:
+	case <-timer.C:
+		err = api.ErrTimeout
 	}
-	c.mux.L.Unlock()
 
 	return c, err
 }
 
-// connect creates an HTTP connectionto the signalR hub
+// connect creates an HTTP connection to the signalR hub
 func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error) {
 	return func() (signalr.Connection, error) {
 		tok, err := ts.Token()
@@ -177,6 +181,17 @@ func (c *Easee) subscribe(client signalr.Client) {
 			}
 		}
 	}()
+}
+
+// waitForInitialUpdate waits for observe to trigger the the timestamp updated condition
+func (c *Easee) waitForInitialUpdate(done chan struct{}) {
+	c.mux.L.Lock()
+	c.mux.Wait()
+	for c.updated.IsZero() {
+		c.mux.Wait()
+	}
+	c.mux.L.Unlock()
+	close(done)
 }
 
 // observe handles the subscription messages
