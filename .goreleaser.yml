@@ -36,6 +36,8 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
+universal_binaries:
+- replace: true
 checksum:
   name_template: 'checksums.txt'
 snapshot:
