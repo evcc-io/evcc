@@ -18,9 +18,9 @@ ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
 # gokrazy image
-# IMAGE_FILE := evcc_$(TAG_NAME).image
-# IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
-# IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
+IMAGE_FILE := evcc_$(TAG_NAME).image
+IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
+IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
 
 default: build
 
@@ -89,25 +89,25 @@ publish-images:
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 # gokrazy image
-# prepare-image:
-# 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
-# 	mkdir -p flags/github.com/gokrazy/breakglass
-# 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
-# 	mkdir -p buildflags/github.com/evcc-io/evcc
-# 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
-# 	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
+prepare-image:
+	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
+	mkdir -p flags/github.com/gokrazy/breakglass
+	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
+	mkdir -p buildflags/github.com/evcc-io/evcc
+	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
+	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
 
-# image:
-# 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
-# 	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
-# 	gzip -f $(IMAGE_FILE)
+image:
+	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
+	loop=$$(sudo losetup --find --show -P $(IMAGE_FILE)); sudo mkfs.ext4 $${loop}p4
+	gzip -f $(IMAGE_FILE)
 
-# image-rootfs:
-# 	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
-# 	gzip -f $(IMAGE_ROOTFS)
+image-rootfs:
+	gokr-packer -overwrite_root=$(IMAGE_ROOTFS) $(IMAGE_OPTIONS)
+	gzip -f $(IMAGE_ROOTFS)
 
-# image-update:
-# 	gokr-packer -update yes $(IMAGE_OPTIONS)
+image-update:
+	gokr-packer -update yes $(IMAGE_OPTIONS)
 
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
