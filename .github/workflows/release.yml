@@ -10,8 +10,7 @@ jobs:
   dockerrelease:
     name: Publish Docker :release
     needs:
-    - build
-    - build-ui
+    - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
@@ -37,8 +36,7 @@ jobs:
   release:
     name: Publish Github & APT release
     needs:
-    - build
-    - build-ui
+    - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
