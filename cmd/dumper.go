@@ -164,8 +164,10 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
-		fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
-		fmt.Fprintf(w, "OnIdentified:\t%v\n", v.OnIdentified())
+		if len(v.Identifiers()) > 0 {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+		}
 	}
 
 	// Identity

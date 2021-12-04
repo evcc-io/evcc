@@ -1,9 +1,12 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
+
+	"github.com/fatih/structs"
 )
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
@@ -53,13 +56,15 @@ type ActionConfig struct {
 	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
 }
 
-// String implements Stringer
+// String implements Stringer and returns the ActionConfig as comma-separated key:value string
 func (a ActionConfig) String() string {
-	if data, err := json.Marshal(a); err != nil {
-		return fmt.Sprintf("%v\n", err)
-	} else {
-		return fmt.Sprintf("%s\n", data)
+	var s []string
+	for k, v := range structs.Map(a) {
+		if v != nil && !reflect.ValueOf(v).IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, v))
+		}
 	}
+	return strings.Join(s, ", ")
 }
 
 // Meter is able to provide current power in W
