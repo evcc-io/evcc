@@ -17,7 +17,7 @@ DOCKER_IMAGE := andig/evcc
 ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
-# image
+# gokrazy image
 IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
@@ -88,6 +88,7 @@ publish-images:
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
+# gokrazy image
 prepare-image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
