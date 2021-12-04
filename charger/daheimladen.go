@@ -3,6 +3,7 @@ package charger
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/daheimladen"
@@ -30,33 +31,32 @@ func NewDaheimLadenFromConfig(other map[string]interface{}) (api.Charger, error)
 	cc := struct {
 		Token     string
 		StationID string
-		IDTag     string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewDaheimLaden(cc.Token, cc.StationID, cc.IDTag)
+	return NewDaheimLaden(cc.Token, cc.StationID)
 }
 
 // NewDaheimLaden creates DaheimLaden charger
-func NewDaheimLaden(token string, stationID string, idTag string) (*DaheimLaden, error) {
+func NewDaheimLaden(token string, stationID string) (*DaheimLaden, error) {
 	c := &DaheimLaden{
 		Helper:      request.NewHelper(util.NewLogger("daheim")),
 		stationID:   stationID,
 		connectorID: 1,
-		idTag:       idTag,
+		idTag:       daheimladen.EVCC_IDTAG,
 		token:       token,
 	}
-	c.Timeout = 0
+
 	c.Client.Transport = &oauth2.Transport{
 		Source: oauth2.StaticTokenSource(&oauth2.Token{
 			AccessToken: token,
 			TokenType:   "Bearer",
 		}),
+		Base: c.Client.Transport,
 	}
-
 	return c, nil
 }
 
@@ -122,7 +122,7 @@ func (c *DaheimLaden) Enable(enable bool) error {
 func (c *DaheimLaden) MaxCurrent(current int64) error {
 	data := daheimladen.ChangeConfigurationRequest{
 		Key:   string(daheimladen.CHARGE_RATE),
-		Value: fmt.Sprint(current),
+		Value: strconv.FormatInt(current, 10),
 	}
 
 	uri := fmt.Sprintf("%s/cs/%s/change_config", daheimladen.BASE_URL, c.stationID)
@@ -179,7 +179,7 @@ func (c *DaheimLaden) TotalEnergy() (float64, error) {
 	var res daheimladen.GetLatestMeterValueResponse
 	uri := fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID)
 	err := c.GetJSON(uri, &res)
-	return float64(res.EnergyActiveImportRegister) / 1e3, err
+	return float64(res.EnergyActiveImportRegister), err
 }
 
 var _ api.MeterCurrent = (*DaheimLaden)(nil)

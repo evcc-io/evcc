@@ -28,7 +28,7 @@ type GetLatestMeterValueResponse struct {
 	CurrentImportPhaseL1       float32 `json:"current_import_phasel1"`
 	CurrentImportPhaseL2       float32 `json:"current_import_phasel2"`
 	CurrentImportPhaseL3       float32 `json:"current_import_phasel3"`
-	EnergyActiveImportRegister int64   `json:"energy_active_import_register"`
+	EnergyActiveImportRegister float32 `json:"energy_active_import_register"`
 	Timestamp                  string  `json:"timestamp"`
 }
 

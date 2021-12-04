@@ -25,4 +25,6 @@ const (
 	CHANGE_CONFIG_REJECTED ChangeConfigStatus = "Rejected"
 
 	CHARGE_RATE ConfigKey = "ChargeRate"
+
+	EVCC_IDTAG string = "evcc"
 )
