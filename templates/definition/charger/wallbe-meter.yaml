@@ -8,7 +8,7 @@ requirements:
 params:
 - name: host
   required: true
-  example: 192.0.2.2
+  example: 192.168.0.8
 - name: port
   default: 502
 render: |

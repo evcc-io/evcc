@@ -1,5 +1,5 @@
 type: template
 template: wallbe-sdm
 description: Wallbe (Eco, Pro) with SDM Meter
-host: 192.0.2.2 
+host: 192.168.0.8 
 port: 502
