@@ -97,7 +97,7 @@ jobs:
       uses: goreleaser/goreleaser-action@v2
       with:
         version: latest
-        args: release -f .goreleaser-nightly.yml --rm-dist
+        args: --snapshot -f .goreleaser-nightly.yml --rm-dist
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -105,7 +105,7 @@ jobs:
       env:
         CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
       run: |
-        for filename in dist/*.deb; do
+        for filename in release/*.deb; do
           echo "Pushing $filename to 'unstable'"
           cloudsmith push deb evcc/unstable/any-distro/any-version $filename
         done

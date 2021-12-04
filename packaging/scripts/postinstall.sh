@@ -21,6 +21,8 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
 		systemctl --system daemon-reload >/dev/null || true
 		if [ -n "$2" ]; then
 			deb-systemd-invoke try-restart evcc.service >/dev/null || true
+		else
+			deb-systemd-invoke start evcc.service >/dev/null || true
 		fi
 	fi
 fi
