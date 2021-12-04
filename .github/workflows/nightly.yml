@@ -34,8 +34,7 @@ jobs:
   dockerlatest:
     name: Publish Docker :latest
     needs:
-    - build
-    - build-ui
+    - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
@@ -61,8 +60,7 @@ jobs:
   nightly:
     name: Publish APT nightly
     needs:
-    - build
-    - build-ui
+    - call-build-workflow
     runs-on: ubuntu-latest
 
     steps:
