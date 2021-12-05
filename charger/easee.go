@@ -115,7 +115,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	client, err := signalr.NewClient(context.Background(),
-		signalr.WithAutoReconnect(c.connect(ts)),
+		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)

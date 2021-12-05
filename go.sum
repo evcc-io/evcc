@@ -625,8 +625,8 @@ github.com/pelletier/go-toml v1.9.3/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCko
 github.com/pelletier/go-toml v1.9.4 h1:tjENF6MfZAg8e4ZmZTeWaWiT2vXtsoO6+iuOjFhECwM=
 github.com/pelletier/go-toml v1.9.4/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/peterbourgon/ff v1.2.0/go.mod h1:ljiF7yxtUvZaxUDyUqQa0+uiEOgwVboj+Q2S2+0nq40=
-github.com/philippseith/signalr v0.5.3-0.20211205193027-e91e51f46e23 h1:k/a5wyJ4/9u/mmogZSaicDrICmqu0JBmYGHbz81DNQ0=
-github.com/philippseith/signalr v0.5.3-0.20211205193027-e91e51f46e23/go.mod h1:lvHqx1JLduRcRHqWiDX6u/LHtSsfb08g+e+QP/B2gTA=
+github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a h1:wLffcAusLojxT9PRjguscJLi2+xIagvQi9ScM9UwVHw=
+github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a/go.mod h1:lvHqx1JLduRcRHqWiDX6u/LHtSsfb08g+e+QP/B2gTA=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
