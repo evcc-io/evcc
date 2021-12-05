@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -62,7 +63,7 @@ func (v *API) Vehicles() ([]string, error) {
 // Status implements the /user/vehicles/<vin>/status api
 func (v *API) Status(vin string) (VehicleStatus, error) {
 	var resp VehiclesStatusResponse
-	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d&vin=%s", CocoApiURI, time.Now().Unix(), vin)
+	uri := fmt.Sprintf("%s/eadrax-vcs/v1/vehicles?apptimezone=60&appDateTime=%d", CocoApiURI, time.Now().Unix())
 
 	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
 		"X-User-Agent": v.xUserAgent,
@@ -71,9 +72,15 @@ func (v *API) Status(vin string) (VehicleStatus, error) {
 		err = v.DoJSON(req, &resp)
 	}
 
-	if l := len(resp); l != 1 {
-		return VehicleStatus{}, fmt.Errorf("unexpected length: %d", l)
+	if err == nil {
+		for _, res := range resp {
+			if res.VIN == vin {
+				return res, nil
+			}
+		}
+
+		err = api.ErrNotAvailable
 	}
 
-	return resp[0], err
+	return VehicleStatus{}, err
 }
