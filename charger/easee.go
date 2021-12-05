@@ -115,7 +115,7 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	client, err := signalr.NewClient(context.Background(),
-		signalr.WithAutoReconnect(c.connect(ts)),
+		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
 		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
 	)
@@ -169,12 +169,12 @@ func (c *Easee) connect(ts oauth2.TokenSource) func() (signalr.Connection, error
 
 // subscribe listen to state changes and sends subscription requests when connection is established
 func (c *Easee) subscribe(client signalr.Client) {
-	stateC := make(chan struct{}, 1)
+	stateC := make(chan signalr.ClientState, 1)
 	_ = client.ObserveStateChanged(stateC)
 
 	go func() {
-		for range stateC {
-			if client.State() == signalr.ClientConnected {
+		for state := range stateC {
+			if state == signalr.ClientConnected {
 				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
 					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
 				}
