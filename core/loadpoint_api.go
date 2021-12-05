@@ -116,7 +116,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, targetSoC int) {
 	lp.Unlock()
 
 	// apply immediately
-	_ = lp.SetTargetSoC(targetSoC)
+	lp.SetTargetSoC(targetSoC)
 
 }
 
