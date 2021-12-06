@@ -52,24 +52,37 @@ changelog:
     - '^docs:'
     - '^test:'
 nfpms:
-  - id: default
-    package_name: evcc
-    file_name_template: '{{ .ConventionalFileName }}'
+- id: default
+  package_name: evcc
+  file_name_template: '{{ .ConventionalFileName }}'
 
-    homepage:  https://evcc.io
-    description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
-    license: MIT
-    vendor: evcc.io
+  homepage:  https://evcc.io
+  description: EV Charge Controller
+  maintainer: andig <cpuidle@gmx.de>
+  license: MIT
+  vendor: evcc.io
 
-    formats:
-    - deb
+  formats:
+  - deb
 
-    contents:
-    - src: ./packaging/init/evcc.service
-      dst: /lib/systemd/system/evcc.service
+  contents:
+  - src: ./packaging/init/evcc.service
+    dst: /lib/systemd/system/evcc.service
 
-    scripts:
-      postinstall: ./packaging/scripts/postinstall.sh
-      preremove: ./packaging/scripts/preremove.sh
-      postremove: ./packaging/scripts/postremove.sh
+  scripts:
+    postinstall: ./packaging/scripts/postinstall.sh
+    preremove: ./packaging/scripts/preremove.sh
+    postremove: ./packaging/scripts/postremove.sh
+brews:
+- tap:
+    owner: evcc-io
+    name: homebrew-tap
+  commit_author:
+    name: andig
+    email: cpuidle@gmx.de
+  folder: Formula
+  homepage: "https://evcc.io"
+  description: "Sonne tanken ☀️🚘"
+  license: "MIT"
+  test: |
+    system "#{bin}/evcc --version"
