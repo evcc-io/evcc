@@ -1,0 +1,18 @@
+template: daheimladen
+description: Daheimladen (Cloud API)
+requirements:
+  sponsorship: true
+params:
+- name: token
+  help:
+    de: "Sie bekommen dieses Access Token vom Daheimladen Support: info@daheimladen.de"
+    en: "Request your access token from Daheimladen Support: info@daheimladen.de"
+- name: stationid
+  example: "xxxxxxxxxxxx990"
+  help:
+    de: "Software Serial Number displayed on the display of the wallbox"
+    en: "Die Software Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird"
+render: |
+  type: daheimladen
+  stationID: {{ .stationid }}
+  token: {{ .token }}

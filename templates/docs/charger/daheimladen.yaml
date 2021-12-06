@@ -1,0 +1,4 @@
+type: template
+template: daheimladen
+description: Daheimladen (Cloud API)
+stationid: xxxxxxxxxxxx990  # Software Serial Number displayed on the display of the wallbox
