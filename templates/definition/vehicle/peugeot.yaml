@@ -1,0 +1,9 @@
+template: peugeot
+description: Peugeot
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: peugeot
+  {{include "vehicle-common" .}}

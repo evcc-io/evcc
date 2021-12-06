@@ -81,10 +81,15 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &PSA{
 		embed: &cc.embed,
 	}
 
+	log.Redact(cc.User, cc.Password, cc.VIN)
 	identity := psa.NewIdentity(log, brand, cc.Credentials.ID, cc.Credentials.Secret)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {

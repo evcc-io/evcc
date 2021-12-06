@@ -22,6 +22,9 @@ type (
 	SetIntProvider interface {
 		IntSetter(param string) func(int64) error
 	}
+	SetStringProvider interface {
+		StringSetter(param string) func(string) error
+	}
 	SetBoolProvider interface {
 		BoolSetter(param string) func(bool) error
 	}

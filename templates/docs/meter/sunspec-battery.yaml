@@ -1,0 +1,6 @@
+type: template
+template: sunspec
+description: Inverter / Wechselrichter (SunSpec)
+usage: battery 
+host: 192.0.2.2 
+id: 1

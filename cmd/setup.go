@@ -30,7 +30,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-var cp = &ConfigProvider{}
+var cp = new(ConfigProvider)
 
 func loadConfigFile(cfgFile string) (conf config, err error) {
 	if cfgFile != "" {
@@ -107,12 +107,13 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 	)
 
 	// eliminate duplicate values
-	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleSoC")
+	dedupe := pipe.NewDeduplicator(30*time.Minute, "vehicleCapacity", "vehicleSoC", "vehicleRange", "vehicleOdometer", "chargedEnergy", "chargeRemainingEnergy")
 	in = dedupe.Pipe(in)
 
 	// reduce number of values written to influx
-	limiter := pipe.NewLimiter(5 * time.Second)
-	in = limiter.Pipe(in)
+	// TODO this breaks writing vehicleRange as its re-writting in short interval
+	// limiter := pipe.NewLimiter(5 * time.Second)
+	// in = limiter.Pipe(in)
 
 	go influx.Run(loadPoints, in)
 }

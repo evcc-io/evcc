@@ -52,6 +52,8 @@ export default {
 		enabled: Boolean,
 		vehicleTitle: String,
 		vehicleSoC: Number,
+		vehiclePresent: Boolean,
+		vehicleRange: Number,
 		minSoC: Number,
 		timerSet: Boolean,
 		timerActive: Boolean,
@@ -61,9 +63,7 @@ export default {
 		chargePower: Number,
 		chargedEnergy: Number,
 		// chargeDuration: Number,
-		vehiclePresent: Boolean,
 		climater: String,
-		range: Number,
 		chargeRemainingDuration: Number,
 
 		// other information

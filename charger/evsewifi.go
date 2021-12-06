@@ -50,7 +50,6 @@ type EVSEListEntry struct {
 // EVSEWifi charger implementation
 type EVSEWifi struct {
 	*request.Helper
-	log          *util.Logger
 	uri          string
 	alwaysActive bool
 	current      int64 // current will always be the physical value sent to the API
@@ -85,6 +84,10 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	params, err := evse.getParameters()
 	if err != nil {
 		return evse, err
+	}
+
+	if !params.AlwaysActive {
+		return nil, errors.New("evse must be configured to remote mode")
 	}
 
 	if params.UseMeter {
@@ -136,7 +139,6 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
 	evse := &EVSEWifi{
-		log:     log,
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
@@ -163,11 +165,8 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	}
 
 	params := res.List[0]
-	if !params.AlwaysActive {
-		evse.log.WARN.Println("evse should be configured to remote mode")
-	}
-
 	evse.alwaysActive = params.AlwaysActive
+
 	return params, nil
 }
 
@@ -263,7 +262,7 @@ func (evse *EVSEWifi) totalEnergy() (float64, error) {
 // Currents implements the api.MeterCurrents interface
 func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
 	params, err := evse.getParameters()
-	return float64(params.CurrentP1), float64(params.CurrentP2), float64(params.CurrentP3), err
+	return params.CurrentP1, params.CurrentP2, params.CurrentP3, err
 }
 
 // Identify implements the api.Identifier interface

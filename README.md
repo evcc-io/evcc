@@ -4,7 +4,7 @@
 [![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
 [![Code Quality](https://goreportcard.com/badge/github.com/evcc-io/evcc)](https://goreportcard.com/report/github.com/evcc-io/evcc)
 [![Latest Version](https://img.shields.io/github/release/evcc-io/evcc.svg)](https://github.com/evcc-io/evcc/releases)
-[![Pulls from Docker Hub](https://img.shields.io/docker/pulls/evcc-io/evcc.svg)](https://hub.docker.com/r/evcc-io/evcc)
+[![Pulls from Docker Hub](https://img.shields.io/docker/pulls/andig/evcc.svg)](https://hub.docker.com/r/andig/evcc)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=48YVXXA7BDNC2)
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
@@ -20,7 +20,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME
 - wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
-- status notifications using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
+- status [notifications](#notifications) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
 - REST and MQTT [APIs](#api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
@@ -29,6 +29,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 ## Index <!-- omit in toc -->
 
+- [Dokumentation](#dokumentation)
 - [Getting started](#getting-started)
 - [Installation](#installation)
 - [Configuration](#configuration)
@@ -39,6 +40,7 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
   - [Vehicle](#vehicle)
   - [Home Energy Management System](#home-energy-management-system)
   - [Flexible Energy Tariffs](#flexible-energy-tariffs)
+  - [Notifications](#notifications)
 - [Plugins](#plugins)
   - [Modbus (read/write)](#modbus-readwrite)
   - [MQTT (read/write)](#mqtt-readwrite)
@@ -55,6 +57,9 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - [Sponsorship](#sponsorship)
 - [Background](#background)
 
+## Dokumentation
+
+Die offizielle und detaillierte Dokumentation in deutscher Sprache ist unter https://docs.evcc.io/ verfügbar.
 
 ## Getting started
 
@@ -346,6 +351,55 @@ tariffs:
     region: de # optional, choose at for Austria
 ```
 
+### Notifications
+
+EVCC supports status notifications using Telegram, PushOver and many more services as offered by [shoutrrr](https://containrrr.dev/shoutrrr) notification library. Configuration allows to define custom messages for several events and to setup the used notification service(s):
+
+```yaml
+messaging:
+  events:
+    [...]
+  services:
+    [...]
+```
+
+#### Notification Events <!-- omit in toc -->
+
+The available events are:
+
+- `start`: Charge start
+- `stop`: Charge stop
+- `connect`: Vehicle connect
+- `disconnect`: Vehicle disconnect
+
+Configuration is done according to the scheme of following example for the `start` event:
+
+```yaml
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+```
+
+#### Notification Services <!-- omit in toc -->
+
+Following types of notification services can be configured:
+
+- `pushover`: [Pushover](https://pushover.net/)
+- `telegram`: [Telegram Messenger](https://telegram.org/)
+- `email`: Email (by using [shoutrrr](https://containrrr.dev/shoutrrr) service url: `smtp://username:password@host:port/?fromAddress=fromAddress&toAddresses=recipient1[,recipient2,...]`)
+- `shout`: Any service supported by [shoutrrr](https://containrrr.dev/shoutrrr) notification library (see below)
+
+Configuration examples can be found in `evcc.dist.yaml`.
+
+Any [shoutrrr](https://containrrr.dev/shoutrrr) service is configured according to the following example for a [Gotify](https://gotify.net/) server:
+
+```yaml
+  - type: shout
+    uri: gotify://gotify.example.com:443/AzyoeNS.D4iJLVa/?priority=1
+```
+
+Please refer to the [shoutrrr](https://containrrr.dev/shoutrrr) documentation for [supported services](https://containrrr.dev/shoutrrr/v0.5/services/overview/) and further details.
+
 ## Plugins
 
 Plugins are used to integrate various devices and external data sources with EVCC. Plugins can be used in combination with a `custom` type meter, charger or vehicle.
@@ -604,15 +658,15 @@ EVCC provides a REST and MQTT APIs.
 
 ### REST API
 
-Loadpoint ids for REST API are starting at `0:
+Loadpoint ids for REST API are starting at `0`:
 
 - `/api/state`: EVCC state (static configuration and dynamic state)
-- `/api/loadpoints/<id>/mode`: loadpoint charge mode (writable)
-- `/api/loadpoints/<id>/minsoc`: loadpoint minimum SoC (writable)
-- `/api/loadpoints/<id>/targetsoc`: loadpoint target SoC (writable)
-- `/api/loadpoints/<id>/mincurrent`: loadpoint minimum current (writable)
-- `/api/loadpoints/<id>/maxcurrent`: loadpoint maximum current (writable)
-- `/api/loadpoints/<id>/phases`: loadpoint enabled phases (writable)
+- `/api/loadpoints/<id>/mode`: set loadpoint charge mode
+- `/api/loadpoints/<id>/minsoc`: set loadpoint minimum SoC
+- `/api/loadpoints/<id>/targetsoc`: set loadpoint target SoC
+- `/api/loadpoints/<id>/mincurrent`: set loadpoint minimum current
+- `/api/loadpoints/<id>/maxcurrent`: set loadpoint maximum current
+- `/api/loadpoints/<id>/phases`: set loadpoint enabled phases
 
 Note: to modify writable settings perform a `POST` request appending the value as path segment.
 

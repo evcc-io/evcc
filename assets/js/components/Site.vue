@@ -33,6 +33,7 @@ export default {
 		// details
 		gridConfigured: Boolean,
 		gridPower: Number,
+		homePower: Number,
 		pvConfigured: Boolean,
 		pvPower: Number,
 		batteryConfigured: Boolean,

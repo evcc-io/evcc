@@ -34,8 +34,7 @@ func NewShoutrrrMessenger(uri string) (*Shoutrrr, error) {
 // Send sends to all receivers
 func (m *Shoutrrr) Send(title, msg string) {
 	params := &types.Params{
-		"title":   title,
-		"subject": title,
+		"title": title,
 	}
 
 	for _, err := range m.app.Send(msg, params) {

@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,9 +26,11 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
+		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,18 +38,20 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
+
+	log := util.NewLogger("hyundai").Redact(cc.User, cc.Password, cc.VIN)
 
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.hyundai.com:8080",
 		BasicToken:        "NmQ0NzdjMzgtM2NhNC00Y2YzLTk1NTctMmExOTI5YTk0NjU0OktVeTQ5WHhQekxwTHVvSzB4aEJDNzdXNlZYaG10UVI5aVFobUlGampvWTRJcHhzVg==",
 		CCSPServiceID:     "6d477c38-3ca4-4cf3-9557-2a1929a94654",
-		CCSPApplicationID: "99cfff84-f4e2-4be8-a5ed-e5b755eb6581",
-		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=97516a3c-2060-48b4-98cd-8e7dcd3c47b2&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		CCSPApplicationID: bluelink.HyundaiAppID,
+		AuthClientID:      "64621b96-0f0d-11ec-82a8-0242ac130003",
+		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	log := util.NewLogger("hyundai")
 	identity, err := bluelink.NewIdentity(log, settings)
 	if err != nil {
 		return nil, err
@@ -58,7 +61,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
 	vehicles, err := api.Vehicles()
 	if err != nil {
@@ -68,11 +71,12 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var vehicle bluelink.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
 		vehicle = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+		log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
 	} else {
 		for _, v := range vehicles {
 			if v.VIN == strings.ToUpper(cc.VIN) {
 				vehicle = v
+				log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
 			}
 		}
 	}
@@ -83,7 +87,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Hyundai{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

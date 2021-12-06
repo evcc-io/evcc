@@ -1,10 +1,6 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-	"time"
-
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
@@ -49,32 +45,8 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	d := dumper{len: len(vehicles)}
-NEXT:
+
 	for name, v := range vehicles {
-		start := time.Now()
-
-	WAIT:
-		// wait up to 1m for the vehicle to wakeup
-		for {
-			if time.Since(start) > time.Minute {
-				log.ERROR.Println(api.ErrTimeout)
-				continue NEXT
-			}
-
-			if _, err := v.SoC(); err != nil {
-				if errors.Is(err, api.ErrMustRetry) {
-					time.Sleep(5 * time.Second)
-					fmt.Print(".")
-					continue WAIT
-				}
-
-				log.ERROR.Println(err)
-				continue NEXT
-			}
-
-			break
-		}
-
 		d.DumpWithHeader(name, v)
 	}
 }

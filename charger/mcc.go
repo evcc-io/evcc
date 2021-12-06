@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 const (
@@ -32,7 +33,7 @@ type MCCTokenResponse struct {
 
 // MCCCurrentSession is the apiCurrentSession response
 type MCCCurrentSession struct {
-	Duration     time.Duration
+	Duration     int64
 	EnergySumKwh float64
 }
 
@@ -87,7 +88,7 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	}
 
 	// ignore the self signed certificate
-	mcc.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	mcc.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	return mcc, nil
 }
@@ -345,7 +346,7 @@ func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.Duration(currentSession.Duration * time.Second), nil
+	return time.Duration(currentSession.Duration) * time.Second, nil
 }
 
 var _ api.MeterCurrent = (*MobileConnect)(nil)

@@ -7,9 +7,9 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -18,15 +18,8 @@ import (
 
 const (
 	ClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
-	EmobilityClientID = "gZLSI7ThXFB4d2ld9t8Cx2DBRvGr1zN2"
+	EmobilityClientID = "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq"
 )
-
-type tokenResponse struct {
-	AccessToken string `json:"access_token"`
-	IDToken     string `json:"id_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int    `json:"expires_in"`
-}
 
 type AccessTokens struct {
 	Token, EmobilityToken oauth2.Token
@@ -103,34 +96,31 @@ func (v *Identity) Login() (AccessTokens, error) {
 	resp.Body.Close()
 
 	// get the token for the generic API
-	var pr tokenResponse
-	if pr, err = v.fetchToken(false); err != nil {
+	var token oauth.Token
+	token, err = v.fetchToken(false)
+	if err != nil {
 		return accessTokens, err
 	}
+	accessTokens.Token = (oauth2.Token)(token)
 
-	accessTokens.Token.AccessToken = pr.AccessToken
-	accessTokens.Token.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	if pr, err = v.fetchToken(true); err != nil {
-		// we don't need to return this error, because we simply won't use the emobility API in this case
-		return accessTokens, nil
+	token, err = v.fetchToken(true)
+	if err != nil {
+		return accessTokens, err
 	}
+	accessTokens.EmobilityToken = (oauth2.Token)(token)
 
-	accessTokens.EmobilityToken.AccessToken = pr.AccessToken
-	accessTokens.EmobilityToken.Expiry = time.Now().Add(time.Duration(pr.ExpiresIn) * time.Second)
-
-	return accessTokens, nil
+	return accessTokens, err
 }
 
-func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
-	var pr tokenResponse
+func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
+	var pr oauth.Token
 
 	actualClientID := ClientID
 	redirectURI := "https://my.porsche.com/core/de/de_DE/"
 
 	if emobility {
 		actualClientID = EmobilityClientID
-		redirectURI = "https://connect-portal.porsche.com/myservices/auth/auth.html"
+		redirectURI = "https://my.porsche.com/myservices/auth/auth.html"
 	}
 
 	var CodeVerifier, _ = cv.CreateCodeVerifier()
@@ -187,72 +177,81 @@ func (v *Identity) fetchToken(emobility bool) (tokenResponse, error) {
 		err = v.DoJSON(req, &pr)
 	}
 
-	if pr.AccessToken == "" || pr.ExpiresIn == 0 {
+	if pr.AccessToken == "" {
 		return pr, errors.New("could not obtain token")
 	}
 
 	return pr, err
 }
 
-type Vehicle struct {
-	VIN              string
-	EmobilityVehicle bool
-}
-
-type VehicleResponse struct {
-	VIN              string
-	ModelDescription string
-	Pictures         []struct {
-		URL         string
-		View        string
-		Size        int
-		Width       int
-		Height      int
-		Transparent bool
-	}
-}
-
-func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (Vehicle, error) {
-	uri := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, error) {
+	vehiclesURL := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
+	req, err := request.New(http.MethodGet, vehiclesURL, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
-		"apikey":        EmobilityClientID,
+		"apikey":        ClientID,
 	})
 
+	if err != nil {
+		return "", err
+	}
+
 	var vehicles []VehicleResponse
-	if err == nil {
-		err = v.DoJSON(req, &vehicles)
+	if err = v.DoJSON(req, &vehicles); err != nil {
+		return "", err
 	}
 
 	var foundVehicle VehicleResponse
-	var foundEmobilityVehicle bool
 
-	if err == nil {
-		if vin == "" && len(vehicles) == 1 {
-			foundVehicle = vehicles[0]
-		} else {
-			for _, vehicleItem := range vehicles {
-				if vehicleItem.VIN == strings.ToUpper(vin) {
-					foundVehicle = vehicleItem
-				}
+	if vin == "" && len(vehicles) == 1 {
+		foundVehicle = vehicles[0]
+	} else {
+		for _, vehicleItem := range vehicles {
+			if vehicleItem.VIN == strings.ToUpper(vin) {
+				foundVehicle = vehicleItem
 			}
 		}
-
-		if foundVehicle.VIN != "" {
-			v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
-
-			if accessTokens.EmobilityToken.AccessToken != "" {
-				foundEmobilityVehicle = true
-			}
-		} else {
-			err = errors.New("vin not found")
-		}
+	}
+	if foundVehicle.VIN == "" {
+		return "", errors.New("vin not found")
 	}
 
-	vehicle := Vehicle{
-		VIN:              foundVehicle.VIN,
-		EmobilityVehicle: foundEmobilityVehicle,
+	v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
+
+	// check if vehicle is paired
+	uri := fmt.Sprintf("%s/%s/pairing", vehiclesURL, foundVehicle.VIN)
+	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+		"apikey":        ClientID,
+	})
+
+	if err != nil {
+		return "", err
 	}
 
-	return vehicle, err
+	var pairing VehiclePairingResponse
+	if err = v.DoJSON(req, &pairing); err != nil {
+		return "", err
+	}
+
+	if pairing.Status != "PAIRINGCOMPLETE" {
+		return "", errors.New("vehicle is not paired with the My Porsche account")
+	}
+
+	// now check if we get any response at all for a status request
+	// there are PHEV which do not provide any data, even thought they are PHEV
+	uri = fmt.Sprintf("https://api.porsche.com/vehicle-data/de/de_DE/status/%s", foundVehicle.VIN)
+	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
+		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
+		"apikey":        ClientID,
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if _, err = v.DoBody(req); err != nil {
+		return "", errors.New("vehicle is not capable of providing data")
+	}
+
+	return foundVehicle.VIN, err
 }

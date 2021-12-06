@@ -318,19 +318,32 @@ func (mr *MockVehicleMockRecorder) Capacity() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Capacity", reflect.TypeOf((*MockVehicle)(nil).Capacity))
 }
 
-// Identify mocks base method.
-func (m *MockVehicle) Identify() (string, error) {
+// Identifiers mocks base method.
+func (m *MockVehicle) Identifiers() []string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Identify")
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Identifiers")
+	ret0, _ := ret[0].([]string)
+	return ret0
 }
 
-// Identify indicates an expected call of Identify.
-func (mr *MockVehicleMockRecorder) Identify() *gomock.Call {
+// Identifiers indicates an expected call of Identifiers.
+func (mr *MockVehicleMockRecorder) Identifiers() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identify", reflect.TypeOf((*MockVehicle)(nil).Identify))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Identifiers", reflect.TypeOf((*MockVehicle)(nil).Identifiers))
+}
+
+// OnIdentified mocks base method.
+func (m *MockVehicle) OnIdentified() api.ActionConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnIdentified")
+	ret0, _ := ret[0].(api.ActionConfig)
+	return ret0
+}
+
+// OnIdentified indicates an expected call of OnIdentified.
+func (mr *MockVehicleMockRecorder) OnIdentified() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnIdentified", reflect.TypeOf((*MockVehicle)(nil).OnIdentified))
 }
 
 // SoC mocks base method.

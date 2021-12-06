@@ -2,7 +2,8 @@ package tasks
 
 import (
 	"errors"
-	"fmt"
+	"net"
+	"strconv"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -36,10 +37,10 @@ type MqttHandler struct {
 }
 
 func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
-	broker := fmt.Sprintf("%s:%d", in.IP, h.Port)
+	addr := net.JoinHostPort(in.IP, strconv.Itoa(h.Port))
 
 	opt := mqtt.NewClientOptions()
-	opt.AddBroker(broker)
+	opt.AddBroker(addr)
 	opt.SetConnectTimeout(timeout)
 
 	client := mqtt.NewClient(opt)

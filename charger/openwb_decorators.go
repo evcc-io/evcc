@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateOpenWB(base *OpenWB, chargePhases func(int) error) api.Charger {
+func decorateOpenWB(base *OpenWB, chargePhases func(int) error, battery func() (float64, error)) api.Charger {
 	switch {
-	case chargePhases == nil:
+	case battery == nil && chargePhases == nil:
 		return base
 
-	case chargePhases != nil:
+	case battery == nil && chargePhases != nil:
 		return &struct {
 			*OpenWB
 			api.ChargePhases
@@ -21,9 +21,43 @@ func decorateOpenWB(base *OpenWB, chargePhases func(int) error) api.Charger {
 				chargePhases: chargePhases,
 			},
 		}
+
+	case battery != nil && chargePhases == nil:
+		return &struct {
+			*OpenWB
+			api.Battery
+		}{
+			OpenWB: base,
+			Battery: &decorateOpenWBBatteryImpl{
+				battery: battery,
+			},
+		}
+
+	case battery != nil && chargePhases != nil:
+		return &struct {
+			*OpenWB
+			api.Battery
+			api.ChargePhases
+		}{
+			OpenWB: base,
+			Battery: &decorateOpenWBBatteryImpl{
+				battery: battery,
+			},
+			ChargePhases: &decorateOpenWBChargePhasesImpl{
+				chargePhases: chargePhases,
+			},
+		}
 	}
 
 	return nil
+}
+
+type decorateOpenWBBatteryImpl struct {
+	battery func() (float64, error)
+}
+
+func (impl *decorateOpenWBBatteryImpl) SoC() (float64, error) {
+	return impl.battery()
 }
 
 type decorateOpenWBChargePhasesImpl struct {

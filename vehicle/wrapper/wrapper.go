@@ -30,10 +30,17 @@ func (v *Wrapper) Capacity() int64 {
 	return 0
 }
 
-// Identify implements the api.Identifier interface
-func (v *Wrapper) Identify() (string, error) {
-	return "", v.err
+// Identifiers implements the api.Vehicle interface
+func (v *Wrapper) Identifiers() []string {
+	return nil
 }
+
+// OnIdentified implements the api.Vehicle interface
+func (v *Wrapper) OnIdentified() api.ActionConfig {
+	return api.ActionConfig{}
+}
+
+var _ api.Battery = (*Wrapper)(nil)
 
 // SoC implements the api.Battery interface
 func (v *Wrapper) SoC() (float64, error) {

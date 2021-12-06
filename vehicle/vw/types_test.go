@@ -27,3 +27,17 @@ func TestTemp(t *testing.T) {
 		}
 	}
 }
+
+func TestError(t *testing.T) {
+	data := `{"error":{"errorCode":"batterycharge.auth.forbidden","description":"The context has not gained a legitimation due to missing access rights."}}`
+	var res ChargerResponse
+	if err := json.Unmarshal([]byte(data), &res); err != nil {
+		t.Error(err)
+	}
+	if res.Error == nil {
+		t.Fatal("Error is nil")
+	}
+	if res.Error.ErrorCode == "" {
+		t.Error("ErrorCode is empty")
+	}
+}

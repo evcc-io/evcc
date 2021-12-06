@@ -1,5 +1,11 @@
 package nissan
 
+import (
+	"fmt"
+	"strings"
+	"time"
+)
+
 // api constants
 const (
 	APIVersion         = "protocol=1.0,resource=2.1"
@@ -37,6 +43,20 @@ type Token struct {
 	TokenID    string `json:"tokenId"`
 	SuccessURL string `json:"successUrl"`
 	Realm      string `json:"realm"`
+	Code       int    `json:"code"`    // error response
+	Reason     string `json:"reason"`  // error response
+	Message    string `json:"message"` // error response
+}
+
+func (t *Token) SessionExpired() bool {
+	return strings.EqualFold(t.Message, "Session has timed out")
+}
+
+func (t *Token) Error() error {
+	if t.Code == 0 {
+		return nil
+	}
+	return fmt.Errorf("%s: %s", t.Reason, t.Message)
 }
 
 type Vehicles struct {
@@ -73,16 +93,35 @@ type Error struct {
 }
 
 type attributes struct {
-	Timestamp          string  `json:"timestamp"`
-	ChargingStatus     float32 `json:"chargingStatus"`
-	InstantaneousPower int     `json:"instantaneousPower"`
-	RangeHvacOff       int     `json:"rangeHvacOff"`    // Nissan
-	BatteryAutonomy    int     `json:"batteryAutonomy"` // Renault
-	BatteryLevel       int     `json:"batteryLevel"`
-	BatteryCapacity    int     `json:"batteryCapacity"` // Nissan
-	BatteryTemperature int     `json:"batteryTemperature"`
-	PlugStatus         int     `json:"plugStatus"`
-	LastUpdateTime     string  `json:"lastUpdateTime"`
-	ChargePower        int     `json:"chargePower"`
-	RemainingTime      *int    `json:"chargingRemainingTime"`
+	Timestamp          Timestamp `json:"timestamp"`
+	ChargingStatus     float32   `json:"chargingStatus"`
+	InstantaneousPower int       `json:"instantaneousPower"`
+	RangeHvacOff       int       `json:"rangeHvacOff"`    // Nissan
+	BatteryAutonomy    int       `json:"batteryAutonomy"` // Renault
+	BatteryLevel       int       `json:"batteryLevel"`
+	BatteryCapacity    int       `json:"batteryCapacity"` // Nissan
+	BatteryTemperature int       `json:"batteryTemperature"`
+	PlugStatus         int       `json:"plugStatus"`
+	LastUpdateTime     Timestamp `json:"lastUpdateTime"`
+	ChargePower        int       `json:"chargePower"`
+	RemainingTime      *int      `json:"chargingRemainingTime"`
+}
+
+const timeFormat = "2006-01-02T15:04:05Z"
+
+// Timestamp implements JSON unmarshal
+type Timestamp struct {
+	time.Time
+}
+
+// UnmarshalJSON decodes string timestamp into time.Time
+func (ct *Timestamp) UnmarshalJSON(data []byte) error {
+	s := strings.Trim(string(data), "\"")
+
+	t, err := time.Parse(timeFormat, s)
+	if err == nil {
+		(*ct).Time = t
+	}
+
+	return err
 }

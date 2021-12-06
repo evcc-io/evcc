@@ -25,7 +25,7 @@
 				:batteryCharge="batteryCharge"
 				:batteryDischarge="batteryDischarge"
 				:pvProduction="pvProduction"
-				:houseConsumption="houseConsumption"
+				:homePower="homePower"
 				:batterySoC="batterySoC"
 				:valuesInKw="valuesInKw"
 			/>
@@ -40,12 +40,12 @@
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(pvProduction) }}</span>
 				</div>
-				<div class="d-flex justify-content-between" data-test-house-consumption>
+				<div class="d-flex justify-content-between" data-test-home-power>
 					<span class="details-icon text-muted"><fa-icon icon="home"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
-						$t("main.energyflow.houseConsumption")
+						$t("main.energyflow.homePower")
 					}}</span>
-					<span class="text-end text-nowrap ps-1">{{ kw(houseConsumption) }}</span>
+					<span class="text-end text-nowrap ps-1">{{ kw(homePower) }}</span>
 				</div>
 				<div class="d-flex justify-content-between" data-test-loadpoints>
 					<span class="details-icon text-muted"><fa-icon icon="car"></fa-icon></span>
@@ -139,6 +139,7 @@ export default {
 	props: {
 		gridConfigured: Boolean,
 		gridPower: { type: Number, default: 0 },
+		homePower: { type: Number, default: 0 },
 		pvConfigured: Boolean,
 		pvPower: { type: Number, default: 0 },
 		loadpointsPower: { type: Number, default: 0 },
@@ -158,12 +159,6 @@ export default {
 		pvProduction: function () {
 			return this.pvConfigured ? Math.abs(this.pvPower) : this.pvExport;
 		},
-		pvConsumption: function () {
-			return Math.min(
-				this.pvProduction,
-				this.pvProduction + this.gridPower - this.batteryCharge
-			);
-		},
 		batteryPowerAdjusted: function () {
 			const batteryPowerThreshold = 50;
 			return Math.abs(this.batteryPower) < batteryPowerThreshold ? 0 : this.batteryPower;
@@ -174,14 +169,10 @@ export default {
 		batteryCharge: function () {
 			return Math.min(0, this.batteryPowerAdjusted) * -1;
 		},
-		houseConsumption: function () {
-			return Math.max(
-				0,
-				this.gridImport + this.pvConsumption + this.batteryDischarge - this.loadpointsPower
-			);
-		},
 		selfConsumption: function () {
-			return Math.max(0, this.batteryDischarge + this.pvConsumption + this.batteryCharge);
+			const ownPower = this.batteryDischarge + this.pvProduction;
+			const consumption = this.homePower + this.batteryCharge + this.loadpointsPower;
+			return Math.min(ownPower, consumption);
 		},
 		pvExport: function () {
 			return Math.max(0, this.gridPower * -1);

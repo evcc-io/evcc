@@ -53,7 +53,7 @@
 		</div>
 		<div class="label-scale">
 			<div class="d-flex justify-content-start">
-				<LabelBar v-bind="labelBarProps('bottom', 'houseConsumption')">
+				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
 					<fa-icon icon="home"></fa-icon>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
@@ -89,7 +89,7 @@ export default {
 		batteryCharge: { type: Number, default: 0 },
 		batteryDischarge: { type: Number, default: 0 },
 		pvProduction: { type: Number, default: 0 },
-		houseConsumption: { type: Number, default: 0 },
+		homePower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
 		valuesInKw: { type: Boolean, default: false },
 	},
@@ -180,7 +180,7 @@ export default {
 		isLabel(position, name, last) {
 			const labels = {
 				top: ["pvProduction", "batteryDischarge", "gridImport"],
-				bottom: ["houseConsumption", "loadpoints", "batteryCharge", "gridExport"],
+				bottom: ["homePower", "loadpoints", "batteryCharge", "gridExport"],
 			};
 			const entries = [...labels[position]];
 			if (last) {

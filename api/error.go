@@ -11,6 +11,9 @@ var ErrMustRetry = errors.New("must retry")
 // ErrSponsorRequired indicates that a sponsor token is required
 var ErrSponsorRequired = errors.New("sponsorship required, see https://github.com/evcc-io/evcc#sponsorship")
 
+// ErrMissingCredentials indicates that user/password are missing
+var ErrMissingCredentials = errors.New("missing credentials")
+
 // ErrTimeout is the error returned when a timeout happened.
 // Modeled after context.DeadlineError
 var ErrTimeout error = errTimeoutError{}

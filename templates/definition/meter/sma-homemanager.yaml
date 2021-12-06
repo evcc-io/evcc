@@ -1,0 +1,22 @@
+template: sma-home-manager
+description: SMA Sunny Home Manager 2.0
+requirements:
+  hems: sma
+guidedsetup:
+  enable: true
+  linked: 
+  - template: sma-energy-meter
+    usage: pv
+  - template: sma-inverter
+    usage: pv
+  - template: sma-inverter
+    usage: battery
+params:
+- name: usage
+  choice: ["grid"]
+- name: host
+  example: 192.0.2.2
+  required: true
+render: |
+  type: sma
+  uri: {{ .host }}

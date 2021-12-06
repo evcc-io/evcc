@@ -13,7 +13,7 @@ func TestEncode(t *testing.T) {
 		{int64(1), "1"},
 		{float64(1.23456), "1.2346"},
 		{"1.2345", "\"1.2345\""},
-		{time.Duration(time.Hour), "3600"},
+		{time.Hour, "3600"},
 		{"minpv", "\"minpv\""},
 	}
 

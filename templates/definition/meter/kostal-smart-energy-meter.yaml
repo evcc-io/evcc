@@ -1,0 +1,15 @@
+template: kostal-smart-energy-meter
+description: Kostal Smart Energy Meter
+params:
+- name: usage
+  choice: [ "grid" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: port
+  default: 502
+render: |
+  type: modbus
+  model: sunspec
+  uri: {{ .host }}:{{ .port }}
+  id: 71 # kostal default sunspec modbus id

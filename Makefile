@@ -17,7 +17,7 @@ DOCKER_IMAGE := andig/evcc
 ALPINE_VERSION := 3.13
 TARGETS := arm.v6,arm.v8,amd64
 
-# image
+# gokrazy image
 IMAGE_FILE := evcc_$(TAG_NAME).image
 IMAGE_ROOTFS := evcc_$(TAG_NAME).rootfs
 IMAGE_OPTIONS := -hostname evcc -http_port 8080 github.com/gokrazy/serial-busybox github.com/gokrazy/breakglass github.com/evcc-io/evcc
@@ -30,7 +30,7 @@ clean:
 	rm -rf dist/
 
 install:
-	go install github.com/golang/mock/mockgen
+	go install $$(go list -f '{{join .Imports " "}}' tools.go)
 
 install-ui:
 	npm ci
@@ -48,7 +48,7 @@ lint-ui:
 	npm run lint
 
 test-ui:
-	npm run test
+	npm test
 
 test:
 	@echo "Running testsuite"
@@ -88,6 +88,7 @@ publish-images:
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
+# gokrazy image
 prepare-image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
@@ -110,9 +111,9 @@ image-update:
 
 soc:
 	@echo Version: $(VERSION) $(BUILD_DATE)
-	go build -o evcc-soc $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
+	go build $(BUILD_TAGS) $(BUILD_ARGS) github.com/evcc-io/evcc/cmd/soc
 
 stamps:
 	docker pull hacksore/hks
-	docker run --rm hacksore/hks hyundai list 99cfff84-f4e2-4be8-a5ed-e5b755eb6581 | head -n 101 | tail -n 100 > vehicle/bluelink/99cfff84-f4e2-4be8-a5ed-e5b755eb6581
-	docker run --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417
+	docker run --platform linux/amd64 --rm hacksore/hks hyundai list 014d2225-8495-4735-812d-2616334fd15d | head -n 101 | tail -n 100 > vehicle/bluelink/014d2225-8495-4735-812d-2616334fd15d
+	docker run --platform linux/amd64 --rm hacksore/hks kia list 693a33fa-c117-43f2-ae3b-61a02d24f417 | head -n 101 | tail -n 100 > vehicle/bluelink/693a33fa-c117-43f2-ae3b-61a02d24f417

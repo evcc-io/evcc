@@ -36,6 +36,8 @@ type Ovms struct {
 	*embed
 	*request.Helper
 	user, password, vehicleId, server string
+	cache                             time.Duration
+	isOnline                          bool
 	chargeG                           func() (interface{}, error)
 	statusG                           func() (interface{}, error)
 }
@@ -58,7 +60,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ovms")
+	log := util.NewLogger("ovms").Redact(cc.User, cc.Password, cc.VehicleID)
 
 	v := &Ovms{
 		embed:     &cc.embed,
@@ -67,6 +69,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		password:  cc.Password,
 		vehicleId: cc.VehicleID,
 		server:    cc.Server,
+		cache:     cc.Cache,
 	}
 
 	v.chargeG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
@@ -117,8 +120,8 @@ func (v *Ovms) authFlow() error {
 	err := v.loginToServer()
 	if err == nil {
 		resp, err = v.connectRequest()
-		if err == nil && resp.NetConnected != 1 {
-			return api.ErrMustRetry
+		if err == nil {
+			v.isOnline = resp.NetConnected == 1
 		}
 	}
 	return err
@@ -137,7 +140,7 @@ func (v *Ovms) batteryAPI() (interface{}, error) {
 	}
 
 	messageAge := time.Duration(resp.MessageAgeServer) * time.Second
-	if err == nil && messageAge > time.Minute {
+	if err == nil && v.isOnline && messageAge > v.cache {
 		err = api.ErrMustRetry
 	}
 
@@ -227,7 +230,7 @@ func (v *Ovms) FinishTime() (time.Time, error) {
 	if res, ok := res.(ovmsChargeResponse); err == nil && ok {
 		cef, err := strconv.ParseInt(res.ChargeEtrFull, 0, 64)
 		if err == nil {
-			return time.Now().Add(time.Duration(cef) * time.Minute), err
+			return time.Now().Add(time.Duration(cef) * time.Minute), nil
 		}
 	}
 

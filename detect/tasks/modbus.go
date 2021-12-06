@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
+	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
@@ -30,7 +32,7 @@ type ModbusResult struct {
 func (r *ModbusResult) Configuration(handler TaskHandler, res Result) map[string]interface{} {
 	port := handler.(*ModbusHandler).Port
 	cc := map[string]interface{}{
-		"uri":   fmt.Sprintf("%s:%d", res.ResultDetails.IP, port),
+		"uri":   net.JoinHostPort(res.ResultDetails.IP, strconv.Itoa(port)),
 		"model": "sunspec",
 		"id":    r.SlaveID,
 	}
@@ -179,7 +181,7 @@ func (h *ModbusHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDe
 		panic("modbus: invalid port")
 	}
 
-	addr := fmt.Sprintf("%s:%d", in.IP, port)
+	addr := net.JoinHostPort(in.IP, strconv.Itoa(port))
 	conn := meters.NewTCP(addr)
 	dev := sunspec.NewDevice("sunspec")
 

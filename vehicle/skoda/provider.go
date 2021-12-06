@@ -10,8 +10,7 @@ import (
 // Provider implements the evcc vehicle api
 type Provider struct {
 	chargerG func() (interface{}, error)
-	// climateG func() (interface{}, error)
-	// action   func(action, value string) error
+	action   func(action, value string) error
 }
 
 // NewProvider provides the evcc vehicle api provider
@@ -23,9 +22,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		// climateG: provider.NewCached(func() (interface{}, error) {
 		// 	return api.Climater(vin)
 		// }, cache).InterfaceGetter(),
-		// action: func(action, value string) error {
-		// 	return api.Action(vin, action, value)
-		// },
+		action: func(action, value string) error {
+			return api.Action(vin, action, value)
+		},
 	}
 	return impl
 }
@@ -87,7 +86,7 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (rng int64, err error) {
 	res, err := v.chargerG()
 	if res, ok := res.(ChargerResponse); err == nil && ok {
-		rng = int64(res.Battery.CruisingRangeElectricInMeters) / 1e3
+		rng = res.Battery.CruisingRangeElectricInMeters / 1e3
 	}
 
 	return rng, err
@@ -114,16 +113,16 @@ func (v *Provider) Range() (rng int64, err error) {
 // 	return active, outsideTemp, targetTemp, err
 // }
 
-// var _ api.VehicleStartCharge = (*Provider)(nil)
+var _ api.VehicleStartCharge = (*Provider)(nil)
 
-// // StartCharge implements the api.VehicleStartCharge interface
-// func (v *Provider) StartCharge() error {
-// 	return v.action(ActionCharge, ActionChargeStart)
-// }
+// StartCharge implements the api.VehicleStartCharge interface
+func (v *Provider) StartCharge() error {
+	return v.action(ActionCharge, ActionChargeStart)
+}
 
-// var _ api.VehicleStopCharge = (*Provider)(nil)
+var _ api.VehicleStopCharge = (*Provider)(nil)
 
-// // StopCharge implements the api.VehicleStopCharge interface
-// func (v *Provider) StopCharge() error {
-// 	return v.action(ActionCharge, ActionChargeStop)
-// }
+// StopCharge implements the api.VehicleStopCharge interface
+func (v *Provider) StopCharge() error {
+	return v.action(ActionCharge, ActionChargeStop)
+}

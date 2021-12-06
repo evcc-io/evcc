@@ -33,37 +33,43 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed               `mapstructure:",squash"`
 		User, Password, VIN string
+		Expiry              time.Duration
 		Cache               time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Nissan{
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("nissan")
+	log := util.NewLogger("nissan").Redact(cc.User, cc.Password, cc.VIN)
 	identity := nissan.NewIdentity(log)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := nissan.NewAPI(log, identity, strings.ToUpper(cc.VIN))
+	api := nissan.NewAPI(log, identity)
 
 	var err error
 	if cc.VIN == "" {
-		api.VIN, err = findVehicle(api.Vehicles())
+		cc.VIN, err = findVehicle(api.Vehicles())
 		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", api.VIN)
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
 		}
 	}
 
-	v.Provider = nissan.NewProvider(api, cc.Cache)
+	v.Provider = nissan.NewProvider(api, strings.ToUpper(cc.VIN), cc.Expiry, cc.Cache)
 
 	return v, err
 }

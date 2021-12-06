@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -9,12 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/itchyny/gojq"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/robertkrimen/otto"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // HTTP implements HTTP request provider
@@ -25,6 +29,10 @@ type HTTP struct {
 	body        string
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	unpack      string
+	decode      string
+	vm          *otto.Otto
+	script      string
 	scale       float64
 	cache       time.Duration
 	updated     time.Time
@@ -49,6 +57,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Body        string
 		Regex       string
 		Jq          string
+		Unpack      string
+		Decode      string
+		VM          string
+		Script      string
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
@@ -64,70 +76,123 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
-	log := util.NewLogger("http")
-
-	http, err := NewHTTP(log,
+	http := NewHTTP(
+		util.NewLogger("http"),
 		cc.Method,
 		cc.URI,
-		cc.Headers,
-		cc.Body,
 		cc.Insecure,
-		cc.Regex,
-		cc.Jq,
 		cc.Scale,
 		cc.Cache,
-	)
+	).WithHeaders(cc.Headers).WithBody(cc.Body)
+	http.Client.Timeout = cc.Timeout
+
+	var err error
+	if err == nil && cc.Regex != "" {
+		_, err = http.WithRegex(cc.Regex)
+	}
+
+	if err == nil && cc.Jq != "" {
+		_, err = http.WithJq(cc.Jq)
+	}
+
+	if err == nil && cc.Unpack != "" {
+		_, err = http.WithUnpack(cc.Unpack)
+	}
+
+	if err == nil && cc.Decode != "" {
+		_, err = http.WithDecode(cc.Decode)
+	}
+
+	if err == nil && cc.Script != "" {
+		_, err = http.WithScript(cc.VM, cc.Script)
+	}
 
 	if err == nil && cc.Auth.Type != "" {
 		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
-	}
-
-	if err == nil {
-		http.Client.Timeout = cc.Timeout
 	}
 
 	return http, err
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, regex, jq string, scale float64, cache time.Duration) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
 	p := &HTTP{
-		Helper:  request.NewHelper(log),
-		url:     url,
-		method:  method,
-		headers: headers,
-		body:    body,
-		scale:   scale,
-		cache:   cache,
+		Helper: request.NewHelper(log),
+		url:    url,
+		method: method,
+		scale:  scale,
+		cache:  cache,
 	}
 
 	// ignore the self signed certificate
 	if insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
-	if regex != "" {
-		re, err := regexp.Compile(regex)
-		if err != nil {
-			return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
-		}
+	return p
+}
 
-		p.re = re
+// WithBody adds request body
+func (p *HTTP) WithBody(body string) *HTTP {
+	p.body = body
+	return p
+}
+
+// WithHeaders adds request headers
+func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
+	p.headers = headers
+	return p
+}
+
+// WithRegex adds a regex query applied to the mqtt listener payload
+func (p *HTTP) WithRegex(regex string) (*HTTP, error) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
 	}
 
-	if jq != "" {
-		op, err := gojq.Parse(jq)
-		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
-		}
+	p.re = re
 
-		p.jq = op
+	return p, nil
+}
+
+// WithJq adds a jq query applied to the mqtt listener payload
+func (p *HTTP) WithJq(jq string) (*HTTP, error) {
+	op, err := gojq.Parse(jq)
+	if err != nil {
+		return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
 	}
+
+	p.jq = op
+
+	return p, nil
+}
+
+// WithUnpack adds data unpacking
+func (p *HTTP) WithUnpack(unpack string) (*HTTP, error) {
+	p.unpack = strings.ToLower(unpack)
+
+	return p, nil
+}
+
+// WithDecode adds data decoding
+func (p *HTTP) WithDecode(decode string) (*HTTP, error) {
+	p.decode = strings.ToLower(decode)
+
+	return p, nil
+}
+
+// WithScript adds a javascript script to process the response
+func (p *HTTP) WithScript(vm, script string) (*HTTP, error) {
+	regvm := javascript.RegisteredVM(strings.ToLower(vm))
+
+	p.vm = regvm
+	p.script = script
 
 	return p, nil
 }
@@ -136,7 +201,10 @@ func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, bo
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
-		p.Client.Transport = basicauth.NewTransport(user, password, p.Client.Transport)
+		basicAuth := transport.BasicAuthHeader(user, password)
+		log.Redact(basicAuth)
+
+		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
 	default:
@@ -165,6 +233,48 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	return p.val, p.err
+}
+
+func (p *HTTP) unpackValue(value []byte) (string, error) {
+	switch p.unpack {
+	case "hex":
+		b, err := hex.DecodeString(string(value))
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	}
+
+	return "", fmt.Errorf("invalid unpack: %s", p.unpack)
+}
+
+// decode a hex string to a proper value
+// TODO reuse similar code from Modbus
+func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
+	switch p.decode {
+	case "float32", "ieee754":
+		return rs485.RTUIeee754ToFloat64(value), nil
+	case "float32s", "ieee754s":
+		return rs485.RTUIeee754ToFloat64Swapped(value), nil
+	case "float64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "uint16":
+		return rs485.RTUUint16ToFloat64(value), nil
+	case "uint32":
+		return rs485.RTUUint32ToFloat64(value), nil
+	case "uint32s":
+		return rs485.RTUUint32ToFloat64Swapped(value), nil
+	case "uint64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "int16":
+		return rs485.RTUInt16ToFloat64(value), nil
+	case "int32":
+		return rs485.RTUInt32ToFloat64(value), nil
+	case "int32s":
+		return rs485.RTUInt32ToFloat64Swapped(value), nil
+	}
+
+	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
 }
 
 // FloatGetter parses float from request
@@ -213,7 +323,40 @@ func (p *HTTP) StringGetter() func() (string, error) {
 
 		if p.jq != nil {
 			v, err := jq.Query(p.jq, b)
-			return fmt.Sprintf("%v", v), err
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.unpack != "" {
+			v, err := p.unpackValue(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.decode != "" {
+			v, err := p.decodeValue(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.vm != nil {
+			err := p.vm.Set("val", string(b))
+			if err != nil {
+				return string(b), err
+			}
+
+			v, err := p.vm.Eval(p.script)
+			if err != nil {
+				return string(b), err
+			}
+
+			return v.ToString()
 		}
 
 		return string(b), err

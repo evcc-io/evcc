@@ -29,6 +29,11 @@ func (lp *LoadPoint) SetMode(mode api.ChargeMode) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	if _, err := api.ChargeModeString(mode.String()); err != nil {
+		lp.log.WARN.Printf("invalid charge mode: %s", string(mode))
+		return
+	}
+
 	lp.log.INFO.Printf("set charge mode: %s", string(mode))
 
 	// apply immediately
@@ -51,11 +56,7 @@ func (lp *LoadPoint) GetTargetSoC() int {
 }
 
 // SetTargetSoC sets loadpoint charge target soc
-func (lp *LoadPoint) SetTargetSoC(soc int) error {
-	if lp.vehicle == nil {
-		return api.ErrNotAvailable
-	}
-
+func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -67,8 +68,6 @@ func (lp *LoadPoint) SetTargetSoC(soc int) error {
 		lp.publish("targetSoC", soc)
 		lp.requestUpdate()
 	}
-
-	return nil
 }
 
 // GetMinSoC returns loadpoint charge minimum soc
@@ -79,11 +78,7 @@ func (lp *LoadPoint) GetMinSoC() int {
 }
 
 // SetMinSoC sets loadpoint charge minimum soc
-func (lp *LoadPoint) SetMinSoC(soc int) error {
-	if lp.vehicle == nil {
-		return api.ErrNotAvailable
-	}
-
+func (lp *LoadPoint) SetMinSoC(soc int) {
 	lp.Lock()
 	defer lp.Unlock()
 
@@ -95,16 +90,13 @@ func (lp *LoadPoint) SetMinSoC(soc int) error {
 		lp.publish("minSoC", soc)
 		lp.requestUpdate()
 	}
-
-	return nil
 }
 
 // GetPhases returns loadpoint enabled phases
 func (lp *LoadPoint) GetPhases() int {
 	lp.Lock()
 	defer lp.Unlock()
-
-	return int(lp.Phases)
+	return lp.Phases
 }
 
 // SetPhases sets loadpoint enabled phases
@@ -173,6 +165,8 @@ func (lp *LoadPoint) SetMinCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
 
+	lp.log.INFO.Println("set min current:", current)
+
 	if current != lp.MinCurrent {
 		lp.MinCurrent = current
 		lp.publish("minCurrent", lp.MinCurrent)
@@ -190,6 +184,8 @@ func (lp *LoadPoint) GetMaxCurrent() float64 {
 func (lp *LoadPoint) SetMaxCurrent(current float64) {
 	lp.Lock()
 	defer lp.Unlock()
+
+	lp.log.INFO.Println("set max current:", current)
 
 	if current != lp.MaxCurrent {
 		lp.MaxCurrent = current

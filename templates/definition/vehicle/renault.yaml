@@ -1,0 +1,11 @@
+template: renault
+description: Renault
+paramsbase: vehicle
+params:
+- name: vin
+  example: WREN...
+- name: capacity
+  default: 60
+render: |
+  type: renault
+  {{include "vehicle-common" .}}

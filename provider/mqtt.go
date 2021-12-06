@@ -53,16 +53,14 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout)
+	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout).WithPayload(cc.Payload)
 
-	if cc.Payload != "" {
-		m = m.WithPayload(cc.Payload)
-	}
 	if cc.Regex != "" {
 		if m, err = m.WithRegex(cc.Regex); err != nil {
 			return nil, err
 		}
 	}
+
 	if cc.Jq != "" {
 		if m, err = m.WithJq(cc.Jq); err != nil {
 			return nil, err
@@ -137,7 +135,7 @@ var _ IntProvider = (*Mqtt)(nil)
 func (m *Mqtt) IntGetter() func() (int64, error) {
 	h := &msgHandler{
 		topic: m.topic,
-		scale: float64(m.scale),
+		scale: m.scale,
 		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		re:    m.re,
 		jq:    m.jq,
@@ -205,19 +203,19 @@ func (m *Mqtt) BoolSetter(param string) func(bool) error {
 	}
 }
 
-// var _ SetStringProvider = (*Mqtt)(nil)
+var _ SetStringProvider = (*Mqtt)(nil)
 
-// // StringSetter invokes script with parameter replaced by string value
-// func (m *Mqtt) StringSetter(param string) func(string) error {
-// 	return func(v string) error {
-// 		payload, err := setFormattedValue(m.payload, param, v)
-// 		if err != nil {
-// 			return err
-// 		}
+// StringSetter invokes script with parameter replaced by string value
+func (m *Mqtt) StringSetter(param string) func(string) error {
+	return func(v string) error {
+		payload, err := setFormattedValue(m.payload, param, v)
+		if err != nil {
+			return err
+		}
 
-// 		return m.client.Publish(m.topic, false, payload)
-// 	}
-// }
+		return m.client.Publish(m.topic, false, payload)
+	}
+}
 
 type msgHandler struct {
 	mux     *util.Waiter

@@ -27,8 +27,8 @@ var _ api.Battery = (*Provider)(nil)
 // SoC implements the api.Vehicle interface
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return float64(res.VehicleStatus.ChargingLevelHv), nil
+	if res, ok := res.(VehicleStatus); err == nil && ok {
+		return float64(res.Properties.ChargingState.ChargePercentage), nil
 	}
 
 	return 0, err
@@ -41,11 +41,11 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		if res.VehicleStatus.ConnectionStatus == "CONNECTED" {
+	if res, ok := res.(VehicleStatus); err == nil && ok {
+		if res.Properties.ChargingState.IsChargerConnected {
 			status = api.StatusB
 		}
-		if res.VehicleStatus.ChargingStatus == "CHARGING" {
+		if res.Properties.ChargingState.State == "CHARGING" {
 			status = api.StatusC
 		}
 	}
@@ -71,8 +71,8 @@ var _ api.VehicleRange = (*Provider)(nil)
 // Range implements the api.VehicleRange interface
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return int64(res.VehicleStatus.RemainingRangeElectric), nil
+	if res, ok := res.(VehicleStatus); err == nil && ok {
+		return int64(res.Properties.ElectricRange.Distance.Value), nil
 	}
 
 	return 0, err
@@ -83,8 +83,8 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 // Odometer implements the api.VehicleOdometer interface
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(StatusResponse); err == nil && ok {
-		return float64(res.VehicleStatus.Mileage), nil
+	if res, ok := res.(VehicleStatus); err == nil && ok {
+		return float64(res.Status.CurrentMileage.Mileage), nil
 	}
 
 	return 0, err

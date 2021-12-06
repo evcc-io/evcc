@@ -41,7 +41,7 @@ VehicleRange.args = {
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
   vehiclePresent: true,
-  range: 240.123,
+  vehicleRange: 240.123,
   chargeRemainingDuration: 5 * 3600,
 };
 
@@ -51,7 +51,7 @@ VehicleClimater.args = {
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
   vehiclePresent: true,
-  range: 240.123,
+  vehicleRange: 240.123,
   chargeRemainingDuration: 5 * 3600,
   climater: "on",
 };
@@ -62,7 +62,7 @@ VehicleTimer.args = {
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
   vehiclePresent: true,
-  range: 240.123,
+  vehicleRange: 240.123,
   chargeRemainingDuration: 5 * 3600,
   timerSet: true,
   timerActive: true,

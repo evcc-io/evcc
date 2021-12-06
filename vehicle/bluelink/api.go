@@ -4,25 +4,22 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 const (
-	VehiclesURL     = "/api/v1/spa/vehicles"
-	StatusURL       = "/api/v1/spa/vehicles/%s/status"
-	StatusLatestURL = "/api/v1/spa/vehicles/%s/status/latest"
+	VehiclesURL     = "vehicles"
+	StatusURL       = "vehicles/%s/status"
+	StatusLatestURL = "vehicles/%s/status/latest"
 )
 
 const (
-	resOK          = "S"                    // auth fail: F
-	timeFormat     = "20060102150405 -0700" // Note: must add timeOffset
-	timeOffset     = " +0100"
-	refreshTimeout = time.Minute
-	statusExpiry   = 5 * time.Minute
+	resOK = "S" // auth fail: F
 )
 
 // ErrAuthFail indicates authorization failure
@@ -32,31 +29,29 @@ var ErrAuthFail = errors.New("authorization failed")
 // Based on https://github.com/Hacksore/bluelinky.
 type API struct {
 	*request.Helper
-	log         *util.Logger
-	identity    *Identity
-	refresh     bool
-	refreshTime time.Time
+	baseURI string
+}
+
+type Requester interface {
+	Request(*http.Request) error
 }
 
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, identity *Identity, cache time.Duration) *API {
+func NewAPI(log *util.Logger, baseURI string, identity Requester, cache time.Duration) *API {
 	v := &API{
-		log:      log,
-		identity: identity,
-		Helper:   request.NewHelper(log),
+		Helper:  request.NewHelper(log),
+		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",
 	}
 
 	// api is unbelievably slow when retrieving status
-	v.Helper.Client.Timeout = 120 * time.Second
+	v.Client.Timeout = 120 * time.Second
+
+	v.Client.Transport = &transport.Decorator{
+		Decorator: identity.Request,
+		Base:      v.Client.Transport,
+	}
 
 	return v
-}
-
-type VehiclesResponse struct {
-	RetCode string
-	ResMsg  struct {
-		Vehicles []Vehicle
-	}
 }
 
 type Vehicle struct {
@@ -64,116 +59,36 @@ type Vehicle struct {
 }
 
 func (v *API) Vehicles() ([]Vehicle, error) {
-	req, err := v.identity.Request(http.MethodGet, VehiclesURL)
+	var res VehiclesResponse
 
-	var resp VehiclesResponse
-	if err == nil {
-		err = v.DoJSON(req, &resp)
-	}
+	uri := fmt.Sprintf("%s/%s", v.baseURI, VehiclesURL)
+	err := v.GetJSON(uri, &res)
 
-	return resp.ResMsg.Vehicles, err
+	return res.ResMsg.Vehicles, err
 }
 
-type StatusResponse struct {
-	RetCode string
-	ResCode string
-	ResMsg  StatusData
+// StatusLatest retrieves the latest server-side status
+func (v *API) StatusLatest(vid string) (StatusLatestResponse, error) {
+	var res StatusLatestResponse
+
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
+	}
+
+	return res, err
 }
 
-type StatusLatestResponse struct {
-	RetCode string
-	ResCode string
-	ResMsg  struct {
-		VehicleStatusInfo struct {
-			VehicleStatus StatusData
-		}
-	}
-}
+// StatusPartial refreshes the status
+func (v *API) StatusPartial(vid string) (StatusResponse, error) {
+	var res StatusResponse
 
-type StatusData struct {
-	Time     string
-	EvStatus struct {
-		BatteryStatus float64
-		RemainTime2   struct {
-			Atc struct {
-				Value, Unit int
-			}
-		}
-		DrvDistance []DrivingDistance
-	}
-	Vehicles []Vehicle
-}
-
-func (d *StatusData) Updated() (time.Time, error) {
-	return time.Parse(timeFormat, d.Time+timeOffset)
-}
-
-type DrivingDistance struct {
-	RangeByFuel struct {
-		EvModeRange struct {
-			Value int
-		}
-	}
-}
-
-func (v *API) Status(vid string) (StatusData, error) {
-	var resp StatusLatestResponse
-
-	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusLatestURL, vid))
-	if err == nil {
-		if err = v.DoJSON(req, &resp); err == nil && resp.RetCode != resOK {
-			err = fmt.Errorf("unexpected response: %s", resp.RetCode)
-		}
-
-		var ts time.Time
-		if err == nil {
-			ts, err = resp.ResMsg.VehicleStatusInfo.VehicleStatus.Updated()
-
-			// return the current value
-			if time.Since(ts) <= statusExpiry {
-				v.refresh = false
-				return resp.ResMsg.VehicleStatusInfo.VehicleStatus, err
-			}
-		}
+	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusURL, vid))
+	err := v.GetJSON(uri, &res)
+	if err == nil && res.RetCode != resOK {
+		err = fmt.Errorf("unexpected response: %s", res.RetCode)
 	}
 
-	// request a refresh, irrespective of a previous error
-	if !v.refresh {
-		if err = v.refreshRequest(vid); err == nil {
-			err = api.ErrMustRetry
-		}
-
-		return StatusData{}, err
-	}
-
-	// refresh finally expired
-	if time.Since(v.refreshTime) > refreshTimeout {
-		v.refresh = false
-		if err == nil {
-			err = api.ErrTimeout
-		}
-	} else {
-		// wait for refresh, irrespective of a previous error
-		err = api.ErrMustRetry
-	}
-
-	return resp.ResMsg.VehicleStatusInfo.VehicleStatus, err
-}
-
-func (v *API) refreshRequest(vid string) error {
-	req, err := v.identity.Request(http.MethodGet, fmt.Sprintf(StatusURL, vid))
-	if err == nil {
-		v.refresh = true
-		v.refreshTime = time.Now()
-
-		// run the actual update asynchronously
-		go func() {
-			var resp StatusResponse
-			if err := v.DoJSON(req, &resp); err == nil && resp.RetCode != resOK {
-				v.log.ERROR.Printf("unexpected response: %s", resp.RetCode)
-			}
-		}()
-	}
-
-	return err
+	return res, err
 }

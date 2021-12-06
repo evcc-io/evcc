@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -27,9 +26,11 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed          `mapstructure:",squash"`
 		User, Password string
 		VIN            string
+		Expiry         time.Duration
 		Cache          time.Duration
 	}{
-		Cache: interval,
+		Expiry: expiry,
+		Cache:  interval,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -37,18 +38,20 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
+
+	log := util.NewLogger("kia").Redact(cc.User, cc.Password, cc.VIN)
 
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
 		CCSPServiceID:     "fdc85c00-0a2f-4c64-bcb4-2cfb1500730a",
-		CCSPApplicationID: "693a33fa-c117-43f2-ae3b-61a02d24f417",
-		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=f4d531c7-1043-444d-b09a-ad24bd913dd4&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
+		CCSPApplicationID: bluelink.KiaAppID,
+		AuthClientID:      "572e0304-5f8d-4b4c-9dd5-41aa84eed160",
+		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	log := util.NewLogger("kia")
 	identity, err := bluelink.NewIdentity(log, settings)
 	if err != nil {
 		return nil, err
@@ -58,7 +61,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
 	vehicles, err := api.Vehicles()
 	if err != nil {
@@ -83,7 +86,7 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Kia{
 		embed:    &cc.embed,
-		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Cache),
+		Provider: bluelink.NewProvider(api, vehicle.VehicleID, cc.Expiry, cc.Cache),
 	}
 
 	return v, nil

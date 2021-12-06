@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -13,15 +14,18 @@ type TokenRefresher interface {
 }
 
 type TokenSource struct {
+	mu        sync.Mutex
 	token     *oauth2.Token
 	refresher TokenRefresher
 }
 
 func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
-	return &TokenSource{token, refresher}
+	return &TokenSource{token: token, refresher: refresher}
 }
 
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
 	var err error
 	if time.Until(ts.token.Expiry) < time.Minute {
 		var token *oauth2.Token

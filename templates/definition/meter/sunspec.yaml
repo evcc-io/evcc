@@ -1,0 +1,23 @@
+template: sunspec
+description: Inverter / Wechselrichter (SunSpec)
+generic: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: id
+  default: 1
+  valuetype: number
+render: |
+  type: modbus
+  model: sunspec
+  uri: {{ .host }}
+  id: {{ .id }}
+  {{- if eq .usage "grid" }}
+  power: 203:W # sunspec 3-phase meter power reading
+  {{- end -}}
+  {{- if eq .usage "battery" }}
+  soc: ChargeState
+  {{- end -}}

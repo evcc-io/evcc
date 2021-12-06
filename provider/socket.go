@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gorilla/websocket"
 	"github.com/itchyny/gojq"
 )
@@ -70,12 +70,15 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		p.headers["Authorization"] = basicauth.Header(cc.Auth.User, cc.Auth.Password)
+		basicAuth := transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
+		log.Redact(basicAuth)
+
+		p.headers["Authorization"] = basicAuth
 	}
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	if cc.Jq != "" {

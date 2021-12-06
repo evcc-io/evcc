@@ -1,0 +1,5 @@
+type: template
+template: phoenix-ev-eth
+description: Phoenix EV-ETH Controller (Modbus TCP)
+host: 192.0.2.2 
+port: 502

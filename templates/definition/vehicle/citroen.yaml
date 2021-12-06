@@ -1,0 +1,9 @@
+template: citroen
+description: Citroen
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: citroen
+  {{include "vehicle-common" .}}

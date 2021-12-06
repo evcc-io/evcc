@@ -1,0 +1,45 @@
+template: fronius-gen24
+description: Fronius Symo GEN24 Plus
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: ["grid", "pv", "battery"]
+- name: host
+  example: 192.0.2.2
+  required: true
+- name: port
+  default: 502
+render: |
+  {{- if eq .usage "grid" }}
+  type: modbus
+  model: sunspec
+  uri: {{ .host }}:{{ .port }}
+  id: 200
+  power: 213:W # sunspec model 203 meter
+  {{- end }}
+  {{- if or (eq .usage "pv") (eq .usage "battery") }}
+  type: custom
+  power:
+    source: calc
+    add:
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:3:DCW # mppt 3 charge
+      scale: -1
+    - source: modbus
+      model: sunspec
+      uri: {{ .host }}:{{ .port }}
+      id: 1
+      value: 160:4:DCW # mppt 4 discharge
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  soc:
+    source: modbus
+    model: sunspec
+    uri: {{ .host }}:{{ .port }}
+    id: 1
+    value: ChargeState
+  {{- end }}

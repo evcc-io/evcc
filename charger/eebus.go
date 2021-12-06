@@ -3,13 +3,11 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/eebus/app"
 	"github.com/evcc-io/eebus/communication"
 	"github.com/evcc-io/eebus/ship"
-	"github.com/evcc-io/eebus/spine"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/server"
@@ -72,15 +70,10 @@ func NewEEBus(ski string, forcePVLimits bool) (*EEBus, error) {
 	return c, nil
 }
 
-var eebusDevice spine.Device
-var once sync.Once
-
 func (c *EEBus) onConnect(ski string, conn ship.Conn) error {
 	c.log.TRACE.Println("!! onCconnect invoked on ski ", ski)
 
-	once.Do(func() {
-		eebusDevice = app.HEMS(server.EEBusInstance.DeviceInfo())
-	})
+	eebusDevice := app.HEMS(server.EEBusInstance.DeviceInfo())
 	c.cc = communication.NewConnectionController(c.log.TRACE, conn, eebusDevice)
 	c.cc.SetDataUpdateHandler(c.dataUpdateHandler)
 

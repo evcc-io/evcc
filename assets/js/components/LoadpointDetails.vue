@@ -34,10 +34,10 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="range && range >= 0">
-				<div class="mb-2 value">{{ $t("main.loadpointDetails.range") }}</div>
+			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehicleRange && vehicleRange >= 0">
+				<div class="mb-2 value">{{ $t("main.loadpointDetails.vehicleRange") }}</div>
 				<h3 class="value">
-					{{ Math.round(range) }}
+					{{ Math.round(vehicleRange) }}
 					<small class="text-muted">km</small>
 				</h3>
 			</div>
@@ -76,7 +76,7 @@ export default {
 		chargePower: Number,
 		climater: String,
 		vehiclePresent: Boolean,
-		range: Number,
+		vehicleRange: Number,
 	},
 	mixins: [formatter],
 };

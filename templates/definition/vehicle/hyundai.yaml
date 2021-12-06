@@ -1,0 +1,9 @@
+template: hyundai
+description: Hyundai
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 64
+render: |
+  type: hyundai
+  {{include "vehicle-common" .}}

@@ -65,12 +65,20 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Battery); ok {
-		soc, err := v.SoC()
+		var soc float64
+		var err error
 
-		for err != nil && errors.Is(err, api.ErrMustRetry) {
-			fmt.Fprint(w, ".")
-			time.Sleep(3 * time.Second)
-			soc, err = v.SoC()
+		// wait up to 1m for the vehicle to wakeup
+		start := time.Now()
+		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
+			if soc, err = v.SoC(); err != nil {
+				if time.Since(start) > time.Minute {
+					err = api.ErrTimeout
+				} else {
+					fmt.Fprint(w, ".")
+					time.Sleep(3 * time.Second)
+				}
+			}
 		}
 
 		if err != nil {
@@ -116,10 +124,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	// vehicle
 
-	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
-	}
-
 	if v, ok := v.(api.VehicleRange); ok {
 		if rng, err := v.Range(); err != nil {
 			fmt.Fprintf(w, "Range:\t%v\n", err)
@@ -155,6 +159,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if !math.IsNaN(tt) {
 				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
 			}
+		}
+	}
+
+	if v, ok := v.(api.Vehicle); ok {
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		if len(v.Identifiers()) > 0 {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
 		}
 	}
 

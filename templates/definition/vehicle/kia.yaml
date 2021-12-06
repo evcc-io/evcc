@@ -1,0 +1,9 @@
+template: kia
+description: Kia
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 64
+render: |
+  type: kia
+  {{include "vehicle-common" .}}

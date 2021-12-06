@@ -50,7 +50,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the Tesla client
-	log := util.NewLogger("tesla")
+	log := util.NewLogger("tesla").Redact(cc.Tokens.Access, cc.Tokens.Refresh)
 	ctx := context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(log).Client)
 
 	options := []tesla.ClientOption{tesla.WithToken(&oauth2.Token{
@@ -136,7 +136,7 @@ func (v *Tesla) ChargedEnergy() (float64, error) {
 	res, err := v.chargeStateG()
 
 	if res, ok := res.(*tesla.ChargeState); err == nil && ok {
-		return float64(res.ChargeEnergyAdded), nil
+		return res.ChargeEnergyAdded, nil
 	}
 
 	return 0, err

@@ -32,6 +32,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/vehicle/tronity"
+	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
 
@@ -48,6 +49,8 @@ type Tronity struct {
 func init() {
 	registry.Add("tronity", NewTronityFromConfig)
 }
+
+//go:generate go run ../cmd/tools/decorate.go -f decorateTronity -b *Tronity -r api.Vehicle -t "api.ChargeState,Status,func() (api.ChargeStatus, error)" -t "api.VehicleOdometer,Odometer,func() (float64, error)" -t "api.VehicleStartCharge,StartCharge,func() error" -t "api.VehicleStopCharge,StopCharge,func() error"
 
 // NewTronityFromConfig creates a new vehicle
 func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
@@ -74,7 +77,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the tronity client
-	log := util.NewLogger("tronity")
+	log := util.NewLogger("tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
 
 	oc, err := tronity.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret)
 	if err != nil {
@@ -115,23 +118,41 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	var vehicle tronity.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
-		v.vid = vehicles[0].ID
+		vehicle = vehicles[0]
 	} else {
-		for _, vehicle := range vehicles {
-			if vehicle.VIN == strings.ToUpper(cc.VIN) {
-				v.vid = vehicle.ID
+		for _, v := range vehicles {
+			if v.VIN == strings.ToUpper(cc.VIN) {
+				vehicle = v
 			}
 		}
 	}
 
-	if v.vid == "" {
+	if vehicle.ID == "" {
 		return nil, errors.New("vin not found")
 	}
 
+	v.vid = vehicle.ID
 	v.bulkG = provider.NewCached(v.bulk, cc.Cache).InterfaceGetter()
 
-	return v, nil
+	var status func() (api.ChargeStatus, error)
+	if funk.ContainsString(vehicle.Scopes, tronity.ReadCharge) {
+		status = v.status
+	}
+
+	var odometer func() (float64, error)
+	if funk.ContainsString(vehicle.Scopes, tronity.ReadOdometer) {
+		odometer = v.odometer
+	}
+
+	var start, stop func() error
+	if funk.ContainsString(vehicle.Scopes, tronity.WriteChargeStartStop) {
+		start = v.startCharge
+		stop = v.stopCharge
+	}
+
+	return decorateTronity(v, status, odometer, start, stop), nil
 }
 
 // RefreshToken performs token refresh by logging in with app context
@@ -188,10 +209,8 @@ func (v *Tronity) SoC() (float64, error) {
 	return 0, err
 }
 
-var _ api.ChargeState = (*Tronity)(nil)
-
-// Status implements the api.ChargeState interface
-func (v *Tronity) Status() (api.ChargeStatus, error) {
+// status implements the api.ChargeState interface
+func (v *Tronity) status() (api.ChargeStatus, error) {
 	status := api.StatusA // disconnected
 	res, err := v.bulkG()
 
@@ -217,10 +236,8 @@ func (v *Tronity) Range() (int64, error) {
 	return 0, err
 }
 
-var _ api.VehicleOdometer = (*Tronity)(nil)
-
-// Odometer implements the api.VehicleOdometer interface
-func (v *Tronity) Odometer() (float64, error) {
+// odometer implements the api.VehicleOdometer interface
+func (v *Tronity) odometer() (float64, error) {
 	res, err := v.bulkG()
 
 	if res, ok := res.(tronity.Bulk); err == nil && ok {
@@ -246,18 +263,14 @@ func (v *Tronity) post(uri string) error {
 	return err
 }
 
-var _ api.VehicleStartCharge = (*Tronity)(nil)
-
-// StartCharge implements the api.VehicleStartCharge interface
-func (v *Tronity) StartCharge() error {
+// startCharge implements the api.VehicleStartCharge interface
+func (v *Tronity) startCharge() error {
 	uri := fmt.Sprintf("%s/v1/vehicles/%s/charge_start", tronity.URI, v.vid)
 	return v.post(uri)
 }
 
-var _ api.VehicleStopCharge = (*Tronity)(nil)
-
-// StopCharge implements the api.VehicleStopCharge interface
-func (v *Tronity) StopCharge() error {
+// stopCharge implements the api.VehicleStopCharge interface
+func (v *Tronity) stopCharge() error {
 	uri := fmt.Sprintf("%s/v1/vehicles/%s/charge_stop", tronity.URI, v.vid)
 	return v.post(uri)
 }

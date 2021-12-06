@@ -71,12 +71,12 @@ func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
 	})
 	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetMinSoC(soc)
+			apiHandler.SetMinSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
 		if soc, err := strconv.Atoi(payload); err == nil {
-			_ = apiHandler.SetTargetSoC(soc)
+			apiHandler.SetTargetSoC(soc)
 		}
 	})
 	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
@@ -103,7 +103,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	m.publish(topic, true, "online")
 
 	// site setters
-	m.Handler.Listen(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {
 			_ = site.SetPrioritySoC(float64(soc))
@@ -124,6 +124,14 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
 
+	// remove deprecated topics
+	for id := range site.LoadPoints() {
+		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
+		for _, dep := range []string{"range", "socCharge", "vehicleSoc"} {
+			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
+		}
+	}
+
 	// publish
 	for p := range in {
 		topic := fmt.Sprintf("%s/site", m.root)
@@ -140,6 +148,6 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 		// value
 		topic += "/" + p.Key
-		m.publish(topic, false, p.Val)
+		m.publish(topic, true, p.Val)
 	}
 }

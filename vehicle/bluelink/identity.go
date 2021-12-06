@@ -29,6 +29,7 @@ const (
 // Config is the bluelink API configuration
 type Config struct {
 	URI               string
+	AuthClientID      string // v2
 	BrandAuthUrl      string // v2
 	BasicToken        string
 	CCSPServiceID     string
@@ -62,7 +63,7 @@ func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
 
 func (v *Identity) stamp() string {
-	return stamps.New(v.config.CCSPApplicationID)
+	return Stamps.New(v.config.CCSPApplicationID)
 }
 
 func (v *Identity) getDeviceID() (string, error) {
@@ -150,7 +151,7 @@ func (v *Identity) brandLogin(cookieClient *request.Helper, user, password strin
 	var resp *http.Response
 
 	if err == nil {
-		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.URI, "en", info.ServiceId, info.UserId)
+		uri := fmt.Sprintf(v.config.BrandAuthUrl, v.config.AuthClientID, v.config.URI, "en", info.ServiceId, info.UserId)
 
 		req, err = request.New(http.MethodGet, uri, nil)
 		if err == nil {
@@ -255,15 +256,19 @@ func (v *Identity) bluelinkLogin(cookieClient *request.Helper, user, password st
 		return "", err
 	}
 
-	var redirect struct {
+	var res struct {
 		RedirectURL string `json:"redirectUrl"`
+		ErrCode     string `json:"errCode"`
+		ErrMsg      string `json:"errMsg"`
 	}
 
 	var accCode string
-	if err = cookieClient.DoJSON(req, &redirect); err == nil {
-		if parsed, err := url.Parse(redirect.RedirectURL); err == nil {
+	if err = cookieClient.DoJSON(req, &res); err == nil {
+		if parsed, err := url.Parse(res.RedirectURL); err == nil {
 			accCode = parsed.Query().Get("code")
 		}
+	} else if res.ErrCode != "" {
+		err = fmt.Errorf("%w: %s (%s)", err, res.ErrMsg, res.ErrCode)
 	}
 
 	return accCode, err
@@ -334,10 +339,6 @@ func (v *Identity) Login(user, password string) (err error) {
 		if code, err = v.brandLogin(cookieClient, user, password); err != nil {
 			code, err = v.bluelinkLogin(cookieClient, user, password)
 		}
-
-		if err != nil {
-			err = fmt.Errorf("login failed: %w", err)
-		}
 	}
 
 	if err == nil {
@@ -354,21 +355,23 @@ func (v *Identity) Login(user, password string) (err error) {
 	return err
 }
 
-// Request creates authenticated request
-func (v *Identity) Request(method, path string) (*http.Request, error) {
+// Request decorates requests with authorization headers
+func (v *Identity) Request(req *http.Request) error {
 	token, err := v.Token()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	headers := map[string]string{
+	for k, v := range map[string]string{
 		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
 		"Stamp":               v.stamp(),
+	} {
+		req.Header.Set(k, v)
 	}
 
-	return request.New(method, v.config.URI+path, nil, headers)
+	return nil
 }

@@ -1,0 +1,4 @@
+type: template
+template: cfos-meter
+description: cFos PowerBrain
+usage: charger

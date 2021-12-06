@@ -143,7 +143,7 @@ func (wb *Wallbe) Enabled() (bool, error) {
 func (wb *Wallbe) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
@@ -186,7 +186,7 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 
 	// 2 words, least significant word first
 	secs := uint64(b[1]) | uint64(b[0])<<8 | uint64(b[3])<<16 | uint64(b[2])<<24
-	return time.Duration(time.Duration(secs) * time.Second), nil
+	return time.Duration(secs) * time.Second, nil
 }
 
 func (wb *Wallbe) decodeReading(b []byte) float64 {

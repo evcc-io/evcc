@@ -3,7 +3,7 @@
 		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/evcc-io/evcc">
+					<a class="navbar-brand" href="https://github.com/evcc-io/evcc#readme">
 						<Logo class="logo"></Logo>
 					</a>
 					<div class="d-flex">

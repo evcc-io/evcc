@@ -1,0 +1,9 @@
+template: skoda
+description: Skoda (Citigo)
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 10
+render: |
+  type: skoda
+  {{include "vehicle-common" .}}

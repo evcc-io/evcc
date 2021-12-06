@@ -1,93 +1,23 @@
 package vehicle
 
 import (
-	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
+	"github.com/evcc-io/evcc/vehicle/volvo"
 )
 
-const (
-	volvoAPI = "https://vocapi.wirelesscar.net/customerapi/rest/v3.0"
-)
-
-type volvoAccountResponse struct {
-	FirstName        string   `json:"firstName"`
-	LastName         string   `json:"lastName"`
-	VehicleRelations []string `json:"accountVehicleRelations"`
-}
-
-type volvoVehicleRelation struct {
-	Account                   string `json:"account"`
-	AccountID                 string `json:"accountId"`
-	Vehicle                   string `json:"vehicle"`
-	AccountVehicleRelation    string `json:"accountVehicleRelation"`
-	VehicleID                 string `json:"vehicleId"`
-	Username                  string `json:"username"`
-	Status                    string `json:"status"`
-	CustomerVehicleRelationID int    `json:"customerVehicleRelationId"`
-}
-
-type volvoStatus struct {
-	AverageFuelConsumption          float32 `json:"averageFuelConsumption"`
-	AverageFuelConsumptionTimestamp string  `json:"averageFuelConsumptionTimestamp"`
-	AverageSpeed                    int     `json:"averageSpeed"`
-	AverageSpeedTimestamp           string  `json:"averageSpeedTimestamp"`
-	BrakeFluid                      string  `json:"brakeFluid"`
-	BrakeFluidTimestamp             string  `json:"brakeFluidTimestamp"`
-	CarLocked                       bool    `json:"carLocked"`
-	CarLockedTimestamp              string  `json:"carLockedTimestamp"`
-	ConnectionStatus                string  `json:"connectionStatus"` // Disconnected
-	ConnectionStatusTimestamp       string  `json:"connectionStatusTimestamp"`
-	DistanceToEmpty                 int     `json:"distanceToEmpty"`
-	DistanceToEmptyTimestamp        string  `json:"distanceToEmptyTimestamp"`
-	EngineRunning                   bool    `json:"engineRunning"`
-	EngineRunningTimestamp          string  `json:"engineRunningTimestamp"`
-	FuelAmount                      int     `json:"fuelAmount"`
-	FuelAmountLevel                 int     `json:"fuelAmountLevel"`
-	FuelAmountLevelTimestamp        string  `json:"fuelAmountLevelTimestamp"`
-	FuelAmountTimestamp             string  `json:"fuelAmountTimestamp"`
-	HvBattery                       struct {
-		HvBatteryChargeStatusDerived          string `json:"hvBatteryChargeStatusDerived"` // CableNotPluggedInCar, CablePluggedInCar, Charging
-		HvBatteryChargeStatusDerivedTimestamp string `json:"hvBatteryChargeStatusDerivedTimestamp"`
-		HvBatteryChargeModeStatus             string `json:"hvBatteryChargeModeStatus"`
-		HvBatteryChargeModeStatusTimestamp    string `json:"hvBatteryChargeModeStatusTimestamp"`
-		HvBatteryChargeStatus                 string `json:"hvBatteryChargeStatus"` // Started, ChargeProgress, ChargeEnd, Interrupted
-		HvBatteryChargeStatusTimestamp        string `json:"hvBatteryChargeStatusTimestamp"`
-		HvBatteryLevel                        int    `json:"hvBatteryLevel"`
-		HvBatteryLevelTimestamp               string `json:"hvBatteryLevelTimestamp"`
-		DistanceToHVBatteryEmpty              int    `json:"distanceToHVBatteryEmpty"`
-		DistanceToHVBatteryEmptyTimestamp     string `json:"distanceToHVBatteryEmptyTimestamp"`
-		TimeToHVBatteryFullyCharged           int    `json:"timeToHVBatteryFullyCharged"`
-		TimeToHVBatteryFullyChargedTimestamp  string `json:"timeToHVBatteryFullyChargedTimestamp"`
-	} `json:"hvBattery"`
-	Odometer                           float64 `json:"odometer"`
-	OdometerTimestamp                  string  `json:"odometerTimestamp"`
-	PrivacyPolicyEnabled               bool    `json:"privacyPolicyEnabled"`
-	PrivacyPolicyEnabledTimestamp      string  `json:"privacyPolicyEnabledTimestamp"`
-	RemoteClimatizationStatus          string  `json:"remoteClimatizationStatus"` // CableConnectedWithoutPower
-	RemoteClimatizationStatusTimestamp string  `json:"remoteClimatizationStatusTimestamp"`
-	ServiceWarningStatus               string  `json:"serviceWarningStatus"`
-	ServiceWarningStatusTimestamp      string  `json:"serviceWarningStatusTimestamp"`
-	TimeFullyAccessibleUntil           string  `json:"timeFullyAccessibleUntil"`
-	TimePartiallyAccessibleUntil       string  `json:"timePartiallyAccessibleUntil"`
-	TripMeter1                         int     `json:"tripMeter1"`
-	TripMeter1Timestamp                string  `json:"tripMeter1Timestamp"`
-	TripMeter2                         int     `json:"tripMeter2"`
-	TripMeter2Timestamp                string  `json:"tripMeter2Timestamp"`
-}
-
-// Volvo is an api.Vehicle implementation for Volvo cars
+// Volvo is an api.Vehicle implementation for Volvo. cars
 type Volvo struct {
 	*embed
 	*request.Helper
-	user, password, vin string
-	statusG             func() (interface{}, error)
+	vin     string
+	statusG func() (interface{}, error)
 }
 
 func init() {
@@ -108,17 +38,31 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo")
+	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
+
+	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)
 
 	v := &Volvo{
-		embed:    &cc.embed,
-		Helper:   request.NewHelper(log),
-		user:     cc.User,
-		password: cc.Password,
-		vin:      cc.VIN,
+		embed:  &cc.embed,
+		Helper: request.NewHelper(log),
+		vin:    cc.VIN,
 	}
 
-	v.statusG = provider.NewCached(v.status, cc.Cache).InterfaceGetter()
+	v.Client.Transport = &transport.Decorator{
+		Base: v.Client.Transport,
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"Authorization":     basicAuth,
+			"Content-Type":      "application/json",
+			"X-Device-Id":       "Device",
+			"X-OS-Type":         "Android",
+			"X-Originator-Type": "App",
+			"X-OS-Version":      "22",
+		}),
+	}
+
+	v.statusG = provider.NewCached(func() (interface{}, error) {
+		return v.status()
+	}, cc.Cache).InterfaceGetter()
 
 	var err error
 	if cc.VIN == "" {
@@ -131,49 +75,37 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	return v, err
 }
 
-func (v *Volvo) request(uri string) (*http.Request, error) {
-	basicAuth := base64.StdEncoding.EncodeToString([]byte(v.user + ":" + v.password))
-
-	return request.New(http.MethodGet, uri, nil, map[string]string{
-		"Authorization":     fmt.Sprintf("Basic %s", basicAuth),
-		"Content-Type":      "application/json",
-		"X-Device-Id":       "Device",
-		"X-OS-Type":         "Android",
-		"X-Originator-Type": "App",
-		"X-OS-Version":      "22",
-	})
-}
-
 // vehicles implements returns the list of user vehicles
 func (v *Volvo) vehicles() ([]string, error) {
 	var vehicles []string
 
-	req, err := v.request(fmt.Sprintf("%s/customeraccounts", volvoAPI))
+	uri := fmt.Sprintf("%s/customeraccounts", volvo.ApiURI)
+
+	var res volvo.AccountResponse
+	err := v.GetJSON(uri, &res)
 	if err == nil {
-		var res volvoAccountResponse
-		err = v.DoJSON(req, &res)
-
 		for _, rel := range res.VehicleRelations {
-			var vehicle volvoVehicleRelation
-			if req, err := v.request(rel); err == nil {
-				if err = v.DoJSON(req, &vehicle); err != nil {
-					return vehicles, err
-				}
-
-				vehicles = append(vehicles, vehicle.VehicleID)
+			var vehicle volvo.VehicleRelation
+			if err := v.GetJSON(rel, &vehicle); err != nil {
+				return vehicles, err
 			}
+
+			vehicles = append(vehicles, vehicle.VehicleID)
 		}
+	} else if res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
 	}
 
 	return vehicles, err
 }
 
-func (v *Volvo) status() (interface{}, error) {
-	var res volvoStatus
+func (v *Volvo) status() (volvo.Status, error) {
+	var res volvo.Status
 
-	req, err := v.request(fmt.Sprintf("%s/vehicles/%s/status", volvoAPI, v.vin))
-	if err == nil {
-		err = v.DoJSON(req, &res)
+	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin)
+	err := v.GetJSON(uri, &res)
+	if err != nil && res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
 	}
 
 	return res, err
@@ -182,7 +114,7 @@ func (v *Volvo) status() (interface{}, error) {
 // SoC implements the api.Vehicle interface
 func (v *Volvo) SoC() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(volvoStatus); err == nil && ok {
+	if res, ok := res.(volvo.Status); err == nil && ok {
 		return float64(res.HvBattery.HvBatteryLevel), nil
 	}
 
@@ -194,13 +126,13 @@ var _ api.ChargeState = (*Volvo)(nil)
 // Status implements the api.ChargeState interface
 func (v *Volvo) Status() (api.ChargeStatus, error) {
 	res, err := v.statusG()
-	if res, ok := res.(volvoStatus); err == nil && ok {
+	if res, ok := res.(volvo.Status); err == nil && ok {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
 			return api.StatusA, nil
-		case "CablePluggedInCar":
+		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged", "CablePluggedInCar_ChargingPaused":
 			return api.StatusB, nil
-		case "Charging":
+		case "Charging", "CablePluggedInCar_Charging":
 			return api.StatusC, nil
 		}
 	}
@@ -213,7 +145,7 @@ var _ api.VehicleRange = (*Volvo)(nil)
 // VehicleRange implements the api.VehicleRange interface
 func (v *Volvo) Range() (int64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(volvoStatus); err == nil && ok {
+	if res, ok := res.(volvo.Status); err == nil && ok {
 		return int64(res.HvBattery.DistanceToHVBatteryEmpty), nil
 	}
 
@@ -225,8 +157,8 @@ var _ api.VehicleOdometer = (*Volvo)(nil)
 // VehicleOdometer implements the api.VehicleOdometer interface
 func (v *Volvo) Odometer() (float64, error) {
 	res, err := v.statusG()
-	if res, ok := res.(volvoStatus); err == nil && ok {
-		return float64(res.Odometer), nil
+	if res, ok := res.(volvo.Status); err == nil && ok {
+		return res.Odometer / 1e3, nil
 	}
 
 	return 0, err
@@ -237,14 +169,10 @@ var _ api.VehicleFinishTimer = (*Volvo)(nil)
 // FinishTime implements the VehicleFinishTimer interface
 func (v *Volvo) FinishTime() (time.Time, error) {
 	res, err := v.statusG()
-	if res, ok := res.(volvoStatus); err == nil && ok {
-		timestamp, err := time.Parse("2006-01-02T15:04:05-0700", res.HvBattery.TimeToHVBatteryFullyChargedTimestamp)
-
-		if err == nil {
-			timestamp = timestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
-			if timestamp.Before(time.Now()) {
-				return time.Time{}, api.ErrNotAvailable
-			}
+	if res, ok := res.(volvo.Status); err == nil && ok {
+		timestamp := res.HvBattery.TimeToHVBatteryFullyChargedTimestamp.Add(time.Duration(res.HvBattery.DistanceToHVBatteryEmpty) * time.Minute)
+		if timestamp.Before(time.Now()) {
+			return time.Time{}, api.ErrNotAvailable
 		}
 
 		return timestamp, err

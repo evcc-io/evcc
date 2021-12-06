@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	carwingsRequestTimeout = 90 * time.Second
 	carwingsStatusExpiry   = 5 * time.Minute // if returned status value is older, evcc will init refresh
 	carwingsRefreshTimeout = 2 * time.Minute // timeout to get status after refresh
 )
@@ -51,20 +52,19 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
-	// http client with high dial/handshake timeout
-	const timeout = 90 * time.Second
-	log := util.NewLogger("carwings")
+	log := util.NewLogger("carwings").Redact(cc.User, cc.Password, cc.VIN)
 
+	// http client with high dial/handshake timeout
 	transport := request.NewTripper(log, &http.Transport{
 		Proxy: http.ProxyFromEnvironment, // default
 		DialContext: (&net.Dialer{
-			Timeout:   timeout,
+			Timeout:   carwingsRequestTimeout,
 			KeepAlive: 30 * time.Second, // default
 		}).DialContext,
-		TLSHandshakeTimeout:   timeout,
+		TLSHandshakeTimeout:   carwingsRequestTimeout,
 		ForceAttemptHTTP2:     true,             // default
 		MaxIdleConns:          100,              // default
 		IdleConnTimeout:       90 * time.Second, // default
@@ -72,7 +72,7 @@ func NewCarWingsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	})
 
 	carwings.Client = &http.Client{
-		Timeout:   timeout,
+		Timeout:   carwingsRequestTimeout,
 		Transport: transport,
 	}
 
