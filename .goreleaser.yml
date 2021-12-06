@@ -93,6 +93,10 @@ brews:
       <dict>
         <key>Label</key>
         <string>#{plist_name}</string>
+        <key>Program</key>
+        <string>#{bin}/evcc</string>
+        <key>WorkingDirectory</key>
+        <string>#{HOMEBREW_PREFIX}</string>
         <key>RunAtLoad</key>
         <true/>
         <key>KeepAlive</key>
