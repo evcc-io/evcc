@@ -74,7 +74,7 @@ Allows to define a list of meter devices that are typically installed with this 
 
 - `vehicle`: Provides a set of params that are used in most vehicles
 
-## ´params`
+## `params`
 
 `params` describes the set of parameters the user needs to provide a value for.
 
