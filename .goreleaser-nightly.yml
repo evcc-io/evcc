@@ -12,8 +12,6 @@ builds:
   - CGO_ENABLED=0
   goos:
   - linux
-  - darwin
-  - windows
   goarch:
   - amd64
   - arm
@@ -40,24 +38,24 @@ checksum:
 snapshot:
   name_template: "{{ .Version }}.{{.Timestamp}}"
 nfpms:
-  - id: default
-    package_name: evcc
-    file_name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+- id: default
+  package_name: evcc
+  file_name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
 
-    homepage:  https://evcc.io
-    description: EV Charge Controller
-    maintainer: andig <cpuidle@gmx.de>
-    license: MIT
-    vendor: evcc.io
+  homepage:  https://evcc.io
+  description: EV Charge Controller
+  maintainer: andig <cpuidle@gmx.de>
+  license: MIT
+  vendor: evcc.io
 
-    formats:
-    - deb
+  formats:
+  - deb
 
-    contents:
-    - src: ./packaging/init/evcc.service
-      dst: /lib/systemd/system/evcc.service
+  contents:
+  - src: ./packaging/init/evcc.service
+    dst: /lib/systemd/system/evcc.service
 
-    scripts:
-      postinstall: ./packaging/scripts/postinstall.sh
-      preremove: ./packaging/scripts/preremove.sh
-      postremove: ./packaging/scripts/postremove.sh
+  scripts:
+    postinstall: ./packaging/scripts/postinstall.sh
+    preremove: ./packaging/scripts/preremove.sh
+    postremove: ./packaging/scripts/postremove.sh
