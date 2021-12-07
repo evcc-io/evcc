@@ -85,6 +85,9 @@
           "mode": {
             "$ref": "#/definitions/mode"
           },
+          "resetOnDisconnect": {
+            "type": "boolean"
+          },
           "charger": {
             "type": "string"
           },
