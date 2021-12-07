@@ -31,6 +31,8 @@ import (
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
+// https://github.com/evcc-io/evcc/discussions/1965
+
 // Alfen charger implementation
 type Alfen struct {
 	log     *util.Logger
