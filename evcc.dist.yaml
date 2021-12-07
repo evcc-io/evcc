@@ -5,7 +5,7 @@ interval: 10s # control cycle interval
 # sponsortoken:
 
 # log settings
-log: error
+log: info
 levels:
   core: debug
   lp-1: debug
