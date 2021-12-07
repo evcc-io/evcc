@@ -92,6 +92,11 @@ export default {
       charged: "Geladen",
       duration: "Dauer",
       remaining: "Restzeit",
+      tooltip: {
+        scale1p: "Umschaltung auf 1-phasig {remaining}",
+        scale3p: "Umschaltung auf 3-phasig {remaining}",
+        inactive: "lädt {activePhases}-phasig",
+      },
     },
   },
 };

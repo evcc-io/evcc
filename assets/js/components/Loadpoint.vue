@@ -77,6 +77,8 @@ export default {
 		chargeCurrents: Array,
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
+		phaseAction: String,
+		phaseRemaining: Number,
 	},
 	components: { LoadpointDetails, Mode, Vehicle },
 	mixins: [formatter, collector],

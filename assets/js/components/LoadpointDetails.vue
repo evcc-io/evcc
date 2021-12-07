@@ -5,13 +5,22 @@
 				<div class="mb-2 value">
 					{{ $t("main.loadpointDetails.power") }}
 					<div
+						v-if="chargePower && activePhases"
 						class="badge bg-dark text-light"
 						:class="{ pulse: phaseTimerActive }"
-						v-tooltip="
-							'Umschaltung auf 1-phasig in ' + Math.round(Math.random() * 60) + 's'
-						"
+						v-tooltip="{
+							content: $t(
+								`main.loadpointDetails.tooltip.${phaseAction || 'inactive'}`,
+								{
+									remaining: fmtTimeAgo(
+										new Date(Date.now() + phaseRemaining * 1000)
+									),
+									activePhases,
+								}
+							),
+						}"
 					>
-						3p
+						{{ activePhases }}p
 					</div>
 					<fa-icon
 						class="text-primary ms-1"
@@ -86,11 +95,14 @@ export default {
 		climater: String,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
+		activePhases: Number,
+		phaseRemaining: Number,
+		phaseAction: String,
 	},
 	mixins: [formatter],
 	computed: {
 		phaseTimerActive() {
-			return true;
+			return this.phaseRemaining > 0;
 		},
 	},
 };

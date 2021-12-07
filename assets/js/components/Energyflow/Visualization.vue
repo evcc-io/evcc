@@ -140,10 +140,10 @@ export default {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
 		enableTimerActive: function () {
-			return true;
+			return false;
 		},
 		disableTimerActive: function () {
-			return true;
+			return false;
 		},
 	},
 	watch: {
