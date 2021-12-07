@@ -112,7 +112,7 @@
                 "type": "object",
                 "properties": {
                   "mode": {
-                    "type": "string"
+                    "$ref": "#/definitions/pollMode"
                   },
                   "interval": {
                     "$ref": "#/definitions/duration"
@@ -172,6 +172,13 @@
         "on",
         "pv",
         "minpv"
+      ]
+    },
+    "pollMode": {
+      "enum": [
+        "alway",
+        "charging",
+        "connected"
       ]
     }
   }
