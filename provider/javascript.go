@@ -10,7 +10,6 @@ import (
 
 // Javascript implements Javascript request provider
 type Javascript struct {
-	log    *util.Logger
 	vm     *otto.Otto
 	script string
 }
@@ -30,12 +29,9 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 		return nil, err
 	}
 
-	log := util.NewLogger("js")
-
 	vm := javascript.RegisteredVM(strings.ToLower(cc.VM))
 
 	p := &Javascript{
-		log:    log,
 		vm:     vm,
 		script: cc.Script,
 	}
