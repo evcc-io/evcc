@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    branches:
-      - master
+    tags:
+    - '*'
 
 jobs:
   call-build-workflow:
