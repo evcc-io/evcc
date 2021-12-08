@@ -20,7 +20,6 @@ const AuthURI = "https://customer.bmwgroup.com/gcdm/oauth/authenticate"
 
 type Identity struct {
 	*request.Helper
-	log *util.Logger
 	oauth2.TokenSource
 	user, password string
 }
@@ -28,7 +27,6 @@ type Identity struct {
 // NewIdentity creates BMW identity
 func NewIdentity(log *util.Logger) *Identity {
 	v := &Identity{
-		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
