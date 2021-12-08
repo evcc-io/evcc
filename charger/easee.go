@@ -431,7 +431,7 @@ func (c *Easee) Phases1p3p(phases int) error {
 	} else {
 		// charger level
 		if phases == 3 {
-			phases = 2
+			phases = 2 // mode 2 means 3p
 		}
 
 		data := easee.ChargerSettings{
