@@ -73,7 +73,7 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 		c.localizedString("Flow_Type_SingleDevice", nil),
 	}
 	fmt.Println()
-	flowIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), flowChoices)
+	flowIndex, _ := c.askChoice(c.localizedString("Flow_Type", nil), flowChoices)
 	switch flowIndex {
 	case 0:
 		c.flowNewConfigFile()
