@@ -1,6 +1,6 @@
 type: template
 template: tinkerforge-warp-pro
-description: TinkerForge WARP Charger
+description: TinkerForge WARP Charger Pro
 host: 192.0.2.2 
 port: 1883 
 topic: warp 
