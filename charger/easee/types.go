@@ -69,6 +69,7 @@ type Circuit struct {
 	RatedCurrent     float64
 	UseDynamicMaster bool
 	ParentCircuitID  int
+	Chargers         []Charger
 }
 
 // ChargerStatus is the charger status type
