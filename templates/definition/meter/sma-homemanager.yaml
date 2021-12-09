@@ -9,8 +9,10 @@ guidedsetup:
     usage: pv
   - template: sma-inverter
     usage: pv
+    multiple: true
   - template: sma-inverter
     usage: battery
+    multiple: true
 params:
 - name: usage
   choice: ["grid"]

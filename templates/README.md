@@ -50,6 +50,10 @@ Allows to define a list of meter devices that are typically installed with this 
 - `pv`:  for pv inverter/meter
 - `battery`: for battery inverter/meter
 
+#### `multiple`
+
+`multiple:true` to define that multiple devices of this template can be added
+
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup

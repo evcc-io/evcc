@@ -101,45 +101,67 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	}
 
 	for _, linkedTemplate := range linkedTemplates {
+		linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			return
+		}
+		if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
+			break
+		}
+
+		category := DeviceCategory(linkedTemplate.Usage)
+
+		localizeMap := localizeMap{
+			"Linked":     linkedTemplateItem.Description,
+			"Article":    DeviceCategories[category].article,
+			"Additional": DeviceCategories[category].additional,
+			"Category":   DeviceCategories[category].title,
+		}
+
+		fmt.Println()
+		if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap)) {
+			break
+		}
+
 		for ok := true; ok; {
-			deviceItem := device{}
+			c.configureLinkedTemplate(linkedTemplateItem, category)
 
-			linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
-			if err != nil {
-				fmt.Println("Error: " + err.Error())
-				return
-			}
-			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
-				return
-			}
-
-			category := DeviceCategory(linkedTemplate.Usage)
-
-			fmt.Println()
-			if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap{"Linked": linkedTemplateItem.Description, "Article": DeviceCategories[category].article, "Category": DeviceCategories[category].title})) {
+			if !linkedTemplate.Multiple {
 				break
 			}
 
-			values := c.processConfig(linkedTemplateItem.Params, category)
-			deviceItem, err = c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
-			if err != nil {
-				if !errors.Is(err, c.errDeviceNotValid) {
-					fmt.Println()
-					fmt.Println(err)
-				}
-				fmt.Println()
-				if c.askConfigFailureNextStep() {
-					continue
-				}
-
-			} else {
-				c.configuration.AddDevice(deviceItem, category)
-
-				fmt.Println()
-				fmt.Println(linkedTemplateItem.Description + " " + c.localizedString("Device_Added", nil))
+			fmt.Println()
+			if !c.askYesNo(c.localizedString("AddAnotherLinkedDeviceInCategory", localizeMap)) {
+				break
 			}
-			break
 		}
+	}
+}
+
+func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, category DeviceCategory) {
+	for ok := true; ok; {
+		deviceItem := device{}
+
+		values := c.processConfig(template.Params, category)
+		deviceItem, err := c.processDeviceValues(values, template, deviceItem, category)
+		if err != nil {
+			if !errors.Is(err, c.errDeviceNotValid) {
+				fmt.Println()
+				fmt.Println(err)
+			}
+			fmt.Println()
+			if c.askConfigFailureNextStep() {
+				continue
+			}
+
+		} else {
+			c.configuration.AddDevice(deviceItem, category)
+
+			fmt.Println()
+			fmt.Println(template.Description + " " + c.localizedString("Device_Added", nil))
+		}
+		break
 	}
 }
 
