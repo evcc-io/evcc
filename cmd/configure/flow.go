@@ -121,7 +121,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 
 		fmt.Println()
 		if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap)) {
-			break
+			continue
 		}
 
 		for ok := true; ok; {
