@@ -1,7 +1,7 @@
 type: template
 template: tinkerforge-warp
 description: TinkerForge WARP Charger
-host: 192.0.2.2 
-port: 1883 
+host: 192.0.2.2  # Die IP Adresse oder der Hostname des MQTT Brokers
+port: 1883  # Der Port des MQTT Brokers
 topic: warp 
 timeout: 30s

@@ -15,7 +15,8 @@ ItemNotPresent = "Mein Gerät ist nicht in der Liste"
 
 AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
 AddAnotherDeviceInCategory = "Möchtest du noch {{ .Additional }} {{ .Category }} hinzufügen?"
-AddLinkedDeviceInCategory = "Möchtest du '{{ .Linked }}' als {{ .Article }} {{ .Category }} hinzufügen?"
+AddLinkedDeviceInCategory = "Möchtest du ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
+AddAnotherLinkedDeviceInCategory = "Möchtest du noch ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
 
 Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
