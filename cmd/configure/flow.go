@@ -139,6 +139,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	}
 }
 
+// configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
 func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, category DeviceCategory) {
 	for ok := true; ok; {
 		deviceItem := device{}
