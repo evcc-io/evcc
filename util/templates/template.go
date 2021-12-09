@@ -100,9 +100,10 @@ type GuidedSetup struct {
 
 // Linked Template
 type LinkedTemplate struct {
-	Template string
-	Usage    string // usage: "grid", "pv", "battery"
-	Multiple bool   // if true, multiple instances of this template can be added
+	Template        string
+	Usage           string // usage: "grid", "pv", "battery"
+	Multiple        bool   // if true, multiple instances of this template can be added
+	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
 // Param is a proxy template parameter

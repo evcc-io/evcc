@@ -54,6 +54,12 @@ Allows to define a list of meter devices that are typically installed with this 
 
 `multiple:true` to define that multiple devices of this template can be added
 
+#### `excludetemplate`
+
+`excludetemplate` defines a linked device `template` value. If defined and a device of the linked template is added, then this linked template won't be considered in the flow
+
+Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used for getting the PV generation or multiple SMA PV inverters. But never both together. So if the used added an SMA Energy Meter, then the flow shoudn't ask for SMA PV inverters.
+
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup

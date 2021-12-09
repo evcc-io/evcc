@@ -10,6 +10,7 @@ guidedsetup:
   - template: sma-inverter
     usage: pv
     multiple: true
+    excludetemplate: sma-energy-meter
   - template: sma-inverter
     usage: battery
     multiple: true

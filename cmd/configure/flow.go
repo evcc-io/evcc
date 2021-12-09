@@ -96,11 +96,20 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	linkedTemplates := templateItem.GuidedSetup.Linked
 
+	deviceOfTemplateAdded := make(map[string]bool)
+
 	if linkedTemplates == nil {
 		return
 	}
 
 	for _, linkedTemplate := range linkedTemplates {
+		if linkedTemplate.ExcludeTemplate != "" {
+			// don't process this linked template if a referenced exclude template was added
+			if deviceOfTemplateAdded[linkedTemplate.ExcludeTemplate] {
+				continue
+			}
+		}
+
 		linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
 		if err != nil {
 			fmt.Println("Error: " + err.Error())
@@ -125,7 +134,9 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 		}
 
 		for ok := true; ok; {
-			c.configureLinkedTemplate(linkedTemplateItem, category)
+			if added := c.configureLinkedTemplate(linkedTemplateItem, category); added {
+				deviceOfTemplateAdded[linkedTemplate.Template] = true
+			}
 
 			if !linkedTemplate.Multiple {
 				break
@@ -137,10 +148,12 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			}
 		}
 	}
+	fmt.Println("DONE")
 }
 
 // configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
-func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, category DeviceCategory) {
+// returns true if a device was added
+func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, category DeviceCategory) bool {
 	for ok := true; ok; {
 		deviceItem := device{}
 
@@ -161,9 +174,11 @@ func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, cate
 
 			fmt.Println()
 			fmt.Println(template.Description + " " + c.localizedString("Device_Added", nil))
+			return true
 		}
 		break
 	}
+	return false
 }
 
 // configureDeviceCategory lets the user select and configure a device from a specific category
