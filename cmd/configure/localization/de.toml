@@ -2,7 +2,7 @@ Intro = "Die nächsten Schritte führen durch die Einrichtung einer Konfiguratio
 
 Flow_Type = "Was möchtest du machen?"
 Flow_Type_NewConfiguration = "Eine neue evcc Konfigurationsdatei erstellen"
-Flow_Type_SingleDevice = "Ein einzelnes Gerät Konfigurieren"
+Flow_Type_SingleDevice = "Ein einzelnes Gerät konfigurieren"
 
 Flow_NewConfiguration_Setup = "- Hausinstallation einrichten"
 Flow_NewConfiguration_Select = "Wähle eines der folgenden PV Komplettsysteme aus, oder '{{ .ItemNotPresent }}' falls keines dieser Geräte vorhanden ist"
