@@ -124,6 +124,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 		sponsortoken := c.askValue(question{
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
+			mask:     true,
 			required: true})
 		c.configuration.config.SponsorToken = sponsortoken
 		sponsor.Subject = sponsortoken
@@ -346,24 +347,26 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 			index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
 		}
 		selectedModbusKey = choiceKeys[index]
+		additionalConfig[templates.ParamModbus] = selectedModbusKey
+
 		switch selectedModbusKey {
 		case templates.ModbusKeyRS485Serial:
 			device := c.askValue(question{
-				label:        "Device",
-				help:         "USB-RS485 Adapter Adresse",
+				label:        c.localizedString("UserFriendly_Baudrate_Name", nil),
+				help:         c.localizedString("UserFriendly_Device_Help", nil),
 				exampleValue: templates.ModbusParamValueDevice,
 				required:     true})
 			additionalConfig[templates.ModbusParamNameDevice] = device
 
 			baudrate := c.askValue(question{
-				label:        "Baudrate",
+				label:        c.localizedString("UserFriendly_Baudrate_Name", nil),
 				defaultValue: deviceDefaultBaudrate,
 				valueType:    templates.ParamValueTypeNumber,
 				required:     true})
 			additionalConfig[templates.ModbusParamNameBaudrate] = baudrate
 
 			comset := c.askValue(question{
-				label:        "ComSet",
+				label:        c.localizedString("UserFriendly_ComSet_Name", nil),
 				defaultValue: deviceDefaultComset,
 				required:     true})
 			additionalConfig[templates.ModbusParamNameComset] = comset
@@ -373,13 +376,13 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 				additionalConfig[templates.ModbusParamNameRTU] = "true"
 			}
 			host := c.askValue(question{
-				label:        "Host",
+				label:        c.localizedString("UserFriendly_Host_Name", nil),
 				exampleValue: templates.ModbusParamValueHost,
 				required:     true})
 			additionalConfig[templates.ModbusParamNameHost] = host
 
 			port := c.askValue(question{
-				label:        "Port",
+				label:        c.localizedString("UserFriendly_Port_Name", nil),
 				defaultValue: templates.ModbusParamValuePort,
 				valueType:    templates.ParamValueTypeNumber,
 				required:     true})
