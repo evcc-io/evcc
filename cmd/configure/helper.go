@@ -347,6 +347,8 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 			index, _ = c.askChoice(c.localizedString("Config_ModbusInterface", nil), choices)
 		}
 		selectedModbusKey = choiceKeys[index]
+		additionalConfig[templates.ParamModbus] = selectedModbusKey
+
 		switch selectedModbusKey {
 		case templates.ModbusKeyRS485Serial:
 			device := c.askValue(question{
