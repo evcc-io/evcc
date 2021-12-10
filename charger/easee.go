@@ -64,7 +64,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		Circuit  int
+		Circuit  int           // deprecated
 		Cache    time.Duration // deprecated
 	}{}
 
@@ -72,11 +72,21 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Circuit, cc.Cache)
+	log := util.NewLogger("easee")
+
+	if cc.Circuit > 0 {
+		log.WARN.Println("circuit is deprecated and will be removed in a future release")
+	}
+
+	if cc.Cache > 0 {
+		log.WARN.Println("cache is deprecated and will be removed in a future release")
+	}
+
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, circuit int, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -114,25 +124,25 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		}
 
 		c.charger = chargers[0].ID
+	}
 
-		// find site
-		site, err := c.chargerSite(c.charger)
-		if err != nil {
-			return nil, err
+	// find site
+	site, err := c.chargerSite(c.charger)
+	if err != nil {
+		return nil, err
+	}
+
+	// find single charger per circuit
+	for _, circuit := range site.Circuits {
+		if len(circuit.Chargers) > 1 {
+			continue
 		}
 
-		// find single charger per circuit
-		for _, circuit := range site.Circuits {
-			if len(circuit.Chargers) > 1 {
-				continue
-			}
-
-			for _, charger := range circuit.Chargers {
-				if charger.ID == c.charger {
-					c.site = site.ID
-					c.circuit = circuit.ID
-					break
-				}
+		for _, charger := range circuit.Chargers {
+			if charger.ID == c.charger {
+				c.site = site.ID
+				c.circuit = circuit.ID
+				break
 			}
 		}
 	}
