@@ -1,0 +1,17 @@
+template: huawei-sun2000-8ktl
+description: Huawei SUN2000-8KTL
+params:
+- name: usage
+  choice: [ "pv" ]
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{include "modbus" . | indent 2}}
+    # register details
+    register:
+      address: 40525
+      type: holding
+      decode: int32

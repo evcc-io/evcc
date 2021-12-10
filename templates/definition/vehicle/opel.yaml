@@ -1,0 +1,11 @@
+template: opel
+description: Opel
+paramsbase: vehicle
+params:
+- name: vin
+  example: WP0...
+- name: capacity
+  default: 50
+render: |
+  type: opel
+  {{include "vehicle-common" .}}

@@ -162,6 +162,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.Vehicle); ok {
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		if len(v.Identifiers()) > 0 {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+		}
+	}
+
 	// Identity
 
 	if v, ok := v.(api.Identifier); ok {
@@ -175,10 +183,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnose()
-	}
-
-	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 	}
 
 	w.Flush()

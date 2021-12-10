@@ -1,0 +1,10 @@
+template: abl
+description: ABL eMH / SENEC.Wallbox pro
+requirements:
+  sponsorship: true
+params:
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: abl
+  {{include "modbus" .}}

@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	if cc.User == "" || cc.Password == "" {
-		return nil, errors.New("missing credentials")
+		return nil, api.ErrMissingCredentials
 	}
 
 	log := util.NewLogger("hyundai").Redact(cc.User, cc.Password, cc.VIN)
@@ -62,7 +61,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	api := bluelink.NewAPI(log, identity, cc.Cache)
+	api := bluelink.NewAPI(log, settings.URI, identity, cc.Cache)
 
 	vehicles, err := api.Vehicles()
 	if err != nil {
@@ -72,11 +71,12 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var vehicle bluelink.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
 		vehicle = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+		log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
 	} else {
 		for _, v := range vehicles {
 			if v.VIN == strings.ToUpper(cc.VIN) {
 				vehicle = v
+				log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
 			}
 		}
 	}

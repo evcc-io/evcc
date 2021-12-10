@@ -1,0 +1,9 @@
+template: porsche
+description: Porsche
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 83.4
+render: |
+  type: porsche
+  {{include "vehicle-common" .}}

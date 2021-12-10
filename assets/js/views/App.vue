@@ -29,7 +29,7 @@
 								<li class="nav-item">
 									<a
 										class="nav-link"
-										href="https://github.com/evcc-io/evcc/discussions"
+										href="https://docs.evcc.io/docs/Home/"
 										target="_blank"
 									>
 										{{ $t("header.support") }}

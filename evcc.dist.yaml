@@ -5,7 +5,7 @@ interval: 10s # control cycle interval
 # sponsortoken:
 
 # log settings
-log: error
+log: info
 levels:
   core: debug
   lp-1: debug
@@ -44,14 +44,16 @@ chargers:
 # name can be freely chosen and is used as reference when assigning vehicle to loadpoint
 # for examples see https://github.com/evcc-io/config#vehicles
 vehicles:
-- name: renault
+- name: car1
   type: renault
   title: Zoe
   capacity: 60 # kWh
   user: # user
   password: # password
   vin: WREN...
-  cache: 5m
+  onIdentify: # set defaults when vehicle is identified
+    minSoC: 20 # charge to at least 20% independent of charge mode
+    targetSoC: 90 # limit charge to 90%
 
 # site describes the EVU connection, PV and home battery
 site:
@@ -75,6 +77,7 @@ loadpoints:
   # - ID.3
   # - e-Up
   mode: pv
+  resetOnDisconnect: true # set defaults when vehicle disconnects
   soc:
     # polling defines usage of the vehicle APIs
     # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
@@ -90,13 +93,6 @@ loadpoints:
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
     estimate: false # set true to interpolate between api updates
-  onDisconnect: # set defaults when vehicle disconnects
-    mode: pv # switch back to pv mode
-    targetSoC: 100 # charge to 100%
-  onIdentify: # set defaults when vehicle is identified
-  - e-Up:
-      mode: pv # switch back to pv mode
-      targetSoC: 100 # charge to 100%
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 1m # threshold must be exceeded for this long

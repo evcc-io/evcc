@@ -13,6 +13,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // URIs
@@ -63,7 +64,7 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 		}
 
 		// ignore the self signed certificate
-		instance.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		instance.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 		// caches the data access for the "cache" time duration
 		// sends a new request to the pcs if the cache is expired and Data() requested

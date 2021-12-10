@@ -9,8 +9,8 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/shelly"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/basicauth"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
@@ -72,7 +72,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		gen:          resp.Gen,
 	}
 
-	c.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	c.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	if (resp.Auth || resp.AuthEn) && (user == "" || password == "") {
 		return c, fmt.Errorf("%s (%s) missing user/password", resp.Model, resp.Mac)
@@ -84,7 +84,8 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		c.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
-			c.Client.Transport = basicauth.NewTransport(user, password, c.Client.Transport)
+			log.Redact(transport.BasicAuthHeader(user, password))
+			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
 
 		if resp.NumMeters == 0 {

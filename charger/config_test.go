@@ -6,27 +6,28 @@ import (
 	"github.com/evcc-io/evcc/util/test"
 )
 
-func TestChargers(t *testing.T) {
-	test.SkipCI(t)
+var acceptable = []string{
+	"invalid plugin type: ...",
+	"missing mqtt broker configuration",
+	"mqtt not configured",
+	"invalid charger type: nrgkick-bluetooth",
+	"NRGKick bluetooth is only supported on linux",
+	"invalid pin:",
+	"hciconfig provided no response",
+	"connect: no route to host",
+	"connect: connection refused",
+	"error connecting: Network Error",
+	"i/o timeout",
+	"recv timeout",
+	"(Client.Timeout exceeded while awaiting headers)",
+	"can only have either uri or device", // modbus
+	"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
+	"eebus not configured",
+	"unexpected status: 400", // easee
+}
 
-	acceptable := []string{
-		"invalid plugin type: ...",
-		"missing mqtt broker configuration",
-		"mqtt not configured",
-		"invalid charger type: nrgkick-bluetooth",
-		"NRGKick bluetooth is only supported on linux",
-		"invalid pin:",
-		"hciconfig provided no response",
-		"connect: no route to host",
-		"connect: connection refused",
-		"error connecting: Network Error",
-		"i/o timeout",
-		"recv timeout",
-		"(Client.Timeout exceeded while awaiting headers)",
-		"can only have either uri or device", // modbus
-		"sponsorship required, see https://github.com/evcc-io/evcc#sponsorship",
-		"eebus not configured",
-	}
+func TestConfigChargers(t *testing.T) {
+	test.SkipCI(t)
 
 	for _, tmpl := range test.ConfigTemplates("charger") {
 		tmpl := tmpl

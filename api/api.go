@@ -1,6 +1,13 @@
 package api
 
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
+	"github.com/fatih/structs"
+)
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
@@ -38,6 +45,26 @@ const (
 // String implements Stringer
 func (c ChargeStatus) String() string {
 	return string(c)
+}
+
+// ActionConfig defines an action to take on event
+type ActionConfig struct {
+	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
+	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+}
+
+// String implements Stringer and returns the ActionConfig as comma-separated key:value string
+func (a ActionConfig) String() string {
+	var s []string
+	for k, v := range structs.Map(a) {
+		if v != nil && !reflect.ValueOf(v).IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, v))
+		}
+	}
+	return strings.Join(s, ", ")
 }
 
 // Meter is able to provide current power in W
@@ -111,9 +138,10 @@ type Authorizer interface {
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
-	Identifier
 	Title() string
 	Capacity() int64
+	Identifiers() []string
+	OnIdentified() ActionConfig
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time

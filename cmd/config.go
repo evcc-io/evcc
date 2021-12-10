@@ -76,17 +76,20 @@ type ConfigProvider struct {
 	visited  map[string]bool
 }
 
+func (cp *ConfigProvider) TrackVisitors() {
+	cp.visited = make(map[string]bool)
+}
+
 // Meter provides meters by name
 func (cp *ConfigProvider) Meter(name string) api.Meter {
 	if meter, ok := cp.meters[name]; ok {
 		// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
-		if cp.visited == nil {
-			cp.visited = make(map[string]bool)
+		if cp.visited != nil {
+			if _, ok := cp.visited[name]; ok {
+				log.FATAL.Fatalf("duplicate meter usage: %s", name)
+			}
+			cp.visited[name] = true
 		}
-		if _, ok := cp.visited[name]; ok {
-			log.FATAL.Fatalf("duplicate meter usage: %s", name)
-		}
-		cp.visited[name] = true
 
 		return meter
 	}

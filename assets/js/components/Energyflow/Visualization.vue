@@ -41,7 +41,11 @@
 				<span class="power" v-else-if="powerLabelSomeSpace(gridImport, disableTimerActive)">
 					{{ kwNoUnit(gridImport) }}
 				</span>
-				<fa-icon v-if="disableTimerActive" icon="pause-circle" class="pulse"></fa-icon>
+				<fa-icon
+					v-if="disableTimerActive"
+					:icon="['far', 'lightbulb']"
+					class="pulse-out"
+				></fa-icon>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
@@ -59,7 +63,11 @@
 				<span class="power" v-else-if="powerLabelSomeSpace(pvExport, enableTimerActive)">
 					{{ kwNoUnit(pvExport) }}
 				</span>
-				<fa-icon v-if="enableTimerActive" icon="play-circle" class="pulse"></fa-icon>
+				<fa-icon
+					v-if="enableTimerActive"
+					:icon="['far', 'lightbulb']"
+					class="pulse-in"
+				></fa-icon>
 			</div>
 			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
@@ -140,10 +148,10 @@ export default {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
 		enableTimerActive: function () {
-			return false;
+			return true;
 		},
 		disableTimerActive: function () {
-			return false;
+			return true;
 		},
 	},
 	watch: {
@@ -279,7 +287,10 @@ export default {
 .visualization--ready >>> .label-bar-icon {
 	transition: opacity 250ms ease-in;
 }
-.pulse {
-	animation: pulse 2s infinite ease-in-out;
+.pulse-out {
+	animation: pulse 2s alternate infinite ease-out;
+}
+.pulse-in {
+	animation: pulse 2s alternate-reverse infinite ease-in;
 }
 </style>

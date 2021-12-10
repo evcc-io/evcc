@@ -1,0 +1,9 @@
+template: volvo
+description: Volvo
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: volvo
+  {{include "vehicle-common" .}}

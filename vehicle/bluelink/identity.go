@@ -355,21 +355,23 @@ func (v *Identity) Login(user, password string) (err error) {
 	return err
 }
 
-// Request creates authenticated request
-func (v *Identity) Request(method, path string) (*http.Request, error) {
+// Request decorates requests with authorization headers
+func (v *Identity) Request(req *http.Request) error {
 	token, err := v.Token()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	headers := map[string]string{
+	for k, v := range map[string]string{
 		"Authorization":       "Bearer " + token.AccessToken,
 		"ccsp-device-id":      v.deviceID,
 		"ccsp-application-id": v.config.CCSPApplicationID,
 		"offset":              "1",
 		"User-Agent":          "okhttp/3.10.0",
 		"Stamp":               v.stamp(),
+	} {
+		req.Header.Set(k, v)
 	}
 
-	return request.New(method, v.config.URI+path, nil, headers)
+	return nil
 }

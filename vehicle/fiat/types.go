@@ -23,7 +23,7 @@ type StatusResponse struct {
 		}
 		Timestamp TimeMillis
 	}
-	EvInfo struct {
+	EvInfo *struct {
 		Battery struct {
 			ChargingLevel   string // LEVEL_2
 			ChargingStatus  string // CHARGING
@@ -38,7 +38,7 @@ type StatusResponse struct {
 			TotalRange          int     // 17
 		}
 		Timestamp TimeMillis
-	}
+	} `json:",omitempty"`
 	Timestamp TimeMillis
 }
 

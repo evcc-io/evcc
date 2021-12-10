@@ -22,8 +22,7 @@ import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
 import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
 import { faHome } from "@fortawesome/free-solid-svg-icons/faHome";
 import { faCar } from "@fortawesome/free-solid-svg-icons/faCar";
-import { faPlayCircle } from "@fortawesome/free-solid-svg-icons/faPlayCircle";
-import { faPauseCircle } from "@fortawesome/free-solid-svg-icons/faPauseCircle";
+import { faLightbulb } from "@fortawesome/free-regular-svg-icons/faLightbulb";
 import { faSquare } from "@fortawesome/free-solid-svg-icons/faSquare";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
 import { faAngleDoubleLeft } from "@fortawesome/free-solid-svg-icons/faAngleDoubleLeft";
@@ -54,8 +53,7 @@ library.add(
   faTemperatureHigh,
   faTemperatureLow,
   faThermometerHalf,
-  faPauseCircle,
-  faPlayCircle
+  faLightbulb
 );
 
 Vue.component("fa-icon", FontAwesomeIcon);

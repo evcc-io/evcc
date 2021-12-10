@@ -1,0 +1,12 @@
+template: cfos-meter
+description: cFos PowerBrain
+requirements:
+  sponsorship: true
+params:
+- name: usage
+  choice: [ "charger" ]
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: cfos
+  {{include "modbus" .}}

@@ -44,6 +44,10 @@ func NewNissanFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	if cc.User == "" || cc.Password == "" {
+		return nil, api.ErrMissingCredentials
+	}
+
 	v := &Nissan{
 		embed: &cc.embed,
 	}

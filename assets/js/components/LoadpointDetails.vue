@@ -12,9 +12,9 @@
 							content: $t(
 								`main.loadpointDetails.tooltip.${phaseAction || 'inactive'}`,
 								{
-									remaining: fmtTimeAgo(
-										new Date(Date.now() + phaseRemaining * 1000)
-									),
+									remaining: phaseTimerActive
+										? fmtTimeAgo(new Date(Date.now() + phaseRemaining * 1000))
+										: null,
 									activePhases,
 								}
 							),

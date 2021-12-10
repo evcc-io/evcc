@@ -85,6 +85,10 @@ func (v *Provider) status(statusG func() (StatusResponse, error)) (StatusRespons
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
+		if res.EvInfo == nil {
+			return 0, api.ErrNotAvailable
+		}
+
 		return res.EvInfo.Battery.StateOfCharge, nil
 	}
 
@@ -97,6 +101,10 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
+		if res.EvInfo == nil {
+			return 0, api.ErrNotAvailable
+		}
+
 		return int64(res.EvInfo.Battery.DistanceToEmpty.Value), nil
 	}
 
@@ -123,6 +131,10 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
+		if res.EvInfo == nil {
+			return api.StatusNone, api.ErrNotAvailable
+		}
+
 		if res.EvInfo.Battery.PlugInStatus {
 			status = api.StatusB // connected, not charging
 		}

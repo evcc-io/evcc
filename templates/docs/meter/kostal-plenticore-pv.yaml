@@ -1,0 +1,6 @@
+type: template
+template: kostal-plenticore
+description: Kostal Plenticore Hybrid
+usage: pv 
+host: 192.0.2.2 
+port: 1502

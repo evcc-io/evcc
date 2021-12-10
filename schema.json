@@ -85,6 +85,9 @@
           "mode": {
             "$ref": "#/definitions/mode"
           },
+          "resetOnDisconnect": {
+            "type": "boolean"
+          },
           "charger": {
             "type": "string"
           },
@@ -109,7 +112,7 @@
                 "type": "object",
                 "properties": {
                   "mode": {
-                    "type": "string"
+                    "$ref": "#/definitions/pollMode"
                   },
                   "interval": {
                     "$ref": "#/definitions/duration"
@@ -148,6 +151,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "template": {
+          "type": "string"
         }
       }
     },
@@ -166,6 +172,13 @@
         "on",
         "pv",
         "minpv"
+      ]
+    },
+    "pollMode": {
+      "enum": [
+        "alway",
+        "charging",
+        "connected"
       ]
     }
   }

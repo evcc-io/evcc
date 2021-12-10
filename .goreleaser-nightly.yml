@@ -1,0 +1,61 @@
+dist: release
+release:
+  disable: true
+builds:
+- id: evcc
+  main: main.go
+  flags:
+  - -tags=release
+  ldflags:
+  - -X github.com/evcc-io/evcc/server.Version={{.Version}}.{{.Timestamp}} -X github.com/evcc-io/evcc/server.Commit={{.ShortCommit}} -s -w
+  env:
+  - CGO_ENABLED=0
+  goos:
+  - linux
+  goarch:
+  - amd64
+  - arm
+  - arm64
+  goarm:
+  - "6"
+  - "7"
+archives:
+- builds:
+  - evcc
+  replacements:
+    darwin: macOS
+  format: tar.gz
+  format_overrides:
+  - goos: windows
+    format: zip
+  files:
+  - evcc.dist.yaml
+  name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+universal_binaries:
+- replace: true
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Version }}.{{.Timestamp}}"
+nfpms:
+- id: default
+  package_name: evcc
+  file_name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+
+  homepage:  https://evcc.io
+  description: EV Charge Controller
+  maintainer: andig <cpuidle@gmx.de>
+  license: MIT
+  vendor: evcc.io
+
+  formats:
+  - deb
+
+  contents:
+  - src: ./packaging/init/evcc.service
+    dst: /lib/systemd/system/evcc.service
+
+  scripts:
+    postinstall: ./packaging/scripts/postinstall.sh
+    preremove: ./packaging/scripts/preremove.sh
+    postremove: ./packaging/scripts/postremove.sh

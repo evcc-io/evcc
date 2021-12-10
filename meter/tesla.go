@@ -12,6 +12,7 @@ import (
 	"github.com/evcc-io/evcc/meter/powerwall"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 )
 
 // credits to https://github.com/vloschiavo/powerwall2
@@ -74,7 +75,7 @@ func NewTesla(uri, usage, password string) (api.Meter, error) {
 	}
 
 	// ignore the self signed certificate
-	m.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+	m.Client.Transport = request.NewTripper(log, transport.Insecure())
 	// create cookie jar to save login tokens
 	m.Client.Jar, _ = cookiejar.New(nil)
 

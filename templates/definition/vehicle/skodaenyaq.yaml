@@ -1,0 +1,9 @@
+template: enyaq
+description: Skoda (Enyaq)
+paramsbase: vehicle
+params:
+- name: capacity
+  default: 50
+render: |
+  type: enyaq
+  {{include "vehicle-common" .}}
