@@ -419,9 +419,9 @@ func (c *Easee) Phases1p3p(phases int) error {
 		}
 
 		var zero float64
-		max1 := float64(*res.MaxCircuitCurrentP1)
-		max2 := float64(*res.MaxCircuitCurrentP2)
-		max3 := float64(*res.MaxCircuitCurrentP3)
+		max1 := *res.MaxCircuitCurrentP1
+		max2 := *res.MaxCircuitCurrentP2
+		max3 := *res.MaxCircuitCurrentP3
 
 		data := easee.CircuitSettings{
 			DynamicCircuitCurrentP1: &max1,
