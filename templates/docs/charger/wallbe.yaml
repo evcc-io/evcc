@@ -2,4 +2,4 @@ type: template
 template: wallbe
 description: Wallbe (Eco, Pro)
 host: 192.0.2.2 
-port: 1883
+port: 502
