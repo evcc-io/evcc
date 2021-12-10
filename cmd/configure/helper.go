@@ -124,6 +124,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 		sponsortoken := c.askValue(question{
 			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
+			mask:     true,
 			required: true})
 		c.configuration.config.SponsorToken = sponsortoken
 		sponsor.Subject = sponsortoken
