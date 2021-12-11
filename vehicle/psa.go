@@ -120,5 +120,11 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	v.Provider = psa.NewProvider(api, vid, cc.Cache)
 
+	mqtt, err := psa.NewMqtt(log, identity, realm, cc.Credentials.ID)
+	if err != nil {
+		return nil, err
+	}
+	_ = mqtt
+
 	return v, err
 }
