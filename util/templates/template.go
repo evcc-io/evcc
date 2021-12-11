@@ -259,11 +259,11 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
 			default:
-				switch v.(type) {
+				switch v := v.(type) {
 				case string:
-					t.Params[index].Value = yamlQuote(v.(string))
+					t.Params[index].Value = yamlQuote(v)
 				case int:
-					t.Params[index].Value = fmt.Sprintf("%d", v.(int))
+					t.Params[index].Value = fmt.Sprintf("%d", v)
 				}
 			}
 		}
