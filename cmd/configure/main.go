@@ -148,14 +148,17 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for ok := true; ok; {
-		_, err := os.Open(filename)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
-
-		if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
-			break
+		// in case of permission error, we can't write to the file anyway
+		if !os.IsPermission(err) {
+			if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
+				break
+			}
 		}
+		file.Close()
 
 		filename = c.askValue(question{
 			label:        c.localizedString("File_NewFilename", nil),
