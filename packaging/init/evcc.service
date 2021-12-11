@@ -10,7 +10,7 @@ StartLimitIntervalSec=10
 StartLimitBurst=10
 
 [Service]
-ExecStart=/usr/local/bin/evcc --log error
+ExecStart=/usr/local/bin/evcc
 Restart=always
 
 [Install]
