@@ -48,11 +48,9 @@ type Option func(*paho.ClientOptions)
 // NewClient creates new Mqtt publisher
 func NewClient(log *util.Logger, broker, user, password, clientID string, qos byte, opts ...Option) (*Client, error) {
 	broker = util.DefaultPort(broker, 1883)
-	log.INFO.Printf("connecting %s at %s", clientID, broker)
 
 	mc := &Client{
 		log:      log,
-		broker:   broker,
 		Qos:      qos,
 		listener: make(map[string][]func(string)),
 	}
@@ -74,6 +72,10 @@ func NewClient(log *util.Logger, broker, user, password, clientID string, qos by
 	}
 
 	client := paho.NewClient(options)
+
+	or := client.OptionsReader()
+	log.INFO.Printf("connecting %s at %v", clientID, or.Servers())
+
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return nil, fmt.Errorf("error connecting: %w", token.Error())
 	}
