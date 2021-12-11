@@ -164,6 +164,11 @@ type VehicleOdometer interface {
 	Odometer() (float64, error)
 }
 
+// VehiclePosition returns the vehicles position in latitude and longitude
+type VehiclePosition interface {
+	Position() (float64, float64, error)
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
