@@ -53,8 +53,6 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 			t.Params = append(t.Params, Param{Name: ModbusParamNameComset, ValueType: ParamValueTypeString})
 		}
 	}
-
-	delete(values, ParamModbus)
 }
 
 // set the modbus values required from modbus.tpl and and the template to the render
