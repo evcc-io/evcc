@@ -48,14 +48,15 @@ const (
 var HemsValueTypes = []string{HemsTypeSMA}
 
 const (
-	ParamValueTypeString     = "string"
-	ParamValueTypeNumber     = "number"
-	ParamValueTypeFloat      = "float"
-	ParamValueTypeBool       = "bool"
-	ParamValueTypeStringList = "stringlist"
+	ParamValueTypeString      = "string"
+	ParamValueTypeNumber      = "number"
+	ParamValueTypeFloat       = "float"
+	ParamValueTypeBool        = "bool"
+	ParamValueTypeStringList  = "stringlist"
+	ParamValueTypeChargeModes = "chargemodes"
 )
 
-var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
+var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
 
 // language specific texts
 type TextLanguage struct {

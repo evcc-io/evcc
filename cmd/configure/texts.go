@@ -81,6 +81,53 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 		if result.Help.String(c.lang) == "" {
 			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Vin_Help", nil))
 		}
+	case "cache":
+		result.Name = c.localizedString("UserFriendly_Cache_Name", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Cache_Help", nil))
+		}
+		if result.Example == "" {
+			result.Example = "5m"
+		}
+	case "mode":
+		result.Name = c.localizedString("ChargeMode_Question", nil)
+		result.ValueType = templates.ParamValueTypeChargeModes
+	case "minsoc":
+		result.Name = c.localizedString("UserFriendly_MinSoC_Name", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_MinSoC_Help", nil))
+		}
+		if result.Example == "" {
+			result.Example = "25"
+		}
+		result.ValueType = templates.ParamValueTypeNumber
+	case "targetsoc":
+		result.Name = c.localizedString("UserFriendly_TargetSoC_Name", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_TargetSoC_Help", nil))
+		}
+		if result.Example == "" {
+			result.Example = "80"
+		}
+		result.ValueType = templates.ParamValueTypeNumber
+	case "mincurrent":
+		result.Name = c.localizedString("UserFriendly_MinCurrent_Name", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_MinCurrent_Help", nil))
+		}
+		if result.Example == "" {
+			result.Example = "6"
+		}
+		result.ValueType = templates.ParamValueTypeNumber
+	case "maxcurrent":
+		result.Name = c.localizedString("UserFriendly_MaxCurrent_Name", nil)
+		if result.Help.String(c.lang) == "" {
+			result.Help.SetString(c.lang, c.localizedString("UserFriendly_MaxCurrent_Help", nil))
+		}
+		if result.Example == "" {
+			result.Example = "16"
+		}
+		result.ValueType = templates.ParamValueTypeNumber
 	case "identifiers":
 		result.Name = c.localizedString("UserFriendly_Identifier_Name", nil)
 		if result.Help.String(c.lang) == "" {

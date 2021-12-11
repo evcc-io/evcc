@@ -11,7 +11,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
@@ -302,16 +301,8 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
-		chargeModes := []string{
-			c.localizedString("Loadpoint_ChargeModeOff", nil),
-			c.localizedString("Loadpoint_ChargeModeNow", nil),
-			c.localizedString("Loadpoint_ChargeModeMinPV", nil),
-			c.localizedString("Loadpoint_ChargeModePV", nil),
-		}
 		fmt.Println()
-		modeChoice, _ := c.askChoice(c.localizedString("Loadpoint_DefaultChargeMode", nil), chargeModes)
-		loadpoint.Mode = chargingModes[modeChoice]
+		loadpoint.Mode = c.askValue(question{valueType: templates.ParamValueTypeChargeModes, excludeNone: true})
 
 		c.configuration.AddLoadpoint(loadpoint)
 
