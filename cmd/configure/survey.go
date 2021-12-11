@@ -192,7 +192,7 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		help += " (" + c.localizedString("Value_Optional", nil) + ")"
 	}
-	if q.exampleValue != "" {
+	if q.exampleValue != nil && q.exampleValue != "" {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 
