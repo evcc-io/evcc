@@ -22,7 +22,7 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 		return
 	}
 
-	for k, _ := range values {
+	for k := range values {
 		switch k {
 		case ModbusParamNameId:
 			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
