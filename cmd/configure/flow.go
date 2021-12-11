@@ -96,51 +96,89 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 	linkedTemplates := templateItem.GuidedSetup.Linked
 
+	deviceOfTemplateAdded := make(map[string]bool)
+
 	if linkedTemplates == nil {
 		return
 	}
 
 	for _, linkedTemplate := range linkedTemplates {
+		if linkedTemplate.ExcludeTemplate != "" {
+			// don't process this linked template if a referenced exclude template was added
+			if deviceOfTemplateAdded[linkedTemplate.ExcludeTemplate] {
+				continue
+			}
+		}
+
+		linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
+		if err != nil {
+			fmt.Println("Error: " + err.Error())
+			return
+		}
+		if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
+			break
+		}
+
+		category := DeviceCategory(linkedTemplate.Usage)
+
+		localizeMap := localizeMap{
+			"Linked":     linkedTemplateItem.Description,
+			"Article":    DeviceCategories[category].article,
+			"Additional": DeviceCategories[category].additional,
+			"Category":   DeviceCategories[category].title,
+		}
+
+		fmt.Println()
+		if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap)) {
+			continue
+		}
+
 		for ok := true; ok; {
-			deviceItem := device{}
-
-			linkedTemplateItem, err := templates.ByTemplate(linkedTemplate.Template, string(DeviceClassMeter))
-			if err != nil {
-				fmt.Println("Error: " + err.Error())
-				return
-			}
-			if len(linkedTemplateItem.Params) == 0 || linkedTemplate.Usage == "" {
-				return
+			if added := c.configureLinkedTemplate(linkedTemplateItem, category); added {
+				deviceOfTemplateAdded[linkedTemplate.Template] = true
 			}
 
-			category := DeviceCategory(linkedTemplate.Usage)
-
-			fmt.Println()
-			if !c.askYesNo(c.localizedString("AddLinkedDeviceInCategory", localizeMap{"Linked": linkedTemplateItem.Description, "Article": DeviceCategories[category].article, "Category": DeviceCategories[category].title})) {
+			if !linkedTemplate.Multiple {
 				break
 			}
 
-			values := c.processConfig(linkedTemplateItem.Params, category)
-			deviceItem, err = c.processDeviceValues(values, linkedTemplateItem, deviceItem, category)
-			if err != nil {
-				if !errors.Is(err, c.errDeviceNotValid) {
-					fmt.Println()
-					fmt.Println(err)
-				}
-				fmt.Println()
-				if c.askConfigFailureNextStep() {
-					continue
-				}
-
-			} else {
-				c.configuration.AddDevice(deviceItem, category)
-
-				fmt.Println()
-				fmt.Println(linkedTemplateItem.Description + " " + c.localizedString("Device_Added", nil))
+			fmt.Println()
+			if !c.askYesNo(c.localizedString("AddAnotherLinkedDeviceInCategory", localizeMap)) {
+				break
 			}
-			break
 		}
 	}
+	fmt.Println("DONE")
+}
+
+// configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
+// returns true if a device was added
+func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, category DeviceCategory) bool {
+	for ok := true; ok; {
+		deviceItem := device{}
+
+		values := c.processConfig(template.Params, category)
+		deviceItem, err := c.processDeviceValues(values, template, deviceItem, category)
+		if err != nil {
+			if !errors.Is(err, c.errDeviceNotValid) {
+				fmt.Println()
+				fmt.Println(err)
+			}
+			fmt.Println()
+			if c.askConfigFailureNextStep() {
+				continue
+			}
+
+		} else {
+			c.configuration.AddDevice(deviceItem, category)
+
+			fmt.Println()
+			fmt.Println(template.Description + " " + c.localizedString("Device_Added", nil))
+			return true
+		}
+		break
+	}
+	return false
 }
 
 // configureDeviceCategory lets the user select and configure a device from a specific category

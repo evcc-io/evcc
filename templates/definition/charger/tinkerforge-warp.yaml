@@ -9,8 +9,14 @@ params:
 - name: host
   required: true
   example: 192.0.2.2
+  help:
+    de: Die IP Adresse oder der Hostname des MQTT Brokers
+    en: The IP address or hostname of the MQTT broker
 - name: port
   default: 1883
+  help:
+    de: Der Port des MQTT Brokers
+    en: The port of the MQTT broker
 - name: topic
   default: warp
 - name: timeout

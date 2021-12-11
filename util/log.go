@@ -30,7 +30,6 @@ var LogAreaPadding = 6
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
 	*jww.Notepad
-	name string
 	*Redactor
 }
 
@@ -55,17 +54,11 @@ func NewLogger(area string) *Logger {
 	logger := &Logger{
 		Notepad:  notepad,
 		Redactor: redactor,
-		name:     area,
 	}
 
 	loggers[area] = logger
 
 	return logger
-}
-
-// Name returns the loggers name
-func (l *Logger) Name() string {
-	return l.name
 }
 
 // Redact adds items for redaction

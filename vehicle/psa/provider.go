@@ -138,3 +138,18 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 
 	return active, outsideTemp, targetTemp, err
 }
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(Status); err == nil && ok {
+		if coord := res.LastPosition.Geometry.Coordinates; len(coord) == 2 {
+			return coord[0], coord[1], nil
+		}
+		return 0, 0, api.ErrNotAvailable
+	}
+
+	return 0, 0, err
+}

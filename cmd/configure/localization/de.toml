@@ -2,7 +2,7 @@ Intro = "Die nächsten Schritte führen durch die Einrichtung einer Konfiguratio
 
 Flow_Type = "Was möchtest du machen?"
 Flow_Type_NewConfiguration = "Eine neue evcc Konfigurationsdatei erstellen"
-Flow_Type_SingleDevice = "Ein einzelnes Gerät Konfigurieren"
+Flow_Type_SingleDevice = "Ein einzelnes Gerät konfigurieren"
 
 Flow_NewConfiguration_Setup = "- Hausinstallation einrichten"
 Flow_NewConfiguration_Select = "Wähle eines der folgenden PV Komplettsysteme aus, oder '{{ .ItemNotPresent }}' falls keines dieser Geräte vorhanden ist"
@@ -15,7 +15,8 @@ ItemNotPresent = "Mein Gerät ist nicht in der Liste"
 
 AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
 AddAnotherDeviceInCategory = "Möchtest du noch {{ .Additional }} {{ .Category }} hinzufügen?"
-AddLinkedDeviceInCategory = "Möchtest du '{{ .Linked }}' als {{ .Article }} {{ .Category }} hinzufügen?"
+AddLinkedDeviceInCategory = "Möchtest du ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
+AddAnotherLinkedDeviceInCategory = "Möchtest du noch ein '{{ .Linked }}' Gerät als {{ .Article }} {{ .Category }} hinzufügen?"
 
 Error = "Fehler: {{ .Error }}"
 Error_ItemNotPresent = "Gerät nicht vorhanden"
@@ -34,6 +35,7 @@ Choose = "Wähle"
 UserFriendly_Title_Name = "Titel"
 UserFriendly_Title_Help = "Wird in der Benutzeroberfläche angezeigt"
 UserFriendly_Device_Name = "Geräteadresse"
+UserFriendly_Device_Help = "USB-RS485 Adapter Adresse"
 UserFriendly_Baudrate_Name = "Baudrate"
 UserFriendly_ComSet_Name = "ComSet"
 UserFriendly_Host_Name = "IP-Adresse oder Hostname"

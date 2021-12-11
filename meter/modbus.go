@@ -15,7 +15,6 @@ import (
 
 // Modbus is an api.Meter implementation with configurable getters and setters.
 type Modbus struct {
-	log      *util.Logger
 	conn     *modbus.Connection
 	device   meters.Device
 	opPower  modbus.Operation
@@ -88,7 +87,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	}
 
 	m := &Modbus{
-		log:    log,
 		conn:   conn,
 		device: device,
 	}
@@ -149,10 +147,6 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 	if err != nil && errors.Is(err, meters.ErrNaN) {
 		res.Value = 0
 		err = nil
-	}
-
-	if err == nil {
-		m.log.TRACE.Printf("%+v", res)
 	}
 
 	return res.Value, err

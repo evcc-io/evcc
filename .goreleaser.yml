@@ -96,10 +96,14 @@ brews:
         <key>Program</key>
         <string>#{bin}/evcc</string>
         <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
+        <string>#{var}</string>
         <key>RunAtLoad</key>
         <true/>
         <key>KeepAlive</key>
         <true/>
+        <key>StandardOutPath</key>
+        <string>#{var}/log/evcc.log</string>
+        <key>StandardErrorPath</key>
+        <string>#{var}/log/evcc.log</string>
       </dict>
     </plist>

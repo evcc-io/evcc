@@ -29,7 +29,6 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
-	log     *util.Logger
 	conn    *modbus.Connection
 	current uint16
 }
@@ -83,7 +82,6 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 	conn.Logger(log.TRACE)
 
 	wb := &HeidelbergEC{
-		log:     log,
 		conn:    conn,
 		current: 60, // assume min current
 	}

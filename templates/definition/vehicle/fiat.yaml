@@ -3,6 +3,7 @@ description: Fiat
 paramsbase: vehicle
 params:
 - name: pin
+  mask: true
 - name: vin
   example: ZFAE...
 - name: capacity

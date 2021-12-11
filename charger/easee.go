@@ -20,6 +20,7 @@ package charger
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -40,6 +41,7 @@ import (
 type Easee struct {
 	*request.Helper
 	charger               string
+	site, circuit         int
 	updated               time.Time
 	chargeStatus          api.ChargeStatus
 	log                   *util.Logger
@@ -62,7 +64,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		User     string
 		Password string
 		Charger  string
-		Circuit  int
+		Circuit  int           // deprecated
 		Cache    time.Duration // deprecated
 	}{}
 
@@ -70,11 +72,21 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Circuit, cc.Cache)
+	log := util.NewLogger("easee")
+
+	if cc.Circuit > 0 {
+		log.WARN.Println("circuit is deprecated and will be removed in a future release")
+	}
+
+	if cc.Cache > 0 {
+		log.WARN.Println("cache is deprecated and will be removed in a future release")
+	}
+
+	return NewEasee(cc.User, cc.Password, cc.Charger, cc.Cache)
 }
 
 // NewEasee creates Easee charger
-func NewEasee(user, password, charger string, circuit int, cache time.Duration) (*Easee, error) {
+func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
 	log := util.NewLogger("easee").Redact(user, password)
 
 	if !sponsor.IsAuthorized() {
@@ -114,6 +126,27 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 		c.charger = chargers[0].ID
 	}
 
+	// find site
+	site, err := c.chargerSite(c.charger)
+	if err != nil {
+		return nil, err
+	}
+
+	// find single charger per circuit
+	for _, circuit := range site.Circuits {
+		if len(circuit.Chargers) > 1 {
+			continue
+		}
+
+		for _, charger := range circuit.Chargers {
+			if charger.ID == c.charger {
+				c.site = site.ID
+				c.circuit = circuit.ID
+				break
+			}
+		}
+	}
+
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
@@ -143,6 +176,13 @@ func NewEasee(user, password, charger string, circuit int, cache time.Duration) 
 	}
 
 	return c, err
+}
+
+func (c *Easee) chargerSite(charger string) (easee.Site, error) {
+	var res easee.Site
+	uri := fmt.Sprintf("%s/chargers/%s/site", easee.API, charger)
+	err := c.GetJSON(uri, &res)
+	return res, err
 }
 
 // connect creates an HTTP connection to the signalR hub
@@ -288,14 +328,10 @@ func (c *Easee) CommandResponse(i json.RawMessage) {
 	// c.observe("CommandResponse", i)
 }
 
-func (c *Easee) chargers() (res []easee.Charger, err error) {
+func (c *Easee) chargers() ([]easee.Charger, error) {
+	var res []easee.Charger
 	uri := fmt.Sprintf("%s/chargers", easee.API)
-
-	req, err := request.New(http.MethodGet, uri, nil, request.JSONEncoding)
-	if err == nil {
-		err = c.DoJSON(req, &res)
-	}
-
+	err := c.GetJSON(uri, &res)
 	return res, err
 }
 
@@ -368,18 +404,56 @@ var _ api.ChargePhases = (*Easee)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *Easee) Phases1p3p(phases int) error {
-	if phases == 3 {
-		phases = 2
-	}
+	var err error
+	if c.circuit != 0 {
+		// circuit level
+		uri := fmt.Sprintf("%s/sites/%d/circuits/%d/settings", easee.API, c.site, c.circuit)
 
-	data := easee.ChargerSettings{
-		PhaseMode: &phases,
-	}
+		var res easee.CircuitSettings
+		if err := c.GetJSON(uri, &res); err != nil {
+			return err
+		}
 
-	uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
-	resp, err := c.Post(uri, request.JSONContent, request.MarshalJSON(data))
-	if err == nil {
-		resp.Body.Close()
+		if res.MaxCircuitCurrentP1 == nil || res.MaxCircuitCurrentP2 == nil || res.MaxCircuitCurrentP3 == nil {
+			return errors.New("MaxCircuitCurrent must not be nil")
+		}
+
+		var zero float64
+		max1 := *res.MaxCircuitCurrentP1
+		max2 := *res.MaxCircuitCurrentP2
+		max3 := *res.MaxCircuitCurrentP3
+
+		data := easee.CircuitSettings{
+			DynamicCircuitCurrentP1: &max1,
+			DynamicCircuitCurrentP2: &zero,
+			DynamicCircuitCurrentP3: &zero,
+		}
+
+		if phases > 1 {
+			data.DynamicCircuitCurrentP2 = &max2
+			data.DynamicCircuitCurrentP3 = &max3
+		}
+
+		var resp *http.Response
+		if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
+			resp.Body.Close()
+		}
+	} else {
+		// charger level
+		if phases == 3 {
+			phases = 2 // mode 2 means 3p
+		}
+
+		data := easee.ChargerSettings{
+			PhaseMode: &phases,
+		}
+
+		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+
+		var resp *http.Response
+		if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
+			resp.Body.Close()
+		}
 	}
 
 	return err
