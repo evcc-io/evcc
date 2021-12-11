@@ -4,7 +4,7 @@ requirements:
   sponsorship: true
 params:
 - name: usage
-  choice: [ "charger" ]
+  choice: [ "charge" ]
 - name: modbus
   choice: ["tcpip"]
   port: 4702
