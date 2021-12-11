@@ -191,6 +191,8 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 		switch p.ValueType {
 		case ParamValueTypeStringList:
 			values[p.Name] = []string{}
+		case ParamValueTypeChargeModes:
+			values[p.Name] = ""
 		default:
 			if p.Test != "" {
 				values[p.Name] = p.Test
