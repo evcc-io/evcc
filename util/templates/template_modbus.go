@@ -12,6 +12,51 @@ import (
 //go:embed modbus.tpl
 var modbusTmpl string
 
+// add the modbus params to the template
+func (t *Template) ModbusParams(values map[string]interface{}) {
+	if len(t.ModbusChoices()) == 0 {
+		return
+	}
+
+	if values[ParamModbus] == nil {
+		return
+	}
+
+	for k, _ := range values {
+		switch k {
+		case ModbusParamNameId:
+			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
+		case ModbusParamNameHost:
+			if values[ParamModbus] != ModbusKeyTCPIP && values[ParamModbus] != ModbusKeyRS485TCPIP {
+				continue
+			}
+			t.Params = append(t.Params, Param{Name: ModbusParamNameHost, ValueType: ParamValueTypeString})
+		case ModbusParamNamePort:
+			if values[ParamModbus] != ModbusKeyTCPIP && values[ParamModbus] != ModbusKeyRS485TCPIP {
+				continue
+			}
+			t.Params = append(t.Params, Param{Name: ModbusParamNamePort, ValueType: ParamValueTypeNumber})
+		case ModbusParamNameDevice:
+			if values[ParamModbus] != ModbusKeyRS485Serial {
+				continue
+			}
+			t.Params = append(t.Params, Param{Name: ModbusParamNameDevice, ValueType: ParamValueTypeString})
+		case ModbusParamNameBaudrate:
+			if values[ParamModbus] != ModbusKeyRS485Serial {
+				continue
+			}
+			t.Params = append(t.Params, Param{Name: ModbusParamNameBaudrate, ValueType: ParamValueTypeNumber})
+		case ModbusParamNameComset:
+			if values[ParamModbus] != ModbusKeyRS485Serial {
+				continue
+			}
+			t.Params = append(t.Params, Param{Name: ModbusParamNameComset, ValueType: ParamValueTypeString})
+		}
+	}
+
+	delete(values, ParamModbus)
+}
+
 // set the modbus values required from modbus.tpl and and the template to the render
 func (t *Template) ModbusValues(values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {

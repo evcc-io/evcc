@@ -249,6 +249,8 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 		panic(err)
 	}
 
+	t.ModbusParams(values)
+
 	for index, p := range t.Params {
 		for k, v := range values {
 			if p.Name != k {
