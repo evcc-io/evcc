@@ -7,6 +7,7 @@ params:
   choice: [ "charger" ]
 - name: modbus
   choice: ["tcpip"]
+  port: 4702
 render: |
   type: cfos
   {{include "modbus" .}}

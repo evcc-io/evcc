@@ -5,6 +5,7 @@ requirements:
 params:
 - name: modbus
   choice: ["tcpip"]
+  port: 4701
 render: |
   type: cfos
   {{include "modbus" .}}

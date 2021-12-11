@@ -307,12 +307,16 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 
 	// baudrate and comset defaults can be overwritten, as they are device specific
 	deviceDefaultBaudrate := templates.ModbusParamValueBaudrate
+	deviceDefaultComset := templates.ModbusParamValueComset
+	deviceDefaultPort := templates.ModbusParamValuePort
 	if param.Baudrate != 0 {
 		deviceDefaultBaudrate = param.Baudrate
 	}
-	deviceDefaultComset := templates.ModbusParamValueComset
 	if param.Comset != "" {
 		deviceDefaultComset = param.Comset
+	}
+	if param.Port != 0 {
+		deviceDefaultPort = param.Port
 	}
 
 	var choices []string
@@ -383,7 +387,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 
 			port := c.askValue(question{
 				label:        c.localizedString("UserFriendly_Port_Name", nil),
-				defaultValue: templates.ModbusParamValuePort,
+				defaultValue: deviceDefaultPort,
 				valueType:    templates.ParamValueTypeNumber,
 				required:     true})
 			additionalConfig[templates.ModbusParamNamePort] = port
