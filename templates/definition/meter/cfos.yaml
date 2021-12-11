@@ -5,9 +5,9 @@ requirements:
 params:
 - name: usage
   choice: [ "charge" ]
-- name: modbus
-  choice: ["tcpip"]
-  port: 4702
+- name: host
+  required: true
+  example: 192.0.2.2
 render: |
   type: cfos
-  {{include "modbus" .}}
+  uri: {{ .host }}

@@ -1,3 +1,4 @@
 type: template
 template: cfos_charger
 description: cFos PowerBrain
+host: 192.0.2.2

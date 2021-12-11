@@ -1,4 +1,5 @@
 type: template
 template: cfos-meter
 description: cFos PowerBrain
-usage: charge
+usage: charge 
+host: 192.0.2.2
