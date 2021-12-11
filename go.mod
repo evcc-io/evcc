@@ -41,10 +41,13 @@ require (
 	github.com/grid-x/modbus v0.0.0-20211113184042-7f2251c342c9
 	github.com/hashicorp/go-version v1.3.0
 	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/huin/gobinarytest v0.0.0-20170803182140-bc6c19e91749 // indirect
+	github.com/huin/mqtt v0.0.0-20200914141616-61735481eb15 // indirect
 	github.com/imdario/mergo v0.3.12
 	github.com/influxdata/influxdb-client-go/v2 v2.5.1
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/itchyny/gojq v0.12.5
+	github.com/jeffallen/mqtt v0.0.0-20180518073322-5387cfa89df0
 	github.com/jeremywohl/flatten v1.0.1
 	github.com/jinzhu/copier v0.3.2
 	github.com/joeshaw/carwings v0.0.0-20210629130626-7ce4ec17db73
@@ -61,7 +64,6 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
-	github.com/mochi-co/mqtt v1.0.0 // indirect
 	github.com/muka/go-bluetooth v0.0.0-20211122080231-b99792bbe62a
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
