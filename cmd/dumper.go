@@ -162,6 +162,14 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.VehiclePosition); ok {
+		if lat, lon, err := v.Position(); err != nil {
+			fmt.Fprintf(w, "Position:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Position:\t%v,%v\n", lat, lon)
+		}
+	}
+
 	if v, ok := v.(api.Vehicle); ok {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
