@@ -238,11 +238,7 @@ func (t *Template) ModbusChoices() []string {
 //go:embed proxy.tpl
 var proxyTmpl string
 
-// RenderProxy renders the proxy template for inclusion in documentation
-func (t *Template) RenderProxy() ([]byte, error) {
-	return t.RenderProxyWithValues(nil, false)
-}
-
+// RenderProxy renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeDescription bool) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
@@ -263,7 +259,12 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
 			default:
-				t.Params[index].Value = yamlQuote(v.(string))
+				switch v.(type) {
+				case string:
+					t.Params[index].Value = yamlQuote(v.(string))
+				case int:
+					t.Params[index].Value = fmt.Sprintf("%d", v.(int))
+				}
 			}
 		}
 	}
