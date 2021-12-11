@@ -16,14 +16,15 @@ type device struct {
 }
 
 type loadpoint struct {
-	Title       string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
-	Charger     string
-	ChargeMeter string
-	Vehicles    []string
-	Mode        string
-	MinCurrent  int
-	MaxCurrent  int
-	Phases      int
+	Title             string // TODO Perspektivisch können wir was aus core wiederverwenden, für später
+	Charger           string
+	ChargeMeter       string
+	Vehicles          []string
+	Mode              string
+	MinCurrent        int
+	MaxCurrent        int
+	Phases            int
+	ResetOnDisconnect string
 }
 
 type config struct {

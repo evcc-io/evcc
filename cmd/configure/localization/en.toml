@@ -123,6 +123,8 @@ Loadpoint_Title = "Loadpoint title"
 Loadpoint_AddAnother = "Do you want to add another loadpoint?"
 Loadpoint_DefaultTitle = "Garage"
 
+Loadpoint_ResetOnDisconnect = "Shall disconnecting the charging cable from the vehicle reset the charging settings to the defaults?"
+
 Loadpoint_WallboxWOMeter = "The wallbox does not provide power data. Do you have an external meter that can be used?"
 Loadpoint_WallboxMaxPower = "What is the maximum power your wallbox can provide?"
 Loadpoint_WallboxMaxAmperage = "What is the maximum amperage your wallbox can provide on a single phase?"

@@ -123,6 +123,8 @@ Loadpoint_Title = "Titel des Ladepunktes"
 Loadpoint_AddAnother = "Möchtest du einen weiteren Ladepunkt hinzufügen?"
 Loadpoint_DefaultTitle = "Garage"
 
+Loadpoint_ResetOnDisconnect = "Soll beim Abstecken des Ladekables von einem Fahrzeug, die Lade-Standardeinstellungen wieder hergestellt werden?"
+
 Loadpoint_WallboxWOMeter = "Die Wallbox hat keinen Ladestromzähler. Hast du einen externen Zähler dafür installiert, der verwendet werden kann?"
 Loadpoint_WallboxMaxPower = "Was ist die maximale Leistung, welche die Wallbox zur Verfügung stellen kann?"
 Loadpoint_WallboxMaxAmperage = "Was ist die maximale Stromstärke, welche die Wallbox auf einer Phase zur Verfügung stellen kann?"

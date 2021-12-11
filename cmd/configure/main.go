@@ -304,6 +304,11 @@ func (c *CmdConfigure) configureLoadpoints() {
 		fmt.Println()
 		loadpoint.Mode = c.askValue(question{valueType: templates.ParamValueTypeChargeModes, excludeNone: true})
 
+		fmt.Println()
+		loadpoint.ResetOnDisconnect = c.askValue(question{
+			label:     c.localizedString("Loadpoint_ResetOnDisconnect", nil),
+			valueType: templates.ParamValueTypeBool,
+		})
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()
