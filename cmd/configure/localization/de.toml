@@ -26,6 +26,7 @@ Error_EEBUS_Certificate_Create = "Konnte das EEBUS Zertifikat nicht erstellen"
 Error_EEBUS_Certificate_Use = "Konnte das EEBUS Zertifikat nicht verwenden"
 
 File_Exists = "Die Datei {{ .FileName }} existiert bereits. Soll die Datei überschrieben werden?"
+File_Permissions = "Die Datei {{ .FileName }} existiert bereits und kann nicht überschrieben werden."
 File_NewFilename = "Bitte gib einen neuen Dateinamen an"
 File_Error_SaveFailed = "Die Konfiguration konnte nicht in der Datei {{ .FileName }} gespeichert werden"
 File_SaveSuccess = "Die Konfiguration wurde erfolgreich in der Datei {{ .FileName }} gespeichert"
