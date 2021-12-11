@@ -61,6 +61,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.2
 	github.com/mlnoga/rct v0.1.2-0.20211011124352-7e995f76b592
+	github.com/mochi-co/mqtt v1.0.0 // indirect
 	github.com/muka/go-bluetooth v0.0.0-20211122080231-b99792bbe62a
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.1.2
