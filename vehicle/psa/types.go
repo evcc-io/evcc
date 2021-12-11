@@ -37,6 +37,18 @@ type Status struct {
 	Odometer struct {
 		Mileage float64
 	} `json:"timed.odometer"`
+	LastPosition struct {
+		Type     string
+		Geometry struct {
+			Type        string
+			Coordinates []float64
+		}
+		Properties struct {
+			UpdatedAt time.Time
+			Type      string
+			Heading   int
+		}
+	}
 }
 
 // Energy is the /status partial energy response
