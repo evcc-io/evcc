@@ -106,6 +106,7 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 	var vid string
 	if cc.VIN == "" && len(vehicles) == 1 {
 		vid = vehicles[0].ID
+		cc.VIN = vehicles[0].VIN // for mqtt
 	} else {
 		for _, vehicle := range vehicles {
 			if vehicle.VIN == strings.ToUpper(cc.VIN) {
@@ -120,11 +121,13 @@ func newPSA(log *util.Logger, brand, realm, id, secret string, other map[string]
 
 	v.Provider = psa.NewProvider(api, vid, cc.Cache)
 
-	mqtt, err := psa.NewMqtt(log, identity, realm, cc.Credentials.ID)
+	mqtt, err := psa.NewMqtt(log, identity, realm, cc.Credentials.ID, cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 	_ = mqtt
+
+	time.Sleep(10 * time.Second)
 
 	return v, err
 }

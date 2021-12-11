@@ -12,15 +12,8 @@ import (
 
 // https://developer.groupe-psa.io/webapi/b2c/api-reference/specification
 
-const (
-	// BaseURL is the API base url
-	BaseURL = "https://api.groupe-psa.com/connectedcar/v4"
-
-	MQTT_SERVER      = "ssl://mwa.mpsa.com:8885"
-	MQTT_RESP_TOPIC  = "psa/RemoteServices/to/cid/"
-	MQTT_EVENT_TOPIC = "psa/RemoteServices/events/MPHRTServices/"
-	MQTT_TOKEN_TTL   = 890
-)
+// BaseURL is the API base url
+const BaseURL = "https://api.groupe-psa.com/connectedcar/v4"
 
 // API is an api.Vehicle implementation for PSA cars
 type API struct {
