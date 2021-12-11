@@ -312,7 +312,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 	}
 	deviceDefaultComset := templates.ModbusParamValueComset
 	if param.Comset != "" {
-		deviceDefaultBaudrate = param.Baudrate
+		deviceDefaultComset = param.Comset
 	}
 
 	var choices []string
