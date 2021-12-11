@@ -5,6 +5,8 @@ requirements:
 params:
 - name: modbus
   choice: ["rs485"]
+  baudrate: 38400
+  comset: "8E1"
 render: |
   type: abl
   {{include "modbus" .}}

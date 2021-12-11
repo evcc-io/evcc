@@ -5,6 +5,7 @@ params:
   choice: [ "pv" ]
 - name: modbus
   choice: ["rs485"]
+  baudrate: 19200
 render: |
   type: custom
   power:
