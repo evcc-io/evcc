@@ -60,8 +60,9 @@ type ActionConfig struct {
 func (a ActionConfig) String() string {
 	var s []string
 	for k, v := range structs.Map(a) {
-		if v != nil && !reflect.ValueOf(v).IsNil() {
-			s = append(s, fmt.Sprintf("%s:%v", k, v))
+		val := reflect.ValueOf(v)
+		if v != nil && !val.IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
 		}
 	}
 	return strings.Join(s, ", ")
