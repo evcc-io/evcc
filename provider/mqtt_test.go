@@ -2,6 +2,7 @@ package provider
 
 import (
 	"net"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,11 +18,11 @@ func TestMqttInitialTimeout(t *testing.T) {
 
 	// // Add the listener to the server with default options (nil).
 	// if err := server.AddListener(tcp, nil); err != nil {
-	// 	t.Fatal(err)
+	// 	t.Error(err)
 	// }
 
 	// if err := server.Serve(); err != nil {
-	// 	t.Fatal(err)
+	// 	t.Error(err)
 	// }
 
 	// // TODO depends on https://github.com/mochi-co/mqtt/issues/6
@@ -29,26 +30,104 @@ func TestMqttInitialTimeout(t *testing.T) {
 
 	l, err := net.Listen("tcp", ":0")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	server := jeff.NewServer(l)
+	// server.Dump = true
 	server.Start()
 
 	broker := l.Addr().String()
 
-	client, err := mqtt.NewClient(util.NewLogger("foo"), broker, "foo", "bar", "cid", 0, func(o *paho.ClientOptions) {
+	pub, err := mqtt.NewClient(util.NewLogger("foo"), broker, "", "", "pub", 0, func(o *paho.ClientOptions) {
 		o.SetProtocolVersion(3)
 	})
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
-	topic := "test"
-	client.Listen(topic, func(payload string) {
-		t.Log("recv:", payload)
+	sub, err := mqtt.NewClient(util.NewLogger("foo"), broker, "", "", "sub", 0, func(o *paho.ClientOptions) {
+		o.SetProtocolVersion(3)
 	})
+	if err != nil {
+		t.Error(err)
+	}
+	_ = sub
 
-	client.Publish(topic, false, "hello")
+	timerTopic := "timer"
+	go func() {
+		var i int
+		for range time.Tick(time.Second) {
+			i++
+			t.Log("tick")
+			if err := pub.Publish(timerTopic, false, strconv.Itoa(i)); err != nil {
+				t.Error(err)
+			}
+		}
+	}()
+
+	// sub.Listen(topic, func(payload string) {
+	// 	t.Log("recv:", payload)
+	// })
+
+	delay := 100 * time.Millisecond
+	_ = delay
+
+	// {
+	// 	topic := "test1"
+	// 	stringG := NewMqtt(util.NewLogger("foo"), sub, topic, 1, 0).StringGetter()
+
+	// 	c := make(chan struct{})
+	// 	go func() {
+	// 		c <- struct{}{}
+	// 		t.Log("startet")
+
+	// 		if s, err := stringG(); err != nil {
+	// 			t.Error(err)
+	// 		} else if s != "hello" {
+	// 			t.Error("wrong value", s)
+	// 		}
+
+	// 		close(c)
+	// 		t.Log("stopped")
+	// 	}()
+	// 	<-c
+
+	// 	// time.Sleep(2 * delay)
+
+	// 	t.Log("publish")
+	// 	if err := pub.Publish(topic, false, "hello"); err != nil {
+	// 		t.Error(err)
+	// 	}
+	// 	<-c
+	// }
+
+	{
+		topic := "test2"
+		stringG := NewMqtt(util.NewLogger("foo"), sub, topic, 1, delay).StringGetter()
+
+		c := make(chan struct{})
+		go func() {
+			c <- struct{}{}
+			t.Log("startet")
+
+			if _, err := stringG(); err == nil {
+				t.Error("initial timeout error not received")
+			}
+
+			close(c)
+			t.Log("stopped")
+		}()
+		<-c
+
+		time.Sleep(2 * delay)
+
+		t.Log("publish")
+		if err := pub.Publish(topic, false, "hello"); err != nil {
+			t.Error(err)
+		}
+		<-c
+	}
+
 	time.Sleep(1 * time.Second)
 }
