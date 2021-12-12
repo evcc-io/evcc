@@ -93,9 +93,15 @@ export default {
       duration: "Dauer",
       remaining: "Restzeit",
       tooltip: {
-        scale1p: "Umschaltung auf 1-phasig {remaining}",
-        scale3p: "Umschaltung auf 3-phasig {remaining}",
-        inactive: "lädt {activePhases}-phasig",
+        phases: {
+          scale1p: "Herunterschalten auf 1-phasig {remaining}.",
+          scale3p: "Hochschalten auf 3-phasig {remaining}.",
+          inactive: "Lädt {activePhases}-phasig.",
+        },
+        pv: {
+          enable: "Überschuss verfügbar. Ladung startet {remaining}.",
+          disable: "Zu wenig Überschuss. Ladung pausiert {remaining}.",
+        },
       },
     },
   },

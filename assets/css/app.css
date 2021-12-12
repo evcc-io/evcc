@@ -36,11 +36,7 @@ a {
 	border-color: var(--evcc-dark-green);
 }
 
-@keyframes pulse {
-	0% {
-		opacity: 1;
-	}
-	100% {
-		opacity: 0.25;
-	}
+.cursor-pointer {
+	cursor: pointer;
 }
+

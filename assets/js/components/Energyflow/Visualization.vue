@@ -27,47 +27,25 @@
 			</div>
 			<div
 				class="site-progress-bar grid-import"
-				v-tooltip="{
-					content: `Zu wenig Überschuss. Pausiere Ladung in ${Math.round(
-						Math.random() * 60
-					)}s`,
-					disabled: !disableTimerActive,
-				}"
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(gridImport, disableTimerActive)">
+				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
 					{{ kw(gridImport) }}
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(gridImport, disableTimerActive)">
+				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
 					{{ kwNoUnit(gridImport) }}
 				</span>
-				<fa-icon
-					v-if="disableTimerActive"
-					:icon="['far', 'lightbulb']"
-					class="pulse-out"
-				></fa-icon>
 			</div>
 			<div
 				class="site-progress-bar pv-export"
-				v-tooltip="{
-					content: `Ausreichend Überschuss. Starte Ladung in ${Math.round(
-						Math.random() * 60
-					)}s`,
-					disabled: !enableTimerActive,
-				}"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(pvExport, enableTimerActive)">
+				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
 					{{ kw(pvExport) }}
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(pvExport, enableTimerActive)">
+				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
 					{{ kwNoUnit(pvExport) }}
 				</span>
-				<fa-icon
-					v-if="enableTimerActive"
-					:icon="['far', 'lightbulb']"
-					class="pulse-in"
-				></fa-icon>
 			</div>
 			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
@@ -147,12 +125,6 @@ export default {
 		totalAdjusted: function () {
 			return this.gridImportAdjusted + this.selfConsumptionAdjusted + this.pvExportAdjusted;
 		},
-		enableTimerActive: function () {
-			return true;
-		},
-		disableTimerActive: function () {
-			return true;
-		},
 	},
 	watch: {
 		showDetails: function () {
@@ -181,13 +153,11 @@ export default {
 			const percent = (100 / this.totalAdjusted) * power;
 			return (this.width / 100) * percent;
 		},
-		powerLabelEnoughSpace(power, withIcon) {
-			const limit = withIcon ? 80 : 60;
-			return this.powerLabelAvailableSpace(power) > limit;
+		powerLabelEnoughSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 60;
 		},
-		powerLabelSomeSpace(power, withIcon) {
-			const limit = withIcon ? 55 : 35;
-			return this.powerLabelAvailableSpace(power) > limit;
+		powerLabelSomeSpace(power) {
+			return this.powerLabelAvailableSpace(power) > 35;
 		},
 		hideLabelIcon(power, minWidth = 32) {
 			if (this.totalAdjusted === 0) return true;
@@ -286,11 +256,5 @@ export default {
 }
 .visualization--ready >>> .label-bar-icon {
 	transition: opacity 250ms ease-in;
-}
-.pulse-out {
-	animation: pulse 2s alternate infinite ease-out;
-}
-.pulse-in {
-	animation: pulse 2s alternate-reverse infinite ease-in;
 }
 </style>
