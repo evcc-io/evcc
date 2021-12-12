@@ -5,59 +5,60 @@ import (
 	"time"
 )
 
-const waitTimeout = 50 * time.Millisecond // polling interval when waiting for initial value
+var WaitInitialTimeout = 10 * time.Second
 
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
 	sync.Mutex
 	log     func()
-	once    sync.Once
+	cond    *sync.Cond
 	updated time.Time
 	timeout time.Duration
 }
 
 // NewWaiter creates new waiter
 func NewWaiter(timeout time.Duration, logInitialWait func()) *Waiter {
-	return &Waiter{
+	p := &Waiter{
 		log:     logInitialWait,
 		timeout: timeout,
 	}
+	p.cond = sync.NewCond(p)
+	return p
 }
 
 // Update is called when client has received data. Update resets the timeout counter.
 // It is client responsibility to ensure that the waiter is not locked when Update is called.
 func (p *Waiter) Update() {
 	p.updated = time.Now()
-}
-
-// waitForInitialValue blocks until Update has been called at least once.
-// It assumes lock has been obtained before and returns with lock active.
-func (p *Waiter) waitForInitialValue() {
-	if p.updated.IsZero() {
-		p.log()
-
-		// wait for initial update
-		waitStarted := time.Now()
-		for p.updated.IsZero() {
-			p.Unlock()
-			time.Sleep(waitTimeout)
-			p.Lock()
-
-			// abort initial wait with error
-			if p.timeout != 0 && time.Since(waitStarted) > p.timeout {
-				p.updated = waitStarted
-				return
-			}
-		}
-	}
+	p.cond.Broadcast()
 }
 
 // LockWithTimeout waits for initial value and checks if update timeout has elapsed
 func (p *Waiter) LockWithTimeout() time.Duration {
 	p.Lock()
 
-	// waiting assumes lock acquired and returns with lock
-	p.once.Do(p.waitForInitialValue)
+	if p.updated.IsZero() {
+		p.log()
+
+		c := make(chan struct{})
+
+		go func() {
+			defer close(c)
+			for p.updated.IsZero() {
+				p.cond.Wait()
+			}
+		}()
+
+		select {
+		case <-c:
+			// initial value received
+		case <-time.After(WaitInitialTimeout):
+			p.updated = time.Now()  // unblock the condition
+			<-c                     // wait for goroutine
+			p.updated = time.Time{} // reset updated to missing initial value
+			return WaitInitialTimeout
+		}
+	}
 
 	if elapsed := time.Since(p.updated); p.timeout != 0 && elapsed > p.timeout {
 		return elapsed
