@@ -10,12 +10,18 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/evcc-io/evcc/util"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
+
+	UsageChoiceGrid    = "grid"
+	UsageChoicePV      = "pv"
+	UsageChoiceBattery = "battery"
+	UsageChoiceCharge  = "charge"
 
 	HemsTypeSMA = "sma"
 
@@ -57,6 +63,9 @@ const (
 )
 
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
+
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 
 // language specific texts
 type TextLanguage struct {
@@ -144,6 +153,27 @@ type Template struct {
 	ParamsBase   string // references a base param set to inherit from
 	Params       []Param
 	Render       string // rendering template
+}
+
+func (t *Template) Validate() error {
+	for _, p := range t.Params {
+		switch p.Name {
+		case ParamUsage:
+			for _, c := range p.Choice {
+				if !funk.ContainsString(ValidUsageChoices, c) {
+					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
+				}
+			}
+		case ParamModbus:
+			for _, c := range p.Choice {
+				if !funk.ContainsString(ValidModbusChoices, c) {
+					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // add the referenced base Params and overwrite existing ones
