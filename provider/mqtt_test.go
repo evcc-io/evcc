@@ -14,15 +14,12 @@ import (
 	jeff "github.com/jeffallen/mqtt"
 )
 
-func init() {
-	util.LogLevel("fatal", nil)
-}
-
 const (
 	mqttTimeout = 100 * time.Millisecond
 )
 
 func TestMain(t *testing.M) {
+	util.LogLevel("fatal", nil)
 	util.WaitInitialTimeout = 3 * mqttTimeout
 	os.Exit(t.Run())
 }
@@ -34,7 +31,6 @@ func server(t *testing.T) (net.Listener, *mqtt.Client, *mqtt.Client) {
 	}
 
 	server := jeff.NewServer(l)
-	// server.Dump = true
 	server.Start()
 
 	broker := l.Addr().String()
@@ -128,7 +124,6 @@ func startTicker(t *testing.T, ticker string, pub *mqtt.Client) chan struct{} {
 				break
 			}
 
-			t.Log("tick")
 			if err := pub.Publish(ticker, false, strconv.Itoa(i)); err != nil {
 				t.Error(err)
 			}
@@ -174,8 +169,6 @@ func TestMqttReceiveTickerInInitialTimeout(t *testing.T) {
 			t.Error("wrong value", s)
 		}
 
-		t.Log("received 1")
-
 		close(c)
 	}()
 	<-c
@@ -198,7 +191,6 @@ func TestMqttReceiveTickerInInitialTimeout(t *testing.T) {
 
 			// keep waiting for updated value
 			if err == nil && s == "hello 1" {
-				t.Log("continue")
 				time.Sleep(mqttTimeout / 3)
 				continue
 			}
@@ -219,7 +211,6 @@ func TestMqttReceiveTickerInInitialTimeout(t *testing.T) {
 	}()
 	<-c
 
-	t.Log("waiting 2")
 	time.Sleep(util.WaitInitialTimeout + 2*mqttTimeout)
 
 	if err := pub.Publish(topic, false, "hello 2"); err != nil {
@@ -260,8 +251,6 @@ func TestMqttReceiveTickerAfterInitialTimeout(t *testing.T) {
 		if _, err := stringG(); err == nil {
 			t.Error("initial timeout error not received")
 		}
-
-		t.Log("received")
 
 		close(c)
 	}()
