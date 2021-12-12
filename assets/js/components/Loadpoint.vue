@@ -79,6 +79,8 @@ export default {
 		chargeRemainingEnergy: Number,
 		phaseAction: String,
 		phaseRemaining: Number,
+		pvRemaining: Number,
+		pvAction: String,
 	},
 	components: { LoadpointDetails, Mode, Vehicle },
 	mixins: [formatter, collector],

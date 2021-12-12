@@ -157,8 +157,3 @@ export default {
 	},
 };
 </script>
-<style scoped>
-.pulse {
-	animation: pulse 2s infinite ease-in-out;
-}
-</style>
