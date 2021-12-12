@@ -9,7 +9,7 @@ import (
 const testTimeout = 100 * time.Millisecond
 
 func TestMain(t *testing.M) {
-	WaitInitialTimeout = 2 * testTimeout
+	waitInitialTimeout = 2 * testTimeout
 	os.Exit(t.Run())
 }
 

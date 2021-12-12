@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var WaitInitialTimeout = 10 * time.Second
+var waitInitialTimeout = 10 * time.Second
 
 // Waiter provides monitoring of receive timeouts and reception of initial value
 type Waiter struct {
@@ -52,11 +52,11 @@ func (p *Waiter) LockWithTimeout() time.Duration {
 		select {
 		case <-c:
 			// initial value received, lock established
-		case <-time.After(WaitInitialTimeout):
+		case <-time.After(waitInitialTimeout):
 			p.Update()              // unblock the sync.Cond
 			<-c                     // wait for goroutine, re-establish lock
 			p.updated = time.Time{} // reset updated to missing initial value
-			return WaitInitialTimeout
+			return waitInitialTimeout
 		}
 	}
 
