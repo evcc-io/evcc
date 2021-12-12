@@ -158,6 +158,17 @@ func (v *API) Climater(vin string) (ClimaterResponse, error) {
 	return res, err
 }
 
+// Position implements the /position response
+func (v *API) Position(vin string) (ClimaterResponse, error) {
+	var res ClimaterResponse
+	uri := fmt.Sprintf("%s/bs/cf/v1/%s/%s/vehicles/%s/position", v.baseURI, v.brand, v.country, vin)
+	err := v.GetJSON(uri, &res)
+	if err != nil && res.Error != nil {
+		err = res.Error.Error()
+	}
+	return res, err
+}
+
 const (
 	ActionCharge      = "batterycharge"
 	ActionChargeStart = "start"
