@@ -39,9 +39,12 @@ func loadTemplates(class string) {
 
 		var tmpl Template
 		if err = yaml.Unmarshal(b, &tmpl); err != nil {
-			panic(fmt.Errorf("reading template '%s' failed: %w", filepath, err))
+			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
 		}
 		tmpl.ResolveParamBase()
+		if err = tmpl.Validate(); err != nil {
+			return err
+		}
 
 		path := path.Dir(filepath)
 		templates[path] = append(templates[path], tmpl)

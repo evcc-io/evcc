@@ -34,6 +34,9 @@ func main() {
 
 func generateClass(class string) error {
 	for _, tmpl := range templates.ByClass(class) {
+		if err := tmpl.Validate(); err != nil {
+			return err
+		}
 		usages := tmpl.Usages()
 
 		fmt.Println(tmpl.Template)

@@ -12,6 +12,41 @@ import (
 //go:embed modbus.tpl
 var modbusTmpl string
 
+// add the modbus params to the template
+func (t *Template) ModbusParams(values map[string]interface{}) {
+	if len(t.ModbusChoices()) == 0 {
+		return
+	}
+
+	if values[ParamModbus] == nil {
+		return
+	}
+
+	for k := range values {
+		if k == ModbusParamNameId {
+			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
+			continue
+		}
+
+		type modbusData struct {
+			modbusKeys []string
+			valueType  string
+		}
+		paramMap := map[string]modbusData{
+			ModbusParamNameId:       {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP, ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
+			ModbusParamNameHost:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeString},
+			ModbusParamNamePort:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeNumber},
+			ModbusParamNameDevice:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
+			ModbusParamNameBaudrate: {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
+			ModbusParamNameComset:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
+		}
+
+		if funk.ContainsString(paramMap[k].modbusKeys, values[ParamModbus].(string)) {
+			t.Params = append(t.Params, Param{Name: k, ValueType: paramMap[k].valueType})
+		}
+	}
+}
+
 // set the modbus values required from modbus.tpl and and the template to the render
 func (t *Template) ModbusValues(values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {

@@ -3,17 +3,15 @@ description: Kostal Piko (BA) Energy Meter
 params:
 - name: usage
   choice: [ "grid" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: port
-  default: 1502
+- name: modbus
+  choice: [ "tcpip" ]
+  port: 1502
+  id: 71
 render: |
   type: custom
   power:
     source: modbus # use ModBus plugin
-    uri: {{ .host }}:{{ .port }} # inverter port
-    id: 71
+    {{ include "modbus" . | indent 2 }}
     register: # manual non-sunspec register configuration
       address: 252 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
       type: holding

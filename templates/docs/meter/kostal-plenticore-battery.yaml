@@ -1,6 +1,4 @@
 type: template
 template: kostal-plenticore
 description: Kostal Plenticore Hybrid
-usage: battery 
-host: 192.0.2.2 
-port: 1502
+usage: battery

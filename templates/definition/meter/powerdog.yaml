@@ -5,11 +5,8 @@ guidedsetup:
 params:
 - name: usage
   choice: [ "grid", "pv" ]
-- name: host
-  required: true
-  example: 192.0.2.2
-- name: port
-  default: 502
+- name: modbus
+  choice: [ "tcpip" ]
 render: |
   type: custom
   power:
@@ -17,15 +14,13 @@ render: |
     source: calc #calculate current overall consumption + (current pv effort * (-1) )
     add:
     - source: modbus
-      uri: {{ .host }}:{{ .port }} #ip-adress and port (default-port: 502)
-      id: 1
+      {{ include "modbus" . | indent 4 }}
       register:
         address: 40026 #register for overall consumption
         type: holding
         decode: int32
     - source: modbus
-      uri: {{ .host }}:{{ .port }} #ip-adress and port (default-port: 502)
-      id: 1
+      {{ include "modbus" . | indent 4 }}
       register:
         address: 40002 #register for pv effort
         type: holding
@@ -34,8 +29,7 @@ render: |
   {{- end }}
   {{- if eq .usage "pv" }}
     type: modbus
-    uri: {{ .host }}:{{ .port }} #ip-adress and port (default-port: 502)
-    id: 1
+    {{ include "modbus" . | indent 2 }}
     register:
       address: 40002 #register for pv effort
       type: holding
