@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 type Error struct {
@@ -65,6 +66,24 @@ type ClimaterResponse struct {
 				VehicleParkingClock TimedString
 			}
 		}
+	}
+	Error *Error // optional error
+}
+
+// PositionResponse is the /bs/cf/v1/%s/%s/vehicles/%s/position api
+type PositionResponse struct {
+	FindCarResponse struct {
+		Position struct {
+			TimestampCarSent     string // "2021-12-12T16:42:44"
+			TimestampTssReceived time.Time
+			CarCoordinate        struct {
+				Latitude  int64
+				Longitude int64
+			}
+			TimestampCarSentUTC  time.Time
+			TimestampCarCaptured string // "2021-12-12T16:42:44"
+		}
+		ParkingTimeUTC time.Time
 	}
 	Error *Error // optional error
 }

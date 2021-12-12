@@ -159,13 +159,24 @@ func (v *API) Climater(vin string) (ClimaterResponse, error) {
 }
 
 // Position implements the /position response
-func (v *API) Position(vin string) (ClimaterResponse, error) {
-	var res ClimaterResponse
+func (v *API) Position(vin string) (PositionResponse, error) {
+	var res PositionResponse
 	uri := fmt.Sprintf("%s/bs/cf/v1/%s/%s/vehicles/%s/position", v.baseURI, v.brand, v.country, vin)
-	err := v.GetJSON(uri, &res)
+
+	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+		"Accept":        request.JSONContent,
+		"Content-type":  "application/vnd.vwg.mbb.carfinderservice_v1_0_0+json",
+		"X-App-Version": "TODO",
+		"X-App-Name":    "TODO",
+	})
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
 	if err != nil && res.Error != nil {
 		err = res.Error.Error()
 	}
+
 	return res, err
 }
 
