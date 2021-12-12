@@ -1,7 +1,4 @@
 type: template
 template: cfos-meter
 description: cFos PowerBrain
-usage: charge 
-host: 192.0.2.2 
-port: 4702 
-id: 2
+usage: charge

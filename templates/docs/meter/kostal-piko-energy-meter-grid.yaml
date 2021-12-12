@@ -1,6 +1,4 @@
 type: template
 template: kostal-piko-energy-meter
 description: Kostal Piko (BA) Energy Meter
-usage: grid 
-host: 192.0.2.2 
-port: 1502
+usage: grid

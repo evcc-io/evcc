@@ -4,17 +4,12 @@ generic: true
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]
-- name: host
-  example: 192.0.2.2
-  required: true
-- name: id
-  default: 1
-  valuetype: number
+- name: modbus
+  choice: [ "tcpip" ]
 render: |
   type: modbus
   model: sunspec
-  uri: {{ .host }}
-  id: {{ .id }}
+  {{ include "modbus" .}}
   {{- if eq .usage "grid" }}
   power: 203:W # sunspec 3-phase meter power reading
   {{- end -}}
