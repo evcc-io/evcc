@@ -55,7 +55,7 @@ func (p *Waiter) LockWithTimeout() time.Duration {
 		case <-time.After(waitInitialTimeout):
 			p.Update()              // unblock the sync.Cond
 			<-c                     // wait for goroutine, re-establish lock
-			p.updated = time.Time{} // reset updated to missing initial value
+			p.updated = time.Time{} // reset updated to initial value missing
 			return waitInitialTimeout
 		}
 	}
