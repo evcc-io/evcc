@@ -1,5 +1,5 @@
 template: cfos-meter
-description: cFos PowerBrain
+description: cFos PowerBrain Meter
 requirements:
   sponsorship: true
 params:
