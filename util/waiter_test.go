@@ -32,8 +32,8 @@ func TestWaiterInitialUpdateNotReceived(t *testing.T) {
 	for _, timeout := range []time.Duration{0, testTimeout} {
 		w := NewWaiter(timeout, func() {})
 
-		if elapsed := w.LockWithTimeout(); elapsed != WaitInitialTimeout {
-			t.Errorf("expected %v, got %v", WaitInitialTimeout, elapsed)
+		if elapsed := w.LockWithTimeout(); elapsed != waitInitialTimeout {
+			t.Errorf("expected %v, got %v", waitInitialTimeout, elapsed)
 		}
 	}
 }
