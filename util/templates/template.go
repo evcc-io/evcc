@@ -134,6 +134,7 @@ type Param struct {
 	Baudrate  int    // device specific default for modbus RS485 baudrate
 	Comset    string // device specific default for modbus RS485 comset
 	Port      int    // device specific default for modbus TCPIP port
+	ID        int    // device specific default for modbus ID
 }
 
 type ParamBase struct {

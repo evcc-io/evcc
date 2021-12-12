@@ -309,6 +309,8 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 	deviceDefaultBaudrate := templates.ModbusParamValueBaudrate
 	deviceDefaultComset := templates.ModbusParamValueComset
 	deviceDefaultPort := templates.ModbusParamValuePort
+	deviceDefaultId := templates.ModbusParamValueId
+
 	if param.Baudrate != 0 {
 		deviceDefaultBaudrate = param.Baudrate
 	}
@@ -317,6 +319,9 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 	}
 	if param.Port != 0 {
 		deviceDefaultPort = param.Port
+	}
+	if param.ID != 0 {
+		deviceDefaultId = param.ID
 	}
 
 	var choices []string
@@ -340,7 +345,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 		id := c.askValue(question{
 			label:        "ID",
 			help:         "Modbus ID",
-			defaultValue: 1,
+			defaultValue: deviceDefaultId,
 			valueType:    templates.ParamValueTypeNumber,
 			required:     true})
 		additionalConfig[templates.ModbusParamNameId] = id
