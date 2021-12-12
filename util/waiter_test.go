@@ -22,7 +22,10 @@ func TestWaiterInitialUpdateInTime(t *testing.T) {
 			w.Update()
 		}()
 
-		if elapsed := w.LockWithTimeout(); elapsed != 0 {
+		w.Lock()
+		defer w.Unlock()
+
+		if elapsed := w.Overdue(); elapsed != 0 {
 			t.Errorf("expected %v, got %v", 0, elapsed)
 		}
 	}
@@ -32,7 +35,10 @@ func TestWaiterInitialUpdateNotReceived(t *testing.T) {
 	for _, timeout := range []time.Duration{0, testTimeout} {
 		w := NewWaiter(timeout, func() {})
 
-		if elapsed := w.LockWithTimeout(); elapsed != waitInitialTimeout {
+		w.Lock()
+		defer w.Unlock()
+
+		if elapsed := w.Overdue(); elapsed != waitInitialTimeout {
 			t.Errorf("expected %v, got %v", waitInitialTimeout, elapsed)
 		}
 	}
@@ -47,7 +53,10 @@ func TestWaiterUpdateInTime(t *testing.T) {
 		w.Update()
 	}()
 
-	if elapsed := w.LockWithTimeout(); elapsed != 0 {
+	w.Lock()
+	defer w.Unlock()
+
+	if elapsed := w.Overdue(); elapsed != 0 {
 		t.Errorf("expected %v, got %v", 0, elapsed)
 	}
 }
@@ -58,7 +67,10 @@ func TestWaiterUpdateNotReceived(t *testing.T) {
 
 	time.Sleep(2 * testTimeout)
 
-	if elapsed := w.LockWithTimeout(); elapsed < 2*testTimeout {
+	w.Lock()
+	defer w.Unlock()
+
+	if elapsed := w.Overdue(); elapsed < 2*testTimeout {
 		t.Errorf("expected >%v, got %v", 2*testTimeout, elapsed)
 	}
 }

@@ -50,11 +50,11 @@ func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
 	// ensure update loop was started
 	d.StartUpdateLoop()
 
-	elapsed := d.mux.LockWithTimeout()
+	d.mux.Lock()
 	defer d.mux.Unlock()
 
-	if elapsed > 0 {
-		return nil, fmt.Errorf("update timeout: %v", elapsed.Truncate(time.Second))
+	if late := d.mux.Overdue(); late > 0 {
+		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
 	}
 
 	// return a copy of the map to avoid race conditions

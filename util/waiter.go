@@ -33,10 +33,9 @@ func (p *Waiter) Update() {
 	p.cond.Broadcast()
 }
 
-// LockWithTimeout waits for initial value and checks if update timeout has elapsed
-func (p *Waiter) LockWithTimeout() time.Duration {
-	p.Lock()
-
+// Overdue waits for initial update and returns the duration since the last update
+// in excess of timeout. Waiter MUST be locked when calling Overdue.
+func (p *Waiter) Overdue() time.Duration {
 	if p.updated.IsZero() {
 		p.log()
 
