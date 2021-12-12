@@ -23,34 +23,26 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 	}
 
 	for k := range values {
-		switch k {
-		case ModbusParamNameId:
+		if k == ModbusParamNameId {
 			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
-		case ModbusParamNameHost:
-			if values[ParamModbus] != ModbusKeyTCPIP && values[ParamModbus] != ModbusKeyRS485TCPIP {
-				continue
-			}
-			t.Params = append(t.Params, Param{Name: ModbusParamNameHost, ValueType: ParamValueTypeString})
-		case ModbusParamNamePort:
-			if values[ParamModbus] != ModbusKeyTCPIP && values[ParamModbus] != ModbusKeyRS485TCPIP {
-				continue
-			}
-			t.Params = append(t.Params, Param{Name: ModbusParamNamePort, ValueType: ParamValueTypeNumber})
-		case ModbusParamNameDevice:
-			if values[ParamModbus] != ModbusKeyRS485Serial {
-				continue
-			}
-			t.Params = append(t.Params, Param{Name: ModbusParamNameDevice, ValueType: ParamValueTypeString})
-		case ModbusParamNameBaudrate:
-			if values[ParamModbus] != ModbusKeyRS485Serial {
-				continue
-			}
-			t.Params = append(t.Params, Param{Name: ModbusParamNameBaudrate, ValueType: ParamValueTypeNumber})
-		case ModbusParamNameComset:
-			if values[ParamModbus] != ModbusKeyRS485Serial {
-				continue
-			}
-			t.Params = append(t.Params, Param{Name: ModbusParamNameComset, ValueType: ParamValueTypeString})
+			continue
+		}
+
+		type modbusData struct {
+			modbusKeys []string
+			valueType  string
+		}
+		paramMap := map[string]modbusData{
+			ModbusParamNameId:       {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP, ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
+			ModbusParamNameHost:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeString},
+			ModbusParamNamePort:     {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP}, valueType: ParamValueTypeNumber},
+			ModbusParamNameDevice:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
+			ModbusParamNameBaudrate: {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
+			ModbusParamNameComset:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
+		}
+
+		if funk.ContainsString(paramMap[k].modbusKeys, values[ParamModbus].(string)) {
+			t.Params = append(t.Params, Param{Name: k, ValueType: paramMap[k].valueType})
 		}
 	}
 }
