@@ -16,6 +16,46 @@ const (
 	MQTT_TOKEN_TTL   = 890
 )
 
+// var BRAND = {"com.psa.mym.myopel": {"realm": "clientsB2COpel", "brand_code": "OP", "app_name": "MyOpel"},
+//          "com.psa.mym.mypeugeot": {"realm": "clientsB2CPeugeot", "brand_code": "AP", "app_name": "MyPeugeot"},
+//          "com.psa.mym.mycitroen": {"realm": "clientsB2CCitroen", "brand_code": "AC", "app_name": "MyCitroen"},
+//          "com.psa.mym.myds": {"realm": "clientsB2CDS", "brand_code": "DS", "app_name": "MyDS"},
+//          "com.psa.mym.myvauxhall": {"realm": "clientsB2CVauxhall", "brand_code": "VX", "app_name": "MyVauxhall"}
+//          }
+
+// MQTT_BRANDCODE = {"AP": "AP",
+//                   "AC": "AC",
+//                   "DS": "AC",
+//                   "VX": "OV",
+//                   "OP": "OV"
+//                   }
+
+// res2 = requests.post(
+// 	f"https://mw-{BRAND[package_name]['brand_code'].lower()}-m2c.mym.awsmpsa.com/api/v1/user",
+// 	params={
+// 		"culture": apk_parser.culture,
+// 		"width": 1080,
+// 		"version": APP_VERSION
+// 	},
+// 	data=json.dumps({"site_code": apk_parser.site_code, "ticket": token}),
+// 	headers={
+// 		"Connection": "Keep-Alive",
+// 		"Content-Type": "application/json;charset=UTF-8",
+// 		"Source-Agent": "App-Android",
+// 		"Token": token,
+// 		"User-Agent": "okhttp/4.8.0",
+// 		"Version": APP_VERSION
+// 	},
+// 	cert=("certs/public.pem", "certs/private.pem"),
+// )
+
+// res_dict = res2.json()["success"]
+// customer_id = BRAND[package_name]["brand_code"] + "-" + res_dict["id"]
+
+// def get_mqtt_customer_id(self):
+// 	brand_code = self.customer_id[:2]
+// 	return MQTT_BRANDCODE[brand_code] + self.customer_id[2:]
+
 type Mqtt struct {
 	realm  string
 	id     string
@@ -39,7 +79,9 @@ func NewMqtt(log *util.Logger, identity oauth2.TokenSource, realm, id, vin strin
 		client: client,
 	}
 
+	v.client.Listen(fmt.Sprintf("%s/%s/#", MQTT_RESP_TOPIC, vin), v.onMessage)
 	v.client.Listen(fmt.Sprintf("%s/%s", MQTT_EVENT_TOPIC, vin), v.onMessage)
+
 	return v, nil
 }
 
