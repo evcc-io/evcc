@@ -8,15 +8,7 @@
 						v-if="chargePower && activePhases"
 						class="badge rounded-pill bg-secondary text-light cursor-pointer"
 						tabindex="0"
-						v-tooltip="{
-							content: $t(
-								`main.loadpointDetails.tooltip.phases.${phaseAction || 'inactive'}`,
-								{
-									remaining: fmtRemaining(phaseRemaining),
-									activePhases,
-								}
-							),
-						}"
+						v-tooltip="{ content: phaseTooltip }"
 					>
 						{{ activePhases }}P
 						<WaitingDots
@@ -130,6 +122,14 @@ export default {
 		},
 	},
 	computed: {
+		phaseTooltip() {
+			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
+				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
+					remaining: this.fmtRemaining(this.phaseRemaining),
+				});
+			}
+			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
+		},
 		phaseTimerActive() {
 			return this.phaseRemaining > 0 && ["scale1p", "scale3p"].includes(this.phaseAction);
 		},
