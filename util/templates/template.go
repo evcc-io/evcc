@@ -351,6 +351,12 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 
 	for item, p := range values {
 		switch p := p.(type) {
+		case []interface{}:
+			var list []string
+			for _, v := range p {
+				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
+			}
+			values[item] = list
 		case []string:
 			var list []string
 			for _, v := range p {
