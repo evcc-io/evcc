@@ -1,5 +1,6 @@
 import LoadpointDetails from "./LoadpointDetails.vue";
 import i18n from "../i18n";
+import "../tooltip";
 
 export default {
   title: "Main/LoadpointDetails",
@@ -56,14 +57,62 @@ VehicleClimater.args = {
   climater: "on",
 };
 
-export const VehicleTimer = Template.bind({});
-VehicleTimer.args = {
-  chargePower: 2800,
+export const TimerPhaseScaleDown = Template.bind({});
+TimerPhaseScaleDown.args = {
+  chargePower: 4400,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
   vehiclePresent: true,
   vehicleRange: 240.123,
   chargeRemainingDuration: 5 * 3600,
-  timerSet: true,
-  timerActive: true,
+  activePhases: 3,
+  phaseAction: "scale1p",
+  phaseRemaining: 80,
+  pvAction: "enable",
+  pvRemaining: 90,
+};
+
+export const TimerPhaseScaleUp = Template.bind({});
+TimerPhaseScaleUp.args = {
+  chargePower: 3900,
+  chargedEnergy: 11e3,
+  chargeDuration: 95 * 60,
+  vehiclePresent: true,
+  vehicleRange: 240.123,
+  chargeRemainingDuration: 5 * 3600,
+  activePhases: 1,
+  phaseAction: "scale3p",
+  phaseRemaining: 25,
+  pvAction: "inactive",
+  pvRemaining: 0,
+};
+
+export const TimerPvDisable = Template.bind({});
+TimerPvDisable.args = {
+  chargePower: 1300,
+  chargedEnergy: 4e3,
+  chargeDuration: 95 * 60,
+  vehiclePresent: true,
+  vehicleRange: 240.123,
+  chargeRemainingDuration: 5 * 3600,
+  activePhases: 1,
+  phaseAction: "inactive",
+  phaseRemaining: 0,
+  pvAction: "disable",
+  pvRemaining: 55,
+};
+
+export const TimerPvEnable = Template.bind({});
+TimerPvEnable.args = {
+  chargePower: 0,
+  chargedEnergy: 0,
+  chargeDuration: 0,
+  vehiclePresent: true,
+  vehicleRange: 240.123,
+  chargeRemainingDuration: 0,
+  activePhases: 1,
+  phaseAction: "inactive",
+  phaseRemaining: 0,
+  pvAction: "enable",
+  pvRemaining: 55,
 };

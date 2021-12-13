@@ -32,6 +32,16 @@ const (
 	evVehicleConnect    = "connect"    // vehicle connected
 	evVehicleDisconnect = "disconnect" // vehicle disconnected
 
+	pvTimer   = "pv"
+	pvEnable  = "enable"
+	pvDisable = "disable"
+
+	phaseTimer   = "phase"
+	phaseScale1p = "scale1p"
+	phaseScale3p = "scale3p"
+
+	timerInactive = "inactive"
+
 	minActiveCurrent      = 1.0 // minimum current at which a phase is treated as active
 	vehicleDetectInterval = 3 * time.Minute
 	vehicleDetectDuration = 10 * time.Minute
@@ -863,6 +873,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 func (lp *LoadPoint) elapsePVTimer() {
 	lp.pvTimer = lp.clock.Now().Add(-lp.Disable.Delay)
 	lp.guardUpdated = lp.clock.Now().Add(-lp.GuardDuration)
+	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
 // scalePhasesIfAvailable scales if api.ChargePhases is available
@@ -943,6 +954,8 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.phaseTimer = lp.clock.Now()
 		}
 
+		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale1p)
+
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Disable.Delay {
 			lp.log.DEBUG.Println("phase disable timer elapsed")
@@ -972,6 +985,8 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.phaseTimer = lp.clock.Now()
 		}
 
+		lp.publishTimer(phaseTimer, lp.Disable.Delay, phaseScale3p)
+
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Disable.Delay {
 			lp.log.DEBUG.Println("phase enable timer elapsed")
@@ -991,9 +1006,32 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	if !waiting && !lp.phaseTimer.IsZero() {
 		lp.log.DEBUG.Printf("phase timer reset")
 		lp.phaseTimer = time.Time{}
+
+		lp.publishTimer(phaseTimer, 0, timerInactive)
 	}
 
 	return false
+}
+
+func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action string) {
+	timer := lp.pvTimer
+	if name == phaseTimer {
+		timer = lp.phaseTimer
+	}
+
+	remaining := delay - lp.clock.Since(timer)
+	if remaining < 0 {
+		remaining = 0
+	}
+
+	lp.publish(name+"Action", action)
+	lp.publish(name+"Remaining", remaining)
+
+	if action == timerInactive {
+		lp.log.DEBUG.Printf("%s action: %s", name, action)
+	} else {
+		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining)
+	}
 }
 
 // pvMaxCurrent calculates the maximum target current for PV mode
@@ -1034,6 +1072,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 				lp.pvTimer = lp.clock.Now()
 			}
 
+			lp.publishTimer(pvTimer, lp.Disable.Delay, pvDisable)
+
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Disable.Delay {
 				lp.log.DEBUG.Println("pv disable timer elapsed")
@@ -1045,6 +1085,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			// reset timer
 			lp.log.DEBUG.Printf("reset pv disable timer: %v", lp.Disable.Delay)
 			lp.pvTimer = lp.clock.Now()
+
+			lp.publishTimer(pvTimer, lp.Disable.Delay, pvDisable)
 		}
 
 		lp.log.DEBUG.Println("pv enable timer: keep enabled")
@@ -1062,6 +1104,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 				lp.pvTimer = lp.clock.Now()
 			}
 
+			lp.publishTimer(pvTimer, lp.Enable.Delay, pvEnable)
+
 			elapsed := lp.clock.Since(lp.pvTimer)
 			if elapsed >= lp.Enable.Delay {
 				lp.log.DEBUG.Println("pv enable timer elapsed")
@@ -1073,6 +1117,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			// reset timer
 			lp.log.DEBUG.Printf("reset pv enable timer: %v", lp.Enable.Delay)
 			lp.pvTimer = lp.clock.Now()
+
+			lp.publishTimer(pvTimer, lp.Enable.Delay, pvEnable)
 		}
 
 		lp.log.DEBUG.Println("pv enable timer: keep disabled")
@@ -1083,6 +1129,8 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	if !lp.pvTimer.IsZero() {
 		lp.log.DEBUG.Printf("pv timer reset")
 		lp.pvTimer = time.Time{}
+
+		lp.publishTimer(pvTimer, 0, timerInactive)
 	}
 
 	// cap at maximum current

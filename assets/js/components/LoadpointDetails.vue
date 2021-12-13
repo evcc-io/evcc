@@ -4,6 +4,20 @@
 			<div class="col-6 col-sm-3 col-lg-2 mt-3 offset-lg-4">
 				<div class="mb-2 value">
 					{{ $t("main.loadpointDetails.power") }}
+					<div
+						v-if="chargePower && activePhases"
+						class="badge rounded-pill bg-secondary text-light cursor-pointer"
+						tabindex="0"
+						v-tooltip="{ content: phaseTooltip }"
+					>
+						{{ activePhases }}P
+						<WaitingDots
+							v-if="phaseTimerVisible"
+							class="small"
+							:direction="phaseAction === 'scale1p' ? 'down' : 'up'"
+							orientation="vertical"
+						/>
+					</div>
 					<fa-icon
 						class="text-primary ms-1"
 						icon="temperature-low"
@@ -22,7 +36,23 @@
 				</div>
 				<h3 class="value">
 					{{ fmt(chargePower) }}
-					<small class="text-muted">{{ fmtUnit(chargePower) }}W</small>
+					<small class="text-muted">
+						{{ fmtUnit(chargePower) }}W<small
+							class="cursor-pointer d-inline-block px-2"
+							v-if="pvTimerVisible"
+							v-tooltip="{
+								content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
+									remaining: fmtRemaining(pvRemaining),
+								}),
+							}"
+							tabindex="0"
+						>
+							<WaitingDots
+								:direction="pvAction === 'disable' ? 'down' : 'up'"
+								orientation="vertical"
+							/>
+						</small>
+					</small>
 				</h3>
 			</div>
 
@@ -65,10 +95,12 @@
 
 <script>
 import "../icons";
+import WaitingDots from "./WaitingDots";
 import formatter from "../mixins/formatter";
 
 export default {
 	name: "LoadpointDetails",
+	components: { WaitingDots },
 	props: {
 		chargedEnergy: Number,
 		chargeDuration: Number,
@@ -77,7 +109,51 @@ export default {
 		climater: String,
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
+		activePhases: Number,
+		phaseRemaining: Number,
+		phaseAction: String,
+		pvRemaining: Number,
+		pvAction: String,
 	},
 	mixins: [formatter],
+	methods: {
+		fmtRemaining(remaining) {
+			return remaining > 0 ? this.fmtTimeAgo(new Date(Date.now() + remaining * 1000)) : null;
+		},
+	},
+	computed: {
+		phaseTooltip() {
+			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
+				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
+					remaining: this.fmtRemaining(this.phaseRemaining),
+				});
+			}
+			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
+		},
+		phaseTimerActive() {
+			return this.phaseRemaining > 0 && ["scale1p", "scale3p"].includes(this.phaseAction);
+		},
+		pvTimerActive() {
+			return this.pvRemaining > 0 && ["enable", "disable"].includes(this.pvAction);
+		},
+		phaseTimerVisible() {
+			if (this.phaseTimerActive && !this.pvTimerActive) {
+				return true;
+			}
+			if (this.phaseTimerActive && this.pvTimerActive) {
+				return this.phaseRemaining < this.pvRemaining; // only show next timer
+			}
+			return false;
+		},
+		pvTimerVisible() {
+			if (this.pvTimerActive && !this.phaseTimerActive) {
+				return true;
+			}
+			if (this.pvTimerActive && this.phaseTimerActive) {
+				return this.pvRemaining < this.phaseRemaining; // only show next timer
+			}
+			return false;
+		},
+	},
 };
 </script>
