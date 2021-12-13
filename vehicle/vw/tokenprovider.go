@@ -106,7 +106,7 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				logx.Warn(v.log, "msg", "accepting updated tos"+u)
+				logx.Warn(v.log, "msg", "accepting updated tos "+u)
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
 				}
