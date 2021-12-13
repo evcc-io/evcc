@@ -101,7 +101,8 @@ func NewABLeMH(uri, device, comset string, baudrate int, slaveID uint8) (api.Cha
 		return nil, api.ErrSponsorRequired
 	}
 
-	conn.Logger(logx.NewModule("abl"))
+	log := logx.NewModule("abl")
+	conn.Logger(log)
 
 	wb := &ABLeMH{
 		conn: conn,
