@@ -8,6 +8,9 @@ import (
 
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	kit "github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -26,13 +29,12 @@ func routeLogger(inner http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		inner.ServeHTTP(w, r)
-		log.TRACE.Printf(
-			"%s\t%s\t%s",
-			r.Method,
-			r.RequestURI,
-			time.Since(start),
-		)
+		logx.Trace(kit.With(log, "component", "httpd"), "method", r.Method, "uri", r.RequestURI, "duration", time.Since(start))
 	}
+}
+
+func httpdLog() logx.Logger {
+	return kit.With(log, "component", "httpd")
 }
 
 // HTTPd wraps an http.Server and adds the root router
@@ -104,7 +106,7 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
-			ErrorLog:     log.ERROR,
+			ErrorLog:     logx.NewStdLogAdapter(level.Error(httpdLog())),
 		},
 	}
 	srv.SetKeepAlivesEnabled(true)

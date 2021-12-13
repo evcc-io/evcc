@@ -30,6 +30,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/easee"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/philippseith/signalr"
@@ -44,7 +45,7 @@ type Easee struct {
 	site, circuit         int
 	updated               time.Time
 	chargeStatus          api.ChargeStatus
-	log                   *util.Logger
+	log                   logx.Logger
 	mux                   *sync.Cond
 	dynamicChargerCurrent float64
 	current               float64
@@ -87,7 +88,7 @@ func NewEaseeFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewEasee creates Easee charger
 func NewEasee(user, password, charger string, cache time.Duration) (*Easee, error) {
-	log := util.NewLogger("easee").Redact(user, password)
+	log := logx.Redact(logx.NewModule("easee"), user, password)
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
@@ -150,7 +151,7 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	client, err := signalr.NewClient(context.Background(),
 		signalr.WithConnector(c.connect(ts)),
 		signalr.WithReceiver(c),
-		signalr.Logger(easee.SignalrLogger(c.log.TRACE), false),
+		signalr.Logger(easee.SignalrLogger(logx.TraceLevel(c.log)), false),
 	)
 
 	if err == nil {
@@ -216,7 +217,7 @@ func (c *Easee) subscribe(client signalr.Client) {
 		for state := range stateC {
 			if state == signalr.ClientConnected {
 				if err := <-client.Send("SubscribeWithCurrentState", c.charger, true); err != nil {
-					c.log.ERROR.Printf("SubscribeWithCurrentState: %v", err)
+					logx.Error(c.log, "msg", "SubscribeWithCurrentState failed", "error", err)
 				}
 			}
 		}
@@ -239,7 +240,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	var res easee.Observation
 	err := json.Unmarshal(i, &res)
 	if err != nil {
-		c.log.ERROR.Printf("invalid message: %s %s %v", i, typ, err)
+		logx.Error(c.log, "msg", "invalid message", "typ", typ, "error", err, "payload", i)
 		return
 	}
 
@@ -251,13 +252,13 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	case easee.Double:
 		value, err = strconv.ParseFloat(res.Value, 64)
 		if err != nil {
-			c.log.ERROR.Println(err)
+			logx.Error(c.log, "error", err)
 			return
 		}
 	case easee.Integer:
 		value, err = strconv.Atoi(res.Value)
 		if err != nil {
-			c.log.ERROR.Println(err)
+			logx.Error(c.log, "error", err)
 			return
 		}
 	}
@@ -284,7 +285,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		// ensure that charger current matches evcc's expectation
 		if c.dynamicChargerCurrent > 0 && c.dynamicChargerCurrent != c.current {
 			if err = c.MaxCurrent(int64(c.current)); err != nil {
-				c.log.ERROR.Println(err)
+				logx.Error(c.log, "error", err)
 			}
 		}
 	case easee.CHARGER_OP_MODE:
@@ -299,7 +300,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			c.chargeStatus = api.StatusF
 		default:
 			c.chargeStatus = api.StatusNone
-			c.log.ERROR.Printf("unknown opmode: %d", value.(int))
+			logx.Error(c.log, "msg", "unknown opmode", "mode", value)
 		}
 		c.enabledStatus = value.(int) == easee.ModeCharging ||
 			value.(int) == easee.ModeAwaitingStart ||
@@ -310,7 +311,7 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.mux.Broadcast()
 	}
 
-	c.log.TRACE.Printf("%s %s: %s %.4v", typ, res.Mid, res.ID, value)
+	logx.Trace(c.log, "mid", res.Mid, "typ", typ, "id", res.ID, "val", value)
 }
 
 // ProductUpdate implements the signalr receiver

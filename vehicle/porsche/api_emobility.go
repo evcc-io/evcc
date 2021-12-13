@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"golang.org/x/oauth2"
@@ -16,7 +16,7 @@ type EmobilityAPI struct {
 }
 
 // NewEmobilityAPI creates a new vehicle
-func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAPI {
+func NewEmobilityAPI(log logx.Logger, identity oauth2.TokenSource) *EmobilityAPI {
 	v := &EmobilityAPI{
 		Helper: request.NewHelper(log),
 	}

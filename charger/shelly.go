@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/shelly"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
@@ -17,7 +18,7 @@ import (
 // Shelly charger implementation
 type Shelly struct {
 	*request.Helper
-	log          *util.Logger
+	log          logx.Logger
 	uri          string
 	gen          int // Shelly api generation
 	channel      int
@@ -55,7 +56,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		uri = strings.TrimSuffix(uri, suffix)
 	}
 
-	log := util.NewLogger("shelly")
+	log := logx.NewModule("shelly")
 	client := request.NewHelper(log)
 
 	// Shelly Gen1 and Gen2 families expose the /shelly endpoint
@@ -84,7 +85,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		c.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
-			log.Redact(transport.BasicAuthHeader(user, password))
+			c.log = logx.Redact(c.log, transport.BasicAuthHeader(user, password))
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
 

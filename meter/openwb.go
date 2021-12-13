@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 func init() {
@@ -33,7 +34,7 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Meter, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("openwb")
+	log := logx.NewModule("openwb")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {

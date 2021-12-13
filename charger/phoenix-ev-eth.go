@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 )
@@ -79,8 +80,7 @@ func NewPhoenixEVEth(uri string, id uint8) (*PhoenixEVEth, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ev-eth")
-	conn.Logger(log.TRACE)
+	conn.Logger(logx.NewModule("ev-eth"))
 
 	wb := &PhoenixEVEth{
 		conn: conn,

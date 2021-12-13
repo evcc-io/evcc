@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/gorilla/websocket"
 )
 
@@ -54,7 +55,7 @@ func (c *SocketClient) writePump() {
 func ServeWebsocket(hub *SocketHub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.ERROR.Println(err)
+		logx.Error(log, "error", err)
 		return
 	}
 	client := &SocketClient{hub: hub, conn: conn, send: make(chan []byte, 256)}

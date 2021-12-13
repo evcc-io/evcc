@@ -26,6 +26,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -35,7 +36,7 @@ import (
 
 // Alfen charger implementation
 type Alfen struct {
-	log     *util.Logger
+	log     logx.Logger
 	conn    *modbus.Connection
 	mu      sync.Mutex
 	curr    float64
@@ -80,8 +81,8 @@ func NewAlfen(uri, device, comset string, baudrate int, slaveID uint8) (api.Char
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("alfen")
-	conn.Logger(log.TRACE)
+	log := logx.NewModule("alfen")
+	conn.Logger(log)
 
 	wb := &Alfen{
 		log:  log,
@@ -104,7 +105,7 @@ func (wb *Alfen) heartbeat() {
 		wb.mu.Unlock()
 
 		if err := wb.setCurrent(curr); err != nil {
-			wb.log.ERROR.Println("heartbeat:", err)
+			logx.Error(wb.log, "msg", "heartbeat failed", "error", err)
 		}
 	}
 }

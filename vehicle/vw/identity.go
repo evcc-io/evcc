@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -31,7 +31,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
-func NewIdentity(log *util.Logger, clientID string, query url.Values, user, password string) *Identity {
+func NewIdentity(log logx.Logger, clientID string, query url.Values, user, password string) *Identity {
 	uri := fmt.Sprintf("%s/oidc/v1/authorize?%s", IdentityURI, query.Encode())
 
 	return &Identity{

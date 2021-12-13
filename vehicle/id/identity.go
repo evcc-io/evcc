@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vw"
@@ -23,7 +23,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
-func NewIdentity(log *util.Logger, user, password string) *Identity {
+func NewIdentity(log logx.Logger, user, password string) *Identity {
 	uri := fmt.Sprintf("%s/authorize?%s", OauthTokenURI, AuthParams.Encode())
 
 	return &Identity{

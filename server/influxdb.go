@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
@@ -25,7 +26,7 @@ type InfluxConfig struct {
 // Influx is a influx publisher
 type Influx struct {
 	sync.Mutex
-	log      *util.Logger
+	log      logx.Logger
 	client   influxdb2.Client
 	org      string
 	database string
@@ -33,7 +34,7 @@ type Influx struct {
 
 // NewInfluxClient creates new publisher for influx
 func NewInfluxClient(url, token, org, user, password, database string) *Influx {
-	log := util.NewLogger("influx")
+	log := logx.NewModule("influx")
 
 	// InfluxDB v1 compatibility
 	if token == "" && user != "" {
@@ -79,7 +80,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	// log errors
 	go func() {
 		for err := range writer.Errors() {
-			m.log.ERROR.Println(err)
+			logx.Error(m.log, "error", err)
 		}
 	}()
 
@@ -129,7 +130,7 @@ func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 		fields["value"] = val
 
 		// write asynchronously
-		m.log.TRACE.Printf("write %s=%v (%v)", param.Key, param.Val, tags)
+		logx.Trace(m.log, "msg", "write", "key", param.Key, "val", param.Val, "tags", tags)
 		p := influxdb2.NewPoint(param.Key, tags, fields, time.Now())
 		writer.WritePoint(p)
 	}

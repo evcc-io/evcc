@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/vehicle/bluelink"
 )
 
@@ -46,7 +47,7 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BrandAuthUrl:      "https://eu-account.hyundai.com/auth/realms/euhyundaiidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	log := util.NewLogger("hyundai").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("hyundai"), cc.User, cc.Password, cc.VIN)
 	identity := bluelink.NewIdentity(log, settings)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {
@@ -63,12 +64,12 @@ func NewHyundaiFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	var vehicle bluelink.Vehicle
 	if cc.VIN == "" && len(vehicles) == 1 {
 		vehicle = vehicles[0]
-		log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
+		logx.Debug(log, "msg", "found vehicle", "vin", vehicle.VIN)
 	} else {
 		for _, v := range vehicles {
 			if v.VIN == strings.ToUpper(cc.VIN) {
 				vehicle = v
-				log.DEBUG.Printf("found vehicle: %v", vehicle.VIN)
+				logx.Debug(log, "msg", "found vehicle", "vin", vehicle.VIN)
 			}
 		}
 	}

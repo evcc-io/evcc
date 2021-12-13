@@ -1,10 +1,14 @@
 package tasks
 
 import (
+	"fmt"
+	"os"
 	"runtime"
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	"github.com/go-kit/log/level"
 	"github.com/go-ping/ping"
 )
 
@@ -30,7 +34,7 @@ type PingHandler struct {
 	Timeout time.Duration
 }
 
-func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *PingHandler) Test(log logx.Logger, in ResultDetails) []ResultDetails {
 	pinger, err := ping.NewPinger(in.IP)
 	if err != nil {
 		panic(err)
@@ -44,16 +48,17 @@ func (h *PingHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 	pinger.Timeout = h.Timeout
 
 	if err = pinger.Run(); err != nil {
-		log.FATAL.Println("ping:", err)
+		_ = level.Error(log).Log("msg", "ping", "error", err)
 
 		if runtime.GOOS != "windows" {
-			log.FATAL.Println("")
-			log.FATAL.Println("In order to run evcc in discovery mode, make sure to allow ping:")
-			log.FATAL.Println("")
-			log.FATAL.Println("	sudo sysctl -w net.ipv4.ping_group_range=\"0 2147483647\"")
+			fmt.Println(`
+
+	In order to run evcc in discovery mode, make sure to allow ping:
+
+		sudo sysctl -w net.ipv4.ping_group_range="0 2147483647"`)
 		}
 
-		log.FATAL.Fatalln("")
+		os.Exit(1)
 	}
 
 	stat := pinger.Statistics()

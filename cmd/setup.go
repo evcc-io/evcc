@@ -21,6 +21,7 @@ import (
 	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/cloud"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/spf13/viper"
@@ -120,7 +121,7 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 
 // setup mqtt
 func configureMQTT(conf mqttConfig) error {
-	log := util.NewLogger("mqtt")
+	log := logx.NewModule("mqtt")
 
 	var err error
 	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, func(options *paho.ClientOptions) {

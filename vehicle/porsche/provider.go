@@ -5,7 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 // Provider is an api.Vehicle implementation for Porsche PHEV cars
@@ -15,7 +15,7 @@ type Provider struct {
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, model string, cache time.Duration) *Provider {
+func NewProvider(log logx.Logger, api *API, emobility *EmobilityAPI, vin, model string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)

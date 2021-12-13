@@ -6,6 +6,8 @@ import (
 
 	"github.com/evcc-io/evcc/charger/keba"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	"github.com/go-kit/log/level"
 )
 
 const Keba TaskType = "keba"
@@ -34,13 +36,13 @@ type KEBAHandler struct {
 	Timeout  time.Duration
 }
 
-func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *KEBAHandler) Test(log logx.Logger, in ResultDetails) []ResultDetails {
 	h.mux.Lock()
 
 	if h.listener == nil {
 		var err error
 		if h.listener, err = keba.New(log); err != nil {
-			log.ERROR.Println("keba:", err)
+			_ = level.Error(log).Log("component", "keba", "error", err)
 		}
 
 		h.mux.Unlock()
@@ -54,7 +56,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 
 	sender, err := keba.NewSender(log, in.IP)
 	if err != nil {
-		log.ERROR.Println("keba:", err)
+		_ = level.Error(log).Log("component", "keba", "error", err)
 		return nil
 	}
 
@@ -67,7 +69,7 @@ func (h *KEBAHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
 
 		select {
 		case t := <-resC:
-			log.INFO.Println(t)
+			logx.Info(log, "msg", t)
 			if t.Report == nil {
 				continue
 			}

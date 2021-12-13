@@ -1,16 +1,19 @@
 package provider
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	"github.com/go-kit/log/level"
 )
 
 // Mqtt provider
 type Mqtt struct {
-	log      *util.Logger
+	log      logx.Logger
 	client   *mqtt.Client
 	topic    string
 	payload  string
@@ -39,7 +42,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("mqtt")
+	log := logx.New("transport", "mqtt")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, cc.Config)
 	if err != nil {
@@ -57,7 +60,7 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 }
 
 // NewMqtt creates mqtt provider for given topic
-func NewMqtt(log *util.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
+func NewMqtt(log logx.Logger, client *mqtt.Client, topic string, scale float64, timeout time.Duration) *Mqtt {
 	m := &Mqtt{
 		log:     log,
 		client:  client,
@@ -90,7 +93,7 @@ func (m *Mqtt) newReceiver() *msgHandler {
 	h := &msgHandler{
 		topic:    m.topic,
 		scale:    m.scale,
-		mux:      util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		mux:      util.NewWaiter(m.timeout, func() { _ = level.Debug(m.log).Log("msg", fmt.Sprintf("%s wait for initial value", m.topic)) }),
 		pipeline: m.pipeline,
 	}
 

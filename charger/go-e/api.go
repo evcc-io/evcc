@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -38,7 +38,7 @@ type LocalAPI struct {
 
 var _ API = (*LocalAPI)(nil)
 
-func NewLocal(log *util.Logger, uri string) *LocalAPI {
+func NewLocal(log logx.Logger, uri string) *LocalAPI {
 	uri = strings.TrimRight(uri, "/")
 	uri = strings.TrimSuffix(uri, "/api")
 
@@ -113,7 +113,7 @@ type cloud struct {
 
 var _ API = (*cloud)(nil)
 
-func NewCloud(log *util.Logger, token string, cache time.Duration) API {
+func NewCloud(log logx.Logger, token string, cache time.Duration) API {
 	return &cloud{
 		Helper: request.NewHelper(log),
 		token:  token,

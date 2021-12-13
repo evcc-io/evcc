@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	kit "github.com/go-kit/log"
 	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -60,8 +62,8 @@ func (mb *Connection) Delay(delay time.Duration) {
 }
 
 // Logger sets logger implementation
-func (mb *Connection) Logger(logger meters.Logger) {
-	mb.conn.Logger(logger)
+func (mb *Connection) Logger(log logx.Logger) {
+	mb.conn.Logger(logx.NewPrintAdapter(logx.TraceLevel(kit.With(log, "transport", "modbus"))))
 }
 
 // Timeout sets the connection timeout (not idle timeout)

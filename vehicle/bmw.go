@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/vehicle/bmw"
 )
 
@@ -51,7 +52,7 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule(brand), cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log)
 
 	err := identity.Login(cc.User, cc.Password)

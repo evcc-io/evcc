@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/thoas/go-funk"
 )
@@ -130,7 +131,7 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("renault").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("renault"), cc.User, cc.Password, cc.VIN)
 
 	v := &Renault{
 		embed:    &cc.embed,

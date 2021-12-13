@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/volvo"
@@ -40,7 +41,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
 
-	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)
+	log := logx.Redact(logx.NewModule("skoda"), cc.User, cc.Password, cc.VIN, basicAuth)
 
 	v := &Volvo{
 		embed:  &cc.embed,

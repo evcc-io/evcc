@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -38,7 +38,7 @@ func NewTestClient(fn roundTripFunc) *http.Client {
 // NewTestMobileConnect .
 func NewTestMobileConnect(t *testing.T, responses []apiResponse) *MobileConnect {
 	mcc := &MobileConnect{
-		Helper:      request.NewHelper(util.NewLogger("foo")),
+		Helper:      request.NewHelper(logx.New()),
 		uri:         "http://192.0.2.2:502",
 		password:    "none",
 		token:       "token",

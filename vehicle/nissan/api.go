@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
 )
@@ -28,7 +28,7 @@ type API struct {
 	*request.Helper
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log logx.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

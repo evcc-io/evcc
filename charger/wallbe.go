@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/volkszaehler/mbmd/encoding"
 	"github.com/volkszaehler/mbmd/meters/rs485"
@@ -103,8 +104,7 @@ func NewWallbe(uri string) (*Wallbe, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("wallbe")
-	conn.Logger(log.TRACE)
+	conn.Logger(logx.NewModule("wallbe"))
 
 	wb := &Wallbe{
 		conn:   conn,

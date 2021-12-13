@@ -8,6 +8,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 const Mqtt TaskType = "mqtt"
@@ -36,7 +37,7 @@ type MqttHandler struct {
 	Timeout time.Duration
 }
 
-func (h *MqttHandler) Test(log *util.Logger, in ResultDetails) []ResultDetails {
+func (h *MqttHandler) Test(log logx.Logger, in ResultDetails) []ResultDetails {
 	addr := net.JoinHostPort(in.IP, strconv.Itoa(h.Port))
 
 	opt := mqtt.NewClientOptions()

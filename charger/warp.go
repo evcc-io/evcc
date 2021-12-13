@@ -11,11 +11,12 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 // Warp configures generic charger and charge meter for an Warp loadpoint
 type Warp struct {
-	log           *util.Logger
+	log           logx.Logger
 	root          string
 	client        *mqtt.Client
 	enabledG      func() (string, error)
@@ -78,7 +79,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {
-	log := util.NewLogger("warp")
+	log := logx.NewModule("warp")
 
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {

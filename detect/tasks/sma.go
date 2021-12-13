@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	"github.com/go-kit/log/level"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -60,7 +62,7 @@ func (h *SMAHandler) httpAvailable(ip string) bool {
 	return true
 }
 
-func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetails) {
+func (h *SMAHandler) Test(log logx.Logger, in ResultDetails) (res []ResultDetails) {
 	h.mux.Lock()
 
 	if h.handled {
@@ -70,7 +72,7 @@ func (h *SMAHandler) Test(log *util.Logger, in ResultDetails) (res []ResultDetai
 
 	connection, err := sunny.NewConnection("")
 	if err != nil {
-		log.ERROR.Println("sma:", err)
+		_ = level.Error(log).Log("msg", "sma", "error", err)
 		return nil
 	}
 

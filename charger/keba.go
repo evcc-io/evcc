@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/keba"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 // https://www.keba.com/file/downloads/e-mobility/KeContact_P20_P30_UDP_ProgrGuide_en.pdf
@@ -25,7 +26,7 @@ type RFID struct {
 
 // Keba is an api.Charger implementation with configurable getters and setters.
 type Keba struct {
-	log     *util.Logger
+	log     logx.Logger
 	conn    string
 	rfid    RFID
 	timeout time.Duration
@@ -73,7 +74,7 @@ func NewKebaFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewKeba creates a new charger
 func NewKeba(uri, serial string, rfid RFID, timeout time.Duration) (*Keba, error) {
-	log := util.NewLogger("keba")
+	log := logx.NewModule("keba")
 
 	if keba.Instance == nil {
 		var err error
@@ -183,7 +184,7 @@ func (c *Keba) Status() (api.ChargeStatus, error) {
 	}
 
 	if kr.AuthON == 1 && c.rfid.Tag == "" {
-		c.log.WARN.Println("missing credentials for RFID authorization")
+		logx.Warn(c.log, "msg", "missing credentials for RFID authorization")
 	}
 
 	if kr.Plug < 5 {

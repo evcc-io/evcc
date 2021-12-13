@@ -12,6 +12,7 @@ import (
 
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -56,7 +57,7 @@ func GetInstance(uri, password string, cache time.Duration) (*Com, error) {
 	uri = util.DefaultScheme(strings.TrimSuffix(uri, "/"), "https")
 
 	once.Do(func() {
-		log := util.NewLogger("lgess")
+		log := logx.NewModule("lgess")
 		instance = &Com{
 			Helper:   request.NewHelper(log),
 			uri:      uri,

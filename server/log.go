@@ -1,5 +1,5 @@
 package server
 
-import "github.com/evcc-io/evcc/util"
+import "github.com/evcc-io/evcc/util/logx"
 
-var log = util.NewLogger("server")
+var log = logx.NewModule("server")

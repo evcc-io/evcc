@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
+	kit "github.com/go-kit/log"
 )
 
 // Timeout is the default request timeout used by the Helper
@@ -17,7 +18,9 @@ type Helper struct {
 }
 
 // NewHelper creates http helper for simplified PUT GET logic
-func NewHelper(log *util.Logger) *Helper {
+func NewHelper(log logx.Logger) *Helper {
+	log = logx.TraceLevel(kit.With(log, "transport", "http"))
+
 	r := &Helper{
 		Client: &http.Client{
 			Timeout:   Timeout,

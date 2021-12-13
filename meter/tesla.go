@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/meter/powerwall"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -65,7 +66,7 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 // NewTesla creates a Tesla Meter
 func NewTesla(uri, usage, password string) (api.Meter, error) {
-	log := util.NewLogger("tesla").Redact(password)
+	log := logx.Redact(logx.NewModule("tesla"), password)
 
 	m := &Tesla{
 		Helper:   request.NewHelper(log),

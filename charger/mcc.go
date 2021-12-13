@@ -11,6 +11,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -79,7 +80,7 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 
 // NewMobileConnect creates MCC charger
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
-	log := util.NewLogger("mcc")
+	log := logx.NewModule("mcc")
 
 	mcc := &MobileConnect{
 		Helper:   request.NewHelper(log),

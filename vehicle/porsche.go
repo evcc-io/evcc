@@ -7,6 +7,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/vehicle/porsche"
 	"github.com/thoas/go-funk"
 )
@@ -39,7 +40,7 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, api.ErrMissingCredentials
 	}
 
-	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("porsche"), cc.User, cc.Password, cc.VIN)
 	identity := porsche.NewIdentity(log, cc.User, cc.Password)
 
 	err := identity.Login()

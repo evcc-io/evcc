@@ -1,9 +1,9 @@
-package util
+package redact
 
 import (
-	"bytes"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -34,13 +34,19 @@ func (l *Redactor) Redact(redact ...string) {
 	}
 }
 
-func (l *Redactor) Write(p []byte) (n int, err error) {
+func (l *Redactor) Safe(p string) string {
 	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	for _, s := range l.redact {
-		p = bytes.ReplaceAll(p, []byte(s), []byte(RedactReplacement))
+		p = strings.ReplaceAll(p, s, RedactReplacement)
 	}
-	l.mu.Unlock()
-	return os.Stdout.Write(p)
+
+	return p
+}
+
+func (l *Redactor) Write(p []byte) (n int, err error) {
+	return os.Stdout.Write([]byte(l.Safe(string(p))))
 }
 
 // RedactDefaultHook expands a redaction item to include URL encoding

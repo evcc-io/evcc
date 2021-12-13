@@ -52,8 +52,8 @@ func runToken(cmd *cobra.Command, args []string) {
 	var token *oauth2.Token
 
 	switch strings.ToLower(vehicleConf.Type) {
-	case "tesla":
-		token, err = teslaToken()
+	// case "tesla":
+	// 	token, err = teslaToken()
 	case "tronity":
 		token, err = tronityToken(conf, vehicleConf)
 	default:

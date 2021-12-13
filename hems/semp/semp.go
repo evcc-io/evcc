@@ -18,6 +18,7 @@ import (
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/koron/go-ssdp"
@@ -40,7 +41,7 @@ var (
 
 // SEMP is the SMA SEMP server
 type SEMP struct {
-	log          *util.Logger
+	log          logx.Logger
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
@@ -89,7 +90,7 @@ func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP
 
 	s := &SEMP{
 		doneC:        make(chan struct{}),
-		log:          util.NewLogger("semp"),
+		log:          logx.NewModule("semp"),
 		site:         site,
 		uid:          uid.String(),
 		vid:          cc.VendorID,
@@ -114,7 +115,7 @@ func (s *SEMP) advertise(st, usn string) *ssdp.Advertiser {
 	descriptor := s.hostURI + basePath + "/description.xml"
 	ad, err := ssdp.Advertise(st, usn, descriptor, serverName, maxAge)
 	if err != nil {
-		s.log.ERROR.Println(err)
+		logx.Error(s.log, "error", err)
 	}
 	return ad
 }
@@ -141,7 +142,7 @@ ANNOUNCE:
 		case <-ticker.C:
 			for _, ad := range ads {
 				if err := ad.Alive(); err != nil {
-					s.log.ERROR.Println(err)
+					logx.Error(s.log, "error", err)
 				}
 			}
 		case <-s.closeC:
@@ -151,7 +152,7 @@ ANNOUNCE:
 
 	for _, ad := range ads {
 		if err := ad.Bye(); err != nil {
-			s.log.ERROR.Println(err)
+			logx.Error(s.log, "error", err)
 		}
 	}
 
@@ -181,11 +182,11 @@ func (s *SEMP) callbackURI() string {
 	if len(ips) > 0 {
 		ip = ips[0].IP.String()
 	} else {
-		s.log.ERROR.Printf("couldn't determine ip address- specify %s to override", sempBaseURLEnv)
+		logx.Error(s.log, "error", "couldn't determine ip address- specify %s to override", sempBaseURLEnv)
 	}
 
 	uri := fmt.Sprintf("http://%s:%d", ip, s.port)
-	s.log.WARN.Printf("%s unspecified, using %s instead", sempBaseURLEnv, uri)
+	logx.Warn(s.log, "msg", fmt.Sprintf("%s unspecified, using %s instead", sempBaseURLEnv, uri))
 
 	return uri
 }
@@ -207,7 +208,7 @@ func (s *SEMP) handlers(router *mux.Router) {
 }
 
 func (s *SEMP) writeXML(w http.ResponseWriter, msg interface{}) {
-	s.log.TRACE.Printf("send: %+v", msg)
+	logx.Trace(s.log, "send", msg)
 
 	b, err := xml.MarshalIndent(msg, "", "  ")
 	if err != nil {
@@ -496,7 +497,7 @@ func (s *SEMP) deviceControlHandler(w http.ResponseWriter, r *http.Request) {
 	var msg EM2Device
 
 	err := xml.NewDecoder(r.Body).Decode(&msg)
-	s.log.TRACE.Printf("recv: %+v", msg)
+	logx.Trace(s.log, "recv", msg)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

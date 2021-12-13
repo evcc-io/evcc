@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/vehicle/mb"
 	"github.com/evcc-io/evcc/vehicle/smart"
 )
@@ -37,7 +38,7 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("smart").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("smart"), cc.User, cc.Password, cc.VIN)
 
 	v := &Smart{
 		embed: &cc.embed,
@@ -51,12 +52,7 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := smart.NewAPI(log, identity)
 
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
 		v.Provider = smart.NewProvider(log, api, cc.VIN, cc.Expiry, cc.Cache)

@@ -24,6 +24,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -79,8 +80,8 @@ func NewInnogy(uri string, id uint8) (*Innogy, error) {
 		return nil, api.ErrSponsorRequired
 	}
 
-	log := util.NewLogger("innogy")
-	conn.Logger(log.TRACE)
+	log := logx.NewModule("innogy")
+	conn.Logger(log)
 
 	wb := &Innogy{
 		conn: conn,

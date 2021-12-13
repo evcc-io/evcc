@@ -3,7 +3,7 @@ package smart
 import (
 	"fmt"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/evcc-io/evcc/vehicle/mb"
@@ -30,7 +30,7 @@ type API struct {
 	*request.Helper
 }
 
-func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
+func NewAPI(log logx.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 	}

@@ -28,6 +28,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/sponsor"
@@ -40,7 +41,7 @@ import (
 type Tronity struct {
 	*embed
 	*request.Helper
-	log   *util.Logger
+	log   logx.Logger
 	oc    *oauth2.Config
 	vid   string
 	bulkG func() (interface{}, error)
@@ -77,7 +78,7 @@ func NewTronityFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	// authenticated http client with logging injected to the tronity client
-	log := util.NewLogger("tronity").Redact(cc.Credentials.ID, cc.Credentials.Secret)
+	log := logx.Redact(logx.NewModule("tronity"), cc.Credentials.ID, cc.Credentials.Secret)
 
 	oc, err := tronity.OAuth2Config(cc.Credentials.ID, cc.Credentials.Secret)
 	if err != nil {

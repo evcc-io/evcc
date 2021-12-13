@@ -13,11 +13,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/tplink"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 // TPLink charger implementation
 type TPLink struct {
-	log          *util.Logger
+	log          logx.Logger
 	uri          string
 	standbypower float64
 }
@@ -47,7 +48,7 @@ func NewTPLinkFromConfig(other map[string]interface{}) (api.Charger, error) {
 // NewTPLink creates TP-Link charger
 func NewTPLink(uri string, standbypower float64) (*TPLink, error) {
 	c := &TPLink{
-		log:          util.NewLogger("tplink"),
+		log:          logx.NewModule("tplink"),
 		uri:          net.JoinHostPort(uri, "9999"),
 		standbypower: standbypower,
 	}
@@ -196,7 +197,7 @@ func (c *TPLink) execCmd(cmd string, res interface{}) error {
 		key = resp[i]
 		_ = buf.WriteByte(dec)
 	}
-	c.log.TRACE.Printf("recv: %s", buf.String())
+	logx.Trace(c.log, "recv", buf.String())
 
 	return json.Unmarshal(buf.Bytes(), res)
 }

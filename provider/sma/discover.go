@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"gitlab.com/bboehmke/sunny"
 )
 
@@ -23,9 +24,9 @@ var once sync.Once
 // GetDiscoverer fo the given interface
 func GetDiscoverer(iface string) (*Discoverer, error) {
 	// on time initialization of sunny logger
-	log := util.NewLogger("sma")
+	log := logx.NewModule("sma")
 	once.Do(func() {
-		sunny.Log = log.TRACE
+		sunny.Log = &logAdapter{logx.TraceLevel(log)}
 	})
 
 	discoverersMutex.Lock()
@@ -54,7 +55,7 @@ func GetDiscoverer(iface string) (*Discoverer, error) {
 
 // Discoverer discovers SMA devicesBySerial in background while providing already found devicesBySerial
 type Discoverer struct {
-	log     *util.Logger
+	log     logx.Logger
 	conn    *sunny.Connection
 	devices map[uint32]*Device
 	mux     sync.RWMutex
@@ -65,7 +66,7 @@ func (d *Discoverer) createDevice(device *sunny.Device) *Device {
 	return &Device{
 		Device: device,
 		log:    d.log,
-		mux:    util.NewWaiter(udpTimeout, func() { d.log.DEBUG.Println("wait for initial value") }),
+		mux:    util.NewWaiter(udpTimeout, func() { logx.Debug(d.log, "msg", "wait for initial value") }),
 		values: make(map[sunny.ValueID]interface{}),
 	}
 }

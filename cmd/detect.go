@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/detect"
 	"github.com/evcc-io/evcc/detect/tasks"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -128,6 +129,6 @@ configuring EVCC but are probably not sufficient for fully automatic configurati
 	}
 
 	// magic happens here
-	res := detect.Work(log, 50, hosts)
+	res := detect.Work(logx.NewModule("main"), 50, hosts)
 	display(res)
 }

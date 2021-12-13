@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 )
@@ -37,7 +37,7 @@ type Requester interface {
 }
 
 // New creates a new BlueLink API
-func NewAPI(log *util.Logger, baseURI string, identity Requester, cache time.Duration) *API {
+func NewAPI(log logx.Logger, baseURI string, identity Requester, cache time.Duration) *API {
 	v := &API{
 		Helper:  request.NewHelper(log),
 		baseURI: strings.TrimSuffix(baseURI, "/api/v1/spa") + "/api/v1/spa",

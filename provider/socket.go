@@ -9,6 +9,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gorilla/websocket"
@@ -20,7 +21,7 @@ const retryDelay = 5 * time.Second
 // Socket implements websocket request provider
 type Socket struct {
 	*request.Helper
-	log     *util.Logger
+	log     logx.Logger
 	mux     *util.Waiter
 	url     string
 	headers map[string]string
@@ -52,17 +53,17 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		return nil, err
 	}
 
-	log := util.NewLogger("ws")
+	log := logx.New("transport", "websock")
 
 	url := util.DefaultScheme(cc.URI, "ws")
 	if url != cc.URI {
-		log.WARN.Printf("missing scheme for %s, assuming ws", cc.URI)
+		logx.Warn(log, "msg", fmt.Sprintf("missing scheme for %s, assuming ws", cc.URI))
 	}
 
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
+		mux:     util.NewWaiter(cc.Timeout, func() { logx.Debug(log, "msg", "wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
@@ -71,7 +72,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	// handle basic auth
 	if cc.Auth.Type != "" {
 		basicAuth := transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
-		log.Redact(basicAuth)
+		p.log = logx.Redact(p.log, basicAuth)
 
 		p.headers["Authorization"] = basicAuth
 	}
@@ -109,7 +110,7 @@ func (p *Socket) listen() {
 	for {
 		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
-			p.log.ERROR.Println(err)
+			logx.Error(p.log, "error", err)
 			time.Sleep(retryDelay)
 			continue
 		}
@@ -117,12 +118,12 @@ func (p *Socket) listen() {
 		for {
 			_, b, err := client.ReadMessage()
 			if err != nil {
-				p.log.TRACE.Println("read:", err)
+				logx.Trace(p.log, "read", err)
 				_ = client.Close()
 				break
 			}
 
-			p.log.TRACE.Printf("recv: %s", b)
+			logx.Trace(p.log, "recv", b)
 
 			p.mux.Lock()
 			if p.jq != nil {

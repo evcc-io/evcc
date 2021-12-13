@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	gridx "github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
@@ -18,7 +19,7 @@ import (
 
 // Modbus implements modbus RTU and TCP access
 type Modbus struct {
-	log    *util.Logger
+	log    logx.Logger
 	conn   *modbus.Connection
 	device meters.Device
 	op     modbus.Operation
@@ -67,8 +68,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		conn.Timeout(cc.Timeout)
 	}
 
-	log := util.NewLogger("modbus")
-	conn.Logger(log.TRACE)
+	conn.Logger(logx.New())
 
 	var device meters.Device
 	var op modbus.Operation
@@ -78,7 +78,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	}
 
 	if cc.Value == "" && cc.Register.Decode == "" {
-		log.WARN.Println("missing modbus value or register - assuming Power")
+		logx.Warn(log, "msg", "missing modbus value or register - assuming Power")
 		cc.Value = "Power"
 	}
 
@@ -182,9 +182,9 @@ func (m *Modbus) floatGetter() (float64, error) {
 
 	if err == nil {
 		if m.op.MBMD.IEC61850 != 0 {
-			m.log.TRACE.Printf("%s: %v", m.op.MBMD.IEC61850, res.Value)
+			logx.Trace(m.log, "measure", m.op.MBMD.IEC61850, "val", res.Value)
 		} else {
-			m.log.TRACE.Printf("%d:%d:%s: %v", m.op.SunSpec.Model, m.op.SunSpec.Block, m.op.SunSpec.Point, res.Value)
+			logx.Trace(m.log, "model", m.op.SunSpec.Model, "block", m.op.SunSpec.Block, "point", m.op.SunSpec.Point, "val", res.Value)
 		}
 	}
 

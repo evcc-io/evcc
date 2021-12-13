@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/tibber"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/shurcooL/graphql"
 	"golang.org/x/oauth2"
@@ -16,7 +17,7 @@ import (
 
 type Tibber struct {
 	mux    sync.Mutex
-	log    *util.Logger
+	log    logx.Logger
 	Token  string
 	HomeID string
 	Cheap  float64
@@ -28,7 +29,7 @@ var _ api.Tariff = (*Tibber)(nil)
 
 func NewTibber(other map[string]interface{}) (*Tibber, error) {
 	t := &Tibber{
-		log: util.NewLogger("tibber"),
+		log: logx.NewModule("tibber"),
 	}
 
 	if err := util.DecodeOther(other, &t); err != nil {
@@ -87,7 +88,7 @@ func (t *Tibber) Run() {
 		}
 
 		if err := t.client.Query(context.Background(), &res, v); err != nil {
-			t.log.ERROR.Println(err)
+			logx.Error(t.log, "error", err)
 			continue
 		}
 

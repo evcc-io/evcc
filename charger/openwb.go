@@ -9,6 +9,7 @@ import (
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 func init() {
@@ -47,13 +48,13 @@ func NewOpenWBFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("openwb")
-
-	return NewOpenWB(log, cc.Config, cc.ID, cc.Topic, cc.Phases, cc.DC, cc.Timeout)
+	return NewOpenWB(cc.Config, cc.ID, cc.Topic, cc.Phases, cc.DC, cc.Timeout)
 }
 
 // NewOpenWB creates a new configurable charger
-func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p3, dc bool, timeout time.Duration) (api.Charger, error) {
+func NewOpenWB(mqttconf mqtt.Config, id int, topic string, p1p3, dc bool, timeout time.Duration) (api.Charger, error) {
+	log := logx.NewModule("openwb")
+
 	client, err := mqtt.RegisteredClientOrDefault(log, mqttconf)
 	if err != nil {
 		return nil, err
@@ -151,7 +152,7 @@ func NewOpenWB(log *util.Logger, mqttconf mqtt.Config, id int, topic string, p1p
 
 		for range time.NewTicker(openwb.HeartbeatInterval).C {
 			if err := heartbeatS(1); err != nil {
-				log.ERROR.Printf("heartbeat: %v", err)
+				logx.Error(log, "msg", "heartbeat failed", "error", err)
 			}
 		}
 	}()

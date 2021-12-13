@@ -10,14 +10,17 @@ import (
 
 	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	kit "github.com/go-kit/log"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
 type HTTP struct {
 	*request.Helper
+	log         logx.Logger
 	url, method string
 	headers     map[string]string
 	body        string
@@ -60,8 +63,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		return nil, err
 	}
 
+	log := logx.New("transport", "http")
+
 	http := NewHTTP(
-		util.NewLogger("http"),
+		log,
 		cc.Method,
 		cc.URI,
 		cc.Insecure,
@@ -81,13 +86,16 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
+func NewHTTP(log logx.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
+	log = kit.With(log, "transport", "http")
+
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
-		log.WARN.Printf("missing scheme for %s, assuming http", uri)
+		logx.Warn(log, "msg", fmt.Sprintf("missing scheme for %s, assuming http", uri))
 	}
 
 	p := &HTTP{
+		log:    log,
 		Helper: request.NewHelper(log),
 		url:    url,
 		method: method,
@@ -126,7 +134,7 @@ func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
 		basicAuth := transport.BasicAuthHeader(user, password)
-		log.Redact(basicAuth)
+		p.log = logx.Redact(p.log, basicAuth)
 
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "digest":

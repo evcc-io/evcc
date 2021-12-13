@@ -8,6 +8,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	goe "github.com/evcc-io/evcc/charger/go-e"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
 
@@ -69,7 +70,7 @@ func NewGoEFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 	c := &GoE{}
 
-	log := util.NewLogger("go-e").Redact(token)
+	log := logx.Redact(logx.NewModule("go-e"), token)
 
 	if token != "" {
 		c.api = goe.NewCloud(log, token, cache)
@@ -82,7 +83,7 @@ func NewGoE(uri, token string, cache time.Duration) (api.Charger, error) {
 		if sponsor.IsAuthorized() {
 			phases = c.phases1p3p
 		} else {
-			log.WARN.Println("automatic 1p3p phase switching requires sponsor token")
+			logx.Warn(log, "msg", "automatic 1p3p phase switching requires sponsor token")
 		}
 
 		return decorateGoE(c, c.totalEnergy, phases), nil

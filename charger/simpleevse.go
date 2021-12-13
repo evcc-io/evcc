@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 )
 
@@ -42,14 +43,12 @@ func NewSimpleEVSEFromConfig(other map[string]interface{}) (api.Charger, error) 
 
 // NewSimpleEVSE creates SimpleEVSE charger
 func NewSimpleEVSE(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (api.Charger, error) {
-	log := util.NewLogger("evse")
-
 	conn, err := modbus.NewConnection(uri, device, comset, baudrate, modbus.RtuFormat, slaveID)
 	if err != nil {
 		return nil, err
 	}
 
-	conn.Logger(log.TRACE)
+	conn.Logger(logx.NewModule("evse"))
 	conn.Delay(200 * time.Millisecond)
 
 	evse := &SimpleEVSE{

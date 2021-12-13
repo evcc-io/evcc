@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
 )
@@ -60,7 +61,7 @@ func NewOvmsFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("ovms").Redact(cc.User, cc.Password, cc.VehicleID)
+	log := logx.Redact(logx.NewModule("ovmw"), cc.User, cc.Password, cc.VehicleID)
 
 	v := &Ovms{
 		embed:     &cc.embed,

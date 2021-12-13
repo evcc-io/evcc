@@ -1,30 +1,23 @@
 package easee
 
 import (
-	"fmt"
-	"strings"
-
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/philippseith/signalr"
 	"github.com/thoas/go-funk"
 )
 
-// Logger is a simple logger interface
-type Logger interface {
-	Println(v ...interface{})
-}
-
 type logger struct {
-	log Logger
+	log logx.Logger
 }
 
-func SignalrLogger(log Logger) signalr.StructuredLogger {
+func SignalrLogger(log logx.Logger) signalr.StructuredLogger {
 	return &logger{log: log}
 }
 
 var skipped = []string{"ts", "class", "hub", "protocol", "value"}
 
 func (l *logger) Log(keyVals ...interface{}) error {
-	b := new(strings.Builder)
+	var kv []interface{}
 
 	var skip bool
 	for i, v := range keyVals {
@@ -38,19 +31,9 @@ func (l *logger) Log(keyVals ...interface{}) error {
 				skip = true
 				continue
 			}
-
-			if b.Len() > 0 {
-				b.WriteRune(' ')
-			}
-
-			b.WriteString(fmt.Sprintf("%v", v))
-			b.WriteRune('=')
-		} else {
-			b.WriteString(fmt.Sprintf("%v", v))
 		}
+		kv = append(kv, v)
 	}
 
-	l.log.Println(b.String())
-
-	return nil
+	return l.log.Log(kv...)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/vw"
 )
@@ -43,7 +44,7 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("vw").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("vw"), cc.User, cc.Password, cc.VIN)
 
 	identity := vw.NewIdentity(log, vw.AuthClientID, vw.AuthParams, cc.User, cc.Password)
 	err := identity.Login()

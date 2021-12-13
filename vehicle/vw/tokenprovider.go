@@ -9,19 +9,20 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/net/publicsuffix"
 )
 
 // IDTokenProvider provides the identity.vwgroup.io login token source
 type IDTokenProvider struct {
-	log *util.Logger
+	log logx.Logger
 	*request.Helper
 	uri, user, password string
 }
 
 // NewIDTokenProvider creates VW identity
-func NewIDTokenProvider(log *util.Logger, uri, user, password string) *IDTokenProvider {
+func NewIDTokenProvider(log logx.Logger, uri, user, password string) *IDTokenProvider {
 	v := &IDTokenProvider{
 		log:      log,
 		Helper:   request.NewHelper(log),
@@ -105,7 +106,7 @@ func (v *IDTokenProvider) Login() (url.Values, error) {
 			}
 
 			if u := resp.Request.URL.Query().Get("updated"); err == nil && u != "" {
-				v.log.WARN.Println("accepting updated tos", u)
+				logx.Warn(v.log, "msg", "accepting updated tos"+u)
 				if resp, err = v.postTos(resp.Request.URL.String()); err == nil {
 					resp.Body.Close()
 				}

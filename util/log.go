@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/evcc-io/evcc/util/logx/redact"
 	jww "github.com/spf13/jwalterweatherman"
 )
 
@@ -30,7 +31,7 @@ var LogAreaPadding = 6
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
 	*jww.Notepad
-	*Redactor
+	*redact.Redactor
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
@@ -48,7 +49,7 @@ func NewLogger(area string) *Logger {
 	}
 
 	level := LogLevelForArea(area)
-	redactor := new(Redactor)
+	redactor := new(redact.Redactor)
 	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	"golang.org/x/oauth2"
@@ -25,7 +25,7 @@ type Identity struct {
 }
 
 // NewIdentity creates BMW identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log logx.Logger) *Identity {
 	v := &Identity{
 		Helper: request.NewHelper(log),
 	}

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 )
 
@@ -36,20 +36,20 @@ var (
 	mu      sync.Mutex
 	updater map[string]struct{} = make(map[string]struct{})
 
-	client = request.NewHelper(util.NewLogger("http"))
+	client = request.NewHelper(logx.NewModule("bluelink"))
 	brands = map[string]string{
 		KiaAppID:     "kia",
 		HyundaiAppID: "hyundai",
 	}
 )
 
-func download(log *util.Logger, id, brand string) {
+func download(log logx.Logger, id, brand string) {
 	var res []string
 	uri := fmt.Sprintf("https://raw.githubusercontent.com/neoPix/bluelinky-stamps/master/%s.json", brand)
 
 	err := client.GetJSON(uri, &res)
 	if err != nil {
-		log.ERROR.Println(err)
+		logx.Error(log, "error", err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func download(log *util.Logger, id, brand string) {
 }
 
 // updateStamps updates stamps according to https://github.com/Hacksore/bluelinky/pull/144
-func updateStamps(log *util.Logger, id string) {
+func updateStamps(log logx.Logger, id string) {
 	if _, ok := updater[id]; ok {
 		return
 	}

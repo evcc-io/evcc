@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/jinzhu/copier"
 )
 
@@ -39,5 +39,5 @@ type Task struct {
 }
 
 type TaskHandler interface {
-	Test(log *util.Logger, in ResultDetails) []ResultDetails
+	Test(log logx.Logger, in ResultDetails) []ResultDetails
 }

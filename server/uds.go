@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/util/logx"
 )
 
 // SocketPath is the unix domain socket path
@@ -23,7 +24,8 @@ func removeIfExists(file string) {
 	}
 
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.FATAL.Fatal(err)
+		logx.Error(log, "error", err)
+		os.Exit(1)
 	}
 }
 
@@ -33,7 +35,8 @@ func HealthListener(site site.API, exitC <-chan struct{}) {
 
 	l, err := net.Listen("unix", SocketPath)
 	if err != nil {
-		log.FATAL.Fatal(err)
+		logx.Error(log, "error", err)
+		os.Exit(1)
 	}
 	defer l.Close()
 

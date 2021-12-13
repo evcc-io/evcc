@@ -9,12 +9,13 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/tariff/awattar"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 )
 
 type Awattar struct {
 	mux   sync.Mutex
-	log   *util.Logger
+	log   logx.Logger
 	uri   string
 	cheap float64
 	data  []awattar.PriceInfo
@@ -35,7 +36,7 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	}
 
 	t := &Awattar{
-		log:   util.NewLogger("awattar"),
+		log:   logx.NewModule("awattar"),
 		cheap: cc.Cheap,
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
@@ -51,7 +52,7 @@ func (t *Awattar) Run() {
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
 		if err := client.GetJSON(t.uri, &res); err != nil {
-			t.log.ERROR.Println(err)
+			logx.Error(t.log, "error", err)
 			continue
 		}
 

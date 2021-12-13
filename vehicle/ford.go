@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/vehicle/ford"
 )
 
@@ -14,13 +15,6 @@ import (
 // Ford is an api.Vehicle implementation for Ford cars
 type Ford struct {
 	*embed
-	// *request.Helper
-	// log         *util.Logger
-	// vin         string
-	// tokenSource oauth2.TokenSource
-	// statusG     func() (interface{}, error)
-	// refreshId   string
-	// refreshTime time.Time
 	*ford.Provider
 }
 
@@ -52,7 +46,7 @@ func NewFordFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		embed: &cc.embed,
 	}
 
-	log := util.NewLogger("ford").Redact(cc.User, cc.Password, cc.VIN)
+	log := logx.Redact(logx.NewModule("audi"), cc.User, cc.Password, cc.VIN)
 	identity := ford.NewIdentity(log, cc.User, cc.Password)
 
 	err := identity.Login()

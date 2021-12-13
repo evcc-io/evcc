@@ -13,6 +13,7 @@ import (
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
@@ -20,7 +21,7 @@ import (
 
 // Script implements shell script-based providers and setters
 type Script struct {
-	log     *util.Logger
+	log     logx.Logger
 	script  string
 	timeout time.Duration
 	cache   time.Duration
@@ -71,7 +72,7 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 // Script execution is aborted after given timeout.
 func NewScriptProvider(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	s := &Script{
-		log:     util.NewLogger("script"),
+		log:     logx.New("tranport", "script"),
 		script:  script,
 		timeout: timeout,
 		scale:   scale,
@@ -124,11 +125,11 @@ func (p *Script) exec(script string) (string, error) {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 
-		p.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
+		logx.Error(p.log, "args", strings.Join(args, " "), "error", s)
 		return "", err
 	}
 
-	p.log.DEBUG.Printf("%s: %s", strings.Join(args, " "), s)
+	logx.Debug(p.log, "args", strings.Join(args, " "), "error", s)
 
 	return s, nil
 }

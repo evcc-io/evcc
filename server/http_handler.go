@@ -14,6 +14,7 @@ import (
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/gorilla/mux"
 )
 
@@ -23,13 +24,15 @@ func indexHandler(site site.API) http.HandlerFunc {
 
 		indexTemplate, err := fs.ReadFile(Assets, "index.html")
 		if err != nil {
-			log.FATAL.Print("httpd: failed to load embedded template:", err.Error())
-			log.FATAL.Fatal("Make sure templates are included using the `release` build tag or use `make build`")
+			logx.Error(httpdLog(), "msg", "failed to load embedded template", "error", err.Error())
+			fmt.Println("Make sure templates are included using the `release` build tag or use `make build`")
+			os.Exit(1)
 		}
 
 		t, err := template.New("evcc").Delims("[[", "]]").Parse(string(indexTemplate))
 		if err != nil {
-			log.FATAL.Fatal("httpd: failed to create main page template:", err.Error())
+			logx.Error(httpdLog(), "msg", "failed to create main page template", "error", err.Error())
+			os.Exit(1)
 		}
 
 		if err := t.Execute(w, map[string]interface{}{
@@ -37,7 +40,8 @@ func indexHandler(site site.API) http.HandlerFunc {
 			"Commit":     Commit,
 			"Configured": len(site.LoadPoints()),
 		}); err != nil {
-			log.ERROR.Println("httpd: failed to render main page:", err.Error())
+			logx.Error(httpdLog(), "msg", "failed to render main page", "error", err.Error())
+			os.Exit(1)
 		}
 	})
 }
@@ -52,7 +56,7 @@ func jsonHandler(h http.Handler) http.Handler {
 
 func jsonWrite(w http.ResponseWriter, content interface{}) {
 	if err := json.NewEncoder(w).Encode(content); err != nil {
-		log.ERROR.Printf("httpd: failed to encode JSON: %v", err)
+		logx.Error(httpdLog(), "msg", "failed to encode JSON", "error", err)
 	}
 }
 

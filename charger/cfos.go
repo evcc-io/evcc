@@ -5,6 +5,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/logx"
 	"github.com/evcc-io/evcc/util/modbus"
 	"github.com/evcc-io/evcc/util/sponsor"
 )
@@ -51,8 +52,7 @@ func NewCfosPowerBrain(uri string, id uint8) (*CfosPowerBrain, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("cfos")
-	conn.Logger(log.TRACE)
+	conn.Logger(logx.NewModule("cfos"))
 
 	if !sponsor.IsAuthorized() {
 		return nil, api.ErrSponsorRequired
