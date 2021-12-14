@@ -74,10 +74,10 @@
               "targetSoC": {
                 "type": "integer"
               },
-              "mincurrent": {
+              "minCurrent": {
                 "type": "integer"
               },
-              "maxcurrent": {
+              "maxCurrent": {
                 "type": "integer"
               }
             }
@@ -195,11 +195,12 @@
           "phases": {
             "type": "integer"
           },
-          "mincurrent": {
+          "minCurrent": {
             "type": "integer"
           },
-          "maxcurrent": {
+          "maxCurrent": {
             "type": "integer"
+          },
           }
         }
       }
