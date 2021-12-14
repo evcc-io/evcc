@@ -60,7 +60,7 @@
             "type": "string"
           },
           "cache": {
-            "type": "string"
+            "$ref": "#/definitions/duration"
           },
           "onIdentify": {
             "type": "object",
