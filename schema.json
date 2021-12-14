@@ -103,10 +103,32 @@
             "pv": {
               "type": "string"
             },
+            "pvs": {
+              "description": "List of pv inverters/meters",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
             "battery": {
               "type": "string"
+            },
+            "batteries": {
+              "description": "List of home batteries",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
             }
           }
+        },
+        "prioritySoC": {
+        },
+        "bufferSoC": {
         }
       }
     },
