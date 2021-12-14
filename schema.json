@@ -204,6 +204,27 @@
           "guardDuration": {
             "$ref": "#/definitions/duration"
           },
+          "enable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
+              }
+            }
+          },
+          "disable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
+              }
+            }
           }
         }
       }
