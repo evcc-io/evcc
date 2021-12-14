@@ -70,7 +70,7 @@ func (lp *Timer) DemandActive() bool {
 	se := lp.SocEstimator()
 	if se == nil {
 		lp.log.WARN.Printf("target charging: not possible")
-	return false
+		return false
 	}
 
 	// time
@@ -81,12 +81,8 @@ func (lp *Timer) DemandActive() bool {
 	lp.log.DEBUG.Printf("estimated charge duration: %v to %v%%", remainingDuration.Round(time.Minute), lp.SoC)
 	lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
 	if lp.active {
-		lp.log.DEBUG.Printf("projected end (when now starting): %v", lp.finishAt)
+		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
 		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
-	}
-	lp.log.DEBUG.Printf("starting in: %v", time.Until(lp.Time.Add(-remainingDuration)).Round(time.Second))
-	if lp.active {
-		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt.UTC())
 	}
 
 	// timer charging is already active- only deactivate once charging has stopped
