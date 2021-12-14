@@ -42,7 +42,47 @@
       "type": "array",
       "description": "List of vehicles",
       "items": {
-        "$ref": "#/definitions/namedObject"
+        "$ref": "#/definitions/namedObject",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "user": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "VIN": {
+            "type": "string"
+          },
+          "cache": {
+            "type": "string"
+          },
+          "onIdentify": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "$ref": "#/definitions/mode"
+              },
+              "minSoC": {
+                "type": "integer"
+              },
+              "targetSoC": {
+                "type": "integer"
+              },
+              "mincurrent": {
+                "type": "integer"
+              },
+              "maxcurrent": {
+                "type": "integer"
+              }
+            }
+          }
+        }
       }
     },
     "site": {
