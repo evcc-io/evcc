@@ -176,7 +176,7 @@
     },
     "pollMode": {
       "enum": [
-        "alway",
+        "always",
         "charging",
         "connected"
       ]
