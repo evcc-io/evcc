@@ -191,6 +191,15 @@
                 "type": "boolean"
               }
             }
+          },
+          "phases": {
+            "type": "integer"
+          },
+          "mincurrent": {
+            "type": "integer"
+          },
+          "maxcurrent": {
+            "type": "integer"
           }
         }
       }
