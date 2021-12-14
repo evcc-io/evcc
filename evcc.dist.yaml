@@ -100,7 +100,7 @@ loadpoints:
   disable: # pv mode disable behavior
     delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
-  guardduration: 5m # switch charger contactor not more often than this (default 10m)
+  guardDuration: 5m # switch charger contactor not more often than this (default 10m)
   minCurrent: 6 # minimum charge current (default 6A)
   maxCurrent: 16 # maximum charge current (default 16A)
 

@@ -201,6 +201,9 @@
           "maxCurrent": {
             "type": "integer"
           },
+          "guardDuration": {
+            "$ref": "#/definitions/duration"
+          },
           }
         }
       }
