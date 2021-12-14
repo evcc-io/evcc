@@ -51,7 +51,6 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	if lp.Time.IsZero() {
-		lp.active = false
 		return false
 	}
 
