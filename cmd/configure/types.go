@@ -1,7 +1,5 @@
 package configure
 
-import "github.com/evcc-io/evcc/util/templates"
-
 const (
 	DefaultConfigFilename string = "evcc.yaml"
 )
@@ -11,8 +9,6 @@ type UsageChoice string
 func (u UsageChoice) String() string {
 	return string(u)
 }
-
-var ValidModbusChoices = []string{templates.ModbusChoiceRS485, templates.ModbusChoiceTCPIP}
 
 type DeviceClass string
 
@@ -41,8 +37,6 @@ const (
 	DeviceCategoryVehicle      DeviceCategory = "vehicle"
 	DeviceCategoryGuidedSetup  DeviceCategory = "guided"
 )
-
-var ValidUsageChoices = []DeviceCategory{DeviceCategoryGridMeter, DeviceCategoryPVMeter, DeviceCategoryBatteryMeter, DeviceCategoryChargeMeter}
 
 const (
 	defaultNameCharger      = "wallbox"

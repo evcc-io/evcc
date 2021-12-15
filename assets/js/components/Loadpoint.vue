@@ -79,6 +79,10 @@ export default {
 		chargeCurrents: Array,
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
+		phaseAction: String,
+		phaseRemaining: Number,
+		pvRemaining: Number,
+		pvAction: String,
 	},
 	data: function () {
 		return {

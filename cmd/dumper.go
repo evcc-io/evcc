@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/fatih/structs"
 )
 
 var truefalse = map[bool]string{false: "false", true: "true"}
@@ -174,6 +175,8 @@ func (d *dumper) Dump(name string, v interface{}) {
 		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
 		if len(v.Identifiers()) > 0 {
 			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+		}
+		if !structs.IsZero(v.OnIdentified()) {
 			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
 		}
 	}

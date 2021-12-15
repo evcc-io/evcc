@@ -7,7 +7,6 @@ import (
 
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 )
 
@@ -117,15 +116,10 @@ var _ FloatProvider = (*Mqtt)(nil)
 // receiver will ensure actual data guarded by `timeout` and return error
 // if initial value is not received within `timeout` or max. 10s if timeout is not given.
 func (m *Mqtt) newReceiver() *msgHandler {
-	wait := m.timeout
-	if wait == 0 {
-		wait = request.Timeout
-	}
-
 	h := &msgHandler{
 		topic: m.topic,
 		scale: m.scale,
-		mux:   util.NewWaiter(wait, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
 		re:    m.re,
 		jq:    m.jq,
 	}

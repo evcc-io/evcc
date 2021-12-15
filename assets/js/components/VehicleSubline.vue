@@ -6,7 +6,7 @@
 				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
-		<TargetCharge v-if="false" v-bind="targetCharge" @target-time-updated="targetTimeUpdated" />
+		<TargetCharge v-bind="targetCharge" @target-time-updated="targetTimeUpdated" />
 	</div>
 </template>
 

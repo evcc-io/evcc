@@ -49,49 +49,49 @@ func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param 
 		result.ValueType = templates.ParamValueTypeString
 	}
 
-	switch strings.ToLower(result.Name) {
-	case "title":
-		result.Name = c.localizedString("UserFriendly_Title_Name", nil)
-		if result.Help.String(c.lang) == "" {
-			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Title_Help", nil))
-		}
-	case "device":
-		result.Name = c.localizedString("UserFriendly_Device_Name", nil)
-	case "baudrate":
-		result.Name = c.localizedString("UserFriendly_Baudrate_Name", nil)
-	case "comset":
-		result.Name = c.localizedString("UserFriendly_ComSet_Name", nil)
-	case "host":
-		result.Name = c.localizedString("UserFriendly_Host_Name", nil)
-	case "port":
-		result.Name = c.localizedString("UserFriendly_Port_Name", nil)
-		result.ValueType = templates.ParamValueTypeNumber
-	case "user":
-		result.Name = c.localizedString("UserFriendly_User_Name", nil)
-	case "password":
-		result.Name = c.localizedString("UserFriendly_Password_Name", nil)
-	case "capacity":
-		result.Name = c.localizedString("UserFriendly_Capacity_Name", nil)
-		if result.Example == "" {
-			result.Example = "41.5"
-		}
-		result.ValueType = templates.ParamValueTypeFloat
-	case "vin":
-		result.Name = c.localizedString("UserFriendly_Vin_Name", nil)
-		if result.Help.String(c.lang) == "" {
-			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Vin_Help", nil))
-		}
-	case "identifiers":
-		result.Name = c.localizedString("UserFriendly_Identifier_Name", nil)
-		if result.Help.String(c.lang) == "" {
-			result.Help.SetString(c.lang, c.localizedString("UserFriendly_Identifier_Help", nil))
-		}
-	case "standbypower":
-		result.Name = c.localizedString("UserFriendly_StandByPower_Name", nil)
-		if result.Help.String(c.lang) == "" {
-			result.Help.SetString(c.lang, c.localizedString("UserFriendly_StandByPower_Help", nil))
-		}
-		result.ValueType = templates.ParamValueTypeNumber
+	type replacements struct {
+		Name      string
+		Help      string
+		Example   string
+		ValueType string
 	}
+	resultNameMap := map[string]replacements{
+		"title":        {Name: "UserFriendly_Title_Name", Help: "UserFriendly_Title_Help"},
+		"device":       {Name: "UserFriendly_Device_Name"},
+		"baudrate":     {Name: "UserFriendly_Baudrate_Name"},
+		"comset":       {Name: "UserFriendly_ComSet_Name"},
+		"host":         {Name: "UserFriendly_Host_Name"},
+		"port":         {Name: "UserFriendly_Port_Name", ValueType: templates.ParamValueTypeNumber},
+		"user":         {Name: "UserFriendly_User_Name"},
+		"password":     {Name: "UserFriendly_Password_Name"},
+		"capacity":     {Name: "UserFriendly_Capacity_Name", Example: "41.5", ValueType: templates.ParamValueTypeFloat},
+		"vin":          {Name: "UserFriendly_Vin_Name", Help: "UserFriendly_Vin_Help"},
+		"cache":        {Name: "UserFriendly_Cache_Name", Help: "UserFriendly_Cache_Help", Example: "5m"},
+		"mode":         {Name: "ChargeMode_Question", ValueType: templates.ParamValueTypeChargeModes},
+		"minsoc":       {Name: "UserFriendly_MinSoC_Name", Help: "UserFriendly_MinSoC_Help", Example: "25", ValueType: templates.ParamValueTypeNumber},
+		"targetsoc":    {Name: "UserFriendly_TargetSoC_Name", Help: "UserFriendly_TargetSoC_Help", Example: "80", ValueType: templates.ParamValueTypeNumber},
+		"mincurrent":   {Name: "UserFriendly_MinCurrent_Name", Help: "UserFriendly_MinCurrent_Help", Example: "6", ValueType: templates.ParamValueTypeNumber},
+		"maxcurrent":   {Name: "UserFriendly_MaxCurrent_Name", Help: "UserFriendly_MaxCurrent_Help", Example: "16", ValueType: templates.ParamValueTypeNumber},
+		"identifiers":  {Name: "UserFriendly_Identifier_Name", Help: "UserFriendly_Identifier_Help"},
+		"standbypower": {Name: "UserFriendly_StandByPower_Name", Help: "UserFriendly_StandByPower_Help", ValueType: templates.ParamValueTypeNumber},
+	}
+
+	if resultMapItem := resultNameMap[strings.ToLower(result.Name)]; resultMapItem != (replacements{}) {
+		// always overwrite if defined
+		if resultMapItem.Name != "" {
+			result.Name = c.localizedString(resultMapItem.Name, nil)
+		}
+		if resultMapItem.ValueType != "" {
+			result.ValueType = resultMapItem.ValueType
+		}
+		// only set if empty
+		if result.Help.String(c.lang) == "" && resultMapItem.Help != "" {
+			result.Help.SetString(c.lang, c.localizedString(resultMapItem.Help, nil))
+		}
+		if result.Example == "" && resultMapItem.Example != "" {
+			result.Example = resultMapItem.Example
+		}
+	}
+
 	return result
 }

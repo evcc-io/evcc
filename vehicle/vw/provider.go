@@ -17,11 +17,12 @@ import (
 
 // Provider implements the evcc vehicle api
 type Provider struct {
-	chargerG func() (interface{}, error)
-	statusG  func() (interface{}, error)
-	climateG func() (interface{}, error)
-	action   func(action, value string) error
-	rr       func() (RolesRights, error)
+	chargerG  func() (interface{}, error)
+	statusG   func() (interface{}, error)
+	climateG  func() (interface{}, error)
+	positionG func() (interface{}, error)
+	action    func(action, value string) error
+	rr        func() (RolesRights, error)
 }
 
 // NewProvider provides the evcc vehicle api provider
@@ -35,6 +36,9 @@ func NewProvider(api *API, vin string, cache time.Duration) *Provider {
 		}, cache).InterfaceGetter(),
 		climateG: provider.NewCached(func() (interface{}, error) {
 			return api.Climater(vin)
+		}, cache).InterfaceGetter(),
+		positionG: provider.NewCached(func() (interface{}, error) {
+			return api.Position(vin)
 		}, cache).InterfaceGetter(),
 		action: func(action, value string) error {
 			return api.Action(vin, action, value)
@@ -152,6 +156,19 @@ func (v *Provider) Climater() (active bool, outsideTemp float64, targetTemp floa
 	}
 
 	return active, outsideTemp, targetTemp, err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.positionG()
+	if res, ok := res.(PositionResponse); err == nil && ok {
+		coord := res.FindCarResponse.Position.CarCoordinate
+		return float64(coord.Latitude) / 1e6, float64(coord.Longitude) / 1e6, nil
+	}
+
+	return 0, 0, err
 }
 
 var _ api.VehicleStartCharge = (*Provider)(nil)

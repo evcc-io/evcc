@@ -126,6 +126,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 - `number`: for int values
 - `float`: for float values
 - `stringlist`: for a list of strings, e.g.used for defining a list of `identifiers` for `vehicles`
+- `chargemodes`: for a selection of charge modes (including `None` which results in the param not being set)
 
 ### `advanced`
 

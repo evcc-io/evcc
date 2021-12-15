@@ -35,3 +35,7 @@ a {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
+
+.cursor-pointer {
+	cursor: pointer;
+}

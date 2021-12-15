@@ -10,12 +10,18 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/evcc-io/evcc/templates/definition"
 	"github.com/evcc-io/evcc/util"
+	"github.com/thoas/go-funk"
 	"gopkg.in/yaml.v3"
 )
 
 const (
 	ParamUsage  = "usage"
 	ParamModbus = "modbus"
+
+	UsageChoiceGrid    = "grid"
+	UsageChoicePV      = "pv"
+	UsageChoiceBattery = "battery"
+	UsageChoiceCharge  = "charge"
 
 	HemsTypeSMA = "sma"
 
@@ -48,14 +54,18 @@ const (
 var HemsValueTypes = []string{HemsTypeSMA}
 
 const (
-	ParamValueTypeString     = "string"
-	ParamValueTypeNumber     = "number"
-	ParamValueTypeFloat      = "float"
-	ParamValueTypeBool       = "bool"
-	ParamValueTypeStringList = "stringlist"
+	ParamValueTypeString      = "string"
+	ParamValueTypeNumber      = "number"
+	ParamValueTypeFloat       = "float"
+	ParamValueTypeBool        = "bool"
+	ParamValueTypeStringList  = "stringlist"
+	ParamValueTypeChargeModes = "chargemodes"
 )
 
-var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeBool}
+var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
+
+var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
+var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 
 // language specific texts
 type TextLanguage struct {
@@ -123,6 +133,8 @@ type Param struct {
 	Usages    []string
 	Baudrate  int    // device specific default for modbus RS485 baudrate
 	Comset    string // device specific default for modbus RS485 comset
+	Port      int    // device specific default for modbus TCPIP port
+	ID        int    // device specific default for modbus ID
 }
 
 type ParamBase struct {
@@ -142,6 +154,27 @@ type Template struct {
 	ParamsBase   string // references a base param set to inherit from
 	Params       []Param
 	Render       string // rendering template
+}
+
+func (t *Template) Validate() error {
+	for _, p := range t.Params {
+		switch p.Name {
+		case ParamUsage:
+			for _, c := range p.Choice {
+				if !funk.ContainsString(ValidUsageChoices, c) {
+					return fmt.Errorf("invalid usage choice '%s' in template %s", c, t.Template)
+				}
+			}
+		case ParamModbus:
+			for _, c := range p.Choice {
+				if !funk.ContainsString(ValidModbusChoices, c) {
+					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // add the referenced base Params and overwrite existing ones
@@ -190,6 +223,8 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 		switch p.ValueType {
 		case ParamValueTypeStringList:
 			values[p.Name] = []string{}
+		case ParamValueTypeChargeModes:
+			values[p.Name] = ""
 		default:
 			if p.Test != "" {
 				values[p.Name] = p.Test
@@ -234,16 +269,14 @@ func (t *Template) ModbusChoices() []string {
 //go:embed proxy.tpl
 var proxyTmpl string
 
-// RenderProxy renders the proxy template for inclusion in documentation
-func (t *Template) RenderProxy() ([]byte, error) {
-	return t.RenderProxyWithValues(nil, false)
-}
-
+// RenderProxy renders the proxy template
 func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeDescription bool) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
 	}
+
+	t.ModbusParams(values)
 
 	for index, p := range t.Params {
 		for k, v := range values {
@@ -257,7 +290,12 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 					t.Params[index].Values = append(p.Values, yamlQuote(e))
 				}
 			default:
-				t.Params[index].Value = yamlQuote(v.(string))
+				switch v := v.(type) {
+				case string:
+					t.Params[index].Value = yamlQuote(v)
+				case int:
+					t.Params[index].Value = fmt.Sprintf("%d", v)
+				}
 			}
 		}
 	}
@@ -313,6 +351,12 @@ func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte
 
 	for item, p := range values {
 		switch p := p.(type) {
+		case []interface{}:
+			var list []string
+			for _, v := range p {
+				list = append(list, yamlQuote(fmt.Sprintf("%v", v)))
+			}
+			values[item] = list
 		case []string:
 			var list []string
 			for _, v := range p {

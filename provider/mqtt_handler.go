@@ -31,11 +31,11 @@ func (h *msgHandler) receive(payload string) {
 
 // hasValue returned the received and processed payload as string
 func (h *msgHandler) hasValue() (string, error) {
-	elapsed := h.mux.LockWithTimeout()
+	h.mux.Lock()
 	defer h.mux.Unlock()
 
-	if elapsed > 0 {
-		return "", fmt.Errorf("%s outdated: %v", h.topic, elapsed.Truncate(time.Second))
+	if late := h.mux.Overdue(); late > 0 {
+		return "", fmt.Errorf("%s outdated: %v", h.topic, late.Truncate(time.Second))
 	}
 
 	var err error

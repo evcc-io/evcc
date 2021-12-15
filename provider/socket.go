@@ -141,11 +141,11 @@ func (p *Socket) listen() {
 }
 
 func (p *Socket) hasValue() (interface{}, error) {
-	elapsed := p.mux.LockWithTimeout()
+	p.mux.Lock()
 	defer p.mux.Unlock()
 
-	if elapsed > 0 {
-		return nil, fmt.Errorf("outdated: %v", elapsed.Truncate(time.Second))
+	if late := p.mux.Overdue(); late > 0 {
+		return nil, fmt.Errorf("outdated: %v", late.Truncate(time.Second))
 	}
 
 	return p.val, nil

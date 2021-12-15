@@ -8,6 +8,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
 )
@@ -115,6 +116,7 @@ type question struct {
 	invalidValues              []string
 	valueType                  string
 	mask, required             bool
+	excludeNone                bool
 }
 
 // askBoolValue asks for a boolean value selection for a given question
@@ -135,6 +137,22 @@ func (c *CmdConfigure) askValue(q question) string {
 		}
 
 		return c.askBoolValue(label)
+	}
+
+	if q.valueType == templates.ParamValueTypeChargeModes {
+		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
+		chargeModes := []string{
+			c.localizedString("ChargeModeOff", nil),
+			c.localizedString("ChargeModeNow", nil),
+			c.localizedString("ChargeModeMinPV", nil),
+			c.localizedString("ChargeModePV", nil),
+		}
+		if !q.excludeNone {
+			chargingModes = append(chargingModes, "")
+			chargeModes = append(chargeModes, c.localizedString("ChargeModeNone", nil))
+		}
+		modeChoice, _ := c.askChoice(c.localizedString("ChargeMode_Question", nil), chargeModes)
+		return chargingModes[modeChoice]
 	}
 
 	input := ""
@@ -174,7 +192,7 @@ func (c *CmdConfigure) askValue(q question) string {
 	} else {
 		help += " (" + c.localizedString("Value_Optional", nil) + ")"
 	}
-	if q.exampleValue != "" {
+	if q.exampleValue != nil && q.exampleValue != "" {
 		help += fmt.Sprintf(" ("+c.localizedString("Value_Sample", nil)+": %s)", q.exampleValue)
 	}
 

@@ -11,7 +11,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/cloudfoundry/jibber_jabber"
-	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/server"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
@@ -149,13 +148,18 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	filename := DefaultConfigFilename
 
 	for ok := true; ok; {
-		_, err := os.Open(filename)
+		file, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 		if errors.Is(err, os.ErrNotExist) {
 			break
 		}
-
-		if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
-			break
+		file.Close()
+		// in case of permission error, we can't write to the file anyway
+		if os.IsPermission(err) {
+			fmt.Println(c.localizedString("File_Permissions", localizeMap{"FileName": filename}))
+		} else {
+			if c.askYesNo(c.localizedString("File_Exists", localizeMap{"FileName": filename})) {
+				break
+			}
 		}
 
 		filename = c.askValue(question{
@@ -302,17 +306,14 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		chargingModes := []string{string(api.ModeOff), string(api.ModeNow), string(api.ModeMinPV), string(api.ModePV)}
-		chargeModes := []string{
-			c.localizedString("Loadpoint_ChargeModeOff", nil),
-			c.localizedString("Loadpoint_ChargeModeNow", nil),
-			c.localizedString("Loadpoint_ChargeModeMinPV", nil),
-			c.localizedString("Loadpoint_ChargeModePV", nil),
-		}
 		fmt.Println()
-		modeChoice, _ := c.askChoice(c.localizedString("Loadpoint_DefaultChargeMode", nil), chargeModes)
-		loadpoint.Mode = chargingModes[modeChoice]
+		loadpoint.Mode = c.askValue(question{valueType: templates.ParamValueTypeChargeModes, excludeNone: true})
 
+		fmt.Println()
+		loadpoint.ResetOnDisconnect = c.askValue(question{
+			label:     c.localizedString("Loadpoint_ResetOnDisconnect", nil),
+			valueType: templates.ParamValueTypeBool,
+		})
 		c.configuration.AddLoadpoint(loadpoint)
 
 		fmt.Println()

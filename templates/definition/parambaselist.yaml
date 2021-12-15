@@ -10,7 +10,18 @@ vehicle:
     example: W...
   - name: capacity
     default: '50'
-    valueType: float
+  - name: cache
+    advanced: true
+  - name: mode
+    advanced: true
+  - name: minSoC
+    advanced: true
+  - name: targetSoC
+    advanced: true
+  - name: minCurrent
+    advanced: true
+  - name: maxCurrent
+    advanced: true
   - name: identifiers
     advanced: true
     valueType: stringlist
@@ -26,6 +37,27 @@ vehicle:
     {{- end }}
     {{- if ne .vin "" }}
     vin: {{ .vin }}
+    {{- end }}
+    {{- if ne .cache "" }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
+    onIdentify:
+    {{- if (ne .mode "") }}
+      mode: {{ .mode }}
+    {{- end }}
+    {{- if (ne .minSoC "") }}
+      minSoC: {{ .minSoC }}
+    {{- end }}
+    {{- if (ne .targetSoC "") }}
+      targetSoC: {{ .targetSoC }}
+    {{- end }}
+    {{- if (ne .minCurrent "") }}
+      minCurrent: {{ .minCurrent }}
+    {{- end }}
+    {{- if (ne .maxCurrent "") }}
+      maxCurrent: {{ .maxCurrent }}
+    {{- end }}
     {{- end }}
     {{- if ne (len .identifiers) 0 }}
     identifiers:

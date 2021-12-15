@@ -7,6 +7,7 @@ import axios from "axios";
 import App from "./views/App";
 import router from "./router";
 import i18n from "./i18n";
+import "./tooltip";
 import store from "./store";
 
 Vue.use(VueMeta);
