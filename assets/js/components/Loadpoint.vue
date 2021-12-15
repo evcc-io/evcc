@@ -3,15 +3,15 @@
 		<p class="h3 mb-4 d-sm-block" :class="{ 'd-none': single }">
 			{{ title || $t("main.loadpoint.fallbackName") }}
 		</p>
-		<div class="alert alert-warning mt-4 mb-2" role="alert" v-if="remoteDisabled == 'soft'">
+		<div v-if="remoteDisabled == 'soft'" class="alert alert-warning mt-4 mb-2" role="alert">
 			{{ $t("main.loadpoint.remoteDisabledSoft", { source: remoteDisabledSource }) }}
 		</div>
-		<div class="alert alert-danger mt-4 mb-2" role="alert" v-if="remoteDisabled == 'hard'">
+		<div v-if="remoteDisabled == 'hard'" class="alert alert-danger mt-4 mb-2" role="alert">
 			{{ $t("main.loadpoint.remoteDisabledHard", { source: remoteDisabledSource }) }}
 		</div>
 
 		<div class="row">
-			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" v-on:updated="setTargetMode" />
+			<Mode class="col-12 col-md-6 col-lg-4 mb-4" :mode="mode" @updated="setTargetMode" />
 			<Vehicle
 				class="col-12 col-md-6 col-lg-8 mb-4"
 				v-bind="vehicle"
@@ -33,6 +33,8 @@ import collector from "../mixins/collector";
 
 export default {
 	name: "Loadpoint",
+	components: { LoadpointDetails, Mode, Vehicle },
+	mixins: [formatter, collector],
 	props: {
 		id: Number,
 		single: Boolean,
@@ -78,8 +80,6 @@ export default {
 		chargeConfigured: Boolean,
 		chargeRemainingEnergy: Number,
 	},
-	components: { LoadpointDetails, Mode, Vehicle },
-	mixins: [formatter, collector],
 	data: function () {
 		return {
 			tickerHandle: null,
@@ -108,6 +108,9 @@ export default {
 				);
 			}
 		},
+	},
+	destroyed: function () {
+		window.clearInterval(this.tickerHandle);
 	},
 	methods: {
 		api: function (func) {
@@ -141,9 +144,6 @@ export default {
 				.post(this.api("targetcharge") + "/" + this.targetSoC + "/" + formattedDate)
 				.catch(window.app.error);
 		},
-	},
-	destroyed: function () {
-		window.clearInterval(this.tickerHandle);
 	},
 };
 </script>

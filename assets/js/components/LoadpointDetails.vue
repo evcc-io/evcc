@@ -5,19 +5,19 @@
 				<div class="mb-2 value">
 					{{ $t("main.loadpointDetails.power") }}
 					<fa-icon
+						v-if="climater == 'heating'"
 						class="text-primary ms-1"
 						icon="temperature-low"
-						v-if="climater == 'heating'"
 					></fa-icon>
 					<fa-icon
+						v-if="climater == 'cooling'"
 						class="text-primary ms-1"
 						icon="temperature-high"
-						v-if="climater == 'cooling'"
 					></fa-icon>
 					<fa-icon
+						v-if="climater == 'on'"
 						class="text-primary ms-1"
 						icon="thermometer-half"
-						v-if="climater == 'on'"
 					></fa-icon>
 				</div>
 				<h3 class="value">
@@ -34,7 +34,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehicleRange && vehicleRange >= 0">
+			<div v-if="vehicleRange && vehicleRange >= 0" class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.vehicleRange") }}</div>
 				<h3 class="value">
 					{{ Math.round(vehicleRange) }}
@@ -42,7 +42,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-else>
+			<div v-else class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.duration") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeDuration) }}
@@ -50,7 +50,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehiclePresent">
+			<div v-if="vehiclePresent" class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeRemainingDuration) }}
@@ -69,6 +69,7 @@ import formatter from "../mixins/formatter";
 
 export default {
 	name: "LoadpointDetails",
+	mixins: [formatter],
 	props: {
 		chargedEnergy: Number,
 		chargeDuration: Number,
@@ -78,6 +79,5 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
 	},
-	mixins: [formatter],
 };
 </script>

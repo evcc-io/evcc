@@ -6,8 +6,8 @@
 		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline
 			v-bind="vehicleSubline"
-			@target-time-updated="targetTimeUpdated"
 			class="my-1"
+			@target-time-updated="targetTimeUpdated"
 		/>
 	</div>
 </template>
@@ -21,6 +21,7 @@ import VehicleSubline from "./VehicleSubline";
 export default {
 	name: "Vehicle",
 	components: { VehicleSoc, VehicleSubline },
+	mixins: [collector],
 	props: {
 		id: Number,
 		connected: Boolean,
@@ -51,6 +52,5 @@ export default {
 			this.$emit("target-time-updated", targetTime);
 		},
 	},
-	mixins: [collector],
 };
 </script>

@@ -54,4 +54,5 @@ library.add(
   faThermometerHalf
 );
 
+// eslint-disable-next-line vue/component-definition-name-casing
 Vue.component("fa-icon", FontAwesomeIcon);

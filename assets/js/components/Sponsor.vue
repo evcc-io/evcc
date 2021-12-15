@@ -1,7 +1,7 @@
 <template>
 	<div
-		ref="sponsor"
 		v-if="sponsor"
+		ref="sponsor"
 		class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap sponsor-button"
 		@click.stop.prevent="surprise"
 	>
@@ -28,7 +28,7 @@
 import confetti from "canvas-confetti";
 
 export default {
-	name: "sponsor",
+	name: "Sponsor",
 	props: {
 		sponsor: String,
 	},

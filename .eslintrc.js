@@ -6,8 +6,11 @@ module.exports = {
   },
   extends: [
     "eslint:recommended",
-    "plugin:vue/essential",
+    "plugin:vue/recommended",
     "plugin:prettier/recommended",
     "prettier",
   ],
+  rules: {
+    "vue/require-default-prop": "off",
+  },
 };

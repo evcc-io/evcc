@@ -1,6 +1,6 @@
 <template>
 	<div class="container">
-		<Site v-bind="state" v-if="configured"></Site>
+		<Site v-if="configured" v-bind="state"></Site>
 		<div v-else>
 			<div class="row py-5">
 				<div class="col12">

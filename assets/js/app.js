@@ -21,9 +21,6 @@ window.app = new Vue({
   router,
   i18n,
   data: { store, notifications: [] },
-  render: function (h) {
-    return h(App, { props: { notifications: this.notifications } });
-  },
   methods: {
     raise: function (msg) {
       console[msg.type](msg);
@@ -54,6 +51,9 @@ window.app = new Vue({
       msg.type = "warn";
       this.raise(msg);
     },
+  },
+  render: function (h) {
+    return h(App, { props: { notifications: this.notifications } });
   },
 });
 
