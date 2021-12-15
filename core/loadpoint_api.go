@@ -55,6 +55,12 @@ func (lp *LoadPoint) GetTargetSoC() int {
 	return lp.SoC.Target
 }
 
+func (lp *LoadPoint) setTargetSoC(soc int) {
+	lp.SoC.Target = soc
+	lp.socTimer.SoC = soc
+	lp.publish("targetSoC", soc)
+}
+
 // SetTargetSoC sets loadpoint charge target soc
 func (lp *LoadPoint) SetTargetSoC(soc int) {
 	lp.Lock()
@@ -64,9 +70,7 @@ func (lp *LoadPoint) SetTargetSoC(soc int) {
 
 	// apply immediately
 	if lp.SoC.Target != soc {
-		lp.SoC.Target = soc
-		lp.socTimer.SoC = soc
-		lp.publish("targetSoC", soc)
+		lp.setTargetSoC(soc)
 		lp.requestUpdate()
 	}
 }
@@ -106,18 +110,20 @@ func (lp *LoadPoint) SetPhases(phases int) error {
 }
 
 // SetTargetCharge sets loadpoint charge targetSoC
-func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, targetSoC int) {
-
-	lp.log.DEBUG.Printf("set target charge: %d @ %v", targetSoC, finishAt)
-
+func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	lp.Lock()
-	lp.publish("targetTime", finishAt)
-	lp.socTimer.Time = finishAt
-	lp.Unlock()
+	defer lp.Unlock()
+
+	lp.log.DEBUG.Printf("set target charge: %d @ %v", soc, finishAt)
 
 	// apply immediately
-	lp.SetTargetSoC(targetSoC)
+	if lp.socTimer.Time != finishAt || lp.SoC.Target != soc {
+		lp.publish("targetTime", finishAt)
+		lp.socTimer.Time = finishAt
 
+		lp.setTargetSoC(soc)
+		lp.requestUpdate()
+	}
 }
 
 // RemoteControl sets remote status demand
