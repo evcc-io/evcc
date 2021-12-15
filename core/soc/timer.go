@@ -76,12 +76,12 @@ func (lp *Timer) DemandActive() bool {
 	remainingDuration := se.AssumedChargeDuration(lp.SoC, power)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
-	lp.log.DEBUG.Printf("estimated charge power: %vW", power)
-	lp.log.DEBUG.Printf("estimated charge duration: %v to %v%%", remainingDuration.Round(time.Minute), lp.SoC)
-	lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
+	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
 	if lp.active {
 		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
 		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
+	} else {
+		lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
 	}
 
 	// timer charging is already active- only deactivate once charging has stopped
