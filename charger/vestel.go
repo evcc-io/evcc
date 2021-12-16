@@ -109,7 +109,7 @@ func (wb *Vestel) Enable(enable bool) error {
 // MaxCurrent implements the api.Charger interface
 func (wb *Vestel) MaxCurrent(current int64) error {
 	if current < 6 {
-		return fmt.Errorf("invalid current %.5g", current)
+		return fmt.Errorf("invalid current %d", current)
 	}
 
 	u := uint16(10 * current)
