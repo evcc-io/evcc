@@ -54,39 +54,7 @@ func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewVestel(cc.URI)
-	if err != nil {
-		return nil, err
-	}
-
-	return wb, err
-
-	// var currentPower func() (float64, error)
-	// if cc.Meter.Power {
-	// 	currentPower = wb.currentPower
-	// }
-
-	// var totalEnergy func() (float64, error)
-	// if cc.Meter.Energy {
-	// 	totalEnergy = wb.totalEnergy
-	// }
-
-	// var currents func() (float64, float64, float64, error)
-	// if cc.Meter.Currents {
-	// 	currents = wb.currents
-	// }
-
-	// var maxCurrentMillis func(float64) error
-	// if !cc.Legacy {
-	// 	maxCurrentMillis = wb.maxCurrentMillis
-	// }
-
-	// // special case for SDM meters
-	// if encoding := strings.ToLower(cc.Meter.Encoding); strings.HasPrefix(encoding, encodingSDM) {
-	// 	wb.encoding = encodingSDM
-	// }
-
-	// return decorateVestel(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
+	return NewVestel(cc.URI, cc.ID)
 }
 
 // NewVestel creates a Vestel charger
