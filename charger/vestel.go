@@ -16,17 +16,17 @@ import (
 )
 
 const (
-	wbSlaveID = 255
+	vestelSlaveID = 255
 // todo Alive Register 6000 Failsafe Timeout 2002 Failsafe Current 2000
-	wbRegStatus        = 100 // Input
-	wbRegChargeTime    = 1508 // Input
-	wbRegActualCurrent = 5004 // Holding
-	//wbRegEnable        = 400 // Coil todo does not exist, but set actualCurrent to 0?
-	wbRegMaxCurrent    = 1104 // todo vestel this is not writeable! only read! Holding 0.1A
-	wbRegFirmware      = 230 // Firmware 230-279  50 register!
+	vestelRegStatus        = 100 // Input
+	vestelRegChargeTime    = 1508 // Input
+	vestelRegActualCurrent = 5004 // Holding
+	//vestelRegEnable        = 400 // Coil todo does not exist, but set actualCurrent to 0?
+	vestelRegMaxCurrent    = 1104 // todo vestel this is not writeable! only read! Holding 0.1A
+	vestelRegFirmware      = 230 // Firmware 230-279  50 register!
 
-	wbRegPower  = 1020 // power reading 1020,1021
-	wbRegEnergy = 1502 // todo energy reading vestel is Wh! Wallbe is kWh!
+	vestelRegPower  = 1020 // power reading todo vestel are two registers 1020,1021!
+	vestelRegEnergy = 1502 // todo energy reading vestel is Wh! Wallbe is kWh!
 
 	encodingSDM = "sdm"
 )
@@ -63,46 +63,46 @@ func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	wb, err := NewVestel(cc.URI)
+	vl, err := NewVestel(cc.URI)
 	if err != nil {
 		return nil, err
 	}
 
 	if cc.Legacy {
-		wb.factor = 1
+		vl.factor = 1
 	}
 
 	var currentPower func() (float64, error)
 	if cc.Meter.Power {
-		currentPower = wb.currentPower
+		currentPower = vl.currentPower
 	}
 
 	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = wb.totalEnergy
+		totalEnergy = vl.totalEnergy
 	}
 
 	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
-		currents = wb.currents
+		currents = vl.currents
 	}
 
 	var maxCurrentMillis func(float64) error
 	if !cc.Legacy {
-		maxCurrentMillis = wb.maxCurrentMillis
+		maxCurrentMillis = vl.maxCurrentMillis
 	}
 
 	// special case for SDM meters
 	if encoding := strings.ToLower(cc.Meter.Encoding); strings.HasPrefix(encoding, encodingSDM) {
-		wb.encoding = encodingSDM
+		vl.encoding = encodingSDM
 	}
 
-	return decorateVestel(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
+	return decorateVestel(vl, currentPower, totalEnergy, currents, maxCurrentMillis), nil
 }
 
 // NewVestel creates a Vestel charger
 func NewVestel(uri string) (*Vestel, error) {
-	conn, err := modbus.NewConnection(uri, "", "", 0, false, wbSlaveID)
+	conn, err := modbus.NewConnection(uri, "", "", 0, false, vestelSlaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func NewVestel(uri string) (*Vestel, error) {
 	log := util.NewLogger("vestel")
 	conn.Logger(log.TRACE)
 
-	wb := &Vestel{
+	vl := &Vestel{
 		conn:   conn,
 		factor: 10,
 	}
@@ -119,8 +119,8 @@ func NewVestel(uri string) (*Vestel, error) {
 }
 
 // Status implements the api.Charger interface
-func (wb *Vestel) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegStatus, 1)
+func (vl *Vestel) Status() (api.ChargeStatus, error) {
+	b, err := vl.conn.ReadInputRegisters(vestelRegStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -129,8 +129,8 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (wb *Vestel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(wbRegActualCurrent, 1)
+func (vl *Vestel) Enabled() (bool, error) {
+	b, err := vl.conn.ReadHoldingRegisters(vestelRegActualCurrent, 1)
 	if err != nil {
 		return false, err
 	}
@@ -139,37 +139,37 @@ func (wb *Vestel) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (wb *Vestel) Enable(enable bool) error {
+func (vl *Vestel) Enable(enable bool) error {
 	var u uint16
 	if enable {
 		u = 0xFF00
 	}
 
-	_, err := wb.conn.WriteSingleCoil(wbRegEnable, u)
+	_, err := vl.conn.WriteSingleCoil(vestelRegEnable, u)
 
 	return err
 }
 
 // MaxCurrent implements the api.Charger interface
-func (wb *Vestel) MaxCurrent(current int64) error {
+func (vl *Vestel) MaxCurrent(current int64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %d", current)
 	}
 
-	u := uint16(current * wb.factor)
-	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u)
+	u := uint16(current * vl.factor)
+	_, err := vl.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
 
 	return err
 }
 
 // maxCurrentMillis implements the api.ChargerEx interface
-func (wb *Vestel) maxCurrentMillis(current float64) error {
+func (vl *Vestel) maxCurrentMillis(current float64) error {
 	if current < 6 {
 		return fmt.Errorf("invalid current %.5g", current)
 	}
 
-	u := uint16(current * float64(wb.factor))
-	_, err := wb.conn.WriteSingleRegister(wbRegMaxCurrent, u) // todo vestel: register wbRegActualCurrent instead! contains current current and allows to set it too
+	u := uint16(current * float64(vl.factor))
+	_, err := vl.conn.WriteSingleRegister(vestelRegMaxCurrent, u) // todo vestel: register vestelRegActualCurrent instead! contains current current and allows to set it too
 
 	return err
 }
@@ -177,8 +177,8 @@ func (wb *Vestel) maxCurrentMillis(current float64) error {
 var _ api.ChargeTimer = (*Vestel)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (wb *Vestel) ChargingTime() (time.Duration, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegChargeTime, 2)
+func (vl *Vestel) ChargingTime() (time.Duration, error) {
+	b, err := vl.conn.ReadInputRegisters(vestelRegChargeTime, 2)
 	if err != nil {
 		return 0, err
 	}
@@ -188,11 +188,11 @@ func (wb *Vestel) ChargingTime() (time.Duration, error) {
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
-func (wb *Vestel) decodeReading(b []byte) float64 {
+func (vl *Vestel) decodeReading(b []byte) float64 {
 	v := binary.BigEndian.Uint32(b)
 
 	// assuming high register first
-	if wb.encoding == encodingSDM {
+	if vl.encoding == encodingSDM {
 		bits := uint32(b[3])<<0 | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
 		f := math.Float32frombits(bits)
 		return float64(f)
@@ -202,43 +202,43 @@ func (wb *Vestel) decodeReading(b []byte) float64 {
 }
 
 // currentPower implements the api.Meter interface
-func (wb *Vestel) currentPower() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
+func (vl *Vestel) currentPower() (float64, error) {
+	b, err := vl.conn.ReadInputRegisters(vestelRegPower, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return vl.decodeReading(b), err
 }
 
 // totalEnergy implements the api.MeterEnergy interface
-func (wb *Vestel) totalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(wbRegEnergy, 2)
+func (vl *Vestel) totalEnergy() (float64, error) {
+	b, err := vl.conn.ReadInputRegisters(vestelRegEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), err
+	return vl.decodeReading(b), err
 }
 
 // currents implements the api.MeterCurrent interface
-func (wb *Vestel) currents() (float64, float64, float64, error) {
+func (vl *Vestel) currents() (float64, float64, float64, error) {
 	var currents []float64
 	for _, regCurrent := range vestelRegCurrents {
-		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
+		b, err := vl.conn.ReadInputRegisters(regCurrent, 2)
 		if err != nil {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(b))
+		currents = append(currents, vl.decodeReading(b))
 	}
 
 	return currents[0], currents[1], currents[2], nil
 }
 
 // Diagnose implements the Diagnosis interface
-func (wb *Vestel) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(wbRegFirmware, 50); err == nil {
+func (vl *Vestel) Diagnose() {
+	if b, err := vl.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
 		fmt.Printf("Firmware:\t%s\n", encoding.StringSwapped(b))
 	}
 }
