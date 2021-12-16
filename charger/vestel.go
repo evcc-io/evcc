@@ -14,25 +14,23 @@ import (
 )
 
 const (
-	// todo Alive Register 6000 Failsafe Timeout 2002 Failsafe Current 2000
-	vestelRegStatus        = 100  // Input
-	vestelRegChargeTime    = 1508 // Input
-	vestelRegActualCurrent = 5004 // Holding
-	//vestelRegEnable        = 400 // Coil todo does not exist, but set actualCurrent to 0?
-	vestelRegMaxCurrent = 1104 // todo vestel this is not writeable! only read! Holding 0.1A
-	vestelRegFirmware   = 230  // Firmware 230-279  50 register!
-
-	vestelRegPower  = 1020 // power reading todo vestel are two registers 1020,1021!
-	vestelRegEnergy = 1502 // todo energy reading vestel is Wh! Wallbe is kWh!
+	vestelRegFirmware   = 230
+	vestelRegStatus     = 1001
+	vestelRegChargeTime = 1508
+	vestelRegMaxCurrent = 5004
+	vestelRegPower      = 1020
+	vestelRegEnergy     = 1502
+	vestelRegAlive      = 6000
 )
 
-var vestelRegCurrents = []uint16{1008, 1010, 1012} // current readings // todo this are mA! wallbe is A!
+var vestelRegCurrents = []uint16{1008, 1010, 1012}
 
 // Vestel is an api.ChargeController implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Vestel struct {
-	conn *modbus.Connection
-	// encoding string
+	log     *util.Logger
+	conn    *modbus.Connection
+	current uint16
 }
 
 func init() {
@@ -68,10 +66,23 @@ func NewVestel(uri string, slaveID uint8) (*Vestel, error) {
 	conn.Logger(log.TRACE)
 
 	wb := &Vestel{
-		conn: conn,
+		log:     log,
+		conn:    conn,
+		current: 6,
 	}
 
+	go wb.heartbeat()
+
 	return wb, nil
+}
+
+// heartbeat implements the api.ChargerEx interface
+func (wb *Vestel) heartbeat() {
+	for range time.NewTicker(time.Minute).C {
+		if _, err := wb.conn.WriteSingleRegister(vestelRegAlive, 1); err != nil {
+			wb.log.ERROR.Println("heartbeat:", err)
+		}
+	}
 }
 
 // Status implements the api.Charger interface
@@ -86,22 +97,22 @@ func (wb *Vestel) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Vestel) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(vestelRegActualCurrent, 1)
+	b, err := wb.conn.ReadHoldingRegisters(vestelRegMaxCurrent, 1)
 	if err != nil {
 		return false, err
 	}
-	// todo not bit but a value it is!
-	return b[0] > 0, nil
+
+	return binary.BigEndian.Uint16(b) > 0, nil
 }
 
 // Enable implements the api.Charger interface
 func (wb *Vestel) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = wb.current
 	}
 
-	_, err := wb.conn.WriteSingleCoil(vestelRegEnable, u)
+	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
 
 	return err
 }
@@ -113,7 +124,10 @@ func (wb *Vestel) MaxCurrent(current int64) error {
 	}
 
 	u := uint16(10 * current)
-	_, err := wb.conn.WriteSingleRegister(vestelRegActualCurrent, u)
+	_, err := wb.conn.WriteSingleRegister(vestelRegMaxCurrent, u)
+	if err == nil {
+		wb.current = u
+	}
 
 	return err
 }
@@ -128,7 +142,8 @@ func (wb *Vestel) ChargingTime() (time.Duration, error) {
 	}
 
 	// 2 words, least significant word first
-	secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
+	// secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
+	secs := binary.BigEndian.Uint32(b)
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
 
