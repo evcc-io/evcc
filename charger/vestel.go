@@ -26,12 +26,12 @@ const (
 	wbRegFirmware      = 230 // Firmware 230-279  50 register!
 
 	wbRegPower  = 1020 // power reading 1020,1021
-	wbRegEnergy = 1502 // energy reading Wh! Wallbe is kWh!
+	wbRegEnergy = 1502 // todo energy reading vestel is Wh! Wallbe is kWh!
 
 	encodingSDM = "sdm"
 )
 
-var wbRegCurrents = []uint16{1008, 1010, 1012} // current readings // todo this are mA! wallbe is A!
+var vestelRegCurrents = []uint16{1008, 1010, 1012} // current readings // todo this are mA! wallbe is A!
 
 // Vestel is an api.ChargeController implementation for Vestel/Hymes wallboxes with Ethernet (SW modells).
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
@@ -224,7 +224,7 @@ func (wb *Vestel) totalEnergy() (float64, error) {
 // currents implements the api.MeterCurrent interface
 func (wb *Vestel) currents() (float64, float64, float64, error) {
 	var currents []float64
-	for _, regCurrent := range wbRegCurrents {
+	for _, regCurrent := range vestelRegCurrents {
 		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
 		if err != nil {
 			return 0, 0, 0, err
