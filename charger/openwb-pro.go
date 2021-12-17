@@ -148,7 +148,7 @@ var _ api.Meter = (*OpenWBPro)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *OpenWBPro) CurrentPower() (float64, error) {
 	res, err := wb.get()
-	return 1000 * res.PowerAll, err
+	return res.PowerAll * 1e3, err
 }
 
 var _ api.MeterEnergy = (*OpenWBPro)(nil)
