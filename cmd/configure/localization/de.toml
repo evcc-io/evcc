@@ -115,6 +115,8 @@ ValueError_Used = "Dieser Wert wird bereits verwendet."
 ValueError_Empty = "Der Wert darf nicht leer sein."
 ValueError_Float = "Der Wert muss eine Zahl sein. Nachkommastellen mit . anstatt mit , trennen."
 ValueError_Number = "Der Wert muss eine ganzzahlige Zahl sein."
+ValueError_NumberLowerThanMin = "Der Wert muss größer oder gleich {{ .Min }} sein."
+ValueError_NumberBiggerThanMax = "Der Wert muss kleiner oder gleich {{ .Max }} sein."
 
 Device_Configure = "Konfiguration"
 Device_Added = "wurde erfolgreich hinzugefügt."

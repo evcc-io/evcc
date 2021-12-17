@@ -111,12 +111,13 @@ func (c *CmdConfigure) askYesNo(label string) bool {
 }
 
 type question struct {
-	label, help                string
-	defaultValue, exampleValue interface{}
-	invalidValues              []string
-	valueType                  string
-	mask, required             bool
-	excludeNone                bool
+	label, help                    string
+	defaultValue, exampleValue     interface{}
+	invalidValues                  []string
+	valueType                      string
+	minNumberValue, maxNumberValue int64
+	mask, required                 bool
+	excludeNone                    bool
 }
 
 // askBoolValue asks for a boolean value selection for a given question
@@ -177,9 +178,15 @@ func (c *CmdConfigure) askValue(q question) string {
 		}
 
 		if q.valueType == templates.ParamValueTypeNumber {
-			_, err := strconv.ParseInt(value, 10, 64)
+			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number", nil))
+			}
+			if q.minNumberValue != 0 && intValue < q.minNumberValue {
+				return errors.New(c.localizedString("ValueError_NumberLowerThanMin", localizeMap{"Min": q.minNumberValue}))
+			}
+			if q.maxNumberValue != 0 && intValue > q.maxNumberValue {
+				return errors.New(c.localizedString("ValueError_NumberBiggerThanMax", localizeMap{"Max": q.maxNumberValue}))
 			}
 		}
 
