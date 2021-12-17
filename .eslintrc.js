@@ -12,6 +12,6 @@ module.exports = {
   ],
   rules: {
     "vue/require-default-prop": "off",
-    "vue/attribute-hyphenation": ["never", { "ignore": ["custom-prop"] }]
+    "vue/attribute-hyphenation": "off",
   },
 };
