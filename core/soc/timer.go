@@ -107,7 +107,7 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	// time
-	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / chargeEfficiency)
+	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(power, lp.SoC)) / chargeEfficiency)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
 	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
