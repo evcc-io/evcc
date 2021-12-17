@@ -129,6 +129,11 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	}
 }
 
+// Get Finish Time
+func (lp *LoadPoint) GetFinishAt () time.Time {
+	return lp.socTimer.Time
+}
+
 // RemoteControl sets remote status demand
 func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()

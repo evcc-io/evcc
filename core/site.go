@@ -18,6 +18,8 @@ import (
 // Updater abstracts the LoadPoint implementation for testing
 type Updater interface {
 	Update(availablePower float64, cheapRate bool, batteryBuffered bool)
+	GetAssumedDuration() time.Duration
+	GetFinishAt() time.Time
 }
 
 // Site is the main configuration container. A site can host multiple loadpoints.
@@ -392,7 +394,7 @@ func (site *Site) update(lp Updater) {
 	var cheap bool
 	var err error
 	if site.tariffs.Grid != nil {
-		cheap, err = site.tariffs.Grid.IsCheap()
+		cheap, err = site.tariffs.Grid.IsCheap(lp.GetAssumedDuration(), lp.GetFinishAt())
 		if err != nil {
 			cheap = false
 		}

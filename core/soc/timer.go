@@ -45,6 +45,23 @@ func (lp *Timer) MustValidateDemand() {
 
 // DemandValidated returns if DemandActive has been called
 func (lp *Timer) DemandValidated() bool {
+	se := lp.SocEstimator()
+	if se == nil {
+		return 0
+	}
+
+	power := lp.GetMaxPower()
+	if lp.active {
+		power *= lp.current / lp.GetMaxCurrent()
+	}
+
+	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)
+
+	return remainingDuration
+}
+
+// DemandActive calculates remaining charge duration and returns true if charge start is required to achieve target soc in time
+func (lp *Timer) DemandActive() bool {
 	if lp == nil {
 		return false
 	}

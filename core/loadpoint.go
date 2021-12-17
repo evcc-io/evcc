@@ -1433,6 +1433,19 @@ func (lp *LoadPoint) publishSoCAndRange() {
 	}
 }
 
+// GetAssumedDuration is the estimated remaining charging duration
+func (lp *LoadPoint) GetAssumedDuration() time.Duration {
+	var duration time.Duration
+
+	if lp.charging() {
+		duration = lp.socEstimator.AssumedChargeDuration(lp.chargePower, lp.SoC.Target)
+	} else {
+		duration = lp.socEstimator.AssumedChargeDuration(lp.GetMaxPower(), lp.SoC.Target)
+	}
+
+	return duration
+}
+
 // Update is the main control function. It reevaluates meters and charger state
 func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool) {
 	mode := lp.GetMode()

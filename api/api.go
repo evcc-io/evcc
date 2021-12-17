@@ -193,7 +193,7 @@ type AlarmClock interface {
 }
 
 type Tariff interface {
-	IsCheap() (bool, error)
+	IsCheap(duration time.Duration, end time.Time) (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 }
 

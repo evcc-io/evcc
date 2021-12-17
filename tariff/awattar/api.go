@@ -7,6 +7,8 @@ import (
 
 const RegionURI = "https://api.awattar.%s/v1/marketdata"
 
+type ByPrices []PriceInfo
+
 type Prices struct {
 	Data []PriceInfo
 }

@@ -2,7 +2,6 @@ package tariff
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
