@@ -6,17 +6,17 @@
 		>
 			<Visualization
 				class="col-12 offset-md-1 col-md-6 offset-lg-1 col-lg-8 offset-xl-1 col-xl-6 offset-xxl-1 col-xl-8 order-md-2"
-				:show-details="showDetails"
-				:grid-import="gridImport"
-				:self-consumption="selfConsumption"
+				:showDetails="showDetails"
+				:gridImport="gridImport"
+				:selfConsumption="selfConsumption"
 				:loadpoints="loadpointsPower"
-				:pv-export="pvExport"
-				:battery-charge="batteryCharge"
-				:battery-discharge="batteryDischarge"
-				:pv-production="pvProduction"
-				:home-power="homePower"
-				:battery-so-c="batterySoC"
-				:values-in-kw="valuesInKw"
+				:pvExport="pvExport"
+				:batteryCharge="batteryCharge"
+				:batteryDischarge="batteryDischarge"
+				:pvProduction="pvProduction"
+				:homePower="homePower"
+				:batterySoC="batterySoC"
+				:valuesInKw="valuesInKw"
 			/>
 			<div
 				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0"
