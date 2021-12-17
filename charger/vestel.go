@@ -22,7 +22,8 @@ const (
 	vestelRegChargeTime      = 1508
 	vestelRegMaxCurrent      = 5004
 	vestelRegPower           = 1020
-	vestelRegEnergy          = 1502
+	vestelRegTotalEnergy     = 1036
+	vestelRegSessionEnergy   = 1502
 	vestelRegFailsafeTimeout = 2002
 	vestelRegAlive           = 6000
 )
@@ -184,12 +185,24 @@ var _ api.MeterEnergy = (*Vestel)(nil)
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *Vestel) TotalEnergy() (float64, error) {
-	b, err := wb.conn.ReadInputRegisters(vestelRegEnergy, 2)
+	b, err := wb.conn.ReadInputRegisters(vestelRegTotalEnergy, 2)
 	if err != nil {
 		return 0, err
 	}
 
 	return float64(binary.BigEndian.Uint32(b)) / 10, err
+}
+
+var _ api.ChargeRater = (*Vestel)(nil)
+
+// ChargedEnergy implements the api.ChargeRater interface
+func (wb *Vestel) ChargedEnergy() (float64, error) {
+	b, err := wb.conn.ReadInputRegisters(vestelRegSessionEnergy, 2)
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(binary.BigEndian.Uint32(b)) / 1e3, err
 }
 
 var _ api.MeterCurrent = (*Vestel)(nil)
