@@ -13,17 +13,18 @@ import (
 )
 
 const (
-	vestelRegSerial       = 100 // 25
-	vestelRegBrand        = 190 // 10
-	vestelRegModel        = 210 // 5
-	vestelRegFirmware     = 230 // 50
-	vestelRegChargeStatus = 1001
-	vestelRegCableStatus  = 1004
-	vestelRegChargeTime   = 1508
-	vestelRegMaxCurrent   = 5004
-	vestelRegPower        = 1020
-	vestelRegEnergy       = 1502
-	vestelRegAlive        = 6000
+	vestelRegSerial          = 100 // 25
+	vestelRegBrand           = 190 // 10
+	vestelRegModel           = 210 // 5
+	vestelRegFirmware        = 230 // 50
+	vestelRegChargeStatus    = 1001
+	vestelRegCableStatus     = 1004
+	vestelRegChargeTime      = 1508
+	vestelRegMaxCurrent      = 5004
+	vestelRegPower           = 1020
+	vestelRegEnergy          = 1502
+	vestelRegFailsafeTimeout = 2002
+	vestelRegAlive           = 6000
 )
 
 var vestelRegCurrents = []uint16{1008, 1010, 1012}
@@ -72,6 +73,11 @@ func NewVestel(uri string, slaveID uint8) (*Vestel, error) {
 		log:     log,
 		conn:    conn,
 		current: 6,
+	}
+
+	// 5min failsafe timeout
+	if _, err := wb.conn.WriteSingleRegister(vestelRegFailsafeTimeout, 5*60); err != nil {
+		return nil, fmt.Errorf("could not set failsafe timeout: %v", err)
 	}
 
 	go wb.heartbeat()
