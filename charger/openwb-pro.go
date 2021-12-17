@@ -3,6 +3,7 @@ package charger
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -63,7 +64,17 @@ func NewOpenWBPro(uri string) (*OpenWBPro, error) {
 		current: 6, // 6A defined value
 	}
 
+	go wb.hearbeat(log)
+
 	return wb, nil
+}
+
+func (wb *OpenWBPro) hearbeat(log *util.Logger) {
+	for range time.NewTicker(30 * time.Second).C {
+		if _, err := wb.get(); err != nil {
+			log.ERROR.Printf("heartbeat: %v", err)
+		}
+	}
 }
 
 func (wb *OpenWBPro) get() (openwbProStatus, error) {
