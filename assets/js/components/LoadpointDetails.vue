@@ -41,7 +41,7 @@
 							v-if="pvTimerVisible"
 							v-tooltip="{
 								content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
-									remaining: fmtRemaining(pvRemaining),
+									remaining: fmtRemaining(pvRemainingInterpolated),
 								}),
 							}"
 							class="cursor-pointer d-inline-block px-2"
@@ -116,27 +116,39 @@ export default {
 		pvRemaining: Number,
 		pvAction: String,
 	},
+	data() {
+		return {
+			tickerHandler: null,
+			phaseRemainingInterpolated: this.phaseRemaining,
+			pvRemainingInterpolated: this.pvRemaining,
+		};
+	},
 	computed: {
 		phaseTooltip() {
 			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
 				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
-					remaining: this.fmtRemaining(this.phaseRemaining),
+					remaining: this.fmtRemaining(this.phaseRemainingInterpolated),
 				});
 			}
 			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
 		},
 		phaseTimerActive() {
-			return this.phaseRemaining > 0 && ["scale1p", "scale3p"].includes(this.phaseAction);
+			return (
+				this.phaseRemainingInterpolated > 0 &&
+				["scale1p", "scale3p"].includes(this.phaseAction)
+			);
 		},
 		pvTimerActive() {
-			return this.pvRemaining > 0 && ["enable", "disable"].includes(this.pvAction);
+			return (
+				this.pvRemainingInterpolated > 0 && ["enable", "disable"].includes(this.pvAction)
+			);
 		},
 		phaseTimerVisible() {
 			if (this.phaseTimerActive && !this.pvTimerActive) {
 				return true;
 			}
 			if (this.phaseTimerActive && this.pvTimerActive) {
-				return this.phaseRemaining < this.pvRemaining; // only show next timer
+				return this.phaseRemainingInterpolated < this.pvRemainingInterpolated; // only show next timer
 			}
 			return false;
 		},
@@ -145,14 +157,36 @@ export default {
 				return true;
 			}
 			if (this.pvTimerActive && this.phaseTimerActive) {
-				return this.pvRemaining < this.phaseRemaining; // only show next timer
+				return this.pvRemainingInterpolated < this.phaseRemainingInterpolated; // only show next timer
 			}
 			return false;
 		},
 	},
+	watch: {
+		phaseRemaining() {
+			this.phaseRemainingInterpolated = this.phaseRemaining;
+		},
+		pvRemaining() {
+			this.pvRemainingInterpolated = this.pvRemaining;
+		},
+	},
+	mounted() {
+		this.tickerHandler = setInterval(this.tick, 1000);
+	},
+	destroyed() {
+		clearInterval(this.tickerHandler);
+	},
 	methods: {
 		fmtRemaining(remaining) {
-			return remaining > 0 ? this.fmtTimeAgo(new Date(Date.now() + remaining * 1000)) : null;
+			return remaining > 0 ? this.fmtShortDuration(remaining) + "s" : "0:00s";
+		},
+		tick() {
+			if (this.phaseRemainingInterpolated > 0) {
+				this.phaseRemainingInterpolated--;
+			}
+			if (this.pvRemainingInterpolated > 0) {
+				this.pvRemainingInterpolated--;
+			}
 		},
 	},
 };

@@ -94,15 +94,15 @@ export default {
       remaining: "Restzeit",
       tooltip: {
         phases: {
-          scale1p: "Herunterschalten auf einphasig {remaining}.",
-          scale3p: "Hochschalten auf dreiphasig {remaining}.",
+          scale1p: "Herunterschalten auf einphasig in {remaining}.",
+          scale3p: "Hochschalten auf dreiphasig in {remaining}.",
           charge1p: "Lädt einphasig.",
           charge2p: "Lädt zweiphasig.",
           charge3p: "Lädt dreiphasig.",
         },
         pv: {
-          enable: "Überschuss verfügbar. Ladung startet {remaining}.",
-          disable: "Zu wenig Überschuss. Ladung pausiert {remaining}.",
+          enable: "Überschuss verfügbar. Ladung startet in {remaining}.",
+          disable: "Zu wenig Überschuss. Ladung pausiert in {remaining}.",
         },
       },
     },
