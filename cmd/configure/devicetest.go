@@ -91,6 +91,8 @@ func (d *DeviceTest) testCharger(v interface{}) (DeviceTestResult, error) {
 		if _, err := v.CurrentPower(); err != nil {
 			return DeviceTestResultValidMissingMeter, nil
 		}
+	} else {
+		return DeviceTestResultValidMissingMeter, nil
 	}
 
 	return DeviceTestResultValid, nil

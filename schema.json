@@ -265,7 +265,7 @@
     "mode": {
       "enum": [
         "off",
-        "on",
+        "now",
         "pv",
         "minpv"
       ]
