@@ -1093,10 +1093,10 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			lp.log.DEBUG.Printf("pv disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
-			lp.log.DEBUG.Printf("reset pv disable timer: %v", lp.Disable.Delay)
+			lp.log.DEBUG.Printf("pv disable timer reset: %v", lp.Disable.Delay)
 			lp.pvTimer = lp.clock.Now()
 
-			lp.publishTimer(pvTimer, lp.Disable.Delay, pvDisable)
+			lp.publishTimer(pvTimer, 0, timerInactive)
 		}
 
 		lp.log.DEBUG.Println("pv enable timer: keep enabled")
@@ -1125,10 +1125,10 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			lp.log.DEBUG.Printf("pv enable timer remaining: %v", (lp.Enable.Delay - elapsed).Round(time.Second))
 		} else {
 			// reset timer
-			lp.log.DEBUG.Printf("reset pv enable timer: %v", lp.Enable.Delay)
+			lp.log.DEBUG.Printf("pv enable timer reset: %v", lp.Enable.Delay)
 			lp.pvTimer = lp.clock.Now()
 
-			lp.publishTimer(pvTimer, lp.Enable.Delay, pvEnable)
+			lp.publishTimer(pvTimer, 0, timerInactive)
 		}
 
 		lp.log.DEBUG.Println("pv enable timer: keep disabled")
