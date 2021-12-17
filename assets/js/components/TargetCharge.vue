@@ -29,40 +29,42 @@
 					<form @submit.prevent="saveTargetTime">
 						<div class="modal-body">
 							<div class="form-group">
+								<!-- eslint-disable vue/no-v-html -->
 								<label
 									for="targetTimeLabel"
 									class="mb-3"
 									v-html="$t('main.targetCharge.description', { targetSoC })"
 								>
 								</label>
+								<!-- eslint-enable vue/no-v-html -->
 								<div
 									class="d-flex justify-content-between"
 									:style="{ 'max-width': '350px' }"
 								>
 									<select
-										class="form-select me-2"
 										v-model="selectedDay"
+										class="form-select me-2"
 										:style="{ 'flex-basis': '60%' }"
 									>
 										<option
 											v-for="opt in dayOptions()"
-											:value="opt.value"
 											:key="opt.value"
+											:value="opt.value"
 										>
 											{{ opt.name }}
 										</option>
 									</select>
 									<input
+										v-model="selectedTime"
 										type="time"
 										class="form-control ms-2"
 										:style="{ 'flex-basis': '40%' }"
-										v-model="selectedTime"
 										:step="60 * 5"
 										required
 									/>
 								</div>
 							</div>
-							<p class="text-danger mb-0" v-if="!selectedTargetTimeValid">
+							<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 								{{ $t("main.targetCharge.targetIsInThePast") }}
 							</p>
 							<p class="small mt-3 text-muted">
@@ -108,12 +110,16 @@ import formatter from "../mixins/formatter";
 
 export default {
 	name: "TargetCharge",
+	mixins: [formatter],
 	props: {
 		id: Number,
 		timerActive: Boolean,
 		timerSet: Boolean,
 		targetTime: String,
 		targetSoC: Number,
+	},
+	data: function () {
+		return { selectedDay: null, selectedTime: null };
 	},
 	computed: {
 		targetChargeEnabled: function () {
@@ -130,16 +136,13 @@ export default {
 			return `targetChargeModal_${this.id}`;
 		},
 	},
-	data: function () {
-		return { selectedDay: null, selectedTime: null };
-	},
-	mounted: function () {
-		this.initInputFields();
-	},
 	watch: {
 		targetTime() {
 			this.initInputFields();
 		},
+	},
+	mounted: function () {
+		this.initInputFields();
 	},
 	methods: {
 		// not computed because it needs to update over time
@@ -201,6 +204,5 @@ export default {
 			this.$emit("target-time-updated", this.selectedTargetTime);
 		},
 	},
-	mixins: [formatter],
 };
 </script>

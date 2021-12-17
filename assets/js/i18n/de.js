@@ -1,5 +1,5 @@
 export default {
-  header: { support: "Dokumentation" },
+  header: { docs: "Dokumentation", blog: "Blog", github: "GitHub" },
   footer: {
     version: {
       version: "Version",

@@ -7,12 +7,12 @@
 		<hr class="w-100 my-4" />
 		<div class="flex-grow-1 d-flex justify-content-around flex-column">
 			<template v-for="(loadpoint, id) in loadpoints">
-				<hr class="w-100 my-4" v-if="id > 0" :key="id + '_hr'" />
+				<hr v-if="id > 0" :key="id + '_hr'" class="w-100 my-4" />
 				<Loadpoint
-					:key="id"
 					v-bind="loadpoint"
-					:single="loadpoints.length === 1"
 					:id="id"
+					:key="id"
+					:single="loadpoints.length === 1"
 				/>
 			</template>
 		</div>
@@ -27,6 +27,8 @@ import collector from "../mixins/collector";
 
 export default {
 	name: "Site",
+	components: { Loadpoint, Energyflow },
+	mixins: [formatter, collector],
 	props: {
 		loadpoints: Array,
 
@@ -43,8 +45,6 @@ export default {
 		prioritySoC: Number,
 		siteTitle: String,
 	},
-	components: { Loadpoint, Energyflow },
-	mixins: [formatter, collector],
 	computed: {
 		energyflow: function () {
 			return this.collectProps(Energyflow);

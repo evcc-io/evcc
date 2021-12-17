@@ -70,16 +70,6 @@ export default {
 			interactionStartScreenY: null,
 		};
 	},
-	mounted: function () {
-		setTimeout(() => {
-			this.allowSliderHiding = true;
-		}, 1000);
-	},
-	watch: {
-		targetSoC: function () {
-			this.selectedTargetSoC = this.targetSoC;
-		},
-	},
 	computed: {
 		vehicleSoCDisplayWidth: function () {
 			if (this.vehiclePresent && this.vehicleSoC >= 0) {
@@ -135,6 +125,16 @@ export default {
 		visibleTargetSoC: function () {
 			return Number(this.selectedTargetSoC || this.targetSoC);
 		},
+	},
+	watch: {
+		targetSoC: function () {
+			this.selectedTargetSoC = this.targetSoC;
+		},
+	},
+	mounted: function () {
+		setTimeout(() => {
+			this.allowSliderHiding = true;
+		}, 1000);
 	},
 	methods: {
 		changeTargetSoCStart: function (e) {

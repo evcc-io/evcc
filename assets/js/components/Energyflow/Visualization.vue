@@ -13,15 +13,15 @@
 				</LabelBar>
 			</div>
 		</div>
-		<div class="site-progress" ref="site_progress">
+		<div ref="site_progress" class="site-progress">
 			<div
 				class="site-progress-bar self-consumption"
 				:style="{ width: widthTotal(selfConsumptionAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(selfConsumption)">
+				<span v-if="powerLabelEnoughSpace(selfConsumption)" class="power">
 					{{ kw(selfConsumption) }}
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(selfConsumption)">
+				<span v-else-if="powerLabelSomeSpace(selfConsumption)" class="power">
 					{{ kwNoUnit(selfConsumption) }}
 				</span>
 			</div>
@@ -29,10 +29,10 @@
 				class="site-progress-bar grid-import"
 				:style="{ width: widthTotal(gridImportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(gridImport)">
+				<span v-if="powerLabelEnoughSpace(gridImport)" class="power">
 					{{ kw(gridImport) }}
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(gridImport)">
+				<span v-else-if="powerLabelSomeSpace(gridImport)" class="power">
 					{{ kwNoUnit(gridImport) }}
 				</span>
 			</div>
@@ -40,14 +40,14 @@
 				class="site-progress-bar pv-export"
 				:style="{ width: widthTotal(pvExportAdjusted) }"
 			>
-				<span class="power" v-if="powerLabelEnoughSpace(pvExport)">
+				<span v-if="powerLabelEnoughSpace(pvExport)" class="power">
 					{{ kw(pvExport) }}
 				</span>
-				<span class="power" v-else-if="powerLabelSomeSpace(pvExport)">
+				<span v-else-if="powerLabelSomeSpace(pvExport)" class="power">
 					{{ kwNoUnit(pvExport) }}
 				</span>
 			</div>
-			<div class="site-progress-bar bg-light border no-wrap w-100" v-if="totalAdjusted <= 0">
+			<div v-if="totalAdjusted <= 0" class="site-progress-bar bg-light border no-wrap w-100">
 				<span>{{ $t("main.energyflow.noEnergy") }}</span>
 			</div>
 		</div>
@@ -80,6 +80,7 @@ import LabelBar from "./LabelBar.vue";
 export default {
 	name: "Visualization",
 	components: { BatteryIcon, LabelBar, GridIcon },
+	mixins: [formatter],
 	props: {
 		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
@@ -96,16 +97,6 @@ export default {
 	data: function () {
 		return { width: 0, visualizationReady: false };
 	},
-	mounted: function () {
-		this.$nextTick(function () {
-			window.addEventListener("resize", this.updateElementWidth);
-			this.updateElementWidth();
-		});
-	},
-	beforeDestroy() {
-		window.removeEventListener("resize", this.updateElementWidth);
-	},
-	mixins: [formatter],
 	computed: {
 		gridExport: function () {
 			return this.pvExport;
@@ -136,6 +127,15 @@ export default {
 					this.visualizationReady = true;
 				}, 500);
 		},
+	},
+	mounted: function () {
+		this.$nextTick(function () {
+			window.addEventListener("resize", this.updateElementWidth);
+			this.updateElementWidth();
+		});
+	},
+	beforeDestroy() {
+		window.removeEventListener("resize", this.updateElementWidth);
 	},
 	methods: {
 		widthTotal: function (power) {

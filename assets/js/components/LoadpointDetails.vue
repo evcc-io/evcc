@@ -6,9 +6,9 @@
 					{{ $t("main.loadpointDetails.power") }}
 					<div
 						v-if="chargePower && activePhases"
+						v-tooltip="{ content: phaseTooltip }"
 						class="badge rounded-pill bg-secondary text-light cursor-pointer"
 						tabindex="0"
-						v-tooltip="{ content: phaseTooltip }"
 					>
 						{{ activePhases }}P
 						<WaitingDots
@@ -19,32 +19,32 @@
 						/>
 					</div>
 					<fa-icon
+						v-if="climater == 'heating'"
 						class="text-primary ms-1"
 						icon="temperature-low"
-						v-if="climater == 'heating'"
 					></fa-icon>
 					<fa-icon
+						v-if="climater == 'cooling'"
 						class="text-primary ms-1"
 						icon="temperature-high"
-						v-if="climater == 'cooling'"
 					></fa-icon>
 					<fa-icon
+						v-if="climater == 'on'"
 						class="text-primary ms-1"
 						icon="thermometer-half"
-						v-if="climater == 'on'"
 					></fa-icon>
 				</div>
 				<h3 class="value">
 					{{ fmt(chargePower) }}
 					<small class="text-muted">
 						{{ fmtUnit(chargePower) }}W<small
-							class="cursor-pointer d-inline-block px-2"
 							v-if="pvTimerVisible"
 							v-tooltip="{
 								content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
 									remaining: fmtRemaining(pvRemaining),
 								}),
 							}"
+							class="cursor-pointer d-inline-block px-2"
 							tabindex="0"
 						>
 							<WaitingDots
@@ -64,7 +64,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehicleRange && vehicleRange >= 0">
+			<div v-if="vehicleRange && vehicleRange >= 0" class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.vehicleRange") }}</div>
 				<h3 class="value">
 					{{ Math.round(vehicleRange) }}
@@ -72,7 +72,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-else>
+			<div v-else class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.duration") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeDuration) }}
@@ -80,7 +80,7 @@
 				</h3>
 			</div>
 
-			<div class="col-6 col-sm-3 col-lg-2 mt-3" v-if="vehiclePresent">
+			<div v-if="vehiclePresent" class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
 					{{ fmtShortDuration(chargeRemainingDuration) }}
@@ -101,6 +101,7 @@ import formatter from "../mixins/formatter";
 export default {
 	name: "LoadpointDetails",
 	components: { WaitingDots },
+	mixins: [formatter],
 	props: {
 		chargedEnergy: Number,
 		chargeDuration: Number,
@@ -114,12 +115,6 @@ export default {
 		phaseAction: String,
 		pvRemaining: Number,
 		pvAction: String,
-	},
-	mixins: [formatter],
-	methods: {
-		fmtRemaining(remaining) {
-			return remaining > 0 ? this.fmtTimeAgo(new Date(Date.now() + remaining * 1000)) : null;
-		},
 	},
 	computed: {
 		phaseTooltip() {
@@ -153,6 +148,11 @@ export default {
 				return this.pvRemaining < this.phaseRemaining; // only show next timer
 			}
 			return false;
+		},
+	},
+	methods: {
+		fmtRemaining(remaining) {
+			return remaining > 0 ? this.fmtTimeAgo(new Date(Date.now() + remaining * 1000)) : null;
 		},
 	},
 };

@@ -17,6 +17,7 @@ import TargetCharge from "./TargetCharge.vue";
 export default {
 	name: "VehicleSubline",
 	components: { TargetCharge },
+	mixins: [collector],
 	props: {
 		id: Number,
 		vehicleSoC: Number,
@@ -34,7 +35,6 @@ export default {
 			return this.collectProps(TargetCharge);
 		},
 	},
-	mixins: [collector],
 	methods: {
 		targetTimeUpdated: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
