@@ -154,7 +154,7 @@ func init() {
 		},
 	})
 
-// todo vestel
+	// TODO fix logic
 	taskList.Add(tasks.Task{
 		ID:      taskVestel,
 		Type:    tasks.Modbus,

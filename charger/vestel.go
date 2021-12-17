@@ -10,17 +10,20 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
-	"github.com/volkszaehler/mbmd/encoding"
 )
 
 const (
-	vestelRegFirmware   = 230
-	vestelRegStatus     = 1001
-	vestelRegChargeTime = 1508
-	vestelRegMaxCurrent = 5004
-	vestelRegPower      = 1020
-	vestelRegEnergy     = 1502
-	vestelRegAlive      = 6000
+	vestelRegSerial       = 100 // 25
+	vestelRegBrand        = 190 // 10
+	vestelRegModel        = 210 // 5
+	vestelRegFirmware     = 230 // 50
+	vestelRegChargeStatus = 1001
+	vestelRegCableStatus  = 1004
+	vestelRegChargeTime   = 1508
+	vestelRegMaxCurrent   = 5004
+	vestelRegPower        = 1020
+	vestelRegEnergy       = 1502
+	vestelRegAlive        = 6000
 )
 
 var vestelRegCurrents = []uint16{1008, 1010, 1012}
@@ -87,12 +90,26 @@ func (wb *Vestel) heartbeat() {
 
 // Status implements the api.Charger interface
 func (wb *Vestel) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(vestelRegStatus, 1)
+	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
 	if err != nil {
 		return api.StatusNone, err
 	}
 
-	return api.ChargeStatus(string(b[1])), nil
+	res := api.StatusA
+	if binary.BigEndian.Uint16(b) > 0 {
+		res = api.StatusB
+
+		b, err := wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
+		if err != nil {
+			return api.StatusNone, err
+		}
+
+		if binary.BigEndian.Uint16(b) == 1 {
+			res = api.StatusC
+		}
+	}
+
+	return res, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -141,8 +158,6 @@ func (wb *Vestel) ChargingTime() (time.Duration, error) {
 		return 0, err
 	}
 
-	// 2 words, least significant word first
-	// secs := uint64(b[3])<<16 | uint64(b[2])<<24 | uint64(b[1]) | uint64(b[0])<<8
 	secs := binary.BigEndian.Uint32(b)
 	return time.Duration(time.Duration(secs) * time.Second), nil
 }
@@ -190,7 +205,16 @@ func (wb *Vestel) Currents() (float64, float64, float64, error) {
 
 // Diagnose implements the Diagnosis interface
 func (wb *Vestel) Diagnose() {
+	if b, err := wb.conn.ReadInputRegisters(vestelRegBrand, 10); err == nil {
+		fmt.Printf("Brand:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegModel, 5); err == nil {
+		fmt.Printf("Model:\t%s\n", b)
+	}
+	if b, err := wb.conn.ReadInputRegisters(vestelRegSerial, 25); err == nil {
+		fmt.Printf("Serial:\t%s\n", b)
+	}
 	if b, err := wb.conn.ReadInputRegisters(vestelRegFirmware, 50); err == nil {
-		fmt.Printf("Firmware:\t%s\n", encoding.StringSwapped(b))
+		fmt.Printf("Firmware:\t%s\n", b)
 	}
 }
