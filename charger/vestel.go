@@ -1,7 +1,5 @@
 package charger
 
-// todo vestel hymes
-
 import (
 	"encoding/binary"
 	"fmt"
