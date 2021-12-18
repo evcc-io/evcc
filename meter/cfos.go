@@ -64,7 +64,7 @@ func (wb *CfosPowerBrain) CurrentPower() (float64, error) {
 		return 0, err
 	}
 
-	return float64(binary.BigEndian.Uint32(b)) / 10, err
+	return float64(binary.BigEndian.Uint32(b)), err
 }
 
 var _ api.MeterEnergy = (*CfosPowerBrain)(nil)
