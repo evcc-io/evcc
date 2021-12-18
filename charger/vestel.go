@@ -40,8 +40,6 @@ func init() {
 	registry.Add("vestel", NewVestelFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateVestel -b *Vestel -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error"
-
 // NewVestelFromConfig creates a Vestel charger from generic config
 func NewVestelFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
@@ -95,26 +93,19 @@ func (wb *Vestel) heartbeat() {
 
 // Status implements the api.Charger interface
 func (wb *Vestel) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
-	if err != nil {
-		return api.StatusNone, err
-	}
-
 	res := api.StatusA
-	if binary.BigEndian.Uint16(b) > 0 {
+
+	b, err := wb.conn.ReadInputRegisters(vestelRegCableStatus, 1)
+	if err == nil && binary.BigEndian.Uint16(b) > 0 {
 		res = api.StatusB
 
-		b, err := wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
-		if err != nil {
-			return api.StatusNone, err
-		}
-
-		if binary.BigEndian.Uint16(b) == 1 {
+		b, err = wb.conn.ReadInputRegisters(vestelRegChargeStatus, 1)
+		if err == nil && binary.BigEndian.Uint16(b) > 0 {
 			res = api.StatusC
 		}
 	}
 
-	return res, nil
+	return res, err
 }
 
 // Enabled implements the api.Charger interface
