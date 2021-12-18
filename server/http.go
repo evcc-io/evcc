@@ -81,14 +81,15 @@ func NewHTTPd(url string, site site.API, hub *SocketHub, cache *util.Cache) *HTT
 		lpAPI := api.PathPrefix(fmt.Sprintf("/loadpoints/%d", id)).Subrouter()
 
 		routes := map[string]route{
-			"mode":         {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
-			"targetsoc":    {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", targetSoCHandler(lp)},
-			"minsoc":       {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", minSoCHandler(lp)},
-			"mincurrent":   {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", minCurrentHandler(lp)},
-			"maxcurrent":   {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", maxCurrentHandler(lp)},
-			"phases":       {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
-			"targetcharge": {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", targetChargeHandler(lp)},
-			"remotedemand": {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
+			"mode":          {[]string{"POST", "OPTIONS"}, "/mode/{value:[a-z]+}", chargeModeHandler(lp)},
+			"targetsoc":     {[]string{"POST", "OPTIONS"}, "/targetsoc/{value:[0-9]+}", targetSoCHandler(lp)},
+			"minsoc":        {[]string{"POST", "OPTIONS"}, "/minsoc/{value:[0-9]+}", minSoCHandler(lp)},
+			"mincurrent":    {[]string{"POST", "OPTIONS"}, "/mincurrent/{value:[0-9]+}", minCurrentHandler(lp)},
+			"maxcurrent":    {[]string{"POST", "OPTIONS"}, "/maxcurrent/{value:[0-9]+}", maxCurrentHandler(lp)},
+			"phases":        {[]string{"POST", "OPTIONS"}, "/phases/{value:[0-9]+}", phasesHandler(lp)},
+			"targetcharge":  {[]string{"POST", "OPTIONS"}, "/targetcharge/{soc:[0-9]+}/{time:[0-9TZ:-]+}", targetChargeHandler(lp)},
+			"targetcharge2": {[]string{"DELETE", "OPTIONS"}, "/targetcharge", targetChargeRemoveHandler(lp)},
+			"remotedemand":  {[]string{"POST", "OPTIONS"}, "/remotedemand/{demand:[a-z]+}/{source::[0-9a-zA-Z_-]+}", remoteDemandHandler(lp)},
 		}
 
 		for _, r := range routes {

@@ -7,7 +7,8 @@
 		<VehicleSubline
 			v-bind="vehicleSubline"
 			class="my-1"
-			@target-time-updated="targetTimeUpdated"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
 		/>
 	</div>
 </template>
@@ -31,8 +32,7 @@ export default {
 		charging: Boolean,
 		minSoC: Number,
 		vehicleTitle: String,
-		timerActive: Boolean,
-		timerSet: Boolean,
+		targetTimeActive: Boolean,
 		targetTime: String,
 		targetSoC: Number,
 	},
@@ -48,8 +48,11 @@ export default {
 		targetSocUpdated: function (targetSoC) {
 			this.$emit("target-soc-updated", targetSoC);
 		},
-		targetTimeUpdated: function (targetTime) {
+		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
 		},
 	},
 };

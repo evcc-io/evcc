@@ -6,7 +6,11 @@
 				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
-		<TargetCharge v-bind="targetCharge" @target-time-updated="targetTimeUpdated" />
+		<TargetCharge
+			v-bind="targetCharge"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 	</div>
 </template>
 
@@ -22,8 +26,7 @@ export default {
 		id: Number,
 		vehicleSoC: Number,
 		minSoC: Number,
-		timerActive: Boolean,
-		timerSet: Boolean,
+		targetTimeActive: Boolean,
 		targetTime: String,
 		targetSoC: Number,
 	},
@@ -36,8 +39,11 @@ export default {
 		},
 	},
 	methods: {
-		targetTimeUpdated: function (targetTime) {
+		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
 		},
 	},
 };

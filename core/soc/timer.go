@@ -55,9 +55,7 @@ func (lp *Timer) DemandActive() bool {
 	}
 
 	defer func() {
-		lp.Publish("timerSet", lp.Time.After(time.Now()))
-		lp.Publish("timerActive", lp.active)
-		lp.Publish("timerProjectedEnd", lp.finishAt)
+		lp.Publish("targetTimeActive", lp.active)
 	}()
 
 	// power
