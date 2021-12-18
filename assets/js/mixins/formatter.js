@@ -43,31 +43,39 @@ export default {
       }
       return hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
     },
-    fmtShortDuration: function (d) {
-      if (d <= 0 || d == null) {
+    fmtShortDuration: function (duration = 0, withUnit = false) {
+      if (duration <= 0) {
         return "—";
       }
-      var minutes = Math.floor(d / 60) % 60;
-      var hours = Math.floor(d / 3600);
-      var tm;
+      var seconds = duration % 60;
+      var minutes = Math.floor(duration / 60) % 60;
+      var hours = Math.floor(duration / 3600);
+      var result = "";
       if (hours >= 1) {
-        minutes = "0" + minutes;
-        tm = hours + ":" + minutes.substr(-2);
+        result = hours + ":" + `${minutes}`.padStart(2, "0");
+      } else if (minutes >= 1) {
+        result = minutes + ":" + `${seconds}`.padStart(2, "0");
       } else {
-        var seconds = "0" + (d % 60);
-        tm = minutes + ":" + seconds.substr(-2);
+        result = `${seconds}`;
       }
-      return tm;
+      if (withUnit) {
+        result += this.fmtShortDurationUnit(duration);
+      }
+      return result;
     },
-    fmtShortDurationUnit: function (d) {
-      if (d <= 0 || d == null) {
+    fmtShortDurationUnit: function (duration = 0) {
+      if (duration <= 0) {
         return "";
       }
-      var hours = Math.floor(d / 3600);
+      var minutes = Math.floor(duration / 60) % 60;
+      var hours = Math.floor(duration / 3600);
       if (hours >= 1) {
         return "h";
       }
-      return "m";
+      if (minutes >= 1) {
+        return "m";
+      }
+      return "s";
     },
     fmtDayString: function (date) {
       const YY = `${date.getFullYear()}`;
