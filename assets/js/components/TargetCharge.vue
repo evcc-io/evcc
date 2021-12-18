@@ -4,8 +4,8 @@
 			class="target-time-button btn btn-link btn-sm pe-0"
 			:class="{
 				invisible: !targetSoC,
-				'text-dark': timerActive,
-				'text-secondary': !timerActive,
+				'text-dark': targetTimeActive,
+				'text-secondary': !targetTimeActive,
 			}"
 			data-bs-toggle="modal"
 			:data-bs-target="`#${modalId}`"
@@ -26,7 +26,7 @@
 							aria-label="Close"
 						></button>
 					</div>
-					<form @submit.prevent="saveTargetTime">
+					<form @submit.prevent="setTargetTime">
 						<div class="modal-body">
 							<div class="form-group">
 								<!-- eslint-disable vue/no-v-html -->
@@ -113,8 +113,7 @@ export default {
 	mixins: [formatter],
 	props: {
 		id: Number,
-		timerActive: Boolean,
-		timerSet: Boolean,
+		targetTimeActive: Boolean,
 		targetTime: String,
 		targetSoC: Number,
 	},
@@ -123,7 +122,7 @@ export default {
 	},
 	computed: {
 		targetChargeEnabled: function () {
-			return this.targetTime && this.timerSet;
+			return this.targetTime;
 		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
@@ -197,11 +196,11 @@ export default {
 		minTime: function () {
 			return new Date().toISOString().split("T")[1].slice(0, -8);
 		},
-		removeTargetTime: function () {
-			this.$emit("target-time-updated", new Date(null));
-		},
-		saveTargetTime: function () {
+		setTargetTime: function () {
 			this.$emit("target-time-updated", this.selectedTargetTime);
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
 		},
 	},
 };

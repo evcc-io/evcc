@@ -17,6 +17,7 @@
 				v-bind="vehicle"
 				@target-soc-updated="setTargetSoC"
 				@target-time-updated="setTargetTime"
+				@target-time-removed="removeTargetTime"
 			/>
 		</div>
 		<LoadpointDetails v-bind="details" />
@@ -57,8 +58,7 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		minSoC: Number,
-		timerSet: Boolean,
-		timerActive: Boolean,
+		targetTimeActive: Boolean,
 		targetTime: String,
 
 		// details
@@ -123,6 +123,9 @@ export default {
 			axios
 				.post(this.api("targetcharge") + "/" + this.targetSoC + "/" + formattedDate)
 				.catch(window.app.error);
+		},
+		removeTargetTime: function () {
+			axios.delete(this.api("targetcharge")).catch(window.app.error);
 		},
 	},
 };

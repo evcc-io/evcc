@@ -265,6 +265,15 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 	}
 }
 
+// targetChargeRemoveHandler removes target soc
+func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		loadpoint.SetTargetCharge(time.Time{}, 0)
+		res := struct{}{}
+		jsonResult(w, res)
+	}
+}
+
 // socketHandler attaches websocket handler to uri
 func socketHandler(hub *SocketHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
