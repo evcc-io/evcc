@@ -41,7 +41,7 @@
 							v-if="pvTimerVisible"
 							v-tooltip="{
 								content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
-									remaining: fmtRemaining(pvRemainingInterpolated),
+									remaining: fmtShortDuration(pvRemainingInterpolated, true),
 								}),
 							}"
 							class="cursor-pointer d-inline-block px-2"
@@ -75,17 +75,19 @@
 			<div v-else class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.duration") }}</div>
 				<h3 class="value">
-					{{ fmtShortDuration(chargeDuration) }}
-					<small class="text-muted">{{ fmtShortDurationUnit(chargeDuration) }}</small>
+					{{ fmtShortDuration(chargeDurationInterpolated) }}
+					<small class="text-muted">{{
+						fmtShortDurationUnit(chargeDurationInterpolated)
+					}}</small>
 				</h3>
 			</div>
 
 			<div v-if="vehiclePresent" class="col-6 col-sm-3 col-lg-2 mt-3">
 				<div class="mb-2 value">{{ $t("main.loadpointDetails.remaining") }}</div>
 				<h3 class="value">
-					{{ fmtShortDuration(chargeRemainingDuration) }}
+					{{ fmtShortDuration(chargeRemainingDurationInterpolated) }}
 					<small class="text-muted">{{
-						fmtShortDurationUnit(chargeRemainingDuration)
+						fmtShortDurationUnit(chargeRemainingDurationInterpolated, true)
 					}}</small>
 				</h3>
 			</div>
@@ -115,19 +117,22 @@ export default {
 		phaseAction: String,
 		pvRemaining: Number,
 		pvAction: String,
+		charging: Boolean,
 	},
 	data() {
 		return {
 			tickerHandler: null,
 			phaseRemainingInterpolated: this.phaseRemaining,
 			pvRemainingInterpolated: this.pvRemaining,
+			chargeDurationInterpolated: this.chargeDuration,
+			chargeRemainingDurationInterpolated: this.chargeRemainingDuration,
 		};
 	},
 	computed: {
 		phaseTooltip() {
 			if (["scale1p", "scale3p"].includes(this.phaseAction)) {
 				return this.$t(`main.loadpointDetails.tooltip.phases.${this.phaseAction}`, {
-					remaining: this.fmtRemaining(this.phaseRemainingInterpolated),
+					remaining: this.fmtShortDuration(this.phaseRemainingInterpolated, true),
 				});
 			}
 			return this.$t(`main.loadpointDetails.tooltip.phases.charge${this.activePhases}p`);
@@ -169,6 +174,12 @@ export default {
 		pvRemaining() {
 			this.pvRemainingInterpolated = this.pvRemaining;
 		},
+		chargeDuration() {
+			this.chargeDurationInterpolated = this.chargeDuration;
+		},
+		chargeRemainingDuration() {
+			this.chargeDurationInterpolated = this.chargeRemainingDuration;
+		},
 	},
 	mounted() {
 		this.tickerHandler = setInterval(this.tick, 1000);
@@ -177,15 +188,18 @@ export default {
 		clearInterval(this.tickerHandler);
 	},
 	methods: {
-		fmtRemaining(remaining) {
-			return remaining > 0 ? this.fmtShortDuration(remaining) + "s" : "0:00s";
-		},
 		tick() {
 			if (this.phaseRemainingInterpolated > 0) {
 				this.phaseRemainingInterpolated--;
 			}
 			if (this.pvRemainingInterpolated > 0) {
 				this.pvRemainingInterpolated--;
+			}
+			if (this.chargeDurationInterpolated > 0 && this.charging) {
+				this.chargeDurationInterpolated++;
+			}
+			if (this.chargeRemainingDurationInterpolated > 0 && this.charging) {
+				this.chargeRemainingDurationInterpolated--;
 			}
 		},
 	},

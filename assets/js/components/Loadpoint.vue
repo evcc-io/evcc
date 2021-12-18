@@ -84,12 +84,6 @@ export default {
 		pvRemaining: Number,
 		pvAction: String,
 	},
-	data: function () {
-		return {
-			tickerHandle: null,
-			chargeDurationDisplayed: null,
-		};
-	},
 	computed: {
 		details: function () {
 			return this.collectProps(LoadpointDetails);
@@ -97,24 +91,6 @@ export default {
 		vehicle: function () {
 			return this.collectProps(Vehicle);
 		},
-	},
-	watch: {
-		chargeDuration: function () {
-			window.clearInterval(this.tickerHandle);
-			// only ticker if actually charging
-			if (this.charging && this.chargeDuration >= 0) {
-				this.chargeDurationDisplayed = this.chargeDuration;
-				this.tickerHandle = window.setInterval(
-					function () {
-						this.chargeDurationDisplayed += 1;
-					}.bind(this),
-					1000
-				);
-			}
-		},
-	},
-	destroyed: function () {
-		window.clearInterval(this.tickerHandle);
 	},
 	methods: {
 		api: function (func) {
