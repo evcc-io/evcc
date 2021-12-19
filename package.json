@@ -59,6 +59,8 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "resolutions": {
-    "immer": "^9.0.6"
+    "glob-parent": "^5.1.2",
+    "immer": "^9.0.6",
+    "trim": "^1.0.1"
   }
 }
