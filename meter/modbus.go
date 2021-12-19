@@ -26,7 +26,7 @@ func init() {
 	registry.Add("modbus", NewModbusFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.Battery,SoC,func() (float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateModbus -b api.Meter -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.Battery,SoC,func() (float64, error)"
 
 // NewModbusFromConfig creates api.Meter from config
 func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
@@ -34,6 +34,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Model              string
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, SoC string
+		Currents           []string
 		Timeout            time.Duration
 	}{
 		Power: "Power",
@@ -107,6 +108,32 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		totalEnergy = m.totalEnergy
 	}
 
+	// decorate Meter with MeterCurrent
+	var currentsG func() (float64, float64, float64, error)
+	if len(cc.Currents) > 0 {
+		if len(cc.Currents) != 3 {
+			return nil, errors.New("need 3 currents")
+		}
+
+		var curr []func() (float64, error)
+		for _, cc := range cc.Currents {
+			var opCurrent modbus.Operation
+
+			cc = modbus.ReadingName(cc)
+			if err := modbus.ParseOperation(device, cc, &opCurrent); err != nil {
+				return nil, fmt.Errorf("invalid measurement for current: %s", cc)
+			}
+
+			c := func() (float64, error) {
+				return m.floatGetter(opCurrent)
+			}
+
+			curr = append(curr, c)
+		}
+
+		currentsG = collectCurrentProviders(curr)
+	}
+
 	// decorate soc reading
 	var soc func() (float64, error)
 	if cc.SoC != "" {
@@ -118,7 +145,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		soc = m.soc
 	}
 
-	return decorateModbus(m, totalEnergy, soc), nil
+	return decorateModbus(m, totalEnergy, currentsG, soc), nil
 }
 
 // floatGetter executes configured modbus read operation and implements func() (float64, error)
