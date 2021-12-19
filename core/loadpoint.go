@@ -1401,8 +1401,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// target charging
 	case lp.socTimer.DemandActive():
-		targetCurrent := lp.socTimer.Handle()
-		err = lp.setLimit(targetCurrent, true)
+		// 3p if available
+		if err = lp.scalePhasesIfAvailable(3); err == nil {
+			targetCurrent := lp.socTimer.Handle()
+			err = lp.setLimit(targetCurrent, true)
+		}
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
