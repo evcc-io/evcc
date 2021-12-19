@@ -26,8 +26,9 @@ export default {
 		id: Number,
 		vehicleSoC: Number,
 		minSoC: Number,
-		targetTimeActive: Boolean,
 		targetTime: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetSoC: Number,
 	},
 	computed: {
