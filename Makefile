@@ -90,12 +90,12 @@ publish-images:
 
 # gokrazy image
 prepare-image:
-	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
+	go install github.com/gokrazy/tools/cmd/gokr-packer@latest
 	mkdir -p flags/github.com/gokrazy/breakglass
 	echo "-forward=private-network" > flags/github.com/gokrazy/breakglass/flags.txt
 	mkdir -p buildflags/github.com/evcc-io/evcc
 	echo "$(BUILD_TAGS),gokrazy" > buildflags/github.com/evcc-io/evcc/buildflags.txt
-	echo "-ldflags=$(LD_FLAGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
+	echo "$(BUILD_ARGS)" >> buildflags/github.com/evcc-io/evcc/buildflags.txt
 
 image:
 	gokr-packer -overwrite=$(IMAGE_FILE) -target_storage_bytes=1258299392 $(IMAGE_OPTIONS)
