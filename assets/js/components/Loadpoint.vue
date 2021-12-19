@@ -58,8 +58,9 @@ export default {
 		vehiclePresent: Boolean,
 		vehicleRange: Number,
 		minSoC: Number,
-		targetTimeActive: Boolean,
 		targetTime: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 
 		// details
 		chargePower: Number,

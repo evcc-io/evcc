@@ -4,7 +4,6 @@ import i18n from "../i18n";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
-  argTypes: {},
 };
 
 const Template = (args, { argTypes }) => ({
@@ -59,6 +58,7 @@ Charging.args = {
   vehicleSoC: 66,
   targetSoC: 90,
   id: 0,
+  targetTimeHourSuggestion: null,
 };
 
 const hoursFromNow = function (hours) {
