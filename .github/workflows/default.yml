@@ -30,6 +30,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: gofmt
+      run: |
+        gofmt -w -l $(find . -name '*.go')
+
     - name: Install tools
       run: make install
 
