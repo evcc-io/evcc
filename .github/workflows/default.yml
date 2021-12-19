@@ -32,7 +32,7 @@ jobs:
 
     - name: gofmt
       run: |
-        [ "$(gofmt -l $(find . -name '*.go') 2>&1)" = "" ]
+        gofmt -w -l $(find . -name '*.go')
 
     - name: Install tools
       run: make install
