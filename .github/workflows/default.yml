@@ -30,6 +30,10 @@ jobs:
       with:
         fetch-depth: 0
 
+    - name: gofmt
+      run: |
+        [ "$(gofmt -l $(find . -name '*.go') 2>&1)" = "" ]
+
     - name: Install tools
       run: make install
 
