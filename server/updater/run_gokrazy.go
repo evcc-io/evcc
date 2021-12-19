@@ -1,3 +1,4 @@
+//go:build gokrazy
 // +build gokrazy
 
 package updater
