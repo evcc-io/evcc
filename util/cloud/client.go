@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 var Host = "cloud.evcc.io:8080"
@@ -43,16 +44,16 @@ func loadTLSCredentials() (*tls.Config, error) {
 func Connection(uri string) (*grpc.ClientConn, error) {
 	var err error
 	if conn == nil {
-		transportOption := grpc.WithInsecure()
+		creds := insecure.NewCredentials()
 		if !strings.HasPrefix(uri, "localhost") {
 			var tlsConfig *tls.Config
 			if tlsConfig, err = loadTLSCredentials(); err != nil {
 				return nil, err
 			}
 
-			transportOption = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+			creds = credentials.NewTLS(tlsConfig)
 		}
-		conn, err = grpc.Dial(uri, transportOption)
+		conn, err = grpc.Dial(uri, grpc.WithTransportCredentials(creds))
 	}
 
 	return conn, err
