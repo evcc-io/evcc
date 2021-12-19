@@ -71,7 +71,7 @@ export default {
       inactiveLabel: "Target time",
       activeLabel: "until {time}",
       modalTitle: "Set Target Time",
-      description: "When should the vehicle be chargerd to <strong>{targetSoC}%</strong>?",
+      description: "When should the vehicle be charged to <strong>{targetSoC}%</strong>?",
       today: "today",
       tomorrow: "tomorrow",
       targetIsInThePast: "The chosen time is in the past.",
