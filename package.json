@@ -3,6 +3,7 @@
   "description": "",
   "author": "naltatis & andig",
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "build": "vue-cli-service build",
     "test": "vue-cli-service test:unit",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
@@ -58,6 +59,6 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "resolutions": {
-    "node-forge": "0.10.0"
+    "immer": "^9.0.6"
   }
 }
