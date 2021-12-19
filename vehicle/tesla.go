@@ -84,6 +84,10 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
+	if v.Title_ == "" {
+		v.Title_ = v.vehicle.DisplayName
+	}
+
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
 	v.driveStateG = provider.NewCached(v.driveState, cc.Cache).InterfaceGetter()
