@@ -42,7 +42,7 @@ var (
 	innogyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
 )
 
-// Innogy is an api.Charger implementation for Innogy eBox/Smart wallboxes.
+// Innogy is an api.Charger implementation for Innogy eBox wallboxes.
 type Innogy struct {
 	conn *modbus.Connection
 }
