@@ -92,6 +92,19 @@ export default {
       charged: "Charged",
       duration: "Duration",
       remaining: "Remaining",
+      tooltip: {
+        phases: {
+          scale1p: "Switching to single-phase in {remaining}.",
+          scale3p: "Switching to three-phase in {remaining}.",
+          charge1p: "Single-phase charging.",
+          charge2p: "Two-phase charging.",
+          charge3p: "Three-phase charging.",
+        },
+        pv: {
+          enable: "Solar available. Resume charging in {remaining}.",
+          disable: "Not enough solar. Pause charging in {remaining}.",
+        },
+      },
     },
   },
 };
