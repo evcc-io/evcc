@@ -20,6 +20,7 @@ import (
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
 //  https://github.com/hacf-fr/renault-api
+// https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -110,6 +111,7 @@ type Renault struct {
 }
 
 func init() {
+	registry.Add("dacia", NewRenaultFromConfig)
 	registry.Add("renault", NewRenaultFromConfig)
 }
 
