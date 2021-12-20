@@ -22,7 +22,7 @@ const (
 
 var phxEVEthRegCurrents = []uint16{114, 116, 118} // current readings
 
-// PhoenixEVEth is an api.ChargeController implementation for Phoenix EV-***-ETH controller models
+// PhoenixEVEth is an api.Charger implementation for Phoenix EV-***-ETH controller models
 // EV-CC-AC1-M3-CBC-RCM-ETH, EV-CC-AC1-M3-CBC-RCM-ETH-3G, EV-CC-AC1-M3-RCM-ETH-XP, EV-CC-AC1-M3-RCM-ETH-3G-XP
 // It uses Modbus TCP to communicate with the controller at modbus client id 255.
 type PhoenixEVEth struct {

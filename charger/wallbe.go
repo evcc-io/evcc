@@ -32,7 +32,7 @@ const (
 
 var wbRegCurrents = []uint16{114, 116, 118} // current readings
 
-// Wallbe is an api.ChargeController implementation for Wallbe wallboxes.
+// Wallbe is an api.Charger implementation for Wallbe wallboxes.
 // It supports both wallbe controllers (post 2019 models) and older ones using the
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
