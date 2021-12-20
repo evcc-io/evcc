@@ -28,13 +28,13 @@ import (
 )
 
 const (
-	innogyRegStatus       = 275  // Input
-	innogyRegEnable       = 1028 // Holding
 	innogyRegID           = 0    // Input
 	innogyRegSerial       = 25   // Input
 	innogyRegProtocol     = 50   // Input
 	innogyRegManufacturer = 100  // Input
 	innogyRegFirmware     = 200  // Input
+	innogyRegStatus       = 275  // Input
+	innogyRegEnable       = 1028 // Holding
 )
 
 var (
@@ -155,6 +155,8 @@ func (wb *Innogy) MaxCurrentMillis(current float64) error {
 
 	return nil
 }
+
+var _ api.MeterCurrent = (*Innogy)(nil)
 
 // Currents implements the api.MeterCurrent interface
 func (wb *Innogy) Currents() (float64, float64, float64, error) {
