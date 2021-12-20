@@ -177,14 +177,14 @@ var _ api.Diagnosis = (*Innogy)(nil)
 
 // Diagnose implements the Diagnosis interface
 func (wb *Innogy) Diagnose() {
+	if b, err := wb.conn.ReadInputRegisters(innogyRegManufacturer, 25); err == nil {
+		fmt.Printf("Manufacturer:\t%s\n", b)
+	}
 	if b, err := wb.conn.ReadInputRegisters(innogyRegID, 25); err == nil {
 		fmt.Printf("Id:\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadInputRegisters(innogyRegSerial, 25); err == nil {
 		fmt.Printf("Serial:\t%s\n", b)
-	}
-	if b, err := wb.conn.ReadInputRegisters(innogyRegManufacturer, 25); err == nil {
-		fmt.Printf("Manufacturer:\t%s\n", b)
 	}
 	if b, err := wb.conn.ReadInputRegisters(innogyRegProtocol, 25); err == nil {
 		fmt.Printf("Protocol:\t%s\n", b)
