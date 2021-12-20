@@ -25,6 +25,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/modbus"
+	"github.com/evcc-io/evcc/util/sponsor"
 )
 
 const (
@@ -59,16 +60,12 @@ func NewInnogyFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}{
 		ID: 1,
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewInnogy(cc.URI, cc.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return wb, nil
+	return NewInnogy(cc.URI, cc.ID)
 }
 
 // NewInnogy creates a Innogy charger
@@ -76,6 +73,10 @@ func NewInnogy(uri string, id uint8) (*Innogy, error) {
 	conn, err := modbus.NewConnection(uri, "", "", 0, modbus.TcpFormat, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if !sponsor.IsAuthorized() {
+		return nil, api.ErrSponsorRequired
 	}
 
 	log := util.NewLogger("innogy")
