@@ -1,0 +1,11 @@
+template: bmw
+description: BMW
+paramsbase: vehicle
+params:
+- name: vin
+  example: WBMW...
+- name: capacity
+  default: 65
+render: |
+  type: bmw
+  {{include "vehicle-common" .}}

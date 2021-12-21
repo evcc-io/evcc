@@ -6,8 +6,9 @@
 		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
 		<VehicleSubline
 			v-bind="vehicleSubline"
-			@target-time-updated="targetTimeUpdated"
 			class="my-1"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
 		/>
 	</div>
 </template>
@@ -21,6 +22,7 @@ import VehicleSubline from "./VehicleSubline";
 export default {
 	name: "Vehicle",
 	components: { VehicleSoc, VehicleSubline },
+	mixins: [collector],
 	props: {
 		id: Number,
 		connected: Boolean,
@@ -30,8 +32,8 @@ export default {
 		charging: Boolean,
 		minSoC: Number,
 		vehicleTitle: String,
-		timerActive: Boolean,
-		timerSet: Boolean,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
 	},
@@ -47,10 +49,12 @@ export default {
 		targetSocUpdated: function (targetSoC) {
 			this.$emit("target-soc-updated", targetSoC);
 		},
-		targetTimeUpdated: function (targetTime) {
+		setTargetTime: function (targetTime) {
 			this.$emit("target-time-updated", targetTime);
 		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
+		},
 	},
-	mixins: [collector],
 };
 </script>

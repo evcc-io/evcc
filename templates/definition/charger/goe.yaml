@@ -1,0 +1,14 @@
+template: go-e
+description: go-eCharger Home/Pro/V3
+requirements:
+  description:
+    en: Home und PRO require firmware 040.0 or later, V3 requires firmware 052.1 or later.
+    de: Home und PRO benötigen mindestens Firmware 040.0 oder neuer, V3 benötigt mindestens Firmware 052.1 oder neuer.
+  uri: https://docs.evcc.io/docs/devices/chargers#go-echarger-homeprov3
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+render: |
+  type: go-e
+  uri: http://{{ .host }}

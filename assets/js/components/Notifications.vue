@@ -51,7 +51,7 @@
 								<span class="flex-grow-1 px-2 py-1 text-break">
 									{{ msg.message }}
 								</span>
-								<span class="badge rounded-pill bg-secondary" v-if="msg.count > 1">
+								<span v-if="msg.count > 1" class="badge rounded-pill bg-secondary">
 									{{ msg.count }}
 								</span>
 							</p>
@@ -62,8 +62,8 @@
 							type="button"
 							data-bs-dismiss="modal"
 							aria-label="Close"
-							@click="clear"
 							class="btn btn-outline-secondary"
+							@click="clear"
 						>
 							{{ $t("notifications.dismissAll") }}
 						</button>
@@ -80,6 +80,7 @@ import formatter from "../mixins/formatter";
 
 export default {
 	name: "Notifications",
+	mixins: [formatter],
 	props: {
 		notifications: Array,
 	},
@@ -93,11 +94,6 @@ export default {
 				: "text-warning";
 		},
 	},
-	methods: {
-		clear: function () {
-			window.app && window.app.clear();
-		},
-	},
 	created: function () {
 		this.interval = setInterval(() => {
 			this.$forceUpdate();
@@ -106,6 +102,10 @@ export default {
 	destroyed: function () {
 		clearTimeout(this.interval);
 	},
-	mixins: [formatter],
+	methods: {
+		clear: function () {
+			window.app && window.app.clear();
+		},
+	},
 };
 </script>

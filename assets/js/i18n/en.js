@@ -1,5 +1,5 @@
 export default {
-  header: { support: "Support" },
+  header: { docs: "Documentation", blog: "Blog", github: "GitHub" },
   footer: {
     version: {
       version: "version",
@@ -75,7 +75,7 @@ export default {
       inactiveLabel: "Target time",
       activeLabel: "until {time}",
       modalTitle: "Set Target Time",
-      description: "When should the vehicle be chargerd to <strong>{targetSoC}%</strong>?",
+      description: "When should the vehicle be charged to <strong>{targetSoC}%</strong>?",
       today: "today",
       tomorrow: "tomorrow",
       targetIsInThePast: "The chosen time is in the past.",
@@ -96,6 +96,19 @@ export default {
       charged: "Charged",
       duration: "Duration",
       remaining: "Remaining",
+      tooltip: {
+        phases: {
+          scale1p: "Switching to single-phase in {remaining}.",
+          scale3p: "Switching to three-phase in {remaining}.",
+          charge1p: "Single-phase charging.",
+          charge2p: "Two-phase charging.",
+          charge3p: "Three-phase charging.",
+        },
+        pv: {
+          enable: "Solar available. Resume charging in {remaining}.",
+          disable: "Not enough solar. Pause charging in {remaining}.",
+        },
+      },
     },
   },
 };

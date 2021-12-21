@@ -67,7 +67,8 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res.ResMsg.Vehicles, err
 }
 
-func (v *API) Status(vid string) (StatusLatestResponse, error) {
+// StatusLatest retrieves the latest server-side status
+func (v *API) StatusLatest(vid string) (StatusLatestResponse, error) {
 	var res StatusLatestResponse
 
 	uri := fmt.Sprintf("%s/%s", v.baseURI, fmt.Sprintf(StatusLatestURL, vid))
@@ -79,7 +80,7 @@ func (v *API) Status(vid string) (StatusLatestResponse, error) {
 	return res, err
 }
 
-// StatusPartial refreshes the status from the bluelink api
+// StatusPartial refreshes the status
 func (v *API) StatusPartial(vid string) (StatusResponse, error) {
 	var res StatusResponse
 

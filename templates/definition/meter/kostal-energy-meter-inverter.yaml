@@ -1,0 +1,18 @@
+template: kostal-piko-energy-meter
+description: Kostal Piko (BA) Energy Meter
+params:
+- name: usage
+  choice: [ "grid" ]
+- name: modbus
+  choice: [ "tcpip" ]
+  port: 1502
+  id: 71
+render: |
+  type: custom
+  power:
+    source: modbus # use ModBus plugin
+    {{ include "modbus" . | indent 2 }}
+    register: # manual non-sunspec register configuration
+      address: 252 # (see ba_kostal_interface_modbus-tcp_sunspec.pdf)
+      type: holding
+      decode: float32s # may be float32 on specific firmware/devices

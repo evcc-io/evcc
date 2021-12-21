@@ -14,7 +14,7 @@ const (
 	phxEVSerRegStatus     = 24000 // Input
 )
 
-// PhoenixEVSer is an api.ChargeController implementation for Phoenix EV-CC-AC1-M wallboxes.
+// PhoenixEVSer is an api.Charger implementation for Phoenix EV-CC-AC1-M wallboxes.
 // It uses Modbus RTU to communicate with the wallbox at configurable modbus client.
 type PhoenixEVSer struct {
 	conn *modbus.Connection
@@ -82,7 +82,7 @@ func (wb *PhoenixEVSer) Enabled() (bool, error) {
 func (wb *PhoenixEVSer) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(phxEVSerRegEnable, u)

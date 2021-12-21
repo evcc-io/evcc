@@ -4,7 +4,6 @@ import i18n from "../i18n";
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
-  argTypes: {},
 };
 
 const Template = (args, { argTypes }) => ({
@@ -59,6 +58,7 @@ Charging.args = {
   vehicleSoC: 66,
   targetSoC: 90,
   id: 0,
+  targetTimeHourSuggestion: null,
 };
 
 const hoursFromNow = function (hours) {
@@ -76,8 +76,7 @@ TargetChargePlanned.args = {
   vehicleSoC: 31,
   minSoC: 20,
   charging: false,
-  timerSet: true,
-  timerActive: false,
+  targetTimeActive: false,
   targetSoC: 45,
   targetTime: hoursFromNow(14),
   id: 0,
@@ -92,8 +91,7 @@ TargetChargeActive.args = {
   vehicleSoC: 66,
   minSoC: 30,
   charging: true,
-  timerSet: true,
-  timerActive: true,
+  targetTimeActive: true,
   targetSoC: 80,
   targetTime: hoursFromNow(2),
   id: 0,

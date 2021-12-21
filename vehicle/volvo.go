@@ -38,7 +38,9 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN)
+	basicAuth := transport.BasicAuthHeader(cc.User, cc.Password)
+
+	log := util.NewLogger("volvo").Redact(cc.User, cc.Password, cc.VIN, basicAuth)
 
 	v := &Volvo{
 		embed:  &cc.embed,
@@ -49,7 +51,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	v.Client.Transport = &transport.Decorator{
 		Base: v.Client.Transport,
 		Decorator: transport.DecorateHeaders(map[string]string{
-			"Authorization":     transport.BasicAuthHeader(cc.User, cc.Password),
+			"Authorization":     basicAuth,
 			"Content-Type":      "application/json",
 			"X-Device-Id":       "Device",
 			"X-OS-Type":         "Android",
@@ -90,6 +92,8 @@ func (v *Volvo) vehicles() ([]string, error) {
 
 			vehicles = append(vehicles, vehicle.VehicleID)
 		}
+	} else if res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
 	}
 
 	return vehicles, err
@@ -100,6 +104,9 @@ func (v *Volvo) status() (volvo.Status, error) {
 
 	uri := fmt.Sprintf("%s/vehicles/%s/status", volvo.ApiURI, v.vin)
 	err := v.GetJSON(uri, &res)
+	if err != nil && res.ErrorLabel != "" {
+		err = fmt.Errorf("%w: %s: %s", err, res.ErrorLabel, res.ErrorDescription)
+	}
 
 	return res, err
 }
@@ -123,9 +130,9 @@ func (v *Volvo) Status() (api.ChargeStatus, error) {
 		switch res.HvBattery.HvBatteryChargeStatusDerived {
 		case "CableNotPluggedInCar":
 			return api.StatusA, nil
-		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged":
+		case "CablePluggedInCar", "CablePluggedInCar_FullyCharged", "CablePluggedInCar_ChargingPaused":
 			return api.StatusB, nil
-		case "Charging":
+		case "Charging", "CablePluggedInCar_Charging":
 			return api.StatusC, nil
 		}
 	}

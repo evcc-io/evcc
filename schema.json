@@ -42,7 +42,47 @@
       "type": "array",
       "description": "List of vehicles",
       "items": {
-        "$ref": "#/definitions/namedObject"
+        "$ref": "#/definitions/namedObject",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "integer"
+          },
+          "user": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "VIN": {
+            "type": "string"
+          },
+          "cache": {
+            "$ref": "#/definitions/duration"
+          },
+          "onIdentify": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "$ref": "#/definitions/mode"
+              },
+              "minSoC": {
+                "type": "integer"
+              },
+              "targetSoC": {
+                "type": "integer"
+              },
+              "minCurrent": {
+                "type": "integer"
+              },
+              "maxCurrent": {
+                "type": "integer"
+              }
+            }
+          }
+        }
       }
     },
     "site": {
@@ -63,10 +103,32 @@
             "pv": {
               "type": "string"
             },
+            "pvs": {
+              "description": "List of pv inverters/meters",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
             "battery": {
               "type": "string"
+            },
+            "batteries": {
+              "description": "List of home batteries",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
             }
           }
+        },
+        "prioritySoC": {
+        },
+        "bufferSoC": {
         }
       }
     },
@@ -84,6 +146,9 @@
           },
           "mode": {
             "$ref": "#/definitions/mode"
+          },
+          "resetOnDisconnect": {
+            "type": "boolean"
           },
           "charger": {
             "type": "string"
@@ -109,7 +174,7 @@
                 "type": "object",
                 "properties": {
                   "mode": {
-                    "type": "string"
+                    "$ref": "#/definitions/pollMode"
                   },
                   "interval": {
                     "$ref": "#/definitions/duration"
@@ -124,6 +189,40 @@
               },
               "estimate": {
                 "type": "boolean"
+              }
+            }
+          },
+          "phases": {
+            "type": "integer"
+          },
+          "minCurrent": {
+            "type": "integer"
+          },
+          "maxCurrent": {
+            "type": "integer"
+          },
+          "guardDuration": {
+            "$ref": "#/definitions/duration"
+          },
+          "enable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
+              }
+            }
+          },
+          "disable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
               }
             }
           }
@@ -148,6 +247,9 @@
         },
         "type": {
           "type": "string"
+        },
+        "template": {
+          "type": "string"
         }
       }
     },
@@ -163,9 +265,16 @@
     "mode": {
       "enum": [
         "off",
-        "on",
+        "now",
         "pv",
         "minpv"
+      ]
+    },
+    "pollMode": {
+      "enum": [
+        "always",
+        "charging",
+        "connected"
       ]
     }
   }

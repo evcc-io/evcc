@@ -114,10 +114,8 @@ func targetSoCHandler(lp loadpoint.API) http.HandlerFunc {
 
 		soc, err := strconv.ParseInt(vars["value"], 10, 32)
 		if err == nil {
-			err = lp.SetTargetSoC(int(soc))
-		}
-
-		if err != nil {
+			lp.SetTargetSoC(int(soc))
+		} else {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -133,10 +131,8 @@ func minSoCHandler(lp loadpoint.API) http.HandlerFunc {
 
 		soc, err := strconv.ParseInt(vars["value"], 10, 32)
 		if err == nil {
-			err = lp.SetMinSoC(int(soc))
-		}
-
-		if err != nil {
+			lp.SetMinSoC(int(soc))
+		} else {
 			jsonError(w, http.StatusBadRequest, err)
 			return
 		}
@@ -265,6 +261,15 @@ func targetChargeHandler(loadpoint loadpoint.API) http.HandlerFunc {
 			Time: timeV,
 		}
 
+		jsonResult(w, res)
+	}
+}
+
+// targetChargeRemoveHandler removes target soc
+func targetChargeRemoveHandler(loadpoint loadpoint.API) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		loadpoint.SetTargetCharge(time.Time{}, 0)
+		res := struct{}{}
 		jsonResult(w, res)
 	}
 }

@@ -4,8 +4,8 @@
 			class="target-time-button btn btn-link btn-sm pe-0"
 			:class="{
 				invisible: !targetSoC,
-				'text-dark': timerActive,
-				'text-secondary': !timerActive,
+				'text-dark': targetTimeActive,
+				'text-secondary': !targetTimeActive,
 			}"
 			data-bs-toggle="modal"
 			:data-bs-target="`#${modalId}`"
@@ -26,43 +26,45 @@
 							aria-label="Close"
 						></button>
 					</div>
-					<form @submit.prevent="saveTargetTime">
+					<form @submit.prevent="setTargetTime">
 						<div class="modal-body">
 							<div class="form-group">
+								<!-- eslint-disable vue/no-v-html -->
 								<label
 									for="targetTimeLabel"
 									class="mb-3"
 									v-html="$t('main.targetCharge.description', { targetSoC })"
 								>
 								</label>
+								<!-- eslint-enable vue/no-v-html -->
 								<div
 									class="d-flex justify-content-between"
 									:style="{ 'max-width': '350px' }"
 								>
 									<select
-										class="form-select me-2"
 										v-model="selectedDay"
+										class="form-select me-2"
 										:style="{ 'flex-basis': '60%' }"
 									>
 										<option
 											v-for="opt in dayOptions()"
-											:value="opt.value"
 											:key="opt.value"
+											:value="opt.value"
 										>
 											{{ opt.name }}
 										</option>
 									</select>
 									<input
+										v-model="selectedTime"
 										type="time"
 										class="form-control ms-2"
 										:style="{ 'flex-basis': '40%' }"
-										v-model="selectedTime"
 										:step="60 * 5"
 										required
 									/>
 								</div>
 							</div>
-							<p class="text-danger mb-0" v-if="!selectedTargetTimeValid">
+							<p v-if="!selectedTargetTimeValid" class="text-danger mb-0">
 								{{ $t("main.targetCharge.targetIsInThePast") }}
 							</p>
 							<p class="small mt-3 text-muted">
@@ -106,18 +108,24 @@
 <script>
 import formatter from "../mixins/formatter";
 
+const DEFAULT_TARGET_HOUR = 7;
+
 export default {
 	name: "TargetCharge",
+	mixins: [formatter],
 	props: {
 		id: Number,
-		timerActive: Boolean,
-		timerSet: Boolean,
 		targetTime: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetSoC: Number,
+	},
+	data: function () {
+		return { selectedDay: null, selectedTime: null };
 	},
 	computed: {
 		targetChargeEnabled: function () {
-			return this.targetTime && this.timerSet;
+			return this.targetTime;
 		},
 		selectedTargetTimeValid: function () {
 			const now = new Date();
@@ -130,16 +138,13 @@ export default {
 			return `targetChargeModal_${this.id}`;
 		},
 	},
-	data: function () {
-		return { selectedDay: null, selectedTime: null };
-	},
-	mounted: function () {
-		this.initInputFields();
-	},
 	watch: {
 		targetTime() {
 			this.initInputFields();
 		},
+	},
+	mounted: function () {
+		this.initInputFields();
 	},
 	methods: {
 		// not computed because it needs to update over time
@@ -153,12 +158,21 @@ export default {
 			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
-			const now = new Date();
-			// 12 hrs from now
-			now.setHours(now.getHours() + 12);
-			// round to quarter hour
-			now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15);
-			return now;
+			console.log(this.targetTimeHourSuggestion, "target");
+			const target = new Date();
+			target.setSeconds(0);
+			target.setMinutes(0);
+			if (Number.isInteger(this.targetTimeHourSuggestion)) {
+				target.setUTCHours(this.targetTimeHourSuggestion);
+			} else {
+				target.setHours(DEFAULT_TARGET_HOUR);
+			}
+			// today or tomorrow?
+			const isInPast = target < new Date();
+			if (isInPast) {
+				target.setDate(target.getDate() + 1);
+			}
+			return target;
 		},
 		initInputFields: function () {
 			let date = this.defaultDate();
@@ -178,7 +192,7 @@ export default {
 			];
 			for (let i = 0; i < 7; i++) {
 				const dayNumber = date.toLocaleDateString("default", {
-					month: "long",
+					month: "short",
 					day: "numeric",
 				});
 				const dayName =
@@ -194,13 +208,12 @@ export default {
 		minTime: function () {
 			return new Date().toISOString().split("T")[1].slice(0, -8);
 		},
-		removeTargetTime: function () {
-			this.$emit("target-time-updated", new Date(null));
-		},
-		saveTargetTime: function () {
+		setTargetTime: function () {
 			this.$emit("target-time-updated", this.selectedTargetTime);
 		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
+		},
 	},
-	mixins: [formatter],
 };
 </script>

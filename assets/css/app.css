@@ -61,3 +61,7 @@ a {
 		display: inline !important;
 	}
 }
+
+.cursor-pointer {
+	cursor: pointer;
+}

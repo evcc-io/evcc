@@ -24,15 +24,16 @@ type Device struct {
 func (d *Device) StartUpdateLoop() {
 	d.once.Do(func() {
 		go func() {
-			d.updateValues()
 			for range time.NewTicker(time.Second * 5).C {
-				d.updateValues()
+				if err := d.UpdateValues(); err != nil {
+					d.log.ERROR.Println(err)
+				}
 			}
 		}()
 	})
 }
 
-func (d *Device) updateValues() {
+func (d *Device) UpdateValues() error {
 	d.mux.Lock()
 	defer d.mux.Unlock()
 
@@ -42,20 +43,18 @@ func (d *Device) updateValues() {
 		d.mux.Update()
 	}
 
-	if err != nil {
-		d.log.ERROR.Println(err)
-	}
+	return err
 }
 
 func (d *Device) Values() (map[sunny.ValueID]interface{}, error) {
 	// ensure update loop was started
 	d.StartUpdateLoop()
 
-	elapsed := d.mux.LockWithTimeout()
+	d.mux.Lock()
 	defer d.mux.Unlock()
 
-	if elapsed > 0 {
-		return nil, fmt.Errorf("update timeout: %v", elapsed.Truncate(time.Second))
+	if late := d.mux.Overdue(); late > 0 {
+		return nil, fmt.Errorf("update timeout: %v", late.Truncate(time.Second))
 	}
 
 	// return a copy of the map to avoid race conditions

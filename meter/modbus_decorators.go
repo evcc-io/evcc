@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateModbus(base api.Meter, meterEnergy func() (float64, error), battery func() (float64, error)) api.Meter {
+func decorateModbus(base api.Meter, meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error), battery func() (float64, error)) api.Meter {
 	switch {
-	case battery == nil && meterEnergy == nil:
+	case battery == nil && meterCurrent == nil && meterEnergy == nil:
 		return base
 
-	case battery == nil && meterEnergy != nil:
+	case battery == nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Meter
 			api.MeterEnergy
@@ -22,7 +22,33 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), battery
 			},
 		}
 
-	case battery != nil && meterEnergy == nil:
+	case battery == nil && meterCurrent != nil && meterEnergy == nil:
+		return &struct {
+			api.Meter
+			api.MeterCurrent
+		}{
+			Meter: base,
+			MeterCurrent: &decorateModbusMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+		}
+
+	case battery == nil && meterCurrent != nil && meterEnergy != nil:
+		return &struct {
+			api.Meter
+			api.MeterCurrent
+			api.MeterEnergy
+		}{
+			Meter: base,
+			MeterCurrent: &decorateModbusMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+			MeterEnergy: &decorateModbusMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && meterCurrent == nil && meterEnergy == nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -33,7 +59,7 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), battery
 			},
 		}
 
-	case battery != nil && meterEnergy != nil:
+	case battery != nil && meterCurrent == nil && meterEnergy != nil:
 		return &struct {
 			api.Meter
 			api.Battery
@@ -42,6 +68,40 @@ func decorateModbus(base api.Meter, meterEnergy func() (float64, error), battery
 			Meter: base,
 			Battery: &decorateModbusBatteryImpl{
 				battery: battery,
+			},
+			MeterEnergy: &decorateModbusMeterEnergyImpl{
+				meterEnergy: meterEnergy,
+			},
+		}
+
+	case battery != nil && meterCurrent != nil && meterEnergy == nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.MeterCurrent
+		}{
+			Meter: base,
+			Battery: &decorateModbusBatteryImpl{
+				battery: battery,
+			},
+			MeterCurrent: &decorateModbusMeterCurrentImpl{
+				meterCurrent: meterCurrent,
+			},
+		}
+
+	case battery != nil && meterCurrent != nil && meterEnergy != nil:
+		return &struct {
+			api.Meter
+			api.Battery
+			api.MeterCurrent
+			api.MeterEnergy
+		}{
+			Meter: base,
+			Battery: &decorateModbusBatteryImpl{
+				battery: battery,
+			},
+			MeterCurrent: &decorateModbusMeterCurrentImpl{
+				meterCurrent: meterCurrent,
 			},
 			MeterEnergy: &decorateModbusMeterEnergyImpl{
 				meterEnergy: meterEnergy,
@@ -58,6 +118,14 @@ type decorateModbusBatteryImpl struct {
 
 func (impl *decorateModbusBatteryImpl) SoC() (float64, error) {
 	return impl.battery()
+}
+
+type decorateModbusMeterCurrentImpl struct {
+	meterCurrent func() (float64, float64, float64, error)
+}
+
+func (impl *decorateModbusMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+	return impl.meterCurrent()
 }
 
 type decorateModbusMeterEnergyImpl struct {

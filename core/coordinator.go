@@ -58,7 +58,7 @@ func (lp *vehicleCoordinator) identifyVehicleByStatus(log *util.Logger, owner in
 			// vehicle is plugged or charging, so it should be the right one
 			if status == api.StatusB || status == api.StatusC {
 				if res != nil {
-					log.DEBUG.Printf("vehicle status: >1 matches, giving up")
+					log.WARN.Println("vehicle status: >1 matches, giving up")
 					return nil
 				}
 

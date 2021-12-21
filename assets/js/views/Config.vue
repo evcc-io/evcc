@@ -13,26 +13,26 @@
 			<div class="col-md-4"></div>
 			<div class="col-6 col-md-2 py-3">
 				Netzzähler:
-				<span class="text-primary" v-if="gridConfigured">✓</span>
-				<span class="text-primary" v-else>&mdash;</span>
+				<span v-if="gridConfigured" class="text-primary">✓</span>
+				<span v-else class="text-primary">&mdash;</span>
 			</div>
 			<div class="col-6 col-md-2 py-3">
 				PV Zähler:
-				<span class="text-primary" v-if="pvConfigured">✓</span>
-				<span class="text-primary" v-else>&mdash;</span>
+				<span v-if="pvConfigured" class="text-primary">✓</span>
+				<span v-else class="text-primary">&mdash;</span>
 			</div>
 			<div class="col-6 col-md-2 py-3">
 				Batteriezähler:
-				<span class="text-primary" v-if="batteryConfigured">✓</span>
-				<span class="text-primary" v-else>&mdash;</span>
+				<span v-if="batteryConfigured" class="text-primary">✓</span>
+				<span v-else class="text-primary">&mdash;</span>
 			</div>
 		</div>
 
 		<div
 			v-for="(loadpoint, id) in loadpoints"
-			:loadpoint="loadpoint"
-			:key="id"
 			:id="'loadpoint-' + id"
+			:key="id"
+			:loadpoint="loadpoint"
 		>
 			<div class="row mt-4 border-bottom">
 				<div class="col-12">
@@ -44,8 +44,8 @@
 				<div class="col-md-4"></div>
 				<div class="col-6 col-md-2 py-3">
 					Ladezähler:
-					<span class="text-primary" v-if="loadpoint.chargeConfigured">✓</span>
-					<span class="text-primary" v-else>&mdash;</span>
+					<span v-if="loadpoint.chargeConfigured" class="text-primary">✓</span>
+					<span v-else class="text-primary">&mdash;</span>
 				</div>
 				<div class="col-6 col-md-2 py-3">
 					Phasen:

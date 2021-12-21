@@ -22,7 +22,7 @@ const (
 
 var phxEMEthRegCurrents = []uint16{114, 116, 118} // current readings
 
-// PhoenixEMEth is an api.ChargeController implementation for Phoenix EM-CP-PP-ETH wallboxes.
+// PhoenixEMEth is an api.Charger implementation for Phoenix EM-CP-PP-ETH wallboxes.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 180.
 type PhoenixEMEth struct {
 	conn *modbus.Connection
@@ -112,7 +112,7 @@ func (wb *PhoenixEMEth) Enabled() (bool, error) {
 func (wb *PhoenixEMEth) Enable(enable bool) error {
 	var u uint16
 	if enable {
-		u = 0xFF00
+		u = modbus.CoilOn
 	}
 
 	_, err := wb.conn.WriteSingleCoil(phxEMEthRegEnable, u)

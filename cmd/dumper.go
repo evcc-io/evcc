@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/fatih/structs"
 )
 
 var truefalse = map[bool]string{false: "false", true: "true"}
@@ -162,6 +163,24 @@ func (d *dumper) Dump(name string, v interface{}) {
 		}
 	}
 
+	if v, ok := v.(api.VehiclePosition); ok {
+		if lat, lon, err := v.Position(); err != nil {
+			fmt.Fprintf(w, "Position:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Position:\t%v,%v\n", lat, lon)
+		}
+	}
+
+	if v, ok := v.(api.Vehicle); ok {
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		if len(v.Identifiers()) > 0 {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+		}
+		if !structs.IsZero(v.OnIdentified()) {
+			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+		}
+	}
+
 	// Identity
 
 	if v, ok := v.(api.Identifier); ok {
@@ -175,11 +194,6 @@ func (d *dumper) Dump(name string, v interface{}) {
 	if v, ok := v.(api.Diagnosis); ok {
 		fmt.Fprintln(w, "Diagnostic dump:")
 		v.Diagnose()
-	}
-
-	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
-		fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
 	}
 
 	w.Flush()

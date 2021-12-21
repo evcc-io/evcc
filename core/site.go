@@ -312,8 +312,7 @@ func (site *Site) updateMeters() error {
 			if err == nil {
 				site.batteryPower += power
 			} else {
-				err = fmt.Errorf("updating battery meter %d: %v", id, err)
-				site.log.ERROR.Println(err)
+				site.log.ERROR.Println(fmt.Errorf("updating battery meter %d: %v", id, err))
 			}
 		}
 
@@ -327,6 +326,18 @@ func (site *Site) updateMeters() error {
 		if err == nil {
 			site.log.DEBUG.Printf("grid currents: %.3gA", []float64{i1, i2, i3})
 			site.publish("gridCurrents", []float64{i1, i2, i3})
+		} else {
+			site.log.ERROR.Println(fmt.Errorf("updating grid meter currents: %v", err))
+		}
+	}
+
+	// grid energy
+	if energyMeter, ok := site.gridMeter.(api.MeterEnergy); ok {
+		val, err := energyMeter.TotalEnergy()
+		if err == nil {
+			site.publish("gridEnergy", val)
+		} else {
+			site.log.ERROR.Println(fmt.Errorf("updating grid meter energy: %v", err))
 		}
 	}
 

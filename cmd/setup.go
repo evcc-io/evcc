@@ -121,13 +121,9 @@ func configureDatabase(conf server.InfluxConfig, loadPoints []loadpoint.API, in 
 // setup mqtt
 func configureMQTT(conf mqttConfig) error {
 	log := util.NewLogger("mqtt")
-	clientID := conf.ClientID
-	if clientID == "" {
-		clientID = mqtt.ClientID()
-	}
 
 	var err error
-	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, clientID, 1, func(options *paho.ClientOptions) {
+	mqtt.Instance, err = mqtt.RegisteredClient(log, conf.Broker, conf.User, conf.Password, conf.ClientID, 1, func(options *paho.ClientOptions) {
 		topic := fmt.Sprintf("%s/status", conf.RootTopic())
 		options.SetWill(topic, "offline", 1, true)
 	})

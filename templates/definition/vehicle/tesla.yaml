@@ -1,0 +1,30 @@
+template: tesla
+description: Tesla
+params:
+- name: title
+- name: accessToken
+  required: true
+  help:
+    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+    de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
+- name: refreshToken
+  required: true
+  help:
+    en: "See https://docs.evcc.io/docs/devices/vehicles#tesla"
+    de: "Siehe https://docs.evcc.io/docs/devices/vehicles#tesla"
+- name: vin
+  example: W...
+- name: capacity
+  default: 90
+render: |
+  type: tesla
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  tokens:
+    access: {{ .accessToken }}
+    refresh: {{ .refreshToken }}
+  capacity: {{ .capacity }}
+  {{- if ne .vin "" }}
+  vin: {{ .vin }}
+  {{- end }}

@@ -1,0 +1,11 @@
+template: id
+description: Volkswagen (We Connect ID)
+paramsbase: vehicle
+params:
+- name: vin
+  example: WVWZZZ...
+- name: capacity
+  default: 50
+render: |
+  type: id
+  {{include "vehicle-common" .}}

@@ -1,6 +1,13 @@
 package api
 
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
+	"github.com/fatih/structs"
+)
 
 //go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
@@ -42,11 +49,23 @@ func (c ChargeStatus) String() string {
 
 // ActionConfig defines an action to take on event
 type ActionConfig struct {
-	Mode       ChargeMode `mapstructure:"mode"`       // Charge mode
-	MinCurrent float64    `mapstructure:"minCurrent"` // Minimum Current
-	MaxCurrent float64    `mapstructure:"maxCurrent"` // Maximum Current
-	MinSoC     int        `mapstructure:"minSoC"`     // Minimum SoC
-	TargetSoC  int        `mapstructure:"targetSoC"`  // Target SoC
+	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
+	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+}
+
+// String implements Stringer and returns the ActionConfig as comma-separated key:value string
+func (a ActionConfig) String() string {
+	var s []string
+	for k, v := range structs.Map(a) {
+		val := reflect.ValueOf(v)
+		if v != nil && !val.IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
+		}
+	}
+	return strings.Join(s, ", ")
 }
 
 // Meter is able to provide current power in W
@@ -144,6 +163,11 @@ type VehicleClimater interface {
 // VehicleOdometer returns the vehicles milage
 type VehicleOdometer interface {
 	Odometer() (float64, error)
+}
+
+// VehiclePosition returns the vehicles position in latitude and longitude
+type VehiclePosition interface {
+	Position() (float64, float64, error)
 }
 
 // VehicleStartCharge starts the charging session on the vehicle side

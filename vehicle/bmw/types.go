@@ -12,20 +12,22 @@ type Vehicle struct {
 type VehiclesStatusResponse []VehicleStatus
 
 type VehicleStatus struct {
-	Properties struct {
-		ChargingState struct {
+	VIN, Model, Brand string
+	Year              int
+	Properties        struct {
+		ChargingState *struct {
 			ChargePercentage   int
 			State              string // CHARGING, ERROR, FINISHED_FULLY_CHARGED, FINISHED_NOT_FULL, INVALID, NOT_CHARGING, WAITING_FOR_CHARGING, COMPLETED
 			IsChargerConnected bool
 		}
-		ElectricRange struct {
+		ElectricRange *struct {
 			Distance struct {
 				Value int
 			}
 		}
 	}
 	Status struct {
-		CurrentMileage struct {
+		CurrentMileage *struct {
 			Mileage int
 		}
 	}

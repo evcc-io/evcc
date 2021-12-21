@@ -1,0 +1,16 @@
+template: fiat
+description: Fiat
+paramsbase: vehicle
+params:
+- name: pin
+  mask: true
+- name: vin
+  example: ZFAE...
+- name: capacity
+  default: 42
+render: |
+  type: fiat
+  {{include "vehicle-common" .}}
+  {{- if ne .pin "" }}
+  pin: {{ .pin }} #mandatory to deep refresh SoC
+  {{- end }}

@@ -5,7 +5,7 @@ interval: 10s # control cycle interval
 # sponsortoken:
 
 # log settings
-log: error
+log: info
 levels:
   core: debug
   lp-1: debug
@@ -48,8 +48,8 @@ vehicles:
   type: renault
   title: Zoe
   capacity: 60 # kWh
-  user: # user
-  password: # password
+  user: myuser # user
+  password: mypassword # password
   vin: WREN...
   onIdentify: # set defaults when vehicle is identified
     minSoC: 20 # charge to at least 20% independent of charge mode
@@ -100,9 +100,9 @@ loadpoints:
   disable: # pv mode disable behavior
     delay: 10m # threshold must be exceeded for this long
     threshold: 200 # maximum import power (W)
-  guardduration: 5m # switch charger contactor not more often than this (default 10m)
-  mincurrent: 6 # minimum charge current (default 6A)
-  maxcurrent: 16 # maximum charge current (default 16A)
+  guardDuration: 5m # switch charger contactor not more often than this (default 10m)
+  minCurrent: 6 # minimum charge current (default 6A)
+  maxCurrent: 16 # maximum charge current (default 16A)
 
 # tariffs are the fixed or variable tariffs
 # cheap can be used to define a tariff rate considered cheap enough for charging

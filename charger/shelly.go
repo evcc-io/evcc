@@ -84,6 +84,7 @@ func NewShelly(uri, user, password string, channel int, standbypower float64) (*
 		// https://shelly-api-docs.shelly.cloud/gen1/#shelly-family-overview
 		c.uri = util.DefaultScheme(uri, "http")
 		if user != "" {
+			log.Redact(transport.BasicAuthHeader(user, password))
 			c.Client.Transport = transport.BasicAuth(user, password, c.Client.Transport)
 		}
 

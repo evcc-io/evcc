@@ -3,40 +3,53 @@
 		<div class="flex-grow-1 d-flex flex-column justify-content-between">
 			<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 				<div class="container">
-					<a class="navbar-brand" href="https://github.com/evcc-io/evcc#readme">
+					<a class="navbar-brand" href="https://evcc.io/" target="_blank">
 						<Logo class="logo"></Logo>
 					</a>
-					<div class="d-flex">
-						<div class="d-flex">
-							<Notifications :notifications="notifications" />
-							<button
-								class="navbar-toggler"
-								type="button"
-								data-bs-toggle="collapse"
-								data-bs-target="#navbarNavAltMarkup"
-								aria-controls="navbarNavAltMarkup"
-								aria-expanded="false"
-								aria-label="Toggle navigation"
-							>
-								<span class="navbar-toggler-icon"></span>
-							</button>
-						</div>
-						<div
-							class="collapse navbar-collapse flex-lg-grow-0"
-							id="navbarNavAltMarkup"
+					<div class="d-flex flex-grow-1 justify-content-end">
+						<Notifications :notifications="notifications" />
+						<button
+							class="navbar-toggler"
+							type="button"
+							data-bs-toggle="collapse"
+							data-bs-target="#navbarNavAltMarkup"
+							aria-controls="navbarNavAltMarkup"
+							aria-expanded="false"
+							aria-label="Toggle navigation"
 						>
-							<ul class="navbar-nav">
-								<li class="nav-item">
-									<a
-										class="nav-link"
-										href="https://github.com/evcc-io/evcc/discussions"
-										target="_blank"
-									>
-										{{ $t("header.support") }}
-									</a>
-								</li>
-							</ul>
-						</div>
+							<span class="navbar-toggler-icon"></span>
+						</button>
+					</div>
+					<div id="navbarNavAltMarkup" class="collapse navbar-collapse flex-grow-0">
+						<ul class="navbar-nav">
+							<li class="nav-item">
+								<a
+									class="nav-link"
+									href="https://docs.evcc.io/blog/"
+									target="_blank"
+								>
+									{{ $t("header.blog") }}
+								</a>
+							</li>
+							<li class="nav-item">
+								<a
+									class="nav-link"
+									href="https://docs.evcc.io/docs/Home/"
+									target="_blank"
+								>
+									{{ $t("header.docs") }}
+								</a>
+							</li>
+							<li class="nav-item">
+								<a
+									class="nav-link"
+									href="https://github.com/evcc-io/evcc"
+									target="_blank"
+								>
+									{{ $t("header.github") }}
+								</a>
+							</li>
+						</ul>
 					</div>
 				</div>
 			</nav>
@@ -59,6 +72,9 @@ import store from "../store";
 export default {
 	name: "App",
 	components: { Logo, Footer, Notifications },
+	props: {
+		notifications: Array,
+	},
 	data: function () {
 		return {
 			compact: false,
@@ -66,6 +82,39 @@ export default {
 			installedVersion: window.evcc.version,
 			commit: window.evcc.commit,
 		};
+	},
+	computed: {
+		version: function () {
+			return {
+				installed: this.installedVersion,
+				available: this.store.state.availableVersion,
+				releaseNotes: this.store.state.releaseNotes,
+				hasUpdater: this.store.state.hasUpdater,
+				uploadMessage: this.store.state.uploadMessage,
+				uploadProgress: this.store.state.uploadProgress,
+			};
+		},
+		title: function () {
+			return this.store.state.siteTitle;
+		},
+		sponsor: function () {
+			return this.store.state.sponsor;
+		},
+		savings: function () {
+			return {
+				since: this.store.state.savingsSince,
+				chargedTotal: this.store.state.savingsChargedTotal,
+				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
+				selfPercentage: this.store.state.savingsSelfPercentage,
+				gridPrice: this.store.state.tariffGrid,
+				feedinPrice: this.store.state.tariffFeedin,
+			};
+		},
+	},
+	created: function () {
+		const urlParams = new URLSearchParams(window.location.search);
+		this.compact = urlParams.get("compact");
+		this.connect(); // websocket listener
 	},
 	methods: {
 		connect: function () {
@@ -103,43 +152,6 @@ export default {
 		return {
 			title: this.title ? `evcc | ${this.title}` : "evcc",
 		};
-	},
-	computed: {
-		version: function () {
-			return {
-				installed: this.installedVersion,
-				commit: this.commit,
-				available: this.store.state.availableVersion,
-				releaseNotes: this.store.state.releaseNotes,
-				hasUpdater: this.store.state.hasUpdater,
-				uploadMessage: this.store.state.uploadMessage,
-				uploadProgress: this.store.state.uploadProgress,
-			};
-		},
-		title: function () {
-			return this.store.state.siteTitle;
-		},
-		sponsor: function () {
-			return this.store.state.sponsor;
-		},
-		savings: function () {
-			return {
-				since: this.store.state.savingsSince,
-				chargedTotal: this.store.state.savingsChargedTotal,
-				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
-				selfPercentage: this.store.state.savingsSelfPercentage,
-				gridPrice: this.store.state.tariffGrid,
-				feedinPrice: this.store.state.tariffFeedin,
-			};
-		},
-	},
-	props: {
-		notifications: Array,
-	},
-	created: function () {
-		const urlParams = new URLSearchParams(window.location.search);
-		this.compact = urlParams.get("compact");
-		this.connect(); // websocket listener
 	},
 };
 </script>

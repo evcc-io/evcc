@@ -1,0 +1,68 @@
+vehicle:
+  params:
+  - name: title
+  - name: user
+    required: true
+  - name: password
+    required: true
+    mask: true
+  - name: vin
+    example: W...
+  - name: capacity
+    default: '50'
+  - name: cache
+    advanced: true
+  - name: mode
+    advanced: true
+  - name: minSoC
+    advanced: true
+  - name: targetSoC
+    advanced: true
+  - name: minCurrent
+    advanced: true
+  - name: maxCurrent
+    advanced: true
+  - name: identifiers
+    advanced: true
+    valueType: stringlist
+  render: |
+    {{define "vehicle-common"}}
+    {{- if ne .title "" }}
+    title: {{ .title }}
+    {{- end }}
+    user: {{ .user }}
+    password: {{ .password }}
+    {{- if ne .capacity "" }}
+    capacity: {{ .capacity }}
+    {{- end }}
+    {{- if ne .vin "" }}
+    vin: {{ .vin }}
+    {{- end }}
+    {{- if ne .cache "" }}
+    cache: {{ .cache }}
+    {{- end }}
+    {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
+    onIdentify:
+    {{- if (ne .mode "") }}
+      mode: {{ .mode }}
+    {{- end }}
+    {{- if (ne .minSoC "") }}
+      minSoC: {{ .minSoC }}
+    {{- end }}
+    {{- if (ne .targetSoC "") }}
+      targetSoC: {{ .targetSoC }}
+    {{- end }}
+    {{- if (ne .minCurrent "") }}
+      minCurrent: {{ .minCurrent }}
+    {{- end }}
+    {{- if (ne .maxCurrent "") }}
+      maxCurrent: {{ .maxCurrent }}
+    {{- end }}
+    {{- end }}
+    {{- if ne (len .identifiers) 0 }}
+    identifiers:
+    {{-   range .identifiers }}
+    - {{ . }}
+    {{-   end }}
+    {{- end }}
+    {{end}}

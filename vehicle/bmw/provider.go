@@ -28,7 +28,11 @@ var _ api.Battery = (*Provider)(nil)
 func (v *Provider) SoC() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(VehicleStatus); err == nil && ok {
-		return float64(res.Properties.ChargingState.ChargePercentage), nil
+		if cs := res.Properties.ChargingState; cs != nil {
+			return float64(cs.ChargePercentage), nil
+		}
+
+		err = api.ErrNotAvailable
 	}
 
 	return 0, err
@@ -38,19 +42,25 @@ var _ api.ChargeState = (*Provider)(nil)
 
 // Status implements the api.ChargeState interface
 func (v *Provider) Status() (api.ChargeStatus, error) {
-	status := api.StatusA // disconnected
-
 	res, err := v.statusG()
 	if res, ok := res.(VehicleStatus); err == nil && ok {
-		if res.Properties.ChargingState.IsChargerConnected {
-			status = api.StatusB
+		if cs := res.Properties.ChargingState; cs != nil {
+			status := api.StatusA // disconnected
+
+			if cs.IsChargerConnected {
+				status = api.StatusB
+			}
+			if cs.State == "CHARGING" {
+				status = api.StatusC
+			}
+
+			return status, nil
 		}
-		if res.Properties.ChargingState.State == "CHARGING" {
-			status = api.StatusC
-		}
+
+		err = api.ErrNotAvailable
 	}
 
-	return status, err
+	return api.StatusNone, err
 }
 
 // var _ api.VehicleFinishTimer = (*Provider)(nil)
@@ -72,7 +82,11 @@ var _ api.VehicleRange = (*Provider)(nil)
 func (v *Provider) Range() (int64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(VehicleStatus); err == nil && ok {
-		return int64(res.Properties.ElectricRange.Distance.Value), nil
+		if er := res.Properties.ElectricRange; er != nil {
+			return int64(er.Distance.Value), nil
+		}
+
+		err = api.ErrNotAvailable
 	}
 
 	return 0, err
@@ -84,7 +98,11 @@ var _ api.VehicleOdometer = (*Provider)(nil)
 func (v *Provider) Odometer() (float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(VehicleStatus); err == nil && ok {
-		return float64(res.Status.CurrentMileage.Mileage), nil
+		if cm := res.Status.CurrentMileage; cm != nil {
+			return float64(cm.Mileage), nil
+		}
+
+		err = api.ErrNotAvailable
 	}
 
 	return 0, err

@@ -3,9 +3,9 @@ release:
   github:
     owner: evcc-io
     name: evcc
-  extra_files:
-  - glob: evcc_*.image.gz
-  - glob: evcc_*.rootfs.gz
+#  extra_files:
+#  - glob: evcc_*.image.gz
+#  - glob: evcc_*.rootfs.gz
 builds:
 - id: evcc
   main: main.go
@@ -25,6 +25,7 @@ builds:
   - arm64
   goarm:
   - "6"
+  - "7"
 archives:
 - builds:
   - evcc
@@ -36,6 +37,8 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
+universal_binaries:
+- replace: true
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -48,3 +51,59 @@ changelog:
     - '^bump'
     - '^docs:'
     - '^test:'
+nfpms:
+- id: default
+  package_name: evcc
+  file_name_template: '{{ .ConventionalFileName }}'
+
+  homepage:  https://evcc.io
+  description: EV Charge Controller
+  maintainer: andig <cpuidle@gmx.de>
+  license: MIT
+  vendor: evcc.io
+
+  formats:
+  - deb
+
+  contents:
+  - src: ./packaging/init/evcc.service
+    dst: /lib/systemd/system/evcc.service
+
+  scripts:
+    postinstall: ./packaging/scripts/postinstall.sh
+    preremove: ./packaging/scripts/preremove.sh
+    postremove: ./packaging/scripts/postremove.sh
+brews:
+- tap:
+    owner: evcc-io
+    name: homebrew-tap
+  commit_author:
+    name: andig
+    email: cpuidle@gmx.de
+  folder: Formula
+  homepage: "https://evcc.io"
+  description: "Sonne tanken ☀️🚘"
+  license: "MIT"
+  test: |
+    system "#{bin}/evcc --version"
+  plist: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>Program</key>
+        <string>#{bin}/evcc</string>
+        <key>WorkingDirectory</key>
+        <string>#{var}</string>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardOutPath</key>
+        <string>#{var}/log/evcc.log</string>
+        <key>StandardErrorPath</key>
+        <string>#{var}/log/evcc.log</string>
+      </dict>
+    </plist>

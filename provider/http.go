@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -9,12 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
 	"github.com/itchyny/gojq"
 	"github.com/jpfielding/go-http-digest/pkg/digest"
+	"github.com/robertkrimen/otto"
+	"github.com/volkszaehler/mbmd/meters/rs485"
 )
 
 // HTTP implements HTTP request provider
@@ -25,6 +29,10 @@ type HTTP struct {
 	body        string
 	re          *regexp.Regexp
 	jq          *gojq.Query
+	unpack      string
+	decode      string
+	vm          *otto.Otto
+	script      string
 	scale       float64
 	cache       time.Duration
 	updated     time.Time
@@ -49,6 +57,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Body        string
 		Regex       string
 		Jq          string
+		Unpack      string
+		Decode      string
+		VM          string
+		Script      string
 		Scale       float64
 		Insecure    bool
 		Auth        Auth
@@ -81,6 +93,18 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 
 	if err == nil && cc.Jq != "" {
 		_, err = http.WithJq(cc.Jq)
+	}
+
+	if err == nil && cc.Unpack != "" {
+		_, err = http.WithUnpack(cc.Unpack)
+	}
+
+	if err == nil && cc.Decode != "" {
+		_, err = http.WithDecode(cc.Decode)
+	}
+
+	if err == nil && cc.Script != "" {
+		_, err = http.WithScript(cc.VM, cc.Script)
 	}
 
 	if err == nil && cc.Auth.Type != "" {
@@ -149,10 +173,37 @@ func (p *HTTP) WithJq(jq string) (*HTTP, error) {
 	return p, nil
 }
 
+// WithUnpack adds data unpacking
+func (p *HTTP) WithUnpack(unpack string) (*HTTP, error) {
+	p.unpack = strings.ToLower(unpack)
+
+	return p, nil
+}
+
+// WithDecode adds data decoding
+func (p *HTTP) WithDecode(decode string) (*HTTP, error) {
+	p.decode = strings.ToLower(decode)
+
+	return p, nil
+}
+
+// WithScript adds a javascript script to process the response
+func (p *HTTP) WithScript(vm, script string) (*HTTP, error) {
+	regvm := javascript.RegisteredVM(strings.ToLower(vm))
+
+	p.vm = regvm
+	p.script = script
+
+	return p, nil
+}
+
 // WithAuth adds authorized transport
 func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
 	switch strings.ToLower(typ) {
 	case "basic":
+		basicAuth := transport.BasicAuthHeader(user, password)
+		log.Redact(basicAuth)
+
 		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
 	case "digest":
 		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
@@ -182,6 +233,48 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	return p.val, p.err
+}
+
+func (p *HTTP) unpackValue(value []byte) (string, error) {
+	switch p.unpack {
+	case "hex":
+		b, err := hex.DecodeString(string(value))
+		if err != nil {
+			return "", err
+		}
+		return string(b), nil
+	}
+
+	return "", fmt.Errorf("invalid unpack: %s", p.unpack)
+}
+
+// decode a hex string to a proper value
+// TODO reuse similar code from Modbus
+func (p *HTTP) decodeValue(value []byte) (interface{}, error) {
+	switch p.decode {
+	case "float32", "ieee754":
+		return rs485.RTUIeee754ToFloat64(value), nil
+	case "float32s", "ieee754s":
+		return rs485.RTUIeee754ToFloat64Swapped(value), nil
+	case "float64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "uint16":
+		return rs485.RTUUint16ToFloat64(value), nil
+	case "uint32":
+		return rs485.RTUUint32ToFloat64(value), nil
+	case "uint32s":
+		return rs485.RTUUint32ToFloat64Swapped(value), nil
+	case "uint64":
+		return rs485.RTUUint64ToFloat64(value), nil
+	case "int16":
+		return rs485.RTUInt16ToFloat64(value), nil
+	case "int32":
+		return rs485.RTUInt32ToFloat64(value), nil
+	case "int32s":
+		return rs485.RTUInt32ToFloat64Swapped(value), nil
+	}
+
+	return nil, fmt.Errorf("invalid decoding: %s", p.decode)
 }
 
 // FloatGetter parses float from request
@@ -230,7 +323,40 @@ func (p *HTTP) StringGetter() func() (string, error) {
 
 		if p.jq != nil {
 			v, err := jq.Query(p.jq, b)
-			return fmt.Sprintf("%v", v), err
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.unpack != "" {
+			v, err := p.unpackValue(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.decode != "" {
+			v, err := p.decodeValue(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
+		}
+
+		if p.vm != nil {
+			err := p.vm.Set("val", string(b))
+			if err != nil {
+				return string(b), err
+			}
+
+			v, err := p.vm.Eval(p.script)
+			if err != nil {
+				return string(b), err
+			}
+
+			return v.ToString()
 		}
 
 		return string(b), err

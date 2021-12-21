@@ -39,9 +39,9 @@ func (lp *Timer) Reset() {
 		return
 	}
 
-	lp.current = float64(lp.GetMaxCurrent())
+	lp.current = lp.GetMaxCurrent()
 	lp.Time = time.Time{}
-	lp.SoC = 0
+	lp.active = false
 }
 
 // DemandActive calculates remaining charge duration and returns true if charge start is required to achieve target soc in time
@@ -50,16 +50,12 @@ func (lp *Timer) DemandActive() bool {
 		return false
 	}
 
-	se := lp.SocEstimator()
-	if se == nil {
-		lp.log.WARN.Printf("target charging: not possible")
+	if lp.Time.IsZero() {
 		return false
 	}
 
 	defer func() {
-		lp.Publish("timerSet", lp.Time.After(time.Now()))
-		lp.Publish("timerActive", lp.active)
-		lp.Publish("timerProjectedEnd", lp.finishAt)
+		lp.Publish("targetTimeActive", lp.active)
 	}()
 
 	// power
@@ -68,14 +64,28 @@ func (lp *Timer) DemandActive() bool {
 		power *= lp.current / lp.GetMaxCurrent()
 	}
 
+	se := lp.SocEstimator()
+	if se == nil {
+		lp.log.WARN.Printf("target charging: not possible")
+		return false
+	}
+
 	// time
-	remainingDuration := se.RemainingChargeDuration(power, lp.SoC)
+	remainingDuration := se.AssumedChargeDuration(lp.SoC, power)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
+
+	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
+	if lp.active {
+		lp.log.DEBUG.Printf("projected end: %v", lp.finishAt)
+		lp.log.DEBUG.Printf("desired finish time: %v", lp.Time)
+	} else {
+		lp.log.DEBUG.Printf("projected start: %v", lp.Time.Add(-remainingDuration))
+	}
 
 	// timer charging is already active- only deactivate once charging has stopped
 	if lp.active {
 		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC {
-			lp.log.TRACE.Printf("target charging: deactivating")
+			lp.log.INFO.Printf("target charging: deactivating")
 			lp.active = false
 		}
 
@@ -85,7 +95,7 @@ func (lp *Timer) DemandActive() bool {
 	// check if charging need be activated
 	if lp.active = lp.finishAt.After(lp.Time); lp.active {
 		lp.current = lp.GetMaxCurrent()
-		lp.log.DEBUG.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
+		lp.log.INFO.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
 	}
 
 	return lp.active

@@ -20,6 +20,7 @@ type Tesla struct {
 	vehicle       *tesla.Vehicle
 	chargeStateG  func() (interface{}, error)
 	vehicleStateG func() (interface{}, error)
+	driveStateG   func() (interface{}, error)
 }
 
 func init() {
@@ -83,8 +84,13 @@ func NewTeslaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, errors.New("vin not found")
 	}
 
+	if v.Title_ == "" {
+		v.Title_ = v.vehicle.DisplayName
+	}
+
 	v.chargeStateG = provider.NewCached(v.chargeState, cc.Cache).InterfaceGetter()
 	v.vehicleStateG = provider.NewCached(v.vehicleState, cc.Cache).InterfaceGetter()
+	v.driveStateG = provider.NewCached(v.driveState, cc.Cache).InterfaceGetter()
 
 	return v, nil
 }
@@ -97,6 +103,11 @@ func (v *Tesla) chargeState() (interface{}, error) {
 // vehicleState implements the climater api
 func (v *Tesla) vehicleState() (interface{}, error) {
 	return v.vehicle.VehicleState()
+}
+
+// driveState implements the climater api
+func (v *Tesla) driveState() (interface{}, error) {
+	return v.vehicle.DriveState()
 }
 
 // SoC implements the api.Vehicle interface
@@ -187,6 +198,18 @@ func (v *Tesla) FinishTime() (time.Time, error) {
 }
 
 // TODO api.Climater implementation has been removed as it drains battery. Re-check at a later time.
+
+var _ api.VehiclePosition = (*Tesla)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Tesla) Position() (float64, float64, error) {
+	res, err := v.driveStateG()
+	if res, ok := res.(*tesla.DriveState); err == nil && ok {
+		return res.Latitude, res.Longitude, nil
+	}
+
+	return 0, 0, err
+}
 
 var _ api.VehicleStartCharge = (*Tesla)(nil)
 

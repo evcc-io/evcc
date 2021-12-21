@@ -1,0 +1,11 @@
+template: ford
+description: Ford
+paramsbase: vehicle
+params:
+- name: vin
+  example: WF0FXX...
+- name: capacity
+  default: 10
+render: |
+  type: ford
+  {{include "vehicle-common" .}}
