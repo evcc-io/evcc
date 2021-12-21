@@ -29,18 +29,18 @@ import (
 )
 
 const (
-	innogyRegID           = 0    // Input
-	innogyRegSerial       = 25   // Input
-	innogyRegProtocol     = 50   // Input
-	innogyRegManufacturer = 100  // Input
-	innogyRegFirmware     = 200  // Input
-	innogyRegStatus       = 275  // Input
-	innogyRegEnable       = 1028 // Holding
+	igyRegID           = 0    // Input
+	igyRegSerial       = 25   // Input
+	igyRegProtocol     = 50   // Input
+	igyRegManufacturer = 100  // Input
+	igyRegFirmware     = 200  // Input
+	igyRegStatus       = 275  // Input
+	igyRegEnable       = 1028 // Holding
 )
 
 var (
-	innogyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
-	innogyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
+	igyRegMaxCurrents = []uint16{1012, 1014, 1016} // max current per phase
+	igyRegCurrents    = []uint16{1006, 1008, 1010} // current readings per phase
 )
 
 // Innogy is an api.Charger implementation for Innogy eBox wallboxes.
@@ -91,7 +91,7 @@ func NewInnogy(uri string, id uint8) (*Innogy, error) {
 
 // Status implements the api.Charger interface
 func (wb *Innogy) Status() (api.ChargeStatus, error) {
-	b, err := wb.conn.ReadInputRegisters(innogyRegStatus, 2)
+	b, err := wb.conn.ReadInputRegisters(igyRegStatus, 2)
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -112,7 +112,7 @@ func (wb *Innogy) Status() (api.ChargeStatus, error) {
 
 // Enabled implements the api.Charger interface
 func (wb *Innogy) Enabled() (bool, error) {
-	b, err := wb.conn.ReadHoldingRegisters(innogyRegEnable, 1)
+	b, err := wb.conn.ReadHoldingRegisters(igyRegEnable, 1)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +127,7 @@ func (wb *Innogy) Enable(enable bool) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(innogyRegEnable, u)
+	_, err := wb.conn.WriteSingleRegister(igyRegEnable, u)
 
 	return err
 }
@@ -148,7 +148,7 @@ func (wb *Innogy) MaxCurrentMillis(current float64) error {
 	b := make([]byte, 4)
 	binary.BigEndian.PutUint32(b, math.Float32bits(float32(current)))
 
-	for _, reg := range innogyRegMaxCurrents {
+	for _, reg := range igyRegMaxCurrents {
 		if _, err := wb.conn.WriteMultipleRegisters(reg, 2, b); err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ var _ api.MeterCurrent = (*Innogy)(nil)
 // Currents implements the api.MeterCurrent interface
 func (wb *Innogy) Currents() (float64, float64, float64, error) {
 	var currents []float64
-	for _, regCurrent := range innogyRegCurrents {
+	for _, regCurrent := range igyRegCurrents {
 		b, err := wb.conn.ReadInputRegisters(regCurrent, 2)
 		if err != nil {
 			return 0, 0, 0, err
@@ -178,19 +178,19 @@ var _ api.Diagnosis = (*Innogy)(nil)
 
 // Diagnose implements the Diagnosis interface
 func (wb *Innogy) Diagnose() {
-	if b, err := wb.conn.ReadInputRegisters(innogyRegManufacturer, 25); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(igyRegManufacturer, 25); err == nil {
 		fmt.Printf("Manufacturer:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(innogyRegID, 25); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(igyRegID, 25); err == nil {
 		fmt.Printf("Id:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(innogyRegSerial, 25); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(igyRegSerial, 25); err == nil {
 		fmt.Printf("Serial:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(innogyRegProtocol, 25); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(igyRegProtocol, 25); err == nil {
 		fmt.Printf("Protocol:\t%s\n", b)
 	}
-	if b, err := wb.conn.ReadInputRegisters(innogyRegFirmware, 25); err == nil {
+	if b, err := wb.conn.ReadInputRegisters(igyRegFirmware, 25); err == nil {
 		fmt.Printf("Firmware:\t%s\n", b)
 	}
 }
