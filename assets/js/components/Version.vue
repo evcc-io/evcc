@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "../api";
 import "../icons";
 
 export default {
@@ -133,7 +133,7 @@ export default {
 	methods: {
 		update: async function () {
 			try {
-				await axios.post("update");
+				await api.post("update");
 				this.updateStatus = this.$t("footer.version.modalUpdateStatusStart");
 				this.updateStarted = true;
 			} catch (e) {
