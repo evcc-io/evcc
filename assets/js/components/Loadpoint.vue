@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import api from "../api";
 import Mode from "./Mode";
 import Vehicle from "./Vehicle";
 import LoadpointDetails from "./LoadpointDetails";
@@ -94,39 +94,21 @@ export default {
 		},
 	},
 	methods: {
-		api: function (func) {
+		apiPath: function (func) {
 			return "loadpoints/" + this.id + "/" + func;
 		},
 		setTargetMode: function (mode) {
-			axios
-				.post(this.api("mode") + "/" + mode)
-				.then(
-					function (response) {
-						// eslint-disable-next-line vue/no-mutating-props
-						this.mode = response.data.mode;
-					}.bind(this)
-				)
-				.catch(window.app.error);
+			api.post(this.apiPath("mode") + "/" + mode);
 		},
 		setTargetSoC: function (soc) {
-			axios
-				.post(this.api("targetsoc") + "/" + soc)
-				.then(
-					function (response) {
-						// eslint-disable-next-line vue/no-mutating-props
-						this.targetSoC = response.data.targetSoC;
-					}.bind(this)
-				)
-				.catch(window.app.error);
+			api.post(this.apiPath("targetsoc") + "/" + soc);
 		},
 		setTargetTime: function (date) {
 			const formattedDate = `${this.fmtDayString(date)}T${this.fmtTimeString(date)}:00`;
-			axios
-				.post(this.api("targetcharge") + "/" + this.targetSoC + "/" + formattedDate)
-				.catch(window.app.error);
+			api.post(this.apiPath("targetcharge") + "/" + this.targetSoC + "/" + formattedDate);
 		},
 		removeTargetTime: function () {
-			axios.delete(this.api("targetcharge")).catch(window.app.error);
+			api.delete(this.apiPath("targetcharge"));
 		},
 	},
 };
