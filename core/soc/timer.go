@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	chargeEfficiency = 0.8
-	deviation        = 30 * time.Minute
+	deviation = 30 * time.Minute
 )
 
 // Timer is the target charging handler
