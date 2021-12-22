@@ -41,7 +41,6 @@ var (
 // SEMP is the SMA SEMP server
 type SEMP struct {
 	log          *util.Logger
-	cache        *util.Cache
 	closeC       chan struct{}
 	doneC        chan struct{}
 	controllable bool
@@ -54,7 +53,7 @@ type SEMP struct {
 }
 
 // New generates SEMP Gateway listening at /semp endpoint
-func New(conf map[string]interface{}, site site.API, cache *util.Cache, httpd *server.HTTPd) (*SEMP, error) {
+func New(conf map[string]interface{}, site site.API, httpd *server.HTTPd) (*SEMP, error) {
 	cc := struct {
 		VendorID     string
 		DeviceID     string
@@ -91,7 +90,6 @@ func New(conf map[string]interface{}, site site.API, cache *util.Cache, httpd *s
 	s := &SEMP{
 		doneC:        make(chan struct{}),
 		log:          util.NewLogger("semp"),
-		cache:        cache,
 		site:         site,
 		uid:          uid.String(),
 		vid:          cc.VendorID,

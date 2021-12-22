@@ -19,16 +19,15 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log   *util.Logger
-	cache *util.Cache
-	site  site.API
-	cp    ocpp16.ChargePoint
+	log  *util.Logger
+	site site.API
+	cp   ocpp16.ChargePoint
 }
 
 const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
-func New(conf map[string]interface{}, site site.API, cache *util.Cache) (*OCPP, error) {
+func New(conf map[string]interface{}, site site.API) (*OCPP, error) {
 	cc := struct {
 		URI       string
 		StationID string
@@ -54,10 +53,9 @@ func New(conf map[string]interface{}, site site.API, cache *util.Cache) (*OCPP, 
 	cp := ocpp16.NewChargePoint(cc.StationID, nil, ws)
 
 	s := &OCPP{
-		log:   log,
-		cache: cache,
-		site:  site,
-		cp:    cp,
+		log:  log,
+		site: site,
+		cp:   cp,
 	}
 
 	err := cp.Start(cc.URI)
