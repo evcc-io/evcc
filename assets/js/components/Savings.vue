@@ -15,11 +15,11 @@
 		</button>
 		<div
 			id="savingsModal"
+			ref="modal"
 			class="modal fade"
 			tabindex="-1"
 			role="dialog"
 			aria-hidden="true"
-			ref="modal"
 		>
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
 				<div class="modal-content">
@@ -59,38 +59,27 @@
 								</div>
 							</div>
 							<div
-								class="
-									chart
-									d-flex
-									justify-content-stretch
-									mb-1
-									rounded
-									overflow-hidden
-								"
+								class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
 							>
 								<div
-									class="
-										chart-item chart-item--self
-										d-flex
-										justify-content-center
-										text-white
-										flex-shrink-1
-									"
+									v-if="chargedTotal > 0"
+									class="chart-item chart-item--self d-flex justify-content-center text-white flex-shrink-1"
 									:style="{ width: `${percent}%` }"
 								>
 									<span class="text-truncate"> {{ percent }}% </span>
 								</div>
 								<div
-									class="
-										chart-item chart-item--grid
-										d-flex
-										justify-content-center
-										text-white
-										flex-shrink-1
-									"
+									v-if="chargedTotal > 0"
+									class="chart-item chart-item--grid d-flex justify-content-center text-white flex-shrink-1"
 									:style="{ width: `${100 - percent}%` }"
 								>
 									<span class="text-truncate"> {{ 100 - percent }}% </span>
+								</div>
+								<div
+									v-if="chargedTotal === 0"
+									class="chart-item chart-item--no-data d-flex justify-content-center text-white w-100"
+								>
+									<span>{{ $t("footer.savings.modalNoData") }}</span>
 								</div>
 							</div>
 						</div>
@@ -103,7 +92,13 @@
 						</p>
 
 						<p class="small text-muted mb-3">
-							{{ $t("footer.savings.modalExplaination") }}
+							<a
+								href="https://github.com/evcc-io/evcc/blob/master/README.md#energy-tariffs--savings-estimate"
+								target="_blank"
+								class="text-muted"
+							>
+								{{ $t("footer.savings.modalExplaination") }}</a
+							>:
 							<span class="text-nowrap">
 								{{
 									$t("footer.savings.modalExplainationGrid", { gridPrice })
@@ -112,16 +107,6 @@
 							<span class="text-nowrap">
 								{{ $t("footer.savings.modalExplainationFeedin", { feedinPrice }) }}
 							</span>
-							<a
-								href="https://github.com/evcc-io/evcc/blob/master/README.md#energy-tariffs--savings-estimate"
-								target="_blank"
-								class="text-muted"
-								><fa-icon
-									:title="$t('footer.savings.modalExplainationCalculation')"
-									icon="info-circle"
-									class="icon ms-1"
-								></fa-icon
-							></a>
 							<br />
 							{{
 								$t("footer.savings.modalServerStart", {
@@ -132,7 +117,20 @@
 
 						<hr class="mb-4" />
 
-						<Sponsor :sponsor="sponsor" />
+						<Sponsor :sponsor="sponsor" class="mb-4" />
+
+						<p class="small text-muted mb-0">
+							<strong class="text-primary">
+								<fa-icon icon="flask"></fa-icon>
+								{{ $t("footer.savings.experimentalLabel") }}:
+							</strong>
+							{{ $t("footer.savings.experimentalText") }}
+							<a
+								href="https://github.com/evcc-io/evcc/discussions/2104"
+								target="_blank"
+								>GitHub Discussions</a
+							>.
+						</p>
 					</div>
 				</div>
 			</div>
@@ -146,14 +144,14 @@ import Sponsor from "./Sponsor.vue";
 
 export default {
 	name: "Savings",
-	mixins: [formatter],
 	components: { Sponsor },
+	mixins: [formatter],
 	props: {
 		selfPercentage: Number,
 		since: { type: Number, default: 0 },
 		sponsor: String,
-		chargedTotal: Number,
-		chargedSelfConsumption: Number,
+		chargedTotal: { type: Number, default: 0 },
+		chargedSelfConsumption: { type: Number, default: 0 },
 		gridPrice: { type: Number, default: 30 },
 		feedinPrice: { type: Number, default: 8 },
 	},
@@ -168,7 +166,7 @@ export default {
 		savingEuro() {
 			const priceDiffEuro = (this.gridPrice - this.feedinPrice) / 100;
 			const saving = (this.chargedSelfConsumption / 1000) * priceDiffEuro;
-			return this.$n(saving || 0, { style: "currency", currency: "EUR" });
+			return this.fmtEuro(saving);
 		},
 		centPerKWh() {
 			const totalCent =
@@ -213,6 +211,9 @@ export default {
 }
 .chart-item--grid {
 	background-color: var(--evcc-grid);
+}
+.chart-item--no-data {
+	background-color: var(--bs-gray);
 }
 
 .chart-item {

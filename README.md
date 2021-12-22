@@ -336,7 +336,7 @@ to the left makes **Min+PV** behave as described above. Pushing completely to th
 
 ### Energy Tariffs & Savings Estimate
 
-You can specify your energy tariffs and grid feedin rates. Evcc uses these values for a rough savings calculation shown in the web UI.
+You can specify your energy tariffs and grid feed-in rates. Evcc uses these values for a rough savings calculation shown in the web UI.
 
 ```yaml
 tariffs:

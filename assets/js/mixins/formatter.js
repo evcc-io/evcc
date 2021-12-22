@@ -89,11 +89,14 @@ export default {
       return `${HH}:${mm}`;
     },
     fmtAbsoluteDate: function (date) {
-      return new Intl.DateTimeFormat("default", {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
         weekday: "short",
         hour: "numeric",
         minute: "numeric",
       }).format(date);
+    },
+    fmtEuro: function (euro = 0) {
+      return this.$n(euro, { style: "currency", currency: "EUR" });
     },
     fmtTimeAgo: function (elapsed) {
       const units = {
@@ -103,7 +106,7 @@ export default {
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat("default", { numeric: "auto" });
+      const rtf = new Intl.RelativeTimeFormat(this.$i18n.locale, { numeric: "auto" });
 
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)
