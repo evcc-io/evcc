@@ -309,7 +309,7 @@ func (p *HTTP) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *HTTP) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.request()
+		b, err := p.request(p.body)
 		if err != nil {
 			return string(b), err
 		}

@@ -143,8 +143,8 @@ func configureJavascript(conf map[string]interface{}) error {
 }
 
 // setup HEMS
-func configureHEMS(conf typedConfig, site *core.Site, cache *util.Cache, httpd *server.HTTPd) hems.HEMS {
-	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, cache, httpd)
+func configureHEMS(conf typedConfig, site *core.Site, httpd *server.HTTPd) hems.HEMS {
+	hems, err := hems.NewFromConfig(conf.Type, conf.Other, site, httpd)
 	if err != nil {
 		log.FATAL.Fatalf("failed configuring hems: %v", err)
 	}

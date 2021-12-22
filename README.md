@@ -200,7 +200,7 @@ Available charger implementations are:
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
 - `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; [sponsors only](#sponsorship))
-- `innogy`: Innogy eBox
+- `innogy`: Innogy eBox ([sponsors only](#sponsorship))
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)

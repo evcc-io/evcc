@@ -200,7 +200,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if conf.HEMS.Type != "" {
-		hems := configureHEMS(conf.HEMS, site, cache, httpd)
+		hems := configureHEMS(conf.HEMS, site, httpd)
 		go hems.Run()
 	}
 
