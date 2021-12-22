@@ -5,9 +5,9 @@
 		</p>
 		<div class="d-flex justify-content-center flex-column">
 			<button
+				ref="confetti"
 				class="btn btn-primary mb-2 confetti-button bg-evcc"
 				@click="surprise"
-				ref="confetti"
 			>
 				<fa-icon :icon="['fas', 'heart']" class="icon me-1 solid"></fa-icon>
 				{{ $t("footer.sponsor.confetti") }}
