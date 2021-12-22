@@ -33,7 +33,7 @@ a {
 	border-color: var(--bs-gray-dark);
 }
 .btn-primary:hover,
-.btn-primary:active  {
+.btn-primary:active {
 	background-color: var(--evcc-dark-green);
 	border-color: var(--evcc-dark-green);
 }
