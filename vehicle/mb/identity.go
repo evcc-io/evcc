@@ -14,6 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://id.mercedes-benz.com/.well-known/openid-configuration
 const OAuthURI = "https://id.mercedes-benz.com"
 
 type Identity struct {
@@ -21,7 +22,7 @@ type Identity struct {
 	oauth2.TokenSource
 }
 
-// NewIdentity creates Nissan identity
+// NewIdentity creates Mercedes Benz identity
 func NewIdentity(log *util.Logger) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),

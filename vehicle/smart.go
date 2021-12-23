@@ -1,6 +1,7 @@
 package vehicle
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -45,6 +46,20 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	identity := mb.NewIdentity(log)
 	err := identity.Login(cc.User, cc.Password)
+	if err != nil {
+		return v, fmt.Errorf("login failed: %w", err)
+	}
+
+	api := mb.NewAPI(log, identity)
+
+	if cc.VIN == "" {
+		cc.VIN, err = findVehicle(api.Vehicles())
+		if err == nil {
+			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+		}
+	}
+
+	err = api.Call(cc.VIN)
 
 	return v, err
 }
