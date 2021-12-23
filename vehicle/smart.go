@@ -6,14 +6,12 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/vehicle/mb"
 )
 
 // Smart is an api.Vehicle implementation for Smart cars
 type Smart struct {
 	*embed
-	*request.Helper
 }
 
 func init() {
@@ -40,8 +38,7 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("smart").Redact(cc.User, cc.Password, cc.VIN)
 
 	v := &Smart{
-		embed:  &cc.embed,
-		Helper: request.NewHelper(log),
+		embed: &cc.embed,
 	}
 
 	identity := mb.NewIdentity(log)
