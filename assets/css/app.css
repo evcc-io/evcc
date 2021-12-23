@@ -65,3 +65,7 @@ a {
 .cursor-pointer {
 	cursor: pointer;
 }
+
+.v-popper__inner {
+	margin: 0 12px !important;
+}
