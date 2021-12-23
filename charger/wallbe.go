@@ -195,16 +195,12 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	res := rs485.RTUUint32ToFloat64Swapped(b)
-
 	d, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
 	if err != nil {
 		return 0, err
 	}
 
-	res += float64(binary.BigEndian.Uint16(d)) / 1e3
-
-	return res, nil
+	return rs485.RTUUint32ToFloat64Swapped(b) + (float64(binary.BigEndian.Uint16(d)) / 1e3), nil
 }
 
 // currents implements the api.MeterCurrent interface
