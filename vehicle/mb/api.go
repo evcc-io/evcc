@@ -2,10 +2,10 @@ package mb
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
@@ -22,9 +22,18 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	}
 
 	// replace client transport with authenticated transport
-	v.Client.Transport = &oauth2.Transport{
-		Source: identity,
-		Base:   v.Client.Transport,
+	v.Client.Transport = &transport.Decorator{
+		Base: &oauth2.Transport{
+			Source: identity,
+			Base:   v.Client.Transport,
+		},
+		Decorator: transport.DecorateHeaders(map[string]string{
+			"accept":            "*/*",
+			"accept-language":   "de-DE;q=1.0",
+			"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
+			"x-applicationname": OAuth2Config.ClientID,
+			// "user-agent":        "Device: iPhone 6; OS-version: iOS_12.5.1; App-Name: smart EQ control; App-Version: 3.0; Build: 202108260942; Language: de_DE",
+		}),
 	}
 
 	return v
@@ -37,16 +46,14 @@ func (v *API) Vehicles() ([]string, error) {
 
 	var res struct {
 		Authorizations, LicensePlates []vehicle
+		Error                         string
+		ErrorDescription              string `json:"error_description"`
 	}
 
 	uri := fmt.Sprintf("%s/users/current", ApiURI)
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"accept-language":   "de-DE;q=1.0",
-		"x-applicationname": "70d89501-938c-4bec-82d0-6abb550b0825",
-		"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
-	})
-	if err == nil {
-		err = v.DoJSON(req, &res)
+	err := v.GetJSON(uri, &res)
+	if err != nil && res.Error != "" {
+		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
 	}
 
 	vehicles := funk.Map(res.LicensePlates, func(v vehicle) string {
@@ -79,24 +86,27 @@ func (v *API) Call(vin string) error {
 	// 		});
 	// }
 
-	// {"error":"internal_error","error_description":"Unknown error occurred"}
 	var res struct {
-		Authorizations, LicensePlates string
-		Error                         string
-		ErrorDescription              string `json:"error_description"`
+		Error            string
+		ErrorDescription string `json:"error_description"`
 	}
 
 	uri := fmt.Sprintf("%s/vehicles/%s/init-data?requestedData=BOTH&countryCode=DE&locale=de-DE", ApiURI, vin)
-	req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-		"accept":            "*/*",
-		"accept-language":   "de-DE;q=1.0",
-		"x-applicationname": "70d89501-938c-4bec-82d0-6abb550b0825",
-		"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
-	})
-	if err == nil {
-		if err = v.DoJSON(req, &res); err != nil && res.Error != "" {
-			err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
-		}
+	// req, err := request.New(http.MethodGet, uri, nil, map[string]string{
+	// 	"accept":            "*/*",
+	// 	"accept-language":   "de-DE;q=1.0",
+	// 	"x-applicationname": "70d89501-938c-4bec-82d0-6abb550b0825",
+	// 	"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
+	// })
+	// if err == nil {
+	// 	if err = v.DoJSON(req, &res); err != nil && res.Error != "" {
+	// 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+	// 	}
+	// }
+
+	err := v.GetJSON(uri, &res)
+	if err != nil && res.Error != "" {
+		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
 	}
 
 	return err
