@@ -18,15 +18,17 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// https://id.mercedes-benz.com/.well-known/openid-configuration
+// https://github.com/TA2k/ioBroker.smart-eq
+
 const OAuthURI = "https://id.mercedes-benz.com"
 
+// https://id.mercedes-benz.com/.well-known/openid-configuration
 var OAuth2Config = &oauth2.Config{
 	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
 	RedirectURL: "https://oneapp.microservice.smart.com",
 	Endpoint: oauth2.Endpoint{
-		AuthURL:  "https://id.mercedes-benz.com/as/authorization.oauth2",
-		TokenURL: "https://id.mercedes-benz.com/as/token.oauth2",
+		AuthURL:  OAuthURI + "/as/authorization.oauth2",
+		TokenURL: OAuthURI + "/as/token.oauth2",
 	},
 	Scopes: []string{"openid", "profile", "email", "phone", "ciam-uid", "offline_access"},
 }
@@ -69,7 +71,6 @@ func (v *Identity) Login(user, password string) error {
 	}
 
 	uri := OAuth2Config.AuthCodeURL(state(), oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("redirect_uri", "https://oneapp.microservice.smart.com"),
 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)

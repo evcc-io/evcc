@@ -10,6 +10,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://github.com/TA2k/ioBroker.smart-eq
+
 const ApiURI = "https://oneapp.microservice.smart.com/seqc/v0"
 
 type API struct {
