@@ -17,8 +17,27 @@ import (
 )
 
 const (
-	ClientID          = "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA"
-	EmobilityClientID = "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq"
+	OAuthURI = "https://login.porsche.com"
+)
+
+// https://login.porsche.com/.well-known/openid-configuration
+var (
+	OAuth2Config = &oauth2.Config{
+		ClientID:    "4mPO3OE5Srjb1iaUGWsbqKBvvesya8oA",
+		RedirectURL: "https://my.porsche.com/core/de/de_DE/",
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  OAuthURI + "/as/authorization.oauth2",
+			TokenURL: OAuthURI + "/as/token.oauth2",
+		},
+		Scopes: []string{"openid"},
+	}
+
+	EmobilityOAuth2Config = &oauth2.Config{
+		ClientID:    "NJOxLv4QQNrpZnYQbb7mCvdiMxQWkHDq",
+		RedirectURL: "https://my.porsche.com/myservices/auth/auth.html",
+		Endpoint:    OAuth2Config.Endpoint,
+		Scopes:      OAuth2Config.Scopes,
+	}
 )
 
 type AccessTokens struct {
@@ -115,11 +134,11 @@ func (v *Identity) Login() (AccessTokens, error) {
 func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
 	var pr oauth.Token
 
-	actualClientID := ClientID
+	actualClientID := OAuth2Config.ClientID
 	redirectURI := "https://my.porsche.com/core/de/de_DE/"
 
 	if emobility {
-		actualClientID = EmobilityClientID
+		actualClientID = EmobilityOAuth2Config.ClientID
 		redirectURI = "https://my.porsche.com/myservices/auth/auth.html"
 	}
 
@@ -188,7 +207,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, e
 	vehiclesURL := "https://api.porsche.com/core/api/v3/de/de_DE/vehicles"
 	req, err := request.New(http.MethodGet, vehiclesURL, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
-		"apikey":        ClientID,
+		"apikey":        OAuth2Config.ClientID,
 	})
 
 	if err != nil {
@@ -221,7 +240,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, e
 	uri := fmt.Sprintf("%s/%s/pairing", vehiclesURL, foundVehicle.VIN)
 	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
-		"apikey":        ClientID,
+		"apikey":        OAuth2Config.ClientID,
 	})
 
 	if err != nil {
@@ -242,7 +261,7 @@ func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, e
 	uri = fmt.Sprintf("https://api.porsche.com/vehicle-data/de/de_DE/status/%s", foundVehicle.VIN)
 	req, err = request.New(http.MethodGet, uri, nil, map[string]string{
 		"Authorization": fmt.Sprintf("Bearer %s", accessTokens.Token.AccessToken),
-		"apikey":        ClientID,
+		"apikey":        OAuth2Config.ClientID,
 	})
 
 	if err != nil {
