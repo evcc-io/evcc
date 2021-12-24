@@ -65,29 +65,7 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *API) Call(vin string) error {
-	// 	await this.requestClient({
-	// 		method: "get",
-	// 		url: "%s/vehicles/" + vin + "/init-data?requestedData=BOTH&countryCode=DE&locale=de-DE",
-	// 		headers: {
-	// 			accept: "*/*",
-	// 			"accept-language": "de-DE;q=1.0",
-	// 			authorization: "Bearer " + this.session.access_token,
-	// 			"x-applicationname": "70d89501-938c-4bec-82d0-6abb550b0825",
-	// 			"user-agent": "Device: iPhone 6; OS-version: iOS_12.5.1; App-Name: smart EQ control; App-Version: 3.0; Build: 202108260942; Language: de_DE",
-	// 			guid: "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
-	// 		},
-	// 	})
-	// 		.then(async (res) => {
-	// 			this.log.debug(JSON.stringify(res.data));
-	// 			this.json2iob.parse(vin, res.data);
-	// 		})
-	// 		.catch((error) => {
-	// 			this.log.error(error);
-	// 			error.response && this.log.error(JSON.stringify(error.response.data));
-	// 		});
-	// }
-
+func (v *API) Status(vin string) error {
 	var res struct {
 		Error            string
 		ErrorDescription string `json:"error_description"`
@@ -106,6 +84,21 @@ func (v *API) Call(vin string) error {
 	// 	}
 	// }
 
+	err := v.GetJSON(uri, &res)
+	if err != nil && res.Error != "" {
+		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
+	}
+
+	return err
+}
+
+func (v *API) Refresh(vin string) error {
+	var res struct {
+		Error            string
+		ErrorDescription string `json:"error_description"`
+	}
+
+	uri := fmt.Sprintf("%s/vehicles/%s/refresh-data", ApiURI, vin)
 	err := v.GetJSON(uri, &res)
 	if err != nil && res.Error != "" {
 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)

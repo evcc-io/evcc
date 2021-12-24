@@ -56,15 +56,14 @@ func NewSmartFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		}
 	}
 
-	err = api.Call(cc.VIN)
+	err = api.Status(cc.VIN)
 
 	return v, err
 }
 
 // SoC implements the api.Vehicle interface
 func (v *Smart) SoC() (float64, error) {
-
-	return 0, nil
+	return 0, api.ErrNotAvailable
 }
 
 // var _ api.ChargeState = (*Smart)(nil)
@@ -155,47 +154,4 @@ func (v *Smart) SoC() (float64, error) {
 // 	}
 
 // 	return 0, 0, err
-// }
-
-// var _ api.VehicleStartCharge = (*Smart)(nil)
-
-// // StartCharge implements the api.VehicleStartCharge interface
-// func (v *Smart) StartCharge() error {
-// 	err := v.vehicle.StartCharging()
-
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		if _, err := v.vehicle.Wakeup(); err != nil {
-// 			return err
-// 		}
-
-// 		timer := time.NewTimer(90 * time.Second)
-
-// 		for {
-// 			select {
-// 			case <-timer.C:
-// 				return api.ErrTimeout
-// 			default:
-// 				time.Sleep(2 * time.Second)
-// 				if err := v.vehicle.StartCharging(); err == nil || err.Error() != "408 Request Timeout" {
-// 					return err
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	return err
-// }
-
-// var _ api.VehicleStopCharge = (*Smart)(nil)
-
-// // StopCharge implements the api.VehicleStopCharge interface
-// func (v *Smart) StopCharge() error {
-// 	err := v.vehicle.StopCharging()
-
-// 	// ignore sleeping vehicle
-// 	if err != nil && err.Error() == "408 Request Timeout" {
-// 		err = nil
-// 	}
-
-// 	return err
 // }
