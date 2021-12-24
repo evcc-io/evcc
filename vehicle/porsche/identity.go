@@ -1,15 +1,16 @@
 package porsche
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -41,7 +42,7 @@ var (
 )
 
 type AccessTokens struct {
-	Token, EmobilityToken oauth2.Token
+	Token, EmobilityToken *oauth2.Token
 }
 
 // Identity is the Porsche Identity client
@@ -115,92 +116,63 @@ func (v *Identity) Login() (AccessTokens, error) {
 	resp.Body.Close()
 
 	// get the token for the generic API
-	var token oauth.Token
-	token, err = v.fetchToken(false)
+	token, err := v.fetchToken(OAuth2Config)
 	if err != nil {
 		return accessTokens, err
 	}
-	accessTokens.Token = (oauth2.Token)(token)
+	accessTokens.Token = token
 
-	token, err = v.fetchToken(true)
+	token, err = v.fetchToken(EmobilityOAuth2Config)
 	if err != nil {
 		return accessTokens, err
 	}
-	accessTokens.EmobilityToken = (oauth2.Token)(token)
+	accessTokens.EmobilityToken = token
 
 	return accessTokens, err
 }
 
-func (v *Identity) fetchToken(emobility bool) (oauth.Token, error) {
-	var pr oauth.Token
-
-	actualClientID := OAuth2Config.ClientID
-	redirectURI := "https://my.porsche.com/core/de/de_DE/"
-
-	if emobility {
-		actualClientID = EmobilityOAuth2Config.ClientID
-		redirectURI = "https://my.porsche.com/myservices/auth/auth.html"
-	}
-
-	var CodeVerifier, _ = cv.CreateCodeVerifier()
-	codeChallenge := CodeVerifier.CodeChallengeS256()
-
-	dataTokenAuth := url.Values{
-		"redirect_uri":          []string{redirectURI},
-		"client_id":             []string{actualClientID},
-		"response_type":         []string{"code"},
-		"state":                 []string{"uvobn7XJs1"},
-		"scope":                 []string{"openid"},
-		"access_type":           []string{"offline"},
-		"country":               []string{"de"},
-		"locale":                []string{"de_DE"},
-		"code_challenge":        []string{codeChallenge},
-		"code_challenge_method": []string{"S256"},
-	}
-
-	req, err := http.NewRequest(http.MethodGet, "https://login.porsche.com/as/authorization.oauth2", nil)
+func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
+	cv, err := cv.CreateCodeVerifier()
 	if err != nil {
-		return pr, err
+		return nil, err
 	}
 
-	req.URL.RawQuery = dataTokenAuth.Encode()
+	uri := oc.AuthCodeURL("uvobn7XJs1", oauth2.AccessTypeOffline,
+		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("country", "de"),
+		oauth2.SetAuthURLParam("locale", "de_DE"),
+	)
 
-	resp, err := v.Client.Do(req)
+	resp, err := v.Client.Get(uri)
 	if err != nil {
-		return pr, err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
-		return pr, err
+		return nil, err
 	}
 
-	authCode := query.Get("code")
-	if authCode == "" {
-		return pr, errors.New("no auth code")
+	code := query.Get("code")
+	if code == "" {
+		return nil, errors.New("no auth code")
 	}
 
-	codeVerifier := CodeVerifier.CodeChallengePlain()
+	ctx, cancel := context.WithTimeout(
+		context.WithValue(context.Background(), oauth2.HTTPClient, v.Client),
+		request.Timeout,
+	)
+	defer cancel()
 
-	dataAPIToken := url.Values{
-		"grant_type":    []string{"authorization_code"},
-		"client_id":     []string{actualClientID},
-		"redirect_uri":  []string{redirectURI},
-		"code":          []string{authCode},
-		"code_verifier": []string{codeVerifier},
-	}
+	token, err := oc.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
+	)
 
-	req, err = request.New(http.MethodPost, "https://login.porsche.com/as/token.oauth2", strings.NewReader(dataAPIToken.Encode()), request.URLEncoding)
-	if err == nil {
-		err = v.DoJSON(req, &pr)
-	}
+	os.Exit(1)
 
-	if pr.AccessToken == "" {
-		return pr, errors.New("could not obtain token")
-	}
-
-	return pr, err
+	return token, err
 }
 
 func (v *Identity) FindVehicle(accessTokens AccessTokens, vin string) (string, error) {

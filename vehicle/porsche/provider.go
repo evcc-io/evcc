@@ -61,10 +61,10 @@ func (v *Provider) request(emobility bool, uri string) (*http.Request, error) {
 		v.accessTokens = newAccessTokens
 	}
 
-	apiKey := ClientID
+	apiKey := OAuth2Config.ClientID
 	apiAccessToken := v.accessTokens.Token.AccessToken
 	if emobility {
-		apiKey = EmobilityClientID
+		apiKey = EmobilityOAuth2Config.ClientID
 		apiAccessToken = v.accessTokens.EmobilityToken.AccessToken
 	}
 
