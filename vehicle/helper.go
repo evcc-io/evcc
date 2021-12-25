@@ -7,7 +7,7 @@ import (
 
 func findVehicle(vehicles []string, err error) (string, error) {
 	if err != nil {
-		return "", fmt.Errorf("cannot get vehicles: %v", err)
+		return "", fmt.Errorf("cannot get vehicles: %w", err)
 	}
 
 	if len(vehicles) != 1 {
