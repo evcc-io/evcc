@@ -1,11 +1,13 @@
 template: ford
 description: Ford
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: vin
   example: WF0FXX...
 - name: capacity
   default: 10
 render: |
   type: ford
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

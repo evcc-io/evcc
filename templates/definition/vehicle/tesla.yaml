@@ -16,6 +16,7 @@ params:
   example: W...
 - name: capacity
   default: 90
+- base: vehicleidentify
 render: |
   type: tesla
   {{- if ne .title "" }}
@@ -28,3 +29,4 @@ render: |
   {{- if ne .vin "" }}
   vin: {{ .vin }}
   {{- end }}
+  {{include "vehicle-identify" .}}

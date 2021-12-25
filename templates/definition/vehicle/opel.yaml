@@ -1,11 +1,13 @@
 template: opel
 description: Opel
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: vin
   example: WP0...
 - name: capacity
   default: 50
 render: |
   type: opel
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

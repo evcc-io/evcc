@@ -1,4 +1,4 @@
-vehicle:
+vehiclebase:
   params:
   - name: title
   - name: user
@@ -12,21 +12,8 @@ vehicle:
     default: '50'
   - name: cache
     advanced: true
-  - name: mode
-    advanced: true
-  - name: minSoC
-    advanced: true
-  - name: targetSoC
-    advanced: true
-  - name: minCurrent
-    advanced: true
-  - name: maxCurrent
-    advanced: true
-  - name: identifiers
-    advanced: true
-    valueType: stringlist
   render: |
-    {{define "vehicle-common"}}
+    {{define "vehicle-base"}}
     {{- if ne .title "" }}
     title: {{ .title }}
     {{- end }}
@@ -41,6 +28,24 @@ vehicle:
     {{- if ne .cache "" }}
     cache: {{ .cache }}
     {{- end }}
+    {{end}}
+vehicleidentify:
+  params:
+  - name: mode
+    advanced: true
+  - name: minSoC
+    advanced: true
+  - name: targetSoC
+    advanced: true
+  - name: minCurrent
+    advanced: true
+  - name: maxCurrent
+    advanced: true
+  - name: identifiers
+    advanced: true
+    valueType: stringlist
+  render: |
+    {{define "vehicle-identify"}}
     {{- if or (ne .mode "") (ne .minSoC "") (ne .targetSoC "") (ne .minCurrent "") (ne .maxCurrent "") }}
     onIdentify:
     {{- if (ne .mode "") }}

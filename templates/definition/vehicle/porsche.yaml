@@ -1,9 +1,11 @@
 template: porsche
 description: Porsche
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: capacity
   default: 83.4
 render: |
   type: porsche
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

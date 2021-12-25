@@ -118,7 +118,8 @@ type LinkedTemplate struct {
 
 // Param is a proxy template parameter
 type Param struct {
-	Name      string
+	Base      string       // Reference a predefined se of params
+	Name      string       // Param name which is used for assigning defaults properties and referencing in render
 	Required  bool         // cli if the user has to provide a non empty value
 	Mask      bool         // cli if the value should be masked, e.g. for passwords
 	Advanced  bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
@@ -150,8 +151,7 @@ type Template struct {
 	Description  string // user friendly description of the device this template describes
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
-	Generic      bool   // if this describes a generic device type rather than a product
-	ParamsBase   string // references a base param set to inherit from
+	Generic      bool // if this describes a generic device type rather than a product
 	Params       []Param
 	Render       string // rendering template
 }
@@ -178,30 +178,28 @@ func (t *Template) Validate() error {
 }
 
 // add the referenced base Params and overwrite existing ones
-func (t *Template) ResolveParamBase() {
-	if t.ParamsBase == "" {
-		return
-	}
-
+func (t *Template) ResolveParamBases() error {
 	if paramBaseList == nil {
 		err := yaml.Unmarshal([]byte(definition.ParamBaseListDefinition), &paramBaseList)
 		if err != nil {
-			fmt.Printf("Error: failed to parse paramBasesDefinition: %v\n", err)
-			return
+			return fmt.Errorf("Error: failed to parse paramBasesDefinition: %v\n", err)
 		}
-	}
-
-	base, ok := paramBaseList[t.ParamsBase]
-	if !ok {
-		fmt.Printf("Error: Could not find parambase definition: %s\n", t.ParamsBase)
-		return
 	}
 
 	currentParams := make([]Param, len(t.Params))
 	copy(currentParams, t.Params)
-	t.Params = make([]Param, len(base.Params))
-	copy(t.Params, base.Params)
+	t.Params = []Param{}
 	for _, p := range currentParams {
+		if p.Base != "" {
+			base, ok := paramBaseList[p.Base]
+			if !ok {
+				return fmt.Errorf("Error: Could not find parambase definition: %s\n", p.Base)
+			}
+
+			t.Params = append(t.Params, base.Params...)
+			continue
+		}
+
 		if i, item := t.paramWithName(p.Name); item != nil {
 			// we only allow overwriting a few fields
 			if p.Default != "" {
@@ -214,6 +212,8 @@ func (t *Template) ResolveParamBase() {
 			t.Params = append(t.Params, p)
 		}
 	}
+
+	return nil
 }
 
 // Defaults returns a map of default values for the template
