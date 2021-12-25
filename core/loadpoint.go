@@ -347,6 +347,10 @@ func (lp *LoadPoint) evChargeStopHandler() {
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
+
+	// reset pv enable/disable timer
+	lp.log.DEBUG.Printf("pv timer reset")
+	lp.resetPVTimer()
 }
 
 // evVehicleConnectHandler sends external start event
