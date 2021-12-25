@@ -1,0 +1,11 @@
+template: dacia
+description: Dacia
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 27,4
+render: |
+  type: renault
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}
