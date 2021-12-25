@@ -44,18 +44,27 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := porsche.NewAPI(log, identity)
+	api := porsche.NewAPI(log, identity.DefaultSource)
 	vin, err := api.FindVehicle(cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	capabilities, err := api.Capabilities(vin)
+	// Note: As of 27.10.21 the capabilities API needs to be called AFTER a
+	//   call to status() as it otherwise returns an HTTP 502 error.
+	//   The reason is unknown, even when tested with 100% identical Headers.
+	//   It seems to be a new backend related issue.
+	if _, err := api.Status(vin); err != nil {
+		return nil, err
+	}
+
+	emobility := porsche.NewEmobilityAPI(log, identity.EmobilitySource)
+	capabilities, err := emobility.Capabilities(vin)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, api, vin, capabilities.CarModel, cc.Cache)
+	provider := porsche.NewProvider(log, api, emobility, vin, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
 		embed:    &cc.embed,

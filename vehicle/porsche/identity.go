@@ -3,6 +3,7 @@ package porsche
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -39,10 +40,6 @@ var (
 	}
 )
 
-// type AccessTokens struct {
-// 	Token, EmobilityToken *oauth2.Token
-// }
-
 // Identity is the Porsche Identity client
 type Identity struct {
 	log *util.Logger
@@ -57,22 +54,30 @@ func NewIdentity(log *util.Logger) *Identity {
 		Helper: request.NewHelper(log),
 	}
 
-	jar, _ := cookiejar.New(&cookiejar.Options{
+	return v
+}
+
+func (v *Identity) Login(user, password string) error {
+	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
+	if err != nil {
+		return err
+	}
 
 	// track cookies and follow all (>10) redirects
 	v.Client.Jar = jar
 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		return nil
 	}
+	defer func() {
+		v.Client.Jar = nil
+		v.Client.CheckRedirect = nil
+	}()
 
-	return v
-}
-
-func (v *Identity) Login(user, password string) error {
-	// get the login page to get the cookies for the subsequent requests
-	resp, err := v.Client.Get("https://login.porsche.com/auth/de/de_DE")
+	// get the login page
+	uri := fmt.Sprintf("%s/auth/api/v1/de/de_DE/public/login", OAuthURI)
+	resp, err := v.Get(uri)
 	if err != nil {
 		return err
 	}
@@ -98,7 +103,7 @@ func (v *Identity) Login(user, password string) error {
 		"keeploggedin": []string{"false"},
 	}
 
-	req, err := request.New(http.MethodPost, "https://login.porsche.com/auth/api/v1/de/de_DE/public/login", strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
 	if err != nil {
 		return err
 	}
@@ -112,11 +117,9 @@ func (v *Identity) Login(user, password string) error {
 	// get the token for the generic API
 	token, err := v.fetchToken(OAuth2Config)
 	if err == nil {
-		// TODO
 		v.DefaultSource = OAuth2Config.TokenSource(context.Background(), token)
 
-		if token, err = v.fetchToken(EmobilityOAuth2Config); err != nil {
-			// TODO
+		if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
 			v.EmobilitySource = EmobilityOAuth2Config.TokenSource(context.Background(), token)
 		}
 	}

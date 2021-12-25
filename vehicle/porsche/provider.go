@@ -15,14 +15,14 @@ type Provider struct {
 }
 
 // NewProvider creates a new vehicle
-func NewProvider(log *util.Logger, api *API, vin, model string, cache time.Duration) *Provider {
+func NewProvider(log *util.Logger, api *API, emobility *EmobilityAPI, vin, model string, cache time.Duration) *Provider {
 	impl := &Provider{
 		statusG: provider.NewCached(func() (interface{}, error) {
 			return api.Status(vin)
 		}, cache).InterfaceGetter(),
 
 		emobilityG: provider.NewCached(func() (interface{}, error) {
-			return api.EmobilityStatus(vin, model)
+			return emobility.Status(vin, model)
 		}, cache).InterfaceGetter(),
 	}
 
