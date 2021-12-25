@@ -404,7 +404,8 @@ func (site *Site) update(lp Updater) {
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
-		homePower := site.gridPower + site.pvPower + site.batteryPower
+		// ignore negative pvPower values as that means it is not an energy source but consumption
+		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower
 		for _, lp := range site.loadpoints {
 			homePower -= lp.GetChargePower()
 		}
