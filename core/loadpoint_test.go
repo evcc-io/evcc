@@ -262,8 +262,8 @@ func TestPVHysteresis(t *testing.T) {
 			{-500, 1, 0},
 			{-499, dt - 1, 0}, // should reset timer
 			{-500, dt + 1, 0}, // new begin of timer
-			{-500, 2*dt - 2, 0},
-			{-500, 2*dt - 1, minA},
+			{-500, 2 * dt, 0},
+			{-500, 2*dt + 1, minA},
 		}},
 		// reset enable timer when threshold not met while timer active and threshold not configured
 		{false, 0, 0, []se{
@@ -271,16 +271,16 @@ func TestPVHysteresis(t *testing.T) {
 			{-6 * 100 * 10, dt + 1, 0},
 			{-6 * 100 * 10, dt + 2, 0},
 			{-6 * 100 * 10, 2 * dt, 0},
-			{-6 * 100 * 10, 2*dt + 2, minA},
+			{-6 * 100 * 10, 2*dt + 1, minA},
 		}},
 		// reset disable timer when threshold not met while timer active
 		{true, 0, 500, []se{
 			{500, 0, minA},
 			{500, 1, minA},
-			{499, dt - 1, minA},   // reset timer
-			{500, dt + 1, minA},   // within reset timer duration
-			{500, 2*dt - 2, minA}, // still within reset timer duration
-			{500, 2*dt - 1, 0},    // reset timer elapsed
+			{499, dt - 1, minA}, // reset timer
+			{500, dt + 1, minA}, // within reset timer duration
+			{500, 2 * dt, minA}, // still within reset timer duration
+			{500, 2*dt + 1, 0},  // reset timer elapsed
 		}},
 	}
 
