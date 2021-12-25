@@ -1,0 +1,10 @@
+template: innogy-ebox
+description: Innogy eBox
+requirements:
+  sponsorship: true
+params:
+- name: modbus
+  choice: ["tcpip"]
+render: |
+  type: innogy
+  {{include "modbus" .}}
