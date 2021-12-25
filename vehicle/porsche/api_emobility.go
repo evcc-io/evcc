@@ -12,14 +12,12 @@ import (
 
 // EmobilityAPI is the Porsche Emobility API
 type EmobilityAPI struct {
-	log *util.Logger
 	*request.Helper
 }
 
 // NewEmobilityAPI creates a new vehicle
 func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAPI {
 	v := &EmobilityAPI{
-		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
@@ -38,7 +36,6 @@ func NewEmobilityAPI(log *util.Logger, identity oauth2.TokenSource) *EmobilityAP
 
 func (v *EmobilityAPI) Capabilities(vin string) (CapabilitiesResponse, error) {
 	var res CapabilitiesResponse
-
 	uri := fmt.Sprintf("https://api.porsche.com/e-mobility/vcs/capabilities/%s", vin)
 	err := v.GetJSON(uri, &res)
 	return res, err

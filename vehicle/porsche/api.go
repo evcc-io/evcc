@@ -17,14 +17,12 @@ const (
 
 // API is an api.Vehicle implementation for Porsche PHEV cars
 type API struct {
-	log *util.Logger
 	*request.Helper
 }
 
 // NewAPI creates a new vehicle
 func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	v := &API{
-		log:    log,
 		Helper: request.NewHelper(log),
 	}
 
