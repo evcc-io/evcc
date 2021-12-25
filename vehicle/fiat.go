@@ -56,14 +56,11 @@ func NewFiatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	api := fiat.NewAPI(log, identity)
 
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	v.Provider = fiat.NewProvider(api, strings.ToUpper(cc.VIN), cc.PIN, cc.Expiry, cc.Cache)
+	if err == nil {
+		v.Provider = fiat.NewProvider(api, strings.ToUpper(cc.VIN), cc.PIN, cc.Expiry, cc.Cache)
+	}
 
 	return v, err
 }

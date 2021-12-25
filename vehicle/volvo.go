@@ -65,12 +65,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}, cc.Cache).InterfaceGetter()
 
 	var err error
-	if cc.VIN == "" {
-		v.vin, err = findVehicle(v.vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", v.vin)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, v.vehicles)
 
 	return v, err
 }

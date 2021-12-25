@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
@@ -47,7 +48,7 @@ type Identity struct {
 }
 
 // NewIdentity creates BlueLink Identity
-func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
+func NewIdentity(log *util.Logger, config Config) *Identity {
 	v := &Identity{
 		log:    log,
 		Helper: request.NewHelper(log),
@@ -57,7 +58,7 @@ func NewIdentity(log *util.Logger, config Config) (*Identity, error) {
 	// fetch updated stamps
 	updateStamps(log, config.CCSPApplicationID)
 
-	return v, nil
+	return v
 }
 
 // Credits to https://openwb.de/forum/viewtopic.php?f=5&t=1215&start=10#p11877
@@ -322,6 +323,10 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 }
 
 func (v *Identity) Login(user, password string) (err error) {
+	if user == "" || password == "" {
+		return api.ErrMissingCredentials
+	}
+
 	v.deviceID, err = v.getDeviceID()
 
 	var cookieClient *request.Helper

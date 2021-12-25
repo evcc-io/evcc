@@ -37,12 +37,6 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.User == "" || cc.Password == "" {
-		return nil, api.ErrMissingCredentials
-	}
-
-	log := util.NewLogger("kia").Redact(cc.User, cc.Password, cc.VIN)
-
 	settings := bluelink.Config{
 		URI:               "https://prd.eu-ccapi.kia.com:8080",
 		BasicToken:        "ZmRjODVjMDAtMGEyZi00YzY0LWJjYjQtMmNmYjE1MDA3MzBhOnNlY3JldA==",
@@ -52,10 +46,8 @@ func NewKiaFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		BrandAuthUrl:      "https://eu-account.kia.com/auth/realms/eukiaidm/protocol/openid-connect/auth?client_id=%s&scope=openid%%20profile%%20email%%20phone&response_type=code&hkid_session_reset=true&redirect_uri=%s/api/v1/user/integration/redirect/login&ui_locales=%s&state=%s:%s",
 	}
 
-	identity, err := bluelink.NewIdentity(log, settings)
-	if err != nil {
-		return nil, err
-	}
+	log := util.NewLogger("kia").Redact(cc.User, cc.Password, cc.VIN)
+	identity := bluelink.NewIdentity(log, settings)
 
 	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, err

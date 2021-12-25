@@ -46,8 +46,8 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("seat").Redact(cc.User, cc.Password, cc.VIN)
-
 	identity := vw.NewIdentity(log, seat.AuthClientID, seat.AuthParams, cc.User, cc.Password)
+
 	err := identity.Login()
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
@@ -56,12 +56,7 @@ func NewSeatFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	api := vw.NewAPI(log, identity, seat.Brand, seat.Country)
 	api.Client.Timeout = cc.Timeout
 
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
 		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {

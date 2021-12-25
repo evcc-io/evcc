@@ -42,23 +42,22 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
 	identity := porsche.NewIdentity(log)
 
-	if err := identity.Login(cc.User, cc.Password); err != nil {
+	err := identity.Login(cc.User, cc.Password)
+	if err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
 	api := porsche.NewAPI(log, identity.DefaultSource)
 
-	if cc.VIN == "" {
+	cc.VIN, err = ensureVehicle(cc.VIN, func() ([]string, error) {
 		vehicles, err := api.Vehicles()
-		cc.VIN, err = findVehicle(funk.Map(vehicles, func(v porsche.Vehicle) string {
+		return funk.Map(vehicles, func(v porsche.Vehicle) string {
 			return v.VIN
-		}).([]string), err)
+		}).([]string), err
+	})
 
-		if err != nil {
-			return nil, err
-		}
-
-		log.DEBUG.Printf("found vehicle: %v", cc.VIN)
+	if err != nil {
+		return nil, err
 	}
 
 	// check if vehicle is paired
