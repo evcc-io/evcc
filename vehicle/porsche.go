@@ -50,11 +50,9 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	if cc.VIN == "" {
 		vehicles, err := api.Vehicles()
-		if err == nil {
-			cc.VIN, err = findVehicle(funk.Map(vehicles, func(v porsche.Vehicle) string {
-				return v.VIN
-			}).([]string), nil)
-		}
+		cc.VIN, err = findVehicle(funk.Map(vehicles, func(v porsche.Vehicle) string {
+			return v.VIN
+		}).([]string), err)
 
 		if err != nil {
 			return nil, err
