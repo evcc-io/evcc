@@ -9,19 +9,10 @@ import (
 	"github.com/evcc-io/evcc/vehicle/porsche"
 )
 
-type porscheProvider interface {
-	api.Battery
-	api.ChargeState
-	api.VehicleRange
-	api.VehicleClimater
-	api.VehicleFinishTimer
-	api.VehicleOdometer
-}
-
 // Porsche is an api.Vehicle implementation for Porsche cars
 type Porsche struct {
 	*embed
-	porscheProvider // provides the api implementations
+	*porsche.Provider
 }
 
 func init() {
@@ -47,23 +38,28 @@ func NewPorscheFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("porsche").Redact(cc.User, cc.Password, cc.VIN)
-	identity := porsche.NewIdentity(log, cc.User, cc.Password)
+	identity := porsche.NewIdentity(log)
 
-	accessTokens, err := identity.Login()
-	if err != nil {
+	if err := identity.Login(cc.User, cc.Password); err != nil {
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
-	vin, err := identity.FindVehicle(accessTokens, cc.VIN)
+	api := porsche.NewAPI(log, identity)
+	vin, err := api.FindVehicle(cc.VIN)
 	if err != nil {
 		return nil, err
 	}
 
-	provider := porsche.NewProvider(log, identity, accessTokens, vin, cc.Cache)
+	capabilities, err := api.Capabilities(vin)
+	if err != nil {
+		return nil, err
+	}
+
+	provider := porsche.NewProvider(log, api, vin, capabilities.CarModel, cc.Cache)
 
 	v := &Porsche{
-		embed:           &cc.embed,
-		porscheProvider: provider,
+		embed:    &cc.embed,
+		Provider: provider,
 	}
 
 	return v, err
