@@ -41,6 +41,7 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	return v
 }
 
+// Vehicles implements the vehicle list response
 func (v *API) Vehicles() ([]Vehicle, error) {
 	var res []Vehicle
 	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles", ApiURI)
@@ -48,7 +49,7 @@ func (v *API) Vehicles() ([]Vehicle, error) {
 	return res, err
 }
 
-// PairingStatus implements the vehicle status response
+// PairingStatus implements the vehicle pairing status response
 func (v *API) PairingStatus(vin string) (VehiclePairingResponse, error) {
 	var res VehiclePairingResponse
 	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles/%s/pairing", ApiURI, vin)
