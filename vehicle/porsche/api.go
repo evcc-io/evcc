@@ -1,9 +1,7 @@
 package porsche
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -13,6 +11,8 @@ import (
 
 const (
 	ApiURI = "https://api.porsche.com"
+
+	PairingComplete = "PAIRINGCOMPLETE"
 )
 
 // API is an api.Vehicle implementation for Porsche PHEV cars
@@ -41,50 +41,19 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 	return v
 }
 
-func (v *API) FindVehicle(vin string) (string, error) {
-	var vehicles []VehicleResponse
-
+func (v *API) Vehicles() ([]Vehicle, error) {
+	var res []Vehicle
 	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles", ApiURI)
-	if err := v.GetJSON(uri, &vehicles); err != nil {
-		return "", err
-	}
+	err := v.GetJSON(uri, &res)
+	return res, err
+}
 
-	var foundVehicle VehicleResponse
-
-	if vin == "" && len(vehicles) == 1 {
-		foundVehicle = vehicles[0]
-	} else {
-		for _, vehicleItem := range vehicles {
-			if vehicleItem.VIN == strings.ToUpper(vin) {
-				foundVehicle = vehicleItem
-			}
-		}
-	}
-	if foundVehicle.VIN == "" {
-		return "", errors.New("vin not found")
-	}
-
-	v.log.DEBUG.Printf("found vehicle: %v", foundVehicle.VIN)
-
-	// check if vehicle is paired
-	var pairing VehiclePairingResponse
-	uri = fmt.Sprintf("%s/%s/pairing", uri, foundVehicle.VIN)
-	if err := v.GetJSON(uri, &pairing); err != nil {
-		return "", err
-	}
-
-	if pairing.Status != "PAIRINGCOMPLETE" {
-		return "", errors.New("vehicle is not paired with the My Porsche account")
-	}
-
-	// now check if we get any response at all for a status request
-	// there are PHEV which do not provide any data, even thought they are PHEV
-	uri = fmt.Sprintf("%s/vehicle-data/de/de_DE/status/%s", ApiURI, foundVehicle.VIN)
-	if err := v.GetJSON(uri, nil); err != nil {
-		return "", errors.New("vehicle is not capable of providing data")
-	}
-
-	return foundVehicle.VIN, nil
+// PairingStatus implements the vehicle status response
+func (v *API) PairingStatus(vin string) (VehiclePairingResponse, error) {
+	var res VehiclePairingResponse
+	uri := fmt.Sprintf("%s/core/api/v3/de/de_DE/vehicles/%s/pairing", ApiURI, vin)
+	err := v.GetJSON(uri, &res)
+	return res, err
 }
 
 // Status implements the vehicle status response
