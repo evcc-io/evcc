@@ -1044,7 +1044,7 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 	if action == timerInactive {
 		lp.log.DEBUG.Printf("%s action: %s", name, action)
 	} else {
-		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining)
+		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining.Round(time.Second))
 	}
 }
 
