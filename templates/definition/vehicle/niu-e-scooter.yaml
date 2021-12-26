@@ -9,6 +9,7 @@ params:
   mask: true
 - name: serial
   required: true
+- base: vehicleidentify
 render: |
   type: niu
   {{- if ne .title "" }}

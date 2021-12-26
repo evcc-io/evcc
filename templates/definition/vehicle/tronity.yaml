@@ -16,6 +16,7 @@ params:
   example: W...
 - name: capacity
   default: 10
+- base: vehicleidentify
 render: |
   type: tronity
   {{- if ne .title "" }}

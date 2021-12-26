@@ -1,13 +1,11 @@
-template: mini
-description: Mini
+template: dacia
+description: Dacia
 params:
 - base: vehiclebase
 - base: vehicleidentify
-- name: vin
-  example: WBMW...
 - name: capacity
-  default: 32
+  default: 27,4
 render: |
-  type: mini
+  type: renault
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}

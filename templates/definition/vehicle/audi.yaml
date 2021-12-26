@@ -1,11 +1,13 @@
 template: audi
 description: Audi
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: vin
   example: WAUZZZ...
 - name: capacity
   default: 60
 render: |
   type: audi
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

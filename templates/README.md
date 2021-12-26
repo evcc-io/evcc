@@ -76,17 +76,13 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 `loglevel` defindes the name that can be used in the `levels` configuration for adjusting the log level of individual devices/components/...
 
-## `paramsbase`
-
-`paramsbase` allows to use a predefined set of params, so they don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
-
-**Possible values**:
-
-- `vehicle`: Provides a set of params that are used in most vehicles
-
 ## `params`
 
 `params` describes the set of parameters the user needs to provide a value for.
+
+## `base`
+
+`base` reference value of a predefined params set defined in `parambaselist.yaml`, so these params don't need to be redefined in each template. The `example` and `default` values for each predefined value can be overwritten.
 
 ### `name`
 

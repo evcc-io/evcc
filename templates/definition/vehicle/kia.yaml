@@ -1,9 +1,11 @@
 template: kia
 description: Kia
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: capacity
   default: 64
 render: |
   type: kia
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}
