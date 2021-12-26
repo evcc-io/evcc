@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	xj "github.com/basgys/goxml2json"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
@@ -28,6 +30,7 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	re          *regexp.Regexp
+	transform   string
 	jq          *gojq.Query
 	unpack      string
 	decode      string
@@ -56,6 +59,7 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		Headers     map[string]string
 		Body        string
 		Regex       string
+		Transform   string
 		Jq          string
 		Unpack      string
 		Decode      string
@@ -89,6 +93,10 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 	var err error
 	if err == nil && cc.Regex != "" {
 		_, err = http.WithRegex(cc.Regex)
+	}
+
+	if err == nil && cc.Transform != "" {
+		_, err = http.WithTransform(cc.Transform)
 	}
 
 	if err == nil && cc.Jq != "" {
@@ -157,6 +165,13 @@ func (p *HTTP) WithRegex(regex string) (*HTTP, error) {
 	}
 
 	p.re = re
+
+	return p, nil
+}
+
+// WithTransform adds data transformation into JSON
+func (p *HTTP) WithTransform(transform string) (*HTTP, error) {
+	p.transform = strings.ToLower(transform)
 
 	return p, nil
 }
@@ -233,6 +248,32 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	}
 
 	return p.val, p.err
+}
+
+// transform XML string into JSON with attribute names getting 'attr' prefix
+func (p *HTTP) transformXML(value []byte) (string, error) {
+	switch p.transform {
+	case "xml":
+		xmlReader := strings.NewReader(string(value))
+
+		// Decode XML document
+		root := &xj.Node{}
+		err := xj.NewDecoder(xmlReader).DecodeWithCustomPrefixes(root, "", "attr")
+		if err != nil {
+			return "", fmt.Errorf("Error parsing XML: %s", err)
+		}
+
+		// Then encode it in JSON
+		json := new(bytes.Buffer)
+		err = xj.NewEncoder(json).Encode(root)
+		if err != nil {
+			return "", fmt.Errorf("Error transforming XML to JSON: %s", err)
+		}
+
+		return json.String(), nil
+	}
+
+	return "", fmt.Errorf("invalid transform %s", p.transform)
 }
 
 func (p *HTTP) unpackValue(value []byte) (string, error) {
@@ -319,6 +360,14 @@ func (p *HTTP) StringGetter() func() (string, error) {
 			if len(m) > 1 {
 				b = m[1] // first submatch
 			}
+		}
+
+		if p.transform != "" {
+			v, err := p.transformXML(b)
+			if err != nil {
+				return string(b), err
+			}
+			b = []byte(fmt.Sprintf("%v", v))
 		}
 
 		if p.jq != nil {
