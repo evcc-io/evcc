@@ -20,7 +20,6 @@ type Modbus struct {
 	opPower  modbus.Operation
 	opEnergy modbus.Operation
 	opSoC    modbus.Operation
-	scale    float64
 }
 
 func init() {
@@ -36,14 +35,12 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, SoC string
 		Currents           []string
-		Scale              float64
 		Timeout            time.Duration
 	}{
 		Power: "Power",
 		Settings: modbus.Settings{
 			ID: 1,
 		},
-		Scale: 1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
@@ -93,7 +90,6 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	m := &Modbus{
 		conn:   conn,
 		device: device,
-		scale:  cc.Scale,
 	}
 
 	cc.Power = modbus.ReadingName(cc.Power)
@@ -180,7 +176,7 @@ func (m *Modbus) floatGetter(op modbus.Operation) (float64, error) {
 		err = nil
 	}
 
-	return m.scale * res.Value, err
+	return res.Value, err
 }
 
 // CurrentPower implements the api.Meter interface

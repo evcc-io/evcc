@@ -15,7 +15,4 @@ rtu: true # serial modbus rtu (rs485) device connected using simple ethernet ada
 # TCPIP
 uri: {{ .host }}:{{ .port }}
 {{- end }}
-{{- if ne .scale "" }}
-scale: {{ .scale }}
-{{- end }}
 {{end}}

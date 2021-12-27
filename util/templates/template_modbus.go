@@ -23,12 +23,8 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 	}
 
 	for k := range values {
-		switch k {
-		case ModbusParamNameId:
+		if k == ModbusParamNameId {
 			t.Params = append(t.Params, Param{Name: ModbusParamNameId, ValueType: ParamValueTypeNumber})
-			continue
-		case ModbusParamNameScale:
-			t.Params = append(t.Params, Param{Name: ModbusParamNameScale, ValueType: ParamValueTypeFloat})
 			continue
 		}
 
@@ -43,7 +39,6 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 			ModbusParamNameDevice:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
 			ModbusParamNameBaudrate: {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeNumber},
 			ModbusParamNameComset:   {modbusKeys: []string{ModbusKeyRS485Serial}, valueType: ParamValueTypeString},
-			ModbusParamNameScale:    {modbusKeys: []string{ModbusKeyTCPIP, ModbusKeyRS485TCPIP, ModbusKeyRS485Serial}, valueType: ParamValueTypeFloat},
 		}
 
 		if funk.ContainsString(paramMap[k].modbusKeys, values[ParamModbus].(string)) {
@@ -95,7 +90,6 @@ func (t *Template) ModbusValues(values map[string]interface{}) {
 		ModbusParamNameDevice:   ModbusParamValueDevice,
 		ModbusParamNameBaudrate: ModbusParamValueBaudrate,
 		ModbusParamNameComset:   ModbusParamValueComset,
-		ModbusParamNameScale:    ModbusParamValueScale,
 	} {
 		values[k] = v
 	}
