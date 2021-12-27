@@ -310,6 +310,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 	deviceDefaultComset := templates.ModbusParamValueComset
 	deviceDefaultPort := templates.ModbusParamValuePort
 	deviceDefaultId := templates.ModbusParamValueId
+	deviceDefaultScale := templates.ModbusParamValueScale
 
 	if param.Baudrate != 0 {
 		deviceDefaultBaudrate = param.Baudrate
@@ -322,6 +323,9 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 	}
 	if param.ID != 0 {
 		deviceDefaultId = param.ID
+	}
+	if param.Scale != 0 {
+		deviceDefaultScale = param.Scale
 	}
 
 	var choices []string
@@ -349,6 +353,18 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 			valueType:    templates.ParamValueTypeNumber,
 			required:     true})
 		additionalConfig[templates.ModbusParamNameId] = id
+
+		if c.advancedMode {
+			// ask for modbus address
+			scale := c.askValue(question{
+				label:        c.localizedString("UserFriendly_Scale_Name", nil),
+				help:         c.localizedString("UserFriendly_Scale_Help", nil),
+				defaultValue: deviceDefaultScale,
+				valueType:    templates.ParamValueTypeFloat})
+			additionalConfig[templates.ModbusParamNameScale] = scale
+		} else {
+			additionalConfig[templates.ModbusParamNameScale] = deviceDefaultScale
+		}
 
 		// ask for modbus interface type
 		var index int

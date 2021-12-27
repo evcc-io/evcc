@@ -49,6 +49,8 @@ const (
 	ModbusParamNamePort      = "port"
 	ModbusParamValuePort     = 502
 	ModbusParamNameRTU       = "rtu"
+	ModbusParamNameScale     = "scale"
+	ModbusParamValueScale    = 1.0
 )
 
 var HemsValueTypes = []string{HemsTypeSMA}
@@ -132,10 +134,11 @@ type Param struct {
 	ValueType string       // string representation of the value type, "string" is default
 	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
 	Usages    []string
-	Baudrate  int    // device specific default for modbus RS485 baudrate
-	Comset    string // device specific default for modbus RS485 comset
-	Port      int    // device specific default for modbus TCPIP port
-	ID        int    // device specific default for modbus ID
+	Baudrate  int     // device specific default for modbus RS485 baudrate
+	Comset    string  // device specific default for modbus RS485 comset
+	Port      int     // device specific default for modbus TCPIP port
+	ID        int     // device specific default for modbus ID
+	Scale     float64 // device specific default for modbus scale
 }
 
 type ParamBase struct {
