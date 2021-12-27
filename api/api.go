@@ -184,3 +184,8 @@ type Tariff interface {
 	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
 }
+
+// Updateable components shall be updated every site cycle
+type Updateable interface {
+	Update() error
+}

@@ -8,4 +8,5 @@ type configProvider interface {
 	Charger(string) api.Charger
 	Switch1p3p(string) api.ChargePhases
 	Vehicle(string) api.Vehicle
+	Simulator(string) api.Updateable
 }

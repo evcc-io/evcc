@@ -37,15 +37,17 @@ type Site struct {
 	Meters        MetersConfig // Meter references
 	PrioritySoC   float64      `mapstructure:"prioritySoC"` // prefer battery up to this SoC
 	BufferSoC     float64      `mapstructure:"bufferSoC"`   // ignore battery above this SoC
+	SimulatorsRef []string     `mapstructure:"simulators"`  // list of simulators
 
 	// meters
 	gridMeter     api.Meter   // Grid usage meter
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 
-	tariffs    tariff.Tariffs // Tariff
-	loadpoints []*LoadPoint   // Loadpoints
-	savings    Savings        // Savings
+	tariffs     tariff.Tariffs   // Tariff
+	loadpoints  []*LoadPoint     // Loadpoints
+	savings     Savings          // Savings
+	updateables []api.Updateable // elements whose update shall be called regularly
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -80,6 +82,13 @@ func NewSiteFromConfig(
 	site.tariffs = tariffs
 	site.loadpoints = loadpoints
 	site.savings = NewSavings()
+
+	// all simulators have to be updated -> add them to the updateables list
+	if len(site.SimulatorsRef) > 0 {
+		for _, name := range site.SimulatorsRef {
+			site.updateables = append(site.updateables, cp.Simulator(name))
+		}
+	}
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -416,6 +425,13 @@ func (site *Site) sitePower() (float64, error) {
 
 func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
+
+	// update all updateables before all other elements are updated
+	for _, updateable := range site.updateables {
+		if err := updateable.Update(); err != nil {
+			site.log.ERROR.Println(err)
+		}
+	}
 
 	var cheap bool
 	var err error
