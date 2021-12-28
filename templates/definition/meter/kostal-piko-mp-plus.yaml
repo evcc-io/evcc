@@ -15,6 +15,5 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/measurements.xml
-    transform: xml
     jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | .attrValue | tonumber
   {{- end -}}
