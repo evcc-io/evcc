@@ -417,8 +417,8 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// stop timer when vehicle is removed
-	lp.socTimer.Stop()
+	// reset timer when vehicle is removed
+	lp.socTimer.Reset()
 }
 
 // evChargeCurrentHandler publishes the charge current

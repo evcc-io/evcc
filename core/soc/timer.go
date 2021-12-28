@@ -65,13 +65,23 @@ func (lp *Timer) Stop() {
 	}
 }
 
+// Set sets the target charging time
+func (lp *Timer) Set(t time.Time) {
+	if lp == nil {
+		return
+	}
+
+	lp.Time = t
+	lp.Publish("targetTime", lp.Time)
+}
+
 // Reset resets the target charging request
 func (lp *Timer) Reset() {
 	if lp == nil {
 		return
 	}
 
-	lp.Time = time.Time{}
+	lp.Set(time.Time{})
 	lp.Stop()
 }
 
