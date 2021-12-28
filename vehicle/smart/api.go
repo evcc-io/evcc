@@ -1,4 +1,4 @@
-package mb
+package smart
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
+	"github.com/evcc-io/evcc/vehicle/mb"
 	"github.com/thoas/go-funk"
 	"golang.org/x/oauth2"
 )
@@ -13,6 +14,17 @@ import (
 // https://github.com/TA2k/ioBroker.smart-eq
 
 const ApiURI = "https://oneapp.microservice.smart.com/seqc/v0"
+
+// https://id.mercedes-benz.com/.well-known/openid-configuration
+var OAuth2Config = &oauth2.Config{
+	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
+	RedirectURL: "https://oneapp.microservice.smart.com",
+	Endpoint: oauth2.Endpoint{
+		AuthURL:  mb.OAuthURI + "/as/authorization.oauth2",
+		TokenURL: mb.OAuthURI + "/as/token.oauth2",
+	},
+	Scopes: []string{"openid", "profile", "email", "phone", "ciam-uid", "offline_access"},
+}
 
 type API struct {
 	*request.Helper
@@ -34,7 +46,6 @@ func NewAPI(log *util.Logger, identity oauth2.TokenSource) *API {
 			"accept-language":   "de-DE;q=1.0",
 			"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
 			"x-applicationname": OAuth2Config.ClientID,
-			// "user-agent":        "Device: iPhone 6; OS-version: iOS_12.5.1; App-Name: smart EQ control; App-Version: 3.0; Build: 202108260942; Language: de_DE",
 		}),
 	}
 
@@ -65,44 +76,28 @@ func (v *API) Vehicles() ([]string, error) {
 	return vehicles, err
 }
 
-func (v *API) Status(vin string) error {
-	var res struct {
-		Error            string
-		ErrorDescription string `json:"error_description"`
-	}
+func (v *API) Status(vin string) (StatusResponse, error) {
+	var res StatusResponse
 
 	uri := fmt.Sprintf("%s/vehicles/%s/init-data?requestedData=BOTH&countryCode=DE&locale=de-DE", ApiURI, vin)
-	// req, err := request.New(http.MethodGet, uri, nil, map[string]string{
-	// 	"accept":            "*/*",
-	// 	"accept-language":   "de-DE;q=1.0",
-	// 	"x-applicationname": "70d89501-938c-4bec-82d0-6abb550b0825",
-	// 	"guid":              "280C6B55-F179-4428-88B6-E0CCF5C22A7C",
-	// })
-	// if err == nil {
-	// 	if err = v.DoJSON(req, &res); err != nil && res.Error != "" {
-	// 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
-	// 	}
-	// }
-
 	err := v.GetJSON(uri, &res)
+
 	if err != nil && res.Error != "" {
 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
 	}
 
-	return err
+	return res, err
 }
 
-func (v *API) Refresh(vin string) error {
-	var res struct {
-		Error            string
-		ErrorDescription string `json:"error_description"`
-	}
+func (v *API) Refresh(vin string) (StatusResponse, error) {
+	var res StatusResponse
 
 	uri := fmt.Sprintf("%s/vehicles/%s/refresh-data", ApiURI, vin)
 	err := v.GetJSON(uri, &res)
+
 	if err != nil && res.Error != "" {
 		err = fmt.Errorf("%s (%s): %w", res.Error, res.ErrorDescription, err)
 	}
 
-	return err
+	return res, err
 }

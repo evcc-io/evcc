@@ -22,26 +22,17 @@ import (
 
 const OAuthURI = "https://id.mercedes-benz.com"
 
-// https://id.mercedes-benz.com/.well-known/openid-configuration
-var OAuth2Config = &oauth2.Config{
-	ClientID:    "70d89501-938c-4bec-82d0-6abb550b0825",
-	RedirectURL: "https://oneapp.microservice.smart.com",
-	Endpoint: oauth2.Endpoint{
-		AuthURL:  OAuthURI + "/as/authorization.oauth2",
-		TokenURL: OAuthURI + "/as/token.oauth2",
-	},
-	Scopes: []string{"openid", "profile", "email", "phone", "ciam-uid", "offline_access"},
-}
-
 type Identity struct {
 	*request.Helper
+	oc *oauth2.Config
 	oauth2.TokenSource
 }
 
 // NewIdentity creates Mercedes Benz identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, oc *oauth2.Config) *Identity {
 	return &Identity{
 		Helper: request.NewHelper(log),
+		oc:     oc,
 	}
 }
 
@@ -70,7 +61,7 @@ func (v *Identity) Login(user, password string) error {
 		return err
 	}
 
-	uri := OAuth2Config.AuthCodeURL(state(), oauth2.AccessTypeOffline,
+	uri := v.oc.AuthCodeURL(state(), oauth2.AccessTypeOffline,
 		oauth2.SetAuthURLParam("code_challenge", cv.CodeChallengeS256()),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
 	)
@@ -146,13 +137,13 @@ func (v *Identity) Login(user, password string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), request.Timeout)
 		defer cancel()
 
-		token, err = OAuth2Config.Exchange(ctx, code,
+		token, err = v.oc.Exchange(ctx, code,
 			oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 		)
 	}
 
 	if err == nil {
-		v.TokenSource = OAuth2Config.TokenSource(context.Background(), token)
+		v.TokenSource = v.oc.TokenSource(context.Background(), token)
 	}
 
 	return err
