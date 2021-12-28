@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -58,8 +57,8 @@ func NewVWFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		if err = api.HomeRegion(strings.ToUpper(cc.VIN)); err == nil {
-			v.Provider = vw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		if err = api.HomeRegion(cc.VIN); err == nil {
+			v.Provider = vw.NewProvider(api, cc.VIN, cc.Cache)
 		}
 	}
 

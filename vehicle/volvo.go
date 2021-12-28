@@ -65,7 +65,7 @@ func NewVolvoFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}, cc.Cache).InterfaceGetter()
 
 	var err error
-	cc.VIN, err = ensureVehicle(cc.VIN, v.vehicles)
+	v.vin, err = ensureVehicle(cc.VIN, v.vehicles)
 
 	return v, err
 }

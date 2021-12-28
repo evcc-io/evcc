@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -65,7 +64,7 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
 	if err == nil {
-		v.Provider = bmw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		v.Provider = bmw.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err
