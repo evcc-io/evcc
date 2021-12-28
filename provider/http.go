@@ -250,19 +250,17 @@ func (p *HTTP) transformXML(value []byte) []byte {
 
 	// Decode XML document
 	root := &xj.Node{}
-	err := xj.NewDecoder(xmlReader).DecodeWithCustomPrefixes(root, "", "attr")
-	if err != nil {
+	if err := xj.NewDecoder(xmlReader).DecodeWithCustomPrefixes(root, "", "attr"); err != nil {
 		return value
 	}
 
 	// Then encode it in JSON
 	json := new(bytes.Buffer)
-	err = xj.NewEncoder(json).Encode(root)
-	if err != nil {
+	if err := xj.NewEncoder(json).Encode(root); err != nil {
 		return value
 	}
 
-	return []byte(fmt.Sprintf("%v", json.String()))
+	return json.Bytes()
 }
 
 func (p *HTTP) unpackValue(value []byte) (string, error) {
