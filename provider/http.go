@@ -344,27 +344,6 @@ func (p *HTTP) StringGetter() func() (string, error) {
 			return string(b), err
 		}
 
-		input := `<root>
-		<Device Name="PIKO 1.5-1 MP plus" Type="Inverter" Platform="Net16" HmiPlatform="HMI17" NominalPower="1500" UserPowerLimit="nan" CountryPowerLimit="nan" Serial="" OEMSerial="10351311" BusAddress="1" NetBiosName="INV006919340022" WebPortal="PIKO Solar Portal" ManufacturerURL="kostal-solar-electric.com" IpAddress="" DateTime="2020-04-07T08:16:33" MilliSeconds="598">
-		<Measurements>
-		<Measurement Value="235.2" Unit="V" Type="AC_Voltage"/>
-		<Measurement Value="0.224" Unit="A" Type="AC_Current"/>
-		<Measurement Value="32.6" Unit="W" Type="AC_Power"/>
-		<Measurement Value="33.8" Unit="W" Type="AC_Power_fast"/>
-		<Measurement Value="50.003" Unit="Hz" Type="AC_Frequency"/>
-		<Measurement Value="89.6" Unit="V" Type="DC_Voltage"/>
-		<Measurement Value="0.548" Unit="A" Type="DC_Current"/>
-		<Measurement Value="343.6" Unit="V" Type="LINK_Voltage"/>
-		<Measurement Unit="W" Type="GridPower"/>
-		<Measurement Unit="W" Type="GridConsumedPower"/>
-		<Measurement Unit="W" Type="GridInjectedPower"/>
-		<Measurement Unit="W" Type="OwnConsumedPower"/>
-		<Measurement Value="100.0" Unit="%" Type="Derating"/>
-		</Measurements>
-		</Device>
-		</root>`
-		b = []byte(input)
-
 		b = p.transformXML(b)
 
 		if p.re != nil {
