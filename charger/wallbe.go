@@ -50,10 +50,12 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Legacy bool
 		Meter  struct {
 			Power, Energy, Currents bool
+			Encoding                interface{}
 		}
 	}{
 		URI: "192.168.0.8:502",
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -61,6 +63,10 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	wb, err := NewWallbe(cc.URI)
 	if err != nil {
 		return nil, err
+	}
+
+	if cc.Meter.Encoding != nil {
+		util.NewLogger("wallbe").WARN.Printf("encoding is deprecated and will be removed in a future release. Use firmware 01.04.21 instead.")
 	}
 
 	if cc.Legacy {
