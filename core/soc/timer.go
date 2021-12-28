@@ -15,12 +15,13 @@ const (
 // Timer is the target charging handler
 type Timer struct {
 	Adapter
-	log      *util.Logger
-	current  float64
-	SoC      int
-	Time     time.Time
-	finishAt time.Time
-	active   bool
+	log       *util.Logger
+	current   float64
+	SoC       int
+	Time      time.Time
+	finishAt  time.Time
+	active    bool
+	validated bool
 }
 
 // NewTimer creates a Timer
@@ -31,6 +32,24 @@ func NewTimer(log *util.Logger, api Adapter) *Timer {
 	}
 
 	return lp
+}
+
+// MustValidateDemand resets the flag for detecting if DemandActive has been called
+func (lp *Timer) MustValidateDemand() {
+	if lp == nil {
+		return
+	}
+
+	lp.validated = false
+}
+
+// DemandValidated returns if DemandActive has been called
+func (lp *Timer) DemandValidated() bool {
+	if lp == nil {
+		return false
+	}
+
+	return lp.validated
 }
 
 // Stop stops the target charging request
@@ -52,11 +71,8 @@ func (lp *Timer) Reset() {
 		return
 	}
 
-	lp.current = lp.GetMaxCurrent()
 	lp.Time = time.Time{}
-
-	lp.active = false
-	lp.Publish("targetTimeActive", lp.active)
+	lp.Stop()
 }
 
 // DemandActive calculates remaining charge duration and returns true if charge start is required to achieve target soc in time
@@ -64,6 +80,9 @@ func (lp *Timer) DemandActive() bool {
 	if lp == nil || lp.Time.IsZero() {
 		return false
 	}
+
+	// demand validation has been called
+	lp.validated = true
 
 	// power
 	power := lp.GetMaxPower()

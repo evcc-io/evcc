@@ -1370,8 +1370,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
 
-	// timerAllowed indicates if the soc timer needs be deactived after evaluating the loading strategy
-	var timerAllowed bool
+	// reset detection if soc timer needs be deactived after evaluating the loading strategy
+	lp.socTimer.MustValidateDemand()
 
 	// execute loading strategy
 	switch {
@@ -1413,8 +1413,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	// target charging
 	case lp.socTimer.DemandActive():
-		timerAllowed = true
-
 		// 3p if available
 		if err = lp.scalePhasesIfAvailable(3); err == nil {
 			targetCurrent := lp.socTimer.Handle()
@@ -1422,8 +1420,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
-		timerAllowed = true
-
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
 		lp.log.DEBUG.Printf("pv max charge current: %.3gA", targetCurrent)
 
@@ -1450,7 +1446,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		err = lp.setLimit(targetCurrent, required)
 	}
 
-	if !timerAllowed {
+	// stop an active target charging session if not currently evaluated
+	if !lp.socTimer.DemandValidated() {
 		lp.socTimer.Stop()
 	}
 
