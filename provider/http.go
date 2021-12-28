@@ -239,17 +239,15 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 
 // transform XML into JSON with attribute names getting 'attr' prefix
 func (p *HTTP) transformXML(value []byte) []byte {
-	content := string(value)
-
 	// only do a simple check, as some devices e.g. Kostal Piko MP plus don't seem to send proper XML
-	if !strings.HasPrefix(content, "<") {
+	if !bytes.HasPrefix(value, []byte("<")) {
 		return value
 	}
 
-	xmlReader := strings.NewReader(content)
+	xmlReader := bytes.NewReader(value)
 
 	// Decode XML document
-	root := &xj.Node{}
+	root := new(xj.Node)
 	if err := xj.NewDecoder(xmlReader).DecodeWithCustomPrefixes(root, "", "attr"); err != nil {
 		return value
 	}
