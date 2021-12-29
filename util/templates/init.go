@@ -41,7 +41,9 @@ func loadTemplates(class string) {
 		if err = yaml.Unmarshal(b, &tmpl); err != nil {
 			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
 		}
-		tmpl.ResolveParamBase()
+		if err = tmpl.ResolveParamBases(); err != nil {
+			return err
+		}
 		if err = tmpl.Validate(); err != nil {
 			return err
 		}

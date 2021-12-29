@@ -361,7 +361,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 		switch selectedModbusKey {
 		case templates.ModbusKeyRS485Serial:
 			device := c.askValue(question{
-				label:        c.localizedString("UserFriendly_Baudrate_Name", nil),
+				label:        c.localizedString("UserFriendly_Device_Name", nil),
 				help:         c.localizedString("UserFriendly_Device_Help", nil),
 				exampleValue: templates.ModbusParamValueDevice,
 				required:     true})
@@ -369,6 +369,7 @@ func (c *CmdConfigure) processModbusConfig(param templates.Param, deviceCategory
 
 			baudrate := c.askValue(question{
 				label:        c.localizedString("UserFriendly_Baudrate_Name", nil),
+				help:         c.localizedString("UserFriendly_Baudrate_Help", nil),
 				defaultValue: deviceDefaultBaudrate,
 				valueType:    templates.ParamValueTypeNumber,
 				required:     true})

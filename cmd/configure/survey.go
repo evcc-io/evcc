@@ -171,6 +171,9 @@ func (c *CmdConfigure) askValue(q question) string {
 		}
 
 		if q.valueType == templates.ParamValueTypeFloat {
+			if value == "" && !q.required {
+				return nil
+			}
 			_, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Float", nil))
@@ -178,6 +181,10 @@ func (c *CmdConfigure) askValue(q question) string {
 		}
 
 		if q.valueType == templates.ParamValueTypeNumber {
+			if value == "" && !q.required {
+				return nil
+			}
+
 			intValue, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return errors.New(c.localizedString("ValueError_Number", nil))

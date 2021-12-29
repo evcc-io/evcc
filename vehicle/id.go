@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -44,24 +43,21 @@ func NewIDFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	}
 
 	log := util.NewLogger("id").Redact(cc.User, cc.Password, cc.VIN)
+	identity := id.NewIdentity(log, cc.User, cc.Password)
 
-	ts := id.NewIdentity(log, cc.User, cc.Password)
-	err := ts.Login()
+	err := identity.Login()
 	if err != nil {
 		return v, fmt.Errorf("login failed: %w", err)
 	}
 
-	api := id.NewAPI(log, ts)
+	api := id.NewAPI(log, identity)
 	api.Client.Timeout = cc.Timeout
 
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	v.Provider = id.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		v.Provider = id.NewProvider(api, cc.VIN, cc.Cache)
+	}
 
 	return v, err
 }

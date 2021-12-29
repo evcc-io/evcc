@@ -1,4 +1,4 @@
-template: kostal-smart-energy-meter
+template: kostal-ksem
 description: Kostal Smart Energy Meter
 params:
 - name: usage

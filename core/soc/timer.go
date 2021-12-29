@@ -15,12 +15,13 @@ const (
 // Timer is the target charging handler
 type Timer struct {
 	Adapter
-	log      *util.Logger
-	current  float64
-	SoC      int
-	Time     time.Time
-	finishAt time.Time
-	active   bool
+	log       *util.Logger
+	current   float64
+	SoC       int
+	Time      time.Time
+	finishAt  time.Time
+	active    bool
+	validated bool
 }
 
 // NewTimer creates a Timer
@@ -33,30 +34,65 @@ func NewTimer(log *util.Logger, api Adapter) *Timer {
 	return lp
 }
 
+// MustValidateDemand resets the flag for detecting if DemandActive has been called
+func (lp *Timer) MustValidateDemand() {
+	if lp == nil {
+		return
+	}
+
+	lp.validated = false
+}
+
+// DemandValidated returns if DemandActive has been called
+func (lp *Timer) DemandValidated() bool {
+	if lp == nil {
+		return false
+	}
+
+	return lp.validated
+}
+
+// Stop stops the target charging request
+func (lp *Timer) Stop() {
+	if lp == nil {
+		return
+	}
+
+	if lp.active {
+		lp.active = false
+		lp.Publish("targetTimeActive", lp.active)
+		lp.log.DEBUG.Println("target charging: disable")
+	}
+}
+
+// Set sets the target charging time
+func (lp *Timer) Set(t time.Time) {
+	if lp == nil {
+		return
+	}
+
+	lp.Time = t
+	lp.Publish("targetTime", lp.Time)
+}
+
 // Reset resets the target charging request
 func (lp *Timer) Reset() {
 	if lp == nil {
 		return
 	}
 
-	lp.current = lp.GetMaxCurrent()
-	lp.Time = time.Time{}
-	lp.active = false
+	lp.Set(time.Time{})
+	lp.Stop()
 }
 
 // DemandActive calculates remaining charge duration and returns true if charge start is required to achieve target soc in time
 func (lp *Timer) DemandActive() bool {
-	if lp == nil {
+	if lp == nil || lp.Time.IsZero() {
 		return false
 	}
 
-	if lp.Time.IsZero() {
-		return false
-	}
-
-	defer func() {
-		lp.Publish("targetTimeActive", lp.active)
-	}()
+	// demand validation has been called
+	lp.validated = true
 
 	// power
 	power := lp.GetMaxPower()
@@ -66,12 +102,12 @@ func (lp *Timer) DemandActive() bool {
 
 	se := lp.SocEstimator()
 	if se == nil {
-		lp.log.WARN.Printf("target charging: not possible")
+		lp.log.WARN.Println("target charging: not possible")
 		return false
 	}
 
 	// time
-	remainingDuration := se.AssumedChargeDuration(lp.SoC, power)
+	remainingDuration := time.Duration(float64(se.AssumedChargeDuration(lp.SoC, power)) / chargeEfficiency)
 	lp.finishAt = time.Now().Add(remainingDuration).Round(time.Minute)
 
 	lp.log.DEBUG.Printf("estimated charge duration: %v to %d%% at %.0fW", remainingDuration.Round(time.Minute), lp.SoC, power)
@@ -85,15 +121,17 @@ func (lp *Timer) DemandActive() bool {
 	// timer charging is already active- only deactivate once charging has stopped
 	if lp.active {
 		if time.Now().After(lp.Time) && lp.GetStatus() != api.StatusC {
-			lp.log.INFO.Printf("target charging: deactivating")
-			lp.active = false
+			lp.Stop()
 		}
 
 		return lp.active
 	}
 
 	// check if charging need be activated
-	if lp.active = lp.finishAt.After(lp.Time); lp.active {
+	if active := lp.finishAt.After(lp.Time); active {
+		lp.active = active
+		lp.Publish("targetTimeActive", lp.active)
+
 		lp.current = lp.GetMaxCurrent()
 		lp.log.INFO.Printf("target charging active for %v: projected %v (%v remaining)", lp.Time, lp.finishAt, remainingDuration.Round(time.Minute))
 	}

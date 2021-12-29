@@ -36,7 +36,6 @@ func (v *Identity) Login(user, password string) error {
 
 	var nToken Token
 	var realm string
-	var resp *http.Response
 	var code string
 
 	if err == nil {
@@ -95,20 +94,14 @@ func (v *Identity) Login(user, password string) error {
 		})
 
 		if err == nil {
-			v.CheckRedirect = func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }
-			resp, err = v.Do(req)
-			v.CheckRedirect = nil
+			var param request.InterceptResult
+			v.Client.CheckRedirect, param = request.InterceptRedirect("code", true)
 
-			if err == nil {
-				resp.Body.Close()
-
-				var location *url.URL
-				if location, err = url.Parse(resp.Header.Get("Location")); err == nil {
-					if code = location.Query().Get("code"); code == "" {
-						err = fmt.Errorf("missing auth code: %v", location)
-					}
-				}
+			if _, err = v.Do(req); err == nil {
+				code, err = param()
 			}
+
+			v.CheckRedirect = nil
 		}
 	}
 

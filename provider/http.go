@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	xj "github.com/basgys/goxml2json"
 	"github.com/evcc-io/evcc/provider/javascript"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/jq"
@@ -235,6 +237,30 @@ func (p *HTTP) request(body ...string) ([]byte, error) {
 	return p.val, p.err
 }
 
+// transform XML into JSON with attribute names getting 'attr' prefix
+func (p *HTTP) transformXML(value []byte) []byte {
+	// only do a simple check, as some devices e.g. Kostal Piko MP plus don't seem to send proper XML
+	if !bytes.HasPrefix(value, []byte("<")) {
+		return value
+	}
+
+	xmlReader := bytes.NewReader(value)
+
+	// Decode XML document
+	root := new(xj.Node)
+	if err := xj.NewDecoder(xmlReader).DecodeWithCustomPrefixes(root, "", "attr"); err != nil {
+		return value
+	}
+
+	// Then encode it in JSON
+	json := new(bytes.Buffer)
+	if err := xj.NewEncoder(json).Encode(root); err != nil {
+		return value
+	}
+
+	return json.Bytes()
+}
+
 func (p *HTTP) unpackValue(value []byte) (string, error) {
 	switch p.unpack {
 	case "hex":
@@ -313,6 +339,8 @@ func (p *HTTP) StringGetter() func() (string, error) {
 		if err != nil {
 			return string(b), err
 		}
+
+		b = p.transformXML(b)
 
 		if p.re != nil {
 			m := p.re.FindSubmatch(b)

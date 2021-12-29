@@ -11,7 +11,9 @@ require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/avast/retry-go/v3 v3.1.1
 	github.com/aws/aws-sdk-go v1.42.23
+	github.com/basgys/goxml2json v1.1.0
 	github.com/benbjohnson/clock v1.3.0
+	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bogosj/tesla v1.0.2
 	github.com/cjrd/allocate v0.0.0-20191115010018-022b87fe59fc
 	github.com/cloudfoundry/jibber_jabber v0.0.0-20151120183258-bcc4c8345a21

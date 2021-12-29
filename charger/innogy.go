@@ -127,7 +127,9 @@ func (wb *Innogy) Enable(enable bool) error {
 		u = 1
 	}
 
-	_, err := wb.conn.WriteSingleRegister(igyRegEnable, u)
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, u)
+	_, err := wb.conn.WriteMultipleRegisters(igyRegEnable, 1, b)
 
 	return err
 }

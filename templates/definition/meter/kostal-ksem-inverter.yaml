@@ -1,5 +1,5 @@
-template: kostal-piko-energy-meter
-description: Kostal Piko (BA) Energy Meter
+template: kostal-ksem-inverter
+description: Kostal Smart Energy Meter via inverter
 params:
 - name: usage
   choice: [ "grid" ]

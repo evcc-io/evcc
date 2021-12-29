@@ -2,7 +2,7 @@ Intro = "The next steps will guide you through the creation of a configuration f
 
 Flow_Type = "What do you want to do?"
 Flow_Type_NewConfiguration = "Create a new evcc configuration file"
-Flow_Type_SingleDevice = "Configure a single device"
+Flow_Type_SingleDevice = "Configure a single device (has to be added manually to a configuration file!)"
 
 Flow_NewConfiguration_Setup = "- Setup meters (house installation)"
 Flow_NewConfiguration_Select = "Choose one of the following PV systems, or '{{ .ItemNotPresent }}' if you have none of them"
@@ -38,6 +38,7 @@ UserFriendly_Title_Help = "Will be displayed in the user interface"
 UserFriendly_Device_Name = "Device address"
 UserFriendly_Device_Help = "USB-RS485 Adapter address"
 UserFriendly_Baudrate_Name = "Baudrate"
+UserFriendly_Baudrate_Help = "Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200"
 UserFriendly_ComSet_Name = "ComSet"
 UserFriendly_Host_Name = "IP-Address or Hostname"
 UserFriendly_Port_Name = "Port"

@@ -3,7 +3,7 @@ import axios from "axios";
 const { protocol, hostname, port, pathname } = window.location;
 
 const api = axios.create({
-  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "api",
+  baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "api/",
   headers: {
     Accept: "application/json",
   },
