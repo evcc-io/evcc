@@ -138,13 +138,13 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
-	evse := &EVSEWifi{
+	wb := &EVSEWifi{
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
 	}
 
-	return evse, nil
+	return wb, nil
 }
 
 // query evse parameters
