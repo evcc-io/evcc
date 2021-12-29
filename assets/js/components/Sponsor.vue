@@ -34,7 +34,6 @@ export default {
 	},
 	methods: {
 		surprise: function () {
-			console.log(this.$refs.sponsor);
 			const { top, height, left, width } = this.$refs.sponsor.getBoundingClientRect();
 			const x = (left + width / 2) / window.innerWidth;
 			const y = (top + height / 2) / window.innerHeight;
