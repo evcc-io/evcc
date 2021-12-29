@@ -1190,7 +1190,7 @@ func (lp *LoadPoint) updateChargeCurrents() {
 		// guess active phases from power consumption
 		// assumes that chargePower has been updated before
 		if lp.charging() && lp.chargeCurrent > 0 {
-			phases := int(math.Round(lp.chargePower / Voltage / lp.chargeCurrent))
+			phases := int(math.Ceil(lp.chargePower / Voltage / lp.chargeCurrent))
 			if phases >= 1 && phases <= 3 {
 				lp.activePhases = phases
 				lp.log.DEBUG.Printf("detected phases: %dp (%.1fA @ %.0fW)", lp.activePhases, lp.chargeCurrent, lp.chargePower)
