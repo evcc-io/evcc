@@ -25,8 +25,6 @@ import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
 import { faHome } from "@fortawesome/free-solid-svg-icons/faHome";
 import { faWrench } from "@fortawesome/free-solid-svg-icons/faWrench";
 import { faCar } from "@fortawesome/free-solid-svg-icons/faCar";
-import { faEllipsisH } from "@fortawesome/free-solid-svg-icons/faEllipsisH";
-import { faEllipsisV } from "@fortawesome/free-solid-svg-icons/faEllipsisV";
 import { faSquare } from "@fortawesome/free-solid-svg-icons/faSquare";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
 import { faAngleDoubleLeft } from "@fortawesome/free-solid-svg-icons/faAngleDoubleLeft";
@@ -59,9 +57,7 @@ library.add(
   faFlask,
   faTemperatureHigh,
   faTemperatureLow,
-  faThermometerHalf,
-  faEllipsisH,
-  faEllipsisV
+  faThermometerHalf
 );
 
 // eslint-disable-next-line vue/component-definition-name-casing

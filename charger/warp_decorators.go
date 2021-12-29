@@ -6,45 +6,19 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() (float64, error)) api.Charger {
+func decorateWarp(base *Warp, meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterEnergy == nil:
+	case meterCurrent == nil:
 		return base
 
-	case meter != nil && meterEnergy == nil:
+	case meterCurrent != nil:
 		return &struct {
 			*Warp
-			api.Meter
+			api.MeterCurrent
 		}{
 			Warp: base,
-			Meter: &decorateWarpMeterImpl{
-				meter: meter,
-			},
-		}
-
-	case meter == nil && meterEnergy != nil:
-		return &struct {
-			*Warp
-			api.MeterEnergy
-		}{
-			Warp: base,
-			MeterEnergy: &decorateWarpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter != nil && meterEnergy != nil:
-		return &struct {
-			*Warp
-			api.Meter
-			api.MeterEnergy
-		}{
-			Warp: base,
-			Meter: &decorateWarpMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decorateWarpMeterEnergyImpl{
-				meterEnergy: meterEnergy,
+			MeterCurrent: &decorateWarpMeterCurrentImpl{
+				meterCurrent: meterCurrent,
 			},
 		}
 	}
@@ -52,18 +26,10 @@ func decorateWarp(base *Warp, meter func() (float64, error), meterEnergy func() 
 	return nil
 }
 
-type decorateWarpMeterImpl struct {
-	meter func() (float64, error)
+type decorateWarpMeterCurrentImpl struct {
+	meterCurrent func() (float64, float64, float64, error)
 }
 
-func (impl *decorateWarpMeterImpl) CurrentPower() (float64, error) {
-	return impl.meter()
-}
-
-type decorateWarpMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decorateWarpMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
+func (impl *decorateWarpMeterCurrentImpl) Currents() (float64, float64, float64, error) {
+	return impl.meterCurrent()
 }
