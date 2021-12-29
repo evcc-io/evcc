@@ -22,7 +22,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-// go:generate go run ../cmd/tools/decorate.go -f decorateEVSE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
+// go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)" -t "api.ChargerEx,MaxCurrentMillis,func(current float64) error" -t "api.Identifier,Identify,func() (string, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -39,7 +39,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 		return wb, err
 	}
 
-	// return decorateEVSE(wb, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
+	// return decoratePCE(wb, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
 
 	return wb, err
 }
@@ -92,13 +92,11 @@ func (wb *PCElectric) Enable(enable bool) error {
 	}
 
 	uri := fmt.Sprintf("%s/%s/%s", wb.uri, "mode", mode)
-
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
-	if err != nil {
-		return err
+	if err == nil {
+		_, err = wb.DoBody(req)
 	}
 
-	_, err = wb.DoBody(req)
 	return err
 }
 
@@ -107,7 +105,6 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 	var data pcelectric.ReducedIntervals
 
 	uri := fmt.Sprintf("%s/%s", wb.uri, "currentlimit")
-
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
