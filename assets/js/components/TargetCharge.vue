@@ -158,7 +158,6 @@ export default {
 			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
-			console.log(this.targetTimeHourSuggestion, "target");
 			const target = new Date();
 			target.setSeconds(0);
 			target.setMinutes(0);
