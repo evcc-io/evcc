@@ -37,8 +37,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"))
 	if err == nil {
 		var res pcelectric.MeterInfo
-
-		if err = wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res); err == nil && res.MeterSerial != "" {
+		if err := wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res); err == nil && res.MeterSerial != "" {
 			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
 		}
 	}
