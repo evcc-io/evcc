@@ -62,7 +62,7 @@ func NewPCElectric(uri string) (*PCElectric, error) {
 func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	var status pcelectric.Status
 
-	uri := fmt.Sprintf("%s/%s", wb.uri, "status")
+	uri := fmt.Sprintf("%s/status", wb.uri)
 	if err := wb.GetJSON(uri, &status); err != nil {
 		return api.StatusNone, err
 	}
@@ -81,7 +81,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *PCElectric) Enabled() (bool, error) {
 	var res pcelectric.Status
-	uri := fmt.Sprintf("%s/%s", wb.uri, "status")
+	uri := fmt.Sprintf("%s/status", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	return res.Mode == "ALWAYS_ON", err
 }
@@ -93,7 +93,7 @@ func (wb *PCElectric) Enable(enable bool) error {
 		mode = "ALWAYS_ON"
 	}
 
-	uri := fmt.Sprintf("%s/%s/%s", wb.uri, "mode", mode)
+	uri := fmt.Sprintf("%s/mode/%s", wb.uri, mode)
 	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
@@ -106,7 +106,7 @@ func (wb *PCElectric) Enable(enable bool) error {
 func (wb *PCElectric) MaxCurrent(current int64) error {
 	var data pcelectric.ReducedIntervals
 
-	uri := fmt.Sprintf("%s/%s", wb.uri, "currentlimit")
+	uri := fmt.Sprintf("%s/currentlimit", wb.uri)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
@@ -138,20 +138,20 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 // CurrentPower implements the api.Meter interface
 func (wb *PCElectric) currentPower() (float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res)
+	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
 	return float64(res.ApparentPower), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *PCElectric) totalEnergy() (float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res)
+	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
 	return float64(res.AccEnergy) / 1e3, err
 }
 
 // Currents implements the api.MeterCurrents interface
 func (wb *PCElectric) currents() (float64, float64, float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res)
+	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
 	return float64(res.Phase1Current) / 10, float64(res.Phase2Current) / 10, float64(res.Phase3Current) / 10, err
 }
