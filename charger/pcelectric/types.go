@@ -57,18 +57,18 @@ type ReducedCurrentInterval struct {
 
 // /servlet/rest/chargebox/meterinfo/CENTRAL100
 
-// {
-//   "success": 0,
-//   "accEnergy": 169100,
-//   "phase1Current": 158,
-//   "phase2Current": 157,
-//   "phase3Current": 156,
-//   "phase1InstPower": 3,
-//   "phase2InstPower": 3,
-//   "phase3InstPower": 3,
-//   "readTime": 1640783279023,
-//   "gridNetType": "UNKNOWN",
-//   "meterSerial": "116223V",
-//   "type": 341,
-//   "apparentPower": 9
-// }
+type MeterInfo struct {
+	Success         int    // 0,
+	AccEnergy       int64  // 169100,
+	Phase1Current   int    // 158,
+	Phase2Current   int    // 157,
+	Phase3Current   int    // 156,
+	Phase1InstPower int    // 3,
+	Phase2InstPower int    // 3,
+	Phase3InstPower int    // 3,
+	ReadTime        int64  // 1640783279023,
+	GridNetType     string // "UNKNOWN",
+	MeterSerial     string // "116223V",
+	Type            int    // 341,
+	ApparentPower   int    // 9
+}
