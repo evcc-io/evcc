@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/evcc-io/evcc/api"
@@ -91,7 +92,25 @@ func (wb *PCElectric) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *PCElectric) MaxCurrent(current int64) error {
-	return errors.New("not implemented")
+	uri := fmt.Sprintf("%s/%s", wb.uri, "currentlimit")
+
+	data := fmt.Sprintf(`{
+		"reducedIntervalsEnabled": true,
+		"reducedCurrentIntervals": [
+			{
+				"schemaId": 1,
+				"start": "00:00:00",
+				"stop": "24:00:00",
+				"weekday": 8,
+				"chargeLimit": "%d"
+			}
+		]}`, current)
+	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	return wb.DoJSON(req, nil)
 }
 
 // // CurrentPower implements the api.Meter interface
