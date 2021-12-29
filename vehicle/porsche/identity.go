@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -56,6 +57,22 @@ func NewIdentity(log *util.Logger) *Identity {
 
 	return v
 }
+
+// func (v *Identity) client() (*http.Client, error) {
+// 	jar, err := cookiejar.New(&cookiejar.Options{
+// 		PublicSuffixList: publicsuffix.List,
+// 	})
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// track cookies and follow all (>10) redirects
+// 	v.Client.Jar = jar
+// 	v.Client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+// 		return nil
+// 	}
+
+// }
 
 func (v *Identity) Login(user, password string) error {
 	jar, err := cookiejar.New(&cookiejar.Options{
@@ -117,10 +134,12 @@ func (v *Identity) Login(user, password string) error {
 	// get the token for the generic API
 	token, err := v.fetchToken(OAuth2Config)
 	if err == nil {
-		v.DefaultSource = OAuth2Config.TokenSource(context.Background(), token)
+		// v.DefaultSource = OAuth2Config.TokenSource(context.Background(), token)
+		v.DefaultSource = oauth.RefreshTokenSource(token, newTokenRefresher(OAuth2Config))
 
 		if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
-			v.EmobilitySource = EmobilityOAuth2Config.TokenSource(context.Background(), token)
+			// v.EmobilitySource = EmobilityOAuth2Config.TokenSource(context.Background(), token)
+			v.EmobilitySource = oauth.RefreshTokenSource(token, newTokenRefresher(EmobilityOAuth2Config))
 		}
 	}
 
