@@ -11,13 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-const (
-	evseGetParameters = "getParameters"
-	evseSetStatus     = "setStatus"
-	evseSetCurrent    = "setCurrent"
-
-	evseSuccess = "S0_"
-)
+const evseSuccess = "S0_"
 
 // EVSEParameterResponse is the getParameters response
 type EVSEParameterResponse struct {
@@ -151,7 +145,7 @@ func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 // query evse parameters
 func (wb *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var res EVSEParameterResponse
-	uri := fmt.Sprintf("%s/%s", wb.uri, evseGetParameters)
+	uri := fmt.Sprintf("%s/getParameters", wb.uri)
 	err := wb.GetJSON(uri, &res)
 	if err != nil {
 		return EVSEListEntry{}, err
@@ -207,13 +201,13 @@ func (wb *EVSEWifi) get(uri string) error {
 
 // Enable implements the api.Charger interface
 func (wb *EVSEWifi) Enable(enable bool) error {
-	uri := fmt.Sprintf("%s/%s?active=%v", wb.uri, evseSetStatus, enable)
+	uri := fmt.Sprintf("%s/setStatus?active=%v", wb.uri, enable)
 	if wb.alwaysActive {
 		var current int64
 		if enable {
 			current = wb.current
 		}
-		uri = fmt.Sprintf("%s/%s?current=%d", wb.uri, evseSetCurrent, current)
+		uri = fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, current)
 	}
 	return wb.get(uri)
 }
@@ -224,14 +218,14 @@ func (wb *EVSEWifi) MaxCurrent(current int64) error {
 		current = 100 * current
 	}
 	wb.current = current
-	uri := fmt.Sprintf("%s/%s?current=%d", wb.uri, evseSetCurrent, current)
+	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, current)
 	return wb.get(uri)
 }
 
 // maxCurrentEx implements the api.ChargerEx interface
 func (wb *EVSEWifi) maxCurrentEx(current float64) error {
 	wb.current = int64(100 * current)
-	uri := fmt.Sprintf("%s/%s?current=%d", wb.uri, evseSetCurrent, wb.current)
+	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, wb.current)
 	return wb.get(uri)
 }
 
