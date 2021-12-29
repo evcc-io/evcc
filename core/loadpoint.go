@@ -416,6 +416,9 @@ func (lp *LoadPoint) evVehicleDisconnectHandler() {
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
+
+	// reset timer when vehicle is removed
+	lp.socTimer.Reset()
 }
 
 // evChargeCurrentHandler publishes the charge current
@@ -1367,6 +1370,9 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// track if remote disabled is actually active
 	remoteDisabled := loadpoint.RemoteEnable
 
+	// reset detection if soc timer needs be deactived after evaluating the loading strategy
+	lp.socTimer.MustValidateDemand()
+
 	// execute loading strategy
 	switch {
 	case !lp.connected():
@@ -1438,6 +1444,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 
 		err = lp.setLimit(targetCurrent, required)
+	}
+
+	// stop an active target charging session if not currently evaluated
+	if !lp.socTimer.DemandValidated() {
+		lp.socTimer.Stop()
 	}
 
 	// effective disabled status

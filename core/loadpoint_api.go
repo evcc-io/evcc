@@ -118,8 +118,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 
 	// apply immediately
 	if lp.socTimer.Time != finishAt || lp.SoC.Target != soc {
-		lp.socTimer.Time = finishAt
-		lp.publish("targetTime", finishAt)
+		lp.socTimer.Set(finishAt)
 
 		// don't remove soc
 		if !finishAt.IsZero() {
