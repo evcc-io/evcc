@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/oauth"
 	"github.com/evcc-io/evcc/util/request"
 	cv "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"golang.org/x/net/publicsuffix"
@@ -42,27 +43,41 @@ var (
 
 // Identity is the Porsche Identity client
 type Identity struct {
-	log *util.Logger
 	*request.Helper
+	user, password                 string
+	defaultToken, emobilityToken   *oauth2.Token
 	DefaultSource, EmobilitySource oauth2.TokenSource
 }
 
 // NewIdentity creates Porsche identity
-func NewIdentity(log *util.Logger) *Identity {
+func NewIdentity(log *util.Logger, user, password string) *Identity {
 	v := &Identity{
-		log:    log,
-		Helper: request.NewHelper(log),
+		Helper:   request.NewHelper(log),
+		user:     user,
+		password: password,
 	}
 
 	return v
 }
 
-func (v *Identity) Login(user, password string) error {
+func (v *Identity) Login() error {
+	_, err := v.RefreshToken(nil)
+
+	if err == nil {
+		v.DefaultSource = oauth.RefreshTokenSource(v.defaultToken, v)
+		v.EmobilitySource = oauth.RefreshTokenSource(v.emobilityToken, &emobilityAdapter{v})
+	}
+
+	return err
+}
+
+// RefreshToken performs new login and creates default and emobility tokens
+func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// track cookies and follow all (>10) redirects
@@ -79,13 +94,13 @@ func (v *Identity) Login(user, password string) error {
 	uri := fmt.Sprintf("%s/auth/api/v1/de/de_DE/public/login", OAuthURI)
 	resp, err := v.Get(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	query, err := url.ParseQuery(resp.Request.URL.RawQuery)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sec := query.Get("sec")
@@ -98,33 +113,33 @@ func (v *Identity) Login(user, password string) error {
 		"resume":       []string{resume},
 		"thirdPartyId": []string{thirdPartyID},
 		"state":        []string{state},
-		"username":     []string{user},
-		"password":     []string{password},
+		"username":     []string{v.user},
+		"password":     []string{v.password},
 		"keeploggedin": []string{"false"},
 	}
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(dataLoginAuth.Encode()), request.URLEncoding)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// process the auth so the session is authenticated
 	if resp, err = v.Client.Do(req); err != nil {
-		return err
+		return nil, err
 	}
 	resp.Body.Close()
 
 	// get the token for the generic API
 	token, err := v.fetchToken(OAuth2Config)
 	if err == nil {
-		v.DefaultSource = OAuth2Config.TokenSource(context.Background(), token)
+		v.defaultToken = token
 
 		if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
-			v.EmobilitySource = EmobilityOAuth2Config.TokenSource(context.Background(), token)
+			v.emobilityToken = token
 		}
 	}
 
-	return err
+	return v.defaultToken, err
 }
 
 func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
@@ -166,5 +181,17 @@ func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
 		oauth2.SetAuthURLParam("code_verifier", cv.CodeChallengePlain()),
 	)
 
+	return token, err
+}
+
+type emobilityAdapter struct {
+	tr *Identity
+}
+
+func (v *emobilityAdapter) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
+	token, err := v.tr.RefreshToken(nil)
+	if err == nil {
+		token = v.tr.emobilityToken
+	}
 	return token, err
 }
