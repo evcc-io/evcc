@@ -42,7 +42,20 @@ type Status struct {
 	TwinCharger interface{}
 }
 
-// http://schlocke.de:8181/servlet/rest/chargebox/meterinfo/CENTRAL100
+type ReducedIntervals struct {
+	ReducedIntervalsEnabled bool                     `json:"reducedIntervalsEnabled"`
+	ReducedCurrentIntervals []ReducedCurrentInterval `json:"reducedCurrentIntervals,omitempty"`
+}
+
+type ReducedCurrentInterval struct {
+	SchemaId    int    `json:"schemaId"`
+	Start       string `json:"start"`
+	Stop        string `json:"stop"`
+	Weekday     int    `json:"weekday"`
+	ChargeLimit int    `json:"chargeLimit"`
+}
+
+// /servlet/rest/chargebox/meterinfo/CENTRAL100
 
 // {
 //   "success": 0,

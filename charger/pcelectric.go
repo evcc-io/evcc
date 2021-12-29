@@ -104,25 +104,35 @@ func (wb *PCElectric) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *PCElectric) MaxCurrent(current int64) error {
+	var data pcelectric.ReducedIntervals
+
 	uri := fmt.Sprintf("%s/%s", wb.uri, "currentlimit")
 
-	data := fmt.Sprintf(`{
-		"reducedIntervalsEnabled": true,
-		"reducedCurrentIntervals": [
-			{
-				"schemaId": 1,
-				"start": "00:00:00",
-				"stop": "24:00:00",
-				"weekday": 8,
-				"chargeLimit": "%d"
-			}
-		]}`, current)
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data), request.JSONEncoding)
-	if err != nil {
-		return err
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = wb.DoBody(req)
 	}
 
-	_, err = wb.DoBody(req)
+	if err == nil {
+		data = pcelectric.ReducedIntervals{
+			ReducedIntervalsEnabled: true,
+			ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
+				{
+					SchemaId:    1,
+					Start:       "00:00:00",
+					Stop:        "24:00:00",
+					Weekday:     8,
+					ChargeLimit: int(current),
+				},
+			},
+		}
+		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	}
+
+	if err == nil {
+		_, err = wb.DoBody(req)
+	}
+
 	return err
 }
 
