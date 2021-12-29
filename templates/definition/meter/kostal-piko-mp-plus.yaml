@@ -5,6 +5,9 @@ guidedsetup:
   linked: 
   - template: kostal-ksem-inverter
     usage: grid
+  - template: kostal-ksem
+    usage: grid
+    excludetemplate: kostal-ksem-inverter
 params:
 - name: usage
   choice: [ "pv" ]
