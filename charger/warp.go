@@ -2,23 +2,36 @@ package charger
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger/warp"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/provider/mqtt"
 	"github.com/evcc-io/evcc/util"
 )
 
+// Warp configures generic charger and charge meter for an Warp loadpoint
+type Warp struct {
+	log           *util.Logger
+	root          string
+	client        *mqtt.Client
+	enabledG      func() (string, error)
+	statusG       func() (string, error)
+	meterG        func() (string, error)
+	meterDetailsG func() (string, error)
+	enableS       func(bool) error
+	maxcurrentS   func(int64) error
+	enabled       bool // cache
+}
+
 func init() {
 	registry.Add("warp", NewWarpFromConfig)
 }
 
-const (
-	warpRootTopic = "warp"
-	warpTimeout   = 30 * time.Second
-)
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b *Warp -r api.Charger -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -26,45 +39,47 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 		mqtt.Config `mapstructure:",squash"`
 		Topic       string
 		Timeout     time.Duration
-		UseMeter    bool
+		UseMeter    interface{}
 	}{
-		Topic:   warpRootTopic,
-		Timeout: warpTimeout,
+		Topic:   warp.RootTopic,
+		Timeout: warp.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	m, err := NewWarp(cc.Config, cc.Topic, cc.Timeout)
+	wb, err := NewWarp(cc.Config, cc.Topic, cc.Timeout)
 	if err != nil {
 		return nil, err
 	}
 
-	var currentPower func() (float64, error)
-	var totalEnergy func() (float64, error)
-	if cc.UseMeter {
-		currentPower = m.currentPower
-		totalEnergy = m.totalEnergy
+	if cc.UseMeter != nil {
+		// TODO remove
+		util.NewLogger("warp").WARN.Println("usemeter is deprecated and will be removed in a future release")
 	}
 
-	return decorateWarp(m, currentPower, totalEnergy), err
-}
+	detectPro := provider.NewMqtt(wb.log, wb.client,
+		fmt.Sprintf("%s/evse/low_level_state", wb.root), 1, cc.Timeout,
+	).StringGetter()
 
-// Warp configures generic charger and charge meter for an Warp loadpoint
-type Warp struct {
-	log         *util.Logger
-	root        string
-	client      *mqtt.Client
-	enabledG    func() (string, error)
-	statusG     func() (string, error)
-	meterG      func() (string, error)
-	enableS     func(bool) error
-	maxcurrentS func(int64) error
-	enabled     bool // cache
-}
+	var isPro bool
+	if state, err := detectPro(); err == nil {
+		var res warp.LowLevelState
+		if err := json.Unmarshal([]byte(state), &res); err != nil {
+			return nil, err
+		}
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)"
+		isPro = len(res.AdcValues) > 2
+	}
+
+	var currents func() (float64, float64, float64, error)
+	if isPro {
+		currents = wb.currents
+	}
+
+	return decorateWarp(wb, currents), err
+}
 
 // NewWarp creates a new configurable charger
 func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, error) {
@@ -99,6 +114,7 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 	m.enabledG = stringG(fmt.Sprintf("%s/evse/auto_start_charging", topic))
 	m.statusG = stringG(fmt.Sprintf("%s/evse/state", topic))
 	m.meterG = stringG(fmt.Sprintf("%s/meter/state", topic))
+	m.meterDetailsG = stringG(fmt.Sprintf("%s/meter/detailed_values", topic))
 
 	m.enableS = provider.NewMqtt(log, client,
 		fmt.Sprintf("%s/evse/auto_start_charging_update", topic), 1, 0).
@@ -111,19 +127,6 @@ func NewWarp(mqttconf mqtt.Config, topic string, timeout time.Duration) (*Warp, 
 		IntSetter("maxcurrent")
 
 	return m, nil
-}
-
-type warpStatus struct {
-	Iec61851State          int   `json:"iec61851_state"`
-	VehicleState           int   `json:"vehicle_state"`
-	ChargeRelease          int   `json:"charge_release"`
-	ContactorState         int   `json:"contactor_state"`
-	ContactorError         int   `json:"contactor_error"`
-	AllowedChargingCurrent int64 `json:"allowed_charging_current"`
-	ErrorState             int   `json:"error_state"`
-	LockState              int   `json:"lock_state"`
-	TimeSinceStateChange   int64 `json:"time_since_state_change"`
-	Uptime                 int64 `json:"uptime"`
 }
 
 // Enable implements the api.Charger interface
@@ -149,8 +152,8 @@ func (m *Warp) Enable(enable bool) error {
 	return err
 }
 
-func (m *Warp) status() (warpStatus, error) {
-	var res warpStatus
+func (m *Warp) status() (warp.Status, error) {
+	var res warp.Status
 
 	s, err := m.statusG()
 	if err == nil {
@@ -179,7 +182,7 @@ func (m *Warp) autostart() (bool, error) {
 func (m *Warp) isEnabled() (bool, error) {
 	enabled, err := m.autostart()
 
-	var status warpStatus
+	var status warp.Status
 	if err == nil {
 		status, err = m.status()
 	}
@@ -221,7 +224,7 @@ func (m *Warp) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (m *Warp) Status() (api.ChargeStatus, error) {
-	var status warpStatus
+	var status warp.Status
 
 	s, err := m.statusG()
 	if err == nil {
@@ -257,15 +260,11 @@ func (m *Warp) MaxCurrentMillis(current float64) error {
 	return m.maxcurrentS(int64(1000 * current))
 }
 
-type powerStatus struct {
-	Power     float64 `json:"power"`
-	EnergyRel float64 `json:"energy_rel"`
-	EnergyAbs float64 `json:"energy_abs"`
-}
+var _ api.Meter = (*Warp)(nil)
 
-// currentPower implements the api.Meter interface
-func (m *Warp) currentPower() (float64, error) {
-	var res powerStatus
+// CurrentPower implements the api.Meter interface
+func (m *Warp) CurrentPower() (float64, error) {
+	var res warp.PowerStatus
 
 	s, err := m.meterG()
 	if err == nil {
@@ -275,9 +274,11 @@ func (m *Warp) currentPower() (float64, error) {
 	return res.Power, err
 }
 
-// totalEnergy implements the api.MeterEnergy interface
-func (m *Warp) totalEnergy() (float64, error) {
-	var res powerStatus
+var _ api.MeterEnergy = (*Warp)(nil)
+
+// TotalEnergy implements the api.MeterEnergy interface
+func (m *Warp) TotalEnergy() (float64, error) {
+	var res warp.PowerStatus
 
 	s, err := m.meterG()
 	if err == nil {
@@ -285,4 +286,22 @@ func (m *Warp) totalEnergy() (float64, error) {
 	}
 
 	return res.EnergyAbs, err
+}
+
+// currents implements the api.MeterCurrrents interface
+func (m *Warp) currents() (float64, float64, float64, error) {
+	var res []float64
+
+	s, err := m.meterDetailsG()
+	if err == nil {
+		if err = json.Unmarshal([]byte(s), &res); err == nil {
+			if len(res) > 5 {
+				return res[3], res[4], res[5], nil
+			}
+
+			err = errors.New("invalid length")
+		}
+	}
+
+	return 0, 0, 0, err
 }
