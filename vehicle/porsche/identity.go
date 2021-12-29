@@ -45,7 +45,7 @@ var (
 type Identity struct {
 	*request.Helper
 	user, password                 string
-	DefaultToken, EmobilityToken   *oauth2.Token
+	defaultToken, emobilityToken   *oauth2.Token
 	DefaultSource, EmobilitySource oauth2.TokenSource
 }
 
@@ -64,13 +64,14 @@ func (v *Identity) Login() error {
 	_, err := v.RefreshToken(nil)
 
 	if err == nil {
-		v.DefaultSource = oauth.RefreshTokenSource(v.DefaultToken, v)
-		v.EmobilitySource = oauth.RefreshTokenSource(v.EmobilityToken, &emobilityAdapter{v})
+		v.DefaultSource = oauth.RefreshTokenSource(v.defaultToken, v)
+		v.EmobilitySource = oauth.RefreshTokenSource(v.emobilityToken, &emobilityAdapter{v})
 	}
 
 	return err
 }
 
+// RefreshToken performs new login and creates default and emobility tokens
 func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
@@ -131,14 +132,14 @@ func (v *Identity) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	// get the token for the generic API
 	token, err := v.fetchToken(OAuth2Config)
 	if err == nil {
-		v.DefaultToken = token
+		v.defaultToken = token
 
 		if token, err = v.fetchToken(EmobilityOAuth2Config); err == nil {
-			v.EmobilityToken = token
+			v.emobilityToken = token
 		}
 	}
 
-	return v.DefaultToken, err
+	return v.defaultToken, err
 }
 
 func (v *Identity) fetchToken(oc *oauth2.Config) (*oauth2.Token, error) {
@@ -190,7 +191,7 @@ type emobilityAdapter struct {
 func (v *emobilityAdapter) RefreshToken(_ *oauth2.Token) (*oauth2.Token, error) {
 	token, err := v.tr.RefreshToken(nil)
 	if err == nil {
-		token = v.tr.EmobilityToken
+		token = v.tr.emobilityToken
 	}
 	return token, err
 }
