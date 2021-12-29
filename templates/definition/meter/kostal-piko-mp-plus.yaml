@@ -2,6 +2,9 @@ template: kostal-piko-mp-plus
 description: Kostal Piko MP Plus
 guidedsetup:
   enable: true
+  linked: 
+  - template: kostal-ksem-inverter
+    usage: grid
 params:
 - name: usage
   choice: [ "pv" ]
