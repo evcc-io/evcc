@@ -57,6 +57,7 @@ type EVSEWifi struct {
 }
 
 func init() {
+	registry.Add("smartwb", NewEVSEWifiFromConfig)
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
