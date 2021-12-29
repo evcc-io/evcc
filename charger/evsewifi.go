@@ -11,13 +11,7 @@ import (
 	"github.com/evcc-io/evcc/util/request"
 )
 
-const (
-	evseGetParameters = "getParameters"
-	evseSetStatus     = "setStatus"
-	evseSetCurrent    = "setCurrent"
-
-	evseSuccess = "S0_"
-)
+const evseSuccess = "S0_"
 
 // EVSEParameterResponse is the getParameters response
 type EVSEParameterResponse struct {
@@ -57,6 +51,7 @@ type EVSEWifi struct {
 }
 
 func init() {
+	registry.Add("smartwb", NewEVSEWifiFromConfig)
 	registry.Add("evsewifi", NewEVSEWifiFromConfig)
 }
 
@@ -75,15 +70,15 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 		return nil, err
 	}
 
-	evse, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
+	wb, err := NewEVSEWifi(util.DefaultScheme(cc.URI, "http"))
 	if err != nil {
-		return evse, err
+		return wb, err
 	}
 
 	// auto-detect capabilities
-	params, err := evse.getParameters()
+	params, err := wb.getParameters()
 	if err != nil {
-		return evse, err
+		return wb, err
 	}
 
 	if !params.AlwaysActive {
@@ -97,65 +92,61 @@ func NewEVSEWifiFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	if params.ActualCurrentMA != nil {
-		evse.hires = true
+		wb.hires = true
 	}
 
 	// decorate Charger with Meter
 	var currentPower func() (float64, error)
 	if cc.Meter.Energy {
-		currentPower = evse.currentPower
+		currentPower = wb.currentPower
 	}
 
 	// decorate Charger with MeterEnergy
 	var totalEnergy func() (float64, error)
 	if cc.Meter.Energy {
-		totalEnergy = evse.totalEnergy
+		totalEnergy = wb.totalEnergy
 	}
 
 	// decorate Charger with MeterCurrent
 	var currents func() (float64, float64, float64, error)
 	if cc.Meter.Currents {
-		currents = evse.currents
+		currents = wb.currents
 	}
 
 	// decorate Charger with MaxCurrentEx
 	var maxCurrentEx func(float64) error
-	if evse.hires {
-		maxCurrentEx = evse.maxCurrentEx
-		evse.current = 100 * evse.current
+	if wb.hires {
+		maxCurrentEx = wb.maxCurrentEx
+		wb.current = 100 * wb.current
 	}
 
 	// decorate Charger with Identifier
 	var identify func() (string, error)
 	if params.RFIDUID != nil {
-		identify = evse.identify
+		identify = wb.identify
 	}
 
-	return decorateEVSE(evse, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
+	return decorateEVSE(wb, currentPower, totalEnergy, currents, maxCurrentEx, identify), nil
 }
 
 // NewEVSEWifi creates EVSEWifi charger
 func NewEVSEWifi(uri string) (*EVSEWifi, error) {
 	log := util.NewLogger("evse")
 
-	evse := &EVSEWifi{
+	wb := &EVSEWifi{
 		Helper:  request.NewHelper(log),
 		uri:     strings.TrimRight(uri, "/"),
 		current: 6, // 6A defined value
 	}
 
-	return evse, nil
-}
-
-func (evse *EVSEWifi) apiURL(service string) string {
-	return fmt.Sprintf("%s/%s", evse.uri, service)
+	return wb, nil
 }
 
 // query evse parameters
-func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
+func (wb *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	var res EVSEParameterResponse
-	url := evse.apiURL(evseGetParameters)
-	err := evse.GetJSON(url, &res)
+	uri := fmt.Sprintf("%s/getParameters", wb.uri)
+	err := wb.GetJSON(uri, &res)
 	if err != nil {
 		return EVSEListEntry{}, err
 	}
@@ -165,14 +156,14 @@ func (evse *EVSEWifi) getParameters() (EVSEListEntry, error) {
 	}
 
 	params := res.List[0]
-	evse.alwaysActive = params.AlwaysActive
+	wb.alwaysActive = params.AlwaysActive
 
 	return params, nil
 }
 
 // Status implements the api.Charger interface
-func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) Status() (api.ChargeStatus, error) {
+	params, err := wb.getParameters()
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -194,14 +185,14 @@ func (evse *EVSEWifi) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (evse *EVSEWifi) Enabled() (bool, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) Enabled() (bool, error) {
+	params, err := wb.getParameters()
 	return params.EvseState, err
 }
 
 // get executes GET request and checks for EVSE error response
-func (evse *EVSEWifi) get(uri string) error {
-	b, err := evse.GetBody(uri)
+func (wb *EVSEWifi) get(uri string) error {
+	b, err := wb.GetBody(uri)
 	if err == nil && !strings.HasPrefix(string(b), evseSuccess) {
 		err = errors.New(string(b))
 	}
@@ -209,65 +200,64 @@ func (evse *EVSEWifi) get(uri string) error {
 }
 
 // Enable implements the api.Charger interface
-func (evse *EVSEWifi) Enable(enable bool) error {
-	url := fmt.Sprintf("%s?active=%v", evse.apiURL(evseSetStatus), enable)
-
-	if evse.alwaysActive {
+func (wb *EVSEWifi) Enable(enable bool) error {
+	uri := fmt.Sprintf("%s/setStatus?active=%v", wb.uri, enable)
+	if wb.alwaysActive {
 		var current int64
 		if enable {
-			current = evse.current
+			current = wb.current
 		}
-		url = fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
+		uri = fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, current)
 	}
-	return evse.get(url)
+	return wb.get(uri)
 }
 
 // MaxCurrent implements the api.Charger interface
-func (evse *EVSEWifi) MaxCurrent(current int64) error {
-	if evse.hires {
+func (wb *EVSEWifi) MaxCurrent(current int64) error {
+	if wb.hires {
 		current = 100 * current
 	}
-	evse.current = current
-	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), current)
-	return evse.get(url)
+	wb.current = current
+	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, current)
+	return wb.get(uri)
 }
 
 // maxCurrentEx implements the api.ChargerEx interface
-func (evse *EVSEWifi) maxCurrentEx(current float64) error {
-	evse.current = int64(100 * current)
-	url := fmt.Sprintf("%s?current=%d", evse.apiURL(evseSetCurrent), evse.current)
-	return evse.get(url)
+func (wb *EVSEWifi) maxCurrentEx(current float64) error {
+	wb.current = int64(100 * current)
+	uri := fmt.Sprintf("%s/setCurrent?current=%d", wb.uri, wb.current)
+	return wb.get(uri)
 }
 
 var _ api.ChargeTimer = (*EVSEWifi)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (evse *EVSEWifi) ChargingTime() (time.Duration, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) ChargingTime() (time.Duration, error) {
+	params, err := wb.getParameters()
 	return time.Duration(params.Duration) * time.Millisecond, err
 }
 
 // CurrentPower implements the api.Meter interface
-func (evse *EVSEWifi) currentPower() (float64, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) currentPower() (float64, error) {
+	params, err := wb.getParameters()
 	return 1000 * params.ActualPower, err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
-func (evse *EVSEWifi) totalEnergy() (float64, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) totalEnergy() (float64, error) {
+	params, err := wb.getParameters()
 	return params.MeterReading, err
 }
 
 // Currents implements the api.MeterCurrents interface
-func (evse *EVSEWifi) currents() (float64, float64, float64, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) currents() (float64, float64, float64, error) {
+	params, err := wb.getParameters()
 	return params.CurrentP1, params.CurrentP2, params.CurrentP3, err
 }
 
 // Identify implements the api.Identifier interface
-func (evse *EVSEWifi) identify() (string, error) {
-	params, err := evse.getParameters()
+func (wb *EVSEWifi) identify() (string, error) {
+	params, err := wb.getParameters()
 	if err != nil {
 		return "", err
 	}
@@ -277,7 +267,7 @@ func (evse *EVSEWifi) identify() (string, error) {
 }
 
 // // ChargedEnergy implements the ChargeRater interface
-// func (evse *EVSEWifi) ChargedEnergy() (float64, error) {
-// 	params, err := evse.getParameters()
+// func (wb *EVSEWifi) ChargedEnergy() (float64, error) {
+// 	params, err := wb.getParameters()
 // 	return params.Energy, err
 // }
