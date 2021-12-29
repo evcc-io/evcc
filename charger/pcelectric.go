@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -87,7 +86,20 @@ func (wb *PCElectric) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (wb *PCElectric) Enable(enable bool) error {
-	return errors.New("not implemented")
+	mode := "ALWAYS_OFF"
+	if enable {
+		mode = "ALWAYS_ON"
+	}
+
+	uri := fmt.Sprintf("%s/%s/%s", wb.uri, "mode", mode)
+
+	req, err := request.New(http.MethodPost, uri, nil, request.JSONEncoding)
+	if err != nil {
+		return err
+	}
+
+	_, err = wb.DoBody(req)
+	return err
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -110,7 +122,8 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 		return err
 	}
 
-	return wb.DoJSON(req, nil)
+	_, err = wb.DoBody(req)
+	return err
 }
 
 // // CurrentPower implements the api.Meter interface
