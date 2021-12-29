@@ -3,8 +3,6 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -26,8 +24,6 @@ const (
 	wbRegPower          = 120 // power reading
 	wbRegEnergy         = 128 // energy reading
 	wbRegEnergyDecimals = 904 // energy reading decimals
-
-	encodingSDM = "sdm"
 )
 
 var wbRegCurrents = []uint16{114, 116, 118} // current readings
@@ -37,9 +33,8 @@ var wbRegCurrents = []uint16{114, 116, 118} // current readings
 // Phoenix EV-CC-AC1-M3-CBC-RCM-ETH controller.
 // It uses Modbus TCP to communicate with the wallbox at modbus client id 255.
 type Wallbe struct {
-	conn     *modbus.Connection
-	factor   int64
-	encoding string
+	conn   *modbus.Connection
+	factor int64
 }
 
 func init() {
@@ -55,11 +50,12 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 		Legacy bool
 		Meter  struct {
 			Power, Energy, Currents bool
-			Encoding                string
+			Encoding                interface{}
 		}
 	}{
 		URI: "192.168.0.8:502",
 	}
+
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
@@ -67,6 +63,10 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	wb, err := NewWallbe(cc.URI)
 	if err != nil {
 		return nil, err
+	}
+
+	if cc.Meter.Encoding != nil {
+		util.NewLogger("wallbe").WARN.Printf("encoding is deprecated and will be removed in a future release. Use firmware 01.04.21 instead.")
 	}
 
 	if cc.Legacy {
@@ -91,11 +91,6 @@ func NewWallbeFromConfig(other map[string]interface{}) (api.Charger, error) {
 	var maxCurrentMillis func(float64) error
 	if !cc.Legacy {
 		maxCurrentMillis = wb.maxCurrentMillis
-	}
-
-	// special case for SDM meters
-	if encoding := strings.ToLower(cc.Meter.Encoding); strings.HasPrefix(encoding, encodingSDM) {
-		wb.encoding = encodingSDM
 	}
 
 	return decorateWallbe(wb, currentPower, totalEnergy, currents, maxCurrentMillis), nil
@@ -189,19 +184,6 @@ func (wb *Wallbe) ChargingTime() (time.Duration, error) {
 	return time.Duration(secs) * time.Second, nil
 }
 
-func (wb *Wallbe) decodeReading(b []byte) float64 {
-	switch wb.encoding {
-	case encodingSDM:
-		// high word first
-		bits := uint32(b[3]) | uint32(b[2])<<8 | uint32(b[1])<<16 | uint32(b[0])<<24
-		return float64(math.Float32frombits(bits))
-
-	default:
-		// low word first
-		return rs485.RTUUint32ToFloat64Swapped(b)
-	}
-}
-
 // currentPower implements the api.Meter interface
 func (wb *Wallbe) currentPower() (float64, error) {
 	b, err := wb.conn.ReadInputRegisters(wbRegPower, 2)
@@ -209,7 +191,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return wb.decodeReading(b), nil
+	return rs485.RTUUint32ToFloat64Swapped(b), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -219,16 +201,14 @@ func (wb *Wallbe) totalEnergy() (float64, error) {
 		return 0, err
 	}
 
-	res := wb.decodeReading(b)
+	res := rs485.RTUUint32ToFloat64Swapped(b)
 
-	if wb.encoding != encodingSDM {
-		b, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
-		if err != nil {
-			return 0, err
-		}
-
-		res += float64(binary.BigEndian.Uint16(b)) / 1e3
+	d, err := wb.conn.ReadHoldingRegisters(wbRegEnergyDecimals, 1)
+	if err != nil {
+		return 0, err
 	}
+
+	res += float64(binary.BigEndian.Uint16(d)) / 1e3
 
 	return res, nil
 }
@@ -242,7 +222,7 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, wb.decodeReading(b))
+		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b))
 	}
 
 	return currents[0], currents[1], currents[2], nil
