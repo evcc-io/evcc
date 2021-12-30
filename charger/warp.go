@@ -31,7 +31,7 @@ func init() {
 	registry.Add("warp", NewWarpFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b *Warp -r api.Charger -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decorateWarp -b *Warp -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewWarpFromConfig creates a new configurable charger
 func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -60,7 +60,7 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 	}
 
 	detectPro := provider.NewMqtt(wb.log, wb.client,
-		fmt.Sprintf("%s/evse/low_level_state", wb.root), 1, cc.Timeout,
+		fmt.Sprintf("%s/evse/low_level_state", wb.root), 1, 0,
 	).StringGetter()
 
 	var isPro bool
@@ -73,12 +73,33 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 		isPro = len(res.AdcValues) > 2
 	}
 
+	detectMeter := provider.NewMqtt(wb.log, wb.client,
+		fmt.Sprintf("%s/meter/state", wb.root), 1, 0,
+	).StringGetter()
+
+	var hasMeter bool
+	if state, err := detectMeter(); err == nil {
+		var res warp.MeterState
+		if err := json.Unmarshal([]byte(state), &res); err != nil {
+			return nil, err
+		}
+
+		hasMeter = res.State == 1
+	}
+
+	var currentPower func() (float64, error)
+	var totalEnergy func() (float64, error)
+	if hasMeter || isPro {
+		currentPower = wb.currentPower
+		totalEnergy = wb.totalEnergy
+	}
+
 	var currents func() (float64, float64, float64, error)
 	if isPro {
 		currents = wb.currents
 	}
 
-	return decorateWarp(wb, currents), err
+	return decorateWarp(wb, currentPower, totalEnergy, currents), err
 }
 
 // NewWarp creates a new configurable charger
@@ -260,11 +281,9 @@ func (m *Warp) MaxCurrentMillis(current float64) error {
 	return m.maxcurrentS(int64(1000 * current))
 }
 
-var _ api.Meter = (*Warp)(nil)
-
 // CurrentPower implements the api.Meter interface
-func (m *Warp) CurrentPower() (float64, error) {
-	var res warp.PowerStatus
+func (m *Warp) currentPower() (float64, error) {
+	var res warp.MeterState
 
 	s, err := m.meterG()
 	if err == nil {
@@ -274,11 +293,9 @@ func (m *Warp) CurrentPower() (float64, error) {
 	return res.Power, err
 }
 
-var _ api.MeterEnergy = (*Warp)(nil)
-
 // TotalEnergy implements the api.MeterEnergy interface
-func (m *Warp) TotalEnergy() (float64, error) {
-	var res warp.PowerStatus
+func (m *Warp) totalEnergy() (float64, error) {
+	var res warp.MeterState
 
 	s, err := m.meterG()
 	if err == nil {
