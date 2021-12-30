@@ -21,5 +21,5 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/measurements.xml
-    jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | .attrValue | tonumber
+    jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | if has ("attrValue") then .attrValue else "0" end | tonumber
   {{- end -}}
