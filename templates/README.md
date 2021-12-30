@@ -95,6 +95,13 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 - `usage`: specifies a list of meter classes, the device can be used for. Possible values are `grid`, `pv`, `battery`, and `charger`
 - `modbus`: specifies that this device is accessed via modbus. It requires the `choice` property to have a list of possible interface values the device provides. These values can be `rs485` and `tcpip`. The command will use either to ask the appropriate questions and settings. The `render` section needs to include the string `{{include "modbus" .}}` in all places where the configuration needs modbus settings.
 
+#### Modbus Options
+
+- `id`: Device specific default for modbus ID
+- `port`: Device specific default for modbus TCPIP port
+- `baudrate`: Device specific default for modbus RS485 baudrate
+- `comset`: Device specific default for modbus RS485 comset
+
 ### `required`
 
 `required: true` defines if the user has to provide a value. Default is `false`
