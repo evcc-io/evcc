@@ -1,0 +1,15 @@
+template: solaredge-inverter
+description: Solaredge Inverter
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "pv" ]
+- name: modbus
+  choice: [ "tcpip" ]
+  id: 1
+  port: 1502
+render: |
+  type: modbus
+  model: sunspec
+  {{ include "modbus" . }}
