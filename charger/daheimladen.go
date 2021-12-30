@@ -153,7 +153,7 @@ func (c *DaheimLaden) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case daheimladen.PREPARING:
 		return api.StatusB, nil
-	case daheimladen.CHARGING:
+	case daheimladen.CHARGING, daheimladen.FINISHING:
 		return api.StatusC, nil
 	case daheimladen.FAULTED:
 		return api.StatusF, nil
