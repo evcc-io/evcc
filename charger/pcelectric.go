@@ -14,7 +14,8 @@ import (
 // PCElectric charger implementation
 type PCElectric struct {
 	*request.Helper
-	uri string
+	uri     string
+	meterID int
 }
 
 func init() {
@@ -27,17 +28,20 @@ func init() {
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI string
-	}{}
+		URI     string
+		MeterID int
+	}{
+		MeterID: 100,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"))
+	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.MeterID)
 	if err == nil {
 		var res pcelectric.MeterInfo
-		if err := wb.GetJSON(wb.uri+"/meterinfo/CENTRAL100", &res); err == nil && res.MeterSerial != "" {
+		if err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID), &res); err == nil && res.MeterSerial != "" {
 			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
 		}
 	}
@@ -46,12 +50,13 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 }
 
 // NewPCElectric creates PCElectric charger
-func NewPCElectric(uri string) (*PCElectric, error) {
+func NewPCElectric(uri string, meterID int) (*PCElectric, error) {
 	log := util.NewLogger("pce")
 
 	wb := &PCElectric{
-		Helper: request.NewHelper(log),
-		uri:    strings.TrimRight(uri, "/") + "/servlet/rest/chargebox",
+		Helper:  request.NewHelper(log),
+		uri:     strings.TrimRight(uri, "/") + "/servlet/rest/chargebox",
+		meterID: meterID,
 	}
 
 	return wb, nil
@@ -137,20 +142,23 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 // CurrentPower implements the api.Meter interface
 func (wb *PCElectric) currentPower() (float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
+	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
+	err := wb.GetJSON(uri, &res)
 	return float64(res.ApparentPower), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface
 func (wb *PCElectric) totalEnergy() (float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
+	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
+	err := wb.GetJSON(uri, &res)
 	return float64(res.AccEnergy) / 1e3, err
 }
 
 // Currents implements the api.MeterCurrents interface
 func (wb *PCElectric) currents() (float64, float64, float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL100", wb.uri), &res)
+	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
+	err := wb.GetJSON(uri, &res)
 	return float64(res.Phase1Current) / 10, float64(res.Phase2Current) / 10, float64(res.Phase3Current) / 10, err
 }
