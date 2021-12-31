@@ -6,6 +6,7 @@ import (
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
 	"github.com/evcc-io/evcc/util/transport"
@@ -72,7 +73,9 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
 	power, err := provider.NewHTTP(log, http.MethodGet, uri, false, 0.001*cc.Scale, 0).WithAuth("basic", cc.User, cc.Password)
 	if err == nil {
-		_, err = power.WithJq(".values.power")
+		var pipe *pipeline.Pipeline
+		pipe, err = new(pipeline.Pipeline).WithJq(".values.power")
+		power = power.WithPipeline(pipe)
 	}
 	if err != nil {
 		return nil, err
