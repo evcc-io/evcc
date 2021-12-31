@@ -73,12 +73,11 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 	uri := fmt.Sprintf("%s/last_reading?meterId=%s", discovergyAPI, meterID)
 	power, err := provider.NewHTTP(log, http.MethodGet, uri, false, 0.001*cc.Scale, 0).WithAuth("basic", cc.User, cc.Password)
 	if err == nil {
-		var pipe *pipeline.Pipeline
-		pipe, err = new(pipeline.Pipeline).WithJq(".values.power")
+		pipe, err := new(pipeline.Pipeline).WithJq(".values.power")
+		if err != nil {
+			return nil, err
+		}
 		power = power.WithPipeline(pipe)
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	return NewConfigurable(power.FloatGetter())
