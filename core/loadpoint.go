@@ -347,6 +347,9 @@ func (lp *LoadPoint) evChargeStopHandler() {
 
 	// soc update reset
 	lp.socUpdated = time.Time{}
+
+	// reset pv enable/disable timer
+	lp.resetPVTimerIfRunning()
 }
 
 // evVehicleConnectHandler sends external start event
@@ -879,6 +882,22 @@ func (lp *LoadPoint) elapsePVTimer() {
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
+// resetPVTimerIfRunning resets the pv enable/disable timer to disabled state
+func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
+	if lp.pvTimer.IsZero() {
+		return
+	}
+
+	msg := "pv timer reset"
+	if len(typ) == 1 {
+		msg = fmt.Sprintf("pv %s timer reset", typ)
+	}
+	lp.log.DEBUG.Printf(msg)
+
+	lp.pvTimer = time.Time{}
+	lp.publishTimer(pvTimer, 0, timerInactive)
+}
+
 // scalePhasesIfAvailable scales if api.ChargePhases is available
 func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 	err := lp.scalePhases(phases)
@@ -1043,7 +1062,7 @@ func (lp *LoadPoint) publishTimer(name string, delay time.Duration, action strin
 	if action == timerInactive {
 		lp.log.DEBUG.Printf("%s action: %s", name, action)
 	} else {
-		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining)
+		lp.log.DEBUG.Printf("%s action: %s in %v", name, action, remaining.Round(time.Second))
 	}
 }
 
@@ -1099,10 +1118,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.log.DEBUG.Printf("pv disable timer reset: %v", lp.Disable.Delay)
-			lp.pvTimer = lp.clock.Now()
-
-			lp.publishTimer(pvTimer, 0, timerInactive)
+			lp.resetPVTimerIfRunning("disable")
 		}
 
 		// lp.log.DEBUG.Println("pv disable timer: keep enabled")
@@ -1134,10 +1150,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 			}
 		} else {
 			// reset timer
-			lp.log.DEBUG.Printf("pv enable timer reset: %v", lp.Enable.Delay)
-			lp.pvTimer = lp.clock.Now()
-
-			lp.publishTimer(pvTimer, 0, timerInactive)
+			lp.resetPVTimerIfRunning("enable")
 		}
 
 		// lp.log.DEBUG.Println("pv enable timer: keep disabled")
@@ -1145,12 +1158,7 @@ func (lp *LoadPoint) pvMaxCurrent(mode api.ChargeMode, sitePower float64, batter
 	}
 
 	// reset timer to disabled state
-	if !lp.pvTimer.IsZero() {
-		lp.log.DEBUG.Printf("pv timer reset")
-		lp.pvTimer = time.Time{}
-
-		lp.publishTimer(pvTimer, 0, timerInactive)
-	}
+	lp.resetPVTimerIfRunning()
 
 	// cap at maximum current
 	targetCurrent = math.Min(targetCurrent, maxCurrent)
