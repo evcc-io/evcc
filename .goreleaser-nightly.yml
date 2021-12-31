@@ -29,7 +29,7 @@ archives:
     format: zip
   files:
   - evcc.dist.yaml
-  name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
 universal_binaries:
 - replace: true
 checksum:
@@ -39,7 +39,7 @@ snapshot:
 nfpms:
 - id: default
   package_name: evcc
-  file_name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  file_name_template: "{{.ProjectName}}_{{ .Version }}.{{.Timestamp}}_{{.Os}}-{{.Arch}}{{ if .Arm }}hf{{ end }}"
 
   homepage:  https://evcc.io
   description: EV Charge Controller
