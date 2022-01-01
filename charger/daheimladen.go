@@ -96,9 +96,6 @@ func (c *DaheimLaden) Enable(enable bool) error {
 	}
 
 	c.transactionID = res.TransactionID
-	if c.transactionID == 0 {
-		return fmt.Errorf("cannot stop transaction as the transaction was started with plug and charge mode")
-	}
 
 	data := daheimladen.RemoteStopRequest{
 		TransactionID: c.transactionID,
@@ -153,7 +150,7 @@ func (c *DaheimLaden) Status() (api.ChargeStatus, error) {
 		return api.StatusA, nil
 	case daheimladen.PREPARING:
 		return api.StatusB, nil
-	case daheimladen.CHARGING:
+	case daheimladen.CHARGING, daheimladen.FINISHING:
 		return api.StatusC, nil
 	case daheimladen.FAULTED:
 		return api.StatusF, nil
@@ -169,7 +166,7 @@ func (c *DaheimLaden) CurrentPower() (float64, error) {
 	var res daheimladen.GetLatestMeterValueResponse
 	uri := fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID)
 	err := c.GetJSON(uri, &res)
-	return float64(res.PowerActiveImport), err
+	return float64(int64(res.ActivePowerImport * 1000)), err
 }
 
 var _ api.MeterEnergy = (*DaheimLaden)(nil)
