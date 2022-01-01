@@ -49,7 +49,7 @@ func NewLogger(area string) *Logger {
 
 	level := LogLevelForArea(area)
 	redactor := new(Redactor)
-	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
+	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Lmicroseconds)
 
 	logger := &Logger{
 		Notepad:  notepad,
