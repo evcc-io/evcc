@@ -196,8 +196,6 @@ github.com/envoyproxy/go-control-plane v0.9.10-0.20210907150352-cf90f659a021/go.
 github.com/envoyproxy/go-control-plane v0.10.1/go.mod h1:AY7fTTXNdv/aJ2O5jwpxAPOWUZ7hQAEvzN5Pf27BkQQ=
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/envoyproxy/protoc-gen-validate v0.6.2/go.mod h1:2t7qjJNvHPx8IjnBOzl9E9/baC+qXE/TeeyBRzgJDws=
-github.com/evcc-io/config v0.0.0-20211116174948-89807a2a9695 h1:IaAbFjdRSnbRhuY1MRbrcXa2gVDYin6XuPdWAORR0ww=
-github.com/evcc-io/config v0.0.0-20211116174948-89807a2a9695/go.mod h1:aN5D6PVnoFvfZSMScvAQAIYRXwWOZ9lde3J0lsNRIOM=
 github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1 h1:fEaXff1wN1s+ySvie/JZF1HeeZCofdGwd1jQeK45Ugw=
 github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1/go.mod h1:2fJZDu2dSe7M6m+KIYkG5XPdk+Ws1ckuRyklZRvFzWE=
 github.com/fatih/camelcase v1.0.0/go.mod h1:yN2Sb0lFhZJUdVvtELVWefmrXpuZESvPmqwoZc+/fpc=
