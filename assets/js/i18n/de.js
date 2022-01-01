@@ -28,7 +28,7 @@ export default {
       modalSavingsTotal: "Ersparnis gegenüber Netzbezug",
       modalExplaination: "Berechnung",
       modalExplainationGrid: "Netzstrom {gridPrice}",
-      modalExplainationFeedin: "Einspeisung {feedinPrice}",
+      modalExplainationFeedIn: "Einspeisung {feedInPrice}",
       modalServerStart: "Seit Serverstart {since}.",
       modalNoData: "noch nicht geladen",
       experimentalLabel: "experimentell",

@@ -8,7 +8,7 @@ import (
 type Tariffs struct {
 	Currency currency.Unit
 	Grid     api.Tariff
-	Feedin   api.Tariff
+	FeedIn   api.Tariff
 }
 
 var _ api.Tariff = (*Fixed)(nil)
@@ -17,6 +17,6 @@ func NewTariffs(currency currency.Unit, grid api.Tariff, feedin api.Tariff) *Tar
 	t := Tariffs{}
 	t.Currency = currency
 	t.Grid = grid
-	t.Feedin = feedin
+	t.FeedIn = feedin
 	return &t
 }

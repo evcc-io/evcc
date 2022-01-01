@@ -405,9 +405,9 @@ func (site *Site) sitePower() (float64, error) {
 			site.publish("tariffGrid", gridPrice)
 		}
 	}
-	if site.tariffs.Feedin != nil {
-		if feedinPrice, err := site.tariffs.Feedin.CurrentPrice(); err == nil {
-			site.publish("tariffFeedin", feedinPrice)
+	if site.tariffs.FeedIn != nil {
+		if feedInPrice, err := site.tariffs.FeedIn.CurrentPrice(); err == nil {
+			site.publish("tariffFeedIn", feedInPrice)
 		}
 	}
 
@@ -418,8 +418,12 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	var cheap bool
+	var err error
 	if site.tariffs.Grid != nil {
-		cheap = site.tariffs.Grid.IsCheap()
+		cheap, err = site.tariffs.Grid.IsCheap()
+		if err != nil {
+			cheap = false
+		}
 	}
 
 	if sitePower, err := site.sitePower(); err == nil {
@@ -437,13 +441,11 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings
-	site.Lock()
 	var totalChargePower = 0.0
 	for _, lp := range site.loadpoints {
 		totalChargePower += lp.chargePower
 	}
 	site.savings.Update(site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
-	site.Unlock()
 }
 
 // Prepare attaches communication channels to site and loadpoints

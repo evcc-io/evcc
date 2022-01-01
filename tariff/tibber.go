@@ -112,12 +112,7 @@ func (t *Tibber) CurrentPrice() (float64, error) {
 	return 0, errors.New("unable to find current tibber price")
 }
 
-func (t *Tibber) IsCheap() bool {
+func (t *Tibber) IsCheap() (bool, error) {
 	price, err := t.CurrentPrice()
-
-	if err != nil {
-		return false
-	}
-
-	return price <= t.Cheap
+	return price <= t.Cheap, err
 }

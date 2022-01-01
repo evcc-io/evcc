@@ -359,7 +359,7 @@ At the moment the algorithm only uses the current energy price. Flexible prices 
 
 ### Flexible Energy Tariffs
 
-EVCC also supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
+Evcc supports flexible energy tariffs as offered by [Awattar](https://www.awattar.de) or [Tibber](https://tibber.com). Configuration allows to define a "cheap" rate at which charging from grid is enabled at highest possible rate even when not enough PV power is locally available:
 
 ```yaml
 tariffs:

@@ -77,12 +77,7 @@ func (t *Awattar) CurrentPrice() (float64, error) {
 	return 0, errors.New("unable to find current awattar price")
 }
 
-func (t *Awattar) IsCheap() bool {
+func (t *Awattar) IsCheap() (bool, error) {
 	price, err := t.CurrentPrice()
-
-	if err != nil {
-		return false
-	}
-
-	return price <= t.cheap
+	return price <= t.cheap, err
 }

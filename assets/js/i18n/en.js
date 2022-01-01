@@ -28,7 +28,7 @@ export default {
       modalSavingsTotal: "Savings compared to grid",
       modalExplaination: "Calculation",
       modalExplainationGrid: "grid tariff {gridPrice}",
-      modalExplainationFeedin: "feed-in rate {feedinPrice}",
+      modalExplainationFeedIn: "feed-in rate {feedInPrice}",
       modalServerStart: "since server start {since}.",
       modalNoData: "nothing charged yet",
       experimentalLabel: "experimental",

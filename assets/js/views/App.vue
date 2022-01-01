@@ -107,7 +107,7 @@ export default {
 				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
 				selfPercentage: this.store.state.savingsSelfPercentage,
 				gridPrice: this.store.state.tariffGrid,
-				feedinPrice: this.store.state.tariffFeedin,
+				feedInPrice: this.store.state.tariffFeedIn,
 				currency: this.store.state.currency,
 			};
 		},

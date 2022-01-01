@@ -25,6 +25,6 @@ func (t *Fixed) CurrentPrice() (float64, error) {
 	return t.Price, nil
 }
 
-func (t *Fixed) IsCheap() bool {
-	return false
+func (t *Fixed) IsCheap() (bool, error) {
+	return false, nil
 }

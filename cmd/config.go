@@ -67,7 +67,7 @@ type messagingConfig struct {
 type tariffConfig struct {
 	Currency string
 	Grid     typedConfig
-	Feedin   typedConfig
+	FeedIn   typedConfig
 }
 
 // ConfigProvider provides configuration items

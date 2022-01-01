@@ -108,8 +108,8 @@
 							>,
 							<span class="text-nowrap">
 								{{
-									$t("footer.savings.modalExplainationFeedin", {
-										feedinPrice: fmtPricePerKWh(feedinPrice, currency),
+									$t("footer.savings.modalExplainationFeedIn", {
+										feedInPrice: fmtPricePerKWh(feedInPrice, currency),
 									})
 								}}
 							</span>
@@ -159,7 +159,7 @@ export default {
 		chargedTotal: { type: Number, default: 0 },
 		chargedSelfConsumption: { type: Number, default: 0 },
 		gridPrice: { type: Number, default: 30 },
-		feedinPrice: { type: Number, default: 8 },
+		feedInPrice: { type: Number, default: 8 },
 		currency: String,
 	},
 	computed: {
@@ -167,17 +167,17 @@ export default {
 			return this.chargedTotal - this.chargedSelfConsumption;
 		},
 		defaultPrices() {
-			const { gridPrice, feedinPrice } = this.$options.propsData;
-			return gridPrice === undefined || feedinPrice === undefined;
+			const { gridPrice, feedInPrice } = this.$options.propsData;
+			return gridPrice === undefined || feedInPrice === undefined;
 		},
 		savingAmount() {
-			const priceDiff = (this.gridPrice - this.feedinPrice) / 100;
+			const priceDiff = (this.gridPrice - this.feedInPrice) / 100;
 			const saving = (this.chargedSelfConsumption / 1000) * priceDiff;
 			return this.fmtMoney(saving, this.currency);
 		},
 		pricePerKWh() {
 			const total =
-				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedinPrice;
+				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedInPrice;
 			const perKWh = total / this.chargedTotal;
 			return this.fmtPricePerKWh(perKWh || this.gridPrice, this.currency);
 		},
