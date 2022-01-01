@@ -33,6 +33,7 @@ export default {
 		minSoC: Number,
 		vehicleTitle: String,
 		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
 	},

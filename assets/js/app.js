@@ -3,7 +3,7 @@ import "bootstrap";
 import "../css/app.css";
 import Vue from "vue";
 import VueMeta from "vue-meta";
-import axios from "axios";
+import api from "./api";
 import App from "./views/App";
 import router from "./router";
 import i18n from "./i18n";
@@ -11,11 +11,6 @@ import "./tooltip";
 import store from "./store";
 
 Vue.use(VueMeta);
-
-const loc = window.location;
-axios.defaults.baseURL =
-  loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
-axios.defaults.headers.post["Content-Type"] = "application/json";
 
 window.app = new Vue({
   el: "#app",
@@ -59,7 +54,7 @@ window.app = new Vue({
 });
 
 window.setInterval(function () {
-  axios.get("health").catch(function () {
+  api.get("health").catch(function () {
     window.app.error({ message: "Server unavailable" });
   });
 }, 5000);

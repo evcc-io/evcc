@@ -2,7 +2,6 @@ package vehicle
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -55,10 +54,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
+		cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 	}
 
 	if err == nil {
@@ -70,7 +66,7 @@ func NewEnyaqFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		api := skoda.NewAPI(log, ts)
 		api.Client.Timeout = cc.Timeout
 
-		v.Provider = skoda.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+		v.Provider = skoda.NewProvider(api, cc.VIN, cc.Cache)
 	}
 
 	return v, err

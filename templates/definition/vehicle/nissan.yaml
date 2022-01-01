@@ -1,9 +1,11 @@
 template: nissan
 description: Nissan
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: capacity
   default: 60
 render: |
   type: nissan
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

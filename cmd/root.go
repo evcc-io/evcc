@@ -24,8 +24,7 @@ var (
 	log     = util.NewLogger("main")
 	cfgFile string
 
-	ignoreErrors = []string{"warn", "error", "fatal"} // don't add to cache
-	ignoreMqtt   = []string{"releaseNotes"}           // excessive size may crash certain brokers
+	ignoreMqtt = []string{"releaseNotes"} // excessive size may crash certain brokers
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -171,7 +170,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// value cache
 	cache := util.NewCache()
-	go cache.Run(pipe.NewDropper(ignoreErrors...).Pipe(tee.Attach()))
+	go cache.Run(tee.Attach())
 
 	// setup database
 	if conf.Influx.URL != "" {
@@ -200,7 +199,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if conf.HEMS.Type != "" {
-		hems := configureHEMS(conf.HEMS, site, cache, httpd)
+		hems := configureHEMS(conf.HEMS, site, httpd)
 		go hems.Run()
 	}
 

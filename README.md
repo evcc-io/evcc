@@ -14,11 +14,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - simple and clean user interface
 - multiple [chargers](#charger):
   - Open source: [openWB](https://openwb.de/), [EVSEWifi](https://www.evse-wifi.de) (includes smartWB)
-  - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
+  - Other commercial: ABL eMH1, Alfen Eve, cFos PowerBrain, Daheimladen, go-eCharger, Heidelberg Energy Control, Innogy eBox, KEBA/BMW, NRGkick, Wallbe, Mobile Charger Connect, EEBUS (experimental)
   - Build-your-own: Phoenix (includes ESL Walli), [SimpleEVSE](https://www.evse-wifi.de/produkt-schlagwort/simple-evse-wb/)
   - Smart-Home outlets: FritzDECT, Shelly, Tasmota, TP-Link
 - multiple [meters](#meter): ModBus (Eastron SDM, MPM3PM, SBC ALE3 and many more), Discovergy (using HTTP plugin), SMA Sunny Home Manager and Energy Meter, KOSTAL Smart Energy Meter (KSEM, EMxx), any Sunspec-compatible inverter or home battery devices (Fronius, SMA, SolarEdge, KOSTAL, STECA, E3DC, ...), Tesla PowerWall, LG ESS HOME
-- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Skoda, Tesla, Volkswagen, Volvo, Tronity
+- wide support of vendor-specific [vehicles](#vehicle) interfaces (remote charge, battery and preconditioning status): Audi, BMW, Fiat, Ford, Hyundai, Kia, Mini, Nissan, Niu, Porsche, Renault, Seat, Smart, Skoda, Tesla, Volkswagen, Volvo, Tronity
 - [plugins](#plugins) for integrating with any charger/ meter/ vehicle: Modbus (meters and grid inverters), HTTP, MQTT, Javascript, WebSockets and shell scripts
 - status [notifications](#notifications) using [Telegram](https://telegram.org), [PushOver](https://pushover.net) and [many more](https://containrrr.dev/shoutrrr/)
 - logging using [InfluxDB](https://www.influxdata.com) and [Grafana](https://grafana.com/grafana/)
@@ -200,6 +200,7 @@ Available charger implementations are:
 - `evsewifi`: chargers with SimpleEVSE controllers using [EVSE-WiFi](https://www.evse-wifi.de/) (includes smartWB)
 - `go-e`: go-eCharger chargers (both local and cloud API are supported, at least firmware 040.0 required)
 - `heidelberg`: Heidelberg Energy Control (requires Modbus adapter; [sponsors only](#sponsorship))
+- `innogy`: Innogy eBox ([sponsors only](#sponsorship))
 - `keba`: KEBA KeContact P20/P30 and BMW chargers (see [Preparation](#keba-preparation-))
 - `mcc`: Mobile Charger Connect devices (Audi, Bentley, Porsche)
 - `nrgkick-bluetooth`: NRGkick chargers with Bluetooth connector (Linux only, not supported on Docker)
@@ -296,6 +297,7 @@ Available vehicle remote interface implementations are:
 - `bmw`: BMW (i3)
 - `carwings`: Nissan (Leaf pre 2019)
 - `citroen`, `ds`, `opel`, `peugeot`: All PSA brands
+- `dacia`: Dacia (Spring)
 - `fiat`: Fiat (500e, Neuer 500)
 - `ford`: Ford (Kuga, Mustang)
 - `kia`: Kia (Soul and other Bluelink models)
@@ -308,6 +310,7 @@ Available vehicle remote interface implementations are:
 - `ovms`: Open Vehicle Monitoring System (f.i. Twizzy, Smart ED)
 - `porsche`: Porsche (Taycan, Cayenne E-Hybrid)
 - `seat`: Seat (Cupra, Mii)
+- `smart`: Smart (EQ)
 - `skoda`: Skoda (Citigo)
 - `enyaq`: Skoda (Enyaq)
 - `vw`: Volkswagen (eGolf, eUp)

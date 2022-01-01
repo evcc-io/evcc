@@ -8,8 +8,6 @@ params:
 - name: host
   required: true
   example: 192.0.2.2
-- name: port
-  default: 8080
 render: |
   type: custom
   power:
@@ -23,7 +21,6 @@ render: |
   {{- if eq .usage "grid" }}
     body: '{"ENERGY":{"GUI_GRID_POW":""}}'
     jq: .ENERGY.GUI_GRID_POW | sub("fl_"; "")
-    scale: -1
   {{- end }}
   {{- if eq .usage "pv" }}
     body: '{"ENERGY":{"GUI_INVERTER_POWER":""}}'

@@ -1,7 +1,6 @@
 package vehicle
 
 import (
-	"strings"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -55,21 +54,18 @@ func NewBMWMiniFromConfig(brand string, other map[string]interface{}) (api.Vehic
 	log := util.NewLogger(brand).Redact(cc.User, cc.Password, cc.VIN)
 	identity := bmw.NewIdentity(log)
 
-	if err := identity.Login(cc.User, cc.Password); err != nil {
+	err := identity.Login(cc.User, cc.Password)
+	if err != nil {
 		return nil, err
 	}
 
 	api := bmw.NewAPI(log, brand, identity)
 
-	var err error
-	if cc.VIN == "" {
-		cc.VIN, err = findVehicle(api.Vehicles())
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", cc.VIN)
-		}
-	}
+	cc.VIN, err = ensureVehicle(cc.VIN, api.Vehicles)
 
-	v.Provider = bmw.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache)
+	if err == nil {
+		v.Provider = bmw.NewProvider(api, cc.VIN, cc.Cache)
+	}
 
 	return v, err
 }

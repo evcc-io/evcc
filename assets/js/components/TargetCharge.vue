@@ -108,13 +108,16 @@
 <script>
 import formatter from "../mixins/formatter";
 
+const DEFAULT_TARGET_HOUR = 7;
+
 export default {
 	name: "TargetCharge",
 	mixins: [formatter],
 	props: {
 		id: Number,
-		targetTimeActive: Boolean,
 		targetTime: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetSoC: Number,
 	},
 	data: function () {
@@ -155,12 +158,20 @@ export default {
 			return this.$t("main.targetCharge.inactiveLabel");
 		},
 		defaultDate: function () {
-			const now = new Date();
-			// 12 hrs from now
-			now.setHours(now.getHours() + 12);
-			// round to quarter hour
-			now.setMinutes(Math.ceil(now.getMinutes() / 15) * 15);
-			return now;
+			const target = new Date();
+			target.setSeconds(0);
+			target.setMinutes(0);
+			if (Number.isInteger(this.targetTimeHourSuggestion)) {
+				target.setUTCHours(this.targetTimeHourSuggestion);
+			} else {
+				target.setHours(DEFAULT_TARGET_HOUR);
+			}
+			// today or tomorrow?
+			const isInPast = target < new Date();
+			if (isInPast) {
+				target.setDate(target.getDate() + 1);
+			}
+			return target;
 		},
 		initInputFields: function () {
 			let date = this.defaultDate();
@@ -180,7 +191,7 @@ export default {
 			];
 			for (let i = 0; i < 7; i++) {
 				const dayNumber = date.toLocaleDateString("default", {
-					month: "long",
+					month: "short",
 					day: "numeric",
 				});
 				const dayName =

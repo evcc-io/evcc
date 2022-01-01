@@ -7,15 +7,13 @@
 					<div
 						v-if="chargePower && activePhases"
 						v-tooltip="{ content: phaseTooltip }"
-						class="badge rounded-pill bg-secondary text-light cursor-pointer"
+						class="badge rounded-pill bg-secondary text-light cursor-pointer d-inline-flex align-items-center"
 						tabindex="0"
 					>
-						{{ activePhases }}P
+						<div>{{ activePhases }}P</div>
 						<WaitingDots
 							v-if="phaseTimerVisible"
-							class="small"
 							:direction="phaseAction === 'scale1p' ? 'down' : 'up'"
-							orientation="vertical"
 						/>
 					</div>
 					<fa-icon
@@ -36,22 +34,19 @@
 				</div>
 				<h3 class="value">
 					{{ fmt(chargePower) }}
-					<small class="text-muted">
-						{{ fmtUnit(chargePower) }}W<small
-							v-if="pvTimerVisible"
-							v-tooltip="{
-								content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
-									remaining: fmtShortDuration(pvRemainingInterpolated, true),
-								}),
-							}"
-							class="cursor-pointer d-inline-block px-2"
-							tabindex="0"
-						>
-							<WaitingDots
-								:direction="pvAction === 'disable' ? 'down' : 'up'"
-								orientation="vertical"
-							/>
-						</small>
+					<small class="text-muted">{{ fmtUnit(chargePower) }}W</small
+					><small
+						v-if="pvTimerVisible"
+						v-tooltip="{
+							content: $t(`main.loadpointDetails.tooltip.pv.${pvAction}`, {
+								remaining: fmtShortDuration(pvRemainingInterpolated, true),
+							}),
+						}"
+						class="text-muted cursor-pointer d-inline-block align-bottom"
+						style="margin-bottom: 0.1em"
+						tabindex="0"
+					>
+						<WaitingDots :direction="pvAction === 'disable' ? 'down' : 'up'" />
 					</small>
 				</h3>
 			</div>
@@ -96,7 +91,6 @@
 </template>
 
 <script>
-import "../icons";
 import WaitingDots from "./WaitingDots";
 import formatter from "../mixins/formatter";
 

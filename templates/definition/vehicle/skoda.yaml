@@ -1,9 +1,11 @@
 template: skoda
 description: Skoda (Citigo)
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: capacity
   default: 10
 render: |
   type: skoda
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

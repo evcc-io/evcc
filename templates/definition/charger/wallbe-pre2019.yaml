@@ -14,4 +14,4 @@ params:
 render: |
   type: wallbe
   uri: {{ .host }}:{{ .port }}
-  legacy: true # set only for older Wallbe devices (pre ~2019, old controller firmware) 
+  legacy: true # set only for older Wallbe devices (pre ~2019, old controller firmware)

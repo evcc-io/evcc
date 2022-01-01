@@ -65,6 +65,11 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 
 	c.setDefaultTexts()
 
+	if !c.advancedMode {
+		c.flowNewConfigFile()
+		return
+	}
+
 	fmt.Println()
 	fmt.Println(c.localizedString("Intro", nil))
 	flowChoices := []string{

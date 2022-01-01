@@ -20,6 +20,7 @@ import (
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
 //  https://github.com/hacf-fr/renault-api
+// https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -110,6 +111,7 @@ type Renault struct {
 }
 
 func init() {
+	registry.Add("dacia", NewRenaultFromConfig)
 	registry.Add("renault", NewRenaultFromConfig)
 }
 
@@ -135,7 +137,6 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		Helper:   request.NewHelper(log),
 		user:     cc.User,
 		password: cc.Password,
-		vin:      strings.ToUpper(cc.VIN),
 	}
 
 	err := v.apiKeys(cc.Region)
@@ -143,16 +144,17 @@ func NewRenaultFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		err = v.authFlow()
 	}
 
-	if err == nil && cc.VIN == "" {
-		v.vin, err = findVehicle(v.kamereonVehicles(v.accountID))
-		if err == nil {
-			log.DEBUG.Printf("found vehicle: %v", v.vin)
-		}
+	if err == nil {
+		v.vin, err = ensureVehicle(cc.VIN, func() ([]string, error) {
+			return v.kamereonVehicles(v.accountID)
+		})
 	}
 
-	v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
-	v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
-	v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
+	if err == nil {
+		v.batteryG = provider.NewCached(v.batteryAPI, cc.Cache).InterfaceGetter()
+		v.cockpitG = provider.NewCached(v.cockpitAPI, cc.Cache).InterfaceGetter()
+		v.hvacG = provider.NewCached(v.hvacAPI, cc.Cache).InterfaceGetter()
+	}
 
 	return v, err
 }

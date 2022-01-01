@@ -103,10 +103,18 @@ export default {
 	created: function () {
 		const urlParams = new URLSearchParams(window.location.search);
 		this.compact = urlParams.get("compact");
-		this.connect(); // websocket listener
+		setTimeout(this.connect, 0);
 	},
 	methods: {
 		connect: function () {
+			const supportsWebSockets = "WebSocket" in window;
+			if (!supportsWebSockets) {
+				window.app.error({
+					message: "Web sockets not supported. Please upgrade your browser.",
+				});
+				return;
+			}
+
 			const loc = window.location;
 			const protocol = loc.protocol == "https:" ? "wss:" : "ws:";
 			const uri =
@@ -116,20 +124,21 @@ export default {
 				(loc.port ? ":" + loc.port : "") +
 				loc.pathname +
 				"ws";
-			const ws = new WebSocket(uri),
-				self = this;
-			ws.onerror = function () {
+			const ws = new WebSocket(uri);
+			ws.onerror = () => {
 				ws.close();
 			};
-			ws.onclose = function () {
-				window.setTimeout(self.connect, 1000);
+			ws.onclose = () => {
+				window.setTimeout(this.connect, 1000);
 			};
-			ws.onmessage = function (evt) {
+			ws.onmessage = (evt) => {
 				try {
 					var msg = JSON.parse(evt.data);
 					store.update(msg);
-				} catch (e) {
-					window.app.error(e, evt.data);
+				} catch (error) {
+					window.app.error({
+						message: `Failed to parse web socket data: ${error.message} [${evt.data}]`,
+					});
 				}
 			};
 		},

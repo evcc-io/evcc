@@ -1,9 +1,11 @@
 template: peugeot
 description: Peugeot
-paramsbase: vehicle
 params:
+- base: vehiclebase
+- base: vehicleidentify
 - name: capacity
   default: 50
 render: |
   type: peugeot
-  {{include "vehicle-common" .}}
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

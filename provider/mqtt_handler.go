@@ -3,22 +3,19 @@ package provider
 import (
 	"fmt"
 	"math"
-	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
-	"github.com/evcc-io/evcc/util/jq"
-	"github.com/itchyny/gojq"
 )
 
 type msgHandler struct {
-	mux     *util.Waiter
-	scale   float64
-	topic   string
-	payload string
-	re      *regexp.Regexp
-	jq      *gojq.Query
+	mux      *util.Waiter
+	scale    float64
+	topic    string
+	pipeline *pipeline.Pipeline
+	payload  string
 }
 
 func (h *msgHandler) receive(payload string) {
@@ -38,24 +35,12 @@ func (h *msgHandler) hasValue() (string, error) {
 		return "", fmt.Errorf("%s outdated: %v", h.topic, late.Truncate(time.Second))
 	}
 
-	var err error
-	payload := h.payload
-
-	if h.re != nil {
-		m := h.re.FindStringSubmatch(payload)
-		if len(m) > 1 {
-			payload = m[1] // first submatch
-		}
+	if h.pipeline != nil {
+		b, err := h.pipeline.Process([]byte(h.payload))
+		return string(b), err
 	}
 
-	if h.jq != nil {
-		var val interface{}
-		if val, err = jq.Query(h.jq, []byte(payload)); err == nil {
-			payload = fmt.Sprintf("%v", val)
-		}
-	}
-
-	return payload, err
+	return h.payload, nil
 }
 
 func (h *msgHandler) floatGetter() (float64, error) {

@@ -1,6 +1,6 @@
 package porsche
 
-type VehicleResponse struct {
+type Vehicle struct {
 	VIN              string
 	ModelDescription string
 	Pictures         []struct {
