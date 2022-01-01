@@ -132,17 +132,17 @@ func (c *EEBus) showCurrentChargingSetup() {
 
 	if prevComStandard != data.EVData.CommunicationStandard {
 		c.communicationStandard = data.EVData.CommunicationStandard
-		logx.Warn(c.log, "msg", "ev-charger-communication changed", "from", prevComStandard, "to", data.EVData.CommunicationStandard, "ts", time.Now())
+		logx.Warn(c.log, "msg", "ev-charger-communication changed", "from", prevComStandard, "to", data.EVData.CommunicationStandard)
 	}
 
 	if prevSoCSupport != data.EVData.UCSoCAvailable {
 		c.socSupportAvailable = data.EVData.UCSoCAvailable
-		logx.Warn(c.log, "msg", "ev-charger-soc support changed", "from", prevSoCSupport, "to", data.EVData.UCSoCAvailable, "ts", time.Now())
+		logx.Warn(c.log, "msg", "ev-charger-soc support changed", "from", prevSoCSupport, "to", data.EVData.UCSoCAvailable)
 	}
 
 	if prevSelfConsumptionSupport != data.EVData.UCSelfConsumptionAvailable {
 		c.selfConsumptionSupportAvailable = data.EVData.UCSelfConsumptionAvailable
-		logx.Warn(c.log, "msg", "ev-charger-self-consumption-support support changed", "from", prevSelfConsumptionSupport, "to", data.EVData.UCSelfConsumptionAvailable, "ts", time.Now())
+		logx.Warn(c.log, "msg", "ev-charger-self-consumption-support support changed", "from", prevSelfConsumptionSupport, "to", data.EVData.UCSelfConsumptionAvailable)
 	}
 
 }
