@@ -19,6 +19,7 @@ func init() {
 
 type Discovergy struct {
 	dataG func() (interface{}, error)
+	scale float64
 }
 
 // NewDiscovergyFromConfig creates a new configurable meter
@@ -27,6 +28,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		User     string
 		Password string
 		Meter    string
+		Scale    float64
 		Cache    time.Duration
 	}{
 		Cache: time.Second,
@@ -74,6 +76,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 
 	m := &Discovergy{
 		dataG: dataG,
+		scale: cc.Scale,
 	}
 
 	return m, nil
@@ -88,7 +91,7 @@ var _ api.Meter = (*Discovergy)(nil)
 func (m *Discovergy) CurrentPower() (float64, error) {
 	res, err := m.dataG()
 	if res, ok := res.(discovergy.Reading); err == nil && ok {
-		return float64(res.Values.Power) / 1e3, nil
+		return m.scale * float64(res.Values.Power) / 1e3, nil
 	}
 	return 0, err
 }
