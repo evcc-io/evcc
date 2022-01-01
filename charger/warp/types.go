@@ -29,7 +29,8 @@ type LowLevelState struct {
 	Gpio           []bool
 }
 
-type PowerStatus struct {
+type MeterState struct {
+	State     int     `json:"state"` // Warp 1 only
 	Power     float64 `json:"power"`
 	EnergyRel float64 `json:"energy_rel"`
 	EnergyAbs float64 `json:"energy_abs"`

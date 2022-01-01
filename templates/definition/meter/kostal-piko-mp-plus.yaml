@@ -2,6 +2,12 @@ template: kostal-piko-mp-plus
 description: Kostal Piko MP Plus
 guidedsetup:
   enable: true
+  linked: 
+  - template: kostal-ksem-inverter
+    usage: grid
+  - template: kostal-ksem
+    usage: grid
+    excludetemplate: kostal-ksem-inverter
 params:
 - name: usage
   choice: [ "pv" ]
@@ -15,5 +21,5 @@ render: |
     # PV
     source: http
     uri: http://{{ .host }}/measurements.xml
-    jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | .attrValue | tonumber
+    jq: .root.Device.Measurements.Measurement[] | select(.attrType == "AC_Power") | if has ("attrValue") then .attrValue else "0" end | tonumber
   {{- end -}}

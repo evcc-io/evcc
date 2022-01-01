@@ -1,25 +1,22 @@
 package provider
 
 import (
-	"fmt"
-	"regexp"
 	"time"
 
 	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/provider/pipeline"
 	"github.com/evcc-io/evcc/util"
-	"github.com/itchyny/gojq"
 )
 
 // Mqtt provider
 type Mqtt struct {
-	log     *util.Logger
-	client  *mqtt.Client
-	topic   string
-	payload string
-	scale   float64
-	timeout time.Duration
-	re      *regexp.Regexp
-	jq      *gojq.Query
+	log      *util.Logger
+	client   *mqtt.Client
+	topic    string
+	payload  string
+	scale    float64
+	timeout  time.Duration
+	pipeline *pipeline.Pipeline
 }
 
 func init() {
@@ -29,12 +26,11 @@ func init() {
 // NewMqttFromConfig creates Mqtt provider
 func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
-		mqtt.Config    `mapstructure:",squash"`
-		Topic, Payload string // Payload only applies to setters
-		Scale          float64
-		Timeout        time.Duration
-		Regex          string
-		Jq             string
+		mqtt.Config       `mapstructure:",squash"`
+		Topic, Payload    string // Payload only applies to setters
+		Scale             float64
+		Timeout           time.Duration
+		pipeline.Settings `mapstructure:",squash"`
 	}{
 		Scale: 1,
 	}
@@ -52,19 +48,12 @@ func NewMqttFromConfig(other map[string]interface{}) (IntProvider, error) {
 
 	m := NewMqtt(log, client, cc.Topic, cc.Scale, cc.Timeout).WithPayload(cc.Payload)
 
-	if cc.Regex != "" {
-		if m, err = m.WithRegex(cc.Regex); err != nil {
-			return nil, err
-		}
+	pipe, err := pipeline.New(cc.Settings)
+	if err == nil {
+		m = m.WithPipeline(pipe)
 	}
 
-	if cc.Jq != "" {
-		if m, err = m.WithJq(cc.Jq); err != nil {
-			return nil, err
-		}
-	}
-
-	return m, nil
+	return m, err
 }
 
 // NewMqtt creates mqtt provider for given topic
@@ -86,28 +75,10 @@ func (m *Mqtt) WithPayload(payload string) *Mqtt {
 	return m
 }
 
-// WithRegex adds a regex query applied to the mqtt listener payload
-func (m *Mqtt) WithRegex(regex string) (*Mqtt, error) {
-	re, err := regexp.Compile(regex)
-	if err != nil {
-		return m, fmt.Errorf("invalid regex '%s': %w", re, err)
-	}
-
-	m.re = re
-
-	return m, nil
-}
-
-// WithJq adds a jq query applied to the mqtt listener payload
-func (m *Mqtt) WithJq(jq string) (*Mqtt, error) {
-	op, err := gojq.Parse(jq)
-	if err != nil {
-		return m, fmt.Errorf("invalid jq query '%s': %w", jq, err)
-	}
-
-	m.jq = op
-
-	return m, nil
+// WithPipeline adds a processing pipeline
+func (p *Mqtt) WithPipeline(pipeline *pipeline.Pipeline) *Mqtt {
+	p.pipeline = pipeline
+	return p
 }
 
 var _ FloatProvider = (*Mqtt)(nil)
@@ -117,11 +88,10 @@ var _ FloatProvider = (*Mqtt)(nil)
 // if initial value is not received within `timeout` or max. 10s if timeout is not given.
 func (m *Mqtt) newReceiver() *msgHandler {
 	h := &msgHandler{
-		topic: m.topic,
-		scale: m.scale,
-		mux:   util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
-		re:    m.re,
-		jq:    m.jq,
+		topic:    m.topic,
+		scale:    m.scale,
+		mux:      util.NewWaiter(m.timeout, func() { m.log.DEBUG.Printf("%s wait for initial value", m.topic) }),
+		pipeline: m.pipeline,
 	}
 
 	m.client.Listen(m.topic, h.receive)

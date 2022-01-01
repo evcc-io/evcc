@@ -3,6 +3,7 @@
   "description": "",
   "author": "naltatis & andig",
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "build": "vue-cli-service build",
     "test": "vue-cli-service test:unit",
     "lint": "prettier assets --write && eslint assets/**/*.js assets/**/*.vue --fix",
@@ -23,7 +24,7 @@
     "v-tooltip": "^3.0.0-beta.1",
     "vue": "^2.6.14",
     "vue-hot-reload-api": "^2.3.4",
-    "vue-i18n": "^8.26.7",
+    "vue-i18n": "^8.26.8",
     "vue-meta": "^2.4.0",
     "vue-router": "^3.5.3"
   },
@@ -59,6 +60,9 @@
   "license": "MIT",
   "repository": "github:evcc-io/evcc",
   "resolutions": {
-    "node-forge": "0.10.0"
+    "glob-parent": ">=5.1.2",
+    "immer": ">=9.0.6",
+    "node-notifier": ">=8.0.1",
+    "trim": ">=1.0.1"
   }
 }

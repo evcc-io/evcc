@@ -191,7 +191,7 @@ func (wb *Wallbe) currentPower() (float64, error) {
 		return 0, err
 	}
 
-	return rs485.RTUUint32ToFloat64Swapped(b), nil
+	return rs485.RTUInt32ToFloat64Swapped(b), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface
@@ -222,7 +222,7 @@ func (wb *Wallbe) currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 
-		currents = append(currents, rs485.RTUUint32ToFloat64Swapped(b))
+		currents = append(currents, rs485.RTUInt32ToFloat64Swapped(b))
 	}
 
 	return currents[0], currents[1], currents[2], nil
