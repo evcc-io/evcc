@@ -1,0 +1,68 @@
+template: victron-energy
+description: Victron Energy
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: port
+  default: 502
+render: |
+  type: custom
+  power:
+  {{- if eq .usage "grid" }}
+    source: calc
+    add:
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 50 # com.victronenergy.grid
+      register:
+        address: 2600 # L1 grid power
+        type: input
+        decode: int16
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 50 # com.victronenergy.grid
+      register:
+        address: 2601 # L2 grid power
+        type: input
+        decode: int16
+    - source: modbus
+      uri: {{ .host }}:{{ .port }}
+      id: 50 # com.victronenergy.grid
+      register:
+        address: 2602 # L3 grid power
+        type: input
+        decode: int16
+  {{- end }}
+  {{- if eq .usage "pv" }}
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 20 # com.victronenergy.pvinverter
+    register:
+      address: 1052 # Total AC Power
+      type: input
+      decode: int32
+  {{- end }}
+  {{- if eq .usage "battery" }}
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 100 # com.victronenergy.system
+    register:
+      address: 842 # active DC power
+      type: input
+      decode: int16
+    scale: -1
+  soc:
+    source: modbus
+    uri: {{ .host }}:{{ .port }}
+    id: 225 # com.victronenergy.battery
+    register:
+      address: 266 # SoC
+      type: input
+      decode: uint16
+    scale: 0.1
+  {{- end }}
