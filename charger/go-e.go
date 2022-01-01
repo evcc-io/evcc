@@ -184,7 +184,10 @@ var _ api.Identifier = (*GoE)(nil)
 // Identify implements the api.Identifier interface
 func (c *GoE) Identify() (string, error) {
 	resp, err := c.api.Status()
-	return resp.Identify(), err
+	if err != nil {
+		return "", err
+	}
+	return resp.Identify(), nil
 }
 
 // totalEnergy implements the api.MeterEnergy interface - v2 only
