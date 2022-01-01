@@ -27,7 +27,7 @@
 						<h5 class="modal-title">
 							{{
 								$t("footer.savings.modalTitle", {
-									total: fmtKw(chargedTotal, true, false),
+									total: fmtKw(chargedTotal * 1000, true, false),
 								})
 							}}
 						</h5>
@@ -45,7 +45,7 @@
 									<fa-icon icon="square" class="text-evcc"></fa-icon>
 									{{
 										$t("footer.savings.modalChartSelf", {
-											self: fmtKw(chargedSelfConsumption, true, false),
+											self: fmtKw(chargedSelfConsumption * 1000, true, false),
 										})
 									}}
 								</div>
@@ -53,7 +53,7 @@
 									<fa-icon icon="square" class="text-grid"></fa-icon>
 									{{
 										$t("footer.savings.modalChartGrid", {
-											grid: fmtKw(chargedGrid, true, false),
+											grid: fmtKw(chargedGrid * 1000, true, false),
 										})
 									}}
 								</div>
@@ -172,7 +172,7 @@ export default {
 		},
 		savingAmount() {
 			const priceDiff = (this.gridPrice - this.feedInPrice) / 100;
-			const saving = (this.chargedSelfConsumption / 1000) * priceDiff;
+			const saving = this.chargedSelfConsumption * priceDiff;
 			return this.fmtMoney(saving, this.currency);
 		},
 		pricePerKWh() {
