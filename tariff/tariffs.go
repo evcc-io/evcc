@@ -2,17 +2,20 @@ package tariff
 
 import (
 	"github.com/evcc-io/evcc/api"
+	"golang.org/x/text/currency"
 )
 
 type Tariffs struct {
-	Grid   api.Tariff
-	Feedin api.Tariff
+	Currency currency.Unit
+	Grid     api.Tariff
+	Feedin   api.Tariff
 }
 
 var _ api.Tariff = (*Fixed)(nil)
 
-func NewTariffs(grid api.Tariff, feedin api.Tariff) *Tariffs {
+func NewTariffs(currency currency.Unit, grid api.Tariff, feedin api.Tariff) *Tariffs {
 	t := Tariffs{}
+	t.Currency = currency
 	t.Grid = grid
 	t.Feedin = feedin
 	return &t

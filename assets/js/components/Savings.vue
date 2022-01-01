@@ -85,10 +85,10 @@
 						</div>
 						<p class="mb-3">
 							{{ $t("footer.savings.modalSavingsPrice") }}:
-							<strong>{{ centPerKWh }}</strong>
+							<strong>{{ pricePerKWh }}</strong>
 							<br />
 							{{ $t("footer.savings.modalSavingsTotal") }}:
-							<strong>{{ savingEuro }}</strong>
+							<strong>{{ savingAmount }}</strong>
 						</p>
 
 						<p class="small text-muted mb-3">
@@ -101,11 +101,17 @@
 							>:
 							<span class="text-nowrap">
 								{{
-									$t("footer.savings.modalExplainationGrid", { gridPrice })
+									$t("footer.savings.modalExplainationGrid", {
+										gridPrice: fmtPricePerKWh(gridPrice, currency),
+									})
 								}}</span
 							>,
 							<span class="text-nowrap">
-								{{ $t("footer.savings.modalExplainationFeedin", { feedinPrice }) }}
+								{{
+									$t("footer.savings.modalExplainationFeedin", {
+										feedinPrice: fmtPricePerKWh(feedinPrice, currency),
+									})
+								}}
 							</span>
 							<br />
 							{{
@@ -154,6 +160,7 @@ export default {
 		chargedSelfConsumption: { type: Number, default: 0 },
 		gridPrice: { type: Number, default: 30 },
 		feedinPrice: { type: Number, default: 8 },
+		currency: String,
 	},
 	computed: {
 		chargedGrid() {
@@ -163,16 +170,16 @@ export default {
 			const { gridPrice, feedinPrice } = this.$options.propsData;
 			return gridPrice === undefined || feedinPrice === undefined;
 		},
-		savingEuro() {
-			const priceDiffEuro = (this.gridPrice - this.feedinPrice) / 100;
-			const saving = (this.chargedSelfConsumption / 1000) * priceDiffEuro;
-			return this.fmtEuro(saving);
+		savingAmount() {
+			const priceDiff = (this.gridPrice - this.feedinPrice) / 100;
+			const saving = (this.chargedSelfConsumption / 1000) * priceDiff;
+			return this.fmtMoney(saving, this.currency);
 		},
-		centPerKWh() {
-			const totalCent =
+		pricePerKWh() {
+			const total =
 				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedinPrice;
-			const euroPerKWh = totalCent / this.chargedTotal;
-			return `${Math.round(euroPerKWh || this.gridPrice)} ct/kWh`;
+			const perKWh = total / this.chargedTotal;
+			return this.fmtPricePerKWh(perKWh || this.gridPrice, this.currency);
 		},
 		percent() {
 			return Math.round(this.selfPercentage) || 0;

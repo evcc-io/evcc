@@ -108,6 +108,7 @@ export default {
 				selfPercentage: this.store.state.savingsSelfPercentage,
 				gridPrice: this.store.state.tariffGrid,
 				feedinPrice: this.store.state.tariffFeedin,
+				currency: this.store.state.currency,
 			};
 		},
 	},

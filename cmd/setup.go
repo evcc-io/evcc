@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/spf13/viper"
+	"golang.org/x/text/currency"
 )
 
 func init() {
@@ -182,7 +183,12 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 
 func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 	var grid, feedin api.Tariff
+	var currencyCode currency.Unit = currency.EUR
 	var err error
+
+	if conf.Currency != "" {
+		currencyCode = currency.MustParseISO(conf.Currency)
+	}
 
 	if conf.Grid.Type != "" {
 		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
@@ -196,7 +202,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		err = fmt.Errorf("failed configuring tariff: %w", err)
 	}
 
-	tariffs := tariff.NewTariffs(grid, feedin)
+	tariffs := tariff.NewTariffs(currencyCode, grid, feedin)
 
 	return *tariffs, err
 }

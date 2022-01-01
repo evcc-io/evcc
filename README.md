@@ -341,18 +341,19 @@ You can specify your energy tariffs and grid feed-in rates. Evcc uses these valu
 
 ```yaml
 tariffs:
+  currency: EUR # (default EUR)
   grid:
     # static grid price
     type: fixed
-    price: 29 # ct/kWh
+    price: 0.294 # EUR/kWh
 
   feedin:
     # rate for feeding excess (pv) energy to the grid
     type: fixed
-    price: 8 # ct/kWh
+    price: 0.08 # EUR/kWh
 ```
 
-For the savings estimate calculation evcc roughly records the total amount of energy charged and the used energy sources (grid, battery, pv). PV direct usage and energy provided by the battery system are treated equally in this calculation. Battery losses due to conversion are not taken into account. The algorithm distinguishes between grid energy and self-produced solar energy (pv, battery). The cost advantage of your solar energy is the difference between you grid import price (e.g. 29ct/kWh) and your feedin rate (e.g. 8ct/kWh). If you are not compensated for feedin energy to the grid you can set the feedin price to 0.
+For the savings estimate calculation evcc roughly records the total amount of energy charged and the used energy sources (grid, battery, pv). PV direct usage and energy provided by the battery system are treated equally in this calculation. Battery losses due to conversion are not taken into account. The algorithm distinguishes between grid energy and self-produced solar energy (pv, battery). The cost advantage of your solar energy is the difference between you grid import price (e.g. 0.294 EUR/kWh) and your feedin rate (e.g. 0.08 EUR/kWh). If you are not compensated for feedin energy to the grid you can set the feedin price to 0.
 If at one time your pulling energy from multiple sources (e.g. 50% grid, 50% pv) the algorithm will distribute the energy sources evenly. It assumes that your house consumption and your active loadpoints are each using a 50/50 energy mix.
 At the moment the algorithm only uses the current energy price. Flexible prices (see below) or day/night-tariffs are not taken into account. The energy amounts and savings are currently not persistant and will be reset after a service restart.
 
@@ -365,13 +366,13 @@ tariffs:
   grid:
     # either
     type: tibber
-    cheap: 20 # ct/kWh
+    cheap: 0.2 # EUR/kWh
     token: "476c477d8a039529478ebd690d35ddd80e3308ffc49b59c65b142321aee963a4" # access token
     homeid: "cc83e83e-8cbf-4595-9bf7-c3cf192f7d9c" # optional if multiple homes associated to account
 
     # or
     type: awattar
-    cheap: 20 # ct/kWh
+    cheap: 0.2 # EUR/kWh
     region: de # optional, choose at for Austria
 ```
 

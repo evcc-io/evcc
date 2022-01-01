@@ -70,7 +70,7 @@ func (t *Awattar) CurrentPrice() (float64, error) {
 		pi := t.data[i]
 
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice / 10, nil
+			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
 		}
 	}
 

@@ -95,8 +95,17 @@ export default {
         minute: "numeric",
       }).format(date);
     },
-    fmtEuro: function (euro = 0) {
-      return this.$n(euro, { style: "currency", currency: "EUR" });
+    fmtMoney: function (amout = 0, currency = "EUR") {
+      return this.$n(amout, { style: "currency", currency });
+    },
+    fmtPricePerKWh: function (amout = 0, currency = "EUR") {
+      let unit = currency;
+      let value = amout;
+      if (["EUR", "USD"].includes(currency)) {
+        value *= 100;
+        unit = "ct";
+      }
+      return `${this.$n(value, { style: "decimal" })} ${unit}/kWh`;
     },
     fmtTimeAgo: function (elapsed) {
       const units = {

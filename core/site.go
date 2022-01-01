@@ -398,6 +398,8 @@ func (site *Site) sitePower() (float64, error) {
 	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
 	site.publish("savingsSince", site.savings.Since())
 
+	site.publish("currency", site.tariffs.Currency.String())
+
 	if site.tariffs.Grid != nil {
 		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
 			site.publish("tariffGrid", gridPrice)
