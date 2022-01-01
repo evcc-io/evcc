@@ -1178,7 +1178,8 @@ func (lp *LoadPoint) updateChargePower() {
 		lp.log.DEBUG.Printf("charge power: %.0fW", value)
 		lp.publish("chargePower", value)
 
-		if lp.chargePower < 0 {
+		// use -1 for https://github.com/evcc-io/evcc/issues/2153
+		if lp.chargePower < -1 {
 			lp.log.WARN.Printf("charge power must not be negative: %.0f", lp.chargePower)
 		}
 
