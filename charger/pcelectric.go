@@ -98,10 +98,7 @@ func (wb *PCElectric) Enabled() (bool, error) {
 	var res pcelectric.Status
 	uri := fmt.Sprintf("%s/status", wb.uri)
 	err := wb.GetJSON(uri, &res)
-	if err == nil && res.PowerMode == "ON" {
-		return true, err
-	}
-	return false, err
+	return res.PowerMode == "ON", err
 }
 
 // Enable implements the api.Charger interface
