@@ -441,6 +441,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings
+	// TODO: use a proper interface, use meter readings instead of current power for better results
 	var totalChargePower = 0.0
 	for _, lp := range site.loadpoints {
 		totalChargePower += lp.chargePower
