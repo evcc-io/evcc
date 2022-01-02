@@ -113,13 +113,12 @@ func (wb *MobileConnect) fetchToken(request *http.Request) error {
 
 // login as the home user with the given password
 func (wb *MobileConnect) login(password string) error {
-	uri := fmt.Sprintf("%s/%s", wb.uri, mccAPILogin)
-
 	data := url.Values{
 		"user": []string{"user"},
 		"pass": []string{wb.password},
 	}
 
+	uri := fmt.Sprintf("%s/%s", wb.uri, mccAPILogin)
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
 		"Referer":      fmt.Sprintf("%s/login", wb.uri),
 		"Content-Type": "application/x-www-form-urlencoded",
@@ -134,7 +133,6 @@ func (wb *MobileConnect) login(password string) error {
 // refresh the auth token with a new one
 func (wb *MobileConnect) refresh() error {
 	uri := fmt.Sprintf("%s/%s", wb.uri, mccAPIRefresh)
-
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return err
@@ -148,7 +146,6 @@ func (wb *MobileConnect) refresh() error {
 
 // creates a http request that contains the auth token
 func (wb *MobileConnect) request(method, uri string) (*http.Request, error) {
-
 	// do we need a token refresh?
 	if wb.token != "" {
 		// is it time to refresh the token?
@@ -171,14 +168,12 @@ func (wb *MobileConnect) request(method, uri string) (*http.Request, error) {
 
 	// now lets process the request with the fetched token
 	req, err := http.NewRequest(method, uri, nil)
-	if err != nil {
-		return req, err
+	if err == nil {
+		req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", wb.uri))
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", wb.token))
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", wb.token))
-	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", wb.uri))
-
-	return req, nil
+	return req, err
 }
 
 // use http GET to fetch a non structured value from an URI and stores it in result
