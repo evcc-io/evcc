@@ -1430,7 +1430,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	case mode == api.ModeMinPV || mode == api.ModePV:
 		targetCurrent := lp.pvMaxCurrent(mode, sitePower, batteryBuffered)
-		lp.log.DEBUG.Printf("pv max charge current: %.3gA", targetCurrent)
 
 		var required bool // false
 		if targetCurrent == 0 && lp.climateActive() {
