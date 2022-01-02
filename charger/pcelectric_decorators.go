@@ -6,12 +6,12 @@ import (
 	"github.com/evcc-io/evcc/api"
 )
 
-func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
+func decoratePCE(base *PCElectric, meter func() (float64, error), meterCurrent func() (float64, float64, float64, error)) api.Charger {
 	switch {
-	case meter == nil && meterCurrent == nil && meterEnergy == nil:
+	case meter == nil && meterCurrent == nil:
 		return base
 
-	case meter != nil && meterCurrent == nil && meterEnergy == nil:
+	case meter != nil && meterCurrent == nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -22,33 +22,7 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter == nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct {
-			*PCElectric
-			api.MeterEnergy
-		}{
-			PCElectric: base,
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter != nil && meterCurrent == nil && meterEnergy != nil:
-		return &struct {
-			*PCElectric
-			api.Meter
-			api.MeterEnergy
-		}{
-			PCElectric: base,
-			Meter: &decoratePCEMeterImpl{
-				meter: meter,
-			},
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter == nil && meterCurrent != nil && meterEnergy == nil:
+	case meter == nil && meterCurrent != nil:
 		return &struct {
 			*PCElectric
 			api.MeterCurrent
@@ -59,7 +33,7 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 		}
 
-	case meter != nil && meterCurrent != nil && meterEnergy == nil:
+	case meter != nil && meterCurrent != nil:
 		return &struct {
 			*PCElectric
 			api.Meter
@@ -71,40 +45,6 @@ func decoratePCE(base *PCElectric, meter func() (float64, error), meterEnergy fu
 			},
 			MeterCurrent: &decoratePCEMeterCurrentImpl{
 				meterCurrent: meterCurrent,
-			},
-		}
-
-	case meter == nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*PCElectric
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			PCElectric: base,
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
-			},
-		}
-
-	case meter != nil && meterCurrent != nil && meterEnergy != nil:
-		return &struct {
-			*PCElectric
-			api.Meter
-			api.MeterCurrent
-			api.MeterEnergy
-		}{
-			PCElectric: base,
-			Meter: &decoratePCEMeterImpl{
-				meter: meter,
-			},
-			MeterCurrent: &decoratePCEMeterCurrentImpl{
-				meterCurrent: meterCurrent,
-			},
-			MeterEnergy: &decoratePCEMeterEnergyImpl{
-				meterEnergy: meterEnergy,
 			},
 		}
 	}
@@ -126,12 +66,4 @@ type decoratePCEMeterCurrentImpl struct {
 
 func (impl *decoratePCEMeterCurrentImpl) Currents() (float64, float64, float64, error) {
 	return impl.meterCurrent()
-}
-
-type decoratePCEMeterEnergyImpl struct {
-	meterEnergy func() (float64, error)
-}
-
-func (impl *decoratePCEMeterEnergyImpl) TotalEnergy() (float64, error) {
-	return impl.meterEnergy()
 }

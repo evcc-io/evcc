@@ -23,7 +23,7 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
@@ -42,7 +42,7 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 	if err == nil {
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID), &res); err == nil && res.MeterSerial != "" {
-			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
+			return decoratePCE(wb, wb.currentPower, wb.currents), nil
 		}
 	}
 
@@ -87,7 +87,10 @@ func (wb *PCElectric) Enabled() (bool, error) {
 	var res pcelectric.Status
 	uri := fmt.Sprintf("%s/status", wb.uri)
 	err := wb.GetJSON(uri, &res)
-	return res.Mode == "ALWAYS_ON", err
+	if err == nil && res.PowerMode == "ON" {
+		return true, err
+	}
+	return false, err
 }
 
 // Enable implements the api.Charger interface
@@ -108,30 +111,21 @@ func (wb *PCElectric) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (wb *PCElectric) MaxCurrent(current int64) error {
-	var data pcelectric.ReducedIntervals
-
 	uri := fmt.Sprintf("%s/currentlimit", wb.uri)
-	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-	if err == nil {
-		_, err = wb.DoBody(req)
-	}
-
-	if err == nil {
-		data = pcelectric.ReducedIntervals{
-			ReducedIntervalsEnabled: true,
-			ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
-				{
-					SchemaId:    1,
-					Start:       "00:00:00",
-					Stop:        "24:00:00",
-					Weekday:     8,
-					ChargeLimit: int(current),
-				},
+	data := pcelectric.ReducedIntervals{
+		ReducedIntervalsEnabled: true,
+		ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
+			{
+				SchemaId:    1,
+				Start:       "00:00:00",
+				Stop:        "24:00:00",
+				Weekday:     8,
+				ChargeLimit: int(current),
 			},
-		}
-		req, err = request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		},
 	}
 
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
 	}
@@ -144,15 +138,7 @@ func (wb *PCElectric) currentPower() (float64, error) {
 	var res pcelectric.MeterInfo
 	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
 	err := wb.GetJSON(uri, &res)
-	return float64(res.ApparentPower), err
-}
-
-// TotalEnergy implements the api.MeterEnergy interface
-func (wb *PCElectric) totalEnergy() (float64, error) {
-	var res pcelectric.MeterInfo
-	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
-	err := wb.GetJSON(uri, &res)
-	return float64(res.AccEnergy) / 1e3, err
+	return float64(res.ApparentPower) * 1000, err
 }
 
 // Currents implements the api.MeterCurrents interface
