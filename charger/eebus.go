@@ -185,6 +185,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 		c.setLoadpointMinMaxLimits(data)
 	// case communication.EVDataElementUpdateEVSEOperationState:
 	// case communication.EVDataElementUpdateEVChargeState:
+	// case communication.EVDataElementUpdateChargingStrategy:
+	case communication.EVDataElementUpdateChargingPlanRequired:
+		c.writeChargingPlan()
 	case communication.EVDataElementUpdateConnectedPhases:
 		c.setLoadpointMinMaxLimits(data)
 	case communication.EVDataElementUpdatePowerLimits:
@@ -314,6 +317,130 @@ func (c *EEBus) optimizationSelfConsumptionAvailable() bool {
 	return false
 }
 
+// respond to a charging plan request from the EV
+func (c *EEBus) writeChargingPlan() error {
+	data, err := c.cc.GetData()
+	if err != nil {
+		return err
+	}
+
+	var chargingPlan communication.EVChargingPlan
+
+	tariffGrid := 0.30
+	tariffFeedIn := 0.10
+	maxPower := c.lp.GetMaxPower()
+
+	switch data.EVData.ChargingStrategy {
+	case communication.EVChargingStrategyEnumTypeNoDemand, communication.EVChargingStrategyEnumTypeUnknown:
+		// The EV has no power demand or we don't know it yet, so we shouldn't get here
+		// TODO: why did we get here?
+
+		// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
+		for i := 0; i < 24; i++ {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Duration(1) * time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+		chargingPlan.Duration = time.Duration(24) * time.Hour
+	case communication.EVChargingStrategyEnumTypeDirectCharging:
+		// The EV is in direct charging mode
+
+		// Does it support self consumption?
+		if c.optimizationSelfConsumptionAvailable() && !c.forcePVLimits {
+			// this should mean that any mode in evcc is ignored and the EV is in full control
+			// TODO: is this the right approach?
+
+			// lets do one 24 hour slot with maximum power, power will be adjusted via Overload Protection limits
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Duration(24) * time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+			chargingPlan.Duration = time.Duration(24) * time.Hour
+		} else {
+			// in this mode we need to enforce the evcc modes
+
+			// we need to create a 24h charging plan
+			chargingPlan.Duration = time.Duration(24) * time.Hour
+
+			currentMode := c.lp.GetMode()
+			switch currentMode {
+			case api.ModeNow, api.ModeMinPV:
+				// lets do one 24 hour slot with maximum power, power will be adjusted via Overload Protection limits
+				chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+					Duration: time.Duration(24) * time.Hour,
+					MaxValue: maxPower,
+					Pricing:  tariffGrid,
+				})
+				chargingPlan.Duration = time.Duration(24) * time.Hour
+			case api.ModePV:
+				// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
+				// but set the nightly hours to 0 W, we assume those to be from 20:00 to 07:00
+				now := time.Now()
+				for i := 0; i < 24; i++ {
+					power := maxPower
+					pricing := tariffFeedIn
+					if now.Hour()+i >= 20 || now.Hour()+i < 7 {
+						power = 0.0
+						pricing = tariffGrid
+					}
+					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+						Duration: time.Duration(1) * time.Hour,
+						MaxValue: power,
+						Pricing:  pricing,
+					})
+				}
+				chargingPlan.Duration = time.Duration(24) * time.Hour
+			case api.ModeOff:
+				// lets do 24 1 hour slots with 0 W, so it wakes at once an hour to check back
+				for i := 0; i < 24; i++ {
+					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+						Duration: time.Duration(1) * time.Hour,
+						MaxValue: 0,
+						Pricing:  tariffGrid,
+					})
+				}
+				chargingPlan.Duration = time.Duration(24) * time.Hour
+			}
+		}
+	case communication.EVChargingStrategyEnumTypeTimedCharging:
+		// The EV is in timed charging mode
+
+		targetDuration := data.EVData.ChargingTargetDuration
+
+		// split the duration into full hours, with the remaining time at the start
+		hours := int(targetDuration.Hours())
+		remainingDuration := targetDuration - (time.Duration(hours) * time.Hour)
+
+		if remainingDuration > 0 {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: remainingDuration,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+
+		for i := 0; i < hours; i++ {
+			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
+				Duration: time.Duration(1) * time.Hour,
+				MaxValue: maxPower,
+				Pricing:  tariffGrid,
+			})
+		}
+		chargingPlan.Duration = targetDuration
+
+	default:
+		return fmt.Errorf("implementation missing for charging strategy: %s", data.EVData.ChargingStrategy)
+	}
+
+	c.cc.WriteChargingPlan(chargingPlan)
+
+	return nil
+}
+
+// send current charging power limits to the EV
 func (c *EEBus) writeCurrentLimitData(currents []float64) error {
 	data, err := c.cc.GetData()
 	if err != nil {
