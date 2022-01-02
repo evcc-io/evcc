@@ -31,15 +31,15 @@ func NewSavings() *Savings {
 	return savings
 }
 
-func (s *Savings) Since() int {
-	return int(time.Since(s.startedTime).Seconds())
+func (s *Savings) Since() time.Duration {
+	return time.Since(s.startedTime)
 }
 
 func (s *Savings) SelfPercentage() float64 {
-	if s.chargedTotal == 0 || s.chargedSelfConsumption == 0 {
+	if s.chargedTotal == 0 {
 		return 0
 	}
-	return 100 / float64(s.chargedTotal) * float64(s.chargedSelfConsumption)
+	return 100 / s.chargedTotal * s.chargedSelfConsumption
 }
 
 func (s *Savings) ChargedTotal() float64 {
