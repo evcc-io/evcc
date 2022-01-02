@@ -4,6 +4,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -15,14 +16,16 @@ type Savings struct {
 	lastUpdatedTime        time.Time // Time of last charged value update
 	chargedTotal           float64   // Energy charged since startup (kWh)
 	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
+	Clock                  clock.Clock
 }
 
-// NewSite creates a Site with sane defaults
 func NewSavings() *Savings {
+	clock := clock.New()
 	savings := &Savings{
 		log:             util.NewLogger("savings"),
-		startedTime:     time.Now(),
-		lastUpdatedTime: time.Now(),
+		startedTime:     clock.Now(),
+		lastUpdatedTime: clock.Now(),
+		Clock:           clock,
 	}
 
 	return savings
@@ -64,11 +67,8 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, 
 	return selfPercentage
 }
 
-func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float64, chargePower float64, mockNow ...time.Time) {
-	now := time.Now()
-	if len(mockNow) == 1 {
-		now = mockNow[0]
-	}
+func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float64, chargePower float64) {
+	now := s.Clock.Now()
 
 	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
