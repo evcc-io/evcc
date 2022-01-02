@@ -193,23 +193,15 @@ func (wb *MobileConnect) getValue(uri string) ([]byte, error) {
 
 // use http GET to fetch an escaped JSON string and unmarshal the data in result
 func (wb *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
-	req, err := wb.request(http.MethodGet, uri)
-	if err != nil {
-		return err
-	}
-
-	b, err := wb.DoBody(req)
+	b, err := wb.getValue(uri)
 	if err != nil {
 		return err
 	}
 
 	s, err := strconv.Unquote(strings.Trim(string(b), "\n"))
-	if err != nil {
+	if err != nil || s == "" {
+		// error or empty response
 		return err
-	}
-
-	if s == "" {
-		return nil // empty response
 	}
 
 	return json.Unmarshal([]byte(s), &result)
