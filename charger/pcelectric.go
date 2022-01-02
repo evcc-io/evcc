@@ -72,11 +72,22 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	}
 
 	res := api.StatusA
-	switch status.Connector {
-	case "CONNECTED":
+	switch status.ChargeStatus {
+	case 0x30, // connected
+		0x42, // chargepaused
+		0x50, // chargefinished
+		0x60: // chargecancelled
 		res = api.StatusB
-	case "CHARGING":
+	case 0x40: // charging
 		res = api.StatusC
+	case 0x90: // unavailable
+		if status.AccSessionMillis > 0 {
+			res = api.StatusB
+		} else {
+			res = api.StatusF
+		}
+	default:
+		return api.StatusNone, fmt.Errorf("invalid status: %02x", status.ChargeStatus)
 	}
 
 	return res, nil
