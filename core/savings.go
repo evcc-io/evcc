@@ -19,7 +19,7 @@ type Savings struct {
 	Clock                  clock.Clock
 }
 
-func NewSavings() *Savings {
+func NewSavings() Savings {
 	clock := clock.New()
 	savings := &Savings{
 		log:     util.NewLogger("savings"),
@@ -28,7 +28,7 @@ func NewSavings() *Savings {
 		Clock:   clock,
 	}
 
-	return savings
+	return *savings
 }
 
 func (s *Savings) Since() time.Duration {

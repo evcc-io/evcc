@@ -79,7 +79,7 @@ func NewSiteFromConfig(
 	Voltage = site.Voltage
 	site.tariffs = tariffs
 	site.loadpoints = loadpoints
-	site.savings = *NewSavings()
+	site.savings = NewSavings()
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
