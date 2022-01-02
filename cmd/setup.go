@@ -194,7 +194,7 @@ func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
 		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
 	}
 
-	if conf.FeedIn.Type != "" {
+	if err == nil && conf.FeedIn.Type != "" {
 		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
 	}
 
