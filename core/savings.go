@@ -12,8 +12,8 @@ import (
 type Savings struct {
 	log *util.Logger
 
-	startedTime            time.Time // Boot time
-	lastUpdatedTime        time.Time // Time of last charged value update
+	started                time.Time // Boot time
+	updated                time.Time // Time of last charged value update
 	chargedTotal           float64   // Energy charged since startup (kWh)
 	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
 	Clock                  clock.Clock
@@ -22,17 +22,17 @@ type Savings struct {
 func NewSavings() *Savings {
 	clock := clock.New()
 	savings := &Savings{
-		log:             util.NewLogger("savings"),
-		startedTime:     clock.Now(),
-		lastUpdatedTime: clock.Now(),
-		Clock:           clock,
+		log:     util.NewLogger("savings"),
+		started: clock.Now(),
+		updated: clock.Now(),
+		Clock:   clock,
 	}
 
 	return savings
 }
 
 func (s *Savings) Since() time.Duration {
-	return time.Since(s.startedTime)
+	return time.Since(s.started)
 }
 
 func (s *Savings) SelfPercentage() float64 {
@@ -72,15 +72,15 @@ func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float6
 
 	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	updateDuration := now.Sub(s.lastUpdatedTime)
+	updateDuration := now.Sub(s.updated)
 
 	// assuming the charge power was constant over the duration -> rough estimate
 	addedEnergy := updateDuration.Hours() * chargePower / 1000
 
 	s.chargedTotal += addedEnergy
 	s.chargedSelfConsumption += addedEnergy * (selfPercentage / 100)
-	s.lastUpdatedTime = now
+	s.updated = now
 
-	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.startedTime).Round(time.Second))
+	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
 	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
 }

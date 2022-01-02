@@ -30,10 +30,10 @@ func compareWithTolerane(a, b float64) bool {
 func TestSavingsWithChangingEnergySources(t *testing.T) {
 	mockClock := clock.NewMock()
 	s := &Savings{
-		log:             util.NewLogger("savings"),
-		startedTime:     mockClock.Now(),
-		lastUpdatedTime: mockClock.Now(),
-		Clock:           mockClock,
+		log:     util.NewLogger("savings"),
+		started: mockClock.Now(),
+		updated: mockClock.Now(),
+		Clock:   mockClock,
 	}
 
 	s.Update(0, 0, 0, 0)
@@ -77,10 +77,10 @@ func TestSavingsWithChangingEnergySources(t *testing.T) {
 func TestSavingsWithDifferentTimespans(t *testing.T) {
 	mockClock := clock.NewMock()
 	s := &Savings{
-		log:             util.NewLogger("savings"),
-		startedTime:     mockClock.Now(),
-		lastUpdatedTime: mockClock.Now(),
-		Clock:           mockClock,
+		log:     util.NewLogger("savings"),
+		started: mockClock.Now(),
+		updated: mockClock.Now(),
+		Clock:   mockClock,
 	}
 
 	s.Update(0, 0, 0, 0)
