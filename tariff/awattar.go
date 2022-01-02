@@ -1,6 +1,7 @@
 package tariff
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -61,7 +62,7 @@ func (t *Awattar) Run() {
 	}
 }
 
-func (t *Awattar) IsCheap() bool {
+func (t *Awattar) CurrentPrice() (float64, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
@@ -69,9 +70,14 @@ func (t *Awattar) IsCheap() bool {
 		pi := t.data[i]
 
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice/10 <= t.cheap // Eur/MWh conversion
+			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
 		}
 	}
 
-	return false
+	return 0, errors.New("unable to find current awattar price")
+}
+
+func (t *Awattar) IsCheap() (bool, error) {
+	price, err := t.CurrentPrice()
+	return price <= t.cheap, err
 }

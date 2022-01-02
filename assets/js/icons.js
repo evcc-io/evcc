@@ -12,6 +12,8 @@ import { faAngleDown } from "@fortawesome/free-solid-svg-icons/faAngleDown";
 import { faClock } from "@fortawesome/free-solid-svg-icons/faClock";
 import { faExclamationTriangle } from "@fortawesome/free-solid-svg-icons/faExclamationTriangle";
 import { faSun } from "@fortawesome/free-solid-svg-icons/faSun";
+import { faSun as farSun } from "@fortawesome/free-regular-svg-icons/faSun";
+import { faInfoCircle } from "@fortawesome/free-solid-svg-icons/faInfoCircle";
 import { faFlask } from "@fortawesome/free-solid-svg-icons/faFlask";
 import { faTemperatureHigh } from "@fortawesome/free-solid-svg-icons/faTemperatureHigh";
 import { faTemperatureLow } from "@fortawesome/free-solid-svg-icons/faTemperatureLow";
@@ -21,6 +23,7 @@ import { faHeart as fasHeart } from "@fortawesome/free-solid-svg-icons/faHeart";
 import { faGift } from "@fortawesome/free-solid-svg-icons/faGift";
 import { faBox } from "@fortawesome/free-solid-svg-icons/faBox";
 import { faHome } from "@fortawesome/free-solid-svg-icons/faHome";
+import { faWrench } from "@fortawesome/free-solid-svg-icons/faWrench";
 import { faCar } from "@fortawesome/free-solid-svg-icons/faCar";
 import { faSquare } from "@fortawesome/free-solid-svg-icons/faSquare";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons/faExclamationCircle";
@@ -44,10 +47,13 @@ library.add(
   faExclamationTriangle,
   faGift,
   faHome,
+  faWrench,
   farHeart,
   fasHeart,
   faSquare,
   faSun,
+  farSun,
+  faInfoCircle,
   faFlask,
   faTemperatureHigh,
   faTemperatureLow,

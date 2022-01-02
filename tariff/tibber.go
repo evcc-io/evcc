@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -97,7 +98,7 @@ func (t *Tibber) Run() {
 	}
 }
 
-func (t *Tibber) IsCheap() bool {
+func (t *Tibber) CurrentPrice() (float64, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
@@ -105,9 +106,13 @@ func (t *Tibber) IsCheap() bool {
 		pi := t.data[i]
 
 		if pi.StartsAt.Before(time.Now()) {
-			return pi.Total <= t.Cheap
+			return pi.Total, nil
 		}
 	}
+	return 0, errors.New("unable to find current tibber price")
+}
 
-	return false
+func (t *Tibber) IsCheap() (bool, error) {
+	price, err := t.CurrentPrice()
+	return price <= t.Cheap, err
 }

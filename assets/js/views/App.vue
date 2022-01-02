@@ -57,7 +57,7 @@
 				class="flex-grow-1 d-flex flex-column justify-content-stretch"
 			></router-view>
 		</div>
-		<Footer :version="version" :sponsor="sponsor"></Footer>
+		<Footer :version="version" :sponsor="sponsor" :savings="savings"></Footer>
 	</div>
 </template>
 
@@ -80,6 +80,7 @@ export default {
 			compact: false,
 			store: this.$root.$data.store,
 			installedVersion: window.evcc.version,
+			commit: window.evcc.commit,
 		};
 	},
 	computed: {
@@ -98,6 +99,17 @@ export default {
 		},
 		sponsor: function () {
 			return this.store.state.sponsor;
+		},
+		savings: function () {
+			return {
+				since: this.store.state.savingsSince,
+				chargedTotal: this.store.state.savingsChargedTotal,
+				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
+				selfPercentage: this.store.state.savingsSelfPercentage,
+				gridPrice: this.store.state.tariffGrid,
+				feedInPrice: this.store.state.tariffFeedIn,
+				currency: this.store.state.currency,
+			};
 		},
 	},
 	created: function () {

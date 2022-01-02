@@ -89,24 +89,33 @@ export default {
       return `${HH}:${mm}`;
     },
     fmtAbsoluteDate: function (date) {
-      return new Intl.DateTimeFormat("default", {
+      return new Intl.DateTimeFormat(this.$i18n.locale, {
         weekday: "short",
         hour: "numeric",
         minute: "numeric",
       }).format(date);
     },
-    fmtTimeAgo: function (date) {
+    fmtMoney: function (amout = 0, currency = "EUR") {
+      return this.$n(amout, { style: "currency", currency });
+    },
+    fmtPricePerKWh: function (amout = 0, currency = "EUR") {
+      let unit = currency;
+      let value = amout;
+      if (["EUR", "USD"].includes(currency)) {
+        value *= 100;
+        unit = "ct";
+      }
+      return `${this.$n(value, { style: "decimal" })} ${unit}/kWh`;
+    },
+    fmtTimeAgo: function (elapsed) {
       const units = {
-        year: 24 * 60 * 60 * 1000 * 365,
-        month: (24 * 60 * 60 * 1000 * 365) / 12,
         day: 24 * 60 * 60 * 1000,
         hour: 60 * 60 * 1000,
         minute: 60 * 1000,
         second: 1000,
       };
 
-      const rtf = new Intl.RelativeTimeFormat("default", { numeric: "auto" });
-      const elapsed = date - new Date();
+      const rtf = new Intl.RelativeTimeFormat(this.$i18n.locale, { numeric: "auto" });
 
       // "Math.abs" accounts for both "past" & "future" scenarios
       for (var u in units)

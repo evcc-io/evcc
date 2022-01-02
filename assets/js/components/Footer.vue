@@ -4,7 +4,7 @@
 			<div class="d-flex justify-content-between">
 				<Version v-bind="version" />
 				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->
-				<Sponsor :sponsor="sponsor" />
+				<Savings v-bind="savings" :sponsor="sponsor" />
 			</div>
 		</div>
 	</footer>
@@ -12,14 +12,15 @@
 
 <script>
 import Version from "./Version";
-import Sponsor from "./Sponsor";
+import Savings from "./Savings";
 
 export default {
 	name: "Footer",
-	components: { Version, Sponsor },
+	components: { Version, Savings },
 	props: {
 		version: Object,
 		sponsor: String,
+		savings: Object,
 	},
 };
 </script>

@@ -11,6 +11,7 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/core/loadpoint"
 	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
 
@@ -42,8 +43,9 @@ type Site struct {
 	pvMeters      []api.Meter // PV generation meters
 	batteryMeters []api.Meter // Battery charging meters
 
-	tariff     api.Tariff   // Tariff
-	loadpoints []*LoadPoint // Loadpoints
+	tariffs    tariff.Tariffs // Tariff
+	loadpoints []*LoadPoint   // Loadpoints
+	savings    Savings        // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -67,7 +69,7 @@ func NewSiteFromConfig(
 	cp configProvider,
 	other map[string]interface{},
 	loadpoints []*LoadPoint,
-	tariff api.Tariff,
+	tariffs tariff.Tariffs,
 ) (*Site, error) {
 	site := NewSite()
 	if err := util.DecodeOther(other, &site); err != nil {
@@ -75,8 +77,9 @@ func NewSiteFromConfig(
 	}
 
 	Voltage = site.Voltage
-	site.tariff = tariff
+	site.tariffs = tariffs
 	site.loadpoints = loadpoints
+	site.savings = NewSavings()
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -390,6 +393,24 @@ func (site *Site) sitePower() (float64, error) {
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
+	site.publish("savingsChargedTotal", site.savings.ChargedTotal())
+	site.publish("savingsChargedSelfConsumption", site.savings.ChargedSelfConsumption())
+	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
+	site.publish("savingsSince", site.savings.Since())
+
+	site.publish("currency", site.tariffs.Currency.String())
+
+	if site.tariffs.Grid != nil {
+		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
+			site.publish("tariffGrid", gridPrice)
+		}
+	}
+	if site.tariffs.FeedIn != nil {
+		if feedInPrice, err := site.tariffs.FeedIn.CurrentPrice(); err == nil {
+			site.publish("tariffFeedIn", feedInPrice)
+		}
+	}
+
 	return sitePower, nil
 }
 
@@ -397,8 +418,12 @@ func (site *Site) update(lp Updater) {
 	site.log.DEBUG.Println("----")
 
 	var cheap bool
-	if site.tariff != nil {
-		cheap = site.tariff.IsCheap()
+	var err error
+	if site.tariffs.Grid != nil {
+		cheap, err = site.tariffs.Grid.IsCheap()
+		if err != nil {
+			cheap = false
+		}
 	}
 
 	if sitePower, err := site.sitePower(); err == nil {
@@ -414,6 +439,14 @@ func (site *Site) update(lp Updater) {
 
 		site.Health.Update()
 	}
+
+	// update savings
+	// TODO: use a proper interface, use meter readings instead of current power for better results
+	var totalChargePower = 0.0
+	for _, lp := range site.loadpoints {
+		totalChargePower += lp.chargePower
+	}
+	site.savings.Update(site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 }
 
 // Prepare attaches communication channels to site and loadpoints

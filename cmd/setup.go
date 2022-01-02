@@ -24,6 +24,7 @@ import (
 	"github.com/evcc-io/evcc/util/pipe"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/spf13/viper"
+	"golang.org/x/text/currency"
 )
 
 func init() {
@@ -180,16 +181,30 @@ func configureMessengers(conf messagingConfig, cache *util.Cache) chan push.Even
 	return notificationChan
 }
 
-func configureTariffs(conf tariffConfig) (t api.Tariff, err error) {
+func configureTariffs(conf tariffConfig) (tariff.Tariffs, error) {
+	var grid, feedin api.Tariff
+	var currencyCode currency.Unit = currency.EUR
+	var err error
+
+	if conf.Currency != "" {
+		currencyCode = currency.MustParseISO(conf.Currency)
+	}
+
 	if conf.Grid.Type != "" {
-		t, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+		grid, err = tariff.NewFromConfig(conf.Grid.Type, conf.Grid.Other)
+	}
+
+	if err == nil && conf.FeedIn.Type != "" {
+		feedin, err = tariff.NewFromConfig(conf.FeedIn.Type, conf.FeedIn.Other)
 	}
 
 	if err != nil {
 		err = fmt.Errorf("failed configuring tariff: %w", err)
 	}
 
-	return t, err
+	tariffs := tariff.NewTariffs(currencyCode, grid, feedin)
+
+	return *tariffs, err
 }
 
 func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
@@ -197,21 +212,21 @@ func configureSiteAndLoadpoints(conf config) (site *core.Site, err error) {
 		var loadPoints []*core.LoadPoint
 		loadPoints, err = configureLoadPoints(conf, cp)
 
-		var tariff api.Tariff
+		var tariffs tariff.Tariffs
 		if err == nil {
-			tariff, err = configureTariffs(conf.Tariffs)
+			tariffs, err = configureTariffs(conf.Tariffs)
 		}
 
 		if err == nil {
-			site, err = configureSite(conf.Site, cp, loadPoints, tariff)
+			site, err = configureSite(conf.Site, cp, loadPoints, tariffs)
 		}
 	}
 
 	return site, err
 }
 
-func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint, tariff api.Tariff) (*core.Site, error) {
-	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, tariff)
+func configureSite(conf map[string]interface{}, cp *ConfigProvider, loadPoints []*core.LoadPoint, tariffs tariff.Tariffs) (*core.Site, error) {
+	site, err := core.NewSiteFromConfig(log, cp, conf, loadPoints, tariffs)
 	if err != nil {
 		return nil, fmt.Errorf("failed configuring site: %w", err)
 	}

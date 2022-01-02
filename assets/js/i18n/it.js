@@ -3,7 +3,7 @@ export default {
   footer: {
     version: {
       version: "versione",
-      availableShort: "disponibile",
+      availableShort: "aggiornamento",
       availableLong: "aggiornamento disponibile",
       modalTitle: "Aggiornamento disponibile",
       modalUpdateStarted: "Evcc ripartirà dopo l'aggiornamento..",
