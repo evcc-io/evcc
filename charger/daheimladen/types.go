@@ -24,7 +24,7 @@ type GetLatestInProgressTransactionResponse struct {
 type GetLatestMeterValueResponse struct {
 	ChargingStationID          string  `json:"charging_station_id"`
 	ConnectorID                int32   `json:"connector_id"`
-	PowerActiveImport          float32 `json:"power_active_import"`
+	ActivePowerImport          float32 `json:"active_power_import"`
 	CurrentImportPhaseL1       float32 `json:"current_import_phasel1"`
 	CurrentImportPhaseL2       float32 `json:"current_import_phasel2"`
 	CurrentImportPhaseL3       float32 `json:"current_import_phasel3"`
