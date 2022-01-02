@@ -166,7 +166,7 @@ func (c *DaheimLaden) CurrentPower() (float64, error) {
 	var res daheimladen.GetLatestMeterValueResponse
 	uri := fmt.Sprintf("%s/cs/%s/metervalue", daheimladen.BASE_URL, c.stationID)
 	err := c.GetJSON(uri, &res)
-	return float64(int64(res.ActivePowerImport * 1000)), err
+	return float64(res.ActivePowerImport * 1e3), err
 }
 
 var _ api.MeterEnergy = (*DaheimLaden)(nil)
