@@ -71,10 +71,17 @@ func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error
 		WithHeaders(cc.Headers).
 		WithBody(cc.Body)
 
-	pipe, err := pipeline.New(cc.Settings)
+	http.Client.Timeout = cc.Timeout
+
+	var err error
+	if cc.Auth.Type != "" {
+		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+	}
+
 	if err == nil {
+		var pipe *pipeline.Pipeline
+		pipe, err = pipeline.New(cc.Settings)
 		http = http.WithPipeline(pipe)
-		http.Client.Timeout = cc.Timeout
 	}
 
 	return http, err
