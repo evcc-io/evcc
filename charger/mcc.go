@@ -88,88 +88,88 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	}
 
 	// ignore the self signed certificate
-	mcc.Client.Transport = request.NewTripper(log, transport.Insecure())
+	wb.Client.Transport = request.NewTripper(log, transport.Insecure())
 
 	return mcc, nil
 }
 
 // construct the URL for a given api
-func (mcc *MobileConnect) apiURL(api string) string {
-	return fmt.Sprintf("%s/%s", mcc.uri, api)
+func (wb *MobileConnect) apiURL(api string) string {
+	return fmt.Sprintf("%s/%s", wb.uri, api)
 }
 
 // process the http request to fetch the auth token for a login or refresh request
-func (mcc *MobileConnect) fetchToken(request *http.Request) error {
+func (wb *MobileConnect) fetchToken(request *http.Request) error {
 	var tr MCCTokenResponse
-	err := mcc.DoJSON(request, &tr)
+	err := wb.DoJSON(request, &tr)
 	if err == nil {
 		if len(tr.Token) == 0 {
 			return fmt.Errorf("response: %s", tr.Error)
 		}
 
-		mcc.token = tr.Token
+		wb.token = tr.Token
 		// According to tests, the token is valid for 10 minutes
 		// but the web interface updates the token every 2 minutes, so let's enforce this
-		mcc.tokenExpiry = time.Now().Add(2 * time.Minute)
+		wb.tokenExpiry = time.Now().Add(2 * time.Minute)
 	}
 
 	return err
 }
 
 // login as the home user with the given password
-func (mcc *MobileConnect) login(password string) error {
-	uri := fmt.Sprintf("%s/%s", mcc.uri, mccAPILogin)
+func (wb *MobileConnect) login(password string) error {
+	uri := fmt.Sprintf("%s/%s", wb.uri, mccAPILogin)
 
 	data := url.Values{
 		"user": []string{"user"},
-		"pass": []string{mcc.password},
+		"pass": []string{wb.password},
 	}
 
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), map[string]string{
-		"Referer":      fmt.Sprintf("%s/login", mcc.uri),
+		"Referer":      fmt.Sprintf("%s/login", wb.uri),
 		"Content-Type": "application/x-www-form-urlencoded",
 	})
 	if err != nil {
 		return err
 	}
 
-	return mcc.fetchToken(req)
+	return wb.fetchToken(req)
 }
 
 // refresh the auth token with a new one
-func (mcc *MobileConnect) refresh() error {
-	uri := fmt.Sprintf("%s/%s", mcc.uri, mccAPIRefresh)
+func (wb *MobileConnect) refresh() error {
+	uri := fmt.Sprintf("%s/%s", wb.uri, mccAPIRefresh)
 
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Set("Referer", fmt.Sprintf("%s/login", mcc.uri))
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
+	req.Header.Set("Referer", fmt.Sprintf("%s/login", wb.uri))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", wb.token))
 
-	return mcc.fetchToken(req)
+	return wb.fetchToken(req)
 }
 
 // creates a http request that contains the auth token
-func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
+func (wb *MobileConnect) request(method, uri string) (*http.Request, error) {
 
 	// do we need a token refresh?
-	if mcc.token != "" {
+	if wb.token != "" {
 		// is it time to refresh the token?
-		if time.Until(mcc.tokenExpiry) < 10*time.Second {
-			if err := mcc.refresh(); err != nil {
+		if time.Until(wb.tokenExpiry) < 10*time.Second {
+			if err := wb.refresh(); err != nil {
 				// if refreshing the token fails it most likely is expired
 				// hence a new login is required, so let's enforce this
 				// and ignore this error
-				mcc.token = ""
+				wb.token = ""
 			}
 		}
 	}
 
 	// do we need to login?
-	if mcc.token == "" {
-		if err := mcc.login(mcc.password); err != nil {
+	if wb.token == "" {
+		if err := wb.login(wb.password); err != nil {
 			return nil, err
 		}
 	}
@@ -180,30 +180,30 @@ func (mcc *MobileConnect) request(method, uri string) (*http.Request, error) {
 		return req, err
 	}
 
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", mcc.token))
-	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", mcc.uri))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", wb.token))
+	req.Header.Set("Referer", fmt.Sprintf("%s/dashboard", wb.uri))
 
 	return req, nil
 }
 
 // use http GET to fetch a non structured value from an URI and stores it in result
-func (mcc *MobileConnect) getValue(uri string) ([]byte, error) {
-	req, err := mcc.request(http.MethodGet, uri)
+func (wb *MobileConnect) getValue(uri string) ([]byte, error) {
+	req, err := wb.request(http.MethodGet, uri)
 	if err != nil {
 		return nil, err
 	}
 
-	return mcc.DoBody(req)
+	return wb.DoBody(req)
 }
 
 // use http GET to fetch an escaped JSON string and unmarshal the data in result
-func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
-	req, err := mcc.request(http.MethodGet, uri)
+func (wb *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
+	req, err := wb.request(http.MethodGet, uri)
 	if err != nil {
 		return err
 	}
 
-	b, err := mcc.DoBody(req)
+	b, err := wb.DoBody(req)
 	if err != nil {
 		return err
 	}
@@ -221,8 +221,8 @@ func (mcc *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 }
 
 // Status implements the api.Charger interface
-func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
-	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
+func (wb *MobileConnect) Status() (api.ChargeStatus, error) {
+	b, err := wb.getValue(wb.apiURL(mccAPIChargeState))
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -247,9 +247,9 @@ func (mcc *MobileConnect) Status() (api.ChargeStatus, error) {
 }
 
 // Enabled implements the api.Charger interface
-func (mcc *MobileConnect) Enabled() (bool, error) {
+func (wb *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
-	b, err := mcc.getValue(mcc.apiURL(mccAPIChargeState))
+	b, err := wb.getValue(wb.apiURL(mccAPIChargeState))
 	if err != nil {
 		return false, err
 	}
@@ -268,41 +268,41 @@ func (mcc *MobileConnect) Enabled() (bool, error) {
 }
 
 // Enable implements the api.Charger interface
-func (mcc *MobileConnect) Enable(enable bool) error {
+func (wb *MobileConnect) Enable(enable bool) error {
 	// As we don't know of the API to disable charging this for now always returns an error
 	return nil
 }
 
 // MaxCurrent implements the api.Charger interface
-func (mcc *MobileConnect) MaxCurrent(current int64) error {
+func (wb *MobileConnect) MaxCurrent(current int64) error {
 	// The device doesn't return an error if we set a value greater than the
 	// current allowed max or smaller than the allowed min
 	// instead it will simply set it to max or min and return "OK" anyway
 	// Since the API here works differently, we fetch the limits
 	// and then return an error if the value is outside of the limits or
 	// otherwise set the new value
-	if mcc.cableInformation.MaxValue == 0 {
-		if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentCableInformation), &mcc.cableInformation); err != nil {
+	if wb.cableInformation.MaxValue == 0 {
+		if err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentCableInformation), &wb.cableInformation); err != nil {
 			return err
 		}
 	}
 
-	if current < mcc.cableInformation.MinValue {
-		return fmt.Errorf("value is lower than the allowed minimum value %d", mcc.cableInformation.MinValue)
+	if current < wb.cableInformation.MinValue {
+		return fmt.Errorf("value is lower than the allowed minimum value %d", wb.cableInformation.MinValue)
 	}
 
-	if current > mcc.cableInformation.MaxValue {
-		return fmt.Errorf("value is higher than the allowed maximum value %d", mcc.cableInformation.MaxValue)
+	if current > wb.cableInformation.MaxValue {
+		return fmt.Errorf("value is higher than the allowed maximum value %d", wb.cableInformation.MaxValue)
 	}
 
-	url := fmt.Sprintf("%s%d", mcc.apiURL(mccAPISetCurrentLimit), current)
+	url := fmt.Sprintf("%s%d", wb.apiURL(mccAPISetCurrentLimit), current)
 
-	req, err := mcc.request(http.MethodPut, url)
+	req, err := wb.request(http.MethodPut, url)
 	if err != nil {
 		return err
 	}
 
-	b, err := mcc.DoBody(req)
+	b, err := wb.DoBody(req)
 	if err != nil {
 		return err
 	}
@@ -318,43 +318,35 @@ func (mcc *MobileConnect) MaxCurrent(current int64) error {
 var _ api.Meter = (*MobileConnect)(nil)
 
 // CurrentPower implements the api.Meter interface
-func (mcc *MobileConnect) CurrentPower() (float64, error) {
+func (wb *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
-	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
-
+	err := wb.getEscapedJSON(wb.apiURL(mccAPIEnergy), &energy)
 	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
 }
 
 var _ api.ChargeRater = (*MobileConnect)(nil)
 
 // ChargedEnergy implements the api.ChargeRater interface
-func (mcc *MobileConnect) ChargedEnergy() (float64, error) {
-	var currentSession MCCCurrentSession
-	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
-		return 0, err
-	}
-
-	return currentSession.EnergySumKwh, nil
+func (wb *MobileConnect) ChargedEnergy() (float64, error) {
+	var res MCCCurrentSession
+	err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentSession), &res)
+	return res.EnergySumKwh, err
 }
 
 var _ api.ChargeTimer = (*MobileConnect)(nil)
 
 // ChargingTime implements the api.ChargeTimer interface
-func (mcc *MobileConnect) ChargingTime() (time.Duration, error) {
-	var currentSession MCCCurrentSession
-	if err := mcc.getEscapedJSON(mcc.apiURL(mccAPICurrentSession), &currentSession); err != nil {
-		return 0, err
-	}
-
-	return time.Duration(currentSession.Duration) * time.Second, nil
+func (wb *MobileConnect) ChargingTime() (time.Duration, error) {
+	var res MCCCurrentSession
+	err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentSession), &res)
+	return time.Duration(res.Duration) * time.Second, err
 }
 
 var _ api.MeterCurrent = (*MobileConnect)(nil)
 
 // Currents implements the api.MeterCurrent interface
-func (mcc *MobileConnect) Currents() (float64, float64, float64, error) {
-	var energy MCCEnergy
-	err := mcc.getEscapedJSON(mcc.apiURL(mccAPIEnergy), &energy)
-
-	return energy.L1.Ampere, energy.L2.Ampere, energy.L3.Ampere, err
+func (wb *MobileConnect) Currents() (float64, float64, float64, error) {
+	var res MCCEnergy
+	err := wb.getEscapedJSON(wb.apiURL(mccAPIEnergy), &res)
+	return res.L1.Ampere, res.L2.Ampere, res.L3.Ampere, err
 }
