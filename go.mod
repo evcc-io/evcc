@@ -23,7 +23,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/dylanmei/iso8601 v0.1.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
-	github.com/evcc-io/eebus v0.0.0-20211108130022-5536fd4b8fa1
+	github.com/evcc-io/eebus v0.0.0-20220114105402-9535c5f985c1
 	github.com/fatih/structs v1.1.0
 	github.com/go-ping/ping v0.0.0-20211130115550-779d1e919534
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
@@ -66,7 +66,6 @@ require (
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/onsi/ginkgo v1.16.5 // indirect
-	github.com/onsi/gomega v1.17.0 // indirect
 	github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.32.1 // indirect
@@ -88,7 +87,6 @@ require (
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7
 	golang.org/x/tools v0.1.8 // indirect
