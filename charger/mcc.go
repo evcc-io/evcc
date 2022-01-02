@@ -81,7 +81,7 @@ func NewMobileConnectFromConfig(other map[string]interface{}) (api.Charger, erro
 func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	log := util.NewLogger("mcc")
 
-	mcc := &MobileConnect{
+	wb := &MobileConnect{
 		Helper:   request.NewHelper(log),
 		uri:      strings.TrimRight(uri, "/"),
 		password: password,
@@ -90,12 +90,7 @@ func NewMobileConnect(uri string, password string) (*MobileConnect, error) {
 	// ignore the self signed certificate
 	wb.Client.Transport = request.NewTripper(log, transport.Insecure())
 
-	return mcc, nil
-}
-
-// construct the URL for a given api
-func (wb *MobileConnect) apiURL(api string) string {
-	return fmt.Sprintf("%s/%s", wb.uri, api)
+	return wb, nil
 }
 
 // process the http request to fetch the auth token for a login or refresh request
@@ -222,7 +217,7 @@ func (wb *MobileConnect) getEscapedJSON(uri string, result interface{}) error {
 
 // Status implements the api.Charger interface
 func (wb *MobileConnect) Status() (api.ChargeStatus, error) {
-	b, err := wb.getValue(wb.apiURL(mccAPIChargeState))
+	b, err := wb.getValue(fmt.Sprintf("%s/%s", wb.uri, mccAPIChargeState))
 	if err != nil {
 		return api.StatusNone, err
 	}
@@ -249,22 +244,18 @@ func (wb *MobileConnect) Status() (api.ChargeStatus, error) {
 // Enabled implements the api.Charger interface
 func (wb *MobileConnect) Enabled() (bool, error) {
 	// Check if the car is connected and Paused, Active, or Finished
-	b, err := wb.getValue(wb.apiURL(mccAPIChargeState))
+	b, err := wb.getValue(fmt.Sprintf("%s/%s", wb.uri, mccAPIChargeState))
 	if err != nil {
 		return false, err
 	}
 
 	// return value is returned in the format 0\n
 	chargeState, err := strconv.ParseInt(strings.Trim(string(b), "\n"), 10, 8)
-	if err != nil {
-		return false, err
-	}
-
-	if chargeState >= 4 && chargeState <= 6 {
+	if err == nil && chargeState >= 4 && chargeState <= 6 {
 		return true, nil
 	}
 
-	return false, nil
+	return false, err
 }
 
 // Enable implements the api.Charger interface
@@ -282,7 +273,7 @@ func (wb *MobileConnect) MaxCurrent(current int64) error {
 	// and then return an error if the value is outside of the limits or
 	// otherwise set the new value
 	if wb.cableInformation.MaxValue == 0 {
-		if err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentCableInformation), &wb.cableInformation); err != nil {
+		if err := wb.getEscapedJSON(fmt.Sprintf("%s/%s", wb.uri, mccAPICurrentCableInformation), &wb.cableInformation); err != nil {
 			return err
 		}
 	}
@@ -295,24 +286,18 @@ func (wb *MobileConnect) MaxCurrent(current int64) error {
 		return fmt.Errorf("value is higher than the allowed maximum value %d", wb.cableInformation.MaxValue)
 	}
 
-	url := fmt.Sprintf("%s%d", wb.apiURL(mccAPISetCurrentLimit), current)
-
-	req, err := wb.request(http.MethodPut, url)
+	uri := fmt.Sprintf("%s%d", fmt.Sprintf("%s/%s", wb.uri, mccAPISetCurrentLimit), current)
+	req, err := wb.request(http.MethodPut, uri)
 	if err != nil {
 		return err
 	}
 
 	b, err := wb.DoBody(req)
-	if err != nil {
-		return err
+	if err == nil && strings.Trim(string(b), "\n\"") != "OK" {
+		err = fmt.Errorf("maxcurrent unexpected response: %s", string(b))
 	}
 
-	// return value is returned in the format "OK"\n
-	if strings.Trim(string(b), "\n\"") != "OK" {
-		return fmt.Errorf("maxcurrent unexpected response: %s", string(b))
-	}
-
-	return nil
+	return err
 }
 
 var _ api.Meter = (*MobileConnect)(nil)
@@ -320,7 +305,7 @@ var _ api.Meter = (*MobileConnect)(nil)
 // CurrentPower implements the api.Meter interface
 func (wb *MobileConnect) CurrentPower() (float64, error) {
 	var energy MCCEnergy
-	err := wb.getEscapedJSON(wb.apiURL(mccAPIEnergy), &energy)
+	err := wb.getEscapedJSON(fmt.Sprintf("%s/%s", wb.uri, mccAPIEnergy), &energy)
 	return energy.L1.Power + energy.L2.Power + energy.L3.Power, err
 }
 
@@ -329,7 +314,7 @@ var _ api.ChargeRater = (*MobileConnect)(nil)
 // ChargedEnergy implements the api.ChargeRater interface
 func (wb *MobileConnect) ChargedEnergy() (float64, error) {
 	var res MCCCurrentSession
-	err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentSession), &res)
+	err := wb.getEscapedJSON(fmt.Sprintf("%s/%s", wb.uri, mccAPICurrentSession), &res)
 	return res.EnergySumKwh, err
 }
 
@@ -338,7 +323,7 @@ var _ api.ChargeTimer = (*MobileConnect)(nil)
 // ChargingTime implements the api.ChargeTimer interface
 func (wb *MobileConnect) ChargingTime() (time.Duration, error) {
 	var res MCCCurrentSession
-	err := wb.getEscapedJSON(wb.apiURL(mccAPICurrentSession), &res)
+	err := wb.getEscapedJSON(fmt.Sprintf("%s/%s", wb.uri, mccAPICurrentSession), &res)
 	return time.Duration(res.Duration) * time.Second, err
 }
 
@@ -347,6 +332,6 @@ var _ api.MeterCurrent = (*MobileConnect)(nil)
 // Currents implements the api.MeterCurrent interface
 func (wb *MobileConnect) Currents() (float64, float64, float64, error) {
 	var res MCCEnergy
-	err := wb.getEscapedJSON(wb.apiURL(mccAPIEnergy), &res)
+	err := wb.getEscapedJSON(fmt.Sprintf("%s/%s", wb.uri, mccAPIEnergy), &res)
 	return res.L1.Ampere, res.L2.Ampere, res.L3.Ampere, err
 }
