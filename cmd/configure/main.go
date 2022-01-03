@@ -143,6 +143,10 @@ func (c *CmdConfigure) flowNewConfigFile() {
 	c.configureLoadpoints()
 	c.configureSite()
 
+	if c.advancedMode && c.configuration.config.SponsorToken == "" {
+		_ = c.askSponsortoken(true)
+	}
+
 	yaml, err := c.configuration.RenderConfiguration()
 	if err != nil {
 		c.log.FATAL.Fatal(err)

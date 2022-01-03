@@ -115,21 +115,9 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 
 	// check if sponsorship is required
 	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
-		fmt.Println("-- Sponsorship -----------------------------")
-		fmt.Println()
-		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
-		fmt.Println()
-		if !c.askYesNo(c.localizedString("Requirements_Sponsorship_Token", nil)) {
-			return c.errItemNotPresent
+		if err := c.askSponsortoken(true); err != nil {
+			return err
 		}
-		sponsortoken := c.askValue(question{
-			label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
-			mask:     true,
-			required: true})
-		c.configuration.config.SponsorToken = sponsortoken
-		sponsor.Subject = sponsortoken
-		fmt.Println()
-		fmt.Println("--------------------------------------------")
 	}
 
 	// check if we need to setup a HEMS
@@ -169,6 +157,29 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		fmt.Println(c.localizedString("Requirements_EEBUS_Pairing", nil))
 		fmt.Scanln()
 	}
+
+	return nil
+}
+
+func (c *CmdConfigure) askSponsortoken(required bool) error {
+	fmt.Println("-- Sponsorship -----------------------------")
+	if required {
+		fmt.Println()
+		fmt.Println(c.localizedString("Requirements_Sponsorship_Title", nil))
+	}
+	fmt.Println()
+	if !c.askYesNo(c.localizedString("Requirements_Sponsorship_Token", nil)) {
+		return c.errItemNotPresent
+	}
+
+	sponsortoken := c.askValue(question{
+		label:    c.localizedString("Requirements_Sponsorship_Token_Input", nil),
+		mask:     true,
+		required: true})
+	c.configuration.config.SponsorToken = sponsortoken
+	sponsor.Subject = sponsortoken
+	fmt.Println()
+	fmt.Println("--------------------------------------------")
 
 	return nil
 }
