@@ -243,6 +243,7 @@ type Register struct {
 	Address uint16 // Length  uint16
 	Type    string
 	Decode  string
+	BitMask string
 }
 
 // RegisterOperation creates a read operation from a register definition
@@ -288,6 +289,13 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = rs485.RTUInt32ToFloat64
 	case "int32s":
 		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "bool16":
+		mask, err := decodeMask(r.BitMask)
+		if err != nil {
+			return op, err
+		}
+		op.Transform = decodeBool16(mask)
+		op.ReadLen = 1
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}
