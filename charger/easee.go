@@ -50,6 +50,7 @@ type Easee struct {
 	current               float64
 	chargerEnabled        bool
 	enabledStatus         bool
+	phaseMode             int
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
 }
@@ -279,6 +280,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 		c.currentL2 = value.(float64)
 	case easee.IN_CURRENT_T5:
 		c.currentL3 = value.(float64)
+	case easee.PHASE_MODE:
+		c.phaseMode = value.(int)
 	case easee.DYNAMIC_CHARGER_CURRENT:
 		c.dynamicChargerCurrent = value.(float64)
 		// ensure that charger current matches evcc's expectation
@@ -444,15 +447,18 @@ func (c *Easee) Phases1p3p(phases int) error {
 			phases = 2 // mode 2 means 3p
 		}
 
-		data := easee.ChargerSettings{
-			PhaseMode: &phases,
-		}
+		// change phaseMode only if necessary
+		if phases != c.phaseMode {
+			data := easee.ChargerSettings{
+				PhaseMode: &phases,
+			}
 
-		uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
+			uri := fmt.Sprintf("%s/chargers/%s/settings", easee.API, c.charger)
 
-		var resp *http.Response
-		if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
-			resp.Body.Close()
+			var resp *http.Response
+			if resp, err = c.Post(uri, request.JSONContent, request.MarshalJSON(data)); err == nil {
+				resp.Body.Close()
+			}
 		}
 	}
 
