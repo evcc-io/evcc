@@ -1,5 +1,7 @@
 template: pmcc
 description: Porsche Mobile Charger Connect
+capabilities:
+  iso151182: true
 requirements:
   eebus: true
 params:

@@ -131,7 +131,8 @@ Loadpoint_ResetOnDisconnect = "Shall disconnecting the charging cable from the v
 
 Loadpoint_WallboxWOMeter = "The wallbox does not provide power data. Do you have an external meter that can be used?"
 Loadpoint_WallboxMaxPower = "What is the maximum power your wallbox can provide?"
-Loadpoint_WallboxMaxAmperage = "What is the maximum amperage your wallbox can provide on a single phase?"
+Loadpoint_WallboxMinAmperage = "What is the MINIMUM amperage your wallbox can provide on a single phase?"
+Loadpoint_WallboxMaxAmperage = "What is the MAXIMUM amperage your wallbox can provide on a single phase?"
 Loadpoint_WallboxPhases = "How many phases are connected to the wallbox?"
 Loadpoint_WallboxPower36kW = "3.6 kW"
 Loadpoint_WallboxPower11kW = "11 kW"

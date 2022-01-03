@@ -1,6 +1,8 @@
 template: eebus
 description: EEBUS kompatible Wallbox
 generic: true
+capabilities:
+  iso151182: true
 requirements:
   eebus: true
 params:

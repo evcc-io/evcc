@@ -211,7 +211,7 @@ func (c *CmdConfigure) configureDevices(deviceCategory DeviceCategory, askAdding
 	}
 
 	for ok := true; ok; {
-		device, err := c.configureDeviceCategory(deviceCategory)
+		device, _, err := c.configureDeviceCategory(deviceCategory)
 		if err != nil {
 			break
 		}
@@ -247,7 +247,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			MinCurrent: 6,
 		}
 
-		charger, err := c.configureDeviceCategory(DeviceCategoryCharger)
+		charger, capabilities, err := c.configureDeviceCategory(DeviceCategoryCharger)
 		if err != nil {
 			break
 		}
@@ -257,7 +257,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 
 		if !chargerHasMeter {
 			if c.askYesNo(c.localizedString("Loadpoint_WallboxWOMeter", nil)) {
-				chargeMeter, err := c.configureDeviceCategory(DeviceCategoryChargeMeter)
+				chargeMeter, _, err := c.configureDeviceCategory(DeviceCategoryChargeMeter)
 				if err == nil {
 					loadpoint.ChargeMeter = chargeMeter.Name
 					chargerHasMeter = true
@@ -276,14 +276,26 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
+		var minValue int = 6
+		if capabilities.ISO151182 {
+			minValue = 2
+		}
+
 		if c.advancedMode {
-			amperage := c.askValue(question{
+			minAmperage := c.askValue(question{
+				label:          c.localizedString("Loadpoint_WallboxMinAmperage", nil),
+				valueType:      templates.ParamValueTypeNumber,
+				minNumberValue: int64(minValue),
+				maxNumberValue: 32,
+				required:       true})
+			loadpoint.MinCurrent, _ = strconv.Atoi(minAmperage)
+			maxAmperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,
 				minNumberValue: 6,
 				maxNumberValue: 32,
 				required:       true})
-			loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
+			loadpoint.MaxCurrent, _ = strconv.Atoi(maxAmperage)
 
 			if !chargerHasMeter {
 				phaseChoices := []string{"1", "2", "3"}
@@ -300,7 +312,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 			fmt.Println()
 			powerIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), powerChoices)
-			loadpoint.MinCurrent = 6
+			loadpoint.MinCurrent = minValue
 			switch powerIndex {
 			case 0:
 				loadpoint.MaxCurrent = 16
@@ -321,7 +333,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 				amperage := c.askValue(question{
 					label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 					valueType:      templates.ParamValueTypeNumber,
-					minNumberValue: 6,
+					minNumberValue: int64(minValue),
 					maxNumberValue: 32,
 					required:       true})
 				loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)

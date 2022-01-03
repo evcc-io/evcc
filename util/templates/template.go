@@ -94,6 +94,11 @@ func (t *TextLanguage) SetString(lang, value string) {
 	}
 }
 
+// Capabilities
+type Capabilities struct {
+	ISO151182 bool // ISO 15118-2 support
+}
+
 // Requirements
 type Requirements struct {
 	Hems        string       // HEMS Type
@@ -149,6 +154,7 @@ var paramBaseList map[string]ParamBase
 type Template struct {
 	Template     string
 	Description  string // user friendly description of the device this template describes
+	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
 	Generic      bool // if this describes a generic device type rather than a product

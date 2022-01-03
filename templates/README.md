@@ -60,6 +60,14 @@ Allows to define a list of meter devices that are typically installed with this 
 
 Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used for getting the PV generation or multiple SMA PV inverters. But never both together. So if the used added an SMA Energy Meter, then the flow shoudn't ask for SMA PV inverters.
 
+## `capabilities`
+
+`capabilities` provides an option to define special capabilities of the devie
+
+**Possible Values**:
+
+- `iso151182: true`: If the charger supports communicating via ISO15118-2
+
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup
