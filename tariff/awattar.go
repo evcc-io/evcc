@@ -118,13 +118,28 @@ func (t *Awattar) Run() {
 	}
 }
 
-func (t *Awattar) IsCheap(duration time.Duration, end time.Time) bool {
+func (t *Awattar) CurrentPrice() (float64, error) {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+
+	for i := len(t.data) - 1; i >= 0; i-- {
+		pi := t.data[i]
+
+		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
+			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
+		}
+	}
+
+	return 0, errors.New("unable to find current awattar price")
+}
+
+func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
 	if end.Before(time.Now()) {
 		t.cheapactive = false
-		return false
+		return false, nil
 	}
 
 	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
@@ -147,8 +162,9 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) bool {
 	for i := 0; i < len(t.data); i++ {
 		pi = t.data[i]
 
-		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
+		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) { // current slot
+			pi.StartTimestamp = time.Now()
+		}
 
 		if pi.EndTimestamp.Before(time.Now()) { // old data
 			continue
@@ -207,13 +223,13 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) bool {
 	}
 
 	if t.cheapactive {
-		return true
+		return true, nil
 	}
 
-	cheap := pi.Marketprice/10 <= t.cheap // Eur/MWh conversion
+	cheap := pi.Marketprice / 1000 <= t.cheap // convert EUR/MWh to EUR/KWh
 	if cheap {
 		t.log.DEBUG.Printf("low marketprice, charging")
 	}
 
-	return cheap
+	return cheap, nil
 }

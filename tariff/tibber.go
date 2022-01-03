@@ -2,6 +2,7 @@ package tariff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -111,7 +112,7 @@ func (t *Tibber) CurrentPrice() (float64, error) {
 	return 0, errors.New("unable to find current tibber price")
 }
 
-func (t *Tibber) IsCheap() (bool, error) {
+func (t *Tibber) IsCheap(time.Duration, time.Time) (bool, error) {
 	price, err := t.CurrentPrice()
 	return price <= t.Cheap, err
 }

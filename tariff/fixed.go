@@ -1,6 +1,8 @@
 package tariff
 
 import (
+	"time"
+
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
@@ -25,6 +27,6 @@ func (t *Fixed) CurrentPrice() (float64, error) {
 	return t.Price, nil
 }
 
-func (t *Fixed) IsCheap() (bool, error) {
+func (t *Fixed) IsCheap(time.Duration, time.Time) (bool, error) {
 	return false, nil
 }
