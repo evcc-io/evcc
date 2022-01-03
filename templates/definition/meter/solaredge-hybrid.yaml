@@ -2,6 +2,10 @@ template: solaredge-hybrid
 description: Solaredge Hybrid
 guidedsetup:
   enable: true
+requirements:
+  description:
+    de: Nur ein System kann auf den Wechselrichter zugreifen!
+    en: Only one system may access the inverter!
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]
