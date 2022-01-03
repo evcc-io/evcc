@@ -272,32 +272,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 			}
 		}
 
-		powerChoices := []string{
-			c.localizedString("Loadpoint_WallboxPower36kW", nil),
-			c.localizedString("Loadpoint_WallboxPower11kW", nil),
-			c.localizedString("Loadpoint_WallboxPower22kW", nil),
-			c.localizedString("Loadpoint_WallboxPowerOther", nil),
-		}
-		fmt.Println()
-		powerIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), powerChoices)
-		loadpoint.MinCurrent = 6
-		switch powerIndex {
-		case 0:
-			loadpoint.MaxCurrent = 16
-			if !chargerHasMeter {
-				loadpoint.Phases = 1
-			}
-		case 1:
-			loadpoint.MaxCurrent = 16
-			if !chargerHasMeter {
-				loadpoint.Phases = 3
-			}
-		case 2:
-			loadpoint.MaxCurrent = 32
-			if !chargerHasMeter {
-				loadpoint.Phases = 3
-			}
-		case 3:
+		if c.advancedMode {
 			amperage := c.askValue(question{
 				label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
 				valueType:      templates.ParamValueTypeNumber,
@@ -311,6 +286,48 @@ func (c *CmdConfigure) configureLoadpoints() {
 				fmt.Println()
 				phaseIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxPhases", nil), phaseChoices)
 				loadpoint.Phases = phaseIndex + 1
+			}
+		} else {
+			powerChoices := []string{
+				c.localizedString("Loadpoint_WallboxPower36kW", nil),
+				c.localizedString("Loadpoint_WallboxPower11kW", nil),
+				c.localizedString("Loadpoint_WallboxPower22kW", nil),
+				c.localizedString("Loadpoint_WallboxPowerOther", nil),
+			}
+			fmt.Println()
+			powerIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxMaxPower", nil), powerChoices)
+			loadpoint.MinCurrent = 6
+			switch powerIndex {
+			case 0:
+				loadpoint.MaxCurrent = 16
+				if !chargerHasMeter {
+					loadpoint.Phases = 1
+				}
+			case 1:
+				loadpoint.MaxCurrent = 16
+				if !chargerHasMeter {
+					loadpoint.Phases = 3
+				}
+			case 2:
+				loadpoint.MaxCurrent = 32
+				if !chargerHasMeter {
+					loadpoint.Phases = 3
+				}
+			case 3:
+				amperage := c.askValue(question{
+					label:          c.localizedString("Loadpoint_WallboxMaxAmperage", nil),
+					valueType:      templates.ParamValueTypeNumber,
+					minNumberValue: 6,
+					maxNumberValue: 32,
+					required:       true})
+				loadpoint.MaxCurrent, _ = strconv.Atoi(amperage)
+
+				if !chargerHasMeter {
+					phaseChoices := []string{"1", "2", "3"}
+					fmt.Println()
+					phaseIndex, _ := c.askChoice(c.localizedString("Loadpoint_WallboxPhases", nil), phaseChoices)
+					loadpoint.Phases = phaseIndex + 1
+				}
 			}
 		}
 
