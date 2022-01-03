@@ -59,17 +59,18 @@ func NewWarpFromConfig(other map[string]interface{}) (api.Charger, error) {
 		util.NewLogger("warp").WARN.Println("usemeter is deprecated and will be removed in a future release")
 	}
 
-	isPro := wb.isPro()
+	_ = wb.isPro()
+	hasMeter := wb.hasMeter()
 
 	var currentPower func() (float64, error)
 	var totalEnergy func() (float64, error)
-	if isPro || wb.hasMeter() {
+	if hasMeter {
 		currentPower = wb.currentPower
 		totalEnergy = wb.totalEnergy
 	}
 
 	var currents func() (float64, float64, float64, error)
-	if isPro {
+	if hasMeter && wb.hasCurrents() {
 		currents = wb.currents
 	}
 
@@ -131,6 +132,19 @@ func (wb *Warp) hasMeter() bool {
 		var res warp.MeterState
 		if err := json.Unmarshal([]byte(state), &res); err == nil {
 			return res.State == 2
+		}
+	}
+
+	return false
+}
+
+func (wb *Warp) hasCurrents() bool {
+	if state, err := provider.NewMqtt(wb.log, wb.client,
+		fmt.Sprintf("%s/meter/detailed_values", wb.root), 1, 0,
+	).StringGetter()(); err == nil {
+		var res []float64
+		if err := json.Unmarshal([]byte(state), &res); err == nil {
+			return len(res) > 5
 		}
 	}
 
