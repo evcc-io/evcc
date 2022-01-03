@@ -158,8 +158,8 @@ export default {
 		sponsor: String,
 		chargedTotal: { type: Number, default: 0 },
 		chargedSelfConsumption: { type: Number, default: 0 },
-		gridPrice: { type: Number, default: 30 },
-		feedInPrice: { type: Number, default: 8 },
+		gridPrice: { type: Number, default: 0.3 },
+		feedInPrice: { type: Number, default: 0.08 },
 		currency: String,
 	},
 	computed: {
