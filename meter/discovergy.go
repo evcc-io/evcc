@@ -31,6 +31,7 @@ func NewDiscovergyFromConfig(other map[string]interface{}) (api.Meter, error) {
 		Scale    float64
 		Cache    time.Duration
 	}{
+		Scale: 1,
 		Cache: time.Second,
 	}
 
