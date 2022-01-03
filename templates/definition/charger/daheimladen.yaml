@@ -1,7 +1,5 @@
 template: daheimladen
 description: Daheimladen (Cloud API)
-requirements:
-  sponsorship: true
 params:
 - name: token
   help:
