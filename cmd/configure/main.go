@@ -70,12 +70,11 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 
 	if !c.advancedMode {
 		// ask the user for his knowledge, so advanced mode can also be turned on this way
-		flowChoices := []string{
+		fmt.Println()
+		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), []string{
 			c.localizedString("Flow_Mode_Standard", nil),
 			c.localizedString("Flow_Mode_Advanced", nil),
-		}
-		fmt.Println()
-		flowIndex, _ := c.askChoice(c.localizedString("Flow_Mode", nil), flowChoices)
+		})
 		if flowIndex == 1 {
 			c.advancedMode = true
 		}
@@ -86,12 +85,11 @@ func (c *CmdConfigure) Run(log *util.Logger, flagLang string, advancedMode, expa
 		return
 	}
 
-	flowChoices := []string{
+	fmt.Println()
+	flowIndex, _ := c.askChoice(c.localizedString("Flow_Type", nil), []string{
 		c.localizedString("Flow_Type_NewConfiguration", nil),
 		c.localizedString("Flow_Type_SingleDevice", nil),
-	}
-	fmt.Println()
-	flowIndex, _ := c.askChoice(c.localizedString("Flow_Type", nil), flowChoices)
+	})
 	switch flowIndex {
 	case 0:
 		c.flowNewConfigFile()
