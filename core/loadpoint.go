@@ -1437,11 +1437,11 @@ func (lp *LoadPoint) publishSoCAndRange() {
 func (lp *LoadPoint) GetAssumedDuration() time.Duration {
 	var duration time.Duration
 
-	if lp.charging() {
-		duration = lp.socEstimator.AssumedChargeDuration(lp.chargePower, lp.SoC.Target)
-	} else {
-		duration = lp.socEstimator.AssumedChargeDuration(lp.GetMaxPower(), lp.SoC.Target)
-	}
+	//if lp.charging() {
+	//	duration = lp.socEstimator.AssumedChargeDuration(lp.chargePower, lp.SoC.Target)
+	//} else {
+	duration = lp.socEstimator.AssumedChargeDuration(lp.GetMaxPower(), lp.SoC.Target)
+	//}
 
 	return duration
 }

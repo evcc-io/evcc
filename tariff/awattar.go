@@ -189,12 +189,13 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		cnt_expected_slots++
 		delta := pend.Sub(pstart)
 		sum += delta
-		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s\n", pi.StartTimestamp.Round(time.Second), pi.EndTimestamp.Round(time.Second), pi.Marketprice, sum)
+		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s", pi.StartTimestamp.Round(time.Second), pi.EndTimestamp.Round(time.Second), pi.Marketprice, sum)
 
 		// current timeslot is a cheap one
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) && duration > 0 {
 			cheap_slot = true // rename to cheapSlotNow
-			cur_slot_nr = i
+			cur_slot_nr = cnt_expected_slots
+			t.log.TRACE.Printf(" (now, slot number %v)", cur_slot_nr)
 		}
 
 		// we found all necessary cheap slots to charge to targetSoC
@@ -205,7 +206,7 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 
 	if cheap_slot {
 		// use the most expensive slot as little as possible, but do not disable on last charging slot
-		if cur_slot_nr == cnt_expected_slots-1 && !(t.cheapactive && cnt_expected_slots == 1) {
+		if cur_slot_nr == cnt_expected_slots && !(t.cheapactive && cnt_expected_slots == 1) {
 			if sum <= duration {
 				t.log.DEBUG.Printf("cheap timeslot, charging...\n")
 				t.cheapactive = true
@@ -215,10 +216,12 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 					t.cheapactive = false
 				}
 			}
-		} else {
+		} else { /* not most expensiv slot */
+			t.log.DEBUG.Printf("cheap timeslot, charging...\n")
 			t.cheapactive = true
 		}
 	} else {
+		t.log.DEBUG.Printf("not cheap, not charging...\n")
 		t.cheapactive = false
 	}
 
