@@ -47,7 +47,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	}
 
 	if cp.status.ErrorCode != core.NoError {
-		return res, fmt.Errorf("chargepoint status: %s", cp.status.ErrorCode)
+		return res, fmt.Errorf("chargepoint error: %s", cp.status.ErrorCode)
 	}
 
 	res = api.StatusA
@@ -65,7 +65,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 		res = api.StatusC
 	case core.ChargePointStatusReserved, // "Reserved"
 		core.ChargePointStatusFaulted: // "Faulted"
-		return api.StatusF, fmt.Errorf("chargepoint error: %s", cp.status.Status)
+		return api.StatusF, fmt.Errorf("chargepoint status: %s", cp.status.Status)
 	default:
 		return api.StatusNone, fmt.Errorf("invalid chargepoint status: %s", cp.status.Status)
 	}
