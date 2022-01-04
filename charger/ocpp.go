@@ -1,7 +1,6 @@
 package charger
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/evcc-io/evcc/api"
@@ -103,7 +102,7 @@ func (c *OCPP) MaxCurrent(current int64) error {
 
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
-	return api.StatusB, errors.New("not implemented")
+	return c.cp.Status()
 }
 
 // var _ api.Meter = (*OCPP)(nil)
