@@ -19,16 +19,28 @@ type CP struct {
 	id          string
 	txnCount    int64
 	meterValues []types.MeterValue
-	boot        core.BootNotificationRequest
-	status      core.StatusNotificationRequest
+
+	bootWG sync.WaitGroup
+	boot   *core.BootNotificationRequest
+	status *core.StatusNotificationRequest
 }
 
 // Boot waits for the CP to register itself
 func (cp *CP) Boot() error {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
+	cp.bootWG.Add(2) // boot and status
 
-	return nil
+	bootC := make(chan struct{})
+	go func() {
+		cp.bootWG.Wait()
+		close(bootC)
+	}()
+
+	select {
+	case <-bootC:
+		return nil
+	case <-time.After(timeout):
+		return api.ErrTimeout
+	}
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {

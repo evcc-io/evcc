@@ -27,8 +27,15 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 
 	if request != nil {
 		cp.mu.Lock()
-		cp.boot = *request
-		cp.mu.Unlock()
+		defer cp.mu.Unlock()
+
+		ptr := cp.boot
+		cp.boot = request
+
+		// once
+		if ptr == nil {
+			cp.bootWG.Done()
+		}
 	}
 
 	res := &core.BootNotificationConfirmation{
@@ -38,6 +45,25 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	}
 
 	return res, nil
+}
+
+func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
+	cp.log.TRACE.Printf("%T: %+v", request, request)
+
+	if request != nil {
+		cp.mu.Lock()
+		defer cp.mu.Unlock()
+
+		ptr := cp.boot
+		cp.status = request
+
+		// once
+		if ptr == nil {
+			cp.bootWG.Done()
+		}
+	}
+
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransferConfirmation, error) {
@@ -70,18 +96,6 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 	}
 
 	return new(core.MeterValuesConfirmation), nil
-}
-
-func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
-	cp.log.TRACE.Printf("%T: %+v", request, request)
-
-	if request != nil {
-		cp.mu.Lock()
-		cp.status = *request
-		cp.mu.Unlock()
-	}
-
-	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
