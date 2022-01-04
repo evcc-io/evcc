@@ -75,8 +75,20 @@ func (c *OCPP) Enable(enable bool) error {
 		close(rc)
 	}, c.tag)
 
+	// txn := "transaction id" // TODO
+	// err = ocpp.Instance().CS().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
+	// 	c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)
+
+	// 	if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+	// 		err = fmt.Errorf("invalid status: %s", resp.Status)
+	// 	}
+
+	// 	rc <- err
+	// 	close(rc)
+	// }, txn)
+
 	if err == nil {
-		c.log.TRACE.Println("RemoteStartTransaction: waiting for response")
+		c.log.TRACE.Println("RemoteStartStopTransaction: waiting for response")
 		err = <-rc
 	}
 
