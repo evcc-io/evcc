@@ -63,7 +63,7 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
-	return &core.StatusNotificationConfirmation{}, nil
+	return new(core.StatusNotificationConfirmation), nil
 }
 
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
