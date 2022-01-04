@@ -16,6 +16,7 @@ type OCPP struct {
 	log     *util.Logger
 	cp      *ocpp.CP
 	id      string
+	tag     string
 	enabled bool // TODO remove
 }
 
@@ -27,21 +28,23 @@ func init() {
 func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		StationId string
+		IdTag     string
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOCPP(cc.StationId)
+	return NewOCPP(cc.StationId, cc.IdTag)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id string) (*OCPP, error) {
+func NewOCPP(id, tag string) (*OCPP, error) {
 	c := &OCPP{
 		log: util.NewLogger("ocpp-" + id),
 		cp:  ocpp.Instance().Register(id),
 		id:  id,
+		tag: tag,
 	}
 
 	return c, nil
@@ -70,7 +73,7 @@ func (c *OCPP) Enable(enable bool) error {
 
 		rc <- err
 		close(rc)
-	}, "idTag")
+	}, c.tag)
 
 	if err == nil {
 		c.log.TRACE.Println("RemoteStartTransaction: waiting for response")
