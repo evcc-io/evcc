@@ -18,6 +18,7 @@ type CP struct {
 	log         *util.Logger
 	id          string
 	available   bool
+	txnCount    int64
 	meterValues []types.MeterValue
 	status      core.StatusNotificationRequest
 }

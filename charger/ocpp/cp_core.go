@@ -1,6 +1,7 @@
 package ocpp
 
 import (
+	"sync/atomic"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -78,11 +79,14 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.StartTransactionConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	// create new transaction
+	txn := atomic.AddInt64(&cp.txnCount, 1)
+
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted, // accept
 		},
-		TransactionId: 0,
+		TransactionId: int(txn),
 	}
 
 	return res, nil
