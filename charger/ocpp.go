@@ -2,19 +2,21 @@ package charger
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 // OCPP charger implementation
 type OCPP struct {
-	log       *util.Logger
-	cp        *ocpp.CP
-	stationId string
-	enabled   bool
+	log     *util.Logger
+	cp      *ocpp.CP
+	id      string
+	enabled bool // TODO remove
 }
 
 func init() {
@@ -35,11 +37,11 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(stationId string) (*OCPP, error) {
+func NewOCPP(id string) (*OCPP, error) {
 	c := &OCPP{
-		log:       util.NewLogger("ocpp-" + stationId),
-		cp:        ocpp.Instance().Register(stationId),
-		stationId: stationId,
+		log: util.NewLogger("ocpp-" + id),
+		cp:  ocpp.Instance().Register(id),
+		id:  id,
 	}
 
 	return c, nil
@@ -59,8 +61,13 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	rc := make(chan error, 1)
-	err := ocpp.Instance().CS().RemoteStartTransaction(c.stationId, func(request *core.RemoteStartTransactionConfirmation, err error) {
+	err := ocpp.Instance().CS().RemoteStartTransaction(c.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
 		c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", request, request)
+
+		if err == nil && request.Status != types.RemoteStartStopStatusAccepted {
+			err = fmt.Errorf("invalid status: %s", request.Status)
+		}
+
 		rc <- err
 		close(rc)
 	}, "idTag")
