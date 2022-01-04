@@ -17,18 +17,18 @@ render: |
     add:
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
-      jq: .dxsEntries[0].value
+      jq: .dxsEntries[0].value | if . == null then 0 else . end
       scale: -1.0
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886848 # Netzbezug
-      jq: .dxsEntries[0].value
+      jq: .dxsEntries[0].value | if . == null then 0 else . end
     - source: http
       uri: http://{{ .host }}/api/dxs.json?dxsEntries=83886336 # PV Eigenverbrauch
-      jq: .dxsEntries[0].value
+      jq: .dxsEntries[0].value | if . == null then 0 else . end
   {{- end -}}
   {{- if eq .usage "pv" }}
     # PV
     source: http
     uri: http://{{ .host }}/api/dxs.json?dxsEntries=67109120 # PV AC Ausgang
-    jq: .dxsEntries[0].value
+    jq: .dxsEntries[0].value | if . == null then 0 else . end
   {{- end -}}
