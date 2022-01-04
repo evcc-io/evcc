@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/evcc-io/evcc/core/site"
 	"github.com/evcc-io/evcc/hems/ocpp/profile"
 	"github.com/evcc-io/evcc/util"
 
@@ -15,13 +14,9 @@ import (
 
 // OCPP is an OCPP client
 type OCPP struct {
-	log   *util.Logger
-	cache *util.Cache
-	site  site.API
-	cp    ocpp16.ChargePoint
+	log *util.Logger
+	cp  ocpp16.ChargePoint
 }
-
-const retryTimeout = 5 * time.Second
 
 // New generates OCPP chargepoint client
 func New(conf map[string]interface{}) (*OCPP, error) {
