@@ -57,7 +57,13 @@ type SimCharger interface {
 type SimChargePhases interface {
 	Sim
 	ChargePhases
+	ChargeEnable
 	GetPhases1p3p() (int, error)
+}
+
+type LockPhases1p3p interface {
+	LockPhases1p3p(phases int) error
+	UnlockPhases1p3p() error
 }
 
 type SimVehicle interface {

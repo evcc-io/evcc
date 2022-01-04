@@ -4,7 +4,7 @@ The simulator itself coordinates the sim devices and executes a program that can
 
 ## sim-devices
 The following **sim-devices** are provided:
-* **sim-vehicle**: simulates a vehicle and its battery. Bidirectional charging can be activated.
+* **sim-vehicle**: simulates a vehicle and its battery. Bidirectional charging can be activated (but is not yet tested in the simulator).
 * **sim-charger**: simulates a charger to which vehicles can be connected
 * **sim-switch1p3p**: simulates a phase switch that can switch a charger from 1phase to 3phases. The name of the switch must be configured in the switch1p3p config entry of the charger to which it belongs
 * **sim-meter**: simulates different types of meters. The following **usage** types are supported:
@@ -12,8 +12,6 @@ The following **sim-devices** are provided:
   * **pv**: simulates a pv. A free number of "pv" meters is allowed (one for each pv)
   * **battery**: simulates a battery. A free number of "battery" meters are allowed (one for each battery)
   * **home**: simulates the power consumption of your home - the value can be controlled using your simulation program. A free number of "home" meters is allowed - but the sense can be questioned
-
-A mixture of real devices and sim-devices is not supported.
 
 ## Configuration evcc.yaml
 The various meters, charger, vehicles, switches and the simulator must be configured in the .yaml file for the simulator to work correctly.
@@ -107,7 +105,7 @@ vehicles:
       - Identifier2
 ```
 ### simulator
-The simulator ist he core component of the simulation. It interacts with the sim-devices, calculates the grid meter values and executes the simulator program that allows for example to connect/disconnect a vehicle, change the power consumption of the "home" node, or change the power generation of a "pv" node. It also supports changing the active charge-mode of the Gui. At maximum one simulator command is executed each simulator "update" (which is also the site update cycle time).
+The simulator ist he core component of the simulation. It interacts with the sim-devices, calculates the grid meter values and executes the simulator program that allows for example to connect/disconnect a vehicle, change the power consumption of the "home" node, or change the power generation of a "pv" node. It also supports changing the active charge-mode of the Gui. The simulator commands are all executed in a row until a command is started that takes some time e.g. sleep or expect..
 A free number of simulators can be configured - but currently only one simulator that "does it all" is in use - it is therefore not needed to configure multiple simulators.
 ```yaml
 simulators:
@@ -159,7 +157,11 @@ Tells the simulator to set an attribute of a given sim-device.
 ```yaml
   - cmd: set
     object: homeSim  # the name of the sim-device whose value shall be changed
-    attribute: power # currently only "power" is supported ... but it is quite simple to extend the simulator to support "soc"
+    attribute: power # supported attributes:
+                     # power: sets the power of an api.SimPower device. Value: the power
+                     # phases: sets the phases of a device that implements api.ChargeEnable and api.Phases. Value: the phases to set
+                     # lockPhases: locks a phase (with the next phases1p3p command) to the given phase value. Device must implement the api.LockPhases1p3p interface.
+                     # unlockPhases: unlocks a previously locked phase immediately. No Value is used. Device must implement the api.LockPhases1p3p interface
     value:  -1250    # the value to set for the homeSim power attribute
 ```
 #### setGui
@@ -176,11 +178,21 @@ Tells the simulator to check the value of an attribute within a given time windo
 ```yaml
   - cmd: expect
     object: gridSim  # name of the sim device whose attribute value shall be checked
-    attribute: power # currently only this attribute is supported
+    attribute: power # supported attributes: 
+                     # - power: of any device that implements the api.Meter interface
+                     # - phases: of any device that implements the api.SimChargePhases interface
     value: -1200     # the expected value
     timeout: 20s     # maximum time the simulator checks the expected value.
                      # if the  the simulator 
 ```
+## Hardware in the loop testing
+Hardware-in-the-loop testing allows a mixture of real hardware elements and simulated hardware elements.
+
+Currently only the following setting is supported: 
+* Switch1p3p - as real device + all other devices are sim-devices
+
+It is technically possible but not yet implemented to allow other devices for HIL-Testing - e.g. all devices including the PV are simulated devices, the charger and the vehicle are real devices.
+
 ## Behind the scenes
 During initialization the simulator is initialized after all devices to be able to search the list of devices and find all sim-devices with which it can operate.
 The sim-devices are identified by the implementation of the "Sim" interface.

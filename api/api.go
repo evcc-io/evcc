@@ -93,11 +93,16 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
+// ChargeEnable provides enabling and disabling the charging process
+type ChargeEnable interface {
+	Enabled() (bool, error)
+	Enable(enable bool) error
+}
+
 // Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
-	Enabled() (bool, error)
-	Enable(enable bool) error
+	ChargeEnable
 	MaxCurrent(current int64) error
 }
 

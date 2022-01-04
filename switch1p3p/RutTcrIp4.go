@@ -33,6 +33,9 @@ import (
 type RutTcrIp4 struct {
 	conn       UdpReadWrite  // element implementing the UdpReadWrite interface
 	udpAddress *net.UDPAddr  // UDP address object
+	enabled    bool          // true when enabled, false otherwise
+	name       string        // name of the 1p3p switch (used for Hardware-in-the-loop tests)
+	phases     int           // current phases setting (1phase or 3 phases)
 	cfg        *RutTcrIp4Cfg // config
 	log        *util.Logger
 }
@@ -51,12 +54,12 @@ type RutTcrIp4Cfg struct {
 	// (toggles with outReadbackCtrl rising edge if we are switched to 3phases, doesn't toggle if 1phase is switched)
 	OutWallboxEnable   int // number of the TcrIp4 output that is used to enable/disable the wallbox. "0" to disable this feature
 	ResponseTimeoutSec int // UDP response timeout in seconds
-	RelaisSwitchTimeMs int // Relais switch time in milliseconds
+	ComCooldownMs      int // Communication cooldown time in ms between two RutTcrIp4 requests (should be at least 100ms)
 }
 
+// error types for detailed unit testing
 type ErrorType int64
 
-// error types for detailed unit testing
 const (
 	err_none ErrorType = iota
 	err_decode
@@ -80,6 +83,7 @@ const (
 	err_targetState
 	err_responseLength
 	err_readbackState
+	err_enableState
 )
 
 type Switch1p3pError struct {
@@ -87,6 +91,7 @@ type Switch1p3pError struct {
 	errType ErrorType // error type
 }
 
+// NewSwitchError creates a switch error instance that holds the error type information
 func NewSwitchError(errType ErrorType, err error) *Switch1p3pError {
 	switchError := &Switch1p3pError{
 		err:     err,
@@ -95,11 +100,13 @@ func NewSwitchError(errType ErrorType, err error) *Switch1p3pError {
 	return switchError
 }
 
+// Error gives the error stored in the switchError instance
 func (e *Switch1p3pError) Error() string {
 	return e.err.Error()
 }
 
-func (e *Switch1p3pError) GetErrorType() ErrorType {
+// ErrorType gives the error type stored in the switchError instance
+func (e *Switch1p3pError) ErrorType() ErrorType {
 	return e.errType
 }
 
@@ -112,7 +119,7 @@ func init() {
 func NewRutTcrIp4FromConfig(other map[string]interface{}) (api.ChargePhases, error) {
 	cfg := &RutTcrIp4Cfg{
 		ResponseTimeoutSec: 2,   //default timeout for response: 2 seconds
-		RelaisSwitchTimeMs: 100, // default relais switch time: 100ms
+		ComCooldownMs:      100, // default communication cooldown time: 100ms
 	}
 	if err := util.DecodeOther(other, &cfg); err != nil {
 		return nil, NewSwitchError(err_decode, err)
@@ -124,9 +131,8 @@ func NewRutTcrIp4FromConfig(other map[string]interface{}) (api.ChargePhases, err
 // NewRutTcrIp4 creates a new configurable rutenbeck 1p3p switch
 func NewRutTcrIp4(cfg *RutTcrIp4Cfg, conn UdpReadWrite) (api.ChargePhases, error) {
 
-	trace := util.NewLogger("RutTcrIp4")
-
-	trace.DEBUG.Printf("url: %s, out1p3p: %d, outReadbackCtrl: %d, outReadbackSts: %d, outWallboxEnable: %d, responseTimeoutSec: %d, relaisSwitchTimeMs: %d", cfg.Url, cfg.Out1p3p, cfg.OutReadbackCtrl, cfg.OutReadbackSts, cfg.OutWallboxEnable, cfg.ResponseTimeoutSec, cfg.RelaisSwitchTimeMs)
+	trace := util.NewLogger("RutIp4")
+	trace.DEBUG.Printf("url: %s, out1p3p: %d, outReadbackCtrl: %d, outReadbackSts: %d, outWallboxEnable: %d, responseTimeoutSec: %d, relaisSwitchTimeMs: %d", cfg.Url, cfg.Out1p3p, cfg.OutReadbackCtrl, cfg.OutReadbackSts, cfg.OutWallboxEnable, cfg.ResponseTimeoutSec, cfg.ComCooldownMs)
 
 	// url must be valid
 	parsedUrl, err := url.ParseRequestURI(cfg.Url)
@@ -172,8 +178,8 @@ func NewRutTcrIp4(cfg *RutTcrIp4Cfg, conn UdpReadWrite) (api.ChargePhases, error
 		return nil, NewSwitchError(err_cfgRespTimeout, fmt.Errorf("udpResponseTimeout must be > 0 but configured: %v", cfg.ResponseTimeoutSec))
 	}
 
-	if cfg.RelaisSwitchTimeMs <= 10 {
-		return nil, NewSwitchError(err_cfgRelaisTimeout, fmt.Errorf("relaisSwitchTimems must be > 10 but configured: %v", cfg.RelaisSwitchTimeMs))
+	if cfg.ComCooldownMs < 10 {
+		return nil, NewSwitchError(err_cfgRelaisTimeout, fmt.Errorf("commCooldownMs must be >= 10 but configured: %v", cfg.ComCooldownMs))
 	}
 
 	// setup udp address
@@ -185,6 +191,9 @@ func NewRutTcrIp4(cfg *RutTcrIp4Cfg, conn UdpReadWrite) (api.ChargePhases, error
 	instance := &RutTcrIp4{
 		conn:       conn,
 		udpAddress: udpAddr,
+		enabled:    false,
+		name:       "unnamed",
+		phases:     1,
 		cfg:        cfg,
 		log:        trace,
 	}
@@ -195,15 +204,64 @@ func NewRutTcrIp4(cfg *RutTcrIp4Cfg, conn UdpReadWrite) (api.ChargePhases, error
 	return instance, nil
 }
 
-// phases implements the api.ChargePhases interface
-func (sw *RutTcrIp4) Phases1p3p(phases int) error {
+// SimType gives the simulation type of the Switch. "Hil_switch1p3p"
+// means that this is a real switch that can be tested as "hardware in the loop"
+// component - i.e. a simulator can simulate other components
+func (c *RutTcrIp4) SimType() (api.SimType, error) {
+	return api.Hil_switch1p3p, nil
+}
 
+// SetName sets the name
+func (c *RutTcrIp4) SetName(name string) error {
+	c.name = name
+	return nil
+}
+
+// Name gets the name
+func (c *RutTcrIp4) Name() (string, error) {
+	return c.name, nil
+}
+
+// Enable implements the ChargeEnable interface.
+// Enables or disables the wallbox. If configured and supported: enables/disables the wallbox
+// Is also used for allowing a phases switch (may only be switched when disabled)
+func (sw *RutTcrIp4) Enable(enable bool) error {
+	sw.log.DEBUG.Printf("RutTcrIp4: Enable:%t", enable)
+	sw.enabled = enable
 	// if configured: disable wallbox
 	if sw.cfg.OutWallboxEnable != 0 {
-		if err := sw.SetOutput(sw.cfg.OutWallboxEnable, 0); err != nil {
+		var outVal int = 0
+		if enable {
+			outVal = 1
+		}
+		if err := sw.SetOutput(sw.cfg.OutWallboxEnable, outVal); err != nil {
 			return err
 		}
 	}
+
+	return nil
+}
+
+// Enabled implements the ChargeEnable interface.
+// Gives the current enabled status
+func (sw *RutTcrIp4) Enabled() (bool, error) {
+	return sw.enabled, nil
+}
+
+// GetPhases1p3p gives the current phases setting of the switch
+func (sw *RutTcrIp4) GetPhases1p3p() (int, error) {
+	return sw.phases, nil
+}
+
+// Phases1p3p implements the api.ChargePhases interface
+func (sw *RutTcrIp4) Phases1p3p(phases int) error {
+
+	sw.log.DEBUG.Printf("RutTcrIp4: SwitchPhases:%d", phases)
+
+	if sw.enabled {
+		return NewSwitchError(err_enableState, fmt.Errorf("switch1p3p: phase switching only allowed when disabled, but is enabled"))
+	}
+
 	if phases == 3 {
 		// switch to 3 phases
 		if err := sw.SetOutput(sw.cfg.Out1p3p, 1); err != nil {
@@ -221,13 +279,7 @@ func (sw *RutTcrIp4) Phases1p3p(phases int) error {
 			return err
 		}
 	}
-	// if configured: re-enable wallbox
-	if sw.cfg.OutWallboxEnable != 0 {
-		if err := sw.SetOutput(sw.cfg.OutWallboxEnable, 1); err != nil {
-			return err
-		}
-	}
-
+	sw.phases = phases
 	return nil
 }
 
@@ -251,12 +303,10 @@ func (sw *RutTcrIp4) CheckReadback(expectedPhases int) error {
 		return err
 	}
 	// switching the relais takes some time - we have to wait here until it switched physically
-	time.Sleep(time.Duration(sw.cfg.RelaisSwitchTimeMs) * time.Millisecond)
 	if err = sw.SetOutput(sw.cfg.OutReadbackCtrl, 1); err != nil {
 		return err
 	}
 	// switching the relais takes some time - we have to wait here until it switched physically
-	time.Sleep(time.Duration(sw.cfg.RelaisSwitchTimeMs) * time.Millisecond)
 	if err = sw.SetOutput(sw.cfg.OutReadbackCtrl, 0); err != nil {
 		return err
 	}
@@ -357,6 +407,7 @@ func (sw *RutTcrIp4) UdpXchange(udpAddress *net.UDPAddr, command string, respons
 	defer conn.Close()
 
 	// send command
+	time.Sleep(time.Duration(sw.cfg.ComCooldownMs) * time.Millisecond)
 	numBytesWritten, err := conn.Write([]byte(command))
 	if err != nil {
 		return "", NewSwitchError(err_udpSend, err)

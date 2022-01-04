@@ -1,5 +1,5 @@
 uri: 0.0.0.0:7070 # uri for ui
-interval: 2s # control cycle interval
+interval: 10s # control cycle interval
 
 # sponsor token enables optional features (request at https://cloud.evcc.io)
 # sponsortoken:
@@ -20,18 +20,18 @@ meters:
   usage: grid
 - name: pvSim
   type: sim-meter
-  power: 22000 # [W] produces power: positive sign
+  power: 500 # [W] produces power: positive sign
   usage: pv
 - name: batterySim
   type: sim-meter
   usage: battery
   capacity: 1 # [kWh]
   powerLimit: 5000 # [W]
-  soc: 100 # [%]
+  soc: 0 # [%]
 - name: homeSim
   type: sim-meter
   usage: home
-  power: -800 # [W] consumes power: negative sign
+  power: 0 # [W] consumes power: negative sign
 
 # charger definitions
 # name can be freely chosen and is used as reference when assigning charger to vehicle
@@ -83,7 +83,10 @@ simulators:
     active: true
     program:
     - cmd: sleep
-      value: 4s
+      value: 10s
+    - cmd: setGui
+      attribute: mode
+      value: off
     - cmd: connect
       object: chargerSim
       attribute: vehicle
@@ -92,29 +95,44 @@ simulators:
       value: 30s
     - cmd: setGui
       attribute: mode
-      value: off
+      value: now
     - cmd: sleep
-      value: 6s
+      value: 60s
+    - cmd: set
+      object: switch1p3pSim
+      attribute: lockPhases
+      value: 2
+    - cmd: setGui
+      attribute: mode
+      value: minpv
+    - cmd: expect
+      object: switch1p3pSim
+      attribute: phases
+      value: 2
+      timeout: 60s
+    - cmd: set
+      object: switch1p3pSim
+      attribute: unlockPhases
+    - cmd: sleep
+      value: 20s
     - cmd: setGui
       attribute: mode
       value: now
     - cmd: sleep
-      value: 6s
+      value: 30s
     - cmd: setGui
       attribute: mode
       value: minpv
     - cmd: sleep
-      value: 6s
+      value: 30s
     - cmd: setGui
       attribute: mode
-      value: pv
-    - cmd: disconnect
-      object: chargerSim
+      value: now
     - cmd: expect
-      object: gridSim
-      attribute: power
-      value: -21200
-      timeout: 10s
+      object: switch1p3pSim
+      attribute: phases
+      value: 3
+      timeout: 60s
 
 # loadpoint describes the charger, charge meter and connected vehicle
 loadpoints:
@@ -143,7 +161,7 @@ loadpoints:
       interval: 60m
     min: 0 # immediately charge to 0% regardless of mode unless "off" (disabled)
     target: 100 # always charge to 100%
-    estimate: false # set true to interpolate between api updates
+    estimate: true # set true to interpolate between api updates
   phases: 3 # ev phases (default 3)
   enable: # pv mode enable behavior
     delay: 10s # threshold must be exceeded for this long
@@ -153,7 +171,7 @@ loadpoints:
     threshold: 200 # maximum import power (W)
   guardDuration: 10s # switch charger contactor not more often than this (default 10m)
   minCurrent: 6 # minimum charge current (default 6A)
-  maxCurrent: 32 # maximum charge current (default 16A)
+  maxCurrent: 20 # maximum charge current (default 16A)
 
 # tariffs are the fixed or variable tariffs
 # cheap can be used to define a tariff rate considered cheap enough for charging

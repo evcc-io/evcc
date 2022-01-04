@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"testing"
+
+	"github.com/evcc-io/evcc/api"
 )
 
 type CfgMap map[string]interface{}
@@ -21,6 +23,10 @@ type MockUdpConn struct {
 }
 
 func (mockUdp *MockUdpConn) UdpXchange(udpAddress *net.UDPAddr, command string, responseTimeoutSec int) (string, error) {
+	if len(mockUdp.commands) == 0 {
+		// no commands expected, but called => return error
+		return "", NewSwitchError(err_udpSend, fmt.Errorf("Invalid command. Expected: none but was %s", command))
+	}
 	mockCmd := mockUdp.commands[mockUdp.cmdCnt]
 	mockUdp.cmdCnt++
 
@@ -42,124 +48,124 @@ const (
 func TestInvalidConfig(t *testing.T) {
 
 	tests := []struct {
-		desc		string
-		cfgMap     	CfgMap
-		expErrType 	ErrorType
+		desc       string
+		cfgMap     CfgMap
+		expErrType ErrorType
 	}{
 		{
-			desc: 		"nok: empty url",
-		 	cfgMap: 	CfgMap{"url": ""},
-		 	expErrType: err_cfgUrl,
-		},
-		{
-			desc: 		"nok: invalid url (udp:// required)",
-			cfgMap: 	CfgMap{"url": "192.168.1.10:3030"},
+			desc:       "nok: empty url",
+			cfgMap:     CfgMap{"url": ""},
 			expErrType: err_cfgUrl,
 		},
 		{
-			desc: 		"nok: invalid url - wrong: udp//, correct: udp://",
-			cfgMap: 	CfgMap{"url": "udp//192.168.1.10:3030"},
+			desc:       "nok: invalid url (udp:// required)",
+			cfgMap:     CfgMap{"url": "192.168.1.10:3030"},
 			expErrType: err_cfgUrl,
 		},
 		{
-			desc: 		"nok: out1p3p entry is missing",
-			cfgMap:		CfgMap{"url": cUrlOk},
+			desc:       "nok: invalid url - wrong: udp//, correct: udp://",
+			cfgMap:     CfgMap{"url": "udp//192.168.1.10:3030"},
+			expErrType: err_cfgUrl,
+		},
+		{
+			desc:       "nok: out1p3p entry is missing",
+			cfgMap:     CfgMap{"url": cUrlOk},
 			expErrType: err_cfgOut1p3p,
 		},
 		{
-			desc: 		"nok: out1p3p value 0 invalid - must be 1<=value <=4",
-			cfgMap: 	CfgMap{"url": cUrlOk, "out1p3p": 0},
+			desc:       "nok: out1p3p value 0 invalid - must be 1<=value <=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 0},
 			expErrType: err_cfgOut1p3p,
 		},
 		{
-			desc: 		"nok: out1p3p value -1 invalid - must be 1<=value <=4",
-			cfgMap: 	CfgMap{"url": cUrlOk, "out1p3p": -1},
+			desc:       "nok: out1p3p value -1 invalid - must be 1<=value <=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": -1},
 			expErrType: err_cfgOut1p3p,
 		},
 		{
-			desc: 		"nok: responseTimeoutSec value 0 invalid - must be >0",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "responseTimeoutSec": 0.0},
+			desc:       "nok: responseTimeoutSec value 0 invalid - must be >0",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "responseTimeoutSec": 0.0},
 			expErrType: err_cfgRespTimeout,
-		},		
-		{
-			desc: 		"nok: responseTimeoutSec value -0.1 invalid - must be >0",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "responseTimeoutSec": -0.1},
-			expErrType:	err_cfgRespTimeout,
 		},
 		{
-			desc: 		"nok: out2p3p value 5 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 5},
-			expErrType:	err_cfgOut1p3p,
+			desc:       "nok: responseTimeoutSec value -0.1 invalid - must be >0",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "responseTimeoutSec": -0.1},
+			expErrType: err_cfgRespTimeout,
 		},
 		{
-			desc:		"nok: outReadbackCtrl value -1 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": -1},
-			expErrType:	err_cfgOutReadbackCtrl,
+			desc:       "nok: out2p3p value 5 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 5},
+			expErrType: err_cfgOut1p3p,
 		},
 		{
-			desc:		"nok: outReadbackCtrl value 5 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": 5},
-			expErrType:	err_cfgOutReadbackCtrl,
+			desc:       "nok: outReadbackCtrl value -1 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": -1},
+			expErrType: err_cfgOutReadbackCtrl,
 		},
 		{
-			desc:		"nok: outReadbackSts value -1 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": -1},
+			desc:       "nok: outReadbackCtrl value 5 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": 5},
+			expErrType: err_cfgOutReadbackCtrl,
+		},
+		{
+			desc:       "nok: outReadbackSts value -1 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": -1},
 			expErrType: err_cfgOutReadbackSts,
 		},
 		{
-			desc:		"nok: outReadbackSts value 5 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 5},
-			expErrType:	err_cfgOutReadbackSts,
+			desc:       "nok: outReadbackSts value 5 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 5},
+			expErrType: err_cfgOutReadbackSts,
 		},
 		{
-			desc:		"nok: outWallboxEnable value -1 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outWallboxEnable": -1},
-			expErrType:	err_cfgOutWallboxEnable,
+			desc:       "nok: outWallboxEnable value -1 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outWallboxEnable": -1},
+			expErrType: err_cfgOutWallboxEnable,
 		},
 		{
-			desc:		"nok: outWallboxEnable value 5 invalid - must be 1<=value<=4",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outWallboxEnable": 5},
-			expErrType:	err_cfgOutWallboxEnable,
+			desc:       "nok: outWallboxEnable value 5 invalid - must be 1<=value<=4",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outWallboxEnable": 5},
+			expErrType: err_cfgOutWallboxEnable,
 		},
 		{
-			desc:		"nok: outReadbackSts enabled but outReadbackCtrl not enabled - must be both enabled or both disabled",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 2},
-			expErrType:	err_cfgOutReadbackCfg,
-		},
-		{	
-			desc:		"nok: outReadbackCtrl enabled but outReadbackSts not enabled - must be both enabled or both disabled",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": 2},
-			expErrType:	err_cfgOutReadbackCfg,
+			desc:       "nok: outReadbackSts enabled but outReadbackCtrl not enabled - must be both enabled or both disabled",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 2},
+			expErrType: err_cfgOutReadbackCfg,
 		},
 		{
-			desc:		"nok: outReadbackCtrl and outReadbackSts have same output number - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 4, "outReadbackCtrl": 4},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: outReadbackCtrl enabled but outReadbackSts not enabled - must be both enabled or both disabled",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackCtrl": 2},
+			expErrType: err_cfgOutReadbackCfg,
 		},
 		{
-			desc:		"nok: outReadbackCtrl and out1p3p overlap - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 2, "outReadbackSts": 4, "outReadbackCtrl": 2},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: outReadbackCtrl and outReadbackSts have same output number - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 4, "outReadbackCtrl": 4},
+			expErrType: err_cfgOutOverlap,
 		},
 		{
-			desc:		"nok: OutReadbackSts and out1p3p overlap - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 2, "outReadbackSts": 2, "outReadbackCtrl": 3},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: outReadbackCtrl and out1p3p overlap - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 2, "outReadbackSts": 4, "outReadbackCtrl": 2},
+			expErrType: err_cfgOutOverlap,
 		},
 		{
-			desc:		"nok: outWallboxEnable and out1p3p overlap - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 2, "outWallboxEnable": 2},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: OutReadbackSts and out1p3p overlap - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 2, "outReadbackSts": 2, "outReadbackCtrl": 3},
+			expErrType: err_cfgOutOverlap,
 		},
 		{
-			desc:		"nok: outWallboxEnable and outReadbackSts overlap - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 2, "outReadbackCtrl": 3, "outWallboxEnable": 2},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: outWallboxEnable and out1p3p overlap - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 2, "outWallboxEnable": 2},
+			expErrType: err_cfgOutOverlap,
 		},
 		{
-			desc:		"nok: outWallboxEnable and outReadbackCtrl overlap - must have different output numbers",
-			cfgMap:		CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 3, "outReadbackCtrl": 2, "outWallboxEnable": 2},
-			expErrType:	err_cfgOutOverlap,
+			desc:       "nok: outWallboxEnable and outReadbackSts overlap - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 2, "outReadbackCtrl": 3, "outWallboxEnable": 2},
+			expErrType: err_cfgOutOverlap,
+		},
+		{
+			desc:       "nok: outWallboxEnable and outReadbackCtrl overlap - must have different output numbers",
+			cfgMap:     CfgMap{"url": cUrlOk, "out1p3p": 1, "outReadbackSts": 3, "outReadbackCtrl": 2, "outWallboxEnable": 2},
+			expErrType: err_cfgOutOverlap,
 		},
 	}
 
@@ -172,11 +178,10 @@ func TestInvalidConfig(t *testing.T) {
 			t.Errorf("New without config didn't return an error")
 		} else if _, ok := err.(*Switch1p3pError); !ok {
 			t.Errorf("New with invalid config didn't return a Switch1p3pError")
-		} else if err.(*Switch1p3pError).GetErrorType() != test.expErrType {
-			t.Errorf("New with invalid config didn't return the expected error type: was[%d], expected[%d]", err.(*Switch1p3pError).GetErrorType(), test.expErrType)
+		} else if err.(*Switch1p3pError).ErrorType() != test.expErrType {
+			t.Errorf("New with invalid config didn't return the expected error type: was[%d], expected[%d]", err.(*Switch1p3pError).ErrorType(), test.expErrType)
 		}
 	}
-
 }
 
 func TestPhases1p3p(t *testing.T) {
@@ -186,7 +191,7 @@ func TestPhases1p3p(t *testing.T) {
 		Url:                "udp://192.168.0.1:30303",
 		Out1p3p:            1,
 		ResponseTimeoutSec: 2,
-		RelaisSwitchTimeMs: 100,
+		ComCooldownMs:      100,
 	}
 
 	// switch with wallbox enable, no readback
@@ -195,7 +200,7 @@ func TestPhases1p3p(t *testing.T) {
 		Out1p3p:            1,
 		OutWallboxEnable:   4,
 		ResponseTimeoutSec: 2,
-		RelaisSwitchTimeMs: 100,
+		ComCooldownMs:      100,
 	}
 
 	// switch with readback, no wallbox enable
@@ -205,7 +210,7 @@ func TestPhases1p3p(t *testing.T) {
 		OutReadbackCtrl:    1,
 		OutReadbackSts:     3,
 		ResponseTimeoutSec: 2,
-		RelaisSwitchTimeMs: 100,
+		ComCooldownMs:      100,
 	}
 
 	// switch with readback and with wallbox enable
@@ -216,7 +221,7 @@ func TestPhases1p3p(t *testing.T) {
 		OutReadbackSts:     3,
 		OutWallboxEnable:   4,
 		ResponseTimeoutSec: 2,
-		RelaisSwitchTimeMs: 100,
+		ComCooldownMs:      100,
 	}
 
 	tests := []struct {
@@ -543,15 +548,21 @@ func TestPhases1p3p(t *testing.T) {
 		} else if _, ok := tcrIp4.(*RutTcrIp4); !ok {
 			t.Errorf("NewRutTcrIp4FromConfig unexpected return type")
 		} else {
-			err := tcrIp4.Phases1p3p(test.phases)
+			err := tcrIp4.(api.ChargeEnable).Enable(false)
+			if err == nil {
+				err = tcrIp4.Phases1p3p(test.phases)
+				if err == nil {
+					err = tcrIp4.(api.ChargeEnable).Enable(true)
+				}
+			}
 			if test.expErrType != err_none {
 				// error expected
 				if err == nil {
 					t.Errorf("Error type should be %d but error was 'nil'", test.expErrType)
 				} else if _, ok := err.(*Switch1p3pError); !ok {
 					t.Errorf("Phases1p3p didn't return an error of type Switch1p3pError")
-				} else if err.(*Switch1p3pError).GetErrorType() != test.expErrType {
-					t.Errorf("Phases1p3p returned error type: %d but expected: %d. Error: %s", err.(*Switch1p3pError).GetErrorType(), test.expErrType, err.Error())
+				} else if err.(*Switch1p3pError).ErrorType() != test.expErrType {
+					t.Errorf("Phases1p3p returned error type: %d but expected: %d. Error: %s", err.(*Switch1p3pError).ErrorType(), test.expErrType, err.Error())
 				}
 			} else {
 				// no error expected
@@ -563,6 +574,48 @@ func TestPhases1p3p(t *testing.T) {
 					t.Errorf("Phases1p3p did not execute all expected commands. Expected: [%d] but was: [%d]", len(test.udpRw.commands), test.udpRw.cmdCnt)
 				}
 			}
+		}
+	}
+}
+
+func TestPhases1p3pEnabled(t *testing.T) {
+
+	// switch with wallbox enable, no readback
+	rutCfgNoRbWithWbEn := &RutTcrIp4Cfg{
+		Url:                "udp://192.168.0.1:30303",
+		Out1p3p:            1,
+		OutWallboxEnable:   4,
+		ResponseTimeoutSec: 2,
+		ComCooldownMs:      100,
+	}
+
+	udpRw := &MockUdpConn{cmdCnt: 0,
+		commands: []Command{
+			{cmd: "OUT4 1", resp: "OUT4 =1"}, // OK enable wallbox
+		},
+	}
+	tcrIp4, err := NewRutTcrIp4(rutCfgNoRbWithWbEn, udpRw)
+	// check construction result
+	if err != nil {
+		t.Errorf("NewRutTcrIp4FromConfig failed unexpected: %s", err.Error())
+	} else if tcrIp4 == nil {
+		t.Errorf("NewRutTcrIp4FromConfig unexpected return value")
+	} else if _, ok := tcrIp4.(*RutTcrIp4); !ok {
+		t.Errorf("NewRutTcrIp4FromConfig unexpected return type")
+	} else {
+		// enable
+		err := tcrIp4.(api.ChargeEnable).Enable(true)
+		if err == nil {
+			err = tcrIp4.Phases1p3p(1)
+		} else {
+			t.Errorf("failed to enable the switch")
+		}
+		if err == nil {
+			t.Errorf("Error type should be %d but error was 'nil'", err_enableState)
+		} else if _, ok := err.(*Switch1p3pError); !ok {
+			t.Errorf("Phases1p3p didn't return an error of type Switch1p3pError")
+		} else if err.(*Switch1p3pError).ErrorType() != err_enableState {
+			t.Errorf("Phases1p3p returned error type: %d but expected: %d. Error: %s", err.(*Switch1p3pError).ErrorType(), err_enableState, err.Error())
 		}
 	}
 }

@@ -523,7 +523,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 
 	// read initial charger state to prevent immediately disabling charger
-	if enabled, err := lp.charger.Enabled(); err == nil {
+	if enabled, err := lp.ChargerEnabled(); err == nil {
 		if lp.enabled = enabled; enabled {
 			lp.guardUpdated = lp.clock.Now()
 			// set defined current for use by pv mode
@@ -539,13 +539,74 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	}
 }
 
+// ChargerEnabled returns true if the charger (and - if configured - a connected 1p3p switch) are enabled
+// This has to be used instead of lp.charger.Enabled() to ensure that the switch1p3p enable status is also
+// taken into account
+func (lp *LoadPoint) ChargerEnabled() (bool, error) {
+
+	var switchEnabled bool = true
+	chargerEnabled, err := lp.charger.Enabled()
+	if err != nil {
+		return false, err
+	}
+	if lp.switch1p3p != nil {
+		if switchElement, ok := lp.switch1p3p.(api.ChargeEnable); ok {
+			switchEnabled, err = switchElement.Enabled()
+			if err != nil {
+				return false, err
+			}
+		} else {
+			// switch doesn't support the enable interface -> set to true
+			switchEnabled = true
+		}
+	}
+	return (chargerEnabled && switchEnabled), nil
+}
+
+// ChargerEnable sets the requested enable status for the charger and
+// if configured and supported for the 1p3p switch
+// This has to be used instead of lp.charger.Enable to ensure that the 1p3pswitch is
+// also correctly enabled and disabled
+func (lp *LoadPoint) ChargerEnable(enable bool) error {
+
+	if enable {
+		// Enable: first enable the switch, then enable the charger
+		// send enable request to switch (if configured and supported)
+		if lp.switch1p3p != nil {
+			if switchElement, ok := lp.switch1p3p.(api.ChargeEnable); ok {
+				if err := switchElement.Enable(enable); err != nil {
+					return err
+				}
+			}
+		}
+
+		if err := lp.charger.Enable(enable); err != nil {
+			return err
+		}
+	} else {
+		// Disable: first disable the charger, then disable the switch
+		if err := lp.charger.Enable(enable); err != nil {
+			return err
+		}
+		// send enable request to switch (if configured and supported)
+		if lp.switch1p3p != nil {
+			if switchElement, ok := lp.switch1p3p.(api.ChargeEnable); ok {
+				if err := switchElement.Enable(enable); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
 // syncCharger updates charger status and synchronizes it with expectations
 func (lp *LoadPoint) syncCharger() {
-	enabled, err := lp.charger.Enabled()
+	enabled, err := lp.ChargerEnabled()
 	if err == nil {
 		if enabled != lp.enabled {
 			lp.log.WARN.Printf("charger out of sync: expected %vd, got %vd", status[lp.enabled], status[enabled])
-			err = lp.charger.Enable(lp.enabled)
+			err = lp.ChargerEnable(lp.enabled)
 		}
 
 		if !enabled && lp.GetStatus() == api.StatusC {
@@ -594,7 +655,7 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		// 	}
 		// }
 
-		if err = lp.charger.Enable(enabled); err == nil {
+		if err = lp.ChargerEnable(enabled); err == nil {
 			lp.log.DEBUG.Printf("charger %s", status[enabled])
 			lp.enabled = enabled
 			lp.guardUpdated = lp.clock.Now()

@@ -233,10 +233,16 @@ func (sim *Simulator) Update() error {
 
 	}
 
-	// execute simulator program (checks/changes properties of sims)
-	if err := sim.ProcessProgram(); err != nil {
-		return err
+	// execute program steps until end of program or timed program step is reached
+	var proceedToNextProgStep bool = true
+	for proceedToNextProgStep {
+		var err error = nil
+		if proceedToNextProgStep, err = sim.ProcessProgramStep(); err != nil {
+			return err
+		}
 	}
+
+	// execute simulator program (checks/changes properties of sims)
 
 	// recalculate everything
 	pvPowerW := 0.0
@@ -323,13 +329,16 @@ func (sim *Simulator) updateBatteries(gridPower float64) error {
 	return nil
 }
 
-// ProcessProgram executes the program in the simulation file
-func (sim *Simulator) ProcessProgram() error {
+// ProcessProgramStep executes one program step in the simulation file
+// returns true when the step is finished (and ready for the next step)
+// returns false when the step is in progress or the program is finisehd, or an error occurred
+func (sim *Simulator) ProcessProgramStep() (bool, error) {
 
 	if sim.progStep >= len(sim.cfg.Program) {
 		// last command already processed. program finished, nothing to do -> return without error
-		return nil
+		return false, nil
 	}
+	executeStep := sim.progStep
 
 	command := sim.cfg.Program[sim.progStep]
 	sim.log.DEBUG.Printf("TestCommand: [%d] %v", sim.progStep, command)
@@ -338,7 +347,7 @@ func (sim *Simulator) ProcessProgram() error {
 	case "sleep":
 		sleepTime, err := time.ParseDuration(command.Value)
 		if err != nil {
-			return fmt.Errorf("invalid time format in command[%d]: %s", sim.progStep, command.Value)
+			return false, fmt.Errorf("invalid time format in command[%d]: %s", sim.progStep, command.Value)
 		}
 		if sim.progStepStart.IsZero() {
 			sim.progStepStart = time.Now()
@@ -359,19 +368,52 @@ func (sim *Simulator) ProcessProgram() error {
 	case "set":
 		simElement, ok := sim.simsByName[command.Object]
 		if !ok {
-			return fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
-		}
-		value, err := strconv.ParseFloat(command.Value, 64)
-		if err != nil {
-			return err
+			return false, fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
 		}
 		switch command.Attribute {
 		case "power":
+			value, err := strconv.ParseFloat(command.Value, 64)
+			if err != nil {
+				return false, err
+			}
 			if err := simElement.(api.SimPower).SetCurrentPower(value); err != nil {
-				return err
+				return false, err
+			}
+		case "phases":
+			value, err := strconv.ParseInt(command.Value, 10, 32)
+			if err != nil {
+				return false, err
+			}
+			// remember old "enabled" status
+			enabled, err := simElement.(api.ChargeEnable).Enabled()
+			if err != nil {
+				return false, err
+			}
+			if err := simElement.(api.ChargeEnable).Enable(false); err != nil {
+				return false, err
+			}
+			if err := simElement.(api.ChargePhases).Phases1p3p(int(value)); err != nil {
+				return false, err
+			}
+			// switch back to old "enabled" status
+			if err := simElement.(api.ChargeEnable).Enable(enabled); err != nil {
+				return false, err
+			}
+		case "lockPhases":
+			// value holds the phases value to lock into
+			value, err := strconv.ParseInt(command.Value, 10, 32)
+			if err != nil {
+				return false, err
+			}
+			if err := simElement.(api.LockPhases1p3p).LockPhases1p3p(int(value)); err != nil {
+				return false, err
+			}
+		case "unlockPhases":
+			if err := simElement.(api.LockPhases1p3p).UnlockPhases1p3p(); err != nil {
+				return false, err
 			}
 		default:
-			return fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
+			return false, fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
 		}
 		sim.progStep++
 	case "setGui":
@@ -390,23 +432,23 @@ func (sim *Simulator) ProcessProgram() error {
 			case api.ModePV.String():
 				mode = api.ModePV
 			default:
-				return fmt.Errorf("setGui invalid mode value:%s", command.Value)
+				return false, fmt.Errorf("setGui invalid mode value:%s", command.Value)
 			}
 			if err := sim.SetChargeMode(mode); err != nil {
-				return err
+				return false, err
 			}
 		default:
-			return fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
+			return false, fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
 		}
 		sim.progStep++
 	case "expect":
 		simElement, ok := sim.simsByName[command.Object]
 		if !ok {
-			return fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
+			return false, fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
 		}
 		timeout, err := time.ParseDuration(command.Timeout)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if sim.progStepStart.IsZero() {
@@ -418,7 +460,7 @@ func (sim *Simulator) ProcessProgram() error {
 			sim.progStepStart = time.Time{}
 			currentProcStep := sim.progStep
 			sim.progStep = len(sim.cfg.Program)
-			return fmt.Errorf("expect timeout elapsed for command[%d]. Stopping simulator program", currentProcStep)
+			return false, fmt.Errorf("expect timeout elapsed for command[%d]. Stopping simulator program", currentProcStep)
 		} else {
 			sim.log.DEBUG.Printf("expect timeout remaining:%v", (timeout - time.Since(sim.progStepStart)))
 		}
@@ -426,11 +468,11 @@ func (sim *Simulator) ProcessProgram() error {
 		case "power":
 			powerW, err := simElement.(api.Meter).CurrentPower()
 			if err != nil {
-				return err
+				return false, err
 			}
 			expectedValue, err := strconv.ParseFloat(command.Value, 64)
 			if err != nil {
-				return err
+				return false, err
 			}
 			if powerW == expectedValue {
 				sim.log.DEBUG.Printf("Expected power reached: %f", expectedValue)
@@ -443,11 +485,11 @@ func (sim *Simulator) ProcessProgram() error {
 		case "phases":
 			value, err := strconv.ParseInt(command.Value, 10, 32)
 			if err != nil {
-				return err
+				return false, err
 			}
 			phases, err := simElement.(api.SimChargePhases).GetPhases1p3p()
 			if err != nil {
-				return err
+				return false, err
 			}
 			if int64(phases) == value {
 				sim.log.DEBUG.Printf("Expected phases reached: %d", value)
@@ -457,38 +499,44 @@ func (sim *Simulator) ProcessProgram() error {
 				sim.log.DEBUG.Printf("Phases: %d", phases)
 			}
 		default:
-			return fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
+			return false, fmt.Errorf("unknown attribute name in command[%d]: [%s]", sim.progStep, command.Attribute)
 		}
 	case "connect":
 		simCharger, ok := sim.simsByName[command.Object].(api.SimCharger)
 		if !ok {
-			return fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
+			return false, fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
 		}
 		simVehicle, ok := sim.simsByName[command.Value].(api.SimVehicle)
 		if !ok {
-			return fmt.Errorf("unknown vehicle name in command[%d]: [%s]", sim.progStep, command.Value)
+			return false, fmt.Errorf("unknown vehicle name in command[%d]: [%s]", sim.progStep, command.Value)
 		}
 		if err := simCharger.Connect(simVehicle); err != nil {
-			return err
+			return false, err
 		}
 		sim.progStep++
 	case "disconnect":
 		simCharger, ok := sim.simsByName[command.Object].(api.SimCharger)
 		if !ok {
-			return fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
+			return false, fmt.Errorf("unknown object name in command[%d]: [%s]", sim.progStep, command.Object)
 		}
 		if err := simCharger.Disconnect(); err != nil {
-			return err
+			return false, err
 		}
 		sim.progStep++
 	default:
-		return fmt.Errorf("unhandled command: [%s]", command.Cmd)
+		return false, fmt.Errorf("unhandled command: [%s]", command.Cmd)
 	}
 
 	if sim.progStep >= len(sim.cfg.Program) {
 		sim.log.DEBUG.Printf("*** Program finished ***")
+		return false, nil
 	}
-	return nil
+
+	if executeStep != sim.progStep {
+		// program step finished
+		return true, nil
+	}
+	return false, nil
 }
 
 // SetChargeMode sets the charge mode using the Rest API

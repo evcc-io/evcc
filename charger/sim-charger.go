@@ -127,10 +127,18 @@ func (c *SimCharger) Currents() (float64, float64, float64, error) {
 			return 0, 0, 0, err
 		}
 	}
-	if phases == 1 {
+
+	switch phases {
+	case 1:
 		// I = P / U
 		i1 = c.powerW / voltage1p
-	} else {
+		i2 = 0
+		i3 = 0
+	case 2:
+		i1 = c.powerW / (2 * voltage1p)
+		i2 = i1
+		i3 = 0
+	case 3:
 		// I = P / (U * SQRT(3))
 		i1 = c.powerW / (voltage3p * math.Sqrt(3))
 		i2 = i1
