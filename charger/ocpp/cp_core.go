@@ -1,7 +1,6 @@
 package ocpp
 
 import (
-	"errors"
 	"time"
 
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
@@ -54,7 +53,12 @@ func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirma
 
 func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
-	return nil, errors.New("not implemented")
+
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+	cp.meterValues = request.MeterValue
+
+	return new(core.MeterValuesConfirmation), nil
 }
 
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
