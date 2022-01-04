@@ -32,6 +32,17 @@ func (cp *CP) Boot() error {
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
+	timeoutTimestamp := time.Now().Add(timeout)
+
+	for cp.status.Timestamp != nil || time.Now().Before(timeoutTimestamp) {
+		cp.log.TRACE.Printf("waiting for status from charge point %s", cp.id)
+		time.Sleep(5 * time.Second)
+
+		if cp.status.Timestamp != nil {
+			break
+		}
+	}
+
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
