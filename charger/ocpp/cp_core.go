@@ -29,13 +29,11 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
-		ptr := cp.boot
 		cp.boot = request
 
-		// once
-		if ptr == nil {
+		cp.once.boot.Do(func() {
 			cp.bootWG.Done()
-		}
+		})
 	}
 
 	res := &core.BootNotificationConfirmation{
@@ -54,13 +52,11 @@ func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
-		ptr := cp.boot
 		cp.status = request
 
-		// once
-		if ptr == nil {
+		cp.once.status.Do(func() {
 			cp.bootWG.Done()
-		}
+		})
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
