@@ -67,7 +67,7 @@ func (c *OCPP) Enable(enable bool) error {
 	err := ocpp.Instance().CS().RemoteStartTransaction(c.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
 		c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", request, request)
 
-		if err == nil && request.Status != types.RemoteStartStopStatusAccepted {
+		if err == nil && request != nil && request.Status != types.RemoteStartStopStatusAccepted {
 			err = fmt.Errorf("invalid status: %s", request.Status)
 		}
 
