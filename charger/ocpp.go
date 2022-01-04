@@ -39,14 +39,17 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 
 // NewOCPP creates OCPP charger
 func NewOCPP(id, tag string) (*OCPP, error) {
+	cp := ocpp.Instance().Register(id)
 	c := &OCPP{
 		log: util.NewLogger("ocpp-" + id),
-		cp:  ocpp.Instance().Register(id),
+		cp:  cp,
 		id:  id,
 		tag: tag,
 	}
 
-	return c, nil
+	err := cp.Boot()
+
+	return c, err
 }
 
 // Enabled implements the api.Charger interface

@@ -18,7 +18,7 @@ type CS struct {
 func (cs *CS) Register(id string) *CP {
 	cp := &CP{
 		id:  id,
-		log: util.NewLogger("ocpp"),
+		log: util.NewLogger("ocpp-cs"),
 	}
 
 	cs.mu.Lock()
@@ -48,18 +48,14 @@ func (cs *CS) NewChargePoint(chargePoint ocpp16.ChargePointConnection) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Println(err)
-	} else {
-		cp.SetAvailable(true)
 	}
 }
 
 func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) {
-	if cp, err := cs.chargepointByID(chargePoint.ID()); err != nil {
+	if _, err := cs.chargepointByID(chargePoint.ID()); err != nil {
 		cs.log.ERROR.Println(err)
-	} else {
-		cp.SetAvailable(false)
 	}
 }
 

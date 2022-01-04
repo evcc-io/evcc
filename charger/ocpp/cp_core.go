@@ -11,6 +11,8 @@ import (
 func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	// TODO check if this authorizes foreign RFID tags
+
 	res := &core.AuthorizeConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted,
@@ -22,6 +24,12 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
+
+	if request != nil {
+		cp.mu.Lock()
+		cp.boot = *request
+		cp.mu.Unlock()
+	}
 
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),

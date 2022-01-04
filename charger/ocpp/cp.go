@@ -17,24 +17,18 @@ type CP struct {
 	mu          sync.Mutex
 	log         *util.Logger
 	id          string
-	available   bool
 	txnCount    int64
 	meterValues []types.MeterValue
+	boot        core.BootNotificationRequest
 	status      core.StatusNotificationRequest
 }
 
-func (cp *CP) SetAvailable(available bool) {
+// Boot waits for the CP to register itself
+func (cp *CP) Boot() error {
 	cp.mu.Lock()
 	defer cp.mu.Unlock()
 
-	cp.available = available
-}
-
-func (cp *CP) Available() bool {
-	cp.mu.Lock()
-	defer cp.mu.Unlock()
-
-	return cp.available
+	return nil
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {
@@ -50,8 +44,6 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	if cp.status.ErrorCode != core.NoError {
 		return res, fmt.Errorf("chargepoint error: %s", cp.status.ErrorCode)
 	}
-
-	res = api.StatusA
 
 	switch cp.status.Status {
 	case core.ChargePointStatusUnavailable: // "Unavailable"
