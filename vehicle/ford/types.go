@@ -32,6 +32,16 @@ type StatusResponse struct {
 			Value     int
 			Timestamp Timestamp
 		}
+		Odometer struct {
+			Value     float64
+			Timestamp Timestamp
+		}
+		Gps struct {
+			Latitude  string
+			Longitude string
+			GpsState  string
+			Timestamp Timestamp
+		}
 		LastRefresh Timestamp
 	}
 	Status int
