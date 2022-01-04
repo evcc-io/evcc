@@ -62,3 +62,7 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 		cp.SetAvailable(false)
 	}
 }
+
+func (cs *CS) CS() ocpp16.CentralSystem {
+	return cs.cs
+}
