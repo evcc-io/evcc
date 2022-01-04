@@ -64,11 +64,11 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	rc := make(chan error, 1)
-	err := ocpp.Instance().CS().RemoteStartTransaction(c.id, func(request *core.RemoteStartTransactionConfirmation, err error) {
-		c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", request, request)
+	err := ocpp.Instance().CS().RemoteStartTransaction(c.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
+		c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", resp, resp)
 
-		if err == nil && request != nil && request.Status != types.RemoteStartStopStatusAccepted {
-			err = fmt.Errorf("invalid status: %s", request.Status)
+		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+			err = fmt.Errorf("invalid status: %s", resp.Status)
 		}
 
 		rc <- err
