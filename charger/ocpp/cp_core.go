@@ -24,8 +24,9 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
 	res := &core.BootNotificationConfirmation{
-		Interval: 60, // TODO
-		Status:   core.RegistrationStatusAccepted,
+		CurrentTime: types.NewDateTime(time.Now()),
+		Interval:    60, // TODO
+		Status:      core.RegistrationStatusAccepted,
 	}
 
 	return res, nil
