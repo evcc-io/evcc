@@ -60,9 +60,6 @@ func (c *OCPP) Enabled() (bool, error) {
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	c.enabled = enable
-	if !enable {
-		return nil
-	}
 
 	rc := make(chan error, 1)
 
@@ -78,7 +75,13 @@ func (c *OCPP) Enable(enable bool) error {
 
 			rc <- err
 			close(rc)
-		}, c.idtag)
+		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
+			// TODO the one pointer
+			one := 1
+			request.ConnectorId = &one
+			// rstr.IdTag = c.idtag
+			//request.ChargingProfile = &types.ChargingProfile{}
+		})
 	} else {
 		err = ocpp.Instance().CS().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
 			c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)

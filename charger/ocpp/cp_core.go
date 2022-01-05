@@ -35,7 +35,7 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 
 	res := &core.BootNotificationConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
-		Interval:    60, // TODO
+		Interval:    10, // TODO
 		Status:      core.RegistrationStatusAccepted,
 	}
 
