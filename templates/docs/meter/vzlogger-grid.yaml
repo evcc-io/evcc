@@ -1,6 +1,6 @@
 type: template
 template: vzlogger
-description: vzlogger
+description: {vzlogger  }
 usage: grid 
 host: 192.0.2.2 
 port: 8081 

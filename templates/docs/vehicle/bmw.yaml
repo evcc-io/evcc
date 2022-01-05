@@ -1,6 +1,6 @@
 type: template
 template: bmw
-description: BMW
+description: {BMW  }
 user:
 password:
 vin: WBMW... 

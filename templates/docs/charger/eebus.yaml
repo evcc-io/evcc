@@ -1,5 +1,5 @@
 type: template
 template: eebus
-description: EEBUS kompatible Wallbox
+description: { EEBUS kompatible Wallbox EEBUS compatible Wallbox}
 ski: # Die SKI der Wallbox, ist üblicherweise im Web Interface der Wallbox zu finden
 enforcePVLimits: true  # Verwende PV Laden über eine Ladebegrenzung (wie herkömmliche Wallboxen) bei Fahrzeugen mit Unterstützung von ISO15118

@@ -1,6 +1,6 @@
 type: template
 template: fritzdect
-description: FritzDECT
+description: {FritzDECT  }
 usage: pv 
 uri: https://fritz.box 
 user:

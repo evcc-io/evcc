@@ -1,4 +1,4 @@
 type: template
 template: solaredge-inverter
-description: Solaredge Inverter
+description: { Solaredge Wechselrichter Solaredge Inverter}
 usage: pv

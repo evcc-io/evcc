@@ -1,5 +1,5 @@
 type: template
 template: wallbe-meter
-description: Wallbe (Eco, Pro) with Meter
+description: { Wallbe (Eco, Pro) mit Strommessgerät Wallbe (Eco, Pro) with Meter}
 host: 192.0.2.2 
 port: 502

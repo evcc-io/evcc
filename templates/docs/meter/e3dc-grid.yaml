@@ -1,6 +1,6 @@
 type: template
 template: e3dc
-description: E3DC
+description: {E3DC  }
 usage: grid 
 host: 192.0.2.2 
 port: 502

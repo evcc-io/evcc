@@ -1,6 +1,6 @@
 type: template
 template: fronius-gen24
-description: Fronius Symo GEN24 Plus
+description: {Fronius Symo GEN24 Plus  }
 usage: grid 
 host: 192.0.2.2 
 port: 502

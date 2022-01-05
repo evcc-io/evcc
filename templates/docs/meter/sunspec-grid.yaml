@@ -1,4 +1,4 @@
 type: template
 template: sunspec
-description: Inverter / Wechselrichter (SunSpec)
+description: { Wechselrichter (SunSpec) Inverter (SunSpec)}
 usage: grid

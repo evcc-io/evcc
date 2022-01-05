@@ -1,6 +1,6 @@
 type: template
 template: evnotify
-description: evNotify
+description: {evNotify  }
 akey:
 token:
 capacity: 64

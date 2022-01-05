@@ -1,6 +1,6 @@
 type: template
 template: ford
-description: Ford
+description: {Ford  }
 user:
 password:
 vin: WF0FXX... 

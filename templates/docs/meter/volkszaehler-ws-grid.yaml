@@ -1,6 +1,6 @@
 type: template
 template: volkszaehler-ws
-description: Volkszähler (WebSocket API)
+description: {Volkszähler (WebSocket API)  }
 usage: grid 
 host: 192.0.2.2 
 port: 8082 

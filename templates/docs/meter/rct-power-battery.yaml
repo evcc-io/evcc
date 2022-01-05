@@ -1,5 +1,5 @@
 type: template
 template: rct-power
-description: RCT Power
+description: {RCT Power  }
 usage: battery 
 host: 192.0.2.2

@@ -1,6 +1,6 @@
 type: template
 template: fiat
-description: Fiat
+description: {Fiat  }
 user:
 password:
 vin: ZFAE... 

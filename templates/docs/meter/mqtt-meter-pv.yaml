@@ -1,0 +1,8 @@
+type: template
+template: mqtt-meter
+description: { MQTT Strommessgerät MQTT Meter}
+usage: pv 
+topicpower:
+scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden
+scaleenergy: 1  # Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden
+timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist
