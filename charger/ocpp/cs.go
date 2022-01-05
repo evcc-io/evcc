@@ -64,3 +64,27 @@ func (cs *CS) ChargePointDisconnected(chargePoint ocpp16.ChargePointConnection) 
 func (cs *CS) CS() ocpp16.CentralSystem {
 	return cs.cs
 }
+
+func (cs *CS) Debug(args ...interface{}) {
+	cs.log.TRACE.Println(args...)
+}
+
+func (cs *CS) Debugf(fmt string, args ...interface{}) {
+	cs.log.TRACE.Printf(fmt, args...)
+}
+
+func (cs *CS) Info(args ...interface{}) {
+	cs.log.DEBUG.Println(args...)
+}
+
+func (cs *CS) Infof(fmt string, args ...interface{}) {
+	cs.log.DEBUG.Printf(fmt, args...)
+}
+
+func (cs *CS) Error(args ...interface{}) {
+	cs.log.ERROR.Println(args...)
+}
+
+func (cs *CS) Errorf(fmt string, args ...interface{}) {
+	cs.log.ERROR.Printf(fmt, args...)
+}
