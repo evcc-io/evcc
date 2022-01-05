@@ -110,6 +110,32 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 - `baudrate`: Device specific default for modbus RS485 baudrate
 - `comset`: Device specific default for modbus RS485 comset
 
+### `description`
+
+`description` allows to define user friendly and language specific names via `de`, `en`
+
+### `dependencies`
+
+`dependencies` allows to define a list of checks, when this param should be presented to the user, if it should be only in special cases
+
+#### `name`
+
+`name` referenced the `param` `name` value
+
+#### `check`
+
+`check` defines which kind of check should be performed
+
+**Possible values**:
+
+- `empty`: if the `value` of the referenced `param` `name` should be empty
+- `notempty`: if the `value` of the referenced `param` `name` should be **NOT** empty
+- `equal`: if the `value` of the referenced `param` `name` should match the value of the `value` property
+
+#### `value`
+
+`value` property is used in the `equal` `check`
+
 ### `required`
 
 `required: true` defines if the user has to provide a value. Default is `false`

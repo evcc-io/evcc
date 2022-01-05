@@ -94,6 +94,8 @@ TestingDevice_RepeatStep = "Möchtest du erneut ein Gerät aus der Liste auswäh
 TestingDevice_AddFailed = "Der Test von {{ .Device }} ist fehlgeschlagen. Soll es trotzdem in die Konfiguration aufgenommen werden?"
 TestingDevice_AddFailedUsage = "Der Test der {{ .Usage }} Konfiguration von {{ .Device }} ist fehlgeschlagen. Soll es trotzdem in die Konfiguration aufgenommen werden?"
 
+TestingMQTTFailed = "Der Test der MQTT Konfiguration ist fehlgeschlagen. Möchten Sie die Konfiguration wiederholen?"
+
 Requirements_Title = "Das Gerät muss die folgenden Voraussetzungen erfüllen:"
 Requirements_More = "Weitere Informationen:"
 

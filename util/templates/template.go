@@ -62,6 +62,12 @@ const (
 	ParamValueTypeChargeModes = "chargemodes"
 )
 
+const (
+	DependencyCheckEmpty    = "empty"
+	DependencyCheckNotEmpty = "notempty"
+	DependencyCheckEqual    = "equal"
+)
+
 var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
@@ -103,6 +109,7 @@ type Capabilities struct {
 type Requirements struct {
 	Hems        string       // HEMS Type
 	Eebus       bool         // EEBUS Setup is required
+	Mqtt        bool         // MQTT Setup is required
 	Sponsorship bool         // Sponsorship is required
 	Description TextLanguage // Description of requirements, e.g. how the device needs to be prepared
 	URI         string       // URI to a webpage with more details about the preparation requirements
@@ -121,26 +128,34 @@ type LinkedTemplate struct {
 	ExcludeTemplate string // only consider this if no device of the named linked template was added
 }
 
+type Dependency struct {
+	Name  string // the Param name value this depends on
+	Check string // the check to perform, valid values see const DependencyCheck...
+	Value string // the string value to check against
+}
+
 // Param is a proxy template parameter
 type Param struct {
-	Base      string       // Reference a predefined se of params
-	Name      string       // Param name which is used for assigning defaults properties and referencing in render
-	Required  bool         // cli if the user has to provide a non empty value
-	Mask      bool         // cli if the value should be masked, e.g. for passwords
-	Advanced  bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
-	Default   string       // default value if no user value is provided in the configuration
-	Example   string       // cli example value
-	Help      TextLanguage // cli configuration help
-	Test      string       // testing default value
-	Value     string       // user provided value via cli configuration
-	Values    []string     // user provided list of values
-	ValueType string       // string representation of the value type, "string" is default
-	Choice    []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
-	Usages    []string
-	Baudrate  int    // device specific default for modbus RS485 baudrate
-	Comset    string // device specific default for modbus RS485 comset
-	Port      int    // device specific default for modbus TCPIP port
-	ID        int    // device specific default for modbus ID
+	Base         string       // Reference a predefined se of params
+	Name         string       // Param name which is used for assigning defaults properties and referencing in render
+	Description  TextLanguage // language specific titles (presented in UI instead of Name)
+	Dependencies []Dependency // List of dependencies, when this param should be presented
+	Required     bool         // cli if the user has to provide a non empty value
+	Mask         bool         // cli if the value should be masked, e.g. for passwords
+	Advanced     bool         // cli if the user does not need to be asked. Requires a "Default" to be defined.
+	Default      string       // default value if no user value is provided in the configuration
+	Example      string       // cli example value
+	Help         TextLanguage // cli configuration help
+	Test         string       // testing default value
+	Value        string       // user provided value via cli configuration
+	Values       []string     // user provided list of values
+	ValueType    string       // string representation of the value type, "string" is default
+	Choice       []string     // defines which usage choices this config supports, valid elemtents are "grid", "pv", "battery", "charge"
+	Usages       []string
+	Baudrate     int    // device specific default for modbus RS485 baudrate
+	Comset       string // device specific default for modbus RS485 comset
+	Port         int    // device specific default for modbus TCPIP port
+	ID           int    // device specific default for modbus ID
 }
 
 type ParamBase struct {
@@ -206,7 +221,7 @@ func (t *Template) ResolveParamBases() error {
 			continue
 		}
 
-		if i, item := t.paramWithName(p.Name); item != nil {
+		if i, item := t.ParamByName(p.Name); item != nil {
 			// we only allow overwriting a few fields
 			if p.Default != "" {
 				t.Params[i].Default = p.Default
@@ -246,7 +261,7 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 }
 
 // return the param with the given name
-func (t *Template) paramWithName(name string) (int, *Param) {
+func (t *Template) ParamByName(name string) (int, *Param) {
 	for i, p := range t.Params {
 		if p.Name == name {
 			return i, &p
@@ -257,7 +272,7 @@ func (t *Template) paramWithName(name string) (int, *Param) {
 
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
-	if _, p := t.paramWithName(ParamUsage); p != nil {
+	if _, p := t.ParamByName(ParamUsage); p != nil {
 		return p.Choice
 	}
 
@@ -265,7 +280,7 @@ func (t *Template) Usages() []string {
 }
 
 func (t *Template) ModbusChoices() []string {
-	if _, p := t.paramWithName(ParamModbus); p != nil {
+	if _, p := t.ParamByName(ParamModbus); p != nil {
 		return p.Choice
 	}
 

@@ -94,6 +94,8 @@ TestingDevice_RepeatStep = "Do you want to repeat choosing a device and configur
 TestingDevice_AddFailed = "Testing {{ .Device }} failed. Do you want to add it anyway?"
 TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add it anyway?"
 
+TestingMQTTFailed = "Testing the MQTT configuration failed. Do you want to repeat its configuration?"
+
 Requirements_Title = "The device needs to provide the following requirements:"
 Requirements_More = "Additional information:"
 

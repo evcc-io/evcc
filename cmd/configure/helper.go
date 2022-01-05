@@ -5,6 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
@@ -128,6 +130,23 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 		}
 	}
 
+	// check if we need to setup an MQTT broker
+	if templateItem.Requirements.Mqtt {
+		if c.configuration.config.MQTT == "" {
+			mqttConfig, err := c.configureMQTT()
+			if err != nil {
+				return err
+			}
+
+			mqttYaml, err := yaml.Marshal(mqttConfig)
+			if err != nil {
+				return err
+			}
+
+			c.configuration.config.MQTT = string(mqttYaml)
+		}
+	}
+
 	// check if we need to setup an EEBUS HEMS
 	if templateItem.Requirements.Eebus {
 		if c.configuration.config.EEBUS == "" {
@@ -182,6 +201,61 @@ func (c *CmdConfigure) askSponsortoken(required bool) error {
 	fmt.Println("--------------------------------------------")
 
 	return nil
+}
+
+func (c *CmdConfigure) configureMQTT() (map[string]interface{}, error) {
+	fmt.Println()
+	fmt.Println("-- MQTT Broker ----------------------------")
+
+	var err error
+
+	for ok := true; ok; {
+		fmt.Println()
+		host := c.askValue(question{
+			label:    c.localizedString("UserFriendly_Host_Name", nil),
+			mask:     false,
+			required: true})
+
+		port := c.askValue(question{
+			label:    c.localizedString("UserFriendly_Port_Name", nil),
+			mask:     false,
+			required: true})
+
+		user := c.askValue(question{
+			label:    c.localizedString("UserFriendly_User_Name", nil),
+			mask:     false,
+			required: false})
+
+		password := c.askValue(question{
+			label:    c.localizedString("UserFriendly_Password_Name", nil),
+			mask:     true,
+			required: false})
+
+		fmt.Println()
+		fmt.Println("-------------------------------------------")
+
+		broker := fmt.Sprintf("%s:%s", host, port)
+
+		mqttConfig := map[string]interface{}{
+			"broker":   broker,
+			"user":     user,
+			"password": password,
+		}
+
+		log := util.NewLogger("mqtt")
+
+		if mqtt.Instance, err = mqtt.RegisteredClient(log, broker, user, password, "", 1); err == nil {
+			return mqttConfig, nil
+		}
+
+		fmt.Println()
+		question := c.localizedString("TestingMQTTFailed", nil)
+		if !c.askYesNo(question) {
+			return nil, fmt.Errorf("failed configuring mqtt: %w", err)
+		}
+	}
+
+	return nil, fmt.Errorf("failed configuring mqtt: %w", err)
 }
 
 // fetchElements returns template items of a given class
@@ -244,7 +318,7 @@ func (c *CmdConfigure) paramChoiceValues(params []templates.Param, name string) 
 // processConfig processes an EVCC configuration item
 // Returns:
 //   a map with param name and values
-func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategory DeviceCategory) map[string]interface{} {
+func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCategory DeviceCategory) map[string]interface{} {
 	usageFilter := DeviceCategories[deviceCategory].categoryFilter
 
 	additionalConfig := make(map[string]interface{})
@@ -253,7 +327,33 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 	fmt.Println(c.localizedString("Config_Title", nil))
 	fmt.Println()
 
-	for _, param := range paramItems {
+	for _, param := range templateItem.Params {
+		if param.Dependencies != nil {
+			valid := true
+			for _, dep := range param.Dependencies {
+				_, valueParam := templateItem.ParamByName(dep.Name)
+				if valueParam == nil {
+					break
+				}
+
+				value := valueParam.Value
+				switch dep.Check {
+				case templates.DependencyCheckEmpty:
+					valid = value == ""
+				case templates.DependencyCheckNotEmpty:
+					valid = value != ""
+				case templates.DependencyCheckEqual:
+					valid = value == dep.Value
+				}
+				if !valid {
+					break
+				}
+			}
+			if !valid {
+				continue
+			}
+		}
+
 		switch param.Name {
 		case templates.ParamModbus:
 			c.processModbusConfig(param, deviceCategory, additionalConfig)
@@ -282,7 +382,7 @@ func (c *CmdConfigure) processConfig(paramItems []templates.Param, deviceCategor
 func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 	var values []string
 
-	// ask for values until the decides stops
+	// ask for values until the user decides to stop
 	for ok := true; ok; {
 		newValue := c.processInputConfig(param)
 		values = append(values, newValue)
@@ -302,8 +402,15 @@ func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 // handle user input for a simple one value input
 func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 	userFriendly := c.userFriendlyTexts(param)
+
+	label := userFriendly.Name
+	langLabel := param.Description.String(c.lang)
+	if langLabel != "" {
+		label = langLabel
+	}
+
 	return c.askValue(question{
-		label:        userFriendly.Name,
+		label:        label,
 		defaultValue: userFriendly.Default,
 		exampleValue: userFriendly.Example,
 		help:         userFriendly.Help.String(c.lang),
