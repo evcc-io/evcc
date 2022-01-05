@@ -935,7 +935,6 @@ func TestScalePhases(t *testing.T) {
 
 func TestVehiclePhases(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	charger := mock.NewMockCharger(ctrl)
 	vehicle := &struct {
 		*mock.MockVehicle
 		*mock.MockVehiclePhases
@@ -965,15 +964,10 @@ func TestVehiclePhases(t *testing.T) {
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
-		clock := clock.NewMock()
 
 		lp := &LoadPoint{
 			log:          util.NewLogger("foo"),
-			clock:        clock,
-			charger:      charger,
 			vehicle:      vehicle,
-			MinCurrent:   minA,
-			MaxCurrent:   maxA,
 			Phases:       tc.phases,
 			activePhases: tc.activePhases,
 		}
