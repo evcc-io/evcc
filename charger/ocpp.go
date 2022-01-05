@@ -15,7 +15,7 @@ type OCPP struct {
 	log     *util.Logger
 	cp      *ocpp.CP
 	id      string
-	tag     string
+	idtag   string
 	enabled bool // TODO remove
 }
 
@@ -38,13 +38,13 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id, tag string) (*OCPP, error) {
+func NewOCPP(id, idtag string) (*OCPP, error) {
 	cp := ocpp.Instance().Register(id)
 	c := &OCPP{
-		log: util.NewLogger("ocpp-" + id),
-		cp:  cp,
-		id:  id,
-		tag: tag,
+		log:   util.NewLogger("ocpp-" + id),
+		cp:    cp,
+		id:    id,
+		idtag: idtag,
 	}
 
 	err := cp.Boot()
@@ -54,8 +54,7 @@ func NewOCPP(id, tag string) (*OCPP, error) {
 
 // Enabled implements the api.Charger interface
 func (c *OCPP) Enabled() (bool, error) {
-	// TODO implement
-	return c.enabled, nil
+	return c.cp.TransactionID() > 0, nil
 }
 
 // Enable implements the api.Charger interface
@@ -66,28 +65,32 @@ func (c *OCPP) Enable(enable bool) error {
 	}
 
 	rc := make(chan error, 1)
-	err := ocpp.Instance().CS().RemoteStartTransaction(c.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
-		c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", resp, resp)
 
-		if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-			err = fmt.Errorf("invalid status: %s", resp.Status)
-		}
+	var err error
 
-		rc <- err
-		close(rc)
-	}, c.tag)
+	if enable {
+		err = ocpp.Instance().CS().RemoteStartTransaction(c.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
+			c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", resp, resp)
 
-	// txn := "transaction id" // TODO
-	// err = ocpp.Instance().CS().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
-	// 	c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)
+			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+				err = fmt.Errorf("invalid status: %s", resp.Status)
+			}
 
-	// 	if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-	// 		err = fmt.Errorf("invalid status: %s", resp.Status)
-	// 	}
+			rc <- err
+			close(rc)
+		}, c.idtag)
+	} else {
+		err = ocpp.Instance().CS().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
+			c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)
 
-	// 	rc <- err
-	// 	close(rc)
-	// }, txn)
+			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
+				err = fmt.Errorf("invalid status: %s", resp.Status)
+			}
+
+			rc <- err
+			close(rc)
+		}, c.cp.TransactionID())
+	}
 
 	if err == nil {
 		c.log.TRACE.Println("RemoteStartStopTransaction: waiting for response")

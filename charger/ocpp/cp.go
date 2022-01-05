@@ -8,21 +8,23 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
-	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
 const timeout = time.Minute
 
-type CP struct {
-	mu          sync.Mutex
-	log         *util.Logger
-	id          string
-	txnCount    int64
-	meterValues []types.MeterValue
+// txnCount is the global transaction id counter
+var txnCount int64
 
-	updated *sync.Cond
-	boot    *core.BootNotificationRequest
-	status  *core.StatusNotificationRequest
+type CP struct {
+	mu  sync.Mutex
+	log *util.Logger
+	id  string
+	txn int // current transaction
+
+	updated     *sync.Cond
+	boot        *core.BootNotificationRequest
+	status      *core.StatusNotificationRequest
+	meterValues *core.MeterValuesRequest
 }
 
 // Boot waits for the CP to register itself
@@ -45,6 +47,14 @@ func (cp *CP) Boot() error {
 	case <-time.After(timeout):
 		return api.ErrTimeout
 	}
+}
+
+// TransactionID returns the current transaction id
+func (cp *CP) TransactionID() int {
+	cp.mu.Lock()
+	defer cp.mu.Unlock()
+
+	return cp.txn
 }
 
 func (cp *CP) Status() (api.ChargeStatus, error) {

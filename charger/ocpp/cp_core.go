@@ -81,7 +81,7 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 
 	if request != nil {
 		cp.mu.Lock()
-		cp.meterValues = request.MeterValue
+		cp.meterValues = request
 		cp.mu.Unlock()
 	}
 
@@ -92,13 +92,17 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
 	// create new transaction
-	txn := atomic.AddInt64(&cp.txnCount, 1)
+	if request != nil {
+		cp.mu.Lock()
+		cp.txn = int(atomic.AddInt64(&txnCount, 1))
+		cp.mu.Unlock()
+	}
 
 	res := &core.StartTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
 			Status: types.AuthorizationStatusAccepted, // accept
 		},
-		TransactionId: int(txn),
+		TransactionId: cp.txn,
 	}
 
 	return res, nil
@@ -106,6 +110,13 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 
 func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopTransactionConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
+
+	// reset transaction
+	if request != nil {
+		cp.mu.Lock()
+		cp.txn = 0
+		cp.mu.Unlock()
+	}
 
 	res := &core.StopTransactionConfirmation{
 		IdTagInfo: &types.IdTagInfo{
