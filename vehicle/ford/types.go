@@ -37,8 +37,8 @@ type StatusResponse struct {
 			Timestamp Timestamp
 		}
 		Gps struct {
-			Latitude  string
-			Longitude string
+			Latitude  float64 `json:",string"`
+			Longitude float64 `json:",string"`
 			GpsState  string
 			Timestamp Timestamp
 		}

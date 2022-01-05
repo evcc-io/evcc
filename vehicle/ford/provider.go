@@ -1,7 +1,6 @@
 package ford
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -132,11 +131,7 @@ var _ api.VehiclePosition = (*Provider)(nil)
 func (v *Provider) Position() (float64, float64, error) {
 	res, err := v.statusG()
 	if res, ok := res.(StatusResponse); err == nil && ok {
-		lat, er := strconv.ParseFloat(res.VehicleStatus.Gps.Latitude, 8)
-		lon, err := strconv.ParseFloat(res.VehicleStatus.Gps.Longitude, 8)
-		if er == nil && err == nil {
-			return lat, lon, nil
-		}
+		return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, nil
 	}
 
 	return 0, 0, err
