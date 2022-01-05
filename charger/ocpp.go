@@ -1,11 +1,14 @@
 package charger
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
@@ -64,6 +67,18 @@ func (c *OCPP) Enabled() (bool, error) {
 	return c.cp.TransactionID() > 0, nil
 }
 
+func (c *OCPP) wait(err error, rc chan error) error {
+	if err == nil {
+		select {
+		case err = <-rc:
+			close(rc)
+		case <-time.After(request.Timeout):
+			err = api.ErrTimeout
+		}
+	}
+	return err
+}
+
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
 	var err error
@@ -74,11 +89,10 @@ func (c *OCPP) Enable(enable bool) error {
 			c.log.TRACE.Printf("RemoteStartTransaction %T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = fmt.Errorf("invalid status: %s", resp.Status)
+				err = errors.New(string(resp.Status))
 			}
 
 			rc <- err
-			close(rc)
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
 			request.ConnectorId = &c.connector
 		})
@@ -87,20 +101,14 @@ func (c *OCPP) Enable(enable bool) error {
 			c.log.TRACE.Printf("RemoteStopTransaction %T: %+v", resp, resp)
 
 			if err == nil && resp != nil && resp.Status != types.RemoteStartStopStatusAccepted {
-				err = fmt.Errorf("invalid status: %s", resp.Status)
+				err = errors.New(string(resp.Status))
 			}
 
 			rc <- err
-			close(rc)
 		}, c.cp.TransactionID())
 	}
 
-	if err == nil {
-		c.log.TRACE.Println("RemoteStartStopTransaction: waiting for response")
-		err = <-rc
-	}
-
-	return err
+	return c.wait(err, rc)
 }
 
 // MaxCurrent implements the api.Charger interface
@@ -132,11 +140,10 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 		c.log.TRACE.Printf("SetChargingProfile %T: %+v", resp, resp)
 
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
-			err = fmt.Errorf("invalid status: %s", resp.Status)
+			err = errors.New(string(resp.Status))
 		}
 
 		rc <- err
-		close(rc)
 	}, c.connector, &types.ChargingProfile{
 		ChargingProfileId:      1,
 		StackLevel:             1,
@@ -148,12 +155,7 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 		},
 	})
 
-	if err == nil {
-		c.log.TRACE.Println("SetChargingProfile: waiting for response")
-		err = <-rc
-	}
-
-	return err
+	return c.wait(err, rc)
 }
 
 // MaxCurrent implements the api.ChargerEx interface
