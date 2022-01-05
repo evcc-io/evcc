@@ -44,7 +44,7 @@ func (cp *CP) Boot() error {
 
 	select {
 	case <-bootC:
-		cp.heartbeat = time.Now()
+		cp.updateHeartbeat()
 		return nil
 	case <-time.After(timeout):
 		return api.ErrTimeout
