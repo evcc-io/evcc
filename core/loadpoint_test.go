@@ -944,7 +944,6 @@ func TestVehiclePhases(t *testing.T) {
 	}
 
 	tc := []struct {
-		// desc                 string
 		phases, activePhases, vehiclePhases int
 		res                                 int
 	}{
