@@ -21,6 +21,8 @@ func (cs *CS) Register(id string) *CP {
 		log: util.NewLogger("ocpp-cs"),
 	}
 
+	cp.updated = sync.NewCond(&cp.mu)
+
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
