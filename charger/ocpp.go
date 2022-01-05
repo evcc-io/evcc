@@ -7,6 +7,7 @@ import (
 	"github.com/evcc-io/evcc/charger/ocpp"
 	"github.com/evcc-io/evcc/util"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/core"
+	"github.com/lorenzodonini/ocpp-go/ocpp1.6/smartcharging"
 	"github.com/lorenzodonini/ocpp-go/ocpp1.6/types"
 )
 
@@ -29,7 +30,9 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 		StationId string
 		IdTag     string
 		Connector int
-	}{}
+	}{
+		Connector: 1,
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -42,7 +45,7 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 	cp := ocpp.Instance().Register(id)
 	c := &OCPP{
-		log:       util.NewLogger("ocpp-" + id),
+		log:       util.NewLogger(fmt.Sprintf("ocpp-%s:%d", id, connector)),
 		cp:        cp,
 		id:        id,
 		connector: connector,
@@ -100,8 +103,34 @@ func (c *OCPP) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *OCPP) MaxCurrent(current int64) error {
-	// TODO implement
-	return nil
+	rc := make(chan error, 1)
+
+	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
+		c.log.TRACE.Printf("SetChargingProfile %T: %+v", resp, resp)
+
+		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
+			err = fmt.Errorf("invalid status: %s", resp.Status)
+		}
+
+		rc <- err
+		close(rc)
+	}, c.connector, &types.ChargingProfile{
+		ChargingProfileId:      1,
+		StackLevel:             1,
+		ChargingProfilePurpose: types.ChargingProfilePurposeChargePointMaxProfile,
+		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
+		ChargingSchedule: &types.ChargingSchedule{
+			ChargingRateUnit:       types.ChargingRateUnitAmperes,
+			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{types.NewChargingSchedulePeriod(1, float64(current))},
+		},
+	})
+
+	if err == nil {
+		c.log.TRACE.Println("SetChargingProfile: waiting for response")
+		err = <-rc
+	}
+
+	return err
 }
 
 // Status implements the api.Charger interface
