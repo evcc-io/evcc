@@ -18,7 +18,7 @@ The following describes each possible element in a yaml file
 
 ## `description`
 
-`description` expects a human readable description of the device, best language neutral and containing the name of the product
+`description` expects a human readable description of the device, best containing the name of the product. Values are language specific names via `de`, `en`, `generic` (if string is language independent)
 
 ## `generic`
 
@@ -112,7 +112,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `description`
 
-`description` allows to define user friendly and language specific names via `de`, `en`
+`description` allows to define user friendly and language specific names via `de`, `en`, `generic`
 
 ### `dependencies`
 
