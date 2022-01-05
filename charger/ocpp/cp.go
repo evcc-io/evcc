@@ -21,8 +21,8 @@ type CP struct {
 	id  string
 	txn int // current transaction
 
-	heartbeat   time.Time
-	updated     *sync.Cond
+	updated     time.Time
+	initialized *sync.Cond
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 	meterValues *core.MeterValuesRequest
@@ -36,7 +36,7 @@ func (cp *CP) Boot() error {
 		defer cp.mu.Unlock()
 
 		for cp.boot == nil || cp.status == nil {
-			cp.updated.Wait()
+			cp.initialized.Wait()
 		}
 
 		close(bootC)
@@ -44,7 +44,7 @@ func (cp *CP) Boot() error {
 
 	select {
 	case <-bootC:
-		cp.updateHeartbeat()
+		cp.update()
 		return nil
 	case <-time.After(timeout):
 		return api.ErrTimeout
@@ -65,7 +65,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.heartbeat) > timeout {
+	if time.Since(cp.updated) > timeout {
 		return res, api.ErrTimeout
 	}
 

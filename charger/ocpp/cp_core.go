@@ -24,13 +24,12 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	cp.updateHeartbeat()
 	if request != nil {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
 		cp.boot = request
-		cp.updated.Broadcast()
+		cp.initialized.Broadcast()
 	}
 
 	res := &core.BootNotificationConfirmation{
@@ -45,13 +44,12 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	cp.updateHeartbeat()
 	if request != nil {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
 
 		cp.status = request
-		cp.updated.Broadcast()
+		cp.initialized.Broadcast()
 	}
 
 	return new(core.StatusNotificationConfirmation), nil
@@ -67,16 +65,16 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 	return res, nil
 }
 
-func (cp *CP) updateHeartbeat() {
+func (cp *CP) update() {
 	cp.mu.Lock()
-	cp.heartbeat = time.Now()
+	cp.updated = time.Now()
 	cp.mu.Unlock()
 }
 
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	cp.updateHeartbeat()
+	cp.update()
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 	}
