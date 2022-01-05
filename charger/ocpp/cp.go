@@ -44,6 +44,7 @@ func (cp *CP) Boot() error {
 
 	select {
 	case <-bootC:
+		cp.heartbeat = time.Now()
 		return nil
 	case <-time.After(timeout):
 		return api.ErrTimeout
@@ -64,7 +65,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.heartbeat) > timeout {
+	if !cp.heartbeat.IsZero() && time.Since(cp.heartbeat) > timeout {
 		return res, api.ErrTimeout
 	}
 

@@ -25,6 +25,8 @@ func (cp *CP) Authorize(request *core.AuthorizeRequest) (*core.AuthorizeConfirma
 func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.BootNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	cp.updateHeartbeat()
+
 	if request != nil {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
@@ -45,6 +47,8 @@ func (cp *CP) BootNotification(request *core.BootNotificationRequest) (*core.Boo
 func (cp *CP) StatusNotification(request *core.StatusNotificationRequest) (*core.StatusNotificationConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	cp.updateHeartbeat()
+
 	if request != nil {
 		cp.mu.Lock()
 		defer cp.mu.Unlock()
@@ -63,15 +67,15 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 		Status: core.DataTransferStatusRejected,
 	}
 
+	cp.updateHeartbeat()
+
 	return res, nil
 }
 
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
-	cp.mu.Lock()
-	cp.heartbeat = time.Now()
-	cp.mu.Unlock()
+	cp.updateHeartbeat()
 
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
@@ -88,6 +92,8 @@ func (cp *CP) MeterValues(request *core.MeterValuesRequest) (*core.MeterValuesCo
 		cp.meterValues = request
 		cp.mu.Unlock()
 	}
+
+	cp.updateHeartbeat()
 
 	return new(core.MeterValuesConfirmation), nil
 }
@@ -109,6 +115,8 @@ func (cp *CP) StartTransaction(request *core.StartTransactionRequest) (*core.Sta
 		TransactionId: cp.txn,
 	}
 
+	cp.updateHeartbeat()
+
 	return res, nil
 }
 
@@ -128,5 +136,13 @@ func (cp *CP) StopTransaction(request *core.StopTransactionRequest) (*core.StopT
 		},
 	}
 
+	cp.updateHeartbeat()
+
 	return res, nil
+}
+
+func (cp *CP) updateHeartbeat() {
+	cp.mu.Lock()
+	cp.heartbeat = time.Now()
+	cp.mu.Unlock()
 }
