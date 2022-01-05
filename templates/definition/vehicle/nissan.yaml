@@ -1,5 +1,6 @@
 template: nissan
-description: Nissan
+description: 
+  generic: Nissan
 params:
 - base: vehiclebase
 - base: vehicleidentify

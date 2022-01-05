@@ -1,5 +1,7 @@
 template: solaredge-inverter
-description: Solaredge Inverter
+description: 
+  de: Solaredge Wechselrichter
+  en: Solaredge Inverter
 guidedsetup:
   enable: true
 params:

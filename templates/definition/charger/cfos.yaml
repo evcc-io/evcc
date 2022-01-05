@@ -1,5 +1,6 @@
 template: cfos_charger
-description: cFos PowerBrain
+description:
+  generic: cFos PowerBrain
 requirements:
   sponsorship: true
 params:

@@ -1,5 +1,6 @@
 template: victron-energy
-description: Victron Energy
+description: 
+  generic: Victron Energy
 guidedsetup:
   enable: true
 params:

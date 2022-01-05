@@ -17,7 +17,7 @@ import (
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
-	if templateItem.Description == c.localizedString("ItemNotPresent", nil) {
+	if templateItem.Description.String(c.lang) == c.localizedString("ItemNotPresent", nil) {
 		return templateItem, c.errItemNotPresent
 	}
 
@@ -33,7 +33,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	c.addedDeviceIndex++
 
 	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, c.addedDeviceIndex)
-	device.Title = templateItem.Description
+	device.Title = templateItem.Description.String(c.lang)
 	for item, value := range values {
 		if strings.ToLower(item) != "title" {
 			continue
@@ -263,7 +263,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 	var items []templates.Template
 
 	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class.String()) {
-		if len(tmpl.Params) == 0 || len(tmpl.Description) == 0 {
+		if len(tmpl.Params) == 0 || len(tmpl.Description.String(c.lang)) == 0 {
 			continue
 		}
 
@@ -287,7 +287,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 		if !items[i].Generic && items[j].Generic {
 			return true
 		}
-		return strings.ToLower(items[i].Description) < strings.ToLower(items[j].Description)
+		return strings.ToLower(items[i].Description.String(c.lang)) < strings.ToLower(items[j].Description.String(c.lang))
 	})
 
 	return items

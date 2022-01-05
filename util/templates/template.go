@@ -75,11 +75,15 @@ var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBatt
 
 // language specific texts
 type TextLanguage struct {
-	DE string // german text
-	EN string // english text
+	Generic string // language independent
+	DE      string // german text
+	EN      string // english text
 }
 
 func (t *TextLanguage) String(lang string) string {
+	if t.Generic != "" {
+		return t.Generic
+	}
 	switch lang {
 	case "de":
 		return t.DE
@@ -168,7 +172,7 @@ var paramBaseList map[string]ParamBase
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	Template     string
-	Description  string // user friendly description of the device this template describes
+	Description  TextLanguage // user friendly description of the device this template describes
 	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup

@@ -1,5 +1,6 @@
 template: heidelberg
-description: Heidelberg Energy Control (Modbus RTU)
+description: 
+  generic: Heidelberg Energy Control (Modbus RTU)
 requirements:
   sponsorship: true
 params:

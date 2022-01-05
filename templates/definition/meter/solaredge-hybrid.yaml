@@ -1,5 +1,6 @@
 template: solaredge-hybrid
-description: Solaredge Hybrid
+description: 
+  generic: Solaredge Hybrid
 guidedsetup:
   enable: true
 requirements:

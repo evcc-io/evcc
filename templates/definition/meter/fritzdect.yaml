@@ -1,5 +1,6 @@
 template: fritzdect
-description: FritzDECT
+description: 
+  generic: FritzDECT
 params:
 - name: usage
   choice: ["pv", "charge"]

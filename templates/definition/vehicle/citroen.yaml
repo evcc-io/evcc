@@ -1,5 +1,6 @@
 template: citroen
-description: Citroen
+description: 
+  generic: Citroen
 params:
 - base: vehiclebase
 - base: vehicleidentify

@@ -1,5 +1,6 @@
 template: daheimladen
-description: Daheimladen (Cloud API)
+description:
+  generic: Daheimladen (Cloud API)
 params:
 - name: token
   help:

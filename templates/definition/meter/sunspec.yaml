@@ -1,5 +1,7 @@
 template: sunspec
-description: Inverter / Wechselrichter (SunSpec)
+description: 
+  de: Wechselrichter (SunSpec)
+  en: Inverter (SunSpec)
 generic: true
 params:
 - name: usage

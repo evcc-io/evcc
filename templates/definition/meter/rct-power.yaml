@@ -1,5 +1,6 @@
 template: rct-power
-description: RCT Power
+description: 
+  generic: RCT Power
 guidedsetup:
   enable: true
 params:

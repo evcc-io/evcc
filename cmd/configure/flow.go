@@ -86,7 +86,7 @@ func (c *CmdConfigure) configureDeviceGuidedSetup() {
 	}
 
 	fmt.Println()
-	fmt.Println(templateItem.Description + " " + c.localizedString("Device_Added", nil))
+	fmt.Println(templateItem.Description.String(c.lang) + " " + c.localizedString("Device_Added", nil))
 
 	c.configureLinkedTypes(templateItem)
 }
@@ -173,7 +173,7 @@ func (c *CmdConfigure) configureLinkedTemplate(template templates.Template, cate
 			c.configuration.AddDevice(deviceItem, category)
 
 			fmt.Println()
-			fmt.Println(template.Description + " " + c.localizedString("Device_Added", nil))
+			fmt.Println(template.Description.String(c.lang) + " " + c.localizedString("Device_Added", nil))
 			return true
 		}
 		break
@@ -202,7 +202,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 			return device, capabilities, c.errItemNotPresent
 		}
 
-		deviceDescription = templateItem.Description
+		deviceDescription = templateItem.Description.String(c.lang)
 		capabilities = templateItem.Capabilities
 		values := c.processConfig(templateItem, deviceCategory)
 

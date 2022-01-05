@@ -1,5 +1,6 @@
 template: skoda
-description: Skoda (Citigo)
+description: 
+  generic: Skoda (Citigo)
 params:
 - base: vehiclebase
 - base: vehicleidentify

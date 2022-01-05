@@ -1,5 +1,6 @@
 template: tesla-powerwall
-description: Tesla Powerwall
+description: 
+  generic: Tesla Powerwall
 guidedsetup:
   enable: true
 params:
