@@ -69,6 +69,10 @@ func (cp *CP) DataTransfer(request *core.DataTransferRequest) (*core.DataTransfe
 func (cp *CP) Heartbeat(request *core.HeartbeatRequest) (*core.HeartbeatConfirmation, error) {
 	cp.log.TRACE.Printf("%T: %+v", request, request)
 
+	cp.mu.Lock()
+	cp.heartbeat = time.Now()
+	cp.mu.Unlock()
+
 	res := &core.HeartbeatConfirmation{
 		CurrentTime: types.NewDateTime(time.Now()),
 	}

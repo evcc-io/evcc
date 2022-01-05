@@ -21,6 +21,7 @@ type CP struct {
 	id  string
 	txn int // current transaction
 
+	heartbeat   time.Time
 	updated     *sync.Cond
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
@@ -63,7 +64,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if time.Since(cp.status.Timestamp.Time) > timeout {
+	if time.Since(cp.heartbeat) > timeout {
 		return res, api.ErrTimeout
 	}
 
