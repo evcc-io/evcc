@@ -111,11 +111,6 @@ func (c *OCPP) Enable(enable bool) error {
 	return c.wait(err, rc)
 }
 
-// MaxCurrent implements the api.Charger interface
-func (c *OCPP) MaxCurrent(current int64) error {
-	return c.MaxCurrentMillis(float64(current))
-}
-
 // setPeriod sets a single charging schedule period with given current and phases
 func (c *OCPP) setPeriod(current float64, phases int) error {
 	if current == 0 {
@@ -158,7 +153,12 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 	return c.wait(err, rc)
 }
 
-// MaxCurrent implements the api.ChargerEx interface
+// MaxCurrent implements the api.Charger interface
+func (c *OCPP) MaxCurrent(current int64) error {
+	return c.MaxCurrentMillis(float64(current))
+}
+
+// MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
 	err := c.setPeriod(current, 0)
 	if err == nil {
