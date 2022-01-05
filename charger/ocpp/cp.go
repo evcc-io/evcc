@@ -65,7 +65,7 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 
 	res := api.StatusNone
 
-	if !cp.heartbeat.IsZero() && time.Since(cp.heartbeat) > timeout {
+	if time.Since(cp.heartbeat) > timeout {
 		return res, api.ErrTimeout
 	}
 
