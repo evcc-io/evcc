@@ -18,6 +18,8 @@ type OCPP struct {
 	id        string
 	connector int
 	idtag     string
+	phases    int
+	current   float64
 }
 
 func init() {
@@ -103,8 +105,29 @@ func (c *OCPP) Enable(enable bool) error {
 
 // MaxCurrent implements the api.Charger interface
 func (c *OCPP) MaxCurrent(current int64) error {
-	rc := make(chan error, 1)
+	return c.MaxCurrentMillis(float64(current))
+}
 
+// setPeriod sets a single charging schedule period with given current and phases
+func (c *OCPP) setPeriod(current float64, phases int) error {
+	if current == 0 {
+		current = c.current
+	}
+
+	period := types.ChargingSchedulePeriod{
+		StartPeriod: 1,
+		Limit:       current,
+	}
+
+	if phases == 0 {
+		phases = c.phases
+	}
+
+	if phases > 0 {
+		period.NumberPhases = &phases
+	}
+
+	rc := make(chan error, 1)
 	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
 		c.log.TRACE.Printf("SetChargingProfile %T: %+v", resp, resp)
 
@@ -121,7 +144,7 @@ func (c *OCPP) MaxCurrent(current int64) error {
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
 			ChargingRateUnit:       types.ChargingRateUnitAmperes,
-			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{types.NewChargingSchedulePeriod(1, float64(current))},
+			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
 	})
 
@@ -133,9 +156,29 @@ func (c *OCPP) MaxCurrent(current int64) error {
 	return err
 }
 
+// MaxCurrent implements the api.ChargerEx interface
+func (c *OCPP) MaxCurrentMillis(current float64) error {
+	err := c.setPeriod(current, 0)
+	if err == nil {
+		c.current = current
+	}
+	return err
+}
+
 // Status implements the api.Charger interface
 func (c *OCPP) Status() (api.ChargeStatus, error) {
 	return c.cp.Status()
+}
+
+var _ api.ChargePhases = (*Easee)(nil)
+
+// Phases1p3p implements the api.ChargePhases interface
+func (c *OCPP) Phases1p3p(phases int) error {
+	err := c.setPeriod(0, phases)
+	if err == nil {
+		c.phases = phases
+	}
+	return err
 }
 
 // var _ api.Meter = (*OCPP)(nil)
