@@ -35,6 +35,8 @@ func (cp *CP) Boot() error {
 		for cp.boot == nil || cp.status == nil {
 			cp.updated.Wait()
 		}
+
+		close(bootC)
 	}()
 
 	select {
