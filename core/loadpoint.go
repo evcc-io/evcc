@@ -904,7 +904,10 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 func (lp *LoadPoint) setVehiclePhases() {
 	if v, ok := lp.vehicle.(api.VehiclePhases); ok {
 		if phases := v.Phases(); phases > 0 {
-			lp.log.DEBUG.Printf("vehicle phases: %dp", lp.activePhases)
+			lp.log.DEBUG.Printf("vehicle phases: %dp", phases)
+
+			lp.Lock()
+			defer lp.Unlock()
 
 			if phases > lp.Phases {
 				phases = lp.Phases
