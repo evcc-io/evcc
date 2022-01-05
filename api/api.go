@@ -170,6 +170,11 @@ type VehiclePosition interface {
 	Position() (float64, float64, error)
 }
 
+// VehiclePhases returns the number of supported phases
+type VehiclePhases interface {
+	Phases() int
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error

@@ -765,6 +765,12 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 		lp.publish("vehicleCapacity", lp.vehicle.Capacity())
 
 		lp.applyAction(vehicle.OnIdentified())
+
+		if v, ok := vehicle.(api.VehiclePhases); ok {
+			lp.activePhases = v.Phases()
+			lp.log.DEBUG.Printf("vehicle phases: %dp", lp.activePhases)
+			lp.publish("activePhases", lp.activePhases)
+		}
 	} else {
 		lp.socEstimator = nil
 
@@ -916,12 +922,19 @@ func (lp *LoadPoint) setPhases(phases int) {
 		lp.Phases = phases
 		lp.publish("phases", lp.Phases)
 
-		// When scaling down, charger will temporarily disable. During this time, activePhases will not be updated
-		// since all currents are zero. This will lead to inconsistent state when scaling is triggered again
-		// (1p configured vs 3p active). Update activePhases to reflect the current state of the charger.
 		if phases < lp.activePhases {
+			// When scaling down, charger will temporarily disable. During this time, activePhases will not be updated
+			// since all currents are zero. This will lead to inconsistent state when scaling is triggered again
+			// (1p configured vs 3p active). Update activePhases to reflect the current state of the charger.
 			lp.activePhases = phases
 			lp.publish("activePhases", lp.activePhases)
+		} else if v, ok := lp.vehicle.(api.VehiclePhases); ok && phases >= lp.activePhases {
+			// When scaling up, charger will offer more phases than vehicle can use.
+			// Adjust to enable subsequent PV restart at lower powers than full 3p.
+			if phases := v.Phases(); phases > 0 {
+				lp.activePhases = phases
+				lp.publish("activePhases", lp.activePhases)
+			}
 		}
 	}
 }
