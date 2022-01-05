@@ -113,17 +113,9 @@ func (c *OCPP) Enable(enable bool) error {
 
 // setPeriod sets a single charging schedule period with given current and phases
 func (c *OCPP) setPeriod(current float64, phases int) error {
-	if current == 0 {
-		current = c.current
-	}
-
 	period := types.ChargingSchedulePeriod{
 		StartPeriod: 1,
 		Limit:       current,
-	}
-
-	if phases == 0 {
-		phases = c.phases
 	}
 
 	if phases > 0 {
@@ -160,7 +152,7 @@ func (c *OCPP) MaxCurrent(current int64) error {
 
 // MaxCurrentMillis implements the api.ChargerEx interface
 func (c *OCPP) MaxCurrentMillis(current float64) error {
-	err := c.setPeriod(current, 0)
+	err := c.setPeriod(current, c.phases)
 	if err == nil {
 		c.current = current
 	}
@@ -176,7 +168,7 @@ var _ api.ChargePhases = (*Easee)(nil)
 
 // Phases1p3p implements the api.ChargePhases interface
 func (c *OCPP) Phases1p3p(phases int) error {
-	err := c.setPeriod(0, phases)
+	err := c.setPeriod(c.current, phases)
 	if err == nil {
 		c.phases = phases
 	}
