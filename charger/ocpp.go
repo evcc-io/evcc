@@ -12,11 +12,11 @@ import (
 
 // OCPP charger implementation
 type OCPP struct {
-	log     *util.Logger
-	cp      *ocpp.CP
-	id      string
-	idtag   string
-	enabled bool // TODO remove
+	log       *util.Logger
+	cp        *ocpp.CP
+	id        string
+	connector int
+	idtag     string
 }
 
 func init() {
@@ -28,23 +28,25 @@ func NewOCPPFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
 		StationId string
 		IdTag     string
+		Connector int
 	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewOCPP(cc.StationId, cc.IdTag)
+	return NewOCPP(cc.StationId, cc.Connector, cc.IdTag)
 }
 
 // NewOCPP creates OCPP charger
-func NewOCPP(id, idtag string) (*OCPP, error) {
+func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 	cp := ocpp.Instance().Register(id)
 	c := &OCPP{
-		log:   util.NewLogger("ocpp-" + id),
-		cp:    cp,
-		id:    id,
-		idtag: idtag,
+		log:       util.NewLogger("ocpp-" + id),
+		cp:        cp,
+		id:        id,
+		connector: connector,
+		idtag:     idtag,
 	}
 
 	err := cp.Boot()
@@ -59,11 +61,8 @@ func (c *OCPP) Enabled() (bool, error) {
 
 // Enable implements the api.Charger interface
 func (c *OCPP) Enable(enable bool) error {
-	c.enabled = enable
-
-	rc := make(chan error, 1)
-
 	var err error
+	rc := make(chan error, 1)
 
 	if enable {
 		err = ocpp.Instance().CS().RemoteStartTransaction(c.id, func(resp *core.RemoteStartTransactionConfirmation, err error) {
@@ -76,11 +75,7 @@ func (c *OCPP) Enable(enable bool) error {
 			rc <- err
 			close(rc)
 		}, c.idtag, func(request *core.RemoteStartTransactionRequest) {
-			// TODO the one pointer
-			one := 1
-			request.ConnectorId = &one
-			// rstr.IdTag = c.idtag
-			//request.ChargingProfile = &types.ChargingProfile{}
+			request.ConnectorId = &c.connector
 		})
 	} else {
 		err = ocpp.Instance().CS().RemoteStopTransaction(c.id, func(resp *core.RemoteStopTransactionConfirmation, err error) {
