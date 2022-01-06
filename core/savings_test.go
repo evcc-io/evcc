@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-func assert(t *testing.T, s *Savings, total float64, self float64, percentage float64) {
+func assert(t *testing.T, s *Savings, total, self, percentage float64) {
 	if !compareWithTolerane(s.ChargedTotal(), total) {
 		t.Errorf("ChargedTotal was incorrect, got: %.3f, want: %.3f.", s.ChargedTotal(), total)
 	}
@@ -30,54 +30,62 @@ func compareWithTolerane(a, b float64) bool {
 func TestSavingsWithChangingEnergySources(t *testing.T) {
 	clck := clock.NewMock()
 	s := &Savings{
-		log:     util.NewLogger("savings"),
+		log:     util.NewLogger("foo"),
 		clock:   clck,
 		started: clck.Now(),
 		updated: clck.Now(),
 	}
 
+	tc := []struct {
+		title                     string
+		grid, pv, battery, charge float64
+		total, self, percentage   float64
+	}{
+		{
+			"half grid, half pv",
+			2500, 2500, 0, 5000,
+			5, 2.5, 50},
+		{
+			"full pv",
+			0, 5000, 0, 5000,
+			10, 7.5, 75},
+		{
+			"full grid",
+			5000, 0, 0, 5000,
+			15, 7.5, 50},
+		{
+			"half grid, half battery",
+			2500, 0, 2500, 5000,
+			20, 10, 50},
+		{
+			"full pv, pv export",
+			-5000, 10000, 0, 5000,
+			25, 15, 60},
+		{
+			"full pv, pv export, battery charge",
+			-2500, 10000, -2500, 5000,
+			30, 20, 66},
+		{
+			"double charge speed, full grid",
+			10000, 0, 0, 10000,
+			40, 20, 50},
+	}
+
 	s.Update(0, 0, 0, 0)
 
-	// half grid, half pv
-	clck.Add(time.Hour)
-	s.Update(2500, 2500, 0, 5000)
-	assert(t, s, 5, 2.5, 50)
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
 
-	// full pv
-	clck.Add(time.Hour)
-	s.Update(0, 5000, 0, 5000)
-	assert(t, s, 10, 7.5, 75)
-
-	// full grid
-	clck.Add(time.Hour)
-	s.Update(5000, 0, 0, 5000)
-	assert(t, s, 15, 7.5, 50)
-
-	// half grid, half battery
-	clck.Add(time.Hour)
-	s.Update(2500, 0, 2500, 5000)
-	assert(t, s, 20, 10, 50)
-
-	// full pv, pv export
-	clck.Add(time.Hour)
-	s.Update(-5000, 10000, 0, 5000)
-	assert(t, s, 25, 15, 60)
-
-	// full pv, pv export, battery charge
-	clck.Add(time.Hour)
-	s.Update(-2500, 10000, -2500, 5000)
-	assert(t, s, 30, 20, 66)
-
-	// double charge speed, full grid
-	clck.Add(time.Hour)
-	s.Update(10000, 0, 0, 10000)
-	assert(t, s, 40, 20, 50)
+		clck.Add(time.Hour)
+		s.Update(tc.grid, tc.pv, tc.battery, tc.charge)
+		assert(t, s, tc.total, tc.self, tc.percentage)
+	}
 }
 
 func TestSavingsWithDifferentTimespans(t *testing.T) {
 	clck := clock.NewMock()
 	s := &Savings{
-		log:     util.NewLogger("savings"),
+		log:     util.NewLogger("foo"),
 		started: clck.Now(),
 		updated: clck.Now(),
 		clock:   clck,
