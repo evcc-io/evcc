@@ -41,32 +41,25 @@ func TestSavingsWithChangingEnergySources(t *testing.T) {
 		grid, pv, battery, charge float64
 		total, self, percentage   float64
 	}{
-		{
-			"half grid, half pv",
+		{"half grid, half pv",
 			2500, 2500, 0, 5000,
 			5, 2.5, 50},
-		{
-			"full pv",
+		{"full pv",
 			0, 5000, 0, 5000,
 			10, 7.5, 75},
-		{
-			"full grid",
+		{"full grid",
 			5000, 0, 0, 5000,
 			15, 7.5, 50},
-		{
-			"half grid, half battery",
+		{"half grid, half battery",
 			2500, 0, 2500, 5000,
 			20, 10, 50},
-		{
-			"full pv, pv export",
+		{"full pv, pv export",
 			-5000, 10000, 0, 5000,
 			25, 15, 60},
-		{
-			"full pv, pv export, battery charge",
+		{"full pv, pv export, battery charge",
 			-2500, 10000, -2500, 5000,
 			30, 20, 66},
-		{
-			"double charge speed, full grid",
+		{"double charge speed, full grid",
 			10000, 0, 0, 10000,
 			40, 20, 50},
 	}
@@ -107,15 +100,13 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 			},
 			0.030556, 0, 0, // 30,555Wh
 		},
-		{
-			"10 second 11kW charging, full grid",
+		{"10 second 11kW charging, full grid",
 			[]tcStep{
 				{10 * time.Second, 0, 0, 0, 11000},
 			},
 			0.061111, 0, 0, // 61,111Wh
 		},
-		{
-			"5x 2 second 11kW charging, full grid",
+		{"5x 2 second 11kW charging, full grid",
 			[]tcStep{
 				{2 * time.Second, 0, 0, 0, 11000},
 				{2 * time.Second, 0, 0, 0, 11000},
@@ -125,15 +116,13 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 			},
 			0.092, 0, 0, // 91,666Wh
 		},
-		{
-			"30 min 11kW charging, full grid",
+		{"30 min 11kW charging, full grid",
 			[]tcStep{
 				{30 * time.Minute, 0, 0, 0, 11000},
 			},
 			5.592, 0, 0, // 5561,111Wh
 		},
-		{
-			"4 hours 11kW charging, full pv",
+		{"4 hours 11kW charging, full pv",
 			[]tcStep{
 				{4 * time.Hour, 0, 11000, 0, 11000},
 			},
