@@ -87,7 +87,7 @@ publish-latest-ci:
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "latest" -v "0" -v "$(TAG_NAME)" --targets=$(TARGETS)
+	   --image-name $(DOCKER_IMAGE) -v "latest" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
 # gokrazy image
 prepare-image:
