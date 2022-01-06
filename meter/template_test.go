@@ -69,7 +69,7 @@ func TestMeterTemplates(t *testing.T) {
 
 func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{}) {
 	t.Run(tmpl.Template, func(t *testing.T) {
-		// t.Parallel()
+		t.Parallel()
 
 		b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
 		if err != nil {
