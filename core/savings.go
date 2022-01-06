@@ -35,10 +35,10 @@ func (s *Savings) Since() time.Duration {
 }
 
 func (s *Savings) SelfPercentage() float64 {
-	if s.chargedTotal == 0 {
-		return 0
+	if self := s.chargedTotal * s.chargedSelfConsumption; self > 0 {
+		return 100 / self
 	}
-	return 100 / s.chargedTotal * s.chargedSelfConsumption
+	return 0
 }
 
 func (s *Savings) ChargedTotal() float64 {
