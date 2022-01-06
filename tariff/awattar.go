@@ -44,7 +44,6 @@ func fake_awattar() awattar.Prices {
 		p.Marketprice = float64(100 + rand.Intn(40))
 		p.Unit = "Eur/MWh"
 		f.Data = append(f.Data, *p)
-		//fmt.Printf("Length %d\n", len(f.Data))
 	}
 
 	return *f
@@ -229,7 +228,7 @@ func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 		return true, nil
 	}
 
-	cheap := pi.Marketprice / 1000 <= t.cheap // convert EUR/MWh to EUR/KWh
+	cheap := pi.Marketprice/1000 <= t.cheap // convert EUR/MWh to EUR/KWh
 	if cheap {
 		t.log.DEBUG.Printf("low marketprice, charging")
 	}
