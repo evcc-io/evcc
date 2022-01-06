@@ -8,7 +8,7 @@ const (
 )
 
 // https://www.warp-charger.com/api.html#evse_state
-type State struct {
+type EvseState struct {
 	Iec61851State          int   `json:"iec61851_state"`
 	VehicleState           int   `json:"vehicle_state"`
 	ChargeRelease          int   `json:"charge_release"`
