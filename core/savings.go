@@ -10,25 +10,24 @@ import (
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
-	log *util.Logger
-
+	log                    *util.Logger
+	clock                  clock.Clock
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
 	chargedTotal           float64   // Energy charged since startup (kWh)
 	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
-	Clock                  clock.Clock
 }
 
-func NewSavings() Savings {
+func NewSavings() *Savings {
 	clock := clock.New()
 	savings := &Savings{
 		log:     util.NewLogger("savings"),
+		clock:   clock,
 		started: clock.Now(),
 		updated: clock.Now(),
-		Clock:   clock,
 	}
 
-	return *savings
+	return savings
 }
 
 func (s *Savings) Since() time.Duration {
@@ -68,18 +67,13 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, 
 }
 
 func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float64, chargePower float64) {
-	now := s.Clock.Now()
-
+	// assume charge power as constant over the duration -> rough estimate
+	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1000
 	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
-
-	updateDuration := now.Sub(s.updated)
-
-	// assuming the charge power was constant over the duration -> rough estimate
-	addedEnergy := updateDuration.Hours() * chargePower / 1000
 
 	s.chargedTotal += addedEnergy
 	s.chargedSelfConsumption += addedEnergy * (selfPercentage / 100)
-	s.updated = now
+	s.updated = s.clock.Now()
 
 	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
 	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
