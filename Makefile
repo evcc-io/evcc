@@ -89,7 +89,6 @@ publish-images:
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
 	   --image-name $(DOCKER_IMAGE) -v "latest" -v "0" -v "$(TAG_NAME)" --targets=$(TARGETS)
 
-
 # gokrazy image
 prepare-image:
 	go get github.com/gokrazy/tools/cmd/gokr-packer@latest
