@@ -77,9 +77,9 @@ func NewSiteFromConfig(
 	}
 
 	Voltage = site.Voltage
-	site.tariffs = tariffs
 	site.loadpoints = loadpoints
-	site.savings = NewSavings()
+	site.tariffs = tariffs
+	site.savings = NewSavings(tariffs)
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -430,22 +430,7 @@ func (site *Site) update(lp Updater) {
 		totalChargePower += lp.chargePower
 	}
 
-	site.savings.Update(site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
-
-	site.publish("savingsChargedTotal", site.savings.ChargedTotal())
-	site.publish("savingsChargedSelfConsumption", site.savings.ChargedSelfConsumption())
-	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
-
-	if site.tariffs.Grid != nil {
-		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
-			site.publish("tariffGrid", gridPrice)
-		}
-	}
-	if site.tariffs.FeedIn != nil {
-		if feedInPrice, err := site.tariffs.FeedIn.CurrentPrice(); err == nil {
-			site.publish("tariffFeedIn", feedInPrice)
-		}
-	}
+	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 }
 
 // prepare publishes initial values

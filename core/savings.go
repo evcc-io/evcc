@@ -5,24 +5,32 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
+
+// publisher gives access to the site's publish function
+type publisher interface {
+	publish(key string, val interface{})
+}
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
 	log                    *util.Logger
 	clock                  clock.Clock
+	tariffs                tariff.Tariffs
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
 	chargedTotal           float64   // Energy charged since startup (kWh)
 	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
 }
 
-func NewSavings() *Savings {
+func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 	savings := &Savings{
 		log:     util.NewLogger("savings"),
 		clock:   clock,
+		tariffs: tariffs,
 		started: clock.Now(),
 		updated: clock.Now(),
 	}
@@ -66,7 +74,7 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower flo
 	return share
 }
 
-func (s *Savings) Update(gridPower, pvPower, batteryPower, chargePower float64) {
+func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
 	// assume charge power as constant over the duration -> rough kWh estimate
 	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
@@ -77,4 +85,19 @@ func (s *Savings) Update(gridPower, pvPower, batteryPower, chargePower float64) 
 
 	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
 	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
+
+	p.publish("savingsChargedTotal", s.ChargedTotal())
+	p.publish("savingsChargedSelfConsumption", s.ChargedSelfConsumption())
+	p.publish("savingsSelfPercentage", s.SelfPercentage())
+
+	if s.tariffs.Grid != nil {
+		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
+			p.publish("tariffGrid", gridPrice)
+		}
+	}
+	if s.tariffs.FeedIn != nil {
+		if feedInPrice, err := s.tariffs.FeedIn.CurrentPrice(); err == nil {
+			p.publish("tariffFeedIn", feedInPrice)
+		}
+	}
 }
