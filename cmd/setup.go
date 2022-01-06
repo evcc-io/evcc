@@ -25,6 +25,8 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/spf13/viper"
 	"golang.org/x/text/currency"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func init() {
@@ -90,7 +92,12 @@ func configureSponsorship(token string) error {
 	}
 
 	if err != nil {
-		err = fmt.Errorf("sponsortoken: %w", err)
+		if s, ok := status.FromError(err); ok && s.Code() != codes.Unknown {
+			sponsor.Subject = "sponsorship unavailable"
+			err = nil
+		} else {
+			err = fmt.Errorf("sponsortoken: %w", err)
+		}
 	}
 
 	return err
