@@ -86,9 +86,9 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 	clck := clock.NewMock()
 	s := &Savings{
 		log:     util.NewLogger("foo"),
+		clock:   clck,
 		started: clck.Now(),
 		updated: clck.Now(),
-		clock:   clck,
 	}
 
 	type tcStep = struct {
