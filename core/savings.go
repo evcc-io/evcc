@@ -57,22 +57,22 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower flo
 	gridImport := math.Max(0, gridPower)
 	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
 
-	selfPercentage := 100 / (gridImport + selfConsumption) * selfConsumption
+	share := selfConsumption / (gridImport + selfConsumption)
 
-	if math.IsNaN(selfPercentage) {
+	if math.IsNaN(share) {
 		return 0
 	}
 
-	return selfPercentage
+	return share
 }
 
 func (s *Savings) Update(gridPower, pvPower, batteryPower, chargePower float64) {
-	// assume charge power as constant over the duration -> rough estimate
-	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1000
-	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
+	// assume charge power as constant over the duration -> rough kWh estimate
+	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1e3
+	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
 	s.chargedTotal += addedEnergy
-	s.chargedSelfConsumption += addedEnergy * (selfPercentage / 100)
+	s.chargedSelfConsumption += addedEnergy * share
 	s.updated = s.clock.Now()
 
 	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
