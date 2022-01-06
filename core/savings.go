@@ -49,7 +49,7 @@ func (s *Savings) ChargedSelfConsumption() float64 {
 	return s.chargedSelfConsumption
 }
 
-func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, batteryPower float64) float64 {
+func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
 	batteryDischarge := math.Max(0, batteryPower)
 	batteryCharge := math.Min(0, batteryPower) * -1
 	pvConsumption := math.Min(pvPower, pvPower+gridPower-batteryCharge)
@@ -66,7 +66,7 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, 
 	return selfPercentage
 }
 
-func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float64, chargePower float64) {
+func (s *Savings) Update(gridPower, pvPower, batteryPower, chargePower float64) {
 	// assume charge power as constant over the duration -> rough estimate
 	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1000
 	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)

@@ -45,7 +45,7 @@ type Site struct {
 
 	tariffs    tariff.Tariffs // Tariff
 	loadpoints []*LoadPoint   // Loadpoints
-	savings    Savings        // Savings
+	savings    *Savings       // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
