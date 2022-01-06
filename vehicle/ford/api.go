@@ -11,6 +11,8 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// https://github.com/ianjwhite99/connected-car-node-sdk
+
 const (
 	ApiURI         = "https://usapi.cv.ford.com"
 	VehicleListURI = "https://api.mps.ford.com/api/users/vehicles"
