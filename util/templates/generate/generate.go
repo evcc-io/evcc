@@ -61,7 +61,7 @@ func generateClass(class string) error {
 }
 
 func writeTemplate(class string, tmpl templates.Template, usage string) error {
-	values := tmpl.Defaults(true)
+	values := tmpl.Defaults(templates.TemplateRenderModeDocs)
 
 	if usage != "" {
 		values["usage"] = usage

@@ -26,7 +26,7 @@ func NewVehicleFromTemplateConfig(other map[string]interface{}) (api.Vehicle, er
 		return nil, err
 	}
 
-	b, _, err := tmpl.RenderResult(false, other)
+	b, _, err := tmpl.RenderResult(templates.TemplateRenderModeInstance, other)
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ func (t *Template) ModbusParams(values map[string]interface{}) {
 }
 
 // set the modbus values required from modbus.tpl and and the template to the render
-func (t *Template) ModbusValues(values map[string]interface{}) {
+func (t *Template) ModbusValues(renderMode string, values map[string]interface{}) {
 	if len(t.ModbusChoices()) == 0 {
 		return
 	}
@@ -105,13 +105,15 @@ func (t *Template) ModbusValues(values map[string]interface{}) {
 			}
 		}
 
-		if funk.ContainsString(p.Choice, ModbusChoiceRS485) {
-			values[ModbusRS485Serial] = true
-			values[ModbusRS485TCPIP] = true
-		}
+		if renderMode == TemplateRenderModeDocs {
+			if funk.ContainsString(p.Choice, ModbusChoiceRS485) {
+				values[ModbusRS485Serial] = true
+				values[ModbusRS485TCPIP] = true
+			}
 
-		if funk.ContainsString(p.Choice, ModbusChoiceTCPIP) {
-			values[ModbusTCPIP] = true
+			if funk.ContainsString(p.Choice, ModbusChoiceTCPIP) {
+				values[ModbusTCPIP] = true
+			}
 		}
 	}
 }

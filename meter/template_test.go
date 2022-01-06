@@ -33,7 +33,7 @@ func TestMeterTemplates(t *testing.T) {
 		tmpl := tmpl
 
 		// set default values for all params
-		values := tmpl.Defaults(true)
+		values := tmpl.Defaults(templates.TemplateRenderModeUnitTest)
 
 		// set the template value which is needed for rendering
 		values["template"] = tmpl.Template
@@ -41,10 +41,11 @@ func TestMeterTemplates(t *testing.T) {
 		// set modbus default test values
 		if values[templates.ParamModbus] != nil {
 			modbusChoices := tmpl.ModbusChoices()
+			// we only test one modbus setup
 			if funk.ContainsString(modbusChoices, templates.ModbusChoiceTCPIP) {
-				values[templates.ModbusKeyTCPIP] = true
+				values[templates.ModbusTCPIP] = true
 			} else {
-				values[templates.ModbusKeyRS485TCPIP] = true
+				values[templates.ModbusRS485TCPIP] = true
 			}
 		}
 
@@ -68,16 +69,18 @@ func TestMeterTemplates(t *testing.T) {
 
 func runTest(t *testing.T, tmpl templates.Template, values map[string]interface{}) {
 	t.Run(tmpl.Template, func(t *testing.T) {
-		t.Parallel()
+		// t.Parallel()
 
-		b, values, err := tmpl.RenderResult(true, values)
+		b, values, err := tmpl.RenderResult(templates.TemplateRenderModeUnitTest, values)
 		if err != nil {
-			t.Logf("%s: %s", tmpl.Template, b)
+			t.Logf("Template: %s", tmpl.Template)
+			t.Logf("%s", string(b))
 			t.Error(err)
 		}
 
 		if _, err := NewFromConfig("template", values); err != nil && !test.Acceptable(err, acceptable) {
-			t.Logf("%s", tmpl.Template)
+			t.Logf("Template: %s", tmpl.Template)
+			t.Logf("%s", string(b))
 			t.Error(err)
 		}
 	})

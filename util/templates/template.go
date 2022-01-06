@@ -49,6 +49,10 @@ const (
 	ModbusParamNamePort      = "port"
 	ModbusParamValuePort     = 502
 	ModbusParamNameRTU       = "rtu"
+
+	TemplateRenderModeDocs     = "docs"
+	TemplateRenderModeUnitTest = "unittest"
+	TemplateRenderModeInstance = "instance"
 )
 
 var HemsValueTypes = []string{HemsTypeSMA}
@@ -242,7 +246,7 @@ func (t *Template) ResolveParamBases() error {
 }
 
 // Defaults returns a map of default values for the template
-func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
+func (t *Template) Defaults(renderMode string) map[string]interface{} {
 	values := make(map[string]interface{})
 	for _, p := range t.Params {
 		switch p.ValueType {
@@ -253,7 +257,7 @@ func (t *Template) Defaults(docsOrTests bool) map[string]interface{} {
 		default:
 			if p.Test != "" {
 				values[p.Name] = p.Test
-			} else if p.Example != "" && docsOrTests {
+			} else if p.Example != "" && funk.ContainsString([]string{TemplateRenderModeDocs, TemplateRenderModeUnitTest}, renderMode) {
 				values[p.Name] = p.Example
 			} else {
 				values[p.Name] = p.Default // may be empty
@@ -359,13 +363,13 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 }
 
 // RenderResult renders the result template to instantiate the proxy
-func (t *Template) RenderResult(docs bool, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
-	values := t.Defaults(docs)
+func (t *Template) RenderResult(renderMode string, other map[string]interface{}) ([]byte, map[string]interface{}, error) {
+	values := t.Defaults(renderMode)
 	if err := util.DecodeOther(other, &values); err != nil {
 		return nil, values, err
 	}
 
-	t.ModbusValues(values)
+	t.ModbusValues(renderMode, values)
 
 	// add the common templates
 	for _, v := range paramBaseList {

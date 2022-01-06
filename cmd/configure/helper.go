@@ -93,7 +93,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 				templateItem.Render = fmt.Sprintf("name: {{ .name }}\n%s", templateItem.Render)
 			}
 		}
-		b, _, err := templateItem.RenderResult(false, values)
+		b, _, err := templateItem.RenderResult(templates.TemplateRenderModeInstance, values)
 		if err != nil {
 			c.addedDeviceIndex--
 			return device, err
