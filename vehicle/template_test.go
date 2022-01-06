@@ -31,6 +31,7 @@ var acceptable = []string{
 	"login failed: no auth code",                                      // Porsche
 	"invalid_client:Client authentication failed (e.g., login failure, unknown client, no client authentication included or unsupported authentication method)",   // BMW, Mini
 	"login failed: oauth2: cannot fetch token: 400 Bad Request Response: {\"error\":\"invalid_request\",\"error_description\":\"Missing parameter, 'username'\"}", // Opel, DS, Citroen, PSA
+	"401: Unauthorized: Invalid credentials", // Volvo
 }
 
 func TestVehicleTemplates(t *testing.T) {
