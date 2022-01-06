@@ -131,7 +131,7 @@ func (wb *Warp) hasMeter() bool {
 	).StringGetter()(); err == nil {
 		var res warp.MeterState
 		if err := json.Unmarshal([]byte(state), &res); err == nil {
-			return res.State == 2
+			return res.State == 2 || len(res.PhasesConnected) > 0
 		}
 	}
 
@@ -187,8 +187,8 @@ func (wb *Warp) Enable(enable bool) error {
 	return err
 }
 
-func (wb *Warp) status() (warp.Status, error) {
-	var res warp.Status
+func (wb *Warp) status() (warp.State, error) {
+	var res warp.State
 
 	s, err := wb.statusG()
 	if err == nil {
@@ -217,7 +217,7 @@ func (wb *Warp) autostart() (bool, error) {
 func (wb *Warp) isEnabled() (bool, error) {
 	enabled, err := wb.autostart()
 
-	var status warp.Status
+	var status warp.State
 	if err == nil {
 		status, err = wb.status()
 	}
@@ -259,7 +259,7 @@ func (wb *Warp) Enabled() (bool, error) {
 
 // Status implements the api.Charger interface
 func (wb *Warp) Status() (api.ChargeStatus, error) {
-	var status warp.Status
+	var status warp.State
 
 	s, err := wb.statusG()
 	if err == nil {
