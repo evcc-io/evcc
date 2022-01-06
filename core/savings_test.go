@@ -91,38 +91,66 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 		clock:   clck,
 	}
 
+	type tcStep = struct {
+		dt                        time.Duration
+		grid, pv, battery, charge float64
+	}
+
+	tc := []struct {
+		title                   string
+		steps                   []tcStep
+		total, self, percentage float64
+	}{
+		{"10 second 11kW charging, full grid",
+			[]tcStep{
+				{10 * time.Second, 0, 0, 0, 11000},
+			},
+			0.030556, 0, 0, // 30,555Wh
+		},
+		{
+			"10 second 11kW charging, full grid",
+			[]tcStep{
+				{10 * time.Second, 0, 0, 0, 11000},
+			},
+			0.061111, 0, 0, // 61,111Wh
+		},
+		{
+			"5x 2 second 11kW charging, full grid",
+			[]tcStep{
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+			},
+			0.092, 0, 0, // 91,666Wh
+		},
+		{
+			"30 min 11kW charging, full grid",
+			[]tcStep{
+				{30 * time.Minute, 0, 0, 0, 11000},
+			},
+			5.592, 0, 0, // 5561,111Wh
+		},
+		{
+			"4 hours 11kW charging, full pv",
+			[]tcStep{
+				{4 * time.Hour, 0, 11000, 0, 11000},
+			},
+			49.592, 44, 88,
+		},
+	}
+
 	s.Update(0, 0, 0, 0)
 
-	// 10 second 11kW charging, full grid
-	clck.Add(10 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.030556, 0, 0) // 30,555Wh
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
 
-	// 10 second 11kW charging, full grid
-	clck.Add(10 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.061111, 0, 0) // 61,111Wh
+		for _, tc := range tc.steps {
+			clck.Add(tc.dt)
+			s.Update(tc.grid, tc.pv, tc.battery, tc.charge)
+		}
 
-	// 5x 2 second 11kW charging, full grid
-	clck.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	clck.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	clck.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	clck.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	clck.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.092, 0, 0) // 91,666Wh
-
-	// 30 min 11kW charging, full grid
-	clck.Add(30 * time.Minute)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 5.592, 0, 0) // 5561,111Wh
-
-	// 4 hours 11kW charging, full pv
-	clck.Add(4 * time.Hour)
-	s.Update(0, 11000, 0, 11000)
-	assert(t, s, 49.592, 44, 88)
+		assert(t, s, tc.total, tc.self, tc.percentage)
+	}
 }
