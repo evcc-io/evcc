@@ -30,7 +30,7 @@ type MyByPrices awattar.ByPrices
 
 var _ api.Tariff = (*Awattar)(nil)
 
-func fake_awattar() awattar.Prices {
+func fakeAwattar() awattar.Prices {
 	start := time.Now()
 	start = start.Add(-2 * time.Minute)
 
@@ -67,7 +67,7 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 		uri:   fmt.Sprintf(awattar.RegionURI, strings.ToLower(cc.Region)),
 	}
 
-	//t.data = fake_awattar().Data
+	//t.data = fakeAwattar().Data
 	go t.Run()
 
 	return t, nil
