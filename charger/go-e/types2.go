@@ -20,7 +20,7 @@ type StatusResponse2 struct {
 // Card is the v2 RFID card
 type Card struct {
 	Name   string
-	Energy int
+	Energy float64
 	CardID bool
 }
 
