@@ -77,6 +77,12 @@ var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, Param
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
 
+var predefinedTemplateProperties = []string{"type", "template", "name",
+	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
+	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
+	ModbusRS485Serial, ModbusRS485TCPIP, ModbusTCPIP,
+}
+
 // language specific texts
 type TextLanguage struct {
 	Generic string // language independent
@@ -379,6 +385,11 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	}
 
 	for item, p := range values {
+		_, param := t.ParamByName(item)
+		if param == nil && !funk.ContainsString(predefinedTemplateProperties, item) {
+			return nil, values, fmt.Errorf("invalid element 'name: %s'", item)
+		}
+
 		switch p := p.(type) {
 		case []interface{}:
 			var list []string
