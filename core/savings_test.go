@@ -29,9 +29,7 @@ func compareWithTolerane(a, b float64) bool {
 
 type StubPublisher struct{}
 
-func (p StubPublisher) publish(key string, val interface{}) {
-	return
-}
+func (p StubPublisher) publish(key string, val interface{}) {}
 
 func TestSavingsWithChangingEnergySources(t *testing.T) {
 	p := StubPublisher{}
