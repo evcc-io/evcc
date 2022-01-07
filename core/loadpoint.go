@@ -993,11 +993,6 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.log.DEBUG.Println("phase disable timer elapsed")
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
-
-				// if charging is disabled, current detection will not switch active phases to 1p
-				// make sure we can start charging by assuming 1p during next cycle
-				lp.activePhases = 1
-
 				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
