@@ -25,11 +25,22 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
-							{{
-								$t("footer.savings.modalTitle", {
-									total: fmtKw(chargedTotal * 1000, true, false),
-								})
-							}}
+							<span class="d-block d-sm-none">
+								{{
+									$t("footer.savings.modalTitleShort", {
+										percent,
+										total: fmtKw(chargedTotal * 1000, true, false),
+									})
+								}}
+							</span>
+							<span class="d-none d-sm-block">
+								{{
+									$t("footer.savings.modalTitleLong", {
+										percent,
+										total: fmtKw(chargedTotal * 1000, true, false),
+									})
+								}}
+							</span>
 						</h5>
 						<button
 							type="button"

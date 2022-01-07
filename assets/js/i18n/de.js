@@ -21,7 +21,8 @@ export default {
     savings: {
       footerShort: "{percent}% Sonne",
       footerLong: "{percent}% Sonnenenergie",
-      modalTitle: "{total} kWh Strom geladen",
+      modalTitleShort: "{total} kWh geladen · {percent}% Sonne",
+      modalTitleLong: "{total} kWh geladen · {percent}% Sonnenenergie",
       modalChartGrid: "Netz {grid} kWh",
       modalChartSelf: "Sonne {self} kWh",
       modalSavingsPrice: "Effektiver Energiepreis",
