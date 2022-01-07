@@ -116,7 +116,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 6, 7:
 		return api.StatusC, nil
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %0x", sb)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
 }
 

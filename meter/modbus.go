@@ -35,6 +35,7 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 		modbus.Settings    `mapstructure:",squash"`
 		Power, Energy, SoC string
 		Currents           []string
+		Delay              time.Duration
 		Timeout            time.Duration
 	}{
 		Power: "Power",
@@ -61,6 +62,11 @@ func NewModbusFromConfig(other map[string]interface{}) (api.Meter, error) {
 	conn, err := modbus.NewConnection(cc.URI, cc.Device, cc.Comset, cc.Baudrate, format, cc.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// set non-default delay
+	if cc.Delay > 0 {
+		conn.Delay(cc.Delay)
 	}
 
 	// set non-default timeout

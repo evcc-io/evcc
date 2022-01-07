@@ -165,14 +165,12 @@ func NewEasee(user, password, charger string, cache time.Duration) (*Easee, erro
 	}
 
 	// wait for first update
-	timer := time.NewTimer(request.Timeout)
 	done := make(chan struct{})
-
 	go c.waitForInitialUpdate(done)
 
 	select {
 	case <-done:
-	case <-timer.C:
+	case <-time.After(request.Timeout):
 		err = api.ErrTimeout
 	}
 
@@ -265,6 +263,13 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 
 	c.mux.L.Lock()
 	defer c.mux.L.Unlock()
+
+	if c.updated.IsZero() {
+		go func() {
+			<-time.After(3 * time.Second)
+			c.mux.Broadcast()
+		}()
+	}
 	c.updated = time.Now()
 
 	switch res.ID {
@@ -308,9 +313,6 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 			value.(int) == easee.ModeAwaitingStart ||
 			value.(int) == easee.ModeCompleted ||
 			value.(int) == easee.ModeReadyToCharge
-	case 219:
-		// HACK observation 219 is the last value received- broadcast to signal ready condition
-		c.mux.Broadcast()
 	}
 
 	c.log.TRACE.Printf("%s %s: %s %.4v", typ, res.Mid, res.ID, value)
