@@ -220,6 +220,18 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 
 	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
 	if _, ok := lp.charger.(api.ChargePhases); ok {
+		if lp.GetPhases() != 3 {
+			lp.log.WARN.Printf("loadpoint.phases is not 3p as expected")
+
+			// make sure that the setPhases does not become a no-op, but don't interrupt current charging session
+			// https://github.com/evcc-io/evcc/issues/2230
+			if status, err := lp.charger.Status(); err == nil && status != api.StatusC {
+				lp.Lock()
+				lp.Phases = 3
+				lp.Unlock()
+			}
+		}
+
 		lp.setPhases(1)
 	}
 
