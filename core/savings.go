@@ -21,8 +21,10 @@ type Savings struct {
 	tariffs                tariff.Tariffs
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
-	chargedTotal           float64   // Energy charged since startup (kWh)
+	chargedGrid            float64   // Grid energy charged since startup (kWh)
 	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
+	costGrid               float64   // Cost of charged grid energy (e.g. EUR)
+	costSelfConsumption    float64   // Cost of charged self-produced energy (e.g. EUR)
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -43,18 +45,29 @@ func (s *Savings) Since() time.Duration {
 }
 
 func (s *Savings) SelfPercentage() float64 {
-	if s.chargedTotal == 0 {
+	if s.ChargedTotal() == 0 {
 		return 0
 	}
-	return s.chargedSelfConsumption / s.chargedTotal * 100
+	return s.chargedSelfConsumption / s.ChargedTotal() * 100
 }
 
 func (s *Savings) ChargedTotal() float64 {
-	return s.chargedTotal
+	return s.chargedGrid + s.chargedSelfConsumption
 }
 
-func (s *Savings) ChargedSelfConsumption() float64 {
-	return s.chargedSelfConsumption
+func (s *Savings) CostTotal() float64 {
+	return s.costGrid + s.costSelfConsumption
+}
+
+func (s *Savings) EffectivePrice() float64 {
+	if s.ChargedTotal() == 0 {
+		return s.currentGridPrice()
+	}
+	return s.CostTotal() / s.ChargedTotal()
+}
+
+func (s *Savings) SavingsAmount() float64 {
+	return s.chargedSelfConsumption * (s.currentGridPrice() - s.currentFeedInPrice())
 }
 
 func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
@@ -74,30 +87,48 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower flo
 	return share
 }
 
+func (s *Savings) currentGridPrice() float64 {
+	if s.tariffs.Grid != nil {
+		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
+			return gridPrice
+		}
+	}
+	return 0.3
+}
+
+func (s *Savings) currentFeedInPrice() float64 {
+	if s.tariffs.FeedIn != nil {
+		if gridPrice, err := s.tariffs.FeedIn.CurrentPrice(); err == nil {
+			return gridPrice
+		}
+	}
+	return 0.08
+}
+
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
 	// assume charge power as constant over the duration -> rough kWh estimate
 	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	s.chargedTotal += addedEnergy
-	s.chargedSelfConsumption += addedEnergy * share
+	addedSelfConsumption := addedEnergy * share
+	addedGrid := addedEnergy - addedSelfConsumption
+
+	s.chargedGrid += addedGrid
+	s.costGrid += addedGrid * s.currentGridPrice()
+	s.chargedSelfConsumption += addedSelfConsumption
+	s.costSelfConsumption += addedSelfConsumption * s.currentFeedInPrice()
+
 	s.updated = s.clock.Now()
 
-	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
+	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.ChargedTotal(), time.Since(s.started).Round(time.Second))
 	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
 
 	p.publish("savingsChargedTotal", s.ChargedTotal())
-	p.publish("savingsChargedSelfConsumption", s.ChargedSelfConsumption())
+	p.publish("savingsChargedGrid", s.chargedGrid)
+	p.publish("savingsChargedSelfConsumption", s.chargedSelfConsumption)
 	p.publish("savingsSelfPercentage", s.SelfPercentage())
-
-	if s.tariffs.Grid != nil {
-		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
-			p.publish("tariffGrid", gridPrice)
-		}
-	}
-	if s.tariffs.FeedIn != nil {
-		if feedInPrice, err := s.tariffs.FeedIn.CurrentPrice(); err == nil {
-			p.publish("tariffFeedIn", feedInPrice)
-		}
-	}
+	p.publish("savingsEffectivePrice", s.EffectivePrice())
+	p.publish("savingsAmount", s.SavingsAmount())
+	p.publish("tariffGrid", s.currentGridPrice())
+	p.publish("tariffFeedIn", s.currentFeedInPrice())
 }

@@ -85,10 +85,10 @@
 						</div>
 						<p class="mb-3">
 							{{ $t("footer.savings.modalSavingsPrice") }}:
-							<strong>{{ pricePerKWh }}</strong>
+							<strong>{{ fmtPricePerKWh(effectivePrice, currency) }}</strong>
 							<br />
 							{{ $t("footer.savings.modalSavingsTotal") }}:
-							<strong>{{ savingAmount }}</strong>
+							<strong>{{ fmtMoney(amount, currency) }}</strong>
 						</p>
 
 						<p class="small text-muted mb-3">
@@ -156,31 +156,16 @@ export default {
 		selfPercentage: Number,
 		since: { type: Number, default: 0 },
 		sponsor: String,
+		amount: { type: Number, default: 0 },
+		effectivePrice: { type: Number, default: 0 },
 		chargedTotal: { type: Number, default: 0 },
+		chargedGrid: { type: Number, default: 0 },
 		chargedSelfConsumption: { type: Number, default: 0 },
-		gridPrice: { type: Number, default: 0.3 },
-		feedInPrice: { type: Number, default: 0.08 },
+		gridPrice: { type: Number },
+		feedInPrice: { type: Number },
 		currency: String,
 	},
 	computed: {
-		chargedGrid() {
-			return this.chargedTotal - this.chargedSelfConsumption;
-		},
-		defaultPrices() {
-			const { gridPrice, feedInPrice } = this.$options.propsData;
-			return gridPrice === undefined || feedInPrice === undefined;
-		},
-		savingAmount() {
-			const priceDiff = (this.gridPrice - this.feedInPrice) / 100;
-			const saving = this.chargedSelfConsumption * priceDiff;
-			return this.fmtMoney(saving, this.currency);
-		},
-		pricePerKWh() {
-			const total =
-				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedInPrice;
-			const perKWh = total / this.chargedTotal;
-			return this.fmtPricePerKWh(perKWh || this.gridPrice, this.currency);
-		},
 		percent() {
 			return Math.round(this.selfPercentage) || 0;
 		},

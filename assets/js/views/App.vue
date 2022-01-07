@@ -104,7 +104,10 @@ export default {
 			return {
 				since: this.store.state.savingsSince,
 				chargedTotal: this.store.state.savingsChargedTotal,
+				chargedGrid: this.store.state.savingsChargedGrid,
 				chargedSelfConsumption: this.store.state.savingsChargedSelfConsumption,
+				amount: this.store.state.savingsAmount,
+				effectivePrice: this.store.state.savingsEffectivePrice,
 				selfPercentage: this.store.state.savingsSelfPercentage,
 				gridPrice: this.store.state.tariffGrid,
 				feedInPrice: this.store.state.tariffFeedIn,

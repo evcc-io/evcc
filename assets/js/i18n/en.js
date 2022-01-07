@@ -40,7 +40,7 @@ export default {
       supportUs:
         "We want to make efficient home charging the standard for as many people as possible. Help us by supporting the further development and maintenance of the project.",
       sticker: "...or evcc stickers?",
-      confettiPromise: "There will be confetti ;)",
+      confettiPromise: "There will be stickers and digital confetti ;)",
       becomeSponsor: "Become a GitHub Sponsor",
     },
   },

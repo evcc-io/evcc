@@ -40,7 +40,7 @@ export default {
       supportUs:
         "Wir möchten effizientes Zuhause-Laden zum Standard für möglichst viele Menschen machen. Helfe uns indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",
       sticker: "...oder evcc Sticker?",
-      confettiPromise: "Es gibt auch Konfetti ;)",
+      confettiPromise: "Es gibt auch Sticker und digitales Konfetti ;)",
       becomeSponsor: "Werde jetzt GitHub Sponsor",
     },
   },
