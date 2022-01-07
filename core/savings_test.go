@@ -13,8 +13,8 @@ func assert(t *testing.T, s *Savings, total, self, percentage float64) {
 	if !compareWithTolerane(s.ChargedTotal(), total) {
 		t.Errorf("ChargedTotal was incorrect, got: %.3f, want: %.3f.", s.ChargedTotal(), total)
 	}
-	if !compareWithTolerane(s.ChargedSelfConsumption(), self) {
-		t.Errorf("ChargedSelfConsumption was incorrect, got: %.3f, want: %.3f.", s.ChargedSelfConsumption(), self)
+	if !compareWithTolerane(s.chargedSelfConsumption, self) {
+		t.Errorf("ChargedSelfConsumption was incorrect, got: %.3f, want: %.3f.", s.chargedSelfConsumption, self)
 	}
 	if int(s.SelfPercentage()) != int(percentage) {
 		t.Errorf("SelfPercentage was incorrect, got: %.1f, want: %.1f.", s.SelfPercentage(), percentage)
