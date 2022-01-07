@@ -27,7 +27,15 @@ func compareWithTolerane(a, b float64) bool {
 	return diff < tolerance
 }
 
+type StubPublisher struct{}
+
+func (p StubPublisher) publish(key string, val interface{}) {
+	return
+}
+
 func TestSavingsWithChangingEnergySources(t *testing.T) {
+	p := StubPublisher{}
+
 	clck := clock.NewMock()
 	s := &Savings{
 		log:     util.NewLogger("foo"),
@@ -64,18 +72,20 @@ func TestSavingsWithChangingEnergySources(t *testing.T) {
 			40, 20, 50},
 	}
 
-	s.Update(0, 0, 0, 0)
+	s.Update(p, 0, 0, 0, 0)
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		clck.Add(time.Hour)
-		s.Update(tc.grid, tc.pv, tc.battery, tc.charge)
+		s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
 		assert(t, s, tc.total, tc.self, tc.percentage)
 	}
 }
 
 func TestSavingsWithDifferentTimespans(t *testing.T) {
+	p := StubPublisher{}
+
 	clck := clock.NewMock()
 	s := &Savings{
 		log:     util.NewLogger("foo"),
@@ -130,14 +140,14 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 		},
 	}
 
-	s.Update(0, 0, 0, 0)
+	s.Update(p, 0, 0, 0, 0)
 
 	for _, tc := range tc {
 		t.Logf("%+v", tc)
 
 		for _, tc := range tc.steps {
 			clck.Add(tc.dt)
-			s.Update(tc.grid, tc.pv, tc.battery, tc.charge)
+			s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
 		}
 
 		assert(t, s, tc.total, tc.self, tc.percentage)
