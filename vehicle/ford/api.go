@@ -11,12 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// https://github.com/ianjwhite99/connected-car-node-sdk
-
-const (
-	ApiURI         = "https://usapi.cv.ford.com"
-	VehicleListURI = "https://api.mps.ford.com/api/users/vehicles"
-)
+const ApiURI = "https://usapi.cv.ford.com"
 
 // API is the VW api client
 type API struct {
@@ -34,8 +29,8 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			token, err := ts.Token()
 			if err == nil {
 				for k, v := range map[string]string{
-					"Content-type":   "application/json",
-					"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
+					"Content-type":   request.JSONContent,
+					"Application-Id": ApplicationID,
 					"Auth-Token":     token.AccessToken,
 				} {
 					req.Header.Set(k, v)
@@ -54,7 +49,9 @@ func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
 	var vehicles []string
 
-	err := v.GetJSON(VehicleListURI, &resp)
+	uri := fmt.Sprintf("%s/api/users/vehicles", TokenURI)
+
+	err := v.GetJSON(uri, &resp)
 	if err == nil {
 		for _, v := range resp.Vehicles.Values {
 			vehicles = append(vehicles, v.VIN)
