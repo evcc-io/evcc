@@ -22,9 +22,9 @@ type Savings struct {
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
 	gridCharged            float64   // Grid energy charged since startup (kWh)
-	gridCost               float64   // Cost of charged grid energy (e.g. EUR)
+	gridCost               float64   // Running total of charged grid energy cost (e.g. EUR)
 	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
-	selfConsumptionCost    float64   // Cost of charged self-produced energy (e.g. EUR)
+	selfConsumptionCost    float64   // Running total of charged self-produced energy cost (e.g. EUR)
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
