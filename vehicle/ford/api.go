@@ -23,6 +23,31 @@ type API struct {
 	*request.Helper
 }
 
+func GetHeader(req *http.Request) *http.Request {
+	for k, v := range map[string]string{
+		"Accept":          "*/*",
+		"Accept-Language": "en-US",
+		"User-Agent":      "FordPass/5 CFNetwork/1197 Darwin/20.0.0",
+		"Accept-Encoding": "gzip, deflate, br",
+		"Content-Type":    "application/x-www-form-urlencoded",
+	} {
+		req.Header.Set(k, v)
+	}
+	return req
+}
+
+func GetHeaderAPI(req *http.Request) *http.Request {
+	req = GetHeader(req)
+	for k, v := range map[string]string{
+		//"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
+		"Application-Id": "1E8C7794-FF5F-49BC-9596-A1E0C86C5B19",
+		"Content-type":   "application/json",
+	} {
+		req.Header.Set(k, v)
+	}
+	return req
+}
+
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 	v := &API{
@@ -33,10 +58,9 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 		Decorator: func(req *http.Request) error {
 			token, err := ts.Token()
 			if err == nil {
+				req = GetHeaderAPI(req)
 				for k, v := range map[string]string{
-					"Content-type":   "application/json",
-					"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
-					"Auth-Token":     token.AccessToken,
+					"Auth-Token": token.AccessToken,
 				} {
 					req.Header.Set(k, v)
 				}

@@ -1,6 +1,7 @@
 package ford
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -12,7 +13,8 @@ import (
 )
 
 const (
-	AuthURI  = "https://sso.ci.ford.ca" // fcis.ice.ibmcloud.com
+	SSOURI   = "https://sso.ci.ford.com"
+	TokenURI = "https://api.mps.ford.com"
 	ClientID = "9fb503e0-715b-47e8-adfd-ad4b7770f73b"
 )
 
@@ -49,8 +51,34 @@ func (v *Identity) login() (oauth.Token, error) {
 		"password":   []string{v.password},
 	}
 
-	uri := AuthURI + "/v1.0/endpoint/default/token"
+	uri := SSOURI + "/oidc/endpoint/default/token"
+
 	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	req = GetHeader(req)
+
+	var res oauth.Token
+	if err == nil {
+		err = v.DoJSON(req, &res)
+	}
+
+	if err == nil {
+		return v.GetToken(res)
+	}
+
+	return res, err
+}
+
+// Get the Token for the API
+func (v *Identity) GetToken(token oauth.Token) (oauth.Token, error) {
+	mapD := map[string]string{
+		"code": token.AccessToken,
+	}
+	jsonD, _ := json.Marshal(mapD)
+	data := string(jsonD)
+	uri := TokenURI + "/api/oauth2/v1/token"
+
+	req, err := request.New(http.MethodPut, uri, strings.NewReader(data), request.URLEncoding)
+	req = GetHeaderAPI(req)
 
 	var res oauth.Token
 	if err == nil {
@@ -62,14 +90,16 @@ func (v *Identity) login() (oauth.Token, error) {
 
 // Refresh implements oauth.TokenRefresher
 func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
-	data := url.Values{
-		"client_id":     []string{ClientID},
-		"grant_type":    []string{"refresh_token"},
-		"refresh_token": []string{token.RefreshToken},
-	}
 
-	uri := AuthURI + "/v1.0/endpoint/default/token"
-	req, err := request.New(http.MethodPost, uri, strings.NewReader(data.Encode()), request.URLEncoding)
+	mapD := map[string]string{
+		"refresh_token": token.RefreshToken,
+	}
+	jsonD, _ := json.Marshal(mapD)
+	data := string(jsonD)
+	uri := TokenURI + "/api/oauth2/v1/refresh"
+
+	req, err := request.New(http.MethodPut, uri, strings.NewReader(data), request.URLEncoding)
+	req = GetHeaderAPI(req)
 
 	var res oauth.Token
 	if err == nil {
