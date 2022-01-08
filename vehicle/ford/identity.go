@@ -70,7 +70,7 @@ func (v *Identity) login() (oauth.Token, error) {
 
 		var req *http.Request
 		req, err = request.New(http.MethodPut, uri, request.MarshalJSON(data), map[string]string{
-			"Content-type":   "application/json",
+			"Content-type":   request.JSONContent,
 			"Application-Id": ApplicationID,
 		})
 
@@ -90,7 +90,7 @@ func (v *Identity) RefreshToken(token *oauth2.Token) (*oauth2.Token, error) {
 
 	uri := fmt.Sprintf("%s/api/oauth2/v1/refresh", TokenURI)
 	req, err := request.New(http.MethodPut, uri, request.MarshalJSON(data), map[string]string{
-		"Content-type":   "application/json",
+		"Content-type":   request.JSONContent,
 		"Application-Id": ApplicationID,
 	})
 

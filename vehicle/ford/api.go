@@ -29,7 +29,7 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 			token, err := ts.Token()
 			if err == nil {
 				for k, v := range map[string]string{
-					"Content-type":   "application/json",
+					"Content-type":   request.JSONContent,
 					"Application-Id": ApplicationID,
 					"Auth-Token":     token.AccessToken,
 				} {
