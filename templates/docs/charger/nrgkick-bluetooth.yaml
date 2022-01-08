@@ -1,5 +1,5 @@
 type: template
 template: nrgkick-bluetooth
-description: {NRGKick Bluetooth  }
+description: NRGKick Bluetooth
 mac:
 pin:

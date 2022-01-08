@@ -1,5 +1,5 @@
 type: template
 template: kostal-piko
-description: {Kostal Piko + Piko BA  }
+description: Kostal Piko + Piko BA
 usage: pv 
 host: 192.0.2.2

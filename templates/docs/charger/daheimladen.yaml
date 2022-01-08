@@ -1,4 +1,4 @@
 type: template
 template: daheimladen
-description: {Daheimladen (Cloud API)  }
+description: Daheimladen (Cloud API)
 stationid: xxxxxxxxxxxx990  # Die Software Seriennummer, welche auf dem Bildschirm der Wallbox angezeigt wird

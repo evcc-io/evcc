@@ -1,6 +1,6 @@
 type: template
 template: nrgkick-connect
-description: {NRGKick Connect  }
+description: NRGKick Connect
 host: 192.0.2.2 
 mac:
 password:

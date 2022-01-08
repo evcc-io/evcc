@@ -1,6 +1,6 @@
 type: template
 template: tronity
-description: {Tronity  }
+description: Tronity
 userid:
 secret:
 accessToken:

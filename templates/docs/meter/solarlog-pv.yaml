@@ -1,6 +1,6 @@
 type: template
 template: solarlog
-description: {Solarlog  }
+description: Solarlog
 usage: pv 
 host: 192.0.2.2 
 port: 502

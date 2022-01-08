@@ -1,4 +1,4 @@
 type: template
 template: cfos-meter
-description: {cFos PowerBrain Meter  }
+description: cFos PowerBrain Meter
 usage: charge

@@ -1,6 +1,6 @@
 type: template
 template: discovergy
-description: {Discovergy (Cloud)  }
+description: Discovergy (Cloud)
 usage: pv 
 user:
 password:

@@ -1,6 +1,6 @@
 type: template
 template: niu-e-scooter
-description: {NIU E-Scooter  }
+description: NIU E-Scooter
 user:
 password:
 serial:
