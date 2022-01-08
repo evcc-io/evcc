@@ -11,41 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// https://github.com/ianjwhite99/connected-car-node-sdk
-
-const (
-	ApiURI         = "https://usapi.cv.ford.com"
-	VehicleListURI = "https://api.mps.ford.com/api/users/vehicles"
-)
+const ApiURI = "https://usapi.cv.ford.com"
 
 // API is the VW api client
 type API struct {
 	*request.Helper
-}
-
-func GetHeader(req *http.Request) *http.Request {
-	for k, v := range map[string]string{
-		"Accept":          "*/*",
-		"Accept-Language": "en-US",
-		"User-Agent":      "FordPass/5 CFNetwork/1197 Darwin/20.0.0",
-		"Accept-Encoding": "gzip, deflate, br",
-		"Content-Type":    "application/x-www-form-urlencoded",
-	} {
-		req.Header.Set(k, v)
-	}
-	return req
-}
-
-func GetHeaderAPI(req *http.Request) *http.Request {
-	req = GetHeader(req)
-	for k, v := range map[string]string{
-		//"Application-Id": "71A3AD0A-CF46-4CCF-B473-FC7FE5BC4592",
-		"Application-Id": "1E8C7794-FF5F-49BC-9596-A1E0C86C5B19",
-		"Content-type":   "application/json",
-	} {
-		req.Header.Set(k, v)
-	}
-	return req
 }
 
 // NewAPI creates a new api client
@@ -58,9 +28,10 @@ func NewAPI(log *util.Logger, ts oauth2.TokenSource) *API {
 		Decorator: func(req *http.Request) error {
 			token, err := ts.Token()
 			if err == nil {
-				req = GetHeaderAPI(req)
 				for k, v := range map[string]string{
-					"Auth-Token": token.AccessToken,
+					"Content-type":   "application/json",
+					"Application-Id": ApplicationID,
+					"Auth-Token":     token.AccessToken,
 				} {
 					req.Header.Set(k, v)
 				}
@@ -78,7 +49,9 @@ func (v *API) Vehicles() ([]string, error) {
 	var resp VehiclesResponse
 	var vehicles []string
 
-	err := v.GetJSON(VehicleListURI, &resp)
+	uri := fmt.Sprintf("%s/api/users/vehicles", TokenURI)
+
+	err := v.GetJSON(uri, &resp)
 	if err == nil {
 		for _, v := range resp.Vehicles.Values {
 			vehicles = append(vehicles, v.VIN)
