@@ -104,7 +104,7 @@
 
 						<p class="small text-muted mb-3">
 							<a
-								href="https://github.com/evcc-io/evcc/blob/master/README.md#energy-tariffs--savings-estimate"
+								href="https://docs.evcc.io/docs/guides/setup/#ersparnisberechnung"
 								target="_blank"
 								class="text-muted"
 							>
