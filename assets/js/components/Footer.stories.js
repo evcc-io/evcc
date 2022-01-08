@@ -19,9 +19,9 @@ KeinUpdate.args = {
   version: { installed: "0.40" },
   savings: {
     since: 82800,
-    chargedTotal: 15231,
-    chargedSelfConsumption: 12231,
-    selfPercentage: 80.3,
+    totalCharged: 15231,
+    selfConsumptionCharged: 12231,
+    selfConsumptionPercent: 80.3,
   },
 };
 
@@ -32,9 +32,9 @@ Sponsor.args = {
   },
   savings: {
     since: 82800,
-    chargedTotal: 21000,
-    chargedSelfConsumption: 12000,
-    selfPercentage: 54,
+    totalCharged: 21000,
+    selfConsumptionCharged: 12000,
+    selfConsumptionPercent: 54,
   },
   sponsor: "naltatis",
 };
@@ -48,9 +48,9 @@ UpdateVerfuegbar.args = {
   },
   savings: {
     since: 82800,
-    chargedTotal: 15231,
-    chargedSelfConsumption: 15000,
-    selfPercentage: 74,
+    totalCharged: 15231,
+    selfConsumptionCharged: 15000,
+    selfConsumptionPercent: 74,
   },
 };
 
@@ -64,9 +64,9 @@ Updater.args = {
   },
   savings: {
     since: 82800,
-    chargedTotal: 0,
-    chargedSelfConsumption: 0,
-    selfPercentage: 0,
+    totalCharged: 0,
+    selfConsumptionCharged: 0,
+    selfConsumptionPercent: 0,
   },
 };
 
@@ -79,9 +79,9 @@ Upgrade.args = {
   },
   savings: {
     since: 82800,
-    chargedTotal: 0,
-    chargedSelfConsumption: 0,
-    selfPercentage: 0,
+    totalCharged: 0,
+    selfConsumptionCharged: 0,
+    selfConsumptionPercent: 0,
   },
 };
 
@@ -94,8 +94,8 @@ Savings.args = {
   },
   savings: {
     since: 82800,
-    chargedTotal: 15231,
-    chargedSelfConsumption: 12231,
-    selfPercentage: 80.3,
+    totalCharged: 15231,
+    selfConsumptionCharged: 12231,
+    selfConsumptionPercent: 80.3,
   },
 };

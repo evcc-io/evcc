@@ -21,10 +21,10 @@ type Savings struct {
 	tariffs                tariff.Tariffs
 	started                time.Time // Boot time
 	updated                time.Time // Time of last charged value update
-	chargedGrid            float64   // Grid energy charged since startup (kWh)
-	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
-	costGrid               float64   // Cost of charged grid energy (e.g. EUR)
-	costSelfConsumption    float64   // Cost of charged self-produced energy (e.g. EUR)
+	gridCharged            float64   // Grid energy charged since startup (kWh)
+	gridCost               float64   // Cost of charged grid energy (e.g. EUR)
+	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost    float64   // Cost of charged self-produced energy (e.g. EUR)
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -44,30 +44,30 @@ func (s *Savings) Since() time.Duration {
 	return time.Since(s.started)
 }
 
-func (s *Savings) SelfPercentage() float64 {
-	if s.ChargedTotal() == 0 {
+func (s *Savings) SelfConsumptionPercent() float64 {
+	if s.TotalCharged() == 0 {
 		return 0
 	}
-	return s.chargedSelfConsumption / s.ChargedTotal() * 100
+	return s.selfConsumptionCharged / s.TotalCharged() * 100
 }
 
-func (s *Savings) ChargedTotal() float64 {
-	return s.chargedGrid + s.chargedSelfConsumption
+func (s *Savings) TotalCharged() float64 {
+	return s.gridCharged + s.selfConsumptionCharged
 }
 
 func (s *Savings) CostTotal() float64 {
-	return s.costGrid + s.costSelfConsumption
+	return s.gridCost + s.selfConsumptionCost
 }
 
 func (s *Savings) EffectivePrice() float64 {
-	if s.ChargedTotal() == 0 {
+	if s.TotalCharged() == 0 {
 		return s.currentGridPrice()
 	}
-	return s.CostTotal() / s.ChargedTotal()
+	return s.CostTotal() / s.TotalCharged()
 }
 
 func (s *Savings) SavingsAmount() float64 {
-	return s.chargedSelfConsumption * (s.currentGridPrice() - s.currentFeedInPrice())
+	return s.selfConsumptionCharged * (s.currentGridPrice() - s.currentFeedInPrice())
 }
 
 func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
@@ -107,26 +107,23 @@ func (s *Savings) currentFeedInPrice() float64 {
 
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
 	// assume charge power as constant over the duration -> rough kWh estimate
-	addedEnergy := s.clock.Since(s.updated).Hours() * chargePower / 1e3
+	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	addedSelfConsumption := addedEnergy * share
-	addedGrid := addedEnergy - addedSelfConsumption
+	addedSelfConsumption := energyAdded * share
+	addedGrid := energyAdded - addedSelfConsumption
 
-	s.chargedGrid += addedGrid
-	s.costGrid += addedGrid * s.currentGridPrice()
-	s.chargedSelfConsumption += addedSelfConsumption
-	s.costSelfConsumption += addedSelfConsumption * s.currentFeedInPrice()
+	s.gridCharged += addedGrid
+	s.gridCost += addedGrid * s.currentGridPrice()
+	s.selfConsumptionCharged += addedSelfConsumption
+	s.selfConsumptionCost += addedSelfConsumption * s.currentFeedInPrice()
 
 	s.updated = s.clock.Now()
 
-	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.ChargedTotal(), time.Since(s.started).Round(time.Second))
-	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
-
-	p.publish("savingsChargedTotal", s.ChargedTotal())
-	p.publish("savingsChargedGrid", s.chargedGrid)
-	p.publish("savingsChargedSelfConsumption", s.chargedSelfConsumption)
-	p.publish("savingsSelfPercentage", s.SelfPercentage())
+	p.publish("savingsTotalCharged", s.TotalCharged())
+	p.publish("savingsGridCharged", s.gridCharged)
+	p.publish("savingsSelfConsumptionCharged", s.selfConsumptionCharged)
+	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
 	p.publish("tariffGrid", s.currentGridPrice())
