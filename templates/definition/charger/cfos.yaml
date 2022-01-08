@@ -1,4 +1,4 @@
-template: cfos_charger
+template: cfos
 description:
   generic: cFos PowerBrain
 requirements:

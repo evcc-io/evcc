@@ -1,4 +1,4 @@
-template: cfos-meter
+template: cfos
 description: 
   generic: cFos PowerBrain Meter
 requirements:
