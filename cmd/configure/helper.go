@@ -79,7 +79,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	if !c.expandedMode {
-		b, err := templateItem.RenderProxyWithValues(values, false)
+		b, err := templateItem.RenderProxyWithValues(values, c.lang, false)
 		if err != nil {
 			c.addedDeviceIndex--
 			return device, err

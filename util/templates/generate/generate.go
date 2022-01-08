@@ -78,7 +78,7 @@ func writeTemplate(class string, tmpl templates.Template, usage string) error {
 			values[templates.ModbusTCPIP] = true
 		}
 	}
-	b, err := tmpl.RenderProxyWithValues(values, true)
+	b, err := tmpl.RenderProxyWithValues(values, "de", true)
 
 	if err != nil {
 		println(string(b))

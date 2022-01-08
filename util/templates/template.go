@@ -305,7 +305,7 @@ func (t *Template) ModbusChoices() []string {
 var proxyTmpl string
 
 // RenderProxy renders the proxy template
-func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeDescription bool) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string, includeDescription bool) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -361,7 +361,7 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, includeD
 		"Params":   t.Params,
 	}
 	if includeDescription {
-		data["Description"] = t.Description
+		data["Description"] = t.Description.String(lang)
 	}
 	err = tmpl.Execute(out, data)
 
