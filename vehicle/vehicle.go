@@ -90,7 +90,7 @@ func (v *Vehicle) SoC() (float64, error) {
 	return v.socG()
 }
 
-// SoC implements the api.ChargeState interface
+// status implements the api.ChargeState interface
 func (v *Vehicle) status() (api.ChargeStatus, error) {
 	status := api.StatusF
 
