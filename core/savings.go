@@ -9,6 +9,9 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
+const DefaultGridPrice = 0.30
+const DefaultFeedInPrice = 0.08
+
 // publisher gives access to the site's publish function
 type publisher interface {
 	publish(key string, val interface{})
@@ -93,7 +96,7 @@ func (s *Savings) currentGridPrice() float64 {
 			return gridPrice
 		}
 	}
-	return 0.3
+	return DefaultGridPrice
 }
 
 func (s *Savings) currentFeedInPrice() float64 {
@@ -102,7 +105,7 @@ func (s *Savings) currentFeedInPrice() float64 {
 			return gridPrice
 		}
 	}
-	return 0.08
+	return DefaultFeedInPrice
 }
 
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
