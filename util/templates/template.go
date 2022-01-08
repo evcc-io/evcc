@@ -81,6 +81,7 @@ var predefinedTemplateProperties = []string{"type", "template", "name",
 	ModbusParamNameId, ModbusParamNameDevice, ModbusParamNameBaudrate, ModbusParamNameComset,
 	ModbusParamNameURI, ModbusParamNameHost, ModbusParamNamePort, ModbusParamNameRTU,
 	ModbusRS485Serial, ModbusRS485TCPIP, ModbusTCPIP,
+	ModbusKeyTCPIP, ModbusKeyRS485Serial, ModbusKeyRS485TCPIP,
 }
 
 // language specific texts
