@@ -148,7 +148,6 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 			}
 		}
 	}
-	fmt.Println("DONE")
 }
 
 // configureLinkedTemplate lets the user configure a device that is marked as being linked to a guided device
