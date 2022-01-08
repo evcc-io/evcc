@@ -16,11 +16,11 @@ import (
 )
 
 // Credits to
+//  https://github.com/hacf-fr/renault-api
 //  https://github.com/edent/Renault-Zoe-API/issues/18
 //  https://github.com/epenet/Renault-Zoe-API/blob/newapimockup/Test/MyRenault.py
 //  https://github.com/jamesremuscat/pyze
-//  https://github.com/hacf-fr/renault-api
-// https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
+//  https://muscatoxblog.blogspot.com/2019/07/delving-into-renaults-new-api.html
 
 const (
 	keyStore = "https://renault-wrd-prod-1-euw1-myrapp-one.s3-eu-west-1.amazonaws.com/configuration/android/config_%s.json"
@@ -358,6 +358,23 @@ func (v *Renault) cockpitAPI() (interface{}, error) {
 	return res, err
 }
 
+// actionAPI provides cockpit api response
+func (v *Renault) actionAPI() (interface{}, error) {
+	uri := fmt.Sprintf("%s/commerce/v1/accounts/%s/kamereon/kca/car-adapter/v2/cars/%s/actions/charging-start", v.kamereon.Target, v.accountID, v.vin)
+	res, err := v.kamereonRequest(uri)
+
+	//  "vehicle_action/charging-start.start.json",
+
+	// repeat auth if error
+	if err != nil {
+		if err = v.authFlow(); err == nil {
+			res, err = v.kamereonRequest(uri)
+		}
+	}
+
+	return res, err
+}
+
 // SoC implements the api.Vehicle interface
 func (v *Renault) SoC() (float64, error) {
 	res, err := v.batteryG()
@@ -433,10 +450,10 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-var _ api.VehicleClimater = (*Renault)(nil)
+var _ api.VehicleStart = (*Renault)(nil)
 
-// Climater implements the api.VehicleClimater interface
-func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
+// Start implements the api.VehicleStart interface
+func (v *Renault) Start() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2
@@ -457,4 +474,11 @@ func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float
 	}
 
 	return false, 0, 0, err
+}
+
+var _ api.VehicleStartCharge = (*Renault)(nil)
+
+// StartCharge implements the api.VehicleClimater interface
+func (v *Renault) StartCharge() error {
+	return api.ErrNotAvailable
 }
