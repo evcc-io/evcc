@@ -25,7 +25,7 @@ jobs:
         personal_token: ${{ secrets.GH_API_DOCS_TOKEN }}
         publish_dir: ./templates/docs
         external_repository: evcc-io/docs
-        publish_branch: master
+        publish_branch: main
         destination_dir: templates
         allow_empty_commit: false
         commit_message: Templates update
