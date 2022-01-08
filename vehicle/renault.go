@@ -450,10 +450,10 @@ func (v *Renault) FinishTime() (time.Time, error) {
 	return time.Time{}, err
 }
 
-var _ api.VehicleStart = (*Renault)(nil)
+var _ api.VehicleClimater = (*Renault)(nil)
 
-// Start implements the api.VehicleStart interface
-func (v *Renault) Start() (active bool, outsideTemp float64, targetTemp float64, err error) {
+// Climater implements the api.VehicleClimater interface
+func (v *Renault) Climater() (active bool, outsideTemp float64, targetTemp float64, err error) {
 	res, err := v.hvacG()
 
 	// Zoe Ph2
