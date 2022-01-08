@@ -47,9 +47,9 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	fmt.Println()
 	if categoryWithUsage {
-		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()}))
+		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description.String(c.lang), "Usage": deviceCategory.String()}))
 	} else {
-		fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description}))
+		fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description.String(c.lang)}))
 	}
 
 	deviceTest := DeviceTest{
@@ -63,9 +63,9 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
 		fmt.Println()
 
-		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description})
+		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description.String(c.lang)})
 		if categoryWithUsage {
-			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Description, "Usage": deviceCategory.String()})
+			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Description.String(c.lang), "Usage": deviceCategory.String()})
 		}
 		if !c.askYesNo(question) {
 			c.addedDeviceIndex--

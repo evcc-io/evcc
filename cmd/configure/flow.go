@@ -122,7 +122,7 @@ func (c *CmdConfigure) configureLinkedTypes(templateItem templates.Template) {
 		category := DeviceCategory(linkedTemplate.Usage)
 
 		localizeMap := localizeMap{
-			"Linked":     linkedTemplateItem.Description,
+			"Linked":     linkedTemplateItem.Description.String(c.lang),
 			"Article":    DeviceCategories[category].article,
 			"Additional": DeviceCategories[category].additional,
 			"Category":   DeviceCategories[category].title,
