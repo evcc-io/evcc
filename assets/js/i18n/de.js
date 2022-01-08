@@ -36,7 +36,7 @@ export default {
       experimentalText: "Unplausible Werte? Fragen zur Ansicht? Meld dich gerne in den",
     },
     sponsor: {
-      thanks: "Danke für deine Unterstützung {sponsor}! Das hilft uns bei der Weiterentwicklung.",
+      thanks: "Danke für deine Unterstützung, {sponsor}! Das hilft uns bei der Weiterentwicklung.",
       confetti: "Lust auf etwas Sponsor-Konfetti?",
       supportUs:
         "Wir möchten effizientes Zuhause-Laden zum Standard für möglichst viele Menschen machen. Helfe uns indem du die Weiterentwicklung und Pflege des Projekts unterstützt.",

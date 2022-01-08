@@ -36,7 +36,7 @@ export default {
       experimentalText: "Implausible values? Questions about this view? Feel free to join our ",
     },
     sponsor: {
-      thanks: "Thanks for your support {sponsor}! It helps us with the further development.",
+      thanks: "Thanks for your support, {sponsor}! It helps us with the further development.",
       confetti: "Ready for some sponsor confetti?",
       supportUs:
         "We want to make efficient home charging the standard for as many people as possible. Help us by supporting the further development and maintenance of the project.",

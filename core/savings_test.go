@@ -9,7 +9,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-func assert(t *testing.T, s *Savings, total, self, percentage float64) {
+func assertEnergy(t *testing.T, s *Savings, total, self, percentage float64) {
 	if !compareWithTolerane(s.ChargedTotal(), total) {
 		t.Errorf("ChargedTotal was incorrect, got: %.3f, want: %.3f.", s.ChargedTotal(), total)
 	}
@@ -18,6 +18,15 @@ func assert(t *testing.T, s *Savings, total, self, percentage float64) {
 	}
 	if int(s.SelfPercentage()) != int(percentage) {
 		t.Errorf("SelfPercentage was incorrect, got: %.1f, want: %.1f.", s.SelfPercentage(), percentage)
+	}
+}
+
+func assertPrices(t *testing.T, s *Savings, effectivePrice, savingsAmount float64) {
+	if !compareWithTolerane(s.EffectivePrice(), effectivePrice) {
+		t.Errorf("EffectivePrice was incorrect, got: %.3f, want: %.3f.", s.EffectivePrice(), effectivePrice)
+	}
+	if !compareWithTolerane(s.SavingsAmount(), savingsAmount) {
+		t.Errorf("SavingsAmount was incorrect, got: %.3f, want: %.3f.", s.SavingsAmount(), savingsAmount)
 	}
 }
 
@@ -77,7 +86,7 @@ func TestSavingsWithChangingEnergySources(t *testing.T) {
 
 		clck.Add(time.Hour)
 		s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
-		assert(t, s, tc.total, tc.self, tc.percentage)
+		assertEnergy(t, s, tc.total, tc.self, tc.percentage)
 	}
 }
 
@@ -148,6 +157,68 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 			s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
 		}
 
-		assert(t, s, tc.total, tc.self, tc.percentage)
+		assertEnergy(t, s, tc.total, tc.self, tc.percentage)
+	}
+}
+
+func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
+	p := StubPublisher{}
+
+	clck := clock.NewMock()
+
+	type tcStep = struct {
+		dt                        time.Duration
+		grid, pv, battery, charge float64
+	}
+
+	tc := []struct {
+		title                         string
+		steps                         []tcStep
+		effectivePrice, savingsAmount float64
+	}{
+		{"1 hour, 10kW, full grid",
+			[]tcStep{
+				{time.Hour, 10000, 0, 0, 10000},
+			},
+			0.3, 0,
+		},
+		{"1 hour, 10kW, full pv",
+			[]tcStep{
+				{time.Hour, 0, 10000, 0, 10000},
+			},
+			0.08, 2.2,
+		},
+		{"1 hour, 10kW, full battery",
+			[]tcStep{
+				{time.Hour, 0, 0, 10000, 10000},
+			},
+			0.08, 2.2,
+		},
+
+		{"1 hour, 10kW, half grid, half pv",
+			[]tcStep{
+				{time.Hour, 5000, 0, 5000, 10000},
+			},
+			0.19, 1.1,
+		},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		s := &Savings{
+			log:     util.NewLogger("foo"),
+			clock:   clck,
+			started: clck.Now(),
+			updated: clck.Now(),
+		}
+		s.Update(p, 0, 0, 0, 0)
+
+		for _, tc := range tc.steps {
+			clck.Add(tc.dt)
+			s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
+		}
+
+		assertPrices(t, s, tc.effectivePrice, tc.savingsAmount)
 	}
 }
