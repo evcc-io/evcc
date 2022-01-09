@@ -99,3 +99,16 @@ func (v *API) RefreshRequest(vin string) (string, error) {
 
 	return resp.CommandId, err
 }
+
+// WakeUp performs a wakeup request
+func (v *API) WakeUp(vin string) error {
+	uri := fmt.Sprintf("%s/api/dashboard/v1/users/vehicles?language=EN&skipRecall=true&country=USA&region=US&wakeupVin=%s", TokenURI, vin)
+
+	res, err := v.GetBody(uri)
+
+	if err == nil && res == nil {
+		err = errors.New("WakeUp failed")
+	}
+
+	return err
+}

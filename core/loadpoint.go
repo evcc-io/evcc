@@ -121,6 +121,7 @@ type LoadPoint struct {
 
 	charger     api.Charger
 	chargeTimer api.ChargeTimer
+	activeTimer api.ActiveTimer
 	chargeRater api.ChargeRater
 
 	chargeMeter  api.Meter     // Charger usage meter
@@ -141,6 +142,7 @@ type LoadPoint struct {
 	// charge progress
 	vehicleSoc              float64       // Vehicle SoC
 	chargeDuration          time.Duration // Charge duration
+	activeDuration          time.Duration // Active current duration for wakeup calls
 	chargedEnergy           float64       // Charged energy while connected in Wh
 	chargeRemainingDuration time.Duration // Remaining charge duration
 	chargeRemainingEnergy   float64       // Remaining charge energy in Wh
@@ -317,6 +319,12 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 		_ = lp.bus.Subscribe(evChargeStop, ct.StopCharge)
 		lp.chargeTimer = ct
 	}
+
+	// add Active timer for wakeup check
+	at := wrapper.NewActiveTimer()
+	_ = lp.bus.Subscribe(evChargeCurrent, func(current float64) { at.ActiveTimerHandler(lp.enabled, current) })
+	_ = lp.bus.Subscribe(evChargeStop, func() { at.StopActiveTimer() })
+	lp.activeTimer = at
 }
 
 // pushEvent sends push messages to clients
@@ -1246,8 +1254,15 @@ func (lp *LoadPoint) publishChargeProgress() {
 		lp.log.ERROR.Printf("charge timer: %v", err)
 	}
 
+	if d, err := lp.activeTimer.ActiveTime(); err == nil {
+		lp.activeDuration = d.Round(time.Second)
+	} else {
+		lp.log.ERROR.Printf("active timer: %v", err)
+	}
+
 	lp.publish("chargedEnergy", lp.chargedEnergy)
 	lp.publish("chargeDuration", lp.chargeDuration)
+	lp.publish("activeDuration", lp.activeDuration)
 }
 
 // socPollAllowed validates charging state against polling mode
@@ -1448,6 +1463,23 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 
 		err = lp.setLimit(targetCurrent, required)
+	}
+
+	if mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.chargePower == 0 && lp.enabled && lp.activeDuration.Minutes() > 5 {
+		lp.log.DEBUG.Printf("sleeping? Mode:%s LPStatus:%s Active:%.2fm SOC:%f Current:%f Power:%f ", mode, lp.status, lp.activeDuration.Minutes(), lp.vehicleSoc, lp.chargeCurrent, lp.chargePower)
+		// check if wakup called
+		// call the Vehicle WakeUp if available
+		if vs, ok := lp.vehicle.(api.CallWakeUp); ok {
+			if err := vs.WakeUp(); err == nil {
+				lp.log.DEBUG.Printf("vehicle WakeUp API Call")
+			}
+		}
+		// call the Charger WakeUp if available
+		if c, ok := lp.charger.(api.CallWakeUp); ok {
+			if err := c.WakeUp(); err == nil {
+				lp.log.DEBUG.Printf("charger WakeUp Call")
+			}
+		}
 	}
 
 	// stop an active target charging session if not currently evaluated
