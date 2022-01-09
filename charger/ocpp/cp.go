@@ -74,9 +74,10 @@ func (cp *CP) Status() (api.ChargeStatus, error) {
 	}
 
 	switch cp.status.Status {
-	case core.ChargePointStatusUnavailable: // "Unavailable"
+	case core.ChargePointStatusUnavailable, // "Unavailable"
+		core.ChargePointStatusAvailable: // "Available"
 		res = api.StatusA
-	case core.ChargePointStatusAvailable, // "Available"
+	case
 		core.ChargePointStatusPreparing,     // "Preparing"
 		core.ChargePointStatusSuspendedEVSE, // "SuspendedEVSE"
 		core.ChargePointStatusSuspendedEV,   // "SuspendedEV"
