@@ -16,9 +16,9 @@ type PCElectric struct {
 	*request.Helper
 	log *util.Logger
 
-	uri        string // http://garo2216247:8080
+	uri        string // http://garo2216247:8080/servlet
 	slaveIndex int    // 0 = Master, 1..n Slave
-	meter      string // http://garo2216247:8080/servlet/meterinfo/<CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
+	meter      string // <CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
 
 	lbmode       bool // true/false (wird automatisch bestimmt)
 	serialNumber int  // 1234567
@@ -34,10 +34,12 @@ func init() {
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI        string // http://garo2216247:8080
-		SlaveIndex int    // 0 = Master, 1..n Slave
-		Meter      string // <CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
-	}{}
+		URI        string
+		SlaveIndex int
+		Meter      string
+	}{
+		Meter: "CENTRAL100",
+	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
@@ -48,46 +50,38 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 		var res pcelectric.MeterInfo
 		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
 			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
-		} else {
-			wb.meter = ""
 		}
+
+		wb.meter = ""
 	}
 
 	return wb, err
 }
 
 // NewPCElectric creates PCElectric charger
-func NewPCElectric(uri string, SlaveIndex int, Meter string) (*PCElectric, error) {
+func NewPCElectric(uri string, slaveIndex int, meter string) (*PCElectric, error) {
 	log := util.NewLogger("pce")
-
-	// Build complete uri:
-	uri = strings.TrimRight(uri, "/") + "/servlet/rest/chargebox"
-
-	// Build meter uri:
-	if Meter == "" {
-		Meter = "CENTRAL100"
-	}
-	Meter = uri + "/meterinfo/" + Meter
+	uri = strings.TrimSuffix(strings.TrimRight(uri, "/"), "/servlet") + "/servlet/rest/chargebox"
 
 	wb := &PCElectric{
 		Helper:     request.NewHelper(log),
 		log:        log,
 		uri:        uri,
-		slaveIndex: SlaveIndex,
-		meter:      Meter,
+		slaveIndex: slaveIndex,
+		meter:      strings.ToUpper(meter),
 	}
 
 	// Nur Master: lb Config auslesen.
 	// Ohne Loadbalancer: Steuerung über currentlimit
 	// Mit Loadbalander: Steuerung über loadBalancingFuse
 	var lbconfig pcelectric.LbConfig
-	urilb := fmt.Sprintf("%s/lbconfig/false", wb.uri)
-	err := wb.GetJSON(urilb, &lbconfig)
-	if err == nil {
+	uri = fmt.Sprintf("%s/lbconfig/false", wb.uri)
+	if err := wb.GetJSON(uri, &lbconfig); err == nil {
 		wb.lbmode = lbconfig.MasterLoadBalanced
 		wb.serialNumber = lbconfig.Slaves[wb.slaveIndex].SerialNumber
 		log.DEBUG.Printf("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
 	}
+
 	return wb, nil
 }
 
@@ -197,19 +191,20 @@ func (wb *PCElectric) Enable(enable bool) error {
 }
 
 func (wb *PCElectric) MinCurrent(current int64) error {
-	var data pcelectric.MinCurrentLimitStruct
-	uri := fmt.Sprintf("%s/mincurrentlimit", wb.uri)
-	data = pcelectric.MinCurrentLimitStruct{
+	data := pcelectric.MinCurrentLimitStruct{
 		{
 			MinCurrentLimit: int(current), // default=6
 			SerialNumber:    wb.serialNumber,
 			TwinSerial:      -1,
 		},
 	}
+
+	uri := fmt.Sprintf("%s/mincurrentlimit", wb.uri)
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
 	}
+
 	return err
 }
 
@@ -221,9 +216,7 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 
 	// Ohne Loadbalancer Regelung über currentlimit:
 	if !wb.lbmode {
-		var data pcelectric.ReducedIntervals
-		uri := fmt.Sprintf("%s/currentlimit", wb.uri)
-		data = pcelectric.ReducedIntervals{
+		data := pcelectric.ReducedIntervals{
 			ReducedIntervalsEnabled: true,
 			ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
 				{
@@ -235,48 +228,52 @@ func (wb *PCElectric) MaxCurrent(current int64) error {
 				},
 			},
 		}
+
+		uri := fmt.Sprintf("%s/currentlimit", wb.uri)
 		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 		if err == nil {
 			_, err = wb.DoBody(req)
-		}
-		return err
-	} else { // Mit Loadbalancer Regelung über lbconfig/LoadBalancingFuse
-		var data pcelectric.LbConfigShort
-		uri := fmt.Sprintf("%s/lbconfig/false", wb.uri)
-		err := wb.GetJSON(uri, &data)
-		if err != nil {
-			return err
 		}
 
-		uri = fmt.Sprintf("%s/lbconfig", wb.uri)
-		data.LoadBalancingFuse = int(current)
-		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
-		if err == nil {
-			_, err = wb.DoBody(req)
-		}
 		return err
 	}
+
+	// Mit Loadbalancer Regelung über lbconfig/LoadBalancingFuse
+	var data pcelectric.LbConfigShort
+	uri := fmt.Sprintf("%s/lbconfig/false", wb.uri)
+	if err := wb.GetJSON(uri, &data); err != nil {
+		return err
+	}
+
+	data.LoadBalancingFuse = int(current)
+
+	uri = fmt.Sprintf("%s/lbconfig", wb.uri)
+	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+	if err == nil {
+		_, err = wb.DoBody(req)
+	}
+
+	return err
 }
 
 // CurrentPower implements the api.Meter interface W
 func (wb *PCElectric) currentPower() (float64, error) {
-	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.meter, &res)
-	power := float64(23) * float64(res.Phase1Current+res.Phase2Current+res.Phase3Current)
-	return power, err
+	l1, l2, l3, err := wb.currents()
+	return 230 * (l1 + l2 + l3), err
 }
 
 // TotalEnergy implements the api.MeterEnergy interface kwh
 func (wb *PCElectric) totalEnergy() (float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.meter, &res)
-	energy := float64(res.AccEnergy) / 1000
-	return energy, err
+	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)
+	err := wb.GetJSON(uri, &res)
+	return float64(res.AccEnergy) / 1e3, err
 }
 
 // Currents implements the api.MeterCurrents interface A
 func (wb *PCElectric) currents() (float64, float64, float64, error) {
 	var res pcelectric.MeterInfo
-	err := wb.GetJSON(wb.meter, &res)
+	uri := fmt.Sprintf("%s/meterinfo/%s", wb.uri, wb.meter)
+	err := wb.GetJSON(uri, &res)
 	return float64(res.Phase1Current) / 10, float64(res.Phase2Current) / 10, float64(res.Phase3Current) / 10, err
 }
