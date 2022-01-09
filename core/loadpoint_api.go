@@ -130,7 +130,7 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 }
 
 // Get Finish Time
-func (lp *LoadPoint) GetFinishAt () time.Time {
+func (lp *LoadPoint) GetFinishAt() time.Time {
 	return lp.socTimer.Time
 }
 

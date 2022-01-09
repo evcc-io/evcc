@@ -49,7 +49,7 @@ type API interface {
 	// SetTargetCharge sets the charge targetSoC
 	SetTargetCharge(time.Time, int)
 	// Get Finish time
-	GetFinishAt () time.Time
+	GetFinishAt() time.Time
 	// RemoteControl sets remote status demand
 	RemoteControl(string, RemoteDemand)
 
