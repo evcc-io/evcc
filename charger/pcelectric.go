@@ -114,7 +114,7 @@ func (wb *PCElectric) Status() (api.ChargeStatus, error) {
 	}
 	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
-	res := api.StatusA
+	var res api.ChargeStatus
 	switch chargeStatus {
 	case 0x00, 0x10: // notconnected
 		res = api.StatusA
