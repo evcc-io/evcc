@@ -5,52 +5,76 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/tariff"
 	"github.com/evcc-io/evcc/util"
 )
 
-// Site is the main configuration container. A site can host multiple loadpoints.
-type Savings struct {
-	log *util.Logger
+const DefaultGridPrice = 0.30
+const DefaultFeedInPrice = 0.08
 
-	started                time.Time // Boot time
-	updated                time.Time // Time of last charged value update
-	chargedTotal           float64   // Energy charged since startup (kWh)
-	chargedSelfConsumption float64   // Self-produced energy charged since startup (kWh)
-	Clock                  clock.Clock
+// publisher gives access to the site's publish function
+type publisher interface {
+	publish(key string, val interface{})
 }
 
-func NewSavings() Savings {
+// Site is the main configuration container. A site can host multiple loadpoints.
+type Savings struct {
+	log                    *util.Logger
+	clock                  clock.Clock
+	tariffs                tariff.Tariffs
+	started                time.Time // Boot time
+	updated                time.Time // Time of last charged value update
+	gridCharged            float64   // Grid energy charged since startup (kWh)
+	gridCost               float64   // Running total of charged grid energy cost (e.g. EUR)
+	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost    float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	lastGridPrice          float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
+}
+
+func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 	savings := &Savings{
 		log:     util.NewLogger("savings"),
+		clock:   clock,
+		tariffs: tariffs,
 		started: clock.Now(),
 		updated: clock.Now(),
-		Clock:   clock,
 	}
 
-	return *savings
+	return savings
 }
 
 func (s *Savings) Since() time.Duration {
 	return time.Since(s.started)
 }
 
-func (s *Savings) SelfPercentage() float64 {
-	if s.chargedTotal == 0 {
+func (s *Savings) SelfConsumptionPercent() float64 {
+	if s.TotalCharged() == 0 {
 		return 0
 	}
-	return 100 / s.chargedTotal * s.chargedSelfConsumption
+	return s.selfConsumptionCharged / s.TotalCharged() * 100
 }
 
-func (s *Savings) ChargedTotal() float64 {
-	return s.chargedTotal
+func (s *Savings) TotalCharged() float64 {
+	return s.gridCharged + s.selfConsumptionCharged
 }
 
-func (s *Savings) ChargedSelfConsumption() float64 {
-	return s.chargedSelfConsumption
+func (s *Savings) CostTotal() float64 {
+	return s.gridCost + s.selfConsumptionCost
 }
 
-func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, batteryPower float64) float64 {
+func (s *Savings) EffectivePrice() float64 {
+	if s.TotalCharged() == 0 {
+		return s.currentGridPrice()
+	}
+	return s.CostTotal() / s.TotalCharged()
+}
+
+func (s *Savings) SavingsAmount() float64 {
+	return s.selfConsumptionCharged * (s.currentGridPrice() - s.currentFeedInPrice())
+}
+
+func (s *Savings) shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower float64) float64 {
 	batteryDischarge := math.Max(0, batteryPower)
 	batteryCharge := math.Min(0, batteryPower) * -1
 	pvConsumption := math.Min(pvPower, pvPower+gridPower-batteryCharge)
@@ -58,29 +82,60 @@ func (s *Savings) shareOfSelfProducedEnergy(gridPower float64, pvPower float64, 
 	gridImport := math.Max(0, gridPower)
 	selfConsumption := math.Max(0, batteryDischarge+pvConsumption+batteryCharge)
 
-	selfPercentage := 100 / (gridImport + selfConsumption) * selfConsumption
+	share := selfConsumption / (gridImport + selfConsumption)
 
-	if math.IsNaN(selfPercentage) {
+	if math.IsNaN(share) {
 		return 0
 	}
 
-	return selfPercentage
+	return share
 }
 
-func (s *Savings) Update(gridPower float64, pvPower float64, batteryPower float64, chargePower float64) {
-	now := s.Clock.Now()
+func (s *Savings) currentGridPrice() float64 {
+	if s.tariffs.Grid != nil {
+		if gridPrice, err := s.tariffs.Grid.CurrentPrice(); err == nil {
+			return gridPrice
+		}
+	}
+	return DefaultGridPrice
+}
 
-	selfPercentage := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
+func (s *Savings) currentFeedInPrice() float64 {
+	if s.tariffs.FeedIn != nil {
+		if gridPrice, err := s.tariffs.FeedIn.CurrentPrice(); err == nil {
+			return gridPrice
+		}
+	}
+	return DefaultFeedInPrice
+}
 
-	updateDuration := now.Sub(s.updated)
+func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
+	// assume charge power as constant over the duration -> rough kWh estimate
+	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 
-	// assuming the charge power was constant over the duration -> rough estimate
-	addedEnergy := updateDuration.Hours() * chargePower / 1000
+	// nothing meaningfull changed, no need to update
+	if energyAdded == 0 && s.lastGridPrice == s.currentGridPrice() {
+		return
+	}
 
-	s.chargedTotal += addedEnergy
-	s.chargedSelfConsumption += addedEnergy * (selfPercentage / 100)
-	s.updated = now
+	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
-	s.log.DEBUG.Printf("%.1fkWh charged since %s", s.chargedTotal, time.Since(s.started).Round(time.Second))
-	s.log.DEBUG.Printf("%.1fkWh own energy (%.1f%%)", s.chargedSelfConsumption, s.SelfPercentage())
+	addedSelfConsumption := energyAdded * share
+	addedGrid := energyAdded - addedSelfConsumption
+
+	s.gridCharged += addedGrid
+	s.gridCost += addedGrid * s.currentGridPrice()
+	s.selfConsumptionCharged += addedSelfConsumption
+	s.selfConsumptionCost += addedSelfConsumption * s.currentFeedInPrice()
+	s.lastGridPrice = s.currentGridPrice()
+	s.updated = s.clock.Now()
+
+	p.publish("savingsTotalCharged", s.TotalCharged())
+	p.publish("savingsGridCharged", s.gridCharged)
+	p.publish("savingsSelfConsumptionCharged", s.selfConsumptionCharged)
+	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
+	p.publish("savingsEffectivePrice", s.EffectivePrice())
+	p.publish("savingsAmount", s.SavingsAmount())
+	p.publish("tariffGrid", s.currentGridPrice())
+	p.publish("tariffFeedIn", s.currentFeedInPrice())
 }

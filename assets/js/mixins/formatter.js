@@ -101,11 +101,13 @@ export default {
     fmtPricePerKWh: function (amout = 0, currency = "EUR") {
       let unit = currency;
       let value = amout;
+      let maximumFractionDigits = 3;
       if (["EUR", "USD"].includes(currency)) {
         value *= 100;
         unit = "ct";
+        maximumFractionDigits = 1;
       }
-      return `${this.$n(value, { style: "decimal" })} ${unit}/kWh`;
+      return `${this.$n(value, { style: "decimal", maximumFractionDigits })} ${unit}/kWh`;
     },
     fmtTimeAgo: function (elapsed) {
       const units = {

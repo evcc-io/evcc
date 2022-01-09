@@ -45,7 +45,7 @@ type Site struct {
 
 	tariffs    tariff.Tariffs // Tariff
 	loadpoints []*LoadPoint   // Loadpoints
-	savings    Savings        // Savings
+	savings    *Savings       // Savings
 
 	// cached state
 	gridPower       float64 // Grid power
@@ -77,9 +77,9 @@ func NewSiteFromConfig(
 	}
 
 	Voltage = site.Voltage
-	site.tariffs = tariffs
 	site.loadpoints = loadpoints
-	site.savings = NewSavings()
+	site.tariffs = tariffs
+	site.savings = NewSavings(tariffs)
 
 	if site.Meters.GridMeterRef != "" {
 		site.gridMeter = cp.Meter(site.Meters.GridMeterRef)
@@ -393,24 +393,6 @@ func (site *Site) sitePower() (float64, error) {
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
 
-	site.publish("savingsChargedTotal", site.savings.ChargedTotal())
-	site.publish("savingsChargedSelfConsumption", site.savings.ChargedSelfConsumption())
-	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
-	site.publish("savingsSince", site.savings.Since())
-
-	site.publish("currency", site.tariffs.Currency.String())
-
-	if site.tariffs.Grid != nil {
-		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
-			site.publish("tariffGrid", gridPrice)
-		}
-	}
-	if site.tariffs.FeedIn != nil {
-		if feedInPrice, err := site.tariffs.FeedIn.CurrentPrice(); err == nil {
-			site.publish("tariffFeedIn", feedInPrice)
-		}
-	}
-
 	return sitePower, nil
 }
 
@@ -441,18 +423,28 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings
+
 	// TODO: use a proper interface, use meter readings instead of current power for better results
-	var totalChargePower = 0.0
+	var totalChargePower float64
 	for _, lp := range site.loadpoints {
 		totalChargePower += lp.chargePower
 	}
-	site.savings.Update(site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+
+	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
+}
+
+// prepare publishes initial values
+func (site *Site) prepare() {
+	site.publish("currency", site.tariffs.Currency.String())
+	site.publish("savingsSince", site.savings.Since())
 }
 
 // Prepare attaches communication channels to site and loadpoints
 func (site *Site) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Event) {
 	site.uiChan = uiChan
 	site.lpUpdateChan = make(chan *LoadPoint, 1) // 1 capacity to avoid deadlock
+
+	site.prepare()
 
 	for id, lp := range site.loadpoints {
 		lpUIChan := make(chan util.Param)

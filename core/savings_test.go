@@ -9,15 +9,24 @@ import (
 	"github.com/evcc-io/evcc/util"
 )
 
-func assert(t *testing.T, s *Savings, total float64, self float64, percentage float64) {
-	if !compareWithTolerane(s.ChargedTotal(), total) {
-		t.Errorf("ChargedTotal was incorrect, got: %.3f, want: %.3f.", s.ChargedTotal(), total)
+func assertEnergy(t *testing.T, s *Savings, total, self, percentage float64) {
+	if !compareWithTolerane(s.TotalCharged(), total) {
+		t.Errorf("TotalCharged was incorrect, got: %.3f, want: %.3f.", s.TotalCharged(), total)
 	}
-	if !compareWithTolerane(s.ChargedSelfConsumption(), self) {
-		t.Errorf("ChargedSelfConsumption was incorrect, got: %.3f, want: %.3f.", s.ChargedSelfConsumption(), self)
+	if !compareWithTolerane(s.selfConsumptionCharged, self) {
+		t.Errorf("ChargedSelfConsumption was incorrect, got: %.3f, want: %.3f.", s.selfConsumptionCharged, self)
 	}
-	if int(s.SelfPercentage()) != int(percentage) {
-		t.Errorf("SelfPercentage was incorrect, got: %.1f, want: %.1f.", s.SelfPercentage(), percentage)
+	if int(s.SelfConsumptionPercent()) != int(percentage) {
+		t.Errorf("SelfConsumptionPercent was incorrect, got: %.1f, want: %.1f.", s.SelfConsumptionPercent(), percentage)
+	}
+}
+
+func assertPrices(t *testing.T, s *Savings, effectivePrice, savingsAmount float64) {
+	if !compareWithTolerane(s.EffectivePrice(), effectivePrice) {
+		t.Errorf("EffectivePrice was incorrect, got: %.3f, want: %.3f.", s.EffectivePrice(), effectivePrice)
+	}
+	if !compareWithTolerane(s.SavingsAmount(), savingsAmount) {
+		t.Errorf("SavingsAmount was incorrect, got: %.3f, want: %.3f.", s.SavingsAmount(), savingsAmount)
 	}
 }
 
@@ -27,94 +36,189 @@ func compareWithTolerane(a, b float64) bool {
 	return diff < tolerance
 }
 
+type StubPublisher struct{}
+
+func (p StubPublisher) publish(key string, val interface{}) {}
+
 func TestSavingsWithChangingEnergySources(t *testing.T) {
-	mockClock := clock.NewMock()
+	p := StubPublisher{}
+
+	clck := clock.NewMock()
 	s := &Savings{
-		log:     util.NewLogger("savings"),
-		started: mockClock.Now(),
-		updated: mockClock.Now(),
-		Clock:   mockClock,
+		log:     util.NewLogger("foo"),
+		clock:   clck,
+		started: clck.Now(),
+		updated: clck.Now(),
 	}
 
-	s.Update(0, 0, 0, 0)
+	tc := []struct {
+		title                     string
+		grid, pv, battery, charge float64
+		total, self, percentage   float64
+	}{
+		{"half grid, half pv",
+			2500, 2500, 0, 5000,
+			5, 2.5, 50},
+		{"full pv",
+			0, 5000, 0, 5000,
+			10, 7.5, 75},
+		{"full grid",
+			5000, 0, 0, 5000,
+			15, 7.5, 50},
+		{"half grid, half battery",
+			2500, 0, 2500, 5000,
+			20, 10, 50},
+		{"full pv, pv export",
+			-5000, 10000, 0, 5000,
+			25, 15, 60},
+		{"full pv, pv export, battery charge",
+			-2500, 10000, -2500, 5000,
+			30, 20, 66},
+		{"double charge speed, full grid",
+			10000, 0, 0, 10000,
+			40, 20, 50},
+	}
 
-	// half grid, half pv
-	mockClock.Add(time.Hour)
-	s.Update(2500, 2500, 0, 5000)
-	assert(t, s, 5, 2.5, 50)
+	s.Update(p, 0, 0, 0, 0)
 
-	// full pv
-	mockClock.Add(time.Hour)
-	s.Update(0, 5000, 0, 5000)
-	assert(t, s, 10, 7.5, 75)
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
 
-	// full grid
-	mockClock.Add(time.Hour)
-	s.Update(5000, 0, 0, 5000)
-	assert(t, s, 15, 7.5, 50)
-
-	// half grid, half battery
-	mockClock.Add(time.Hour)
-	s.Update(2500, 0, 2500, 5000)
-	assert(t, s, 20, 10, 50)
-
-	// full pv, pv export
-	mockClock.Add(time.Hour)
-	s.Update(-5000, 10000, 0, 5000)
-	assert(t, s, 25, 15, 60)
-
-	// full pv, pv export, battery charge
-	mockClock.Add(time.Hour)
-	s.Update(-2500, 10000, -2500, 5000)
-	assert(t, s, 30, 20, 66)
-
-	// double charge speed, full grid
-	mockClock.Add(time.Hour)
-	s.Update(10000, 0, 0, 10000)
-	assert(t, s, 40, 20, 50)
+		clck.Add(time.Hour)
+		s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
+		assertEnergy(t, s, tc.total, tc.self, tc.percentage)
+	}
 }
 
 func TestSavingsWithDifferentTimespans(t *testing.T) {
-	mockClock := clock.NewMock()
+	p := StubPublisher{}
+
+	clck := clock.NewMock()
 	s := &Savings{
-		log:     util.NewLogger("savings"),
-		started: mockClock.Now(),
-		updated: mockClock.Now(),
-		Clock:   mockClock,
+		log:     util.NewLogger("foo"),
+		clock:   clck,
+		started: clck.Now(),
+		updated: clck.Now(),
 	}
 
-	s.Update(0, 0, 0, 0)
+	type tcStep = struct {
+		dt                        time.Duration
+		grid, pv, battery, charge float64
+	}
 
-	// 10 second 11kW charging, full grid
-	mockClock.Add(10 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.030556, 0, 0) // 30,555Wh
+	tc := []struct {
+		title                   string
+		steps                   []tcStep
+		total, self, percentage float64
+	}{
+		{"10 second 11kW charging, full grid",
+			[]tcStep{
+				{10 * time.Second, 0, 0, 0, 11000},
+			},
+			0.030556, 0, 0, // 30,555Wh
+		},
+		{"10 second 11kW charging, full grid",
+			[]tcStep{
+				{10 * time.Second, 0, 0, 0, 11000},
+			},
+			0.061111, 0, 0, // 61,111Wh
+		},
+		{"5x 2 second 11kW charging, full grid",
+			[]tcStep{
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+				{2 * time.Second, 0, 0, 0, 11000},
+			},
+			0.092, 0, 0, // 91,666Wh
+		},
+		{"30 min 11kW charging, full grid",
+			[]tcStep{
+				{30 * time.Minute, 0, 0, 0, 11000},
+			},
+			5.592, 0, 0, // 5561,111Wh
+		},
+		{"4 hours 11kW charging, full pv",
+			[]tcStep{
+				{4 * time.Hour, 0, 11000, 0, 11000},
+			},
+			49.592, 44, 88,
+		},
+	}
 
-	// 10 second 11kW charging, full grid
-	mockClock.Add(10 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.061111, 0, 0) // 61,111Wh
+	s.Update(p, 0, 0, 0, 0)
 
-	// 5x 2 second 11kW charging, full grid
-	mockClock.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	mockClock.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	mockClock.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	mockClock.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	mockClock.Add(2 * time.Second)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 0.092, 0, 0) // 91,666Wh
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
 
-	// 30 min 11kW charging, full grid
-	mockClock.Add(30 * time.Minute)
-	s.Update(11000, 0, 0, 11000)
-	assert(t, s, 5.592, 0, 0) // 5561,111Wh
+		for _, tc := range tc.steps {
+			clck.Add(tc.dt)
+			s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
+		}
 
-	// 4 hours 11kW charging, full pv
-	mockClock.Add(4 * time.Hour)
-	s.Update(0, 11000, 0, 11000)
-	assert(t, s, 49.592, 44, 88)
+		assertEnergy(t, s, tc.total, tc.self, tc.percentage)
+	}
+}
+
+func TestEffectiveEnergyPriceAndSavingsAmount(t *testing.T) {
+	p := StubPublisher{}
+
+	clck := clock.NewMock()
+
+	type tcStep = struct {
+		dt                        time.Duration
+		grid, pv, battery, charge float64
+	}
+
+	tc := []struct {
+		title                         string
+		steps                         []tcStep
+		effectivePrice, savingsAmount float64
+	}{
+		{"1 hour, 10kW, full grid",
+			[]tcStep{
+				{time.Hour, 10000, 0, 0, 10000},
+			},
+			0.3, 0,
+		},
+		{"1 hour, 10kW, full pv",
+			[]tcStep{
+				{time.Hour, 0, 10000, 0, 10000},
+			},
+			0.08, 2.2,
+		},
+		{"1 hour, 10kW, full battery",
+			[]tcStep{
+				{time.Hour, 0, 0, 10000, 10000},
+			},
+			0.08, 2.2,
+		},
+
+		{"1 hour, 10kW, half grid, half pv",
+			[]tcStep{
+				{time.Hour, 5000, 0, 5000, 10000},
+			},
+			0.19, 1.1,
+		},
+	}
+
+	for _, tc := range tc {
+		t.Logf("%+v", tc)
+
+		s := &Savings{
+			log:     util.NewLogger("foo"),
+			clock:   clck,
+			started: clck.Now(),
+			updated: clck.Now(),
+		}
+		s.Update(p, 0, 0, 0, 0)
+
+		for _, tc := range tc.steps {
+			clck.Add(tc.dt)
+			s.Update(p, tc.grid, tc.pv, tc.battery, tc.charge)
+		}
+
+		assertPrices(t, s, tc.effectivePrice, tc.savingsAmount)
+	}
 }
