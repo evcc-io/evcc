@@ -1,5 +1,6 @@
 template: openwb
-description: openWB (MQTT)
+description: 
+  generic: openWB (MQTT)
 requirements:
   description:
     en: The wallbox has to be configured running as a loadpoint.

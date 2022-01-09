@@ -1,5 +1,6 @@
 template: ford
-description: Ford
+description: 
+  generic: Ford
 params:
 - base: vehiclebase
 - base: vehicleidentify

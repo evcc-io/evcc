@@ -1,0 +1,4 @@
+type: template
+template: solaredge-inverter
+description: Solaredge Wechselrichter
+usage: pv

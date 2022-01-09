@@ -1,0 +1,39 @@
+template: sungrow
+description: 
+  generic: Sungrow (Beta)
+guidedsetup:
+  enable: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "battery" ]
+- name: modbus
+  choice: [ "rs485", "tcpip" ]
+render: |
+  type: custom
+  power:
+    source: modbus
+    {{include "modbus" . | indent 2}}
+    register:
+      type: input
+  {{- if eq .usage "grid" }}
+      address: 13009 # Export power
+      decode: int32s
+    scale: -1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+      address: 5016 # Total DC power
+      decode: uint32s
+  {{- end }}
+  {{- if eq .usage "battery" }}
+      address: 13021 # Battery power
+      decode: int16
+    #scale: -1 # charging sign form 13000 & 0x2
+  soc:
+    source: modbus
+    {{include "modbus" . | indent 2}}
+    register:
+      address: 13022 # Battery level
+      type: input
+      decode: int16
+    scale: 0.1
+  {{- end }}

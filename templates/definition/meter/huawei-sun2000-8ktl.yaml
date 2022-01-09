@@ -1,5 +1,6 @@
 template: huawei-sun2000-8ktl
-description: Huawei SUN2000-8KTL
+description: 
+  generic: Huawei SUN2000-8KTL
 params:
 - name: usage
   choice: [ "pv" ]

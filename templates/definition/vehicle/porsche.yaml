@@ -1,5 +1,6 @@
 template: porsche
-description: Porsche
+description: 
+  generic: Porsche
 params:
 - base: vehiclebase
 - base: vehicleidentify

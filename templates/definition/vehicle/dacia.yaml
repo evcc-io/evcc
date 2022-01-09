@@ -1,5 +1,6 @@
 template: dacia
-description: Dacia
+description: 
+  generic: Dacia
 params:
 - base: vehiclebase
 - base: vehicleidentify

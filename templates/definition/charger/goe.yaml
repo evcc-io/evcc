@@ -1,5 +1,6 @@
 template: go-e
-description: go-eCharger Home/Pro/V3
+description: 
+  generic: go-eCharger Home/Pro/V3
 requirements:
   description:
     en: Home und PRO require firmware 040.0 or later, V3 requires firmware 052.1 or later.

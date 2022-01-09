@@ -1,5 +1,6 @@
 template: ds
-description: DS
+description: 
+  generic: DS
 params:
 - base: vehiclebase
 - base: vehicleidentify

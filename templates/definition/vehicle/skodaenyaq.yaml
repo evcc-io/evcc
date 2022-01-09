@@ -1,5 +1,6 @@
 template: enyaq
-description: Skoda (Enyaq)
+description: 
+  generic: Skoda (Enyaq)
 params:
 - base: vehiclebase
 - base: vehicleidentify

@@ -1,5 +1,6 @@
 template: sma-energy-meter
-description: SMA Energy Meter
+description: 
+  generic: SMA Energy Meter (Produktname)
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]

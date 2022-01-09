@@ -1,0 +1,105 @@
+template: mqtt-meter
+description: 
+  de: MQTT Strommessgerät
+  en: MQTT Meter
+generic: true
+requirements:
+  mqtt: true
+params:
+- name: usage
+  choice: [ "grid", "pv", "charge", "battery" ]
+- name: power
+  description:
+    de: MQTT Topic für die Leistung (W)
+    en: MQTT Topic for power (W)
+  required: true
+- name: scalepower
+  description:
+    de: Skalierung der Leistungswerte
+    en: Scaling of the power value
+  default: 1
+  help:
+    de: Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden
+    en: Power is expected to be provided in Watt. If it is provided in kW instead, set this value to 1000 to correct it
+- name: energy
+  description:
+    de: MQTT Topic für Energiemenge (Wh)
+    en: MQTT Topic for energy (Wh)
+- name: scaleenergy
+  dependencies:
+    - name: energy
+      check: notempty
+  description:
+    de: Skalierung der Energiement
+    en: Scaling of the energy value
+  default: 1
+  help:
+    de: Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden
+    en: Power is expected to be provided in kWh. If it is provided in Wh instead, set this value to 0.001 to correct it
+- name: soc
+  description:
+    de: MQTT Topic für den SoC der Batterie (%)
+    en: MQTT Topic for battery SoC (%)
+  dependencies:
+    - name: usage
+      check: equal
+      value: battery
+- name: currentp1
+  description:
+    de: MQTT Topic Stromstärke (A) Phase 1
+    en: MQTT Topic Amperage (A) phase 1
+- name: currentp2
+  description:
+    de: MQTT Topic Stromstärke (A) Phase 2
+    en: MQTT Topic Amperage (A) phase 2
+  dependencies:
+    - name: currentp1
+      check: notempty
+- name: currentp3
+  description:
+    de: MQTT Topic Stromstärke (A) Phase 3
+    en: MQTT Topic Amperage (A) phase 3
+  dependencies:
+    - name: currentp1
+      check: notempty
+- name: timeout
+  default: 30
+  help:
+    de: Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist 
+    en: Don't accept values older than this value in seconds
+render: |
+  type: custom
+  power:
+    source: mqtt
+    topic: {{ .power }}
+    scale: {{ .scalepower }}
+    timeout: {{ .timeout }}
+  {{- if ne .energy1 "" }}
+  energy:
+    source: mqtt
+    topic: {{ .energy }}
+    scale: {{ .scaleenergy }}
+    timeout: {{ .timeout }}
+  {{- end -}}
+  {{- if eq .usage "battery" }}
+  soc:
+    source: mqtt
+    topic: {{ .soc }}
+    timeout: {{ .timeout }}
+  {{- end -}}
+  {{- if ne .currentp1 "" }}
+  currents:
+    - source: mqtt
+      topic: {{ .currentp1 }}
+      timeout: {{ .timeout }}
+  {{- if ne .currentp2 "" }}
+    - source: mqtt
+      topic: {{ .currentp2 }}
+      timeout: {{ .timeout }}
+  {{- end -}}
+  {{- if ne .currentp3 "" }}
+    - source: mqtt
+      topic: {{ .currentp3 }}
+      timeout: {{ .timeout }}
+  {{- end -}}
+  {{- end -}}
