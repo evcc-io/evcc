@@ -6,7 +6,6 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/evcc-io/evcc/tariff"
-	"github.com/evcc-io/evcc/util"
 )
 
 const DefaultGridPrice = 0.30
@@ -19,7 +18,6 @@ type publisher interface {
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
-	log                    *util.Logger
 	clock                  clock.Clock
 	tariffs                tariff.Tariffs
 	started                time.Time // Boot time
@@ -34,7 +32,6 @@ type Savings struct {
 func NewSavings(tariffs tariff.Tariffs) *Savings {
 	clock := clock.New()
 	savings := &Savings{
-		log:     util.NewLogger("savings"),
 		clock:   clock,
 		tariffs: tariffs,
 		started: clock.Now(),
