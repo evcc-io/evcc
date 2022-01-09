@@ -121,6 +121,11 @@ type ChargeTimer interface {
 	ChargingTime() (time.Duration, error)
 }
 
+// ActiveTimer provides current active cycle duration
+type ActiveTimer interface {
+	ActiveTime() (time.Duration, error)
+}
+
 // ChargeRater provides charged energy amount in kWh
 type ChargeRater interface {
 	ChargedEnergy() (float64, error)
@@ -183,6 +188,11 @@ type VehicleStartCharge interface {
 // VehicleStopCharge stops the charging session on the vehicle side
 type VehicleStopCharge interface {
 	StopCharge() error
+}
+
+// WakeUp provides wakeup calls to wakeup the vehicle with an API call or a CP interrupt from the charger
+type CallWakeUp interface {
+	WakeUp() error
 }
 
 type Tariff interface {

@@ -271,3 +271,11 @@ func (wb *EVSEWifi) identify() (string, error) {
 // 	params, err := wb.getParameters()
 // 	return params.Energy, err
 // }
+
+var _ api.CallWakeUp = (*EVSEWifi)(nil)
+
+// WakeUp implements the api.CallWakeUp interface
+func (wb *EVSEWifi) WakeUp() error {
+	uri := fmt.Sprintf("%s/interruptCp", wb.uri)
+	return wb.get(uri)
+}
