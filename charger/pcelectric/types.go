@@ -13,7 +13,9 @@ type Status struct {
 	CurrentChargingCurrent int    //  -1,
 	CurrentChargingPower   int    //  -1,
 	AccSessionEnergy       int    //  0,
-	AccSessionMillis       int    //  0,
+	SessionStartTime       int64  //  1641489661842
+	ChargeboxTime          string //  "22:25"
+	AccSessionMillis       int64  //  0,
 	LatestReading          int    //  0,
 	ChargeStatus           int    //  0,
 	NrOfPhases             int    //  1,
@@ -32,14 +34,45 @@ type Status struct {
 		AccEnergy              int    //  -1,
 		Connector              string //  "NOT_CONNECTED",
 		AccSessionEnergy       int    //  0,
-		SessionStartValue      int    //  -1,
-		AccSessionMillis       int    //  0,
+		SessionStartValue      int64  //  -1,
+		AccSessionMillis       int64  //  0,
 		CurrentChargingCurrent int    //  -1,
 		CurrentChargingPower   int    //  0,
 		NrOfPhases             int    //  1,
 		TwinSerial             int    //  -1,
 	}
 	TwinCharger interface{}
+}
+
+// /servlet/rest/chargebox/slaves/false
+type SlaveStatus []struct {
+	Reference              string //  "Garage",
+	SerialNumber           int    //  2216247,
+	LastContact            int64  //  1640781615305,
+	Online                 bool   //  false,
+	LoadBalanced           bool   //  true,
+	Phase                  int    //  16,
+	ProductId              int    //  121,
+	MeterStatus            int    //  1,
+	MeterSerial            string //  "",
+	ChargeStatus           int    //  0,
+	PilotLevel             int    //  6,
+	AccEnergy              int    //  -1,
+	FirmwareVersion        int    //  7
+	FirmwareRevision       int    //  9
+	WifiCardStatus         int    //  2
+	Connector              string //  "NOT_CONNECTED",
+	AccSessionEnergy       int    //  0,
+	SessionStartValue      int    //  -1,
+	AccSessionMillis       int64  //  0,
+	SessionStartTime       int64  //  1641136092090
+	CurrentChargingCurrent int    //  -1,
+	CurrentChargingPower   int    //  0,
+	NrOfPhases             int    //  1,
+	TwinSerial             int    //  -1,
+	CableLockMode          int    //  0
+	MinCurrentLimit        int    //  6
+	DipSwitchSettings      int    //  8188
 }
 
 type ReducedIntervals struct {
@@ -73,7 +106,15 @@ type MeterInfo struct {
 	ApparentPower   int    // 9
 }
 
-///servlet/rest/chargebox/lbconfig/false
+// /servlet/rest/chargebox/lbconfig/false
+type LbConfigShort struct {
+	LoadBalancingFuse     int  `json:"loadBalancingFuse"`     // 32
+	LoadBalancingPower    int  `json:"loadBalancingPower"`    // 0
+	LoadBalancingFuse101  int  `json:"loadBalancingFuse101"`  // 32
+	LoadBalancingPower101 int  `json:"loadBalancingPower101"` // 0
+	MasterPhase           int  `json:"masterPhase"`           // 16
+	MasterLoadBalanced    bool `json:"masterLoadBalanced"`    // true
+}
 
 type LbConfig struct {
 	LoadBalancingFuse     int  // 16
@@ -112,7 +153,6 @@ type LbConfig struct {
 		DipSwitchSettings      int    // 8188
 	}
 }
-
 type Config struct {
 	OcppConnected           bool   // false
 	MaxChargeCurrent        int    // 32
@@ -197,10 +237,8 @@ type Config struct {
 	}
 }
 
-type Schema struct {
-	SchemaId    int
-	Start       string
-	Stop        string
-	Weekday     int
-	ChargeLimit int
+type MinCurrentLimitStruct []struct {
+	MinCurrentLimit int `json:"minCurrentLimit"`
+	SerialNumber    int `json:"serialNumber"`
+	TwinSerial      int `json:"twinSerial"` // -1
 }

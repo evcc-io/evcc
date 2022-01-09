@@ -14,8 +14,14 @@ import (
 // PCElectric charger implementation
 type PCElectric struct {
 	*request.Helper
-	uri     string
-	meterID int
+	log *util.Logger
+
+	uri        string // http://garo2216247:8080
+	slaveIndex int    // 0 = Master, 1..n Slave
+	meter      string // http://garo2216247:8080/servlet/meterinfo/<CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
+
+	lbmode       bool // true/false (wird automatisch bestimmt)
+	serialNumber int  // 1234567
 }
 
 func init() {
@@ -23,26 +29,27 @@ func init() {
 	registry.Add("pcelectric", NewPCElectricFromConfig)
 }
 
-//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
+//go:generate go run ../cmd/tools/decorate.go -f decoratePCE -b *PCElectric -r api.Charger -t "api.Meter,CurrentPower,func() (float64, error)" -t "api.MeterEnergy,TotalEnergy,func() (float64, error)" -t "api.MeterCurrent,Currents,func() (float64, float64, float64, error)"
 
 // NewPCElectricFromConfig creates a PCElectric charger from generic config
 func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) {
 	cc := struct {
-		URI     string
-		MeterID int
-	}{
-		MeterID: 100,
-	}
+		URI        string // http://garo2216247:8080
+		SlaveIndex int    // 0 = Master, 1..n Slave
+		Meter      string // <CENTRAL100|CENTRAL101|INTERNAL|EXTERNAL|TWIN>
+	}{}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.MeterID)
-	if err == nil {
+	wb, err := NewPCElectric(util.DefaultScheme(cc.URI, "http"), cc.SlaveIndex, cc.Meter)
+	if err == nil && wb.slaveIndex == 0 { // Nur Master hat den Zähler...leider
 		var res pcelectric.MeterInfo
-		if err := wb.GetJSON(fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID), &res); err == nil && res.MeterSerial != "" {
-			return decoratePCE(wb, wb.currentPower, wb.currents), nil
+		if err := wb.GetJSON(wb.meter, &res); err == nil && res.MeterSerial != "" {
+			return decoratePCE(wb, wb.currentPower, wb.totalEnergy, wb.currents), nil
+		} else {
+			wb.meter = ""
 		}
 	}
 
@@ -50,44 +57,108 @@ func NewPCElectricFromConfig(other map[string]interface{}) (api.Charger, error) 
 }
 
 // NewPCElectric creates PCElectric charger
-func NewPCElectric(uri string, meterID int) (*PCElectric, error) {
+func NewPCElectric(uri string, SlaveIndex int, Meter string) (*PCElectric, error) {
 	log := util.NewLogger("pce")
 
+	// Build complete uri:
+	uri = strings.TrimRight(uri, "/") + "/servlet/rest/chargebox"
+
+	// Build meter uri:
+	if Meter == "" {
+		Meter = "CENTRAL100"
+	}
+	Meter = uri + "/meterinfo/" + Meter
+
 	wb := &PCElectric{
-		Helper:  request.NewHelper(log),
-		uri:     strings.TrimRight(uri, "/") + "/servlet/rest/chargebox",
-		meterID: meterID,
+		Helper:     request.NewHelper(log),
+		log:        log,
+		uri:        uri,
+		slaveIndex: SlaveIndex,
+		meter:      Meter,
 	}
 
+	// Nur Master: lb Config auslesen.
+	// Ohne Loadbalancer: Steuerung über currentlimit
+	// Mit Loadbalander: Steuerung über loadBalancingFuse
+	var lbconfig pcelectric.LbConfig
+	urilb := fmt.Sprintf("%s/lbconfig/false", wb.uri)
+	err := wb.GetJSON(urilb, &lbconfig)
+	if err == nil {
+		wb.lbmode = lbconfig.MasterLoadBalanced
+		wb.serialNumber = lbconfig.Slaves[wb.slaveIndex].SerialNumber
+		log.DEBUG.Printf("lbmode: %t  serial: %d ", wb.lbmode, wb.serialNumber)
+	}
 	return wb, nil
 }
 
 // Status implements the api.Charger interface
 func (wb *PCElectric) Status() (api.ChargeStatus, error) {
-	var status pcelectric.Status
+	var chargeStatus int
+	var sessionStartTime int64
 
-	uri := fmt.Sprintf("%s/status", wb.uri)
-	if err := wb.GetJSON(uri, &status); err != nil {
-		return api.StatusNone, err
+	if wb.slaveIndex == 0 {
+		var status pcelectric.Status
+
+		uri := fmt.Sprintf("%s/status", wb.uri)
+		if err := wb.GetJSON(uri, &status); err != nil {
+			return api.StatusNone, err
+		}
+		chargeStatus = status.ChargeStatus
+		sessionStartTime = status.SessionStartTime
+	} else {
+		var status pcelectric.SlaveStatus
+
+		uri := fmt.Sprintf("%s/slaves/false", wb.uri)
+		if err := wb.GetJSON(uri, &status); err != nil {
+			return api.StatusNone, err
+		}
+		if wb.slaveIndex >= len(status) {
+			return api.StatusNone, nil
+		}
+		chargeStatus = status[wb.slaveIndex].ChargeStatus
+		sessionStartTime = status[wb.slaveIndex].SessionStartTime
 	}
+	wb.log.DEBUG.Printf("chargeStatus: %d", chargeStatus)
 
 	res := api.StatusA
-	switch status.ChargeStatus {
-	case 0x30, // connected
-		0x42, // chargepaused
-		0x50, // chargefinished
-		0x60: // chargecancelled
+	switch chargeStatus {
+	case 0x00, 0x10: // notconnected
+		res = api.StatusA
+	case 0x30: // connected
 		res = api.StatusB
 	case 0x40: // charging
 		res = api.StatusC
+	case 0x42, // chargepaused
+		0x50, // chargefinished
+		0x60: // chargecancelled
+		res = api.StatusB
 	case 0x90: // unavailable
-		if status.AccSessionMillis > 0 {
+		if sessionStartTime > 0 {
 			res = api.StatusB
 		} else {
 			res = api.StatusF
 		}
-	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %02x", status.ChargeStatus)
+	case 0x95, // dcfault
+		0x96, // dchardwarefault
+		0x9A, // cpfault
+		0x9B: // cpshorted
+		res = api.StatusE
+	case 0x70, // overheat
+		0x80, // criticaltemperature
+		0x91, // reserved
+		0x9C, // remotedisabled
+		0x9D, // dlmfault
+		0xA0, // cablefault
+		0xA1,
+		0xA2, // lockingfault
+		0xA3,
+		0xA4, // contactorfault
+		0xA8, // rcdfault
+		0xF0, // wait
+		0xF1: // ventfault
+		res = api.StatusF
+	default: // generalfault
+		res = api.StatusF
 	}
 
 	return res, nil
@@ -98,11 +169,19 @@ func (wb *PCElectric) Enabled() (bool, error) {
 	var res pcelectric.Status
 	uri := fmt.Sprintf("%s/status", wb.uri)
 	err := wb.GetJSON(uri, &res)
-	return res.PowerMode == "ON", err
+	if err == nil && res.PowerMode == "ON" {
+		return true, err
+	}
+	return false, err
 }
 
 // Enable implements the api.Charger interface
 func (wb *PCElectric) Enable(enable bool) error {
+	if wb.slaveIndex > 0 {
+		return nil //Slave wird immer mit dem Master geschaltet!
+	}
+
+	// Master Only !!
 	mode := "ALWAYS_OFF"
 	if enable {
 		mode = "ALWAYS_ON"
@@ -117,42 +196,87 @@ func (wb *PCElectric) Enable(enable bool) error {
 	return err
 }
 
-// MaxCurrent implements the api.Charger interface
-func (wb *PCElectric) MaxCurrent(current int64) error {
-	uri := fmt.Sprintf("%s/currentlimit", wb.uri)
-	data := pcelectric.ReducedIntervals{
-		ReducedIntervalsEnabled: true,
-		ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
-			{
-				SchemaId:    1,
-				Start:       "00:00:00",
-				Stop:        "24:00:00",
-				Weekday:     8,
-				ChargeLimit: int(current),
-			},
+func (wb *PCElectric) MinCurrent(current int64) error {
+	var data pcelectric.MinCurrentLimitStruct
+	uri := fmt.Sprintf("%s/mincurrentlimit", wb.uri)
+	data = pcelectric.MinCurrentLimitStruct{
+		{
+			MinCurrentLimit: int(current), // default=6
+			SerialNumber:    wb.serialNumber,
+			TwinSerial:      -1,
 		},
 	}
-
 	req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
 	if err == nil {
 		_, err = wb.DoBody(req)
 	}
-
 	return err
 }
 
-// CurrentPower implements the api.Meter interface
-func (wb *PCElectric) currentPower() (float64, error) {
-	var res pcelectric.MeterInfo
-	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
-	err := wb.GetJSON(uri, &res)
-	return float64(res.ApparentPower) * 1000, err
+// MaxCurrent implements the api.Charger interface
+func (wb *PCElectric) MaxCurrent(current int64) error {
+	if wb.slaveIndex > 0 {
+		return nil //Slave wird immer mit dem Master geschaltet!
+	}
+
+	// Ohne Loadbalancer Regelung über currentlimit:
+	if !wb.lbmode {
+		var data pcelectric.ReducedIntervals
+		uri := fmt.Sprintf("%s/currentlimit", wb.uri)
+		data = pcelectric.ReducedIntervals{
+			ReducedIntervalsEnabled: true,
+			ReducedCurrentIntervals: []pcelectric.ReducedCurrentInterval{
+				{
+					SchemaId:    1,
+					Start:       "00:00:00",
+					Stop:        "24:00:00",
+					Weekday:     8,
+					ChargeLimit: int(current),
+				},
+			},
+		}
+		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			_, err = wb.DoBody(req)
+		}
+		return err
+	} else { // Mit Loadbalancer Regelung über lbconfig/LoadBalancingFuse
+		var data pcelectric.LbConfigShort
+		uri := fmt.Sprintf("%s/lbconfig/false", wb.uri)
+		err := wb.GetJSON(uri, &data)
+		if err != nil {
+			return err
+		}
+
+		uri = fmt.Sprintf("%s/lbconfig", wb.uri)
+		data.LoadBalancingFuse = int(current)
+		req, err := request.New(http.MethodPost, uri, request.MarshalJSON(data), request.JSONEncoding)
+		if err == nil {
+			_, err = wb.DoBody(req)
+		}
+		return err
+	}
 }
 
-// Currents implements the api.MeterCurrents interface
+// CurrentPower implements the api.Meter interface W
+func (wb *PCElectric) currentPower() (float64, error) {
+	var res pcelectric.MeterInfo
+	err := wb.GetJSON(wb.meter, &res)
+	power := float64(23) * float64(res.Phase1Current+res.Phase2Current+res.Phase3Current)
+	return power, err
+}
+
+// TotalEnergy implements the api.MeterEnergy interface kwh
+func (wb *PCElectric) totalEnergy() (float64, error) {
+	var res pcelectric.MeterInfo
+	err := wb.GetJSON(wb.meter, &res)
+	energy := float64(res.AccEnergy) / 1000
+	return energy, err
+}
+
+// Currents implements the api.MeterCurrents interface A
 func (wb *PCElectric) currents() (float64, float64, float64, error) {
 	var res pcelectric.MeterInfo
-	uri := fmt.Sprintf("%s/meterinfo/CENTRAL%d", wb.uri, wb.meterID)
-	err := wb.GetJSON(uri, &res)
+	err := wb.GetJSON(wb.meter, &res)
 	return float64(res.Phase1Current) / 10, float64(res.Phase2Current) / 10, float64(res.Phase3Current) / 10, err
 }
