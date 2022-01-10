@@ -39,7 +39,7 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	if cc.ClientID == "" && cc.Tokens.Access == "" {
+	if cc.ClientID == "" && cc.Tokens.Refresh == "" {
 		return nil, errors.New("missing credentials")
 	}
 

@@ -68,17 +68,6 @@ func (v *API) getJSON(uri string, res interface{}) error {
 	return err
 }
 
-type EVResponse struct {
-	SoC struct {
-		Value     IntVal
-		Timestamp int64
-	}
-	RangeElectric struct {
-		Value     IntVal
-		Timestamp int64
-	}
-}
-
 // SoC implements the /soc response
 func (v *API) SoC(vin string) (EVResponse, error) {
 	var res EVResponse

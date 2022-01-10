@@ -5,6 +5,17 @@ import (
 	"strconv"
 )
 
+type EVResponse struct {
+	SoC struct {
+		Value     IntVal
+		Timestamp int64
+	}
+	RangeElectric struct {
+		Value     IntVal
+		Timestamp int64
+	}
+}
+
 type IntVal int
 
 func (si *IntVal) UnmarshalJSON(b []byte) error {
