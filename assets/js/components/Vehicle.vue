@@ -76,7 +76,6 @@ export default {
 					console.log("login failed ", error);
 				});
 		},
-		}
 	},
 	mixins: [collector],
 };
