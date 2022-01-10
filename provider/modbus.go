@@ -38,6 +38,7 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 		Value           string
 		Scale           float64
 		Delay           time.Duration
+		ConnectDelay    time.Duration
 		Timeout         time.Duration
 	}{
 		Scale: 1,
@@ -71,6 +72,16 @@ func NewModbusFromConfig(other map[string]interface{}) (IntProvider, error) {
 	// set non-default timeout
 	if cc.Timeout > 0 {
 		conn.Timeout(cc.Timeout)
+	}
+
+	// set non-default delay
+	if cc.Delay > 0 {
+		conn.Delay(cc.Delay)
+	}
+
+	// set non-default connect delay
+	if cc.ConnectDelay > 0 {
+		conn.ConnectDelay(cc.ConnectDelay)
 	}
 
 	log := util.NewLogger("modbus")
