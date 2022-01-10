@@ -5,13 +5,14 @@
 				{{ socTitle || "Fahrzeug" }}
 			</div>
 			<div>
-				<button 
+				<button
 					v-if="!vehicleProviderLoggedIn && vehicleLoginButtonText !== ''"
-					type="button" 
+					type="button"
 					class="btn btn-outline-success btn-sm"
 					@click="providerLogin"
 				>
-					{{ vehicleLoginButtonText }}</button>
+					{{ vehicleLoginButtonText }}
+				</button>
 			</div>
 		</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
@@ -54,11 +55,11 @@ export default {
 		},
 		// TODO: Handle language support
 		vehicleLoginButtonText: function() {
-			if (this.vehicleProviderLoginPath !== '') {
-				return 'Login'
+			if (this.vehicleProviderLoginPath !== "") {
+				return "Login"
 			}
 			
-			return ''
+			return ""
 		},
 	},
 	methods: {
@@ -66,11 +67,15 @@ export default {
 			this.$emit("target-soc-updated", targetSoC);
 		},
 		providerLogin: async function () {
-			await axios.post(this.vehicleProviderLoginPath).then(function (response) {
-				window.location.href = response.data.loginUri;
-			}).catch(function (error) {
-				console.log("login failed ", error)
-			});
+			await axios
+				.post(this.vehicleProviderLoginPath)
+				.then(function (response) {
+					window.location.href = response.data.loginUri;
+				})
+				.catch(function (error) {
+					console.log("login failed ", error);
+				});
+		},
 		}
 	},
 	mixins: [collector],

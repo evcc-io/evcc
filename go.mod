@@ -10,7 +10,7 @@ require (
 	github.com/benbjohnson/clock v1.0.3
 	github.com/bogosj/tesla v0.0.0-20210326132323-e3261e5d6c70
 	github.com/containrrr/shoutrrr v0.4.0
-	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
+	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dylanmei/iso8601 v0.1.0
