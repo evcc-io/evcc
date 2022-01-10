@@ -54,12 +54,12 @@ export default {
 			return this.collectProps(VehicleSubline);
 		},
 		// TODO: Handle language support
-		vehicleLoginButtonText: function() {
+		vehicleLoginButtonText: function () {
 			if (this.vehicleProviderLoginPath !== "") {
-				return "Login"
+				return "Login";
 			}
-			
-			return ""
+
+			return "";
 		},
 	},
 	methods: {
