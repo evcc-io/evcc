@@ -108,6 +108,12 @@ func TestSavingsWithDifferentTimespans(t *testing.T) {
 		steps                   []tcStep
 		total, self, percentage float64
 	}{
+		{"10 second not charging, full grid",
+			[]tcStep{
+				{10 * time.Second, 1000, 0, 0, 0},
+			},
+			0, 0, 0, // 0Wh
+		},
 		{"10 second 11kW charging, full grid",
 			[]tcStep{
 				{10 * time.Second, 0, 0, 0, 11000},
