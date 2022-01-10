@@ -109,6 +109,7 @@ func (s *Savings) currentFeedInPrice() float64 {
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
 	// assume charge power as constant over the duration -> rough kWh estimate
 	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
+	s.updated = s.clock.Now()
 
 	// nothing meaningfull changed, no need to update
 	if energyAdded == 0 && s.lastGridPrice == s.currentGridPrice() {
@@ -125,7 +126,6 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	s.selfConsumptionCharged += addedSelfConsumption
 	s.selfConsumptionCost += addedSelfConsumption * s.currentFeedInPrice()
 	s.lastGridPrice = s.currentGridPrice()
-	s.updated = s.clock.Now()
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
