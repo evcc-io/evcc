@@ -219,8 +219,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.configureChargerType(lp.charger)
 
 	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
-	if _, ok := lp.charger.(api.ChargePhases); ok {
-		lp.setPhases(1)
+	if _, ok := lp.charger.(api.ChargePhases); ok && lp.Phases != 0 {
+		lp.log.WARN.Printf("ignoring phases config (%dp) for switchable charger", lp.Phases)
+		lp.setPhases(0)
 	}
 
 	// allow target charge handler to access loadpoint
@@ -964,21 +965,18 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
 func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
-	// correct charger state inconsistency (https://github.com/evcc-io/evcc/issues/1572)
 	phases := lp.GetPhases()
 
-	// if more active phases observed than configured, update internal state accordingly
+	// observed phase state inconsistency (https://github.com/evcc-io/evcc/issues/1572, https://github.com/evcc-io/evcc/issues/2230)
 	if phases < lp.activePhases {
-		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to 3p", phases, lp.activePhases)
-		phases = 3
-		lp.setPhases(3)
+		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
 	}
 
 	var waiting bool
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
 	// scale down phases
-	if targetCurrent < minCurrent && phases > 1 && lp.activePhases > 1 {
+	if targetCurrent < minCurrent && (phases == 0 || phases == 3) && lp.activePhases > 1 {
 		lp.log.DEBUG.Printf("available power below %dp min threshold of %.0fW", lp.activePhases, float64(lp.activePhases)*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
@@ -1004,7 +1002,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	}
 
 	// scale up phases
-	if min3pCurrent := powerToCurrent(availablePower, 3); min3pCurrent >= minCurrent && phases == 1 {
+	if min3pCurrent := powerToCurrent(availablePower, 3); min3pCurrent >= minCurrent && (phases == 0 || phases == 1) {
 		lp.log.DEBUG.Printf("available power above 3p min threshold of %.0fW", 3*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
