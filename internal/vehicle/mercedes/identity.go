@@ -3,26 +3,18 @@ package mercedes
 import (
 	"context"
 	"crypto/rand"
-	"encoding/base64"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"os/exec"
-	"runtime"
-	"time"
 
 	"github.com/andig/evcc/internal"
 	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/request"
+	"github.com/coreos/go-oidc"
 	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 )
-
-// https://id.mercedes-benz.com/.well-known/openid-configuration
-
-const redirectURI = "localhost:34972"
 
 type ClientOption func(c *Identity) error
 
@@ -40,119 +32,90 @@ type Identity struct {
 	token      *oauth2.Token
 	// tokenSource oauth2.TokenSource
 	router *mux.Router
+
+	sessionSecret []byte
+	loginUpdateC  chan struct{}
+	loginPath     string
 }
 
-func NewIdentity(log *util.Logger, id, secret string, options ...ClientOption) (*Identity, error) {
+// TODO: SessionSecret from config/persistence
+func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}, options ...ClientOption) (*Identity, error) {
+	var err error
+	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
+	if err != nil {
+		log.FATAL.Printf("failed to inizialize OIDC provider: %s", err)
+	}
+
 	v := &Identity{
-		log: log,
+		log:          log,
+		loginUpdateC: loginUpdateC,
 		AuthConfig: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
-			Endpoint: oauth2.Endpoint{
-				AuthURL:   "https://id.mercedes-benz.com/as/authorization.oauth2",
-				TokenURL:  "https://id.mercedes-benz.com/as/token.oauth2",
-				AuthStyle: oauth2.AuthStyleInHeader,
-			},
-			Scopes: []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
+			Endpoint:     provider.Endpoint(),
+			Scopes:       []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
+			// TODO: configure properly redirectURL
+			RedirectURL: "http://localhost:7070/api/vehicle/mercedes/callback",
 		},
+		loginPath:     "/identityproviders/mercedes/login",
+		sessionSecret: genSessionSecret(),
 	}
 
-	var err error
 	for _, o := range options {
 		if err == nil {
 			err = o(v)
 		}
 	}
 
-	// if err == nil && v.token == nil {
-	// 	err = v.Login()
-	// }
-
 	return v, err
 }
 
-func state() string {
-	var b [9]byte
+func genSessionSecret() []byte {
+	var b [16]byte
 	if _, err := io.ReadFull(rand.Reader, b[:]); err != nil {
 		panic(err)
 	}
-	return base64.RawURLEncoding.EncodeToString(b[:])
+	return b[:]
 }
 
-// urlOpen opens the specified URL in the default browser of the user.
-func urlOpen(url string) error {
-	var cmd string
-	var args []string
-
-	switch runtime.GOOS {
-	case "windows":
-		cmd = "cmd"
-		args = []string{"/c", "start"}
-	case "darwin":
-		cmd = "open"
-	default: // "linux", "freebsd", "openbsd", "netbsd"
-		cmd = "xdg-open"
-	}
-	args = append(args, url)
-	return exec.Command(cmd, args...).Start()
-}
-
-func (v *Identity) Token() (*oauth2.Token, error) {
-	var err error
-	if v.token == nil {
-		if v.router == nil {
-			return nil, errors.New("missing web access")
-		}
-
-		err = v.Login()
-	}
-
-	return v.token, err
+func (v *Identity) Token() *oauth2.Token {
+	return v.token
 }
 
 var _ internal.WebController = (*Identity)(nil)
 
 func (v *Identity) WebControl(router *mux.Router) {
-	v.router = router
+	v.router = router.PathPrefix("/api").Subrouter()
+
+	state := NewState(v.sessionSecret)
+
+	v.router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler(context.Background(), state))
+
+	v.router.Methods("POST").Path(v.loginPath).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := json.Marshal(struct {
+			LoginUri string `json:"loginUri"`
+		}{
+			LoginUri: v.AuthConfig.AuthCodeURL(state.Encrypt(), oauth2.AccessTypeOffline,
+				oauth2.SetAuthURLParam("prompt", "login consent"),
+			),
+		})
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(b)
+	})
+
 }
 
-func (v *Identity) Login() error {
-	state := state()
-	uri := v.AuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline,
-		oauth2.SetAuthURLParam("prompt", "login consent"),
-	)
-
-	ctx, cancel := context.WithTimeout(
-		context.WithValue(context.Background(), oauth2.HTTPClient, request.NewHelper(v.log).Client),
-		60*time.Second,
-	)
-	defer cancel()
-
-	done := make(chan struct{})
-	handler := v.redirectHandler(ctx, state, done)
-
-	v.router.HandleFunc("/vehicle/mercedes/callback", handler)
-
-	if err := urlOpen(uri); err != nil {
-		return err
-	}
-
-	select {
-	case <-ctx.Done():
-		return errors.New("login timeout")
-	case <-done:
-		if v.token == nil {
-			return errors.New("login failed")
-		}
-	}
-
-	return nil
+func (v *Identity) LoginPath() string {
+	return v.loginPath
 }
 
-func (v *Identity) redirectHandler(ctx context.Context, state string, done chan struct{}) http.HandlerFunc {
+func (v *Identity) LoggedIn() bool {
+	return v.token.Valid()
+}
+
+func (v *Identity) redirectHandler(ctx context.Context, state State) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer close(done)
-
 		data, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
 			fmt.Fprintln(w, "invalid response:", data)
@@ -165,8 +128,11 @@ func (v *Identity) redirectHandler(ctx context.Context, state string, done chan 
 		}
 
 		states, ok := data["state"]
-		if !ok || len(states) != 1 || states[0] != state {
-			fmt.Fprintln(w, "invalid response:", data)
+		if !ok || len(states) != 1 {
+			fmt.Fprintln(w, "invalid state response:", data)
+			return
+		} else if err := Validate(states[0], v.sessionSecret); err != nil {
+			fmt.Fprintf(w, "failed state validation: %s", err)
 			return
 		}
 
@@ -182,12 +148,14 @@ func (v *Identity) redirectHandler(ctx context.Context, state string, done chan 
 			return
 		}
 
-		v.token = token
+		if token.Valid() {
+			v.token = token
+			v.log.TRACE.Println("sending login update...")
+			v.loginUpdateC <- struct{}{}
+		}
 
-		fmt.Fprintln(w, "Folgende Fahrzeugkonfiguration kann in die evcc.yaml Konfigurationsdatei übernommen werden")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  tokens:")
-		fmt.Fprintln(w, "    access:", token.AccessToken)
-		fmt.Fprintln(w, "    refresh:", token.RefreshToken)
+		// TODO: make uri configurable like v.LocalURI = "http://localhost:7070"
+		w.Header().Set("Location", "http://localhost:7070")
+		w.WriteHeader(http.StatusFound)
 	}
 }

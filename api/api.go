@@ -118,3 +118,8 @@ type VehicleClimater interface {
 type VehicleStartCharge interface {
 	StartCharge() error
 }
+
+type VehicleProviderLogin interface {
+	LoggedIn() bool
+	LoginPath() string
+}

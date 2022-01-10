@@ -10,6 +10,7 @@ require (
 	github.com/benbjohnson/clock v1.0.3
 	github.com/bogosj/tesla v0.0.0-20210326132323-e3261e5d6c70
 	github.com/containrrr/shoutrrr v0.4.0
+	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dylanmei/iso8601 v0.1.0
@@ -43,6 +44,7 @@ require (
 	github.com/mxschmitt/golang-combinations v1.1.0
 	github.com/nirasan/go-oauth-pkce-code-verifier v0.0.0-20170819232839-0fbfe93532da
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/common v0.10.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
@@ -65,5 +67,6 @@ require (
 	google.golang.org/grpc v1.36.1
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

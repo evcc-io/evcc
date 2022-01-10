@@ -564,6 +564,11 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.publish("socTitle", lp.vehicle.Title())
 	lp.publish("socCapacity", lp.vehicle.Capacity())
+
+	if provider, ok := lp.vehicle.(api.VehicleProviderLogin); ok {
+		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
+		lp.publish("vehicleProviderLoginPath", provider.LoginPath())
+	}
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint
@@ -982,6 +987,11 @@ func (lp *LoadPoint) Update(sitePower float64) {
 
 	// effective disabled status
 	lp.publish("remoteDisabled", remoteDisabled)
+
+	// update login state
+	if provider, ok := lp.vehicle.(api.VehicleProviderLogin); ok {
+		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
+	}
 
 	if err != nil {
 		lp.log.ERROR.Println(err)

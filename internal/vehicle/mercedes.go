@@ -54,12 +54,15 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	log := util.NewLogger("mercedes")
 
-	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, options...)
+	updateC := make(chan struct{})
+
+	// TODO: session secret from config/persistence
+	identity, err := mercedes.NewIdentity(log, cc.ClientID, cc.ClientSecret, updateC, options...)
 	if err != nil {
 		return nil, err
 	}
 
-	api := mercedes.NewAPI(log, identity)
+	api := mercedes.NewAPI(log, identity, updateC)
 
 	v := &Mercedes{
 		embed:    &embed{cc.Title, cc.Capacity},

@@ -59,6 +59,8 @@ export default {
 		timerSet: Boolean,
 		timerActive: Boolean,
 		targetTime: String,
+		vehicleProviderLoggedIn: Boolean,
+		vehicleProviderLoginPath: String,
 
 		// details
 		chargePower: Number,
