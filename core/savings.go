@@ -18,15 +18,15 @@ type publisher interface {
 
 // Site is the main configuration container. A site can host multiple loadpoints.
 type Savings struct {
-	clock                  clock.Clock
-	tariffs                tariff.Tariffs
-	started                time.Time // Boot time
-	updated                time.Time // Time of last charged value update
-	gridCharged            float64   // Grid energy charged since startup (kWh)
-	gridCost               float64   // Running total of charged grid energy cost (e.g. EUR)
-	selfConsumptionCharged float64   // Self-produced energy charged since startup (kWh)
-	selfConsumptionCost    float64   // Running total of charged self-produced energy cost (e.g. EUR)
-	lastGridPrice          float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
+	clock                          clock.Clock
+	tariffs                        tariff.Tariffs
+	started                        time.Time // Boot time
+	updated                        time.Time // Time of last charged value update
+	gridCharged                    float64   // Grid energy charged since startup (kWh)
+	gridCost                       float64   // Running total of charged grid energy cost (e.g. EUR)
+	selfConsumptionCharged         float64   // Self-produced energy charged since startup (kWh)
+	selfConsumptionCost            float64   // Running total of charged self-produced energy cost (e.g. EUR)
+	lastGridPrice, lastFeedInPrice float64   // Stores the last published grid price. Needed to detect price changes (Awattar, ..)
 }
 
 func NewSavings(tariffs tariff.Tariffs) *Savings {
@@ -106,10 +106,28 @@ func (s *Savings) currentFeedInPrice() float64 {
 	return DefaultFeedInPrice
 }
 
+func (s *Savings) updatePrices(p publisher) (float64, float64) {
+	gridPrice := s.currentGridPrice()
+	if gridPrice != s.lastGridPrice {
+		s.lastGridPrice = gridPrice
+		p.publish("tariffGrid", gridPrice)
+	}
+
+	feedinPrice := s.currentFeedInPrice()
+	if feedinPrice != s.lastFeedInPrice {
+		s.lastFeedInPrice = feedinPrice
+		p.publish("tariffFeedIn", feedinPrice)
+	}
+
+	return gridPrice, feedinPrice
+}
+
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
-	// no charging, no price update, no need to update
-	if chargePower == 0 && s.lastGridPrice == s.currentGridPrice() {
-		s.updated = s.clock.Now()
+	gridPrice, feedinPrice := s.updatePrices(p)
+	defer func() { s.updated = s.clock.Now() }()
+
+	// no charging, no need to update
+	if chargePower == 0 {
 		return
 	}
 
@@ -121,11 +139,9 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	addedGrid := energyAdded - addedSelfConsumption
 
 	s.gridCharged += addedGrid
-	s.gridCost += addedGrid * s.currentGridPrice()
+	s.gridCost += addedGrid * gridPrice
 	s.selfConsumptionCharged += addedSelfConsumption
-	s.selfConsumptionCost += addedSelfConsumption * s.currentFeedInPrice()
-	s.lastGridPrice = s.currentGridPrice()
-	s.updated = s.clock.Now()
+	s.selfConsumptionCost += addedSelfConsumption * feedinPrice
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
@@ -133,6 +149,4 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	p.publish("savingsSelfConsumptionPercent", s.SelfConsumptionPercent())
 	p.publish("savingsEffectivePrice", s.EffectivePrice())
 	p.publish("savingsAmount", s.SavingsAmount())
-	p.publish("tariffGrid", s.currentGridPrice())
-	p.publish("tariffFeedIn", s.currentFeedInPrice())
 }
