@@ -88,7 +88,7 @@ vehicles:
 - name: demo
   title: e-Golf
   type: custom
-  charge:
+  soc:
     type: js
     vm: shared
     script: |
