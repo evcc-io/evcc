@@ -39,12 +39,15 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
+	// TODO: cc.Tokens should be moved to a persistence storage
+	// e.g. persistence.Load("key")
+
 	if cc.ClientID == "" && cc.Tokens.Refresh == "" {
 		return nil, errors.New("missing credentials")
 	}
 
 	var options []mercedes.ClientOption
-	if cc.Tokens.Access != "" {
+	if cc.Tokens.Refresh != "" {
 		options = append(options, mercedes.WithToken(&oauth2.Token{
 			AccessToken:  cc.Tokens.Access,
 			RefreshToken: cc.Tokens.Refresh,
