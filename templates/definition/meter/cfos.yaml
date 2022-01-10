@@ -1,5 +1,6 @@
-template: cfos-meter
-description: cFos PowerBrain Meter
+template: cfos
+description: 
+  generic: cFos PowerBrain Meter
 requirements:
   sponsorship: true
 params:

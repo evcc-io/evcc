@@ -1,5 +1,6 @@
 template: hyundai
-description: Hyundai
+description: 
+  generic: Hyundai
 params:
 - base: vehiclebase
 - base: vehicleidentify

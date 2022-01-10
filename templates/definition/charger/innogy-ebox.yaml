@@ -1,5 +1,6 @@
 template: innogy-ebox
-description: Innogy eBox
+description: 
+  generic: Innogy eBox
 requirements:
   sponsorship: true
 params:

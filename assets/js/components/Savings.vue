@@ -25,11 +25,22 @@
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">
-							{{
-								$t("footer.savings.modalTitle", {
-									total: fmtKw(chargedTotal * 1000, true, false),
-								})
-							}}
+							<span class="d-block d-sm-none">
+								{{
+									$t("footer.savings.modalTitleShort", {
+										percent,
+										total: fmtKw(totalCharged * 1000, true, false),
+									})
+								}}
+							</span>
+							<span class="d-none d-sm-block">
+								{{
+									$t("footer.savings.modalTitleLong", {
+										percent,
+										total: fmtKw(totalCharged * 1000, true, false),
+									})
+								}}
+							</span>
 						</h5>
 						<button
 							type="button"
@@ -45,7 +56,7 @@
 									<fa-icon icon="square" class="text-evcc"></fa-icon>
 									{{
 										$t("footer.savings.modalChartSelf", {
-											self: fmtKw(chargedSelfConsumption * 1000, true, false),
+											self: fmtKw(selfConsumptionCharged * 1000, true, false),
 										})
 									}}
 								</div>
@@ -53,7 +64,7 @@
 									<fa-icon icon="square" class="text-grid"></fa-icon>
 									{{
 										$t("footer.savings.modalChartGrid", {
-											grid: fmtKw(chargedGrid * 1000, true, false),
+											grid: fmtKw(gridCharged * 1000, true, false),
 										})
 									}}
 								</div>
@@ -62,21 +73,21 @@
 								class="chart d-flex justify-content-stretch mb-1 rounded overflow-hidden"
 							>
 								<div
-									v-if="chargedTotal > 0"
+									v-if="totalCharged > 0"
 									class="chart-item chart-item--self d-flex justify-content-center text-white flex-shrink-1"
 									:style="{ width: `${percent}%` }"
 								>
 									<span class="text-truncate"> {{ percent }}% </span>
 								</div>
 								<div
-									v-if="chargedTotal > 0"
+									v-if="totalCharged > 0"
 									class="chart-item chart-item--grid d-flex justify-content-center text-white flex-shrink-1"
 									:style="{ width: `${100 - percent}%` }"
 								>
 									<span class="text-truncate"> {{ 100 - percent }}% </span>
 								</div>
 								<div
-									v-if="chargedTotal === 0"
+									v-if="totalCharged === 0"
 									class="chart-item chart-item--no-data d-flex justify-content-center text-white w-100"
 								>
 									<span>{{ $t("footer.savings.modalNoData") }}</span>
@@ -85,15 +96,15 @@
 						</div>
 						<p class="mb-3">
 							{{ $t("footer.savings.modalSavingsPrice") }}:
-							<strong>{{ pricePerKWh }}</strong>
+							<strong>{{ fmtPricePerKWh(effectivePrice, currency) }}</strong>
 							<br />
 							{{ $t("footer.savings.modalSavingsTotal") }}:
-							<strong>{{ savingAmount }}</strong>
+							<strong>{{ fmtMoney(amount, currency) }}</strong>
 						</p>
 
 						<p class="small text-muted mb-3">
 							<a
-								href="https://github.com/evcc-io/evcc/blob/master/README.md#energy-tariffs--savings-estimate"
+								href="https://docs.evcc.io/docs/guides/setup/#ersparnisberechnung"
 								target="_blank"
 								class="text-muted"
 							>
@@ -116,7 +127,7 @@
 							<br />
 							{{
 								$t("footer.savings.modalServerStart", {
-									since: fmtTimeAgo(since * -1000),
+									since: fmtTimeAgo(secondsSinceStart()),
 								})
 							}}
 						</p>
@@ -153,36 +164,26 @@ export default {
 	components: { Sponsor },
 	mixins: [formatter],
 	props: {
-		selfPercentage: Number,
+		selfConsumptionPercent: Number,
 		since: { type: Number, default: 0 },
 		sponsor: String,
-		chargedTotal: { type: Number, default: 0 },
-		chargedSelfConsumption: { type: Number, default: 0 },
-		gridPrice: { type: Number, default: 0.3 },
-		feedInPrice: { type: Number, default: 0.08 },
+		amount: { type: Number, default: 0 },
+		effectivePrice: { type: Number, default: 0 },
+		totalCharged: { type: Number, default: 0 },
+		gridCharged: { type: Number, default: 0 },
+		selfConsumptionCharged: { type: Number, default: 0 },
+		gridPrice: { type: Number },
+		feedInPrice: { type: Number },
 		currency: String,
 	},
 	computed: {
-		chargedGrid() {
-			return this.chargedTotal - this.chargedSelfConsumption;
-		},
-		defaultPrices() {
-			const { gridPrice, feedInPrice } = this.$options.propsData;
-			return gridPrice === undefined || feedInPrice === undefined;
-		},
-		savingAmount() {
-			const priceDiff = (this.gridPrice - this.feedInPrice) / 100;
-			const saving = this.chargedSelfConsumption * priceDiff;
-			return this.fmtMoney(saving, this.currency);
-		},
-		pricePerKWh() {
-			const total =
-				this.chargedGrid * this.gridPrice + this.chargedSelfConsumption * this.feedInPrice;
-			const perKWh = total / this.chargedTotal;
-			return this.fmtPricePerKWh(perKWh || this.gridPrice, this.currency);
-		},
 		percent() {
-			return Math.round(this.selfPercentage) || 0;
+			return Math.round(this.selfConsumptionPercent) || 0;
+		},
+	},
+	methods: {
+		secondsSinceStart() {
+			return this.since * 1000 - Date.now();
 		},
 	},
 };

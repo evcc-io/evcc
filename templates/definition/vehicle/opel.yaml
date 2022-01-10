@@ -1,5 +1,6 @@
 template: opel
-description: Opel
+description: 
+  generic: Opel
 params:
 - base: vehiclebase
 - base: vehicleidentify

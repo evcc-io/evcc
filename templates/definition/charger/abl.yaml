@@ -1,5 +1,6 @@
 template: abl
-description: ABL eMH / SENEC.Wallbox pro
+description:
+  generic: ABL eMH / SENEC.Wallbox pro
 requirements:
   sponsorship: true
 params:

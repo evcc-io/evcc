@@ -1,5 +1,7 @@
 template: evnotify
-description: evNotify
+description: 
+  generic: evNotify
+generic: true
 params:
 - name: title
 - name: akey

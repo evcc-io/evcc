@@ -1,5 +1,6 @@
 template: pmcp
-description: Porsche Mobile Charger Plus
+description: 
+  generic: Porsche Mobile Charger Plus
 requirements:
   eebus: true
 params:

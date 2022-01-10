@@ -1,5 +1,6 @@
 template: nrgkick-connect
-description: NRGKick Connect
+description: 
+  generic: NRGKick Connect
 params:
 - name: host
   required: true

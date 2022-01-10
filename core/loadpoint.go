@@ -977,7 +977,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// if more active phases observed than configured, update internal state accordingly
 	if phases < lp.activePhases {
-		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to %dp", phases, lp.activePhases, lp.activePhases)
+		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to 3p", phases, lp.activePhases)
 		phases = 3
 		lp.setPhases(3)
 	}

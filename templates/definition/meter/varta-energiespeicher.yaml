@@ -1,5 +1,6 @@
 template: varta-energiespeicher
-description: VARTA Energiespeicher
+description: 
+  generic: VARTA Energiespeicher
 guidedsetup:
   enable: true
 params:

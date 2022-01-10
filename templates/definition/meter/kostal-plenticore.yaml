@@ -1,5 +1,6 @@
 template: kostal-plenticore
-description: Kostal Plenticore Hybrid
+description: 
+  generic: Kostal Plenticore Hybrid
 guidedsetup:
   enable: true
   linked:

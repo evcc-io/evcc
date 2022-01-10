@@ -1,5 +1,6 @@
 template: nrgkick-bluetooth
-description: NRGKick Bluetooth
+description: 
+  generic: NRGKick Bluetooth
 params:
 - name: mac
   required: true
