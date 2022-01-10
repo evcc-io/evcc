@@ -107,10 +107,9 @@ func (s *Savings) currentFeedInPrice() float64 {
 }
 
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
-	s.updated = s.clock.Now()
-
 	// no charging, no price update, no need to update
 	if chargePower == 0 && s.lastGridPrice == s.currentGridPrice() {
+		s.updated = s.clock.Now()
 		return
 	}
 
@@ -126,6 +125,7 @@ func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePo
 	s.selfConsumptionCharged += addedSelfConsumption
 	s.selfConsumptionCost += addedSelfConsumption * s.currentFeedInPrice()
 	s.lastGridPrice = s.currentGridPrice()
+	s.updated = s.clock.Now()
 
 	p.publish("savingsTotalCharged", s.TotalCharged())
 	p.publish("savingsGridCharged", s.gridCharged)
