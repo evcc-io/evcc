@@ -436,7 +436,7 @@ func (site *Site) update(lp Updater) {
 // prepare publishes initial values
 func (site *Site) prepare() {
 	site.publish("currency", site.tariffs.Currency.String())
-	site.publish("savingsSince", site.savings.Since())
+	site.publish("savingsSince", site.savings.Since().Unix())
 }
 
 // Prepare attaches communication channels to site and loadpoints

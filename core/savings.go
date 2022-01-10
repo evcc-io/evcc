@@ -41,8 +41,8 @@ func NewSavings(tariffs tariff.Tariffs) *Savings {
 	return savings
 }
 
-func (s *Savings) Since() time.Duration {
-	return time.Since(s.started)
+func (s *Savings) Since() time.Time {
+	return s.started
 }
 
 func (s *Savings) SelfConsumptionPercent() float64 {
@@ -107,15 +107,15 @@ func (s *Savings) currentFeedInPrice() float64 {
 }
 
 func (s *Savings) Update(p publisher, gridPower, pvPower, batteryPower, chargePower float64) {
-	// assume charge power as constant over the duration -> rough kWh estimate
-	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	s.updated = s.clock.Now()
 
-	// nothing meaningfull changed, no need to update
-	if energyAdded == 0 && s.lastGridPrice == s.currentGridPrice() {
+	// no charging, no price update, no need to update
+	if chargePower == 0 && s.lastGridPrice == s.currentGridPrice() {
 		return
 	}
 
+	// assume charge power as constant over the duration -> rough kWh estimate
+	energyAdded := s.clock.Since(s.updated).Hours() * chargePower / 1e3
 	share := s.shareOfSelfProducedEnergy(gridPower, pvPower, batteryPower)
 
 	addedSelfConsumption := energyAdded * share

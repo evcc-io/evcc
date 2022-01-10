@@ -127,7 +127,7 @@
 							<br />
 							{{
 								$t("footer.savings.modalServerStart", {
-									since: fmtTimeAgo(since * -1000),
+									since: fmtTimeAgo(secondsSinceStart()),
 								})
 							}}
 						</p>
@@ -179,6 +179,11 @@ export default {
 	computed: {
 		percent() {
 			return Math.round(this.selfConsumptionPercent) || 0;
+		},
+	},
+	methods: {
+		secondsSinceStart() {
+			return this.since * 1000 - Date.now();
 		},
 	},
 };
