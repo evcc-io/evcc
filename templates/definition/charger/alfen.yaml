@@ -1,0 +1,11 @@
+template: alfen
+description: 
+  generic: Alfen
+requirements:
+  sponsorship: true
+params:
+- name: modbus
+  choice: ["rs485"]
+render: |
+  type: alfen
+  {{include "modbus" .}}
