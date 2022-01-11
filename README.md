@@ -31,6 +31,14 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 
 Documentation is available in german language at [https://docs.evcc.io/](https://docs.evcc.io/)
 
+## Build
+
+To build EVCC from source, [Go][2] 1.16 and [Node][3] 16 are required:
+
+```sh
+make
+```
+
 ## Sponsorship
 
 EVCC believes in open source software. We're committed to provide best in class EV charging experience.
