@@ -159,8 +159,6 @@ func meterCapabilities(name string, meter interface{}) string {
 
 // DumpConfig site configuration
 func (site *Site) DumpConfig() {
-	site.publish("siteTitle", site.Title)
-
 	site.log.INFO.Println("site config:")
 	site.log.INFO.Printf("  meters:      grid %s pv %s battery %s",
 		presence[site.gridMeter != nil],
@@ -168,19 +166,16 @@ func (site *Site) DumpConfig() {
 		presence[len(site.batteryMeters) > 0],
 	)
 
-	site.publish("gridConfigured", site.gridMeter != nil)
 	if site.gridMeter != nil {
 		site.log.INFO.Println(meterCapabilities("grid", site.gridMeter))
 	}
 
-	site.publish("pvConfigured", len(site.pvMeters) > 0)
 	if len(site.pvMeters) > 0 {
 		for i, pv := range site.pvMeters {
 			site.log.INFO.Println(meterCapabilities(fmt.Sprintf("pv %d", i), pv))
 		}
 	}
 
-	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
 	if len(site.batteryMeters) > 0 {
 		for i, battery := range site.batteryMeters {
 			_, ok := battery.(api.Battery)
@@ -188,10 +183,6 @@ func (site *Site) DumpConfig() {
 				meterCapabilities(fmt.Sprintf("battery %d", i), battery),
 				fmt.Sprintf("soc %s", presence[ok]),
 			)
-
-			if ok {
-				site.publish("prioritySoC", site.PrioritySoC)
-			}
 		}
 	}
 
@@ -277,6 +268,8 @@ func (site *Site) updateMeters() error {
 		return err
 	}
 
+	err := retryMeter("grid", site.gridMeter, &site.gridPower)
+
 	if len(site.pvMeters) > 0 {
 		site.pvPower = 0
 
@@ -298,8 +291,6 @@ func (site *Site) updateMeters() error {
 		site.log.DEBUG.Printf("pv power: %.0fW", site.pvPower)
 		site.publish("pvPower", site.pvPower)
 	}
-
-	err := retryMeter("grid", site.gridMeter, &site.gridPower)
 
 	if len(site.batteryMeters) > 0 {
 		site.batteryPower = 0
@@ -430,6 +421,13 @@ func (site *Site) update(lp Updater) {
 
 // prepare publishes initial values
 func (site *Site) prepare() {
+	site.publish("siteTitle", site.Title)
+
+	site.publish("gridConfigured", site.gridMeter != nil)
+	site.publish("pvConfigured", len(site.pvMeters) > 0)
+	site.publish("batteryConfigured", len(site.batteryMeters) > 0)
+	site.publish("prioritySoC", site.PrioritySoC)
+
 	site.publish("currency", site.tariffs.Currency.String())
 	site.publish("savingsSince", site.savings.Since().Unix())
 }
