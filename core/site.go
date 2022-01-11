@@ -197,19 +197,18 @@ func (site *Site) DumpConfig() {
 
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
-
 		lp.log.INFO.Printf("  mode:      %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
-		_, timer := lp.charger.(api.ChargeTimer)
+		_, phases := lp.charger.(api.ChargePhases)
 
-		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s timer %s",
+		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s phases %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
-			presence[timer],
+			presence[phases],
 		)
 
 		lp.log.INFO.Printf("  meters:    charge %s", presence[lp.HasChargeMeter()])

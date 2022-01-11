@@ -226,8 +226,8 @@ func run(cmd *cobra.Command, args []string) {
 	pushChan := configureMessengers(conf.Messaging, cache)
 
 	// set channels
-	site.Prepare(valueChan, pushChan)
 	site.DumpConfig()
+	site.Prepare(valueChan, pushChan)
 
 	stopC := make(chan struct{})
 	exitC := make(chan struct{})

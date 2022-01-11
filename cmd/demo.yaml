@@ -5,8 +5,8 @@ javascript:
   script: |
     state = {
       residualpower: 200,
-      pvpower: -3000,
       batterypower: 200,
+      pvpower: 3000,
       gridpower: -2000,
       chargepower: 0,
       maxcurrent: 0,
@@ -26,14 +26,14 @@ meters:
   power:
     type: js
     vm: shared
-    script: state.gridpower = state.pvpower + state.chargepower + state.residualpower + state.batterypower;
+    script: state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
 
 - name: pv
   type: custom
   power:
     type: js
     vm: shared
-    script: state.pvpower += 100*Math.random();
+    script: state.pvpower += 0*(Math.random()-0.5);
 
 - name: battery
   type: custom
