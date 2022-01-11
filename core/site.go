@@ -408,14 +408,16 @@ func (site *Site) update(lp Updater) {
 		}
 	}
 
+	var totalChargePower float64
+	for _, lp := range site.loadpoints {
+		totalChargePower += lp.GetChargePower()
+	}
+
 	if sitePower, err := site.sitePower(); err == nil {
 		lp.Update(sitePower, cheap, site.batteryBuffered)
 
 		// ignore negative pvPower values as that means it is not an energy source but consumption
-		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower
-		for _, lp := range site.loadpoints {
-			homePower -= lp.GetChargePower()
-		}
+		homePower := site.gridPower + math.Max(0, site.pvPower) + site.batteryPower - totalChargePower
 		homePower = math.Max(homePower, 0)
 		site.publish("homePower", homePower)
 
@@ -423,13 +425,7 @@ func (site *Site) update(lp Updater) {
 	}
 
 	// update savings
-
-	// TODO: use a proper interface, use meter readings instead of current power for better results
-	var totalChargePower float64
-	for _, lp := range site.loadpoints {
-		totalChargePower += lp.chargePower
-	}
-
+	// TODO: use energy instead of current power for better results
 	site.savings.Update(site, site.gridPower, site.pvPower, site.batteryPower, totalChargePower)
 }
 
