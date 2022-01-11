@@ -1,4 +1,4 @@
-package wrapper
+package core
 
 import (
 	"sync"
@@ -21,12 +21,11 @@ type ActiveTimer struct {
 // for tracking duration of an active Loadpoint
 func NewActiveTimer() *ActiveTimer {
 	return &ActiveTimer{
-		clck:     clock.New(),
-		duration: 0,
+		clck: clock.New(),
 	}
 }
 
-// ActiveCharge signals active timer start
+// start or stop the timer based on enabled and current
 func (m *ActiveTimer) ActiveTimerHandler(lpEnabled bool, current float64) {
 	if current > 0 && lpEnabled {
 		m.StartActiveTimer()
@@ -35,7 +34,7 @@ func (m *ActiveTimer) ActiveTimerHandler(lpEnabled bool, current float64) {
 	}
 }
 
-// ActiveCharge signals active timer start
+// start the active timer if not started already
 func (m *ActiveTimer) StartActiveTimer() {
 	m.Lock()
 	defer m.Unlock()
@@ -46,7 +45,7 @@ func (m *ActiveTimer) StartActiveTimer() {
 	}
 }
 
-// StopCharge signals charge timer stop
+// stop the active timer and save the duration
 func (m *ActiveTimer) StopActiveTimer() {
 	m.Lock()
 	defer m.Unlock()
@@ -56,7 +55,7 @@ func (m *ActiveTimer) StopActiveTimer() {
 	}
 }
 
-// ActiveTime implements the api.ActiveTimer interface
+// ActiveTime return the duration of the last started timer
 func (m *ActiveTimer) ActiveTime() (time.Duration, error) {
 	m.Lock()
 	defer m.Unlock()

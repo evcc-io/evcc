@@ -127,7 +127,7 @@ type LoadPoint struct {
 	chargeRater api.ChargeRater
 
 	// wakeUp
-	activeTimer         api.ActiveTimer
+	activeTimer         *ActiveTimer
 	activeDuration      time.Duration // Active current duration for wakeup calls
 	vehicleWakeUpCalled bool
 	chargerWakeUpCalled bool
@@ -329,7 +329,7 @@ func (lp *LoadPoint) configureChargerType(charger api.Charger) {
 	}
 
 	// add Active timer for wakeup check
-	at := wrapper.NewActiveTimer()
+	at := NewActiveTimer()
 	_ = lp.bus.Subscribe(evChargeCurrent, func(current float64) { at.ActiveTimerHandler(lp.enabled, current) })
 	_ = lp.bus.Subscribe(evChargeStop, func() { at.StopActiveTimer() })
 	lp.activeTimer = at
@@ -1508,12 +1508,12 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 
 	// WakeUp checks
-	if (!lp.vehicleWakeUpCalled || !lp.chargerWakeUpCalled) && mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.chargePower == 0 && lp.enabled && lp.activeDuration.Minutes() > 5 {
+	if (!lp.vehicleWakeUpCalled || !lp.chargerWakeUpCalled) && mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.chargePower == 0 && lp.enabled && lp.activeDuration.Seconds() > 30 {
 		lp.log.DEBUG.Printf("sleeping? Mode:%s LPStatus:%s Active:%.2fm SOC:%f Current:%f Power:%f ", mode, lp.status, lp.activeDuration.Minutes(), lp.vehicleSoc, lp.chargeCurrent, lp.chargePower)
 		// check if wakup called
 		if !lp.vehicleWakeUpCalled {
 			// call the Vehicle WakeUp if available
-			if vs, ok := lp.vehicle.(api.CallWakeUp); ok {
+			if vs, ok := lp.vehicle.(api.AlarmClock); ok {
 				if err := vs.WakeUp(); err == nil {
 					lp.log.DEBUG.Printf("vehicle WakeUp API called")
 					lp.vehicleWakeUpCalled = true
@@ -1525,7 +1525,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		}
 		if !lp.chargerWakeUpCalled {
 			// call the Charger WakeUp if available
-			if c, ok := lp.charger.(api.CallWakeUp); ok {
+			if c, ok := lp.charger.(api.AlarmClock); ok {
 				if err := c.WakeUp(); err == nil {
 					lp.log.DEBUG.Printf("charger WakeUp called")
 					lp.chargerWakeUpCalled = true
