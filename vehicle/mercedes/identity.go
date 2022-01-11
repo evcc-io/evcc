@@ -169,7 +169,6 @@ func (v *Identity) redirectHandler(ctx context.Context) http.HandlerFunc {
 		}
 
 		// TODO: make uri configurable like v.LocalURI = "http://localhost:7070"
-		w.Header().Set("Location", "http://localhost:7070")
-		w.WriteHeader(http.StatusFound)
+		http.Redirect(w, r, "http://localhost:7070", http.StatusFound)
 	}
 }

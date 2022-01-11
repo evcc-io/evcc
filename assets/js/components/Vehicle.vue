@@ -73,7 +73,7 @@ export default {
 			return this.collectProps(VehicleSubline);
 		},
 		showLogin: function () {
-			return this.vehicleProviderLoginPath && this.vehicleProviderLogoutPath
+			return this.vehicleProviderLoginPath && this.vehicleProviderLogoutPath;
 		},
 	},
 	methods: {
