@@ -16,10 +16,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type ClientOption func(c *Identity) error
+type IdentityOptions func(c *Identity) error
 
 // WithToken provides an oauth2.Token to the client for auth.
-func WithToken(t *oauth2.Token) ClientOption {
+func WithToken(t *oauth2.Token) IdentityOptions {
 	return func(c *Identity) error {
 		c.token = t
 		return nil
@@ -41,7 +41,7 @@ type Identity struct {
 }
 
 // TODO: SessionSecret from config/persistence
-func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}, options ...ClientOption) (*Identity, error) {
+func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}, options ...IdentityOptions) (*Identity, error) {
 	var err error
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {

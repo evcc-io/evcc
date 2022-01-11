@@ -8,13 +8,11 @@ import (
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/vehicle/mercedes"
-	"golang.org/x/oauth2"
 )
 
 // Mercedes is an api.Vehicle implementation for Mercedes cars
 type Mercedes struct {
 	*embed
-	*mercedes.Identity
 	*mercedes.Provider
 }
 
@@ -27,7 +25,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 	cc := struct {
 		embed                  `mapstructure:",squash"`
 		ClientID, ClientSecret string
-		Tokens                 Tokens
 		VIN                    string
 		Cache                  time.Duration
 	}{
@@ -38,21 +35,21 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 		return nil, err
 	}
 
-	// TODO: cc.Tokens should be moved to a persistence storage
-	// e.g. persistence.Load("key")
-
-	if cc.ClientID == "" && cc.Tokens.Refresh == "" {
+	if cc.ClientID == "" && cc.ClientSecret == "" {
 		return nil, errors.New("missing credentials")
 	}
 
-	var options []mercedes.ClientOption
-	if cc.Tokens.Refresh != "" {
-		options = append(options, mercedes.WithToken(&oauth2.Token{
-			AccessToken:  cc.Tokens.Access,
-			RefreshToken: cc.Tokens.Refresh,
-			Expiry:       time.Now(),
-		}))
-	}
+	var options []mercedes.IdentityOptions
+
+	// TODO: Load tokens from a persistence storage and use those during startup
+	// e.g. persistence.Load("key")
+	// if tokens != nil {
+	// 	options = append(options, mercedes.WithToken(&oauth2.Token{
+	// 		AccessToken:  tokens.Access,
+	// 		RefreshToken: tokens.Refresh,
+	// 		Expiry:       tokens.Expiry,
+	// 	}))
+	// }
 
 	log := util.NewLogger("mercedes")
 
@@ -68,7 +65,6 @@ func NewMercedesFromConfig(other map[string]interface{}) (api.Vehicle, error) {
 
 	v := &Mercedes{
 		embed:    &cc.embed,
-		Identity: identity,
 		Provider: mercedes.NewProvider(api, strings.ToUpper(cc.VIN), cc.Cache),
 	}
 
