@@ -105,6 +105,12 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	return device, nil
 }
 
+func (c *CmdConfigure) processDeviceCapabilities(capabilities templates.Capabilities) {
+	if capabilities.SMAHems {
+		c.capabilitySMAHems = true
+	}
+}
+
 // processDeviceRequirements handles device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
 	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
@@ -119,14 +125,6 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
 		if err := c.askSponsortoken(true); err != nil {
 			return err
-		}
-	}
-
-	// check if we need to setup a HEMS
-	if templateItem.Requirements.Hems != "" && funk.ContainsString(templates.HemsValueTypes, templateItem.Requirements.Hems) {
-		switch templateItem.Requirements.Hems {
-		case templates.HemsTypeSMA:
-			c.configuration.config.Hems = "type: sma\nAllowControl: false\n"
 		}
 	}
 

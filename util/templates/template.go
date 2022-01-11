@@ -55,8 +55,6 @@ const (
 	TemplateRenderModeInstance = "instance"
 )
 
-var HemsValueTypes = []string{HemsTypeSMA}
-
 const (
 	ParamValueTypeString      = "string"
 	ParamValueTypeNumber      = "number"
@@ -118,11 +116,11 @@ func (t *TextLanguage) SetString(lang, value string) {
 // Capabilities
 type Capabilities struct {
 	ISO151182 bool // ISO 15118-2 support
+	SMAHems   bool // SMA HEMS Support
 }
 
 // Requirements
 type Requirements struct {
-	Hems        string       // HEMS Type
 	Eebus       bool         // EEBUS Setup is required
 	Mqtt        bool         // MQTT Setup is required
 	Sponsorship bool         // Sponsorship is required

@@ -67,6 +67,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 **Possible Values**:
 
 - `iso151182: true`: If the charger supports communicating via ISO15118-2
+- `smahems: true`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
 
 ## `requirements`
 
@@ -76,7 +77,6 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 - `sponsorshipt: true`: If the device requires a sponsorship token
 - `eebus: true`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
-- `hems: sma`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
 - `description`: expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements
 - `uri`: a link providing more help on the requirements
 

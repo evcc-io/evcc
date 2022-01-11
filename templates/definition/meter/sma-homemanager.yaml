@@ -1,8 +1,8 @@
 template: sma-home-manager
 description: 
   generic: SMA Sunny Home Manager 2.0
-requirements:
-  hems: sma
+capabilities:
+  smahems: true
 guidedsetup:
   enable: true
   linked: 

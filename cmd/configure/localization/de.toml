@@ -15,6 +15,9 @@ Flow_SingleDevice_Setup = "- Ein Gerät konfigurieren"
 Flow_SingleDevice_Select = "Wähle eines der folgenden Gerätekategorien aus"
 Flow_SingleDevice_Config = "Die Konfiguration lautet:"
 
+Flow_SMAHems_Setup = "- SMA HEMS konfigurieren"
+Flow_SMAHems_Add = "Möchtest du die Wallboxen an den SMA Home Manager anbinden, damit diese z.B. für die Steuerung der Hausbatterie berücksichtigt werden können?"
+
 ItemNotPresent = "Mein Gerät ist nicht in der Liste"
 
 AddDeviceInCategory = "Möchtest du {{ .Article }} {{ .Category }} hinzufügen?"
