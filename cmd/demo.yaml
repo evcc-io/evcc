@@ -1,24 +1,21 @@
 log: info
 
+interval: 3s
+
 javascript:
 - vm: shared
   script: |
     state = {
-      residualpower: 200,
-      pvpower: -3000,
-      batterypower: 200,
-      gridpower: -2000,
+      residualpower: 300,
+      batterypower: 0,
+      pvpower: 6200,
+      gridpower: 0,
       chargepower: 0,
       maxcurrent: 0,
       battery: 63, // car
     };
-    function get() {
-      console.log("state:", JSON.stringify(state));
-    }
-    function set() {
-      console.log(param+":", val);
-      console.log("state:", JSON.stringify(state));
-    }
+    function log() { console.log("state:", JSON.stringify(state)); }
+    function set() { console.log("set "+param+"=", val); }
 
 meters:
 - name: grid
@@ -26,14 +23,31 @@ meters:
   power:
     type: js
     vm: shared
-    script: state.gridpower = state.pvpower + state.chargepower + state.residualpower + state.batterypower;
+    script: |
+      state.pvpower += 200*(Math.random()-0.5);
+      state.chargepower = 0;
+      if (state.enabled) {
+        state.chargepower = state.maxcurrent * 3 * 230;
+        state.batterypower = 0;
+      }
+      state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
+      // if (state.gridpower < 0) {
+      //   state.batterypower = -state.gridpower;
+      //   if (state.batterypower > 1000) {
+      //     state.batterypower = 1000;
+      //   }
+      //   state.gridpower += state.batterypower;
+      // } else {
+      //   state.batterypower = 0;
+      // }
+      state.gridpower;
 
 - name: pv
   type: custom
   power:
     type: js
     vm: shared
-    script: state.pvpower += 100*Math.random();
+    script: state.pvpower
 
 - name: battery
   type: custom
@@ -62,10 +76,7 @@ chargers:
   enable:
     type: js
     vm: shared
-    script: |
-      set();
-      state.enabled = val;
-      if (state.enabled) state.chargepower = state.maxcurrent * 230; else state.chargepower = 0;
+    script: set(); state.enabled = val;
   enabled:
     type: js
     vm: shared
@@ -79,10 +90,7 @@ chargers:
   maxcurrent:
     type: js
     vm: shared
-    script: |
-      set();
-      state.maxcurrent = val;
-      if (state.enabled) state.chargepower = state.maxcurrent * 230;
+    script: set(); state.maxcurrent = val;
 
 vehicles:
 - name: demo

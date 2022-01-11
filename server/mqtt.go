@@ -104,8 +104,7 @@ func (m *MQTT) Run(site site.API, in <-chan util.Param) {
 
 	// site setters
 	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
+		if soc, err := strconv.Atoi(payload); err == nil {
 			_ = site.SetPrioritySoC(float64(soc))
 		}
 	})
