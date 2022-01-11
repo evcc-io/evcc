@@ -149,7 +149,7 @@ func meterCapabilities(name string, meter interface{}) string {
 	_, currents := meter.(api.MeterCurrent)
 
 	name += ":"
-	return fmt.Sprintf("    %-8s power %s energy %s currents %s",
+	return fmt.Sprintf("    %-10s power %s energy %s currents %s",
 		name,
 		presence[power],
 		presence[energy],
@@ -162,7 +162,7 @@ func (site *Site) DumpConfig() {
 	site.publish("siteTitle", site.Title)
 
 	site.log.INFO.Println("site config:")
-	site.log.INFO.Printf("  meters:    grid %s pv %s battery %s",
+	site.log.INFO.Printf("  meters:      grid %s pv %s battery %s",
 		presence[site.gridMeter != nil],
 		presence[len(site.pvMeters) > 0],
 		presence[len(site.batteryMeters) > 0],
@@ -197,35 +197,35 @@ func (site *Site) DumpConfig() {
 
 	for i, lp := range site.loadpoints {
 		lp.log.INFO.Printf("loadpoint %d:", i+1)
-		lp.log.INFO.Printf("  mode:      %s", lp.GetMode())
+		lp.log.INFO.Printf("  mode:        %s", lp.GetMode())
 
 		_, power := lp.charger.(api.Meter)
 		_, energy := lp.charger.(api.MeterEnergy)
 		_, currents := lp.charger.(api.MeterCurrent)
 		_, phases := lp.charger.(api.ChargePhases)
 
-		lp.log.INFO.Printf("  charger:   power %s energy %s currents %s phases %s",
+		lp.log.INFO.Printf("  charger:     power %s energy %s currents %s phases %s",
 			presence[power],
 			presence[energy],
 			presence[currents],
 			presence[phases],
 		)
 
-		lp.log.INFO.Printf("  meters:    charge %s", presence[lp.HasChargeMeter()])
+		lp.log.INFO.Printf("  meters:      charge %s", presence[lp.HasChargeMeter()])
 
 		lp.publish("chargeConfigured", lp.HasChargeMeter())
 		if lp.HasChargeMeter() {
 			lp.log.INFO.Printf(meterCapabilities("charge", lp.chargeMeter))
 		}
 
-		lp.log.INFO.Printf("  vehicles:  %s", presence[len(lp.vehicles) > 0])
+		lp.log.INFO.Printf("  vehicles:    %s", presence[len(lp.vehicles) > 0])
 
 		for i, v := range lp.vehicles {
 			_, rng := v.(api.VehicleRange)
 			_, finish := v.(api.VehicleFinishTimer)
 			_, status := v.(api.ChargeState)
 			_, climate := v.(api.VehicleClimater)
-			lp.log.INFO.Printf("    car %d:   range %s finish %s status %s climate %s",
+			lp.log.INFO.Printf("    vehicle %d: range %s finish %s status %s climate %s",
 				i, presence[rng], presence[finish], presence[status], presence[climate],
 			)
 		}
