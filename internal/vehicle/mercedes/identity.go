@@ -30,7 +30,6 @@ type Identity struct {
 	log *util.Logger
 
 	sessionSecret []byte
-	sessionState  State
 
 	AuthConfig *oauth2.Config
 	token      *oauth2.Token

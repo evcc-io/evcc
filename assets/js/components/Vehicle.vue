@@ -10,7 +10,7 @@
 						@click="providerLogout"
 					>
 						Logout
-					</button>	
+					</button>
 				</span>
 				<span>
 					<button
