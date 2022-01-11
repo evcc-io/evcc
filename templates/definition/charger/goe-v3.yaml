@@ -1,6 +1,8 @@
 template: go-e-v3
 description: 
   generic: go-eCharger V3
+capabilities:
+  phases1p3p: true
 requirements:
   description:
     en: Requires firmware 052.1 or later. Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.

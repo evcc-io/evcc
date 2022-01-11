@@ -115,8 +115,9 @@ func (t *TextLanguage) SetString(lang, value string) {
 
 // Capabilities
 type Capabilities struct {
-	ISO151182 bool // ISO 15118-2 support
-	SMAHems   bool // SMA HEMS Support
+	ISO151182  bool // ISO 15118-2 support
+	Phases1p3p bool // 1P/3P phase switching support
+	SMAHems    bool // SMA HEMS Support
 }
 
 // Requirements

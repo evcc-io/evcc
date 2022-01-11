@@ -1,6 +1,8 @@
 template: easee
 description:
   generic: Easee Home (Cloud API)
+capabilities:
+  phases1p3p: true
 requirements:
   sponsorship: true
 params:

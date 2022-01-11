@@ -1,6 +1,8 @@
 template: alfen
 description: 
   generic: Alfen
+capabilities:
+  phases1p3p: true
 requirements:
   sponsorship: true
 params:
