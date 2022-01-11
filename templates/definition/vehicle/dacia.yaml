@@ -10,3 +10,4 @@ render: |
   type: renault
   {{include "vehicle-base" .}}
   {{include "vehicle-identify" .}}
+  
