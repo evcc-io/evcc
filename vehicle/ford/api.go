@@ -107,7 +107,7 @@ func (v *API) WakeUp(vin string) error {
 	res, err := v.GetBody(uri)
 
 	if err == nil && res == nil {
-		err = errors.New("WakeUp failed")
+		err = errors.New("wakeup failed")
 	}
 
 	return err
