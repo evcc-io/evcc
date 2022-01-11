@@ -1,5 +1,6 @@
 template: lg-ess-home-8-10
-description: LG ESS Home 8/10
+description: 
+  generic: LG ESS Home 8/10
 guidedsetup:
   enable: true
 params:

@@ -1,5 +1,6 @@
 template: sonnenbatterie-eco10
-description: Sonnenbatterie Eco/10
+description: 
+  generic: Sonnenbatterie Eco/10
 guidedsetup:
   enable: true
 params:

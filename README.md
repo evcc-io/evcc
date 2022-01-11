@@ -134,7 +134,7 @@ For use with SMA Sunny Home Manager, `evcc` needs to generate a unique device id
 docker run -v /etc/machine-id:/etc/machine-id -v /var/lib/dbus/machine-id:/var/lib/dbus/machine-id andig/evcc ...
 ```
 
-To build EVCC from source, [Go][2] 1.16 is required:
+To build EVCC from source, [Go][2] 1.16 and [Node][3] 16 are required:
 
 ```sh
 make
@@ -739,6 +739,7 @@ Hence, for a simplified and stricter implementation of an EV charge controller, 
 
 [1]: https://github.com/snaptec/openWB
 [2]: https://golang.org
+[3]: https://nodejs.org/
 [4]: https://getbootstrap.org
 [5]: https://hub.docker.com/repository/docker/andig/evcc
 [6]: https://github.com/volkszaehler/mbmd

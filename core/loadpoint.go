@@ -775,12 +775,6 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 
 	lp.publish("vehicleRange", int64(0))
 	lp.publish("vehicleOdometer", 0.0)
-
-	if provider, ok := lp.vehicle.(api.VehicleProviderLogin); ok {
-		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
-		lp.publish("vehicleProviderLoginPath", provider.LoginPath())
-		lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
-	}
 }
 
 // startVehicleDetection resets connection timer and starts api refresh timer
@@ -975,7 +969,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 	// if more active phases observed than configured, update internal state accordingly
 	if phases < lp.activePhases {
-		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to %dp", phases, lp.activePhases, lp.activePhases)
+		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to 3p", phases, lp.activePhases)
 		phases = 3
 		lp.setPhases(3)
 	}
@@ -999,11 +993,6 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.log.DEBUG.Println("phase disable timer elapsed")
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
-
-				// if charging is disabled, current detection will not switch active phases to 1p
-				// make sure we can start charging by assuming 1p during next cycle
-				lp.activePhases = 1
-
 				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
@@ -1469,11 +1458,6 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	// effective disabled status
 	if remoteDisabled != loadpoint.RemoteEnable {
 		lp.publish("remoteDisabled", remoteDisabled)
-	}
-
-	// update login state
-	if provider, ok := lp.vehicle.(api.VehicleProviderLogin); ok {
-		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
 	}
 
 	// read and publish meters after settings are applied

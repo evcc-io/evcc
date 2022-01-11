@@ -1,0 +1,32 @@
+name: Deploy updated templates
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  docupdate:
+    name: Deploy updated templates
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Clean git
+      run: |
+        git checkout go.*
+        rm -rf flags buildflags
+
+    - name: Deploy to docs repo
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        personal_token: ${{ secrets.GH_API_DOCS_TOKEN }}
+        publish_dir: ./templates/docs
+        external_repository: evcc-io/docs
+        publish_branch: main
+        destination_dir: templates
+        allow_empty_commit: false
+        commit_message: Templates update
+      if: ${{ success() }}

@@ -1,5 +1,6 @@
 template: fronius-solarapi-v1
-description: Fronius Solar API V1
+description: 
+  generic: Fronius Solar API V1
 guidedsetup:
   enable: true
 params:

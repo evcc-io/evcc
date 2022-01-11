@@ -1,5 +1,6 @@
 template: volvo
-description: Volvo
+description: 
+  generic: Volvo
 params:
 - base: vehiclebase
 - base: vehicleidentify

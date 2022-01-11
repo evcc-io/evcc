@@ -89,7 +89,7 @@ export default {
 		removeTargetTime: function () {
 			this.$emit("target-time-removed");
 		},
-				providerLogin: async function () {
+		providerLogin: async function () {
 			await axios
 				.post(this.vehicleProviderLoginPath)
 				.then(function (response) {

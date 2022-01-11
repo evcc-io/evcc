@@ -59,6 +59,11 @@ func (mb *Connection) Delay(delay time.Duration) {
 	mb.delay = delay
 }
 
+// ConnectDelay sets the initial delay after connecting before starting communication
+func (mb *Connection) ConnectDelay(delay time.Duration) {
+	mb.conn.ConnectDelay(delay)
+}
+
 // Logger sets logger implementation
 func (mb *Connection) Logger(logger meters.Logger) {
 	mb.conn.Logger(logger)

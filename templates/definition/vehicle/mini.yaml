@@ -1,5 +1,6 @@
 template: mini
-description: Mini
+description: 
+  generic: Mini
 params:
 - base: vehiclebase
 - base: vehicleidentify

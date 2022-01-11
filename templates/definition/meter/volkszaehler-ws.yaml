@@ -1,5 +1,6 @@
 template: volkszaehler-ws
-description: Volkszähler (WebSocket API)
+description: 
+  generic: Volkszähler (WebSocket API)
 generic: true
 params:
 - name: usage

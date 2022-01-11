@@ -1,5 +1,6 @@
 template: shelly-3em
-description: Shelly 3EM
+description: 
+  generic: Shelly 3EM
 params:
 - name: usage
   choice: [ "grid" ]

@@ -40,6 +40,7 @@ type config struct {
 	}
 	Hems         string
 	EEBUS        string
+	MQTT         string
 	SponsorToken string
 }
 

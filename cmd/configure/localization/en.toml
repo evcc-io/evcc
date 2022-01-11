@@ -1,5 +1,9 @@
 Intro = "The next steps will guide you through the creation of a configuration file for evcc.\nPlease note that this process cannot cover all possible scenarios.\nYou can cancel the process by pressing CTRL-C anytime.\n\nNOTE: This functionality is in an experimental state!\n  This means that the created configuration file may not work\n  in a future update of evcc and would need to be recreated.\n  We are looking forward to your feedback at https://github.com/evcc-io/evcc/discussions/\n\nLet's go:"
 
+Flow_Mode = "In which mode should this process guide you through the configuration?"
+Flow_Mode_Standard = "Standard mode (As simple and quick as possible)"
+Flow_Mode_Advanced = "Advanced mode (Ask more details, requires technical know-how)"
+
 Flow_Type = "What do you want to do?"
 Flow_Type_NewConfiguration = "Create a new evcc configuration file"
 Flow_Type_SingleDevice = "Configure a single device (has to be added manually to a configuration file!)"
@@ -90,6 +94,8 @@ TestingDevice_RepeatStep = "Do you want to repeat choosing a device and configur
 TestingDevice_AddFailed = "Testing {{ .Device }} failed. Do you want to add it anyway?"
 TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ .Device }} failed. Do you want to add it anyway?"
 
+TestingMQTTFailed = "Testing the MQTT configuration failed. Do you want to repeat its configuration?"
+
 Requirements_Title = "The device needs to provide the following requirements:"
 Requirements_More = "Additional information:"
 
@@ -131,7 +137,8 @@ Loadpoint_ResetOnDisconnect = "Shall disconnecting the charging cable from the v
 
 Loadpoint_WallboxWOMeter = "The wallbox does not provide power data. Do you have an external meter that can be used?"
 Loadpoint_WallboxMaxPower = "What is the maximum power your wallbox can provide?"
-Loadpoint_WallboxMaxAmperage = "What is the maximum amperage your wallbox can provide on a single phase?"
+Loadpoint_WallboxMinAmperage = "What is the MINIMUM amperage your wallbox can provide on a single phase?"
+Loadpoint_WallboxMaxAmperage = "What is the MAXIMUM amperage your wallbox can provide on a single phase?"
 Loadpoint_WallboxPhases = "How many phases are connected to the wallbox?"
 Loadpoint_WallboxPower36kW = "3.6 kW"
 Loadpoint_WallboxPower11kW = "11 kW"

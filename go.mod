@@ -38,7 +38,7 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/grandcat/zeroconf v1.0.0
 	github.com/gregdel/pushover v1.1.0
-	github.com/grid-x/modbus v0.0.0-20211113184042-7f2251c342c9
+	github.com/grid-x/modbus v0.0.0-20211229160110-3feef1c6833e
 	github.com/hashicorp/go-version v1.3.0
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12
@@ -69,7 +69,6 @@ require (
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/onsi/gomega v1.17.0 // indirect
 	github.com/philippseith/signalr v0.5.3-0.20211205201131-d57b5a34379a
-	github.com/pquerna/cachecontrol v0.1.0 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
@@ -85,7 +84,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/thoas/go-funk v0.9.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c
-	github.com/volkszaehler/mbmd v0.0.0-20211119165407-62927eac8927
+	github.com/volkszaehler/mbmd v0.0.0-20220108103619-de9b2cf95ebe
 	gitlab.com/bboehmke/sunny v0.15.1-0.20211022160056-2fba1c86ade6
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f

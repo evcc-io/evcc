@@ -18,7 +18,7 @@ The following describes each possible element in a yaml file
 
 ## `description`
 
-`description` expects a human readable description of the device, best language neutral and containing the name of the product
+`description` expects a human readable description of the device, best containing the name of the product. Values are language specific names via `de`, `en`, `generic` (if string is language independent)
 
 ## `generic`
 
@@ -60,6 +60,14 @@ Allows to define a list of meter devices that are typically installed with this 
 
 Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used for getting the PV generation or multiple SMA PV inverters. But never both together. So if the used added an SMA Energy Meter, then the flow shoudn't ask for SMA PV inverters.
 
+## `capabilities`
+
+`capabilities` provides an option to define special capabilities of the devie
+
+**Possible Values**:
+
+- `iso151182: true`: If the charger supports communicating via ISO15118-2
+
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup
@@ -94,6 +102,39 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 - `usage`: specifies a list of meter classes, the device can be used for. Possible values are `grid`, `pv`, `battery`, and `charger`
 - `modbus`: specifies that this device is accessed via modbus. It requires the `choice` property to have a list of possible interface values the device provides. These values can be `rs485` and `tcpip`. The command will use either to ask the appropriate questions and settings. The `render` section needs to include the string `{{include "modbus" .}}` in all places where the configuration needs modbus settings.
+
+#### Modbus Options
+
+- `id`: Device specific default for modbus ID
+- `port`: Device specific default for modbus TCPIP port
+- `baudrate`: Device specific default for modbus RS485 baudrate
+- `comset`: Device specific default for modbus RS485 comset
+
+### `description`
+
+`description` allows to define user friendly and language specific names via `de`, `en`, `generic`
+
+### `dependencies`
+
+`dependencies` allows to define a list of checks, when this param should be presented to the user, if it should be only in special cases
+
+#### `name`
+
+`name` referenced the `param` `name` value
+
+#### `check`
+
+`check` defines which kind of check should be performed
+
+**Possible values**:
+
+- `empty`: if the `value` of the referenced `param` `name` should be empty
+- `notempty`: if the `value` of the referenced `param` `name` should be **NOT** empty
+- `equal`: if the `value` of the referenced `param` `name` should match the value of the `value` property
+
+#### `value`
+
+`value` property is used in the `equal` `check`
 
 ### `required`
 

@@ -1,5 +1,6 @@
 template: fiat
-description: Fiat
+description: 
+  generic: Fiat
 params:
 - base: vehiclebase
 - name: vin

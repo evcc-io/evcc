@@ -1,5 +1,6 @@
 template: id
-description: Volkswagen (We Connect ID)
+description: 
+  generic: Volkswagen (We Connect ID)
 params:
 - base: vehiclebase
 - base: vehicleidentify
