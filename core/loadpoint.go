@@ -933,12 +933,16 @@ func (lp *LoadPoint) setPhases(phases int) {
 	lp.Lock()
 	defer lp.Unlock()
 
-	if phases < lp.activePhases {
+	if lp.Phases != phases {
+		lp.Phases = phases
+		lp.publish("phases", lp.Phases)
 		// When scaling down, charger will temporarily disable. During this time, activePhases will not be updated
 		// since all currents are zero. This will lead to inconsistent state when scaling is triggered again
 		// (1p configured vs 3p active). Update activePhases to reflect the current state of the charger.
-		lp.activePhases = phases
-		lp.publish("activePhases", lp.activePhases)
+		if phases < lp.activePhases {
+			lp.activePhases = phases
+			lp.publish("activePhases", lp.activePhases)
+		}
 	} else {
 		// When scaling up, charger will offer more phases than vehicle can use.
 		// Adjust to enable subsequent PV restart at lower powers than full 3p.
