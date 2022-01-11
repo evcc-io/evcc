@@ -1,20 +1,23 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
-		<h3 class="d-none d-md-block my-4">
-			{{ siteTitle || "Home" }}
-		</h3>
-		<Energyflow v-bind="energyflow" />
-		<hr class="w-100 my-4" />
-		<div class="flex-grow-1 d-flex justify-content-around flex-column">
-			<template v-for="(loadpoint, id) in loadpoints">
-				<hr v-if="id > 0" :key="id + '_hr'" class="w-100 my-4" />
-				<Loadpoint
-					v-bind="loadpoint"
-					:id="id"
-					:key="id"
-					:single="loadpoints.length === 1"
-				/>
-			</template>
+		<div class="container">
+			<h3 class="d-none d-md-block my-4">
+				{{ siteTitle || "Home" }}
+			</h3>
+			<Energyflow v-bind="energyflow" />
+		</div>
+		<div class="flex-grow-1 d-flex justify-content-around flex-column content-area">
+			<div class="container">
+				<template v-for="(loadpoint, id) in loadpoints">
+					<hr v-if="id > 0" :key="id + '_hr'" class="w-100 my-4" />
+					<Loadpoint
+						v-bind="loadpoint"
+						:id="id"
+						:key="id"
+						:single="loadpoints.length === 1"
+					/>
+				</template>
+			</div>
 		</div>
 	</div>
 </template>
@@ -61,3 +64,10 @@ export default {
 	},
 };
 </script>
+<style scoped>
+.content-area {
+	background-color: var(--bs-gray-dark);
+	border-radius: 20px 20px 0 0;
+	color: var(--bs-white);
+}
+</style>

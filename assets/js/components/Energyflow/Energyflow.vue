@@ -18,10 +18,7 @@
 				:batterySoC="batterySoC"
 				:valuesInKw="valuesInKw"
 			/>
-			<div
-				class="col-12 col-sm-6 col-md-5 col-lg-3 col-xl-3 order-md-1 mt-2 mt-md-0"
-				:class="`${showDetails ? 'd-block' : `d-none d-md-block`}`"
-			>
+			<div class="col-12 height-transition" :style="`height: ${showDetails ? '0' : '200'}px`">
 				<div class="d-flex justify-content-between" data-test-pv-production>
 					<span class="details-icon text-muted"><fa-icon icon="sun"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
@@ -71,7 +68,7 @@
 				</div>
 			</div>
 			<div
-				v-if="showDetails"
+				v-if="showDetails && false"
 				class="col-12 col-sm-6 offset-md-6 col-md-6 offset-lg-4 col-lg-8 d-block d-md-flex order-md-3 justify-content-between mt-2"
 			>
 				<div class="text-nowrap d-flex d-md-block" data-test-grid-import>
@@ -189,5 +186,8 @@ export default {
 	margin-right: 0.25rem;
 	white-space: nowrap;
 	flex-shrink: 0;
+}
+.height-transition {
+	transition: height 200ms ease-in-out;
 }
 </style>

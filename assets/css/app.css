@@ -1,7 +1,21 @@
+@font-face {
+	font-family: "Montserrat";
+	src: url("../font/Montserrat-Medium.woff2") format("woff2");
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: "Montserrat";
+	src: url("../font/Montserrat-Bold.woff2") format("woff2");
+	font-weight: bold;
+	font-style: normal;
+}
+
 :root {
-	--evcc-green: #66d85a;
-	--evcc-dark-green: #3aba2c;
-	--evcc-yellow: #ffe000;
+	--evcc-green: #baffcb;
+	--evcc-dark-green: #0fde41;
+	--evcc-yellow: #faf000;
+	--bs-gray-dark: #28293e;
 
 	--evcc-grid: var(--bs-gray-dark);
 	--evcc-self: var(--evcc-dark-green);
@@ -9,6 +23,10 @@
 
 	--bs-primary: var(--evcc-dark-green);
 	--bs-primary-rgb: 58, 186, 44;
+
+	--bs-font-sans-serif: Montserrat, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+		Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+		"Segoe UI Symbol", "Noto Color Emoji";
 }
 
 .bg-primary {

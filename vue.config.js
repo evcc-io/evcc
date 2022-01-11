@@ -7,6 +7,11 @@ module.exports = {
   outputDir: "./dist",
   publicPath: "./",
   configureWebpack: {
-    plugins: [new CopyWebpackPlugin([{ from: "assets/ico/", to: "ico" }])],
+    plugins: [
+      new CopyWebpackPlugin([
+        { from: "assets/ico/", to: "ico" },
+        { from: "assets/fonts/", to: "fonts" },
+      ]),
+    ],
   },
 };

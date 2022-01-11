@@ -1,7 +1,7 @@
 <template>
-	<div class="container">
+	<div>
 		<Site v-if="configured" v-bind="state"></Site>
-		<div v-else>
+		<div v-else class="container">
 			<div class="row py-5">
 				<div class="col12">
 					<p class="h1 pt-5 pb-2 border-bottom">Willkommen bei evcc</p>
