@@ -96,7 +96,6 @@ vehicles:
       if (state.battery < 15) state.battery = 15;
       if (state.battery > 100) state.battery = 100;
       state.battery;
-  cache: 1s
 
 site:
   title: Demo
