@@ -26,11 +26,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
 - REST and MQTT [APIs](https://docs.evcc.io/docs/reference/api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
 
+![Screenshot](docs/screenshot.png)
 
 ## Documentation
 
 Documentation is available in german language at [https://docs.evcc.io/](https://docs.evcc.io/)
-
 
 ## Build
 
