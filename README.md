@@ -1,4 +1,4 @@
-# evcc <!-- omit in toc -->
+# evcc
 
 [![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/evcc-io/evcc)
 [![Build Status](https://github.com/evcc-io/evcc/workflows/Build/badge.svg)](https://github.com/evcc-io/evcc/actions?query=workflow%3ABuild)
@@ -9,7 +9,8 @@
 
 EVCC is an extensible EV Charge Controller with PV integration implemented in [Go][2]. Featured in [PV magazine](https://www.pv-magazine.de/2021/01/15/selbst-ist-der-groeoenlandhof-wallbox-ladesteuerung-selbst-gebaut/).
 
-## Features <!-- omit in toc -->
+
+## Features
 
 - simple and clean user interface
 - multiple [chargers](https://docs.evcc.io/docs/devices/chargers):
@@ -25,11 +26,11 @@ EVCC is an extensible EV Charge Controller with PV integration implemented in [G
 - granular charge power control down to mA steps with supported chargers (labeled by e.g. smartWB als [OLC](https://board.evse-wifi.de/viewtopic.php?f=16&t=187))
 - REST and MQTT [APIs](https://docs.evcc.io/docs/reference/api) for integration with home automation systems (e.g. [HomeAssistant](https://github.com/evcc-io/evcc-hassio-addon))
 
-<img src="docs/logo.png" align="right" width="150" />
 
 ## Documentation
 
 Documentation is available in german language at [https://docs.evcc.io/](https://docs.evcc.io/)
+
 
 ## Build
 
@@ -50,7 +51,7 @@ The personal sponsor token requires a [Github Sponsorship](https://github.com/sp
 
 ## Background
 
-![Screenshots](docs/logo.png)
+<img src="docs/logo.png" align="right" width="150" />
 
 EVCC is heavily inspired by [OpenWB][1]. However, in 2019, I found OpenWB's architecture slightly intimidating with everything basically global state and heavily relying on shell scripting. On the other side, especially the scripting aspect is one that contributes to [OpenWB's][1] flexibility.
 
