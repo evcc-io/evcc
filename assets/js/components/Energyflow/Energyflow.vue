@@ -1,12 +1,8 @@
 <template>
 	<div>
-		<div
-			class="row align-items-start align-items-md-center mt-4 energyflow"
-			@click="toggleDetails"
-		>
+		<div class="row align-items-start align-items-md-center mt-4 energyflow">
 			<Visualization
 				class="col-12 offset-md-1 col-md-6 offset-lg-1 col-lg-8 offset-xl-1 col-xl-6 offset-xxl-1 col-xl-8 order-md-2"
-				:showDetails="showDetails"
 				:gridImport="gridImport"
 				:selfConsumption="selfConsumption"
 				:loadpoints="loadpointsPower"
@@ -18,7 +14,7 @@
 				:batterySoC="batterySoC"
 				:valuesInKw="valuesInKw"
 			/>
-			<div class="col-12 height-transition" :style="`height: ${showDetails ? '0' : '200'}px`">
+			<div class="col-12">
 				<div class="d-flex justify-content-between" data-test-pv-production>
 					<span class="details-icon text-muted"><fa-icon icon="sun"></fa-icon></span>
 					<span class="text-nowrap flex-grow-1">{{
@@ -68,7 +64,6 @@
 				</div>
 			</div>
 			<div
-				v-if="showDetails && false"
 				class="col-12 col-sm-6 offset-md-6 col-md-6 offset-lg-4 col-lg-8 d-block d-md-flex order-md-3 justify-content-between mt-2"
 			>
 				<div class="text-nowrap d-flex d-md-block" data-test-grid-import>
@@ -125,9 +120,6 @@ export default {
 		batteryPower: { type: Number, default: 0 },
 		batterySoC: { type: Number, default: 0 },
 	},
-	data: function () {
-		return { showDetails: false };
-	},
 	computed: {
 		gridImport: function () {
 			return Math.max(0, this.gridPower);
@@ -161,9 +153,6 @@ export default {
 		kw: function (watt) {
 			return this.fmtKw(watt, this.valuesInKw);
 		},
-		toggleDetails() {
-			this.showDetails = !this.showDetails;
-		},
 	},
 };
 </script>
@@ -186,8 +175,5 @@ export default {
 	margin-right: 0.25rem;
 	white-space: nowrap;
 	flex-shrink: 0;
-}
-.height-transition {
-	transition: height 200ms ease-in-out;
 }
 </style>

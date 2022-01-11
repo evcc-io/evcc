@@ -82,7 +82,6 @@ export default {
 	components: { BatteryIcon, LabelBar, GridIcon },
 	mixins: [formatter],
 	props: {
-		showDetails: Boolean,
 		gridImport: { type: Number, default: 0 },
 		selfConsumption: { type: Number, default: 0 },
 		pvExport: { type: Number, default: 0 },
@@ -118,9 +117,6 @@ export default {
 		},
 	},
 	watch: {
-		showDetails: function () {
-			this.$nextTick(() => this.updateElementWidth());
-		},
 		totalAdjusted: function () {
 			if (!this.visualizationReady && this.totalAdjusted > 0)
 				setTimeout(() => {
