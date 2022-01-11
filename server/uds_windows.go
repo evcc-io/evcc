@@ -1,10 +1,11 @@
+//go:build windows
 // +build windows
 
 package server
 
-import "github.com/andig/evcc/core"
+import "github.com/evcc-io/evcc/core/site"
 
 // HealthListener attaches listener to unix domain socket
-func HealthListener(site core.SiteAPI) {
+func HealthListener(_ site.API, _ <-chan struct{}) {
 	// nop
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -8,7 +9,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/api"
+	"github.com/fatih/structs"
 )
 
 var truefalse = map[bool]string{false: "false", true: "true"}
@@ -64,7 +66,23 @@ func (d *dumper) Dump(name string, v interface{}) {
 	}
 
 	if v, ok := v.(api.Battery); ok {
-		if soc, err := v.SoC(); err != nil {
+		var soc float64
+		var err error
+
+		// wait up to 1m for the vehicle to wakeup
+		start := time.Now()
+		for err = api.ErrMustRetry; err != nil && errors.Is(err, api.ErrMustRetry); {
+			if soc, err = v.SoC(); err != nil {
+				if time.Since(start) > time.Minute {
+					err = api.ErrTimeout
+				} else {
+					fmt.Fprint(w, ".")
+					time.Sleep(3 * time.Second)
+				}
+			}
+		}
+
+		if err != nil {
 			fmt.Fprintf(w, "SoC:\t%v\n", err)
 		} else {
 			fmt.Fprintf(w, "SoC:\t%.0f%%\n", soc)
@@ -107,15 +125,19 @@ func (d *dumper) Dump(name string, v interface{}) {
 
 	// vehicle
 
-	if v, ok := v.(api.Vehicle); ok {
-		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
-	}
-
 	if v, ok := v.(api.VehicleRange); ok {
 		if rng, err := v.Range(); err != nil {
-			fmt.Fprintf(w, "Vehicle range:\t%v\n", err)
+			fmt.Fprintf(w, "Range:\t%v\n", err)
 		} else {
-			fmt.Fprintf(w, "Vehicle range:\t%vkm\n", rng)
+			fmt.Fprintf(w, "Range:\t%vkm\n", rng)
+		}
+	}
+
+	if v, ok := v.(api.VehicleOdometer); ok {
+		if odo, err := v.Odometer(); err != nil {
+			fmt.Fprintf(w, "Odometer:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Odometer:\t%.0fkm\n", odo)
 		}
 	}
 
@@ -138,6 +160,34 @@ func (d *dumper) Dump(name string, v interface{}) {
 			if !math.IsNaN(tt) {
 				fmt.Fprintf(w, "Target temp:\t%.1f°C\n", tt)
 			}
+		}
+	}
+
+	if v, ok := v.(api.VehiclePosition); ok {
+		if lat, lon, err := v.Position(); err != nil {
+			fmt.Fprintf(w, "Position:\t%v\n", err)
+		} else {
+			fmt.Fprintf(w, "Position:\t%v,%v\n", lat, lon)
+		}
+	}
+
+	if v, ok := v.(api.Vehicle); ok {
+		fmt.Fprintf(w, "Capacity:\t%dkWh\n", v.Capacity())
+		if len(v.Identifiers()) > 0 {
+			fmt.Fprintf(w, "Identifiers:\t%v\n", v.Identifiers())
+		}
+		if !structs.IsZero(v.OnIdentified()) {
+			fmt.Fprintf(w, "OnIdentified:\t%s\n", v.OnIdentified())
+		}
+	}
+
+	// Identity
+
+	if v, ok := v.(api.Identifier); ok {
+		if id, err := v.Identify(); err != nil {
+			fmt.Fprintf(w, "Identifier:\t%v\n", err)
+		} else if id != "" {
+			fmt.Fprintf(w, "Identifier:\t%s\n", id)
 		}
 	}
 

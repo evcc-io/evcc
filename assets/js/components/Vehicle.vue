@@ -2,7 +2,7 @@
 	<div>
 		<div class="mb-3">
 			<div>
-				{{ socTitle || "Fahrzeug" }}
+				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
 				<span v-if="vehicleProviderLoggedIn">
 					<button
 						type="button"
@@ -24,8 +24,13 @@
 				</span>
 			</div>
 		</div>
-		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
-		<VehicleSubline v-bind="vehicleSubline" class="my-1" />
+		<VehicleSoc v-bind="vehicleSocProps" @target-soc-updated="targetSocUpdated" />
+		<VehicleSubline
+			v-bind="vehicleSubline"
+			class="my-1"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 	</div>
 </template>
 
@@ -40,16 +45,18 @@ import VehicleSubline from "./VehicleSubline";
 export default {
 	name: "Vehicle",
 	components: { VehicleSoc, VehicleSubline },
+	mixins: [collector],
 	props: {
+		id: Number,
 		connected: Boolean,
-		hasVehicle: Boolean,
-		socCharge: Number,
+		vehiclePresent: Boolean,
+		vehicleSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
-		socTitle: String,
-		timerActive: Boolean,
-		timerSet: Boolean,
+		vehicleTitle: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetTime: String,
 		targetSoC: Number,
 		vehicleProviderLoggedIn: Boolean,
@@ -57,7 +64,7 @@ export default {
 		vehicleProviderLogoutPath: String,
 	},
 	computed: {
-		vehicleSoc: function () {
+		vehicleSocProps: function () {
 			return this.collectProps(VehicleSoc);
 		},
 		vehicleSubline: function () {
@@ -76,7 +83,13 @@ export default {
 		targetSocUpdated: function (targetSoC) {
 			this.$emit("target-soc-updated", targetSoC);
 		},
-		providerLogin: async function () {
+		setTargetTime: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
+		},
+				providerLogin: async function () {
 			await axios
 				.post(this.vehicleProviderLoginPath)
 				.then(function (response) {
@@ -95,6 +108,5 @@ export default {
 				});
 		},
 	},
-	mixins: [collector],
 };
 </script>

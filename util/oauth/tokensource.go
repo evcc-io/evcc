@@ -2,6 +2,7 @@ package oauth
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -9,23 +10,26 @@ import (
 )
 
 type TokenRefresher interface {
-	Refresh(token *oauth2.Token) (*oauth2.Token, error)
+	RefreshToken(token *oauth2.Token) (*oauth2.Token, error)
 }
 
 type TokenSource struct {
+	mu        sync.Mutex
 	token     *oauth2.Token
 	refresher TokenRefresher
 }
 
 func RefreshTokenSource(token *oauth2.Token, refresher TokenRefresher) oauth2.TokenSource {
-	return &TokenSource{token, refresher}
+	return &TokenSource{token: token, refresher: refresher}
 }
 
 func (ts *TokenSource) Token() (*oauth2.Token, error) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
 	var err error
 	if time.Until(ts.token.Expiry) < time.Minute {
 		var token *oauth2.Token
-		if token, err = ts.refresher.Refresh(ts.token); err == nil {
+		if token, err = ts.refresher.RefreshToken(ts.token); err == nil {
 			if token.AccessToken == "" {
 				err = errors.New("token refresh failed to obtain access token")
 			} else {
@@ -33,7 +37,6 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 			}
 		}
 	}
-
 	return ts.token, err
 }
 

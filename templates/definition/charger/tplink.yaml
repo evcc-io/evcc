@@ -1,0 +1,12 @@
+template: tplink
+description: TP-LINK Smart Plug
+params:
+- name: host
+  required: true
+  example: 192.0.2.2
+- name: standbypower
+  default: 15
+render: |
+  type: tasmota
+  uri: {{ .host }}
+  standbypower: {{ .standbypower }}  # treat as charging above this power

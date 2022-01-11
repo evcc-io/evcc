@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
-	"github.com/andig/evcc/util/request"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
 	"github.com/gorilla/websocket"
 	"github.com/itchyny/gojq"
 )
@@ -61,7 +62,7 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 	p := &Socket{
 		log:     log,
 		Helper:  request.NewHelper(log),
-		mux:     util.NewWaiter(cc.Timeout, func() { log.TRACE.Println("wait for initial value") }),
+		mux:     util.NewWaiter(cc.Timeout, func() { log.DEBUG.Println("wait for initial value") }),
 		url:     url,
 		headers: cc.Headers,
 		scale:   cc.Scale,
@@ -69,14 +70,15 @@ func NewSocketProviderFromConfig(other map[string]interface{}) (IntProvider, err
 
 	// handle basic auth
 	if cc.Auth.Type != "" {
-		if err := AuthHeaders(log, cc.Auth, p.headers); err != nil {
-			return nil, fmt.Errorf("socket auth: %w", err)
-		}
+		basicAuth := transport.BasicAuthHeader(cc.Auth.User, cc.Auth.Password)
+		log.Redact(basicAuth)
+
+		p.headers["Authorization"] = basicAuth
 	}
 
 	// ignore the self signed certificate
 	if cc.Insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
 	if cc.Jq != "" {
@@ -99,8 +101,13 @@ func (p *Socket) listen() {
 		headers.Set(k, v)
 	}
 
+	dialer := &websocket.Dialer{
+		Proxy:            http.ProxyFromEnvironment,
+		HandshakeTimeout: request.Timeout,
+	}
+
 	for {
-		client, _, err := websocket.DefaultDialer.Dial(p.url, headers)
+		client, _, err := dialer.Dial(p.url, headers)
 		if err != nil {
 			p.log.ERROR.Println(err)
 			time.Sleep(retryDelay)
@@ -134,11 +141,11 @@ func (p *Socket) listen() {
 }
 
 func (p *Socket) hasValue() (interface{}, error) {
-	elapsed := p.mux.LockWithTimeout()
+	p.mux.Lock()
 	defer p.mux.Unlock()
 
-	if elapsed > 0 {
-		return nil, fmt.Errorf("outdated: %v", elapsed.Truncate(time.Second))
+	if late := p.mux.Overdue(); late > 0 {
+		return nil, fmt.Errorf("outdated: %v", late.Truncate(time.Second))
 	}
 
 	return p.val, nil

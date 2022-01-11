@@ -1,12 +1,12 @@
 package core
 
 import (
-	"github.com/avast/retry-go"
+	"github.com/avast/retry-go/v3"
 )
 
 var (
 	status   = map[bool]string{false: "disable", true: "enable"}
-	presence = map[bool]string{false: "—", true: "✓"}
+	presence = map[bool]string{false: "✗", true: "✓"}
 
 	// retryOptions ist the default options set for retryable operations
 	retryOptions = []retry.Option{retry.Attempts(3), retry.LastErrorOnly(true)}
@@ -16,7 +16,10 @@ var (
 )
 
 // powerToCurrent is a helper function to convert power to per-phase current
-func powerToCurrent(power float64, phases int64) float64 {
+func powerToCurrent(power float64, phases int) float64 {
+	if Voltage == 0 {
+		panic("Voltage is not set")
+	}
 	return power / (float64(phases) * Voltage)
 }
 

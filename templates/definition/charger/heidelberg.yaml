@@ -1,0 +1,12 @@
+template: heidelberg
+description: Heidelberg Energy Control (Modbus RTU)
+requirements:
+  sponsorship: true
+params:
+- name: modbus
+  choice: ["rs485"]
+  baudrate: 19200
+  comset: "8E1"
+render: |
+  type: heidelberg
+  {{include "modbus" .}}

@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/core/site"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/util"
 )
 
 // MQTT is the MQTT server. It uses the MQTT client for publishing.
@@ -19,10 +20,6 @@ type MQTT struct {
 
 // NewMQTT creates MQTT server
 func NewMQTT(root string) *MQTT {
-	if root == "" {
-		root = "evcc"
-	}
-
 	return &MQTT{
 		Handler: mqtt.Instance,
 		root:    root,
@@ -68,28 +65,45 @@ func (m *MQTT) publish(topic string, retained bool, payload interface{}) {
 	m.publishSingleValue(topic, retained, payload)
 }
 
-func (m *MQTT) listenSetters(topic string, apiHandler core.LoadPointAPI) {
-	m.Handler.Listen(topic+"/mode/set", func(payload string) {
+func (m *MQTT) listenSetters(topic string, apiHandler loadpoint.API) {
+	m.Handler.ListenSetter(topic+"/mode/set", func(payload string) {
 		apiHandler.SetMode(api.ChargeMode(payload))
 	})
-	m.Handler.Listen(topic+"/minSoC/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
-			_ = apiHandler.SetMinSoC(soc)
+	m.Handler.ListenSetter(topic+"/minSoC/set", func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			apiHandler.SetMinSoC(soc)
 		}
 	})
-	m.Handler.Listen(topic+"/targetSoC/set", func(payload string) {
-		soc, err := strconv.Atoi(payload)
-		if err == nil {
-			_ = apiHandler.SetTargetSoC(soc)
+	m.Handler.ListenSetter(topic+"/targetSoC/set", func(payload string) {
+		if soc, err := strconv.Atoi(payload); err == nil {
+			apiHandler.SetTargetSoC(soc)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/minCurrent/set", func(payload string) {
+		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+			apiHandler.SetMinCurrent(current)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/maxCurrent/set", func(payload string) {
+		if current, err := strconv.ParseFloat(payload, 64); err == nil {
+			apiHandler.SetMaxCurrent(current)
+		}
+	})
+	m.Handler.ListenSetter(topic+"/phases/set", func(payload string) {
+		if phases, err := strconv.Atoi(payload); err == nil {
+			_ = apiHandler.SetPhases(phases)
 		}
 	})
 }
 
 // Run starts the MQTT publisher for the MQTT API
-func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
+func (m *MQTT) Run(site site.API, in <-chan util.Param) {
+	// alive
+	topic := fmt.Sprintf("%s/status", m.root)
+	m.publish(topic, true, "online")
+
 	// site setters
-	m.Handler.Listen(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
+	m.Handler.ListenSetter(fmt.Sprintf("%s/site/prioritySoC/set", m.root), func(payload string) {
 		soc, err := strconv.Atoi(payload)
 		if err == nil {
 			_ = site.SetPrioritySoC(float64(soc))
@@ -97,7 +111,7 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	})
 
 	// number of loadpoints
-	topic := fmt.Sprintf("%s/loadpoints", m.root)
+	topic = fmt.Sprintf("%s/loadpoints", m.root)
 	m.publish(topic, true, len(site.LoadPoints()))
 
 	// loadpoint setters
@@ -109,6 +123,14 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 	// alive indicator
 	updated := time.Now().Unix()
 	m.publish(fmt.Sprintf("%s/updated", m.root), true, updated)
+
+	// remove deprecated topics
+	for id := range site.LoadPoints() {
+		topic := fmt.Sprintf("%s/loadpoints/%d", m.root, id+1)
+		for _, dep := range []string{"range", "socCharge", "vehicleSoc"} {
+			m.publish(fmt.Sprintf("%s/%s", topic, dep), true, "")
+		}
+	}
 
 	// publish
 	for p := range in {
@@ -126,6 +148,6 @@ func (m *MQTT) Run(site core.SiteAPI, in <-chan util.Param) {
 
 		// value
 		topic += "/" + p.Key
-		m.publish(topic, false, p.Val)
+		m.publish(topic, true, p.Val)
 	}
 }

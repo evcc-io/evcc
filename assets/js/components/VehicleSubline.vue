@@ -2,52 +2,50 @@
 	<div class="d-flex justify-content-between align-items-center">
 		<small class="text-secondary">
 			<span v-if="minSoCActive">
-				<fa-icon class="text-muted mr-1" icon="exclamation-circle"></fa-icon>
-				Mindestladung bis {{ minSoC }}%
+				<fa-icon class="text-muted me-1" icon="exclamation-circle"></fa-icon>
+				{{ $t("main.vehicleSubline.mincharge", { soc: minSoC }) }}
 			</span>
 		</small>
-		<small
-			v-if="targetChargeEnabled"
-			:class="{
-				invisible: !targetSoC,
-				'text-primary': timerActive,
-				'text-secondary': !timerActive,
-			}"
-		>
-			{{ targetTimeLabel() }}
-			<fa-icon class="ml-1" icon="clock"></fa-icon>
-		</small>
+		<TargetCharge
+			v-bind="targetCharge"
+			@target-time-updated="setTargetTime"
+			@target-time-removed="removeTargetTime"
+		/>
 	</div>
 </template>
 
 <script>
-import formatter from "../mixins/formatter";
+import collector from "../mixins/collector";
+import TargetCharge from "./TargetCharge.vue";
 
 export default {
 	name: "VehicleSubline",
+	components: { TargetCharge },
+	mixins: [collector],
 	props: {
-		socCharge: Number,
+		id: Number,
+		vehicleSoC: Number,
 		minSoC: Number,
-		timerActive: Boolean,
-		timerSet: Boolean,
 		targetTime: String,
+		targetTimeActive: Boolean,
+		targetTimeHourSuggestion: Number,
 		targetSoC: Number,
 	},
 	computed: {
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.socCharge < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
-		targetChargeEnabled: function () {
-			return this.targetTime && this.timerSet;
+		targetCharge: function () {
+			return this.collectProps(TargetCharge);
 		},
 	},
 	methods: {
-		// not computed because it needs to update over time
-		targetTimeLabel: function () {
-			const targetDate = new Date(this.targetTime);
-			return `bis ${this.fmtAbsoluteDate(targetDate)} Uhr`;
+		setTargetTime: function (targetTime) {
+			this.$emit("target-time-updated", targetTime);
+		},
+		removeTargetTime: function () {
+			this.$emit("target-time-removed");
 		},
 	},
-	mixins: [formatter],
 };
 </script>

@@ -1,0 +1,13 @@
+template: ford
+description: Ford
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: vin
+  example: WF0FXX...
+- name: capacity
+  default: 10
+render: |
+  type: ford
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,6 +45,7 @@ func runVehicle(cmd *cobra.Command, args []string) {
 	}
 
 	d := dumper{len: len(vehicles)}
+
 	for name, v := range vehicles {
 		d.DumpWithHeader(name, v)
 	}

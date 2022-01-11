@@ -1,0 +1,4 @@
+type: template
+template: eastron
+description: Eastron SDM Modbus Meter
+usage: grid

@@ -10,7 +10,10 @@ func DecodeOther(other interface{}, cc interface{}) error {
 		Result:           cc,
 		ErrorUnused:      true,
 		WeaklyTypedInput: true,
-		DecodeHook:       mapstructure.StringToTimeDurationHookFunc(),
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+			mapstructure.TextUnmarshallerHookFunc(),
+		),
 	}
 
 	decoder, err := mapstructure.NewDecoder(decoderConfig)

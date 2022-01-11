@@ -1,13 +1,15 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"strings"
 
-	"github.com/andig/evcc/detect"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/detect"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 	"github.com/korylprince/ipnetgen"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -40,8 +42,8 @@ func IPsFromSubnet(arg string) (res []string) {
 	for ip := gen.Next(); ip != nil; ip = gen.Next() {
 		res = append(res, ip.String())
 	}
-
-	return res
+	// remove network and broadcast address
+	return res[1 : len(res)-1]
 }
 
 // ParseHostIPNet converts host or cidr into a host list
@@ -66,7 +68,7 @@ func ParseHostIPNet(arg string) (res []string) {
 	return IPsFromSubnet(arg)
 }
 
-func display(res []detect.Result) {
+func display(res []tasks.Result) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"IP", "Hostname", "Task", "Details"})
 	table.SetAutoMergeCells(true)
@@ -74,35 +76,25 @@ func display(res []detect.Result) {
 
 	for _, hit := range res {
 		switch hit.ID {
-		case detect.TaskPing, detect.TaskTCP80, detect.TaskTCP502:
+		case detect.TaskPing, detect.TaskHttp, detect.TaskModbus:
 			continue
 
 		default:
 			host := ""
-			hosts, err := net.LookupAddr(hit.Host)
+			hosts, err := net.LookupAddr(hit.ResultDetails.IP)
 			if err == nil && len(hosts) > 0 {
 				host = strings.TrimSuffix(hosts[0], ".")
 			}
 
-			details := ""
-			if hit.Details != nil {
-				details = fmt.Sprintf("%+v", hit.Details)
-			}
+			b, _ := json.Marshal(hit.ResultDetails)
 
-			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.Host, host, hit.ID, details)
-			table.Append([]string{hit.Host, host, hit.ID, details})
+			// fmt.Printf("%-16s %-20s %-16s %s\n", hit.ResultDetails.IP, host, hit.ID, details)
+			table.Append([]string{hit.ResultDetails.IP, host, hit.ID, string(b)})
 		}
 	}
 
 	fmt.Println("")
 	table.Render()
-
-	fmt.Println(`
-Please open https://github.com/andig/evcc/issues/new in your browser and copy the
-results above into a new issue. Please tell us:
-
-	1. Is the scan result correct?
-	2. If not correct: please describe your hardware setup.`)
 }
 
 func runDetect(cmd *cobra.Command, args []string) {

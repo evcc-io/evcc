@@ -3,7 +3,7 @@ package provider
 import (
 	"fmt"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 )
 
 // setFormattedValue formats a message template or returns the value formatted as %v if the message template is empty

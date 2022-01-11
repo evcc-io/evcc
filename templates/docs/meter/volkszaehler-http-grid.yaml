@@ -1,0 +1,7 @@
+type: template
+template: volkszaehler-http
+description: Volkszähler (HTTP API)
+usage: grid 
+host: 192.0.2.2 
+port: 80 
+uuid:

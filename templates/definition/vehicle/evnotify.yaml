@@ -1,0 +1,23 @@
+template: evnotify
+description: evNotify
+params:
+- name: title
+- name: akey
+  required: true
+- name: token
+  required: true
+- name: capacity
+  default: 64
+  valuetype: float
+- base: vehicleidentify
+render: |
+  type: custom
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  capacity: {{ .capacity }}
+  charge:
+    type: http
+    uri: https://app.evnotify.de/soc?akey={{ .akey }}&token={{ .token }} # evNotify Server + AKEY
+    method: GET
+    jq: .soc_display

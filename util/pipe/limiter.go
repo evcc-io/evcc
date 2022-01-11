@@ -3,8 +3,8 @@ package pipe
 import (
 	"time"
 
-	"github.com/andig/evcc/util"
 	"github.com/benbjohnson/clock"
+	"github.com/evcc-io/evcc/util"
 )
 
 // Piper is the interface that data flow plugins must implement

@@ -1,0 +1,25 @@
+template: ovms
+description: Open Vehicle Monitoring System
+params:
+- name: title
+- name: user
+  required: true
+- name: password
+  required: true
+  mask: true
+- name: vehicleid
+  required: true
+- name: capacity
+  default: 12
+- base: vehicleidentify
+render: |
+  type: ovms
+  {{- if ne .title "" }}
+  title: {{ .title }}
+  {{- end }}
+  user: {{ .user }}
+  password: {{ .password }}
+  vehicleid: {{ .vehicleid }} # vehicle id
+  capacity: {{ .capacity }}
+  server: dexters-web.de # used ovms server [dexters-web.de or api.openvehicles.com]
+

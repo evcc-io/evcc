@@ -4,23 +4,17 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/andig/evcc/util"
-	"github.com/thoas/go-funk"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 )
 
-type Task struct {
-	ID, Type string
-	Depends  string
-	Config   map[string]interface{}
-}
-
 type TaskList struct {
-	tasks    []Task
-	handlers []TaskHandler
-	once     sync.Once
+	tasks []tasks.Task
+	once  sync.Once
 }
 
-func (l *TaskList) Add(task Task) {
+func (l *TaskList) Add(task tasks.Task) {
+	task.TaskHandler = l.handler(task)
 	l.tasks = append(l.tasks, task)
 }
 
@@ -42,7 +36,7 @@ func (l *TaskList) delete(i int) {
 }
 
 func (l *TaskList) sort() {
-	var res []Task
+	var res []tasks.Task
 
 	for len(l.tasks) > 0 {
 		last := len(l.tasks)
@@ -72,54 +66,60 @@ func (l *TaskList) sort() {
 	l.tasks = res
 }
 
-func (l *TaskList) createHandlers() {
-	for _, task := range l.tasks {
-		factory, err := registry.Get(task.Type)
-		if err != nil {
-			panic("invalid task type " + task.Type)
-		}
-
-		handler, err := factory(task.Config)
-		if err != nil {
-			panic("invalid config: " + err.Error())
-		}
-
-		l.handlers = append(l.handlers, handler)
+func (l *TaskList) handler(task tasks.Task) tasks.TaskHandler {
+	factory, err := tasks.Get(task.Type)
+	if err != nil {
+		panic("invalid task type " + task.Type)
 	}
+
+	// fmt.Println(task)
+	handler, err := factory(task.Config)
+	if err != nil {
+		panic("invalid config: " + err.Error())
+	}
+
+	return handler
 }
 
-func (l *TaskList) Test(log *util.Logger, ip string) (res []Result) {
-	l.once.Do(func() {
-		l.sort()
-		l.createHandlers()
-	})
+func (l *TaskList) Test(log *util.Logger, id string, input tasks.ResultDetails) []tasks.Result {
+	l.once.Do(l.sort)
 
-	failed := make([]string, 0)
+	var all []tasks.Result
+	var inputs []tasks.ResultDetails
 
-HANDLERS:
-	for id, handler := range l.handlers {
-		task := l.tasks[id]
-
-		if funk.ContainsString(failed, task.Depends) {
-			continue HANDLERS
+	if id == "" {
+		inputs = append(inputs, input)
+	} else {
+		var task tasks.Task
+		for _, t := range l.tasks {
+			if t.ID == id {
+				task = t
+				break
+			}
 		}
 
-		results := handler.Test(log, ip)
-		if len(results) > 0 {
-			log.INFO.Printf("ip: %s task: %s ok", ip, task.ID)
+		inputs = task.Test(log, input)
+		success := len(inputs) > 0
+		log.DEBUG.Printf("task: %s %v -> %v", id, input, success)
 
-			for _, detail := range results {
-				res = append(res, Result{
-					Task:    task,
-					Host:    ip,
-					Details: detail,
-				})
-			}
-		} else {
-			// log.INFO.Printf("ip: %s task: %s nok", ip, task.ID)
-			failed = append(failed, task.ID)
+		for _, detail := range inputs {
+			all = append(all, tasks.Result{
+				Task:          task,
+				ResultDetails: detail,
+			})
 		}
 	}
 
-	return res
+	// run dependent tasks
+	for _, task := range l.tasks {
+		if task.Depends == id {
+			// fmt.Println("task:", task)
+			for _, input := range inputs {
+				// fmt.Println("input:", input)
+				all = append(all, l.Test(log, task.ID, input)...)
+			}
+		}
+	}
+
+	return all
 }

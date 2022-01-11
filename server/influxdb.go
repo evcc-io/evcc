@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core/loadpoint"
+	"github.com/evcc-io/evcc/util"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	influxlog "github.com/influxdata/influxdb-client-go/v2/log"
 )
@@ -61,7 +61,7 @@ func (m *Influx) supportedType(p util.Param) bool {
 	}
 
 	switch val := p.Val.(type) {
-	case float64:
+	case int, int64, float64:
 		return true
 	case [3]float64:
 		return true
@@ -73,7 +73,7 @@ func (m *Influx) supportedType(p util.Param) bool {
 }
 
 // Run Influx publisher
-func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
+func (m *Influx) Run(loadPoints []loadpoint.API, in <-chan util.Param) {
 	writer := m.client.WriteAPI(m.org, m.database)
 
 	// log errors
@@ -90,7 +90,7 @@ func (m *Influx) Run(loadPoints []core.LoadPointAPI, in <-chan util.Param) {
 	for param := range in {
 		// vehicle name
 		if param.LoadPoint != nil {
-			if name, ok := param.Val.(string); ok && param.Key == "socTitle" {
+			if name, ok := param.Val.(string); ok && param.Key == "vehicleTitle" {
 				vehicles[*param.LoadPoint] = name
 				continue
 			}

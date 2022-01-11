@@ -1,6 +1,6 @@
 <template>
 	<div class="container">
-		<Site v-bind="state" v-if="configured"></Site>
+		<Site v-if="configured" v-bind="state"></Site>
 		<div v-else>
 			<div class="row py-5">
 				<div class="col12">
@@ -17,7 +17,7 @@
 							Erzeugen einer Konfigurationsdatei mit Namen
 							<code>evcc.yaml</code>. Die Standardkonfiguration
 							<code>evcc.dist.yaml</code> kann dafür als Vorlage dienen (<a
-								href="https://github.com/andig/evcc/blob/master/evcc.dist.yaml"
+								href="https://github.com/evcc-io/evcc/blob/master/evcc.dist.yaml"
 								>Download</a
 							>).
 						</li>
@@ -70,7 +70,7 @@
 					</p>
 					<p>
 						Viel Spass mit <b>evcc</b>! Bei Problemen kannst Du uns auf
-						<a href="https://github.com/andig/evcc/issues">GitHub</a>
+						<a href="https://github.com/evcc-io/evcc/issues">GitHub</a>
 						erreichen.
 					</p>
 				</div>

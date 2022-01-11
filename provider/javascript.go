@@ -3,14 +3,13 @@ package provider
 import (
 	"strings"
 
-	"github.com/andig/evcc/provider/javascript"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/provider/javascript"
+	"github.com/evcc-io/evcc/util"
 	"github.com/robertkrimen/otto"
 )
 
 // Javascript implements Javascript request provider
 type Javascript struct {
-	log    *util.Logger
 	vm     *otto.Otto
 	script string
 }
@@ -30,12 +29,9 @@ func NewJavascriptProviderFromConfig(other map[string]interface{}) (IntProvider,
 		return nil, err
 	}
 
-	log := util.NewLogger("js")
-
 	vm := javascript.RegisteredVM(strings.ToLower(cc.VM))
 
 	p := &Javascript{
-		log:    log,
 		vm:     vm,
 		script: cc.Script,
 	}

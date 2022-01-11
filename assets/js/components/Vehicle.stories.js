@@ -1,12 +1,13 @@
 import Vehicle from "./Vehicle.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Vehicle",
   component: Vehicle,
-  argTypes: {},
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Vehicle },
   template: '<Vehicle v-bind="$props"></Vehicle>',
@@ -14,45 +15,50 @@ const Template = (args, { argTypes }) => ({
 
 export const Base = Template.bind({});
 Base.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 42,
+  vehiclePresent: true,
+  vehicleSoC: 42,
   targetSoC: 90,
+  id: 0,
 };
 
 export const Connected = Template.bind({});
 Connected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: false,
-  socCharge: 66,
+  vehicleSoC: 66,
   targetSoC: 90,
+  id: 0,
 };
 
 export const ReadyToCharge = Template.bind({});
 ReadyToCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: false,
-  socCharge: 66,
+  vehicleSoC: 66,
   targetSoC: 90,
+  id: 0,
 };
 
 export const Charging = Template.bind({});
 Charging.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
+  vehiclePresent: true,
   charging: true,
-  socCharge: 66,
+  vehicleSoC: 66,
   targetSoC: 90,
+  id: 0,
+  targetTimeHourSuggestion: null,
 };
 
 const hoursFromNow = function (hours) {
@@ -63,85 +69,95 @@ const hoursFromNow = function (hours) {
 
 export const TargetChargePlanned = Template.bind({});
 TargetChargePlanned.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: true,
-  socCharge: 31,
+  vehiclePresent: true,
+  vehicleSoC: 31,
   minSoC: 20,
   charging: false,
-  timerSet: true,
-  timerActive: false,
+  targetTimeActive: false,
   targetSoC: 45,
   targetTime: hoursFromNow(14),
+  id: 0,
 };
 
 export const TargetChargeActive = Template.bind({});
 TargetChargeActive.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 66,
+  vehiclePresent: true,
+  vehicleSoC: 66,
   minSoC: 30,
   charging: true,
-  timerSet: true,
-  timerActive: true,
+  targetTimeActive: true,
   targetSoC: 80,
   targetTime: hoursFromNow(2),
+  id: 0,
 };
 
 export const MinCharge = Template.bind({});
 MinCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: true,
-  socCharge: 17,
+  vehiclePresent: true,
+  vehicleSoC: 17,
   minSoC: 20,
   charging: true,
   targetSoC: 90,
+  id: 0,
 };
 
 export const UnknownVehicleConnected = Template.bind({});
 UnknownVehicleConnected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: false,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
+  targetSoC: 90,
+  id: 0,
 };
 
 export const UnknownVehicleReadyToCharge = Template.bind({});
 UnknownVehicleReadyToCharge.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
   charging: false,
+  targetSoC: 100,
+  id: 0,
 };
 
 export const UnknownVehicleCharging = Template.bind({});
 UnknownVehicleCharging.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
-  hasVehicle: false,
+  vehiclePresent: false,
   charging: true,
+  targetSoC: 90,
+  id: 0,
 };
 
 export const Disconnected = Template.bind({});
 Disconnected.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   connected: false,
-  hasVehicle: false,
+  vehiclePresent: false,
+  targetSoC: 75,
+  id: 0,
 };
 
 export const DisconnectedKnownSoc = Template.bind({});
 DisconnectedKnownSoc.args = {
-  socTitle: "Mein Auto",
+  vehicleTitle: "Mein Auto",
   connected: false,
   enabled: false,
-  hasVehicle: true,
-  socCharge: 17,
+  vehiclePresent: true,
+  vehicleSoC: 17,
   targetSoC: 60,
+  id: 0,
 };

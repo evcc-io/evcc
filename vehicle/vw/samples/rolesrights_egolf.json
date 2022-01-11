@@ -1,0 +1,2009 @@
+{
+  "operationList": {
+    "vin": "WVWZZZ...",
+    "channelClient": "APP",
+    "userId": "...",
+    "role": "PRIMARY_USER",
+    "securityLevel": "HG_3",
+    "status": "ENABLED",
+    "vehicleLifeCycleStatus": {
+      "content": "DELIVERED",
+      "garage": false
+    },
+    "serviceInfo": [
+      {
+        "serviceId": "dealerappoint_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "ownersVerification",
+          "activationDate": {
+            "content": "2019-04-26T14:36:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-04-26T14:36:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000721",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000721",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.011.L",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": true,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/otv/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_SAPP",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "S_CONFDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CONFDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "timerprogramming_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": true,
+              "name": "loudpush"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/bs/departuretimer/v1/{brand}/{country}/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_PLUG_NOTIFY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS_AU",
+            "version": "1",
+            "xsd": "setDepartureTimersAndProfiles_V1_0_2",
+            "remoteCommand": "setDepartureTimersAndProfiles",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "parameters": {
+              "parameter": [
+                {
+                  "content": "1",
+                  "name": "auxDisclaimerRequired"
+                }
+              ]
+            },
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_PLUG_NOTIFY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTING_CML",
+            "version": "1",
+            "xsd": "setDepartureTimeBasicSettingsJob_v1_0_2",
+            "remoteCommand": "setDepartureTimeBasicSettings",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS_EL",
+            "version": "1",
+            "xsd": "setDepartureTimersAndProfiles_V1_0_2",
+            "remoteCommand": "setDepartureTimersAndProfiles",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_REMINDER_NOTIFY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_REMINDER_NOTIFY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "owner_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-04-24T07:21:36Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": true,
+              "name": "has_wlan"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "P_INITENROLLMENTCODE",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "G_ENROLLMENTCODE",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "D_VUSERENROLLMENTRESET",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "G_VENROLLMENTSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "D_VENROLLMENTRESET",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "G_VUSERENROLLMENTSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "zieleinspeisung_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-04-26T14:36:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-26T14:36:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000042",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000042",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.003.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000142",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.003.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-04-24T07:21:36Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "rhonk_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              },
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "G_RHIST",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/bs/rhf/v1/vehicles/{vin}/requestHistoryEntries?offset={offset}&limit={limit}",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_REQSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_VREQ",
+            "version": "1",
+            "xsd": "honkAndFlash_v1_0_0",
+            "remoteCommand": "activateHonkAndFlash",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "rlu_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              },
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "LOCK",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/rlu/v1/vehicles/{vin}/lock",
+              "method": "POST"
+            },
+            "xsd": "rlu_v1_0_0",
+            "remoteCommand": "remoteLockJob",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_3",
+            "extAuth": "SPIN",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_RQSTAT",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/rlu/v1/vehicles/{vin}/requests/{requestId}/status",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_3",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "UNLOCK",
+            "version": "1",
+            "xsd": "rlu_v1_0_0",
+            "remoteCommand": "remoteUnlockJob",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_3",
+            "extAuth": "SPIN",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_LACT",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/rlu/v1/vehicles/{vin}/actions",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_3",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "speedalert_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              },
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "P_DLIST",
+            "version": "1",
+            "xsd": "speedAlert_v1_0_0",
+            "remoteCommand": "activateSpeedAlert",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_ALERTS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_RHIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DLIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DLSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_RHENTRY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_ALERT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CONF",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_RHIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_ALERTS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "trip_statistic_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": false,
+              "name": "electric_consumption"
+            },
+            {
+              "content": true,
+              "name": "triptype_short"
+            },
+            {
+              "content": false,
+              "name": "auxiliary_consumption"
+            },
+            {
+              "content": false,
+              "name": "fuel_overall_consumption"
+            },
+            {
+              "content": true,
+              "name": "triptype_cyclic"
+            },
+            {
+              "content": true,
+              "name": "triptype_long"
+            },
+            {
+              "content": true,
+              "name": "electric_overall_consumption"
+            },
+            {
+              "content": false,
+              "name": "recuperation"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "G_AGGR_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "D_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "G_TRIPDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          }
+        ]
+      },
+      {
+        "serviceId": "rclima_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              },
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": true,
+              "name": "loudpush"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://mal-1a.prd.ece.vwg-connect.com/api/bs/climatisation/v1/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_CLIMA_EL",
+            "version": "1",
+            "xsd": "startClimatisationJob_v1_0_2",
+            "remoteCommand": "startClimatisation",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_STOP_WND",
+            "version": "1",
+            "xsd": "stopWindowHeatingJob_v1_0_0",
+            "remoteCommand": "stopWindowHeating",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_CLIMA_NOSET",
+            "version": "1",
+            "xsd": "startClimatisationJob_v1_0_2",
+            "remoteCommand": "startClimatisation",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_WND",
+            "version": "1",
+            "xsd": "startWindowHeatingJob_v1_0_2",
+            "remoteCommand": "startWindowHeating",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_STOP",
+            "version": "1",
+            "xsd": "stopClimatisationJob_v1_0_0",
+            "remoteCommand": "stopClimatisation",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS",
+            "version": "1",
+            "xsd": "setClimatisationSettingsJob_v1_0_2",
+            "remoteCommand": "setClimatisationSettings",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "geofence_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "D_ALERT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_DLIST",
+            "version": "1",
+            "xsd": "geoFencing_v1_0_0",
+            "remoteCommand": "activateGeoFencing",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_ALERTS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_ALERTS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CONF",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_RHIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DLSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DLIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "D_RHENTRY",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_RHIST",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ],
+        "authenticationScope": [
+          {
+            "content": "sc2:fal",
+            "authLevel": "T2"
+          }
+        ]
+      },
+      {
+        "serviceId": "statusreport_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": "BEV",
+              "name": "vehicletype"
+            },
+            {
+              "content": true,
+              "name": "next_serviceinterval"
+            },
+            {
+              "content": "4",
+              "name": "doors"
+            },
+            {
+              "content": "supported",
+              "name": "windowstate"
+            },
+            {
+              "content": false,
+              "name": "oil_serviceinterval"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "G_SVDATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CVDATAID",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_RQSTAT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_CVDATA",
+            "version": "1",
+            "xsd": "rvsRdk_v1_0_1",
+            "remoteCommand": "sendVehicleStatus",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "tourimport_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-04-26T14:36:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-26T14:36:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000042",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000142",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.003.A",
+                "duration": "P1Y"
+              },
+              {
+                "content": "LPPackage00000042",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.003.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-04-24T07:21:36Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true
+      },
+      {
+        "serviceId": "incar_enrollment_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-04-24T07:21:36Z",
+        "privacyGroups": {
+          "privacyGroup": [
+            "personalUser"
+          ]
+        },
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "cc_breakdown_v2",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "ownersVerification",
+          "activationDate": {
+            "content": "2019-04-26T14:36:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-04-26T14:36:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPBundle00000721",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000721",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.011.L",
+                "duration": "P10Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "lsd_v1",
+        "serviceType": "mbbInternal",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      },
+      {
+        "serviceId": "owner_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": true,
+              "name": "has_wlan"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "G_VUSERENROLLMENTSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "D_VUSERENROLLMENTRESET",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "P_INITENROLLMENTCODE",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "D_VENROLLMENTRESET",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "PRIMARY_USER",
+            "requiredSecurityLevel": "HG_1"
+          },
+          {
+            "id": "G_ENROLLMENTCODE",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          },
+          {
+            "id": "G_VENROLLMENTSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "GUEST_USER",
+            "requiredSecurityLevel": "HG_0"
+          }
+        ]
+      },
+      {
+        "serviceId": "vehiclehealth_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2019-04-26T14:36:00Z"
+          },
+          "expirationDate": {
+            "content": "2029-04-26T14:36:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000042",
+            "licenseProfile": [
+              {
+                "content": "LPBundle00000721",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.011.L",
+                "duration": "P10Y"
+              },
+              {
+                "content": "LPPackage00000042",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.003.B",
+                "duration": "P2Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "G_VHRLIMIT",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_IVHR",
+            "version": "1",
+            "xsd": "requestVehicleHealthReport_v1_0_1",
+            "remoteCommand": "requestVehicleHealthReport",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "carfinder_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": true,
+        "operation": [
+          {
+            "id": "FIND_CAR",
+            "version": "1",
+            "invocationUrl": {
+              "content": "https://mal-1a.prd.ece.vwg-connect.com/bs/cf/vehicles/{vin}/position",
+              "method": "GET"
+            },
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "rbatterycharge_v1",
+        "serviceType": "mbb",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": true,
+        "cumulatedLicense": {
+          "status": "ACTIVATED",
+          "warn": false,
+          "activationBy": "automatic",
+          "activationDate": {
+            "content": "2020-04-30T12:20:00Z"
+          },
+          "expirationDate": {
+            "content": "2022-04-30T12:20:00Z"
+          },
+          "licenseProfiles": {
+            "lastUsedProfile": "LPPackage00000244",
+            "licenseProfile": [
+              {
+                "content": "LPPackage00000244",
+                "ltype": "regular",
+                "profileType": "explicit",
+                "salesPartNo": "NET.500.012.B",
+                "duration": "P2Y"
+              },
+              {
+                "content": "LPBundle00000703",
+                "ltype": "regular",
+                "profileType": "implicit",
+                "salesPartNo": "NET.500.012.A",
+                "duration": "P1Y"
+              }
+            ]
+          }
+        },
+        "primaryUserRequired": true,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": false,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "TELEMATICS",
+        "serviceEol": "2121-01-11T09:23:27Z",
+        "privacyGroups": null,
+        "parameters": {
+          "parameter": [
+            {
+              "content": true,
+              "name": "loudpush"
+            },
+            {
+              "content": "32",
+              "name": "max_current"
+            }
+          ]
+        },
+        "rolesAndRightsRequired": true,
+        "invocationUrl": {
+          "content": "https://msg.audi.de/fs-car/bs/batterycharge/v1/{brand}/{country}/vehicles/{vin}/"
+        },
+        "operation": [
+          {
+            "id": "P_START",
+            "version": "1",
+            "xsd": "startBatteryChargingJob_v1_0_1",
+            "remoteCommand": "startBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_SETTINGS",
+            "version": "1",
+            "xsd": "setBatteryChargingSettingsJob_v1_0_1",
+            "remoteCommand": "setBatteryChargingSettings",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_SETTINGS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_STATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_DATA",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "G_JOBSTATUS",
+            "version": "1",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_STOP",
+            "version": "1",
+            "xsd": "stopBatteryChargingJob_v1_0_0",
+            "remoteCommand": "stopBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          },
+          {
+            "id": "P_START_NOSET",
+            "version": "1",
+            "xsd": "startBatteryChargingJob_v1_0_1",
+            "remoteCommand": "startBatteryCharging",
+            "permission": "granted",
+            "requiredUserRole": "SECONDARY_USER",
+            "requiredSecurityLevel": "HG_1",
+            "authenticationScope": [
+              {
+                "content": "sc2:fal",
+                "authLevel": "T2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "serviceId": "lsd_v1",
+        "serviceType": "mbbInternal",
+        "serviceStatus": {
+          "status": "Enabled"
+        },
+        "licenseRequired": false,
+        "primaryUserRequired": false,
+        "termsAndConditionsRequired": false,
+        "blockDisabling": true,
+        "personalized": false,
+        "configurable": false,
+        "deviceType": "INFOTAINMENT",
+        "serviceEol": "2121-04-24T07:21:36Z",
+        "privacyGroups": null,
+        "parameters": null,
+        "rolesAndRightsRequired": false
+      }
+    ]
+  }
+}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -90,6 +90,12 @@ func NewSocketHub() *SocketHub {
 func encode(v interface{}) (string, error) {
 	var s string
 	switch val := v.(type) {
+	case time.Time:
+		var b []byte
+		if !val.IsZero() {
+			b, _ = val.MarshalText()
+		}
+		s = fmt.Sprintf(`"%s"`, string(b))
 	case time.Duration:
 		// must be before stringer to convert to seconds instead of string
 		s = fmt.Sprintf("%d", int64(val.Seconds()))

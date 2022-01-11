@@ -1,0 +1,25 @@
+template: kostal-plenticore
+description: Kostal Plenticore Hybrid
+guidedsetup:
+  enable: true
+  linked:
+  - template: kostal-ksem-inverter
+    usage: grid
+  - template: kostal-ksem
+    usage: grid
+    excludetemplate: kostal-ksem-inverter
+params:
+- name: usage
+  choice: [ "pv", "battery" ]
+- name: modbus
+  choice: [ "tcpip" ]
+  id: 71
+  port: 1502
+render: |
+  type: modbus
+  model: sunspec
+  {{ include "modbus" . }}
+  {{- if eq .usage "battery" }}
+  power: 802:W # sunspec model 802 battery
+  soc: 802:SoC # sunspec model 802 battery
+  {{- end }}

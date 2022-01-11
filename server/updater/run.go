@@ -1,10 +1,11 @@
+//go:build !gokrazy
 // +build !gokrazy
 
 package updater
 
 import (
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/google/go-github/v32/github"
 )
 

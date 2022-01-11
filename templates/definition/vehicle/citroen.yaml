@@ -1,0 +1,11 @@
+template: citroen
+description: Citroen
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 50
+render: |
+  type: citroen
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

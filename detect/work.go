@@ -5,19 +5,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/detect/tasks"
+	"github.com/evcc-io/evcc/util"
 	"github.com/fatih/structs"
 	"github.com/jeremywohl/flatten"
 )
 
-type Result struct {
-	Task
-	Host       string
-	Details    interface{}
-	Attributes map[string]interface{}
-}
-
-func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []Result) *sync.WaitGroup {
+func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []tasks.Result) *sync.WaitGroup {
 	var wg sync.WaitGroup
 	for i := 0; i < num; i++ {
 		wg.Add(1)
@@ -30,21 +24,31 @@ func workers(log *util.Logger, num int, tasks <-chan string, hits chan<- []Resul
 	return &wg
 }
 
-func workunit(log *util.Logger, tasks <-chan string, hits chan<- []Result) {
-	for ip := range tasks {
-		res := taskList.Test(log, ip)
+func workunit(log *util.Logger, ips <-chan string, hits chan<- []tasks.Result) {
+	for ip := range ips {
+		res := taskList.Test(log, "", tasks.ResultDetails{IP: ip})
 		hits <- res
 	}
 }
 
-func Work(log *util.Logger, num int, hosts []string) []Result {
-	tasks := make(chan string)
-	hits := make(chan []Result)
+func Work(log *util.Logger, num int, hosts []string) []tasks.Result {
+	ip := make(chan string)
+	hits := make(chan []tasks.Result)
 	done := make(chan struct{})
 
-	wg := workers(log, num, tasks, hits)
+	// log.INFO.Println(
+	// 	"\n" +
+	// 		strings.Join(
+	// 			funk.Map(taskList.tasks, func(t tasks.Task) string {
+	// 				return fmt.Sprintf("task: %s\ttype: %s\tdepends: %s\n", t.ID, t.Type, t.Depends)
+	// 			}).([]string),
+	// 			"",
+	// 		),
+	// )
 
-	var res []Result
+	wg := workers(log, num, ip, hits)
+
+	var res []tasks.Result
 	go func() {
 		for hits := range hits {
 			res = append(res, hits...)
@@ -53,10 +57,10 @@ func Work(log *util.Logger, num int, hosts []string) []Result {
 	}()
 
 	for _, host := range hosts {
-		tasks <- host
+		ip <- host
 	}
 
-	close(tasks)
+	close(ip)
 	wg.Wait()
 
 	close(hits)
@@ -65,11 +69,11 @@ func Work(log *util.Logger, num int, hosts []string) []Result {
 	return postProcess(res)
 }
 
-func postProcess(res []Result) []Result {
+func postProcess(res []tasks.Result) []tasks.Result {
 	for idx, hit := range res {
-		if sma, ok := hit.Details.(SmaResult); ok {
-			hit.Host = sma.Addr
-		}
+		// if sma, ok := hit.Details.(SmaResult); ok {
+		// 	hit.Host = sma.Addr
+		// }
 
 		hit.Attributes = make(map[string]interface{})
 		flat, _ := flatten.Flatten(structs.Map(hit), "", flatten.DotStyle)
@@ -82,10 +86,10 @@ func postProcess(res []Result) []Result {
 
 	// sort by host
 	sort.Slice(res, func(i, j int) bool {
-		if res[i].Host == res[j].Host {
+		if res[i].ResultDetails.IP == res[j].ResultDetails.IP {
 			return res[i].Type < res[j].Type
 		}
-		return res[i].Host < res[j].Host
+		return res[i].ResultDetails.IP < res[j].ResultDetails.IP
 	})
 
 	return res

@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/andig/evcc/core"
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/core"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -49,11 +49,29 @@ func runDump(cmd *cobra.Command, args []string) {
 	if name := site.Meters.GridMeterRef; name != "" {
 		d.DumpWithHeader(fmt.Sprintf("grid: %s", name), cp.Meter(name))
 	}
-	if name := site.Meters.PVMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("pv: %s", name), cp.Meter(name))
+
+	if len(site.Meters.PVMetersRef) == 0 {
+		if name := site.Meters.PVMeterRef; name != "" {
+			d.DumpWithHeader(fmt.Sprintf("pv: %s", name), cp.Meter(name))
+		}
+	} else {
+		for id, name := range site.Meters.PVMetersRef {
+			if name != "" {
+				d.DumpWithHeader(fmt.Sprintf("pv %d: %s", id, name), cp.Meter(name))
+			}
+		}
 	}
-	if name := site.Meters.BatteryMeterRef; name != "" {
-		d.DumpWithHeader(fmt.Sprintf("battery: %s", name), cp.Meter(name))
+
+	if len(site.Meters.BatteryMetersRef) == 0 {
+		if name := site.Meters.BatteryMeterRef; name != "" {
+			d.DumpWithHeader(fmt.Sprintf("battery: %s", name), cp.Meter(name))
+		}
+	} else {
+		for id, name := range site.Meters.BatteryMetersRef {
+			if name != "" {
+				d.DumpWithHeader(fmt.Sprintf("Battery %d: %s", id, name), cp.Meter(name))
+			}
+		}
 	}
 
 	for id, lpI := range site.LoadPoints() {

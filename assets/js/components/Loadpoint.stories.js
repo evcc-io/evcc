@@ -1,4 +1,5 @@
 import Loadpoint from "./Loadpoint.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Loadpoint",
@@ -11,6 +12,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Loadpoint },
   template: '<Loadpoint v-bind="$props"></Loadpoint>',
@@ -23,12 +25,12 @@ Base.args = {
   chargePower: 2800,
   chargedEnergy: 11e3,
   chargeDuration: 95 * 60,
-  hasVehicle: true,
-  socTitle: "Mein Auto",
+  vehiclePresent: true,
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
   charging: true,
-  socCharge: 66,
+  vehicleSoC: 66,
   targetSoC: 90,
 };
 
@@ -38,11 +40,11 @@ Disabled.args = {
   pvConfigured: true,
   remoteDisabled: "soft",
   remoteDisabledSource: "Sunny Home Manager",
-  hasVehicle: true,
-  socTitle: "Mein Auto",
+  vehiclePresent: true,
+  vehicleTitle: "Mein Auto",
   enabled: true,
   connected: true,
   charging: false,
-  socCharge: 66,
+  vehicleSoC: 66,
   targetSoC: 100,
 };

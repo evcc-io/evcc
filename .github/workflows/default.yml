@@ -1,0 +1,93 @@
+name: Default
+
+on: [push, pull_request, workflow_call]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.16
+      id: go
+
+    - name: Cache Go modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+        key: ${{ runner.os }}-${{ matrix.go-version }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ matrix.go-version }}-go-
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: gofmt
+      run: |
+        gofmt -w -l $(find . -name '*.go')
+
+    - name: Install tools
+      run: make install
+
+    - name: Assets
+      run: make assets
+
+    - name: Porcelain
+      run: |
+        go mod tidy
+        test -z "$(git status --porcelain)" || (git status; git diff; false)
+
+    - name: Build
+      run: make build
+
+    - name: Lint
+      uses: golangci/golangci-lint-action@v2
+      with:
+        version: latest
+        skip-go-installation: true
+        skip-pkg-cache: true
+        skip-build-cache: true
+
+    - name: Test
+      run: make test
+
+  build-ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Cache NPM modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install tools
+      run: make install-ui
+
+    - name: Build
+      run: make ui
+
+    - name: Lint
+      run: make lint-ui
+
+    - name: Test
+      run: make test-ui
+
+    - name: Porcelain
+      run: |
+        test -z "$(git status --porcelain)" || (git status; git diff; false)

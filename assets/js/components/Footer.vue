@@ -1,18 +1,10 @@
 <template>
-	<footer class="py-3 py-md-5 mt-3 mt-md-5 border-top">
-		<div class="container">
-			<div class="row">
-				<div class="col-6">
-					<Version v-bind="version" />
-				</div>
-				<div class="col-6 text-right">
-					<small class="text-black">
-						<a href="https://github.com/sponsors/andig" target="_blank" class="link">
-							<fa-icon icon="heart" class="icon mr-1"></fa-icon
-							><span class="d-none d-sm-inline">Projekt </span>unterstützen
-						</a>
-					</small>
-				</div>
+	<footer class="container">
+		<div class="py-3 py-md-5 mt-3 mt-md-5 border-top">
+			<div class="d-flex justify-content-between">
+				<Version v-bind="version" />
+				<!-- Please don't mess with the sponsor status. You risk loosing your mojo. -->
+				<Savings v-bind="savings" :sponsor="sponsor" />
 			</div>
 		</div>
 	</footer>
@@ -20,21 +12,15 @@
 
 <script>
 import Version from "./Version";
+import Savings from "./Savings";
 
 export default {
 	name: "Footer",
-	components: { Version },
+	components: { Version, Savings },
 	props: {
 		version: Object,
+		sponsor: String,
+		savings: Object,
 	},
 };
 </script>
-
-<style scoped>
-.icon {
-	color: #0fdd42;
-}
-.text-black a {
-	color: #18191a;
-}
-</style>

@@ -1,14 +1,23 @@
 package api
 
-import "time"
+import (
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
 
-//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/andig/evcc/api Charger,Meter,MeterEnergy,Vehicle,ChargeRater
+	"github.com/fatih/structs"
+	"github.com/gorilla/mux"
+)
+
+//go:generate mockgen -package mock -destination ../mock/mock_api.go github.com/evcc-io/evcc/api Charger,ChargeState,ChargePhases,Identifier,Meter,MeterEnergy,Vehicle,ChargeRater,Battery
 
 // ChargeMode are charge modes modeled after OpenWB
 type ChargeMode string
 
 // Charge modes
 const (
+	ModeEmpty ChargeMode = ""
 	ModeOff   ChargeMode = "off"
 	ModeNow   ChargeMode = "now"
 	ModeMinPV ChargeMode = "minpv"
@@ -39,6 +48,27 @@ func (c ChargeStatus) String() string {
 	return string(c)
 }
 
+// ActionConfig defines an action to take on event
+type ActionConfig struct {
+	Mode       *ChargeMode `mapstructure:"mode,omitempty"`       // Charge Mode
+	MinCurrent *float64    `mapstructure:"minCurrent,omitempty"` // Minimum Current
+	MaxCurrent *float64    `mapstructure:"maxCurrent,omitempty"` // Maximum Current
+	MinSoC     *int        `mapstructure:"minSoC,omitempty"`     // Minimum SoC
+	TargetSoC  *int        `mapstructure:"targetSoC,omitempty"`  // Target SoC
+}
+
+// String implements Stringer and returns the ActionConfig as comma-separated key:value string
+func (a ActionConfig) String() string {
+	var s []string
+	for k, v := range structs.Map(a) {
+		val := reflect.ValueOf(v)
+		if v != nil && !val.IsNil() {
+			s = append(s, fmt.Sprintf("%s:%v", k, val.Elem()))
+		}
+	}
+	return strings.Join(s, ", ")
+}
+
 // Meter is able to provide current power in W
 type Meter interface {
 	CurrentPower() (float64, error)
@@ -64,7 +94,7 @@ type ChargeState interface {
 	Status() (ChargeStatus, error)
 }
 
-// Charger is able to provide current charging status and to enable/disabler charging
+// Charger is able to provide current charging status and enable/disable charging
 type Charger interface {
 	ChargeState
 	Enabled() (bool, error)
@@ -75,6 +105,11 @@ type Charger interface {
 // ChargerEx provides milli-amp precision charger current control
 type ChargerEx interface {
 	MaxCurrentMillis(current float64) error
+}
+
+// ChargePhases provides 1p3p switching
+type ChargePhases interface {
+	Phases1p3p(phases int) error
 }
 
 // Diagnosis is a helper interface that allows to dump diagnostic data to console
@@ -92,11 +127,23 @@ type ChargeRater interface {
 	ChargedEnergy() (float64, error)
 }
 
+// Identifier identifies a vehicle and is implemented by the charger
+type Identifier interface {
+	Identify() (string, error)
+}
+
+// Authorizer authorizes a charging session by supplying RFID credentials
+type Authorizer interface {
+	Authorize(key string) error
+}
+
 // Vehicle represents the EV and it's battery
 type Vehicle interface {
 	Battery
 	Title() string
 	Capacity() int64
+	Identifiers() []string
+	OnIdentified() ActionConfig
 }
 
 // VehicleFinishTimer provides estimated charge cycle finish time
@@ -114,9 +161,33 @@ type VehicleClimater interface {
 	Climater() (active bool, outsideTemp float64, targetTemp float64, err error)
 }
 
+// VehicleOdometer returns the vehicles milage
+type VehicleOdometer interface {
+	Odometer() (float64, error)
+}
+
+// VehiclePosition returns the vehicles position in latitude and longitude
+type VehiclePosition interface {
+	Position() (float64, float64, error)
+}
+
 // VehicleStartCharge starts the charging session on the vehicle side
 type VehicleStartCharge interface {
 	StartCharge() error
+}
+
+// VehicleStopCharge stops the charging session on the vehicle side
+type VehicleStopCharge interface {
+	StopCharge() error
+}
+
+type Tariff interface {
+	IsCheap() (bool, error)
+	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+}
+
+type WebController interface {
+	WebControl(*mux.Router)
 }
 
 type VehicleProviderLogin interface {

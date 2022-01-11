@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/andig/evcc/api"
-	"github.com/andig/evcc/internal"
-	"github.com/andig/evcc/internal/charger"
-	"github.com/andig/evcc/internal/meter"
-	"github.com/andig/evcc/internal/vehicle"
-	"github.com/andig/evcc/provider/mqtt"
-	"github.com/andig/evcc/push"
-	"github.com/andig/evcc/server"
+	"github.com/dustin/go-humanize"
+	"github.com/evcc-io/evcc/api"
+	"github.com/evcc-io/evcc/charger"
+	"github.com/evcc-io/evcc/meter"
+	"github.com/evcc-io/evcc/provider/mqtt"
+	"github.com/evcc-io/evcc/push"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/vehicle"
+	"github.com/evcc-io/evcc/vehicle/wrapper"
 )
 
 type config struct {
@@ -25,11 +26,13 @@ type config struct {
 	Mqtt         mqttConfig
 	Javascript   map[string]interface{}
 	Influx       server.InfluxConfig
+	EEBus        map[string]interface{}
 	HEMS         typedConfig
 	Messaging    messagingConfig
 	Meters       []qualifiedConfig
 	Chargers     []qualifiedConfig
 	Vehicles     []qualifiedConfig
+	Tariffs      tariffConfig
 	Site         map[string]interface{}
 	LoadPoints   []map[string]interface{}
 }
@@ -37,6 +40,13 @@ type config struct {
 type mqttConfig struct {
 	mqtt.Config `mapstructure:",squash"`
 	Topic       string
+}
+
+func (conf *mqttConfig) RootTopic() string {
+	if conf.Topic != "" {
+		return conf.Topic
+	}
+	return "evcc"
 }
 
 type qualifiedConfig struct {
@@ -54,16 +64,35 @@ type messagingConfig struct {
 	Services []typedConfig
 }
 
+type tariffConfig struct {
+	Currency string
+	Grid     typedConfig
+	FeedIn   typedConfig
+}
+
 // ConfigProvider provides configuration items
 type ConfigProvider struct {
 	meters   map[string]api.Meter
 	chargers map[string]api.Charger
 	vehicles map[string]api.Vehicle
+	visited  map[string]bool
+}
+
+func (cp *ConfigProvider) TrackVisitors() {
+	cp.visited = make(map[string]bool)
 }
 
 // Meter provides meters by name
 func (cp *ConfigProvider) Meter(name string) api.Meter {
 	if meter, ok := cp.meters[name]; ok {
+		// track duplicate usage https://github.com/evcc-io/evcc/issues/1744
+		if cp.visited != nil {
+			if _, ok := cp.visited[name]; ok {
+				log.FATAL.Fatalf("duplicate meter usage: %s", name)
+			}
+			cp.visited[name] = true
+		}
+
 		return meter
 	}
 	log.FATAL.Fatalf("invalid meter: %s", name)
@@ -101,7 +130,11 @@ func (cp *ConfigProvider) configure(conf config) error {
 
 func (cp *ConfigProvider) configureMeters(conf config) error {
 	cp.meters = make(map[string]api.Meter)
-	for _, cc := range conf.Meters {
+	for id, cc := range conf.Meters {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s meter: missing name", humanize.Ordinal(id+1))
+		}
+
 		m, err := meter.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create meter '%s': %w", cc.Name, err)
@@ -120,7 +153,11 @@ func (cp *ConfigProvider) configureMeters(conf config) error {
 
 func (cp *ConfigProvider) configureChargers(conf config) error {
 	cp.chargers = make(map[string]api.Charger)
-	for _, cc := range conf.Chargers {
+	for id, cc := range conf.Chargers {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s charger: missing name", humanize.Ordinal(id+1))
+		}
+
 		c, err := charger.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
 			err = fmt.Errorf("cannot create charger '%s': %w", cc.Name, err)
@@ -139,11 +176,15 @@ func (cp *ConfigProvider) configureChargers(conf config) error {
 
 func (cp *ConfigProvider) configureVehicles(conf config) error {
 	cp.vehicles = make(map[string]api.Vehicle)
-	for _, cc := range conf.Vehicles {
+	for id, cc := range conf.Vehicles {
+		if cc.Name == "" {
+			return fmt.Errorf("cannot create %s vehicle: missing name", humanize.Ordinal(id+1))
+		}
+
 		v, err := vehicle.NewFromConfig(cc.Type, cc.Other)
 		if err != nil {
-			err = fmt.Errorf("cannot create vehicle '%s': %w", cc.Name, err)
-			return err
+			// wrap any created errors to prevent fatals
+			v, _ = wrapper.New(v, err)
 		}
 
 		if _, exists := cp.vehicles[cc.Name]; exists {
@@ -159,7 +200,7 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 // webControl hands the router to implementing devices
 func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
 	for _, v := range cp.vehicles {
-		if ctrl, ok := v.(internal.WebController); ok {
+		if ctrl, ok := v.(api.WebController); ok {
 			ctrl.WebControl(httpd.Router())
 		}
 	}

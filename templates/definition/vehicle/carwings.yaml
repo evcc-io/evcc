@@ -1,0 +1,11 @@
+template: carwings
+description: Nissan Leaf (pre 2019)
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 50
+render: |
+  type: carwings
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

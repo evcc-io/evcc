@@ -6,8 +6,9 @@ import (
 	"io/fs"
 	"log"
 
-	"github.com/andig/evcc/cmd"
-	"github.com/andig/evcc/server"
+	"github.com/evcc-io/evcc/cmd"
+	"github.com/evcc-io/evcc/server"
+	_ "github.com/evcc-io/evcc/util/goversion" // require minimum go version
 )
 
 //go:embed dist

@@ -37,7 +37,7 @@ Show output of <code>evcc -v</code>:
 
 </pre></details>
 
-<details><summary>Show evcc log output with <code>--log trace</code>:</summary><br><pre>
+<details><summary>Show evcc log output with <code>--log debug</code>:</summary><br><pre>
 <- paste here
 
 </pre></details>

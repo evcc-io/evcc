@@ -1,42 +1,43 @@
-import "../css/app.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "popper.js";
 import "bootstrap";
+import "../css/app.css";
 import Vue from "vue";
-import axios from "axios";
+import VueMeta from "vue-meta";
+import api from "./api";
 import App from "./views/App";
-import Toasts from "./components/Toasts";
 import router from "./router";
+import i18n from "./i18n";
+import "./tooltip";
 import store from "./store";
 
-const loc = window.location;
-axios.defaults.baseURL =
-  loc.protocol + "//" + loc.hostname + (loc.port ? ":" + loc.port : "") + loc.pathname + "api";
-axios.defaults.headers.post["Content-Type"] = "application/json";
+Vue.use(VueMeta);
 
-window.toasts = new Vue({
-  el: "#toasts",
-  render: function (h) {
-    return h(Toasts, { props: { items: this.items, count: this.count } });
-  },
-  data: {
-    items: {},
-    count: 0,
-  },
-  name: "ToastsRoot",
+window.app = new Vue({
+  el: "#app",
+  router,
+  i18n,
+  data: { store, notifications: [] },
   methods: {
     raise: function (msg) {
-      let found = false;
-      Object.keys(this.items).forEach(function (k) {
-        let m = this.items[k];
-        if (m.type == msg.type && m.message == msg.message) {
-          found = true;
-        }
-      }, this);
-      if (!found) {
-        msg.id = this.count++;
-        Vue.set(this.items, msg.id, msg);
+      console[msg.type](msg);
+      const now = new Date();
+      const latestMsg = this.notifications[0];
+      if (latestMsg && latestMsg.message === msg.message) {
+        latestMsg.count++;
+        latestMsg.time = now;
+      } else {
+        this.notifications = [
+          {
+            ...msg,
+            count: 1,
+            time: now,
+          },
+          ...this.notifications,
+        ];
       }
+    },
+    clear: function () {
+      this.notifications = [];
     },
     error: function (msg) {
       msg.type = "error";
@@ -46,22 +47,14 @@ window.toasts = new Vue({
       msg.type = "warn";
       this.raise(msg);
     },
-    remove: function (msg) {
-      Vue.delete(this.items, msg.id);
-    },
+  },
+  render: function (h) {
+    return h(App, { props: { notifications: this.notifications } });
   },
 });
 
-new Vue({
-  el: "#app",
-  router,
-  data: { store },
-  render: (h) => h(App),
-});
-
 window.setInterval(function () {
-  axios.get("health").catch(function (res) {
-    res.message = "Server unavailable";
-    window.toasts.error(res);
+  api.get("health").catch(function () {
+    window.app.error({ message: "Server unavailable" });
   });
 }, 5000);

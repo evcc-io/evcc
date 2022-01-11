@@ -1,0 +1,13 @@
+template: renault
+description: Renault
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: vin
+  example: WREN...
+- name: capacity
+  default: 60
+render: |
+  type: renault
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

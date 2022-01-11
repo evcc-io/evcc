@@ -89,7 +89,7 @@ func (c ConfigMap) set(key string, readonly bool, value string) {
 	c[key] = core.ConfigurationKey{
 		Key:      key,
 		Readonly: readonly,
-		Value:    value,
+		Value:    &value,
 	}
 }
 

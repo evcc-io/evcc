@@ -1,17 +1,18 @@
 package provider
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 	"math"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
-	"github.com/andig/evcc/util/request"
-	"github.com/itchyny/gojq"
+	"github.com/evcc-io/evcc/provider/pipeline"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/request"
+	"github.com/evcc-io/evcc/util/transport"
+	"github.com/jpfielding/go-http-digest/pkg/digest"
 )
 
 // HTTP implements HTTP request provider
@@ -21,7 +22,11 @@ type HTTP struct {
 	headers     map[string]string
 	body        string
 	scale       float64
-	jq          *gojq.Query
+	cache       time.Duration
+	updated     time.Time
+	pipeline    *pipeline.Pipeline
+	val         []byte // Cached http response value
+	err         error  // Cached http response error
 }
 
 func init() {
@@ -33,102 +38,132 @@ type Auth struct {
 	Type, User, Password string
 }
 
-// AuthHeaders creates authorization headers from config
-func AuthHeaders(log *util.Logger, auth Auth, headers map[string]string) error {
-	if strings.ToLower(auth.Type) != "basic" {
-		return fmt.Errorf("unsupported auth type: %s", auth.Type)
-	}
-
-	basicAuth := auth.User + ":" + auth.Password
-	headers["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(basicAuth))
-	return nil
-}
-
 // NewHTTPProviderFromConfig creates a HTTP provider
 func NewHTTPProviderFromConfig(other map[string]interface{}) (IntProvider, error) {
 	cc := struct {
-		URI, Method string
-		Headers     map[string]string
-		Body        string
-		Jq          string
-		Scale       float64
-		Insecure    bool
-		Auth        Auth
+		URI, Method       string
+		Headers           map[string]string
+		Body              string
+		pipeline.Settings `mapstructure:",squash"`
+		Scale             float64
+		Insecure          bool
+		Auth              Auth
+		Timeout           time.Duration
+		Cache             time.Duration
 	}{
 		Headers: make(map[string]string),
+		Scale:   1,
+		Timeout: request.Timeout,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	log := util.NewLogger("http")
-
-	// handle basic auth
-	if cc.Auth.Type != "" {
-		if err := AuthHeaders(log, cc.Auth, cc.Headers); err != nil {
-			return nil, fmt.Errorf("http auth: %w", err)
-		}
-	}
-
-	return NewHTTP(log,
+	http := NewHTTP(
+		util.NewLogger("http"),
 		cc.Method,
 		cc.URI,
-		cc.Headers,
-		cc.Body,
 		cc.Insecure,
-		cc.Jq,
 		cc.Scale,
-	)
+		cc.Cache,
+	).
+		WithHeaders(cc.Headers).
+		WithBody(cc.Body)
+
+	http.Client.Timeout = cc.Timeout
+
+	var err error
+	if cc.Auth.Type != "" {
+		_, err = http.WithAuth(cc.Auth.Type, cc.Auth.User, cc.Auth.Password)
+	}
+
+	if err == nil {
+		var pipe *pipeline.Pipeline
+		pipe, err = pipeline.New(cc.Settings)
+		http = http.WithPipeline(pipe)
+	}
+
+	return http, err
 }
 
 // NewHTTP create HTTP provider
-func NewHTTP(log *util.Logger, method, uri string, headers map[string]string, body string, insecure bool, jq string, scale float64) (*HTTP, error) {
+func NewHTTP(log *util.Logger, method, uri string, insecure bool, scale float64, cache time.Duration) *HTTP {
 	url := util.DefaultScheme(uri, "http")
 	if url != uri {
 		log.WARN.Printf("missing scheme for %s, assuming http", uri)
 	}
 
 	p := &HTTP{
-		Helper:  request.NewHelper(log),
-		url:     url,
-		method:  method,
-		headers: headers,
-		body:    body,
-		scale:   scale,
+		Helper: request.NewHelper(log),
+		url:    url,
+		method: method,
+		scale:  scale,
+		cache:  cache,
 	}
 
 	// ignore the self signed certificate
 	if insecure {
-		p.Client.Transport = request.NewTripper(log, request.InsecureTransport())
+		p.Client.Transport = request.NewTripper(log, transport.Insecure())
 	}
 
-	if jq != "" {
-		op, err := gojq.Parse(jq)
-		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", p.jq, err)
-		}
+	return p
+}
 
-		p.jq = op
+// WithBody adds request body
+func (p *HTTP) WithBody(body string) *HTTP {
+	p.body = body
+	return p
+}
+
+// WithHeaders adds request headers
+func (p *HTTP) WithHeaders(headers map[string]string) *HTTP {
+	p.headers = headers
+	return p
+}
+
+// WithPipeline adds a processing pipeline
+func (p *HTTP) WithPipeline(pipeline *pipeline.Pipeline) *HTTP {
+	p.pipeline = pipeline
+	return p
+}
+
+// WithAuth adds authorized transport
+func (p *HTTP) WithAuth(typ, user, password string) (*HTTP, error) {
+	switch strings.ToLower(typ) {
+	case "basic":
+		basicAuth := transport.BasicAuthHeader(user, password)
+		log.Redact(basicAuth)
+
+		p.Client.Transport = transport.BasicAuth(user, password, p.Client.Transport)
+	case "digest":
+		p.Client.Transport = digest.NewTransport(user, password, p.Client.Transport)
+	default:
+		return nil, fmt.Errorf("unknown auth type '%s'", typ)
 	}
 
 	return p, nil
 }
 
-// request executed the configured request
+// request executes the configured request or returns the cached value
 func (p *HTTP) request(body ...string) ([]byte, error) {
-	var b io.Reader
-	if len(body) == 1 {
-		b = strings.NewReader(body[0])
+	if time.Since(p.updated) >= p.cache {
+		var b io.Reader
+		if len(body) == 1 {
+			b = strings.NewReader(body[0])
+		}
+
+		// empty method becomes GET
+		req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
+		if err != nil {
+			return []byte{}, err
+		}
+
+		p.val, p.err = p.DoBody(req)
+		p.updated = time.Now()
 	}
 
-	// empty method becomes GET
-	req, err := request.New(strings.ToUpper(p.method), p.url, b, p.headers)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return p.DoBody(req)
+	return p.val, p.err
 }
 
 // FloatGetter parses float from request
@@ -142,7 +177,7 @@ func (p *HTTP) FloatGetter() func() (float64, error) {
 		}
 
 		f, err := strconv.ParseFloat(s, 64)
-		if err == nil && p.scale != 0 {
+		if err == nil {
 			f *= p.scale
 		}
 
@@ -163,14 +198,10 @@ func (p *HTTP) IntGetter() func() (int64, error) {
 // StringGetter sends string request
 func (p *HTTP) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		b, err := p.request()
-		if err != nil {
-			return string(b), err
-		}
+		b, err := p.request(p.body)
 
-		if p.jq != nil {
-			v, err := jq.Query(p.jq, b)
-			return fmt.Sprintf("%v", v), err
+		if err == nil && p.pipeline != nil {
+			b, err = p.pipeline.Process(b)
 		}
 
 		return string(b), err

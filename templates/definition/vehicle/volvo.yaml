@@ -1,0 +1,11 @@
+template: volvo
+description: Volvo
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 50
+render: |
+  type: volvo
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

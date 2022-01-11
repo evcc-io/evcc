@@ -7,14 +7,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
+	"github.com/evcc-io/evcc/util"
+	"github.com/grid-x/modbus"
 	"github.com/volkszaehler/mbmd/meters"
 	"github.com/volkszaehler/mbmd/meters/rs485"
 	"github.com/volkszaehler/mbmd/meters/sunspec"
 )
 
-// WriteSingleRegister 16-bit wise write access
-const WriteSingleRegister = 6 // modbus.FuncCodeWriteSingleRegister
+type WireFormat int
+
+const (
+	TcpFormat WireFormat = iota
+	RtuFormat
+	AsciiFormat
+
+	CoilOn uint16 = 0xFF00
+)
 
 // Settings contains the ModBus settings
 type Settings struct {
@@ -140,7 +148,7 @@ func registeredConnection(key string, newConn meters.Connection) meters.Connecti
 }
 
 // NewConnection creates physical modbus device from config
-func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID uint8) (*Connection, error) {
+func NewConnection(uri, device, comset string, baudrate int, wire WireFormat, slaveID uint8) (*Connection, error) {
 	var conn meters.Connection
 
 	if device != "" && uri != "" {
@@ -148,18 +156,34 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 	}
 
 	if device != "" {
-		if baudrate == 0 || comset == "" {
+		switch strings.ToUpper(comset) {
+		case "8N1", "8E1":
+		case "80":
+			comset = "8E1"
+		default:
+			return nil, fmt.Errorf("invalid comset: %s", comset)
+		}
+
+		if baudrate == 0 {
 			return nil, errors.New("invalid modbus configuration: need baudrate and comset")
 		}
-		conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+
+		if wire == RtuFormat {
+			conn = registeredConnection(device, meters.NewRTU(device, baudrate, comset))
+		} else {
+			conn = registeredConnection(uri, meters.NewASCII(device, baudrate, comset))
+		}
 	}
 
 	if uri != "" {
 		uri = util.DefaultPort(uri, 502)
 
-		if rtu {
+		switch wire {
+		case RtuFormat:
 			conn = registeredConnection(uri, meters.NewRTUOverTCP(uri))
-		} else {
+		case AsciiFormat:
+			conn = registeredConnection(uri, meters.NewASCIIOverTCP(uri))
+		default:
 			conn = registeredConnection(uri, meters.NewTCP(uri))
 		}
 	}
@@ -177,8 +201,8 @@ func NewConnection(uri, device, comset string, baudrate int, rtu bool, slaveID u
 }
 
 // NewDevice creates physical modbus device from config
-func NewDevice(model string, subdevice int, isRS485 bool) (device meters.Device, err error) {
-	if isRS485 {
+func NewDevice(model string, subdevice int) (device meters.Device, err error) {
+	if IsRS485(model) {
 		device, err = rs485.NewDevice(strings.ToUpper(model))
 	} else {
 		device = sunspec.NewDevice(strings.ToUpper(model), subdevice)
@@ -219,6 +243,7 @@ type Register struct {
 	Address uint16 // Length  uint16
 	Type    string
 	Decode  string
+	BitMask string
 }
 
 // RegisterOperation creates a read operation from a register definition
@@ -230,11 +255,11 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 
 	switch strings.ToLower(r.Type) {
 	case "holding":
-		op.FuncCode = rs485.ReadHoldingReg
+		op.FuncCode = modbus.FuncCodeReadHoldingRegisters
 	case "input":
-		op.FuncCode = rs485.ReadInputReg
+		op.FuncCode = modbus.FuncCodeReadInputRegisters
 	case "writesingle":
-		op.FuncCode = WriteSingleRegister // modbus.FuncCodeWriteSingleRegister
+		op.FuncCode = modbus.FuncCodeWriteSingleRegister
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register type: %s", r.Type)
 	}
@@ -264,6 +289,13 @@ func RegisterOperation(r Register) (rs485.Operation, error) {
 		op.Transform = rs485.RTUInt32ToFloat64
 	case "int32s":
 		op.Transform = rs485.RTUInt32ToFloat64Swapped
+	case "bool16":
+		mask, err := decodeMask(r.BitMask)
+		if err != nil {
+			return op, err
+		}
+		op.Transform = decodeBool16(mask)
+		op.ReadLen = 1
 	default:
 		return rs485.Operation{}, fmt.Errorf("invalid register decoding: %s", r.Decode)
 	}

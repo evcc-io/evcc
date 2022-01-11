@@ -1,0 +1,11 @@
+template: hyundai
+description: Hyundai
+params:
+- base: vehiclebase
+- base: vehicleidentify
+- name: capacity
+  default: 64
+render: |
+  type: hyundai
+  {{include "vehicle-base" .}}
+  {{include "vehicle-identify" .}}

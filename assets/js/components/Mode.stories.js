@@ -1,4 +1,5 @@
 import Mode from "./Mode.vue";
+import i18n from "../i18n";
 
 export default {
   title: "Main/Mode",
@@ -9,6 +10,7 @@ export default {
 };
 
 const Template = (args, { argTypes }) => ({
+  i18n,
   props: Object.keys(argTypes),
   components: { Mode },
   template: '<Mode v-bind="$props"></Mode>',

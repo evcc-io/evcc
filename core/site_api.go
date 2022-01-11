@@ -3,15 +3,10 @@ package core
 import (
 	"errors"
 
-	"github.com/andig/evcc/api"
+	"github.com/evcc-io/evcc/core/site"
 )
 
-// SiteAPI is the external site API
-type SiteAPI interface {
-	Healthy() bool
-	LoadPoints() []LoadPointAPI
-	SetPrioritySoC(float64) error
-}
+var _ site.API = (*Site)(nil)
 
 // GetPrioritySoC returns the PrioritySoC
 func (site *Site) GetPrioritySoC() float64 {
@@ -25,7 +20,7 @@ func (site *Site) SetPrioritySoC(soc float64) error {
 	site.Lock()
 	defer site.Unlock()
 
-	if _, ok := site.batteryMeter.(api.Battery); !ok {
+	if len(site.batteryMeters) == 0 {
 		return errors.New("battery not configured")
 	}
 

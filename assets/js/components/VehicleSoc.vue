@@ -9,12 +9,12 @@
 					'progress-bar-animated': charging,
 					[progressColor]: true,
 				}"
-				:style="{ width: `${socChargeDisplayWidth}%` }"
+				:style="{ width: `${vehicleSoCDisplayWidth}%` }"
 			>
-				{{ socChargeDisplayValue }}
+				{{ vehicleSoCDisplayValue }}
 			</div>
 			<div
-				v-if="remainingSoCWidth > 0"
+				v-if="remainingSoCWidth > 0 && enabled"
 				class="progress-bar"
 				role="progressbar"
 				:class="{
@@ -25,9 +25,8 @@
 			></div>
 		</div>
 		<div
-			v-if="hasVehicle && visibleTargetSoC"
 			class="target"
-			:class="{ 'target--max': visibleTargetSoC === 100 }"
+			:class="{ 'target--slider-hidden': allowSliderHiding && visibleTargetSoC === 100 }"
 		>
 			<div
 				class="target-label d-flex align-items-center justify-content-center"
@@ -43,7 +42,10 @@
 				:value="visibleTargetSoC"
 				class="target-slider"
 				@input="movedTargetSoC"
-				@change="setTargetSoC"
+				@mousedown="changeTargetSoCStart"
+				@touchstart="changeTargetSoCStart"
+				@mouseup="changeTargetSoCEnd"
+				@touchend="changeTargetSoCEnd"
 			/>
 		</div>
 	</div>
@@ -54,8 +56,8 @@ export default {
 	name: "VehicleSoc",
 	props: {
 		connected: Boolean,
-		hasVehicle: Boolean,
-		socCharge: Number,
+		vehiclePresent: Boolean,
+		vehicleSoC: Number,
 		enabled: Boolean,
 		charging: Boolean,
 		minSoC: Number,
@@ -64,35 +66,37 @@ export default {
 	data: function () {
 		return {
 			selectedTargetSoC: null,
+			allowSliderHiding: false,
+			interactionStartScreenY: null,
 		};
 	},
 	computed: {
-		socChargeDisplayWidth: function () {
-			if (this.hasVehicle && this.socCharge >= 0) {
-				return this.socCharge;
+		vehicleSoCDisplayWidth: function () {
+			if (this.vehiclePresent && this.vehicleSoC >= 0) {
+				return this.vehicleSoC;
 			}
 			return 100;
 		},
-		socChargeDisplayValue: function () {
+		vehicleSoCDisplayValue: function () {
 			// no soc or no soc value
-			if (!this.hasVehicle || !this.socCharge || this.socCharge < 0) {
-				let chargeStatus = "getrennt";
+			if (!this.vehiclePresent || !this.vehicleSoC || this.vehicleSoC < 0) {
+				let chargeStatus = this.$t("main.vehicleSoC.disconnected");
 				if (this.charging) {
-					chargeStatus = "lädt";
+					chargeStatus = this.$t("main.vehicleSoC.charging");
 				} else if (this.enabled) {
-					chargeStatus = "bereit";
+					chargeStatus = this.$t("main.vehicleSoC.ready");
 				} else if (this.connected) {
-					chargeStatus = "verbunden";
+					chargeStatus = this.$t("main.vehicleSoC.connected");
 				}
 				return chargeStatus;
 			}
 
 			// percent value if enough space
-			let socCharge = this.socCharge;
-			if (socCharge >= 10) {
-				socCharge += "%";
+			let vehicleSoC = this.vehicleSoC;
+			if (vehicleSoC >= 10) {
+				vehicleSoC += "%";
 			}
-			return socCharge;
+			return vehicleSoC;
 		},
 		progressColor: function () {
 			if (!this.connected) {
@@ -101,23 +105,20 @@ export default {
 			if (this.minSoCActive) {
 				return "bg-danger";
 			}
-			if (this.enabled) {
-				return "bg-primary";
-			}
-			return "bg-secondary";
+			return "bg-primary";
 		},
 		minSoCActive: function () {
-			return this.minSoC > 0 && this.socCharge < this.minSoC;
+			return this.minSoC > 0 && this.vehicleSoC < this.minSoC;
 		},
 		remainingSoCWidth: function () {
-			if (this.socChargeDisplayWidth === 100) {
+			if (this.vehicleSoCDisplayWidth === 100) {
 				return null;
 			}
 			if (this.minSoCActive) {
-				return this.minSoC - this.socCharge;
+				return this.minSoC - this.vehicleSoC;
 			}
-			if (this.visibleTargetSoC > this.socCharge) {
-				return this.visibleTargetSoC - this.socCharge;
+			if (this.visibleTargetSoC > this.vehicleSoC) {
+				return this.visibleTargetSoC - this.vehicleSoC;
 			}
 			return null;
 		},
@@ -125,9 +126,38 @@ export default {
 			return Number(this.selectedTargetSoC || this.targetSoC);
 		},
 	},
+	watch: {
+		targetSoC: function () {
+			this.selectedTargetSoC = this.targetSoC;
+		},
+	},
+	mounted: function () {
+		setTimeout(() => {
+			this.allowSliderHiding = true;
+		}, 1000);
+	},
 	methods: {
+		changeTargetSoCStart: function (e) {
+			const screenY = e.screenY || e.changedTouches[0].screenY;
+			this.interactionStartScreenY = screenY;
+		},
+		changeTargetSoCEnd: function (e) {
+			const screenY = e.screenY || e.changedTouches[0].screenY;
+			const yDiff = Math.abs(screenY - this.interactionStartScreenY);
+			// horizontal scroll detected - revert slider change
+			if (yDiff > 80) {
+				e.preventDefault();
+				e.target.value = this.targetSoC;
+				this.selectedTargetSoC = this.targetSoC;
+				return false;
+			}
+			// value changed
+			if (e.target.value !== this.targetSoC) {
+				this.$emit("target-soc-updated", e.target.value);
+			}
+		},
 		movedTargetSoC: function (e) {
-			const minTargetSoC = 40;
+			const minTargetSoC = 20;
 			if (e.target.value < minTargetSoC) {
 				e.target.value = minTargetSoC;
 				this.selectedTargetSoC = e.target.value;
@@ -136,9 +166,6 @@ export default {
 			}
 			this.selectedTargetSoC = e.target.value;
 			return true;
-		},
-		setTargetSoC: function (e) {
-			this.$emit("target-soc-updated", e.target.value);
 		},
 	},
 };
@@ -161,7 +188,7 @@ export default {
 	color: var(--white);
 }
 .bg-light {
-	color: var(--dark);
+	color: var(--bs-gray-dark);
 }
 .target-label {
 	width: 3em;
@@ -170,7 +197,7 @@ export default {
 	position: absolute;
 	top: calc((var(--label-height) + var(--thumb-overlap)) * -1);
 	text-align: center;
-	color: var(--dark);
+	color: var(--bs-gray-dark);
 	font-size: 1rem;
 	opacity: 1;
 	transition: opacity 0.2s ease 1s;
@@ -189,6 +216,7 @@ export default {
 }
 /* Note: Safari,Chrome,Blink and Firefox specific styles need to be in separate definitions to work */
 .target-slider::-webkit-slider-runnable-track {
+	position: relative;
 	background: transparent;
 	border: none;
 	height: 100%;
@@ -209,33 +237,34 @@ export default {
 	padding: var(--label-height) var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
-	background-color: var(--dark);
+	background-color: var(--bs-gray-dark);
 	cursor: grab;
 	border: none;
 	opacity: 1;
 	transition: opacity 0.2s ease 1s;
+	box-shadow: none;
 }
 .target-slider::-moz-range-thumb {
 	position: relative;
 	top: calc(var(--label-height) * -1);
 	height: 100%;
 	width: var(--thumb-width);
-	padding: 0 var(--thumb-horizontal-padding);
+	padding: 0 var(--thumb-horizontal-padding) 0;
 	box-sizing: content-box;
 	background-clip: content-box;
-	background-color: var(--dark);
+	background-color: var(--bs-gray-dark);
 	cursor: grab;
 	border: none;
 	opacity: 1;
-	transition: opacity 0.2s ease 1s;
+	transition: opacity 0.5s ease 1s;
 }
 /* auto-hide targetSoC marker at 100% */
-.target--max .target-slider::-webkit-slider-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-webkit-slider-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
-.target--max .target-slider::-moz-range-thumb,
-.target--max .target-label {
+.target--slider-hidden .target-slider::-moz-range-thumb,
+.target--slider-hidden .target-label {
 	opacity: 0;
 }
 .target:hover .target-slider::-webkit-slider-thumb,

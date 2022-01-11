@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andig/evcc/server"
-	"github.com/andig/evcc/server/updater"
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/pipe"
-	"github.com/andig/evcc/util/sponsor"
+	"github.com/evcc-io/evcc/server"
+	"github.com/evcc-io/evcc/server/updater"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/pipe"
+	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/spf13/cobra"
@@ -159,6 +159,8 @@ func run(cmd *cobra.Command, args []string) {
 	}
 
 	// setup loadpoints
+	cp.TrackVisitors() // track duplicate usage
+
 	site, err := configureSiteAndLoadpoints(conf)
 	if err != nil {
 		log.FATAL.Fatal(err)
@@ -178,7 +180,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// setup mqtt publisher
 	if conf.Mqtt.Broker != "" {
-		publisher := server.NewMQTT(conf.Mqtt.Topic)
+		publisher := server.NewMQTT(conf.Mqtt.RootTopic())
 		go publisher.Run(site, pipe.NewDropper(ignoreMqtt...).Pipe(tee.Attach()))
 	}
 
@@ -201,7 +203,7 @@ func run(cmd *cobra.Command, args []string) {
 
 	// start HEMS server
 	if conf.HEMS.Type != "" {
-		hems := configureHEMS(conf.HEMS, site, cache, httpd)
+		hems := configureHEMS(conf.HEMS, site, httpd)
 		go hems.Run()
 	}
 
@@ -239,7 +241,7 @@ func run(cmd *cobra.Command, args []string) {
 	}()
 
 	// uds health check listener
-	go server.HealthListener(site)
+	go server.HealthListener(site, exitC)
 
 	// catch signals
 	go func() {
@@ -248,7 +250,11 @@ func run(cmd *cobra.Command, args []string) {
 
 		<-signalC    // wait for signal
 		close(stopC) // signal loop to end
-		<-exitC      // wait for loop to end
+
+		select {
+		case <-exitC: // wait for loop to end
+		case <-time.NewTimer(conf.Interval).C: // wait max 1 period
+		}
 
 		os.Exit(1)
 	}()

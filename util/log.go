@@ -3,7 +3,6 @@ package util
 import (
 	"io"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -31,33 +30,41 @@ var LogAreaPadding = 6
 // Logger wraps a jww notepad to avoid leaking implementation detail
 type Logger struct {
 	*jww.Notepad
-	name string
+	*Redactor
 }
 
 // NewLogger creates a logger with the given log area and adds it to the registry
 func NewLogger(area string) *Logger {
+	loggersMux.Lock()
+	defer loggersMux.Unlock()
+
+	if logger, ok := loggers[area]; ok {
+		return logger
+	}
+
 	padded := area
 	for len(padded) < LogAreaPadding {
 		padded = padded + " "
 	}
 
 	level := LogLevelForArea(area)
-	notepad := jww.NewNotepad(level, level, os.Stdout, io.Discard, padded, log.Ldate|log.Ltime)
-
-	loggersMux.Lock()
-	defer loggersMux.Unlock()
+	redactor := new(Redactor)
+	notepad := jww.NewNotepad(level, level, redactor, io.Discard, padded, log.Ldate|log.Ltime)
 
 	logger := &Logger{
-		Notepad: notepad,
-		name:    area,
+		Notepad:  notepad,
+		Redactor: redactor,
 	}
+
 	loggers[area] = logger
+
 	return logger
 }
 
-// Name returns the loggers name
-func (l *Logger) Name() string {
-	return l.name
+// Redact adds items for redaction
+func (l *Logger) Redact(items ...string) *Logger {
+	l.Redactor.Redact(items...)
+	return l
 }
 
 // Loggers invokes callback for each configured logger

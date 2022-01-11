@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/andig/evcc/util"
-	"github.com/andig/evcc/util/jq"
+	"github.com/evcc-io/evcc/util"
+	"github.com/evcc-io/evcc/util/jq"
+	"github.com/evcc-io/evcc/util/request"
 	"github.com/itchyny/gojq"
 	"github.com/kballard/go-shellquote"
 )
@@ -24,7 +27,9 @@ type Script struct {
 	updated time.Time
 	val     string
 	err     error
+	re      *regexp.Regexp
 	jq      *gojq.Query
+	scale   float64
 }
 
 func init() {
@@ -37,47 +42,74 @@ func NewScriptProviderFromConfig(other map[string]interface{}) (IntProvider, err
 		Cmd     string
 		Timeout time.Duration
 		Cache   time.Duration
+		Regex   string
 		Jq      string
+		Scale   float64
 	}{
-		Timeout: 5 * time.Second,
+		Timeout: request.Timeout,
+		Scale:   1,
 	}
 
 	if err := util.DecodeOther(other, &cc); err != nil {
 		return nil, err
 	}
 
-	return NewScriptProvider(cc.Cmd, cc.Timeout, cc.Jq, cc.Cache)
+	p, err := NewScriptProvider(cc.Cmd, cc.Timeout, cc.Scale, cc.Cache)
+
+	if err == nil && cc.Regex != "" {
+		_, err = p.WithRegex(cc.Regex)
+	}
+
+	if err == nil && cc.Jq != "" {
+		_, err = p.WithJq(cc.Jq)
+	}
+
+	return p, err
 }
 
 // NewScriptProvider creates a script provider.
 // Script execution is aborted after given timeout.
-func NewScriptProvider(script string, timeout time.Duration, jq string, cache time.Duration) (*Script, error) {
+func NewScriptProvider(script string, timeout time.Duration, scale float64, cache time.Duration) (*Script, error) {
 	s := &Script{
 		log:     util.NewLogger("script"),
 		script:  script,
 		timeout: timeout,
+		scale:   scale,
 		cache:   cache,
-	}
-	
-	if jq != "" {
-		op, err := gojq.Parse(jq)
-		if err != nil {
-			return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
-		}
-
-		s.jq = op
 	}
 
 	return s, nil
 }
 
-func (e *Script) exec(script string) (string, error) {
+func (p *Script) WithRegex(regex string) (*Script, error) {
+	re, err := regexp.Compile(regex)
+	if err != nil {
+		return nil, fmt.Errorf("invalid regex '%s': %w", re, err)
+	}
+
+	p.re = re
+
+	return p, nil
+}
+
+func (p *Script) WithJq(jq string) (*Script, error) {
+	op, err := gojq.Parse(jq)
+	if err != nil {
+		return nil, fmt.Errorf("invalid jq query '%s': %w", jq, err)
+	}
+
+	p.jq = op
+
+	return p, nil
+}
+
+func (p *Script) exec(script string) (string, error) {
 	args, err := shellquote.Split(script)
 	if err != nil {
 		return "", err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), e.timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
@@ -92,51 +124,44 @@ func (e *Script) exec(script string) (string, error) {
 			s = strings.TrimSpace(string(ee.Stderr))
 		}
 
-		e.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
+		p.log.ERROR.Printf("%s: %s", strings.Join(args, " "), s)
 		return "", err
 	}
 
-	e.log.TRACE.Printf("%s: %s", strings.Join(args, " "), s)
+	p.log.DEBUG.Printf("%s: %s", strings.Join(args, " "), s)
 
 	return s, nil
 }
 
 // StringGetter returns string from exec result. Only STDOUT is considered.
-func (e *Script) StringGetter() func() (string, error) {
+func (p *Script) StringGetter() func() (string, error) {
 	return func() (string, error) {
-		if time.Since(e.updated) > e.cache {
-			e.val, e.err = e.exec(e.script)
-			e.updated = time.Now()
+		if time.Since(p.updated) > p.cache {
+			p.val, p.err = p.exec(p.script)
+			p.updated = time.Now()
 
-			if e.err == nil && e.jq != nil {
+			if p.err == nil && p.re != nil {
+				m := p.re.FindStringSubmatch(p.val)
+				if len(m) > 1 {
+					p.val = m[1] // first submatch
+				}
+			}
+
+			if p.err == nil && p.jq != nil {
 				var v interface{}
-				if v, e.err = jq.Query(e.jq, []byte(e.val)); e.err == nil {
-					e.val = fmt.Sprintf("%v", v)
+				if v, p.err = jq.Query(p.jq, []byte(p.val)); p.err == nil {
+					p.val = fmt.Sprintf("%v", v)
 				}
 			}
 		}
-		
-		return e.val, e.err
-	}
-}
 
-// IntGetter parses int64 from exec result
-func (e *Script) IntGetter() func() (int64, error) {
-	g := e.StringGetter()
-
-	return func() (int64, error) {
-		s, err := g()
-		if err != nil {
-			return 0, err
-		}
-
-		return strconv.ParseInt(s, 10, 64)
+		return p.val, p.err
 	}
 }
 
 // FloatGetter parses float from exec result
-func (e *Script) FloatGetter() func() (float64, error) {
-	g := e.StringGetter()
+func (p *Script) FloatGetter() func() (float64, error) {
+	g := p.StringGetter()
 
 	return func() (float64, error) {
 		s, err := g()
@@ -144,13 +169,28 @@ func (e *Script) FloatGetter() func() (float64, error) {
 			return 0, err
 		}
 
-		return strconv.ParseFloat(s, 64)
+		f, err := strconv.ParseFloat(s, 64)
+		if err == nil {
+			f *= p.scale
+		}
+
+		return f, err
+	}
+}
+
+// IntGetter parses int64 from exec result
+func (p *Script) IntGetter() func() (int64, error) {
+	g := p.FloatGetter()
+
+	return func() (int64, error) {
+		f, err := g()
+		return int64(math.Round(f)), err
 	}
 }
 
 // BoolGetter parses bool from exec result. "on", "true" and 1 are considered truish.
-func (e *Script) BoolGetter() func() (bool, error) {
-	g := e.StringGetter()
+func (p *Script) BoolGetter() func() (bool, error) {
+	g := p.StringGetter()
 
 	return func() (bool, error) {
 		s, err := g()
@@ -163,15 +203,15 @@ func (e *Script) BoolGetter() func() (bool, error) {
 }
 
 // IntSetter invokes script with parameter replaced by int value
-func (e *Script) IntSetter(param string) func(int64) error {
+func (p *Script) IntSetter(param string) func(int64) error {
 	// return func to access cached value
 	return func(i int64) error {
-		cmd, err := util.ReplaceFormatted(e.script, map[string]interface{}{
+		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
 			param: i,
 		})
 
 		if err == nil {
-			_, err = e.exec(cmd)
+			_, err = p.exec(cmd)
 		}
 
 		return err
@@ -179,15 +219,15 @@ func (e *Script) IntSetter(param string) func(int64) error {
 }
 
 // BoolSetter invokes script with parameter replaced by bool value
-func (e *Script) BoolSetter(param string) func(bool) error {
+func (p *Script) BoolSetter(param string) func(bool) error {
 	// return func to access cached value
 	return func(b bool) error {
-		cmd, err := util.ReplaceFormatted(e.script, map[string]interface{}{
+		cmd, err := util.ReplaceFormatted(p.script, map[string]interface{}{
 			param: b,
 		})
 
 		if err == nil {
-			_, err = e.exec(cmd)
+			_, err = p.exec(cmd)
 		}
 
 		return err

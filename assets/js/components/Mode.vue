@@ -1,31 +1,41 @@
 <template>
 	<div>
-		<div class="mb-3">Modus</div>
-		<div class="btn-group btn-group-toggle bg-white shadow-none w-100">
-			<label class="btn btn-outline-primary first" :class="{ active: mode == 'off' }">
-				<input type="radio" value="off" @click="setTargetMode('off')" />Stop
-			</label>
-			<label class="btn btn-outline-primary" :class="{ active: mode == 'now' }">
-				<input type="radio" value="now" @click="setTargetMode('now')" />Sofort
-			</label>
-			<label
-				class="btn btn-outline-primary"
+		<div class="mb-3">{{ $t("main.mode.title") }}</div>
+		<div class="btn-group w-100" role="group">
+			<button
+				type="button"
+				class="btn btn-outline-secondary"
+				:class="{ active: mode == 'off' }"
+				@click="setTargetMode('off')"
+			>
+				{{ $t("main.mode.stop") }}
+			</button>
+			<button
+				type="button"
+				class="btn btn-outline-secondary"
+				:class="{ active: mode == 'now' }"
+				@click="setTargetMode('now')"
+			>
+				{{ $t("main.mode.now") }}
+			</button>
+			<button
+				type="button"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'minpv' }"
-				v-if="pvConfigured"
+				@click="setTargetMode('minpv')"
 			>
-				<input type="radio" value="minpv" @click="setTargetMode('minpv')" />
-				<span class="d-inline d-sm-none">Min</span>
-				<span class="d-none d-sm-inline">Min + PV</span>
-			</label>
-			<label
-				class="btn btn-outline-primary"
+				<span class="d-inline d-sm-none"> {{ $t("main.mode.minpvShort") }} </span>
+				<span class="d-none d-sm-inline"> {{ $t("main.mode.minpvLong") }} </span>
+			</button>
+			<button
+				type="button"
+				class="btn btn-outline-secondary"
 				:class="{ active: mode == 'pv' }"
-				v-if="pvConfigured"
+				@click="setTargetMode('pv')"
 			>
-				<input type="radio" value="pv" @click="setTargetMode('pv')" />
-				<span class="d-inline d-sm-none">PV</span>
-				<span class="d-none d-sm-inline">Nur PV</span>
-			</label>
+				<span class="d-inline d-sm-none"> {{ $t("main.mode.pvShort") }} </span>
+				<span class="d-none d-sm-inline"> {{ $t("main.mode.pvLong") }} </span>
+			</button>
 		</div>
 	</div>
 </template>
@@ -35,7 +45,6 @@ export default {
 	name: "Mode",
 	props: {
 		mode: String,
-		pvConfigured: Boolean,
 	},
 	methods: {
 		setTargetMode: function (mode) {
@@ -49,5 +58,6 @@ export default {
 .btn {
 	/* equal width buttons */
 	flex-basis: 0;
+	white-space: nowrap;
 }
 </style>
