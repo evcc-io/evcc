@@ -66,6 +66,10 @@ export default {
     vehicleSubline: {
       mincharge: "carica minima fino a {soc}%",
     },
+    provider: {
+      login: "Accedere",
+      logout: "Disconnettersi",
+    },
     loadpointDetails: {
       power: "Potenza",
       vehicleRange: "Autonomia",

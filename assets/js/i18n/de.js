@@ -89,6 +89,10 @@ export default {
     vehicleSubline: {
       mincharge: "Mindestladung bis {soc}%",
     },
+    provider: {
+      login: "Anmelden",
+      logout: "Abmelden",
+    },
     targetCharge: {
       inactiveLabel: "Zielzeit",
       activeLabel: "bis {time} Uhr",

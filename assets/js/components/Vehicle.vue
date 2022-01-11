@@ -3,24 +3,26 @@
 		<div class="mb-3">
 			<div>
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-				<span v-if="vehicleProviderLoggedIn">
-					<button
-						type="button"
-						class="btn btn-outline-danger btn-sm"
-						@click="providerLogout"
-					>
-						Logout
-					</button>
-				</span>
-				<span>
-					<button
-						v-if="!vehicleProviderLoggedIn && vehicleLoginButtonText !== ''"
-						type="button"
-						class="btn btn-outline-success btn-sm"
-						@click="providerLogin"
-					>
-						{{ vehicleLoginButtonText }}
-					</button>
+				<span v-if="showLogin">
+					<span v-if="!vehicleProviderLoggedIn">
+						<button
+							v-if="!vehicleProviderLoggedIn"
+							type="button"
+							class="btn btn-outline-success btn-sm"
+							@click="providerLogin"
+						>
+							{{ $t("main.provider.login") }}
+						</button>
+					</span>
+					<span v-else>
+						<button
+							type="button"
+							class="btn btn-outline-danger btn-sm"
+							@click="providerLogout"
+						>
+							{{ $t("main.provider.logout") }}
+						</button>
+					</span>
 				</span>
 			</div>
 		</div>
@@ -70,13 +72,8 @@ export default {
 		vehicleSubline: function () {
 			return this.collectProps(VehicleSubline);
 		},
-		// TODO: Handle language support
-		vehicleLoginButtonText: function () {
-			if (this.vehicleProviderLoginPath !== "") {
-				return "Login";
-			}
-
-			return "";
+		showLogin: function () {
+			return this.vehicleProviderLoginPath && this.vehicleProviderLogoutPath
 		},
 	},
 	methods: {
