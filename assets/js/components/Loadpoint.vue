@@ -61,6 +61,7 @@ export default {
 		targetTime: String,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
+		vehicleProviderLogoutPath: String,
 
 		// details
 		chargePower: Number,

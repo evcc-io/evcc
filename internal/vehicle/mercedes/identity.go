@@ -27,15 +27,18 @@ func WithToken(t *oauth2.Token) ClientOption {
 }
 
 type Identity struct {
-	log        *util.Logger
+	log *util.Logger
+
+	sessionSecret []byte
+	sessionState  State
+
 	AuthConfig *oauth2.Config
 	token      *oauth2.Token
 	// tokenSource oauth2.TokenSource
 	router *mux.Router
 
-	sessionSecret []byte
-	loginUpdateC  chan struct{}
-	loginPath     string
+	loginUpdateC chan struct{}
+	apiPath      string
 }
 
 // TODO: SessionSecret from config/persistence
@@ -47,18 +50,18 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 	}
 
 	v := &Identity{
-		log:          log,
-		loginUpdateC: loginUpdateC,
+		log:           log,
+		loginUpdateC:  loginUpdateC,
+		sessionSecret: genSessionSecret(),
 		AuthConfig: &oauth2.Config{
 			ClientID:     id,
 			ClientSecret: secret,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       []string{"mb:vehicle:mbdata:evstatus", "offline_access"},
+			Scopes:       []string{oidc.ScopeOfflineAccess, "mb:vehicle:mbdata:evstatus"},
 			// TODO: configure properly redirectURL
 			RedirectURL: "http://localhost:7070/api/vehicle/mercedes/callback",
 		},
-		loginPath:     "/identityproviders/mercedes/login",
-		sessionSecret: genSessionSecret(),
+		apiPath: "/identityproviders/mercedes",
 	}
 
 	for _, o := range options {
@@ -87,11 +90,10 @@ var _ internal.WebController = (*Identity)(nil)
 func (v *Identity) WebControl(router *mux.Router) {
 	v.router = router.PathPrefix("/api").Subrouter()
 
-	state := NewState(v.sessionSecret)
+	v.router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler(context.Background()))
 
-	v.router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler(context.Background(), state))
-
-	v.router.Methods("POST").Path(v.loginPath).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	v.router.Methods(http.MethodPost).Path(v.getLoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		state := NewState(v.sessionSecret)
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
 		}{
@@ -104,17 +106,38 @@ func (v *Identity) WebControl(router *mux.Router) {
 		_, _ = w.Write(b)
 	})
 
+	v.router.Methods(http.MethodPost).Path(v.getLogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		v.token = nil
+
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(nil)
+	})
 }
 
-func (v *Identity) LoginPath() string {
-	return v.loginPath
-}
-
+// LoggedIn implements the api.VehicleProviderLogin interface
 func (v *Identity) LoggedIn() bool {
 	return v.token.Valid()
 }
 
-func (v *Identity) redirectHandler(ctx context.Context, state State) http.HandlerFunc {
+func (v *Identity) getLoginPath() string {
+	return fmt.Sprintf("%s/login", v.apiPath)
+}
+
+// LoginPath implements the api.VehicleProviderLogin interface
+func (v *Identity) LoginPath() string {
+	return v.getLoginPath()
+}
+
+func (v *Identity) getLogoutPath() string {
+	return fmt.Sprintf("%s/logout", v.apiPath)
+}
+
+// LogoutPath implements the api.VehicleProviderLogin interface
+func (v *Identity) LogoutPath() string {
+	return v.getLogoutPath()
+}
+
+func (v *Identity) redirectHandler(ctx context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {

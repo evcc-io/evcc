@@ -3,16 +3,25 @@
 		<div class="mb-3">
 			<div>
 				{{ socTitle || "Fahrzeug" }}
-			</div>
-			<div>
-				<button
-					v-if="!vehicleProviderLoggedIn && vehicleLoginButtonText !== ''"
-					type="button"
-					class="btn btn-outline-success btn-sm"
-					@click="providerLogin"
-				>
-					{{ vehicleLoginButtonText }}
-				</button>
+				<span v-if="vehicleProviderLoggedIn">
+					<button
+						type="button"
+						class="btn btn-outline-danger btn-sm"
+						@click="providerLogout"
+					>
+						Logout
+					</button>	
+				</span>
+				<span>
+					<button
+						v-if="!vehicleProviderLoggedIn && vehicleLoginButtonText !== ''"
+						type="button"
+						class="btn btn-outline-success btn-sm"
+						@click="providerLogin"
+					>
+						{{ vehicleLoginButtonText }}
+					</button>
+				</span>
 			</div>
 		</div>
 		<VehicleSoc v-bind="vehicleSoc" @target-soc-updated="targetSocUpdated" />
@@ -45,6 +54,7 @@ export default {
 		targetSoC: Number,
 		vehicleProviderLoggedIn: Boolean,
 		vehicleProviderLoginPath: String,
+		vehicleProviderLogoutPath: String,
 	},
 	computed: {
 		vehicleSoc: function () {
@@ -74,6 +84,14 @@ export default {
 				})
 				.catch(function (error) {
 					console.log("login failed ", error);
+				});
+		},
+		providerLogout: async function () {
+			await axios
+				.post(this.vehicleProviderLogoutPath)
+				.then(function () {})
+				.catch(function (error) {
+					console.log("logout failed ", error);
 				});
 		},
 	},

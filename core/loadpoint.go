@@ -568,7 +568,9 @@ func (lp *LoadPoint) setActiveVehicle(vehicle api.Vehicle) {
 	if provider, ok := lp.vehicle.(api.VehicleProviderLogin); ok {
 		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
 		lp.publish("vehicleProviderLoginPath", provider.LoginPath())
+		lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
 	}
+
 }
 
 // findActiveVehicle validates if the active vehicle is still connected to the loadpoint

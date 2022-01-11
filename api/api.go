@@ -122,4 +122,5 @@ type VehicleStartCharge interface {
 type VehicleProviderLogin interface {
 	LoggedIn() bool
 	LoginPath() string
+	LogoutPath() string
 }
