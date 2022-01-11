@@ -190,7 +190,7 @@ type WebController interface {
 	WebControl(*mux.Router)
 }
 
-type VehicleProviderLogin interface {
+type ProviderLogin interface {
 	LoggedIn() bool
 	LoginPath() string
 	LogoutPath() string

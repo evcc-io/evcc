@@ -1460,6 +1460,12 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		lp.publish("remoteDisabled", remoteDisabled)
 	}
 
+	if provider, ok := lp.vehicle.(api.ProviderLogin); ok {
+		lp.publish("vehicleProviderLoggedIn", provider.LoggedIn())
+		lp.publish("vehicleProviderLoginPath", provider.LoginPath())
+		lp.publish("vehicleProviderLogoutPath", provider.LogoutPath())
+	}
+
 	// read and publish meters after settings are applied
 	if err == nil {
 		time.Sleep(settleDuration)

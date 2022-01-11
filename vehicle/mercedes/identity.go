@@ -91,7 +91,7 @@ func (v *Identity) WebControl(router *mux.Router) {
 
 	v.router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler(context.Background()))
 
-	v.router.Methods(http.MethodPost).Path(v.getLoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	v.router.Methods(http.MethodPost).Path(v.LoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		state := NewState(v.sessionSecret)
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
@@ -105,7 +105,7 @@ func (v *Identity) WebControl(router *mux.Router) {
 		_, _ = w.Write(b)
 	})
 
-	v.router.Methods(http.MethodPost).Path(v.getLogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	v.router.Methods(http.MethodPost).Path(v.LogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		v.token = nil
 
 		w.WriteHeader(http.StatusOK)
@@ -113,27 +113,19 @@ func (v *Identity) WebControl(router *mux.Router) {
 	})
 }
 
-// LoggedIn implements the api.VehicleProviderLogin interface
+// LoggedIn implements the api.ProviderLogin interface
 func (v *Identity) LoggedIn() bool {
 	return v.token.Valid()
 }
 
-func (v *Identity) getLoginPath() string {
+// LoginPath implements the api.ProviderLogin interface
+func (v *Identity) LoginPath() string {
 	return fmt.Sprintf("%s/login", v.apiPath)
 }
 
-// LoginPath implements the api.VehicleProviderLogin interface
-func (v *Identity) LoginPath() string {
-	return v.getLoginPath()
-}
-
-func (v *Identity) getLogoutPath() string {
-	return fmt.Sprintf("%s/logout", v.apiPath)
-}
-
-// LogoutPath implements the api.VehicleProviderLogin interface
+// LogoutPath implements the api.ProviderLogin interface
 func (v *Identity) LogoutPath() string {
-	return v.getLogoutPath()
+	return fmt.Sprintf("%s/logout", v.apiPath)
 }
 
 func (v *Identity) redirectHandler(ctx context.Context) http.HandlerFunc {

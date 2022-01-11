@@ -77,7 +77,6 @@ func NewSiteFromConfig(
 	}
 
 	Voltage = site.Voltage
-	site.tariffs = tariffs
 	site.loadpoints = loadpoints
 	site.tariffs = tariffs
 	site.savings = NewSavings(tariffs)
@@ -393,24 +392,6 @@ func (site *Site) sitePower() (float64, error) {
 
 	sitePower := sitePower(site.gridPower, batteryPower, site.ResidualPower)
 	site.log.DEBUG.Printf("site power: %.0fW", sitePower)
-
-	site.publish("savingsChargedTotal", site.savings.ChargedTotal())
-	site.publish("savingsChargedSelfConsumption", site.savings.ChargedSelfConsumption())
-	site.publish("savingsSelfPercentage", site.savings.SelfPercentage())
-	site.publish("savingsSince", site.savings.Since())
-
-	site.publish("currency", site.tariffs.Currency.String())
-
-	if site.tariffs.Grid != nil {
-		if gridPrice, err := site.tariffs.Grid.CurrentPrice(); err == nil {
-			site.publish("tariffGrid", gridPrice)
-		}
-	}
-	if site.tariffs.FeedIn != nil {
-		if feedInPrice, err := site.tariffs.FeedIn.CurrentPrice(); err == nil {
-			site.publish("tariffFeedIn", feedInPrice)
-		}
-	}
 
 	return sitePower, nil
 }
