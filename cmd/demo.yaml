@@ -5,18 +5,18 @@ javascript:
   script: |
     state = {
       residualpower: 200,
-      batterypower: 200,
+      batterypower: 0,
       pvpower: 3000,
-      gridpower: -2000,
+      gridpower: 0,
       chargepower: 0,
       maxcurrent: 0,
       battery: 63, // car
     };
-    function get() {
+    function log() {
       console.log("state:", JSON.stringify(state));
     }
     function set() {
-      console.log(param+":", val);
+      console.log("set "+param+"=", val);
       console.log("state:", JSON.stringify(state));
     }
 
@@ -26,14 +26,17 @@ meters:
   power:
     type: js
     vm: shared
-    script: state.gridpower = -state.pvpower + state.chargepower + state.residualpower + state.batterypower;
+    script: state.gridpower = -state.pvpower - state.batterypower + state.chargepower + state.residualpower;
 
 - name: pv
   type: custom
   power:
     type: js
     vm: shared
-    script: state.pvpower += 0*(Math.random()-0.5);
+    script: |
+      state.pvpower += 0*(Math.random()-0.5);
+      log()
+      state.pvpower
 
 - name: battery
   type: custom
@@ -102,7 +105,7 @@ site:
   meters:
     grid: grid
     pv: pv
-    battery: battery
+    # battery: battery
 
 loadpoints:
 - title: Carport
