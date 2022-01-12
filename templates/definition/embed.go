@@ -9,6 +9,6 @@ var (
 	//go:embed parambaselist.yaml
 	ParamBaseListDefinition string
 
-	//go:embed devicegroups.yaml
-	DeviceGroupListDefinition string
+	//go:embed grouplist.yaml
+	GroupListDefinition string
 )

@@ -1,7 +1,7 @@
 template: volkszaehler-http
 products:
 - generic: Volkszähler (HTTP API)
-devicegroup: generic
+group: generic
 params:
 - name: usage
   choice: [ "grid" ]

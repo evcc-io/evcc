@@ -1,7 +1,7 @@
 template: shelly
 products: 
 - generic: Shelly
-devicegroup: switchsockets
+group: switchsockets
 params:
 - name: host
   required: true

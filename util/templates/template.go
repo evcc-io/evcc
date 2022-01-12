@@ -180,7 +180,7 @@ type ParamBase struct {
 
 var paramBaseList map[string]ParamBase
 
-var deviceGroupList map[string]TextLanguage
+var groupList map[string]TextLanguage
 
 type TemplateDefinition struct {
 	Template     string
@@ -188,7 +188,7 @@ type TemplateDefinition struct {
 	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
-	DeviceGroup  string // the device group this template belongs to, references deviceGroupList entries
+	Group        string // the group this template belongs to, references groupList entries
 	Params       []Param
 	Render       string // rendering template
 }
@@ -319,27 +319,27 @@ func (t *Template) ResolveParamBases() error {
 }
 
 func (t *Template) ResolveDeviceGroup() error {
-	if deviceGroupList == nil {
-		err := yaml.Unmarshal([]byte(definition.DeviceGroupListDefinition), &deviceGroupList)
+	if groupList == nil {
+		err := yaml.Unmarshal([]byte(definition.GroupListDefinition), &groupList)
 		if err != nil {
 			return fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err)
 		}
 	}
 
-	if t.DeviceGroup == "" {
+	if t.Group == "" {
 		return nil
 	}
 
-	_, ok := deviceGroupList[t.DeviceGroup]
+	_, ok := groupList[t.Group]
 	if !ok {
-		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.DeviceGroup)
+		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.Group)
 	}
 
 	return nil
 }
 
-func (t *Template) DeviceGroupTitle() string {
-	tl := deviceGroupList[t.DeviceGroup]
+func (t *Template) GroupTitle() string {
+	tl := groupList[t.Group]
 	return tl.String(t.Lang)
 }
 

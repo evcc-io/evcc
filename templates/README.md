@@ -27,9 +27,9 @@ Each product contains:
 
 Either `brand`, or any of either `generic` (language independent) or `de`, `en` (language specific) have to be provided.
 
-## `devicegroup`
+## `group`
 
-`devicegroup` contains the reference to a `devicegroups.yaml` entry. This is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
+`group` contains the reference to a `groups.yaml` entry. This is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
 ## `guidedsetup`
 

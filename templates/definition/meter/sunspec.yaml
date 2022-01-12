@@ -2,7 +2,7 @@ template: sunspec
 products:
 - de: Wechselrichter (SunSpec)
   en: Inverter (SunSpec)
-devicegroup: generic
+group: generic
 params:
 - name: usage
   choice: [ "grid", "pv", "battery" ]

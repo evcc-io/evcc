@@ -1,7 +1,7 @@
 template: tronity
 products:
 - generic: Tronity
-devicegroup: generic
+group: generic
 requirements:
   sponsorship: true
 params:

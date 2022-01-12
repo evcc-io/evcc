@@ -1,7 +1,7 @@
 template: tasmota
 products:
 - generic: Tasmota
-devicegroup: sockets
+group: sockets
 params:
 - name: usage
   choice: [ "grid", "pv", "charge" ]

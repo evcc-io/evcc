@@ -1,7 +1,7 @@
 template: ovms
 products:
 - generic: Open Vehicle Monitoring System
-devicegroup: generic
+group: generic
 params:
 - name: title
 - name: user
