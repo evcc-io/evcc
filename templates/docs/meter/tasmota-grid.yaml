@@ -1,0 +1,4 @@
+type: template
+template: tasmota
+usage: grid 
+host: 192.0.2.2
