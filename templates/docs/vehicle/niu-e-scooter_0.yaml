@@ -1,0 +1,25 @@
+product:
+  brand: NIU
+  description: E-Scooter
+
+render:
+- default: |
+    type: template
+    template: niu-e-scooter
+    title: # Optional 
+    user:
+    password:
+    serial:
+  advanced: |
+    type: template
+    template: niu-e-scooter
+    title: # Optional 
+    user:
+    password:
+    serial:
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

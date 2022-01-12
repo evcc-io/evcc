@@ -46,7 +46,7 @@ func loadTemplates(class string) {
 		if err = tmpl.ResolveParamBases(); err != nil {
 			return err
 		}
-		if err = tmpl.ResolveDeviceGroup(); err != nil {
+		if err = tmpl.ResolveGroup(); err != nil {
 			return err
 		}
 		if err = tmpl.Validate(); err != nil {

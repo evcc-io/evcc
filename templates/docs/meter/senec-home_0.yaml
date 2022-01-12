@@ -1,0 +1,38 @@
+product:
+  brand: SENEC
+  description: .Home
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: senec-home
+    usage: grid
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: senec-home
+    usage: grid
+    host: 192.0.2.2 
+- usage: pv
+  default: |
+    type: template
+    template: senec-home
+    usage: pv
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: senec-home
+    usage: pv
+    host: 192.0.2.2 
+- usage: battery
+  default: |
+    type: template
+    template: senec-home
+    usage: battery
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: senec-home
+    usage: battery
+    host: 192.0.2.2

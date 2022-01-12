@@ -1,0 +1,19 @@
+product:
+  brand: Easee
+  description: Home (Cloud API)
+capabilities: ["1p3p"]
+requirements: ["sponsorship"]
+
+render:
+- default: |
+    type: template
+    template: easee
+    user:
+    password:
+    charger: EH______ 
+  advanced: |
+    type: template
+    template: easee
+    user:
+    password:
+    charger: EH______

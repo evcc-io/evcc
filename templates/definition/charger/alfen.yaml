@@ -3,10 +3,9 @@ products:
 - brand: Alfen
   description:
     generic: Eve
-capabilities:
-  phases1p3p: true
-requirements:
-  sponsorship: true
+capabilities: ["1p3p"]
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["rs485"]

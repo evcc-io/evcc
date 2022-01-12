@@ -1,0 +1,27 @@
+product:
+  brand: Nissan
+
+render:
+- default: |
+    type: template
+    template: nissan
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 60  # Optional 
+  advanced: |
+    type: template
+    template: nissan
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 60  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

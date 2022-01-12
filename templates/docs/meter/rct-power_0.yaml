@@ -1,0 +1,38 @@
+product:
+  brand: RCT
+  description: Power
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: rct-power
+    usage: grid
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: rct-power
+    usage: grid
+    host: 192.0.2.2 
+- usage: pv
+  default: |
+    type: template
+    template: rct-power
+    usage: pv
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: rct-power
+    usage: pv
+    host: 192.0.2.2 
+- usage: battery
+  default: |
+    type: template
+    template: rct-power
+    usage: battery
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: rct-power
+    usage: battery
+    host: 192.0.2.2

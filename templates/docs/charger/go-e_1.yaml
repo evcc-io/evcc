@@ -1,0 +1,15 @@
+product:
+  brand: go-e
+  description: Charger HOMEfix
+description: |
+  Benötigen mindestens Firmware 040.0 oder neuer.
+
+render:
+- default: |
+    type: template
+    template: go-e
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: go-e
+    host: 192.0.2.2

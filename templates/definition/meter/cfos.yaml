@@ -3,8 +3,8 @@ products:
 - brand: cFos
   description:
     generic: PowerBrain Meter
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: usage
   choice: [ "charge" ]

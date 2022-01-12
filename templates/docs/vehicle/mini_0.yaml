@@ -1,0 +1,27 @@
+product:
+  brand: Mini
+
+render:
+- default: |
+    type: template
+    template: mini
+    title: # Optional 
+    user:
+    password:
+    vin: WBMW...  # Optional 
+    capacity: 32  # Optional 
+  advanced: |
+    type: template
+    template: mini
+    title: # Optional 
+    user:
+    password:
+    vin: WBMW...  # Optional 
+    capacity: 32  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

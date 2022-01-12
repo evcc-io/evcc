@@ -1,0 +1,27 @@
+product:
+  brand: Audi
+
+render:
+- default: |
+    type: template
+    template: audi
+    title: # Optional 
+    user:
+    password:
+    vin: WAUZZZ...  # Optional 
+    capacity: 60  # Optional 
+  advanced: |
+    type: template
+    template: audi
+    title: # Optional 
+    user:
+    password:
+    vin: WAUZZZ...  # Optional 
+    capacity: 60  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

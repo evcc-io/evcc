@@ -3,8 +3,7 @@ products:
 - brand: SMA
   description:
     generic: Sunny Home Manager 2.0
-capabilities:
-  smahems: true
+capabilities: ["smahems"]
 guidedsetup:
   enable: true
   linked: 

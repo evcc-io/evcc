@@ -1,0 +1,20 @@
+product:
+  description: vzlogger
+  group: Generische Unterstützung
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: vzlogger
+    usage: grid
+    host: 192.0.2.2 
+    port: 8081  # Optional 
+    uuid:
+  advanced: |
+    type: template
+    template: vzlogger
+    usage: grid
+    host: 192.0.2.2 
+    port: 8081  # Optional 
+    uuid:

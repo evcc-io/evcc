@@ -184,7 +184,7 @@ func (c *CmdConfigure) configureLinkedTemplate(templateItem templates.Template, 
 }
 
 // configureDeviceCategory lets the user select and configure a device from a specific category
-func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, templates.Capabilities, error) {
+func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (device, []string, error) {
 	fmt.Println()
 	fmt.Printf("- %s %s\n", c.localizedString("Device_Configure", nil), DeviceCategories[deviceCategory].title)
 
@@ -193,7 +193,7 @@ func (c *CmdConfigure) configureDeviceCategory(deviceCategory DeviceCategory) (d
 	}
 
 	var deviceDescription string
-	var capabilities templates.Capabilities
+	var capabilities []string
 
 	// repeat until the device is added or the user chooses to continue without adding a device
 	for ok := true; ok; {

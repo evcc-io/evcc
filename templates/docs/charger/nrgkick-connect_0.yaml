@@ -1,0 +1,17 @@
+product:
+  brand: NRGKick
+  description: Connect
+
+render:
+- default: |
+    type: template
+    template: nrgkick-connect
+    host: 192.0.2.2 
+    mac:
+    password:
+  advanced: |
+    type: template
+    template: nrgkick-connect
+    host: 192.0.2.2 
+    mac:
+    password:

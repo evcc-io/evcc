@@ -1,0 +1,28 @@
+product:
+  brand: Skoda
+  description: Citigo
+
+render:
+- default: |
+    type: template
+    template: skoda
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 10  # Optional 
+  advanced: |
+    type: template
+    template: skoda
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 10  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

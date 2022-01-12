@@ -6,12 +6,17 @@ products:
 - brand: go-e
   description:
     generic: Charger HOMEfix (V3)
-capabilities:
-  phases1p3p: true
+capabilities: ["1p3p"]
 requirements:
   description:
-    en: Requires firmware 052.1 or later. Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.
-    de: Benötigt mindestens Firmware 052.1 oder neuer. For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
+    de: |
+      Benötigt mindestens Firmware 052.1 oder neuer. 
+
+      Für 1P/3P-Phasenumschaltung muss die HTTP API v2 im Charger aktiviert sein.      
+    en: |
+      Requires firmware 052.1 or later.
+
+      For 1P/3P-Phase switching the HTTP API v2 in the charger setup needs to be activated.
   uri: https://docs.evcc.io/docs/devices/chargers#go-echarger-homeprov3
 params:
 - name: host

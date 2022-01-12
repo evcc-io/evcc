@@ -1,4 +1,0 @@
-type: template
-template: sma-energy-meter
-usage: battery 
-host: 192.0.2.2

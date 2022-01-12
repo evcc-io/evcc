@@ -1,0 +1,17 @@
+product:
+  brand: Wallbe
+  description: Pro (vor ~2019)
+description: |
+  Die Wallbox muss über ein Netzwerkkabel angebunden sein und im Gerät muss der DIP Schalter 10 auf 'ON' gestellt sein.
+
+render:
+- default: |
+    type: template
+    template: wallbe-pre2019
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: wallbe-pre2019
+    host: 192.0.2.2 
+    port: 502  # Optional

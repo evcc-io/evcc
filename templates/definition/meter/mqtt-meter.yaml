@@ -4,8 +4,8 @@ products:
     de: MQTT Strommessgerät
     en: MQTT Meter
 group: generic
-requirements:
-  mqtt: true
+requirements: 
+  evcc: ["mqtt"]
 params:
 - name: usage
   choice: [ "grid", "pv", "charge", "battery" ]

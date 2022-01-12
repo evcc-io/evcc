@@ -1,0 +1,15 @@
+product:
+  description: Shelly
+  group: Schaltbare Steckdosen
+
+render:
+- default: |
+    type: template
+    template: shelly
+    host: 192.0.2.2 
+    standbypower: 15  # Optional 
+  advanced: |
+    type: template
+    template: shelly
+    host: 192.0.2.2 
+    standbypower: 15  # Optional

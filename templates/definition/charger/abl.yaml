@@ -6,8 +6,8 @@ products:
 - brand: SENEC
   description:
     generic: Wallbox pro
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["rs485"]

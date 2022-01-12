@@ -3,8 +3,8 @@ products:
 - brand: Innogy
   description:
     generic: eBox
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["tcpip"]

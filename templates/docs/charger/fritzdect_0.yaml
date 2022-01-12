@@ -1,0 +1,22 @@
+product:
+  brand: AVM
+  description: FritzDECT
+  group: Schaltbare Steckdosen
+
+render:
+- default: |
+    type: template
+    template: fritzdect
+    uri: https://fritz.box  # Optional 
+    user:
+    password:
+    ain: 007788992233  # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. 
+    standbypower: 15  # Optional 
+  advanced: |
+    type: template
+    template: fritzdect
+    uri: https://fritz.box  # Optional 
+    user:
+    password:
+    ain: 007788992233  # Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt. 
+    standbypower: 15  # Optional

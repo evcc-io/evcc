@@ -16,6 +16,7 @@ import (
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/thoas/go-funk"
 	"golang.org/x/text/language"
 )
 
@@ -324,7 +325,7 @@ func (c *CmdConfigure) configureLoadpoints() {
 		}
 
 		var minValue int = 6
-		if capabilities.ISO151182 {
+		if funk.ContainsString(capabilities, templates.CapabilityISO151182) {
 			minValue = 2
 		}
 

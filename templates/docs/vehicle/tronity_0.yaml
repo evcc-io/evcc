@@ -1,0 +1,32 @@
+product:
+  description: Tronity
+  group: Generische Unterstützung
+requirements: ["sponsorship"]
+
+render:
+- default: |
+    type: template
+    template: tronity
+    title: # Optional 
+    userid:
+    secret:
+    accessToken:
+    refreshToken:
+    vin: W...  # Optional 
+    capacity: 10  # Optional 
+  advanced: |
+    type: template
+    template: tronity
+    title: # Optional 
+    userid:
+    secret:
+    accessToken:
+    refreshToken:
+    vin: W...  # Optional 
+    capacity: 10  # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

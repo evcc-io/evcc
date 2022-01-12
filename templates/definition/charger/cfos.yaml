@@ -3,8 +3,8 @@ products:
 - brand: cFos
   description:
     generic: PowerBrain
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: host
   required: true

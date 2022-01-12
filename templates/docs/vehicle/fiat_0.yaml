@@ -1,0 +1,29 @@
+product:
+  brand: Fiat
+
+render:
+- default: |
+    type: template
+    template: fiat
+    title: # Optional 
+    user:
+    password:
+    vin: ZFAE...  # Optional 
+    capacity: 42  # Optional 
+    pin: # Optional 
+  advanced: |
+    type: template
+    template: fiat
+    title: # Optional 
+    user:
+    password:
+    vin: ZFAE...  # Optional 
+    capacity: 42  # Optional 
+    cache: # Optional 
+    pin: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

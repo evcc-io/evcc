@@ -2,8 +2,6 @@ template: openwb
 products:
 - description:
     generic: openWB (MQTT)
-capabilities:
-  phases1p3p: true
 requirements:
   description:
     en: The wallbox has to be configured running as a loadpoint.

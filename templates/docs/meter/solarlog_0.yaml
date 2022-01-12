@@ -1,0 +1,30 @@
+product:
+  description: Solarlog
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: solarlog
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: solarlog
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+- usage: pv
+  default: |
+    type: template
+    template: solarlog
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: solarlog
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional

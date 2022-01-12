@@ -1,0 +1,27 @@
+product:
+  brand: Porsche
+
+render:
+- default: |
+    type: template
+    template: porsche
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 83.4  # Optional 
+  advanced: |
+    type: template
+    template: porsche
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 83.4  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

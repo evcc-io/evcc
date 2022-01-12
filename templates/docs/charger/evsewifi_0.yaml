@@ -1,0 +1,12 @@
+product:
+  description: EVSE-Wifi
+
+render:
+- default: |
+    type: template
+    template: evsewifi
+    host: 192.0.2.2 
+  advanced: |
+    type: template
+    template: evsewifi
+    host: 192.0.2.2

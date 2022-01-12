@@ -1,0 +1,44 @@
+product:
+  brand: Fronius
+  description: Symo GEN24 Plus
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: fronius-gen24
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: fronius-gen24
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+- usage: pv
+  default: |
+    type: template
+    template: fronius-gen24
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: fronius-gen24
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional 
+- usage: battery
+  default: |
+    type: template
+    template: fronius-gen24
+    usage: battery
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: fronius-gen24
+    usage: battery
+    host: 192.0.2.2 
+    port: 502  # Optional

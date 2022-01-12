@@ -3,8 +3,8 @@ products:
 - description:
     generic: Tronity
 group: generic
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: title
 - name: userid

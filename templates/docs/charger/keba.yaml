@@ -1,4 +1,0 @@
-type: template
-template: keba
-host: 192.0.2.2 
-rfid: 765765348  # Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.

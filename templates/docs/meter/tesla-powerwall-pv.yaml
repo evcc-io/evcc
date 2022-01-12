@@ -1,5 +1,0 @@
-type: template
-template: tesla-powerwall
-usage: pv 
-host: 192.0.2.2 
-password: # Passwort des Benutzers Kunde

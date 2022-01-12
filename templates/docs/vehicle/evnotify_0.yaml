@@ -1,0 +1,25 @@
+product:
+  description: evNotify
+  group: Generische Unterstützung
+
+render:
+- default: |
+    type: template
+    template: evnotify
+    title: # Optional 
+    akey:
+    token:
+    capacity: 64  # Optional 
+  advanced: |
+    type: template
+    template: evnotify
+    title: # Optional 
+    akey:
+    token:
+    capacity: 64  # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

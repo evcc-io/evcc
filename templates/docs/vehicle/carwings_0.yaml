@@ -1,0 +1,28 @@
+product:
+  brand: Nissan
+  description: Leaf (pre 2019)
+
+render:
+- default: |
+    type: template
+    template: carwings
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 50  # Optional 
+  advanced: |
+    type: template
+    template: carwings
+    title: # Optional 
+    user:
+    password:
+    vin: W...  # Optional 
+    capacity: 50  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

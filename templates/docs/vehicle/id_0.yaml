@@ -1,0 +1,28 @@
+product:
+  brand: Volkswagen
+  description: We Connect ID
+
+render:
+- default: |
+    type: template
+    template: id
+    title: # Optional 
+    user:
+    password:
+    vin: WVWZZZ...  # Optional 
+    capacity: 50  # Optional 
+  advanced: |
+    type: template
+    template: id
+    title: # Optional 
+    user:
+    password:
+    vin: WVWZZZ...  # Optional 
+    capacity: 50  # Optional 
+    cache: # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

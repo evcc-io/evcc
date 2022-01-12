@@ -3,8 +3,8 @@ products:
 - brand: Heidelberg
   description:
     generic: Energy Control (Modbus RTU)
-requirements:
-  sponsorship: true
+requirements: 
+  evcc: ["sponsorship"]
 params:
 - name: modbus
   choice: ["rs485"]

@@ -69,25 +69,36 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ## `capabilities`
 
-`capabilities` provides an option to define special capabilities of the devie
+`capabilities` provides an option to define special capabilities of the device as a list of strings
 
 **Possible Values**:
 
-- `iso151182: true`: If the charger supports communicating via ISO15118-2
-- `rfid: true`: If the charger supports RFID
-- `phases1p3p: true`: If the charger supports 1P/3P-phase switching
-- `smahems: true`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
+- `iso151182`: If the charger supports communicating via ISO15118-2
+- `rfid`: If the charger supports RFID
+- `1p3p`: If the charger supports 1P/3P-phase switching
+- `smahems`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
 
 ## `requirements`
 
 `requirements` provides an option to define various requirements / dependencies that need to be setup
 
+### `evcc`
+
+`evcc` is a list of evcc specific system requirements
+
 **Possible Values**:
 
-- `sponsorshipt: true`: If the device requires a sponsorship token
-- `eebus: true`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
-- `description`: expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements
-- `uri`: a link providing more help on the requirements
+- `sponsorship`: If the device requires a sponsorship token
+- `eebus`: If the device is accessed via the eebus protocol and thus requires the corresponding setup
+- `mqtt`: If the device a MQTT setup
+
+### `description`
+
+`description` expects language specific texts via `de`, `en` to provide specific things the user has to do, e.g. minimum firmware versions or specific hardware setup requirements. The content can be multiline and Markdown
+
+### `uri`
+
+`uri` is a link providing more help on the requirements
 
 ## `loglevel`
 

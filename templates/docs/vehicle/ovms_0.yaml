@@ -1,0 +1,27 @@
+product:
+  description: Open Vehicle Monitoring System
+  group: Generische Unterstützung
+
+render:
+- default: |
+    type: template
+    template: ovms
+    title: # Optional 
+    user:
+    password:
+    vehicleid:
+    capacity: 12  # Optional 
+  advanced: |
+    type: template
+    template: ovms
+    title: # Optional 
+    user:
+    password:
+    vehicleid:
+    capacity: 12  # Optional 
+    mode: # Optional 
+    minSoC: # Optional 
+    targetSoC: # Optional 
+    minCurrent: # Optional 
+    maxCurrent: # Optional 
+    identifiers: # Optional

@@ -1,0 +1,43 @@
+product:
+  description: E3DC
+
+render:
+- usage: grid
+  default: |
+    type: template
+    template: e3dc
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: e3dc
+    usage: grid
+    host: 192.0.2.2 
+    port: 502  # Optional 
+- usage: pv
+  default: |
+    type: template
+    template: e3dc
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: e3dc
+    usage: pv
+    host: 192.0.2.2 
+    port: 502  # Optional 
+- usage: battery
+  default: |
+    type: template
+    template: e3dc
+    usage: battery
+    host: 192.0.2.2 
+    port: 502  # Optional 
+  advanced: |
+    type: template
+    template: e3dc
+    usage: battery
+    host: 192.0.2.2 
+    port: 502  # Optional

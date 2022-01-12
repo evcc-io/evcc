@@ -1,0 +1,25 @@
+product:
+  brand: cFos
+  description: PowerBrain Meter
+requirements: ["sponsorship"]
+
+render:
+- usage: charge
+  default: |
+    type: template
+    template: cfos
+    usage: charge
+    # Modbus Start
+    id: 2
+    # TCPIP
+    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+    # Modbus End
+  advanced: |
+    type: template
+    template: cfos
+    usage: charge
+    # Modbus Start
+    id: 2
+    # TCPIP
+    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
+    # Modbus End

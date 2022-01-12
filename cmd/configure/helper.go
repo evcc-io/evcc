@@ -106,8 +106,8 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	return device, nil
 }
 
-func (c *CmdConfigure) processDeviceCapabilities(capabilities templates.Capabilities) {
-	if capabilities.SMAHems {
+func (c *CmdConfigure) processDeviceCapabilities(capabilitites []string) {
+	if funk.ContainsString(capabilitites, templates.CapabilitySMAHems) {
 		c.capabilitySMAHems = true
 	}
 }
@@ -127,14 +127,14 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if sponsorship is required
-	if templateItem.Requirements.Sponsorship && c.configuration.config.SponsorToken == "" {
+	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementSponsorship) && c.configuration.config.SponsorToken == "" {
 		if err := c.askSponsortoken(true); err != nil {
 			return err
 		}
 	}
 
 	// check if we need to setup an MQTT broker
-	if templateItem.Requirements.Mqtt {
+	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementMQTT) {
 		if c.configuration.config.MQTT == "" {
 			mqttConfig, err := c.configureMQTT()
 			if err != nil {
@@ -151,7 +151,7 @@ func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template
 	}
 
 	// check if we need to setup an EEBUS HEMS
-	if templateItem.Requirements.Eebus {
+	if funk.ContainsString(templateItem.Requirements.EVCC, templates.RequirementEEBUS) {
 		if c.configuration.config.EEBUS == "" {
 			fmt.Println()
 			fmt.Println("-- EEBUS -----------------------------------")
