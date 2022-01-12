@@ -3,6 +3,7 @@ package charger
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -57,9 +58,32 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		idtag:     idtag,
 	}
 
-	err := cp.Boot()
+	if err := cp.Boot(); err != nil {
+		return nil, err
+	}
 
-	return c, err
+	waiter := &sync.WaitGroup{}
+	waiter.Add(1)
+	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
+		cp.SetOptions(resp.ConfigurationKey)
+		waiter.Done()
+	}, []string{}); err != nil {
+		return nil, err
+	}
+
+	waiter.Wait()
+	{ // Check supported connectors of charge point
+		supported, err := cp.GetNumberOfSupportedConnectors()
+		if err != nil {
+			return nil, err
+		}
+
+		if c.connector > supported {
+			return nil, fmt.Errorf("configured connector is not available, max connector number is %d", supported)
+		}
+	}
+
+	return c, nil
 }
 
 // Enabled implements the api.Charger interface
@@ -111,38 +135,50 @@ func (c *OCPP) Enable(enable bool) error {
 	return c.wait(err, rc)
 }
 
-// setPeriod sets a single charging schedule period with given current and phases
-func (c *OCPP) setPeriod(current float64, phases int) error {
-	period := types.ChargingSchedulePeriod{
-		StartPeriod: 1,
-		Limit:       current,
-	}
-
-	if phases > 0 {
-		period.NumberPhases = &phases
-	}
+func (c *OCPP) setChargingProfile(connectorid int, profile *types.ChargingProfile) error {
+	c.log.TRACE.Printf("SetChargingPriofileRequest %T: %+v", profile, profile)
 
 	rc := make(chan error, 1)
 	err := ocpp.Instance().CS().SetChargingProfile(c.id, func(resp *smartcharging.SetChargingProfileConfirmation, err error) {
-		c.log.TRACE.Printf("SetChargingProfile %T: %+v", resp, resp)
-
+		c.log.TRACE.Printf("SetChargingProfileResponse %T: %+v", resp, resp)
 		if err == nil && resp != nil && resp.Status != smartcharging.ChargingProfileStatusAccepted {
 			err = errors.New(string(resp.Status))
 		}
 
 		rc <- err
-	}, c.connector, &types.ChargingProfile{
+	}, connectorid, profile)
+
+	return c.wait(err, rc)
+}
+
+// setPeriod sets a single charging schedule period with given current and phases
+func (c *OCPP) setPeriod(current float64, phases int) error {
+	period := types.NewChargingSchedulePeriod(0, current)
+
+	if phases > 0 {
+		period.NumberPhases = &phases
+	}
+
+	err := c.setChargingProfile(0, getMaxCharginProfile(period))
+	if err != nil {
+		c.log.TRACE.Printf("failed to set charging profile: %s", err)
+	}
+
+	return err
+}
+
+func getMaxCharginProfile(period types.ChargingSchedulePeriod) *types.ChargingProfile {
+	return &types.ChargingProfile{
 		ChargingProfileId:      1,
 		StackLevel:             1,
 		ChargingProfilePurpose: types.ChargingProfilePurposeChargePointMaxProfile,
 		ChargingProfileKind:    types.ChargingProfileKindAbsolute,
 		ChargingSchedule: &types.ChargingSchedule{
+			StartSchedule:          types.NewDateTime(time.Now().Add(-1 * time.Hour)),
 			ChargingRateUnit:       types.ChargingRateUnitAmperes,
 			ChargingSchedulePeriod: []types.ChargingSchedulePeriod{period},
 		},
-	})
-
-	return c.wait(err, rc)
+	}
 }
 
 // MaxCurrent implements the api.Charger interface

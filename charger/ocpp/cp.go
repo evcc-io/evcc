@@ -2,6 +2,7 @@ package ocpp
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -26,6 +27,33 @@ type CP struct {
 	boot        *core.BootNotificationRequest
 	status      *core.StatusNotificationRequest
 	meterValues *core.MeterValuesRequest
+
+	options map[string]core.ConfigurationKey
+}
+
+func (cp *CP) SetOptions(opts []core.ConfigurationKey) {
+	for _, opt := range opts {
+		cp.options[opt.Key] = opt
+	}
+}
+
+func (cp *CP) GetOption(key string) (core.ConfigurationKey, error) {
+	opt, found := cp.options[key]
+	if !found {
+		return core.ConfigurationKey{}, fmt.Errorf("requested option key could not be found")
+	}
+
+	return opt, nil
+}
+
+func (cp *CP) GetNumberOfSupportedConnectors() (int, error) {
+	opt, err := cp.GetOption("NumberOfConnectors")
+	if err != nil {
+		return 0, err
+	}
+
+	return strconv.Atoi(*opt.Value)
+
 }
 
 // Boot waits for the CP to register itself
