@@ -1,9 +1,11 @@
 template: kostal-piko
 products:
 - brand: Kostal
-  generic: Piko
+  description:
+    generic: Piko
 - brand: Kostal
-  generic: Piko BA
+  description:
+    generic: Piko BA
 guidedsetup:
   enable: true
 params:

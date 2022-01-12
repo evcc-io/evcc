@@ -1,7 +1,8 @@
 template: ichargecion
 products:
 - brand: i-CHARGE
-  generic: CION
+  description:
+    generic: CION
 params:
 - name: modbus
   choice: ["tcpip"]

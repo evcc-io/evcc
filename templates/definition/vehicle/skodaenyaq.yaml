@@ -1,7 +1,8 @@
 template: enyaq
 products:
 - brand: Skoda
-  generic: Enyaq
+  description:
+    generic: Enyaq
 params:
 - base: vehiclebase
 - base: vehicleidentify

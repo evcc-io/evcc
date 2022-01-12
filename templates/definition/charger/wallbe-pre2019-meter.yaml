@@ -1,11 +1,13 @@
 template: wallbe-pre2019-meter
 products:
 - brand: Wallbe
-  de: Eco (vor ~2019, mit Strommessgerät)
-  en: Eco (pre ~2019, with Meter)
+  description:
+    de: Eco (vor ~2019, mit Strommessgerät)
+    en: Eco (pre ~2019, with Meter)
 - brand: Wallbe
-  de: Pro (vor ~2019, mit Strommessgerät)
-  en: Pro (pre ~2019, with Meter)
+  description:
+    de: Pro (vor ~2019, mit Strommessgerät)
+    en: Pro (pre ~2019, with Meter)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

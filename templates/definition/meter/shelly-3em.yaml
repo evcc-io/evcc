@@ -1,7 +1,8 @@
 template: shelly-3em
 products:
 - brand: Shelly
-  generic: 3EM
+  description:
+    generic: 3EM
 group: sockets
 params:
 - name: usage

@@ -23,9 +23,9 @@ The following describes each possible element in a yaml file
 Each product contains:
 
 - `brand`: an optional brand description of the product
-- `generic`, `de`, `en`: an optional description of the product
+- `description`: an optional description e.g. of the product model. Expects `generic`, `de`, `en`: an optional description of the product
 
-Either `brand`, or any of either `generic` (language independent) or `de`, `en` (language specific) have to be provided.
+Either `brand`, or `description` need to be set.
 
 ## `group`
 

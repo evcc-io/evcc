@@ -1,7 +1,8 @@
 template: carwings
 products:
 - brand: Nissan
-  generic: Leaf (pre 2019)
+  description:
+    generic: Leaf (pre 2019)
 params:
 - base: vehiclebase
 - base: vehicleidentify

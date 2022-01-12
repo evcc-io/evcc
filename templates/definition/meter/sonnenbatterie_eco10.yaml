@@ -1,7 +1,8 @@
 template: sonnenbatterie-eco10
 products:
 - brand: Sonnenbatterie
-  generic: Eco/10
+  description:
+    generic: Eco/10
 guidedsetup:
   enable: true
 params:

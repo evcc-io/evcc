@@ -1,7 +1,8 @@
 template: fritzdect
 products:
 - brand: AVM
-  generic: FritzDECT
+  description:
+    generic: FritzDECT
 group: switchsockets
 params:
 - name: uri

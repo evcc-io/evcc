@@ -1,7 +1,8 @@
 template: daheimladen
 products:
 - brand: DaheimLaden
-  generic: Wallbox (Cloud API)
+  description:
+    generic: Wallbox (Cloud API)
 params:
 - name: token
   help:

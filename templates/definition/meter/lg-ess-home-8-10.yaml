@@ -1,7 +1,8 @@
 template: lg-ess-home-8-10
 products:
 - brand: LG
-  generic: ESS Home 8/10
+  description:
+    generic: ESS Home 8/10
 guidedsetup:
   enable: true
 params:

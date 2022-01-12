@@ -1,6 +1,7 @@
 template: tasmota
 products:
-- generic: Tasmota
+- description:
+    generic: Tasmota
 group: switchsockets
 params:
 - name: host

@@ -1,6 +1,7 @@
 template: ovms
 products:
-- generic: Open Vehicle Monitoring System
+- description:
+    generic: Open Vehicle Monitoring System
 group: generic
 params:
 - name: title

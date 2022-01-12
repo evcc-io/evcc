@@ -1,7 +1,8 @@
 template: innogy-ebox
 products:
 - brand: Innogy
-  generic: eBox
+  description:
+    generic: eBox
 requirements:
   sponsorship: true
 params:

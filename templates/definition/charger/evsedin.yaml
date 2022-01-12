@@ -1,6 +1,7 @@
 template: evse_din
 products:
-- generic: EVSE DIN
+- description:
+    generic: EVSE DIN
 params:
 - name: modbus
   choice: ["rs485"]

@@ -1,6 +1,7 @@
 template: e3dc
 products:
-- generic: E3DC
+- description:
+    generic: E3DC
 guidedsetup:
   enable: true
 params:

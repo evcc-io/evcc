@@ -1,7 +1,8 @@
 template: sma-energy-meter
 products:
 - brand: SMA
-  generic: Energy Meter
+  description:
+    generic: Energy Meter
 params:
 - name: usage
   choice: ["grid", "pv", "battery"]

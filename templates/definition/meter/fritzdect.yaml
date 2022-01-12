@@ -1,7 +1,8 @@
 template: fritzdect
 products:
 - brand: AVM
-  generic: FritzDECT
+  description:
+    generic: FritzDECT
 group: sockets
 params:
 - name: usage

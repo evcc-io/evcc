@@ -87,7 +87,6 @@ type TextLanguage struct {
 	Generic string // language independent
 	DE      string // german text
 	EN      string // english text
-	Brand   string // product brand, only used in Product struct
 }
 
 func (t *TextLanguage) String(lang string) string {
@@ -183,9 +182,14 @@ var paramBaseList map[string]ParamBase
 
 var groupList map[string]TextLanguage
 
+type Product struct {
+	Brand       string       // product brand
+	Description TextLanguage // product name
+}
+
 type TemplateDefinition struct {
 	Template     string
-	Products     []TextLanguage // list of products this template is compatible with
+	Products     []Product // list of products this template is compatible with
 	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
@@ -266,7 +270,7 @@ func (t *Template) resolveTitles() {
 			title += p.Brand
 		}
 
-		description := p.String(t.Lang)
+		description := p.Description.String(t.Lang)
 		if description != "" {
 			if title != "" {
 				title += " "

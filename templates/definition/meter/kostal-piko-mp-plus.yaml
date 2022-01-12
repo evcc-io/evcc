@@ -1,7 +1,8 @@
 template: kostal-piko-mp-plus
 products:
 - brand: Kostal
-  generic: Piko MP Plus
+  description:
+    generic: Piko MP Plus
 guidedsetup:
   enable: true
   linked: 

@@ -1,7 +1,8 @@
 template: sma-home-manager
 products:
 - brand: SMA
-  generic: Sunny Home Manager 2.0
+  description:
+    generic: Sunny Home Manager 2.0
 capabilities:
   smahems: true
 guidedsetup:

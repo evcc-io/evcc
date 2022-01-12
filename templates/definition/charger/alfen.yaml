@@ -1,7 +1,8 @@
 template: alfen
 products: 
 - brand: Alfen
-  generic: Eve
+  description:
+    generic: Eve
 capabilities:
   phases1p3p: true
 requirements:

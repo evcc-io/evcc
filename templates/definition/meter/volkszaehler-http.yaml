@@ -1,6 +1,7 @@
 template: volkszaehler-http
 products:
-- generic: Volkszähler (HTTP API)
+- description:
+    generic: Volkszähler (HTTP API)
 group: generic
 params:
 - name: usage

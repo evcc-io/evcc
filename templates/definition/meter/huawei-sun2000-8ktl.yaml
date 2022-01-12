@@ -1,7 +1,8 @@
 template: huawei-sun2000-8ktl
 products:
 - brand: Huawei
-  generic: SUN2000-8KTL
+  description:
+    generic: SUN2000-8KTL
 params:
 - name: usage
   choice: [ "pv" ]

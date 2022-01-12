@@ -1,7 +1,8 @@
 template: cfos
 products:
 - brand: cFos
-  generic: PowerBrain Meter
+  description:
+    generic: PowerBrain Meter
 requirements:
   sponsorship: true
 params:

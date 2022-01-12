@@ -1,7 +1,8 @@
 template: niu-e-scooter
 products:
 - brand: NIU
-  generic: E-Scooter
+  description:
+    generic: E-Scooter
 params:
 - name: title
 - name: user

@@ -1,11 +1,13 @@
 template: wallbe-pre2019
 products:
 - brand: Wallbe
-  de: Eco (vor ~2019)
-  en: Eco (pre ~2019)
+  description:
+    de: Eco (vor ~2019)
+    en: Eco (pre ~2019)
 - brand: Wallbe
-  de: Pro (vor ~2019)
-  en: Pro (pre ~2019)
+  description:
+    de: Pro (vor ~2019)
+    en: Pro (pre ~2019)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

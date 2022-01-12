@@ -1,6 +1,7 @@
 template: evnotify
 products:
-- generic: evNotify
+- description:
+    generic: evNotify
 group: generic
 params:
 - name: title

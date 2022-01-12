@@ -1,7 +1,8 @@
 template: tplink
 products:
 - brand: TP-LINK
-  generic: Smart Plug
+  description:
+    generic: Smart Plug
 group: switchsockets
 params:
 - name: host

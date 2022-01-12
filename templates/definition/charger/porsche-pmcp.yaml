@@ -1,7 +1,8 @@
 template: pmcp
 products:
 - brand: Porsche
-  generic: Mobile Charger Plus
+  description:
+    generic: Mobile Charger Plus
 requirements:
   eebus: true
 params:

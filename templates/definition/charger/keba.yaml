@@ -1,11 +1,14 @@
 template: keba
 products: 
 - brand: KEBA
-  generic: KeContact P20
+  description:
+    generic: KeContact P20
 - brand: KEBA
-  generic: KeContact P30
+  description:
+    generic: KeContact P30
 - brand: BMW
-  generic: i Wallbox
+  description:
+    generic: i Wallbox
 capabilities:
   rfid: true
 requirements:
@@ -20,8 +23,8 @@ params:
   example: 765765348
   advanced: true
   help:
-    de: Die Kennung des RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
-    en: The RFID tag ID to start charging even when the wallbox is locked.
+    de: Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
+    en: A RFID tag ID to enable charging even when the wallbox is locked.
 render: |
   type: keba
   uri: {{ .host }}

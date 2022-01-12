@@ -1,8 +1,9 @@
 template: eastron
 products:
 - brand: Eastron
-  de: SDM Modbus Strommessgeräte
-  en: SDM Modbus Meter
+  description:
+    de: SDM Modbus Strommessgeräte
+    en: SDM Modbus Meter
 params:
 - name: usage
   choice: ["grid", "pv", "battery", "charge"]

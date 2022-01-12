@@ -1,6 +1,7 @@
 template: tasmota
 products:
-- generic: Tasmota
+- description:
+    generic: Tasmota
 group: sockets
 params:
 - name: usage

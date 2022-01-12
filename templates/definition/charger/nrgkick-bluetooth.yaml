@@ -1,7 +1,8 @@
 template: nrgkick-bluetooth
 products:
 - brand: NRGKick
-  generic: Bluetooth
+  description:
+    generic: Bluetooth
 params:
 - name: mac
   required: true

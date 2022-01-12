@@ -1,6 +1,7 @@
 template: tronity
 products:
-- generic: Tronity
+- description:
+    generic: Tronity
 group: generic
 requirements:
   sponsorship: true

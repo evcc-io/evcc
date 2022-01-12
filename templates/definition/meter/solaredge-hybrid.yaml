@@ -1,7 +1,8 @@
 template: solaredge-hybrid
 products:
 - brand: Solaredge
-  generic: Hybrid
+  description:
+    generic: Hybrid
 guidedsetup:
   enable: true
 requirements:

@@ -1,7 +1,8 @@
 template: victron-energy
 products:
 - brand: Victron
-  generic: Energy
+  description:
+    generic: Energy
 guidedsetup:
   enable: true
 params:
