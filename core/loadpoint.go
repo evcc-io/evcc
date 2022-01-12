@@ -551,9 +551,10 @@ func (lp *LoadPoint) syncCharger() {
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
-func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
+func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
+		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
@@ -561,17 +562,17 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			err = lp.charger.MaxCurrent(int64(chargeCurrent))
 		}
 
-		if err == nil {
-			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
-			lp.chargeCurrent = chargeCurrent
-			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-		} else {
-			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
+		if err != nil {
+			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
+
+		lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
+		lp.chargeCurrent = chargeCurrent
+		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
 	// set enabled/disabled
-	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled && err == nil {
+	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
 			return nil
@@ -586,27 +587,27 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		// 	}
 		// }
 
-		if err = lp.charger.Enable(enabled); err == nil {
-			lp.log.DEBUG.Printf("charger %s", status[enabled])
-			lp.enabled = enabled
-			lp.guardUpdated = lp.clock.Now()
-
-			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-
-			// wake up vehicle
-			// TODO https://github.com/evcc-io/evcc/discussions/1929
-			// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
-			// 	// log but don't propagate
-			// 	if err := car.StartCharge(); err != nil {
-			// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
-			// 	}
-			// }
-		} else {
-			err = fmt.Errorf("charger %s: %w", status[enabled], err)
+		if err := lp.charger.Enable(enabled); err != nil {
+			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
+
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+		lp.guardUpdated = lp.clock.Now()
+
+		lp.bus.Publish(evChargeCurrent, chargeCurrent)
+
+		// wake up vehicle
+		// TODO https://github.com/evcc-io/evcc/discussions/1929
+		// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+		// 	// log but don't propagate
+		// 	if err := car.StartCharge(); err != nil {
+		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
+		// 	}
+		// }
 	}
 
-	return err
+	return nil
 }
 
 // connected returns the EVs connection state
