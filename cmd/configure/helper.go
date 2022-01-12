@@ -10,6 +10,7 @@ import (
 	"github.com/evcc-io/evcc/util/sponsor"
 	"github.com/evcc-io/evcc/util/templates"
 	"github.com/thoas/go-funk"
+	stripmd "github.com/writeas/go-strip-markdown"
 	"gopkg.in/yaml.v3"
 )
 
@@ -113,12 +114,16 @@ func (c *CmdConfigure) processDeviceCapabilities(capabilities templates.Capabili
 
 // processDeviceRequirements handles device requirements
 func (c *CmdConfigure) processDeviceRequirements(templateItem templates.Template) error {
-	if len(templateItem.Requirements.Description.String(c.lang)) > 0 {
+	requirementDescription := stripmd.Strip(templateItem.Requirements.Description.String(c.lang))
+	if len(requirementDescription) > 0 {
+		fmt.Println()
+		fmt.Println("-------------------------------------------------")
 		fmt.Println(c.localizedString("Requirements_Title", nil))
-		fmt.Println("  ", templateItem.Requirements.Description.String(c.lang))
+		fmt.Println(requirementDescription)
 		if len(templateItem.Requirements.URI) > 0 {
 			fmt.Println("  " + c.localizedString("Requirements_More", nil) + " " + templateItem.Requirements.URI)
 		}
+		fmt.Println("-------------------------------------------------")
 	}
 
 	// check if sponsorship is required
