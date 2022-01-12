@@ -2,6 +2,7 @@ template: fritzdect
 products:
 - brand: AVM
   generic: FritzDECT
+devicegroup: sockets
 params:
 - name: usage
   choice: ["pv", "charge"]

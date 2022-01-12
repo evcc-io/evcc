@@ -180,13 +180,15 @@ type ParamBase struct {
 
 var paramBaseList map[string]ParamBase
 
+var deviceGroupList map[string]TextLanguage
+
 type TemplateDefinition struct {
 	Template     string
 	Products     []TextLanguage // list of products this template is compatible with
 	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
-	Generic      bool // if this describes a generic device type rather than a product
+	DeviceGroup  string // the device group this template belongs to, references deviceGroupList entries
 	Params       []Param
 	Render       string // rendering template
 }
@@ -314,6 +316,31 @@ func (t *Template) ResolveParamBases() error {
 	}
 
 	return nil
+}
+
+func (t *Template) ResolveDeviceGroup() error {
+	if deviceGroupList == nil {
+		err := yaml.Unmarshal([]byte(definition.DeviceGroupListDefinition), &deviceGroupList)
+		if err != nil {
+			return fmt.Errorf("Error: failed to parse deviceGroupListDefinition: %v\n", err)
+		}
+	}
+
+	if t.DeviceGroup == "" {
+		return nil
+	}
+
+	_, ok := deviceGroupList[t.DeviceGroup]
+	if !ok {
+		return fmt.Errorf("Error: Could not find devicegroup definition: %s\n", t.DeviceGroup)
+	}
+
+	return nil
+}
+
+func (t *Template) DeviceGroupTitle() string {
+	tl := deviceGroupList[t.DeviceGroup]
+	return tl.String(t.Lang)
 }
 
 // Defaults returns a map of default values for the template

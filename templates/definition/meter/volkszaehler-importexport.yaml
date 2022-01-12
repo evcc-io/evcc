@@ -1,7 +1,7 @@
 template: volkszaehler-importexport
 products:
 - generic: Volkszähler (HTTP API, Import & Export)
-generic: true
+devicegroup: generic
 params:
 - name: usage
   choice: [ "grid" ]

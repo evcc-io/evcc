@@ -269,7 +269,12 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 				TemplateDefinition: tmpl.TemplateDefinition,
 				Lang:               c.lang,
 			}
-			titleTmpl.SetTitle(t)
+			title := t
+			deviceGroupTitle := titleTmpl.DeviceGroupTitle()
+			if deviceGroupTitle != "" {
+				title += " [" + deviceGroupTitle + "]"
+			}
+			titleTmpl.SetTitle(title)
 
 			if deviceCategory == DeviceCategoryGuidedSetup {
 				if tmpl.GuidedSetup.Enable {
@@ -286,11 +291,14 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 
 	sort.Slice(items[:], func(i, j int) bool {
 		// sort generic templates to the bottom
-		if items[i].Generic && !items[j].Generic {
+		if items[i].DeviceGroup != "" && items[j].DeviceGroup == "" {
 			return false
 		}
-		if !items[i].Generic && items[j].Generic {
+		if items[i].DeviceGroup == "" && items[j].DeviceGroup != "" {
 			return true
+		}
+		if items[i].DeviceGroup != "" && items[j].DeviceGroup != "" {
+			return strings.ToLower(items[i].DeviceGroupTitle()) < strings.ToLower(items[j].DeviceGroupTitle())
 		}
 		return strings.ToLower(items[i].Title()) < strings.ToLower(items[j].Title())
 	})

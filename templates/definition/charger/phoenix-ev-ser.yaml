@@ -1,7 +1,7 @@
 template: phoenix-ev-ser
 products:
 - generic: Phoenix EV-SER Controller (Modbus RTU)
-generic: true
+devicegroup: generic
 params:
 - name: modbus
   choice: ["rs485"]

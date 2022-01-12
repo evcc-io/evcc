@@ -1,7 +1,7 @@
 template: volkszaehler-ws
 products:
 - generic: Volkszähler (WebSocket API)
-generic: true
+devicegroup: generic
 params:
 - name: usage
   choice: [ "grid" ]

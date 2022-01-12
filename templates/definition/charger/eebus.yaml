@@ -2,7 +2,7 @@ template: eebus
 products:
 - de: EEBUS kompatible Wallbox
   en: EEBUS compatible Wallbox
-generic: true
+devicegroup: generic
 capabilities:
   iso151182: true
 requirements:

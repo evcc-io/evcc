@@ -2,7 +2,7 @@ template: mqtt-meter
 products:
 - de: MQTT Strommessgerät
   en: MQTT Meter
-generic: true
+devicegroup: generic
 requirements:
   mqtt: true
 params:

@@ -1,7 +1,7 @@
 template: evnotify
 products:
 - generic: evNotify
-generic: true
+devicegroup: generic
 params:
 - name: title
 - name: akey

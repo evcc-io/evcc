@@ -1,7 +1,7 @@
 template: vzlogger
 products:
 - generic: vzlogger
-generic: true
+devicegroup: generic
 params:
 - name: usage
   choice: [ "grid" ]

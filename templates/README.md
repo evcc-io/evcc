@@ -27,9 +27,9 @@ Each product contains:
 
 Either `brand`, or any of either `generic` (language independent) or `de`, `en` (language specific) have to be provided.
 
-## `generic`
+## `devicegroup`
 
-`generic: true` defines templates that are typically not a hardware product, but rather generic implementations that can be used by a variety of products (e.g. inverters with sunspec support) or for software components like vzlogger.
+`devicegroup` contains the reference to a `devicegroups.yaml` entry. This is used to group switchable sockets and generic device support (e.g. SunSpec) templates.
 
 ## `guidedsetup`
 

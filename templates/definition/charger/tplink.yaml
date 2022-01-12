@@ -2,6 +2,7 @@ template: tplink
 products:
 - brand: TP-LINK
   generic: Smart Plug
+devicegroup: switchsockets
 params:
 - name: host
   required: true

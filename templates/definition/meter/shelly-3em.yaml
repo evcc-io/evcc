@@ -2,6 +2,7 @@ template: shelly-3em
 products:
 - brand: Shelly
   generic: 3EM
+devicegroup: sockets
 params:
 - name: usage
   choice: [ "grid" ]
