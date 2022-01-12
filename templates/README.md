@@ -74,6 +74,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 **Possible Values**:
 
 - `iso151182: true`: If the charger supports communicating via ISO15118-2
+- `rfid: true`: If the charger supports RFID
 - `phases1p3p: true`: If the charger supports 1P/3P-phase switching
 - `smahems: true`: If the device can be used as an SMA HEMS device, only used for the SMA Home Manager 2.0 right now
 
