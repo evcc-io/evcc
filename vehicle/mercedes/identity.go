@@ -113,6 +113,8 @@ func (v *Identity) WebControl(router *mux.Router) {
 	})
 }
 
+var _ api.ProviderLogin = (*Identity)(nil)
+
 // LoggedIn implements the api.ProviderLogin interface
 func (v *Identity) LoggedIn() bool {
 	return v.token.Valid()
