@@ -159,6 +159,7 @@ func (c *OCPP) setPeriod(current float64, phases int) error {
 		period.NumberPhases = &phases
 	}
 
+	// connectorID: 0 - profile will be applied to all connectors
 	err := c.setChargingProfile(0, getMaxCharginProfile(period))
 	if err != nil {
 		c.log.TRACE.Printf("failed to set charging profile: %s", err)
