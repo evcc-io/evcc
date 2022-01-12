@@ -191,6 +191,10 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 		lp.log.WARN.Println("maxCurrent must be larger than minCurrent")
 	}
 
+	if lp.Phases != 1 && lp.Phases != 3 {
+		lp.log.WARN.Println("phases must be 1 or 3")
+	}
+
 	// store defaults
 	lp.collectDefaults()
 
@@ -476,6 +480,7 @@ func (lp *LoadPoint) Prepare(uiChan chan<- util.Param, pushChan chan<- push.Even
 	lp.lpChan = lpChan
 
 	// assume all phases are active
+	lp.maxPhases = lp.Phases
 	lp.activePhases = lp.Phases
 
 	// event handlers
@@ -899,7 +904,7 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 // setVehiclePhases sets the expected active phases by the vehicle
 func (lp *LoadPoint) setVehiclePhases() {
 	if v, ok := lp.vehicle.(api.VehiclePhases); ok {
-		if phases := v.Phases(); phases > 0 {
+		if phases := v.Phases(); phases > 0 && phases <= 3 {
 			lp.log.DEBUG.Printf("vehicle phases: %dp", phases)
 
 			lp.Lock()
@@ -910,6 +915,8 @@ func (lp *LoadPoint) setVehiclePhases() {
 			}
 
 			lp.maxPhases = phases
+			lp.log.DEBUG.Printf("maximum phases: %dp", phases)
+
 			lp.activePhases = phases
 			lp.publish("activePhases", lp.activePhases)
 		}
@@ -923,30 +930,6 @@ func (lp *LoadPoint) scalePhasesIfAvailable(phases int) error {
 		return nil
 	}
 	return err
-}
-
-// setPhases sets the number of enabled phases without modifying the charger
-func (lp *LoadPoint) setPhases(phases int) {
-	lp.Lock()
-	defer lp.Unlock()
-
-	if lp.Phases != phases {
-		lp.Phases = phases
-		lp.publish("phases", lp.Phases)
-
-		if phases < lp.activePhases {
-			// When scaling down, charger will temporarily disable. During this time, activePhases will not be updated
-			// since all currents are zero. This will lead to inconsistent state when scaling is triggered again
-			// (1p configured vs 3p active). Update activePhases to reflect the current state of the charger.
-			lp.maxPhases = phases
-			lp.activePhases = phases
-			lp.publish("activePhases", lp.activePhases)
-		} else {
-			// When scaling up, charger will offer more phases than vehicle can use.
-			// Adjust to enable subsequent PV restart at lower powers than full 3p.
-			lp.setVehiclePhases()
-		}
-	}
 }
 
 // scalePhases adjusts the number of active phases and returns the appropriate charging current.
