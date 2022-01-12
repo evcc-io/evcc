@@ -25,6 +25,18 @@ type Template struct {
 }
 
 func (t *Template) Validate() error {
+	for _, c := range t.Capabilities {
+		if !funk.ContainsString(ValidCapabilities, c) {
+			return fmt.Errorf("invalid capability '%s' in template %s", c, t.Template)
+		}
+	}
+
+	for _, r := range t.Requirements.EVCC {
+		if !funk.ContainsString(ValidRequirements, r) {
+			return fmt.Errorf("invalid requirement '%s' in template %s", r, t.Template)
+		}
+	}
+
 	for _, p := range t.Params {
 		switch p.Name {
 		case ParamUsage:
@@ -38,6 +50,16 @@ func (t *Template) Validate() error {
 				if !funk.ContainsString(ValidModbusChoices, c) {
 					return fmt.Errorf("invalid modbus choice '%s' in template %s", c, t.Template)
 				}
+			}
+		}
+
+		if p.ValueType != "" && !funk.ContainsString(ValidParamValueTypes, p.ValueType) {
+			return fmt.Errorf("invalid value type '%s' in template %s", p.ValueType, t.Template)
+		}
+
+		for _, d := range p.Dependencies {
+			if !funk.ContainsString(ValidDependencies, d.Check) {
+				return fmt.Errorf("invalid dependency check '%s' in template %s", d.Check, t.Template)
 			}
 		}
 	}

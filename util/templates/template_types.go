@@ -50,7 +50,7 @@ const (
 	ParamValueTypeChargeModes = "chargemodes"
 )
 
-var ParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
+var ValidParamValueTypes = []string{ParamValueTypeString, ParamValueTypeNumber, ParamValueTypeFloat, ParamValueTypeBool, ParamValueTypeStringList, ParamValueTypeChargeModes}
 
 var ValidModbusChoices = []string{ModbusChoiceRS485, ModbusChoiceTCPIP}
 var ValidUsageChoices = []string{UsageChoiceGrid, UsageChoicePV, UsageChoiceBattery, UsageChoiceCharge}
@@ -60,6 +60,8 @@ const (
 	DependencyCheckNotEmpty = "notempty"
 	DependencyCheckEqual    = "equal"
 )
+
+var ValidDependencies = []string{DependencyCheckEmpty, DependencyCheckNotEmpty, DependencyCheckEqual}
 
 const (
 	CapabilityISO151182 = "iso151182" // ISO 15118-2 support

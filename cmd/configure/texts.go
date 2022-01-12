@@ -45,7 +45,7 @@ func (c *CmdConfigure) localizedString(key string, templateData localizeMap) str
 func (c *CmdConfigure) userFriendlyTexts(param templates.Param) templates.Param {
 	result := param
 
-	if result.ValueType == "" || (result.ValueType != "" && !funk.ContainsString(templates.ParamValueTypes, result.ValueType)) {
+	if result.ValueType == "" || (result.ValueType != "" && !funk.ContainsString(templates.ValidParamValueTypes, result.ValueType)) {
 		result.ValueType = templates.ParamValueTypeString
 	}
 
