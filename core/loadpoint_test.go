@@ -882,15 +882,15 @@ func TestScalePhases(t *testing.T) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
-		// error states from 1p/3p misconfig
-		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 3, false, nil},
-		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
+		// error states from 1p/3p misconfig - no correction for time being (stay at 1p)
+		{"1/3->1, enough power", 1, 3, 1 * Voltage * maxA, 1, false, nil},
+		{"1/3->1, kickoff, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
 			lp.phaseTimer = time.Time{}
 		}},
-		{"1/3->1, timer running, correct phase setting", 1, 3, 1 * Voltage * maxA, 3, false, func(lp *LoadPoint) {
+		{"1/3->1, timer running, correct phase setting", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/3->1, switch executed", 1, 3, 1 * Voltage * maxA, 1, true, func(lp *LoadPoint) {
+		{"1/3->1, switch not executed", 1, 3, 1 * Voltage * maxA, 1, false, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 	}
@@ -929,53 +929,6 @@ func TestScalePhases(t *testing.T) {
 			if lp.Phases != tc.toPhases {
 				t.Errorf("expected %dp, got %dp", tc.toPhases, lp.Phases)
 			}
-		}
-	}
-}
-
-func TestVehiclePhases(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	vehicle := &struct {
-		*mock.MockVehicle
-		*mock.MockVehiclePhases
-	}{
-		mock.NewMockVehicle(ctrl),
-		mock.NewMockVehiclePhases(ctrl),
-	}
-
-	tc := []struct {
-		phases, activePhases, vehiclePhases int
-		res                                 int
-	}{
-		{1, 1, 0, 1}, // leave as-is
-		{3, 1, 0, 1}, // leave as-is
-		{3, 3, 0, 3}, // leave as-is
-		{1, 1, 1, 1}, // leave as-is
-		{3, 1, 1, 1}, // leave as-is
-		{3, 3, 1, 1}, // limit to 1p
-		{1, 1, 2, 1}, // leave as-is
-		{3, 1, 2, 2}, // limit to 2p
-		{3, 3, 2, 2}, // limit to 2p
-		{1, 1, 3, 1}, // leave as-is
-		{3, 1, 3, 3}, // limit to 3p
-		{3, 3, 3, 3}, // leave as-is
-	}
-
-	for _, tc := range tc {
-		t.Logf("%+v", tc)
-
-		lp := &LoadPoint{
-			log:          util.NewLogger("foo"),
-			vehicle:      vehicle,
-			Phases:       tc.phases,
-			activePhases: tc.activePhases,
-		}
-
-		vehicle.MockVehiclePhases.EXPECT().Phases().Return(tc.vehiclePhases)
-
-		lp.setVehiclePhases()
-		if lp.activePhases != tc.res {
-			t.Errorf("expected %v, got %v", tc.res, lp.activePhases)
 		}
 	}
 }
