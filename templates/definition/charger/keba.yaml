@@ -24,10 +24,18 @@ params:
   help:
     de: Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.
     en: A RFID tag ID to enable charging even when the wallbox is locked.
+- name: serial
+  advanced: true
+  help:
+    de: Die Seriennummer, ermöglicht es auch mit der Wallbox zu kommunizieren wenn evcc in Docker läuft.
+    en: The serial number, allows to communicate with the Wallbox when running evcc in docker
 render: |
   type: keba
   uri: {{ .host }}
   {{ if ne .rfid "" }}
   rfid:
     tag: {{ .rfid }}
+  {{ end }}
+  {{ if ne .serial "" }}
+  serial: {{ .serial }}
   {{ end }}
