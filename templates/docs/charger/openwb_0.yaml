@@ -7,10 +7,10 @@ render:
 - default: |
     type: template
     template: openwb
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     loadpointid: 1  # Optional 
   advanced: |
     type: template
     template: openwb
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     loadpointid: 1  # Optional

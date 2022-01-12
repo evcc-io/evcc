@@ -118,6 +118,21 @@ func (t *TextLanguage) SetString(lang, value string) {
 	}
 }
 
+// Update the language specific texts
+// always true to always update if the new value is not empty
+// always false to update only if the old value is empty and the new value is not empty
+func (t *TextLanguage) Update(new TextLanguage, always bool) {
+	if (new.Generic != "" && always) || (!always && t.Generic == "" && new.Generic != "") {
+		t.Generic = new.Generic
+	}
+	if (new.DE != "" && always) || (!always && t.DE == "" && new.DE != "") {
+		t.DE = new.DE
+	}
+	if (new.EN != "" && always) || (!always && t.EN == "" && new.EN != "") {
+		t.EN = new.EN
+	}
+}
+
 // Requirements
 type Requirements struct {
 	EVCC        []string
@@ -166,6 +181,30 @@ type Param struct {
 	Port         int          // device specific default for modbus TCPIP port
 	ID           int          // device specific default for modbus ID
 }
+
+type ParamDefault struct {
+	Name        string
+	Description TextLanguage
+	Help        TextLanguage
+	Example     string
+	ValueType   string
+}
+
+type ParamDefaultList struct {
+	Params []ParamDefault
+}
+
+// return the param with the given name
+func (p *ParamDefaultList) ParamByName(name string) (int, ParamDefault) {
+	for i, param := range p.Params {
+		if param.Name == name {
+			return i, param
+		}
+	}
+	return -1, ParamDefault{}
+}
+
+var paramDefaultList ParamDefaultList
 
 type ParamBase struct {
 	Params []Param

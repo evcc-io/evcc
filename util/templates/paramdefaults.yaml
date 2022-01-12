@@ -1,0 +1,146 @@
+params:
+- name: title
+  description:
+    de: Titel
+    en: Title
+  help:
+    de: Wird in der Benutzeroberfläche angezeigt
+    en: Will be displayed in the user interface
+- name: device
+  description:
+    de: Geräteadresse
+    en: Device address
+  help:
+    de: USB-RS485 Adapter Adresse
+    en: USB-RS485 Adapter address
+  example: /dev/ttyUSB0
+- name: baudrate
+  description:
+    de: Baudrate
+    en: Baudrate
+  help:
+    de: Prüfe die Geräteeinstellungen, typische Werte sind 9600, 19200, 38400, 57600, 115200
+    en: Check the device settings, typical values are 9600, 19200, 38400, 57600, 115200
+  example: 9600,
+- name: comset
+  description:
+    de: ComSet
+    en: ComSet
+  help:
+    de: Kommunikationsparameter für den Adapter
+    en: Communication parameter for the adapter
+  example: "8N1"
+- name: host
+  description:
+    de: IP-Adresse oder Hostname
+    en: IP-Address or Hostname
+  help:
+    de: IP-Adresse oder Hostname
+    en: IP-Address or Hostname
+- name: port
+  description:
+    de: Port
+    en: Port
+  help:
+    de: Port
+    en: Port
+  valuetype: number
+- name: user
+  description:
+    de: Benutzername
+    en: Username
+  help:
+    de: Benutzername um auf das Gerät zuzugreifen
+    en: Username to access the device
+- name: password
+  description:
+    de: Passwort
+    en: Password
+  help:
+    de: Passwort des Benutzerkontos
+    en: Password of the account
+- name: capacity
+  description:
+    de: Akku-Kapazität in kWh
+    en: Battery-Capacity in kWh
+  help:
+    de: Akku-Kapazität in kWh
+    en: Battery-Capacity in kWh
+  example: 41.5
+  valuetype: float
+- name: vin
+  description:
+    de: Fahrzeugidentifikationsnummer
+    en: Vehicle Identification Number
+  help:
+    de: Erforderlich, wenn mehrere Fahrzeuge des Herstellers vorhanden sind
+    en: Required if you own multiple vehicles of the same brand
+  example: W...
+- name: cache
+  description:
+    de: Cache
+    en: Cache
+  help:
+    de: Das zeitliche Interval, in welchem Daten vom Fahrzeug neu geladen werden soll
+    en: Time interval with when data should be reloaded from the vehicle
+  example: 5m
+- name: mode
+  description:
+    de: Standard-Lademodus, wenn ein Fahrzeug angeschlossen ist
+    en: Default charging mode when a vehicle is connected
+  help:
+    de: Möglich sind Off, Now, MinPV und PV, oder leer wenn keiner definiert werden soll
+    en: Possible values are Off, Now, MinPV and PV, or empty if none should be set
+  valuetype: chargemodes
+- name: minsoc
+  description:
+    de: Minimaler Ladestand (SoC) in %
+    en: Minimum state of charge (SoC) in %"
+  help:
+    de: Lade sofort mit maximaler Geschwindigkeit bis zu dem angegeben Ladestand, wenn der Lademodus nicht auf 'Aus' steht
+    en: Charge immediately with maximum power up to the defined state of charge, if the charge mode is not set to 'OFF'
+  example: 25
+  valuetype: number
+- name: targetsoc
+  description:
+    de: Ziel-Ladestand (SoC) in %
+    en: UserFrieTarget state of charge (SoC) in %ndly_TargetSoC_Name
+  help:
+    de: Bis zu welchem Ladestand (SoC) soll das Fahrzeug geladen werden
+    en: Until which sate of charge (SoC) should the vehicle be charged
+  example: 80
+  valuetype: number
+- name: mincurrent
+  description:
+    de: Minimale Stromstärke in Ampere (A)
+    en: Minimum amperage (A)
+  help:
+    de: Definiert die minimale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
+    en: The minimum amperage per connected phase with which the car should be charged
+  example: 6
+  valuetype: number
+- name: maxcurrent
+  description:
+    de: Maximale Stromstärke in Ampere (A)
+    en: Maximum amperage (A)
+  help:
+    de: Definiert die maximale Stromstärke pro angeschlossener Phase mit welcher das Fahrzeug geladen werden soll
+    en: The maximum amperage per connected phase with which the car shuold be charged
+  example: 16
+  valuetype: number
+- name: identifiers
+  description:
+    de: Identifikationsnummer
+    en: Identification
+  help:
+    de: "Kann meist erst später eingetragen werden, siehe: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+    en: "Mostly this can be added later, see: https://docs.evcc.io/docs/guides/vehicles/#erkennung-des-fahrzeugs-an-der-wallbox"
+  valuetype: stringlist
+- name: standbypower
+  description:
+    de: Standby-Leistung in W"
+    en: Standby power in W
+  help:
+    de: Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet
+    en: Power values above this value will be considered as charging pow
+  valuetype: number

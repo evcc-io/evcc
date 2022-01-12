@@ -9,10 +9,10 @@ render:
 - default: |
     type: template
     template: keba
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
   advanced: |
     type: template
     template: keba
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     rfid: 765765348  # Die Kennung eines RFID Tags um den Lademodus zu starten, selbst wenn die Wallbox gesperrt ist.  # Optional 
     serial: # Die Seriennummer, ermöglicht es auch mit der Wallbox zu kommunizieren wenn evcc in Docker läuft.  # Optional

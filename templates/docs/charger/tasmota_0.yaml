@@ -6,14 +6,14 @@ render:
 - default: |
     type: template
     template: tasmota
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     user: # (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind  # Optional 
     password: # (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind  # Optional 
-    standbypower: 15  # Optional 
+    standbypower: 15  # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet  # Optional 
   advanced: |
     type: template
     template: tasmota
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     user: # (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind  # Optional 
     password: # (optional) nur erforderlich falls diese Werte im Gerät gesetzt sind  # Optional 
-    standbypower: 15  # Optional
+    standbypower: 15  # Leistung oberhalb des angegebenen Wertes wird als Ladeleistung gewertet  # Optional

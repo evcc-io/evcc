@@ -349,8 +349,8 @@ func (c *CmdConfigure) processConfig(templateItem templates.Template, deviceCate
 		if param.Dependencies != nil {
 			valid := true
 			for _, dep := range param.Dependencies {
-				_, valueParam := templateItem.ParamByName(dep.Name)
-				if valueParam == nil {
+				i, valueParam := templateItem.ParamByName(dep.Name)
+				if i == -1 {
 					break
 				}
 
@@ -419,9 +419,7 @@ func (c *CmdConfigure) processListInputConfig(param templates.Param) []string {
 
 // handle user input for a simple one value input
 func (c *CmdConfigure) processInputConfig(param templates.Param) string {
-	userFriendly := c.userFriendlyTexts(param)
-
-	label := userFriendly.Name
+	label := param.Name
 	langLabel := param.Description.String(c.lang)
 	if langLabel != "" {
 		label = langLabel
@@ -429,12 +427,12 @@ func (c *CmdConfigure) processInputConfig(param templates.Param) string {
 
 	return c.askValue(question{
 		label:        label,
-		defaultValue: userFriendly.Default,
-		exampleValue: userFriendly.Example,
-		help:         userFriendly.Help.String(c.lang),
-		valueType:    userFriendly.ValueType,
-		mask:         userFriendly.Mask,
-		required:     userFriendly.Required})
+		defaultValue: param.Default,
+		exampleValue: param.Example,
+		help:         param.Help.String(c.lang),
+		valueType:    param.ValueType,
+		mask:         param.Mask,
+		required:     param.Required})
 }
 
 // handle user input for a device modbus configuration

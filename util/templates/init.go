@@ -49,6 +49,9 @@ func loadTemplates(class string) {
 		if err = tmpl.ResolveGroup(); err != nil {
 			return err
 		}
+		if err = tmpl.UpdateParamsWithDefaults(); err != nil {
+			return err
+		}
 		if err = tmpl.Validate(); err != nil {
 			return err
 		}

@@ -14,6 +14,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+//go:embed paramdefaults.yaml
+var paramDefaults string
+
 // Template describes is a proxy device for use with cli and automated testing
 type Template struct {
 	TemplateDefinition
@@ -22,6 +25,40 @@ type Template struct {
 
 	title  string
 	titles []string
+}
+
+// UpdateParamWithDefaults adds default values to specific param name entries
+func (t *Template) UpdateParamsWithDefaults() error {
+	if paramDefaultList.Params == nil {
+		err := yaml.Unmarshal([]byte(paramDefaults), &paramDefaultList)
+		if err != nil {
+			return err
+		}
+	}
+
+	for i, p := range t.Params {
+		if p.ValueType == "" || (p.ValueType != "" && !funk.ContainsString(ValidParamValueTypes, p.ValueType)) {
+			t.Params[i].ValueType = ParamValueTypeString
+		}
+
+		if index, resultMapItem := paramDefaultList.ParamByName(strings.ToLower(p.Name)); index > -1 {
+			// always overwrite if defined
+			t.Params[i].Description.Update(resultMapItem.Description, true)
+
+			if resultMapItem.ValueType != "" {
+				t.Params[i].ValueType = resultMapItem.ValueType
+			}
+
+			// only set if empty
+			t.Params[i].Help.Update(resultMapItem.Help, false)
+
+			if p.Example == "" && resultMapItem.Example != "" {
+				t.Params[i].Example = resultMapItem.Example
+			}
+		}
+	}
+
+	return nil
 }
 
 func (t *Template) Validate() error {
@@ -151,7 +188,7 @@ func (t *Template) ResolveParamBases() error {
 			continue
 		}
 
-		if i, item := t.ParamByName(p.Name); item != nil {
+		if i, _ := t.ParamByName(p.Name); i > -1 {
 			// we only allow overwriting a few fields
 			if p.Default != "" {
 				t.Params[i].Default = p.Default
@@ -204,7 +241,9 @@ func (t *Template) Defaults(renderMode string) map[string]interface{} {
 		default:
 			if p.Test != "" {
 				values[p.Name] = p.Test
-			} else if p.Example != "" && funk.ContainsString([]string{TemplateRenderModeDocs, TemplateRenderModeUnitTest}, renderMode) {
+			} else if p.Example != "" && funk.ContainsString([]string{TemplateRenderModeUnitTest}, renderMode) {
+				values[p.Name] = p.Example
+			} else if p.Example != "" && p.Default == "" && funk.ContainsString([]string{TemplateRenderModeDocs}, renderMode) {
 				values[p.Name] = p.Example
 			} else {
 				values[p.Name] = p.Default // may be empty
@@ -216,18 +255,18 @@ func (t *Template) Defaults(renderMode string) map[string]interface{} {
 }
 
 // return the param with the given name
-func (t *Template) ParamByName(name string) (int, *Param) {
+func (t *Template) ParamByName(name string) (int, Param) {
 	for i, p := range t.Params {
 		if p.Name == name {
-			return i, &p
+			return i, p
 		}
 	}
-	return 0, nil
+	return -1, Param{}
 }
 
 // Usages returns the list of supported usages
 func (t *Template) Usages() []string {
-	if _, p := t.ParamByName(ParamUsage); p != nil {
+	if i, p := t.ParamByName(ParamUsage); i > -1 {
 		return p.Choice
 	}
 
@@ -235,7 +274,7 @@ func (t *Template) Usages() []string {
 }
 
 func (t *Template) ModbusChoices() []string {
-	if _, p := t.ParamByName(ParamModbus); p != nil {
+	if i, p := t.ParamByName(ParamModbus); i > -1 {
 		return p.Choice
 	}
 
@@ -323,8 +362,8 @@ func (t *Template) RenderResult(renderMode string, other map[string]interface{})
 	}
 
 	for item, p := range values {
-		_, param := t.ParamByName(item)
-		if param == nil && !funk.ContainsString(predefinedTemplateProperties, item) {
+		i, _ := t.ParamByName(item)
+		if i == -1 && !funk.ContainsString(predefinedTemplateProperties, item) {
 			return nil, values, fmt.Errorf("invalid element 'name: %s'", item)
 		}
 

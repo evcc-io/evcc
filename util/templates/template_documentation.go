@@ -44,8 +44,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 	modbusChoices := t.ModbusChoices()
 	modbusRender := ""
 	if len(modbusChoices) > 0 {
-		_, modbusParam := t.ParamByName(ParamModbus)
-		if modbusParam != nil {
+		if i, modbusParam := t.ParamByName(ParamModbus); i > -1 {
 			modbusTmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(documentationModbusTmpl)
 			if err != nil {
 				panic(err)

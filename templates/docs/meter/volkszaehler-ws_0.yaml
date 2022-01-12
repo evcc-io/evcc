@@ -8,13 +8,13 @@ render:
     type: template
     template: volkszaehler-ws
     usage: grid
-    host: 192.0.2.2 
-    port: 8082  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8082  # Port  # Optional 
     uuid:
   advanced: |
     type: template
     template: volkszaehler-ws
     usage: grid
-    host: 192.0.2.2 
-    port: 8082  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8082  # Port  # Optional 
     uuid:

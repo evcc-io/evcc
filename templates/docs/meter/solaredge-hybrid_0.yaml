@@ -10,14 +10,14 @@ render:
     type: template
     template: solaredge-hybrid
     usage: grid
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional 
   advanced: |
     type: template
     template: solaredge-hybrid
     usage: grid
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional 
 - usage: pv
@@ -25,14 +25,14 @@ render:
     type: template
     template: solaredge-hybrid
     usage: pv
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional 
   advanced: |
     type: template
     template: solaredge-hybrid
     usage: pv
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional 
 - usage: battery
@@ -40,13 +40,13 @@ render:
     type: template
     template: solaredge-hybrid
     usage: battery
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional 
   advanced: |
     type: template
     template: solaredge-hybrid
     usage: battery
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 502  # Port 502 (SetApp) oder 1502 (LCD)  # Optional 
     timeout: 3s  # Optional

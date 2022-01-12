@@ -7,8 +7,8 @@ render:
 - default: |
     type: template
     template: cfos
-    host: 192.0.2.2 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
   advanced: |
     type: template
     template: cfos
-    host: 192.0.2.2
+    host: 192.0.2.2  # IP-Adresse oder Hostname

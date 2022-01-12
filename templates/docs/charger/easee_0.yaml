@@ -8,12 +8,12 @@ render:
 - default: |
     type: template
     template: easee
-    user:
-    password:
+    user: # Benutzername um auf das Gerät zuzugreifen 
+    password: # Passwort des Benutzerkontos 
     charger: EH______ 
   advanced: |
     type: template
     template: easee
-    user:
-    password:
+    user: # Benutzername um auf das Gerät zuzugreifen 
+    password: # Passwort des Benutzerkontos 
     charger: EH______

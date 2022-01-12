@@ -8,37 +8,37 @@ render:
     type: template
     template: sonnenbatterie-eco10
     usage: grid
-    host: 192.0.2.2 
-    port: 8080  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional 
   advanced: |
     type: template
     template: sonnenbatterie-eco10
     usage: grid
-    host: 192.0.2.2 
-    port: 8080  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional 
 - usage: pv
   default: |
     type: template
     template: sonnenbatterie-eco10
     usage: pv
-    host: 192.0.2.2 
-    port: 8080  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional 
   advanced: |
     type: template
     template: sonnenbatterie-eco10
     usage: pv
-    host: 192.0.2.2 
-    port: 8080  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional 
 - usage: battery
   default: |
     type: template
     template: sonnenbatterie-eco10
     usage: battery
-    host: 192.0.2.2 
-    port: 8080  # Optional 
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional 
   advanced: |
     type: template
     template: sonnenbatterie-eco10
     usage: battery
-    host: 192.0.2.2 
-    port: 8080  # Optional
+    host: 192.0.2.2  # IP-Adresse oder Hostname 
+    port: 8080  # Port  # Optional
