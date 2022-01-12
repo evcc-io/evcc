@@ -834,7 +834,7 @@ func TestScalePhases(t *testing.T) {
 		res                  bool
 		prepare              func(lp *LoadPoint)
 	}{
-		// switch up from 1p/1p configured/active
+		// omit to switch up from 1p/1p configured/active
 		{"1/1->3, not enough power", 1, 1, 0, 1, false, nil},
 		{"1/1->3, kickoff", 1, 1, 3 * Voltage * minA, 1, false, func(lp *LoadPoint) {
 			lp.phaseTimer = time.Time{}
@@ -842,7 +842,7 @@ func TestScalePhases(t *testing.T) {
 		{"1/1->3, timer running", 1, 1, 3 * Voltage * minA, 1, false, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now()
 		}},
-		{"1/1->3, timer elapsed", 1, 1, 3 * Voltage * minA, 3, true, func(lp *LoadPoint) {
+		{"1/1->3, timer elapsed", 1, 1, 3 * Voltage * minA, 3, false, func(lp *LoadPoint) {
 			lp.phaseTimer = lp.clock.Now().Add(-dt)
 		}},
 
