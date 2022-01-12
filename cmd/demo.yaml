@@ -15,7 +15,7 @@ javascript:
       battery: 63, // car
     };
     function log() { console.log("state:", JSON.stringify(state)); }
-    function set() { console.log("set "+param+"=", val); }
+    function set() { console.log("set:", param+"="+val); }
 
 meters:
 - name: grid
@@ -76,7 +76,7 @@ chargers:
   enable:
     type: js
     vm: shared
-    script: set(); state.enabled = val;
+    script: state.enabled = val;
   enabled:
     type: js
     vm: shared
@@ -90,7 +90,7 @@ chargers:
   maxcurrent:
     type: js
     vm: shared
-    script: set(); state.maxcurrent = val;
+    script: state.maxcurrent = val;
 
 vehicles:
 - name: demo
