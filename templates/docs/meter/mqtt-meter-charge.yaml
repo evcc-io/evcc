@@ -1,6 +1,5 @@
 type: template
 template: mqtt-meter
-description: MQTT Strommessgerät
 usage: charge 
 power:
 scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden

@@ -1,6 +1,9 @@
 template: abl
-description:
-  generic: ABL eMH / SENEC.Wallbox pro
+products:
+- brand: ABL
+  generic: eMH
+- brand: SENEC
+  generic: Wallbox pro
 requirements:
   sponsorship: true
 params:

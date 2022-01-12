@@ -1,6 +1,7 @@
 template: keba
-description: 
-  generic: KEBA Connect
+products: 
+- brand: KEBA
+  generic: Connect
 requirements:
   description:
     en: This requires the UDP function to be enabled with DIP 1.3 = ON, see the installation manual.

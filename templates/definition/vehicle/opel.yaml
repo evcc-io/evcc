@@ -1,6 +1,6 @@
 template: opel
-description: 
-  generic: Opel
+products:
+- brand: Opel
 params:
 - base: vehiclebase
 - base: vehicleidentify

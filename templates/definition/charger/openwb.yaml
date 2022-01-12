@@ -1,6 +1,6 @@
 template: openwb
-description: 
-  generic: openWB (MQTT)
+products:
+- generic: openWB (MQTT)
 capabilities:
   phases1p3p: true
 requirements:

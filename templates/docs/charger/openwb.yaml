@@ -1,5 +1,4 @@
 type: template
 template: openwb
-description: openWB (MQTT)
 host: 192.0.2.2 
 loadpointid: 1

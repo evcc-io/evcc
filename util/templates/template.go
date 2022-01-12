@@ -87,6 +87,7 @@ type TextLanguage struct {
 	Generic string // language independent
 	DE      string // german text
 	EN      string // english text
+	Brand   string // product brand, only used in Product struct
 }
 
 func (t *TextLanguage) String(lang string) string {
@@ -179,16 +180,25 @@ type ParamBase struct {
 
 var paramBaseList map[string]ParamBase
 
-// Template describes is a proxy device for use with cli and automated testing
-type Template struct {
+type TemplateDefinition struct {
 	Template     string
-	Description  TextLanguage // user friendly description of the device this template describes
+	Products     []TextLanguage // list of products this template is compatible with
 	Capabilities Capabilities
 	Requirements Requirements
 	GuidedSetup  GuidedSetup
 	Generic      bool // if this describes a generic device type rather than a product
 	Params       []Param
 	Render       string // rendering template
+}
+
+// Template describes is a proxy device for use with cli and automated testing
+type Template struct {
+	TemplateDefinition
+
+	Lang string
+
+	title  string
+	titles []string
 }
 
 func (t *Template) Validate() error {
@@ -210,6 +220,61 @@ func (t *Template) Validate() error {
 	}
 
 	return nil
+}
+
+func (t *Template) SetCombinedTitle() {
+	if len(t.titles) == 0 {
+		t.resolveTitles()
+	}
+
+	title := ""
+	for _, t := range t.titles {
+		if title != "" {
+			title += "/"
+		}
+		title += t
+	}
+	t.title = title
+}
+
+func (t *Template) SetTitle(title string) {
+	t.title = title
+}
+
+func (t *Template) Title() string {
+	return t.title
+}
+
+func (t *Template) Titles(lang string) []string {
+	if len(t.titles) == 0 {
+		t.resolveTitles()
+	}
+
+	return t.titles
+}
+
+func (t *Template) resolveTitles() {
+	var titles []string
+
+	for _, p := range t.Products {
+		title := ""
+
+		if p.Brand != "" {
+			title += p.Brand
+		}
+
+		description := p.String(t.Lang)
+		if description != "" {
+			if title != "" {
+				title += " "
+			}
+			title += description
+		}
+
+		titles = append(titles, title)
+	}
+
+	t.titles = titles
 }
 
 // add the referenced base Params and overwrite existing ones
@@ -305,7 +370,7 @@ func (t *Template) ModbusChoices() []string {
 var proxyTmpl string
 
 // RenderProxy renders the proxy template
-func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string, includeDescription bool) ([]byte, error) {
+func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang string) ([]byte, error) {
 	tmpl, err := template.New("yaml").Funcs(template.FuncMap(sprig.FuncMap())).Parse(proxyTmpl)
 	if err != nil {
 		panic(err)
@@ -359,9 +424,6 @@ func (t *Template) RenderProxyWithValues(values map[string]interface{}, lang str
 	data := map[string]interface{}{
 		"Template": t.Template,
 		"Params":   t.Params,
-	}
-	if includeDescription {
-		data["Description"] = t.Description.String(lang)
 	}
 	err = tmpl.Execute(out, data)
 

@@ -1,5 +1,4 @@
 type: template
 template: shelly-3em
-description: Shelly 3EM
 usage: grid 
 host: 192.0.2.2

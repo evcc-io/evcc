@@ -1,6 +1,6 @@
 template: fiat
-description: 
-  generic: Fiat
+products:
+- brand: Fiat
 params:
 - base: vehiclebase
 - name: vin

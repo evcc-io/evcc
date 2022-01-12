@@ -1,5 +1,6 @@
 template: fritzdect
-description: 
+products:
+- brand: AVM
   generic: FritzDECT
 params:
 - name: usage

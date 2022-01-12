@@ -1,6 +1,6 @@
 template: peugeot
-description: 
-  generic: Peugeot
+products:
+- brand: Peugeot
 params:
 - base: vehiclebase
 - base: vehicleidentify

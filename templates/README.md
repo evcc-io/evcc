@@ -16,9 +16,16 @@ The following describes each possible element in a yaml file
 
 `template` expects a unique template name for the current device class (charger, meter, vehicle are device classes)
 
-## `description`
+## `products`
 
-`description` expects a human readable description of the device, best containing the name of the product. Values are language specific names via `de`, `en`, `generic` (if string is language independent)
+`products` expects a list of products that work with this template.
+
+Each product contains:
+
+- `brand`: an optional brand description of the product
+- `generic`, `de`, `en`: an optional description of the product
+
+Either `brand`, or any of either `generic` (language independent) or `de`, `en` (language specific) have to be provided.
 
 ## `generic`
 
@@ -172,7 +179,7 @@ Example Use Case: With SMA Home Manager, there can be a SMA Energy Meter used fo
 
 ### `help`
 
-`help` expects language specific help texts via `de`, `en`
+`help` expects language specific help texts via `generic` (language independent), `de`, `en`
 
 ## `render`
 

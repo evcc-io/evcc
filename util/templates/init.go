@@ -37,10 +37,12 @@ func loadTemplates(class string) {
 			return err
 		}
 
-		var tmpl Template
-		if err = yaml.Unmarshal(b, &tmpl); err != nil {
+		var definition TemplateDefinition
+		if err = yaml.Unmarshal(b, &definition); err != nil {
 			return fmt.Errorf("reading template '%s' failed: %w", filepath, err)
 		}
+
+		tmpl := Template{TemplateDefinition: definition}
 		if err = tmpl.ResolveParamBases(); err != nil {
 			return err
 		}

@@ -1,6 +1,7 @@
 template: vw
-description: 
-  generic: Volkswagen (We Connect)
+products:
+- brand: Volkswagen
+  generic: We Connect
 params:
 - base: vehiclebase
 - base: vehicleidentify

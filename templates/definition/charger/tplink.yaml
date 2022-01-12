@@ -1,6 +1,7 @@
 template: tplink
-description: 
-  generic: TP-LINK Smart Plug
+products:
+- brand: TP-LINK
+  generic: Smart Plug
 params:
 - name: host
   required: true

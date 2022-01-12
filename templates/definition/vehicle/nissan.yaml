@@ -1,6 +1,6 @@
 template: nissan
-description: 
-  generic: Nissan
+products:
+- brand: Nissan
 params:
 - base: vehiclebase
 - base: vehicleidentify

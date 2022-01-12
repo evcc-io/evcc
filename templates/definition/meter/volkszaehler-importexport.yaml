@@ -1,6 +1,6 @@
 template: volkszaehler-importexport
-description: 
-  generic: Volkszähler (HTTP API, Import & Export)
+products:
+- generic: Volkszähler (HTTP API, Import & Export)
 generic: true
 params:
 - name: usage

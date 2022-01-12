@@ -1,6 +1,6 @@
 template: vzlogger
-description: 
-  generic: vzlogger
+products:
+- generic: vzlogger
 generic: true
 params:
 - name: usage

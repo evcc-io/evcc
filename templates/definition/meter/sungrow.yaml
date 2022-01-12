@@ -1,6 +1,6 @@
 template: sungrow
-description: 
-  generic: Sungrow (Beta)
+products:
+- generic: Sungrow (Beta)
 guidedsetup:
   enable: true
 params:

@@ -1,6 +1,5 @@
 type: template
 template: tesla
-description: Tesla
 accessToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
 refreshToken: # Siehe https://docs.evcc.io/docs/devices/vehicles#tesla
 vin: W... 

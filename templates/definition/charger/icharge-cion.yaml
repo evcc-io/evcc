@@ -1,6 +1,7 @@
 template: ichargecion
-description: 
-  generic: i-CHARGE CION (Modbus RTU-over-TCP)
+products:
+- brand: i-CHARGE
+  generic: CION
 params:
 - name: modbus
   choice: ["tcpip"]

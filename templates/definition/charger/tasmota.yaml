@@ -1,6 +1,6 @@
 template: tasmota
-description: 
-  generic: Tasmota
+products:
+- generic: Tasmota
 params:
 - name: host
   required: true

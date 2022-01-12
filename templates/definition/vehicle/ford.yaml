@@ -1,6 +1,6 @@
 template: ford
-description: 
-  generic: Ford
+products:
+- brand: Ford
 params:
 - base: vehiclebase
 - base: vehicleidentify

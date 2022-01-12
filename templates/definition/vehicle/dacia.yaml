@@ -1,6 +1,6 @@
 template: dacia
-description: 
-  generic: Dacia
+products:
+- brand: Dacia
 params:
 - base: vehiclebase
 - base: vehicleidentify

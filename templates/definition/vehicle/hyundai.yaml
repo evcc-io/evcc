@@ -1,6 +1,6 @@
 template: hyundai
-description: 
-  generic: Hyundai
+products:
+- brand: Hyundai
 params:
 - base: vehiclebase
 - base: vehicleidentify

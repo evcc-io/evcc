@@ -1,6 +1,5 @@
 type: template
 template: e3dc
-description: E3DC
 usage: pv 
 host: 192.0.2.2 
 port: 502

@@ -1,6 +1,6 @@
 template: shelly
-description: 
-  generic: Shelly
+products: 
+- generic: Shelly
 params:
 - name: host
   required: true

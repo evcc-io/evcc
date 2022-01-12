@@ -1,6 +1,7 @@
 template: tinkerforge-warp
-description: 
-  generic: TinkerForge WARP Charger
+products:
+- brand: TinkerForge
+  generic: WARP Charger
 requirements:
   description:
     en: A MQTT Broker software needs to be running on a computer. The MQTT connection also needs to be configured in the wallbox.

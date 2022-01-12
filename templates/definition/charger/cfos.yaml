@@ -1,6 +1,7 @@
 template: cfos
-description:
-  generic: cFos PowerBrain
+products:
+- brand: cFos
+  generic: PowerBrain
 requirements:
   sponsorship: true
 params:

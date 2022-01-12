@@ -1,6 +1,6 @@
 template: bmw
-description: 
-  generic: BMW
+products:
+- brand: BMW
 params:
 - base: vehiclebase
 - base: vehicleidentify

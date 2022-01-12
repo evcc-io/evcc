@@ -1,5 +1,4 @@
 type: template
 template: fronius-solarapi-v1
-description: Fronius Solar API V1
 usage: battery 
 host: 192.0.2.2

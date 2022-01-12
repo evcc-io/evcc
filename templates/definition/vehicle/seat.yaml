@@ -1,6 +1,9 @@
 template: seat
-description: 
-  generic: Seat (Cupra, Mii)
+products:
+- brand: Seat
+  generic: Cupra
+- brand: Seat
+  generic: Mii
 params:
 - base: vehiclebase
 - base: vehicleidentify

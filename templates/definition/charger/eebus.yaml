@@ -1,6 +1,6 @@
 template: eebus
-description:
-  de: EEBUS kompatible Wallbox
+products:
+- de: EEBUS kompatible Wallbox
   en: EEBUS compatible Wallbox
 generic: true
 capabilities:

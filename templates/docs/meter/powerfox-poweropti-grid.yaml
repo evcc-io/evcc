@@ -1,6 +1,5 @@
 type: template
 template: powerfox-poweropti
-description: Powerfox Poweropti (Cloud)
 usage: grid 
 user:
 password:

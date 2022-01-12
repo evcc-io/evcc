@@ -1,7 +1,8 @@
 template: kostal-ksem-inverter
-description: 
-  de: Kostal Smart Energy Meter über den Wechselrichter
-  en: Kostal Smart Energy Meter via inverter
+products:
+- brand: Kostal
+  de: Smart Energy Meter (über den Wechselrichter)
+  en: Smart Energy Meter (via inverter)
 params:
 - name: usage
   choice: [ "grid" ]

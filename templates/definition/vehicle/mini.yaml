@@ -1,6 +1,6 @@
 template: mini
-description: 
-  generic: Mini
+products:
+- brand: Mini
 params:
 - base: vehiclebase
 - base: vehicleidentify

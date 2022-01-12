@@ -1,6 +1,6 @@
 template: mqtt-meter
-description: 
-  de: MQTT Strommessgerät
+products:
+- de: MQTT Strommessgerät
   en: MQTT Meter
 generic: true
 requirements:

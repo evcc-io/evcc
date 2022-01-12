@@ -1,6 +1,5 @@
 type: template
 template: opel
-description: Opel
 user:
 password:
 vin: WP0... 

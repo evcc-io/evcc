@@ -1,6 +1,5 @@
 type: template
 template: bmw
-description: BMW
 user:
 password:
 vin: WBMW... 

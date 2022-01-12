@@ -1,6 +1,6 @@
 template: powerdog
-description: 
-  generic: Powerdog
+products:
+- generic: Powerdog
 guidedsetup:
   enable: true
 params:

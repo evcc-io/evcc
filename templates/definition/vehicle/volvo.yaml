@@ -1,6 +1,6 @@
 template: volvo
-description: 
-  generic: Volvo
+products:
+- brand: Volvo
 params:
 - base: vehiclebase
 - base: vehicleidentify

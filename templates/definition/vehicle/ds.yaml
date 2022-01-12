@@ -1,6 +1,6 @@
 template: ds
-description: 
-  generic: DS
+products:
+- brand: DS
 params:
 - base: vehiclebase
 - base: vehicleidentify

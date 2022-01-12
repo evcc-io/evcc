@@ -1,5 +1,4 @@
 type: template
 template: shelly
-description: Shelly
 host: 192.0.2.2 
 standbypower: 15

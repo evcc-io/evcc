@@ -1,5 +1,4 @@
 type: template
 template: kostal-piko-mp-plus
-description: Kostal Piko MP Plus
 usage: pv 
 host: 192.0.2.2

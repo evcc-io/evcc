@@ -1,6 +1,6 @@
 template: tesla
-description: 
-  generic: Tesla
+products:
+- brand: Tesla
 params:
 - name: title
 - name: accessToken

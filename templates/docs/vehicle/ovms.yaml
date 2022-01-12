@@ -1,6 +1,5 @@
 type: template
 template: ovms
-description: Open Vehicle Monitoring System
 user:
 password:
 vehicleid:

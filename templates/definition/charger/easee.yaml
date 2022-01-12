@@ -1,6 +1,7 @@
 template: easee
-description:
-  generic: Easee Home (Cloud API)
+products:
+- brand: Easee
+  generic: Home (Cloud API)
 capabilities:
   phases1p3p: true
 requirements:

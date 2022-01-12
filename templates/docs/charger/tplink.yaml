@@ -1,5 +1,4 @@
 type: template
 template: tplink
-description: TP-LINK Smart Plug
 host: 192.0.2.2 
 standbypower: 15

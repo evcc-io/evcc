@@ -1,7 +1,8 @@
 template: sma-inverter
-description: 
-  de: SMA Wechselrichter
-  en: SMA Inverter
+products:
+- brand: SMA
+  de: Wechselrichter
+  en: Inverter
 params:
 - name: usage
   choice: ["pv", "battery"]

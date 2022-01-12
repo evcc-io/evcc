@@ -1,6 +1,7 @@
 template: pmcc
-description: 
-  generic: Porsche Mobile Charger Connect
+products:
+- brand: Porsche
+  generic: Mobile Charger Connect
 capabilities:
   iso151182: true
 requirements:

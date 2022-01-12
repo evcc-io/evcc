@@ -1,6 +1,5 @@
 type: template
 template: fronius-gen24
-description: Fronius Symo GEN24 Plus
 usage: pv 
 host: 192.0.2.2 
 port: 502

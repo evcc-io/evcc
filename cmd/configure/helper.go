@@ -17,7 +17,7 @@ import (
 func (c *CmdConfigure) processDeviceSelection(deviceCategory DeviceCategory) (templates.Template, error) {
 	templateItem := c.selectItem(deviceCategory)
 
-	if templateItem.Description.String(c.lang) == c.localizedString("ItemNotPresent", nil) {
+	if templateItem.Title() == c.localizedString("ItemNotPresent", nil) {
 		return templateItem, c.errItemNotPresent
 	}
 
@@ -33,7 +33,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 	c.addedDeviceIndex++
 
 	device.Name = fmt.Sprintf("%s%d", DeviceCategories[deviceCategory].defaultName, c.addedDeviceIndex)
-	device.Title = templateItem.Description.String(c.lang)
+	device.Title = templateItem.Title()
 	for item, value := range values {
 		if strings.ToLower(item) != "title" {
 			continue
@@ -47,9 +47,9 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	fmt.Println()
 	if categoryWithUsage {
-		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Description.String(c.lang), "Usage": deviceCategory.String()}))
+		fmt.Println(c.localizedString("TestingDevice_TitleUsage", localizeMap{"Device": templateItem.Title(), "Usage": deviceCategory.String()}))
 	} else {
-		fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Description.String(c.lang)}))
+		fmt.Println(c.localizedString("TestingDevice_Title", localizeMap{"Device": templateItem.Title()}))
 	}
 
 	deviceTest := DeviceTest{
@@ -63,9 +63,9 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 		fmt.Println("  ", c.localizedString("Error", localizeMap{"Error": err}))
 		fmt.Println()
 
-		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Description.String(c.lang)})
+		question := c.localizedString("TestingDevice_AddFailed", localizeMap{"Device": templateItem.Title()})
 		if categoryWithUsage {
-			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Description.String(c.lang), "Usage": deviceCategory.String()})
+			question = c.localizedString("TestingDevice_AddFailedUsage", localizeMap{"Device": templateItem.Title(), "Usage": deviceCategory.String()})
 		}
 		if !c.askYesNo(question) {
 			c.addedDeviceIndex--
@@ -79,7 +79,7 @@ func (c *CmdConfigure) processDeviceValues(values map[string]interface{}, templa
 
 	templateItem.Params = append(templateItem.Params, templates.Param{Name: "name", Value: device.Name})
 	if !c.expandedMode {
-		b, err := templateItem.RenderProxyWithValues(values, c.lang, false)
+		b, err := templateItem.RenderProxyWithValues(values, c.lang)
 		if err != nil {
 			c.addedDeviceIndex--
 			return device, err
@@ -259,20 +259,27 @@ func (c *CmdConfigure) configureMQTT() (map[string]interface{}, error) {
 // fetchElements returns template items of a given class
 func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.Template {
 	var items []templates.Template
-
 	for _, tmpl := range templates.ByClass(DeviceCategories[deviceCategory].class.String()) {
-		if len(tmpl.Params) == 0 || len(tmpl.Description.String(c.lang)) == 0 {
+		if len(tmpl.Params) == 0 {
 			continue
 		}
 
-		if deviceCategory == DeviceCategoryGuidedSetup {
-			if tmpl.GuidedSetup.Enable {
-				items = append(items, tmpl)
+		for _, t := range tmpl.Titles(c.lang) {
+			titleTmpl := templates.Template{
+				TemplateDefinition: tmpl.TemplateDefinition,
+				Lang:               c.lang,
 			}
-		} else {
-			if len(DeviceCategories[deviceCategory].categoryFilter) == 0 ||
-				c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].categoryFilter.String()) {
-				items = append(items, tmpl)
+			titleTmpl.SetTitle(t)
+
+			if deviceCategory == DeviceCategoryGuidedSetup {
+				if tmpl.GuidedSetup.Enable {
+					items = append(items, titleTmpl)
+				}
+			} else {
+				if len(DeviceCategories[deviceCategory].categoryFilter) == 0 ||
+					c.paramChoiceContains(tmpl.Params, templates.ParamUsage, DeviceCategories[deviceCategory].categoryFilter.String()) {
+					items = append(items, titleTmpl)
+				}
 			}
 		}
 	}
@@ -285,7 +292,7 @@ func (c *CmdConfigure) fetchElements(deviceCategory DeviceCategory) []templates.
 		if !items[i].Generic && items[j].Generic {
 			return true
 		}
-		return strings.ToLower(items[i].Description.String(c.lang)) < strings.ToLower(items[j].Description.String(c.lang))
+		return strings.ToLower(items[i].Title()) < strings.ToLower(items[j].Title())
 	})
 
 	return items

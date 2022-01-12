@@ -1,6 +1,7 @@
 template: kostal-ksem
-description: 
-  generic: Kostal Smart Energy Meter
+products:
+- brand: Kostal
+  generic: Smart Energy Meter
 params:
 - name: usage
   choice: [ "grid" ]
