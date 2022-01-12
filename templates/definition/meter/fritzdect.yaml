@@ -1,5 +1,6 @@
 template: fritzdect
-description: FritzDECT
+description: 
+  generic: FritzDECT
 params:
 - name: usage
   choice: ["pv", "charge"]
@@ -17,12 +18,9 @@ params:
   help: 
     en: The AIN is printed on the type label on the back of the device. 
     de: Die AIN ist auf dem Typenschild auf der Geräterückseite aufgedruckt.
-- name: standbypower
-  default: 15
 render: |
   type: fritzdect
   uri: {{ .uri }}
   user: {{ .user }}
   password: {{ .password }}
   ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
-  standbypower: {{ .standbypower }}  # treat as charging above this power

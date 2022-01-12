@@ -1,5 +1,6 @@
 template: solarwatt-myreserve
-description: Solarwatt MyReserve
+description: 
+  generic: Solarwatt MyReserve
 guidedsetup:
   enable: true
 params:

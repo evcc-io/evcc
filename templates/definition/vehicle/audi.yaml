@@ -1,5 +1,6 @@
 template: audi
-description: Audi
+description: 
+  generic: Audi
 params:
 - base: vehiclebase
 - base: vehicleidentify

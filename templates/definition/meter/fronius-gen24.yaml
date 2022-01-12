@@ -1,5 +1,6 @@
 template: fronius-gen24
-description: Fronius Symo GEN24 Plus
+description: 
+  generic: Fronius Symo GEN24 Plus
 guidedsetup:
   enable: true
 params:

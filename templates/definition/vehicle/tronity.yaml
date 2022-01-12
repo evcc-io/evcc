@@ -1,5 +1,7 @@
 template: tronity
-description: Tronity
+description: 
+  generic: Tronity
+generic: true
 requirements:
   sponsorship: true
 params:

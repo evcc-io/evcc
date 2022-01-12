@@ -81,8 +81,9 @@ publish-latest:
 publish-latest-ci:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/ci.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \
-	   --image-name $(DOCKER_IMAGE) -v "latest" --targets=$(TARGETS)
+	   --image-name $(DOCKER_IMAGE) -v "nightly" --targets=$(TARGETS)
 
+# TODO: -v "0" needs to be replaced by MAJOR, MINOR and PATCH as soon as we made it to semantic versioning
 publish-images:
 	@echo Version: $(VERSION) $(BUILD_DATE)
 	seihon publish --dry-run=false --template docker/tmpl.Dockerfile --base-runtime-image alpine:$(ALPINE_VERSION) \

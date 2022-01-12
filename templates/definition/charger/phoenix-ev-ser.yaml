@@ -1,5 +1,6 @@
 template: phoenix-ev-ser
-description: Phoenix EV-SER Controller (Modbus RTU)
+description: 
+  generic: Phoenix EV-SER Controller (Modbus RTU)
 generic: true
 params:
 - name: modbus

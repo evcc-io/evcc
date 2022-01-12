@@ -1,5 +1,6 @@
 template: peugeot
-description: Peugeot
+description: 
+  generic: Peugeot
 params:
 - base: vehiclebase
 - base: vehicleidentify

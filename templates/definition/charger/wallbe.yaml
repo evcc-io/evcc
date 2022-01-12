@@ -1,5 +1,6 @@
 template: wallbe
-description: Wallbe (Eco, Pro)
+description: 
+  generic: Wallbe (Eco, Pro)
 requirements:
   description:
     en: The Wallbe must be connected using Ethernet and the DIP switch 10 must be set to 'ON'.

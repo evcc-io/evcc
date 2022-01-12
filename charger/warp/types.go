@@ -7,7 +7,8 @@ const (
 	Timeout   = 30 * time.Second
 )
 
-type Status struct {
+// https://www.warp-charger.com/api.html#evse_state
+type EvseState struct {
 	Iec61851State          int   `json:"iec61851_state"`
 	VehicleState           int   `json:"vehicle_state"`
 	ChargeRelease          int   `json:"charge_release"`
@@ -20,6 +21,7 @@ type Status struct {
 	Uptime                 int64 `json:"uptime"`
 }
 
+// https://www.warp-charger.com/api.html#evse_low_level_state
 type LowLevelState struct {
 	LedState       int   `json:"led_state"`
 	CpPwmDutyCycle int   `json:"cp_pwm_duty_cycle"`
@@ -29,9 +31,12 @@ type LowLevelState struct {
 	Gpio           []bool
 }
 
+// https://www.warp-charger.com/api.html#meter_state
 type MeterState struct {
-	State     int     `json:"state"` // Warp 1 only
-	Power     float64 `json:"power"`
-	EnergyRel float64 `json:"energy_rel"`
-	EnergyAbs float64 `json:"energy_abs"`
+	State           int     `json:"state"` // Warp 1 only
+	Power           float64 `json:"power"`
+	EnergyRel       float64 `json:"energy_rel"`
+	EnergyAbs       float64 `json:"energy_abs"`
+	PhasesActive    []bool  `json:"phases_active"`
+	PhasesConnected []bool  `json:"phases_connected"`
 }

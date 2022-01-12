@@ -112,3 +112,27 @@ func (v *Provider) Status() (api.ChargeStatus, error) {
 
 	return status, err
 }
+
+var _ api.VehicleOdometer = (*Provider)(nil)
+
+// Odometer implements the api.VehicleOdometer interface
+func (v *Provider) Odometer() (float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		return res.VehicleStatus.Odometer.Value, nil
+	}
+
+	return 0, err
+}
+
+var _ api.VehiclePosition = (*Provider)(nil)
+
+// Position implements the api.VehiclePosition interface
+func (v *Provider) Position() (float64, float64, error) {
+	res, err := v.statusG()
+	if res, ok := res.(StatusResponse); err == nil && ok {
+		return res.VehicleStatus.Gps.Latitude, res.VehicleStatus.Gps.Longitude, nil
+	}
+
+	return 0, 0, err
+}

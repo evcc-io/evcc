@@ -1,5 +1,6 @@
 template: kia
-description: Kia
+description: 
+  generic: Kia
 params:
 - base: vehiclebase
 - base: vehicleidentify

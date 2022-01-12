@@ -12,12 +12,7 @@
 				<fa-icon :icon="['fas', 'heart']" class="icon me-1 solid"></fa-icon>
 				{{ $t("footer.sponsor.confetti") }}
 			</button>
-			<a
-				v-if="false"
-				href="https://evcc.io/sticker"
-				target="_blank"
-				class="small text-muted text-center"
-			>
+			<a href="https://evcc.io/sticker" target="_blank" class="small text-muted text-center">
 				{{ $t("footer.sponsor.sticker") }}
 			</a>
 		</div>

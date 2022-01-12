@@ -1,5 +1,6 @@
 template: renault
-description: Renault
+description: 
+  generic: Renault
 params:
 - base: vehiclebase
 - base: vehicleidentify

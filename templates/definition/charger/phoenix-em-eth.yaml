@@ -1,5 +1,6 @@
 template: phoenix-em-eth
-description: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
+description: 
+  generic: Phoenix EM-CP-PP-ETH Controller (Modbus TCP)
 generic: true
 requirements:
   description:

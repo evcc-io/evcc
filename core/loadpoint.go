@@ -219,8 +219,9 @@ func NewLoadPointFromConfig(log *util.Logger, cp configProvider, other map[strin
 	lp.configureChargerType(lp.charger)
 
 	// ensure 1p setup for switchable charger (https://github.com/evcc-io/evcc/issues/1572)
-	if _, ok := lp.charger.(api.ChargePhases); ok {
-		lp.setPhases(1)
+	if _, ok := lp.charger.(api.ChargePhases); ok && lp.Phases != 0 {
+		lp.log.WARN.Printf("ignoring phases config (%dp) for switchable charger", lp.Phases)
+		lp.setPhases(0)
 	}
 
 	// allow target charge handler to access loadpoint
@@ -550,9 +551,10 @@ func (lp *LoadPoint) syncCharger() {
 }
 
 // setLimit applies charger current limits and enables/disables accordingly
-func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
+func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) error {
 	// set current
 	if chargeCurrent != lp.chargeCurrent && chargeCurrent >= lp.GetMinCurrent() {
+		var err error
 		if charger, ok := lp.charger.(api.ChargerEx); ok {
 			err = charger.MaxCurrentMillis(chargeCurrent)
 		} else {
@@ -560,17 +562,17 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 			err = lp.charger.MaxCurrent(int64(chargeCurrent))
 		}
 
-		if err == nil {
-			lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
-			lp.chargeCurrent = chargeCurrent
-			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-		} else {
-			err = fmt.Errorf("max charge current %.3g: %w", chargeCurrent, err)
+		if err != nil {
+			return fmt.Errorf("max charge current %.3gA: %w", chargeCurrent, err)
 		}
+
+		lp.log.DEBUG.Printf("max charge current: %.3gA", chargeCurrent)
+		lp.chargeCurrent = chargeCurrent
+		lp.bus.Publish(evChargeCurrent, chargeCurrent)
 	}
 
 	// set enabled/disabled
-	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled && err == nil {
+	if enabled := chargeCurrent >= lp.GetMinCurrent(); enabled != lp.enabled {
 		if remaining := (lp.GuardDuration - lp.clock.Since(lp.guardUpdated)).Truncate(time.Second); remaining > 0 && !force {
 			lp.log.DEBUG.Printf("charger %s: contactor delay %v", status[enabled], remaining)
 			return nil
@@ -585,27 +587,27 @@ func (lp *LoadPoint) setLimit(chargeCurrent float64, force bool) (err error) {
 		// 	}
 		// }
 
-		if err = lp.charger.Enable(enabled); err == nil {
-			lp.log.DEBUG.Printf("charger %s", status[enabled])
-			lp.enabled = enabled
-			lp.guardUpdated = lp.clock.Now()
-
-			lp.bus.Publish(evChargeCurrent, chargeCurrent)
-
-			// wake up vehicle
-			// TODO https://github.com/evcc-io/evcc/discussions/1929
-			// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
-			// 	// log but don't propagate
-			// 	if err := car.StartCharge(); err != nil {
-			// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
-			// 	}
-			// }
-		} else {
-			err = fmt.Errorf("charger %s: %w", status[enabled], err)
+		if err := lp.charger.Enable(enabled); err != nil {
+			return fmt.Errorf("charger %s: %w", status[enabled], err)
 		}
+
+		lp.log.DEBUG.Printf("charger %s", status[enabled])
+		lp.enabled = enabled
+		lp.guardUpdated = lp.clock.Now()
+
+		lp.bus.Publish(evChargeCurrent, chargeCurrent)
+
+		// wake up vehicle
+		// TODO https://github.com/evcc-io/evcc/discussions/1929
+		// if car, ok := lp.vehicle.(api.VehicleStartCharge); enabled && ok {
+		// 	// log but don't propagate
+		// 	if err := car.StartCharge(); err != nil {
+		// 		lp.log.ERROR.Printf("vehicle remote charge start: %v", err)
+		// 	}
+		// }
 	}
 
-	return err
+	return nil
 }
 
 // connected returns the EVs connection state
@@ -964,21 +966,18 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 
 // pvScalePhases switches phases if necessary and returns if switch occurred
 func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float64) bool {
-	// correct charger state inconsistency (https://github.com/evcc-io/evcc/issues/1572)
 	phases := lp.GetPhases()
 
-	// if more active phases observed than configured, update internal state accordingly
+	// observed phase state inconsistency (https://github.com/evcc-io/evcc/issues/1572, https://github.com/evcc-io/evcc/issues/2230)
 	if phases < lp.activePhases {
-		lp.log.WARN.Printf("inconsistent phases: %dp configured < %dp observed active, updating internal state to %dp", phases, lp.activePhases, lp.activePhases)
-		phases = 3
-		lp.setPhases(3)
+		lp.log.WARN.Printf("ignoring inconsistent phases: %dp < %dp observed active", phases, lp.activePhases)
 	}
 
 	var waiting bool
 	targetCurrent := availablePower / Voltage / float64(lp.activePhases)
 
 	// scale down phases
-	if targetCurrent < minCurrent && phases > 1 && lp.activePhases > 1 {
+	if targetCurrent < minCurrent && (phases == 0 || phases == 3) && lp.activePhases > 1 {
 		lp.log.DEBUG.Printf("available power below %dp min threshold of %.0fW", lp.activePhases, float64(lp.activePhases)*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
@@ -993,11 +992,6 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 			lp.log.DEBUG.Println("phase disable timer elapsed")
 			if err := lp.scalePhases(1); err == nil {
 				lp.log.DEBUG.Printf("switched phases: 1p @ %.0fW", availablePower)
-
-				// if charging is disabled, current detection will not switch active phases to 1p
-				// make sure we can start charging by assuming 1p during next cycle
-				lp.activePhases = 1
-
 				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
@@ -1009,7 +1003,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 	}
 
 	// scale up phases
-	if min3pCurrent := powerToCurrent(availablePower, 3); min3pCurrent >= minCurrent && phases == 1 {
+	if min3pCurrent := powerToCurrent(availablePower, 3); min3pCurrent >= minCurrent && (phases == 0 || phases == 1) {
 		lp.log.DEBUG.Printf("available power above 3p min threshold of %.0fW", 3*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {

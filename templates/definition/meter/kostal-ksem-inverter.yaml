@@ -1,5 +1,7 @@
 template: kostal-ksem-inverter
-description: Kostal Smart Energy Meter via inverter
+description: 
+  de: Kostal Smart Energy Meter über den Wechselrichter
+  en: Kostal Smart Energy Meter via inverter
 params:
 - name: usage
   choice: [ "grid" ]

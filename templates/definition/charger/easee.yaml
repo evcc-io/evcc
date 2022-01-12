@@ -1,5 +1,6 @@
 template: easee
-description: Easee Home (Cloud API)
+description:
+  generic: Easee Home (Cloud API)
 requirements:
   sponsorship: true
 params:

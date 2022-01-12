@@ -1,5 +1,5 @@
 type: template
 template: wallbe-pre2019-meter
-description: Wallbe (Eco, Pro) (pre ~2019) with Meter
+description: Wallbe (Eco, Pro) (vor ~2019) mit Strommessgerät
 host: 192.0.2.2 
 port: 502

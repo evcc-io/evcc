@@ -23,7 +23,7 @@ const nrgTimeout = 10 * time.Second
 // NRGKickBLE charger implementation
 type NRGKickBLE struct {
 	log           *util.Logger
-	timer         *time.Timer
+	timer         *time.Ticker
 	adapter       *adapter.Adapter1
 	agent         *agent.SimpleAgent
 	dev           *device.Device1
@@ -109,7 +109,7 @@ func NewNRGKickBLE(device, mac string, pin int) (*NRGKickBLE, error) {
 
 	nrg := &NRGKickBLE{
 		log:     logger,
-		timer:   time.NewTimer(1),
+		timer:   time.NewTicker(2 * time.Second),
 		device:  ainfo.AdapterID,
 		mac:     mac,
 		pin:     pin,
@@ -141,18 +141,8 @@ func (nrg *NRGKickBLE) close() {
 	}
 }
 
-func (nrg *NRGKickBLE) waitTimer() {
-	<-nrg.timer.C
-}
-
-func (nrg *NRGKickBLE) setTimer() {
-	nrg.timer.Stop() // can be stopped without reading as channel is always drained
-	nrg.timer.Reset(2 * time.Second)
-}
-
 func (nrg *NRGKickBLE) read(service string, res interface{}) error {
-	nrg.waitTimer()
-	defer nrg.setTimer()
+	<-nrg.timer.C
 
 	if nrg.dev == nil {
 		dev, err := nrg.connect()
@@ -185,8 +175,7 @@ func (nrg *NRGKickBLE) write(service string, val interface{}) error {
 	}
 	nrg.log.TRACE.Printf("write %s %0x", service, out.Bytes())
 
-	nrg.waitTimer()
-	defer nrg.setTimer()
+	<-nrg.timer.C
 
 	if nrg.dev == nil {
 		dev, err := nrg.connect()
