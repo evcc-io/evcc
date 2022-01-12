@@ -944,7 +944,7 @@ func (lp *LoadPoint) scalePhases(phases int) error {
 		return api.ErrNotAvailable
 	}
 
-	if (lp.activePhases >= 2 && phases == 1) || (lp.activePhases == 1 && phases == 3) {
+	if lp.maxPhases > 1 && ((lp.activePhases >= 2 && phases == 1) || (lp.activePhases == 1 && phases == 3)) {
 		// disable charger - this will also stop the car charging using the api if available
 		if err := lp.setLimit(0, true); err != nil {
 			return err
@@ -975,7 +975,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.DEBUG.Printf("available power below %dp min threshold of %.0fW", lp.activePhases, float64(lp.activePhases)*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase disable timer: %v", lp.Disable.Delay)
+			lp.log.DEBUG.Printf("start 3p->1p switch timer: %v", lp.Disable.Delay)
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -983,11 +983,11 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Disable.Delay {
-			lp.log.DEBUG.Println("phase disable timer elapsed")
+			lp.log.DEBUG.Println("3p->1p switch timer elapsed")
 			if err := lp.scalePhases(1); err == nil {
-				lp.log.DEBUG.Printf("switched phases: 1p mode @ %.0fW", availablePower)
+				lp.log.DEBUG.Printf("switched phases, 1p mode @ %.0fW", availablePower)
 
-				// if charging is disabled, current detection will not switch active phases to 1p
+				// if charging is disabled, current detection will not switch active phases
 				// make sure we can start charging by assuming 1p during next cycle
 				lp.activePhases = 1
 
@@ -998,7 +998,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		}
 
 		waiting = true
-		lp.log.DEBUG.Printf("phase disable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
+		lp.log.DEBUG.Printf("3p->1p switch timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 	}
 
 	// scale up phases
@@ -1006,7 +1006,7 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		lp.log.DEBUG.Printf("available power above %dp min threshold of %.0fW", lp.maxPhases, float64(lp.maxPhases)*Voltage*minCurrent)
 
 		if lp.phaseTimer.IsZero() {
-			lp.log.DEBUG.Printf("start phase enable timer: %v", lp.Enable.Delay)
+			lp.log.DEBUG.Printf("start 1p->3p switch timer: %v", lp.Enable.Delay)
 			lp.phaseTimer = lp.clock.Now()
 		}
 
@@ -1014,9 +1014,14 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 
 		elapsed := lp.clock.Since(lp.phaseTimer)
 		if elapsed >= lp.Disable.Delay {
-			lp.log.DEBUG.Println("phase enable timer elapsed")
+			lp.log.DEBUG.Println("1p->3p switch timer elapsed")
 			if err := lp.scalePhases(3); err == nil {
-				lp.log.DEBUG.Printf("switched phases: 3p mode @ %.0fW", availablePower)
+				lp.log.DEBUG.Printf("switched phases, 3p mode @ %.0fW", availablePower)
+
+				// if charging is disabled, current detection will not switch active phases
+				// make sure we can start charging by assuming maxPhases during next cycle
+				lp.activePhases = lp.maxPhases
+
 				return true
 			} else {
 				lp.log.ERROR.Printf("switch phases: %v", err)
@@ -1024,12 +1029,12 @@ func (lp *LoadPoint) pvScalePhases(availablePower, minCurrent, maxCurrent float6
 		}
 
 		waiting = true
-		lp.log.DEBUG.Printf("phase enable timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
+		lp.log.DEBUG.Printf("1p->3p switch timer remaining: %v", (lp.Disable.Delay - elapsed).Round(time.Second))
 	}
 
 	// reset timer to disabled state
 	if !waiting && !lp.phaseTimer.IsZero() {
-		lp.log.DEBUG.Printf("phase timer reset")
+		lp.log.DEBUG.Printf("phase switch timer reset")
 		lp.phaseTimer = time.Time{}
 
 		lp.publishTimer(phaseTimer, 0, timerInactive)
