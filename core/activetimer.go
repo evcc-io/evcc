@@ -12,10 +12,10 @@ type ActiveTimer struct {
 	sync.Mutex
 	clck clock.Clock
 
-	active  bool
-	started time.Time
-	dura    int64
-	called  bool
+	active       bool
+	started      time.Time
+	lastduration int64
+	called       bool
 }
 
 // NewActiveTimer creates ActiveTimer
@@ -33,7 +33,6 @@ func (m *ActiveTimer) Start() {
 	if !m.active {
 		m.active = true
 		m.started = m.clck.Now()
-		m.dura = 0
 		m.called = false
 	}
 }
@@ -50,7 +49,7 @@ func (m *ActiveTimer) Stop() {
 	defer m.Unlock()
 	if m.active {
 		m.active = false
-		m.dura = int64(m.clck.Since(m.started).Seconds())
+		m.lastduration = int64(m.clck.Since(m.started).Seconds())
 		m.called = true
 	}
 }
@@ -63,5 +62,5 @@ func (m *ActiveTimer) duration() int64 {
 	if m.active {
 		return int64(m.clck.Since(m.started).Seconds())
 	}
-	return m.dura
+	return m.lastduration
 }
