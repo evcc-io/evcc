@@ -70,7 +70,7 @@ TestingDevice_AddFailedUsage = "Testing of the {{ .Usage }} configuration of {{ 
 
 TestingMQTTFailed = "Testing the MQTT configuration failed. Do you want to repeat its configuration?"
 
-Requirements_Title = "The device needs to provide the following requirements:"
+Requirements_Title = "The device has the following requirements:"
 Requirements_More = "Additional information:"
 
 Requirements_Sponsorship_Title = "This device requires an evcc sponsorship. Check the following link for what this is and how it works: https://docs.evcc.io/docs/sponsorship"
