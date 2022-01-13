@@ -29,9 +29,8 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
-	conn       *modbus.Connection
-	current    uint16
-	laststatus uint16
+	conn    *modbus.Connection
+	current uint16
 }
 
 const (
@@ -119,7 +118,7 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch wb.laststatus = binary.BigEndian.Uint16(b); wb.laststatus {
+	switch sb := binary.BigEndian.Uint16(b); sb {
 	case 2, 3:
 		return api.StatusA, nil
 	case 4, 5:
@@ -131,12 +130,12 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 9:
 		return api.StatusE, nil
 	case 10:
-		// Exit the fail-safe mode and return to normal operation after wakeup
+		// Exit and disable the instant fail-safe mode
 		err = wb.set(hecRegTimeout, 0)
 
 		return api.StatusF, err
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", wb.laststatus)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
 }
 
@@ -268,9 +267,6 @@ func (wb *HeidelbergEC) Diagnose() {
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
-	if wb.laststatus == 5 { // Status B2
-		// set immediate timeout to enter the fail-safe mode
-		return wb.set(hecRegTimeout, 1)
-	}
-	return fmt.Errorf("invalid wakeup status %d", wb.laststatus)
+	// set immediate timeout to enter the fail-safe mode
+	return wb.set(hecRegTimeout, 1)
 }
