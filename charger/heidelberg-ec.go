@@ -29,8 +29,9 @@ import (
 
 // HeidelbergEC charger implementation
 type HeidelbergEC struct {
-	conn    *modbus.Connection
-	current uint16
+	conn       *modbus.Connection
+	current    uint16
+	laststatus uint16
 }
 
 const (
@@ -39,10 +40,14 @@ const (
 	hecRegTemperature   = 9   // Input
 	hecRegPower         = 14  // Input
 	hecRegEnergy        = 17  // Input
+	hecRegTimeout       = 257 // Holding
 	hecRegStandby       = 258 // Holding
 	hecRegAmpsConfig    = 261 // Holding
+	hecRegFailsafe      = 262 // Holding
 
 	hecStandbyDisabled = 4 // disable standby
+
+	hecFailsafeMode = 0 // status F
 )
 
 var hecRegCurrents = []uint16{6, 7, 8}
@@ -86,6 +91,12 @@ func NewHeidelbergEC(uri, device, comset string, baudrate int, slaveID uint8) (a
 		current: 60, // assume min current
 	}
 
+	// fail-safe mode: status F
+	err = wb.set(hecRegFailsafe, hecFailsafeMode)
+	if err != nil {
+		return nil, err
+	}
+
 	// disable standby
 	err = wb.set(hecRegStandby, hecStandbyDisabled)
 
@@ -108,15 +119,24 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch sb := b[1]; sb {
+	switch wb.laststatus = binary.BigEndian.Uint16(b); wb.laststatus {
 	case 2, 3:
 		return api.StatusA, nil
 	case 4, 5:
 		return api.StatusB, nil
 	case 6, 7:
 		return api.StatusC, nil
+	case 8:
+		return api.StatusD, nil
+	case 9:
+		return api.StatusE, nil
+	case 10:
+		// Exit the fail-safe mode and return to normal operation after wakeup
+		err = wb.set(hecRegTimeout, 0)
+
+		return api.StatusF, err
 	default:
-		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
+		return api.StatusNone, fmt.Errorf("invalid status: %d", wb.laststatus)
 	}
 }
 
@@ -233,7 +253,24 @@ func (wb *HeidelbergEC) Diagnose() {
 	if b, err := wb.conn.ReadInputRegisters(hecRegTemperature, 1); err == nil {
 		fmt.Printf("Temperature:\t%.1fC\n", float64(int16(binary.BigEndian.Uint16(b)))/10)
 	}
-	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandby, 1); err == nil {
-		fmt.Printf("Standby:\t%0x\n", b[1])
+	if b, err := wb.conn.ReadHoldingRegisters(hecRegTimeout, 1); err == nil {
+		fmt.Printf("Timeout:\t%d\n", binary.BigEndian.Uint16(b))
 	}
+	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandby, 1); err == nil {
+		fmt.Printf("Standby:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+	if b, err := wb.conn.ReadHoldingRegisters(hecRegStandby, 1); err == nil {
+		fmt.Printf("Failsafe:\t%d\n", binary.BigEndian.Uint16(b))
+	}
+}
+
+// var _ api.AlarmClock = (wb *HeidelbergEC)(nil)
+
+// WakeUp implements the api.AlarmClock interface
+func (wb *HeidelbergEC) WakeUp() error {
+	if wb.laststatus == 5 { // Status B2
+		// set immediate timeout to enter the fail-safe mode
+		return wb.set(hecRegTimeout, 1)
+	}
+	return fmt.Errorf("invalid wakeup status %d", wb.laststatus)
 }
