@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/provider"
 	"github.com/evcc-io/evcc/util"
 	"github.com/evcc-io/evcc/util/request"
@@ -19,20 +20,19 @@ const BaseURI = "https://api.mercedes-benz.com/vehicledata/v2"
 // API is the Mercedes api client
 type API struct {
 	*request.Helper
+	api.ProviderLogin
 
-	providerLogin *Login
-	updatedC      chan struct{}
-	lock          sync.Mutex
+	updatedC chan struct{}
+	lock     sync.Mutex
 }
 
 // NewAPI creates a new api client
-func NewAPI(log *util.Logger, identity *Identity, providerLogin *Login, updatedC chan struct{}) *API {
+func NewAPI(log *util.Logger, identity *Identity, updatedC chan struct{}) *API {
 	v := &API{
 		Helper: request.NewHelper(log),
 
-		providerLogin: providerLogin,
-		updatedC:      updatedC,
-		lock:          sync.Mutex{},
+		updatedC: updatedC,
+		lock:     sync.Mutex{},
 	}
 
 	// authenticated http client with logging injected to the Mercedes client
@@ -43,7 +43,7 @@ func NewAPI(log *util.Logger, identity *Identity, providerLogin *Login, updatedC
 			v.lock.Lock()
 
 			ctx := context.WithValue(context.Background(), oauth2.HTTPClient, v.Client)
-			v.Client = identity.AuthConfig.Client(ctx, v.providerLogin.Token())
+			v.Client = identity.AuthConfig.Client(ctx, identity.Token())
 
 			v.lock.Unlock()
 
@@ -61,7 +61,7 @@ func (v *API) Update() chan struct{} {
 
 // SoC implements the /soc response
 func (v *API) SoC(vin string) (EVResponse, error) {
-	if !v.providerLogin.Valid() {
+	if !v.LoggedIn() {
 		return EVResponse{}, fmt.Errorf("invalid provider login")
 	}
 
@@ -78,7 +78,7 @@ func (v *API) SoC(vin string) (EVResponse, error) {
 
 // Range implements the /rangeelectric response
 func (v *API) Range(vin string) (EVResponse, error) {
-	if !v.providerLogin.Valid() {
+	if !v.LoggedIn() {
 		return EVResponse{}, fmt.Errorf("invalid provider login")
 	}
 
