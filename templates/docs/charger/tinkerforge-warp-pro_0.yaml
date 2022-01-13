@@ -11,11 +11,4 @@ render:
     host: 192.0.2.2  # Die IP Adresse oder der Hostname des MQTT Brokers 
     port: 1883  # Der Port des MQTT Brokers  # Optional 
     topic: warp  # Optional 
-    timeout: 30s  # Optional 
-  advanced: |
-    type: template
-    template: tinkerforge-warp-pro
-    host: 192.0.2.2  # Die IP Adresse oder der Hostname des MQTT Brokers 
-    port: 1883  # Der Port des MQTT Brokers  # Optional 
-    topic: warp  # Optional 
     timeout: 30s  # Optional

@@ -10,20 +10,8 @@ render:
     usage: pv
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     password: # Wird nur benötigt, wenn das Standardpasswort geändert wurde  # Optional 
-  advanced: |
-    type: template
-    template: sma-inverter
-    usage: pv
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    password: # Wird nur benötigt, wenn das Standardpasswort geändert wurde  # Optional 
 - usage: battery
   default: |
-    type: template
-    template: sma-inverter
-    usage: battery
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    password: # Wird nur benötigt, wenn das Standardpasswort geändert wurde  # Optional 
-  advanced: |
     type: template
     template: sma-inverter
     usage: battery

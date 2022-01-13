@@ -13,12 +13,3 @@ render:
     # TCPIP
     uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
     # Modbus End
-  advanced: |
-    type: template
-    template: solaredge-inverter
-    usage: pv
-    # Modbus Start
-    id: 1
-    # TCPIP
-    uri: 192.0.2.2:502 # IP-Adresse oder Hostname: Port
-    # Modbus End

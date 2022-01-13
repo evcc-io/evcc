@@ -9,10 +9,4 @@ render:
     template: powerfox-poweropti
     usage: grid
     user: # Benutzername um auf das Gerät zuzugreifen 
-    password: # Passwort des Benutzerkontos 
-  advanced: |
-    type: template
-    template: powerfox-poweropti
-    usage: grid
-    user: # Benutzername um auf das Gerät zuzugreifen 
     password: # Passwort des Benutzerkontos

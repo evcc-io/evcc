@@ -10,12 +10,6 @@ render:
     usage: grid
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     password: # Passwort des Benutzers Kunde 
-  advanced: |
-    type: template
-    template: tesla-powerwall
-    usage: grid
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    password: # Passwort des Benutzers Kunde 
 - usage: pv
   default: |
     type: template
@@ -23,20 +17,8 @@ render:
     usage: pv
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     password: # Passwort des Benutzers Kunde 
-  advanced: |
-    type: template
-    template: tesla-powerwall
-    usage: pv
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    password: # Passwort des Benutzers Kunde 
 - usage: battery
   default: |
-    type: template
-    template: tesla-powerwall
-    usage: battery
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    password: # Passwort des Benutzers Kunde 
-  advanced: |
     type: template
     template: tesla-powerwall
     usage: battery

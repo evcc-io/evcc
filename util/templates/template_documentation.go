@@ -97,11 +97,15 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		}
 	}
 
-	// remove usage from params
+	// remove usage from params and check if there are advanced params
+	var hasAdvancedParam bool
 	var newParams []Param
 	for _, param := range t.Params {
 		if param.Name == ParamUsage {
 			continue
+		}
+		if param.Advanced {
+			hasAdvancedParam = true
 		}
 		newParams = append(newParams, param)
 	}
@@ -117,6 +121,7 @@ func (t *Template) RenderDocumentation(product Product, values map[string]interf
 		"Requirements":           t.Requirements.EVCC,
 		"RequirementDescription": t.Requirements.Description.String(lang),
 		"Params":                 t.Params,
+		"AdvancedParams":         hasAdvancedParam,
 		"Usages":                 usages,
 		"Modbus":                 modbusRender,
 	}

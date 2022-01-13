@@ -11,10 +11,3 @@ render:
     host: 192.0.2.2  # IP-Adresse oder Hostname 
     port: 8081  # Port  # Optional 
     uuid:
-  advanced: |
-    type: template
-    template: vzlogger
-    usage: grid
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-    port: 8081  # Port  # Optional 
-    uuid:

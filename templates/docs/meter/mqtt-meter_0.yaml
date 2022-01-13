@@ -18,34 +18,8 @@ render:
     currentp2: # Optional 
     currentp3: # Optional 
     timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
-  advanced: |
-    type: template
-    template: mqtt-meter
-    usage: grid
-    power:
-    scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden  # Optional 
-    energy: # Optional 
-    scaleenergy: 1  # Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden  # Optional 
-    soc: # Optional 
-    currentp1: # Optional 
-    currentp2: # Optional 
-    currentp3: # Optional 
-    timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
 - usage: pv
   default: |
-    type: template
-    template: mqtt-meter
-    usage: pv
-    power:
-    scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden  # Optional 
-    energy: # Optional 
-    scaleenergy: 1  # Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden  # Optional 
-    soc: # Optional 
-    currentp1: # Optional 
-    currentp2: # Optional 
-    currentp3: # Optional 
-    timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
-  advanced: |
     type: template
     template: mqtt-meter
     usage: pv
@@ -72,34 +46,8 @@ render:
     currentp2: # Optional 
     currentp3: # Optional 
     timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
-  advanced: |
-    type: template
-    template: mqtt-meter
-    usage: charge
-    power:
-    scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden  # Optional 
-    energy: # Optional 
-    scaleenergy: 1  # Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden  # Optional 
-    soc: # Optional 
-    currentp1: # Optional 
-    currentp2: # Optional 
-    currentp3: # Optional 
-    timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
 - usage: battery
   default: |
-    type: template
-    template: mqtt-meter
-    usage: battery
-    power:
-    scalepower: 1  # Die Leistung wird in Watt erwartet. Falls z.b. kW geliefert wird, kann dies hier mit dem Wert 1000 angepasst werden  # Optional 
-    energy: # Optional 
-    scaleenergy: 1  # Die Energiemenge wird in kWh erwartet. Falls z.b. Wh geliefert wird, kann dies hier mit dem Wert 0.001 angepasst werden  # Optional 
-    soc: # Optional 
-    currentp1: # Optional 
-    currentp2: # Optional 
-    currentp3: # Optional 
-    timeout: 30  # Akzeptiere keine Daten die älter als dieser Wert in Sekunden ist  # Optional 
-  advanced: |
     type: template
     template: mqtt-meter
     usage: battery

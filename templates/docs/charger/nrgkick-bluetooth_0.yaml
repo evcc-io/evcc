@@ -8,8 +8,3 @@ render:
     template: nrgkick-bluetooth
     mac:
     pin:
-  advanced: |
-    type: template
-    template: nrgkick-bluetooth
-    mac:
-    pin:

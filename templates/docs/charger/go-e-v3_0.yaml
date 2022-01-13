@@ -12,8 +12,4 @@ render:
 - default: |
     type: template
     template: go-e-v3
-    host: 192.0.2.2  # IP-Adresse oder Hostname 
-  advanced: |
-    type: template
-    template: go-e-v3
     host: 192.0.2.2  # IP-Adresse oder Hostname

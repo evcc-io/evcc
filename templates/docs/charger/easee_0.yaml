@@ -10,10 +10,4 @@ render:
     template: easee
     user: # Benutzername um auf das Gerät zuzugreifen 
     password: # Passwort des Benutzerkontos 
-    charger: EH______ 
-  advanced: |
-    type: template
-    template: easee
-    user: # Benutzername um auf das Gerät zuzugreifen 
-    password: # Passwort des Benutzerkontos 
     charger: EH______

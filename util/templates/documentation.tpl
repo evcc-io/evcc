@@ -42,6 +42,7 @@ render:
     {{- if .Help.DE }} # {{ .Help.DE }} {{ end }}{{ if ne .Required true }} # Optional {{ end -}}
     {{- end -}}
     {{ end }}
+{{- if $.AdvancedParams }}
   advanced: |
     type: template
     template: {{ $.Template }}
@@ -62,6 +63,7 @@ render:
     {{- if .Help.DE }} # {{ .Help.DE }} {{ end }}{{ if ne .Required true }} # Optional {{ end -}}
     {{- end -}}
     {{ end }}
+{{ end }}
 {{ end }}{{ else -}}
 - default: |
     type: template
@@ -82,6 +84,7 @@ render:
     {{- if .Help.DE }} # {{ .Help.DE }} {{ end }}{{ if ne .Required true }} # Optional {{ end -}}
     {{- end -}}
     {{ end }}
+{{- if $.AdvancedParams }}
   advanced: |
     type: template
     template: {{ $.Template }}
@@ -101,4 +104,4 @@ render:
     {{- if .Help.DE }} # {{ .Help.DE }} {{ end }}{{ if ne .Required true }} # Optional {{ end -}}
     {{- end -}}
     {{ end }}
-{{ end }}
+{{ end }}{{ end }}
