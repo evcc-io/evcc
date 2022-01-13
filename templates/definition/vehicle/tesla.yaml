@@ -1,6 +1,22 @@
 template: tesla
 products:
 - brand: Tesla
+requirements:
+  description:
+    de: |
+      Es wird ein `access` und ein `refresh` Token für die Kommunikation mit der Tesla API erstellt werden.
+
+      Folgende Apps ermöglichen das Erstellen von den beiden Tokens:
+      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
+      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
+      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
+    en: |
+      You need to generate an `access` and a `refresh` token for communicating with the Tesla API.
+
+      The following apps allow to create these tokens:
+      - [Auth app for Tesla (iOS)](https://apps.apple.com/us/app/auth-app-for-tesla/id1552058613#?platform=iphone)
+      - [Tesla Tokens (Android)](https://play.google.com/store/apps/details?id=net.leveugle.teslatokens)
+      - [Tesla Auth (macOS, Linux)](https://github.com/adriankumpf/tesla_auth)
 params:
 - name: title
 - name: accessToken
