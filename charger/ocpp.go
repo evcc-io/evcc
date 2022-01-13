@@ -3,7 +3,6 @@ package charger
 import (
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
@@ -62,19 +61,22 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		return nil, err
 	}
 
-	wg := &sync.WaitGroup{}
+	var (
+		rc      = make(chan error, 1)
+		err     error
+		options []core.ConfigurationKey
+	)
 
-	var options []core.ConfigurationKey
-
-	wg.Add(1)
 	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
 		options = resp.ConfigurationKey
-		wg.Done()
+		rc <- err
 	}, []string{}); err != nil {
 		return nil, err
 	}
 
-	wg.Wait()
+	if err := c.wait(err, rc); err != nil {
+		return nil, err
+	}
 
 	if err := cp.DetectCapabilities(options); err != nil {
 		return nil, err
