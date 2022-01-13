@@ -38,10 +38,8 @@ func (m *ActiveTimer) Start() {
 	}
 }
 
-// reset to defaults
+// stop and reset called
 func (m *ActiveTimer) Reset() {
-	m.Lock()
-	defer m.Unlock()
 	m.Stop()
 	m.called = false
 }
