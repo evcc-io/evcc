@@ -29,7 +29,8 @@ type API struct {
 // NewAPI creates a new api client
 func NewAPI(log *util.Logger, identity *Identity, updatedC chan struct{}) *API {
 	v := &API{
-		Helper: request.NewHelper(log),
+		Helper:        request.NewHelper(log),
+		ProviderLogin: identity,
 
 		updatedC: updatedC,
 		lock:     sync.Mutex{},
