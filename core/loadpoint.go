@@ -1494,7 +1494,7 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 	}
 
 	// WakeUp checks
-	if lp.wakeUpTimer.called && mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.status == api.StatusB && lp.enabled {
+	if mode != api.ModeOff && lp.chargeCurrent > 0 && lp.vehicleSoc < 99 && lp.status == api.StatusB {
 		if lp.wakeUpTimer.active {
 			if lp.wakeUpTimer.duration() > 30 {
 				lp.log.DEBUG.Printf("sleeping? Mode:%s LPStatus:%s Active:%ds SOC:%f Current:%f Power:%f ", mode, lp.status, lp.wakeUpTimer.duration(), lp.vehicleSoc, lp.chargeCurrent, lp.chargePower)
@@ -1512,9 +1512,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 				}
 				// stop the WakeUpTimer as we don't like to call it again
+				lp.log.DEBUG.Print("stop WakeUpTimer")
 				lp.wakeUpTimer.Stop()
 			}
-		} else {
+		} else if !lp.wakeUpTimer.called {
+			lp.log.DEBUG.Print("start WakeUpTimer")
 			lp.wakeUpTimer.Start()
 		}
 
