@@ -1411,6 +1411,11 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 
 	case mode == api.ModeOff:
 		err = lp.setLimit(0, true)
+		// reset WakeUpCalled mode off
+		if lp.wakeUpTimer.active {
+			lp.log.DEBUG.Printf("reset WakeUpTimer - mode off - Active:%ds", lp.wakeUpTimer.duration())
+			lp.wakeUpTimer.Reset()
+		}
 
 	case lp.minSocNotReached():
 		// 3p if available
@@ -1459,13 +1464,8 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		err = lp.setLimit(targetCurrent, required)
 	}
 
-	// reset WakeUpCalled mode off
-	if mode == api.ModeOff && lp.wakeUpTimer.active {
-		lp.log.DEBUG.Printf("reset WakeUpTimer - mode off - Active:%ds", lp.wakeUpTimer.duration())
-		lp.wakeUpTimer.Reset()
-	}
 	// reset WakeUpCalled then car is charging again
-	if lp.enabled && lp.status == api.StatusC && (lp.wakeUpTimer.called || lp.wakeUpTimer.active) {
+	if lp.status == api.StatusC && (lp.wakeUpTimer.called || lp.wakeUpTimer.active) {
 		lp.log.DEBUG.Printf("reset WakeUpTimer - charing - Active:%ds", lp.wakeUpTimer.duration())
 		lp.wakeUpTimer.Reset()
 	}
