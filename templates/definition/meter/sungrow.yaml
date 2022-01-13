@@ -1,7 +1,8 @@
 template: sungrow
 products:
-- description:
-    generic: Sungrow (Beta)
+- brand: Sungrow
+  description:
+    generic: Inverter (Beta)
 guidedsetup:
   enable: true
 params:

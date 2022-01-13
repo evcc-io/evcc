@@ -1,5 +1,6 @@
 product:
-  description: Sungrow (Beta)
+  brand: Sungrow
+  description: Inverter (Beta)
 
 render:
 - usage: grid
