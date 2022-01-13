@@ -69,7 +69,7 @@ func runDump(cmd *cobra.Command, args []string) {
 	} else {
 		for id, name := range site.Meters.BatteryMetersRef {
 			if name != "" {
-				d.DumpWithHeader(fmt.Sprintf("Battery %d: %s", id, name), cp.Meter(name))
+				d.DumpWithHeader(fmt.Sprintf("battery %d: %s", id, name), cp.Meter(name))
 			}
 		}
 	}

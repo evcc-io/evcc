@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -22,7 +23,11 @@ func (c *Cache) Run(in <-chan Param) {
 	log := NewLogger("cache")
 
 	for p := range in {
-		log.DEBUG.Printf("%s: %v", p.Key, p.Val)
+		key := p.Key
+		if p.LoadPoint != nil {
+			key = fmt.Sprintf("lp-%d/%s", *p.LoadPoint+1, key)
+		}
+		log.TRACE.Printf("%s: %v", key, p.Val)
 		c.Add(p.UniqueID(), p)
 	}
 }
