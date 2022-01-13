@@ -62,24 +62,28 @@ func NewOCPP(id string, connector int, idtag string) (*OCPP, error) {
 		return nil, err
 	}
 
-	waiter := &sync.WaitGroup{}
-	waiter.Add(1)
+	wg := &sync.WaitGroup{}
+
+	var options []core.ConfigurationKey
+
+	wg.Add(1)
 	if err := ocpp.Instance().CS().GetConfiguration(id, func(resp *core.GetConfigurationConfirmation, err error) {
-		cp.SetOptions(resp.ConfigurationKey)
-		waiter.Done()
+		options = resp.ConfigurationKey
+		wg.Done()
 	}, []string{}); err != nil {
 		return nil, err
 	}
 
-	waiter.Wait()
-	{ // Check supported connectors of charge point
-		supported, err := cp.GetNumberOfSupportedConnectors()
-		if err != nil {
-			return nil, err
-		}
+	wg.Wait()
 
+	if err := cp.DetectCapabilities(options); err != nil {
+		return nil, err
+	}
+
+	{ // Check supported connectors of charge point
+		supported := cp.GetNumberOfSupportedConnectors()
 		if c.connector > supported {
-			return nil, fmt.Errorf("configured connector is not available, max connector number is %d", supported)
+			return nil, fmt.Errorf("configured connector is not available, max available connectors %d", supported)
 		}
 	}
 
