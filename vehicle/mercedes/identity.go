@@ -33,8 +33,6 @@ type Identity struct {
 
 	AuthConfig *oauth2.Config
 	token      *oauth2.Token
-	// tokenSource oauth2.TokenSource
-	router *mux.Router
 
 	loginUpdateC chan struct{}
 	apiPath      string
@@ -45,7 +43,7 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 	var err error
 	provider, err := oidc.NewProvider(context.Background(), "https://id.mercedes-benz.com")
 	if err != nil {
-		log.FATAL.Printf("failed to inizialize OIDC provider: %s", err)
+		return nil, fmt.Errorf("failed to inizialize OIDC provider: %s", err)
 	}
 
 	v := &Identity{
@@ -87,11 +85,9 @@ func (v *Identity) Token() *oauth2.Token {
 var _ api.WebController = (*Identity)(nil)
 
 func (v *Identity) WebControl(router *mux.Router) {
-	v.router = router
+	router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler())
 
-	v.router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler(context.Background()))
-
-	v.router.Methods(http.MethodPost).Path(v.LoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Methods(http.MethodPost).Path(v.LoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		state := NewState(v.sessionSecret)
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
@@ -105,7 +101,7 @@ func (v *Identity) WebControl(router *mux.Router) {
 		_, _ = w.Write(b)
 	})
 
-	v.router.Methods(http.MethodPost).Path(v.LogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router.Methods(http.MethodPost).Path(v.LogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		v.token = nil
 
 		w.WriteHeader(http.StatusOK)
@@ -130,7 +126,7 @@ func (v *Identity) LogoutPath() string {
 	return fmt.Sprintf("%s/logout", v.apiPath)
 }
 
-func (v *Identity) redirectHandler(ctx context.Context) http.HandlerFunc {
+func (v *Identity) redirectHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := url.ParseQuery(r.URL.RawQuery)
 		if err != nil {
@@ -158,7 +154,7 @@ func (v *Identity) redirectHandler(ctx context.Context) http.HandlerFunc {
 			return
 		}
 
-		token, err := v.AuthConfig.Exchange(ctx, codes[0])
+		token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
 		if err != nil {
 			fmt.Fprintln(w, "token error:", err)
 			return
