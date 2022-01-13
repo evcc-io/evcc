@@ -182,26 +182,18 @@ type Param struct {
 	ID           int          // device specific default for modbus ID
 }
 
-type ParamDefault struct {
-	Name        string
-	Description TextLanguage
-	Help        TextLanguage
-	Example     string
-	ValueType   string
-}
-
 type ParamDefaultList struct {
-	Params []ParamDefault
+	Params []Param
 }
 
 // return the param with the given name
-func (p *ParamDefaultList) ParamByName(name string) (int, ParamDefault) {
+func (p *ParamDefaultList) ParamByName(name string) (int, Param) {
 	for i, param := range p.Params {
 		if param.Name == name {
 			return i, param
 		}
 	}
-	return -1, ParamDefault{}
+	return -1, Param{}
 }
 
 var paramDefaultList ParamDefaultList
