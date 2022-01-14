@@ -337,12 +337,12 @@ func (c *EEBus) writeChargingPlan() error {
 		// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
 		for i := 0; i < 24; i++ {
 			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
-				Duration: time.Duration(1) * time.Hour,
+				Duration: time.Hour,
 				MaxValue: maxPower,
 				Pricing:  tariffGrid,
 			})
 		}
-		chargingPlan.Duration = time.Duration(24) * time.Hour
+		chargingPlan.Duration = 24 * time.Hour
 	case communication.EVChargingStrategyEnumTypeDirectCharging:
 		// The EV is in direct charging mode
 
@@ -357,12 +357,12 @@ func (c *EEBus) writeChargingPlan() error {
 				MaxValue: maxPower,
 				Pricing:  tariffGrid,
 			})
-			chargingPlan.Duration = time.Duration(24) * time.Hour
+			chargingPlan.Duration = 24 * time.Hour
 		} else {
 			// in this mode we need to enforce the evcc modes
 
 			// we need to create a 24h charging plan
-			chargingPlan.Duration = time.Duration(24) * time.Hour
+			chargingPlan.Duration = 24 * time.Hour
 
 			currentMode := c.lp.GetMode()
 			switch currentMode {
@@ -373,7 +373,7 @@ func (c *EEBus) writeChargingPlan() error {
 					MaxValue: maxPower,
 					Pricing:  tariffGrid,
 				})
-				chargingPlan.Duration = time.Duration(24) * time.Hour
+				chargingPlan.Duration = 24 * time.Hour
 			case api.ModePV:
 				// lets do 24 1 hour slots with maximum power, power will be adjusted via Overload Protection limits
 				// but set the nightly hours to 0 W, we assume those to be from 20:00 to 07:00
@@ -386,22 +386,22 @@ func (c *EEBus) writeChargingPlan() error {
 						pricing = tariffGrid
 					}
 					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
-						Duration: time.Duration(1) * time.Hour,
+						Duration: time.Hour,
 						MaxValue: power,
 						Pricing:  pricing,
 					})
 				}
-				chargingPlan.Duration = time.Duration(24) * time.Hour
+				chargingPlan.Duration = 24 * time.Hour
 			case api.ModeOff:
 				// lets do 24 1 hour slots with 0 W, so it wakes at once an hour to check back
 				for i := 0; i < 24; i++ {
 					chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
-						Duration: time.Duration(1) * time.Hour,
+						Duration: time.Hour,
 						MaxValue: 0,
 						Pricing:  tariffGrid,
 					})
 				}
-				chargingPlan.Duration = time.Duration(24) * time.Hour
+				chargingPlan.Duration = 24 * time.Hour
 			}
 		}
 	case communication.EVChargingStrategyEnumTypeTimedCharging:
@@ -423,7 +423,7 @@ func (c *EEBus) writeChargingPlan() error {
 
 		for i := 0; i < hours; i++ {
 			chargingPlan.Slots = append(chargingPlan.Slots, communication.EVChargingSlot{
-				Duration: time.Duration(1) * time.Hour,
+				Duration: time.Hour,
 				MaxValue: maxPower,
 				Pricing:  tariffGrid,
 			})
@@ -431,7 +431,7 @@ func (c *EEBus) writeChargingPlan() error {
 		chargingPlan.Duration = targetDuration
 
 	default:
-		return fmt.Errorf("implementation missing for charging strategy: %s", data.EVData.ChargingStrategy)
+		return fmt.Errorf("charging strategy not implemented: %s", data.EVData.ChargingStrategy)
 	}
 
 	return c.cc.WriteChargingPlan(chargingPlan)
