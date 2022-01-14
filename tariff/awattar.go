@@ -3,7 +3,6 @@ package tariff
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -17,16 +16,12 @@ import (
 )
 
 type Awattar struct {
-	mux         sync.Mutex
-	log         *util.Logger
-	uri         string
-	cheap       float64
-	cheapactive bool
-	last        time.Time
-	data        []awattar.PriceInfo
+	mux   sync.Mutex
+	log   *util.Logger
+	uri   string
+	cheap float64
+	data  []awattar.PriceInfo
 }
-
-type MyByPrices awattar.ByPrices
 
 var _ api.Tariff = (*Awattar)(nil)
 
@@ -73,22 +68,6 @@ func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	return t, nil
 }
 
-// MyByPrices implement sort.interface based on Marketprice field
-func (a MyByPrices) Len() int {
-	return len(a)
-}
-
-func (a MyByPrices) Less(i, j int) bool {
-	if a[i].Marketprice == a[j].Marketprice {
-		return a[i].StartTimestamp.After(a[j].StartTimestamp)
-	}
-	return a[i].Marketprice < a[j].Marketprice
-}
-
-func (a MyByPrices) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
 func (t *Awattar) Run() {
 	client := request.NewHelper(t.log)
 
@@ -100,15 +79,9 @@ func (t *Awattar) Run() {
 				continue
 			}
 
-			t.last = res.Data[len(res.Data)-1].EndTimestamp
-			sort.Sort(MyByPrices(res.Data))
-
 			t.mux.Lock()
 			t.data = res.Data
 			t.mux.Unlock()
-		} else {
-			t.last = t.data[len(t.data)-1].EndTimestamp
-			sort.Sort(MyByPrices(t.data))
 		}
 
 		t.mux.Lock()
@@ -138,8 +111,10 @@ func (t *Awattar) IsCheap() (bool, error) {
 }
 
 func (t *Awattar) Rates() ([]api.Rate, error) {
-	var res []api.Rate
+	t.mux.Lock()
+	defer t.mux.Unlock()
 
+	var res []api.Rate
 	for _, r := range t.data {
 		ar := api.Rate{
 			Start: r.StartTimestamp,

@@ -1,12 +1,31 @@
 package core
 
 import (
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
 )
+
+// RatesByPrice implements sort.Interface based on price
+type RatesByPrice []api.Rate
+
+func (a RatesByPrice) Len() int {
+	return len(a)
+}
+
+func (a RatesByPrice) Less(i, j int) bool {
+	if a[i].Price == a[j].Price {
+		return a[i].Start.After(a[j].Start)
+	}
+	return a[i].Price < a[j].Price
+}
+
+func (a RatesByPrice) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
 
 type Planner struct {
 	log         *util.Logger
@@ -55,6 +74,8 @@ func (t *Planner) IsCheap(duration time.Duration, end time.Time) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	sort.Sort(RatesByPrice(data))
 
 	for i := 0; i < len(data); i++ {
 		pi = data[i]
