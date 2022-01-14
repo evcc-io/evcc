@@ -48,6 +48,9 @@ const (
 	settleDuration        = 100 * time.Millisecond
 )
 
+// elapsed is the time an expired timer will be set to
+var elapsed = time.Unix(0, 1)
+
 // PollConfig defines the vehicle polling mode and interval
 type PollConfig struct {
 	Mode     string        `mapstructure:"mode"`     // polling mode charging (default), connected, always
@@ -350,7 +353,10 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset pv enable/disable timer
-	lp.resetPVTimerIfRunning()
+	// https://github.com/evcc-io/evcc/issues/2289
+	if !lp.pvTimer.Equal(elapsed) {
+		lp.resetPVTimerIfRunning()
+	}
 }
 
 // evVehicleConnectHandler sends external start event
@@ -879,8 +885,11 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 
 // elapsePVTimer puts the pv enable/disable timer into elapsed state
 func (lp *LoadPoint) elapsePVTimer() {
-	lp.pvTimer = lp.clock.Now().Add(-lp.Disable.Delay)
-	lp.guardUpdated = lp.clock.Now().Add(-lp.GuardDuration)
+	lp.log.DEBUG.Printf("pv timer elapse")
+
+	lp.pvTimer = elapsed
+	lp.guardUpdated = elapsed
+
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
 
