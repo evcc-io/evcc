@@ -12,7 +12,6 @@ import (
 	"github.com/coreos/go-oidc"
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
-	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 )
 
@@ -35,7 +34,7 @@ type Identity struct {
 	token      *oauth2.Token
 
 	loginUpdateC chan struct{}
-	apiPath      string
+	basePath     string
 }
 
 // TODO: SessionSecret from config/persistence
@@ -55,10 +54,7 @@ func NewIdentity(log *util.Logger, id, secret string, loginUpdateC chan struct{}
 			ClientSecret: secret,
 			Endpoint:     provider.Endpoint(),
 			Scopes:       []string{oidc.ScopeOfflineAccess, "mb:vehicle:mbdata:evstatus"},
-			// TODO: configure properly redirectURL
-			RedirectURL: "http://localhost:7070/vehicle/mercedes/callback",
 		},
-		apiPath: "/identityproviders/mercedes",
 	}
 
 	for _, o := range options {
@@ -82,13 +78,27 @@ func (v *Identity) Token() *oauth2.Token {
 	return v.token
 }
 
-var _ api.WebController = (*Identity)(nil)
+var _ api.ProviderLogin = (*Identity)(nil)
 
-func (v *Identity) WebControl(router *mux.Router) {
-	router.HandleFunc("/vehicle/mercedes/callback", v.redirectHandler())
+func (v *Identity) SetBasePath(basepath string) {
+	v.basePath = basepath
+}
 
-	router.Methods(http.MethodPost).Path(v.LoginPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (v *Identity) Callback() api.Callback {
+	return api.Callback{
+		Path:    fmt.Sprintf("%s/callback", v.basePath),
+		Handler: v.redirectHandler(),
+	}
+}
+
+func (v *Identity) SetOAuthCallbackURI(uri string) {
+	v.AuthConfig.RedirectURL = uri
+}
+
+func (v *Identity) LoginHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		state := NewState(v.sessionSecret)
+
 		b, _ := json.Marshal(struct {
 			LoginUri string `json:"loginUri"`
 		}{
@@ -99,17 +109,17 @@ func (v *Identity) WebControl(router *mux.Router) {
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(b)
-	})
+	}
+}
 
-	router.Methods(http.MethodPost).Path(v.LogoutPath()).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (v *Identity) LogoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		v.token = nil
 
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(nil)
-	})
+	}
 }
-
-var _ api.ProviderLogin = (*Identity)(nil)
 
 // LoggedIn implements the api.ProviderLogin interface
 func (v *Identity) LoggedIn() bool {
@@ -118,55 +128,56 @@ func (v *Identity) LoggedIn() bool {
 
 // LoginPath implements the api.ProviderLogin interface
 func (v *Identity) LoginPath() string {
-	return fmt.Sprintf("%s/login", v.apiPath)
+	return fmt.Sprintf("%s/login", v.basePath)
 }
 
 // LogoutPath implements the api.ProviderLogin interface
 func (v *Identity) LogoutPath() string {
-	return fmt.Sprintf("%s/logout", v.apiPath)
+	return fmt.Sprintf("%s/logout", v.basePath)
 }
 
-func (v *Identity) redirectHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		data, err := url.ParseQuery(r.URL.RawQuery)
-		if err != nil {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
+func (v *Identity) redirectHandler() api.RedirectHandlerFunc {
+	return func(redirectURI string) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			data, err := url.ParseQuery(r.URL.RawQuery)
+			if err != nil {
+				fmt.Fprintln(w, "invalid response:", data)
+				return
+			}
 
-		if error, ok := data["error"]; ok {
-			fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
-			return
-		}
+			if error, ok := data["error"]; ok {
+				fmt.Fprintf(w, "error: %s: %s\n", error, data["error_description"])
+				return
+			}
 
-		states, ok := data["state"]
-		if !ok || len(states) != 1 {
-			fmt.Fprintln(w, "invalid state response:", data)
-			return
-		} else if err := Validate(states[0], v.sessionSecret); err != nil {
-			fmt.Fprintf(w, "failed state validation: %s", err)
-			return
-		}
+			states, ok := data["state"]
+			if !ok || len(states) != 1 {
+				fmt.Fprintln(w, "invalid state response:", data)
+				return
+			} else if err := Validate(states[0], v.sessionSecret); err != nil {
+				fmt.Fprintf(w, "failed state validation: %s", err)
+				return
+			}
 
-		codes, ok := data["code"]
-		if !ok || len(codes) != 1 {
-			fmt.Fprintln(w, "invalid response:", data)
-			return
-		}
+			codes, ok := data["code"]
+			if !ok || len(codes) != 1 {
+				fmt.Fprintln(w, "invalid response:", data)
+				return
+			}
 
-		token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
-		if err != nil {
-			fmt.Fprintln(w, "token error:", err)
-			return
-		}
+			token, err := v.AuthConfig.Exchange(context.Background(), codes[0])
+			if err != nil {
+				fmt.Fprintln(w, "token error:", err)
+				return
+			}
 
-		if token.Valid() {
-			v.token = token
-			v.log.TRACE.Println("sending login update...")
-			v.loginUpdateC <- struct{}{}
-		}
+			if token.Valid() {
+				v.token = token
+				v.log.TRACE.Println("sending login update...")
+				v.loginUpdateC <- struct{}{}
+			}
 
-		// TODO: make uri configurable like v.LocalURI = "http://localhost:7070"
-		http.Redirect(w, r, "http://localhost:7070", http.StatusFound)
+			http.Redirect(w, r, redirectURI, http.StatusFound)
+		}
 	}
 }

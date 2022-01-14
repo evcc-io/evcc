@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dustin/go-humanize"
@@ -197,11 +198,45 @@ func (cp *ConfigProvider) configureVehicles(conf config) error {
 	return nil
 }
 
-// webControl hands the router to implementing devices
+// webControl handles implemented routes by devices.
+// for now only api.ProviderLogin related routes
 func (cp *ConfigProvider) webControl(httpd *server.HTTPd) {
+	router := httpd.Router()
 	for _, v := range cp.vehicles {
-		if ctrl, ok := v.(api.WebController); ok {
-			ctrl.WebControl(httpd.Router())
+		if provider, ok := v.(api.ProviderLogin); ok {
+			// TODO: exchange 'mercedes' with something dynamic from the vehicle!
+			basePath := fmt.Sprintf("/auth/vehicles/%s", "mercedes")
+			provider.SetBasePath(basePath)
+
+			callback := provider.Callback()
+			callbackURI := fmt.Sprintf("http://%s%s", httpd.Addr, callback.Path)
+			{
+				provider.SetOAuthCallbackURI(callbackURI)
+				log.INFO.Printf("ensure the oauth client redirect/callback is configured for %s: %s", v.Title(), callbackURI)
+			}
+
+			// TODO: how to handle multiple vehicles of the same type
+			//
+			// problems, thoughts and ideas:
+			// conflicting callbacks!
+			// - some unique part has to be added.
+			// - or a general callback handler and the specific vehicle is transported in the state?
+			//   - callback handler needs an option to set the token at the right vehicle and use the right code exchange
+
+			// TODO: what about https?
+			router.
+				Methods(http.MethodGet).
+				Path(callback.Path).
+				HandlerFunc(callback.Handler(fmt.Sprintf("http://%s", httpd.Addr)))
+
+			router.
+				Methods(http.MethodPost).
+				Path(provider.LoginPath()).
+				HandlerFunc(provider.LoginHandler())
+			router.
+				Methods(http.MethodPost).
+				Path(provider.LogoutPath()).
+				HandlerFunc(provider.LogoutHandler())
 		}
 	}
 }
