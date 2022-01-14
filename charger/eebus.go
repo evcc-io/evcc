@@ -177,7 +177,9 @@ func (c *EEBus) dataUpdateHandler(dataType communication.EVDataElementUpdateType
 	// case communication.EVDataElementUpdateEVChargeState:
 	// case communication.EVDataElementUpdateChargingStrategy:
 	case communication.EVDataElementUpdateChargingPlanRequired:
-		c.writeChargingPlan()
+		if err := c.writeChargingPlan(); err != nil {
+			c.log.ERROR.Println("failed to send charging plan: ", err)
+		}
 	case communication.EVDataElementUpdateConnectedPhases:
 		c.setLoadpointMinMaxLimits(data)
 	case communication.EVDataElementUpdatePowerLimits:
@@ -432,9 +434,7 @@ func (c *EEBus) writeChargingPlan() error {
 		return fmt.Errorf("implementation missing for charging strategy: %s", data.EVData.ChargingStrategy)
 	}
 
-	c.cc.WriteChargingPlan(chargingPlan)
-
-	return nil
+	return c.cc.WriteChargingPlan(chargingPlan)
 }
 
 // send current charging power limits to the EV
