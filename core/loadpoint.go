@@ -353,7 +353,6 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	lp.socUpdated = time.Time{}
 
 	// reset pv enable/disable timer
-	// https://github.com/evcc-io/evcc/issues/2289
 	lp.resetPVTimerIfRunning()
 }
 
