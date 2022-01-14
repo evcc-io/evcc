@@ -3,7 +3,7 @@
 		<div class="label-scale">
 			<div class="d-flex justify-content-start">
 				<LabelBar v-bind="labelBarProps('top', 'pvProduction')">
-					<fa-icon icon="sun"></fa-icon>
+					<shopicon-regular-sun></shopicon-regular-sun>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('top', 'batteryDischarge')">
 					<BatteryIcon :soc="batterySoC" discharge />
@@ -54,10 +54,10 @@
 		<div class="label-scale">
 			<div class="d-flex justify-content-start">
 				<LabelBar v-bind="labelBarProps('bottom', 'homePower')">
-					<fa-icon icon="home"></fa-icon>
+					<shopicon-regular-home></shopicon-regular-home>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'loadpoints')">
-					<fa-icon icon="car"></fa-icon>
+					<shopicon-regular-car3></shopicon-regular-car3>
 				</LabelBar>
 				<LabelBar v-bind="labelBarProps('bottom', 'batteryCharge')">
 					<BatteryIcon :soc="batterySoC" charge />
@@ -76,6 +76,9 @@ import formatter from "../../mixins/formatter";
 import BatteryIcon from "./BatteryIcon.vue";
 import GridIcon from "./GridIcon.vue";
 import LabelBar from "./LabelBar.vue";
+import "@h2d2/shopicons/es/regular/car3";
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/home";
 
 export default {
 	name: "Visualization",
@@ -207,10 +210,9 @@ export default {
 </script>
 <style scoped>
 .site-progress {
-	--height: 38px;
+	--height: 32px;
 	height: var(--height);
-	margin: 0.25rem 0;
-	border-radius: 5px;
+	border-radius: 10px;
 	display: flex;
 	overflow: hidden;
 }
@@ -220,6 +222,7 @@ export default {
 	align-items: center;
 	overflow: hidden;
 	position: relative;
+	font-size: 0.75rem;
 	width: 0;
 }
 .visualization--ready .site-progress-bar {

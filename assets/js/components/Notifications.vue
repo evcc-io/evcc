@@ -7,7 +7,9 @@
 			data-bs-target="#notificationModal"
 			class="btn btn-link text-decoration-none link-light text-nowrap"
 		>
-			<fa-icon :class="iconClass" icon="exclamation-triangle"></fa-icon>
+			<shopicon-regular-exclamationtriangle
+				:class="iconClass"
+			></shopicon-regular-exclamationtriangle>
 		</button>
 
 		<div
@@ -40,14 +42,13 @@
 								{{ fmtTimeAgo(msg.time - new Date()) }}
 							</small>
 							<p class="d-flex align-items-baseline">
-								<fa-icon
+								<shopicon-regular-exclamationtriangle
 									:class="{
 										'text-danger': msg.type === 'error',
 										'text-warning': msg.type === 'warn',
 									}"
 									class="flex-grow-0 d-block"
-									icon="exclamation-triangle"
-								></fa-icon>
+								></shopicon-regular-exclamationtriangle>
 								<span class="flex-grow-1 px-2 py-1 text-break">
 									{{ msg.message }}
 								</span>
@@ -75,6 +76,7 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/exclamationtriangle";
 import "../icons";
 import formatter from "../mixins/formatter";
 

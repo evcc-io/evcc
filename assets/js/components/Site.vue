@@ -1,5 +1,5 @@
 <template>
-	<div class="flex-grow-1 d-flex flex-column" :class="{ 'user-select-none': dragActive }">
+	<div class="flex-grow-1 d-flex flex-column">
 		<div class="container" @click="toggleDetails">
 			<h3 class="d-none d-md-block my-4">
 				{{ siteTitle || "Home" }}
@@ -7,20 +7,14 @@
 			<Energyflow v-bind="energyflow" />
 		</div>
 		<div
-			class="flex-grow-1 d-flex justify-content-around flex-column content-area"
+			class="flex-grow-1 d-flex flex-column content-area"
 			:style="`margin-top: ${dragTopMargin}px`"
-			:class="{ 'content-area--transition': !dragActive }"
 		>
-			<div
-				class="drag-handle py-3"
-				@mousedown="dragStart"
-				@mousemove="dragMove"
-				@mouseup="dragEnd"
-				@touchstart="dragStart"
-				@touchmove="dragMove"
-				@touchend="dragEnd"
-			>
-				<hr />
+			<div class="toggle-handle py-3 d-flex justify-content-center" @click="toggleDetails">
+				<shopicon-regular-arrowup
+					class="toggle-icon"
+					:class="`toggle-icon--${positionUp ? 'up' : 'down'}`"
+				></shopicon-regular-arrowup>
 			</div>
 			<div class="container">
 				<template v-for="(loadpoint, id) in loadpoints">
@@ -38,6 +32,7 @@
 </template>
 
 <script>
+import "@h2d2/shopicons/es/regular/arrowup";
 import Energyflow from "./Energyflow";
 import Loadpoint from "./Loadpoint";
 import formatter from "../mixins/formatter";
@@ -66,20 +61,13 @@ export default {
 	data: function () {
 		return {
 			positionUp: true,
-			dragStartY: 0,
-			dragCurrentY: 0,
-			dragActive: false,
 		};
 	},
 	computed: {
 		dragTopMargin: function () {
 			const min = -175;
 			const max = 20;
-			let position = this.positionUp ? min : max;
-			if (this.dragActive) {
-				position -= this.dragStartY - this.dragCurrentY;
-			}
-			return Math.max(min, Math.min(position, max));
+			return this.positionUp ? min : max;
 		},
 		energyflow: function () {
 			return this.collectProps(Energyflow);
@@ -98,32 +86,6 @@ export default {
 		toggleDetails() {
 			this.positionUp = !this.positionUp;
 		},
-		dragMove(e) {
-			if (this.dragActive) {
-				const screenY = e.touches ? e.touches[0].screenY : e.screenY;
-				this.dragCurrentY = screenY;
-				e.preventDefault();
-			}
-		},
-		dragStart(e) {
-			const screenY = e.touches ? e.touches[0].screenY : e.screenY;
-			this.dragActive = true;
-			this.dragStartY = screenY;
-			this.dragCurrentY = screenY;
-			e.preventDefault();
-		},
-		dragEnd(e) {
-			const diffY = this.dragStartY - this.dragCurrentY;
-			if (diffY > 70) {
-				this.positionUp = true;
-			}
-			if (diffY < -70) {
-				this.positionUp = false;
-			}
-			this.dragActive = false;
-			this.dragStartY = NaN;
-			e.preventDefault();
-		},
 	},
 };
 </script>
@@ -133,19 +95,21 @@ export default {
 	border-radius: 20px 20px 0 0;
 	color: var(--bs-white);
 	z-index: 10;
-}
-.content-area--transition {
+	min-height: 90vh;
 	transition: margin-top 0.4s cubic-bezier(0.5, 0.5, 0.5, 1.15);
 }
-.drag-handle {
-	cursor: grab;
+.toggle-handle {
+	cursor: pointer;
+	color: var(--bs-gray-500);
 }
-.drag-handle hr {
-	display: block;
-	margin: 0 auto;
-	border: none;
-	height: 2px;
-	width: 1rem;
-	background-color: var(--bs-gray-500);
+
+.toggle-icon {
+	transition: transform 0.3s linear;
+}
+.toggle-icon--up {
+	transform: scaleY(-1);
+}
+.toggle-icon--down {
+	transform: scaleY(1);
 }
 </style>

@@ -16,21 +16,27 @@
 			/>
 			<div class="col-12">
 				<div class="d-flex justify-content-between" data-test-pv-production>
-					<span class="details-icon text-muted"><fa-icon icon="sun"></fa-icon></span>
+					<span class="details-icon text-muted"
+						><shopicon-regular-sun></shopicon-regular-sun
+					></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.pvProduction")
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(pvProduction) }}</span>
 				</div>
 				<div class="d-flex justify-content-between" data-test-home-power>
-					<span class="details-icon text-muted"><fa-icon icon="home"></fa-icon></span>
+					<span class="details-icon text-muted"
+						><shopicon-regular-home></shopicon-regular-home
+					></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$t("main.energyflow.homePower")
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(homePower) }}</span>
 				</div>
 				<div class="d-flex justify-content-between" data-test-loadpoints>
-					<span class="details-icon text-muted"><fa-icon icon="car"></fa-icon></span>
+					<span class="details-icon text-muted"
+						><shopicon-regular-car3></shopicon-regular-car3
+					></span>
 					<span class="text-nowrap flex-grow-1">{{
 						$tc("main.energyflow.loadpoints", activeLoadpointsCount, {
 							count: activeLoadpointsCount,
@@ -103,6 +109,9 @@ import "../../icons";
 import formatter from "../../mixins/formatter";
 import Visualization from "./Visualization.vue";
 import BatteryIcon from "./BatteryIcon.vue";
+import "@h2d2/shopicons/es/regular/sun";
+import "@h2d2/shopicons/es/regular/home";
+import "@h2d2/shopicons/es/regular/car3";
 
 export default {
 	name: "Energyflow",

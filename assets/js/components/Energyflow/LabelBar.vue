@@ -35,7 +35,7 @@ export default {
 .label-bar {
 	width: 0;
 	margin: 0;
-	height: 1.7rem;
+	height: 2.4rem;
 	padding: 0.6rem 0;
 	opacity: 1;
 	overflow: hidden;
@@ -45,7 +45,7 @@ export default {
 }
 .label-bar-scale {
 	border: 1px solid var(--bs-gray);
-	height: 0.5rem;
+	height: 1rem;
 	background: none;
 	display: flex;
 	justify-content: center;
@@ -61,16 +61,16 @@ export default {
 	border-top: none;
 }
 .label-bar--top.label-bar--first .label-bar-scale {
-	border-top-left-radius: 4px;
+	border-top-left-radius: 10px;
 }
 .label-bar--top.label-bar--last .label-bar-scale {
-	border-top-right-radius: 4px;
+	border-top-right-radius: 10px;
 }
 .label-bar--bottom.label-bar--first .label-bar-scale {
-	border-bottom-left-radius: 4px;
+	border-bottom-left-radius: 10px;
 }
 .label-bar--bottom.label-bar--last .label-bar-scale {
-	border-bottom-right-radius: 4px;
+	border-bottom-right-radius: 10px;
 }
 .label-bar:not(.label-bar--first) .label-bar-scale {
 	border-left: none;

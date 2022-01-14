@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<button
-			class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap"
+			class="btn btn-link pe-0 text-decoration-none link-dark text-nowrap d-flex"
 			data-bs-toggle="modal"
 			data-bs-target="#savingsModal"
 		>
@@ -10,8 +10,8 @@
 			}}</span
 			><span class="d-none d-sm-inline">{{
 				$t("footer.savings.footerLong", { percent })
-			}}</span
-			><fa-icon icon="sun" class="icon ms-2 text-evcc"></fa-icon>
+			}}</span>
+			<shopicon-regular-sun class="ms-2 text-evcc"></shopicon-regular-sun>
 		</button>
 		<div
 			id="savingsModal"
@@ -53,7 +53,9 @@
 						<div class="chart-container mb-3">
 							<div class="chart-legend d-flex flex-wrap justify-content-between mb-1">
 								<div class="text-nowrap">
-									<fa-icon icon="square" class="text-evcc"></fa-icon>
+									<shopicon-regular-sun
+										class="text-evcc align-bottom d-inline-block"
+									></shopicon-regular-sun>
 									{{
 										$t("footer.savings.modalChartSelf", {
 											self: fmtKw(selfConsumptionCharged * 1000, true, false),
@@ -158,6 +160,7 @@
 <script>
 import formatter from "../mixins/formatter";
 import Sponsor from "./Sponsor.vue";
+import "@h2d2/shopicons/es/regular/sun";
 
 export default {
 	name: "Savings",
