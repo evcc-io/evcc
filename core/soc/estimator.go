@@ -51,7 +51,7 @@ func (s *Estimator) Reset() {
 }
 
 // AssumedChargeDuration estimates charge duration up to targetSoC based on virtual capacity
-func (s *Estimator) AssumedChargeDuration(chargePower float64, targetSoC int) time.Duration {
+func (s *Estimator) AssumedChargeDuration(targetSoC int, chargePower float64) time.Duration {
 	percentRemaining := float64(targetSoC) - s.vehicleSoc
 
 	if percentRemaining <= 0 {
@@ -83,7 +83,7 @@ func (s *Estimator) RemainingChargeDuration(chargePower float64, targetSoC int) 
 			}
 		}
 
-		return s.AssumedChargeDuration(chargePower, targetSoC)
+		return s.AssumedChargeDuration(targetSoC, chargePower)
 	}
 
 	return -1
