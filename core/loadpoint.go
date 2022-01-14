@@ -48,7 +48,7 @@ const (
 	settleDuration        = 100 * time.Millisecond
 )
 
-// elapsed is the time an expired time will be set to
+// elapsed is the time an expired timer will be set to
 var elapsed = time.Unix(0, 1)
 
 // PollConfig defines the vehicle polling mode and interval
