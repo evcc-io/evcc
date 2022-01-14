@@ -20,6 +20,7 @@ package charger
 import (
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"github.com/evcc-io/evcc/api"
 	"github.com/evcc-io/evcc/util"
@@ -45,8 +46,7 @@ const (
 	hecRegFailsafe      = 262 // Holding
 
 	hecStandbyDisabled = 4 // disable standby
-
-	hecFailsafeMode = 0 // status F
+	hecFailsafeMode    = 0 // status F
 )
 
 var hecRegCurrents = []uint16{6, 7, 8}
@@ -118,7 +118,9 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 		return api.StatusNone, err
 	}
 
-	switch sb := binary.BigEndian.Uint16(b); sb {
+	sb := binary.BigEndian.Uint16(b)
+
+	switch sb {
 	case 2, 3:
 		return api.StatusA, nil
 	case 4, 5:
@@ -130,10 +132,8 @@ func (wb *HeidelbergEC) Status() (api.ChargeStatus, error) {
 	case 9:
 		return api.StatusE, nil
 	case 10:
-		// Exit and disable the instant fail-safe mode
-		err = wb.set(hecRegTimeout, 0)
-
-		return api.StatusF, err
+		// Fake Status B during Wakeup
+		return api.StatusB, nil
 	default:
 		return api.StatusNone, fmt.Errorf("invalid status: %d", sb)
 	}
@@ -267,6 +267,10 @@ func (wb *HeidelbergEC) Diagnose() {
 
 // WakeUp implements the api.AlarmClock interface
 func (wb *HeidelbergEC) WakeUp() error {
-	// set immediate timeout to enter the fail-safe mode
-	return wb.set(hecRegTimeout, 1)
+	err := wb.set(hecRegTimeout, 1)
+	if err == nil {
+		time.Sleep(3 * time.Second)
+		err = wb.set(hecRegTimeout, 0)
+	}
+	return err
 }
