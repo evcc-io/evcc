@@ -53,6 +53,7 @@ type Easee struct {
 	phaseMode             int
 	currentPower, sessionEnergy,
 	currentL1, currentL2, currentL3 float64
+	rfid string
 }
 
 func init() {
@@ -273,6 +274,8 @@ func (c *Easee) observe(typ string, i json.RawMessage) {
 	c.updated = time.Now()
 
 	switch res.ID {
+	case easee.USER_IDTOKEN:
+		c.rfid = res.Value
 	case easee.IS_ENABLED:
 		c.chargerEnabled = value.(bool)
 	case easee.TOTAL_POWER:
@@ -495,4 +498,14 @@ func (c *Easee) Currents() (float64, float64, float64, error) {
 	defer c.mux.L.Unlock()
 
 	return c.currentL1, c.currentL2, c.currentL3, nil
+}
+
+var _ api.Identifier = (*Easee)(nil)
+
+// Currents implements the api.MeterCurrent interface
+func (c *Easee) Identify() (string, error) {
+	c.mux.L.Lock()
+	defer c.mux.L.Unlock()
+
+	return c.rfid, nil
 }
