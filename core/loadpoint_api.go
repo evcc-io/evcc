@@ -129,11 +129,6 @@ func (lp *LoadPoint) SetTargetCharge(finishAt time.Time, soc int) {
 	}
 }
 
-// Get Finish Time
-func (lp *LoadPoint) GetFinishAt() time.Time {
-	return lp.socTimer.Time
-}
-
 // RemoteControl sets remote status demand
 func (lp *LoadPoint) RemoteControl(source string, demand loadpoint.RemoteDemand) {
 	lp.Lock()
@@ -249,4 +244,14 @@ func (lp *LoadPoint) GetRemainingEnergy() float64 {
 	lp.Lock()
 	defer lp.Unlock()
 	return lp.chargeRemainingEnergy
+}
+
+// GetFinishAt returns the charge finish time
+func (lp *LoadPoint) GetFinishAt() time.Time {
+	return lp.socTimer.Time
+}
+
+// GetAssumedDuration is the estimated remaining charging duration
+func (lp *LoadPoint) GetAssumedDuration() time.Duration {
+	return lp.socEstimator.AssumedChargeDuration(lp.SoC.Target, lp.GetMaxPower())
 }
