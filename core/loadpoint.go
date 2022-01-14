@@ -349,8 +349,10 @@ func (lp *LoadPoint) evChargeStopHandler() {
 	// soc update reset
 	lp.socUpdated = time.Time{}
 
-	// reset pv enable/disable timer
-	lp.resetPVTimerIfRunning()
+	// elapse pv enable/disable timer
+	// if vehicle stopped charging due to 1p3p switch it can start up immediately
+	// https://github.com/evcc-io/evcc/issues/2289
+	lp.elapsePVTimer()
 }
 
 // evVehicleConnectHandler sends external start event
@@ -879,6 +881,7 @@ func (lp *LoadPoint) effectiveCurrent() float64 {
 
 // elapsePVTimer puts the pv enable/disable timer into elapsed state
 func (lp *LoadPoint) elapsePVTimer() {
+	lp.log.DEBUG.Printf("pv timer elapse")
 	lp.pvTimer = lp.clock.Now().Add(-lp.Disable.Delay)
 	lp.guardUpdated = lp.clock.Now().Add(-lp.GuardDuration)
 	lp.publishTimer(pvTimer, 0, timerInactive)
