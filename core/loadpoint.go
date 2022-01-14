@@ -1508,18 +1508,17 @@ func (lp *LoadPoint) Update(sitePower float64, cheap bool, batteryBuffered bool)
 		if lp.wakeUpTimer.active {
 			if lp.wakeUpTimer.duration() > 30 {
 				lp.log.DEBUG.Printf("time for WakeUp calls - sleeping? Mode:%s LPStatus:%s Active:%ds SOC:%f Current:%f Power:%f ", mode, lp.status, lp.wakeUpTimer.duration(), lp.vehicleSoc, lp.chargeCurrent, lp.chargePower)
-				// call the Vehicle WakeUp if available
-				if vs, ok := lp.vehicle.(api.AlarmClock); ok {
-					if err := vs.WakeUp(); err == nil {
-						lp.log.DEBUG.Printf("vehicle WakeUp API called")
-					}
-				}
 				// call the Charger WakeUp if available
 				if c, ok := lp.charger.(api.AlarmClock); ok {
 					if err := c.WakeUp(); err == nil {
 						lp.log.DEBUG.Printf("charger WakeUp called")
 					}
-
+				}
+				// call the Vehicle WakeUp if available
+				if vs, ok := lp.vehicle.(api.AlarmClock); ok {
+					if err := vs.WakeUp(); err == nil {
+						lp.log.DEBUG.Printf("vehicle WakeUp API called")
+					}
 				}
 				// stop the WakeUpTimer as we don't like to call it again
 				lp.log.DEBUG.Print("stop WakeUpTimer")
