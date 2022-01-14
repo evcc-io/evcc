@@ -394,7 +394,8 @@ func (site *Site) update(lp Updater) {
 	var cheap bool
 	var err error
 	if site.tariffs.Grid != nil {
-		cheap, err = site.tariffs.Grid.IsCheap(lp.GetAssumedDuration(), lp.GetFinishAt())
+		p := NewPlanner(site.log, site.tariffs.Grid)
+		cheap, err = p.IsCheap(lp.GetAssumedDuration(), lp.GetFinishAt())
 		if err != nil {
 			cheap = false
 		}

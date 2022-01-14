@@ -192,9 +192,15 @@ type AlarmClock interface {
 	WakeUp() error
 }
 
+type Rate struct {
+	Start, End time.Time
+	Price      float64
+}
+
 type Tariff interface {
-	IsCheap(duration time.Duration, end time.Time) (bool, error)
+	IsCheap() (bool, error)
 	CurrentPrice() (float64, error) // EUR/kWh, CHF/kWh, ...
+	Rates() ([]Rate, error)
 }
 
 type WebController interface {

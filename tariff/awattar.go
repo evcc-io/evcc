@@ -125,113 +125,29 @@ func (t *Awattar) CurrentPrice() (float64, error) {
 		pi := t.data[i]
 
 		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) {
-			return pi.Marketprice / 1000, nil // convert EUR/MWh to EUR/KWh
+			return pi.Marketprice / 1e3, nil // convert EUR/MWh to EUR/KWh
 		}
 	}
 
 	return 0, errors.New("unable to find current awattar price")
 }
 
-func (t *Awattar) IsCheap(duration time.Duration, end time.Time) (bool, error) {
-	t.mux.Lock()
-	defer t.mux.Unlock()
+func (t *Awattar) IsCheap() (bool, error) {
+	price, err := t.CurrentPrice()
+	return price <= t.cheap, err
+}
 
-	if end.Before(time.Now()) {
-		t.cheapactive = false
-		return false, nil
+func (t *Awattar) Rates() ([]api.Rate, error) {
+	var res []api.Rate
+
+	for _, r := range t.data {
+		ar := api.Rate{
+			Start: r.StartTimestamp,
+			End:   r.EndTimestamp,
+			Price: r.Marketprice / 1e3,
+		}
+		res = append(res, ar)
 	}
 
-	duration = time.Duration(float64(duration) * 1.05) // increase by 5%
-
-	// Save same duration until next price info update
-	if end.After(t.last) {
-		duration_old := duration
-		duration = time.Duration(float64(duration) * float64(time.Until(t.last)) / float64(time.Until(end)))
-		t.log.DEBUG.Printf("reduced duration from %s to %s until got new priceinfo after %s\n", duration_old.Round(time.Minute), duration.Round(time.Minute), t.last.Round(time.Minute))
-	}
-
-	t.log.DEBUG.Printf("charge duration: %s, end: %v, find best prices:\n", duration.Round(time.Minute), end.Round(time.Second))
-
-	var pi awattar.PriceInfo
-	var sum time.Duration
-	cheap_slot := false
-	cnt_expected_slots := 0
-	cur_slot_nr := 0
-
-	for i := 0; i < len(t.data); i++ {
-		pi = t.data[i]
-
-		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) { // current slot
-			pi.StartTimestamp = time.Now()
-		}
-
-		if pi.EndTimestamp.Before(time.Now()) { // old data
-			continue
-		}
-
-		if !(pi.StartTimestamp.Before(end)) { // charge ends before
-			continue
-		}
-
-		// timeslot already startet
-		pstart := pi.StartTimestamp
-		if pstart.Before(time.Now()) {
-			pstart = time.Now()
-		}
-
-		// timeslot ends after charge finish time
-		pend := pi.EndTimestamp
-		if pend.After(end) {
-			pend = end
-		}
-
-		cnt_expected_slots++
-		delta := pend.Sub(pstart)
-		sum += delta
-		t.log.TRACE.Printf("  Slot from: %v to %v price %f, timesum %s", pi.StartTimestamp.Round(time.Second), pi.EndTimestamp.Round(time.Second), pi.Marketprice, sum)
-
-		// current timeslot is a cheap one
-		if pi.StartTimestamp.Before(time.Now()) && pi.EndTimestamp.After(time.Now()) && duration > 0 {
-			cheap_slot = true // rename to cheapSlotNow
-			cur_slot_nr = cnt_expected_slots
-			t.log.TRACE.Printf(" (now, slot number %v)", cur_slot_nr)
-		}
-
-		// we found all necessary cheap slots to charge to targetSoC
-		if sum > duration {
-			break
-		}
-	}
-
-	if cheap_slot {
-		// use the most expensive slot as little as possible, but do not disable on last charging slot
-		if cur_slot_nr == cnt_expected_slots && !(t.cheapactive && cnt_expected_slots == 1) {
-			if sum <= duration {
-				t.log.DEBUG.Printf("cheap timeslot, charging...\n")
-				t.cheapactive = true
-			} else {
-				if t.cheapactive && sum > duration+10*time.Minute {
-					t.log.DEBUG.Printf("cheap timeslot, delayed start for %s\n", (sum - duration).Round(time.Minute))
-					t.cheapactive = false
-				}
-			}
-		} else { /* not most expensiv slot */
-			t.log.DEBUG.Printf("cheap timeslot, charging...\n")
-			t.cheapactive = true
-		}
-	} else {
-		t.log.DEBUG.Printf("not cheap, not charging...\n")
-		t.cheapactive = false
-	}
-
-	if t.cheapactive {
-		return true, nil
-	}
-
-	cheap := pi.Marketprice/1000 <= t.cheap // convert EUR/MWh to EUR/KWh
-	if cheap {
-		t.log.DEBUG.Printf("low marketprice, charging")
-	}
-
-	return cheap, nil
+	return res, nil
 }
