@@ -44,6 +44,8 @@ func fakeAwattar() awattar.Prices {
 	return *f
 }
 
+var _ = fakeAwattar
+
 func NewAwattar(other map[string]interface{}) (*Awattar, error) {
 	cc := struct {
 		Cheap  float64
