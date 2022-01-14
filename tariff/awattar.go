@@ -73,15 +73,9 @@ func (t *Awattar) Run() {
 
 	for ; true; <-time.NewTicker(time.Hour).C {
 		var res awattar.Prices
-		if true {
-			if err := client.GetJSON(t.uri, &res); err != nil {
-				t.log.ERROR.Println(err)
-				continue
-			}
-
-			t.mux.Lock()
-			t.data = res.Data
-			t.mux.Unlock()
+		if err := client.GetJSON(t.uri, &res); err != nil {
+			t.log.ERROR.Println(err)
+			continue
 		}
 
 		t.mux.Lock()
