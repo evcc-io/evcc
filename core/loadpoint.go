@@ -892,7 +892,8 @@ func (lp *LoadPoint) elapsePVTimer() {
 
 // resetPVTimerIfRunning resets the pv enable/disable timer to disabled state
 func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
-	if lp.pvTimer.IsZero() {
+	// https://github.com/evcc-io/evcc/issues/2289
+	if lp.pvTimer.IsZero() || lp.pvTimer.Equal(elapsed) {
 		return
 	}
 
@@ -903,10 +904,7 @@ func (lp *LoadPoint) resetPVTimerIfRunning(typ ...string) {
 	lp.log.DEBUG.Printf(msg)
 
 	// reset only if not already elapsed
-	// https://github.com/evcc-io/evcc/issues/2289
-	if !lp.pvTimer.Equal(elapsed) {
-		lp.pvTimer = time.Time{}
-	}
+	lp.pvTimer = time.Time{}
 
 	lp.publishTimer(pvTimer, 0, timerInactive)
 }
