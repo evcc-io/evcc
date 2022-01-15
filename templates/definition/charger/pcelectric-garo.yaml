@@ -1,0 +1,16 @@
+template: pcelectric-garo
+products: 
+- brand: PC Electric
+  description:
+    generic: Garo
+requirements:
+  description:
+    de: Es können momentan nur als Master konfigurierte Geräte verwendet werden!
+    en: Only devices configured as master can be used right now!
+params:
+- name: host
+- name: port
+  default: 8080
+render: |
+  type: garo
+  uri: http://{{ .host }}:{{ .port }}/servlet
