@@ -21,7 +21,7 @@ api.interceptors.response.use(
 
 export default api;
 
-const auth = axios.create({
+const authAPI = axios.create({
   baseURL: protocol + "//" + hostname + (port ? ":" + port : "") + pathname + "auth/",
   headers: {
     Accept: "application/json",
@@ -29,7 +29,7 @@ const auth = axios.create({
 });
 
 // global error handling
-auth.interceptors.response.use(
+authAPI.interceptors.response.use(
   (response) => response,
   (error) => {
     const url = error.config.baseURL + error.config.url;
@@ -38,4 +38,4 @@ auth.interceptors.response.use(
   }
 );
 
-export default auth;
+export default authAPI;

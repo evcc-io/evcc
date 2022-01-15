@@ -39,7 +39,7 @@
 <script>
 import collector from "../mixins/collector";
 
-import auth from "../api";
+import authAPI from "../api";
 
 import VehicleSoc from "./VehicleSoc";
 import VehicleSubline from "./VehicleSubline";
@@ -88,12 +88,12 @@ export default {
 			this.$emit("target-time-removed");
 		},
 		providerLogin: async function () {
-			auth.post(this.vehicleProviderLoginPath).then(function (response) {
+			authAPI.post(this.vehicleProviderLoginPath).then(function (response) {
 				window.location.href = response.data.loginUri;
 			});
 		},
 		providerLogout: async function () {
-			auth.post(this.vehicleProviderLogoutPath)
+			authAPI.post(this.vehicleProviderLogoutPath)
 		},
 	},
 };
