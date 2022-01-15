@@ -3,7 +3,7 @@
 		<div class="mb-3">
 			<div>
 				{{ vehicleTitle || $t("main.vehicle.fallbackName") }}
-				<span class="" v-if="showLogin">
+				<span v-if="showLogin">
 					<span v-if="!vehicleProviderLoggedIn">
 						<button
 							v-if="!vehicleProviderLoggedIn"
@@ -92,7 +92,7 @@ export default {
 			});
 		},
 		providerLogout: async function () {
-			authAPI.post(this.vehicleProviderLogoutPath)
+			authAPI.post(this.vehicleProviderLogoutPath);
 		},
 	},
 };
