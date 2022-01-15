@@ -55,11 +55,16 @@ export default {
 	transition: border-radius 500ms linear;
 }
 .label-bar--top .label-bar-scale {
+	border-top-left-radius: 10px;
+	border-top-right-radius: 10px;
 	border-bottom: none;
 }
 .label-bar--bottom .label-bar-scale {
+	border-bottom-left-radius: 10px;
+	border-bottom-right-radius: 10px;
 	border-top: none;
 }
+/*
 .label-bar--top.label-bar--first .label-bar-scale {
 	border-top-left-radius: 10px;
 }
@@ -72,6 +77,7 @@ export default {
 .label-bar--bottom.label-bar--last .label-bar-scale {
 	border-bottom-right-radius: 10px;
 }
+*/
 .label-bar:not(.label-bar--first) .label-bar-scale {
 	border-left: none;
 }

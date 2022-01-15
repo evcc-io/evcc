@@ -1,6 +1,6 @@
 <template>
 	<div class="flex-grow-1 d-flex flex-column">
-		<div class="container" @click="toggleDetails">
+		<div ref="upper" class="container" @click="toggleDetails">
 			<h3 class="d-none d-md-block my-4">
 				{{ siteTitle || "Home" }}
 			</h3>
@@ -60,13 +60,15 @@ export default {
 	},
 	data: function () {
 		return {
-			positionUp: true,
+			positionUp: false,
+			upperHeight: 0,
 		};
 	},
 	computed: {
 		dragTopMargin: function () {
-			const min = -175;
-			const max = 20;
+			const visualizationHeight = 210;
+			const min = -1 * this.upperHeight + visualizationHeight;
+			const max = 0;
 			return this.positionUp ? min : max;
 		},
 		energyflow: function () {
@@ -82,7 +84,17 @@ export default {
 			}, 0);
 		},
 	},
+	mounted() {
+		this.updateUpperHeight();
+		window.addEventListener("resize", this.updateUpperHeight);
+	},
+	destroyed() {
+		window.removeEventListener("resize", this.updateUpperHeight);
+	},
 	methods: {
+		updateUpperHeight() {
+			this.upperHeight = this.$refs.upper.offsetHeight;
+		},
 		toggleDetails() {
 			this.positionUp = !this.positionUp;
 		},

@@ -1,20 +1,37 @@
 <template>
-	<div>
-		<div class="row align-items-start align-items-md-center mt-4 energyflow">
-			<Visualization
-				class="col-12 offset-md-1 col-md-6 offset-lg-1 col-lg-8 offset-xl-1 col-xl-6 offset-xxl-1 col-xl-8 order-md-2"
-				:gridImport="gridImport"
-				:selfConsumption="selfConsumption"
-				:loadpoints="loadpointsPower"
-				:pvExport="pvExport"
-				:batteryCharge="batteryCharge"
-				:batteryDischarge="batteryDischarge"
-				:pvProduction="pvProduction"
-				:homePower="homePower"
-				:batterySoC="batterySoC"
-				:valuesInKw="valuesInKw"
-			/>
-			<div class="col-12">
+	<div class="row energyflow pb-4">
+		<Visualization
+			class="col-12"
+			:gridImport="gridImport"
+			:selfConsumption="selfConsumption"
+			:loadpoints="loadpointsPower"
+			:pvExport="pvExport"
+			:batteryCharge="batteryCharge"
+			:batteryDischarge="batteryDischarge"
+			:pvProduction="pvProduction"
+			:homePower="homePower"
+			:batterySoC="batterySoC"
+			:valuesInKw="valuesInKw"
+		/>
+		<div class="row mb-4">
+			<div class="col-12 d-flex justify-content-around">
+				<div class="d-flex flex-nowrap">
+					<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
+					<span>{{ $t("main.energyflow.selfConsumption") }}</span>
+				</div>
+				<div v-if="gridImport > 0" class="d-flex flex-nowrap">
+					<span class="color-grid details-icon"><fa-icon icon="square"></fa-icon></span>
+					<span>{{ $t("main.energyflow.gridImport") }}</span>
+				</div>
+				<div v-else class="d-flex flex-nowrap">
+					<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
+					<span>{{ $t("main.energyflow.pvExport") }}</span>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-6">
+				<h4>In</h4>
 				<div class="d-flex justify-content-between" data-test-pv-production>
 					<span class="details-icon text-muted"
 						><shopicon-regular-sun></shopicon-regular-sun
@@ -24,6 +41,36 @@
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(pvProduction) }}</span>
 				</div>
+				<div class="d-flex justify-content-between">
+					<span class="details-icon text-muted">
+						<GridIcon :import="gridImport > 0" />
+					</span>
+					<span class="text-nowrap flex-grow-1 text-truncate">
+						<span>{{ $t("main.energyflow.gridImport") }}</span>
+					</span>
+					<span class="text-end text-nowrap ps-1">
+						{{ kw(gridImport) }}
+					</span>
+				</div>
+				<div
+					v-if="batteryConfigured"
+					class="d-flex justify-content-between"
+					data-test-battery
+				>
+					<span class="details-icon text-muted">
+						<BatteryIcon :soc="batterySoC" :discharge="batteryDischarge > 0" />
+					</span>
+					<span class="text-nowrap flex-grow-1 text-truncate">
+						<span>{{ $t("main.energyflow.batteryDischarge") }}</span>
+					</span>
+					<span class="text-end text-nowrap ps-1">
+						{{ batterySoC }}% /
+						{{ kw(Math.abs(batteryDischarge)) }}
+					</span>
+				</div>
+			</div>
+			<div class="col-6">
+				<h4>Out</h4>
 				<div class="d-flex justify-content-between" data-test-home-power>
 					<span class="details-icon text-muted"
 						><shopicon-regular-home></shopicon-regular-home
@@ -44,59 +91,31 @@
 					}}</span>
 					<span class="text-end text-nowrap ps-1">{{ kw(loadpointsPower) }}</span>
 				</div>
+				<div class="d-flex justify-content-between">
+					<span class="details-icon text-muted">
+						<GridIcon :export="pvExport > 0" />
+					</span>
+					<span class="text-nowrap flex-grow-1 text-truncate">
+						<span>{{ $t("main.energyflow.pvExport") }}</span>
+					</span>
+					<span class="text-end text-nowrap ps-1">
+						{{ kw(pvExport) }}
+					</span>
+				</div>
 				<div
 					v-if="batteryConfigured"
 					class="d-flex justify-content-between"
 					data-test-battery
 				>
 					<span class="details-icon text-muted">
-						<BatteryIcon
-							:soc="batterySoC"
-							:charge="batteryCharge > 0"
-							:discharge="batteryDischarge > 0"
-						/>
+						<BatteryIcon :soc="batterySoC" :charge="batteryCharge > 0" />
 					</span>
 					<span class="text-nowrap flex-grow-1 text-truncate">
-						<span v-if="batteryCharge">{{ $t("main.energyflow.batteryCharge") }}</span>
-						<span v-else-if="batteryDischarge">{{
-							$t("main.energyflow.batteryDischarge")
-						}}</span>
-						<span v-else>{{ $t("main.energyflow.battery") }}</span>
+						<span>{{ $t("main.energyflow.batteryCharge") }}</span>
 					</span>
 					<span class="text-end text-nowrap ps-1">
 						{{ batterySoC }}% /
-						{{ kw(Math.abs(batteryPower)) }}
-					</span>
-				</div>
-			</div>
-			<div
-				class="col-12 col-sm-6 offset-md-6 col-md-6 offset-lg-4 col-lg-8 d-block d-md-flex order-md-3 justify-content-between mt-2"
-			>
-				<div class="text-nowrap d-flex d-md-block" data-test-grid-import>
-					<span class="color-grid details-icon"><fa-icon icon="square"></fa-icon></span>
-					<span class="text-nowrap flex-grow-1">{{
-						$t("main.energyflow.gridImport")
-					}}</span>
-					<span class="text-end text-nowrap d-md-none">
-						{{ kw(gridImport) }}
-					</span>
-				</div>
-				<div class="text-nowrap d-flex d-md-block" data-test-self-consumption>
-					<span class="color-self details-icon"><fa-icon icon="square"></fa-icon></span>
-					<span class="text-nowrap flex-grow-1">{{
-						$t("main.energyflow.selfConsumption")
-					}}</span>
-					<span class="text-end text-nowrap d-md-none">
-						{{ kw(selfConsumption) }}
-					</span>
-				</div>
-				<div class="text-nowrap d-flex d-md-block" data-test-pv-export>
-					<span class="color-export details-icon"><fa-icon icon="square"></fa-icon></span>
-					<span class="text-nowrap flex-grow-1">{{
-						$t("main.energyflow.pvExport")
-					}}</span>
-					<span class="text-end text-nowrap d-md-none">
-						{{ kw(pvExport) }}
+						{{ kw(Math.abs(batteryCharge)) }}
 					</span>
 				</div>
 			</div>
@@ -109,13 +128,14 @@ import "../../icons";
 import formatter from "../../mixins/formatter";
 import Visualization from "./Visualization.vue";
 import BatteryIcon from "./BatteryIcon.vue";
+import GridIcon from "./GridIcon.vue";
 import "@h2d2/shopicons/es/regular/sun";
 import "@h2d2/shopicons/es/regular/home";
 import "@h2d2/shopicons/es/regular/car3";
 
 export default {
 	name: "Energyflow",
-	components: { Visualization, BatteryIcon },
+	components: { Visualization, BatteryIcon, GridIcon },
 	mixins: [formatter],
 	props: {
 		gridConfigured: Boolean,
@@ -179,8 +199,9 @@ export default {
 	color: var(--evcc-export);
 }
 .details-icon {
-	text-align: center;
-	width: 30px;
+	display: flex;
+	justify-content: center;
+	width: 50px;
 	margin-right: 0.25rem;
 	white-space: nowrap;
 	flex-shrink: 0;
